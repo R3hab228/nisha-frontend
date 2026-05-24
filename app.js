@@ -498,35 +498,27 @@ function closeModal(id) {
     
     const win = modal.querySelector('.modal-window');
     
-    // Если закрываем модалку товара - делаем красивый свайп вниз
     if (win && id === 'productModal') {
-        // Отключаем CSS-анимацию, чтобы она не мешала JS спускать окно
+        // Жестко отключаем анимацию появления, чтобы она не мешала закрытию
         win.style.animation = 'none';
+        void win.offsetWidth; // Принудительный рефлоу браузера
         
-        // Включаем плавный откат
-        win.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
-        win.style.transform = 'translateY(100vh)';
+        win.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
+        win.style.transform = 'translateY(100vh)'; // Летим вниз
         win.style.opacity = '0';
-        
-        // Плавно гасим черный фон (overlay)
-        modal.style.transition = 'opacity 0.3s ease';
-        modal.style.opacity = '0';
         
         setTimeout(() => {
             modal.style.display = 'none';
             document.body.style.overflow = 'auto'; 
             if (typeof lenis !== 'undefined') lenis.start(); 
             
-            // Возвращаем стили в исходное состояние для следующего открытия
+            // Сбрасываем стили для следующего открытия
             win.style.transform = '';
             win.style.opacity = '';
             win.style.transition = '';
-            win.style.animation = '';
-            modal.style.transition = '';
-            modal.style.opacity = '';
+            win.style.animation = ''; // Возвращаем стартовую анимацию
         }, 300);
     } else {
-        // Обычное быстрое закрытие для других окон
         modal.style.display = 'none'; 
         document.body.style.overflow = 'auto'; 
         if (typeof lenis !== 'undefined') lenis.start(); 
