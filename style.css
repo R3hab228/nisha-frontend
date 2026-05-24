@@ -525,8 +525,21 @@
     .top-nav a { margin: 0; padding: 8px; font-size: 12px; }
     .main-container { flex-direction: column; padding: 10px; gap: 15px;}
     
-    .sidebar { width: 100%; display: none; }
-    .sidebar.active-mobile { display: flex; animation: fadeIn 0.3s ease; }
+   .sidebar { 
+        display: grid !important; 
+        grid-template-rows: 0fr; /* Плавное скрытие */
+        transition: grid-template-rows 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        padding: 0;
+        gap: 0;
+        visibility: hidden;
+    }
+    .sidebar.active-mobile { 
+        grid-template-rows: 1fr; /* Плавное открытие */
+        padding-top: 15px;
+        gap: 20px;
+        visibility: visible;
+    }
+    .sidebar > div { overflow: hidden; min-height: 0; } /* Нужно для анимации сетки */
     #mobileFilterBtn { display: block; width: 100%; background: #111; color: var(--accent-green); border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; margin-bottom: 0px; cursor: pointer; text-align: center; font-size: 14px;}
 
     .items-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -541,7 +554,7 @@
         overflow: hidden !important; /* Фон стоит на месте */
     } 
     
-   .modal-window {
+  .modal-window {
         width: 100%;
         height: auto !important;
         max-height: 85vh !important;
@@ -555,7 +568,6 @@
         will-change: transform; 
         overscroll-behavior-y: none;
     }
-
     .modal-content { 
     padding: 15px; 
     padding-bottom: 20px; 
@@ -611,9 +623,10 @@
         display: flex !important; 
         opacity: 0; 
         visibility: hidden; 
-        transform: translateY(20px); /* Смещаем немного вниз */
+        bottom: calc(100% + 20px) !important; /* ПОДНЯЛИ СПИСОК ВЫШЕ НАДПИСИ */
+        transform: translateY(15px); 
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        pointer-events: none; /* Защита от случайных кликов */
+        pointer-events: none; 
     }
     .cart-dropdown.active { 
         opacity: 1; 

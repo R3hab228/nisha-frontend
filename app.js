@@ -1366,6 +1366,11 @@ document.addEventListener('mousedown', (e) => {
         const cartDrop = document.getElementById('cartDropdown');
         if (cartDrop) cartDrop.classList.remove('active');
     }
+    // ЗАКРЫТИЕ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ
+    if (!e.target.closest('#footerLangWrapper')) {
+        const langWrap = document.getElementById('footerLangWrapper');
+        if (langWrap) langWrap.classList.remove('active');
+    }
 });
 
 // ==========================================
@@ -2361,8 +2366,8 @@ function handleSwipeEnd(e) {
         e.currentTarget.style.transform = `translateX(0px)`;
     }
 }
-// ==========================================
-// 18. ZERO-LAG СВАЙП КАРТОЧКИ (120 FPS IOS STYLE)
+/// ==========================================
+// 18. ZERO-LAG СВАЙП КАРТОЧКИ (IOS STYLE - БЛОКИРОВКА БРАУЗЕРА)
 // ==========================================
 function initMobileSwipe() {
     const modalWin = document.querySelector('#productModal .modal-window');
@@ -2372,26 +2377,13 @@ function initMobileSwipe() {
     let currentY = 0;
     let isDragging = false;
     let startScrollTop = 0;
-    let ticking = false; // Фиксатор кадров
 
     if (!modalWin || !overlay) return;
 
-    // Функция отрисовки кадра (0 задержки)
-    function updateTransform() {
-        const diffY = currentY - startY;
-        if (diffY > 0) {
-            modalWin.style.transform = `translateY(${diffY}px)`;
-            let opacity = 1 - (diffY / 400);
-            overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.85)})`;
-        }
-        ticking = false;
-    }
-
     modalWin.addEventListener('touchstart', (e) => {
         if (window.innerWidth > 900) return;
-        
-        // Не перехватываем клики по стрелочкам слайдера
-        if (e.target.closest('.slider-btn')) return;
+        // Не мешаем листать фотки в слайдере (вправо/влево)
+        if (e.target.closest('.slider-btn') || e.target.closest('.pswp')) return;
 
         startY = e.touches[0].clientY;
         startScrollTop = modalWin.scrollTop;
@@ -2399,25 +2391,22 @@ function initMobileSwipe() {
         
         modalWin.style.transition = 'none';
         overlay.style.transition = 'none';
-    }, { passive: true });
+    }, { passive: false }); // ВАЖНО: false позволяет блокировать браузер
 
     modalWin.addEventListener('touchmove', (e) => {
         if (window.innerWidth > 900) return;
+        
         currentY = e.touches[0].clientY;
         const diffY = currentY - startY;
 
-        // Толерантность 5px: если мы почти в самом верху и тянем вниз
-        if (startScrollTop <= 5 && diffY > 0) {
+        // Если мы в самом верху карточки и тянем вниз
+        if (startScrollTop <= 3 && diffY > 0) {
             isDragging = true;
+            e.preventDefault(); // ПОЛНОСТЬЮ ОТКЛЮЧАЕТ СОПРОТИВЛЕНИЕ ТЕЛЕФОНА
             
-            // Убиваем сопротивление браузера
-            if (e.cancelable) e.preventDefault(); 
-            
-            // Синхронизируем движение с частотой обновления экрана
-            if (!ticking) {
-                requestAnimationFrame(updateTransform);
-                ticking = true;
-            }
+            modalWin.style.transform = `translateY(${diffY}px)`;
+            let opacity = 1 - (diffY / 400);
+            overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.85)})`;
         }
     }, { passive: false });
 
@@ -2430,8 +2419,7 @@ function initMobileSwipe() {
         modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
         overlay.style.transition = 'background-color 0.25s ease';
         
-        // Чувствительность закрытия: если потянули на 90px или быстро дернули
-        if (diffY > 90) { 
+        if (diffY > 100) { 
             modalWin.style.transform = `translateY(100vh)`; 
             overlay.style.backgroundColor = `rgba(0, 0, 0, 0)`; 
             
