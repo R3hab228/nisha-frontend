@@ -264,18 +264,24 @@ if (!SUPABASE_ANON_KEY) {
     _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', imgUrl = null) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerText = message;
+    
+    // Если передали картинку — добавляем её слева от текста
+    let html = '';
+    if (imgUrl) {
+        html += `<div style="width: 35px; height: 35px; background-image: url('${imgUrl}'); background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #444; flex-shrink: 0;"></div>`;
+    }
+    html += `<div>${message}</div>`;
+    
+    toast.innerHTML = html;
     container.appendChild(toast);
     
     setTimeout(() => { 
-        if(container.contains(toast)) {
-            container.removeChild(toast); 
-        }
+        if(container.contains(toast)) container.removeChild(toast); 
     }, 3500);
 }
 
@@ -857,7 +863,7 @@ async function addToCartById(itemId) {
     await syncCartToServer();
     
     updateCartUI();
-    showToast(i18next.t('messages.cart_add'), 'success')
+    showToast('Товар добавлен в корзину!', 'success', getOptimizedImageUrl(item, true));
 }
 
 // Изменено для создания DOM элементов вручную (чтобы работал AutoAnimate и Tilt.js)
@@ -866,6 +872,14 @@ function sortItems(type) {
     document.getElementById('sort-new').classList.remove('active-sort');
     document.getElementById('sort-cheap').classList.remove('active-sort');
     document.getElementById('sort-' + type).classList.add('active-sort');
+    
+    // Эффект мигания счетчика
+    const countEl = document.getElementById('itemCount');
+    if (countEl) {
+        countEl.style.opacity = '0';
+        setTimeout(() => { countEl.style.opacity = '1'; }, 200);
+    }
+    
     applyFilters();
 }
 
@@ -1277,7 +1291,6 @@ function toggleCartDropdown(e) {
 function renderCartItems() {
     const list = document.getElementById('cartDropdownList');
     if (!list) return;
-    
     list.innerHTML = '';
     
     if (cart.length === 0) {
@@ -1286,13 +1299,12 @@ function renderCartItems() {
     }
 
    cart.forEach((item, index) => {
-        const imgUrl = getOptimizedImageUrl(item, true); // В корзине грузим легкую миниатюру
+        const imgUrl = getOptimizedImageUrl(item, true);
         const row = document.createElement('div');
         row.className = 'cart-item-row';
         
-        // Добавляем логику свайпа
         row.innerHTML = `
-            <div class="swipe-background" onclick="removeFromCart(${index}, event)">УДАЛИТЬ</div>
+            <div class="swipe-background" onclick="removeFromCart(${index}, event, this.closest('.cart-item-row'))">УДАЛИТЬ</div>
             <div class="swipe-surface" 
                  ontouchstart="handleSwipeStart(event)" 
                  ontouchmove="handleSwipeMove(event)" 
@@ -1304,12 +1316,42 @@ function renderCartItems() {
                 </div>
                 <div class="cart-item-price-wrapper">
                     <div class="cart-item-price">${item.price} грн</div>
-                    <div class="cart-item-remove hide-on-mobile" onclick="removeFromCart(${index}, event)" title="Удалить">×</div>
+                    <div class="cart-item-remove hide-on-mobile" onclick="removeFromCart(${index}, event, this.closest('.cart-item-row'))" title="Удалить">×</div>
                 </div>
             </div>
         `;
         list.appendChild(row);
     });
+}
+
+async function removeFromCart(index, event, rowElement) {
+    if (event) event.stopPropagation(); 
+    
+    // Сохраняем данные удаляемого товара для уведомления
+    const removedItem = cart[index];
+    const imgUrl = getOptimizedImageUrl(removedItem, true);
+
+    // Функция финального удаления из БД и обновления UI
+    const executeRemoval = async () => {
+        cart.splice(index, 1);
+        localStorage.setItem('nisha_cart', JSON.stringify(cart));
+        await syncCartToServer();
+        updateCartUI(); 
+        showToast(`Удалено: ${removedItem.name}`, 'error', imgUrl);
+        
+        if (cart.length === 0) {
+            const dropdown = document.getElementById('cartDropdown');
+            if (dropdown) dropdown.classList.remove('active');
+        }
+    };
+
+    // Если передан элемент строки — сначала плавно скрываем его, потом удаляем
+    if (rowElement) {
+        rowElement.classList.add('removing');
+        setTimeout(executeRemoval, 300); // Ждем 0.3 сек пока закончится анимация CSS
+    } else {
+        await executeRemoval();
+    }
 }
 
 function updateCartUI() {
@@ -1329,19 +1371,6 @@ function updateCartUI() {
     renderCartItems(); 
 }
 
-async function removeFromCart(index, event) {
-    if (event) event.stopPropagation(); 
-    
-    cart.splice(index, 1);
-    localStorage.setItem('nisha_cart', JSON.stringify(cart));
-    await syncCartToServer();
-    updateCartUI(); 
-    
-    if (cart.length === 0) {
-        const dropdown = document.getElementById('cartDropdown');
-        if (dropdown) dropdown.classList.remove('active');
-    }
-}
 
 function closeCartDropdown(e) {
     if (e) e.stopPropagation();
