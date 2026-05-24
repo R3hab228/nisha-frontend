@@ -1076,7 +1076,7 @@ function debouncedNPCitySearch(query) {
 // --- ПОИСК ГОРОДА ---
 async function searchNPCity(query) {
     try {
-        const res = await fetch('http://localhost:3000/api/np-proxy', {
+        const res = await fetch('https://nisha-api.onrender.com', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -1172,7 +1172,7 @@ async function loadNPBranches(searchString = "") {
             reqBody.methodProperties.FindByString = searchString.trim();
         }
 
-        const res = await fetch('http://localhost:3000/api/np-proxy', {
+        const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(reqBody)
@@ -1237,7 +1237,7 @@ async function calculateDeliveryCost() {
     const totalCost = cart.reduce((sum, item) => sum + item.price, 0);
     
     try {
-        const res = await fetch('http://localhost:3000/api/np-proxy', {
+        const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
