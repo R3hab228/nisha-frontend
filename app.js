@@ -922,9 +922,9 @@ function renderNextBatch() {
             if (saleBadgeEl && typeof RoughNotation !== 'undefined') {
                 setTimeout(() => RoughNotation.annotate(saleBadgeEl, { type: 'box', color: '#ffcc00', strokeWidth: 2 }).show(), 500);
             }
-            if (typeof VanillaTilt !== 'undefined' && window.innerWidth > 900) {
-                VanillaTilt.init(card, { max: 5, speed: 1000, glare: false, scale: 1.01 });
-            }
+           // if (typeof VanillaTilt !== 'undefined' && window.innerWidth > 900) {
+               // VanillaTilt.init(card, { max: 5, speed: 1000, glare: false, scale: 1.01 });
+           // }
         } catch (cardErr) {
             console.error("Ошибка при отрисовке карточки:", cardErr);
         }
@@ -2124,9 +2124,9 @@ function renderHistory() {
             
         container.appendChild(card);
 
-        if (typeof VanillaTilt !== 'undefined' && window.innerWidth > 900) {
-            VanillaTilt.init(card, { max: 15, speed: 300, scale: 1.05 });
-        }
+       // if (typeof VanillaTilt !== 'undefined' && window.innerWidth > 900) {
+         //   VanillaTilt.init(card, { max: 15, speed: 300, scale: 1.05 });
+        //}
     });
 
     if (typeof lozad !== 'undefined') {
