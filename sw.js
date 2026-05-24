@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v5'; 
+const CACHE_NAME = 'nisha-cache-v6'; 
 const STATIC_URLS = ['/', '/index.html', '/app.js', '/config.js', '/style.css'];
 
 self.addEventListener('install', event => {

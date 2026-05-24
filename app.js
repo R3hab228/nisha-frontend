@@ -2362,64 +2362,82 @@ function handleSwipeEnd(e) {
     }
 }
 // ==========================================
-// 18. ПЛАВНЫЙ СВАЙП ВНИЗ ДЛЯ ЗАКРЫТИЯ (IOS STYLE)
+// 18. ПЛАВНЫЙ СВАЙП ВНИЗ ВСЕЙ КАРТОЧКИ (КАК В IOS/TELEGRAM)
 // ==========================================
 function initMobileSwipe() {
-    let modalTouchStartY = 0;
-    let modalTouchCurrentY = 0;
-    const productModalOverlay = document.querySelector('#productModal'); // Черный фон
-    const productModalWin = document.querySelector('#productModal .modal-window');
-    const productModalHeader = document.querySelector('#productModal .modal-header');
+    const modalWin = document.querySelector('#productModal .modal-window');
+    const overlay = document.querySelector('#productModal');
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let startScrollTop = 0;
 
-    if (productModalHeader && productModalWin && productModalOverlay) {
-        productModalHeader.addEventListener('touchstart', (e) => {
-            if (window.innerWidth > 900) return; 
-            modalTouchStartY = e.touches[0].clientY;
-            productModalWin.style.transition = 'none'; 
-            productModalOverlay.style.transition = 'none'; // Отключаем плавность фона для следования за пальцем
-        }, { passive: true });
+    if (!modalWin || !overlay) return;
 
-        productModalHeader.addEventListener('touchmove', (e) => {
-            if (window.innerWidth > 900) return;
-            modalTouchCurrentY = e.touches[0].clientY;
-            const diffY = modalTouchCurrentY - modalTouchStartY;
-            
-            if (diffY > 0) {
-                // Карточка едет вниз
-                productModalWin.style.transform = `translateY(${diffY}px)`;
-                
-                // Черный фон плавно становится прозрачным
-                let opacity = 1 - (diffY / 300); // 300px - дистанция до полной прозрачности
-                if (opacity < 0) opacity = 0;
-                productModalOverlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.85})`;
-            }
-        }, { passive: true });
+    // КАДР 1: Палец коснулся экрана
+    modalWin.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 900) return;
+        startY = e.touches[0].clientY;
+        startScrollTop = modalWin.scrollTop; // Проверяем, не проскроллил ли юзер текст вниз
+        isDragging = false;
+        
+        // Отключаем плавность, чтобы карточка прилипла к пальцу
+        modalWin.style.transition = 'none';
+        overlay.style.transition = 'none';
+    }, { passive: true });
 
-        productModalHeader.addEventListener('touchend', (e) => {
-            if (window.innerWidth > 900) return;
-            const diffY = modalTouchCurrentY - modalTouchStartY;
+    // КАДР 2: Палец двигается
+    modalWin.addEventListener('touchmove', (e) => {
+        if (window.innerWidth > 900) return;
+        currentY = e.touches[0].clientY;
+        const diffY = currentY - startY;
+
+        // МАГИЯ: Тянем карточку вниз ТОЛЬКО если мы находимся в самом верху (startScrollTop <= 0) и тянем ВНИЗ
+        if (startScrollTop <= 0 && diffY > 0) {
+            isDragging = true;
             
-            // Включаем плавную анимацию для возврата или скрытия
-            productModalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-            productModalOverlay.style.transition = 'background-color 0.3s ease';
+            // Блокируем стандартное обновление страницы свайпом в браузере
+            if (e.cancelable) e.preventDefault(); 
             
-            if (diffY > 80) { // Если протянули больше 80px - закрываем
-                productModalWin.style.transform = `translateY(100vh)`; // Улетает вниз за экран
-                productModalOverlay.style.backgroundColor = `rgba(0, 0, 0, 0)`; // Фон полностью исчезает
-                
-                setTimeout(() => {
-                    closeModal('productModal');
-                    // Сбрасываем стили, чтобы при следующем открытии всё работало как надо
-                    productModalWin.style.transform = ''; 
-                    productModalOverlay.style.backgroundColor = '';
-                }, 300);
-            } else {
-                // Если свайпнули слабо - мягко отпружинивает обратно
-                productModalWin.style.transform = `translateY(0)`;
-                productModalOverlay.style.backgroundColor = ''; // Возвращаем фон
-            }
-        });
-    }
+            // Карточка идеально следует за пальцем (1 к 1)
+            modalWin.style.transform = `translateY(${diffY}px)`;
+            
+            // Фон плавно тускнеет пропорционально оттяжке
+            let opacity = 1 - (diffY / 400);
+            if (opacity < 0) opacity = 0;
+            overlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.85})`;
+        }
+    }, { passive: false }); // ВАЖНО: false нужно для работы preventDefault()
+
+    // КАДР 3: Палец оторвался от экрана
+    modalWin.addEventListener('touchend', (e) => {
+        if (window.innerWidth > 900 || !isDragging) return;
+        
+        const diffY = currentY - startY;
+        isDragging = false;
+        
+        // Возвращаем плавную анимацию для возврата или скрытия
+        modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        overlay.style.transition = 'background-color 0.3s ease';
+        
+        // Если протянули больше 100 пикселей вниз — закрываем
+        if (diffY > 100) { 
+            modalWin.style.transform = `translateY(100vh)`; // Улетает вниз
+            overlay.style.backgroundColor = `rgba(0, 0, 0, 0)`; // Фон пропадает
+            
+            setTimeout(() => {
+                closeModal('productModal');
+                // Сбрасываем стили для следующего раза
+                modalWin.style.transform = '';
+                overlay.style.backgroundColor = '';
+            }, 300);
+        } else {
+            // Если передумали и не дотянули — отпружинивает на место
+            modalWin.style.transform = `translateY(0)`;
+            overlay.style.backgroundColor = '';
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
