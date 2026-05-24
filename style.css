@@ -25,12 +25,12 @@
             overflow-x: hidden;
         }
 
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            z-index: 9999; pointer-events: none; opacity: 0.4;
-        }
+       .scanlines {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    z-index: 10; pointer-events: none; opacity: 0.4;
+}
 
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-main); border-left: 1px solid var(--border-color); }
@@ -606,9 +606,9 @@
     .lang-switcher-wrapper { bottom: 140px; } /* Поднимаем на мобилках, чтобы не перекрывало корзину */
 }
 @media (max-width: 900px) {
-    .cart-dropdown { display: none !important; }
-    .cart-click-area { cursor: default; }
-    .cart-click-area:hover { color: inherit; }
+    .cart-dropdown { display: none; }
+    .cart-dropdown.active { display: flex !important; }
+    .cart-click-area { cursor: pointer; }
 }
 /* --- КНОПКА КОРЗИНЫ НА ГЛАВНОЙ СЕТКЕ --- */
 .grid-cart-btn {

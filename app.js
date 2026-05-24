@@ -1270,12 +1270,10 @@ async function calculateDeliveryCost() {
 // ==========================================
 
 function toggleCartDropdown(e) {
-    if (window.innerWidth > 900) return;
     if (e) e.stopPropagation();
     const dropdown = document.getElementById('cartDropdown');
-    dropdown.classList.toggle('active');
+    if (dropdown) dropdown.classList.toggle('active');
 }
-
 function renderCartItems() {
     const list = document.getElementById('cartDropdownList');
     if (!list) return;
@@ -2281,21 +2279,23 @@ if(installBtn) {
 function shareItem() {
     if (!currentOpenedItem) return;
     
-    // Ссылка на твой бекенд-сервер, который сгенерирует красивое превью
-    const backendShareUrl = `https://твой-сервер-бекенда.com/share/${currentOpenedItem.id}`;
+    // Прямая ссылка на твой сайт с открытием этого товара
+    const shareUrl = `${window.location.origin}/?item=${currentOpenedItem.id}`;
     
     const shareData = {
         title: `NISHA | ${currentOpenedItem.name}`,
         text: `Зацени какую вещь нашел: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`,
-        url: backendShareUrl 
+        url: shareUrl 
     };
 
-    if (navigator.share) {
+    // Если это телефон — открываем нативное меню "Поделиться"
+    if (navigator.share && /mobile|android|iphone/i.test(navigator.userAgent)) {
         navigator.share(shareData).catch(err => console.log('Шеринг отменен'));
     } else {
-        // Если ПК (Web Share API не поддерживается), просто копируем ссылку
-        navigator.clipboard.writeText(window.location.href);
-        showToast('Ссылка скопирована в буфер обмена!', 'success');
+        // Если это ПК (или браузер не поддерживает share) — просто копируем ссылку
+        navigator.clipboard.writeText(shareUrl)
+            .then(() => showToast('Ссылка скопирована в буфер обмена!', 'success'))
+            .catch(() => showToast('Ошибка копирования', 'error'));
     }
 }
 let currentPromoDiscount = 0; 
@@ -2360,4 +2360,53 @@ function handleSwipeEnd(e) {
         // Иначе возвращаем обратно
         e.currentTarget.style.transform = `translateX(0px)`;
     }
+}
+// ==========================================
+// 18. СВАЙП ВНИЗ ДЛЯ ЗАКРЫТИЯ МОДАЛКИ НА ТЕЛЕФОНЕ
+// ==========================================
+let modalTouchStartY = 0;
+let modalTouchCurrentY = 0;
+const productModalWin = document.querySelector('#productModal .modal-window');
+const productModalHeader = document.querySelector('#productModal .modal-header');
+
+if (productModalHeader && productModalWin) {
+    // Касание шапки
+    productModalHeader.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 900) return; // Работает только на телефонах
+        modalTouchStartY = e.touches[0].clientY;
+        productModalWin.style.transition = 'none'; // Убираем плавность, чтобы окно шло ровно за пальцем
+    }, { passive: true });
+
+    // Движение пальцем
+    productModalHeader.addEventListener('touchmove', (e) => {
+        if (window.innerWidth > 900) return;
+        modalTouchCurrentY = e.touches[0].clientY;
+        const diffY = modalTouchCurrentY - modalTouchStartY;
+        
+        // Позволяем тянуть только вниз
+        if (diffY > 0) {
+            productModalWin.style.transform = `translateY(${diffY}px)`;
+        }
+    }, { passive: true });
+
+    // Отпускание пальца
+    productModalHeader.addEventListener('touchend', (e) => {
+        if (window.innerWidth > 900) return;
+        const diffY = modalTouchCurrentY - modalTouchStartY;
+        
+        // Возвращаем плавную анимацию
+        productModalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        
+        // Если протянули вниз больше чем на 80 пикселей — закрываем окно
+        if (diffY > 80) {
+            productModalWin.style.transform = `translateY(100%)`; // Уводим окно вниз за экран
+            setTimeout(() => {
+                closeModal('productModal');
+                productModalWin.style.transform = ''; // Сбрасываем позицию для следующего раза
+            }, 300);
+        } else {
+            // Если свайпнули слабо — возвращаем окно на место
+            productModalWin.style.transform = `translateY(0)`;
+        }
+    });
 }
