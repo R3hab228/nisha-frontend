@@ -2362,19 +2362,21 @@ function handleSwipeEnd(e) {
     }
 }
 // ==========================================
-// 18. СВАЙП ВНИЗ ДЛЯ ЗАКРЫТИЯ МОДАЛКИ НА ТЕЛЕФОНЕ
+// 18. ПЛАВНЫЙ СВАЙП ВНИЗ ДЛЯ ЗАКРЫТИЯ (IOS STYLE)
 // ==========================================
 function initMobileSwipe() {
     let modalTouchStartY = 0;
     let modalTouchCurrentY = 0;
+    const productModalOverlay = document.querySelector('#productModal'); // Черный фон
     const productModalWin = document.querySelector('#productModal .modal-window');
     const productModalHeader = document.querySelector('#productModal .modal-header');
 
-    if (productModalHeader && productModalWin) {
+    if (productModalHeader && productModalWin && productModalOverlay) {
         productModalHeader.addEventListener('touchstart', (e) => {
             if (window.innerWidth > 900) return; 
             modalTouchStartY = e.touches[0].clientY;
             productModalWin.style.transition = 'none'; 
+            productModalOverlay.style.transition = 'none'; // Отключаем плавность фона для следования за пальцем
         }, { passive: true });
 
         productModalHeader.addEventListener('touchmove', (e) => {
@@ -2383,7 +2385,13 @@ function initMobileSwipe() {
             const diffY = modalTouchCurrentY - modalTouchStartY;
             
             if (diffY > 0) {
+                // Карточка едет вниз
                 productModalWin.style.transform = `translateY(${diffY}px)`;
+                
+                // Черный фон плавно становится прозрачным
+                let opacity = 1 - (diffY / 300); // 300px - дистанция до полной прозрачности
+                if (opacity < 0) opacity = 0;
+                productModalOverlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.85})`;
             }
         }, { passive: true });
 
@@ -2391,22 +2399,29 @@ function initMobileSwipe() {
             if (window.innerWidth > 900) return;
             const diffY = modalTouchCurrentY - modalTouchStartY;
             
+            // Включаем плавную анимацию для возврата или скрытия
             productModalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            productModalOverlay.style.transition = 'background-color 0.3s ease';
             
-            if (diffY > 80) {
-                productModalWin.style.transform = `translateY(100%)`; 
+            if (diffY > 80) { // Если протянули больше 80px - закрываем
+                productModalWin.style.transform = `translateY(100vh)`; // Улетает вниз за экран
+                productModalOverlay.style.backgroundColor = `rgba(0, 0, 0, 0)`; // Фон полностью исчезает
+                
                 setTimeout(() => {
                     closeModal('productModal');
+                    // Сбрасываем стили, чтобы при следующем открытии всё работало как надо
                     productModalWin.style.transform = ''; 
+                    productModalOverlay.style.backgroundColor = '';
                 }, 300);
             } else {
+                // Если свайпнули слабо - мягко отпружинивает обратно
                 productModalWin.style.transform = `translateY(0)`;
+                productModalOverlay.style.backgroundColor = ''; // Возвращаем фон
             }
         });
     }
 }
 
-// Запускаем слушатель свайпа только после полной загрузки страницы
 document.addEventListener('DOMContentLoaded', () => {
     initMobileSwipe();
 });

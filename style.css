@@ -25,7 +25,7 @@
             overflow-x: hidden;
         }
 
-      .scanlines {
+     .scanlines {
     display: none !important; /* ПОЛНОСТЬЮ ОТКЛЮЧИЛИ РЯБЬ */
 }
 
@@ -603,8 +603,20 @@
     .lang-switcher-wrapper { bottom: 140px; } /* Поднимаем на мобилках, чтобы не перекрывало корзину */
 }
 @media (max-width: 900px) {
-    .cart-dropdown { display: none; }
-    .cart-dropdown.active { display: flex !important; }
+    .cart-dropdown { 
+        display: flex !important; 
+        opacity: 0; 
+        visibility: hidden; 
+        transform: translateY(20px); /* Смещаем немного вниз */
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        pointer-events: none; /* Защита от случайных кликов */
+    }
+    .cart-dropdown.active { 
+        opacity: 1; 
+        visibility: visible; 
+        transform: translateY(0); /* Плавно поднимаем на место */
+        pointer-events: auto;
+    }
     .cart-click-area { cursor: pointer; }
 }
 /* --- КНОПКА КОРЗИНЫ НА ГЛАВНОЙ СЕТКЕ --- */
