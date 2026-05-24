@@ -406,36 +406,48 @@ window.onload = async () => {
                 setTimeout(() => openProductModalById(openItemId), 500);
             }
             
-         
-            _supabase.channel('public:items')
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'items' }, payload => {
-                    const updatedItem = payload.new;
-                    const index = allItems.findIndex(i => i.id === updatedItem.id);
-                    if (index !== -1) {
-                        allItems[index] = updatedItem;
+         _supabase.channel('public:items')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, payload => {
+                    // ЕСЛИ ДОБАВИЛИ НОВУЮ ВЕЩЬ ЧЕРЕЗ БОТА
+                    if (payload.eventType === 'INSERT') {
+                        allItems.unshift(payload.new); // Добавляем в начало массива
+                        showToast(`🆕 Новая вещь на сайте: ${payload.new.name}`, 'success');
+                        applyFilters(); // Плавно перерисовываем сетку
+                    } 
+                    // ЕСЛИ АДМИН УДАЛИЛ ВЕЩЬ
+                    else if (payload.eventType === 'DELETE') {
+                        allItems = allItems.filter(i => i.id !== payload.old.id);
+                        applyFilters();
                     }
-                    const card = document.querySelector(`.item-card[data-id="${updatedItem.id}"]`);
-                    if (card) {
-                        const oldBadges = card.querySelectorAll('.sold-badge, .reserved-badge');
-                        oldBadges.forEach(b => b.remove());
-                        card.classList.remove('sold-out', 'reserved-item');
-
-                        if (updatedItem.status === 'sold') {
-                            card.classList.add('sold-out');
-                            card.insertAdjacentHTML('afterbegin', '<div class="sold-badge">SOLD</div>');
-                            showToast(`Только что забрали: ${updatedItem.name}`, 'error');
-                        } else if (updatedItem.status === 'reserved') {
-                            card.classList.add('reserved-item');
-                            card.insertAdjacentHTML('afterbegin', '<div class="reserved-badge">RESERVED</div>');
+                    // ЕСЛИ ВЕЩЬ КУПИЛИ ИЛИ ОБНОВИЛИ
+                    else if (payload.eventType === 'UPDATE') {
+                        const updatedItem = payload.new;
+                        const index = allItems.findIndex(i => i.id === updatedItem.id);
+                        if (index !== -1) {
+                            allItems[index] = updatedItem;
                         }
                         
-                        if (currentOpenedItem && currentOpenedItem.id === updatedItem.id && updatedItem.status === 'sold') {
-                            const cartBtn = document.getElementById('modalCartBtn');
-                            const waitBtn = document.getElementById('modalWaitlistBtn');
-                            const liveBadge = document.getElementById('liveViewersBadge');
-                            if(cartBtn) cartBtn.style.display = 'none';
-                            if(waitBtn) waitBtn.style.display = 'block';
-                            if(liveBadge) liveBadge.style.display = 'none';
+                        const card = document.querySelector(`.item-card[data-id="${updatedItem.id}"]`);
+                        if (card) {
+                            const oldBadges = card.querySelectorAll('.sold-badge, .reserved-badge');
+                            oldBadges.forEach(b => b.remove());
+                            card.classList.remove('sold-out', 'reserved-item');
+
+                            if (updatedItem.status === 'sold') {
+                                card.classList.add('sold-out');
+                                card.insertAdjacentHTML('afterbegin', '<div class="sold-badge">SOLD</div>');
+                                showToast(`Только что забрали: ${updatedItem.name}`, 'error');
+                            } else if (updatedItem.status === 'reserved') {
+                                card.classList.add('reserved-item');
+                                card.insertAdjacentHTML('afterbegin', '<div class="reserved-badge">RESERVED</div>');
+                            }
+                            
+                            if (currentOpenedItem && currentOpenedItem.id === updatedItem.id && updatedItem.status === 'sold') {
+                                const cartBtn = document.getElementById('modalCartBtn');
+                                const waitBtn = document.getElementById('modalWaitlistBtn');
+                                if(cartBtn) cartBtn.style.display = 'none';
+                                if(waitBtn) waitBtn.style.display = 'block';
+                            }
                         }
                     }
                 })
