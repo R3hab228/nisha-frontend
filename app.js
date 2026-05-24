@@ -863,17 +863,17 @@ function renderNextBatch() {
             card.innerHTML = `
                 ${badgeHTML}
                 <div class="${starClass}">★</div>
-                <div class="card-clickable-area" style="display:flex; flex-direction:column; flex-grow:1;">
-                    <!-- ДОБАВЛЕН КЛАСС skeleton и ID для плавной загрузки -->
+                <div class="card-clickable-area" style="display:flex; flex-direction:column; flex-grow:1; cursor:pointer;">
                     <div class="mock-image skeleton" id="img-${item.id}"></div>
-                    
                     <div class="item-info">
                         <h3 class="item-title">${safeName}</h3>
                         <div class="item-price">${priceHTML}</div>
-                       <div class="item-size">${i18next.t('grid.size_prefix')}${safeSize}</div>
-                    <div class="item-footer"><span>${safeBrand}</span><span>${item.condition || '9/10'}</span></div>
-                    <button class="grid-cart-btn" onclick="addToCartWithAnimation('${item.id}', this, event)" style="${item.status === 'sold' ? 'display:none;' : ''}">${i18next.t('product.add_to_cart')}</button>
+                        <div class="item-size">${i18next.t('grid.size_prefix')}${safeSize}</div>
+                        <div class="item-footer"><span>${safeBrand}</span><span>${item.condition || '9/10'}</span></div>
+                    </div>
                 </div>
+                <!-- Кнопка теперь ВНЕ кликабельной зоны карточки, баг исчезнет -->
+                <button class="grid-cart-btn" onclick="addToCartWithAnimation('${item.id}', this, event)" style="${item.status === 'sold' ? 'display:none;' : ''}">${i18next.t('product.add_to_cart')}</button>
             `;
 
             
@@ -992,46 +992,42 @@ function addToCartWithAnimation(itemId, btnElement, event) {
     const item = allItems.find(i => i.id === itemId);
     if (!item) return;
     
-    // Добавляем в корзину (логика)
+    // Сначала вызываем добавление, чтобы корзина появилась из display: none
     addToCartById(itemId);
     
-    const cartIcon = document.getElementById('cartInfoWrapper');
-    if (!cartIcon) return; // Убрали багнутую проверку на картинки!
+    // Даем браузеру 10 миллисекунд отрендерить корзину, иначе координаты будут 0,0
+    setTimeout(() => {
+        const cartIcon = document.getElementById('cartInfoWrapper');
+        if (!cartIcon) return; 
 
-    const btnRect = btnElement.getBoundingClientRect();
-    const cartRect = cartIcon.getBoundingClientRect();
+        const btnRect = btnElement.getBoundingClientRect();
+        const cartRect = cartIcon.getBoundingClientRect();
 
-    const flyingImg = document.createElement('div');
-    flyingImg.className = 'flying-item';
+        const flyingImg = document.createElement('div');
+        flyingImg.className = 'flying-item';
 
-    // Если фото есть - ставим его. Если нет - ставим темный фон.
-   if (item.images && item.images.length > 0) {
-        flyingImg.style.backgroundImage = `url('${getOptimizedImageUrl(item, true)}')`;
-    } else {
-        flyingImg.style.backgroundColor = '#111';
-    }
+        if (item.images && item.images.length > 0) {
+            flyingImg.style.backgroundImage = `url('${getOptimizedImageUrl(item, true)}')`;
+        } else {
+            flyingImg.style.backgroundColor = '#111';
+        }
 
-    // Стартовая позиция (ровно над кнопкой)
-    flyingImg.style.left = `${btnRect.left + (btnRect.width/2) - 30}px`;
-    flyingImg.style.top = `${btnRect.top - 30}px`;
-    
-    document.body.appendChild(flyingImg);
+        flyingImg.style.left = `${btnRect.left + (btnRect.width/2) - 30}px`;
+        flyingImg.style.top = `${btnRect.top - 30}px`;
+        
+        document.body.appendChild(flyingImg);
 
-    // Гарантируем, что браузер сначала отрисует стартовую позицию, а только потом начнет двигать
-    requestAnimationFrame(() => {
-        setTimeout(() => {
-            // Конечная позиция (над корзиной)
-            flyingImg.style.left = `${cartRect.left + 20}px`;
-            flyingImg.style.top = `${cartRect.top}px`;
-            
-            // Добавили эффект вращения в полете (rotate(360deg))
-            flyingImg.style.transform = 'scale(0.1) rotate(360deg)';
-            flyingImg.style.opacity = '0.3';
-        }, 10); 
-    });
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                flyingImg.style.left = `${cartRect.left + 20}px`;
+                flyingImg.style.top = `${cartRect.top}px`;
+                flyingImg.style.transform = 'scale(0.1) rotate(360deg)';
+                flyingImg.style.opacity = '0.3';
+            }, 10); 
+        });
 
-    // Удаляем элемент, когда анимация закончится (0.85s = 850ms)
-    setTimeout(() => flyingImg.remove(), 850);
+        setTimeout(() => flyingImg.remove(), 850);
+    }, 10);
 }
 
 // --- КРЕСТИК В ПОИСКЕ ---
@@ -1866,9 +1862,19 @@ function openProductModal(item) {
     const condStr = item.condition || '9 / 10';
     document.getElementById('modalItemCond').innerText = condStr;
     const condMatch = condStr.match(/(\d+)/);
-    let condPercent = 90;
-    if(condMatch && condMatch[1]) condPercent = parseInt(condMatch[1]) * 10;
-    document.getElementById('modalCondFill').style.width = condPercent + '%';
+    let condVal = 9;
+    if(condMatch && condMatch[1]) condVal = parseInt(condMatch[1]);
+    
+    // Рендерим квадратики Win 95
+    const condContainer = document.getElementById('modalCondFill');
+    if (condContainer) {
+        condContainer.innerHTML = ''; // Очищаем старые
+        for (let i = 1; i <= 10; i++) {
+            const block = document.createElement('div');
+            block.className = i <= condVal ? 'cond-block active' : 'cond-block';
+            condContainer.appendChild(block);
+        }
+    }
     // Найди эту строку (или добавь её, если нет):
     const descText = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
    
@@ -2278,7 +2284,7 @@ function handleLiveSearch() {
         if (results.length > 0) {
             results.forEach(result => {
                 const item = result.item;
-                const img = (item.images && item.images.length > 0) ? getOptimizedImageUrl(item.images[0], 100) : '';
+             const img = getOptimizedImageUrl(item, true);
                 dropdown.innerHTML += `
                     <div class="live-search-item" onclick="openProductModalById('${item.id}'); document.getElementById('liveSearchDropdown').style.display='none';">
                         <div class="live-search-img" style="background-image: url('${img}')"></div>
