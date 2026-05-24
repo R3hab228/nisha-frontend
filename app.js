@@ -1186,7 +1186,7 @@ function debouncedNPCitySearch(query) {
 // --- ПОИСК ГОРОДА ---
 async function searchNPCity(query) {
     try {
-        const res = await fetch('https://nisha-api.onrender.com', {
+        const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
