@@ -196,7 +196,14 @@
         .history-name { color: var(--text-main); font-size: 11px; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .history-price { color: var(--accent-green); font-weight: bold; font-size: 12px; font-family: var(--font-mono);}
 
-        .cart-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0, 10, 26, 0.95); border-top: 2px outset var(--border-light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 2000; box-sizing: border-box; color: #fff; font-family: var(--font-mono); box-shadow: 0 -5px 20px rgba(0,0,0,0.8); backdrop-filter: blur(5px);}
+        .cart-panel { 
+    position: fixed; bottom: 0; left: 0; width: 100%; 
+    background: #050505; /* Сделали просто темный фон вместо прозрачного с блюром */
+    border-top: 2px outset var(--border-light); 
+    padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; 
+    z-index: 2000; box-sizing: border-box; color: #fff; font-family: var(--font-mono); 
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.8); 
+}
        .cart-info { font-size: 14px; font-weight: normal; color: #aaa; display: flex; align-items: center; gap: 8px; }
 .cart-info span { color: #888; font-size: 14px; font-weight: normal; margin-left: 0; }
 .cart-info b { font-size: 18px; color: var(--accent-green); margin-right: 15px; }
@@ -214,9 +221,10 @@
 
   .modal-overlay { 
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; 
-    align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px);
-    animation: fadeInOverlay 0.25s ease forwards; /* Плавное появление темного фона */
+    background-color: rgba(0, 0, 0, 0.95); /* Сделали темнее, блюр убрали */
+    z-index: 3000; justify-content: center; 
+    align-items: center; padding: 20px; box-sizing: border-box; 
+    animation: fadeInOverlay 0.25s ease forwards;
 }
 
 .modal-window { 
