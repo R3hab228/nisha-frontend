@@ -2364,49 +2364,49 @@ function handleSwipeEnd(e) {
 // ==========================================
 // 18. СВАЙП ВНИЗ ДЛЯ ЗАКРЫТИЯ МОДАЛКИ НА ТЕЛЕФОНЕ
 // ==========================================
-let modalTouchStartY = 0;
-let modalTouchCurrentY = 0;
-const productModalWin = document.querySelector('#productModal .modal-window');
-const productModalHeader = document.querySelector('#productModal .modal-header');
+function initMobileSwipe() {
+    let modalTouchStartY = 0;
+    let modalTouchCurrentY = 0;
+    const productModalWin = document.querySelector('#productModal .modal-window');
+    const productModalHeader = document.querySelector('#productModal .modal-header');
 
-if (productModalHeader && productModalWin) {
-    // Касание шапки
-    productModalHeader.addEventListener('touchstart', (e) => {
-        if (window.innerWidth > 900) return; // Работает только на телефонах
-        modalTouchStartY = e.touches[0].clientY;
-        productModalWin.style.transition = 'none'; // Убираем плавность, чтобы окно шло ровно за пальцем
-    }, { passive: true });
+    if (productModalHeader && productModalWin) {
+        productModalHeader.addEventListener('touchstart', (e) => {
+            if (window.innerWidth > 900) return; 
+            modalTouchStartY = e.touches[0].clientY;
+            productModalWin.style.transition = 'none'; 
+        }, { passive: true });
 
-    // Движение пальцем
-    productModalHeader.addEventListener('touchmove', (e) => {
-        if (window.innerWidth > 900) return;
-        modalTouchCurrentY = e.touches[0].clientY;
-        const diffY = modalTouchCurrentY - modalTouchStartY;
-        
-        // Позволяем тянуть только вниз
-        if (diffY > 0) {
-            productModalWin.style.transform = `translateY(${diffY}px)`;
-        }
-    }, { passive: true });
+        productModalHeader.addEventListener('touchmove', (e) => {
+            if (window.innerWidth > 900) return;
+            modalTouchCurrentY = e.touches[0].clientY;
+            const diffY = modalTouchCurrentY - modalTouchStartY;
+            
+            if (diffY > 0) {
+                productModalWin.style.transform = `translateY(${diffY}px)`;
+            }
+        }, { passive: true });
 
-    // Отпускание пальца
-    productModalHeader.addEventListener('touchend', (e) => {
-        if (window.innerWidth > 900) return;
-        const diffY = modalTouchCurrentY - modalTouchStartY;
-        
-        // Возвращаем плавную анимацию
-        productModalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-        
-        // Если протянули вниз больше чем на 80 пикселей — закрываем окно
-        if (diffY > 80) {
-            productModalWin.style.transform = `translateY(100%)`; // Уводим окно вниз за экран
-            setTimeout(() => {
-                closeModal('productModal');
-                productModalWin.style.transform = ''; // Сбрасываем позицию для следующего раза
-            }, 300);
-        } else {
-            // Если свайпнули слабо — возвращаем окно на место
-            productModalWin.style.transform = `translateY(0)`;
-        }
-    });
+        productModalHeader.addEventListener('touchend', (e) => {
+            if (window.innerWidth > 900) return;
+            const diffY = modalTouchCurrentY - modalTouchStartY;
+            
+            productModalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            
+            if (diffY > 80) {
+                productModalWin.style.transform = `translateY(100%)`; 
+                setTimeout(() => {
+                    closeModal('productModal');
+                    productModalWin.style.transform = ''; 
+                }, 300);
+            } else {
+                productModalWin.style.transform = `translateY(0)`;
+            }
+        });
+    }
 }
+
+// Запускаем слушатель свайпа только после полной загрузки страницы
+document.addEventListener('DOMContentLoaded', () => {
+    initMobileSwipe();
+});
