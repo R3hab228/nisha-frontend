@@ -280,8 +280,27 @@
         
         .condition-container { margin: 10px 0; font-family: var(--font-mono); }
         .condition-text { display: flex; justify-content: space-between; font-size: 13px; color: #fff; margin-bottom: 5px; font-weight: bold;}
-        .condition-bar-bg { width: 100%; height: 10px; background-color: #000; border: 1px inset #444; position: relative; }
-        .condition-bar-fill { height: 100%; background-color: var(--accent-green); width: 90%; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.3) 5px, rgba(0,0,0,0.3) 10px); border-right: 1px solid #fff; transition: width 1s ease-out;}
+        /* --- НОВАЯ ШКАЛА WIN 95 --- */
+.win95-condition-bar { 
+    display: flex; 
+    gap: 2px; 
+    height: 18px; 
+    background: #c0c0c0; /* Серый цвет Винды */
+    border-top: 2px solid #555;
+    border-left: 2px solid #555;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    padding: 2px; 
+}
+.cond-block { 
+    flex: 1; 
+    background: #888; /* Пустой цвет */
+    border: 1px solid #777; 
+}
+.cond-block.active { 
+    background: #0000a8; /* Классический синий Win 95 */
+    border: 1px solid #000050; 
+}
         
       .info-accordions { margin-top: auto; margin-bottom: 15px; }
     
