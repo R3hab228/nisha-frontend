@@ -27,7 +27,7 @@ const i18nResources = {
             "product": {
                 "views": "👁 ПЕРЕГЛЯДІВ:", "condition": "СТАН РЕЧІ:", "size": "РОЗМІР:", "brand": "БРЕНД:",
                 "add_to_cart": "У КОШИК", "notify": "ПОВІДОМИТИ ПРО НАЯВНІСТЬ",
-                "badge_orig": "100% ОРИГІНАЛ", "badge_fast": "ШВИДКА ВІДПРАВКА", "badge_refund": "ПОВЕРНЕННЯ 14 ДНІВ",
+                "badge_orig": "ПРОЙШЛО ЛЕГІТ-ЧЕК", "badge_fast": "ШВИДКА ВІДПРАВКА", "badge_refund": "ПОВЕРНЕННЯ 14 ДНІВ",
                 "similar": "[ СХОЖІ РЕЧІ ]", "delivery": "Доставка та оплата", "delivery_text": "Відправка Новою Поштою. Працюємо по повній передоплаті або накладеним платежем з передоплатою 200 грн. Повернення протягом 14 днів.",
                 "measure": "Як ми робимо заміри?", "measure_text": "Всі заміри знімаються з речі на рівній поверхні. Похибка може становити 1-2 см."
             },
@@ -69,7 +69,7 @@ const i18nResources = {
             "product": {
                 "views": "👁 ПРОСМОТРОВ:", "condition": "СОСТОЯНИЕ ВЕЩИ:", "size": "РАЗМЕР:", "brand": "БРЕНД:",
                 "add_to_cart": "В КОРЗИНУ", "notify": "УВЕДОМИТЬ О ПОЯВЛЕНИИ",
-                "badge_orig": "100% ОРИГИНАЛ", "badge_fast": "БЫСТРАЯ ОТПРАВКА", "badge_refund": "ВОЗВРАТ 14 ДНЕЙ",
+                "badge_orig": "ПРОШЛО ЛЕГИТ-ЧЕК", "badge_fast": "БЫСТРАЯ ОТПРАВКА", "badge_refund": "ВОЗВРАТ 14 ДНЕЙ",
                 "similar": "[ ПОХОЖИЕ ВЕЩИ ]", "delivery": "Доставка и оплата", "delivery_text": "Отправка Новой Почтой. Работаем по полной предоплате или наложенным платежом по минимальной предоплате 200 грн. Возможен возврат в течение 14 дней.",
                 "measure": "Как мы делаем замеры?", "measure_text": "Все замеры снимаются с вещи, лежащей на ровной поверхности. Погрешность может составлять 1-2 см."
             },
@@ -111,7 +111,7 @@ const i18nResources = {
             "product": {
                 "views": "👁 VIEWS:", "condition": "CONDITION:", "size": "SIZE:", "brand": "BRAND:",
                 "add_to_cart": "ADD TO CART", "notify": "NOTIFY ME",
-                "badge_orig": "100% ORIGINAL", "badge_fast": "FAST SHIPPING", "badge_refund": "14-DAY RETURNS",
+                "badge_orig": "VERIFIED AUTHENTIC", "badge_fast": "FAST SHIPPING", "badge_refund": "14-DAY RETURNS",
                 "similar": "[ SIMILAR ITEMS ]", "delivery": "Shipping & Payment", "delivery_text": "Worldwide shipping available. Full prepayment or cash on delivery. Returns accepted within 14 days.",
                 "measure": "How do we measure?", "measure_text": "All measurements are taken with the item laying flat. Please allow a 1-2 cm margin of error."
             },
@@ -316,6 +316,25 @@ function acceptRules() {
 window.onload = async () => {
     try {
         try {
+            // АВТО-ДОЖИМ БРОШЕННОЙ КОРЗИНЫ
+        setTimeout(() => {
+            if (cart.length > 0) {
+                let lastTime = localStorage.getItem('nisha_cart_time');
+                // Если прошло больше 1 часа (3600000 мс)
+                if (lastTime && (Date.now() - parseInt(lastTime)) > 3600000) {
+                    if (!localStorage.getItem('nisha_cart_reminded')) {
+                        Swal.fire({
+                            title: 'SYSTEM_ALERT // ВАША КОРЗИНА',
+                            html: '<span style="color:#ddd;">Мы заметили, что вы не завершили заказ. Товары могут забрать в любой момент!</span><br><br><b style="color:var(--accent-yellow);">Используйте промокод COMEBACK5 для скидки 5%!</b>',
+                            icon: 'info', background: '#111', color: '#00ff00', confirmButtonColor: 'var(--accent-green)'
+                        });
+                        localStorage.setItem('nisha_cart_reminded', 'true');
+                        // Если промокода COMEBACK5 нет в базе, обязательно создай его через бота!
+                    }
+                }
+            }
+        }, 3000); // Показываем через 3 сек после загрузки сайта
+
             if (typeof i18next !== 'undefined') {
                 let savedLng = localStorage.getItem('nisha_lang');
                 let savedFlag = localStorage.getItem('nisha_flag');
@@ -474,15 +493,68 @@ window.onload = async () => {
 };
 
 function closeModal(id) { 
-    document.getElementById(id).style.display = 'none'; 
-    document.body.style.overflow = 'auto'; 
-    if (typeof lenis !== 'undefined') lenis.start(); 
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    
+    const win = modal.querySelector('.modal-window');
+    
+    // Если это модалка товара, делаем красивый свайп вниз
+    if (win && id === 'productModal') {
+        win.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
+        win.style.transform = 'translateY(100vh)';
+        win.style.opacity = '0';
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; 
+            if (typeof lenis !== 'undefined') lenis.start(); 
+            
+            // Возвращаем стили на место для следующего открытия
+            win.style.transform = '';
+            win.style.opacity = '';
+            win.style.transition = '';
+        }, 300);
+    } else {
+        // Обычное закрытие для остальных окон (Правила, Корзина)
+        modal.style.display = 'none'; 
+        document.body.style.overflow = 'auto'; 
+        if (typeof lenis !== 'undefined') lenis.start(); 
+    }
 }
 
-function openReviewsModal() { 
-    document.getElementById('reviewsModal').style.display = 'flex'; 
+async function openReviewsModal() { 
+    const modal = document.getElementById('reviewsModal');
+    modal.style.display = 'flex'; 
     document.body.style.overflow = 'hidden'; 
     if (typeof lenis !== 'undefined') lenis.stop(); 
+    
+    const container = document.getElementById('reviewsContainerList');
+    if (!container) return;
+    
+    container.innerHTML = '<div style="text-align: center; color: var(--accent-green); font-family: var(--font-mono); padding: 40px 20px;">[ ЗАГРУЗКА ОТЗЫВОВ... ]</div>';
+    
+    const { data, error } = await _supabase.from('reviews').select('*').eq('is_published', true).order('created_at', { ascending: false });
+    
+    if (error || !data || data.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">[ В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ ]</div>';
+        return;
+    }
+    
+    let html = '';
+    data.forEach(rev => {
+        const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
+        html += `
+        <div class="review-card-ui">
+            <div class="review-head">
+                <span class="review-name">@${rev.user_name}</span>
+                <span class="review-rating">${'★'.repeat(rev.rating)}</span>
+            </div>
+            <div class="review-text-body">${rev.text}</div>
+            <div class="review-date">${date}</div>
+        </div>`;
+    });
+    
+    container.innerHTML = html;
 }
 
 
@@ -658,6 +730,14 @@ function applyFilters() {
             
             const sortCheap = document.getElementById('sort-cheap');
             if (sortCheap && sortCheap.classList.contains('active-sort')) {
+                // Оставляем ТОЛЬКО те товары, цена которых 500 грн или ниже
+                sortedItems = sortedItems.filter(item => {
+                    let price = Number(item.price) || 0;
+                    let finalPrice = isHacked ? price * 0.9 : price;
+                    return finalPrice <= 500;
+                });
+                
+                // На всякий случай сортируем их от самых дешевых к 500
                 sortedItems.sort((a, b) => {
                     let pA = Number(a.price) || 0;
                     let pB = Number(b.price) || 0;
@@ -873,7 +953,9 @@ async function addToCartById(itemId) {
     
     localStorage.setItem('nisha_cart', JSON.stringify(cart));
     await syncCartToServer();
-    
+    // В самом конце функции addToCartById(itemId) перед updateCartUI() добавь:
+localStorage.setItem('nisha_cart_time', Date.now());
+localStorage.removeItem('nisha_cart_reminded');
     updateCartUI();
     showToast('Товар добавлен в корзину!', 'success', getOptimizedImageUrl(item, true));
 }
@@ -986,7 +1068,8 @@ async function toggleFav(event, itemId) {
         return; 
     }
 
-    const starBtn = event.target;
+   const starBtn = event.currentTarget || event.target;
+
     
     if (favorites.includes(itemId)) {
         favorites = favorites.filter(id => id !== itemId);
@@ -1783,14 +1866,12 @@ function openProductModal(item) {
     document.getElementById('modalCondFill').style.width = condPercent + '%';
     // Найди эту строку (или добавь её, если нет):
     const descText = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
-    
-    // Замени содержимое блока .modal-desc на динамическое:
+   
     document.querySelector('.modal-desc').innerHTML = `
         <strong style="color: var(--accent-green);">РАЗМЕР: <span id="modalItemSizeDesc">${item.size}</span></strong><br>
         <strong>БРЕНД:</strong> <span id="modalItemBrand">${item.brand}</span><br><br>
         ${descText}
     `;
-    
     // НАСТОЯЩИЕ ПРОСМОТРЫ (1 юзер = 1 просмотр)
     const viewCount = document.getElementById('modalItemViews');
     if(viewCount) {
@@ -2224,6 +2305,16 @@ async function toggleFavFromModal(event) {
     
     // Вызываем стандартную функцию добавления/удаления лайка
     await toggleFav(event, currentOpenedItem.id);
+    
+    // ПРИНУДИТЕЛЬНО обновляем звездочку внутри модалки
+    const modalStar = document.getElementById('modalFavStar');
+    if (modalStar) {
+        if (favorites.includes(currentOpenedItem.id)) {
+            modalStar.classList.add('active');
+        } else {
+            modalStar.classList.remove('active');
+        }
+    }
     
     // Синхронизируем визуально со звездочкой в общей ленте на фоне
     const gridCardStar = document.querySelector(`.item-card[data-id="${currentOpenedItem.id}"] .fav-star`);
