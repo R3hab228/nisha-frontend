@@ -1,0 +1,9 @@
+{
+  "name": "NISHA Underground Store",
+  "short_name": "NISHA",
+  "description": "Магазин вещей",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00ff00"
+}

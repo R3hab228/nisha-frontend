@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://browser.sentry-cdn.com blob:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; connect-src 'self' http://localhost:3000 https://api.novaposhta.ua https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com; img-src 'self' data: https: blob:;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="NISHA | Underground Store">
+    <meta property="og:description" content="Площадка для продажи винтажных, архивных и эксклюзивных вещей.">
+    <meta property="og:image" content="https://i.imgur.com/ТВОЯ_КАРТИНКА.jpg">
+    <meta name="theme-color" content="#00ff00">
+    <link rel="icon" href="data:,">
+    <link rel="manifest" href="manifest.json">
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/scale.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
+    <script type="module">
+        import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js';
+        window.PhotoSwipeLightbox = PhotoSwipeLightbox;
+        document.addEventListener('DOMContentLoaded', () => {
+            window.pswpLightbox = new PhotoSwipeLightbox({
+                gallery: '#sliderWrapper',
+                children: 'a.slide',
+                pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+            });
+            window.pswpLightbox.init();
+        });
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div id="glitchOverlay">
+    <div class="glitch-text" id="glitchMessage">SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]</div>
+</div>
+
+<div id="orderSuccessOverlay" style="display: none;">
+    <div class="success-terminal-box">
+        <div class="success-icon-wrapper">
+            <svg class="animated-check" viewBox="0 0 24 24">
+                <path d="M20 6L9 17l-5-5" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div class="success-title typewriter">ORDER_CONFIRMED.LOG</div>
+        <div class="success-divider"></div>
+        <div class="success-text">
+            Товары успешно забронированы.<br>
+            <span style="color: #888; font-size: 12px;">Ожидайте SMS / сообщение в ТГ с номером накладной.</span>
+        </div>
+    </div>
+</div>
+
+<div class="wrapper">
+    <header>
+        <div class="header-top">
+            <h1><span class="typewriter">[ NISHA ]</span></h1>
+            
+            <nav class="top-nav">
+                <a href="javascript:void(0)" onclick="resetToMain()" data-i18n="nav.home">ГЛАВНАЯ</a>
+                <a href="javascript:void(0)" onclick="filterFavorites()" id="favNav"><span data-i18n="nav.favorites">ИЗБРАННОЕ</span> <span id="favCountBadge">[0]</span></a>
+                <a href="javascript:void(0)" onclick="openReviewsModal()" style="color: var(--accent-yellow);" data-i18n="nav.reviews">ОТЗЫВЫ</a>
+                <a href="javascript:void(0)" onclick="openOrdersModal()" style="color: #00aaff;" data-i18n="nav.orders">МОИ ЗАКАЗЫ</a>
+            </nav>
+        </div>
+
+        <div class="marquee-container">
+            <marquee scrollamount="6" data-i18n="marquee">NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНЫХ КРУТЫХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!</marquee>
+        </div>
+    </header>
+
+    <div class="search-section">
+        <div class="search-wrapper">
+            <input type="text" class="search-input" id="mainSearch" placeholder="Поиск вещи (например: Arcteryx, Gore-Tex)..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
+            <span id="clearSearchBtn" class="clear-search-btn" onclick="clearSearchInput()">✖</span>
+            <div id="liveSearchDropdown" class="live-search-dropdown"></div>
+        </div>
+        <button class="search-btn btn-target" onclick="applyFilters(); document.getElementById('liveSearchDropdown').style.display='none';" data-i18n="search.btn">Искать</button>
+    </div>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="filter-box">
+                <div class="filter-title" data-i18n="sidebar.categories">КАТЕГОРИИ</div>
+                <ul class="filter-list scrollable-list">
+                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('', this)" class="active-filter" data-i18n="sidebar.all">[>] Все вещи</a></li>
+                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Верхняя одежда', this)" data-i18n="sidebar.outerwear">[>] Верхняя одежда</a></li>
+                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Кофты и Свитера', this)" data-i18n="sidebar.sweaters">[>] Кофты и Свитера</a></li>
+                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Штаны и Джинсы', this)" data-i18n="sidebar.pants">[>] Штаны и Джинсы</a></li>
+                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Обувь', this)" data-i18n="sidebar.shoes">[>] Обувь</a></li>
+                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Аксессуары', this)" data-i18n="sidebar.accs">[>] Аксессуары</a></li>
+                </ul>
+            </div>
+
+            <div class="filter-box">
+                <div class="filter-title" data-i18n="sidebar.sizes_title">РАЗМЕРЫ И ЦЕНА</div>
+                <div class="price-filter-container">
+                    <div class="price-values"><span data-i18n="sidebar.from">ОТ</span> <span id="priceMinVal">0</span> <span data-i18n="sidebar.to">ДО</span> <span id="priceMaxVal">15000</span> <span data-i18n="sidebar.uah">грн</span></div>
+                    
+                    <div class="range-slider">
+                        <div class="range-fill" id="rangeFill"></div>
+                        <input type="range" id="priceMin" min="0" max="15000" step="100" value="0" oninput="updatePriceUI()">
+                        <input type="range" id="priceMax" min="0" max="15000" step="100" value="15000" oninput="updatePriceUI()">
+                    </div>
+
+                    <div style="margin-top: 20px; border-top: 1px dashed #444; padding-top: 10px;"></div>
+                    <ul class="filter-list checkbox-list">
+                        <li><label><input type="checkbox" class="size-cb" value="S" onchange="applyFilters()"> <span data-i18n="sidebar.size_s">Размер S</span></label></li>
+                        <li><label><input type="checkbox" class="size-cb" value="M" onchange="applyFilters()"> <span data-i18n="sidebar.size_m">Размер M</span></label></li>
+                        <li><label><input type="checkbox" class="size-cb" value="L" onchange="applyFilters()"> <span data-i18n="sidebar.size_l">Размер L</span></label></li>
+                        <li><label><input type="checkbox" class="size-cb" value="XL" onchange="applyFilters()"> <span data-i18n="sidebar.size_xl">Размер XL / XXL</span></label></li>
+                        <li style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+                            <label><input type="checkbox" class="size-cb" value="42" onchange="applyFilters()"> <span data-i18n="sidebar.shoes_1">Обувь (40 - 42)</span></label>
+                        </li>
+                        <li><label><input type="checkbox" class="size-cb" value="44" onchange="applyFilters()"> <span data-i18n="sidebar.shoes_2">Обувь (43 - 46)</span></label></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="filter-box" id="authBox">
+                <div class="filter-title" data-i18n="sidebar.auth_title">ПРОФИЛЬ / ВХОД</div>
+                <div class="auth-fields" id="loginForm">
+                    <input type="email" id="authEmail" class="auth-input" placeholder="Email">
+                    <input type="text" id="authUsername" class="auth-input" placeholder="Никнейм" style="display: none;">
+                    <input type="password" id="authPass" class="auth-input" placeholder="Пароль">
+                    
+                    <button class="auth-btn btn-target" id="btnLogin" onclick="handleAuth('login')" data-i18n="sidebar.login">ВОЙТИ</button>
+                    <button class="auth-btn btn-target" id="btnShowReg" onclick="toggleRegMode()" style="background: #333; color: #fff;" data-i18n="sidebar.reg">РЕГИСТРАЦИЯ</button>
+                    <button class="auth-btn btn-target" id="btnRegister" onclick="handleAuth('register')" style="display:none; background: var(--accent-green); color: #000;" data-i18n="sidebar.create">СОЗДАТЬ АККАУНТ</button>
+                    <button class="auth-btn btn-target" id="btnBackLogin" onclick="toggleRegMode()" style="display:none; background: #333; color: #fff;">НАЗАД</button>
+                </div>
+                
+                <div class="auth-fields" id="profileForm" style="display: none;">
+                    <div class="profile-info-block">
+                        USER: <span id="profileName">Loading...</span><br>
+                        LIKES: <span id="profileLikesCount">0</span>
+                    </div>
+                    <button class="auth-btn btn-target" onclick="logout()" style="background: #333; color: #fff; margin-top: 10px;" data-i18n="sidebar.logout">ВЫЙТИ</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="content-area">
+            <button id="mobileFilterBtn" onclick="toggleMobileSidebar()" data-i18n="mobile.show_filters">[+] ПОКАЗАТЬ ФИЛЬТРЫ</button>
+            
+            <div class="sorting">
+                <span><span data-i18n="sort.found">Найдено вещей:</span> <strong id="itemCount" style="color: var(--accent-green);">0</strong></span>
+                <span><span data-i18n="sort.sorting">Сортировка:</span> 
+                    <a href="javascript:void(0)" id="sort-new" class="active-sort" onclick="sortItems('new')" data-i18n="sort.new">Новые</a> | 
+                    <a href="javascript:void(0)" id="sort-cheap" onclick="sortItems('cheap')" data-i18n="sort.cheap">Дешевые</a>
+                </span>
+            </div>
+            
+            <div class="items-grid" id="itemsGrid">
+                <!-- Win95 LOADER -->
+                <div id="win95-loader" style="grid-column: 1 / -1; display: flex; justify-content: center; padding: 50px 10px;">
+                    <div style="background: #c0c0c0; border-top: 2px solid #fff; border-left: 2px solid #fff; border-right: 2px solid #0a0a0a; border-bottom: 2px solid #0a0a0a; padding: 2px; width: 100%; max-width: 300px; box-shadow: 4px 4px 0px rgba(0,0,0,0.8);">
+                        <div style="background: #000080; color: #fff; font-family: 'Tahoma', sans-serif; font-weight: bold; font-size: 12px; padding: 3px 5px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>Loading_NISHA.exe</span>
+                            <div style="background: #c0c0c0; color: #000; border: 1px solid #000; width: 14px; height: 14px; display: flex; justify-content: center; align-items: center; font-size: 10px;">X</div>
+                        </div>
+                        <div style="padding: 20px; text-align: center;">
+                            <div id="lottie-box" style="width: 60px; height: 60px; margin: 0 auto;"></div>
+                            <p style="color: #000; margin-top: 15px; margin-bottom: 0; font-family: 'Tahoma', sans-serif; font-size: 13px;">Подключение к БД...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="loadingTrigger" class="lazy-loader"></div>
+        </main>
+    </div>
+
+    <div class="history-section" id="historySection">
+        <div class="history-title" onclick="toggleHistory()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+            <span data-i18n="history.title">HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:</span>
+            <span id="historyArrow" style="transition: transform 0.2s; color: var(--accent-green);">▼</span>
+        </div>
+        <div class="history-grid" id="historyGrid"></div>
+    </div>
+
+    <div class="cart-panel" id="cartPanel" style="display: none;">
+        <div class="cart-info" id="cartInfoWrapper" onclick="toggleCartDropdown(event)">
+            <div class="cart-click-area">
+                <span data-i18n="cart.in_cart">В КОРЗИНЕ:</span> <b id="cartCount">0</b> <span data-i18n="cart.items_total">ВЕЩЕЙ | ИТОГО:</span> <span id="cartTotal">0 грн</span>
+            </div>
+            
+            <div id="cartDropdown" class="cart-dropdown">
+                <div class="cart-dropdown-header">
+                    <span data-i18n="cart.title">[ ВАШИ ПОКУПКИ ]</span>
+                    <button class="cart-close-mobile" onclick="toggleCartDropdown(event)">&times;</button>
+                </div>
+                <div id="cartDropdownList" class="cart-dropdown-list">
+                    <!-- Сюда JS вставит товары -->
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="openCheckoutModal()" class="cart-checkout-btn btn-target" data-i18n="cart.checkout">ОФОРМИТЬ ЗАКАЗ</button>
+    </div>
+
+   <footer>
+        <div class="hit-counter"><span data-i18n="footer.visitors">VISITORS:</span> <span id="hitCounterValue">_ _ _ _ _</span></div>
+        <div class="legal-info">
+            <p>Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.</p>
+            <div>
+                <a href="javascript:void(0)" onclick="showRulesModal()">Договір публічної оферти</a> | 
+                <a href="javascript:void(0)" onclick="showRulesModal()">Політика конфіденційності</a>
+            </div>
+            <p style="margin-top: 10px; color: #555;">Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
+            <button id="installAppBtn" style="display: none; background: var(--accent-green); color: #000; font-family: var(--font-mono); font-weight: bold; padding: 10px 20px; border: 2px outset #fff; cursor: pointer; margin-top: 15px;" data-i18n="footer.install">⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ</button>
+            
+            <!-- НАДПИСЬ КОПИРАЙТА -->
+            <p style="margin-top: 10px; color: #444;">© 2026 NISHA. All rights reserved.</p>
+            
+            <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ СТРОГО ПОД НЕЙ И ПО ЦЕНТРУ -->
+            <div class="footer-lang-dropdown" id="footerLangWrapper">
+                <span id="currentLangLabelFooter" onclick="document.getElementById('footerLangWrapper').classList.toggle('active')">[RU] ▼</span>
+                <div class="footer-lang-menu">
+                    <a href="javascript:void(0)" onclick="setLang('ua')">UA</a>
+                    <a href="javascript:void(0)" onclick="setLang('ru')">RU</a>
+                    <a href="javascript:void(0)" onclick="setLang('en')">EN</a>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+</div>
+
+<!-- СКРИПТ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ЯЗЫКА (чтобы менялся текст на кнопке) -->
+<script>
+    function setLang(lang) {
+        changeLanguage(lang); 
+        document.getElementById('currentLangLabelFooter').innerText = '[' + lang.toUpperCase() + '] ▼';
+        document.getElementById('footerLangWrapper').classList.remove('active');
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedLang = localStorage.getItem('nisha_lang') || 'ru';
+        const el = document.getElementById('currentLangLabelFooter');
+        if(el) el.innerText = '[' + savedLang.toUpperCase() + '] ▼';
+    });
+</script>
+</div>
+
+<div class="modal-overlay" id="rulesModal" style="background: rgba(0,0,0,0.95); z-index: 5000;">
+    <div class="modal-window" style="max-width: 700px;">
+        <div class="modal-header" style="background: #000;">
+            <span class="modal-title typewriter" style="color: var(--accent-red);">USER_AGREEMENT.TXT</span>
+        </div>
+        <div class="rules-content">
+            <p style="color: var(--accent-yellow); font-family: var(--font-mono); font-size: 16px; font-weight: bold;">ВНИМАНИЕ! ПЕРЕД ИСПОЛЬЗОВАНИЕМ САЙТА ОЗНАКОМЬТЕСЬ С ПРАВИЛАМИ.</p>
+            <h3>[ 1. ОБЩИЕ ПОЛОЖЕНИЯ ]</h3>
+            <ul>
+                <li>Данный ресурс является онлайн-витриной магазина <b>NISHA</b>.</li>
+                <li>Мы продаем как новые (с бирками), так и б/у вещи в идеальном состоянии.</li>
+                <li>Состояние каждой вещи оценивается по шкале от 1 до 10 и указывается в описании.</li>
+                <li>Все представленные товары являются <strong>100% оригиналом</strong>. Мы не продаем реплики.</li>
+            </ul>
+            <h3>[ 2. ОФОРМЛЕНИЕ ЗАКАЗА И БРОНЬ ]</h3>
+            <ul>
+                <li>При оформлении заказа через Корзину, товар автоматически получает статус <b>RESERVED</b> (Забронирован).</li>
+                <li>Бронь держится ровно <b>2 часа</b> для внесения оплаты.</li>
+                <li>Менеджер свяжется с вами в Telegram или по телефону для подтверждения реквизитов.</li>
+            </ul>
+            <h3>[ 3. ОПЛАТА И ДОСТАВКА ]</h3>
+            <ul>
+                <li>Доставка осуществляется исключительно компанией <b>«Нова Пошта»</b> по территории Украины.</li>
+                <li>Отправка происходит в день заказа (при оплате до 16:00) или на следующий день.</li>
+            </ul>
+        </div>
+        <div class="rules-footer">
+            <button class="accept-btn btn-target" onclick="acceptRules()">[ Я СОГЛАСЕН С ПРАВИЛАМИ ]</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="productModal">
+    <div class="modal-window">
+        <div class="modal-header">
+            <span class="modal-title typewriter" id="modalTypewriterTitle">ITEM_INFO.EXE</span>
+            <button class="close-btn" onclick="closeModal('productModal')">X</button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-gallery">
+                <div class="slider-container" id="sliderContainer">
+                    <div class="slider-wrapper" id="sliderWrapper"></div>
+                    <button class="slider-btn prev" onclick="moveSlide(-1)">&#10094;</button>
+                    <button class="slider-btn next" onclick="moveSlide(1)">&#10095;</button>
+                </div>
+                <div class="modal-thumbnails" id="modalThumbnails"></div>
+            </div>
+            <div class="modal-info">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <h2 id="modalItemTitle" style="margin-top: 0; color: #fff; font-size: 20px; padding-right: 15px;">Название товара</h2>
+                    <div id="modalFavStar" class="fav-star-modal" onclick="toggleFavFromModal(event)" title="Избранное">★</div>
+                </div>
+                
+                <div class="price-views-row">
+                    <div class="modal-price" id="modalItemPrice">0 грн</div>
+                    <div class="item-views"><span data-i18n="product.views">👁 ПРОСМОТРОВ:</span> <span id="modalItemViews" style="margin-left: 5px;">342</span></div>
+                </div>
+                <div class="condition-container">
+                    <div class="condition-text"><span data-i18n="product.condition">СОСТОЯНИЕ ВЕЩИ:</span><span style="color: var(--accent-green);" id="modalItemCond">9 / 10</span></div>
+                    <div class="condition-bar-bg"><div class="condition-bar-fill" id="modalCondFill"></div></div>
+                </div>
+                
+                <div class="modal-desc">
+                    <strong style="color: var(--accent-green);">РАЗМЕР: <span id="modalItemSizeDesc">L</span></strong><br>
+                    <strong>БРЕНД:</strong> <span id="modalItemBrand">Brand</span><br><br>
+                    Описание товара.
+                </div>
+                
+                <div class="info-accordions">
+                    <div class="custom-details">
+                        <div class="custom-summary" onclick="toggleAccordion(this)" data-i18n="product.delivery">Доставка и оплата</div>
+                        <div class="custom-content-wrapper">
+                            <div><div class="details-content" data-i18n="product.delivery_text">Отправка Новой Почтой. Працюємо по повній передоплаті...</div></div>
+                        </div>
+                    </div>
+                    <div class="custom-details">
+                        <div class="custom-summary" onclick="toggleAccordion(this)" data-i18n="product.measure">Как мы делаем замеры?</div>
+                        <div class="custom-content-wrapper">
+                            <div><div class="details-content" data-i18n="product.measure_text">Все замеры снимаются с вещи на ровной поверхности...</div></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="buy-share-row" id="actionButtonsRow">
+                    <button class="buy-tg-btn cart-add btn-target" id="modalCartBtn" onclick="addToCartFromModal()" data-i18n="product.add_to_cart">В КОРЗИНУ</button>
+                    <button class="buy-tg-btn btn-target" id="modalWaitlistBtn" onclick="openWaitlist()" style="display:none; background: #333; color: #fff;" data-i18n="product.notify">УВЕДОМИТЬ О ПОЯВЛЕНИИ</button>
+                    <button class="share-btn" onclick="shareItem()" title="Поделиться">[↗]</button>
+                </div>
+                
+                <div class="trust-badges">
+                    <div class="badge-item"><span style="color:var(--accent-green);">[✔]</span> <span data-i18n="product.badge_orig">100% ОРИГИНАЛ</span></div>
+                    <div class="badge-item"><span style="color:var(--accent-green);">[✈]</span> <span data-i18n="product.badge_fast">БЫСТРАЯ ОТПРАВКА</span></div>
+                    <div class="badge-item"><span style="color:var(--accent-green);">[↺]</span> <span data-i18n="product.badge_refund">ВОЗВРАТ 14 ДНЕЙ</span></div>
+                </div>
+                
+                <div style="margin-top: 20px; border-top: 2px dashed #333; padding-top: 15px;">
+                    <h3 style="color:var(--accent-yellow); font-family:var(--font-mono); font-size:14px; margin:0 0 10px 0;" data-i18n="product.similar">[ ПОХОЖИЕ ВЕЩИ ]</h3>
+                    <div id="similarItemsContainer" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="checkoutModal">
+    <div class="modal-window" style="max-width: 550px;">
+        <div class="modal-header">
+            <span class="modal-title typewriter" style="animation: none;">SECURE_CHECKOUT.EXE</span>
+            <button class="close-btn" onclick="closeModal('checkoutModal')">X</button>
+        </div>
+        
+        <div class="form-layout" id="checkoutFormLayout">
+            <p style="margin:0; font-size:13px; color:#aaa;" data-i18n="checkout.desc">Заполните данные для отправки. Бронь 2 часа.</p>
+            <input type="text" id="botTrap" style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;" tabindex="-1" autocomplete="off">
+            
+            <label data-i18n="checkout.name">ФИО Получателя:</label>
+            <input type="text" id="orderName" class="form-input" placeholder="Іванов Іван Іванович">
+            
+            <label data-i18n="checkout.phone">Телефон (ОБЯЗАТЕЛЬНО):</label>
+            <div style="display:flex; gap:10px;">
+                <input type="tel" id="orderPhone" class="form-input" placeholder="+380..." inputmode="numeric">
+                <button class="search-btn btn-target" id="btnGetOtp" onclick="generateAndSendOTP()" style="white-space:nowrap; padding: 10px 15px; font-size: 12px;" data-i18n="checkout.btn_otp">Подтвердить</button>
+            </div>
+            <div id="otpStatus" style="color: var(--accent-red); font-size: 11px; font-family: var(--font-mono); margin-top: -5px;" data-i18n="checkout.otp_status">Сначала подтвердите номер для заказа!</div>
+            
+            <label data-i18n="checkout.city">Город (Новая Почта):</label>
+            <div style="position: relative;">
+                <input type="text" id="orderCity" class="form-input" placeholder="Київ..." oninput="debouncedNPCitySearch(this.value)" autocomplete="off">
+                <div id="cityDropdown" class="custom-dropdown"></div>
+            </div>
+            
+            <label data-i18n="checkout.branch">Отделение или Почтомат:</label>
+            <div style="position: relative;">
+                <input type="text" id="orderBranch" class="form-input" placeholder="Відділення..." onfocus="loadNPBranches()" oninput="filterNPBranches(this.value)" autocomplete="off">
+                <div id="branchDropdown" class="custom-dropdown"></div>
+            </div>
+            <!-- НОВОЕ: ПРОМОКОД -->
+            <label style="margin-top: 10px;">Промокод (если есть):</label>
+            <div class="promo-wrapper">
+                <input type="text" id="promoInput" class="form-input" placeholder="Введите код...">
+                <button class="search-btn btn-target" onclick="applyPromoCode()" style="padding: 10px;">ПРИМЕНИТЬ</button>
+            </div>
+            <div id="promoMessage" class="promo-msg"></div>
+            <div id="deliveryCostInfo" style="background:#111; padding:10px; border:1px solid #444; font-family:var(--font-mono); font-size:12px; color:var(--accent-green); display:none; margin-top: 5px;">
+                <span data-i18n="checkout.calc">Ориентировочная стоимость доставки:</span> <span id="calcCostVal" style="font-weight:bold; color:#fff;">Считаем...</span>
+            </div>
+
+            <button class="cart-checkout-btn btn-target" id="btnSubmitOrder" onclick="submitOrder()" style="margin-top: 15px; width: 100%; opacity: 0.5; pointer-events: none;" data-i18n="checkout.btn_submit">ПОДТВЕРДИТЬ ЗАКАЗ</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="ordersModal">
+    <div class="modal-window" style="max-width: 650px;">
+        <div class="modal-header">
+            <span class="modal-title typewriter" style="animation: none;">MY_ORDERS.DB</span>
+            <button class="close-btn" onclick="closeModal('ordersModal')">X</button>
+        </div>
+        
+        <div class="form-layout" id="ordersAuthSection" style="border-bottom: 1px dashed #333; padding-bottom: 15px;">
+            <p id="guestOrderText" style="margin:0; font-size:13px; color:#aaa;" data-i18n="orders_modal.desc">Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
+            <div id="guestOrderInputGroup" style="display: flex; gap: 10px; margin-top: 10px;">
+                <input type="tel" id="ordersSearchPhone" class="form-input" placeholder="+380..." inputmode="numeric">
+                <button class="search-btn btn-target" onclick="fetchMyOrders()" data-i18n="orders_modal.btn">НАЙТИ</button>
+            </div>
+        </div>
+
+        <div class="orders-container" id="ordersListArea" style="max-height: 60vh; overflow-y: auto;">
+            <div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 30px;" data-i18n="orders_modal.loading">
+                Ожидание данных...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="reviewsModal">
+    <div class="modal-window" style="max-width: 600px;">
+        <div class="modal-header">
+            <span class="modal-title typewriter" style="animation: none;">LEGIT_CHECK.TXT</span>
+            <button class="close-btn" onclick="closeModal('reviewsModal')">X</button>
+        </div>
+        <div class="orders-container">
+            <p style="color: #aaa; margin-top: 0; font-size: 14px;">Здесь собраны отзывы реальных покупателей. Работаем честно. Никакого скама.</p>
+            <div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">
+                [ В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ ]
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Библиотеки -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
+    <script defer src="https://unpkg.com/rough-notation/lib/rough-notation.iife.js"></script>
+    <script defer src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script defer src="https://unpkg.com/@popperjs/core@2"></script>
+    <script defer src="https://unpkg.com/tippy.js@6"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@formkit/auto-animate@1/index.global.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <script defer src="https://unpkg.com/imask"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script defer src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+    <script defer src="https://browser.sentry-cdn.com/7.105.0/bundle.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js"></script>
+    <script defer src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
+    
+    <script src="config.js"></script>
+    <script defer src="app.js"></script>
+</body>
+</html>
