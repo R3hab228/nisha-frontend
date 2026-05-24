@@ -498,30 +498,40 @@ function closeModal(id) {
     
     const win = modal.querySelector('.modal-window');
     
-    // Если это модалка товара, делаем красивый свайп вниз
+    // Если закрываем модалку товара - делаем красивый свайп вниз
     if (win && id === 'productModal') {
-        win.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
+        // Отключаем CSS-анимацию, чтобы она не мешала JS спускать окно
+        win.style.animation = 'none';
+        
+        // Включаем плавный откат
+        win.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
         win.style.transform = 'translateY(100vh)';
         win.style.opacity = '0';
+        
+        // Плавно гасим черный фон (overlay)
+        modal.style.transition = 'opacity 0.3s ease';
+        modal.style.opacity = '0';
         
         setTimeout(() => {
             modal.style.display = 'none';
             document.body.style.overflow = 'auto'; 
             if (typeof lenis !== 'undefined') lenis.start(); 
             
-            // Возвращаем стили на место для следующего открытия
+            // Возвращаем стили в исходное состояние для следующего открытия
             win.style.transform = '';
             win.style.opacity = '';
             win.style.transition = '';
+            win.style.animation = '';
+            modal.style.transition = '';
+            modal.style.opacity = '';
         }, 300);
     } else {
-        // Обычное закрытие для остальных окон (Правила, Корзина)
+        // Обычное быстрое закрытие для других окон
         modal.style.display = 'none'; 
         document.body.style.overflow = 'auto'; 
         if (typeof lenis !== 'undefined') lenis.start(); 
     }
 }
-
 async function openReviewsModal() { 
     const modal = document.getElementById('reviewsModal');
     modal.style.display = 'flex'; 
@@ -1062,25 +1072,28 @@ async function loadFavorites() {
 }
 
 async function toggleFav(event, itemId) {
-    event.stopPropagation();
+    if (event) event.stopPropagation();
     if (!currentUser) { 
         showToast('Сначала войдите в систему или создайте профиль!', 'error'); 
         return; 
     }
 
-   const starBtn = event.currentTarget || event.target;
+    const starBtn = event ? (event.currentTarget || event.target) : null;
+    const isFav = favorites.includes(itemId);
 
-    
-    if (favorites.includes(itemId)) {
+    // Моментально меняем массив и визуал (без ожидания БД)
+    if (isFav) {
         favorites = favorites.filter(id => id !== itemId);
-        await _supabase.from('favorites').delete().match({ user_id: currentUser.id, item_id: itemId });
+        if (starBtn) starBtn.classList.remove('active');
         showToast(i18next.t('messages.fav_remove'), 'success');
-        starBtn.classList.remove('active');
+        // Запрос улетает на фон
+        _supabase.from('favorites').delete().match({ user_id: currentUser.id, item_id: itemId }).then();
     } else {
         favorites.push(itemId);
-        await _supabase.from('favorites').insert([{ user_id: currentUser.id, item_id: itemId }]);
+        if (starBtn) starBtn.classList.add('active');
         showToast(i18next.t('messages.fav_add'), 'success');
-        starBtn.classList.add('active');
+        // Запрос улетает на фон
+        _supabase.from('favorites').insert([{ user_id: currentUser.id, item_id: itemId }]).then();
     }
     
     if(document.getElementById('profileLikesCount')) {
@@ -2302,29 +2315,43 @@ document.addEventListener('click', (e) => {
 });
 async function toggleFavFromModal(event) {
     if (!currentOpenedItem) return;
+    if (!currentUser) { 
+        showToast('Сначала войдите в систему или создайте профиль!', 'error'); 
+        return; 
+    }
+
+    const itemId = currentOpenedItem.id;
+    const isFav = favorites.includes(itemId);
     
-    // Вызываем стандартную функцию добавления/удаления лайка
-    await toggleFav(event, currentOpenedItem.id);
-    
-    // ПРИНУДИТЕЛЬНО обновляем звездочку внутри модалки
+    // Моментальное изменение состояния
+    if (isFav) {
+        favorites = favorites.filter(id => id !== itemId);
+        showToast(i18next.t('messages.fav_remove'), 'success');
+        _supabase.from('favorites').delete().match({ user_id: currentUser.id, item_id: itemId }).then();
+    } else {
+        favorites.push(itemId);
+        showToast(i18next.t('messages.fav_add'), 'success');
+        _supabase.from('favorites').insert([{ user_id: currentUser.id, item_id: itemId }]).then();
+    }
+
+    // Жестко принудительно красим звезду в модалке
     const modalStar = document.getElementById('modalFavStar');
     if (modalStar) {
-        if (favorites.includes(currentOpenedItem.id)) {
-            modalStar.classList.add('active');
-        } else {
-            modalStar.classList.remove('active');
-        }
+        if (favorites.includes(itemId)) modalStar.classList.add('active');
+        else modalStar.classList.remove('active');
     }
-    
-    // Синхронизируем визуально со звездочкой в общей ленте на фоне
-    const gridCardStar = document.querySelector(`.item-card[data-id="${currentOpenedItem.id}"] .fav-star`);
+
+    // Синхронизируем её со звездой на фоне (в ленте товаров)
+    const gridCardStar = document.querySelector(`.item-card[data-id="${itemId}"] .fav-star`);
     if (gridCardStar) {
-        if (favorites.includes(currentOpenedItem.id)) {
-            gridCardStar.classList.add('active');
-        } else {
-            gridCardStar.classList.remove('active');
-        }
+        if (favorites.includes(itemId)) gridCardStar.classList.add('active');
+        else gridCardStar.classList.remove('active');
     }
+
+    if(document.getElementById('profileLikesCount')) {
+        document.getElementById('profileLikesCount').innerText = favorites.length;
+    }
+    updateFavBadge();
 }
 // ==========================================
 // ПЛАВНЫЕ АККОРДЕОНЫ (В МОДАЛКЕ ТОВАРА)
