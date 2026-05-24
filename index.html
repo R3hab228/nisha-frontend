@@ -73,7 +73,7 @@
 
     <div class="search-section">
         <div class="search-wrapper">
-            <input type="text" class="search-input" id="mainSearch" placeholder="Поиск вещи (например: Arcteryx, Gore-Tex)..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
+       <input type="text" class="search-input" id="mainSearch" placeholder="Поиск вещи (например: Arcteryx, Gore-Tex)..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="dummy_search">
             <span id="clearSearchBtn" class="clear-search-btn" onclick="clearSearchInput()">✖</span>
             <div id="liveSearchDropdown" class="live-search-dropdown"></div>
         </div>
@@ -302,9 +302,9 @@
                     <div class="item-views"><span data-i18n="product.views">ПРОСМОТРОВ:</span> <span id="modalItemViews" style="margin-left: 5px;">342</span></div>
                 </div>
                 <div class="condition-container">
-                    <div class="condition-text"><span data-i18n="product.condition">СОСТОЯНИЕ ВЕЩИ:</span><span style="color: var(--accent-green);" id="modalItemCond">9 / 10</span></div>
-                    <div class="condition-bar-bg"><div class="condition-bar-fill" id="modalCondFill"></div></div>
-                </div>
+    <div class="condition-text"><span data-i18n="product.condition">СОСТОЯНИЕ ВЕЩИ:</span><span style="color: var(--accent-green);" id="modalItemCond">9 / 10</span></div>
+    <div class="win95-condition-bar" id="modalCondFill"></div>
+</div>
                 
                 <div class="modal-desc">
                     <strong style="color: var(--accent-green);">РАЗМЕР: <span id="modalItemSizeDesc">L</span></strong><br>
