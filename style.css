@@ -525,8 +525,9 @@
     .top-nav a { margin: 0; padding: 8px; font-size: 12px; }
     .main-container { flex-direction: column; padding: 10px; gap: 15px;}
     
-   .sidebar { 
-        display: flex !important; 
+.sidebar { 
+        display: flex !important;
+        width: 100%; /* Растягиваем фильтры на всю ширину на мобилке */
         max-height: 0; 
         opacity: 0; 
         overflow: hidden; 
@@ -536,12 +537,13 @@
         visibility: hidden;
     }
     .sidebar.active-mobile { 
-        max-height: 800px; /* С запасом для раскрытия */
+        max-height: 1500px; /* Увеличили высоту, чтобы форма профиля не наезжала на кнопку */
         opacity: 1; 
-        padding-top: 15px; 
+        padding-top: 15px;
+        padding-bottom: 15px; /* Отступ снизу для формы */
         visibility: visible;
     }
-    #mobileFilterBtn { display: block; width: 100%; background: #111; color: var(--accent-green); border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; margin-bottom: 0px; cursor: pointer; text-align: center; font-size: 14px;}
+    #mobileFilterBtn { display: block; width: 100%; background: #111; color: var(--accent-green); border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; margin-bottom: 15px; cursor: pointer; text-align: center; font-size: 14px;}
 
     .items-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .mock-image { height: 180px; font-size: 14px; }
