@@ -2362,7 +2362,7 @@ function handleSwipeEnd(e) {
     }
 }
 // ==========================================
-// 18. ПЛАВНЫЙ СВАЙП ВНИЗ ВСЕЙ КАРТОЧКИ (КАК В IOS/TELEGRAM)
+// 18. ZERO-LAG СВАЙП КАРТОЧКИ (120 FPS IOS STYLE)
 // ==========================================
 function initMobileSwipe() {
     const modalWin = document.querySelector('#productModal .modal-window');
@@ -2372,68 +2372,75 @@ function initMobileSwipe() {
     let currentY = 0;
     let isDragging = false;
     let startScrollTop = 0;
+    let ticking = false; // Фиксатор кадров
 
     if (!modalWin || !overlay) return;
 
-    // КАДР 1: Палец коснулся экрана
+    // Функция отрисовки кадра (0 задержки)
+    function updateTransform() {
+        const diffY = currentY - startY;
+        if (diffY > 0) {
+            modalWin.style.transform = `translateY(${diffY}px)`;
+            let opacity = 1 - (diffY / 400);
+            overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.85)})`;
+        }
+        ticking = false;
+    }
+
     modalWin.addEventListener('touchstart', (e) => {
         if (window.innerWidth > 900) return;
+        
+        // Не перехватываем клики по стрелочкам слайдера
+        if (e.target.closest('.slider-btn')) return;
+
         startY = e.touches[0].clientY;
-        startScrollTop = modalWin.scrollTop; // Проверяем, не проскроллил ли юзер текст вниз
+        startScrollTop = modalWin.scrollTop;
         isDragging = false;
         
-        // Отключаем плавность, чтобы карточка прилипла к пальцу
         modalWin.style.transition = 'none';
         overlay.style.transition = 'none';
     }, { passive: true });
 
-    // КАДР 2: Палец двигается
     modalWin.addEventListener('touchmove', (e) => {
         if (window.innerWidth > 900) return;
         currentY = e.touches[0].clientY;
         const diffY = currentY - startY;
 
-        // МАГИЯ: Тянем карточку вниз ТОЛЬКО если мы находимся в самом верху (startScrollTop <= 0) и тянем ВНИЗ
-        if (startScrollTop <= 0 && diffY > 0) {
+        // Толерантность 5px: если мы почти в самом верху и тянем вниз
+        if (startScrollTop <= 5 && diffY > 0) {
             isDragging = true;
             
-            // Блокируем стандартное обновление страницы свайпом в браузере
+            // Убиваем сопротивление браузера
             if (e.cancelable) e.preventDefault(); 
             
-            // Карточка идеально следует за пальцем (1 к 1)
-            modalWin.style.transform = `translateY(${diffY}px)`;
-            
-            // Фон плавно тускнеет пропорционально оттяжке
-            let opacity = 1 - (diffY / 400);
-            if (opacity < 0) opacity = 0;
-            overlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.85})`;
+            // Синхронизируем движение с частотой обновления экрана
+            if (!ticking) {
+                requestAnimationFrame(updateTransform);
+                ticking = true;
+            }
         }
-    }, { passive: false }); // ВАЖНО: false нужно для работы preventDefault()
+    }, { passive: false });
 
-    // КАДР 3: Палец оторвался от экрана
     modalWin.addEventListener('touchend', (e) => {
         if (window.innerWidth > 900 || !isDragging) return;
         
         const diffY = currentY - startY;
         isDragging = false;
         
-        // Возвращаем плавную анимацию для возврата или скрытия
-        modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-        overlay.style.transition = 'background-color 0.3s ease';
+        modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        overlay.style.transition = 'background-color 0.25s ease';
         
-        // Если протянули больше 100 пикселей вниз — закрываем
-        if (diffY > 100) { 
-            modalWin.style.transform = `translateY(100vh)`; // Улетает вниз
-            overlay.style.backgroundColor = `rgba(0, 0, 0, 0)`; // Фон пропадает
+        // Чувствительность закрытия: если потянули на 90px или быстро дернули
+        if (diffY > 90) { 
+            modalWin.style.transform = `translateY(100vh)`; 
+            overlay.style.backgroundColor = `rgba(0, 0, 0, 0)`; 
             
             setTimeout(() => {
                 closeModal('productModal');
-                // Сбрасываем стили для следующего раза
                 modalWin.style.transform = '';
                 overlay.style.backgroundColor = '';
-            }, 300);
+            }, 250);
         } else {
-            // Если передумали и не дотянули — отпружинивает на место
             modalWin.style.transform = `translateY(0)`;
             overlay.style.backgroundColor = '';
         }

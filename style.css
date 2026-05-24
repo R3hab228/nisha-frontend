@@ -541,15 +541,19 @@
         overflow: hidden !important; /* Фон стоит на месте */
     } 
     
-    .modal-window {
+   .modal-window {
         width: 100%;
         height: auto !important;
-        max-height: 85vh !important; /* Окно занимает максимум 85% высоты экрана */
+        max-height: 85vh !important;
         margin-top: 0 !important; 
         border-radius: 20px 20px 0 0; 
-        overflow-y: auto !important; /* ВКЛЮЧАЕМ СКРОЛЛ ВНУТРИ ОКНА */
-        -webkit-overflow-scrolling: touch !important; /* Плавный скролл для iOS */
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
         animation: slideUpMobile 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        
+        /* УСКОРЕНИЕ ДЛЯ ИДЕАЛЬНОГО СВАЙПА */
+        will-change: transform; 
+        overscroll-behavior-y: none;
     }
 
     .modal-content { 
