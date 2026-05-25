@@ -138,12 +138,13 @@
     backface-visibility: hidden; /* УБИРАЕТ МЕРЦАНИЕ */
 }
         .item-card:hover { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
-        .fav-star-modal { font-size: 28px; color: #444; cursor: pointer; text-shadow: 1px 1px 0px #000; transition: 0.2s; user-select: none; line-height: 1; flex-shrink: 0;}
+        .fav-star-modal { font-size: 28px; color: #444; cursor: pointer; text-shadow: 1px 1px 0px #000; transition: color 0.2s, text-shadow 0.2s; user-select: none; line-height: 1; flex-shrink: 0; -webkit-tap-highlight-color: transparent;}
         .fav-star-modal.active { color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red); }
-        .fav-star { position: absolute; top: 10px; right: 10px; z-index: 15; font-size: 26px; color: #444; cursor: pointer; text-shadow: 1px 1px 0px #000; transition: 0.2s; user-select: none; transform: translateZ(30px);}
+        
+        .fav-star { position: absolute; top: 10px; right: 10px; z-index: 15; font-size: 26px; color: #444; cursor: pointer; text-shadow: 1px 1px 0px #000; transition: color 0.2s, text-shadow 0.2s; user-select: none; transform: translateZ(30px); -webkit-tap-highlight-color: transparent;}
         .fav-star.active { color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red); }
         
-        /* HOVER работает только на ПК (мышка), на телефонах залипать не будет */
+        /* HOVER и Анимация масштаба работает ТОЛЬКО на ПК (мышка). Телефоны больше глючить не будут */
         @media (hover: hover) {
             .fav-star-modal:hover { color: var(--accent-red); transform: scale(1.1); }
             .fav-star:hover { color: var(--accent-red); transform: scale(1.2) translateZ(30px); }
@@ -200,14 +201,7 @@
         .history-name { color: var(--text-main); font-size: 11px; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .history-price { color: var(--accent-green); font-weight: bold; font-size: 12px; font-family: var(--font-mono);}
 
-        .cart-panel { 
-    position: fixed; bottom: 0; left: 0; width: 100%; 
-    background: #050505; /* Сделали просто темный фон вместо прозрачного с блюром */
-    border-top: 2px outset var(--border-light); 
-    padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; 
-    z-index: 2000; box-sizing: border-box; color: #fff; font-family: var(--font-mono); 
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.8); 
-}
+        .cart-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0, 10, 26, 0.95); border-top: 2px outset var(--border-light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 2000; box-sizing: border-box; color: #fff; font-family: var(--font-mono); box-shadow: 0 -5px 20px rgba(0,0,0,0.8); backdrop-filter: blur(5px);}
        .cart-info { font-size: 14px; font-weight: normal; color: #aaa; display: flex; align-items: center; gap: 8px; }
 .cart-info span { color: #888; font-size: 14px; font-weight: normal; margin-left: 0; }
 .cart-info b { font-size: 18px; color: var(--accent-green); margin-right: 15px; }
@@ -225,10 +219,9 @@
 
   .modal-overlay { 
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background-color: rgba(0, 0, 0, 0.95); /* Сделали темнее, блюр убрали */
-    z-index: 3000; justify-content: center; 
-    align-items: center; padding: 20px; box-sizing: border-box; 
-    animation: fadeInOverlay 0.25s ease forwards;
+    background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; 
+    align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px);
+    animation: fadeInOverlay 0.25s ease forwards; /* Плавное появление темного фона */
 }
 
 .modal-window { 
@@ -292,27 +285,8 @@
         
         .condition-container { margin: 10px 0; font-family: var(--font-mono); }
         .condition-text { display: flex; justify-content: space-between; font-size: 13px; color: #fff; margin-bottom: 5px; font-weight: bold;}
-        /* --- НОВАЯ ШКАЛА WIN 95 --- */
-.win95-condition-bar { 
-    display: flex; 
-    gap: 2px; 
-    height: 18px; 
-    background: #c0c0c0; /* Серый цвет Винды */
-    border-top: 2px solid #555;
-    border-left: 2px solid #555;
-    border-right: 2px solid #fff;
-    border-bottom: 2px solid #fff;
-    padding: 2px; 
-}
-.cond-block { 
-    flex: 1; 
-    background: #888; /* Пустой цвет */
-    border: 1px solid #777; 
-}
-.cond-block.active { 
-    background: #0000a8; /* Классический синий Win 95 */
-    border: 1px solid #000050; 
-}
+        .condition-bar-bg { width: 100%; height: 10px; background-color: #000; border: 1px inset #444; position: relative; }
+        .condition-bar-fill { height: 100%; background-color: var(--accent-green); width: 90%; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.3) 5px, rgba(0,0,0,0.3) 10px); border-right: 1px solid #fff; transition: width 1s ease-out;}
         
       .info-accordions { margin-top: auto; margin-bottom: 15px; }
     
@@ -343,8 +317,9 @@
         .share-btn:active { border-style: inset; }
 
         .trust-badges { display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px dashed #444; padding-top: 15px; }
-        .badge-item { font-size: 11px; color: #aaa; font-family: var(--font-mono); text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;}
-        .badge-item span { font-size: 16px; }
+.badge-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; }
+.badge-icon { font-size: 16px; font-family: var(--font-mono); font-weight: bold; letter-spacing: 1px; }
+.badge-text { font-size: 11px; color: #aaa; font-family: var(--font-main); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .form-layout { display: flex; flex-direction: column; gap: 15px; width: 100%; padding: 25px; box-sizing: border-box;}
         .form-layout label { color: var(--accent-green); font-family: var(--font-mono); font-size: 14px; font-weight: bold; margin-bottom: -10px; text-transform: uppercase;}
@@ -846,3 +821,46 @@
 /* --- 4. ПОЛЕ ПРОМОКОДА --- */
 .promo-wrapper { display: flex; gap: 10px; margin-top: 5px; }
 .promo-msg { font-size: 11px; font-family: var(--font-mono); margin-top: 5px; }
+
+/* --- СТИЛИ КАРТОЧКИ ОТЗЫВА --- */
+.review-card-ui {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    padding: 15px;
+    border-left: 3px solid var(--accent-green);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: 0.2s;
+}
+.review-card-ui:hover {
+    border-color: #555;
+    background: #111;
+}
+.review-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.review-name {
+    color: #fff;
+    font-weight: bold;
+    font-family: var(--font-main);
+    font-size: 14px;
+}
+.review-rating {
+    color: var(--accent-yellow);
+    font-size: 14px;
+}
+.review-text-body {
+    color: #ccc;
+    font-size: 13px;
+    line-height: 1.5;
+    font-style: italic;
+}
+.review-date {
+    color: #555;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    text-align: right;
+}

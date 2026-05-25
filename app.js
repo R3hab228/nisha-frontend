@@ -1061,34 +1061,55 @@ async function loadFavorites() {
     updateFavBadge();
 }
 
+let isToggling = false; // Защита от двойного клика на телефоне
+
 async function toggleFav(event, itemId) {
-    event.stopPropagation();
-    const starBtn = event.currentTarget || event.target;
-    if(starBtn) starBtn.blur();
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
 
     if (!currentUser) { 
         showToast('Сначала войдите в систему или создайте профиль!', 'error'); 
         return; 
     }
 
+    // Блокируем спам кликами на 300мс (чтобы не ломался массив)
+    if (isToggling) return;
+    isToggling = true;
+    setTimeout(() => { isToggling = false; }, 300);
+
+    // 1. Узнаем статус И жестко обновляем локальный массив
     const isFav = favorites.includes(itemId);
 
-    // 1. МГНОВЕННОЕ ИЗМЕНЕНИЕ ЦВЕТА (чтобы не казалось, что лагает)
     if (isFav) {
-        starBtn.classList.remove('active');
         favorites = favorites.filter(id => id !== itemId);
     } else {
-        starBtn.classList.add('active');
         favorites.push(itemId);
     }
 
-    // Мгновенно обновляем счетчики
-    if(document.getElementById('profileLikesCount')) {
-        document.getElementById('profileLikesCount').innerText = favorites.length;
+    // 2. ЖЕСТКО ищем нужную звезду в сетке по ID и меняем класс
+    const gridStar = document.querySelector(`.item-card[data-id="${itemId}"] .fav-star`);
+    if (gridStar) {
+        if (isFav) gridStar.classList.remove('active');
+        else gridStar.classList.add('active');
     }
+
+    // ЖЕСТКО ищем звезду в модалке (если открыт этот товар)
+    if (currentOpenedItem && currentOpenedItem.id === itemId) {
+        const modalStar = document.getElementById('modalFavStar');
+        if (modalStar) {
+            if (isFav) modalStar.classList.remove('active');
+            else modalStar.classList.add('active');
+        }
+    }
+
+    // Обновляем счетчики мгновенно
+    const profileLikes = document.getElementById('profileLikesCount');
+    if (profileLikes) profileLikes.innerText = favorites.length;
     updateFavBadge();
 
-    // 2. ОТПРАВЛЯЕМ В БАЗУ НА ФОНЕ (без задержки для пользователя)
+    // 3. Тихо отправляем в базу
     try {
         if (isFav) {
             await _supabase.from('favorites').delete().match({ user_id: currentUser.id, item_id: itemId });
@@ -2315,30 +2336,13 @@ document.addEventListener('click', (e) => {
 });
 async function toggleFavFromModal(event) {
     if (!currentOpenedItem) return;
+    
+    // Снимаем фокус с телефона, чтобы не залипало
     const modalStar = document.getElementById('modalFavStar');
-    if (modalStar) modalStar.blur(); // Снимаем фокус с телефона
-    
-    // Вызываем стандартную функцию (она теперь работает мгновенно)
+    if (modalStar) modalStar.blur();
+
+    // Просто вызываем главную защищенную функцию
     await toggleFav(event, currentOpenedItem.id);
-    
-    // ПРИНУДИТЕЛЬНО обновляем звездочку внутри модалки сразу же
-    if (modalStar) {
-        if (favorites.includes(currentOpenedItem.id)) {
-            modalStar.classList.add('active');
-        } else {
-            modalStar.classList.remove('active');
-        }
-    }
-    
-    // Синхронизируем визуально со звездочкой в общей ленте на фоне
-    const gridCardStar = document.querySelector(`.item-card[data-id="${currentOpenedItem.id}"] .fav-star`);
-    if (gridCardStar) {
-        if (favorites.includes(currentOpenedItem.id)) {
-            gridCardStar.classList.add('active');
-        } else {
-            gridCardStar.classList.remove('active');
-        }
-    }
 }
 // ==========================================
 // ПЛАВНЫЕ АККОРДЕОНЫ (В МОДАЛКЕ ТОВАРА)
