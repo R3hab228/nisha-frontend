@@ -1217,18 +1217,19 @@ function updateCartUI() {
     if (!p) return; 
     
     if (cart.length === 0) { 
-        p.style.display = 'none'; 
+        p.classList.remove('show'); // Плавно уезжает вниз
         return; 
     }
     
-    p.style.display = 'flex';
+    p.classList.add('show'); // Плавно выезжает вверх
     document.getElementById('cartCount').innerText = cart.length;
     let total = cart.reduce((sum, item) => sum + item.price, 0);
-    // Применяем скидку по промокоду, если она есть
     if (currentPromoDiscount > 0) {
         total = Math.floor(total - (total * currentPromoDiscount));
     }
     document.getElementById('cartTotal').innerText = total + ' грн';
+    
+    if (typeof renderCartItems === 'function') renderCartItems(); 
 }
 
 // ==========================================
@@ -1855,8 +1856,8 @@ async function fetchMyOrders() {
         const date = new Date(order.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
         let itemsHtml = '';
         if (order.items && Array.isArray(order.items)) {
-            order.items.forEach(item => {
-                const imgStyle = item.image ? `background-image: url('${getOptimizedImageUrl(item.image, 100, 50)}');` : '';
+           order.items.forEach(item => {
+                const imgStyle = item.image ? `background-image: url('${item.image}');` : '';
                 itemsHtml += `
                     <div class="order-item-row" onclick="openProductModalById('${item.id}')" title="Открыть карточку товара">
                         <div class="order-item-img" style="${imgStyle}">${item.image ? '' : 'NO IMG'}</div>
@@ -2332,6 +2333,13 @@ function handleLiveSearch() {
     clearTimeout(searchDebounce);
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchTerm = document.getElementById('mainSearch').value.trim();
+
+    // НОВАЯ ФИШКА: Если юзер начал искать, выключаем режим "Только избранное"
+    if (searchTerm.length > 0 && showingOnlyFavs) {
+        showingOnlyFavs = false;
+        const favNav = document.getElementById('favNav');
+        if (favNav) favNav.style.color = 'var(--accent-yellow)';
+    }
 
     if (searchTerm.length < 2) {
         dropdown.style.display = 'none';
