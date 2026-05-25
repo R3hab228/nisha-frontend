@@ -169,16 +169,37 @@ function changeLanguage(lng, flag) {
     }
 }
 
+// === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
+const UPDATE_REASON = "Глобальный фикс звездочек избранного на телефонах"; // МЕНЯЙ ЭТОТ ТЕКСТ ПРИ КАЖДОМ ОБНОВЛЕНИИ САЙТА!
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(registration => {
             console.log('[PWA] SW зарегистрирован');
-                       registration.onupdatefound = () => {
+            registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        showToast('🔄 Доступно обновление сайта. Обновите страницу!', 'success');
-                        setTimeout(() => window.location.reload(), 3000);
+                        // Показываем красивое окно с требованием обновить кэш
+                        Swal.fire({
+                            title: '⚠️ ДОСТУПНО ОБНОВЛЕНИЕ',
+                            html: `Вышла новая версия сайта.<br><br><span style="color:var(--accent-yellow); font-family: monospace;">Причина: (${UPDATE_REASON})</span><br><br>Нажмите кнопку ниже, чтобы очистить кэш и применить исправления.`,
+                            icon: 'info',
+                            background: '#111',
+                            color: '#fff',
+                            confirmButtonColor: 'var(--accent-green)',
+                            confirmButtonText: '<span style="color:#000; font-weight:bold; font-family: monospace;">ОБНОВИТЬ СЕЙЧАС</span>',
+                            allowOutsideClick: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // ПРИНУДИТЕЛЬНО УБИВАЕМ СТАРЫЙ КЭШ ТЕЛЕФОНА
+                                caches.keys().then(names => {
+                                    for (let name of names) caches.delete(name);
+                                }).then(() => {
+                                    window.location.reload(true);
+                                });
+                            }
+                        });
                     }
                 };
             };
