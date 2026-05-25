@@ -170,7 +170,7 @@ function changeLanguage(lng, flag) {
 }
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Глобальный фикс звездочек избранного на телефонах"; // МЕНЯЙ ЭТОТ ТЕКСТ ПРИ КАЖДОМ ОБНОВЛЕНИИ САЙТА!
+const UPDATE_REASON = "кстренный фикс залипания звездочек избранного"; // МЕНЯЙ ЭТОТ ТЕКСТ ПРИ КАЖДОМ ОБНОВЛЕНИИ САЙТА!
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1109,19 +1109,29 @@ async function toggleFav(event, itemId) {
         favorites.push(itemId);
     }
 
-    // 2. ЖЕСТКО ищем нужную звезду в сетке по ID и меняем класс
+    // 2. ЖЕСТКО ищем нужную звезду в сетке по ID и меняем класс + СРАЗУ КРАСИМ
     const gridStar = document.querySelector(`.item-card[data-id="${itemId}"] .fav-star`);
     if (gridStar) {
-        if (isFav) gridStar.classList.remove('active');
-        else gridStar.classList.add('active');
+        if (isFav) {
+            gridStar.classList.remove('active');
+            gridStar.style.color = '#444'; // Принудительно серый
+        } else {
+            gridStar.classList.add('active');
+            gridStar.style.color = 'var(--accent-red)'; // Принудительно красный
+        }
     }
 
     // ЖЕСТКО ищем звезду в модалке (если открыт этот товар)
     if (currentOpenedItem && currentOpenedItem.id === itemId) {
         const modalStar = document.getElementById('modalFavStar');
         if (modalStar) {
-            if (isFav) modalStar.classList.remove('active');
-            else modalStar.classList.add('active');
+            if (isFav) {
+                modalStar.classList.remove('active');
+                modalStar.style.color = '#444';
+            } else {
+                modalStar.classList.add('active');
+                modalStar.style.color = 'var(--accent-red)';
+            }
         }
     }
 
