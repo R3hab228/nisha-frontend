@@ -1060,13 +1060,16 @@ async function loadFavorites() {
 }
 
 async function toggleFav(event, itemId) {
-    if (event) event.stopPropagation();
+    event.stopPropagation();
+    const starBtn = event.currentTarget || event.target;
+    
+    // Снимаем фокус, чтобы на телефоне не "залипал" клик
+    if(starBtn) starBtn.blur();
+
     if (!currentUser) { 
         showToast('Сначала войдите в систему или создайте профиль!', 'error'); 
         return; 
     }
-
-    const starBtn = event ? (event.currentTarget || event.target) : null;
     const isFav = favorites.includes(itemId);
 
     // Моментально меняем массив и визуал (без ожидания БД)
