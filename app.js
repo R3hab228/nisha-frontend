@@ -169,11 +169,9 @@ function changeLanguage(lng, flag) {
     }
 }
 
-// === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "кстренный фикс залипания звездочек избранного"; // МЕНЯЙ ЭТОТ ТЕКСТ ПРИ КАЖДОМ ОБНОВЛЕНИИ САЙТА!
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Новые хакерские окна уведомлений + фикс поиска"; // МЕНЯЙ ЭТОТ ТЕКСТ ПРИ КАЖДОМ ОБНОВЛЕНИИ САЙТА!
+const UPDATE_REASON = "Новые хакерские окна уведомлений + фикс поиска"; 
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -183,7 +181,6 @@ if ('serviceWorker' in navigator) {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // НОВОЕ КРУТОЕ ОКНО ОБНОВЛЕНИЯ
                         showTerminalModal(
                             'SYSTEM_UPDATE.EXE',
                             `Вышла новая версия сайта.<br><br><span style="color:var(--accent-yellow); font-family: monospace;">Причина: (${UPDATE_REASON})</span><br><br>Нажмите кнопку ниже, чтобы очистить кэш и применить исправления.`,
@@ -202,7 +199,6 @@ if ('serviceWorker' in navigator) {
         }).catch(err => console.log('[PWA] Ошибка SW: ', err));
     });
 }
-
 if (typeof Sentry !== 'undefined') {
     Sentry.init({
         dsn: "https://13d63555c1c64605be8f9659af548581@o4511428929323008.ingest.de.sentry.io/4511428931682384", 
