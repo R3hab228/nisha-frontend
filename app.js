@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Фикс автозаполнения Google и фото в поиске"; 
+const UPDATE_REASON = "Фикс отображения выезжающей корзины";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1053,9 +1053,9 @@ function addToCartWithAnimation(itemId, btnElement, event) {
     // Гарантируем, что браузер сначала отрисует стартовую позицию, а только потом начнет двигать
     requestAnimationFrame(() => {
         setTimeout(() => {
-            // Конечная позиция (над корзиной)
-            flyingImg.style.left = `${cartRect.left + 20}px`;
-            flyingImg.style.top = `${cartRect.top}px`;
+            // Конечная позиция (всегда в левый нижний угол экрана, куда приедет корзина)
+            flyingImg.style.left = `20px`;
+            flyingImg.style.top = `${window.innerHeight - 60}px`;
             
             // Добавили эффект вращения в полете (rotate(360deg))
             flyingImg.style.transform = 'scale(0.1) rotate(360deg)';
@@ -1534,16 +1534,21 @@ function updateCartUI() {
     if (!p) return; 
     
     if (cart.length === 0) { 
-        p.style.display = 'none'; 
+        p.classList.remove('show'); 
         return; 
     }
     
-    p.style.display = 'flex';
+    p.classList.add('show'); 
     document.getElementById('cartCount').innerText = cart.length;
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
+    let total = cart.reduce((sum, item) => sum + item.price, 0);
+    // Применяем скидку по промокоду, если она есть
+    if (typeof currentPromoDiscount !== 'undefined' && currentPromoDiscount > 0) {
+        total = Math.floor(total - (total * currentPromoDiscount));
+    }
     document.getElementById('cartTotal').innerText = total + ' грн';
     
-    renderCartItems(); 
+    // Вызываем отрисовку внутреннего списка (если она объявлена)
+    if (typeof renderCartItems === 'function') renderCartItems();
 }
 
 
