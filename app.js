@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Новые хакерские окна уведомлений + фикс поиска"; 
+const UPDATE_REASON = "Фикс автозаполнения Google и фото в поиске"; 
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -2352,7 +2352,7 @@ function handleLiveSearch() {
         if (results.length > 0) {
             results.forEach(result => {
                 const item = result.item;
-                const img = (item.images && item.images.length > 0) ? getOptimizedImageUrl(item.images[0], 100) : '';
+                const img = getOptimizedImageUrl(item, true); // ПРАВИЛЬНЫЙ вызов функции картинок
                 dropdown.innerHTML += `
                     <div class="live-search-item" onclick="openProductModalById('${item.id}'); document.getElementById('liveSearchDropdown').style.display='none';">
                         <div class="live-search-img" style="background-image: url('${img}')"></div>

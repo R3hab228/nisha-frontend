@@ -73,8 +73,10 @@
 
     <div class="search-section">
         <div class="search-wrapper">
-            <!-- Добавлены жесткие блокировщики автозаполнения -->
-            <input type="search" class="search-input" id="mainSearch" name="search_nisha_hidden" autocomplete="new-password" autocorrect="off" spellcheck="false" data-lpignore="true" placeholder="Поиск вещи (например: Arcteryx, Gore-Tex)..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
+            <!-- Оборачиваем в форму, чтобы жестко запретить Гуглу лезть сюда -->
+            <form autocomplete="off" onsubmit="event.preventDefault();" style="margin:0; padding:0; display:flex; width:100%;">
+                <input type="text" class="search-input" id="mainSearch" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Поиск вещи (например: Arcteryx, Gore-Tex)..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
+            </form>
             <span id="clearSearchBtn" class="clear-search-btn" onclick="clearSearchInput()">✖</span>
             <div id="liveSearchDropdown" class="live-search-dropdown"></div>
         </div>
