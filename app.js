@@ -172,6 +172,9 @@ function changeLanguage(lng, flag) {
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
 const UPDATE_REASON = "кстренный фикс залипания звездочек избранного"; // МЕНЯЙ ЭТОТ ТЕКСТ ПРИ КАЖДОМ ОБНОВЛЕНИИ САЙТА!
 
+// === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
+const UPDATE_REASON = "Новые хакерские окна уведомлений + фикс поиска"; // МЕНЯЙ ЭТОТ ТЕКСТ ПРИ КАЖДОМ ОБНОВЛЕНИИ САЙТА!
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(registration => {
@@ -180,26 +183,19 @@ if ('serviceWorker' in navigator) {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // Показываем красивое окно с требованием обновить кэш
-                        Swal.fire({
-                            title: '⚠️ ДОСТУПНО ОБНОВЛЕНИЕ',
-                            html: `Вышла новая версия сайта.<br><br><span style="color:var(--accent-yellow); font-family: monospace;">Причина: (${UPDATE_REASON})</span><br><br>Нажмите кнопку ниже, чтобы очистить кэш и применить исправления.`,
-                            icon: 'info',
-                            background: '#111',
-                            color: '#fff',
-                            confirmButtonColor: 'var(--accent-green)',
-                            confirmButtonText: '<span style="color:#000; font-weight:bold; font-family: monospace;">ОБНОВИТЬ СЕЙЧАС</span>',
-                            allowOutsideClick: false
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // ПРИНУДИТЕЛЬНО УБИВАЕМ СТАРЫЙ КЭШ ТЕЛЕФОНА
+                        // НОВОЕ КРУТОЕ ОКНО ОБНОВЛЕНИЯ
+                        showTerminalModal(
+                            'SYSTEM_UPDATE.EXE',
+                            `Вышла новая версия сайта.<br><br><span style="color:var(--accent-yellow); font-family: monospace;">Причина: (${UPDATE_REASON})</span><br><br>Нажмите кнопку ниже, чтобы очистить кэш и применить исправления.`,
+                            '[ ОБНОВИТЬ СЕЙЧАС ]',
+                            () => {
                                 caches.keys().then(names => {
                                     for (let name of names) caches.delete(name);
                                 }).then(() => {
                                     window.location.reload(true);
                                 });
                             }
-                        });
+                        );
                     }
                 };
             };
@@ -305,6 +301,28 @@ function showToast(message, type = 'success', imgUrl = null) {
         if(container.contains(toast)) container.removeChild(toast); 
     }, 3500);
 }
+// --- КРУТЫЕ ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ ---
+function showTerminalModal(title, htmlText, btnText, callback) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column;";
+    
+    overlay.innerHTML = `
+        <div class="success-terminal-box">
+            <div class="success-title typewriter">${title}</div>
+            <div class="success-divider"></div>
+            <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${htmlText}</div>
+            <button class="cart-checkout-btn btn-target" style="width: 100%; padding: 15px;">${btnText}</button>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    const btn = overlay.querySelector('button');
+    btn.addEventListener('click', () => {
+        overlay.remove();
+        if (callback) callback();
+    });
+}
 
 function checkRules() {
     if (!localStorage.getItem('nisha_rules_accepted')) {
@@ -341,20 +359,20 @@ window.onload = async () => {
         setTimeout(() => {
             if (cart.length > 0) {
                 let lastTime = localStorage.getItem('nisha_cart_time');
-                // Если прошло больше 1 часа (3600000 мс)
                 if (lastTime && (Date.now() - parseInt(lastTime)) > 3600000) {
                     if (!localStorage.getItem('nisha_cart_reminded')) {
-                        Swal.fire({
-                            title: 'SYSTEM_ALERT // ВАША КОРЗИНА',
-                            html: '<span style="color:#ddd;">Мы заметили, что вы не завершили заказ. Товары могут забрать в любой момент!</span><br><br><b style="color:var(--accent-yellow);">Используйте промокод COMEBACK5 для скидки 5%!</b>',
-                            icon: 'info', background: '#111', color: '#00ff00', confirmButtonColor: 'var(--accent-green)'
-                        });
+                        // НОВОЕ КРУТОЕ ОКНО КОРЗИНЫ
+                        showTerminalModal(
+                            'SYSTEM_ALERT.LOG',
+                            'Мы заметили, что вы не завершили заказ. Товары могут забрать в любой момент!<br><br><b style="color:var(--accent-yellow);">Используйте промокод COMEBACK5 для скидки 5%!</b>',
+                            '[ ПРОДОЛЖИТЬ ПОКУПКИ ]',
+                            null
+                        );
                         localStorage.setItem('nisha_cart_reminded', 'true');
-                        // Если промокода COMEBACK5 нет в базе, обязательно создай его через бота!
                     }
                 }
             }
-        }, 3000); // Показываем через 3 сек после загрузки сайта
+        }, 3000);
 
             if (typeof i18next !== 'undefined') {
                 let savedLng = localStorage.getItem('nisha_lang');

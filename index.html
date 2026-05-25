@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://browser.sentry-cdn.com blob:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; connect-src 'self' http://localhost:3000 https://api.novaposhta.ua https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://nisha-api.onrender.com; img-src 'self' data: https: blob:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://browser.sentry-cdn.com blob:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; connect-src 'self' http://localhost:3000 https://api.novaposhta.ua https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com; img-src 'self' data: https: blob:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta property="og:type" content="website">
     <meta property="og:title" content="NISHA | Underground Store">
@@ -73,7 +73,8 @@
 
     <div class="search-section">
         <div class="search-wrapper">
-       <input type="text" class="search-input" id="mainSearch" placeholder="Поиск вещи (например: Arcteryx, Gore-Tex)..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="dummy_search">
+            <!-- Добавлены жесткие блокировщики автозаполнения -->
+            <input type="search" class="search-input" id="mainSearch" name="search_nisha_hidden" autocomplete="new-password" autocorrect="off" spellcheck="false" data-lpignore="true" placeholder="Поиск вещи (например: Arcteryx, Gore-Tex)..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
             <span id="clearSearchBtn" class="clear-search-btn" onclick="clearSearchInput()">✖</span>
             <div id="liveSearchDropdown" class="live-search-dropdown"></div>
         </div>
@@ -302,9 +303,9 @@
                     <div class="item-views"><span data-i18n="product.views">ПРОСМОТРОВ:</span> <span id="modalItemViews" style="margin-left: 5px;">342</span></div>
                 </div>
                 <div class="condition-container">
-    <div class="condition-text"><span data-i18n="product.condition">СОСТОЯНИЕ ВЕЩИ:</span><span style="color: var(--accent-green);" id="modalItemCond">9 / 10</span></div>
-    <div class="win95-condition-bar" id="modalCondFill"></div>
-</div>
+                    <div class="condition-text"><span data-i18n="product.condition">СОСТОЯНИЕ ВЕЩИ:</span><span style="color: var(--accent-green);" id="modalItemCond">9 / 10</span></div>
+                    <div class="condition-bar-bg"><div class="condition-bar-fill" id="modalCondFill"></div></div>
+                </div>
                 
                 <div class="modal-desc">
                     <strong style="color: var(--accent-green);">РАЗМЕР: <span id="modalItemSizeDesc">L</span></strong><br>
@@ -333,10 +334,10 @@
                     <button class="share-btn" onclick="shareItem()" title="Поделиться">[↗]</button>
                 </div>
                 
-                <div class="trust-badges">
-                    <div class="badge-item"><span style="color:var(--accent-green);">[✔]</span> <span data-i18n="product.badge_orig">100% ОРИГИНАЛ</span></div>
-                    <div class="badge-item"><span style="color:var(--accent-green);">[✈]</span> <span data-i18n="product.badge_fast">БЫСТРАЯ ОТПРАВКА</span></div>
-                    <div class="badge-item"><span style="color:var(--accent-green);">[↺]</span> <span data-i18n="product.badge_refund">ВОЗВРАТ 14 ДНЕЙ</span></div>
+               <div class="trust-badges">
+                    <div class="badge-item"><span class="badge-icon" style="color:var(--accent-green);">[✔]</span> <span class="badge-text" data-i18n="product.badge_orig">ПРОШЛО ЛЕГИТ-ЧЕК</span></div>
+                    <div class="badge-item"><span class="badge-icon" style="color:var(--accent-green);">[✈]</span> <span class="badge-text" data-i18n="product.badge_fast">БЫСТРАЯ ОТПРАВКА</span></div>
+                    <div class="badge-item"><span class="badge-icon" style="color:var(--accent-green);">[↺]</span> <span class="badge-text" data-i18n="product.badge_refund">ВОЗВРАТ 14 ДНЕЙ</span></div>
                 </div>
                 
                 <div style="margin-top: 20px; border-top: 2px dashed #333; padding-top: 15px;">
@@ -360,7 +361,7 @@
             <input type="text" id="botTrap" style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;" tabindex="-1" autocomplete="off">
             
             <label data-i18n="checkout.name">ФИО Получателя:</label>
-            <input type="text" id="orderName" class="form-input" placeholder="Іванов Іван Іванович" autocomplete="name" spellcheck="false" autocorrect="off">
+            <input type="text" id="orderName" class="form-input" placeholder="Іванов Іван Іванович">
             
             <label data-i18n="checkout.phone">Телефон (ОБЯЗАТЕЛЬНО):</label>
             <div style="display:flex; gap:10px;">
@@ -426,9 +427,9 @@
             <button class="close-btn" onclick="closeModal('reviewsModal')">X</button>
         </div>
         <div class="orders-container">
-            <p style="color: #aaa; margin-top: 0; font-size: 14px;">Здесь собраны отзывы реальных покупателей. Работаем честно. Никакого скама.</p>
-            <div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">
-                [ В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ ]
+            <p style="color: #aaa; margin-top: 0; font-size: 14px;">Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
+            <div id="reviewsContainerList" style="display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+                <!-- Сюда скрипт сам загрузит отзывы -->
             </div>
         </div>
     </div>
