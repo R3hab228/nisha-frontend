@@ -108,7 +108,8 @@
         .profile-info-block span { color: var(--accent-green); font-family: var(--font-mono);}
 
         .content-area { flex-grow: 1; display: flex; flex-direction: column;}
-        .sorting { display: flex; justify-content: space-between; background-color: #1a1a1a; padding: 10px 15px; border: 1px solid var(--border-color); margin-bottom: 20px; font-size: 14px; }
+       .sorting { display: flex; justify-content: space-between; align-items: center; background-color: #1a1a1a; padding: 10px 15px; border: 1px solid var(--border-color); margin-bottom: 20px; font-size: 14px; white-space: nowrap; gap: 5px; }
+        @media (max-width: 900px) { .sorting { font-size: 11px; padding: 10px 8px; letter-spacing: -0.2px; } }
         .sorting a { text-decoration: none; font-weight: bold; transition: 0.2s; cursor: pointer;}
         .sorting a.active-sort { color: var(--accent-green); border-bottom: 1px dashed var(--accent-green);}
         .sorting a:not(.active-sort) { color: #aaa; }

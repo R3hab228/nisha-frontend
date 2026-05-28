@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Фикс отображения выезжающей корзины";
+const UPDATE_REASON = "Ровная панель сортировки на телефонах";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
