@@ -926,3 +926,10 @@
         height: 50px;
     }
 }
+/* --- РАЗДЕЛЕНИЕ ПРОФИЛЯ НА ПК И МОБИЛКУ --- */
+@media (min-width: 901px) {
+    .mobile-profile-link { display: none !important; }
+}
+@media (max-width: 900px) {
+    #authBox { display: none !important; }
+}

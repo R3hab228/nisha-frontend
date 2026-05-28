@@ -63,7 +63,7 @@
                 <a href="javascript:void(0)" onclick="filterFavorites()" id="favNav"><span data-i18n="nav.favorites">ИЗБРАННОЕ</span> <span id="favCountBadge">[0]</span></a>
                <a href="javascript:void(0)" onclick="openReviewsModal()" style="color: var(--accent-yellow);" data-i18n="nav.reviews">ОТЗЫВЫ</a>
                 <a href="javascript:void(0)" onclick="openOrdersModal()" style="color: #00aaff;" data-i18n="nav.orders">МОИ ЗАКАЗЫ</a>
-                <a href="javascript:void(0)" onclick="openProfileModal()" style="color: #ff00ff;">ПРОФИЛЬ</a>
+                <a href="javascript:void(0)" onclick="openProfileModal()" class="mobile-profile-link" style="color: #ff00ff;">ПРОФИЛЬ</a>
             </nav>
         </div>
 
@@ -120,6 +120,29 @@
                         </li>
                         <li><label><input type="checkbox" class="size-cb" value="44" onchange="applyFilters()"> <span data-i18n="sidebar.shoes_2">Обувь (43 - 46)</span></label></li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- БЛОК ПРОФИЛЯ ДЛЯ ПК (В САЙДБАРЕ) -->
+            <div class="filter-box" id="authBox">
+                <div class="filter-title" data-i18n="sidebar.auth_title">ПРОФИЛЬ / ВХОД</div>
+                <div class="auth-fields" id="loginForm">
+                    <input type="email" id="authEmail" class="auth-input" placeholder="Email">
+                    <input type="text" id="authUsername" class="form-input" placeholder="Никнейм" style="display: none;">
+                    <input type="password" id="authPass" class="auth-input" placeholder="Пароль">
+                    
+                    <button class="auth-btn btn-target" id="btnLogin" onclick="handleAuth('login')" data-i18n="sidebar.login">ВОЙТИ</button>
+                    <button class="auth-btn btn-target" id="btnShowReg" onclick="toggleRegMode()" style="background: #333; color: #fff;" data-i18n="sidebar.reg">РЕГИСТРАЦИЯ</button>
+                    <button class="auth-btn btn-target" id="btnRegister" onclick="handleAuth('register')" style="display:none; background: var(--accent-green); color: #000;" data-i18n="sidebar.create">СОЗДАТЬ АККАУНТ</button>
+                    <button class="auth-btn btn-target" id="btnBackLogin" onclick="toggleRegMode()" style="display:none; background: #333; color: #fff;">НАЗАД</button>
+                </div>
+                
+                <div class="auth-fields" id="profileForm" style="display: none;">
+                    <div class="profile-info-block">
+                        USER: <span id="profileName">Loading...</span><br>
+                        LIKES: <span id="profileLikesCount">0</span>
+                    </div>
+                    <button class="auth-btn btn-target" onclick="logout()" style="background: #333; color: #fff; margin-top: 10px;" data-i18n="sidebar.logout">ВЫЙТИ</button>
                 </div>
             </div>
         </aside>
@@ -446,37 +469,38 @@
     <span style="display:block;">[+]</span>
 </button>
 
-<!-- ОКНО ПРОФИЛЯ -->
+<!-- МОБИЛЬНОЕ ОКНО ПРОФИЛЯ -->
 <div class="modal-overlay" id="profileModal">
     <div class="modal-window" style="max-width: 450px;">
         <div class="modal-header">
             <span class="modal-title typewriter" style="animation: none;">USER_PROFILE.EXE</span>
             <button class="close-btn" onclick="closeModal('profileModal')">X</button>
         </div>
-        <div class="form-layout" id="authBox">
-            <div class="auth-fields" id="loginForm">
+        <div class="form-layout" id="modalAuthBox">
+            <div class="auth-fields" id="modalLoginForm">
                 <p style="margin:0 0 10px 0; color:#aaa; font-size:13px;">Авторизуйтесь для доступа к избранному и истории.</p>
-                <input type="email" id="authEmail" class="form-input" placeholder="Email">
-                <input type="text" id="authUsername" class="form-input" placeholder="Никнейм" style="display: none;">
-                <input type="password" id="authPass" class="form-input" placeholder="Пароль">
+                <input type="email" id="modalAuthEmail" class="form-input" placeholder="Email">
+                <input type="text" id="modalAuthUsername" class="form-input" placeholder="Никнейм" style="display: none;">
+                <input type="password" id="modalAuthPass" class="form-input" placeholder="Пароль">
                 
-                <button class="cart-checkout-btn btn-target" id="btnLogin" onclick="handleAuth('login')" style="width:100%; margin-top:10px;">ВОЙТИ</button>
-                <button class="cart-checkout-btn btn-target" id="btnShowReg" onclick="toggleRegMode()" style="background: #333; color: #fff; width:100%; border-color:#555;">РЕГИСТРАЦИЯ</button>
-                <button class="cart-checkout-btn btn-target" id="btnRegister" onclick="handleAuth('register')" style="display:none; background: var(--accent-green); color: #000; width:100%;">СОЗДАТЬ АККАУНТ</button>
-                <button class="cart-checkout-btn btn-target" id="btnBackLogin" onclick="toggleRegMode()" style="display:none; background: #333; color: #fff; width:100%; border-color:#555;">НАЗАД</button>
+                <button class="cart-checkout-btn btn-target" id="modalBtnLogin" onclick="handleAuth('login', true)" style="width:100%; margin-top:10px;">ВОЙТИ</button>
+                <button class="cart-checkout-btn btn-target" id="modalBtnShowReg" onclick="toggleRegMode(true)" style="background: #333; color: #fff; width:100%; border-color:#555; margin-top:10px;">РЕГИСТРАЦИЯ</button>
+                <button class="cart-checkout-btn btn-target" id="modalBtnRegister" onclick="handleAuth('register', true)" style="display:none; background: var(--accent-green); color: #000; width:100%; margin-top:10px;">СОЗДАТЬ АККАУНТ</button>
+                <button class="cart-checkout-btn btn-target" id="modalBtnBackLogin" onclick="toggleRegMode(true)" style="display:none; background: #333; color: #fff; width:100%; border-color:#555; margin-top:10px;">НАЗАД</button>
             </div>
             
-            <div class="auth-fields" id="profileForm" style="display: none; text-align:center;">
+            <div class="auth-fields" id="modalProfileForm" style="display: none; text-align:center;">
                 <div style="width: 80px; height: 80px; background: #222; border: 2px solid var(--accent-green); border-radius: 50%; margin: 0 auto 15px auto; display:flex; justify-content:center; align-items:center; font-size: 30px;">👤</div>
                 <div class="profile-info-block" style="font-size:15px; border:none; background:transparent;">
-                    USER: <span id="profileName" style="font-size:18px; color:#fff;">Loading...</span><br><br>
-                    LIKES: <span id="profileLikesCount" style="font-size:18px;">0</span>
+                    USER: <span id="modalProfileName" style="font-size:18px; color:#fff;">Loading...</span><br><br>
+                    LIKES: <span id="modalProfileLikesCount" style="font-size:18px;">0</span>
                 </div>
                 <button class="cart-checkout-btn btn-target" onclick="logout(); closeModal('profileModal');" style="background: #333; color: #fff; margin-top: 20px; width:100%; border-color:#555;">ВЫЙТИ</button>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- ОКНО ПРЕДЛОЖКИ -->
 <div class="modal-overlay" id="proposeModal">

@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Перенос профиля в верхнее меню, умная кнопка [+] и фото в лайках";
+const UPDATE_REASON = "Фикс отображения профиля на ПК и мобильном окне";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -637,20 +637,23 @@ async function checkSession() {
         
         if (session) {
             currentUser = session.user;
-            
-           
-            const { data: profiles, error } = await _supabase.from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .limit(1);
-            
-            if (!error && profiles && profiles.length > 0) {
-                userProfile = profiles[0];
-            }
+            const { data: profiles, error } = await _supabase.from('profiles').select('*').eq('id', currentUser.id).limit(1);
+            if (!error && profiles && profiles.length > 0) { userProfile = profiles[0]; }
 
+            const uName = (userProfile && userProfile.username) ? userProfile.username : currentUser.email;
+
+            // Обновляем ПК (Сайдбар)
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('profileForm').style.display = 'flex';
-            document.getElementById('profileName').innerText = (userProfile && userProfile.username) ? userProfile.username : currentUser.email;
+            document.getElementById('profileName').innerText = uName;
+
+            // Обновляем Мобилку (Модалка)
+            const mLog = document.getElementById('modalLoginForm');
+            if (mLog) {
+                mLog.style.display = 'none';
+                document.getElementById('modalProfileForm').style.display = 'block';
+                document.getElementById('modalProfileName').innerText = uName;
+            }
             
             await loadFavorites();
             
@@ -665,23 +668,31 @@ async function checkSession() {
             currentUser = null;
             userProfile = null;
             favorites = [];
+            // ПК
             document.getElementById('loginForm').style.display = 'flex';
             document.getElementById('profileForm').style.display = 'none';
+            // Мобилка
+            const mLog = document.getElementById('modalLoginForm');
+            if (mLog) {
+                mLog.style.display = 'block';
+                document.getElementById('modalProfileForm').style.display = 'none';
+            }
             updateFavBadge();
         }
-    } catch (err) {
-        console.error("Ошибка в checkSession:", err);
-    }
+    } catch (err) { console.error("Ошибка в checkSession:", err); }
 }
-let isRegMode = false;
 
-function toggleRegMode() {
+let isRegMode = false;
+function toggleRegMode(isModal = false) {
     isRegMode = !isRegMode;
-    const btnLogin = document.getElementById('btnLogin');
-    const btnShowReg = document.getElementById('btnShowReg');
-    const btnRegister = document.getElementById('btnRegister');
-    const btnBackLogin = document.getElementById('btnBackLogin');
-    const authUsername = document.getElementById('authUsername');
+    const p = isModal ? 'modal' : '';
+    const a = isModal ? 'modalAuth' : 'auth';
+
+    const btnLogin = document.getElementById(p ? 'modalBtnLogin' : 'btnLogin');
+    const btnShowReg = document.getElementById(p ? 'modalBtnShowReg' : 'btnShowReg');
+    const btnRegister = document.getElementById(p ? 'modalBtnRegister' : 'btnRegister');
+    const btnBackLogin = document.getElementById(p ? 'modalBtnBackLogin' : 'btnBackLogin');
+    const authUsername = document.getElementById(a + 'Username');
 
     if (isRegMode) {
         btnLogin.style.display = 'none';
@@ -697,38 +708,33 @@ function toggleRegMode() {
         authUsername.style.display = 'none';
     }
 }
-async function handleAuth(action) {
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPass').value.trim();
-    const username = document.getElementById('authUsername').value.trim();
 
-    if (!email || !password) { 
-        showToast('Введите Email и пароль!', 'error'); 
-        return; 
-    }
+async function handleAuth(action, isModal = false) {
+    const p = isModal ? 'modalAuth' : 'auth';
+    const email = document.getElementById(p + 'Email').value.trim();
+    const password = document.getElementById(p + 'Pass').value.trim();
+    const username = document.getElementById(p + 'Username').value.trim();
+
+    if (!email || !password) { showToast('Введите Email и пароль!', 'error'); return; }
 
     let result;
     if (action === 'register') {
-        if (!username) { 
-            showToast('Для регистрации нужен никнейм!', 'error'); 
-            return; 
-        }
-        result = await _supabase.auth.signUp({ 
-            email, 
-            password, 
-            options: { data: { username: username } } 
-        });
+        if (!username) { showToast('Для регистрации нужен никнейм!', 'error'); return; }
+        result = await _supabase.auth.signUp({ email, password, options: { data: { username: username } } });
         if (!result.error) showToast('Регистрация успешна! Проверьте почту.', 'success');
     } else {
         result = await _supabase.auth.signInWithPassword({ email, password });
         if (!result.error) showToast(i18next.t('messages.login_success'), 'success');
     }
 
-    if (result.error) {
-        showToast(result.error.message, 'error');
-    } else {
-        await checkSession();
-    }
+    if (result.error) { showToast(result.error.message, 'error'); } 
+    else { await checkSession(); if(isModal) closeModal('profileModal'); }
+}
+
+function openProfileModal() {
+    if (typeof lenis !== 'undefined') lenis.stop();
+    document.getElementById('profileModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 }
 
 async function logout() {
@@ -1114,6 +1120,9 @@ async function loadFavorites() {
         if(document.getElementById('profileLikesCount')) {
             document.getElementById('profileLikesCount').innerText = favorites.length;
         }
+        if(document.getElementById('modalProfileLikesCount')) {
+            document.getElementById('modalProfileLikesCount').innerText = favorites.length;
+        }
     }
     updateFavBadge();
 }
@@ -1174,6 +1183,8 @@ async function toggleFav(event, itemId) {
     // Обновляем счетчики мгновенно
     const profileLikes = document.getElementById('profileLikesCount');
     if (profileLikes) profileLikes.innerText = favorites.length;
+    const modalProfileLikes = document.getElementById('modalProfileLikesCount');
+    if (modalProfileLikes) modalProfileLikes.innerText = favorites.length;
     updateFavBadge();
 
     // 3. Тихо отправляем в базу и выводим красивое уведомление с фото
