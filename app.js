@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Ровная панель сортировки на телефонах";
+const UPDATE_REASON = "Новый дизайн полоски состояния в стиле Win95";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
