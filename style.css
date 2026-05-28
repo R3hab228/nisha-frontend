@@ -1,3 +1,4 @@
+
 :root {
             --bg-main: #000000;
             --bg-panel: #111111;
@@ -9,7 +10,7 @@
             --accent-yellow: #ffcc00;
             --border-color: #333333;
             --border-light: #555555;
-            --font-main: 'Tahoma', 'Verdana', sans-serif;
+           --font-main: 'Tahoma', 'Verdana', sans-serif;
             --font-mono: 'Courier New', Courier, monospace;
         }
 
@@ -393,7 +394,8 @@
         .rules-content li { margin-bottom: 10px; }
         .rules-content strong { color: #fff; }
         .rules-footer { padding: 20px; background: #000; border-top: 2px inset var(--border-light); display: flex; justify-content: center;}
-        .accept-btn { background: var(--accent-green); color: #000; font-weight: bold; padding: 15px 40px; font-size: 18px; font-family: var(--font-mono); border: 2px outset #fff; cursor: pointer; text-transform: uppercase;}
+        .accept-btn { background: #111; color: var(--accent-green); font-weight: bold; padding: 15px 20px; font-size: 15px; font-family: var(--font-mono); border: 2px outset #444; cursor: pointer; text-transform: uppercase; width: 100%; transition: 0.2s;}
+        .accept-btn:hover { border-color: var(--accent-green); }
         .accept-btn:active { border-style: inset; }
 
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
@@ -885,10 +887,9 @@
     font-family: var(--font-mono);
     text-align: right;
 }
-/* --- КНОПКА ПРЕДЛОЖКИ --- */
 .fab-propose {
     position: fixed;
-    bottom: 120px; /* ПОДНЯЛИ ВЫШЕ НА ПК */
+    bottom: 30px; /* ИЗНАЧАЛЬНО ВНИЗУ */
     right: 20px;
     width: 55px;
     height: 55px;
@@ -904,14 +905,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: 0.2s;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-.fab-propose:hover {
-    background: #111;
-    transform: scale(1.1);
-    border-color: var(--accent-green);
-}
+.fab-propose:hover { background: #111; transform: scale(1.1); border-color: var(--accent-green); }
 .fab-propose:active { border-style: inset; }
+
+/* КЛАСС ДЛЯ ПОДНЯТИЯ КНОПКИ, КОГДА ЕСТЬ КОРЗИНА */
+.fab-propose.cart-active { bottom: 120px; }
+
 .fab-propose.hidden-scroll {
     transform: translateY(150px) scale(0.5);
     opacity: 0;
@@ -919,13 +920,15 @@
 }
 
 @media (max-width: 900px) {
-    .fab-propose {
-        bottom: 140px; /* ПОДНЯЛИ ВЫШЕ НА ТЕЛЕФОНЕ */
-        right: 15px;
-        width: 50px;
-        height: 50px;
-    }
+    .fab-propose { bottom: 20px; right: 15px; width: 50px; height: 50px; }
+    .fab-propose.cart-active { bottom: 140px; }
 }
+
+/* СТИЛИ ДЛЯ НОВОГО ЗАГРУЗЧИКА ФОТО В ПРЕДЛОЖКЕ */
+.upload-dropzone { background: #0a0a0a; border: 2px dashed #444; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; border-radius: 4px; min-height: 80px; display: flex; align-items: center; justify-content: center; flex-direction: column;}
+.upload-dropzone:hover { border-color: var(--accent-green); background: #111; }
+.preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; width: 100%; justify-content: center;}
+.preview-img { width: 60px; height: 60px; background-size: cover; background-position: center; border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 /* --- РАЗДЕЛЕНИЕ ПРОФИЛЯ НА ПК И МОБИЛКУ --- */
 @media (min-width: 901px) {
     .mobile-profile-link { display: none !important; }

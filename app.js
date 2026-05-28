@@ -653,17 +653,36 @@ async function checkSession() {
                 mLog.style.display = 'none';
                 document.getElementById('modalProfileForm').style.display = 'block';
                 document.getElementById('modalProfileName').innerText = uName;
+                // Подгружаем аватарку, если она есть
+            const previewDiv = document.getElementById('profileAvatarPreview');
+            if (previewDiv) {
+                if (userProfile && userProfile.avatar_url) {
+                    previewDiv.innerText = '';
+                    previewDiv.style.backgroundImage = `url('${userProfile.avatar_url}')`;
+                } else {
+                    previewDiv.innerText = '?';
+                    previewDiv.style.backgroundImage = 'none';
+                }
+            }
             }
             
             await loadFavorites();
             
-            if (userProfile && userProfile.cart && userProfile.cart.length > 0) {
-                cart = userProfile.cart; 
-                localStorage.setItem('nisha_cart', JSON.stringify(cart));
-                updateCartUI();
-            } else if (cart.length > 0) {
-                await syncCartToServer(); 
-            }
+           // УМНОЕ ОБЪЕДИНЕНИЕ КОРЗИН (МЕРДЖ)
+            const dbCart = (userProfile && userProfile.cart) ? userProfile.cart : [];
+            const localCart = cart || [];
+
+            // Объединяем, удаляя дубликаты товаров по ID
+            const mergedCartMap = new Map();
+            [...dbCart, ...localCart].forEach(item => {
+                if (!mergedCartMap.has(item.id)) mergedCartMap.set(item.id, item);
+            });
+            
+            cart = Array.from(mergedCartMap.values());
+            localStorage.setItem('nisha_cart', JSON.stringify(cart));
+            
+            await syncCartToServer(); // Отправляем объединенную корзину в БД
+            updateCartUI();
         } else {
             currentUser = null;
             userProfile = null;
@@ -1567,14 +1586,18 @@ async function removeFromCart(index, event, rowElement) {
 
 function updateCartUI() {
     const p = document.getElementById('cartPanel');
+    const fab = document.querySelector('.fab-propose');
     if (!p) return; 
     
     if (cart.length === 0) { 
         p.classList.remove('show'); 
+        if(fab) fab.classList.remove('cart-active'); // Опускаем кнопку вниз
         return; 
     }
     
     p.classList.add('show'); 
+    if(fab) fab.classList.add('cart-active'); // Поднимаем кнопку над корзиной
+    
     document.getElementById('cartCount').innerText = cart.length;
     let total = cart.reduce((sum, item) => sum + item.price, 0);
     // Применяем скидку по промокоду, если она есть
@@ -2691,15 +2714,38 @@ function openProposeModal() {
     document.body.style.overflow = 'hidden';
 }
 
-// Показываем количество выбранных фото
+// Предпросмотр загружаемых фото в предложке
 document.getElementById('propFiles')?.addEventListener('change', function(e) {
-    const files = e.target.files;
-    const status = document.getElementById('propFileStatus');
+    const files = Array.from(e.target.files);
+    const container = document.getElementById('propPreviewContainer');
+    const placeholder = document.getElementById('propPlaceholder');
+
     if (files.length > 5) {
-        status.innerHTML = `<span style="color:red;">Максимум 5 фото! Вы выбрали ${files.length}.</span>`;
-        this.value = ''; // Сбрасываем выбор
+        showToast('Максимум 5 фото!', 'error');
+        this.value = ''; // Сбрасываем инпут
+        container.innerHTML = '';
+        placeholder.style.display = 'block';
+        return;
+    }
+
+    container.innerHTML = ''; // Очищаем контейнер
+
+    if (files.length > 0) {
+        placeholder.style.display = 'none'; // Прячем текст "Нажмите чтобы выбрать"
+        
+        // Создаем миниатюрки
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('div');
+                img.className = 'preview-img';
+                img.style.backgroundImage = `url('${e.target.result}')`;
+                container.appendChild(img);
+            }
+            reader.readAsDataURL(file);
+        });
     } else {
-        status.innerHTML = `Выбрано фото: ${files.length} шт.`;
+        placeholder.style.display = 'block';
     }
 });
 
@@ -2769,5 +2815,65 @@ async function submitProposal() {
         btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
+    }
+}
+// ==========================================
+// ЗАГРУЗКА ФОТО ПРОФИЛЯ (АВАТАРКИ)
+// ==========================================
+async function uploadAvatar(event) {
+    const file = event.target.files[0];
+    if (!file || !currentUser) return;
+
+    // Проверка размера (макс 2 МБ)
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('Файл слишком большой! Максимум 2 МБ.', 'error');
+        return;
+    }
+
+    const previewDiv = document.getElementById('profileAvatarPreview');
+    const oldBg = previewDiv.style.backgroundImage;
+    const oldText = previewDiv.innerText;
+    
+    // Показываем часики на время загрузки
+    previewDiv.style.backgroundImage = 'none';
+    previewDiv.innerText = '⏳';
+
+    try {
+        // Уникальное имя файла (id юзера + время)
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+
+        // Грузим в бакет 'avatars'
+        const { error: uploadError } = await _supabase.storage
+            .from('avatars')
+            .upload(fileName, file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        // Получаем публичную ссылку
+        const { data } = _supabase.storage.from('avatars').getPublicUrl(fileName);
+        const avatarUrl = data.publicUrl;
+
+        // Сохраняем ссылку в таблицу profiles
+        const { error: updateError } = await _supabase.from('profiles')
+            .update({ avatar_url: avatarUrl })
+            .eq('id', currentUser.id);
+
+        if (updateError) throw updateError;
+
+        // Успех! Обновляем UI
+        previewDiv.innerText = '';
+        previewDiv.style.backgroundImage = `url('${avatarUrl}')`;
+        if (userProfile) userProfile.avatar_url = avatarUrl;
+        
+        showToast('Фото профиля успешно обновлено!', 'success');
+
+    } catch (err) {
+        console.error("Ошибка загрузки аватара:", err);
+        previewDiv.innerText = oldText;
+        previewDiv.style.backgroundImage = oldBg;
+        showToast('Ошибка при загрузке фото.', 'error');
+    } finally {
+        event.target.value = ''; // Сбрасываем инпут
     }
 }
