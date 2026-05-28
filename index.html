@@ -75,7 +75,7 @@
         <div class="search-wrapper">
             <!-- Оборачиваем в форму, чтобы жестко запретить Гуглу лезть сюда -->
             <form autocomplete="off" onsubmit="event.preventDefault();" style="margin:0; padding:0; display:flex; width:100%;">
-                <input type="text" class="search-input" id="mainSearch" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Поиск вещи (например: Arcteryx, Gore-Tex)..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
+                <input type="text" class="search-input" id="mainSearch" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Поиск вещи..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
             </form>
             <span id="clearSearchBtn" class="clear-search-btn" onclick="clearSearchInput()">✖</span>
             <div id="liveSearchDropdown" class="live-search-dropdown"></div>
@@ -461,5 +461,42 @@
     
     <script src="config.js"></script>
     <script defer src="app.js"></script>
+
+    <!-- ПЛАВАЮЩАЯ КНОПКА ПРЕДЛОЖКИ -->
+<button class="fab-propose" onclick="openProposeModal()" title="Предложить вещь">
+    <span style="display:block; animation: pulse 2s infinite;">[+]</span>
+</button>
+
+<!-- ОКНО ПРЕДЛОЖКИ -->
+<div class="modal-overlay" id="proposeModal">
+    <div class="modal-window" style="max-width: 550px;">
+        <div class="modal-header">
+            <span class="modal-title typewriter" style="animation: none;">DROP_ITEM.EXE</span>
+            <button class="close-btn" onclick="closeModal('proposeModal')">X</button>
+        </div>
+        
+        <div class="form-layout">
+            <p style="margin:0; font-size:13px; color:#aaa;">Загрузи свой шмот. Одобрим — выставим на продажу.</p>
+            
+            <label>ФОТО (ДО 5 ШТУК):</label>
+            <input type="file" id="propFiles" class="form-input" accept="image/*" multiple style="background: #111; padding: 8px;">
+            <div id="propFileStatus" style="font-size:11px; color:var(--accent-yellow); font-family:monospace; margin-top:-5px;"></div>
+            
+            <label>БРЕНД И МОДЕЛЬ:</label>
+            <input type="text" id="propBrand" class="form-input" placeholder="Например: Arcteryx Beta AR">
+            
+            <label>РАЗМЕР И ЗАМЕРЫ:</label>
+            <input type="text" id="propSize" class="form-input" placeholder="Например: M (Длина 70, Грудь 55)">
+            
+            <label>ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
+            <input type="number" id="propCond" class="form-input" placeholder="9" min="1" max="10">
+            
+            <label>СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
+            <input type="text" id="propContact" class="form-input" placeholder="@твои_ник или +380...">
+            
+            <button class="cart-checkout-btn btn-target" id="btnSubmitProp" onclick="submitProposal()" style="margin-top: 15px; width: 100%;">[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

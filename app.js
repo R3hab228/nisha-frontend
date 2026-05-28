@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Новый дизайн полоски состояния в стиле Win95";
+const UPDATE_REASON = "Добавлена предложка шмота";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -2646,3 +2646,92 @@ function initMobileSwipe() {
 document.addEventListener('DOMContentLoaded', () => {
     initMobileSwipe();
 });
+// ==========================================
+// ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (CREATORS)
+// ==========================================
+function openProposeModal() {
+    if (typeof lenis !== 'undefined') lenis.stop();
+    document.getElementById('proposeModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// Показываем количество выбранных фото
+document.getElementById('propFiles')?.addEventListener('change', function(e) {
+    const files = e.target.files;
+    const status = document.getElementById('propFileStatus');
+    if (files.length > 5) {
+        status.innerHTML = `<span style="color:red;">Максимум 5 фото! Вы выбрали ${files.length}.</span>`;
+        this.value = ''; // Сбрасываем выбор
+    } else {
+        status.innerHTML = `Выбрано фото: ${files.length} шт.`;
+    }
+});
+
+async function submitProposal() {
+    const btn = document.getElementById('btnSubmitProp');
+    const files = document.getElementById('propFiles').files;
+    const brand = document.getElementById('propBrand').value.trim();
+    const size = document.getElementById('propSize').value.trim();
+    const cond = parseInt(document.getElementById('propCond').value);
+    const contact = document.getElementById('propContact').value.trim();
+
+    if (!files.length || !brand || !size || isNaN(cond) || !contact) {
+        showToast('Заполните все поля и прикрепите фото!', 'error');
+        return;
+    }
+    if (cond < 1 || cond > 10) {
+        showToast('Оценка должна быть от 1 до 10', 'error');
+        return;
+    }
+
+    btn.innerText = '[ ЗАГРУЗКА ДАННЫХ... ]';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.5';
+
+    try {
+        let imageUrls = [];
+        
+        // Грузим фотки в Supabase напрямую с сайта
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `prop_${Date.now()}_${Math.floor(Math.random()*1000)}.${fileExt}`;
+            
+            const { error: uploadError } = await _supabase.storage.from('proposals').upload(fileName, file);
+            if (!uploadError) {
+                const { data } = _supabase.storage.from('proposals').getPublicUrl(fileName);
+                imageUrls.push(data.publicUrl);
+            }
+        }
+
+        // Сохраняем заявку в БД (Бот ее подхватит)
+        const { error: dbError } = await _supabase.from('proposals').insert([{
+            brand: brand,
+            measurements: size,
+            condition: cond,
+            contact: contact,
+            images: imageUrls
+        }]);
+
+        if (dbError) throw dbError;
+
+        closeModal('proposeModal');
+        showTerminalModal('DATA_UPLOADED.LOG', 'Ваша заявка успешно отправлена на сервер. Админ рассмотрит ее и свяжется с вами.', '[ ЗАКРЫТЬ ]', null);
+
+        // Очищаем форму
+        document.getElementById('propFiles').value = '';
+        document.getElementById('propFileStatus').innerText = '';
+        document.getElementById('propBrand').value = '';
+        document.getElementById('propSize').value = '';
+        document.getElementById('propCond').value = '';
+        document.getElementById('propContact').value = '';
+
+    } catch (err) {
+        console.error(err);
+        showToast('Ошибка отправки: ' + err.message, 'error');
+    } finally {
+        btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    }
+}
