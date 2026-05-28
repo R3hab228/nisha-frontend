@@ -888,7 +888,7 @@
 /* --- КНОПКА ПРЕДЛОЖКИ --- */
 .fab-propose {
     position: fixed;
-    bottom: 85px; /* Выше корзины */
+    bottom: 120px; /* ПОДНЯЛИ ВЫШЕ НА ПК */
     right: 20px;
     width: 55px;
     height: 55px;
@@ -915,7 +915,7 @@
 
 @media (max-width: 900px) {
     .fab-propose {
-        bottom: 95px;
+        bottom: 140px; /* ПОДНЯЛИ ВЫШЕ НА ТЕЛЕФОНЕ */
         right: 15px;
         width: 50px;
         height: 50px;

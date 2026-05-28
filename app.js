@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Добавлена предложка шмота";
+const UPDATE_REASON = "Фикс положения кнопки [+]";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
