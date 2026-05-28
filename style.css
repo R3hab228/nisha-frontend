@@ -912,6 +912,11 @@
     border-color: var(--accent-green);
 }
 .fab-propose:active { border-style: inset; }
+.fab-propose.hidden-scroll {
+    transform: translateY(150px) scale(0.5);
+    opacity: 0;
+    pointer-events: none;
+}
 
 @media (max-width: 900px) {
     .fab-propose {

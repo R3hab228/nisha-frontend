@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Фикс положения кнопки [+]";
+const UPDATE_REASON = "Перенос профиля в верхнее меню, умная кнопка [+] и фото в лайках";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -246,6 +246,28 @@ function raf(time) {
     requestAnimationFrame(raf);
 }
 requestAnimationFrame(raf);
+
+// Открытие нового модального окна профиля
+function openProfileModal() {
+    if (typeof lenis !== 'undefined') lenis.stop();
+    document.getElementById('profileModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// Прячем кнопку [+] когда листаем вниз
+lenis.on('scroll', (e) => {
+    const fab = document.querySelector('.fab-propose');
+    if (!fab) return;
+    
+    // e.velocity > 1 означает, что мы активно скроллим ВНИЗ
+    if (e.velocity > 1) {
+        fab.classList.add('hidden-scroll');
+    } 
+    // e.velocity < -1 (вверх) или 0 (остановка)
+    else if (e.velocity < -1 || e.velocity === 0) {
+        fab.classList.remove('hidden-scroll');
+    }
+});
 
 
 let allItems = []; 
@@ -1154,14 +1176,17 @@ async function toggleFav(event, itemId) {
     if (profileLikes) profileLikes.innerText = favorites.length;
     updateFavBadge();
 
-    // 3. Тихо отправляем в базу
+    // 3. Тихо отправляем в базу и выводим красивое уведомление с фото
+    const itemObj = allItems.find(i => i.id === itemId);
+    const imgUrl = itemObj ? getOptimizedImageUrl(itemObj, true) : null;
+
     try {
         if (isFav) {
             await _supabase.from('favorites').delete().match({ user_id: currentUser.id, item_id: itemId });
-            showToast(i18next.t('messages.fav_remove'), 'success');
+            showToast(i18next.t('messages.fav_remove'), 'success', imgUrl);
         } else {
             await _supabase.from('favorites').insert([{ user_id: currentUser.id, item_id: itemId }]);
-            showToast(i18next.t('messages.fav_add'), 'success');
+            showToast(i18next.t('messages.fav_add'), 'success', imgUrl);
         }
     } catch (err) {
         console.error("Ошибка лайка:", err);
