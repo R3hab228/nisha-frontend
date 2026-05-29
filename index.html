@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://browser.sentry-cdn.com blob:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; connect-src 'self' http://localhost:3000 https://api.novaposhta.ua https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com; img-src 'self' data: https: blob:;">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://browser.sentry-cdn.com https://www.google.com https://www.gstatic.com https://telegram.org blob:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; connect-src 'self' http://localhost:3000 https://nisha-api.onrender.com https://api.novaposhta.ua https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com; frame-src https://www.google.com https://recaptcha.net https://oauth.telegram.org; img-src 'self' data: https: blob:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta property="og:type" content="website">
     <meta property="og:title" content="NISHA | Underground Store">
@@ -137,10 +137,12 @@
                     <button class="auth-btn btn-target" id="btnBackLogin" onclick="toggleRegMode()" style="display:none; background: #333; color: #fff;">НАЗАД</button>
                 </div>
                 
-                <div class="auth-fields" id="profileForm" style="display: none;">
+               <div class="auth-fields" id="profileForm" style="display: none;">
                     <div class="profile-info-block">
                         USER: <span id="profileName">Loading...</span><br>
-                        LIKES: <span id="profileLikesCount">0</span>
+                        LIKES: <span id="profileLikesCount">0</span><br><br>
+                        БАЛАНС: <span id="profileBalance" style="color:var(--accent-yellow); font-weight:bold;">0</span> грн<br>
+                        РЕФ-КОД: <span id="profileRefCode" style="color:#fff; background:#333; padding:2px 5px; cursor:pointer;" onclick="navigator.clipboard.writeText(this.innerText); showToast('Промокод скопирован!', 'success');" title="Дай другу скидку 5%, а себе 5% кэшбека!">LOAD...</span>
                     </div>
                     <button class="auth-btn btn-target" onclick="logout()" style="background: #333; color: #fff; margin-top: 10px;" data-i18n="sidebar.logout">ВЫЙТИ</button>
                 </div>
@@ -461,8 +463,10 @@
     <script defer src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js"></script>
     <script defer src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
     
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="config.js"></script>
     <script defer src="app.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LdBZAEtAAAAAHs2z7H76NvIt0PD6Un1elYdwYBB"></script>
 
     <!-- ПЛАВАЮЩАЯ КНОПКА ПРЕДЛОЖКИ -->
 <button class="fab-propose" onclick="openProposeModal()" title="Предложить вещь">

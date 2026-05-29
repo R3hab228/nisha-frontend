@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Фикс отображения профиля на ПК и мобильном окне";
+const UPDATE_REASON = "Реферальная система, Видео и Бесконечная загрузка";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -319,6 +319,40 @@ function showToast(message, type = 'success', imgUrl = null) {
         if(container.contains(toast)) container.removeChild(toast); 
     }, 3500);
 }
+// --- ВАЛИДАЦИЯ RECAPTCHA v3 ---
+async function verifyCaptchaAction(actionName) {
+    return new Promise((resolve, reject) => {
+        if (typeof grecaptcha === 'undefined') {
+            console.warn("reCAPTCHA не загружена");
+            resolve(true); // Пропускаем, если блок. адблоком, чтобы не ломать сайт реальным юзерам
+            return;
+        }
+
+        grecaptcha.ready(async () => {
+            try {
+                const token = await grecaptcha.execute(envData.RECAPTCHA_SITE_KEY, { action: actionName });
+                
+               // Отправляем токен И действие на наш Render сервер для строгой проверки
+                const res = await fetch('https://nisha-api.onrender.com/api/verify-captcha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token, action: actionName })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    resolve(true); // Человек
+                } else {
+                    showToast('Подозрение на спам. Попробуйте позже.', 'error');
+                    resolve(false); // Бот
+                }
+            } catch (err) {
+                console.error("Ошибка капчи:", err);
+                resolve(false);
+            }
+        });
+    });
+}
 // --- КРУТЫЕ ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ ---
 function showTerminalModal(title, htmlText, btnText, callback) {
     const overlay = document.createElement('div');
@@ -373,24 +407,33 @@ function acceptRules() {
 window.onload = async () => {
     try {
         try {
-            // АВТО-ДОЖИМ БРОШЕННОЙ КОРЗИНЫ
-        setTimeout(() => {
+            // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
             if (cart.length > 0) {
                 let lastTime = localStorage.getItem('nisha_cart_time');
-                if (lastTime && (Date.now() - parseInt(lastTime)) > 3600000) {
-                    if (!localStorage.getItem('nisha_cart_reminded')) {
-                        // НОВОЕ КРУТОЕ ОКНО КОРЗИНЫ
+                // Проверяем: если прошел 1 час И мы еще не напоминали
+                if (lastTime && (Date.now() - parseInt(lastTime)) > 3600000 && !localStorage.getItem('nisha_cart_reminded')) {
+                    setTimeout(() => {
                         showTerminalModal(
                             'SYSTEM_ALERT.LOG',
-                            'Мы заметили, что вы не завершили заказ. Товары могут забрать в любой момент!<br><br><b style="color:var(--accent-yellow);">Используйте промокод COMEBACK5 для скидки 5%!</b>',
-                            '[ ПРОДОЛЖИТЬ ПОКУПКИ ]',
-                            null
+                            'Мы заметили, что вы не завершили заказ. Редкие вещи забирают быстро!<br><br><b style="color:var(--accent-yellow);">Используйте промокод COMEBACK5 для скидки 5%!</b>',
+                            '[ ПРОДОЛЖИТЬ ПОКУПКИ ]', null
                         );
                         localStorage.setItem('nisha_cart_reminded', 'true');
-                    }
+                    }, 2000);
                 }
             }
-        }, 3000);
+
+            // Дожим через системный PUSH (если свернул вкладку с товаром в корзине)
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden && cart.length > 0 && typeof Push !== 'undefined') {
+                    Push.create("NISHA STORE", {
+                        body: "Ваша корзина ждет! Оформляйте, пока не забрали.",
+                        icon: '/favicon.ico',
+                        timeout: 5000,
+                        onClick: function () { window.focus(); this.close(); }
+                    });
+                }
+            });
 
             if (typeof i18next !== 'undefined') {
                 let savedLng = localStorage.getItem('nisha_lang');
@@ -532,6 +575,19 @@ window.onload = async () => {
             document.getElementById('itemsGrid').innerHTML = `<div style="color:red; padding:20px; text-align:center;">[ БД НЕ ПОДКЛЮЧЕНА ]</div>`;
         }
         
+       // --- БЕСКОНЕЧНАЯ ПРОКРУТКА (Infinite Scroll) ---
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                // Если доскроллили до триггера и есть еще товары — рендерим следующую пачку
+                if (renderedCount < filteredItems.length) {
+                    renderNextBatch();
+                }
+            }
+        }, { rootMargin: "300px" }); 
+        
+        const scrollTrigger = document.getElementById('loadingTrigger');
+        if (scrollTrigger) observer.observe(scrollTrigger);
+
         renderHistory();
         initHitCounter();
         
@@ -638,14 +694,32 @@ async function checkSession() {
         if (session) {
             currentUser = session.user;
             const { data: profiles, error } = await _supabase.from('profiles').select('*').eq('id', currentUser.id).limit(1);
-            if (!error && profiles && profiles.length > 0) { userProfile = profiles[0]; }
+            if (!error && profiles && profiles.length > 0) { 
+                userProfile = profiles[0]; 
+                
+                // --- АВТОГЕНЕРАЦИЯ РЕФ-КОДА ДЛЯ АМБАССАДОРОВ ---
+                if (!userProfile.ref_code) {
+                    const cleanName = (userProfile.username || currentUser.email.split('@')[0]).toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    const newCode = cleanName + Math.floor(Math.random() * 99 + 10);
+                    
+                    await _supabase.from('promo_codes').insert([{ code: newCode, discount_percent: 0.05, owner_id: currentUser.id }]);
+                    await _supabase.from('profiles').update({ ref_code: newCode }).eq('id', currentUser.id);
+                    
+                    userProfile.ref_code = newCode;
+                    userProfile.balance = 0;
+                }
+            }
 
             const uName = (userProfile && userProfile.username) ? userProfile.username : currentUser.email;
+            const uBal = userProfile?.balance || 0;
+            const uRef = userProfile?.ref_code || 'ERROR';
 
             // Обновляем ПК (Сайдбар)
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('profileForm').style.display = 'flex';
             document.getElementById('profileName').innerText = uName;
+            if(document.getElementById('profileBalance')) document.getElementById('profileBalance').innerText = uBal;
+            if(document.getElementById('profileRefCode')) document.getElementById('profileRefCode').innerText = uRef;
 
             // Обновляем Мобилку (Модалка)
             const mLog = document.getElementById('modalLoginForm');
@@ -653,6 +727,8 @@ async function checkSession() {
                 mLog.style.display = 'none';
                 document.getElementById('modalProfileForm').style.display = 'block';
                 document.getElementById('modalProfileName').innerText = uName;
+                if(document.getElementById('modalProfileBalance')) document.getElementById('modalProfileBalance').innerText = uBal;
+                if(document.getElementById('modalProfileRefCode')) document.getElementById('modalProfileRefCode').innerText = uRef;
                 // Подгружаем аватарку, если она есть
             const previewDiv = document.getElementById('profileAvatarPreview');
             if (previewDiv) {
@@ -790,7 +866,16 @@ async function loadAllItems() {
         return; 
     }
     
-    allItems = data;
+   allItems = data;
+    
+    // ФИКС КОРЗИНЫ: Если товар удалили из БД, тихо убираем его из локальной корзины юзера
+    const validCart = cart.filter(cItem => allItems.some(dbItem => dbItem.id === cItem.id));
+    if (validCart.length !== cart.length) {
+        cart = validCart;
+        localStorage.setItem('nisha_cart', JSON.stringify(cart));
+        updateCartUI();
+    }
+
     applyFilters();
 }
 
@@ -1679,14 +1764,24 @@ async function generateAndSendOTP() {
     }
 
     const { data: blacklisted } = await _supabase.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
-    if (blacklisted && blacklisted.length > 0) {
-        document.getElementById('otpStatus').innerHTML = "<span style='color:red; font-weight:bold;'>[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.</span>";
-        showToast('Доступ запрещен', 'error');
-        return; 
-    }
     
     const btnOtp = document.getElementById('btnGetOtp');
     if (btnOtp.disabled) return; 
+    
+    // ПРОВЕРКА НА БОТА (reCAPTCHA v3)
+    btnOtp.innerText = "Проверка...";
+    const isHuman = await verifyCaptchaAction('request_otp');
+    if (!isHuman) {
+        btnOtp.innerText = "Подтвердить";
+        return; // Блокируем дальнейшее выполнение
+    }
+
+    if (blacklisted && blacklisted.length > 0) {
+        document.getElementById('otpStatus').innerHTML = "<span style='color:red; font-weight:bold;'>[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.</span>";
+        showToast('Доступ запрещен', 'error');
+        btnOtp.innerText = "Подтвердить";
+        return; 
+    }
     
     btnOtp.disabled = true;
     let timer = 60;
@@ -2052,16 +2147,22 @@ function openProductModal(item) {
     wrapper.innerHTML = ''; 
     thumbs.innerHTML = '';
     
-    // Адаптация под PhotoSwipe: используем <a> теги вместо <div> для слайдов
+    // Поддержка ФОТО и ВИДЕО (.mp4)
     if (item.images && item.images.length > 0) {
-        item.images.forEach((imgUrl, index) => {
-            // Берем миниатюру по индексу, если она есть, иначе берем оригинал
-            const currentThumb = (item.thumbnails && item.thumbnails[index]) ? item.thumbnails[index] : imgUrl;
+        item.images.forEach((url, index) => {
+            const isVideo = url.endsWith('.mp4');
+            const currentThumb = (item.thumbnails && item.thumbnails[index]) ? item.thumbnails[index] : (isVideo ? 'https://via.placeholder.com/400x400.png?text=VIDEO&bg=000000&color=00ff00' : url);
             
-            // PhotoSwipe: для полноэкранного просмотра используем оригинал
-            wrapper.innerHTML += `<a href="${imgUrl}" data-pswp-width="1200" data-pswp-height="1600" target="_blank" class="slide" style="background-image:url('${imgUrl}');"></a>`;
-            // Для нижнего меню миниатюр используем сжатую версию
-            thumbs.innerHTML += `<div class="thumb" style="background-image:url('${currentThumb}');" onclick="setSlide(${index})"></div>`;
+            if (isVideo) {
+                // Если видео — рендерим тег video (autoplay без звука)
+                wrapper.innerHTML += `<div class="slide" style="background:#000;"><video src="${url}" autoplay muted loop playsinline controls style="width:100%; height:100%; object-fit:contain;"></video></div>`;
+            } else {
+                // Если фото — стандартный PhotoSwipe
+                wrapper.innerHTML += `<a href="${url}" data-pswp-width="1200" data-pswp-height="1600" target="_blank" class="slide" style="background-image:url('${url}');"></a>`;
+            }
+            
+            // Добавляем значок "▶️", чтобы на миниатюре было понятно, что это видео
+            thumbs.innerHTML += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" onclick="setSlide(${index})">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
         });
     } else {
         wrapper.innerHTML = `<a class="slide" style="background:#111; pointer-events:none;">НЕТ ФОТО</a>`;
@@ -2170,6 +2271,10 @@ async function openWaitlist() {
     });
     
     if(phoneOrTg && phoneOrTg.trim() !== "") {
+        // ПРОВЕРКА НА БОТА (reCAPTCHA v3)
+        showToast('Проверка безопасности...', 'success');
+        const isHuman = await verifyCaptchaAction('waitlist_subscribe');
+        if (!isHuman) return;
         const { error } = await _supabase.from('waitlist').insert([{ 
             item_id: currentOpenedItem.id, 
             phone: phoneOrTg.trim() 
@@ -2764,6 +2869,14 @@ async function submitProposal() {
     if (cond < 1 || cond > 10) {
         showToast('Оценка должна быть от 1 до 10', 'error');
         return;
+    }
+
+    // ПРОВЕРКА НА БОТА (reCAPTCHA v3)
+    btn.innerText = "[ ПРОВЕРКА БЕЗОПАСНОСТИ... ]";
+    const isHuman = await verifyCaptchaAction('submit_proposal');
+    if (!isHuman) {
+        btn.innerText = "[ ОТПРАВИТЬ ЗАЯВКУ ]";
+        return; 
     }
 
     btn.innerText = '[ ЗАГРУЗКА ДАННЫХ... ]';
