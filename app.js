@@ -320,37 +320,42 @@ function showToast(message, type = 'success', imgUrl = null) {
     }, 3500);
 }
 // --- ВАЛИДАЦИЯ RECAPTCHA v3 ---
+// --- ВАЛИДАЦИЯ RECAPTCHA v3 ---
 async function verifyCaptchaAction(actionName) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if (typeof grecaptcha === 'undefined') {
-            console.warn("reCAPTCHA не загружена");
-            resolve(true); // Пропускаем, если блок. адблоком, чтобы не ломать сайт реальным юзерам
+            console.warn("reCAPTCHA не загружена (возможно блокировщик рекламы). Пропускаем.");
+            resolve(true); 
             return;
         }
 
-        grecaptcha.ready(async () => {
-            try {
-                const token = await grecaptcha.execute(envData.RECAPTCHA_SITE_KEY, { action: actionName });
-                
-               // Отправляем токен И действие на наш Render сервер для строгой проверки
-                const res = await fetch('https://nisha-api.onrender.com/api/verify-captcha', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: token, action: actionName })
-                });
-                
-                const data = await res.json();
-                if (data.success) {
-                    resolve(true); // Человек
-                } else {
-                    showToast('Подозрение на спам. Попробуйте позже.', 'error');
-                    resolve(false); // Бот
+        try {
+            grecaptcha.ready(async () => {
+                try {
+                    const token = await grecaptcha.execute(envData.RECAPTCHA_SITE_KEY, { action: actionName });
+                    
+                    const res = await fetch('https://nisha-api.onrender.com/api/verify-captcha', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: token, action: actionName })
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                        resolve(true); 
+                    } else {
+                        showToast('Подозрение на спам. Попробуйте позже.', 'error');
+                        resolve(false); 
+                    }
+                } catch (err) {
+                    console.error("Сбой сети при проверке капчи. Пропускаем защиту:", err);
+                    resolve(true); // Заказ важнее, пропускаем если сервер тупит
                 }
-            } catch (err) {
-                console.error("Ошибка капчи:", err);
-                resolve(false);
-            }
-        });
+            });
+        } catch (e) {
+            console.error("Критическая ошибка reCAPTCHA:", e);
+            resolve(true); // Заказ важнее
+        }
     });
 }
 // --- КРУТЫЕ ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ ---
@@ -1439,7 +1444,7 @@ function debouncedNPCitySearch(query) {
 // --- ПОИСК ГОРОДА ---
 async function searchNPCity(query) {
     try {
-        const res = await fetch('https://nisha-api.onrender.com', {
+        const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -1460,10 +1465,7 @@ async function searchNPCity(query) {
                 div.onmousedown = (e) => {
                     e.preventDefault();
                     document.getElementById('orderCity').value = city.Present;
-                    
-                    // ВАЖНО: Новая Почта требует именно DeliveryCity для поиска отделений!
                     selectedCityRef = city.DeliveryCity || city.Ref; 
-                    
                     dropdown.style.display = 'none';
                     
                     const branchInput = document.getElementById('orderBranch');
@@ -1483,7 +1485,6 @@ async function searchNPCity(query) {
     } catch(e) { 
         console.error("Ошибка поиска города НП", e); 
         document.getElementById('cityDropdown').style.display = 'none';
-        showToast('Ошибка связи с сервером доставки. Повторите попытку.', 'error');
     }
 }
 
