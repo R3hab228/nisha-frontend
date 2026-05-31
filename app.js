@@ -230,15 +230,15 @@ function changeLanguage(lng) {
     }
 }
 const lenis = new Lenis({
-    duration: 1.0, 
+    duration: 1.2, 
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     direction: 'vertical',
     gestureDirection: 'vertical',
     smooth: true,
     smoothTouch: false,
     touchMultiplier: 2,
-    wheelMultiplier: 0.8, 
-    normalizeWheel: true
+    wheelMultiplier: 1, // Вернули стандартную скорость колесика
+    normalizeWheel: false // Отключили нормализацию (СИЛЬНО жрет FPS на ПК)
 });
 
 function raf(time) {
@@ -641,6 +641,12 @@ function closeModal(id) {
         }
         modal.style.opacity = '';
         modal.style.transition = '';
+        
+        // === ИСПРАВЛЕНИЕ: МГНОВЕННОЕ ОБНОВЛЕНИЕ ИСТОРИИ ===
+        if (id === 'productModal') {
+            renderHistory(); 
+        }
+        
     }, 300);
 }
 
@@ -967,9 +973,12 @@ function applyFilters() {
 
             
             if (grid) {
-                requestAnimationFrame(() => {
-                    grid.classList.remove('fade-out');
-                });
+                // Небольшая задержка, чтобы браузер успел отрисовать карточки без фризов
+                setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        grid.classList.remove('fade-out');
+                    });
+                }, 50);
             }
         } catch (err) {
             console.error("ОШИБКА ФИЛЬТРАЦИИ:", err);
@@ -1107,8 +1116,15 @@ function renderNextBatch() {
             if (saleBadgeEl && typeof RoughNotation !== 'undefined') {
                 setTimeout(() => RoughNotation.annotate(saleBadgeEl, { type: 'box', color: '#ffcc00', strokeWidth: 2 }).show(), 500);
             }
+            // ОПТИМИЗАЦИЯ VanillaTilt: отключаем glare и ставим жесткие рамки
             if (typeof VanillaTilt !== 'undefined' && window.innerWidth > 900) {
-                VanillaTilt.init(card, { max: 5, speed: 1000, glare: false, scale: 1.01 });
+                VanillaTilt.init(card, { 
+                    max: 3,           // Уменьшили угол наклона 
+                    speed: 2000,      // Сделали анимацию более плавной
+                    glare: false,     // Отключили блики (самая тяжелая часть)
+                    scale: 1.0,       // Отключили увеличение при наведении
+                    "mouse-event-element": card // Привязка строго к карточке
+                });
             }
         } catch (cardErr) {
             console.error("Ошибка при отрисовке карточки:", cardErr);
@@ -2373,6 +2389,7 @@ function addToHistory(item) {
 }
 
 // Изменено под создание DOM элементов для AutoAnimate и Tilt
+// Изменено под создание DOM элементов для AutoAnimate, Tilt и поддержку ВИДЕО
 function renderHistory() {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     const container = document.getElementById('historyGrid');
@@ -2397,19 +2414,40 @@ function renderHistory() {
     container.innerHTML = '';
     
     hist.forEach(h => {
-        // В истории мы сохраняли URL, просто оставляем его
         const optImg = h.img;
+        // Проверяем, видео это или обычная картинка
+        const isVideo = optImg && optImg.endsWith('.mp4');
         
         const card = document.createElement('div');
         card.className = 'history-card';
-        
-        // ИСПРАВЛЕНИЕ: Теперь любой клик по истории 100% открывает модалку сразу
         card.onclick = () => openProductModalById(h.id);
         
-        // Убрали zoomable-img, чтобы не срабатывало увеличение фотки
+        // Готовим HTML для медиа-блока
+        let mediaHTML = 'NO FOTO';
+        if (optImg) {
+            if (isVideo) {
+                mediaHTML = `
+                    <video 
+                        src="${optImg}" 
+                        autoplay 
+                        muted 
+                        loop 
+                        playsinline 
+                        webkit-playsinline 
+                        preload="auto"
+                        style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"
+                        ontimeupdate="if(this.currentTime >= 3) { this.currentTime = 0; this.play(); }"
+                    ></video>
+                    <div style="position:absolute; z-index:5; top:2px; left:2px; background:rgba(0,0,0,0.6); padding:1px 4px; border-radius:2px; color:#fff; font-size:8px; font-family:var(--font-mono); border: 1px solid #444; pointer-events: none;">▶ VIDEO</div>
+                `;
+            } else {
+                mediaHTML = `<img class="lozad" data-src="${optImg}" style="width:100%; height:100%; object-fit:cover;">`;
+            }
+        }
+        
         card.innerHTML = `
-            <div class="history-img">
-                ${h.img ? `<img class="lozad" data-src="${optImg}" style="width:100%; height:100%; object-fit:cover;">` : 'NO FOTO'}
+            <div class="history-img" style="position: relative; overflow: hidden;">
+                ${mediaHTML}
             </div>
             <div class="history-info">
                 <div class="history-name" title="${h.name}">${h.name}</div>
@@ -2426,9 +2464,9 @@ function renderHistory() {
     if (typeof lozad !== 'undefined') {
         lozad('.lozad').observe();
     }
+    
     // СИНХРОНИЗАЦИЯ С БД (если юзер вошел в аккаунт)
     if (currentUser && _supabase) {
-        // Чтобы не спамить базу каждым кликом, отправляем без await
         _supabase.from('profiles').update({ 
             viewed_history: hist.map(h => h.id) 
         }).eq('id', currentUser.id).then();
