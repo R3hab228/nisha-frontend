@@ -2,8 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://browser.sentry-cdn.com https://www.google.com https://www.gstatic.com https://telegram.org blob:; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; connect-src 'self' http://localhost:3000 https://nisha-api.onrender.com https://api.novaposhta.ua https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com; frame-src https://www.google.com https://recaptcha.net https://oauth.telegram.org; img-src 'self' data: https: blob:;">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' http://localhost:3000 https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com; frame-src https://www.google.com https://recaptcha.net https://oauth.telegram.org;">
     <meta property="og:type" content="website">
     <meta property="og:title" content="NISHA | Underground Store">
     <meta property="og:description" content="Площадка для продажи винтажных, архивных и эксклюзивных вещей.">
@@ -292,7 +291,7 @@
         <div class="modal-content">
             <div class="modal-gallery">
                <div class="slider-container" id="sliderContainer">
-                    <div id="photoCounter" class="photo-counter">[ 1 / 1 ]</div>
+                    <div id="photoCounter" class="photo-counter">1/1</div>
                     <div class="slider-wrapper" id="sliderWrapper"></div>
                     <button class="slider-btn prev" onclick="moveSlide(-1)">&#10094;</button>
                     <button class="slider-btn next" onclick="moveSlide(1)">&#10095;</button>
