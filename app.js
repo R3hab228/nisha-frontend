@@ -703,33 +703,17 @@ async function checkSession() {
             const { data: profiles, error } = await _supabase.from('profiles').select('*').eq('id', currentUser.id).limit(1);
             if (!error && profiles && profiles.length > 0) { 
                 userProfile = profiles[0]; 
-                
-                // --- АВТОГЕНЕРАЦИЯ РЕФ-КОДА ДЛЯ АМБАССАДОРОВ ---
-                if (!userProfile.ref_code) {
-                    const cleanName = (userProfile.username || currentUser.email.split('@')[0]).toUpperCase().replace(/[^A-Z0-9]/g, '');
-                    const newCode = cleanName + Math.floor(Math.random() * 99 + 10);
-                    
-                    await _supabase.from('promo_codes').insert([{ code: newCode, discount_percent: 0.05, owner_id: currentUser.id }]);
-                    await _supabase.from('profiles').update({ ref_code: newCode }).eq('id', currentUser.id);
-                    
-                    userProfile.ref_code = newCode;
-                    userProfile.balance = 0;
-                }
             }
 
             const uName = (userProfile && userProfile.username) ? userProfile.username : currentUser.email;
-            const uBal = userProfile?.balance || 0;
-            const uRef = userProfile?.ref_code || 'ERROR';
 
-// БЕЗОПАСНО Обновляем ПК (Сайдбар)
+            // БЕЗОПАСНО Обновляем ПК (Сайдбар)
             const loginForm = document.getElementById('loginForm');
             const profileForm = document.getElementById('profileForm');
             if (loginForm) loginForm.style.display = 'none';
             if (profileForm) profileForm.style.display = 'flex';
             
             if(document.getElementById('profileName')) document.getElementById('profileName').innerText = uName;
-            if(document.getElementById('profileBalance')) document.getElementById('profileBalance').innerText = uBal;
-            if(document.getElementById('profileRefCode')) document.getElementById('profileRefCode').innerText = uRef;
 
             // БЕЗОПАСНО Обновляем Мобилку (Модалка)
             const mLog = document.getElementById('modalLoginForm');
@@ -738,8 +722,6 @@ async function checkSession() {
             if (mProf) mProf.style.display = 'block';
             
             if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
-            if(document.getElementById('modalProfileBalance')) document.getElementById('modalProfileBalance').innerText = uBal;
-            if(document.getElementById('modalProfileRefCode')) document.getElementById('modalProfileRefCode').innerText = uRef;
             
             // Подгружаем аватарку, если она есть
             const previewDiv = document.getElementById('profileAvatarPreview');
