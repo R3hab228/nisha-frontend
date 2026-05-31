@@ -1057,7 +1057,7 @@ function renderNextBatch() {
                     <div class="mock-image skeleton" id="img-${item.id}" style="position: relative; overflow: hidden;"></div>`;
             }
 
-            card.innerHTML = `
+           card.innerHTML = `
                 ${badgeHTML}
                 <div class="${starClass}">★</div>
                 <div class="card-clickable-area" style="display:flex; flex-direction:column; flex-grow:1;">
@@ -1065,9 +1065,10 @@ function renderNextBatch() {
                     <div class="item-info">
                         <h3 class="item-title">${safeName}</h3>
                         <div class="item-price">${priceHTML}</div>
-                       <div class="item-size">${i18next.t('grid.size_prefix')}${safeSize}</div>
-                    <div class="item-footer"><span>${safeBrand}</span><span>${item.condition || '9/10'}</span></div>
-                    <button class="grid-cart-btn" onclick="addToCartWithAnimation('${item.id}', this, event)" style="${item.status === 'sold' ? 'display:none;' : ''}">${i18next.t('product.add_to_cart')}</button>
+                        <div class="item-size">${i18next.t('grid.size_prefix')}${safeSize}</div>
+                        <div class="item-footer"><span>${safeBrand}</span><span>${item.condition || '9/10'}</span></div>
+                    </div> <!-- ИСПРАВЛЕНИЕ: закрыли блок информации -->
+                    <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}">${i18next.t('product.add_to_cart')}</button>
                 </div>
             `;
 
@@ -1099,12 +1100,25 @@ function renderNextBatch() {
                 }
             }
 
+            // Нажатие на звездочку
             card.querySelector('.fav-star').addEventListener('click', (e) => toggleFav(e, item.id));
             
+            // Нажатие на карточку (открывает модалку)
             card.querySelector('.card-clickable-area').addEventListener('click', (e) => {
+                // Если кликнули по кнопке корзины — игнорируем, модалку не открываем!
                 if (e.target.closest('.grid-cart-btn')) return; 
                 openProductModal(item);
             });
+
+            // Нажатие СТРОГО на кнопку "В корзину"
+            const cartBtn = card.querySelector('.grid-cart-btn');
+            if (cartBtn) {
+                cartBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Жестко блокируем открытие карточки
+                    addToCartWithAnimation(item.id, cartBtn, e);
+                });
+            }
 
             grid.appendChild(card);
 
@@ -2131,11 +2145,34 @@ function openProductModal(item) {
     document.getElementById('modalItemBrand').innerText = item.brand;
     
     const condStr = item.condition || '9 / 10';
-    document.getElementById('modalItemCond').innerText = condStr;
     const condMatch = condStr.match(/(\d+)/);
-    let condPercent = 90;
-    if(condMatch && condMatch[1]) condPercent = parseInt(condMatch[1]) * 10;
-    document.getElementById('modalCondFill').style.width = condPercent + '%';
+    
+    // Получаем саму оценку (по умолчанию 9)
+    let condNum = 9;
+    if (condMatch && condMatch[1]) condNum = parseInt(condMatch[1]);
+    
+    // Устанавливаем ширину полоски в процентах
+    const condFill = document.getElementById('modalCondFill');
+    condFill.style.width = (condNum * 10) + '%';
+    
+    // Получаем элемент текста "9 / 10"
+    const condText = document.getElementById('modalItemCond');
+    condText.innerText = condStr;
+
+    // Умная раскраска в зависимости от оценки
+    if (condNum <= 3) {
+        condFill.style.backgroundColor = 'var(--accent-red)';
+        condText.style.color = 'var(--accent-red)';
+    } else if (condNum <= 6) {
+        condFill.style.backgroundColor = '#ff9900'; // Оранжевый
+        condText.style.color = '#ff9900';
+    } else if (condNum <= 8) {
+        condFill.style.backgroundColor = 'var(--accent-yellow)';
+        condText.style.color = 'var(--accent-yellow)';
+    } else {
+        condFill.style.backgroundColor = 'var(--accent-green)';
+        condText.style.color = 'var(--accent-green)';
+    }
     // Найди эту строку (или добавь её, если нет):
     const descText = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
    
