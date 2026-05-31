@@ -291,7 +291,8 @@
         </div>
         <div class="modal-content">
             <div class="modal-gallery">
-                <div class="slider-container" id="sliderContainer">
+               <div class="slider-container" id="sliderContainer">
+                    <div id="photoCounter" class="photo-counter">[ 1 / 1 ]</div>
                     <div class="slider-wrapper" id="sliderWrapper"></div>
                     <button class="slider-btn prev" onclick="moveSlide(-1)">&#10094;</button>
                     <button class="slider-btn next" onclick="moveSlide(1)">&#10095;</button>
@@ -299,15 +300,16 @@
                 <div class="modal-thumbnails" id="modalThumbnails"></div>
             </div>
             <div class="modal-info">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <h2 id="modalItemTitle" style="margin-top: 0; color: #fff; font-size: 20px; padding-right: 15px;">Название товара</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 id="modalItemTitle" style="margin: 0; color: #fff; font-size: 22px; padding-right: 15px; line-height: 1.2;">Название товара</h2>
                     <div id="modalFavStar" class="fav-star-modal" onclick="toggleFavFromModal(event)" title="Избранное">★</div>
                 </div>
                 
-                <div class="price-views-row">
+               <div class="price-views-row">
                     <div class="modal-price" id="modalItemPrice">0 грн</div>
-                    <div class="item-views"><span data-i18n="product.views">ПРОСМОТРОВ:</span> <span id="modalItemViews" style="margin-left: 5px;">342</span></div>
+                    <div class="item-views">[ 👁 <span id="modalItemViews">0</span> ]</div>
                 </div>
+
                 <div class="condition-container">
                     <div class="condition-text"><span data-i18n="product.condition">СОСТОЯНИЕ ВЕЩИ:</span><span style="color: var(--accent-green);" id="modalItemCond">9 / 10</span></div>
                     <div class="condition-bar-bg"><div class="condition-bar-fill" id="modalCondFill"></div></div>
@@ -340,10 +342,10 @@
                     <button class="share-btn" onclick="shareItem()" title="Поделиться">[↗]</button>
                 </div>
                 
-               <div class="trust-badges">
-                    <div class="badge-item"><span class="badge-icon" style="color:var(--accent-green);">[✔]</span> <span class="badge-text" data-i18n="product.badge_orig">ПРОШЛО ЛЕГИТ-ЧЕК</span></div>
-                    <div class="badge-item"><span class="badge-icon" style="color:var(--accent-green);">[✈]</span> <span class="badge-text" data-i18n="product.badge_fast">БЫСТРАЯ ОТПРАВКА</span></div>
-                    <div class="badge-item"><span class="badge-icon" style="color:var(--accent-green);">[↺]</span> <span class="badge-text" data-i18n="product.badge_refund">ВОЗВРАТ 14 ДНЕЙ</span></div>
+              <div class="trust-badges">
+                    <div class="badge-item"><span class="badge-icon">100%</span> <span class="badge-text" data-i18n="product.badge_orig">ПРОШЛО ЛЕГИТ-ЧЕК</span></div>
+                    <div class="badge-item"><span class="badge-icon">24H</span> <span class="badge-text" data-i18n="product.badge_fast">БЫСТРАЯ ОТПРАВКА</span></div>
+                    <div class="badge-item"><span class="badge-icon">14D</span> <span class="badge-text" data-i18n="product.badge_refund">ВОЗВРАТ 14 ДНЕЙ</span></div>
                 </div>
                 
                 <div style="margin-top: 20px; border-top: 2px dashed #333; padding-top: 15px;">
@@ -451,7 +453,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script defer src="https://unpkg.com/@popperjs/core@2"></script>
     <script defer src="https://unpkg.com/tippy.js@6"></script>
-    <script defer src="https://unpkg.com/@formkit/auto-animate@1/index.global.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.global.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
     <script defer src="https://unpkg.com/imask"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>

@@ -284,31 +284,30 @@
         .slider-btn:active { border-style: inset; }
         .slider-btn.prev { left: 10px; }
         .slider-btn.next { right: 10px; }
+        /* Счетчик фоток поверх галереи */
+        .photo-counter { position: absolute; top: 15px; right: 15px; background: rgba(0, 0, 0, 0.7); color: #fff; font-family: var(--font-mono); font-size: 12px; font-weight: bold; padding: 4px 10px; border: 1px solid #444; z-index: 15; letter-spacing: 1px; backdrop-filter: blur(3px); }
 
-        .modal-thumbnails { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;}
+       .modal-thumbnails { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;}
         .modal-thumbnails::-webkit-scrollbar { height: 6px; }
-        .thumb { min-width: 70px; height: 70px; background: #000; border: 2px solid #444; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; text-align: center; font-weight: bold; background-size: cover; background-position: center; transition: 0.2s;}
-        .thumb:hover, .thumb.active-thumb { border-color: var(--accent-green); opacity: 1; }
-        .thumb:not(.active-thumb) { opacity: 0.6; }
+        .thumb { min-width: 70px; height: 70px; background: #000; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; background-size: cover; background-position: center; transition: 0.3s ease;}
+        .thumb.active-thumb { opacity: 1; filter: brightness(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+        .thumb:not(.active-thumb) { opacity: 0.4; filter: grayscale(50%); }
+        .thumb:hover:not(.active-thumb) { opacity: 0.8; filter: grayscale(0%); }
         
         .modal-info { width: 50%; display: flex; flex-direction: column; position: relative;}
-        .price-views-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 15px;}
-        .modal-price { color: var(--accent-green); font-size: 32px; font-weight: bold; font-family: var(--font-mono); margin: 0; text-shadow: 0 0 10px rgba(0,255,0,0.2);}
-        .item-views { color: #aaa; font-size: 12px; font-family: var(--font-mono); background: #000; padding: 4px 10px; border: 1px solid #333; display: flex; align-items: center; gap: 5px;}
+        .price-views-row { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 20px;}
+        .modal-price { color: var(--accent-green); font-size: 36px; font-weight: bold; font-family: var(--font-mono); margin: 0; line-height: 1;}
+        .item-views { color: #666; font-size: 11px; font-family: var(--font-mono); display: flex; align-items: center; gap: 5px; margin-top: 5px;}
         
-        .modal-desc { color: var(--text-main); font-size: 14px; line-height: 1.6; background: #000; padding: 15px; border: 1px solid #333; margin-bottom: 15px;}
+        .modal-desc { color: #ddd; font-size: 14px; line-height: 1.6; margin-bottom: 20px; padding: 15px 0; border-top: 1px dashed #333; border-bottom: 1px dashed #333; font-family: var(--font-main);}
         
-     .condition-container { margin: 10px 0; font-family: var(--font-mono); }
-        .condition-text { display: flex; justify-content: space-between; font-size: 13px; color: #fff; margin-bottom: 5px; font-weight: bold;}
+        .condition-container { margin: 0 0 20px 0; font-family: var(--font-mono); }
+        .condition-text { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 8px; text-transform: uppercase;}
         
-        /* Win95 Серый фон с рамками */
-        .condition-bar-bg { width: 100%; height: 18px; background-color: #c0c0c0; border-top: 2px solid #808080; border-left: 2px solid #808080; border-bottom: 2px solid #fff; border-right: 2px solid #fff; position: relative; padding: 2px; box-sizing: border-box; }
-        
-        /* Win95 Синяя заливка */
-        .condition-bar-fill { height: 100%; background-color: #000080; width: 90%; transition: width 1s ease-out; }
-        
-        /* Невидимая решетка, которая делит бар ровно на 10 квадратиков */
-        .condition-bar-bg::after { content: ''; position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; background: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 2px), #c0c0c0 calc(10% - 2px), #c0c0c0 10%); pointer-events: none; }
+        /* Терминальный статус-бар */
+        .condition-bar-bg { width: 100%; height: 8px; background-color: #111; border: 1px solid #333; position: relative; }
+        .condition-bar-fill { height: 100%; background-color: var(--accent-green); width: 90%; transition: width 1s ease-out; box-shadow: 0 0 8px rgba(0,255,0,0.3);}
+        .condition-bar-bg::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), #111 calc(10% - 1px), #111 10%); pointer-events: none; }
         
       .info-accordions { margin-top: auto; margin-bottom: 15px; }
     
@@ -334,14 +333,15 @@
         .buy-tg-btn:active { border-style: inset; }
         .buy-tg-btn:hover { filter: brightness(1.1); }
         
-        .share-btn { background: #1a1a1a; color: #fff; border: 2px outset #555; padding: 0 20px; font-weight: bold; cursor: pointer; font-family: var(--font-mono); font-size: 18px; transition: 0.2s;}
-        .share-btn:hover { border-color: var(--accent-green); color: var(--accent-green); }
-        .share-btn:active { border-style: inset; }
+       .share-btn { background: transparent; color: #888; border: 1px solid #333; padding: 0 20px; font-weight: normal; cursor: pointer; font-family: var(--font-mono); font-size: 18px; transition: 0.2s;}
+        .share-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05);}
+        .share-btn:active { transform: scale(0.95); }
 
-        .trust-badges { display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px dashed #444; padding-top: 15px; }
-.badge-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; }
-.badge-icon { font-size: 16px; font-family: var(--font-mono); font-weight: bold; letter-spacing: 1px; }
-.badge-text { font-size: 11px; color: #aaa; font-family: var(--font-main); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+       .trust-badges { display: flex; gap: 10px; margin-top: 20px; border-top: 1px dashed #333; padding-top: 20px; }
+        .badge-item { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; background: #0a0a0a; border: 1px solid #222; padding: 10px 12px; border-left: 3px solid #333; transition: 0.2s;}
+        .badge-item:hover { border-left-color: var(--accent-green); background: #111;}
+        .badge-icon { font-size: 14px; font-family: var(--font-mono); font-weight: bold; color: var(--accent-green); background: rgba(0,255,0,0.1); padding: 2px 6px; border-radius: 2px;}
+        .badge-text { font-size: 10px; color: #888; font-family: var(--font-main); font-weight: bold; text-transform: uppercase; line-height: 1.3; }
 
         .form-layout { display: flex; flex-direction: column; gap: 15px; width: 100%; padding: 25px; box-sizing: border-box;}
         .form-layout label { color: var(--accent-green); font-family: var(--font-mono); font-size: 14px; font-weight: bold; margin-bottom: -10px; text-transform: uppercase;}

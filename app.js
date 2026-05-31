@@ -611,28 +611,35 @@ function closeModal(id) {
     
     const win = modal.querySelector('.modal-window');
     
-    // Если это модалка товара, делаем красивый свайп вниз
-    if (win && id === 'productModal') {
-        win.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
-        win.style.transform = 'translateY(100vh)';
+    // Плавная анимация окна
+    if (win) {
+        win.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
+        if (window.innerWidth > 900) {
+            win.style.transform = 'scale(0.95) translateY(20px)'; // Плавное исчезновение для ПК
+        } else {
+            win.style.transform = 'translateY(100vh)'; // Свайп вниз для телефона
+        }
         win.style.opacity = '0';
+    }
+
+    // Плавное затухание темного фона
+    modal.style.transition = 'opacity 0.3s ease';
+    modal.style.opacity = '0';
+    
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; 
+        if (typeof lenis !== 'undefined') lenis.start(); 
         
-        setTimeout(() => {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto'; 
-            if (typeof lenis !== 'undefined') lenis.start(); 
-            
-            // Возвращаем стили на место для следующего открытия
+        // Сбрасываем стили, чтобы при следующем открытии всё снова работало
+        if (win) {
             win.style.transform = '';
             win.style.opacity = '';
             win.style.transition = '';
-        }, 300);
-    } else {
-        // Обычное закрытие для остальных окон (Правила, Корзина)
-        modal.style.display = 'none'; 
-        document.body.style.overflow = 'auto'; 
-        if (typeof lenis !== 'undefined') lenis.start(); 
-    }
+        }
+        modal.style.opacity = '';
+        modal.style.transition = '';
+    }, 300);
 }
 
 async function openReviewsModal() { 
@@ -675,9 +682,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
         if (this.id === 'rulesModal') return; 
         if (e.target === this) { 
-            this.style.display = 'none'; 
-            document.body.style.overflow = 'auto'; 
-            if (typeof lenis !== 'undefined') lenis.start(); 
+            closeModal(this.id); // Теперь фон тоже закрывается плавно!
         }
     });
 });
@@ -714,32 +719,36 @@ async function checkSession() {
             const uBal = userProfile?.balance || 0;
             const uRef = userProfile?.ref_code || 'ERROR';
 
-            // Обновляем ПК (Сайдбар)
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('profileForm').style.display = 'flex';
-            document.getElementById('profileName').innerText = uName;
+// БЕЗОПАСНО Обновляем ПК (Сайдбар)
+            const loginForm = document.getElementById('loginForm');
+            const profileForm = document.getElementById('profileForm');
+            if (loginForm) loginForm.style.display = 'none';
+            if (profileForm) profileForm.style.display = 'flex';
+            
+            if(document.getElementById('profileName')) document.getElementById('profileName').innerText = uName;
             if(document.getElementById('profileBalance')) document.getElementById('profileBalance').innerText = uBal;
             if(document.getElementById('profileRefCode')) document.getElementById('profileRefCode').innerText = uRef;
 
-            // Обновляем Мобилку (Модалка)
+            // БЕЗОПАСНО Обновляем Мобилку (Модалка)
             const mLog = document.getElementById('modalLoginForm');
-            if (mLog) {
-                mLog.style.display = 'none';
-                document.getElementById('modalProfileForm').style.display = 'block';
-                document.getElementById('modalProfileName').innerText = uName;
-                if(document.getElementById('modalProfileBalance')) document.getElementById('modalProfileBalance').innerText = uBal;
-                if(document.getElementById('modalProfileRefCode')) document.getElementById('modalProfileRefCode').innerText = uRef;
-                // Подгружаем аватарку, если она есть
+            const mProf = document.getElementById('modalProfileForm');
+            if (mLog) mLog.style.display = 'none';
+            if (mProf) mProf.style.display = 'block';
+            
+            if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
+            if(document.getElementById('modalProfileBalance')) document.getElementById('modalProfileBalance').innerText = uBal;
+            if(document.getElementById('modalProfileRefCode')) document.getElementById('modalProfileRefCode').innerText = uRef;
+            
+            // Подгружаем аватарку, если она есть
             const previewDiv = document.getElementById('profileAvatarPreview');
             if (previewDiv) {
                 if (userProfile && userProfile.avatar_url) {
                     previewDiv.innerText = '';
                     previewDiv.style.backgroundImage = `url('${userProfile.avatar_url}')`;
                 } else {
-                    previewDiv.innerText = '?';
+                    previewDiv.innerText = '?'; // Вернул инопланетянина по умолчанию
                     previewDiv.style.backgroundImage = 'none';
                 }
-            }
             }
             
             await loadFavorites();
@@ -763,15 +772,19 @@ async function checkSession() {
             currentUser = null;
             userProfile = null;
             favorites = [];
-            // ПК
-            document.getElementById('loginForm').style.display = 'flex';
-            document.getElementById('profileForm').style.display = 'none';
-            // Мобилка
+            
+            // БЕЗОПАСНО ПК
+            const loginForm = document.getElementById('loginForm');
+            const profileForm = document.getElementById('profileForm');
+            if (loginForm) loginForm.style.display = 'flex';
+            if (profileForm) profileForm.style.display = 'none';
+            
+            // БЕЗОПАСНО Мобилка
             const mLog = document.getElementById('modalLoginForm');
-            if (mLog) {
-                mLog.style.display = 'block';
-                document.getElementById('modalProfileForm').style.display = 'none';
-            }
+            const mProf = document.getElementById('modalProfileForm');
+            if (mLog) mLog.style.display = 'flex';
+            if (mProf) mProf.style.display = 'none';
+            
             updateFavBadge();
         }
     } catch (err) { console.error("Ошибка в checkSession:", err); }
@@ -857,12 +870,13 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
 }
 
 async function loadAllItems() {
-    document.getElementById('itemsGrid').innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; text-align:center; grid-column: 1/-1;">[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]</div>`;
+    const grid = document.getElementById('itemsGrid');
+    if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; text-align:center; grid-column: 1/-1;">[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]</div>`;
     
     const { data, error } = await _supabase.from('items').select('*').order('created_at', { ascending: false });
     
     if (error) { 
-        document.getElementById('itemsGrid').innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
+        if (grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
         return; 
     }
     
@@ -2107,28 +2121,31 @@ function openProductModal(item) {
     const descText = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
    
     document.querySelector('.modal-desc').innerHTML = `
-        <strong style="color: var(--accent-green);">РАЗМЕР: <span id="modalItemSizeDesc">${item.size}</span></strong><br>
-        <strong>БРЕНД:</strong> <span id="modalItemBrand">${item.brand}</span><br><br>
-        ${descText}
+        <div style="margin-bottom: 5px;">
+            <strong style="color: #fff; font-family: var(--font-mono);">РАЗМЕР:</strong> 
+            <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${item.size}</span>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong style="color: #fff; font-family: var(--font-mono);">БРЕНД:</strong> 
+            <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${item.brand}</span>
+        </div>
+        <div style="color: #aaa; font-size: 13px;">${descText}</div>
     `;
-    // НАСТОЯЩИЕ ПРОСМОТРЫ (1 юзер = 1 просмотр)
+    // ЧИСТЫЕ ПРОСМОТРЫ ИЗ БД
     const viewCount = document.getElementById('modalItemViews');
     if(viewCount) {
-        let viewedItems = JSON.parse(localStorage.getItem('nisha_viewed') || '[]');
-        let currentViews = item.views_count || 0;
+        // Показываем реальную цифру из базы (или 0)
+        viewCount.innerText = item.views_count || 0;
 
-        // Если юзер еще не смотрел этот товар
+        let viewedItems = JSON.parse(localStorage.getItem('nisha_viewed') || '[]');
+        // Если юзер еще не смотрел этот товар - тихо прибавляем +1 в базу
         if (!viewedItems.includes(item.id)) {
-            currentViews += 1; // Визуально добавляем +1
             viewedItems.push(item.id);
             localStorage.setItem('nisha_viewed', JSON.stringify(viewedItems));
-            
-            // Отправляем в базу данных +1 тихо в фоне
             if (_supabase) {
                 _supabase.rpc('increment_item_views', { item_uuid: item.id }).then();
             }
         }
-        viewCount.innerText = currentViews;
     }
 
     const cartBtn = document.getElementById('modalCartBtn');
@@ -2226,6 +2243,8 @@ function openProductModal(item) {
 }
 
 let currentSlide = 0;
+let totalSlides = 0; // Добавили переменную
+
 function moveSlide(step) {
     const slides = document.querySelectorAll('.slide');
     if (slides.length === 0) return;
@@ -2242,6 +2261,13 @@ function setSlide(index) {
 
 function updateSlider() {
     document.getElementById('sliderWrapper').style.transform = `translateX(-${currentSlide * 100}%)`;
+    
+    // Обновляем счетчик
+    const counter = document.getElementById('photoCounter');
+    totalSlides = document.querySelectorAll('.slide').length;
+    if (counter) counter.innerText = `[ ${currentSlide + 1} / ${totalSlides} ]`;
+
+    // Обновляем миниатюры
     const thumbs = document.querySelectorAll('.thumb');
     thumbs.forEach((t, i) => { 
         if(i === currentSlide) t.classList.add('active-thumb'); 
