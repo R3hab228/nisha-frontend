@@ -611,18 +611,16 @@ function closeModal(id) {
     
     const win = modal.querySelector('.modal-window');
     
-    // Плавная анимация окна
     if (win) {
         win.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
         if (window.innerWidth > 900) {
-            win.style.transform = 'scale(0.95) translateY(20px)'; // Плавное исчезновение для ПК
+            win.style.transform = 'scale(0.95) translateY(20px)'; 
         } else {
-            win.style.transform = 'translateY(100vh)'; // Свайп вниз для телефона
+            win.style.transform = 'translateY(100vh)'; 
         }
         win.style.opacity = '0';
     }
 
-    // Плавное затухание темного фона
     modal.style.transition = 'opacity 0.3s ease';
     modal.style.opacity = '0';
     
@@ -631,7 +629,6 @@ function closeModal(id) {
         document.body.style.overflow = 'auto'; 
         if (typeof lenis !== 'undefined') lenis.start(); 
         
-        // Сбрасываем стили, чтобы при следующем открытии всё снова работало
         if (win) {
             win.style.transform = '';
             win.style.opacity = '';
@@ -682,7 +679,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
         if (this.id === 'rulesModal') return; 
         if (e.target === this) { 
-            closeModal(this.id); // Теперь фон тоже закрывается плавно!
+            closeModal(this.id); 
         }
     });
 });
@@ -1020,7 +1017,9 @@ function renderNextBatch() {
                 badgeHTML = '<div class="sale-badge-card">SALE</div>'; 
             }
 
-          const optImg = getOptimizedImageUrl(item, false); // Для сетки берем нормальное фото
+            // ВАЖНО: Определяем картинку и видео ровно один раз!
+            const optImg = getOptimizedImageUrl(item, false);
+            const isVideo = item.images && item.images.length > 0 && item.images[0].endsWith('.mp4');
             
             let itemPrice = Number(item.price) || 0;
             let finalPrice = isHacked ? Math.floor(itemPrice * 0.9) : itemPrice;
@@ -1034,18 +1033,39 @@ function renderNextBatch() {
             card.className = `item-card ${extraClasses}`;
             card.setAttribute('data-id', item.id);
             
-          
             const safeName = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.name || 'Без названия') : (item.name || 'Без названия');
             const safeBrand = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.brand || 'No brand') : (item.brand || 'No brand');
             const safeSize = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.size || '-') : (item.size || '-');
+
+            // ГОТОВИМ БЛОК ФОТО ИЛИ ВИДЕО
+            let mediaHTML = '';
+            if (isVideo) {
+                const videoUrl = item.images[0]; 
+                mediaHTML = `
+                    <div class="mock-image" style="position: relative; overflow: hidden; padding: 0; background: #0a0a0a;">
+                        <div style="position:absolute; z-index:5; top:5px; left:5px; background:rgba(0,0,0,0.6); padding:2px 6px; border-radius:3px; color:#fff; font-size:10px; font-family:var(--font-mono); border: 1px solid #444; pointer-events: none;">▶ VIDEO</div>
+                        <video 
+                            src="${videoUrl}" 
+                            autoplay 
+                            muted 
+                            loop 
+                            playsinline 
+                            webkit-playsinline 
+                            preload="auto"
+                            style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" 
+                            ontimeupdate="if(this.currentTime >= 3) { this.currentTime = 0; this.play(); }"
+                        ></video>
+                    </div>`;
+            } else {
+                mediaHTML = `
+                    <div class="mock-image skeleton" id="img-${item.id}" style="position: relative; overflow: hidden;"></div>`;
+            }
 
             card.innerHTML = `
                 ${badgeHTML}
                 <div class="${starClass}">★</div>
                 <div class="card-clickable-area" style="display:flex; flex-direction:column; flex-grow:1;">
-                    <!-- ДОБАВЛЕН КЛАСС skeleton и ID для плавной загрузки -->
-                    <div class="mock-image skeleton" id="img-${item.id}"></div>
-                    
+                    ${mediaHTML}
                     <div class="item-info">
                         <h3 class="item-title">${safeName}</h3>
                         <div class="item-price">${priceHTML}</div>
@@ -1055,39 +1075,38 @@ function renderNextBatch() {
                 </div>
             `;
 
-            
-            if (optImg) {
-                const imgLoader = new Image();
-                imgLoader.src = optImg;
-                imgLoader.onload = () => {
+            // Грузим картинку ТОЛЬКО если это не видео
+            if (!isVideo) {
+                if (optImg) {
+                    const imgLoader = new Image();
+                    imgLoader.src = optImg;
+                    imgLoader.onload = () => {
+                        const imgDiv = card.querySelector(`#img-${item.id}`);
+                        if (imgDiv) {
+                            imgDiv.classList.remove('skeleton');
+                            imgDiv.style.backgroundImage = `url('${optImg}')`;
+                        }
+                    };
+                    imgLoader.onerror = () => {
+                        const imgDiv = card.querySelector(`#img-${item.id}`);
+                        if (imgDiv) {
+                            imgDiv.classList.remove('skeleton');
+                            imgDiv.innerText = 'NO PHOTO';
+                        }
+                    };
+                } else {
                     const imgDiv = card.querySelector(`#img-${item.id}`);
-                    if (imgDiv) {
-                        imgDiv.classList.remove('skeleton');
-                        imgDiv.style.backgroundImage = `url('${optImg}')`;
-                    }
-                };
-                imgLoader.onerror = () => {
-                    const imgDiv = card.querySelector(`#img-${item.id}`);
-                    if (imgDiv) {
+                    if(imgDiv) {
                         imgDiv.classList.remove('skeleton');
                         imgDiv.innerText = 'NO PHOTO';
                     }
-                };
-            } else {
-                const imgDiv = card.querySelector(`#img-${item.id}`);
-                if(imgDiv) {
-                    imgDiv.classList.remove('skeleton');
-                    imgDiv.innerText = 'NO PHOTO';
                 }
             }
 
             card.querySelector('.fav-star').addEventListener('click', (e) => toggleFav(e, item.id));
             
             card.querySelector('.card-clickable-area').addEventListener('click', (e) => {
-               
                 if (e.target.closest('.grid-cart-btn')) return; 
-                
-                
                 openProductModal(item);
             });
 
@@ -2165,21 +2184,34 @@ function openProductModal(item) {
     wrapper.innerHTML = ''; 
     thumbs.innerHTML = '';
     
-    // Поддержка ФОТО и ВИДЕО (.mp4)
+   // Поддержка ФОТО и ВИДЕО (.mp4)
     if (item.images && item.images.length > 0) {
         item.images.forEach((url, index) => {
             const isVideo = url.endsWith('.mp4');
             const currentThumb = (item.thumbnails && item.thumbnails[index]) ? item.thumbnails[index] : (isVideo ? 'https://via.placeholder.com/400x400.png?text=VIDEO&bg=000000&color=00ff00' : url);
             
             if (isVideo) {
-                // Если видео — рендерим тег video (autoplay без звука)
-                wrapper.innerHTML += `<div class="slide" style="background:#000;"><video src="${url}" autoplay muted loop playsinline controls style="width:100%; height:100%; object-fit:contain;"></video></div>`;
+                // ХАК #t=0.001 ЗАСТАВЛЯЕТ ЛЮБОЙ ТЕЛЕФОН ПОКАЗАТЬ ПЕРВЫЙ КАДР!
+                wrapper.innerHTML += `
+                    <div class="slide" style="background:#000; display:flex; justify-content:center; align-items:center;">
+                        <video 
+                            class="modal-video-player"
+                            autoplay="autoplay" 
+                            muted="muted" 
+                            loop="loop" 
+                            playsinline="playsinline" 
+                            webkit-playsinline="webkit-playsinline" 
+                            preload="metadata"
+                            controls 
+                            style="width:100%; height:100%; max-height:400px; object-fit:contain;"
+                        >
+                            <source src="${url}#t=0.001" type="video/mp4">
+                        </video>
+                    </div>`;
             } else {
-                // Если фото — стандартный PhotoSwipe
                 wrapper.innerHTML += `<a href="${url}" data-pswp-width="1200" data-pswp-height="1600" target="_blank" class="slide" style="background-image:url('${url}');"></a>`;
             }
             
-            // Добавляем значок "▶️", чтобы на миниатюре было понятно, что это видео
             thumbs.innerHTML += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" onclick="setSlide(${index})">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
         });
     } else {
@@ -2187,6 +2219,20 @@ function openProductModal(item) {
     }
 
     setSlide(0);
+
+    // Дополнительный пинок для запуска плеера
+    setTimeout(() => {
+        const modalVideos = document.querySelectorAll('#sliderWrapper video.modal-video-player');
+        modalVideos.forEach(vid => {
+            let playPromise = vid.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // Если браузер заблокировал автоплей, он хотя бы покажет первый кадр благодаря хаку #t=0.001
+                    console.log("Ожидание клика (политика браузера)");
+                });
+            }
+        });
+    }, 100);
 
     // Перезапуск PhotoSwipe после вставки новых картинок
     if (window.pswpLightbox) {
@@ -2765,72 +2811,66 @@ function handleSwipeEnd(e) {
         e.currentTarget.style.transform = `translateX(0px)`;
     }
 }
-/// ==========================================
-// 18. ZERO-LAG СВАЙП КАРТОЧКИ (IOS STYLE - БЛОКИРОВКА БРАУЗЕРА)
+// ==========================================
+// 18. ZERO-LAG СВАЙП КАРТОЧКИ (IOS STYLE)
 // ==========================================
 function initMobileSwipe() {
-    const modalWin = document.querySelector('#productModal .modal-window');
-    const overlay = document.querySelector('#productModal');
-    
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-    let startScrollTop = 0;
+    // Вешаем свайп не только на карточку товара, а на ВСЕ модалки
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        const modalWin = overlay.querySelector('.modal-window');
+        if (!modalWin) return;
 
-    if (!modalWin || !overlay) return;
+        let startY = 0;
+        let currentY = 0;
+        let isDragging = false;
+        let startScrollTop = 0;
 
-    modalWin.addEventListener('touchstart', (e) => {
-        if (window.innerWidth > 900) return;
-        // Не мешаем листать фотки в слайдере (вправо/влево)
-        if (e.target.closest('.slider-btn') || e.target.closest('.pswp')) return;
+        modalWin.addEventListener('touchstart', (e) => {
+            if (window.innerWidth > 900) return;
+            // Не мешаем листать фотки в слайдере (вправо/влево)
+            if (e.target.closest('.slider-btn') || e.target.closest('.pswp')) return;
 
-        startY = e.touches[0].clientY;
-        startScrollTop = modalWin.scrollTop;
-        isDragging = false;
-        
-        modalWin.style.transition = 'none';
-        overlay.style.transition = 'none';
-    }, { passive: false }); // ВАЖНО: false позволяет блокировать браузер
-
-    modalWin.addEventListener('touchmove', (e) => {
-        if (window.innerWidth > 900) return;
-        
-        currentY = e.touches[0].clientY;
-        const diffY = currentY - startY;
-
-        // Если мы в самом верху карточки и тянем вниз
-        if (startScrollTop <= 3 && diffY > 0) {
-            isDragging = true;
-            e.preventDefault(); // ПОЛНОСТЬЮ ОТКЛЮЧАЕТ СОПРОТИВЛЕНИЕ ТЕЛЕФОНА
+            startY = e.touches[0].clientY;
+            startScrollTop = modalWin.scrollTop;
+            isDragging = false;
             
-            modalWin.style.transform = `translateY(${diffY}px)`;
-            let opacity = 1 - (diffY / 400);
-            overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.85)})`;
-        }
-    }, { passive: false });
+            modalWin.style.transition = 'none';
+            overlay.style.transition = 'none';
+        }, { passive: false });
 
-    modalWin.addEventListener('touchend', (e) => {
-        if (window.innerWidth > 900 || !isDragging) return;
-        
-        const diffY = currentY - startY;
-        isDragging = false;
-        
-        modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
-        overlay.style.transition = 'background-color 0.25s ease';
-        
-        if (diffY > 100) { 
-            modalWin.style.transform = `translateY(100vh)`; 
-            overlay.style.backgroundColor = `rgba(0, 0, 0, 0)`; 
+        modalWin.addEventListener('touchmove', (e) => {
+            if (window.innerWidth > 900) return;
             
-            setTimeout(() => {
-                closeModal('productModal');
-                modalWin.style.transform = '';
+            currentY = e.touches[0].clientY;
+            const diffY = currentY - startY;
+
+            // Если мы в самом верху карточки и тянем вниз
+            if (startScrollTop <= 3 && diffY > 0) {
+                isDragging = true;
+                e.preventDefault(); 
+                
+                modalWin.style.transform = `translateY(${diffY}px)`;
+                let opacity = 1 - (diffY / 400);
+                overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.85)})`;
+            }
+        }, { passive: false });
+
+        modalWin.addEventListener('touchend', (e) => {
+            if (window.innerWidth > 900 || !isDragging) return;
+            
+            const diffY = currentY - startY;
+            isDragging = false;
+            
+            if (diffY > 100) { 
+                // Вызываем нашу красивую функцию закрытия
+                closeModal(overlay.id);
+            } else {
+                modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                overlay.style.transition = 'background-color 0.25s ease';
+                modalWin.style.transform = `translateY(0)`;
                 overlay.style.backgroundColor = '';
-            }, 250);
-        } else {
-            modalWin.style.transform = `translateY(0)`;
-            overlay.style.backgroundColor = '';
-        }
+            }
+        });
     });
 }
 
