@@ -1323,7 +1323,8 @@ async function toggleFav(event, itemId) {
 }
 
 function updateFavBadge() { 
-    document.getElementById('favCountBadge').innerText = `[${favorites.length}]`; 
+    const badge = document.getElementById('favCountBadge');
+    if (badge) badge.innerText = `[${favorites.length}]`; 
 }
 
 function filterFavorites() { 
