@@ -743,20 +743,16 @@ async function checkSession() {
             
             await loadFavorites();
             
-           // УМНОЕ ОБЪЕДИНЕНИЕ КОРЗИН (МЕРДЖ)
-            const dbCart = (userProfile && userProfile.cart) ? userProfile.cart : [];
-            const localCart = cart || [];
-
-            // Объединяем, удаляя дубликаты товаров по ID
-            const mergedCartMap = new Map();
-            [...dbCart, ...localCart].forEach(item => {
-                if (!mergedCartMap.has(item.id)) mergedCartMap.set(item.id, item);
-            });
-            
-            cart = Array.from(mergedCartMap.values());
-            localStorage.setItem('nisha_cart', JSON.stringify(cart));
-            
-            await syncCartToServer(); // Отправляем объединенную корзину в БД
+          // ЧИСТАЯ ЗАГРУЗКА КОРЗИНЫ АВТОРИЗОВАННОГО ПОЛЬЗОВАТЕЛЯ
+            if (userProfile && userProfile.cart && userProfile.cart.length > 0) {
+                cart = userProfile.cart; 
+                localStorage.setItem('nisha_cart', JSON.stringify(cart));
+            } else {
+                // Если корзина в БД пуста, но юзер что-то накликал как гость - сохраняем это в БД
+                if (cart.length > 0) {
+                    await syncCartToServer();
+                }
+            }
             updateCartUI();
         } else {
             currentUser = null;
@@ -1033,31 +1029,10 @@ function renderNextBatch() {
             const safeBrand = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.brand || 'No brand') : (item.brand || 'No brand');
             const safeSize = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.size || '-') : (item.size || '-');
 
-            // ГОТОВИМ БЛОК ФОТО ИЛИ ВИДЕО
-            let mediaHTML = '';
-            if (isVideo) {
-                const videoUrl = item.images[0]; 
-                mediaHTML = `
-                    <div class="mock-image" style="position: relative; overflow: hidden; padding: 0; background: #0a0a0a;">
-                        <div style="position:absolute; z-index:5; top:5px; left:5px; background:rgba(0,0,0,0.6); padding:2px 6px; border-radius:3px; color:#fff; font-size:10px; font-family:var(--font-mono); border: 1px solid #444; pointer-events: none;">▶ VIDEO</div>
-                        <video 
-                            src="${videoUrl}" 
-                            autoplay 
-                            muted 
-                            loop 
-                            playsinline 
-                            webkit-playsinline 
-                            preload="auto"
-                            style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" 
-                            ontimeupdate="if(this.currentTime >= 3) { this.currentTime = 0; this.play(); }"
-                        ></video>
-                    </div>`;
-            } else {
-                mediaHTML = `
-                    <div class="mock-image skeleton" id="img-${item.id}" style="position: relative; overflow: hidden;"></div>`;
-            }
-
-           card.innerHTML = `
+           // ГОТОВИМ БЛОК ФОТО/ВИДЕО
+            let mediaHTML = `<div class="mock-image skeleton" id="img-${item.id}" style="position: relative; overflow: hidden;"></div>`;
+            
+            card.innerHTML = `
                 ${badgeHTML}
                 <div class="${starClass}">★</div>
                 <div class="card-clickable-area" style="display:flex; flex-direction:column; flex-grow:1;">
@@ -1067,37 +1042,39 @@ function renderNextBatch() {
                         <div class="item-price">${priceHTML}</div>
                         <div class="item-size">${i18next.t('grid.size_prefix')}${safeSize}</div>
                         <div class="item-footer"><span>${safeBrand}</span><span>${item.condition || '9/10'}</span></div>
-                    </div> <!-- ИСПРАВЛЕНИЕ: закрыли блок информации -->
+                    </div>
                     <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}">${i18next.t('product.add_to_cart')}</button>
                 </div>
             `;
 
-            // Грузим картинку ТОЛЬКО если это не видео
-            if (!isVideo) {
-                if (optImg) {
-                    const imgLoader = new Image();
-                    imgLoader.src = optImg;
-                    imgLoader.onload = () => {
-                        const imgDiv = card.querySelector(`#img-${item.id}`);
-                        if (imgDiv) {
-                            imgDiv.classList.remove('skeleton');
+            // УМНАЯ ЗАГРУЗКА И ФОТО, И ВИДЕО (без пожирания батареи)
+            if (optImg) {
+                const imgDiv = card.querySelector(`#img-${item.id}`);
+                const mediaLoader = new Image();
+                
+                mediaLoader.onload = () => {
+                    if (imgDiv) {
+                        imgDiv.classList.remove('skeleton');
+                        
+                        if (isVideo) {
+                            // Если это видео - ставим скачанную миниатюру фоном и лепим значок (Никаких тяжелых тегов <video>!)
+                            imgDiv.style.backgroundImage = `url('${optImg}')`;
+                            imgDiv.innerHTML = `<div style="position:absolute; z-index:5; top:5px; left:5px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:#00ff00; font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>`;
+                        } else {
                             imgDiv.style.backgroundImage = `url('${optImg}')`;
                         }
-                    };
-                    imgLoader.onerror = () => {
-                        const imgDiv = card.querySelector(`#img-${item.id}`);
-                        if (imgDiv) {
-                            imgDiv.classList.remove('skeleton');
-                            imgDiv.innerText = 'NO PHOTO';
-                        }
-                    };
-                } else {
-                    const imgDiv = card.querySelector(`#img-${item.id}`);
-                    if(imgDiv) {
-                        imgDiv.classList.remove('skeleton');
-                        imgDiv.innerText = 'NO PHOTO';
                     }
-                }
+                };
+                
+                mediaLoader.onerror = () => {
+                    if (imgDiv) {
+                        imgDiv.classList.remove('skeleton');
+                        imgDiv.innerText = 'NO MEDIA';
+                    }
+                };
+                
+                // Запускаем загрузку (одинаково и для фото, и для превью видео)
+                mediaLoader.src = optImg;
             }
 
             // Нажатие на звездочку
@@ -1105,7 +1082,6 @@ function renderNextBatch() {
             
             // Нажатие на карточку (открывает модалку)
             card.querySelector('.card-clickable-area').addEventListener('click', (e) => {
-                // Если кликнули по кнопке корзины — игнорируем, модалку не открываем!
                 if (e.target.closest('.grid-cart-btn')) return; 
                 openProductModal(item);
             });
@@ -1115,7 +1091,7 @@ function renderNextBatch() {
             if (cartBtn) {
                 cartBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    e.stopPropagation(); // Жестко блокируем открытие карточки
+                    e.stopPropagation(); 
                     addToCartWithAnimation(item.id, cartBtn, e);
                 });
             }
@@ -1130,14 +1106,11 @@ function renderNextBatch() {
             if (saleBadgeEl && typeof RoughNotation !== 'undefined') {
                 setTimeout(() => RoughNotation.annotate(saleBadgeEl, { type: 'box', color: '#ffcc00', strokeWidth: 2 }).show(), 500);
             }
-            // ОПТИМИЗАЦИЯ VanillaTilt: отключаем glare и ставим жесткие рамки
+            // ОПТИМИЗАЦИЯ VanillaTilt
             if (typeof VanillaTilt !== 'undefined' && window.innerWidth > 900) {
                 VanillaTilt.init(card, { 
-                    max: 3,           // Уменьшили угол наклона 
-                    speed: 2000,      // Сделали анимацию более плавной
-                    glare: false,     // Отключили блики (самая тяжелая часть)
-                    scale: 1.0,       // Отключили увеличение при наведении
-                    "mouse-event-element": card // Привязка строго к карточке
+                    max: 3, speed: 2000, glare: false, scale: 1.0, 
+                    "mouse-event-element": card 
                 });
             }
         } catch (cardErr) {
@@ -1150,16 +1123,8 @@ function renderNextBatch() {
     if (trigger) {
         trigger.innerText = (renderedCount >= filteredItems.length) ? i18next.t('grid.end_list') : i18next.t('grid.scroll_more');
     }
-
-    setTimeout(() => {
-        if (trigger && renderedCount < filteredItems.length) {
-            const rect = trigger.getBoundingClientRect();
-            // Если триггер находится в пределах видимости экрана
-            if (rect.top < window.innerHeight + 300) {
-                renderNextBatch(); // Вызываем саму себя (рекурсия), пока не появится скролл
-            }
-        }
-    }, 100);
+    
+    // БЕСКОНЕЧНЫЙ ЦИКЛ УДАЛЕН. За скролл отвечает только встроенный Observer!
 }
 
 // Функция добавления в корзину прямо с главной страницы
@@ -1937,11 +1902,17 @@ async function submitOrder() {
         return;
     }
 
-    const name = document.getElementById('orderName').value.trim();
+    // БЕЗОПАСНАЯ ОЧИСТКА ДАННЫХ ОТ XSS-АТАК
+    const rawName = document.getElementById('orderName').value.trim();
+    const rawCity = document.getElementById('orderCity').value.trim();
+    const rawBranch = document.getElementById('orderBranch').value.trim();
+    
+    const name = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawName) : rawName;
+    const city = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawCity) : rawCity;
+    const branch = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawBranch) : rawBranch;
+
     const phoneRaw = document.getElementById('orderPhone').value;
     const phone = phoneRaw.replace(/[^\d+]/g, '');
-    const city = document.getElementById('orderCity').value.trim();
-    const branch = document.getElementById('orderBranch').value.trim();
 
     if(!name || !phone || !city || !branch) { 
         showToast('Заполните все обязательные поля!', 'error'); 
