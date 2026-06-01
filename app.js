@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Фикс зависшего таймера после подтверждения номера";
+const UPDATE_REASON = "Фикс таймера и окна ввода Email";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1899,14 +1899,19 @@ async function generateAndSendOTP() {
                 btnSubmit.style.opacity = "1";
                 btnSubmit.style.pointerEvents = "auto";
                 
-                // ЖЕСТКО УБИВАЕМ ТАЙМЕР И СБРАСЫВАЕМ КНОПКУ ПРИ УСПЕХЕ
-                if (otpInterval) clearInterval(otpInterval);
+                // === ЖЕСТКО УБИВАЕМ ТАЙМЕР И ДЕЛАЕМ КНОПКУ ЗЕЛЕНОЙ ===
+                // Жесткий хак: убиваем вообще все активные таймеры в браузере
+                let id = window.setTimeout(function() {}, 0);
+                while (id--) { window.clearTimeout(id); }
+
                 const btnOtp = document.getElementById('btnGetOtp');
                 if (btnOtp) {
-                    btnOtp.disabled = false;
-                    btnOtp.innerText = "Подтвердить";
+                    btnOtp.disabled = true; // Блокируем нажатие
+                    btnOtp.innerHTML = "✅ УСПЕХ";
+                    btnOtp.style.background = "var(--accent-green)";
+                    btnOtp.style.color = "#000";
                     btnOtp.style.opacity = "1";
-                    btnOtp.style.display = "none"; // Прячем кнопку
+                    btnOtp.style.display = "block"; // Оставляем видимой!
                 }
                 
                 _supabase.removeChannel(otpRealtimeChannel); // Отключаемся, дело сделано
@@ -1924,21 +1929,11 @@ function openCheckoutModal() {
 }
 
 async function submitOrder() {
-    const btnSubmit = document.getElementById('btnSubmitOrder');
-    
-    // БЛОКИРУЕМ КНОПКУ, ЧТОБЫ НЕ НАЖАЛИ ДВАЖДЫ
-    btnSubmit.innerText = "[ ОБРАБОТКА... ]";
-    btnSubmit.style.pointerEvents = "none";
-    btnSubmit.style.opacity = "0.5";
-
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== "") return;
 
     if (!otpVerified) {
         showToast('Подтвердите номер телефона!', 'error');
-        btnSubmit.innerText = "ПОДТВЕРДИТЬ ЗАКАЗ";
-        btnSubmit.style.pointerEvents = "auto";
-        btnSubmit.style.opacity = "1";
         return;
     }
 
@@ -1950,21 +1945,62 @@ async function submitOrder() {
 
     if(!name || !phone || !city || !branch) { 
         showToast('Заполните все обязательные поля!', 'error'); 
-        btnSubmit.innerText = "ПОДТВЕРДИТЬ ЗАКАЗ";
-        btnSubmit.style.pointerEvents = "auto";
-        btnSubmit.style.opacity = "1";
         return; 
     }
 
-    // Собираем ТОЛЬКО ID товаров. Цену и всё остальное БД возьмет сама!
+    // Если всё ок — открываем хакерское меню вопроса про Email
+    const prompt = document.getElementById('emailPromptOverlay');
+    const emailInput = document.getElementById('promptEmailInput');
+    
+    // Подставляем Email из профиля, если юзер авторизован
+    if (currentUser && currentUser.email) {
+        emailInput.value = currentUser.email;
+    } else {
+        emailInput.value = '';
+    }
+    
+    prompt.style.display = 'flex';
+}
+
+async function confirmEmailPrompt(wantsEmail) {
+    const prompt = document.getElementById('emailPromptOverlay');
+    const emailInput = document.getElementById('promptEmailInput');
+    let finalEmail = '';
+
+    if (wantsEmail) {
+        finalEmail = emailInput.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(finalEmail)) {
+            showToast('Введите корректный E-mail!', 'error');
+            return; // Не закрываем окно, ждем правильного ввода
+        }
+    }
+
+    prompt.style.display = 'none'; // Прячем окно вопроса
+    await executeOrderFinal(finalEmail); // Запускаем реальное оформление
+}
+
+async function executeOrderFinal(emailToSave) {
+    const btnSubmit = document.getElementById('btnSubmitOrder');
+    btnSubmit.innerText = "[ ОБРАБОТКА... ]";
+    btnSubmit.style.pointerEvents = "none";
+    btnSubmit.style.opacity = "0.5";
+
+    const name = document.getElementById('orderName').value.trim();
+    const phoneRaw = document.getElementById('orderPhone').value;
+    const phone = phoneRaw.replace(/[^\d+]/g, '');
+    const city = document.getElementById('orderCity').value.trim();
+    const branch = document.getElementById('orderBranch').value.trim();
+
     const orderItemIds = cart.map(i => i.id);
 
     try {
-        // Вызываем нашу безопасную функцию, передавая промокод!
+        // ВАЖНО: передаем p_email в базу!
         const { data: orderId, error: orderError } = await _supabase.rpc('create_secure_order', {
             p_user_id: currentUser ? currentUser.id : null,
             p_name: name,
             p_phone: phone,
+            p_email: emailToSave,
             p_tg: '',
             p_city: city,
             p_branch: branch,
@@ -1974,9 +2010,7 @@ async function submitOrder() {
             p_promocode: appliedPromoCode || null
         });
 
-        if (orderError) { 
-            throw orderError; 
-        }
+        if (orderError) throw orderError; 
 
         // УСПЕШНЫЙ ЗАКАЗ
         localStorage.setItem('nisha_last_phone', phone);
@@ -1989,11 +2023,10 @@ async function submitOrder() {
         updateCartUI();
         closeModal('checkoutModal');
         
-        // Показываем новое стильное окно
+        // Показываем терминал успешного заказа
         const overlay = document.getElementById('orderSuccessOverlay');
         overlay.style.display = 'flex';
         
-        // Закрываем окно через 3.5 секунды и возвращаем всё в норму
         setTimeout(() => { 
             overlay.style.display = 'none'; 
             loadAllItems(); 
@@ -2003,12 +2036,11 @@ async function submitOrder() {
         }, 3500);
 
     } catch (err) {
-        // ОШИБКА (например, кто-то успел купить товар на секунду раньше)
         showToast('Ошибка при оформлении: ' + err.message, 'error');
         btnSubmit.innerText = "ПОДТВЕРДИТЬ ЗАКАЗ";
         btnSubmit.style.pointerEvents = "auto";
         btnSubmit.style.opacity = "1";
-        loadAllItems(); // Перезагружаем витрину, чтобы показать актуальные статусы
+        loadAllItems(); 
     }
 }
 
