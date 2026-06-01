@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Фикс перехода в Telegram при оформлении заказа с телефона";
+const UPDATE_REASON = "Фикс зависшего таймера после подтверждения номера";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1150,6 +1150,16 @@ function renderNextBatch() {
     if (trigger) {
         trigger.innerText = (renderedCount >= filteredItems.length) ? i18next.t('grid.end_list') : i18next.t('grid.scroll_more');
     }
+
+    setTimeout(() => {
+        if (trigger && renderedCount < filteredItems.length) {
+            const rect = trigger.getBoundingClientRect();
+            // Если триггер находится в пределах видимости экрана
+            if (rect.top < window.innerHeight + 300) {
+                renderNextBatch(); // Вызываем саму себя (рекурсия), пока не появится скролл
+            }
+        }
+    }, 100);
 }
 
 // Функция добавления в корзину прямо с главной страницы
@@ -1835,11 +1845,15 @@ async function generateAndSendOTP() {
     btnOtp.innerText = `Ждите ${timer}с`;
     btnOtp.style.opacity = "0.5";
     
-    const interval = setInterval(() => {
+    // Очищаем старый таймер, если он был
+    if (otpInterval) clearInterval(otpInterval);
+    
+    // Сохраняем в глобальную переменную, чтобы можно было убить снаружи
+    otpInterval = setInterval(() => {
         timer--;
         btnOtp.innerText = `Ждите ${timer}с`;
         if (timer <= 0) {
-            clearInterval(interval);
+            clearInterval(otpInterval);
             btnOtp.disabled = false;
             btnOtp.innerText = "Подтвердить";
             btnOtp.style.opacity = "1";
@@ -1884,7 +1898,16 @@ async function generateAndSendOTP() {
                 const btnSubmit = document.getElementById('btnSubmitOrder');
                 btnSubmit.style.opacity = "1";
                 btnSubmit.style.pointerEvents = "auto";
-                document.getElementById('btnGetOtp').style.display = "none";
+                
+                // ЖЕСТКО УБИВАЕМ ТАЙМЕР И СБРАСЫВАЕМ КНОПКУ ПРИ УСПЕХЕ
+                if (otpInterval) clearInterval(otpInterval);
+                const btnOtp = document.getElementById('btnGetOtp');
+                if (btnOtp) {
+                    btnOtp.disabled = false;
+                    btnOtp.innerText = "Подтвердить";
+                    btnOtp.style.opacity = "1";
+                    btnOtp.style.display = "none"; // Прячем кнопку
+                }
                 
                 _supabase.removeChannel(otpRealtimeChannel); // Отключаемся, дело сделано
             }
