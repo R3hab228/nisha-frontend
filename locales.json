@@ -1,0 +1,128 @@
+{
+  "ua": {
+    "translation": {
+      "nav": { "home": "ГОЛОВНА", "favorites": "ОБРАНЕ", "reviews": "ВІДГУКИ", "orders": "МОЇ ЗАМОВЛЕННЯ" },
+      "search": { "placeholder": "Пошук речі (наприклад: Arcteryx)...", "btn": "ШУКАТИ" },
+      "sidebar": {
+        "categories": "КАТЕГОРІЇ", "all": "[>] Всі речі", "outerwear": "[>] Верхній одяг", "sweaters": "[>] Кофти та Светри", 
+        "pants": "[>] Штани та Джинси", "shoes": "[>] Взуття", "accs": "[>] Аксесуари",
+        "sizes_title": "РОЗМІРИ ТА ЦІНА", "from": "ВІД", "to": "ДО", "uah": "грн",
+        "size_s": "Розмір S", "size_m": "Розмір M", "size_l": "Розмір L", "size_xl": "Розмір XL / XXL",
+        "shoes_1": "Взуття (40 - 42)", "shoes_2": "Взуття (43 - 46)",
+        "auth_title": "ПРОФІЛЬ / ВХІД", "login": "УВІЙТИ", "reg": "РЕЄСТРАЦІЯ", "create": "СТВОРИТИ АКАУНТ", "logout": "ВИЙТИ"
+      },
+      "sort": { "found": "Знайдено речей:", "sorting": "Сортування:", "new": "Нові", "cheap": "Дешеві" },
+      "cart": { "checkout": "ОФОРМИТИ ЗАМОВЛЕННЯ", "in_cart": "У КОШИКУ:", "items_total": "РЕЧЕЙ | РАЗОМ:", "empty": "[ КОШИК ПОРОЖНІЙ ]", "title": "[ ВАШІ ПОКУПКИ ]" },
+      "mobile": { "show_filters": "[+] ПОКАЗАТИ ФІЛЬТРИ", "hide_filters": "[-] ПРИХОВАТИ ФІЛЬТРИ" },
+      "product": {
+        "views": "ПРОСМОТРІВ:", "condition": "СТАН РЕЧІ:", "size": "РОЗМІР:", "brand": "БРЕНД:",
+        "add_to_cart": "У КОШИК", "notify": "ПОВІДОМИТИ ПРО НАЯВНІСТЬ",
+        "badge_orig": "ПРОЙШЛО ЛЕГІТ-ЧЕК", "badge_fast": "ШВИДКА ВІДПРАВКА", "badge_refund": "ПОВЕРНЕННЯ 14 ДНІВ",
+        "similar": "[ СХОЖІ РЕЧІ ]", "delivery": "Доставка та оплата", "delivery_text": "Відправка Новою Поштою. Працюємо по повній передоплаті або накладеним платежем з передоплатою 200 грн.",
+        "measure": "Як ми робимо заміри?", "measure_text": "Всі заміри знімаються з речі на рівній поверхні. Похибка 1-2 см."
+      },
+      "checkout": {
+        "desc": "Заповніть дані для відправки. Бронь 2 години.", "name": "ПІБ Одержувача:", "phone": "Телефон (ОБОВ'ЯЗКОВО):",
+        "btn_otp": "Підтвердити", "otp_status": "Спочатку підтвердіть номер для замовлення!",
+        "city": "Місто (Нова Пошта):", "branch": "Відділення або Поштомат:", "calc": "Орієнтовна вартість доставки:",
+        "btn_submit": "ПІДТВЕРДИТИ ЗАМОВЛЕННЯ"
+      },
+      "orders_modal": {
+        "desc": "Введіть номер телефону, вказаний при замовленні, щоб відстежити статус.", "btn": "ЗНАЙТИ",
+        "empty": "[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]", "loading": "Очікування даних..."
+      },
+      "footer": { "visitors": "ВІДВІДУВАЧІ:", "install": "⬇ ВСТАНОВИТИ ДОДАТОК" },
+      "marquee": "NISHA МАЙДАНЧИК ДЛЯ ПРОДАЖУ ВІНТАЖНИХ КРУТИХ РЕЧЕЙ ТА ДЛЯ КРЕАТОРІВ. вдалих покупок!",
+      "messages": {
+        "login_success": "Успішний вхід!", "logout": "Ви вийшли з системи", "reg_success": "Реєстрація успішна! Перевірте пошту.",
+        "fav_add": "Додано до обраного", "fav_remove": "Видалено з обраного", "cart_add": "Річ додана до кошика!", "cart_exist": "Річ вже у кошику!"
+      },
+      "grid": { "size_prefix": "Розмір: ", "end_list": "[ КІНЕЦЬ СПИСКУ ]", "scroll_more": "Гортайте вниз для завантаження...", "no_photo": "НЕМА ФОТО" },
+      "history": { "title": "HISTORY.LOG // ВИ НЕЩОДАВНО ДИВИЛИСЯ:" }
+    }
+  },
+  "ru": {
+    "translation": {
+      "nav": { "home": "ГЛАВНАЯ", "favorites": "ИЗБРАННОЕ", "reviews": "ОТЗЫВЫ", "orders": "МОИ ЗАКАЗЫ" },
+      "search": { "placeholder": "Поиск вещи (например: Arcteryx)...", "btn": "ИСКАТЬ" },
+      "sidebar": {
+        "categories": "КАТЕГОРИИ", "all": "[>] Все вещи", "outerwear": "[>] Верхняя одежда", "sweaters": "[>] Кофты и Свитера", 
+        "pants": "[>] Штаны и Джинсы", "shoes": "[>] Обувь", "accs": "[>] Аксессуары",
+        "sizes_title": "РАЗМЕРЫ И ЦЕНА", "from": "ОТ", "to": "ДО", "uah": "грн",
+        "size_s": "Размер S", "size_m": "Размер M", "size_l": "Размер L", "size_xl": "Размер XL / XXL",
+        "shoes_1": "Обувь (40 - 42)", "shoes_2": "Обувь (43 - 46)",
+        "auth_title": "ПРОФИЛЬ / ВХОД", "login": "ВОЙТИ", "reg": "РЕГИСТРАЦИЯ", "create": "СОЗДАТЬ АККАУНТ", "logout": "ВЫЙТИ"
+      },
+      "sort": { "found": "Найдено вещей:", "sorting": "Сортировка:", "new": "Новые", "cheap": "Дешевые" },
+      "cart": { "checkout": "ОФОРМИТЬ ЗАКАЗ", "in_cart": "В КОРЗИНЕ:", "items_total": "ВЕЩЕЙ | ИТОГО:", "empty": "[ КОРЗИНА ПУСТА ]", "title": "[ ВАШИ ПОКУПКИ ]" },
+      "mobile": { "show_filters": "[+] ПОКАЗАТЬ ФИЛЬТРЫ", "hide_filters": "[-] СКРЫТЬ ФИЛЬТРЫ" },
+      "product": {
+        "views": "ПРОСМОТРОВ:", "condition": "СОСТОЯНИЕ ВЕЩИ:", "size": "РАЗМЕР:", "brand": "БРЕНД:",
+        "add_to_cart": "В КОРЗИНУ", "notify": "УВЕДОМИТЬ О ПОЯВЛЕНИИ",
+        "badge_orig": "ПРОШЛО ЛЕГИТ-ЧЕК", "badge_fast": "БЫСТРАЯ ОТПРАВКА", "badge_refund": "ВОЗВРАТ 14 ДНЕЙ",
+        "similar": "[ ПОХОЖИЕ ВЕЩИ ]", "delivery": "Доставка и оплата", "delivery_text": "Отправка Новой Почтой. Работаем по полной предоплате или наложенным платежом по минимальной предоплате 200 грн.",
+        "measure": "Как мы делаем замеры?", "measure_text": "Все замеры снимаются с вещи, лежащей на ровной поверхности. Погрешность может составлять 1-2 см."
+      },
+      "checkout": {
+        "desc": "Заполните данные для отправки. Бронь 2 часа.", "name": "ФИО Получателя:", "phone": "Телефон (ОБЯЗАТЕЛЬНО):",
+        "btn_otp": "Подтвердить", "otp_status": "Сначала подтвердите номер для заказа!",
+        "city": "Город (Новая Почта):", "branch": "Отделение или Почтомат:", "calc": "Ориентировочная стоимость доставки:",
+        "btn_submit": "ПОДТВЕРДИТЬ ЗАКАЗ"
+      },
+      "orders_modal": {
+        "desc": "Введите номер телефона, указанный при заказе, чтобы отследить статус.", "btn": "НАЙТИ",
+        "empty": "[ ИСТОРИЯ ЗАКАЗОВ ПУСТА ]", "loading": "Ожидание данных..."
+      },
+      "footer": { "visitors": "VISITORS:", "install": "⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ" },
+      "marquee": "NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНЫХ КРУТЫХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!",
+      "messages": {
+        "login_success": "Успешный вход!", "logout": "Вы вышли из системы", "reg_success": "Регистрация успешна! Проверьте почту.",
+        "fav_add": "Добавлено в избранное", "fav_remove": "Удалено из избранного", "cart_add": "Вещь добавлена в корзину!", "cart_exist": "Вещь уже в корзине!"
+      },
+      "grid": { "size_prefix": "Размер: ", "end_list": "[ КОНЕЦ СПИСКА ]", "scroll_more": "Скролльте вниз для загрузки...", "no_photo": "НЕТ ФОТО" },
+      "history": { "title": "HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:" }
+    }
+  },
+  "en": {
+    "translation": {
+      "nav": { "home": "HOME", "favorites": "FAVORITES", "reviews": "REVIEWS", "orders": "MY ORDERS" },
+      "search": { "placeholder": "Search items (e.g., Arcteryx)...", "btn": "SEARCH" },
+      "sidebar": {
+        "categories": "CATEGORIES", "all": "[>] All items", "outerwear": "[>] Outerwear", "sweaters": "[>] Sweaters & Hoodies", 
+        "pants": "[>] Pants & Jeans", "shoes": "[>] Shoes", "accs": "[>] Accessories",
+        "sizes_title": "SIZES & PRICE", "from": "FROM", "to": "TO", "uah": "UAH",
+        "size_s": "Size S", "size_m": "Size M", "size_l": "Size L", "size_xl": "Size XL / XXL",
+        "shoes_1": "Shoes (40 - 42)", "shoes_2": "Shoes (43 - 46)",
+        "auth_title": "PROFILE / LOGIN", "login": "LOGIN", "reg": "REGISTER", "create": "CREATE ACCOUNT", "logout": "LOGOUT"
+      },
+      "sort": { "found": "Items found:", "sorting": "Sort by:", "new": "Newest", "cheap": "Cheapest" },
+      "cart": { "checkout": "CHECKOUT", "in_cart": "IN CART:", "items_total": "ITEMS | TOTAL:", "empty": "[ CART IS EMPTY ]", "title": "[ YOUR PURCHASES ]" },
+      "mobile": { "show_filters": "[+] SHOW FILTERS", "hide_filters": "[-] HIDE FILTERS" },
+      "product": {
+        "views": "VIEWS:", "condition": "CONDITION:", "size": "SIZE:", "brand": "BRAND:",
+        "add_to_cart": "ADD TO CART", "notify": "NOTIFY ME",
+        "badge_orig": "VERIFIED AUTHENTIC", "badge_fast": "FAST SHIPPING", "badge_refund": "14-DAY RETURNS",
+        "similar": "[ SIMILAR ITEMS ]", "delivery": "Shipping & Payment", "delivery_text": "Worldwide shipping available. Returns accepted within 14 days.",
+        "measure": "How do we measure?", "measure_text": "All measurements are taken with the item laying flat. Allow a 1-2 cm error."
+      },
+      "checkout": {
+        "desc": "Fill in shipping details. Reservation holds for 2 hours.", "name": "Full Name:", "phone": "Phone (REQUIRED):",
+        "btn_otp": "Verify", "otp_status": "Please verify your phone number first!",
+        "city": "City (Nova Poshta):", "branch": "Branch or Postomat:", "calc": "Estimated delivery cost:",
+        "btn_submit": "CONFIRM ORDER"
+      },
+      "orders_modal": {
+        "desc": "Enter the phone number used for the order to track its status.", "btn": "SEARCH",
+        "empty": "[ ORDER HISTORY IS EMPTY ]", "loading": "Waiting for data..."
+      },
+      "footer": { "visitors": "VISITORS:", "install": "⬇ INSTALL APP" },
+      "marquee": "NISHA MARKETPLACE FOR VINTAGE COOL ITEMS AND CREATORS. happy shopping!",
+      "messages": {
+        "login_success": "Login successful!", "logout": "You have logged out", "reg_success": "Registration check email.",
+        "fav_add": "Added to favorites", "fav_remove": "Removed from favorites", "cart_add": "Item added!", "cart_exist": "Already in cart!"
+      },
+      "grid": { "size_prefix": "Size: ", "end_list": "[ END OF LIST ]", "scroll_more": "Scroll down to load...", "no_photo": "NO PHOTO" },
+      "history": { "title": "HISTORY.LOG // RECENTLY VIEWED:" }
+    }
+  }
+}
