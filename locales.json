@@ -35,10 +35,28 @@
       "marquee": "NISHA МАЙДАНЧИК ДЛЯ ПРОДАЖУ ВІНТАЖНИХ КРУТИХ РЕЧЕЙ ТА ДЛЯ КРЕАТОРІВ. вдалих покупок!",
       "messages": {
         "login_success": "Успішний вхід!", "logout": "Ви вийшли з системи", "reg_success": "Реєстрація успішна! Перевірте пошту.",
-        "fav_add": "Додано до обраного", "fav_remove": "Видалено з обраного", "cart_add": "Річ додана до кошика!", "cart_exist": "Річ вже у кошику!"
+        "fav_add": "Додано до обраного", "fav_remove": "Видалено з обраного", "cart_add": "Річ додана до кошика!", "cart_exist": "Річ вже у кошику!",
+        "cart_delete": "Видалено: ", "cart_error_auth": "Спершу увійдіть у систему!", "req_fields": "Заповніть всі обов'язкові поля!",
+        "rules_accepted": "Правила прийнято. Ласкаво просимо!", "link_copied": "Посилання скопійовано!", "copy_error": "Помилка копіювання"
       },
-      "grid": { "size_prefix": "Розмір: ", "end_list": "[ КІНЕЦЬ СПИСКУ ]", "scroll_more": "Гортайте вниз для завантаження...", "no_photo": "НЕМА ФОТО" },
-      "history": { "title": "HISTORY.LOG // ВИ НЕЩОДАВНО ДИВИЛИСЯ:" }
+      "grid": { "size_prefix": "Розмір: ", "end_list": "[ КІНЕЦЬ СПИСКУ ]", "scroll_more": "Гортайте вниз для завантаження...", "no_photo": "НЕМА ФОТО", "no_media": "НЕМА МЕДІА" },
+      "history": { "title": "HISTORY.LOG // ВИ НЕЩОДАВНО ДИВИЛИСЯ:" },
+      "rules": {
+        "title": "УВАГА! ПЕРЕД ВИКОРИСТАННЯМ САЙТУ ОЗНАЙОМТЕСЬ З ПРАВИЛАМИ.",
+        "h1": "[ 1. ЗАГАЛЬНІ ПОЛОЖЕННЯ ]",
+        "p1_1": "Даний ресурс є онлайн-вітриною магазину <b>NISHA</b>.",
+        "p1_2": "Ми продаємо як нові (з бірками), так і вживані речі в ідеальному стані.",
+        "p1_3": "Стан кожної речі оцінюється за шкалою від 1 до 10 та вказується в описі.",
+        "p1_4": "Всі представлені товари є <strong>100% оригіналом</strong>. Ми не продаємо репліки.",
+        "h2": "[ 2. ОФОРМЛЕННЯ ЗАМОВЛЕННЯ ТА БРОНЬ ]",
+        "p2_1": "При оформленні замовлення через Кошик, товар автоматично отримує статус <b>RESERVED</b> (Заброньовано).",
+        "p2_2": "Бронь тримається рівно <b>2 години</b> для внесення оплати.",
+        "p2_3": "Менеджер зв'яжеться з вами в Telegram або по телефону для підтвердження реквізитів.",
+        "h3": "[ 3. ОПЛАТА ТА ДОСТАВКА ]",
+        "p3_1": "Доставка здійснюється виключно компанією <b>«Нова Пошта»</b> по території України.",
+        "p3_2": "Відправка відбувається в день замовлення (при оплаті до 16:00) або наступного дня.",
+        "btn_accept": "[ Я ЗГОДЕН З ПРАВИЛАМИ ]"
+      }
     }
   },
   "ru": {
@@ -77,10 +95,28 @@
       "marquee": "NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНЫХ КРУТЫХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!",
       "messages": {
         "login_success": "Успешный вход!", "logout": "Вы вышли из системы", "reg_success": "Регистрация успешна! Проверьте почту.",
-        "fav_add": "Добавлено в избранное", "fav_remove": "Удалено из избранного", "cart_add": "Вещь добавлена в корзину!", "cart_exist": "Вещь уже в корзине!"
+        "fav_add": "Добавлено в избранное", "fav_remove": "Удалено из избранного", "cart_add": "Вещь добавлена в корзину!", "cart_exist": "Вещь уже в корзине!",
+        "cart_delete": "Удалено: ", "cart_error_auth": "Сначала войдите в систему!", "req_fields": "Заполните все обязательные поля!",
+        "rules_accepted": "Правила приняты. Добро пожаловать!", "link_copied": "Ссылка скопирована!", "copy_error": "Ошибка копирования"
       },
-      "grid": { "size_prefix": "Размер: ", "end_list": "[ КОНЕЦ СПИСКА ]", "scroll_more": "Скролльте вниз для загрузки...", "no_photo": "НЕТ ФОТО" },
-      "history": { "title": "HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:" }
+      "grid": { "size_prefix": "Размер: ", "end_list": "[ КОНЕЦ СПИСКА ]", "scroll_more": "Скролльте вниз для загрузки...", "no_photo": "НЕТ ФОТО", "no_media": "НЕТ МЕДИА" },
+      "history": { "title": "HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:" },
+      "rules": {
+        "title": "ВНИМАНИЕ! ПЕРЕД ИСПОЛЬЗОВАНИЕМ САЙТА ОЗНАКОМЬТЕСЬ С ПРАВИЛАМИ.",
+        "h1": "[ 1. ОБЩИЕ ПОЛОЖЕНИЯ ]",
+        "p1_1": "Данный ресурс является онлайн-витриной магазина <b>NISHA</b>.",
+        "p1_2": "Мы продаем как новые (с бирками), так и б/у вещи в идеальном состоянии.",
+        "p1_3": "Состояние каждой вещи оценивается по шкале от 1 до 10 и указывается в описании.",
+        "p1_4": "Все представленные товары являются <strong>100% оригиналом</strong>. Мы не продаем реплики.",
+        "h2": "[ 2. ОФОРМЛЕНИЕ ЗАКАЗА И БРОНЬ ]",
+        "p2_1": "При оформлении заказа через Корзину, товар автоматически получает статус <b>RESERVED</b> (Забронирован).",
+        "p2_2": "Бронь держится ровно <b>2 часа</b> для внесения оплаты.",
+        "p2_3": "Менеджер свяжется с вами в Telegram или по телефону для подтверждения реквизитов.",
+        "h3": "[ 3. ОПЛАТА И ДОСТАВКА ]",
+        "p3_1": "Доставка осуществляется исключительно компанией <b>«Нова Пошта»</b> по территории Украины.",
+        "p3_2": "Отправка происходит в день заказа (при оплате до 16:00) или на следующий день.",
+        "btn_accept": "[ Я СОГЛАСЕН С ПРАВИЛАМИ ]"
+      }
     }
   },
   "en": {
@@ -119,10 +155,28 @@
       "marquee": "NISHA MARKETPLACE FOR VINTAGE COOL ITEMS AND CREATORS. happy shopping!",
       "messages": {
         "login_success": "Login successful!", "logout": "You have logged out", "reg_success": "Registration check email.",
-        "fav_add": "Added to favorites", "fav_remove": "Removed from favorites", "cart_add": "Item added!", "cart_exist": "Already in cart!"
+        "fav_add": "Added to favorites", "fav_remove": "Removed from favorites", "cart_add": "Item added!", "cart_exist": "Already in cart!",
+        "cart_delete": "Deleted: ", "cart_error_auth": "Log in first!", "req_fields": "Fill in all required fields!",
+        "rules_accepted": "Rules accepted. Welcome!", "link_copied": "Link copied!", "copy_error": "Copy error"
       },
-      "grid": { "size_prefix": "Size: ", "end_list": "[ END OF LIST ]", "scroll_more": "Scroll down to load...", "no_photo": "NO PHOTO" },
-      "history": { "title": "HISTORY.LOG // RECENTLY VIEWED:" }
+      "grid": { "size_prefix": "Size: ", "end_list": "[ END OF LIST ]", "scroll_more": "Scroll down to load...", "no_photo": "NO PHOTO", "no_media": "NO MEDIA" },
+      "history": { "title": "HISTORY.LOG // RECENTLY VIEWED:" },
+      "rules": {
+        "title": "ATTENTION! READ RULES BEFORE USE.",
+        "h1": "[ 1. GENERAL PROVISIONS ]",
+        "p1_1": "This resource is an online storefront of the <b>NISHA</b> store.",
+        "p1_2": "We sell both new and pre-owned items in perfect condition.",
+        "p1_3": "The condition of each item is rated on a scale of 1 to 10.",
+        "p1_4": "All presented items are <strong>100% authentic</strong>. No replicas.",
+        "h2": "[ 2. ORDERING AND RESERVATION ]",
+        "p2_1": "Upon placing an order, the item receives a <b>RESERVED</b> status.",
+        "p2_2": "The reservation holds for exactly <b>2 hours</b> for payment.",
+        "p2_3": "A manager will contact you in Telegram or by phone.",
+        "h3": "[ 3. PAYMENT AND DELIVERY ]",
+        "p3_1": "Delivery is carried out exclusively by <b>Nova Poshta</b>.",
+        "p3_2": "Dispatch occurs on the day of the order or the next day.",
+        "btn_accept": "[ I AGREE WITH THE RULES ]"
+      }
     }
   }
 }

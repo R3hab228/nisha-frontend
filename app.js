@@ -280,7 +280,7 @@ function acceptRules() {
     if (modal) modal.style.display = 'none';
     document.body.style.overflow = 'auto';
     if (typeof lenis !== 'undefined') lenis.start(); 
-    showToast('Правила приняты. Добро пожаловать!', 'success');
+    showToast(i18next.t('messages.rules_accepted'), 'success');
 }
 window.onload = async () => {
     try {
@@ -977,7 +977,7 @@ function renderNextBatch() {
                     const imgDiv = card.querySelector(`#img-${item.id}`);
                     if (imgDiv) {
                         imgDiv.classList.remove('skeleton');
-                        imgDiv.innerText = 'NO FOTO';
+                        imgDiv.innerText = i18next.t('grid.no_photo');
                     }
                 };
                 imgLoader.src = optImg;
@@ -1060,7 +1060,7 @@ async function addToCartById(itemId) {
 localStorage.setItem('nisha_cart_time', Date.now());
 localStorage.removeItem('nisha_cart_reminded');
     updateCartUI();
-    showToast('Товар добавлен в корзину!', 'success', getOptimizedImageUrl(item, true));
+    showToast(i18next.t('messages.cart_add'), 'success', getOptimizedImageUrl(item, true));
 }
 
 // Изменено для создания DOM элементов вручную (чтобы работал AutoAnimate и Tilt.js)
@@ -1176,7 +1176,7 @@ async function toggleFav(event, itemId) {
     }
 
     if (!currentUser) { 
-        showToast('Сначала войдите в систему или создайте профиль!', 'error'); 
+        showToast(i18next.t('messages.cart_error_auth'), 'error'); 
         return; 
     }
 
@@ -1585,7 +1585,7 @@ async function removeFromCart(index, event, rowElement) {
         localStorage.setItem('nisha_cart', JSON.stringify(cart));
         await syncCartToServer();
         updateCartUI(); 
-        showToast(`Удалено: ${removedItem.name}`, 'error', imgUrl);
+        showToast(`${i18next.t('messages.cart_delete')}${removedItem.name}`, 'error', imgUrl);
         
         if (cart.length === 0) {
             const dropdown = document.getElementById('cartDropdown');
@@ -1826,7 +1826,7 @@ async function submitOrder() {
     const phone = phoneRaw.replace(/[^\d+]/g, '');
 
     if(!name || !phone || !city || !branch) { 
-        showToast('Заполните все обязательные поля!', 'error'); 
+        showToast(i18next.t('messages.req_fields'), 'error'); 
         return; 
     }
 
@@ -2753,8 +2753,8 @@ function shareItem() {
     } else {
         // Если это ПК (или браузер не поддерживает share) — просто копируем ссылку
         navigator.clipboard.writeText(shareUrl)
-            .then(() => showToast('Ссылка скопирована в буфер обмена!', 'success'))
-            .catch(() => showToast('Ошибка копирования', 'error'));
+            .then(() => showToast(i18next.t('messages.link_copied'), 'success'))
+            .catch(() => showToast(i18next.t('messages.copy_error'), 'error'));
     }
 }
 let currentPromoDiscount = 0; 
