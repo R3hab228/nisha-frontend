@@ -983,7 +983,19 @@ function applyFilters() {
         }
     }, 300); 
 }
-
+// --- УМНЫЙ ПЛЕЕР ДЛЯ ВИДЕО В СЕТКЕ (БЕРЕЖЕТ БАТАРЕЮ) ---
+const gridVideoObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const video = entry.target;
+        if (entry.isIntersecting) {
+            // Видео появилось на экране — запускаем
+            video.play().catch(() => {}); 
+        } else {
+            // Видео ушло за экран — жесткая пауза (Экономия батареи и ОЗУ)
+            video.pause(); 
+        }
+    });
+}, { rootMargin: "50px" }); // Начинает грузить чуть заранее
 function renderNextBatch() {
     const batchSize = 12;
     const grid = document.getElementById('itemsGrid');
@@ -1029,8 +1041,27 @@ function renderNextBatch() {
             const safeBrand = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.brand || 'No brand') : (item.brand || 'No brand');
             const safeSize = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.size || '-') : (item.size || '-');
 
-           // ГОТОВИМ БЛОК ФОТО/ВИДЕО
-            let mediaHTML = `<div class="mock-image skeleton" id="img-${item.id}" style="position: relative; overflow: hidden;"></div>`;
+          // ГОТОВИМ БЛОК ФОТО/ВИДЕО
+            let mediaHTML = '';
+            if (isVideo) {
+                const videoUrl = item.images[0];
+                mediaHTML = `
+                    <div class="mock-image" id="img-${item.id}" style="position: relative; overflow: hidden; padding: 0; background: #0a0a0a;">
+                        <div style="position:absolute; z-index:5; top:5px; left:5px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:var(--accent-green); font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
+                        <video 
+                            class="grid-lazy-video"
+                            src="${videoUrl}#t=0,3" 
+                            muted 
+                            loop 
+                            playsinline 
+                            webkit-playsinline
+                            preload="metadata"
+                            style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"
+                        ></video>
+                    </div>`;
+            } else {
+                mediaHTML = `<div class="mock-image skeleton" id="img-${item.id}" style="position: relative; overflow: hidden;"></div>`;
+            }
             
             card.innerHTML = `
                 ${badgeHTML}
@@ -1047,36 +1078,25 @@ function renderNextBatch() {
                 </div>
             `;
 
-            // УМНАЯ ЗАГРУЗКА И ФОТО, И ВИДЕО (без пожирания батареи)
-            if (optImg) {
-                const imgDiv = card.querySelector(`#img-${item.id}`);
-                const mediaLoader = new Image();
-                
-                mediaLoader.onload = () => {
+            // ЗАГРУЗКА ТОЛЬКО ДЛЯ ФОТО (Видео загружается само)
+            if (!isVideo && optImg) {
+                const imgLoader = new Image();
+                imgLoader.onload = () => {
+                    const imgDiv = card.querySelector(`#img-${item.id}`);
                     if (imgDiv) {
                         imgDiv.classList.remove('skeleton');
-                        
-                        if (isVideo) {
-                            // Если это видео - ставим скачанную миниатюру фоном и лепим значок (Никаких тяжелых тегов <video>!)
-                            imgDiv.style.backgroundImage = `url('${optImg}')`;
-                            imgDiv.innerHTML = `<div style="position:absolute; z-index:5; top:5px; left:5px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:#00ff00; font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>`;
-                        } else {
-                            imgDiv.style.backgroundImage = `url('${optImg}')`;
-                        }
+                        imgDiv.style.backgroundImage = `url('${optImg}')`;
                     }
                 };
-                
-                mediaLoader.onerror = () => {
+                imgLoader.onerror = () => {
+                    const imgDiv = card.querySelector(`#img-${item.id}`);
                     if (imgDiv) {
                         imgDiv.classList.remove('skeleton');
-                        imgDiv.innerText = 'NO MEDIA';
+                        imgDiv.innerText = 'NO FOTO';
                     }
                 };
-                
-                // Запускаем загрузку (одинаково и для фото, и для превью видео)
-                mediaLoader.src = optImg;
+                imgLoader.src = optImg;
             }
-
             // Нажатие на звездочку
             card.querySelector('.fav-star').addEventListener('click', (e) => toggleFav(e, item.id));
             
@@ -1096,7 +1116,13 @@ function renderNextBatch() {
                 });
             }
 
-            grid.appendChild(card);
+           grid.appendChild(card);
+
+            // Если это видео - отдаем его нашему умному наблюдателю!
+            if (isVideo) {
+                const vidNode = card.querySelector('.grid-lazy-video');
+                if (vidNode) gridVideoObserver.observe(vidNode);
+            }
 
             const oldPriceEl = card.querySelector('.old-price');
             if (oldPriceEl && typeof RoughNotation !== 'undefined') {
