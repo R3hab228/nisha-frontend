@@ -171,7 +171,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Реферальная система, Видео и Бесконечная загрузка";
+const UPDATE_REASON = "Фикс перехода в Telegram при оформлении заказа с телефона";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1855,7 +1855,15 @@ async function generateAndSendOTP() {
     }
     
     const payloadPhone = cleanPhone.replace('+', '');
-    window.open(`https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`, '_blank');
+    const tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
+    
+    
+    if (/android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
+        window.location.href = tgLink;
+    } else {
+        window.open(tgLink, '_blank');
+    }
+    
     document.getElementById('otpStatus').innerHTML = "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... <span style='color:var(--accent-yellow)'>⏳</span>";
     
     // ОТКЛЮЧАЕМ СТАРУЮ ПОДПИСКУ, ЕСЛИ ОНА БЫЛА
