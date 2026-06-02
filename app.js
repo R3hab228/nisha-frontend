@@ -387,8 +387,18 @@ window.onload = async () => {
         if (_supabase) {
             await checkSession();
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('cat')) {
-                currentCategory = urlParams.get('cat')
+            
+            // Восстанавливаем вкладку "Избранное"
+            if (sessionStorage.getItem('nisha_showing_favs') === 'true') {
+                showingOnlyFavs = true;
+                const favNav = document.getElementById('favNav');
+                if (favNav) favNav.style.color = '#fff';
+            }
+
+            // Восстанавливаем категорию (из URL или из сохраненной памяти)
+            const savedCat = urlParams.get('cat') || sessionStorage.getItem('nisha_last_category');
+            if (savedCat) {
+                currentCategory = savedCat;
                 document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
                 const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
                 catLinks.forEach(link => {
@@ -1082,8 +1092,14 @@ function sortItems(type) {
 
 function setCategoryFilter(cat, element) { 
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
-    element.classList.add('active-filter');
+    if (element) {
+        element.classList.add('active-filter');
+    }
     currentCategory = cat; 
+    
+    
+    sessionStorage.setItem('nisha_last_category', cat);
+    
     applyFilters(); 
 }
 // --- АНИМАЦИЯ ПОЛЕТА В КОРЗИНУ ---
@@ -1251,10 +1267,11 @@ function updateFavBadge() {
 
 function filterFavorites() { 
     if(!currentUser) { 
-        showToast('Доступно только авторизованным', 'error'); 
+        showToast(i18next.t('messages.cart_error_auth'), 'error'); 
         return; 
     }
     showingOnlyFavs = !showingOnlyFavs; 
+    sessionStorage.setItem('nisha_showing_favs', showingOnlyFavs); // Запоминаем
     document.getElementById('favNav').style.color = showingOnlyFavs ? '#fff' : 'var(--accent-yellow)'; 
     applyFilters(); 
 }
@@ -1698,15 +1715,34 @@ async function generateAndSendOTP() {
 
     const { data: blacklisted } = await _supabase.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
     
-    const btnOtp = document.getElementById('btnGetOtp');
+   const btnOtp = document.getElementById('btnGetOtp');
     if (btnOtp.disabled) return; 
     
-    // ПРОВЕРКА НА БОТА (reCAPTCHA v3)
+    // 1. СНАЧАЛА ПРОВЕРЯЕМ БАЗУ: ВДРУГ НОМЕР УЖЕ ПОДТВЕРЖДЕН?
+    const { data: existCode } = await _supabase.from('otp_codes').select('is_verified').eq('phone', cleanPhone).limit(1);
+    if (existCode && existCode.length > 0 && existCode[0].is_verified) {
+        otpVerified = true;
+        document.getElementById('otpStatus').innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>[✔] Этот номер уже есть в базе и подтвержден!</span>";
+        
+        btnOtp.disabled = true; 
+        btnOtp.innerHTML = "✅ УСПЕХ";
+        btnOtp.style.background = "var(--accent-green)";
+        btnOtp.style.color = "#000";
+        btnOtp.style.opacity = "1";
+        btnOtp.style.display = "block";
+        
+        const btnSubmit = document.getElementById('btnSubmitOrder');
+        btnSubmit.style.opacity = "1";
+        btnSubmit.style.pointerEvents = "auto";
+        return; // Останавливаем выполнение, код слать не нужно
+    }
+
+    // 2. ПРОВЕРКА НА БОТА (reCAPTCHA v3)
     btnOtp.innerText = "Проверка...";
     const isHuman = await verifyCaptchaAction('request_otp');
     if (!isHuman) {
         btnOtp.innerText = "Подтвердить";
-        return; // Блокируем дальнейшее выполнение
+        return; 
     }
 
     if (blacklisted && blacklisted.length > 0) {
