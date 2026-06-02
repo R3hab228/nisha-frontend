@@ -399,18 +399,32 @@ window.onload = async () => {
             const savedCat = urlParams.get('cat') || sessionStorage.getItem('nisha_last_category');
             if (savedCat) {
                 currentCategory = savedCat;
-                document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
                 const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
+                
+                // Очищаем старые выделения
+                catLinks.forEach(el => el.classList.remove('active-filter'));
+                
+                // Находим нужную ссылку и выделяем
                 catLinks.forEach(link => {
-                    if (link.innerText.includes(currentCategory)) link.classList.add('active-filter');
+                    // Используем атрибут data-i18n, чтобы не зависеть от языка и символов [>]
+                    // Извлекаем текст из onclick атрибута: setCategoryFilter('Штаны и Джинсы', this)
+                    const onclickText = link.getAttribute('onclick') || '';
+                    if (onclickText.includes(`'${currentCategory}'`)) {
+                        link.classList.add('active-filter');
+                    }
                 });
+            } else {
+                // Если ничего не сохранено - выделяем первую ссылку ("Все вещи")
+                const firstLink = document.querySelector('.sidebar .filter-list:first-of-type a');
+                if (firstLink) firstLink.classList.add('active-filter');
             }
+
             if (urlParams.has('q')) {
                 const sInput = document.getElementById('mainSearch');
                 if (sInput) sInput.value = urlParams.get('q');
             }
 
-            await loadAllItems(); 
+            await loadAllItems();
 
             const openItemId = urlParams.get('item');
             if (openItemId) {
@@ -1725,9 +1739,9 @@ async function generateAndSendOTP() {
         document.getElementById('otpStatus').innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>[✔] Этот номер уже есть в базе и подтвержден!</span>";
         
         btnOtp.disabled = true; 
-        btnOtp.innerHTML = "✅ УСПЕХ";
-        btnOtp.style.background = "var(--accent-green)";
-        btnOtp.style.color = "#000";
+        btnOtp.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>УСПЕХ!</span>";
+        btnOtp.style.background = "var(--text-main)"; // Оставляем стандартный серый фон
+        btnOtp.style.borderColor = "var(--accent-green)"; // Даем зеленую рамку
         btnOtp.style.opacity = "1";
         btnOtp.style.display = "block";
         
@@ -1811,19 +1825,18 @@ async function generateAndSendOTP() {
                 btnSubmit.style.opacity = "1";
                 btnSubmit.style.pointerEvents = "auto";
                 
-                // === ЖЕСТКО УБИВАЕМ ТАЙМЕР И ДЕЛАЕМ КНОПКУ ЗЕЛЕНОЙ ===
-                // Жесткий хак: убиваем вообще все активные таймеры в браузере
+                // === ЖЕСТКО УБИВАЕМ ТАЙМЕР И ОБНОВЛЯЕМ КНОПКУ ===
                 let id = window.setTimeout(function() {}, 0);
                 while (id--) { window.clearTimeout(id); }
 
                 const btnOtp = document.getElementById('btnGetOtp');
                 if (btnOtp) {
-                    btnOtp.disabled = true; // Блокируем нажатие
-                    btnOtp.innerHTML = "✅ УСПЕХ";
-                    btnOtp.style.background = "var(--accent-green)";
-                    btnOtp.style.color = "#000";
+                    btnOtp.disabled = true; 
+                    btnOtp.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>УСПЕХ!</span>";
+                    btnOtp.style.background = "var(--text-main)"; // Серый фон
+                    btnOtp.style.borderColor = "var(--accent-green)"; // Зеленая рамка
                     btnOtp.style.opacity = "1";
-                    btnOtp.style.display = "block"; // Оставляем видимой!
+                    btnOtp.style.display = "block";
                 }
                 
                 _supabase.removeChannel(otpRealtimeChannel); // Отключаемся, дело сделано
