@@ -44,7 +44,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Фикс таймера и окна ввода Email";
+const UPDATE_REASON = "Фикс кнопки [+] и введение системы 'Безопасная сделка'";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
