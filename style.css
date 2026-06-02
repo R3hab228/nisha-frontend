@@ -942,3 +942,44 @@
 @media (max-width: 900px) {
     #authBox { display: none !important; }
 }
+/* --- СТИЛИ ДЛЯ ОБУЧАЮЩЕГО ТУРА (Driver.js) --- */
+.driver-popover {
+    background-color: #0a0a0a !important;
+    color: #fff !important;
+    border: 2px dashed var(--accent-green) !important;
+    font-family: var(--font-mono) !important;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2) !important;
+    border-radius: 0 !important;
+}
+.driver-popover-title {
+    font-size: 16px !important;
+    color: var(--accent-green) !important;
+    text-transform: uppercase;
+}
+.driver-popover-description {
+    font-size: 13px !important;
+    color: #aaa !important;
+    font-family: var(--font-main) !important;
+}
+.driver-popover-footer button {
+    background-color: var(--accent-green) !important;
+    color: #000 !important;
+    border: 2px outset #fff !important;
+    font-family: var(--font-mono) !important;
+    font-weight: bold !important;
+    text-transform: uppercase;
+    text-shadow: none !important;
+}
+.driver-popover-footer button:hover {
+    background-color: #111 !important;
+    color: var(--accent-green) !important;
+    border-color: var(--accent-green) !important;
+}
+.driver-popover-progress-text {
+    color: #555 !important;
+}
+/* Делаем вырез (окошко) не строгим квадратом, а скругленным */
+.driver-stage-no-animation {
+    border-radius: 15px !important;
+    border: 2px solid var(--accent-yellow) !important;
+}

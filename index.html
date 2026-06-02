@@ -471,9 +471,9 @@
     <script defer src="https://unpkg.com/imask"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script defer src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+    <!-- БИБЛИОТЕКА ДЛЯ ОБУЧЕНИЯ (ОНБОРДИНГ) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
     <script defer src="https://browser.sentry-cdn.com/7.105.0/bundle.min.js" crossorigin="anonymous"></script>
     <script defer src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js"></script>
     <script defer src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
@@ -486,7 +486,6 @@
     <span style="display:block;">[+]</span>
 </button>
 
-<!-- МОБИЛЬНОЕ ОКНО ПРОФИЛЯ -->
 <div class="modal-overlay" id="profileModal">
     <div class="modal-window" style="max-width: 450px;">
         <div class="modal-header">
@@ -495,46 +494,40 @@
         </div>
         <div class="form-layout" id="modalAuthBox" style="padding: 25px 20px;">
             
-            <!-- ФОРМА ВХОДА (ИСПРАВЛЕННЫЕ ОТСТУПЫ) -->
             <div class="auth-fields" id="modalLoginForm" style="display: flex; flex-direction: column; gap: 15px;">
-                <p style="margin:0 0 5px 0; color:#aaa; font-size:13px; text-align: center; font-family: var(--font-mono);">АВТОРИЗАЦИЯ В СИСТЕМЕ</p>
+                <p style="margin:0 0 5px 0; color:#aaa; font-size:13px; text-align: center; font-family: var(--font-mono);" data-i18n="sidebar.auth_req">АВТОРИЗАЦИЯ В СИСТЕМЕ</p>
                 
                 <input type="email" id="modalAuthEmail" class="form-input" placeholder="Email" style="padding: 15px;">
                 <input type="text" id="modalAuthUsername" class="form-input" placeholder="Никнейм" style="display: none; padding: 15px;">
                 <input type="password" id="modalAuthPass" class="form-input" placeholder="Пароль" style="padding: 15px;">
                 
                 <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
-                    <button class="cart-checkout-btn btn-target" id="modalBtnLogin" onclick="handleAuth('login', true)" style="width:100%;">ВОЙТИ</button>
-                    <button class="cart-checkout-btn btn-target" id="modalBtnShowReg" onclick="toggleRegMode(true)" style="background: #111; color: #fff; width:100%; border-color:#444;">РЕГИСТРАЦИЯ</button>
-                    <button class="cart-checkout-btn btn-target" id="modalBtnRegister" onclick="handleAuth('register', true)" style="display:none; background: var(--accent-green); color: #000; width:100%;">СОЗДАТЬ АККАУНТ</button>
-                    <button class="cart-checkout-btn btn-target" id="modalBtnBackLogin" onclick="toggleRegMode(true)" style="display:none; background: #111; color: #fff; width:100%; border-color:#444;">НАЗАД</button>
+                    <button class="cart-checkout-btn btn-target" id="modalBtnLogin" onclick="handleAuth('login', true)" style="width:100%;" data-i18n="sidebar.login">ВОЙТИ</button>
+                    <button class="cart-checkout-btn btn-target" id="modalBtnShowReg" onclick="toggleRegMode(true)" style="background: #111; color: #fff; width:100%; border-color:#444;" data-i18n="sidebar.reg">РЕГИСТРАЦИЯ</button>
+                    <button class="cart-checkout-btn btn-target" id="modalBtnRegister" onclick="handleAuth('register', true)" style="display:none; background: var(--accent-green); color: #000; width:100%;" data-i18n="sidebar.create">СОЗДАТЬ АККАУНТ</button>
+                    <button class="cart-checkout-btn btn-target" id="modalBtnBackLogin" onclick="toggleRegMode(true)" style="display:none; background: #111; color: #fff; width:100%; border-color:#444;" data-i18n="sidebar.back">НАЗАД</button>
                 </div>
             </div>
             
-            <!-- ПРОФИЛЬ (НОВЫЙ КРАСИВЫЙ ДИЗАЙН) -->
             <div class="auth-fields" id="modalProfileForm" style="display: none; text-align:center;">
-                
-                <!-- Скрытый инпут для загрузки файла -->
                 <input type="file" id="avatarUploadInput" accept="image/png, image/jpeg, image/webp" style="display: none;" onchange="uploadAvatar(event)">
 
-                <!-- Аватарка (теперь кликабельная) -->
                 <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 20px auto; cursor: pointer; transition: 0.2s;" onclick="document.getElementById('avatarUploadInput').click()" title="Нажмите, чтобы изменить фото" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
                     <div id="profileAvatarPreview" style="width: 100%; height: 100%; background: #0a0a0a; border: 2px dashed var(--accent-green); border-radius: 50%; display:flex; justify-content:center; align-items:center; font-size: 35px; background-size: cover; background-position: center; overflow: hidden;">?</div>
                     <div style="position: absolute; bottom: -5px; right: -10px; background: var(--accent-green); color: #000; font-size: 10px; font-weight: bold; font-family: var(--font-mono); padding: 3px 8px; border: 1px solid #000; box-shadow: 2px 2px 0px #000;">VERIFIED</div>
                 </div>
 
-                <!-- Инфо блок -->
                 <div style="background: #0a0a0a; border: 1px solid #333; padding: 20px; text-align: left; font-family: var(--font-mono); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
                     <div style="color: #666; font-size: 11px; margin-bottom: 5px;">[ ACCOUNT_ID ]</div>
                     <div style="color: #fff; font-size: 16px; font-family: var(--font-main); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px dashed #333; padding-bottom: 15px; margin-bottom: 15px;" id="modalProfileName">Loading...</div>
                     
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #888; font-size: 13px;">СОХРАНЕНО:</span>
+                        <span style="color: #888; font-size: 13px;" data-i18n="profile.saved">СОХРАНЕНО:</span>
                         <span style="color: var(--accent-red); font-size: 18px; font-weight: bold; text-shadow: 0 0 15px rgba(255,0,0,0.4);">❤ <span id="modalProfileLikesCount">0</span></span>
                     </div>
                 </div>
 
-               <button class="cart-checkout-btn" onclick="logout(); closeModal('profileModal');" style="background: #333; color: #fff; margin-top: 25px; width: 100%; border-color: #555; text-transform: uppercase;">ВЫЙТИ</button>
+               <button class="cart-checkout-btn" onclick="logout(); closeModal('profileModal');" style="background: #333; color: #fff; margin-top: 25px; width: 100%; border-color: #555; text-transform: uppercase;" data-i18n="profile.logout">[ ВЫЙТИ ИЗ СИСТЕМЫ ]</button>
             </div>
             
         </div>
@@ -542,48 +535,45 @@
 </div>
 
 
-<!-- ОКНО ПРЕДЛОЖКИ -->
 <div class="modal-overlay" id="proposeModal">
     <div class="modal-window" style="max-width: 550px;">
         <div class="modal-header">
-            <span class="modal-title typewriter" style="animation: none;">DROP_ITEM.EXE</span>
+            <span class="modal-title typewriter" style="animation: none;" data-i18n="propose.title">DROP_ITEM.EXE</span>
             <button class="close-btn" onclick="closeModal('proposeModal')">X</button>
         </div>
         
         <div class="form-layout">
             <div style="background: #111; padding: 15px; border-left: 3px solid var(--accent-red); margin-bottom: 10px;">
-                <p style="margin:0 0 5px 0; color:var(--accent-red); font-family:var(--font-mono); font-weight:bold; font-size:13px;">[ СИСТЕМА БЕЗОПАСНОЙ СДЕЛКИ ]</p>
+                <p style="margin:0 0 5px 0; color:var(--accent-red); font-family:var(--font-mono); font-weight:bold; font-size:13px;" data-i18n="propose.safe_title">[ СИСТЕМА БЕЗОПАСНОЙ СДЕЛКИ ]</p>
                 <p style="margin:0; font-size:11px; color:#aaa; line-height:1.4;">
-                    1. Мы берем комиссию 15% с продажи.<br>
-                    2. <b>ДЕНЬГИ ПРИНИМАЕМ МЫ.</b> Вы получаете выплату только после того, как клиент забрал посылку на почте.<br>
-                    3. Если клиент отказывается от вещи из-за скрытых вами дефектов или подделки — <b>вы оплачиваете доставку в обе стороны</b>, иначе вещь утилизируется.<br>
-                    4. На одном из фото ОБЯЗАТЕЛЬНО должна быть бумажка с вашим ником и датой.
+                    <span data-i18n="propose.safe_1">1. Мы берем комиссию 15% с продажи.</span><br>
+                    <span data-i18n="propose.safe_2">2. <b>ДЕНЬГИ ПРИНИМАЕМ МЫ.</b> Вы получаете выплату только после того, как клиент забрал посылку.</span><br>
+                    <span data-i18n="propose.safe_3">3. Если клиент отказывается от вещи из-за скрытых вами дефектов или подделки — <b>вы оплачиваете доставку в обе стороны</b>, иначе вещь утилизируется.</span><br>
+                    <span data-i18n="propose.safe_4">4. На одном из фото ОБЯЗАТЕЛЬНО должна быть бумажка с вашим ником и датой.</span>
                 </p>
             </div>
             
-            <label>ФОТО / ВИДЕО (ДО 5 ШТУК):</label>
-            
-          <label>ФОТО (ДО 5 ШТУК):</label>
-            <input type="file" id="propFiles" class="form-input" accept="image/*" multiple style="display: none;">
+            <label data-i18n="propose.media_label">ФОТО / ВИДЕО (ДО 5 ШТУК):</label>
+            <input type="file" id="propFiles" class="form-input" accept="image/*,video/mp4" multiple style="display: none;">
             
             <div id="propDropzone" class="upload-dropzone" onclick="document.getElementById('propFiles').click()">
-                <div id="propPlaceholder" style="color: #666; font-family: var(--font-mono); font-size: 13px;">📸 Нажмите, чтобы выбрать фото</div>
+                <div id="propPlaceholder" style="color: #666; font-family: var(--font-mono); font-size: 13px;" data-i18n="propose.media_click">📸 Нажмите, чтобы выбрать файлы</div>
                 <div id="propPreviewContainer" class="preview-container"></div>
             </div>
             
-            <label>БРЕНД И МОДЕЛЬ:</label>
-            <input type="text" id="propBrand" class="form-input" placeholder="Например: Arcteryx Beta AR">
+            <label data-i18n="propose.brand_label">БРЕНД И МОДЕЛЬ:</label>
+            <input type="text" id="propBrand" class="form-input" placeholder="Например: Arcteryx Beta AR" data-i18n-ph="propose.brand_place">
             
-            <label>РАЗМЕР И ЗАМЕРЫ:</label>
-            <input type="text" id="propSize" class="form-input" placeholder="Например: M (Длина 70, Грудь 55)">
+            <label data-i18n="propose.size_label">РАЗМЕР И ЗАМЕРЫ:</label>
+            <input type="text" id="propSize" class="form-input" placeholder="Например: M (Длина 70, Грудь 55)" data-i18n-ph="propose.size_place">
             
-            <label>ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
-            <input type="number" id="propCond" class="form-input" placeholder="9" min="1" max="10">
+            <label data-i18n="propose.cond_label">ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
+            <input type="number" id="propCond" class="form-input" placeholder="9" min="1" max="10" data-i18n-ph="propose.cond_place">
             
-            <label>СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
-            <input type="text" id="propContact" class="form-input" placeholder="@твои_ник или +380...">
+            <label data-i18n="propose.contact_label">СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
+            <input type="text" id="propContact" class="form-input" placeholder="@твои_ник или +380..." data-i18n-ph="propose.contact_place">
             
-            <button class="cart-checkout-btn btn-target" id="btnSubmitProp" onclick="submitProposal()" style="margin-top: 15px; width: 100%;">[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
+            <button class="cart-checkout-btn btn-target" id="btnSubmitProp" onclick="submitProposal()" style="margin-top: 15px; width: 100%;" data-i18n="propose.btn_submit">[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
         </div>
     </div>
 </div>

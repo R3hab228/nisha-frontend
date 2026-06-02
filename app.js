@@ -44,7 +44,7 @@ function changeLanguage(lng, flag) {
 
 
 // === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Фикс кнопки [+] и введение системы 'Безопасная сделка'";
+const UPDATE_REASON = "Запрет добавления в корзину без регистрации + фикс обучения";
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -82,9 +82,16 @@ if (typeof Sentry !== 'undefined') {
     console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
 }
 function updateContentLanguage() {
+    // Переводим обычный текст
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        el.innerText = i18next.t(key);
+        el.innerHTML = i18next.t(key); // Изменили на innerHTML чтобы теги <b> и <strong> работали!
+    });
+    
+    // Переводим Placeholder'ы инпутов
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const key = el.getAttribute('data-i18n-ph');
+        el.placeholder = i18next.t(key);
     });
 
     const searchInput = document.getElementById('mainSearch');
@@ -885,6 +892,57 @@ function applyFilters() {
                     });
                 }, 50);
             }
+            // === ЗАПУСК ИНТЕРАКТИВНОГО ТУРА (ОНБОРДИНГ) ===
+            setTimeout(() => {
+                if (!localStorage.getItem('nisha_rules_accepted')) return;
+
+                if (!localStorage.getItem('nisha_tour_done') && typeof window.driver !== 'undefined') {
+                    
+                    const isMobile = window.innerWidth <= 900;
+                    
+                    // БЕЗОПАСНЫЙ поиск элементов
+                    const firstStar = document.querySelector('.item-card .fav-star');
+                    const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
+
+                    let activeSteps = [];
+
+                    // Шаг 1: Поиск (общий для всех)
+                    activeSteps.push({ element: '.search-wrapper', popover: { title: i18next.t('tour.search_title'), description: i18next.t('tour.search_desc') } });
+
+                    if (isMobile) {
+                        activeSteps.push(
+                            { element: '.mobile-profile-link', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
+                            { element: '#mobileFilterBtn', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
+                        );
+                        if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
+                        if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
+                        activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
+                        activeSteps.push({ element: '#cartInfoWrapper', popover: { title: i18next.t('tour.cart_title'), description: i18next.t('tour.cart_desc') } });
+                    } else {
+                        // ШАГИ ДЛЯ ПК
+                        activeSteps.push(
+                            { element: '#authBox', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
+                            { element: '.sidebar', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
+                        );
+                        if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
+                        if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
+                        activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
+                    }
+
+                    const driverObj = window.driver.js.driver({
+                        showProgress: true,
+                        nextBtnText: i18next.t('tour.next'),
+                        prevBtnText: i18next.t('tour.prev'),
+                        doneBtnText: i18next.t('tour.done'),
+                        steps: activeSteps,
+                        onDestroyStarted: () => {
+                            localStorage.setItem('nisha_tour_done', 'true');
+                            driverObj.destroy();
+                        }
+                    });
+                    driverObj.drive();
+                }
+            }, 2000);
         } catch (err) {
             console.error("ОШИБКА ФИЛЬТРАЦИИ:", err);
             if (grid) grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${err.message} ]</div>`;
@@ -1064,6 +1122,22 @@ function renderNextBatch() {
 
 // Функция добавления в корзину прямо с главной страницы
 async function addToCartById(itemId) {
+    // --- ПРОВЕРКА НА ГОСТЯ ---
+    if (!currentUser) {
+        showToast(i18next.t('messages.cart_error_auth'), 'error');
+        openProfileModal(); // Автоматически открываем окно входа!
+        
+        // Если это ПК (нет модалки), то подсвечиваем левое меню
+        if (window.innerWidth > 900) {
+            const authBox = document.getElementById('authBox');
+            if(authBox) {
+                authBox.style.boxShadow = "0 0 20px var(--accent-red)";
+                setTimeout(() => authBox.style.boxShadow = "none", 2000);
+            }
+        }
+        return;
+    }
+
     const item = allItems.find(i => i.id === itemId);
     if (!item) return;
 

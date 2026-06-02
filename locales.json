@@ -1,7 +1,7 @@
 {
   "ua": {
     "translation": {
-      "nav": { "home": "ГОЛОВНА", "favorites": "ОБРАНЕ", "reviews": "ВІДГУКИ", "orders": "МОЇ ЗАМОВЛЕННЯ" },
+      "nav": { "home": "ГОЛОВНА", "favorites": "ОБРАНЕ", "reviews": "ВІДГУКИ", "orders": "МОЇ ЗАМОВЛЕННЯ", "profile": "ПРОФІЛЬ" },
       "search": { "placeholder": "Пошук речі (наприклад: Arcteryx)...", "btn": "ШУКАТИ" },
       "sidebar": {
         "categories": "КАТЕГОРІЇ", "all": "[>] Всі речі", "outerwear": "[>] Верхній одяг", "sweaters": "[>] Кофти та Светри", 
@@ -9,10 +9,11 @@
         "sizes_title": "РОЗМІРИ ТА ЦІНА", "from": "ВІД", "to": "ДО", "uah": "грн",
         "size_s": "Розмір S", "size_m": "Розмір M", "size_l": "Розмір L", "size_xl": "Розмір XL / XXL",
         "shoes_1": "Взуття (40 - 42)", "shoes_2": "Взуття (43 - 46)",
-        "auth_title": "ПРОФІЛЬ / ВХІД", "login": "УВІЙТИ", "reg": "РЕЄСТРАЦІЯ", "create": "СТВОРИТИ АКАУНТ", "logout": "ВИЙТИ"
+        "auth_title": "ПРОФІЛЬ / ВХІД", "login": "УВІЙТИ", "reg": "РЕЄСТРАЦІЯ", "create": "СТВОРИТИ АКАУНТ", "logout": "ВИЙТИ", "back": "НАЗАД",
+        "auth_req": "АВТОРИЗАЦІЯ В СИСТЕМІ", "auth_desc": "Авторизуйтесь для доступу до обраного та історії."
       },
       "sort": { "found": "Знайдено речей:", "sorting": "Сортування:", "new": "Нові", "cheap": "Дешеві" },
-      "cart": { "checkout": "ОФОРМИТИ ЗАМОВЛЕННЯ", "in_cart": "У КОШИКУ:", "items_total": "РЕЧЕЙ | РАЗОМ:", "empty": "[ КОШИК ПОРОЖНІЙ ]", "title": "[ ВАШІ ПОКУПКИ ]" },
+      "cart": { "checkout": "ОФОРМИТИ ЗАМОВЛЕННЯ", "in_cart": "У КОШИКУ:", "items_total": "РЕЧЕЙ | РАЗОМ:", "empty": "[ КОШИК ПОРОЖНІЙ ]", "title": "[ ВАШІ ПОКУПКИ ]", "delete": "ВИДАЛИТИ" },
       "mobile": { "show_filters": "[+] ПОКАЗАТИ ФІЛЬТРИ", "hide_filters": "[-] ПРИХОВАТИ ФІЛЬТРИ" },
       "product": {
         "views": "ПРОСМОТРІВ:", "condition": "СТАН РЕЧІ:", "size": "РОЗМІР:", "brand": "БРЕНД:",
@@ -25,9 +26,10 @@
         "desc": "Заповніть дані для відправки. Бронь 2 години.", "name": "ПІБ Одержувача:", "phone": "Телефон (ОБОВ'ЯЗКОВО):",
         "btn_otp": "Підтвердити", "otp_status": "Спочатку підтвердіть номер для замовлення!",
         "city": "Місто (Нова Пошта):", "branch": "Відділення або Поштомат:", "calc": "Орієнтовна вартість доставки:",
-        "btn_submit": "ПІДТВЕРДИТИ ЗАМОВЛЕННЯ"
+        "btn_submit": "ПІДТВЕРДИТИ ЗАМОВЛЕННЯ", "promo": "Промокод (якщо є):", "apply": "ЗАСТОСУВАТИ"
       },
       "orders_modal": {
+        "title": "MY_ORDERS.DB",
         "desc": "Введіть номер телефону, вказаний при замовленні, щоб відстежити статус.", "btn": "ЗНАЙТИ",
         "empty": "[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]", "loading": "Очікування даних..."
       },
@@ -56,12 +58,38 @@
         "p3_1": "Доставка здійснюється виключно компанією <b>«Нова Пошта»</b> по території України.",
         "p3_2": "Відправка відбувається в день замовлення (при оплаті до 16:00) або наступного дня.",
         "btn_accept": "[ Я ЗГОДЕН З ПРАВИЛАМИ ]"
+      },
+      "tour": {
+        "next": "ДАЛІ >",
+        "prev": "< НАЗАД",
+        "done": "ПОГНАЛИ",
+        "prof_title": "ПРОФІЛЬ", "prof_desc": "Обов'язково увійди в систему, щоб зберігати речі та накопичувати кешбек!",
+        "filt_title": "ФІЛЬТРИ", "filt_desc": "Не хочеш гортати все підряд? Натисни сюди, щоб вибрати категорію або розмір.",
+        "star_title": "ОБРАНЕ", "star_desc": "Тисни на зірку, щоб зберегти річ. Вона з'явиться у твоєму профілі та ніколи не загубиться.",
+        "cartbtn_title": "ПОКУПКА", "cartbtn_desc": "Тисни сюди, щоб додати товар у кошик. Бронь тримається рівно 2 години.",
+        "prop_title": "ПРОДАТИ РІЧ", "prop_desc": "Маєш свій рідкісний шмот? Тисни на плюсик, завантажуй фотки, і ми виставимо його на сайті.",
+        "cart_title": "ТВІЙ КОШИК", "cart_desc": "Тут будуть твої покупки. Натисни на цей текст, щоб переглянути список або видалити річ.",
+        "search_title": "РОЗУМНИЙ ПОШУК", "search_desc": "Шукаєш щось конкретне? Вводь назву бренду чи моделі тут."
+      },
+      "profile": {
+        "saved": "ЗБЕРЕЖЕНО:", "balance": "БАЛАНС:", "ref_code": "РЕФ-КОД:", "ref_desc": "Дай другу знижку 5%, а собі 5% кешбеку!", "logout": "[ ВИЙТИ З СИСТЕМИ ]"
+      },
+      "propose": {
+        "title": "DROP_ITEM.EXE", "desc": "Завантаж свій шмот. Схвалимо — виставимо на продаж.",
+        "safe_title": "[ СИСТЕМА БЕЗПЕЧНОЇ УГОДИ ]",
+        "safe_1": "1. Ми беремо комісію 15% з продажу.", "safe_2": "2. <b>ГРОШІ ПРИЙМАЄМО МИ.</b> Ви отримуєте виплату лише після того, як клієнт забрав посилку.", "safe_3": "3. Якщо клієнт відмовляється від речі через приховані вами дефекти або підробку — <b>ви оплачуєте доставку в обидві сторони</b>, інакше річ утилізується.", "safe_4": "4. На одному з фото ОБОВ'ЯЗКОВО має бути папірець з вашим ніком та датою.",
+        "media_label": "ФОТО / ВІДЕО (ДО 5 ШТУК):", "media_click": "📸 Натисніть, щоб вибрати файли",
+        "brand_label": "БРЕНД ТА МОДЕЛЬ:", "brand_place": "Наприклад: Arcteryx Beta AR",
+        "size_label": "РОЗМІР ТА ВИМІРИ:", "size_place": "Наприклад: M (Довжина 70, Груди 55)",
+        "cond_label": "ОЦІНКА СТАНУ (1 - 10):", "cond_place": "9",
+        "contact_label": "ЗВ'ЯЗОК (@TELEGRAM АБО ТЕЛЕФОН):", "contact_place": "@твій_нік або +380...",
+        "btn_submit": "[ ВІДПРАВИТИ ЗАЯВКУ ]"
       }
     }
   },
   "ru": {
     "translation": {
-      "nav": { "home": "ГЛАВНАЯ", "favorites": "ИЗБРАННОЕ", "reviews": "ОТЗЫВЫ", "orders": "МОИ ЗАКАЗЫ" },
+      "nav": { "home": "ГЛАВНАЯ", "favorites": "ИЗБРАННОЕ", "reviews": "ОТЗЫВЫ", "orders": "МОИ ЗАКАЗЫ", "profile": "ПРОФИЛЬ" },
       "search": { "placeholder": "Поиск вещи (например: Arcteryx)...", "btn": "ИСКАТЬ" },
       "sidebar": {
         "categories": "КАТЕГОРИИ", "all": "[>] Все вещи", "outerwear": "[>] Верхняя одежда", "sweaters": "[>] Кофты и Свитера", 
@@ -69,10 +97,11 @@
         "sizes_title": "РАЗМЕРЫ И ЦЕНА", "from": "ОТ", "to": "ДО", "uah": "грн",
         "size_s": "Размер S", "size_m": "Размер M", "size_l": "Размер L", "size_xl": "Размер XL / XXL",
         "shoes_1": "Обувь (40 - 42)", "shoes_2": "Обувь (43 - 46)",
-        "auth_title": "ПРОФИЛЬ / ВХОД", "login": "ВОЙТИ", "reg": "РЕГИСТРАЦИЯ", "create": "СОЗДАТЬ АККАУНТ", "logout": "ВЫЙТИ"
+        "auth_title": "ПРОФИЛЬ / ВХОД", "login": "ВОЙТИ", "reg": "РЕГИСТРАЦИЯ", "create": "СОЗДАТЬ АККАУНТ", "logout": "ВЫЙТИ", "back": "НАЗАД",
+        "auth_req": "АВТОРИЗАЦИЯ В СИСТЕМЕ", "auth_desc": "Авторизуйтесь для доступа к избранному и истории."
       },
       "sort": { "found": "Найдено вещей:", "sorting": "Сортировка:", "new": "Новые", "cheap": "Дешевые" },
-      "cart": { "checkout": "ОФОРМИТЬ ЗАКАЗ", "in_cart": "В КОРЗИНЕ:", "items_total": "ВЕЩЕЙ | ИТОГО:", "empty": "[ КОРЗИНА ПУСТА ]", "title": "[ ВАШИ ПОКУПКИ ]" },
+      "cart": { "checkout": "ОФОРМИТЬ ЗАКАЗ", "in_cart": "В КОРЗИНЕ:", "items_total": "ВЕЩЕЙ | ИТОГО:", "empty": "[ КОРЗИНА ПУСТА ]", "title": "[ ВАШИ ПОКУПКИ ]", "delete": "УДАЛИТЬ" },
       "mobile": { "show_filters": "[+] ПОКАЗАТЬ ФИЛЬТРЫ", "hide_filters": "[-] СКРЫТЬ ФИЛЬТРЫ" },
       "product": {
         "views": "ПРОСМОТРОВ:", "condition": "СОСТОЯНИЕ ВЕЩИ:", "size": "РАЗМЕР:", "brand": "БРЕНД:",
@@ -85,9 +114,10 @@
         "desc": "Заполните данные для отправки. Бронь 2 часа.", "name": "ФИО Получателя:", "phone": "Телефон (ОБЯЗАТЕЛЬНО):",
         "btn_otp": "Подтвердить", "otp_status": "Сначала подтвердите номер для заказа!",
         "city": "Город (Новая Почта):", "branch": "Отделение или Почтомат:", "calc": "Ориентировочная стоимость доставки:",
-        "btn_submit": "ПОДТВЕРДИТЬ ЗАКАЗ"
+        "btn_submit": "ПОДТВЕРДИТЬ ЗАКАЗ", "promo": "Промокод (если есть):", "apply": "ПРИМЕНИТЬ"
       },
       "orders_modal": {
+        "title": "MY_ORDERS.DB",
         "desc": "Введите номер телефона, указанный при заказе, чтобы отследить статус.", "btn": "НАЙТИ",
         "empty": "[ ИСТОРИЯ ЗАКАЗОВ ПУСТА ]", "loading": "Ожидание данных..."
       },
@@ -116,12 +146,38 @@
         "p3_1": "Доставка осуществляется исключительно компанией <b>«Нова Пошта»</b> по территории Украины.",
         "p3_2": "Отправка происходит в день заказа (при оплате до 16:00) или на следующий день.",
         "btn_accept": "[ Я СОГЛАСЕН С ПРАВИЛАМИ ]"
+      },
+      "tour": {
+        "next": "ДАЛЬШЕ >",
+        "prev": "< НАЗАД",
+        "done": "ПОГНАЛИ",
+        "prof_title": "ПРОФИЛЬ", "prof_desc": "Обязательно войди в систему, чтобы сохранять вещи и копить кэшбек!",
+        "filt_title": "ФИЛЬТРЫ", "filt_desc": "Не хочеш листать всё подряд? Нажми сюда, чтобы выбрать категорию или размер.",
+        "star_title": "ИЗБРАННОЕ", "star_desc": "Жми на звезду, чтобы сохранить шмотку. Она появится в твоем профиле и никогда не потеряется.",
+        "cartbtn_title": "ПОКУПКА", "cartbtn_desc": "Жми сюда, чтобы добавить товар в корзину. Бронь держится ровно 2 часа.",
+        "prop_title": "ПРОДАТЬ ВЕЩЬ", "prop_desc": "Есть свой редкий шмот? Жми на плюсик, загружай фотки, и мы выставим его на сайте.",
+        "cart_title": "ТВОЯ КОРЗИНА", "cart_desc": "Здесь будут твои покупки. Нажми на этот текст, чтобы увидеть список или удалить вещь.",
+        "search_title": "УМНЫЙ ПОИСК", "search_desc": "Ищешь что-то конкретное? Вводи название бренда или модели здесь."
+      },
+      "profile": {
+        "saved": "СОХРАНЕНО:", "balance": "БАЛАНС:", "ref_code": "РЕФ-КОД:", "ref_desc": "Дай другу скидку 5%, а себе 5% кэшбека!", "logout": "[ ВЫЙТИ ИЗ СИСТЕМЫ ]"
+      },
+      "propose": {
+        "title": "DROP_ITEM.EXE", "desc": "Загрузи свой шмот. Одобрим — выставим на продажу.",
+        "safe_title": "[ СИСТЕМА БЕЗОПАСНОЙ СДЕЛКИ ]",
+        "safe_1": "1. Мы берем комиссию 15% с продажи.", "safe_2": "2. <b>ДЕНЬГИ ПРИНИМАЕМ МЫ.</b> Вы получаете выплату только после того, как клиент забрал посылку.", "safe_3": "3. Если клиент отказывается от вещи из-за скрытых вами дефектов или подделки — <b>вы оплачиваете доставку в обе стороны</b>, иначе вещь утилизируется.", "safe_4": "4. На одном из фото ОБЯЗАТЕЛЬНО должна быть бумажка с вашим ником и датой.",
+        "media_label": "ФОТО / ВИДЕО (ДО 5 ШТУК):", "media_click": "📸 Нажмите, чтобы выбрать файлы",
+        "brand_label": "БРЕНД И МОДЕЛЬ:", "brand_place": "Например: Arcteryx Beta AR",
+        "size_label": "РАЗМЕР И ЗАМЕРЫ:", "size_place": "Например: M (Длина 70, Грудь 55)",
+        "cond_label": "ОЦЕНКА СОСТОЯНИЯ (1 - 10):", "cond_place": "9",
+        "contact_label": "СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):", "contact_place": "@твои_ник или +380...",
+        "btn_submit": "[ ОТПРАВИТЬ ЗАЯВКУ ]"
       }
     }
   },
   "en": {
     "translation": {
-      "nav": { "home": "HOME", "favorites": "FAVORITES", "reviews": "REVIEWS", "orders": "MY ORDERS" },
+      "nav": { "home": "HOME", "favorites": "FAVORITES", "reviews": "REVIEWS", "orders": "MY ORDERS", "profile": "PROFILE" },
       "search": { "placeholder": "Search items (e.g., Arcteryx)...", "btn": "SEARCH" },
       "sidebar": {
         "categories": "CATEGORIES", "all": "[>] All items", "outerwear": "[>] Outerwear", "sweaters": "[>] Sweaters & Hoodies", 
@@ -129,10 +185,11 @@
         "sizes_title": "SIZES & PRICE", "from": "FROM", "to": "TO", "uah": "UAH",
         "size_s": "Size S", "size_m": "Size M", "size_l": "Size L", "size_xl": "Size XL / XXL",
         "shoes_1": "Shoes (40 - 42)", "shoes_2": "Shoes (43 - 46)",
-        "auth_title": "PROFILE / LOGIN", "login": "LOGIN", "reg": "REGISTER", "create": "CREATE ACCOUNT", "logout": "LOGOUT"
+        "auth_title": "PROFILE / LOGIN", "login": "LOGIN", "reg": "REGISTER", "create": "CREATE ACCOUNT", "logout": "LOGOUT", "back": "BACK",
+        "auth_req": "SYSTEM AUTHORIZATION", "auth_desc": "Log in to access your favorites and history."
       },
       "sort": { "found": "Items found:", "sorting": "Sort by:", "new": "Newest", "cheap": "Cheapest" },
-      "cart": { "checkout": "CHECKOUT", "in_cart": "IN CART:", "items_total": "ITEMS | TOTAL:", "empty": "[ CART IS EMPTY ]", "title": "[ YOUR PURCHASES ]" },
+      "cart": { "checkout": "CHECKOUT", "in_cart": "IN CART:", "items_total": "ITEMS | TOTAL:", "empty": "[ CART IS EMPTY ]", "title": "[ YOUR PURCHASES ]", "delete": "DELETE" },
       "mobile": { "show_filters": "[+] SHOW FILTERS", "hide_filters": "[-] HIDE FILTERS" },
       "product": {
         "views": "VIEWS:", "condition": "CONDITION:", "size": "SIZE:", "brand": "BRAND:",
@@ -145,9 +202,10 @@
         "desc": "Fill in shipping details. Reservation holds for 2 hours.", "name": "Full Name:", "phone": "Phone (REQUIRED):",
         "btn_otp": "Verify", "otp_status": "Please verify your phone number first!",
         "city": "City (Nova Poshta):", "branch": "Branch or Postomat:", "calc": "Estimated delivery cost:",
-        "btn_submit": "CONFIRM ORDER"
+        "btn_submit": "CONFIRM ORDER", "promo": "Promo code (if any):", "apply": "APPLY"
       },
       "orders_modal": {
+        "title": "MY_ORDERS.DB",
         "desc": "Enter the phone number used for the order to track its status.", "btn": "SEARCH",
         "empty": "[ ORDER HISTORY IS EMPTY ]", "loading": "Waiting for data..."
       },
@@ -176,6 +234,32 @@
         "p3_1": "Delivery is carried out exclusively by <b>Nova Poshta</b>.",
         "p3_2": "Dispatch occurs on the day of the order or the next day.",
         "btn_accept": "[ I AGREE WITH THE RULES ]"
+      },
+      "tour": {
+        "next": "NEXT >",
+        "prev": "< PREV",
+        "done": "LET'S GO",
+        "prof_title": "PROFILE", "prof_desc": "Log in to save items and earn cashback!",
+        "filt_title": "FILTERS", "filt_desc": "Click here to select a category or your size.",
+        "star_title": "FAVORITES", "star_desc": "Tap the star to save an item to your profile.",
+        "cartbtn_title": "BUY ITEM", "cartbtn_desc": "Click here to add the item to your cart. Reservation holds for 2 hours.",
+        "prop_title": "SELL YOUR ITEM", "prop_desc": "Got rare stuff? Tap the plus icon, upload photos, and we'll list it.",
+        "cart_title": "YOUR CART", "cart_desc": "Your purchases will be here. Click to view or remove items.",
+        "search_title": "SMART SEARCH", "search_desc": "Looking for something specific? Type brand or model here."
+      },
+      "profile": {
+        "saved": "SAVED:", "balance": "BALANCE:", "ref_code": "REF-CODE:", "ref_desc": "Give a friend 5% off, get 5% cashback!", "logout": "[ LOGOUT ]"
+      },
+      "propose": {
+        "title": "DROP_ITEM.EXE", "desc": "Upload your stuff. Once approved, we will list it.",
+        "safe_title": "[ SAFE DEAL SYSTEM ]",
+        "safe_1": "1. We take a 15% commission from the sale.", "safe_2": "2. <b>WE ACCEPT PAYMENTS.</b> You get paid only after the client picks up the parcel.", "safe_3": "3. If a client rejects the item due to hidden defects or fake — <b>you pay for two-way shipping</b>.", "safe_4": "4. One of the photos MUST include a piece of paper with your nickname and date.",
+        "media_label": "PHOTO / VIDEO (MAX 5):", "media_click": "📸 Click to select files",
+        "brand_label": "BRAND & MODEL:", "brand_place": "E.g.: Arcteryx Beta AR",
+        "size_label": "SIZE & MEASUREMENTS:", "size_place": "E.g.: M (Length 70, Chest 55)",
+        "cond_label": "CONDITION (1 - 10):", "cond_place": "9",
+        "contact_label": "CONTACT (@TELEGRAM OR PHONE):", "contact_place": "@your_nick or +380...",
+        "btn_submit": "[ SUBMIT PROPOSAL ]"
       }
     }
   }
