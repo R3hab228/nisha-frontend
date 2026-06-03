@@ -105,7 +105,13 @@ function changeLanguage(lng) {
     if (typeof i18next !== 'undefined') {
         i18next.changeLanguage(lng).then(() => {
             updateContentLanguage();
-            showToast(`Язык изменен / Мова змінена [${lng.toUpperCase()}]`, 'success');
+            const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
+            showToast(msg, 'success');
+            
+            // --- СИНХРОНИЗАЦИЯ ЯЗЫКА С БАЗОЙ ---
+            if (currentUser && _supabase) {
+                _supabase.from('profiles').update({ language: lng }).eq('id', currentUser.id).then();
+            }
         });
     }
 }
@@ -161,6 +167,7 @@ let showingOnlyFavs = false;
 let currentOpenedItem = null;
 let isHacked = false; 
 let _supabase = null;
+let clientFingerprint = "guest_" + Date.now(); 
 
 let envData = (typeof window.ENV !== 'undefined') ? window.ENV : ((typeof CONFIG !== 'undefined') ? CONFIG : {});
 let rawUrl = envData.SUPABASE_URL || '';
@@ -623,8 +630,25 @@ async function checkSession() {
         if (session) {
             currentUser = session.user;
             const { data: profiles, error } = await _supabase.from('profiles').select('*').eq('id', currentUser.id).limit(1);
-            if (!error && profiles && profiles.length > 0) { 
+           if (!error && profiles && profiles.length > 0) { 
                 userProfile = profiles[0]; 
+                
+                // --- СИНХРОНИЗАЦИЯ ЯЗЫКА ИЗ БД В БРАУЗЕР ---
+                if (userProfile.language) {
+                    const currentLang = localStorage.getItem('nisha_lang') || 'ru';
+                    if (userProfile.language !== currentLang) {
+                        localStorage.setItem('nisha_lang', userProfile.language);
+                        const newFlag = userProfile.language === 'ru' ? '🇷🇺' : (userProfile.language === 'en' ? '🇬🇧' : '🇺🇦');
+                        localStorage.setItem('nisha_flag', newFlag);
+                        if (typeof i18next !== 'undefined') {
+                            i18next.changeLanguage(userProfile.language).then(() => {
+                                updateContentLanguage();
+                                const footLang = document.getElementById('currentLangLabelFooter');
+                                if (footLang) footLang.innerText = '[' + userProfile.language.toUpperCase() + '] ▼';
+                            });
+                        }
+                    }
+                }
             }
 
             const uName = (userProfile && userProfile.username) ? userProfile.username : currentUser.email;
@@ -784,6 +808,21 @@ async function loadAllItems() {
     
    allItems = data;
     
+    // --- СИНХРОНИЗАЦИЯ ИСТОРИИ ПРОСМОТРОВ ИЗ БД ---
+    if (userProfile && userProfile.viewed_history && userProfile.viewed_history.length > 0) {
+        let dbHistory = [];
+        userProfile.viewed_history.forEach(uuid => {
+            const histItem = allItems.find(i => i.id === uuid);
+            if (histItem) {
+                const img = (histItem.images && histItem.images.length > 0) ? histItem.images[0] : '';
+                dbHistory.push({ id: histItem.id, name: histItem.name, price: histItem.price, img: img });
+            }
+        });
+        if (dbHistory.length > 0) {
+            localStorage.setItem('nisha_history', JSON.stringify(dbHistory));
+        }
+    }
+
     // ФИКС КОРЗИНЫ: Если товар удалили из БД, тихо убираем его из локальной корзины юзера
     const validCart = cart.filter(cItem => allItems.some(dbItem => dbItem.id === cItem.id));
     if (validCart.length !== cart.length) {
@@ -795,7 +834,68 @@ async function loadAllItems() {
     applyFilters();
 }
 
+// --- ОБНОВЛЕНИЕ КРАСНЫХ СЧЕТЧИКОВ В БОКОВОМ МЕНЮ ---
+function updateSidebarCounters() {
+    // Считаем категории (по всей базе)
+    const catCounts = { 'Все вещи': allItems.length };
+    allItems.forEach(item => {
+        if (!item) return;
+        const c = item.category || 'Без категории';
+        catCounts[c] = (catCounts[c] || 0) + 1;
+    });
 
+    // Обновляем HTML категорий
+    document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(link => {
+        // Убираем старый счетчик (если был)
+        let baseText = link.innerHTML.split('<span')[0].trim();
+        
+        // Определяем, какая это категория
+        let catName = '';
+        if (baseText.includes('Все вещи')) catName = 'Все вещи';
+        else if (baseText.includes('Верхняя одежда')) catName = 'Верхняя одежда';
+        else if (baseText.includes('Кофты и Свитера')) catName = 'Кофты и Свитера';
+        else if (baseText.includes('Штаны и Джинсы')) catName = 'Штаны и Джинсы';
+        else if (baseText.includes('Обувь')) catName = 'Обувь';
+        else if (baseText.includes('Аксессуары')) catName = 'Аксессуары';
+
+        const count = catCounts[catName] || 0;
+        
+        // Рисуем стильный красный счетчик (скрываем, если 0)
+        if (count > 0) {
+            link.innerHTML = `${baseText} <span style="color:#ff3333; font-weight:bold; font-family:var(--font-mono); font-size:11px;">(${count})</span>`;
+        } else {
+            link.innerHTML = baseText;
+        }
+    });
+
+    // Считаем размеры (только для ТЕКУЩЕЙ выбранной категории)
+    const sizeCounts = {};
+    allItems.forEach(item => {
+        if (!item) return;
+        if (currentCategory !== '' && item.category !== currentCategory) return; // Умный подсчет
+        const s = item.size || '-';
+        sizeCounts[s] = (sizeCounts[s] || 0) + 1;
+    });
+
+    // Обновляем HTML размеров
+    document.querySelectorAll('.size-cb').forEach(cb => {
+        const labelSpan = cb.nextElementSibling;
+        let baseText = labelSpan.innerHTML.split('<span')[0].trim();
+        const sizeVal = cb.value;
+        const count = sizeCounts[sizeVal] || 0;
+
+        if (count > 0) {
+            labelSpan.innerHTML = `${baseText} <span style="color:#ff3333; font-weight:bold; font-family:var(--font-mono); font-size:11px;">(${count})</span>`;
+            cb.parentElement.style.opacity = '1';
+            cb.disabled = false;
+        } else {
+            labelSpan.innerHTML = baseText;
+            cb.parentElement.style.opacity = '0.4'; // Делаем полупрозрачным, если размера нет
+            cb.disabled = true; // Блокируем галочку
+            cb.checked = false; // Снимаем галочку, если была
+        }
+    });
+}
 let itemsPageSize = 12; 
 function applyFilters() {
     const grid = document.getElementById('itemsGrid');
@@ -883,8 +983,10 @@ function applyFilters() {
             else url.searchParams.delete('q');
             window.history.replaceState(null, '', url);
 
+            // === ОБНОВЛЯЕМ ЦИФРЫ В САЙДБАРЕ ===
+            updateSidebarCounters();
             
-            if (grid) {
+           if (grid) {
                 // Небольшая задержка, чтобы браузер успел отрисовать карточки без фризов
                 setTimeout(() => {
                     requestAnimationFrame(() => {
@@ -892,57 +994,6 @@ function applyFilters() {
                     });
                 }, 50);
             }
-            // === ЗАПУСК ИНТЕРАКТИВНОГО ТУРА (ОНБОРДИНГ) ===
-            setTimeout(() => {
-                if (!localStorage.getItem('nisha_rules_accepted')) return;
-
-                if (!localStorage.getItem('nisha_tour_done') && typeof window.driver !== 'undefined') {
-                    
-                    const isMobile = window.innerWidth <= 900;
-                    
-                    // БЕЗОПАСНЫЙ поиск элементов
-                    const firstStar = document.querySelector('.item-card .fav-star');
-                    const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
-
-                    let activeSteps = [];
-
-                    // Шаг 1: Поиск (общий для всех)
-                    activeSteps.push({ element: '.search-wrapper', popover: { title: i18next.t('tour.search_title'), description: i18next.t('tour.search_desc') } });
-
-                    if (isMobile) {
-                        activeSteps.push(
-                            { element: '.mobile-profile-link', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
-                            { element: '#mobileFilterBtn', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
-                        );
-                        if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
-                        if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
-                        activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
-                        activeSteps.push({ element: '#cartInfoWrapper', popover: { title: i18next.t('tour.cart_title'), description: i18next.t('tour.cart_desc') } });
-                    } else {
-                        // ШАГИ ДЛЯ ПК
-                        activeSteps.push(
-                            { element: '#authBox', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
-                            { element: '.sidebar', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
-                        );
-                        if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
-                        if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
-                        activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
-                    }
-
-                    const driverObj = window.driver.js.driver({
-                        showProgress: true,
-                        nextBtnText: i18next.t('tour.next'),
-                        prevBtnText: i18next.t('tour.prev'),
-                        doneBtnText: i18next.t('tour.done'),
-                        steps: activeSteps,
-                        onDestroyStarted: () => {
-                            localStorage.setItem('nisha_tour_done', 'true');
-                            driverObj.destroy();
-                        }
-                    });
-                    driverObj.drive();
-                }
-            }, 2000);
         } catch (err) {
             console.error("ОШИБКА ФИЛЬТРАЦИИ:", err);
             if (grid) grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${err.message} ]</div>`;
@@ -1038,10 +1089,10 @@ function renderNextBatch() {
                     <div class="item-info">
                         <h3 class="item-title">${safeName}</h3>
                         <div class="item-price">${priceHTML}</div>
-                        <div class="item-size">${i18next.t('grid.size_prefix')}${safeSize}</div>
+                        <div class="item-size"><span data-i18n="grid.size_prefix">${i18next.t('grid.size_prefix')}</span>${safeSize}</div>
                         <div class="item-footer"><span>${safeBrand}</span><span>${item.condition || '9/10'}</span></div>
                     </div>
-                    <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}">${i18next.t('product.add_to_cart')}</button>
+                    <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" data-i18n="product.add_to_cart">${i18next.t('product.add_to_cart')}</button>
                 </div>
             `;
 
@@ -1116,8 +1167,62 @@ function renderNextBatch() {
     if (trigger) {
         trigger.innerText = (renderedCount >= filteredItems.length) ? i18next.t('grid.end_list') : i18next.t('grid.scroll_more');
     }
-    
-    // БЕСКОНЕЧНЫЙ ЦИКЛ УДАЛЕН. За скролл отвечает только встроенный Observer!
+
+    setTimeout(() => {
+        if (trigger && renderedCount < filteredItems.length) {
+            const rect = trigger.getBoundingClientRect();
+            // Если триггер находится в пределах видимости экрана
+            if (rect.top < window.innerHeight + 300) {
+                renderNextBatch(); // Вызываем саму себя (рекурсия), пока не появится скролл
+            }
+        }
+
+        // === ЗАПУСК ИНТЕРАКТИВНОГО ТУРА (СТРОГО ПОСЛЕ ОКОНЧАНИЯ РЕНДЕРА КАРТОЧЕК) ===
+        if (renderedCount <= 12 && localStorage.getItem('nisha_rules_accepted') && !localStorage.getItem('nisha_tour_done') && typeof window.driver !== 'undefined') {
+            const isMobile = window.innerWidth <= 900;
+            const firstStar = document.querySelector('.item-card .fav-star');
+            const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
+
+            let activeSteps = [];
+            activeSteps.push({ element: '.search-wrapper', popover: { title: i18next.t('tour.search_title'), description: i18next.t('tour.search_desc') } });
+
+            if (isMobile) {
+                activeSteps.push(
+                    { element: '.mobile-profile-link', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
+                    { element: '#mobileFilterBtn', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
+                );
+                if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
+                if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
+                activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
+                activeSteps.push({ element: '#cartInfoWrapper', popover: { title: i18next.t('tour.cart_title'), description: i18next.t('tour.cart_desc') } });
+            } else {
+                activeSteps.push(
+                    { element: '#authBox', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
+                    { element: '.sidebar', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
+                );
+                if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
+                if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
+                activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
+            }
+
+            // Ждем 300мс, чтобы браузер 100% закончил стилизацию и расстановку элементов
+            setTimeout(() => {
+                const driverObj = window.driver.js.driver({
+                    showProgress: true,
+                    nextBtnText: i18next.t('tour.next'),
+                    prevBtnText: i18next.t('tour.prev'),
+                    doneBtnText: i18next.t('tour.done'),
+                    steps: activeSteps,
+                    onDestroyStarted: () => {
+                        localStorage.setItem('nisha_tour_done', 'true');
+                        driverObj.destroy();
+                    }
+                });
+                driverObj.drive();
+            }, 300);
+        }
+
+    }, 100);
 }
 
 // Функция добавления в корзину прямо с главной страницы
@@ -2261,20 +2366,26 @@ function openProductModal(item) {
         </div>
         <div style="color: #aaa; font-size: 13px;">${descText}</div>
     `;
-    // ЧИСТЫЕ ПРОСМОТРЫ ИЗ БД
+   // ЗАЩИЩЕННЫЕ ПРОСМОТРЫ (ANTI-SPAM)
     const viewCount = document.getElementById('modalItemViews');
     if(viewCount) {
-        // Показываем реальную цифру из базы (или 0)
         viewCount.innerText = item.views_count || 0;
-
-        let viewedItems = JSON.parse(localStorage.getItem('nisha_viewed') || '[]');
-        // Если юзер еще не смотрел этот товар - тихо прибавляем +1 в базу
-        if (!viewedItems.includes(item.id)) {
-            viewedItems.push(item.id);
-            localStorage.setItem('nisha_viewed', JSON.stringify(viewedItems));
-            if (_supabase) {
-                _supabase.rpc('increment_item_views', { item_uuid: item.id }).then();
-            }
+        
+        if (_supabase) {
+            // Используем ID юзера (если вошел) или уникальный отпечаток железа
+            const viewerId = currentUser ? currentUser.id : clientFingerprint;
+            
+            _supabase.rpc('increment_item_views', { 
+                p_item_uuid: item.id, 
+                p_viewer_id: viewerId 
+            }).then(({ data, error }) => {
+                // Сервер сам проверит, был ли уже просмотр от этого юзера/железа. 
+                // Если не было — накинет +1 и вернет новую цифру.
+                if (!error && data !== null) {
+                    viewCount.innerText = data;
+                    item.views_count = data; // Обновляем локально, чтобы не отставало
+                }
+            });
         }
     }
 
@@ -2501,6 +2612,7 @@ function addToHistory(item) {
 
 // Изменено под создание DOM элементов для AutoAnimate и Tilt
 // Изменено под создание DOM элементов для AutoAnimate, Tilt и поддержку ВИДЕО
+// Изменено под создание DOM элементов для AutoAnimate, Tilt и жесткую загрузку медиа
 function renderHistory() {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     const container = document.getElementById('historyGrid');
@@ -2526,38 +2638,37 @@ function renderHistory() {
     
     hist.forEach(h => {
         const optImg = h.img;
-        // Проверяем, видео это или обычная картинка
         const isVideo = optImg && optImg.endsWith('.mp4');
         
         const card = document.createElement('div');
         card.className = 'history-card';
         card.onclick = () => openProductModalById(h.id);
         
-        // Готовим HTML для медиа-блока
-        let mediaHTML = 'NO FOTO';
+        // Готовим надежный HTML для медиа-блока (Без lozad.js)
+        let mediaHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555;">NO FOTO</div>';
+        
         if (optImg) {
             if (isVideo) {
+                // Видео: вытягиваем первый кадр через #t=0.001
                 mediaHTML = `
                     <video 
-                        src="${optImg}" 
-                        autoplay 
+                        src="${optImg}#t=0.001" 
                         muted 
-                        loop 
                         playsinline 
                         webkit-playsinline 
-                        preload="auto"
+                        preload="metadata"
                         style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"
-                        ontimeupdate="if(this.currentTime >= 3) { this.currentTime = 0; this.play(); }"
                     ></video>
-                    <div style="position:absolute; z-index:5; top:2px; left:2px; background:rgba(0,0,0,0.6); padding:1px 4px; border-radius:2px; color:#fff; font-size:8px; font-family:var(--font-mono); border: 1px solid #444; pointer-events: none;">▶ VIDEO</div>
+                    <div style="position:absolute; z-index:5; top:4px; left:4px; background:rgba(0,0,0,0.8); padding:2px 4px; border-radius:2px; color:var(--accent-green); font-size:8px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
                 `;
             } else {
-                mediaHTML = `<img class="lozad" data-src="${optImg}" style="width:100%; height:100%; object-fit:cover;">`;
+                // Картинка: надежный background-image
+                mediaHTML = `<div style="width:100%; height:100%; background-image:url('${optImg}'); background-size:cover; background-position:center;"></div>`;
             }
         }
         
         card.innerHTML = `
-            <div class="history-img" style="position: relative; overflow: hidden;">
+            <div class="history-img" style="position: relative; overflow: hidden; padding: 0;">
                 ${mediaHTML}
             </div>
             <div class="history-info">
@@ -2572,10 +2683,6 @@ function renderHistory() {
         }
     });
 
-    if (typeof lozad !== 'undefined') {
-        lozad('.lozad').observe();
-    }
-    
     // СИНХРОНИЗАЦИЯ С БД (если юзер вошел в аккаунт)
     if (currentUser && _supabase) {
         _supabase.from('profiles').update({ 
@@ -2622,6 +2729,7 @@ async function initHitCounter() {
             const fp = await FingerprintJS.load();
             const result = await fp.get();
             visitorId = result.visitorId; // Уникальный хэш железа/браузера
+            clientFingerprint = visitorId; // Запоминаем для анти-спама просмотров
         }
 
         const today = new Date().toLocaleDateString('en-CA'); 
@@ -2944,10 +3052,9 @@ function handleSwipeEnd(e) {
     }
 }
 // ==========================================
-// 18. ZERO-LAG СВАЙП КАРТОЧКИ (IOS STYLE)
+// 18. ZERO-LAG СВАЙП КАРТОЧКИ (СУПЕР-ПЛАВНЫЙ IOS STYLE)
 // ==========================================
 function initMobileSwipe() {
-    // Вешаем свайп не только на карточку товара, а на ВСЕ модалки
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         const modalWin = overlay.querySelector('.modal-window');
         if (!modalWin) return;
@@ -2959,8 +3066,8 @@ function initMobileSwipe() {
 
         modalWin.addEventListener('touchstart', (e) => {
             if (window.innerWidth > 900) return;
-            // Не мешаем листать фотки в слайдере (вправо/влево)
-            if (e.target.closest('.slider-btn') || e.target.closest('.pswp')) return;
+            // Игнорируем слайдеры, кнопки и инпуты
+            if (e.target.closest('.slider-btn') || e.target.closest('.pswp') || e.target.tagName === 'INPUT') return;
 
             startY = e.touches[0].clientY;
             startScrollTop = modalWin.scrollTop;
@@ -2968,7 +3075,7 @@ function initMobileSwipe() {
             
             modalWin.style.transition = 'none';
             overlay.style.transition = 'none';
-        }, { passive: false });
+        }, { passive: true });
 
         modalWin.addEventListener('touchmove', (e) => {
             if (window.innerWidth > 900) return;
@@ -2976,16 +3083,24 @@ function initMobileSwipe() {
             currentY = e.touches[0].clientY;
             const diffY = currentY - startY;
 
-            // Если мы в самом верху карточки и тянем вниз
-            if (startScrollTop <= 3 && diffY > 0) {
+            // Если мы находимся в самом верху (0-5px) и тянем палец ВНИЗ
+            if (startScrollTop <= 5 && diffY > 0) {
                 isDragging = true;
-                e.preventDefault(); 
                 
-                modalWin.style.transform = `translateY(${diffY}px)`;
-                let opacity = 1 - (diffY / 400);
-                overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.85)})`;
+                // ЖЕСТКО БЛОКИРУЕМ стандартную прокрутку браузера, чтобы не было дерганий
+                if (e.cancelable) e.preventDefault(); 
+                
+                // Используем requestAnimationFrame для идеальных 60 FPS
+                requestAnimationFrame(() => {
+                    // diffY * 0.85 создает эффект легкого сопротивления (как в iOS)
+                    const dragDistance = diffY * 0.85;
+                    modalWin.style.transform = `translateY(${dragDistance}px)`;
+                    
+                    let opacity = 1 - (dragDistance / window.innerHeight);
+                    overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.95)})`;
+                });
             }
-        }, { passive: false });
+        }, { passive: false }); // ОБЯЗАТЕЛЬНО false, чтобы работал preventDefault
 
         modalWin.addEventListener('touchend', (e) => {
             if (window.innerWidth > 900 || !isDragging) return;
@@ -2993,14 +3108,22 @@ function initMobileSwipe() {
             const diffY = currentY - startY;
             isDragging = false;
             
-            if (diffY > 100) { 
-                // Вызываем нашу красивую функцию закрытия
+            // Возвращаем плавные переходы
+            modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            overlay.style.transition = 'background-color 0.3s ease';
+            
+            if (diffY > 120) { 
                 closeModal(overlay.id);
             } else {
-                modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                overlay.style.transition = 'background-color 0.25s ease';
-                modalWin.style.transform = `translateY(0)`;
-                overlay.style.backgroundColor = '';
+                // Пружиним обратно, если потянули недостаточно сильно
+                modalWin.style.transform = `translateY(0px)`;
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+                
+                // Зачищаем стили после возврата
+                setTimeout(() => {
+                    modalWin.style.transform = '';
+                    modalWin.style.transition = '';
+                }, 300);
             }
         });
     });

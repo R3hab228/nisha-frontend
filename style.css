@@ -26,10 +26,6 @@
             overflow-x: hidden;
         }
 
-     .scanlines {
-    display: none !important; /* ПОЛНОСТЬЮ ОТКЛЮЧИЛИ РЯБЬ */
-}
-
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-main); border-left: 1px solid var(--border-color); }
         ::-webkit-scrollbar-thumb { background: var(--border-light); border: 1px solid #222; cursor: pointer; }

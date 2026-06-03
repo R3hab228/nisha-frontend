@@ -12,7 +12,6 @@
     <link rel="icon" href="data:,">
     <link rel="manifest" href="manifest.json">
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/scale.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
     <script type="module">
         import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js';
@@ -31,7 +30,6 @@
 </head>
 <body>
 
-<div class="scanlines"></div>
 <div class="toast-container" id="toastContainer"></div>
 
 <div id="glitchOverlay">
@@ -78,7 +76,7 @@
                 <a href="javascript:void(0)" onclick="filterFavorites()" id="favNav"><span data-i18n="nav.favorites">ИЗБРАННОЕ</span> <span id="favCountBadge">[0]</span></a>
                <a href="javascript:void(0)" onclick="openReviewsModal()" style="color: var(--accent-yellow);" data-i18n="nav.reviews">ОТЗЫВЫ</a>
                 <a href="javascript:void(0)" onclick="openOrdersModal()" style="color: #00aaff;" data-i18n="nav.orders">МОИ ЗАКАЗЫ</a>
-                <a href="javascript:void(0)" onclick="openProfileModal()" class="mobile-profile-link" style="color: #ff00ff;">ПРОФИЛЬ</a>
+                <a href="javascript:void(0)" onclick="openProfileModal()" class="mobile-profile-link" style="color: #ff00ff;" data-i18n="nav.profile">ПРОФИЛЬ</a>
             </nav>
         </div>
 
@@ -461,11 +459,7 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
     <script defer src="https://unpkg.com/rough-notation/lib/rough-notation.iife.js"></script>
-    <script defer src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script defer src="https://unpkg.com/@popperjs/core@2"></script>
-    <script defer src="https://unpkg.com/tippy.js@6"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.global.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
     <script defer src="https://unpkg.com/imask"></script>
