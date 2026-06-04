@@ -3274,7 +3274,11 @@ async function submitProposal() {
         if (dbError) throw dbError;
 
         closeModal('proposeModal');
-        showTerminalModal('DATA_UPLOADED.LOG', 'Ваша заявка успешно отправлена на сервер. Админ рассмотрит ее и свяжется с вами.', '[ ЗАКРЫТЬ ]', null);
+        
+        // Ждем пока окно плавно закроется, и только потом показываем Терминал успеха
+        setTimeout(() => {
+            showTerminalModal('DATA_UPLOADED.LOG', 'Ваша заявка успешно отправлена на сервер. Админ рассмотрит ее и свяжется с вами.', '[ ЗАКРЫТЬ ]', null);
+        }, 300);
 
         // Очищаем форму
         document.getElementById('propFiles').value = '';
