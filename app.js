@@ -1593,6 +1593,7 @@ async function searchNPCity(query) {
     } catch(e) { 
         console.error("Ошибка поиска города НП", e); 
         document.getElementById('cityDropdown').style.display = 'none';
+        showToast('Сервер Новой Почты не отвечает. Попробуйте через пару минут.', 'error');
     }
 }
 
@@ -1657,12 +1658,13 @@ async function loadNPBranches(searchString = "") {
         if(data.success && Array.isArray(data.data) && data.data.length > 0) {
             renderBranches(data.data);
         } else {
-            dropdown.innerHTML = '<div style="color:#ff6666; padding:12px;">За цим запитом відділень не знайдено</div>';
+            dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">[!] По вашему запросу отделений не найдено. Проверьте правильность ввода.</div>`;
             dropdown.style.display = 'block';
         }
    } catch(e) { 
         console.error("Сбой загрузки отделений НП:", e); 
-        input.placeholder = "Ошибка сети: введите адрес вручную"; 
+        dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">[!] Нет связи с базой Новой Почты. Попробуйте ввести данные позже.</div>`;
+        dropdown.style.display = 'block';
     }
 }
 
@@ -2098,9 +2100,23 @@ async function confirmEmailPrompt(wantsEmail) {
 
 async function executeOrderFinal(emailToSave) {
     const btnSubmit = document.getElementById('btnSubmitOrder');
-    btnSubmit.innerText = "[ ОБРАБОТКА... ]";
+    
+    // --- КРУТОЙ ПРОГРЕСС-БАР ЗАГРУЗКИ ---
     btnSubmit.style.pointerEvents = "none";
-    btnSubmit.style.opacity = "0.5";
+    btnSubmit.style.position = "relative";
+    btnSubmit.style.overflow = "hidden";
+    btnSubmit.style.color = "#000";
+    btnSubmit.innerHTML = `
+        <span style="position: relative; z-index: 2;">[ ОБРАБОТКА ДАННЫХ... ]</span>
+        <div id="btnProgressBar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: #fff; z-index: 1; transition: width 3s cubic-bezier(0.1, 0.7, 1.0, 0.1);"></div>
+    `;
+    
+    // Запускаем фейковую анимацию до 90% (остальные 10% заполнятся, когда БД ответит)
+    setTimeout(() => {
+        const bar = document.getElementById('btnProgressBar');
+        if(bar) bar.style.width = "90%";
+    }, 50);
+    // ------------------------------------
 
     const name = document.getElementById('orderName').value.trim();
     const phoneRaw = document.getElementById('orderPhone').value;
@@ -2137,11 +2153,30 @@ async function executeOrderFinal(emailToSave) {
         await syncCartToServer();
         
         updateCartUI();
-        closeModal('checkoutModal');
         
-        // Показываем терминал успешного заказа
-        const overlay = document.getElementById('orderSuccessOverlay');
-        overlay.style.display = 'flex';
+        // Добиваем прогресс-бар до 100% перед закрытием
+        const bar = document.getElementById('btnProgressBar');
+        if(bar) {
+            bar.style.transition = "width 0.2s ease";
+            bar.style.width = "100%";
+        }
+
+        setTimeout(() => {
+            closeModal('checkoutModal');
+            // Возвращаем кнопку в норму
+            btnSubmit.innerHTML = i18next.t('checkout.btn_submit');
+            
+            // Показываем терминал успешного заказа
+            const overlay = document.getElementById('orderSuccessOverlay');
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => { 
+                overlay.style.display = 'none'; 
+                loadAllItems(); 
+                btnSubmit.style.pointerEvents = "auto";
+                btnSubmit.style.opacity = "1";
+            }, 3500);
+        }, 300); // Ждем треть секунды, чтобы юзер увидел 100%
         
         setTimeout(() => { 
             overlay.style.display = 'none'; 
@@ -2153,7 +2188,7 @@ async function executeOrderFinal(emailToSave) {
 
     } catch (err) {
         showToast('Ошибка при оформлении: ' + err.message, 'error');
-        btnSubmit.innerText = "ПОДТВЕРДИТЬ ЗАКАЗ";
+        btnSubmit.innerHTML = i18next.t('checkout.btn_submit');
         btnSubmit.style.pointerEvents = "auto";
         btnSubmit.style.opacity = "1";
         loadAllItems(); 
@@ -2232,7 +2267,12 @@ async function fetchMyOrders() {
     }
 
     if (!ordersData || ordersData.length === 0) { 
-        listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace; padding: 30px;">[ ИСТОРИЯ ЗАКАЗОВ ПУСТА ]</div>'; 
+        listArea.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">
+                <div style="font-size: 30px; margin-bottom: 15px;">📦</div>
+                <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;">[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]</div>
+                <div style="color:#888; font-size: 13px; line-height: 1.5;">Здається, ви ще нічого не купували.<br>Час це виправити! Поверніться на головну та оберіть щось круте.</div>
+            </div>`; 
         return; 
     }
 
@@ -3208,11 +3248,12 @@ async function submitProposal() {
     try {
         let imageUrls = [];
         
-        // Грузим фотки в Supabase напрямую с сайта
+        
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const fileExt = file.name.split('.').pop();
-            const fileName = `prop_${Date.now()}_${Math.floor(Math.random()*1000)}.${fileExt}`;
+            const fileExt = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
+            const randomString = Math.random().toString(36).substring(2, 15);
+            const fileName = `prop_${Date.now()}_${randomString}.${fileExt}`;
             
             const { error: uploadError } = await _supabase.storage.from('proposals').upload(fileName, file);
             if (!uploadError) {
@@ -3274,9 +3315,10 @@ async function uploadAvatar(event) {
     previewDiv.innerText = '⏳';
 
     try {
-        // Уникальное имя файла (id юзера + время)
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+        
+        const fileExt = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
+        const randomString = Math.random().toString(36).substring(2, 10);
+        const fileName = `${currentUser.id}_${Date.now()}_${randomString}.${fileExt}`;
 
         // Грузим в бакет 'avatars'
         const { error: uploadError } = await _supabase.storage
