@@ -1843,9 +1843,17 @@ function updateCartUI() {
     
     document.getElementById('cartCount').innerText = cart.length;
     let total = cart.reduce((sum, item) => sum + item.price, 0);
+    
     // Применяем скидку по промокоду, если она есть
     if (typeof currentPromoDiscount !== 'undefined' && currentPromoDiscount > 0) {
-        total = Math.floor(total - (total * currentPromoDiscount));
+        const savedMoney = Math.floor(total * currentPromoDiscount);
+        total = total - savedMoney;
+        
+        // Динамически обновляем надпись экономии в модалке заказа
+        const msg = document.getElementById('promoMessage');
+        if (msg && appliedPromoCode) {
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Ви зекономили: <b>${savedMoney} грн</b></span></span>`;
+        }
     }
     document.getElementById('cartTotal').innerText = total + ' грн';
     
@@ -3078,17 +3086,31 @@ async function applyPromoCode() {
 
     btn.innerText = '...';
     
-    // Ищем промокод в Базе Данных
+    // Ищем промокод в Базе Данных (С учетом лимитов)
     const { data, error } = await _supabase
         .from('promo_codes')
-        .select('discount_percent, is_active')
+        .select('discount_percent, is_active, max_uses, current_uses')
         .eq('code', input)
         .limit(1);
 
     if (data && data.length > 0 && data[0].is_active) {
-        currentPromoDiscount = data[0].discount_percent;
-        appliedPromoCode = input;
-        msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Промокод активирован! Скидка ${currentPromoDiscount * 100}%</span>`;
+        const promo = data[0];
+        
+        // Проверяем лимит на фронтенде
+        if (promo.max_uses !== null && promo.current_uses >= promo.max_uses) {
+            currentPromoDiscount = 0;
+            appliedPromoCode = '';
+            msg.innerHTML = `<span style="color: var(--accent-red);">[!] Лимит активаций этого кода исчерпан</span>`;
+        } else {
+            currentPromoDiscount = promo.discount_percent;
+            appliedPromoCode = input;
+            
+            // Считаем экономию
+            const originalTotal = cart.reduce((sum, item) => sum + item.price, 0);
+            const savedMoney = Math.floor(originalTotal * currentPromoDiscount);
+            
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Вы сэкономили: <b>${savedMoney} грн</b></span></span>`;
+        }
     } else {
         currentPromoDiscount = 0;
         appliedPromoCode = '';
