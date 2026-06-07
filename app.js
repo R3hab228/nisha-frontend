@@ -2422,7 +2422,8 @@ function openProductModal(item) {
     const tagsContainer = document.getElementById('modalItemTags');
     if (tagsContainer) {
         if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
-            tagsContainer.innerHTML = item.tags.slice(0, 3).map(t => `<span style="color: #fff; margin-right: 12px; letter-spacing: 0.5px;">#${t.toUpperCase()}</span>`).join('');
+            
+            tagsContainer.innerHTML = item.tags.slice(0, 3).map(t => `<span style="color: #fff; margin-right: 12px; letter-spacing: 0.5px;">#${t}</span>`).join('');
             tagsContainer.style.display = 'block';
         } else {
             tagsContainer.style.display = 'none';
