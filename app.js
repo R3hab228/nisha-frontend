@@ -81,11 +81,15 @@ if (typeof Sentry !== 'undefined') {
     });
     console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
 }
+// Переменные для анимации поиска
+let searchTypewriterInterval = null;
+let currentSearchLang = 'ru';
+
 function updateContentLanguage() {
     // Переводим обычный текст
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        el.innerHTML = i18next.t(key); // Изменили на innerHTML чтобы теги <b> и <strong> работали!
+        el.innerHTML = i18next.t(key);
     });
     
     // Переводим Placeholder'ы инпутов
@@ -94,10 +98,57 @@ function updateContentLanguage() {
         el.placeholder = i18next.t(key);
     });
 
+    // Запускаем печатную машинку для поиска
+    currentSearchLang = i18next.language || 'ru';
+    startSearchTypewriter();
+}
+
+function startSearchTypewriter() {
     const searchInput = document.getElementById('mainSearch');
-    if (searchInput) {
-        searchInput.placeholder = i18next.t('search.placeholder');
-    }
+    if (!searchInput) return;
+
+    if (searchTypewriterInterval) clearInterval(searchTypewriterInterval);
+
+    // Словари для анимации
+    const prefixes = {
+        'ua': 'Пошук: ',
+        'ru': 'Поиск: ',
+        'en': 'Search: '
+    };
+    const words = ['Arcteryx...', 'Gore-Tex...', 'Y2K...', 'Nike...', '#archive...'];
+    
+    const prefix = prefixes[currentSearchLang] || prefixes['ru'];
+    let wordIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
+    searchTypewriterInterval = setInterval(() => {
+        // Если фокус в инпуте или юзер что-то написал - останавливаем анимацию
+        if (document.activeElement === searchInput || searchInput.value.length > 0) {
+            searchInput.placeholder = prefix + '...';
+            return;
+        }
+
+        const currentWord = words[wordIndex];
+
+        if (isDeleting) {
+            charIndex--;
+        } else {
+            charIndex++;
+        }
+
+        searchInput.placeholder = prefix + currentWord.substring(0, charIndex) + '|';
+
+        // Логика паузы и переключения слов
+        if (!isDeleting && charIndex === currentWord.length) {
+            isDeleting = true;
+            clearInterval(searchTypewriterInterval);
+            setTimeout(startSearchTypewriter, 1500); // Пауза в конце слова
+        } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            wordIndex = (wordIndex + 1) % words.length;
+        }
+    }, 100); // Скорость печати
 }
 
 
@@ -929,12 +980,22 @@ function applyFilters() {
             }
 
             if (searchTerm !== '' && typeof Fuse !== 'undefined') {
+                // Очищаем поисковый запрос от решетки, если юзер ввел "#nike"
+                const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
+                
                 const fuseOptions = {
-                    includeScore: true, threshold: 0.4, 
-                    keys: [{ name: 'name', weight: 0.7 }, { name: 'brand', weight: 0.5 }, { name: 'category', weight: 0.3 }]
+                    includeScore: true, 
+                    threshold: 0.3, // Сделали поиск более строгим, чтобы не выдавал мусор
+                    ignoreLocation: true, // Ищет слово в любом месте строки
+                    keys: [
+                        { name: 'name', weight: 0.6 }, 
+                        { name: 'brand', weight: 0.5 }, 
+                        { name: 'tags', weight: 0.8 }, // Теги имеют самый высокий приоритет!
+                        { name: 'category', weight: 0.3 }
+                    ]
                 };
                 const fuse = new Fuse(sortedItems, fuseOptions);
-                const fuseResults = fuse.search(searchTerm);
+                const fuseResults = fuse.search(cleanSearchTerm);
                 sortedItems = fuseResults.map(result => result.item);
             }
 
@@ -1354,9 +1415,21 @@ function clearSearchInput() {
 }
 
 // Добавляем слушатель, чтобы крестик появлялся при вводе
-document.getElementById('mainSearch').addEventListener('input', function() {
-    document.getElementById('clearSearchBtn').style.display = this.value.length > 0 ? 'block' : 'none';
-});
+const mainSearchInput = document.getElementById('mainSearch');
+if (mainSearchInput) {
+    mainSearchInput.addEventListener('input', function() {
+        document.getElementById('clearSearchBtn').style.display = this.value.length > 0 ? 'block' : 'none';
+    });
+    
+    // Останавливаем анимацию при фокусе
+    mainSearchInput.addEventListener('focus', () => {
+        mainSearchInput.placeholder = i18next.t('search.placeholder') || 'Поиск...';
+    });
+    // Возвращаем при потере фокуса
+    mainSearchInput.addEventListener('blur', () => {
+        if (mainSearchInput.value.length === 0) startSearchTypewriter();
+    });
+}
 
 // ==========================================
 // 7. ИЗБРАННОЕ (ЛАЙКИ)
@@ -1593,7 +1666,7 @@ async function searchNPCity(query) {
     } catch(e) { 
         console.error("Ошибка поиска города НП", e); 
         document.getElementById('cityDropdown').style.display = 'none';
-        showToast('Сервер Новой Почты не отвечает. Попробуйте через пару минут.', 'error');
+        showToast(i18next.t('np.city_err'), 'error');
     }
 }
 
@@ -1658,12 +1731,12 @@ async function loadNPBranches(searchString = "") {
         if(data.success && Array.isArray(data.data) && data.data.length > 0) {
             renderBranches(data.data);
         } else {
-            dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">[!] По вашему запросу отделений не найдено. Проверьте правильность ввода.</div>`;
+            dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${i18next.t('np.branch_empty')}</div>`;
             dropdown.style.display = 'block';
         }
    } catch(e) { 
         console.error("Сбой загрузки отделений НП:", e); 
-        dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">[!] Нет связи с базой Новой Почты. Попробуйте ввести данные позже.</div>`;
+        dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${i18next.t('np.branch_err')}</div>`;
         dropdown.style.display = 'block';
     }
 }
@@ -1767,7 +1840,12 @@ function renderCartItems() {
     list.innerHTML = '';
     
     if (cart.length === 0) {
-        list.innerHTML = '<div style="color:#555; text-align:center; padding: 30px; font-family: monospace;">[ КОРЗИНА ПУСТА ]</div>';
+        list.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a; margin: 10px;">
+                <div style="font-size: 30px; margin-bottom: 15px;">🛒</div>
+                <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;">${i18next.t('cart.empty_title')}</div>
+                <div style="color:#888; font-size: 12px; line-height: 1.5;">${i18next.t('cart.empty_desc')}</div>
+            </div>`;
         return;
     }
 
@@ -2303,8 +2381,8 @@ async function fetchMyOrders() {
         listArea.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">
                 <div style="font-size: 30px; margin-bottom: 15px;">📦</div>
-                <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;">[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]</div>
-                <div style="color:#888; font-size: 13px; line-height: 1.5;">Здається, ви ще нічого не купували.<br>Час це виправити! Поверніться на головну та оберіть щось круте.</div>
+                <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;">${i18next.t('orders_modal.empty_title')}</div>
+                <div style="color:#888; font-size: 13px; line-height: 1.5;">${i18next.t('orders_modal.empty_desc')}</div>
             </div>`; 
         return; 
     }
@@ -2917,12 +2995,19 @@ function handleLiveSearch() {
 
     searchDebounce = setTimeout(() => {
         // Поиск через Fuse.js
+        const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
         const fuseOptions = {
-            includeScore: true, threshold: 0.4, 
-            keys: [{ name: 'name', weight: 0.7 }, { name: 'brand', weight: 0.5 }]
+            includeScore: true, 
+            threshold: 0.3, 
+            ignoreLocation: true,
+            keys: [
+                { name: 'name', weight: 0.6 }, 
+                { name: 'brand', weight: 0.5 },
+                { name: 'tags', weight: 0.8 } // Поиск по тегам в живом поиске
+            ]
         };
         const fuse = new Fuse(allItems, fuseOptions);
-        const results = fuse.search(searchTerm).slice(0, 5); // Берем топ 5 совпадений
+        const results = fuse.search(cleanSearchTerm).slice(0, 5); // Берем топ 5 совпадений
 
         dropdown.innerHTML = '';
         if (results.length > 0) {
