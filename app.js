@@ -1746,7 +1746,20 @@ async function calculateDeliveryCost() {
 function toggleCartDropdown(e) {
     if (e) e.stopPropagation();
     const dropdown = document.getElementById('cartDropdown');
-    if (dropdown) dropdown.classList.toggle('active');
+    const fab = document.querySelector('.fab-propose');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+        // Прячем или показываем кнопку [+] в зависимости от статуса корзины
+        if (fab) {
+            if (dropdown.classList.contains('active')) {
+                fab.style.opacity = '0';
+                fab.style.pointerEvents = 'none';
+            } else {
+                fab.style.opacity = '1';
+                fab.style.pointerEvents = 'auto';
+            }
+        }
+    }
 }
 function renderCartItems() {
     const list = document.getElementById('cartDropdownList');
@@ -1844,7 +1857,12 @@ function updateCartUI() {
 function closeCartDropdown(e) {
     if (e) e.stopPropagation();
     const dropdown = document.getElementById('cartDropdown');
+    const fab = document.querySelector('.fab-propose');
     if (dropdown) dropdown.classList.remove('active');
+    if (fab) {
+        fab.style.opacity = '1';
+        fab.style.pointerEvents = 'auto';
+    }
 }
 
 // ЕДИНЫЙ ОБРАБОТЧИК КЛИКОВ ДЛЯ ЗАКРЫТИЯ ВСЕХ ВЫПАДАЮЩИХ СПИСКОВ
@@ -1862,7 +1880,14 @@ document.addEventListener('mousedown', (e) => {
     // Закрытие корзины (мобильная версия)
     if (!e.target.closest('#cartInfoWrapper')) {
         const cartDrop = document.getElementById('cartDropdown');
-        if (cartDrop) cartDrop.classList.remove('active');
+        if (cartDrop && cartDrop.classList.contains('active')) {
+            cartDrop.classList.remove('active');
+            const fab = document.querySelector('.fab-propose');
+            if (fab) {
+                fab.style.opacity = '1';
+                fab.style.pointerEvents = 'auto';
+            }
+        }
     }
     // ЗАКРЫТИЕ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ
     if (!e.target.closest('#footerLangWrapper')) {
@@ -2392,7 +2417,19 @@ function openProductModal(item) {
         condFill.style.backgroundColor = 'var(--accent-green)';
         condText.style.color = 'var(--accent-green)';
     }
-    // Найди эту строку (или добавь её, если нет):
+
+    // --- РЕНДЕР ХЭШТЕГОВ ---
+    const tagsContainer = document.getElementById('modalItemTags');
+    if (tagsContainer) {
+        if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
+            tagsContainer.innerHTML = item.tags.slice(0, 3).map(t => `<span style="color: #fff; margin-right: 12px; letter-spacing: 0.5px;">#${t.toUpperCase()}</span>`).join('');
+            tagsContainer.style.display = 'block';
+        } else {
+            tagsContainer.style.display = 'none';
+            tagsContainer.innerHTML = '';
+        }
+    }
+
     const descText = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
    
     document.querySelector('.modal-desc').innerHTML = `
