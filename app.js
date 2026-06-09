@@ -389,15 +389,24 @@ window.onload = async () => {
                 }
             }
 
-            // Дожим через системный PUSH (если свернул вкладку с товаром в корзине)
+            // Дожим через системный PUSH + Фоновое обновление при возвращении из других приложух
             document.addEventListener("visibilitychange", () => {
-                if (document.hidden && cart.length > 0 && typeof Push !== 'undefined') {
-                    Push.create("NISHA STORE", {
-                        body: "Ваша корзина ждет! Оформляйте, пока не забрали.",
-                        icon: '/favicon.ico',
-                        timeout: 5000,
-                        onClick: function () { window.focus(); this.close(); }
-                    });
+                if (document.hidden) {
+                    // Юзер свернул сайт (ушел в TikTok)
+                    if (cart.length > 0 && typeof Push !== 'undefined') {
+                        Push.create("NISHA STORE", {
+                            body: "Ваша корзина ждет! Оформляйте, пока не забрали.",
+                            icon: '/icon.ico',
+                            timeout: 5000,
+                            onClick: function () { window.focus(); this.close(); }
+                        });
+                    }
+                } else {
+                    // ЮЗЕР ВЕРНУЛСЯ НА САЙТ!
+                    // Тихо скачиваем свежую базу в фоне (без лоадеров), чтобы актуализировать плашки SOLD
+                    if (_supabase && allItems.length > 0) {
+                        loadAllItems(); 
+                    }
                 }
             });
 
@@ -862,16 +871,31 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
 
 async function loadAllItems() {
     const grid = document.getElementById('itemsGrid');
-    if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; text-align:center; grid-column: 1/-1;">[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]</div>`;
     
+    // 1. МГНОВЕННАЯ ЗАГРУЗКА (Достаем базу из кэша телефона, если она там есть)
+    const cachedData = localStorage.getItem('nisha_cached_db');
+    if (cachedData && allItems.length === 0) {
+        try {
+            allItems = JSON.parse(cachedData);
+            applyFilters(); // Отрисовываем сетку за 0.1 сек, юзер ничего не ждет!
+        } catch(e) { console.error("Ошибка чтения кэша"); }
+    }
+
+    // Если кэша нет (юзер зашел первый раз), оставляем крутиться Win95 Loader из HTML
+    
+    // 2. ФОНОВЫЙ ЗАПРОС К БД (Тихо проверяем, есть ли новые вещи)
     const { data, error } = await _supabase.from('items').select('*').order('created_at', { ascending: false });
     
     if (error) { 
-        if (grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
+        if (allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
         return; 
     }
     
-   allItems = data;
+    // Проверяем, изменились ли данные по сравнению с кэшем
+    const isChanged = JSON.stringify(data) !== JSON.stringify(allItems);
+    
+    allItems = data;
+    localStorage.setItem('nisha_cached_db', JSON.stringify(data)); // Сохраняем свежую базу в память
     
     // --- СИНХРОНИЗАЦИЯ ИСТОРИИ ПРОСМОТРОВ ИЗ БД ---
     if (userProfile && userProfile.viewed_history && userProfile.viewed_history.length > 0) {
@@ -896,7 +920,10 @@ async function loadAllItems() {
         updateCartUI();
     }
 
-    applyFilters();
+    // 3. ПЕРЕРИСОВКА: Делаем ее ТОЛЬКО если это первый заход, ИЛИ если данные реально поменялись (чтобы экран не моргал просто так)
+    if (!cachedData || isChanged) {
+        applyFilters();
+    }
 }
 
 // --- ОБНОВЛЕНИЕ КРАСНЫХ СЧЕТЧИКОВ В БОКОВОМ МЕНЮ ---
@@ -2763,7 +2790,7 @@ async function openWaitlist() {
             if (typeof Push !== 'undefined') {
                 Push.create("NISHA STORE", {
                     body: `Вы подписались на уведомления о: ${currentOpenedItem.name}`,
-                    icon: '/favicon.ico', // Твоя иконка
+                    icon: '/icon.ico', // Твоя иконка
                     timeout: 5000,
                     onClick: function () {
                         window.focus();
