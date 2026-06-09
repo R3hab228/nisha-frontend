@@ -198,26 +198,33 @@ function openProfileModal() {
     document.body.style.overflow = 'hidden';
 }
 
-// Умная кнопка [+] Предложки
+// Умная кнопка [+] Предложки (Работает везде, даже на телефоне)
 let fabTimeout;
-lenis.on('scroll', (e) => {
+let lastScrollY = window.scrollY;
+
+window.addEventListener('scroll', () => {
     const fab = document.querySelector('.fab-propose');
-    if (!fab || fab.classList.contains('cart-active')) return; 
+    if (!fab || fab.classList.contains('cart-active')) return;
+
+    const currentScrollY = window.scrollY;
     
-    // e.direction: 1 (вниз), -1 (вверх)
-    if (e.direction === 1 && e.velocity > 0.5) {
+    // Если скроллим вниз (и проскроллили больше 10px для защиты от случайных дерганий)
+    if (currentScrollY > lastScrollY && currentScrollY > 50) {
         fab.classList.add('hidden-scroll');
         clearTimeout(fabTimeout);
-    } else if (e.direction === -1) {
+    } else {
+        // Скроллим вверх
         fab.classList.remove('hidden-scroll');
     }
+    
+    lastScrollY = currentScrollY;
 
-    // Всегда показываем кнопку, если скролл остановился
+    // Возвращаем кнопку при остановке скролла
     clearTimeout(fabTimeout);
     fabTimeout = setTimeout(() => {
         fab.classList.remove('hidden-scroll');
-    }, 400); // Появится через 0.4 сек после остановки пальца
-});
+    }, 400);
+}, { passive: true });
 
 
 let allItems = []; 
@@ -605,9 +612,8 @@ function closeModal(id) {
     const win = modal.querySelector('.modal-window');
     
     if (win) {
-        // Убиваем CSS анимацию появления, чтобы она не дралась с закрытием
         win.style.animation = 'none';
-        win.offsetHeight; // Хак: заставляем браузер применить сброс анимации мгновенно
+        win.offsetHeight; 
 
         win.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
         if (window.innerWidth > 900) {
@@ -631,6 +637,7 @@ function closeModal(id) {
             win.style.transform = '';
             win.style.opacity = '';
             win.style.transition = '';
+            win.style.animation = ''; // <--- ВОТ ТУТ МЫ ВОЗВРАЩАЕМ АНИМАЦИЮ
         }
         modal.style.opacity = '';
         modal.style.transition = '';
@@ -3306,6 +3313,7 @@ function initMobileSwipe() {
                 
                 setTimeout(() => {
                     modalWin.style.transition = '';
+                    modalWin.style.animation = ''; // <--- ВАЖНАЯ СТРАХОВКА
                 }, 300);
             }
         });
