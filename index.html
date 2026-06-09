@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
- <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' http://localhost:3000 https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; frame-src https://www.google.com https://recaptcha.net https://oauth.telegram.org;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' http://localhost:3000 https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms; frame-src https://www.google.com https://recaptcha.net https://oauth.telegram.org;">
+    <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "x4ejx2xb0y");
+    </script>
     <meta property="og:type" content="website">
     <meta property="og:title" content="NISHA | Underground Store">
     <meta property="og:description" content="Площадка для продажи винтажных, архивных и эксклюзивных вещей.">
@@ -150,10 +158,18 @@
                     <button class="auth-btn btn-target" id="btnBackLogin" onclick="toggleRegMode()" style="display:none; background: #333; color: #fff;">НАЗАД</button>
                 </div>
                 
-               <div class="auth-fields" id="profileForm" style="display: none;">
-                    <div class="profile-info-block">
-                        USER: <span id="profileName">Loading...</span><br>
-                        LIKES: <span id="profileLikesCount">0</span>
+               <div class="auth-fields" id="profileForm" style="display: none; flex-direction: column;">
+                    <div style="background: #0a0a0a; border: 1px solid #333; padding: 15px; text-align: left; font-family: var(--font-mono); box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+                        <div style="color: var(--accent-green); font-size: 11px; margin-bottom: 5px;">НИКНЕЙМ:</div>
+                        <div style="color: #fff; font-size: 14px; font-family: var(--font-main); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 15px;" id="profileName">Loading...</div>
+                        
+                        <div style="color: #666; font-size: 11px; margin-bottom: 5px;">E-MAIL:</div>
+                        <div style="color: #aaa; font-size: 12px; border-bottom: 1px dashed #333; padding-bottom: 12px; margin-bottom: 12px; overflow: hidden; text-overflow: ellipsis;" id="profileEmail">Loading...</div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #888; font-size: 12px;" data-i18n="profile.saved">СОХРАНЕНО:</span>
+                            <span style="color: var(--accent-red); font-size: 16px; font-weight: bold; text-shadow: 0 0 10px rgba(255,0,0,0.4);">❤ <span id="profileLikesCount">0</span></span>
+                        </div>
                     </div>
                     <button class="auth-btn btn-target" onclick="logout()" style="background: #333; color: #fff; margin-top: 10px;" data-i18n="sidebar.logout">ВЫЙТИ</button>
                 </div>
@@ -506,18 +522,15 @@
                 </div>
             </div>
             
-            <div class="auth-fields" id="modalProfileForm" style="display: none; text-align:center;">
-                <input type="file" id="avatarUploadInput" accept="image/png, image/jpeg, image/webp" style="display: none;" onchange="uploadAvatar(event)">
-
-                <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 20px auto; cursor: pointer; transition: 0.2s;" onclick="document.getElementById('avatarUploadInput').click()" title="Нажмите, чтобы изменить фото" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
-                    <div id="profileAvatarPreview" style="width: 100%; height: 100%; background: #0a0a0a; border: 2px dashed var(--accent-green); border-radius: 50%; display:flex; justify-content:center; align-items:center; font-size: 35px; background-size: cover; background-position: center; overflow: hidden;">?</div>
-                    <div style="position: absolute; bottom: -5px; right: -10px; background: var(--accent-green); color: #000; font-size: 10px; font-weight: bold; font-family: var(--font-mono); padding: 3px 8px; border: 1px solid #000; box-shadow: 2px 2px 0px #000;">VERIFIED</div>
-                </div>
-
+           <div class="auth-fields" id="modalProfileForm" style="display: none; text-align:center;">
+                <!-- Инфо блок -->
                 <div style="background: #0a0a0a; border: 1px solid #333; padding: 20px; text-align: left; font-family: var(--font-mono); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                    <div style="color: #666; font-size: 11px; margin-bottom: 5px;">[ ACCOUNT_ID ]</div>
-                    <div style="color: #fff; font-size: 16px; font-family: var(--font-main); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px dashed #333; padding-bottom: 15px; margin-bottom: 15px;" id="modalProfileName">Loading...</div>
+                    <div style="color: var(--accent-green); font-size: 11px; margin-bottom: 5px;">НИКНЕЙМ:</div>
+                    <div style="color: #fff; font-size: 16px; font-family: var(--font-main); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 15px;" id="modalProfileName">Loading...</div>
                     
+                    <div style="color: #666; font-size: 11px; margin-bottom: 5px;">E-MAIL:</div>
+                    <div style="color: #aaa; font-size: 13px; border-bottom: 1px dashed #333; padding-bottom: 15px; margin-bottom: 15px; overflow: hidden; text-overflow: ellipsis;" id="modalProfileEmail">Loading...</div>
+
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="color: #888; font-size: 13px;" data-i18n="profile.saved">СОХРАНЕНО:</span>
                         <span style="color: var(--accent-red); font-size: 18px; font-weight: bold; text-shadow: 0 0 15px rgba(255,0,0,0.4);">❤ <span id="modalProfileLikesCount">0</span></span>

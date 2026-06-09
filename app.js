@@ -109,15 +109,22 @@ function startSearchTypewriter() {
 
     if (searchTypewriterInterval) clearInterval(searchTypewriterInterval);
 
-    // Словари для анимации
+    // Словари для анимации (Только один текст "Поиск вещи...")
     const prefixes = {
-        'ua': 'Пошук: ',
-        'ru': 'Поиск: ',
-        'en': 'Search: '
+        'ua': '',
+        'ru': '',
+        'en': ''
     };
-    const words = ['Arcteryx...', 'Gore-Tex...', 'Y2K...', 'Nike...', '#archive...'];
     
-    const prefix = prefixes[currentSearchLang] || prefixes['ru'];
+    // Переводы фразы "Поиск вещи..."
+    const translatedWords = {
+        'ua': ['Пошук речі...'],
+        'ru': ['Поиск вещи...'],
+        'en': ['Search items...']
+    };
+    
+    const words = translatedWords[currentSearchLang] || translatedWords['ru'];
+    const prefix = ''; // Префикс больше не нужен
     let wordIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
@@ -191,19 +198,27 @@ function openProfileModal() {
     document.body.style.overflow = 'hidden';
 }
 
-// Прячем кнопку [+] когда листаем вниз
+// Умная кнопка [+] Предложки
+let fabTimeout;
 lenis.on('scroll', (e) => {
     const fab = document.querySelector('.fab-propose');
-    if (!fab) return;
+    if (!fab || fab.classList.contains('cart-active')) return; 
     
-    // e.velocity > 1 означает, что мы активно скроллим ВНИЗ
-    if (e.velocity > 1) {
-        fab.classList.add('hidden-scroll');
+    if (e.velocity > 0.5) {
+        fab.style.transform = 'translateY(150px) scale(0.5)';
+        fab.style.opacity = '0';
+        clearTimeout(fabTimeout);
     } 
-    // e.velocity < -1 (вверх) или 0 (остановка)
-    else if (e.velocity < -1 || e.velocity === 0) {
-        fab.classList.remove('hidden-scroll');
+    else if (e.velocity < -0.5) {
+        fab.style.transform = '';
+        fab.style.opacity = '1';
     }
+
+    clearTimeout(fabTimeout);
+    fabTimeout = setTimeout(() => {
+        fab.style.transform = '';
+        fab.style.opacity = '1';
+    }, 800);
 });
 
 
@@ -346,6 +361,9 @@ function acceptRules() {
     document.body.style.overflow = 'auto';
     if (typeof lenis !== 'undefined') lenis.start(); 
     showToast(i18next.t('messages.rules_accepted'), 'success');
+    
+    // Запускаем тур сразу после закрытия окна правил
+    setTimeout(startOnboardingTour, 400); 
 }
 window.onload = async () => {
     try {
@@ -566,6 +584,11 @@ window.onload = async () => {
             document.getElementById('ordersSearchPhone').value = currentUser.phone;
         }
 
+        // Если правила уже были приняты ранее, но тур не пройден — запускаем
+        if (localStorage.getItem('nisha_rules_accepted')) {
+            startOnboardingTour();
+        }
+
     } catch (err) {
        
         console.error("ОШИБКА ИНИЦИАЛИЗАЦИИ ПРИЛОЖЕНИЯ:", err);
@@ -576,6 +599,7 @@ window.onload = async () => {
     }
 };
 
+// Идеально плавное закрытие по крестику
 function closeModal(id) { 
     const modal = document.getElementById(id);
     if (!modal) return;
@@ -592,14 +616,11 @@ function closeModal(id) {
         win.style.opacity = '0';
     }
 
-    modal.style.transition = 'opacity 0.3s ease';
+    modal.style.transition = 'background-color 0.3s ease, opacity 0.3s ease';
+    modal.style.backgroundColor = 'transparent';
     modal.style.opacity = '0';
     
-    let isClosed = false;
-    const finishClose = () => {
-        if (isClosed) return;
-        isClosed = true;
-        
+    setTimeout(() => {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto'; 
         if (typeof lenis !== 'undefined') lenis.start(); 
@@ -611,17 +632,10 @@ function closeModal(id) {
         }
         modal.style.opacity = '';
         modal.style.transition = '';
+        modal.style.backgroundColor = '';
         
         if (id === 'productModal') renderHistory(); 
-    };
-
-    // Слушаем завершение анимации (transitionend)
-    modal.addEventListener('transitionend', (e) => {
-        if (e.target === modal) finishClose();
-    }, { once: true });
-
-    // Страховка (Fallback) на случай, если анимация забагует или вкладка свернута
-    setTimeout(finishClose, 350);
+    }, 300);
 }
 
 async function openReviewsModal() { 
@@ -702,7 +716,8 @@ async function checkSession() {
                 }
             }
 
-            const uName = (userProfile && userProfile.username) ? userProfile.username : currentUser.email;
+            const uName = (userProfile && userProfile.username) ? userProfile.username : 'Гость';
+            const uEmail = currentUser.email;
 
             // БЕЗОПАСНО Обновляем ПК (Сайдбар)
             const loginForm = document.getElementById('loginForm');
@@ -711,6 +726,7 @@ async function checkSession() {
             if (profileForm) profileForm.style.display = 'flex';
             
             if(document.getElementById('profileName')) document.getElementById('profileName').innerText = uName;
+            if(document.getElementById('profileEmail')) document.getElementById('profileEmail').innerText = uEmail; // ДОБАВИЛИ E-MAIL ДЛЯ ПК
 
             // БЕЗОПАСНО Обновляем Мобилку (Модалка)
             const mLog = document.getElementById('modalLoginForm');
@@ -719,18 +735,7 @@ async function checkSession() {
             if (mProf) mProf.style.display = 'block';
             
             if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
-            
-            // Подгружаем аватарку, если она есть
-            const previewDiv = document.getElementById('profileAvatarPreview');
-            if (previewDiv) {
-                if (userProfile && userProfile.avatar_url) {
-                    previewDiv.innerText = '';
-                    previewDiv.style.backgroundImage = `url('${userProfile.avatar_url}')`;
-                } else {
-                    previewDiv.innerText = '?'; // Вернул инопланетянина по умолчанию
-                    previewDiv.style.backgroundImage = 'none';
-                }
-            }
+            if(document.getElementById('modalProfileEmail')) document.getElementById('modalProfileEmail').innerText = uEmail;
             
             await loadFavorites();
             
@@ -1238,52 +1243,54 @@ function renderNextBatch() {
             }
         }
 
-        // === ЗАПУСК ИНТЕРАКТИВНОГО ТУРА (СТРОГО ПОСЛЕ ОКОНЧАНИЯ РЕНДЕРА КАРТОЧЕК) ===
-        if (renderedCount <= 12 && localStorage.getItem('nisha_rules_accepted') && !localStorage.getItem('nisha_tour_done') && typeof window.driver !== 'undefined') {
-            const isMobile = window.innerWidth <= 900;
-            const firstStar = document.querySelector('.item-card .fav-star');
-            const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
+        }, 100);
+}
 
-            let activeSteps = [];
-            activeSteps.push({ element: '.search-wrapper', popover: { title: i18next.t('tour.search_title'), description: i18next.t('tour.search_desc') } });
+// --- ОТДЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ТУРА (ВЫЗЫВАЕТСЯ СРАЗУ ПОСЛЕ ПРАВИЛ) ---
+function startOnboardingTour() {
+    if (!localStorage.getItem('nisha_rules_accepted') || localStorage.getItem('nisha_tour_done') || typeof window.driver === 'undefined') return;
 
-            if (isMobile) {
-                activeSteps.push(
-                    { element: '.mobile-profile-link', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
-                    { element: '#mobileFilterBtn', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
-                );
-                if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
-                if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
-                activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
-                activeSteps.push({ element: '#cartInfoWrapper', popover: { title: i18next.t('tour.cart_title'), description: i18next.t('tour.cart_desc') } });
-            } else {
-                activeSteps.push(
-                    { element: '#authBox', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
-                    { element: '.sidebar', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
-                );
-                if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
-                if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
-                activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
-            }
+    // Ждем секунду, чтобы сайт 100% прогрузился и сетка товаров встала на места
+    setTimeout(() => {
+        const isMobile = window.innerWidth <= 900;
+        const firstStar = document.querySelector('.item-card .fav-star');
+        const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
 
-            // Ждем 300мс, чтобы браузер 100% закончил стилизацию и расстановку элементов
-            setTimeout(() => {
-                const driverObj = window.driver.js.driver({
-                    showProgress: true,
-                    nextBtnText: i18next.t('tour.next'),
-                    prevBtnText: i18next.t('tour.prev'),
-                    doneBtnText: i18next.t('tour.done'),
-                    steps: activeSteps,
-                    onDestroyStarted: () => {
-                        localStorage.setItem('nisha_tour_done', 'true');
-                        driverObj.destroy();
-                    }
-                });
-                driverObj.drive();
-            }, 300);
+        let activeSteps = [];
+        activeSteps.push({ element: '.search-wrapper', popover: { title: i18next.t('tour.search_title'), description: i18next.t('tour.search_desc') } });
+
+        if (isMobile) {
+            activeSteps.push(
+                { element: '.mobile-profile-link', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
+                { element: '#mobileFilterBtn', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
+            );
+            if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
+            if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
+            activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
+            activeSteps.push({ element: '#cartInfoWrapper', popover: { title: i18next.t('tour.cart_title'), description: i18next.t('tour.cart_desc') } });
+        } else {
+            activeSteps.push(
+                { element: '#authBox', popover: { title: i18next.t('tour.prof_title'), description: i18next.t('tour.prof_desc') } },
+                { element: '.sidebar', popover: { title: i18next.t('tour.filt_title'), description: i18next.t('tour.filt_desc') } }
+            );
+            if (firstStar) activeSteps.push({ element: firstStar, popover: { title: i18next.t('tour.star_title'), description: i18next.t('tour.star_desc') } });
+            if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: i18next.t('tour.cartbtn_title'), description: i18next.t('tour.cartbtn_desc') } });
+            activeSteps.push({ element: '.fab-propose', popover: { title: i18next.t('tour.prop_title'), description: i18next.t('tour.prop_desc') } });
         }
 
-    }, 100);
+        const driverObj = window.driver.js.driver({
+            showProgress: true,
+            nextBtnText: i18next.t('tour.next'),
+            prevBtnText: i18next.t('tour.prev'),
+            doneBtnText: i18next.t('tour.done'),
+            steps: activeSteps,
+            onDestroyStarted: () => {
+                localStorage.setItem('nisha_tour_done', 'true');
+                driverObj.destroy();
+            }
+        });
+        driverObj.drive();
+    }, 800);
 }
 
 // Функция добавления в корзину прямо с главной страницы
@@ -3237,7 +3244,7 @@ function handleSwipeEnd(e) {
     }
 }
 // ==========================================
-// 18. ZERO-LAG СВАЙП КАРТОЧКИ (СУПЕР-ПЛАВНЫЙ IOS STYLE)
+// 18. ZERO-LAG СВАЙП КАРТОЧКИ (ИДЕАЛЬНОЕ СЛЕДОВАНИЕ ЗА ПАЛЬЦЕМ)
 // ==========================================
 function initMobileSwipe() {
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -3251,8 +3258,7 @@ function initMobileSwipe() {
 
         modalWin.addEventListener('touchstart', (e) => {
             if (window.innerWidth > 900) return;
-            // Игнорируем слайдеры, кнопки и инпуты
-            if (e.target.closest('.slider-btn') || e.target.closest('.pswp') || e.target.tagName === 'INPUT') return;
+            if (e.target.closest('.slider-btn') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
             startY = e.touches[0].clientY;
             startScrollTop = modalWin.scrollTop;
@@ -3268,16 +3274,11 @@ function initMobileSwipe() {
             currentY = e.touches[0].clientY;
             const diffY = currentY - startY;
 
-            // Если мы находимся в самом верху (0-5px) и тянем палец ВНИЗ
             if (startScrollTop <= 5 && diffY > 0) {
                 isDragging = true;
-                
-                // ЖЕСТКО БЛОКИРУЕМ стандартную прокрутку браузера, чтобы не было дерганий
                 if (e.cancelable) e.preventDefault(); 
                 
-                // Используем requestAnimationFrame для идеальных 60 FPS
                 requestAnimationFrame(() => {
-                    // diffY * 0.85 создает эффект легкого сопротивления (как в iOS)
                     const dragDistance = diffY * 0.85;
                     modalWin.style.transform = `translateY(${dragDistance}px)`;
                     
@@ -3285,7 +3286,7 @@ function initMobileSwipe() {
                     overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.95)})`;
                 });
             }
-        }, { passive: false }); // ОБЯЗАТЕЛЬНО false, чтобы работал preventDefault
+        }, { passive: false });
 
         modalWin.addEventListener('touchend', (e) => {
             if (window.innerWidth > 900 || !isDragging) return;
@@ -3293,18 +3294,15 @@ function initMobileSwipe() {
             const diffY = currentY - startY;
             isDragging = false;
             
-            // Возвращаем плавные переходы
             modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
             overlay.style.transition = 'background-color 0.3s ease';
             
             if (diffY > 120) { 
                 closeModal(overlay.id);
             } else {
-                // Пружиним обратно, если потянули недостаточно сильно
                 modalWin.style.transform = `translateY(0px)`;
                 overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
                 
-                // Зачищаем стили после возврата
                 setTimeout(() => {
                     modalWin.style.transform = '';
                     modalWin.style.transition = '';
@@ -3440,66 +3438,5 @@ async function submitProposal() {
         btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
-    }
-}
-// ==========================================
-// ЗАГРУЗКА ФОТО ПРОФИЛЯ (АВАТАРКИ)
-// ==========================================
-async function uploadAvatar(event) {
-    const file = event.target.files[0];
-    if (!file || !currentUser) return;
-
-    // Проверка размера (макс 2 МБ)
-    if (file.size > 2 * 1024 * 1024) {
-        showToast('Файл слишком большой! Максимум 2 МБ.', 'error');
-        return;
-    }
-
-    const previewDiv = document.getElementById('profileAvatarPreview');
-    const oldBg = previewDiv.style.backgroundImage;
-    const oldText = previewDiv.innerText;
-    
-    // Показываем часики на время загрузки
-    previewDiv.style.backgroundImage = 'none';
-    previewDiv.innerText = '⏳';
-
-    try {
-        
-        const fileExt = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
-        const randomString = Math.random().toString(36).substring(2, 10);
-        const fileName = `${currentUser.id}_${Date.now()}_${randomString}.${fileExt}`;
-
-        // Грузим в бакет 'avatars'
-        const { error: uploadError } = await _supabase.storage
-            .from('avatars')
-            .upload(fileName, file, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        // Получаем публичную ссылку
-        const { data } = _supabase.storage.from('avatars').getPublicUrl(fileName);
-        const avatarUrl = data.publicUrl;
-
-        // Сохраняем ссылку в таблицу profiles
-        const { error: updateError } = await _supabase.from('profiles')
-            .update({ avatar_url: avatarUrl })
-            .eq('id', currentUser.id);
-
-        if (updateError) throw updateError;
-
-        // Успех! Обновляем UI
-        previewDiv.innerText = '';
-        previewDiv.style.backgroundImage = `url('${avatarUrl}')`;
-        if (userProfile) userProfile.avatar_url = avatarUrl;
-        
-        showToast('Фото профиля успешно обновлено!', 'success');
-
-    } catch (err) {
-        console.error("Ошибка загрузки аватара:", err);
-        previewDiv.innerText = oldText;
-        previewDiv.style.backgroundImage = oldBg;
-        showToast('Ошибка при загрузке фото.', 'error');
-    } finally {
-        event.target.value = ''; // Сбрасываем инпут
     }
 }
