@@ -204,21 +204,19 @@ lenis.on('scroll', (e) => {
     const fab = document.querySelector('.fab-propose');
     if (!fab || fab.classList.contains('cart-active')) return; 
     
-    if (e.velocity > 0.5) {
-        fab.style.transform = 'translateY(150px) scale(0.5)';
-        fab.style.opacity = '0';
+    // e.direction: 1 (вниз), -1 (вверх)
+    if (e.direction === 1 && e.velocity > 0.5) {
+        fab.classList.add('hidden-scroll');
         clearTimeout(fabTimeout);
-    } 
-    else if (e.velocity < -0.5) {
-        fab.style.transform = '';
-        fab.style.opacity = '1';
+    } else if (e.direction === -1) {
+        fab.classList.remove('hidden-scroll');
     }
 
+    // Всегда показываем кнопку, если скролл остановился
     clearTimeout(fabTimeout);
     fabTimeout = setTimeout(() => {
-        fab.style.transform = '';
-        fab.style.opacity = '1';
-    }, 800);
+        fab.classList.remove('hidden-scroll');
+    }, 400); // Появится через 0.4 сек после остановки пальца
 });
 
 
@@ -607,6 +605,10 @@ function closeModal(id) {
     const win = modal.querySelector('.modal-window');
     
     if (win) {
+        // Убиваем CSS анимацию появления, чтобы она не дралась с закрытием
+        win.style.animation = 'none';
+        win.offsetHeight; // Хак: заставляем браузер применить сброс анимации мгновенно
+
         win.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
         if (window.innerWidth > 900) {
             win.style.transform = 'scale(0.95) translateY(20px)'; 
@@ -3264,6 +3266,8 @@ function initMobileSwipe() {
             startScrollTop = modalWin.scrollTop;
             isDragging = false;
             
+            // УБИВАЕМ CSS анимацию появления, чтобы окно мгновенно прилипло к пальцу
+            modalWin.style.animation = 'none';
             modalWin.style.transition = 'none';
             overlay.style.transition = 'none';
         }, { passive: true });
@@ -3278,13 +3282,11 @@ function initMobileSwipe() {
                 isDragging = true;
                 if (e.cancelable) e.preventDefault(); 
                 
-                requestAnimationFrame(() => {
-                    const dragDistance = diffY * 0.85;
-                    modalWin.style.transform = `translateY(${dragDistance}px)`;
-                    
-                    let opacity = 1 - (dragDistance / window.innerHeight);
-                    overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.95)})`;
-                });
+                // Следование строго 1:1 за пальцем (убрал коэффициент замедления)
+                modalWin.style.transform = `translateY(${diffY}px)`;
+                
+                let opacity = 1 - (diffY / window.innerHeight);
+                overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.95)})`;
             }
         }, { passive: false });
 
@@ -3294,17 +3296,15 @@ function initMobileSwipe() {
             const diffY = currentY - startY;
             isDragging = false;
             
-            modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-            overlay.style.transition = 'background-color 0.3s ease';
-            
             if (diffY > 120) { 
                 closeModal(overlay.id);
             } else {
+                modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                overlay.style.transition = 'background-color 0.3s ease';
                 modalWin.style.transform = `translateY(0px)`;
                 overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
                 
                 setTimeout(() => {
-                    modalWin.style.transform = '';
                     modalWin.style.transition = '';
                 }, 300);
             }
