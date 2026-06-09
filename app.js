@@ -3294,7 +3294,12 @@ function initMobileSwipe() {
 
         modalWin.addEventListener('touchstart', (e) => {
             if (window.innerWidth > 900) return;
-            if (e.target.closest('.slider-btn') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            
+            if (e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                isDragging = false;
+                return; // Полностью выходим, окно не сдвинется
+            }
 
             startY = e.touches[0].clientY;
             startScrollTop = modalWin.scrollTop;
@@ -3309,6 +3314,10 @@ function initMobileSwipe() {
         modalWin.addEventListener('touchmove', (e) => {
             if (window.innerWidth > 900) return;
             
+            // Если сработала защита (мы трогаем фото), startY будет 0 или старым,
+            // поэтому мы просто игнорируем любые попытки сдвинуть окно
+            if (e.target.closest('.modal-gallery') || e.target.closest('.pswp')) return;
+
             currentY = e.touches[0].clientY;
             const diffY = currentY - startY;
 
@@ -3316,7 +3325,7 @@ function initMobileSwipe() {
                 isDragging = true;
                 if (e.cancelable) e.preventDefault(); 
                 
-                // Следование строго 1:1 за пальцем (убрал коэффициент замедления)
+                // Следование строго 1:1 за пальцем
                 modalWin.style.transform = `translateY(${diffY}px)`;
                 
                 let opacity = 1 - (diffY / window.innerHeight);
