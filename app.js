@@ -3475,3 +3475,69 @@ async function submitProposal() {
         btn.style.opacity = '1';
     }
 }
+// ==========================================
+// 19. СВАЙП ФОТОГРАФИЙ В МОДАЛКЕ ТОВАРА
+// ==========================================
+function initSliderSwipe() {
+    const sliderContainer = document.getElementById('sliderContainer');
+    const sliderWrapper = document.getElementById('sliderWrapper');
+    
+    if (!sliderContainer || !sliderWrapper) return;
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isSwiping = false;
+
+    sliderContainer.addEventListener('touchstart', (e) => {
+        // Игнорируем свайпы двумя пальцами (это зум в PhotoSwipe)
+        if (e.touches.length > 1) return;
+        
+        touchStartX = e.touches[0].clientX;
+        isSwiping = true;
+        
+        // Отключаем плавность при касании, чтобы картинка прилипла к пальцу (если хочешь)
+        // sliderWrapper.style.transition = 'none'; 
+    }, { passive: true });
+
+    sliderContainer.addEventListener('touchmove', (e) => {
+        if (!isSwiping || e.touches.length > 1) return;
+        
+        // Предотвращаем случайный скролл страницы вниз, если свайпаем вбок
+        const touchCurrentX = e.touches[0].clientX;
+        const diffX = touchStartX - touchCurrentX;
+        
+        if (Math.abs(diffX) > 10) {
+            if (e.cancelable) e.preventDefault();
+        }
+    }, { passive: false });
+
+    sliderContainer.addEventListener('touchend', (e) => {
+        if (!isSwiping) return;
+        
+        touchEndX = e.changedTouches[0].clientX;
+        isSwiping = false;
+        
+        // Возвращаем плавность
+        // sliderWrapper.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        
+        handleSwipeGesture();
+    });
+
+    function handleSwipeGesture() {
+        const swipeDistance = touchStartX - touchEndX;
+        const minSwipeDistance = 50; // Минимальная длина свайпа в пикселях
+
+        if (swipeDistance > minSwipeDistance) {
+            // Свайп влево (Следующее фото)
+            moveSlide(1);
+        } else if (swipeDistance < -minSwipeDistance) {
+            // Свайп вправо (Предыдущее фото)
+            moveSlide(-1);
+        }
+    }
+}
+
+// Запускаем слушатель свайпов после загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+    initSliderSwipe();
+});
