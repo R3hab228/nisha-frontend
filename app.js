@@ -243,11 +243,10 @@ let clientFingerprint = "guest_" + Date.now();
 let envData = (typeof window.ENV !== 'undefined') ? window.ENV : ((typeof CONFIG !== 'undefined') ? CONFIG : {});
 let rawUrl = envData.SUPABASE_URL || '';
 let rawAnonKey = envData.SUPABASE_ANON_KEY || '';
-let rawNpKey = envData.NP_API_KEY || '';
 
 const SUPABASE_URL = rawUrl.replace(/[^\x20-\x7E]/g, '').trim();
 const SUPABASE_ANON_KEY = rawAnonKey.replace(/[^\x20-\x7E]/g, '').trim();
-const NP_API_KEY = rawNpKey.replace(/[^\x20-\x7E]/g, '').trim();
+
 
 if (!SUPABASE_ANON_KEY) {
     console.error("ОШИБКА: Ключ Supabase пустой. База данных недоступна.");
@@ -547,6 +546,17 @@ window.onload = async () => {
                         const index = allItems.findIndex(i => i.id === updatedItem.id);
                         if (index !== -1) {
                             allItems[index] = updatedItem;
+                            // АВТО-УДАЛЕНИЕ ИЗ КОРЗИНЫ: Если вещь стала available (cron-job снял бронь 15 минут)
+                        if (updatedItem.status === 'available') {
+                            const cartIdx = cart.findIndex(c => c.id === updatedItem.id);
+                            if (cartIdx !== -1) {
+                                cart.splice(cartIdx, 1);
+                                localStorage.setItem('nisha_cart', JSON.stringify(cart));
+                                syncCartToServer();
+                                updateCartUI();
+                                showToast(`Время брони (15 мин) вышло. ${updatedItem.name} удалена из корзины.`, 'error');
+                            }
+                        }
                         }
                         
                         const card = document.querySelector(`.item-card[data-id="${updatedItem.id}"]`);
@@ -1355,6 +1365,13 @@ async function addToCartById(itemId) {
         return; 
     }
     
+    // --- ПИНГУЕМ БАЗУ: БРОНИРУЕМ ВЕЩЬ НА 15 МИНУТ ---
+    const { data: isReserved, error } = await _supabase.rpc('reserve_item_to_cart', { p_item_id: item.id });
+    if (error || !isReserved) {
+        showToast('Кто-то уже забрал эту вещь!', 'error');
+        return;
+    }
+
     let cartItem = { ...item };
     if (isHacked) {
         cartItem.price = Math.floor(cartItem.price * 0.9);
@@ -1927,6 +1944,9 @@ async function removeFromCart(index, event, rowElement) {
 
     // Функция финального удаления из БД и обновления UI
     const executeRemoval = async () => {
+        // Снимаем бронь в базе данных
+        await _supabase.rpc('unreserve_item_from_cart', { p_item_id: removedItem.id });
+        
         cart.splice(index, 1);
         localStorage.setItem('nisha_cart', JSON.stringify(cart));
         await syncCartToServer();
