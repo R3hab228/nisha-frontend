@@ -3156,8 +3156,8 @@ if(installBtn) {
 function shareItem() {
     if (!currentOpenedItem) return;
     
-    // Прямая ссылка на твой сайт с открытием этого товара
-    const shareUrl = `${window.location.origin}/?item=${currentOpenedItem.id}`;
+    // Генерируем ссылку через бэкенд Render, чтобы соцсети видели правильную фотку товара
+    const shareUrl = `https://nisha-api.onrender.com/share/${currentOpenedItem.id}`;
     
     const shareData = {
         title: `NISHA | ${currentOpenedItem.name}`,
