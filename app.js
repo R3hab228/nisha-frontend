@@ -1364,13 +1364,6 @@ async function addToCartById(itemId) {
         showToast(i18next.t('messages.cart_exist'), 'error');
         return; 
     }
-    
-    // --- ПИНГУЕМ БАЗУ: БРОНИРУЕМ ВЕЩЬ НА 15 МИНУТ ---
-    const { data: isReserved, error } = await _supabase.rpc('reserve_item_to_cart', { p_item_id: item.id });
-    if (error || !isReserved) {
-        showToast('Кто-то уже забрал эту вещь!', 'error');
-        return;
-    }
 
     let cartItem = { ...item };
     if (isHacked) {
@@ -1909,6 +1902,15 @@ function renderCartItems() {
         return;
     }
 
+    // НОВОЕ: Добавляем предупреждение о том, что товары не забронированы
+    list.innerHTML = `
+        <div style="background: rgba(255,0,0,0.1); border: 1px dashed var(--accent-red); padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; text-align: center;">
+            <span style="color: var(--accent-red); font-size: 11px; font-family: var(--font-mono); font-weight: bold; animation: pulse 1.5s infinite;">
+                ⚠️ ТОВАРЫ НЕ ЗАБРОНИРОВАНЫ!<br>Их могут купить в любой момент.
+            </span>
+        </div>
+    `;
+
    cart.forEach((item, index) => {
         const imgUrl = getOptimizedImageUrl(item, true);
         const row = document.createElement('div');
@@ -1942,10 +1944,8 @@ async function removeFromCart(index, event, rowElement) {
     const removedItem = cart[index];
     const imgUrl = getOptimizedImageUrl(removedItem, true);
 
-    // Функция финального удаления из БД и обновления UI
     const executeRemoval = async () => {
-        // Снимаем бронь в базе данных
-        await _supabase.rpc('unreserve_item_from_cart', { p_item_id: removedItem.id });
+        // Раньше мы тут снимали бронь, теперь это не нужно, так как товар и не был забронирован
         
         cart.splice(index, 1);
         localStorage.setItem('nisha_cart', JSON.stringify(cart));
@@ -2200,7 +2200,44 @@ async function generateAndSendOTP() {
         .subscribe();
 }
 
-function openCheckoutModal() { 
+async function openCheckoutModal() { 
+    // 1. БЫСТРАЯ ПРОВЕРКА: А вдруг товар уже купили, пока он лежал в корзине?
+    const btn = document.querySelector('.cart-checkout-btn');
+    const originalText = btn.innerText;
+    btn.innerText = "[ ПРОВЕРКА НАЛИЧИЯ... ]";
+    btn.style.pointerEvents = "none";
+
+    const itemIds = cart.map(i => i.id);
+    const { data: dbItems, error } = await _supabase.from('items').select('id, name, status').in('id', itemIds);
+
+    let hasSoldItems = false;
+    if (dbItems && !error) {
+        // Фильтруем корзину, оставляя только доступные товары
+        cart = cart.filter(cartItem => {
+            const dbItem = dbItems.find(i => i.id === cartItem.id);
+            if (!dbItem || dbItem.status !== 'available') {
+                showToast(`Товар "${cartItem.name}" уже кто-то купил! 😢`, 'error');
+                hasSoldItems = true;
+                return false; 
+            }
+            return true;
+        });
+    }
+
+    if (hasSoldItems) {
+        // Если что-то удалилось, обновляем корзину и отменяем открытие окна
+        localStorage.setItem('nisha_cart', JSON.stringify(cart));
+        await syncCartToServer();
+        updateCartUI();
+        btn.innerText = originalText;
+        btn.style.pointerEvents = "auto";
+        if (cart.length === 0) closeCartDropdown();
+        return; 
+    }
+
+    // Если всё на месте - открываем окно оформления
+    btn.innerText = originalText;
+    btn.style.pointerEvents = "auto";
 
     if (typeof lenis !== 'undefined') lenis.stop();
     document.getElementById('checkoutModal').style.display = 'flex'; 
