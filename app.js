@@ -1147,8 +1147,22 @@ function renderNextBatch() {
             } else if (item.status === 'reserved') { 
                 extraClasses = 'reserved-item'; 
                 badgeHTML = '<div class="reserved-badge">RESERVED</div>'; 
-            } else if (item.is_sale && item.old_price && !isHacked) { 
-                badgeHTML = '<div class="sale-badge-card">SALE</div>'; 
+            } else {
+                // Если товар свободен, проверяем скидку и популярность
+                let saleHTML = (item.is_sale && item.old_price && !isHacked) ? '<div class="sale-badge-card">SALE</div>' : '';
+                
+                // ЛОГИКА ГРАФИКА: Если у вещи 15 или больше просмотров — вешаем бейдж HOT
+                let hotHTML = '';
+                const viewCount = item.views_count || 0;
+                if (viewCount >= 15) {
+                    const chartSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00aaff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
+                    hotHTML = `<div class="hot-badge-card" title="Эту вещь часто смотрят">${chartSvg} HOT</div>`;
+                }
+
+                // Объединяем бейджи в один контейнер (Они встанут рядом друг с другом)
+                if (saleHTML || hotHTML) {
+                    badgeHTML = `<div class="badges-container">${saleHTML}${hotHTML}</div>`;
+                }
             }
 
             // ВАЖНО: Определяем картинку и видео ровно один раз!
@@ -3607,3 +3621,25 @@ function initSliderSwipe() {
 document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
 });
+// ==========================================
+// 20. ПОДПИСКА НА РАССЫЛКУ (NEWSLETTER)
+// ==========================================
+async function subscribeNewsletter() {
+    const input = document.getElementById('nlEmail');
+    const email = input.value.trim();
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast('Введите корректный E-mail!', 'error');
+        return;
+    }
+
+    try {
+        const { error } = await _supabase.from('subscribers').insert([{ email: email }]);
+        // Даже если почта уже есть в базе (ошибка уникальности), пишем "Успех", чтобы хакеры не чекали базу
+        showToast('Вы в списке! Ждите секретные дропы.', 'success');
+        input.value = '';
+    } catch (err) {
+        showToast('Ошибка сервера, попробуйте позже', 'error');
+    }
+}
