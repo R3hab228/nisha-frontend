@@ -174,15 +174,11 @@ function changeLanguage(lng) {
     }
 }
 const lenis = new Lenis({
-    duration: 1.2, 
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    direction: 'vertical',
-    gestureDirection: 'vertical',
-    smooth: true,
-    smoothTouch: false,
-    touchMultiplier: 2,
-    wheelMultiplier: 1, // Вернули стандартную скорость колесика
-    normalizeWheel: false // Отключили нормализацию (СИЛЬНО жрет FPS на ПК)
+    lerp: 0.1, // lerp вместо duration работает плавнее на 60hz и 120hz экранах
+    wheelMultiplier: 1, 
+    smoothWheel: true,
+    smoothTouch: false, // На телефонах оставляем нативный скролл (он идеален)
+    syncTouch: true     // Синхронизируем мобильный скролл с анимациями
 });
 
 function raf(time) {
@@ -1224,9 +1220,10 @@ function renderNextBatch() {
                 </div>
             `;
 
-            // ЗАГРУЗКА ТОЛЬКО ДЛЯ ФОТО (Видео загружается само)
+            // ЗАГРУЗКА ТОЛЬКО ДЛЯ ФОТО (Ленивая и асинхронная)
             if (!isVideo && optImg) {
                 const imgLoader = new Image();
+                imgLoader.decoding = "async"; // Асинхронная декодировка (не тормозит UI)
                 imgLoader.onload = () => {
                     const imgDiv = card.querySelector(`#img-${item.id}`);
                     if (imgDiv) {
