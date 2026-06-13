@@ -552,6 +552,24 @@ window.onload = async () => {
                 setTimeout(() => openProductModalById(openItemId), 500);
             }
             
+            // --- НОВОЕ: РАССЫЛКА В РЕАЛЬНОМ ВРЕМЕНИ ДЛЯ ТЕХ, КТО УЖЕ НА САЙТЕ ---
+            _supabase.channel('public:site_broadcasts')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'site_broadcasts' }, payload => {
+                    const bData = payload.new;
+                    let bHtml = '';
+                    if (bData.image_url) {
+                        bHtml += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
+                    }
+                    if (bData.message_text) {
+                        bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
+                    }
+
+                    showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
+                        localStorage.setItem('nisha_last_broadcast', bData.id);
+                    });
+                })
+                .subscribe();
+
          _supabase.channel('public:items')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, payload => {
                     // ЕСЛИ ДОБАВИЛИ НОВУЮ ВЕЩЬ ЧЕРЕЗ БОТА
