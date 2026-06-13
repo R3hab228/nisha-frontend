@@ -1274,10 +1274,7 @@ function renderNextBatch() {
             if (oldPriceEl && typeof RoughNotation !== 'undefined') {
                 setTimeout(() => RoughNotation.annotate(oldPriceEl, { type: 'strike-through', color: '#ff0000', strokeWidth: 3 }).show(), 300);
             }
-            const saleBadgeEl = card.querySelector('.sale-badge-card');
-            if (saleBadgeEl && typeof RoughNotation !== 'undefined') {
-                setTimeout(() => RoughNotation.annotate(saleBadgeEl, { type: 'box', color: '#ffcc00', strokeWidth: 2 }).show(), 500);
-            }
+            
             // ОПТИМИЗАЦИЯ VanillaTilt
             if (typeof VanillaTilt !== 'undefined' && window.innerWidth > 900) {
                 VanillaTilt.init(card, { 
