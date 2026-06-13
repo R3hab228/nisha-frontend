@@ -518,6 +518,35 @@ window.onload = async () => {
 
             await loadAllItems();
 
+            // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА ---
+            setTimeout(async () => {
+                try {
+                    const { data: broadcasts } = await _supabase.from('site_broadcasts').select('*').order('created_at', { ascending: false }).limit(1);
+                    
+                    if (broadcasts && broadcasts.length > 0) {
+                        const bData = broadcasts[0];
+                        const lastSeenId = localStorage.getItem('nisha_last_broadcast');
+
+                        // Если юзер еще не видел именно ЭТУ рассылку
+                        if (lastSeenId !== bData.id) {
+                            let bHtml = '';
+                            if (bData.image_url) {
+                                bHtml += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
+                            }
+                            if (bData.message_text) {
+                                // Заменяем переносы строк на <br>, чтобы текст не слипался
+                                bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
+                            }
+
+                            showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
+                                // Запоминаем, что юзер это прочитал
+                                localStorage.setItem('nisha_last_broadcast', bData.id);
+                            });
+                        }
+                    }
+                } catch(e) { console.warn("Ошибка загрузки рассылки", e); }
+            }, 3000); // Показываем через 3 секунды после входа, чтобы не пугать сразу
+
             const openItemId = urlParams.get('item');
             if (openItemId) {
                 setTimeout(() => openProductModalById(openItemId), 500);
