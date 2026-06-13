@@ -1155,8 +1155,9 @@ function renderNextBatch() {
                 let hotHTML = '';
                 const viewCount = item.views_count || 0;
                 if (viewCount >= 15) {
-                    const chartSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00aaff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
-                    hotHTML = `<div class="hot-badge-card" title="Эту вещь часто смотрят">${chartSvg} HOT</div>`;
+                    const chartSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00aaff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
+                    // Убрали текст "HOT" и сделали иконку чуть крупнее
+                    hotHTML = `<div class="hot-badge-card" title="Эту вещь часто смотрят" style="padding: 4px 6px;">${chartSvg}</div>`;
                 }
 
                 // Объединяем бейджи в один контейнер (Они встанут рядом друг с другом)
@@ -1191,7 +1192,8 @@ function renderNextBatch() {
                 const videoUrl = item.images[0];
                 mediaHTML = `
                     <div class="mock-image" id="img-${item.id}" style="position: relative; overflow: hidden; padding: 0; background: #0a0a0a;">
-                        <div style="position:absolute; z-index:5; top:5px; left:5px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:var(--accent-green); font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
+                        <!-- Перенесли плашку VIDEO в ЛЕВЫЙ НИЖНИЙ УГОЛ (bottom: 8px), чтобы не перекрывала бейджики -->
+                        <div style="position:absolute; z-index:5; bottom:8px; left:8px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:var(--accent-green); font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
                         <video 
                             class="grid-lazy-video"
                             src="${videoUrl}#t=0,3" 
@@ -3621,25 +3623,3 @@ function initSliderSwipe() {
 document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
 });
-// ==========================================
-// 20. ПОДПИСКА НА РАССЫЛКУ (NEWSLETTER)
-// ==========================================
-async function subscribeNewsletter() {
-    const input = document.getElementById('nlEmail');
-    const email = input.value.trim();
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        showToast('Введите корректный E-mail!', 'error');
-        return;
-    }
-
-    try {
-        const { error } = await _supabase.from('subscribers').insert([{ email: email }]);
-        // Даже если почта уже есть в базе (ошибка уникальности), пишем "Успех", чтобы хакеры не чекали базу
-        showToast('Вы в списке! Ждите секретные дропы.', 'success');
-        input.value = '';
-    } catch (err) {
-        showToast('Ошибка сервера, попробуйте позже', 'error');
-    }
-}
