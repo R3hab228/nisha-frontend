@@ -518,7 +518,7 @@ window.onload = async () => {
 
             await loadAllItems();
 
-            // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА ---
+           // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА ---
             setTimeout(async () => {
                 try {
                     const { data: broadcasts } = await _supabase.from('site_broadcasts').select('*').order('created_at', { ascending: false }).limit(1);
@@ -534,25 +534,29 @@ window.onload = async () => {
                                 bHtml += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
                             }
                             if (bData.message_text) {
-                                // Заменяем переносы строк на <br>, чтобы текст не слипался
                                 bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                             }
 
-                            showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
-                                // Запоминаем, что юзер это прочитал
-                                localStorage.setItem('nisha_last_broadcast', bData.id);
-                            });
+                            // Если тур УЖЕ пройден - показываем сразу. Если нет - откладываем в память.
+                            if (localStorage.getItem('nisha_tour_done')) {
+                                showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
+                                    localStorage.setItem('nisha_last_broadcast', bData.id);
+                                });
+                            } else {
+                                window.pendingBroadcastHtml = bHtml;
+                                window.pendingBroadcastId = bData.id;
+                            }
                         }
                     }
                 } catch(e) { console.warn("Ошибка загрузки рассылки", e); }
-            }, 3000); // Показываем через 3 секунды после входа, чтобы не пугать сразу
+            }, 3000);
 
             const openItemId = urlParams.get('item');
             if (openItemId) {
                 setTimeout(() => openProductModalById(openItemId), 500);
             }
             
-            // --- НОВОЕ: РАССЫЛКА В РЕАЛЬНОМ ВРЕМЕНИ ДЛЯ ТЕХ, КТО УЖЕ НА САЙТЕ ---
+           // --- НОВОЕ: РАССЫЛКА В РЕАЛЬНОМ ВРЕМЕНИ ДЛЯ ТЕХ, КТО УЖЕ НА САЙТЕ ---
             _supabase.channel('public:site_broadcasts')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'site_broadcasts' }, payload => {
                     const bData = payload.new;
@@ -564,9 +568,14 @@ window.onload = async () => {
                         bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                     }
 
-                    showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
-                        localStorage.setItem('nisha_last_broadcast', bData.id);
-                    });
+                    if (localStorage.getItem('nisha_tour_done')) {
+                        showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
+                            localStorage.setItem('nisha_last_broadcast', bData.id);
+                        });
+                    } else {
+                        window.pendingBroadcastHtml = bHtml;
+                        window.pendingBroadcastId = bData.id;
+                    }
                 })
                 .subscribe();
 
@@ -1390,6 +1399,16 @@ function startOnboardingTour() {
             onDestroyStarted: () => {
                 localStorage.setItem('nisha_tour_done', 'true');
                 driverObj.destroy();
+                
+                // ТУР ЗАКОНЧЕН. Проверяем, не ждет ли нас скрытая рассылка?
+                if (window.pendingBroadcastHtml) {
+                    setTimeout(() => {
+                        showTerminalModal('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
+                            localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
+                        });
+                        window.pendingBroadcastHtml = null; // Очищаем память
+                    }, 600); // Ждем полсекунды после тура, чтобы было красиво
+                }
             }
         });
         driverObj.drive();
