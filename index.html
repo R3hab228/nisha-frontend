@@ -4,7 +4,7 @@
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' http://localhost:3000 https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms https://www.google.com https://recaptcha.net; frame-src https://www.google.com https://recaptcha.net https://oauth.telegram.org;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms; frame-src https://oauth.telegram.org;">
     <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -474,22 +474,22 @@
 </div>
 
     <!-- Библиотеки -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
-    <script defer src="https://unpkg.com/rough-notation/lib/rough-notation.iife.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" integrity="sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0" integrity="sha384-PCSoOZTpbkikBEtd/+uV3WNdc676i9KUf01KOA8CnJotvlx8rRrETbDuwdjqTYvt" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/rough-notation/lib/rough-notation.iife.js" integrity="sha384-IW2mAEaBUcGJfuKi7uhlzpZGhnDDnjI9NLtADxl9xKV6VJPzuuIqhIKyLwiAuRmu" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js" integrity="sha384-hW8ZCQHtRH+nVOAkHZ4amZvYsAtKn1ZOvMV6dNag1Rb1thWmLZMBKTRxFV0cOxiK" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.global.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
-    <script defer src="https://unpkg.com/imask"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-    <script defer src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js" integrity="sha384-0k1dj5tm+KUH/4vkNk/i90XsjDA8Ltmt+ybcrFoH4t0dgv/WZsPpVBnkhcroX8UL" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/imask" integrity="sha384-MfCuG63MU1ZAcTsOI5gjgTtPliw8TUi5OltJrtmhBdu6RKig+1YIuyTsS3k8TRzE" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" integrity="sha384-Kk5SjBOKprEnGfyBWfD2zROFd1Cu8kwOXxG2GIhYPcoDL2rBJS9P8Ud1ZMy4412a" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js" integrity="sha384-jVG6iyATzm39ZwuDA3qwy0WZbXsHBZS5SDdG2lpfwDUA3WtqX2wlZEBReL5cQysM" crossorigin="anonymous"></script>
     <!-- БИБЛИОТЕКА ДЛЯ ОБУЧЕНИЯ (ОНБОРДИНГ) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
-    <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-    <script defer src="https://browser.sentry-cdn.com/7.105.0/bundle.min.js" crossorigin="anonymous"></script>
-    <script defer src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js"></script>
-    <script defer src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css" integrity="sha384-bovbcpDBo0pTIhd7ws6ebPh1PG31ubAHcX2pv8Tcu5EtFHNl5FBciYFtS/e2SN66" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js" integrity="sha384-yPK823YWGKpXfBT8wLqUXmrB5ejcI7sgGBIary/01UavNc1bD92AOUBCBzjXQS/s" crossorigin="anonymous"></script>
+    <script src="https://browser.sentry-cdn.com/7.105.0/bundle.min.js" integrity="sha384-iP5xIlbkWonIse3OwYtwpMAWScjrivRx8HUwVQK36MIK1LWXNF4oaIysvubyRK9V" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js" integrity="sha384-aqlCgYDMI5Xbz2OI3PZ4a11u2VLwCoKbgLErzwgq17Bt2tFTN2MXgzt8JssxC71q" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js" integrity="sha384-099MVvR7WaAXsovY5rMvaY+Uq49ZmVhGPTFSyf4wTuyjNEpC/cBjpOJJa0/J97Mk" crossorigin="anonymous"></script>
     
     <script src="config.js"></script>
     <script defer src="app.js"></script>
