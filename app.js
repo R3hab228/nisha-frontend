@@ -518,17 +518,23 @@ window.onload = async () => {
 
             await loadAllItems();
 
-           // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА ---
+           // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА (УМНАЯ) ---
             setTimeout(async () => {
                 try {
                     const { data: broadcasts } = await _supabase.from('site_broadcasts').select('*').order('created_at', { ascending: false }).limit(1);
                     
                     if (broadcasts && broadcasts.length > 0) {
                         const bData = broadcasts[0];
-                        const lastSeenId = localStorage.getItem('nisha_last_broadcast');
+                        
+                        // Получаем ID последнего просмотра из памяти телефона И из профиля базы (если юзер вошел)
+                        const localSeenId = localStorage.getItem('nisha_last_broadcast');
+                        const dbSeenId = userProfile ? userProfile.last_broadcast_id : null;
+                        
+                        // Проверяем: видел ли юзер рассылку хоть где-то?
+                        const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
 
-                        // Если юзер еще не видел именно ЭТУ рассылку
-                        if (lastSeenId !== bData.id) {
+                        if (!hasSeen) {
+                            let bHtml = '';
                             let bHtml = '';
                             if (bData.image_url) {
                                 bHtml += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
@@ -537,11 +543,17 @@ window.onload = async () => {
                                 bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                             }
 
+                            // Функция фиксации просмотра
+                            const markAsSeen = () => {
+                                localStorage.setItem('nisha_last_broadcast', bData.id);
+                                if (currentUser && _supabase) {
+                                    _supabase.from('profiles').update({ last_broadcast_id: bData.id }).eq('id', currentUser.id).then();
+                                }
+                            };
+
                             // Если тур УЖЕ пройден - показываем сразу. Если нет - откладываем в память.
                             if (localStorage.getItem('nisha_tour_done')) {
-                                showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
-                                    localStorage.setItem('nisha_last_broadcast', bData.id);
-                                });
+                                showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', markAsSeen);
                             } else {
                                 window.pendingBroadcastHtml = bHtml;
                                 window.pendingBroadcastId = bData.id;
@@ -1978,11 +1990,11 @@ function renderCartItems() {
         return;
     }
 
-    // НОВОЕ: Добавляем предупреждение о том, что товары не забронированы
+    // Предупреждение о том, что товары не забронированы (Спокойный дизайн)
     list.innerHTML = `
-        <div style="background: rgba(255,0,0,0.1); border: 1px dashed var(--accent-red); padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; text-align: center;">
-            <span style="color: var(--accent-red); font-size: 11px; font-family: var(--font-mono); font-weight: bold; animation: pulse 1.5s infinite;">
-                ⚠️ ТОВАРЫ НЕ ЗАБРОНИРОВАНЫ!<br>Их могут купить в любой момент.
+        <div style="padding: 8px 10px; margin-bottom: 15px; border-bottom: 1px solid #222; text-align: center;">
+            <span style="color: #666; font-size: 11px; font-family: var(--font-main);">
+                ⚠️ Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.
             </span>
         </div>
     `;
