@@ -2353,11 +2353,23 @@ async function submitOrder() {
         return;
     }
 
-    // Если всё ок — открываем хакерское меню вопроса про Email
+    // ПРОВЕРЯЕМ, ЗАПОМНИЛ ЛИ САЙТ ВЫБОР ЮЗЕРА РАНЕЕ
+    const savedEmailPreference = localStorage.getItem('nisha_email_preference');
+    
+    // Если юзер уже нажимал "Пропустить" в прошлом заказе — сразу оформляем без Email
+    if (savedEmailPreference === 'skipped') {
+        return await executeOrderFinal('');
+    }
+    
+    // Если юзер уже нажимал "ДА" и ввел Email — берем сохраненный Email
+    if (savedEmailPreference && savedEmailPreference.includes('@')) {
+        return await executeOrderFinal(savedEmailPreference);
+    }
+
+    // Если всё ок и юзер делает заказ впервые — открываем окно вопроса про Email
     const prompt = document.getElementById('emailPromptOverlay');
     const emailInput = document.getElementById('promptEmailInput');
     
-    // Подставляем Email из профиля, если юзер авторизован
     if (currentUser && currentUser.email) {
         emailInput.value = currentUser.email;
     } else {
@@ -2377,12 +2389,17 @@ async function confirmEmailPrompt(wantsEmail) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(finalEmail)) {
             showToast('Введите корректный E-mail!', 'error');
-            return; // Не закрываем окно, ждем правильного ввода
+            return; 
         }
+        // Запоминаем Email навсегда
+        localStorage.setItem('nisha_email_preference', finalEmail);
+    } else {
+        // Запоминаем, что юзер отказался
+        localStorage.setItem('nisha_email_preference', 'skipped');
     }
 
-    prompt.style.display = 'none'; // Прячем окно вопроса
-    await executeOrderFinal(finalEmail); // Запускаем реальное оформление
+    prompt.style.display = 'none'; 
+    await executeOrderFinal(finalEmail); 
 }
 
 async function executeOrderFinal(emailToSave) {
