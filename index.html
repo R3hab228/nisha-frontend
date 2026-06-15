@@ -18,7 +18,10 @@
     <meta property="og:description" content="Площадка для продажи винтажных, архивных и эксклюзивных вещей.">
     <meta property="og:image" content="https://i.ibb.co/3s6HhXz/icon.ico">
     <meta name="theme-color" content="#00ff00">
-    <link rel="icon" href="data:,">
+    <!-- Подключаем иконку для вкладки браузера и телефонов -->
+    <link rel="icon" type="image/x-icon" href="/icon.ico">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="icon" type="image/png" href="/icon.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
@@ -77,7 +80,10 @@
 <div class="wrapper">
     <header>
         <div class="header-top">
-            <h1><span class="typewriter">[ NISHA ]</span></h1>
+            <!-- Добавили onclick и курсор для кликабельности -->
+            <h1 onclick="window.location.href='/'" style="cursor: pointer; user-select: none;" title="На главную">
+                <span class="typewriter">[ NISHA ]</span>
+            </h1>
             
             <nav class="top-nav">
                 <a href="javascript:void(0)" onclick="resetToMain()" data-i18n="nav.home">ГЛАВНАЯ</a>
@@ -489,7 +495,7 @@
     <script defer src="https://browser.sentry-cdn.com/7.105.0/bundle.min.js" crossorigin="anonymous"></script>
     <script defer src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js"></script>
     <script defer src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
-    
+
     <script src="config.js"></script>
     <script defer src="app.js"></script>
 
