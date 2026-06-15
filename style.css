@@ -161,12 +161,27 @@
         }
 
         /* КОНТЕЙНЕР ДЛЯ БЕЙДЖЕЙ (SALE и HOT) */
-        .badges-container { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; z-index: 10; transform: translateZ(20px); }
+        .badges-container { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 10; transform: translateZ(20px); }
         
-        .sale-badge-card { background: var(--accent-red); color: #fff; font-weight: bold; font-family: var(--font-mono); padding: 4px 8px; font-size: 12px; border: 1px solid #000; box-shadow: 2px 2px 0 #000; letter-spacing: 1px; }
-        
-        /* НОВЫЙ БЕЙДЖ "HOT" (С голубым графиком) */
-        .hot-badge-card { background: #0a0a0a; color: #00aaff; font-weight: bold; font-family: var(--font-mono); padding: 4px 8px; font-size: 12px; border: 1px solid #00aaff; box-shadow: 2px 2px 0 #000; display: flex; align-items: center; gap: 6px; letter-spacing: 1px; }
+        /* СТИЛЬ КНОПОК WINDOWS 95 */
+        .sale-badge-card, .hot-badge-card { 
+            background: #c0c0c0; /* Классический серый цвет Win95 */
+            color: #000; /* Черный текст для читаемости */
+            font-family: 'Tahoma', sans-serif; /* Аутентичный шрифт системы */
+            font-size: 11px; 
+            font-weight: bold; 
+            padding: 3px 6px; 
+            /* Выпуклая 3D-рамка */
+            border-top: 2px solid #fff; 
+            border-left: 2px solid #fff; 
+            border-bottom: 2px solid #555; 
+            border-right: 2px solid #555; 
+            box-shadow: 1px 1px 0px #000; /* Легкая тень для объема */
+            display: flex; 
+            align-items: center; 
+            gap: 4px; 
+            letter-spacing: 0.5px; 
+        }
         .old-price { text-decoration: line-through; color: var(--text-muted); font-size: 13px; margin-right: 8px; font-weight: normal; }
         .hacked-price-tag { color: var(--accent-green); font-size: 12px; border: 1px solid var(--accent-green); padding: 1px 4px; margin-left: 5px; animation: pulse 1s infinite;}
 

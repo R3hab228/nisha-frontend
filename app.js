@@ -536,14 +536,10 @@ window.onload = async () => {
                         bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                     }
 
-                    if (localStorage.getItem('nisha_tour_done')) {
-                        showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
-                            localStorage.setItem('nisha_last_broadcast', bData.id);
-                        });
-                    } else {
-                        window.pendingBroadcastHtml = bHtml;
-                        window.pendingBroadcastId = bData.id;
-                    }
+                    // Сразу показываем рассылку поверх всего, даже если страница не обновлялась
+                    showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
+                        localStorage.setItem('nisha_last_broadcast', bData.id);
+                    });
                 })
                 .subscribe();
 
@@ -958,9 +954,10 @@ async function loadAllItems() {
 
 // --- ОБНОВЛЕНИЕ КРАСНЫХ СЧЕТЧИКОВ В БОКОВОМ МЕНЮ ---
 function updateSidebarCounters() {
-    // Считаем категории (по всей базе)
-    const catCounts = { 'Все вещи': allItems.length };
-    allItems.forEach(item => {
+    // Считаем категории (только доступные товары)
+    const availableItemsAll = allItems.filter(i => i.status === 'available');
+    const catCounts = { 'Все вещи': availableItemsAll.length };
+    availableItemsAll.forEach(item => {
         if (!item) return;
         const c = item.category || 'Без категории';
         catCounts[c] = (catCounts[c] || 0) + 1;
@@ -990,10 +987,10 @@ function updateSidebarCounters() {
         }
     });
 
-    // Считаем размеры (только для ТЕКУЩЕЙ выбранной категории)
+    // Считаем размеры (только для ТЕКУЩЕЙ выбранной категории и ТОЛЬКО ДОСТУПНЫЕ)
     const sizeCounts = {};
     allItems.forEach(item => {
-        if (!item) return;
+        if (!item || item.status !== 'available') return;
         if (currentCategory !== '' && item.category !== currentCategory) return; // Умный подсчет
         const s = item.size || '-';
         sizeCounts[s] = (sizeCounts[s] || 0) + 1;
@@ -1098,7 +1095,11 @@ function applyFilters() {
             renderedCount = 0; 
             
             const countEl = document.getElementById('itemCount');
-            if (countEl) countEl.innerText = filteredItems.length;
+            if (countEl) {
+                // Считаем только доступные вещи (исключаем проданные и забронированные)
+                const availableItems = filteredItems.filter(item => item.status === 'available');
+                countEl.innerText = availableItems.length;
+            }
 
             if (filteredItems.length === 0) {
                 if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ ТОВАРОВ НЕ НАЙДЕНО ]</div>`;
@@ -1169,18 +1170,18 @@ function renderNextBatch() {
                 badgeHTML = '<div class="reserved-badge">RESERVED</div>'; 
             } else {
                 // Если товар свободен, проверяем скидку и популярность
-                let saleHTML = (item.is_sale && item.old_price && !isHacked) ? '<div class="sale-badge-card">SALE</div>' : '';
+                let saleHTML = (item.is_sale && item.old_price && !isHacked) ? '<div class="sale-badge-card">% SALE</div>' : '';
                 
-                // ЛОГИКА ГРАФИКА: Если у вещи 15 или больше просмотров — вешаем бейдж HOT
+                // ЛОГИКА HOT: Если у вещи 15 или больше просмотров
                 let hotHTML = '';
                 const viewCount = item.views_count || 0;
                 if (viewCount >= 15) {
-                    const chartSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00aaff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
-                    // Убрали текст "HOT" и сделали иконку чуть крупнее
-                    hotHTML = `<div class="hot-badge-card" title="Эту вещь часто смотрят" style="padding: 4px 6px;">${chartSvg}</div>`;
+                    // Используем строгий черный значок тренда вместо кислотно-синего
+                    const chartSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
+                    hotHTML = `<div class="hot-badge-card" title="Эту вещь часто смотрят">${chartSvg} HOT</div>`;
                 }
 
-                // Объединяем бейджи в один контейнер (Они встанут рядом друг с другом)
+                // Объединяем бейджи в один контейнер
                 if (saleHTML || hotHTML) {
                     badgeHTML = `<div class="badges-container">${saleHTML}${hotHTML}</div>`;
                 }
@@ -3297,8 +3298,8 @@ if(installBtn) {
 function shareItem() {
     if (!currentOpenedItem) return;
     
-    // Генерируем ссылку через бэкенд Render, чтобы соцсети видели правильную фотку товара
-    const shareUrl = `https://nisha-api.onrender.com/share/${currentOpenedItem.id}`;
+    // Прямая ссылка на твой новый домен
+    const shareUrl = `https://https://nisha-store.shop/?item=${currentOpenedItem.id}`;
     
     const shareData = {
         title: `NISHA | ${currentOpenedItem.name}`,
@@ -3410,7 +3411,8 @@ function initMobileSwipe() {
             if (window.innerWidth > 900) return;
             
             
-            if (e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            // Усиленная защита от случайных свайпов при заполнении форм (особенно в предложке)
+            if (e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.closest('.form-layout') || e.target.closest('input') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 isDragging = false;
                 return; // Полностью выходим, окно не сдвинется
             }
