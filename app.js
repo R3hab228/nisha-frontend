@@ -518,7 +518,7 @@ window.onload = async () => {
 
             await loadAllItems();
 
-           // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА (УМНАЯ) ---
+         // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА (УМНАЯ) ---
             setTimeout(async () => {
                 try {
                     const { data: broadcasts } = await _supabase.from('site_broadcasts').select('*').order('created_at', { ascending: false }).limit(1);
@@ -526,24 +526,19 @@ window.onload = async () => {
                     if (broadcasts && broadcasts.length > 0) {
                         const bData = broadcasts[0];
                         
-                        // Получаем ID последнего просмотра из памяти телефона И из профиля базы (если юзер вошел)
                         const localSeenId = localStorage.getItem('nisha_last_broadcast');
                         const dbSeenId = userProfile ? userProfile.last_broadcast_id : null;
-                        
-                        // Проверяем: видел ли юзер рассылку хоть где-то?
                         const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
 
                         if (!hasSeen) {
-                            let bHtml = '';
-                            let bHtml = '';
+                            let broadcastContent = ''; // Переименовали переменную для 100% безопасности
                             if (bData.image_url) {
-                                bHtml += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
+                                broadcastContent += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
                             }
                             if (bData.message_text) {
-                                bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
+                                broadcastContent += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                             }
 
-                            // Функция фиксации просмотра
                             const markAsSeen = () => {
                                 localStorage.setItem('nisha_last_broadcast', bData.id);
                                 if (currentUser && _supabase) {
@@ -551,11 +546,10 @@ window.onload = async () => {
                                 }
                             };
 
-                            // Если тур УЖЕ пройден - показываем сразу. Если нет - откладываем в память.
                             if (localStorage.getItem('nisha_tour_done')) {
-                                showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', markAsSeen);
+                                showTerminalModal('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
                             } else {
-                                window.pendingBroadcastHtml = bHtml;
+                                window.pendingBroadcastHtml = broadcastContent;
                                 window.pendingBroadcastId = bData.id;
                             }
                         }
