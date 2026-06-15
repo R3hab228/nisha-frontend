@@ -272,45 +272,7 @@ function showToast(message, type = 'success', imgUrl = null) {
         if(container.contains(toast)) container.removeChild(toast); 
     }, 3500);
 }
-// --- ВАЛИДАЦИЯ RECAPTCHA v3 ---
-// --- ВАЛИДАЦИЯ RECAPTCHA v3 ---
-async function verifyCaptchaAction(actionName) {
-    return new Promise((resolve) => {
-        if (typeof grecaptcha === 'undefined') {
-            console.warn("reCAPTCHA не загружена (возможно блокировщик рекламы). Пропускаем.");
-            resolve(true); 
-            return;
-        }
 
-        try {
-            grecaptcha.ready(async () => {
-                try {
-                    const token = await grecaptcha.execute(envData.RECAPTCHA_SITE_KEY, { action: actionName });
-                    
-                    const res = await fetch('https://nisha-api.onrender.com/api/verify-captcha', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: token, action: actionName })
-                    });
-                    
-                    const data = await res.json();
-                    if (data.success) {
-                        resolve(true); 
-                    } else {
-                        showToast('Подозрение на спам. Попробуйте позже.', 'error');
-                        resolve(false); 
-                    }
-                } catch (err) {
-                    console.error("Сбой сети при проверке капчи. Пропускаем защиту:", err);
-                    resolve(true); // Заказ важнее, пропускаем если сервер тупит
-                }
-            });
-        } catch (e) {
-            console.error("Критическая ошибка reCAPTCHA:", e);
-            resolve(true); // Заказ важнее
-        }
-    });
-}
 // --- КРУТЫЕ ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ ---
 function showTerminalModal(title, htmlText, btnText, callback) {
     const overlay = document.createElement('div');
@@ -2928,10 +2890,6 @@ async function openWaitlist() {
     });
     
     if(phoneOrTg && phoneOrTg.trim() !== "") {
-        // ПРОВЕРКА НА БОТА (reCAPTCHA v3)
-        showToast('Проверка безопасности...', 'success');
-        const isHuman = await verifyCaptchaAction('waitlist_subscribe');
-        if (!isHuman) return;
         const { error } = await _supabase.from('waitlist').insert([{ 
             item_id: currentOpenedItem.id, 
             phone: phoneOrTg.trim() 
@@ -3574,14 +3532,6 @@ async function submitProposal() {
     if (cond < 1 || cond > 10) {
         showToast('Оценка должна быть от 1 до 10', 'error');
         return;
-    }
-
-    // ПРОВЕРКА НА БОТА (reCAPTCHA v3)
-    btn.innerText = "[ ПРОВЕРКА БЕЗОПАСНОСТИ... ]";
-    const isHuman = await verifyCaptchaAction('submit_proposal');
-    if (!isHuman) {
-        btn.innerText = "[ ОТПРАВИТЬ ЗАЯВКУ ]";
-        return; 
     }
 
     btn.innerText = '[ ЗАГРУЗКА ДАННЫХ... ]';
