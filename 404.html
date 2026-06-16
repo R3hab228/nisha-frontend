@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - CONNECTION_LOST.LOG</title>
+    <style>
+        :root {
+            --bg-main: #000000;
+            --accent-green: #00ff00;
+            --accent-red: #ff0000;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--accent-green);
+            font-family: var(--font-mono);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+
+        .terminal-box {
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid var(--accent-green);
+            padding: 30px;
+            background: rgba(10, 10, 10, 0.9);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+            position: relative;
+            z-index: 3;
+        }
+
+        .error-code {
+            color: var(--accent-red);
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--accent-red);
+            padding-bottom: 10px;
+        }
+
+        .status-line {
+            margin: 10px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 18px;
+            background: var(--accent-green);
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .loading-bar {
+            width: 100%;
+            height: 4px;
+            background: #111;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-bar::after {
+            content: "";
+            position: absolute;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-green);
+            animation: loading 3s infinite;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            50% { left: 0; }
+            100% { left: 100%; }
+        }
+
+        .reboot-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 25px;
+            border: 1px solid var(--accent-green);
+            color: #000;
+            background: var(--accent-green);
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .reboot-btn:hover {
+            background: #000;
+            color: var(--accent-green);
+            box-shadow: 0 0 15px var(--accent-green);
+        }
+
+        .glitch {
+            animation: glitch 1s linear infinite;
+        }
+
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px, 0) skew(0deg); }
+            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
+            62% { transform: translate(0, 0) skew(5deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="terminal-box">
+        <div class="error-code glitch">ERROR_404: RESOURCE_NOT_FOUND</div>
+        
+        <div class="status-line">SESSION_ID: <span id="session-id"></span></div>
+        <div class="status-line">LOCATION: NISHA_DATABASE/ARCHIVE/NULL</div>
+        <div class="status-line" style="color: #888;">Система потеряла связь с запрашиваемым сектором. Возможно, данные были перемещены или удалены из архива.</div>
+        
+        <div class="loading-bar"></div>
+        
+        <div class="status-line" style="margin-top: 20px;">
+            > RE-ESTABLISHING CONNECTION... <span class="cursor"></span>
+        </div>
+
+        <a href="/" class="reboot-btn">[ REBOOT_SYSTEM.EXE ]</a>
+    </div>
+
+    <script>
+        // Генерация фейкового ID сессии для серьезности
+        document.getElementById('session-id').innerText = 
+            Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now();
+        
+        // Автоматический редирект через 15 секунд, если юзер уснул
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 15000);
+    </script>
+</body>
+</html>
