@@ -3,6 +3,10 @@
     {
       "source": "/sitemap.xml",
       "destination": "https://nisha-api.onrender.com/sitemap.xml"
+    },
+    {
+      "source": "/share/:id",
+      "destination": "https://nisha-api.onrender.com/share/:id"
     }
   ],
   "headers": [
