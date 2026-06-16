@@ -13,7 +13,7 @@
         "auth_req": "АВТОРИЗАЦІЯ В СИСТЕМІ", "auth_desc": "Авторизуйтесь для доступу до обраного та історії."
       },
       "sort": { "found": "Знайдено речей:", "sorting": "Сортування:", "new": "Нові", "cheap": "Дешеві" },
-      "cart": { "checkout": "ОФОРМИТИ ЗАМОВЛЕННЯ", "in_cart": "У КОШИКУ:", "items_total": "РЕЧЕЙ | РАЗОМ:", "empty": "[ КОШИК ПОРОЖНІЙ ]", "title": "[ ВАШІ ПОКУПКИ ]", "delete": "ВИДАЛИТИ" },
+      "cart": { "checkout": "ОФОРМИТИ ЗАМОВЛЕННЯ", "in_cart": "У КОШИКУ:", "items_total": "РЕЧЕЙ | РАЗОМ:", "empty": "[ КОШИК ПОРОЖНІЙ ]", "title": "[ ВАШІ ПОКУПКИ ]", "delete": "ВИДАЛИТИ", "empty_title": "[ КОШИК ПОРОЖНІЙ ]", "empty_desc": "Тут поки що порожньо.<br>Додайте речі, щоб оформити замовлення!" },
       "mobile": { "show_filters": "[+] ПОКАЗАТИ ФІЛЬТРИ", "hide_filters": "[-] ПРИХОВАТИ ФІЛЬТРИ" },
       "product": {
         "views": "ПРОСМОТРІВ:", "condition": "СТАН РЕЧІ:", "size": "РОЗМІР:", "brand": "БРЕНД:",
@@ -31,11 +31,21 @@
       "orders_modal": {
         "title": "MY_ORDERS.DB",
         "desc": "Введіть номер телефону, вказаний при замовленні, щоб відстежити статус.", "btn": "ЗНАЙТИ",
-        "empty": "[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]", "loading": "Очікування даних..."
+        "empty": "[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]", "loading": "Очікування даних...",
+        "empty_title": "[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]", "empty_desc": "Здається, ви ще нічого не купували.<br>Час це виправити! Поверніться на головну та оберіть щось круте."
       },
-      "footer": { "visitors": "ВІДВІДУВАЧІ:", "install": "⬇ ВСТАНОВИТИ ДОДАТОК" },
+      "footer": { 
+        "visitors": "ВІДВІДУВАЧІ:", 
+        "install": "⬇ ВСТАНОВИТИ ДОДАТОК",
+        "legal_text": "Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.",
+        "public_offer": "Договір публічної оферти",
+        "privacy_policy": "Політика конфіденційності",
+        "refund_policy": "Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.",
+        "copyright": "© 2026 NISHA. Всі права захищені."
+      },
       "marquee": "NISHA МАЙДАНЧИК ДЛЯ ПРОДАЖУ ВІНТАЖНИХ КРУТИХ РЕЧЕЙ ТА ДЛЯ КРЕАТОРІВ. вдалих покупок!",
       "messages": {
+        "lang_changed": "Мову змінено на",
         "login_success": "Успішний вхід!", "logout": "Ви вийшли з системи", "reg_success": "Реєстрація успішна! Перевірте пошту.",
         "fav_add": "Додано до обраного", "fav_remove": "Видалено з обраного", "cart_add": "Річ додана до кошика!", "cart_exist": "Річ вже у кошику!",
         "cart_delete": "Видалено: ", "cart_error_auth": "Спершу увійдіть у систему!", "req_fields": "Заповніть всі обов'язкові поля!",
@@ -84,6 +94,26 @@
         "cond_label": "ОЦІНКА СТАНУ (1 - 10):", "cond_place": "9",
         "contact_label": "ЗВ'ЯЗОК (@TELEGRAM АБО ТЕЛЕФОН):", "contact_place": "@твій_нік або +380...",
         "btn_submit": "[ ВІДПРАВИТИ ЗАЯВКУ ]"
+      },
+      "np": {
+        "city_err": "Сервер Нової Пошти не відповідає. Спробуйте пізніше.",
+        "branch_empty": "[!] За вашим запитом відділень не знайдено. Перевірте правильність введення.",
+        "branch_err": "[!] Немає зв'язку з базою Нової Пошти. Спробуйте ввести дані пізніше."
+      },
+      "email_prompt": {
+        "desc": "Надсилати вам чеки та статуси доставки (ТТН) на E-mail?",
+        "yes": "[ ТАК ]",
+        "skip": "[ ПРОПУСТИТИ ]"
+      },
+      "success_modal": {
+        "desc1": "Товари успішно заброньовані.",
+        "desc2": "Очікуйте SMS / повідомлення в ТГ з номером накладної."
+      },
+      "reviews_modal": {
+        "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму."
+      },
+      "loader": {
+        "connecting": "Підключення до БД..."
       }
     }
   },
@@ -101,7 +131,7 @@
         "auth_req": "АВТОРИЗАЦИЯ В СИСТЕМЕ", "auth_desc": "Авторизуйтесь для доступа к избранному и истории."
       },
       "sort": { "found": "Найдено вещей:", "sorting": "Сортировка:", "new": "Новые", "cheap": "Дешевые" },
-      "cart": { "checkout": "ОФОРМИТЬ ЗАКАЗ", "in_cart": "В КОРЗИНЕ:", "items_total": "ВЕЩЕЙ | ИТОГО:", "empty": "[ КОРЗИНА ПУСТА ]", "title": "[ ВАШИ ПОКУПКИ ]", "delete": "УДАЛИТЬ" },
+      "cart": { "checkout": "ОФОРМИТЬ ЗАКАЗ", "in_cart": "В КОРЗИНЕ:", "items_total": "ВЕЩЕЙ | ИТОГО:", "empty": "[ КОРЗИНА ПУСТА ]", "title": "[ ВАШИ ПОКУПКИ ]", "delete": "УДАЛИТЬ", "empty_title": "[ КОРЗИНА ПУСТА ]", "empty_desc": "Здесь пока ничего нет.<br>Добавьте вещи, чтобы оформить заказ!" },
       "mobile": { "show_filters": "[+] ПОКАЗАТЬ ФИЛЬТРЫ", "hide_filters": "[-] СКРЫТЬ ФИЛЬТРЫ" },
       "product": {
         "views": "ПРОСМОТРОВ:", "condition": "СОСТОЯНИЕ ВЕЩИ:", "size": "РАЗМЕР:", "brand": "БРЕНД:",
@@ -119,11 +149,21 @@
       "orders_modal": {
         "title": "MY_ORDERS.DB",
         "desc": "Введите номер телефона, указанный при заказе, чтобы отследить статус.", "btn": "НАЙТИ",
-        "empty": "[ ИСТОРИЯ ЗАКАЗОВ ПУСТА ]", "loading": "Ожидание данных..."
+        "empty": "[ ИСТОРИЯ ЗАКАЗОВ ПУСТА ]", "loading": "Ожидание данных...",
+        "empty_title": "[ ИСТОРИЯ ЗАКАЗОВ ПУСТА ]", "empty_desc": "Кажется, вы еще ничего не покупали.<br>Пора это исправить! Выберите что-то крутое на главной."
       },
-      "footer": { "visitors": "VISITORS:", "install": "⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ" },
+      "footer": { 
+        "visitors": "VISITORS:", 
+        "install": "⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ",
+        "legal_text": "Данный сайт действует в соответствии с Законодательством Украины. Оформляя заказ, вы соглашаетесь с условиями Публичной оферты.",
+        "public_offer": "Договор публичной оферты",
+        "privacy_policy": "Политика конфиденциальности",
+        "refund_policy": "Возврат и обмен товара надлежащего качества осуществляется в течение 14 дней с момента покупки.",
+        "copyright": "© 2026 NISHA. Все права защищены."
+      },
       "marquee": "NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНЫХ КРУТЫХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!",
       "messages": {
+        "lang_changed": "Язык изменен на",
         "login_success": "Успешный вход!", "logout": "Вы вышли из системы", "reg_success": "Регистрация успешна! Проверьте почту.",
         "fav_add": "Добавлено в избранное", "fav_remove": "Удалено из избранного", "cart_add": "Вещь добавлена в корзину!", "cart_exist": "Вещь уже в корзине!",
         "cart_delete": "Удалено: ", "cart_error_auth": "Сначала войдите в систему!", "req_fields": "Заполните все обязательные поля!",
@@ -172,6 +212,26 @@
         "cond_label": "ОЦЕНКА СОСТОЯНИЯ (1 - 10):", "cond_place": "9",
         "contact_label": "СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):", "contact_place": "@твои_ник или +380...",
         "btn_submit": "[ ОТПРАВИТЬ ЗАЯВКУ ]"
+      },
+      "np": {
+        "city_err": "Сервер Новой Почты не отвечает. Попробуйте позже.",
+        "branch_empty": "[!] По вашему запросу отделений не найдено. Проверьте правильность ввода.",
+        "branch_err": "[!] Нет связи с базой Новой Почты. Попробуйте ввести данные позже."
+      },
+      "email_prompt": {
+        "desc": "Отправлять вам чеки и статусы доставки (ТТН) на E-mail?",
+        "yes": "[ ДА ]",
+        "skip": "[ ПРОПУСТИТЬ ]"
+      },
+      "success_modal": {
+        "desc1": "Товары успешно забронированы.",
+        "desc2": "Ожидайте SMS / сообщение в ТГ с номером накладной."
+      },
+      "reviews_modal": {
+        "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама."
+      },
+      "loader": {
+        "connecting": "Подключение к БД..."
       }
     }
   },
@@ -189,7 +249,7 @@
         "auth_req": "SYSTEM AUTHORIZATION", "auth_desc": "Log in to access your favorites and history."
       },
       "sort": { "found": "Items found:", "sorting": "Sort by:", "new": "Newest", "cheap": "Cheapest" },
-      "cart": { "checkout": "CHECKOUT", "in_cart": "IN CART:", "items_total": "ITEMS | TOTAL:", "empty": "[ CART IS EMPTY ]", "title": "[ YOUR PURCHASES ]", "delete": "DELETE" },
+      "cart": { "checkout": "CHECKOUT", "in_cart": "IN CART:", "items_total": "ITEMS | TOTAL:", "empty": "[ CART IS EMPTY ]", "title": "[ YOUR PURCHASES ]", "delete": "DELETE", "empty_title": "[ CART IS EMPTY ]", "empty_desc": "It's empty here right now.<br>Add some items to checkout!" },
       "mobile": { "show_filters": "[+] SHOW FILTERS", "hide_filters": "[-] HIDE FILTERS" },
       "product": {
         "views": "VIEWS:", "condition": "CONDITION:", "size": "SIZE:", "brand": "BRAND:",
@@ -207,11 +267,21 @@
       "orders_modal": {
         "title": "MY_ORDERS.DB",
         "desc": "Enter the phone number used for the order to track its status.", "btn": "SEARCH",
-        "empty": "[ ORDER HISTORY IS EMPTY ]", "loading": "Waiting for data..."
+        "empty": "[ ORDER HISTORY IS EMPTY ]", "loading": "Waiting for data...",
+        "empty_title": "[ ORDER HISTORY IS EMPTY ]", "empty_desc": "Looks like you haven't bought anything yet.<br>Time to fix that! Go back and pick something cool."
       },
-      "footer": { "visitors": "VISITORS:", "install": "⬇ INSTALL APP" },
+      "footer": { 
+        "visitors": "VISITORS:", 
+        "install": "⬇ INSTALL APP",
+        "legal_text": "This site operates in accordance with the Legislation of Ukraine. By placing an order, you agree to the terms of the Public Offer.",
+        "public_offer": "Public Offer Agreement",
+        "privacy_policy": "Privacy Policy",
+        "refund_policy": "Return and exchange of goods of proper quality is carried out within 14 days from the date of purchase.",
+        "copyright": "© 2026 NISHA. All rights reserved."
+      },
       "marquee": "NISHA MARKETPLACE FOR VINTAGE COOL ITEMS AND CREATORS. happy shopping!",
       "messages": {
+        "lang_changed": "Language changed to",
         "login_success": "Login successful!", "logout": "You have logged out", "reg_success": "Registration check email.",
         "fav_add": "Added to favorites", "fav_remove": "Removed from favorites", "cart_add": "Item added!", "cart_exist": "Already in cart!",
         "cart_delete": "Deleted: ", "cart_error_auth": "Log in first!", "req_fields": "Fill in all required fields!",
@@ -260,6 +330,26 @@
         "cond_label": "CONDITION (1 - 10):", "cond_place": "9",
         "contact_label": "CONTACT (@TELEGRAM OR PHONE):", "contact_place": "@your_nick or +380...",
         "btn_submit": "[ SUBMIT PROPOSAL ]"
+      },
+      "np": {
+        "city_err": "Nova Poshta server is not responding. Try again later.",
+        "branch_empty": "[!] No branches found for your request. Please check the spelling.",
+        "branch_err": "[!] No connection to Nova Poshta DB. Try again later."
+      },
+      "email_prompt": {
+        "desc": "Send you receipts and delivery statuses (TTN) via E-mail?",
+        "yes": "[ YES ]",
+        "skip": "[ SKIP ]"
+      },
+      "success_modal": {
+        "desc1": "Items successfully reserved.",
+        "desc2": "Wait for an SMS / TG message with the tracking number."
+      },
+      "reviews_modal": {
+        "desc": "Here are reviews from real buyers. Completed orders are confirmed by the system. No scam."
+      },
+      "loader": {
+        "connecting": "Connecting to DB..."
       }
     }
   }

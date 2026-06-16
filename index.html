@@ -57,8 +57,8 @@
         <div class="success-title typewriter">ORDER_CONFIRMED.LOG</div>
         <div class="success-divider"></div>
         <div class="success-text">
-            Товары успешно забронированы.<br>
-            <span style="color: #888; font-size: 12px;">Ожидайте SMS / сообщение в ТГ с номером накладной.</span>
+            <span data-i18n="success_modal.desc1">Товары успешно забронированы.</span><br>
+            <span style="color: #888; font-size: 12px;" data-i18n="success_modal.desc2">Ожидайте SMS / сообщение в ТГ с номером накладной.</span>
         </div>
     </div>
 </div>
@@ -67,13 +67,13 @@
     <div class="success-terminal-box" style="opacity: 1; transform: scale(1); animation: none;">
         <div class="success-title typewriter" style="color: #00aaff;">NOTIFICATIONS.SYS</div>
         <div class="success-divider" style="background: repeating-linear-gradient(90deg, #00aaff, #00aaff 5px, transparent 5px, transparent 10px);"></div>
-        <div class="success-text" style="margin-bottom: 15px;">
+        <div class="success-text" style="margin-bottom: 15px;" data-i18n="email_prompt.desc">
             Отправлять вам чеки и статусы доставки (ТТН) на E-mail?
         </div>
         <input type="email" id="promptEmailInput" class="form-input" placeholder="your@email.com" style="margin-bottom: 15px; text-align: center; border-color: #00aaff;">
         <div style="display: flex; gap: 10px;">
-            <button class="cart-checkout-btn btn-target" onclick="confirmEmailPrompt(true)" style="flex: 1; padding: 12px; font-size: 12px; background: #00aaff;">[ ДА ]</button>
-            <button class="cart-checkout-btn btn-target" onclick="confirmEmailPrompt(false)" style="flex: 1; padding: 12px; font-size: 12px; background: #333; border-color: #555; color: #fff;">[ ПРОПУСТИТЬ ]</button>
+            <button class="cart-checkout-btn btn-target" onclick="confirmEmailPrompt(true)" style="flex: 1; padding: 12px; font-size: 12px; background: #00aaff;" data-i18n="email_prompt.yes">[ ДА ]</button>
+            <button class="cart-checkout-btn btn-target" onclick="confirmEmailPrompt(false)" style="flex: 1; padding: 12px; font-size: 12px; background: #333; border-color: #555; color: #fff;" data-i18n="email_prompt.skip">[ ПРОПУСТИТЬ ]</button>
         </div>
     </div>
 </div>
@@ -244,16 +244,16 @@
    <footer>
         <div class="hit-counter"><span data-i18n="footer.visitors">VISITORS:</span> <span id="hitCounterValue">_ _ _ _ _</span></div>
         <div class="legal-info">
-            <p>Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.</p>
+            <p data-i18n="footer.legal_text">Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.</p>
             <div>
-                <a href="javascript:void(0)" onclick="showRulesModal()">Договір публічної оферти</a> | 
-                <a href="javascript:void(0)" onclick="showRulesModal()">Політика конфіденційності</a>
+                <a href="javascript:void(0)" onclick="showRulesModal()" data-i18n="footer.public_offer">Договір публічної оферти</a> | 
+                <a href="javascript:void(0)" onclick="showRulesModal()" data-i18n="footer.privacy_policy">Політика конфіденційності</a>
             </div>
-            <p style="margin-top: 10px; color: #555;">Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
+            <p style="margin-top: 10px; color: #555;" data-i18n="footer.refund_policy">Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
             <button id="installAppBtn" style="display: none; background: var(--accent-green); color: #000; font-family: var(--font-mono); font-weight: bold; padding: 10px 20px; border: 2px outset #fff; cursor: pointer; margin-top: 15px;" data-i18n="footer.install">⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ</button>
             
             <!-- НАДПИСЬ КОПИРАЙТА -->
-            <p style="margin-top: 10px; color: #444;">© 2026 NISHA. All rights reserved.</p>
+            <p style="margin-top: 10px; color: #444;" data-i18n="footer.copyright">© 2026 NISHA. All rights reserved.</p>
             
             <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ СТРОГО ПОД НЕЙ И ПО ЦЕНТРУ -->
             <div class="footer-lang-dropdown" id="footerLangWrapper">
@@ -426,10 +426,10 @@
                 <div id="branchDropdown" class="custom-dropdown"></div>
             </div>
             <!-- НОВОЕ: ПРОМОКОД -->
-            <label style="margin-top: 10px;">Промокод (если есть):</label>
+            <label style="margin-top: 10px;" data-i18n="checkout.promo">Промокод (если есть):</label>
             <div class="promo-wrapper">
                 <input type="text" id="promoInput" class="form-input" placeholder="Введите код...">
-                <button class="search-btn btn-target" onclick="applyPromoCode()" style="padding: 10px;">ПРИМЕНИТЬ</button>
+                <button class="search-btn btn-target" onclick="applyPromoCode()" style="padding: 10px;" data-i18n="checkout.apply">ПРИМЕНИТЬ</button>
             </div>
             <div id="promoMessage" class="promo-msg"></div>
             <div id="deliveryCostInfo" style="background:#111; padding:10px; border:1px solid #444; font-family:var(--font-mono); font-size:12px; color:var(--accent-green); display:none; margin-top: 5px;">
@@ -471,7 +471,7 @@
             <button class="close-btn" onclick="closeModal('reviewsModal')">X</button>
         </div>
         <div class="orders-container">
-            <p style="color: #aaa; margin-top: 0; font-size: 14px;">Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
+            <p style="color: #aaa; margin-top: 0; font-size: 14px;" data-i18n="reviews_modal.desc">Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
             <div id="reviewsContainerList" style="display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
                 <!-- Сюда скрипт сам загрузит отзывы -->
             </div>
