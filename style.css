@@ -202,8 +202,19 @@
         .mock-image { width: 100%; height: 260px; background-color: #151515; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: #333; font-family: var(--font-mono); font-size: 20px; text-align: center; background-size: cover; background-position: center; transition: 0.3s; transform: translateZ(20px);}
         .item-card:hover .mock-image { filter: brightness(1.1); }
         
-        .item-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; transform: translateZ(10px);}
-      .item-title { color: var(--text-main); font-size: 16px; margin: 0 0 10px 0; line-height: 1.4; height: 44px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;}
+        .item-info { padding: 10px 12px; display: flex; flex-direction: column; flex-grow: 1; transform: translateZ(10px);}
+      .item-title { 
+    color: var(--text-main); 
+    font-size: 14px; /* Чуть меньше шрифт */
+    margin: 0 0 6px 0; 
+    line-height: 1.3; 
+    height: 38px; /* Ужали высоту текста */
+    font-weight: bold; 
+    overflow: hidden; 
+    display: -webkit-box; 
+    -webkit-line-clamp: 2; 
+    -webkit-box-orient: vertical;
+}
         .item-price { color: var(--accent-green); font-size: 20px; font-weight: bold; margin-bottom: 12px; font-family: var(--font-mono);}
         .item-size { background-color: #222; color: #aaa; font-size: 12px; padding: 4px 8px; border: 1px solid #444; align-self: flex-start; margin-bottom: auto; text-transform: uppercase;}
         .item-footer { margin-top: 15px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; border-top: 1px dashed #222; padding-top: 10px; text-transform: uppercase; font-weight: bold;}
@@ -676,8 +687,10 @@
     #mobileFilterBtn { display: block; width: 100%; background: #111; color: var(--accent-green); border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; margin-bottom: 15px; cursor: pointer; text-align: center; font-size: 14px;}
 
     .items-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .mock-image { height: 180px; font-size: 14px; }
-    .item-title { font-size: 14px; height: 39px;}
+    .card-slider-wrapper { height: 160px; } /* Мобильную картинку тоже ужали */
+    .item-title { font-size: 12px; height: 32px; margin-bottom: 4px; }
+    .item-price { font-size: 14px; margin-bottom: 5px; }
+    .item-size { font-size: 10px; padding: 2px 6px; }
     .item-price { font-size: 15px; }
 
     /* === ПРАВИЛЬНЫЙ СКРОЛЛ МОДАЛКИ === */
@@ -1085,11 +1098,11 @@
 .driver-stage-no-animation {
     z-index: 99999 !important;
 }
-/* --- СЛАЙДЕР ВНУТРИ КАРТОЧЕК В СЕТКЕ --- */
+/* --- УМЕНЬШЕННЫЙ СЛАЙДЕР --- */
 .card-slider-wrapper { 
     position: relative; 
     width: 100%; 
-    height: 260px; 
+    height: 210px; /* Сплющили картинку */
     background-color: #151515; 
     border-bottom: 1px solid var(--border-color); 
     overflow: hidden; 
