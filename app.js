@@ -2881,14 +2881,18 @@ function setSlide(index) {
 }
 
 function updateSlider() {
-    document.getElementById('sliderWrapper').style.transform = `translateX(-${currentSlide * 100}%)`;
-    
-    // Обновляем счетчик
-    const counter = document.getElementById('photoCounter');
-    totalSlides = document.querySelectorAll('.slide').length;
-    if (counter) counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+    const sliderWrapper = document.getElementById('sliderWrapper');
+    if (!sliderWrapper) return; // Тут return легален, он внутри функции
 
-    // Обновляем миниатюры
+    sliderWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+    
+    const counter = document.getElementById('photoCounter');
+    const totalSlides = document.querySelectorAll('.slide').length;
+    
+    if (counter) {
+        counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+    }
+
     const thumbs = document.querySelectorAll('.thumb');
     thumbs.forEach((t, i) => { 
         if(i === currentSlide) t.classList.add('active-thumb'); 
@@ -3619,9 +3623,6 @@ document.getElementById('propFiles')?.addEventListener('change', function(e) {
         btn.style.opacity = '1';
     }
     
-// ==========================================
-// ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (CREATORS) - ФИКС БАГОВ И СКОРОСТИ
-// ==========================================
 
 // ==========================================
 // УЛЬТРА-БЫСТРАЯ ПРЕДЛОЖКА СО СЖАТИЕМ ФОТО
@@ -3686,6 +3687,62 @@ function resetProposalForm() {
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
     const fileInput = document.getElementById('propFiles');
+    if (!fileInput) return;
+
+    const files = fileInput.files;
+    const brand = document.getElementById('propBrand').value.trim();
+    const size = document.getElementById('propSize').value.trim();
+    const cond = parseInt(document.getElementById('propCond').value);
+    const contact = document.getElementById('propContact').value.trim();
+
+    if (!files.length || !brand || !size || isNaN(cond) || !contact) {
+        showToast('Заполните все поля и фото!', 'error');
+        return;
+    }
+
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.7';
+
+    try {
+        btn.innerText = '[ СЖАТИЕ ФОТО... ]';
+        const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
+        
+        let imageUrls = [];
+        for (let i = 0; i < compressedFiles.length; i++) {
+            btn.innerText = `[ ЗАГРУЗКА: ${i + 1} / ${compressedFiles.length} ]`;
+            const file = compressedFiles[i];
+            const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 5)}.jpg`;
+            
+            const { error } = await _supabase.storage.from('proposals').upload(fileName, file);
+            if (error) throw error;
+            
+            const { data } = _supabase.storage.from('proposals').getPublicUrl(fileName);
+            imageUrls.push(data.publicUrl);
+        }
+
+        btn.innerText = '[ СОХРАНЕНИЕ В БАЗУ... ]';
+        const { error: dbError } = await _supabase.from('proposals').insert([{
+            brand, measurements: size, condition: cond, contact, images: imageUrls
+        }]);
+
+        if (dbError) throw dbError;
+
+        closeModal('proposeModal');
+        setTimeout(() => {
+            showTerminalModal('SYSTEM_OK.LOG', 'Данные успешно переданы.', '[ OK ]', null);
+            resetProposalForm();
+        }, 400);
+
+    } catch (err) {
+        console.error(err);
+        showToast('Ошибка: ' + err.message, 'error');
+        btn.innerText = '[ ОШИБКА ОТПРАВКИ ]';
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    }
+}
+    const btn = document.getElementById('btnSubmitProp');
+    const fileInput = document.getElementById('propFiles');
     const files = fileInput.files;
     
     const brand = document.getElementById('propBrand').value.trim();
@@ -3737,7 +3794,7 @@ async function submitProposal() {
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     }
-}
+
 // ==========================================
 // 19. СВАЙП ФОТОГРАФИЙ В МОДАЛКЕ ТОВАРА
 // ==========================================
