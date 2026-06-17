@@ -1094,10 +1094,11 @@
     width: 100%; 
     height: 100%; 
     overflow-x: auto; 
+    overflow-y: hidden;
     scroll-snap-type: x mandatory; 
     scrollbar-width: none; 
     -webkit-overflow-scrolling: touch;
-    /* УБРАЛИ БЛОКИРОВКУ СВАЙПА! Теперь фото в ленте будут листаться */
+    touch-action: pan-x; /* Разрешаем только горизонтальный свайп внутри */
 }
 .card-slider-container::-webkit-scrollbar { 
     display: none; /* Прячем скроллбар в Chrome/Safari */

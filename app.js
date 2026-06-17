@@ -1187,160 +1187,71 @@ function renderNextBatch() {
             if (!item) continue;
             
             let badgeHTML = '';
-            let extraClasses = '';
-            
-            if (item.status === 'sold') { 
-                extraClasses = 'sold-out'; 
-                badgeHTML = '<div class="sold-badge">SOLD</div>'; 
-            } else if (item.status === 'reserved') { 
-                extraClasses = 'reserved-item'; 
-                badgeHTML = '<div class="reserved-badge">RESERVED</div>'; 
-            } else {
-                // Если товар свободен, проверяем скидку и популярность
-                let saleHTML = (item.is_sale && item.old_price && !isHacked) ? '<div class="sale-badge-card">% SALE</div>' : '';
-                
-                // ЛОГИКА HOT: Если у вещи 15 или больше просмотров
-                let hotHTML = '';
-                const viewCount = item.views_count || 0;
-                if (viewCount >= 15) {
-                    // Используем currentColor, чтобы иконка автоматически покрасилась в синий цвет текста
+            if (item.status === 'sold') badgeHTML = '<div class="sold-badge">SOLD</div>';
+            else if (item.status === 'reserved') badgeHTML = '<div class="reserved-badge">RESERVED</div>';
+            else {
+                if (item.is_sale) badgeHTML += `<div class="sale-badge-card">% SALE</div>`;
+                if ((item.views_count || 0) >= 15) {
                     const chartSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
-                    hotHTML = `<div class="hot-badge-card" title="Эту вещь часто смотрят">${chartSvg} HOT</div>`;
-                }
-
-                // Объединяем бейджи в один контейнер
-                if (saleHTML || hotHTML) {
-                    badgeHTML = `<div class="badges-container">${saleHTML}${hotHTML}</div>`;
+                    badgeHTML += `<div class="hot-badge-card">${chartSvg} HOT</div>`;
                 }
             }
 
-            let itemPrice = Number(item.price) || 0;
-            let finalPrice = isHacked ? Math.floor(itemPrice * 0.9) : itemPrice;
-            let priceHTML = isHacked 
-                ? `<span class="old-price">${itemPrice} грн</span> ${finalPrice} грн<span class="hacked-price-tag">[HACKED]</span>` 
-                : (item.old_price ? `<span class="old-price">${item.old_price} грн</span> ${finalPrice} грн` : `${finalPrice} грн`);
+            const thumbsArray = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails : (item.images && item.images.length > 0 ? item.images : []);
+            let slidesStr = '';
+            let dotsStr = '';
+
+            thumbsArray.forEach((thumbUrl, idx) => {
+                const isVid = item.images && item.images[idx] && item.images[idx].endsWith('.mp4');
+                if (isVid) {
+                    slidesStr += `<div class="card-slide" style="background: #0a0a0a;"><video class="grid-lazy-video" src="${item.images[idx]}#t=0.001" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover; pointer-events:none;"></video></div>`;
+                } else {
+                    slidesStr += `<div class="card-slide" style="background-image: url('${thumbUrl}');"></div>`;
+                }
+                dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
+            });
 
             const starClass = favorites.includes(item.id) ? 'fav-star active' : 'fav-star';
-
             const card = document.createElement('div');
-            card.className = `item-card ${extraClasses}`;
+            card.className = `item-card ${item.status !== 'available' ? 'sold-out' : ''}`;
             card.setAttribute('data-id', item.id);
-            
-            const safeName = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.name || 'Без названия') : (item.name || 'Без названия');
-            const safeBrand = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.brand || 'No brand') : (item.brand || 'No brand');
-            const safeSize = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.size || '-') : (item.size || '-');
-
-            // --- НОВОЕ: СЛАЙДЕР И ТОЧКИ ---
-            let mediaHTML = '';
-            // Берем миниатюры, если их нет - берем оригиналы, если и их нет - пустой массив
-            const thumbsArray = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails : (item.images && item.images.length > 0 ? item.images : []);
-
-            if (thumbsArray.length > 0) {
-                let slidesStr = '';
-                let dotsStr = '';
-
-                thumbsArray.forEach((thumbUrl, idx) => {
-                    // Проверяем, является ли ОРИГИНАЛЬНЫЙ файл по этому индексу видео
-                    const isVid = item.images && item.images[idx] && item.images[idx].endsWith('.mp4');
-                    
-                    if (isVid) {
-                        slidesStr += `
-                            <div class="card-slide" style="background: #0a0a0a;">
-                                <div style="position:absolute; z-index:5; bottom:8px; left:8px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:var(--accent-green); font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
-                                <video class="grid-lazy-video" src="${item.images[idx]}#t=0.001" muted loop playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"></video>
-                            </div>`;
-                    } else {
-                        // Фотка загружается сразу через background-image
-                        slidesStr += `<div class="card-slide" style="background-image: url('${thumbUrl}');"></div>`;
-                    }
-                    // Добавляем точку для каждого слайда
-                    dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
-                });
-
-                mediaHTML = `
-                    <div class="card-slider-wrapper">
-                        <div class="card-slider-container" onscroll="updateCardDots(this, '${item.id}')" id="slider-${item.id}">
-                            ${slidesStr}
-                        </div>
-                        ${thumbsArray.length > 1 ? `<div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>` : ''}
-                    </div>
-                `;
-            } else {
-                 mediaHTML = `<div class="mock-image" style="background:#111; color:#555; display:flex; align-items:center; justify-content:center; font-family: monospace; font-size: 14px;">NO PHOTO</div>`;
-            }
             
             card.innerHTML = `
                 ${badgeHTML}
-                <div class="${starClass}">★</div>
-                <div class="card-clickable-area" style="display:flex; flex-direction:column; flex-grow:1;">
-                    ${mediaHTML}
-                    <div class="item-info">
-                        <h3 class="item-title">${safeName}</h3>
-                        <div class="item-price">${priceHTML}</div>
-                        <div class="item-size"><span data-i18n="grid.size_prefix">${i18next.t('grid.size_prefix')}</span>${safeSize}</div>
-                        <div class="item-footer"><span>${safeBrand}</span><span>${item.condition || '9/10'}</span></div>
+                <div class="${starClass}" onclick="toggleFav(event, '${item.id}')">★</div>
+                <div class="card-slider-wrapper">
+                    <div class="card-slider-container" id="slider-${item.id}" onscroll="updateCardDots(this, '${item.id}')">
+                        ${slidesStr}
                     </div>
-                    <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" data-i18n="product.add_to_cart">${i18next.t('product.add_to_cart')}</button>
+                    ${thumbsArray.length > 1 ? `<div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>` : ''}
                 </div>
+                <div class="item-info" onclick="openProductModalById('${item.id}')">
+                    <h3 class="item-title">${item.name}</h3>
+                    <div class="item-price">${isHacked ? Math.floor(item.price * 0.9) : item.price} грн</div>
+                    <div class="item-size">Размер: ${item.size}</div>
+                    <div class="item-footer"><span>${item.brand}</span><span>${item.condition}</span></div>
+                </div>
+                <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">В КОРЗИНУ</button>
             `;
-            // Нажатие на звездочку
-            card.querySelector('.fav-star').addEventListener('click', (e) => toggleFav(e, item.id));
-            
-            // Нажатие на карточку (открывает модалку)
-            card.querySelector('.card-clickable-area').addEventListener('click', (e) => {
-                if (e.target.closest('.grid-cart-btn')) return; 
-                openProductModal(item);
+
+            // ЛОГИКА: Клик по слайдеру тоже открывает модалку, но НЕ при свайпе
+            const slider = card.querySelector('.card-slider-container');
+            let isScrolling = false;
+            let startX = 0;
+
+            slider.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; isScrolling = false; }, {passive: true});
+            slider.addEventListener('touchmove', (e) => { if(Math.abs(e.touches[0].clientX - startX) > 10) isScrolling = true; }, {passive: true});
+            slider.addEventListener('click', (e) => {
+                if (!isScrolling) openProductModalById(item.id);
             });
 
-            // Нажатие СТРОГО на кнопку "В корзину"
-            const cartBtn = card.querySelector('.grid-cart-btn');
-            if (cartBtn) {
-                cartBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation(); 
-                    addToCartWithAnimation(item.id, cartBtn, e);
-                });
-            }
+            grid.appendChild(card);
+            const vids = card.querySelectorAll('.grid-lazy-video');
+            vids.forEach(v => gridVideoObserver.observe(v));
 
-           grid.appendChild(card);
-
-            // Если есть видео - отдаем их нашему умному наблюдателю!
-            const vidNodes = card.querySelectorAll('.grid-lazy-video');
-            vidNodes.forEach(vidNode => gridVideoObserver.observe(vidNode));
-
-            const oldPriceEl = card.querySelector('.old-price');
-            if (oldPriceEl && typeof RoughNotation !== 'undefined') {
-                setTimeout(() => RoughNotation.annotate(oldPriceEl, { type: 'strike-through', color: '#ff0000', strokeWidth: 3 }).show(), 300);
-            }
-            
-            // ОПТИМИЗАЦИЯ VanillaTilt
-            if (typeof VanillaTilt !== 'undefined' && window.innerWidth > 900) {
-                VanillaTilt.init(card, { 
-                    max: 3, speed: 2000, glare: false, scale: 1.0, 
-                    "mouse-event-element": card 
-                });
-            }
-        } catch (cardErr) {
-            console.error("Ошибка при отрисовке карточки:", cardErr);
-        }
+        } catch (err) { console.error(err); }
     }
     renderedCount = end;
-    
-    const trigger = document.getElementById('loadingTrigger');
-    if (trigger) {
-        trigger.innerText = (renderedCount >= filteredItems.length) ? i18next.t('grid.end_list') : i18next.t('grid.scroll_more');
-    }
-
-    setTimeout(() => {
-        if (trigger && renderedCount < filteredItems.length) {
-            const rect = trigger.getBoundingClientRect();
-            // Если триггер находится в пределах видимости экрана
-            if (rect.top < window.innerHeight + 300) {
-                renderNextBatch(); // Вызываем саму себя (рекурсия), пока не появится скролл
-            }
-        }
-
-        }, 100);
 }
 
 function startOnboardingTour() {
@@ -3703,15 +3614,16 @@ async function loginWithGoogle() {
 }
 // --- ЛОГИКА ДЛЯ ТОЧЕК В КАРТОЧКАХ ---
 window.updateCardDots = function(container, itemId) {
-    // Высчитываем, какой по счету слайд сейчас по центру
-    const index = Math.round(container.scrollLeft / container.clientWidth);
-    const dots = document.querySelectorAll(`#dots-${itemId} .card-dot`);
-    
-    // Переключаем активную точку
-    dots.forEach((dot, i) => {
-        if (i === index) dot.classList.add('active');
-        else dot.classList.remove('active');
-    });
+    // Используем ширину контейнера для вычисления индекса
+    const index = Math.round(container.scrollLeft / container.offsetWidth);
+    const dotsContainer = document.getElementById(`dots-${itemId}`);
+    if (dotsContainer) {
+        const dots = dotsContainer.querySelectorAll('.card-dot');
+        dots.forEach((dot, i) => {
+            if (i === index) dot.classList.add('active');
+            else dot.classList.remove('active');
+        });
+    }
 };
 
 // Запускаем инициализацию после загрузки
