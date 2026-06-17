@@ -782,7 +782,7 @@ async function checkSession() {
             if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
             if(document.getElementById('modalProfileEmail')) document.getElementById('modalProfileEmail').innerText = uEmail;
             
-            // --- УВЕДОМЛЕНИЯ О СТАТУСЕ ЗАКАЗА В РЕАЛЬНОМ ВРЕМЕНИ ---
+           // --- УВЕДОМЛЕНИЯ О СТАТУСЕ ЗАКАЗА В РЕАЛЬНОМ ВРЕМЕНИ ---
             _supabase.channel('order-status-updates')
                 .on('postgres_changes', { 
                     event: 'UPDATE', 
@@ -792,6 +792,10 @@ async function checkSession() {
                 }, payload => {
                     const newStatus = payload.new.status;
                     if (newStatus !== payload.old.status) {
+                        // Показываем зеленый ТОСТ сверху
+                        showToast(`Заказ #${payload.new.id.split('-')[0].toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
+                        
+                        // И показываем большое окно
                         showTerminalModal(
                             'SYSTEM_NOTIFICATION.LOG',
                             `ВНИМАНИЕ! Статус вашего заказа изменился.<br><br>` +
@@ -3415,63 +3419,73 @@ function handleSwipeEnd(e) {
     }
 }
 // ==========================================
-// 18. ПЛАВНЫЙ СВАЙП МОДАЛОК (БЕЗ КОНФЛИКТОВ СО СЛАЙДЕРАМИ)
+// 18. ZERO-LAG СВАЙП КАРТОЧКИ (ИДЕАЛЬНОЕ СЛЕДОВАНИЕ ЗА ПАЛЬЦЕМ)
 // ==========================================
 function initMobileSwipe() {
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         const modalWin = overlay.querySelector('.modal-window');
-        const modalHeader = overlay.querySelector('.modal-header'); // СВАЙП ТОЛЬКО ЗА ШАПКУ!
-        if (!modalWin || !modalHeader) return;
+        if (!modalWin) return;
 
         let startY = 0;
         let currentY = 0;
         let isDragging = false;
+        let canDrag = false;
 
-        modalHeader.addEventListener('touchstart', (e) => {
+        modalWin.addEventListener('touchstart', (e) => {
             if (window.innerWidth > 900) return;
             
+            // Защита: не активируем свайп, если трогаем фото, кнопки или вводим текст
+            if (e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                canDrag = false;
+                return;
+            }
+
             startY = e.touches[0].clientY;
-            isDragging = true;
-            
-            modalWin.style.animation = 'none';
+            canDrag = (modalWin.scrollTop <= 0); 
+            isDragging = false;
+
             modalWin.style.transition = 'none';
             overlay.style.transition = 'none';
         }, { passive: true });
 
-        modalHeader.addEventListener('touchmove', (e) => {
-            if (window.innerWidth > 900 || !isDragging) return;
+        modalWin.addEventListener('touchmove', (e) => {
+            if (window.innerWidth > 900 || !canDrag) return;
 
             currentY = e.touches[0].clientY;
             const diffY = currentY - startY;
 
             if (diffY > 0) {
+                isDragging = true;
                 if (e.cancelable) e.preventDefault(); 
                 
-                modalWin.style.transform = `translateY(${diffY}px)`;
-                
-                let opacity = 1 - (diffY / window.innerHeight);
-                overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.95)})`;
+                // Используем requestAnimationFrame для мгновенной реакции экрана (без задержек)
+                requestAnimationFrame(() => {
+                    modalWin.style.transform = `translateY(${diffY}px)`;
+                    let opacity = 1 - (diffY / window.innerHeight);
+                    overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.95)})`;
+                });
+            } else {
+                isDragging = false;
+                modalWin.style.transform = `translateY(0px)`;
             }
         }, { passive: false });
 
-        modalHeader.addEventListener('touchend', (e) => {
-            if (window.innerWidth > 900 || !isDragging) return;
+        modalWin.addEventListener('touchend', (e) => {
+            if (window.innerWidth > 900) return;
             
-            const diffY = currentY - startY;
-            isDragging = false;
-            
-            if (diffY > 100) { 
-                closeModal(overlay.id);
-            } else {
-                modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                overlay.style.transition = 'background-color 0.3s ease';
-                modalWin.style.transform = `translateY(0px)`;
-                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+            if (isDragging) {
+                const diffY = currentY - startY;
+                isDragging = false;
+                canDrag = false;
                 
-                setTimeout(() => {
-                    modalWin.style.transition = '';
-                    modalWin.style.animation = ''; 
-                }, 300);
+                if (diffY > 150) { 
+                    closeModal(overlay.id);
+                } else {
+                    modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                    overlay.style.transition = 'background-color 0.3s ease';
+                    modalWin.style.transform = `translateY(0px)`;
+                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+                }
             }
         });
     });

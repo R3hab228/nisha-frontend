@@ -1097,10 +1097,7 @@
     scroll-snap-type: x mandatory; 
     scrollbar-width: none; 
     -webkit-overflow-scrolling: touch;
-    
-    /* Блокируем конфликт скроллов. Браузер сам поймет: если ведешь по диагонали или вертикали - он прокрутит ленту, если горизонтально - прокрутит слайдер */
-    touch-action: pan-y pinch-zoom; 
-    overscroll-behavior-x: contain; 
+    /* УБРАЛИ БЛОКИРОВКУ СВАЙПА! Теперь фото в ленте будут листаться */
 }
 .card-slider-container::-webkit-scrollbar { 
     display: none; /* Прячем скроллбар в Chrome/Safari */
