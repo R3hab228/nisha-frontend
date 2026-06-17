@@ -3415,82 +3415,63 @@ function handleSwipeEnd(e) {
     }
 }
 // ==========================================
-// 18. УМНЫЙ СВАЙП (БЕЗ КОНФЛИКТА СО СКРОЛЛОМ)
+// 18. ПЛАВНЫЙ СВАЙП МОДАЛОК (БЕЗ КОНФЛИКТОВ СО СЛАЙДЕРАМИ)
 // ==========================================
 function initMobileSwipe() {
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         const modalWin = overlay.querySelector('.modal-window');
-        if (!modalWin) return;
+        const modalHeader = overlay.querySelector('.modal-header'); // СВАЙП ТОЛЬКО ЗА ШАПКУ!
+        if (!modalWin || !modalHeader) return;
 
         let startY = 0;
         let currentY = 0;
         let isDragging = false;
-        let canDrag = false;
 
-        modalWin.addEventListener('touchstart', (e) => {
+        modalHeader.addEventListener('touchstart', (e) => {
             if (window.innerWidth > 900) return;
             
-            // Защита: не активируем свайп, если трогаем фото, кнопки или вводим текст
-            if (e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                canDrag = false;
-                return;
-            }
-
             startY = e.touches[0].clientY;
+            isDragging = true;
             
-            // КЛЮЧЕВОЙ МОМЕНТ: свайп разрешен только если скролл окна на нуле (самый верх)
-            canDrag = (modalWin.scrollTop <= 0); 
-            isDragging = false;
-
-            // Сбрасываем стили перед началом движения
+            modalWin.style.animation = 'none';
             modalWin.style.transition = 'none';
             overlay.style.transition = 'none';
         }, { passive: true });
 
-        modalWin.addEventListener('touchmove', (e) => {
-            if (window.innerWidth > 900 || !canDrag) return;
+        modalHeader.addEventListener('touchmove', (e) => {
+            if (window.innerWidth > 900 || !isDragging) return;
 
             currentY = e.touches[0].clientY;
             const diffY = currentY - startY;
 
-            // Тянем окно вниз только если палец движется ВНИЗ и мы в топе списка
             if (diffY > 0) {
-                isDragging = true;
-                
-                // Блокируем системный скролл браузера, чтобы окно не дергалось
                 if (e.cancelable) e.preventDefault(); 
                 
-                // Сдвигаем окно в реальном времени за пальцем
                 modalWin.style.transform = `translateY(${diffY}px)`;
                 
-                // Затемняем фон в зависимости от силы потяжки
                 let opacity = 1 - (diffY / window.innerHeight);
                 overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.95)})`;
-            } else {
-                // Если потянули ВВЕРХ — отключаем режим свайпа и даем работать обычному скроллу
-                isDragging = false;
-                modalWin.style.transform = `translateY(0px)`;
             }
         }, { passive: false });
 
-        modalWin.addEventListener('touchend', (e) => {
-            if (window.innerWidth > 900) return;
+        modalHeader.addEventListener('touchend', (e) => {
+            if (window.innerWidth > 900 || !isDragging) return;
             
-            if (isDragging) {
-                const diffY = currentY - startY;
-                isDragging = false;
-                canDrag = false;
+            const diffY = currentY - startY;
+            isDragging = false;
+            
+            if (diffY > 100) { 
+                closeModal(overlay.id);
+            } else {
+                modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                overlay.style.transition = 'background-color 0.3s ease';
+                modalWin.style.transform = `translateY(0px)`;
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
                 
-                if (diffY > 150) { 
-                    // Если протащили достаточно далеко — закрываем
-                    closeModal(overlay.id);
-                } else {
-                    // Если мало — возвращаем окно на место с анимацией
-                    modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                    overlay.style.transition = 'background-color 0.3s ease';
-                    modalWin.style.transform = `translateY(0px)`;
-                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
-                }
+                setTimeout(() => {
+                    modalWin.style.transition = '';
+                    modalWin.style.animation = ''; 
+                }, 300);
             }
         });
     });
