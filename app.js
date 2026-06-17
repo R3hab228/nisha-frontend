@@ -1187,13 +1187,27 @@ function renderNextBatch() {
             if (!item) continue;
             
             let badgeHTML = '';
-            if (item.status === 'sold') badgeHTML = '<div class="sold-badge">SOLD</div>';
-            else if (item.status === 'reserved') badgeHTML = '<div class="reserved-badge">RESERVED</div>';
-            else {
-                if (item.is_sale) badgeHTML += `<div class="sale-badge-card">% SALE</div>`;
-                if ((item.views_count || 0) >= 15) {
-                    const chartSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
-                    badgeHTML += `<div class="hot-badge-card">${chartSvg} HOT</div>`;
+            if (item.status === 'sold') {
+                badgeHTML = '<div class="sold-badge">SOLD</div>';
+            } else if (item.status === 'reserved') {
+                badgeHTML = '<div class="reserved-badge">RESERVED</div>';
+            } else {
+                const hasSale = item.is_sale;
+                const hasHot = (item.views_count || 0) >= 15;
+
+                if (hasSale || hasHot) {
+                    badgeHTML = `<div class="system-status-bar">`;
+                    if (hasSale) {
+                        badgeHTML += `<span class="status-item status-sale">% SALE</span>`;
+                    }
+                    if (hasSale && hasHot) {
+                        badgeHTML += `<div class="status-divider"></div>`;
+                    }
+                    if (hasHot) {
+                        const chartSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
+                        badgeHTML += `<span class="status-item status-hot">${chartSvg} HOT</span>`;
+                    }
+                    badgeHTML += `</div>`;
                 }
             }
 
