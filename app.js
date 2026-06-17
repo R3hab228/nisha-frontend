@@ -3719,47 +3719,9 @@ window.updateCardDots = function(container, itemId) {
     });
 };
 
-// --- НАПРАВЛЕННЫЙ ЛОК ДЛЯ СЛАЙДЕРОВ В ЛЕНТЕ ---
-function initGridSlidersLock() {
-    let startX = 0;
-    let startY = 0;
-    let isHorizontal = null;
-
-    document.addEventListener('touchstart', (e) => {
-        const slider = e.target.closest('.card-slider-container');
-        if (!slider) return;
-        
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        isHorizontal = null; // Сбрасываем направление
-    }, { passive: true });
-
-    document.addEventListener('touchmove', (e) => {
-        const slider = e.target.closest('.card-slider-container');
-        if (!slider) return;
-
-        const diffX = Math.abs(e.touches[0].clientX - startX);
-        const diffY = Math.abs(e.touches[0].clientY - startY);
-
-        // Определяем, куда потянул юзер в первые 5 пикселей движения
-        if (isHorizontal === null && (diffX > 5 || diffY > 5)) {
-            isHorizontal = diffX > diffY;
-        }
-
-        // Если юзер тянет ВНИЗ/ВВЕРХ, мы запрещаем браузеру перелистывать картинки в слайдере
-        if (isHorizontal === false) {
-            e.stopPropagation(); // Игнорируем слайдер, пусть работает лента сайта
-        } 
-        // Если юзер тянет ВЛЕВО/ВПРАВО, мы запрещаем браузеру прокручивать ленту сайта вниз
-        else if (isHorizontal === true && e.cancelable) {
-            e.preventDefault(); 
-        }
-    }, { passive: false });
-}
-
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
     initMobileSwipe();
-    initGridSlidersLock();
+    
 });
