@@ -337,8 +337,21 @@
         @media (max-width: 900px) {
             .slider-btn { padding: 12px 6px; font-size: 14px; background: rgba(0, 0, 0, 0.5); border: none;}
         }
-        /* Счетчик фоток поверх галереи */
-        .photo-counter { position: absolute; top: 15px; right: 15px; background: rgba(0, 0, 0, 0.7); color: #fff; font-family: var(--font-mono); font-size: 12px; font-weight: bold; padding: 4px 10px; border: 1px solid #444; z-index: 15; letter-spacing: 1px; backdrop-filter: blur(3px); }
+        /* Минималистичный счетчик фото */
+        .photo-counter { 
+            position: absolute; 
+            top: 8px; /* Прижали выше */
+            right: 8px; /* Прижали правее */
+            background: rgba(0, 0, 0, 0.5); /* Сделали прозрачнее */
+            color: rgba(255, 255, 255, 0.9); 
+            font-family: var(--font-mono); 
+            font-size: 11px; /* Сделали меньше */
+            padding: 2px 8px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            z-index: 15; 
+            backdrop-filter: blur(2px); 
+            border-radius: 2px;
+        }
 
        .modal-thumbnails { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;}
         .modal-thumbnails::-webkit-scrollbar { height: 6px; }

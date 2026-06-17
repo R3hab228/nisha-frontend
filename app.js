@@ -2886,7 +2886,7 @@ function updateSlider() {
     // Обновляем счетчик
     const counter = document.getElementById('photoCounter');
     totalSlides = document.querySelectorAll('.slide').length;
-    if (counter) counter.innerText = `[ ${currentSlide + 1} / ${totalSlides} ]`;
+    if (counter) counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
 
     // Обновляем миниатюры
     const thumbs = document.querySelectorAll('.thumb');
@@ -3698,45 +3698,42 @@ async function submitProposal() {
         return;
     }
 
-    btn.innerText = '[ 1/2 СЖАТИЕ ДАННЫХ... ]';
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
 
     try {
-        // ЭТАП 1: Сжимаем все картинки параллельно
+        btn.innerText = '[ СЖАТИЕ ФОТО... ]';
         const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
         
-        btn.innerText = '[ 2/2 ОТПРАВКА В БАЗУ... ]';
-
-        // ЭТАП 2: Загружаем в Storage
-        const uploadPromises = compressedFiles.map(async (file) => {
-            const fileExt = 'jpg'; // Мы перевели всё в jpeg при сжатии
-            const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+        let imageUrls = [];
+        // Загружаем по очереди, но быстро, чтобы обновлять текст на кнопке
+        for (let i = 0; i < compressedFiles.length; i++) {
+            btn.innerText = `[ ЗАГРУЗКА: ${i + 1} / ${compressedFiles.length} ]`;
+            const file = compressedFiles[i];
+            const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 5)}.jpg`;
             const { error } = await _supabase.storage.from('proposals').upload(fileName, file);
             if (error) throw error;
-            return _supabase.storage.from('proposals').getPublicUrl(fileName).data.publicUrl;
-        });
+            const url = _supabase.storage.from('proposals').getPublicUrl(fileName).data.publicUrl;
+            imageUrls.push(url);
+        }
 
-        const imageUrls = await Promise.all(uploadPromises);
-
-        // ЭТАП 3: Запись в таблицу
+        btn.innerText = '[ СОХРАНЕНИЕ В БАЗУ... ]';
         const { error: dbError } = await _supabase.from('proposals').insert([{
             brand, measurements: size, condition: cond, contact, images: imageUrls
         }]);
 
         if (dbError) throw dbError;
 
-        // ФИНАЛ: Закрытие и успех
         closeModal('proposeModal');
         setTimeout(() => {
-            showTerminalModal('UPLOAD_COMPLETE.LOG', 'Заявка успешно отправлена.<br>Система очищена.', '[ ПРИНЯТО ]', null);
+            showTerminalModal('SYSTEM_OK.LOG', 'Данные успешно переданы.', '[ OK ]', null);
             resetProposalForm();
         }, 400);
 
     } catch (err) {
         console.error(err);
         showToast('Ошибка: ' + err.message, 'error');
-        btn.innerText = '[ ПОПРОБОВАТЬ СНОВА ]';
+        btn.innerText = '[ ОШИБКА ОТПРАВКИ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     }
