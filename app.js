@@ -3684,21 +3684,29 @@ function resetProposalForm() {
     if (placeholder) placeholder.style.display = 'block';
 }
 
-async function submitProposal() {
+// ПРОВЕРЬ, ЧТО ЭТА СТРОЧКА ЕСТЬ:
+async function submitProposal() { 
     const btn = document.getElementById('btnSubmitProp');
     const fileInput = document.getElementById('propFiles');
-    if (!fileInput) return;
-
     const files = fileInput.files;
-    const brand = document.getElementById('propBrand').value.trim();
+    
+    // Тут мы получаем brand (добавь эту строку, если её нет)
+    const brand = document.getElementById('propBrand').value.trim(); 
     const size = document.getElementById('propSize').value.trim();
     const cond = parseInt(document.getElementById('propCond').value);
     const contact = document.getElementById('propContact').value.trim();
 
+    // ВОТ ТОТ САМЫЙ БЛОК ИЗ ТВОЕГО СКРИНШОТА:
     if (!files.length || !brand || !size || isNaN(cond) || !contact) {
-        showToast('Заполните все поля и фото!', 'error');
+        showToast('Заполните все поля и прикрепите фото!', 'error');
+        return; // Теперь он внутри функции и ошибки не будет
+    }
+
+    if (cond < 1 || cond > 10) {
+        showToast('Оценка должна быть от 1 до 10', 'error');
         return;
     }
+} 
 
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
@@ -3740,7 +3748,7 @@ async function submitProposal() {
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     }
-}
+
     const btn = document.getElementById('btnSubmitProp');
     const fileInput = document.getElementById('propFiles');
     const files = fileInput.files;
