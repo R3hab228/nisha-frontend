@@ -760,7 +760,8 @@ async function checkSession() {
                 }
             }
 
-            const uName = (userProfile && userProfile.username) ? userProfile.username : 'Гость';
+            // Берем имя из профиля БД, если его нет — из метаданных Google, если и там нет — ставим Email или Гость
+            const uName = userProfile?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@')[0];
             const uEmail = currentUser.email;
 
             // БЕЗОПАСНО Обновляем ПК (Сайдбар)
@@ -3683,11 +3684,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Функция входа через Google
 async function loginWithGoogle() {
+    // Вычисляем текущий адрес сайта динамически, чтобы не было конфликта www / не-www
+    const currentUrl = window.location.origin;
+
     const { data, error } = await _supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            // Жестко указываем домен для возврата после входа
-            redirectTo: 'https://www.nisha-store.shop' 
+            redirectTo: currentUrl,
+            queryParams: {
+                prompt: 'select_account' // Принудительно дает выбрать аккаунт (помогает на мобилках)
+            }
         }
     });
     if (error) showToast('Ошибка Google Auth: ' + error.message, 'error');
