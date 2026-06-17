@@ -160,6 +160,10 @@
                     
                     <button class="auth-btn btn-target" id="btnLogin" onclick="handleAuth('login')" data-i18n="sidebar.login">ВОЙТИ</button>
                     <button class="auth-btn btn-target" id="btnShowReg" onclick="toggleRegMode()" style="background: #333; color: #fff;" data-i18n="sidebar.reg">РЕГИСТРАЦИЯ</button>
+                    <!-- Кнопка Google для ПК -->
+<button class="auth-btn btn-target" onclick="loginWithGoogle()" style="background: #fff; color: #000; border-color: #fff; margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+    <img src="https://www.google.com/favicon.ico" width="14"> GOOGLE ID
+</button>
                     <button class="auth-btn btn-target" id="btnRegister" onclick="handleAuth('register')" style="display:none; background: var(--accent-green); color: #000;" data-i18n="sidebar.create">СОЗДАТЬ АККАУНТ</button>
                     <button class="auth-btn btn-target" id="btnBackLogin" onclick="toggleRegMode()" style="display:none; background: #333; color: #fff;">НАЗАД</button>
                 </div>
@@ -522,6 +526,10 @@
                 <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
                     <button class="cart-checkout-btn btn-target" id="modalBtnLogin" onclick="handleAuth('login', true)" style="width:100%;" data-i18n="sidebar.login">ВОЙТИ</button>
                     <button class="cart-checkout-btn btn-target" id="modalBtnShowReg" onclick="toggleRegMode(true)" style="background: #111; color: #fff; width:100%; border-color:#444;" data-i18n="sidebar.reg">РЕГИСТРАЦИЯ</button>
+                    <!-- Кнопка Google для Мобилок -->
+<button class="cart-checkout-btn btn-target" onclick="loginWithGoogle()" style="background: #fff; color: #000; border-color: #fff; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+    <img src="https://www.google.com/favicon.ico" width="18"> ВОЙТИ ЧЕРЕЗ GOOGLE
+</button>
                     <button class="cart-checkout-btn btn-target" id="modalBtnRegister" onclick="handleAuth('register', true)" style="display:none; background: var(--accent-green); color: #000; width:100%;" data-i18n="sidebar.create">СОЗДАТЬ АККАУНТ</button>
                     <button class="cart-checkout-btn btn-target" id="modalBtnBackLogin" onclick="toggleRegMode(true)" style="display:none; background: #111; color: #fff; width:100%; border-color:#444;" data-i18n="sidebar.back">НАЗАД</button>
                 </div>

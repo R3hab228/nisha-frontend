@@ -781,6 +781,28 @@ async function checkSession() {
             if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
             if(document.getElementById('modalProfileEmail')) document.getElementById('modalProfileEmail').innerText = uEmail;
             
+            // --- УВЕДОМЛЕНИЯ О СТАТУСЕ ЗАКАЗА В РЕАЛЬНОМ ВРЕМЕНИ ---
+            _supabase.channel('order-status-updates')
+                .on('postgres_changes', { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'orders',
+                    filter: `user_id=eq.${currentUser.id}` 
+                }, payload => {
+                    const newStatus = payload.new.status;
+                    if (newStatus !== payload.old.status) {
+                        showTerminalModal(
+                            'SYSTEM_NOTIFICATION.LOG',
+                            `ВНИМАНИЕ! Статус вашего заказа изменился.<br><br>` +
+                            `Заказ: #${payload.new.id.split('-')[0].toUpperCase()}<br>` +
+                            `Новый статус: <b style="color:var(--accent-green);">${newStatus.toUpperCase()}</b>`,
+                            '[ ПОСМОТРЕТЬ ]',
+                            () => openOrdersModal()
+                        );
+                    }
+                })
+                .subscribe();
+                
             await loadFavorites();
             
           // ЧИСТАЯ ЗАГРУЗКА КОРЗИНЫ АВТОРИЗОВАННОГО ПОЛЬЗОВАТЕЛЯ
@@ -3658,3 +3680,14 @@ function initSliderSwipe() {
 document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
 });
+
+// Функция входа через Google
+async function loginWithGoogle() {
+    const { data, error } = await _supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin 
+        }
+    });
+    if (error) showToast('Ошибка Google Auth: ' + error.message, 'error');
+}
