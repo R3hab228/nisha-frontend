@@ -3617,95 +3617,126 @@ document.getElementById('propFiles')?.addEventListener('change', function(e) {
         btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
-    }// ==========================================
+    }
+    
+// ==========================================
 // ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (CREATORS) - ФИКС БАГОВ И СКОРОСТИ
 // ==========================================
 
-// 1. Функция для полной очистки формы (вызываем при успехе и закрытии)
-function resetProposalForm() {
-    const fields = ['propBrand', 'propSize', 'propCond', 'propContact'];
-    fields.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = ''; 
+// ==========================================
+// УЛЬТРА-БЫСТРАЯ ПРЕДЛОЖКА СО СЖАТИЕМ ФОТО
+// ==========================================
+
+// 1. Функция сжатия фото перед загрузкой (уменьшает вес в 20 раз)
+async function compressImage(file) {
+    if (file.type === 'video/mp4') return file; // Видео не сжимаем на фронте
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Максимальный размер - 1200px по большой стороне
+                const MAX_SIZE = 1200;
+                if (width > height) {
+                    if (width > MAX_SIZE) {
+                        height *= MAX_SIZE / width;
+                        width = MAX_SIZE;
+                    }
+                } else {
+                    if (height > MAX_SIZE) {
+                        width *= MAX_SIZE / height;
+                        height = MAX_SIZE;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Конвертируем в Blob (качество 0.7 - идеально для веба)
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                }, 'image/jpeg', 0.7);
+            };
+        };
     });
-    
+}
+
+function resetProposalForm() {
+    ['propBrand', 'propSize', 'propCond', 'propContact'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
     const fileInput = document.getElementById('propFiles');
     if (fileInput) fileInput.value = '';
-    
-    const previewContainer = document.getElementById('propPreviewContainer');
-    if (previewContainer) previewContainer.innerHTML = '';
-    
+    const container = document.getElementById('propPreviewContainer');
+    if (container) container.innerHTML = '';
     const placeholder = document.getElementById('propPlaceholder');
     if (placeholder) placeholder.style.display = 'block';
 }
 
-// 2. Ускоренная отправка заявки
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
-    const files = document.getElementById('propFiles').files;
+    const fileInput = document.getElementById('propFiles');
+    const files = fileInput.files;
     
-    // Получаем чистые значения полей
     const brand = document.getElementById('propBrand').value.trim();
     const size = document.getElementById('propSize').value.trim();
     const cond = parseInt(document.getElementById('propCond').value);
     const contact = document.getElementById('propContact').value.trim();
 
-    // ЖЕСТКАЯ ПРОВЕРКА ПОЛЕЙ
     if (!files.length || !brand || !size || isNaN(cond) || !contact) {
-        showToast('Заполните все поля и прикрепите фото!', 'error');
+        showToast('Заполните все поля и фото!', 'error');
         return;
     }
 
-    // Визуальное состояние загрузки
-    btn.innerText = '[ ВЗЛОМ ШЛЮЗА: ЗАГРУЗКА... ]';
+    btn.innerText = '[ 1/2 СЖАТИЕ ДАННЫХ... ]';
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
 
     try {
-        // УСКОРЕНИЕ: Загружаем все фото ПАРАЛЛЕЛЬНО через Promise.all
-        const uploadPromises = Array.from(files).map(async (file) => {
-            const fileExt = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
+        // ЭТАП 1: Сжимаем все картинки параллельно
+        const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
+        
+        btn.innerText = '[ 2/2 ОТПРАВКА В БАЗУ... ]';
+
+        // ЭТАП 2: Загружаем в Storage
+        const uploadPromises = compressedFiles.map(async (file) => {
+            const fileExt = 'jpg'; // Мы перевели всё в jpeg при сжатии
             const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-            
-            const { data, error } = await _supabase.storage.from('proposals').upload(fileName, file);
+            const { error } = await _supabase.storage.from('proposals').upload(fileName, file);
             if (error) throw error;
-            
             return _supabase.storage.from('proposals').getPublicUrl(fileName).data.publicUrl;
         });
 
         const imageUrls = await Promise.all(uploadPromises);
 
-        // Сохраняем данные в таблицу БД
+        // ЭТАП 3: Запись в таблицу
         const { error: dbError } = await _supabase.from('proposals').insert([{
-            brand: brand,
-            measurements: size,
-            condition: cond,
-            contact: contact,
-            images: imageUrls
+            brand, measurements: size, condition: cond, contact, images: imageUrls
         }]);
 
         if (dbError) throw dbError;
 
-        // ЗАКРЫВАЕМ ОКНО ТОЛЬКО ПОСЛЕ УСПЕШНОЙ ЗАПИСИ В БД
+        // ФИНАЛ: Закрытие и успех
         closeModal('proposeModal');
-        
-        // Показываем успех
         setTimeout(() => {
-            showTerminalModal(
-                'DATA_UPLOADED.LOG', 
-                'Ваша заявка успешно отправлена на сервер.<br>Менеджер свяжется с вами, если вещь подходит.', 
-                '[ ПРИНЯТО ]', 
-                null
-            );
-            // ЖЕСТКАЯ ОЧИСТКА
+            showTerminalModal('UPLOAD_COMPLETE.LOG', 'Заявка успешно отправлена.<br>Система очищена.', '[ ПРИНЯТО ]', null);
             resetProposalForm();
         }, 400);
 
     } catch (err) {
-        console.error("Ошибка предложки:", err);
-        showToast('Сбой системы: ' + err.message, 'error');
-    } finally {
-        btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
+        console.error(err);
+        showToast('Ошибка: ' + err.message, 'error');
+        btn.innerText = '[ ПОПРОБОВАТЬ СНОВА ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     }
