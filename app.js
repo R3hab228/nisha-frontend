@@ -3507,10 +3507,20 @@ function initMobileSwipe() {
     });
 }
 // ==========================================
-// ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (CREATORS) - ФИКС СКОРОСТИ И ОШИБОК
+// ПОЛНАЯ ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (DROP_ITEM.EXE)
 // ==========================================
 
-// 1. Функция сжатия фото (уменьшает вес в 20 раз)
+// 1. Открытие модального окна предложки
+function openProposeModal() {
+    if (typeof lenis !== 'undefined') lenis.stop();
+    const modal = document.getElementById('proposeModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// 2. Сжатие фото (уменьшает вес в 20 раз, чтобы грузилось мгновенно)
 async function compressImage(file) {
     if (file.type === 'video/mp4') return file;
     return new Promise((resolve) => {
@@ -3541,9 +3551,10 @@ async function compressImage(file) {
     });
 }
 
-// 2. Очистка формы
+// 3. Полная очистка формы (вызывать после успеха)
 function resetProposalForm() {
-    ['propBrand', 'propSize', 'propCond', 'propContact'].forEach(id => {
+    const fields = ['propBrand', 'propSize', 'propCond', 'propContact'];
+    fields.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -3555,26 +3566,58 @@ function resetProposalForm() {
     if (placeholder) placeholder.style.display = 'block';
 }
 
-// 3. Главная функция отправки
+// 4. Логика предпросмотра выбранных фото (срабатывает при выборе файлов)
+document.getElementById('propFiles')?.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    const container = document.getElementById('propPreviewContainer');
+    const placeholder = document.getElementById('propPlaceholder');
+
+    if (files.length > 5) {
+        showToast('Максимум 5 фото!', 'error');
+        this.value = '';
+        container.innerHTML = '';
+        placeholder.style.display = 'block';
+        return;
+    }
+
+    container.innerHTML = '';
+    if (files.length > 0) {
+        if (placeholder) placeholder.style.display = 'none';
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = document.createElement('div');
+                img.className = 'preview-img';
+                img.style.backgroundImage = `url('${event.target.result}')`;
+                container.appendChild(img);
+            }
+            reader.readAsDataURL(file);
+        });
+    } else {
+        if (placeholder) placeholder.style.display = 'block';
+    }
+});
+
+// 5. Главная функция отправки данных на сервер
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
     const fileInput = document.getElementById('propFiles');
+    if (!fileInput || !fileInput.files) return;
+
     const files = fileInput.files;
-    
     const brand = document.getElementById('propBrand').value.trim();
     const size = document.getElementById('propSize').value.trim();
-    const condInput = document.getElementById('propCond').value;
-    const cond = parseInt(condInput);
+    const cond = parseInt(document.getElementById('propCond').value);
     const contact = document.getElementById('propContact').value.trim();
 
-    // ПРОВЕРКА
+    // Проверка заполнения
     if (!files.length || !brand || !size || isNaN(cond) || !contact) {
         showToast('Заполните все поля и прикрепите фото!', 'error');
         return;
     }
 
     if (cond < 1 || cond > 10) {
-        showToast('Оценка должна быть от 1 до 10', 'error');
+        showToast('Оценка состояния от 1 до 10!', 'error');
         return;
     }
 
@@ -3582,12 +3625,12 @@ async function submitProposal() {
     btn.style.opacity = '0.7';
 
     try {
-        btn.innerText = '[ 1/2 СЖАТИЕ... ]';
+        btn.innerText = '[ 1/3 СЖАТИЕ... ]';
         const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
         
         let imageUrls = [];
         for (let i = 0; i < compressedFiles.length; i++) {
-            btn.innerText = `[ 2/2 ЗАГРУЗКА: ${i + 1} / ${compressedFiles.length} ]`;
+            btn.innerText = `[ 2/3 ЗАГРУЗКА: ${i + 1}/${compressedFiles.length} ]`;
             const file = compressedFiles[i];
             const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 5)}.jpg`;
             
@@ -3598,27 +3641,77 @@ async function submitProposal() {
             imageUrls.push(data.publicUrl);
         }
 
-        btn.innerText = '[ СОХРАНЕНИЕ... ]';
+        btn.innerText = '[ 3/3 СОХРАНЕНИЕ... ]';
         const { error: dbError } = await _supabase.from('proposals').insert([{
-            brand, measurements: size, condition: cond, contact, images: imageUrls
+            brand: brand,
+            measurements: size,
+            condition: cond,
+            contact: contact,
+            images: imageUrls
         }]);
 
         if (dbError) throw dbError;
 
         closeModal('proposeModal');
         setTimeout(() => {
-            showTerminalModal('SYSTEM_OK.LOG', 'Заявка принята. Система очищена.', '[ OK ]', null);
+            showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка принята и будет рассмотрена.', '[ ПРИНЯТО ]', null);
             resetProposalForm();
         }, 400);
 
     } catch (err) {
         console.error(err);
         showToast('Ошибка отправки: ' + err.message, 'error');
-        btn.innerText = '[ ПОПРОБОВАТЬ СНОВА ]';
+        btn.innerText = '[ ПОВТОРИТЬ ПОПЫТКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     }
 }
+
+// 6. Свайп фотографий в модалке товара
+function initSliderSwipe() {
+    const sliderContainer = document.getElementById('sliderContainer');
+    if (!sliderContainer) return;
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    sliderContainer.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) return;
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    sliderContainer.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].clientX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) moveSlide(1);
+            else moveSlide(-1);
+        }
+    }, { passive: true });
+}
+
+// 7. Функция входа через Google
+async function loginWithGoogle() {
+    const isInApp = /Instagram|FBAN|FBAV|TikTok/i.test(navigator.userAgent);
+    if (isInApp) {
+        alert("Для входа через Google открой сайт в обычном браузере (Safari или Chrome)");
+        return;
+    }
+    const { data, error } = await _supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: 'https://www.nisha-store.shop',
+            queryParams: { prompt: 'select_account', access_type: 'offline' }
+        }
+    });
+    if (error) showToast('Ошибка: ' + error.message, 'error');
+}
+
+// Запускаем инициализацию после загрузки
+document.addEventListener('DOMContentLoaded', () => {
+    initSliderSwipe();
+    initMobileSwipe();
+});
 
 // ==========================================
 // 19. СВАЙП ФОТОГРАФИЙ В МОДАЛКЕ ТОВАРА
