@@ -3613,24 +3613,29 @@ async function submitProposal() {
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
 
-    try {
-        btn.innerText = '[ 1/3 СЖАТИЕ... ]';
+   try {
+        btn.innerText = `[ ПОДГОТОВКА ФАЙЛОВ ]`;
         const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
         
         let imageUrls = [];
+        
+        // Цикл загрузки фото (показывает от 1 до 4)
         for (let i = 0; i < compressedFiles.length; i++) {
-            btn.innerText = `[ 2/3 ЗАГРУЗКА: ${i + 1}/${compressedFiles.length} ]`;
+            btn.innerText = `[ ЗАГРУЗКА: ${i + 1} ИЗ ${compressedFiles.length} ]`;
+            
             const file = compressedFiles[i];
-            const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 5)}.jpg`;
+            const fileExt = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
+            const randomString = Math.random().toString(36).substring(2, 15);
+            const fileName = `prop_${Date.now()}_${randomString}.${fileExt}`;
             
             const { error: uploadError } = await _supabase.storage.from('proposals').upload(fileName, file);
-            if (uploadError) throw uploadError;
-            
-            const { data } = _supabase.storage.from('proposals').getPublicUrl(fileName);
-            imageUrls.push(data.publicUrl);
+            if (!uploadError) {
+                const { data } = _supabase.storage.from('proposals').getPublicUrl(fileName);
+                imageUrls.push(data.publicUrl);
+            }
         }
 
-        btn.innerText = '[ 3/3 СОХРАНЕНИЕ... ]';
+        btn.innerText = '[ СОХРАНЕНИЕ ДАННЫХ ]';
         const { error: dbError } = await _supabase.from('proposals').insert([{
             brand: brand,
             measurements: size,
@@ -3642,9 +3647,15 @@ async function submitProposal() {
         if (dbError) throw dbError;
 
         closeModal('proposeModal');
+        
         setTimeout(() => {
             showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка принята и будет рассмотрена.', '[ ПРИНЯТО ]', null);
             resetProposalForm();
+            
+            // Возвращаем кнопку в исходное состояние
+            btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
         }, 400);
 
     } catch (err) {
@@ -3708,8 +3719,47 @@ window.updateCardDots = function(container, itemId) {
     });
 };
 
+// --- НАПРАВЛЕННЫЙ ЛОК ДЛЯ СЛАЙДЕРОВ В ЛЕНТЕ ---
+function initGridSlidersLock() {
+    let startX = 0;
+    let startY = 0;
+    let isHorizontal = null;
+
+    document.addEventListener('touchstart', (e) => {
+        const slider = e.target.closest('.card-slider-container');
+        if (!slider) return;
+        
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isHorizontal = null; // Сбрасываем направление
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+        const slider = e.target.closest('.card-slider-container');
+        if (!slider) return;
+
+        const diffX = Math.abs(e.touches[0].clientX - startX);
+        const diffY = Math.abs(e.touches[0].clientY - startY);
+
+        // Определяем, куда потянул юзер в первые 5 пикселей движения
+        if (isHorizontal === null && (diffX > 5 || diffY > 5)) {
+            isHorizontal = diffX > diffY;
+        }
+
+        // Если юзер тянет ВНИЗ/ВВЕРХ, мы запрещаем браузеру перелистывать картинки в слайдере
+        if (isHorizontal === false) {
+            e.stopPropagation(); // Игнорируем слайдер, пусть работает лента сайта
+        } 
+        // Если юзер тянет ВЛЕВО/ВПРАВО, мы запрещаем браузеру прокручивать ленту сайта вниз
+        else if (isHorizontal === true && e.cancelable) {
+            e.preventDefault(); 
+        }
+    }, { passive: false });
+}
+
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
     initMobileSwipe();
+    initGridSlidersLock();
 });

@@ -1097,7 +1097,6 @@
     scroll-snap-type: x mandatory; 
     scrollbar-width: none; 
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y; 
 }
 .card-slider-container::-webkit-scrollbar { 
     display: none; /* Прячем скроллбар в Chrome/Safari */
