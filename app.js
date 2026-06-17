@@ -1242,7 +1242,7 @@ function renderNextBatch() {
                     if (isVid) {
                         slidesStr += `
                             <div class="card-slide" style="background: #0a0a0a;">
-                                <div style="position:absolute; z-index:5; top:5px; left:5px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:var(--accent-green); font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
+                                <div style="position:absolute; z-index:5; bottom:8px; left:8px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:var(--accent-green); font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
                                 <video class="grid-lazy-video" src="${item.images[idx]}#t=0.001" muted loop playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"></video>
                             </div>`;
                     } else {

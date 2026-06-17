@@ -1095,8 +1095,9 @@
     height: 100%; 
     overflow-x: auto; 
     scroll-snap-type: x mandatory; 
-    scrollbar-width: none; /* Прячем скроллбар в Firefox */
+    scrollbar-width: none; 
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y; 
 }
 .card-slider-container::-webkit-scrollbar { 
     display: none; /* Прячем скроллбар в Chrome/Safari */
