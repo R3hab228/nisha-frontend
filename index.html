@@ -19,8 +19,8 @@
     <meta property="og:image" content="https://i.ibb.co/3s6HhXz/icon.ico">
     <meta name="theme-color" content="#00ff00">
     <!-- Подключаем иконку для вкладки браузера и телефонов -->
-    <link rel="icon" type="image/x-icon" href="/icon.ico">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="icon" type="image/png" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-512.png">
     <link rel="icon" type="image/png" href="/icon.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
@@ -562,7 +562,7 @@
     <div class="modal-window" style="max-width: 550px;">
         <div class="modal-header">
             <span class="modal-title typewriter" style="animation: none;" data-i18n="propose.title">DROP_ITEM.EXE</span>
-            <button class="close-btn" onclick="closeModal('proposeModal')">X</button>
+         <button class="close-btn" onclick="closeModal('proposeModal'); resetProposalForm();">X</button>
         </div>
         
         <div class="form-layout">
