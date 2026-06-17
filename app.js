@@ -3546,7 +3546,7 @@ document.getElementById('propFiles')?.addEventListener('change', function(e) {
     }
 });
 
-async function submitProposal() {
+
     const btn = document.getElementById('btnSubmitProp');
     const files = document.getElementById('propFiles').files;
     const brand = document.getElementById('propBrand').value.trim();
@@ -3613,6 +3613,97 @@ async function submitProposal() {
     } catch (err) {
         console.error(err);
         showToast('Ошибка отправки: ' + err.message, 'error');
+    } finally {
+        btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    }// ==========================================
+// ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (CREATORS) - ФИКС БАГОВ И СКОРОСТИ
+// ==========================================
+
+// 1. Функция для полной очистки формы (вызываем при успехе и закрытии)
+function resetProposalForm() {
+    const fields = ['propBrand', 'propSize', 'propCond', 'propContact'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = ''; 
+    });
+    
+    const fileInput = document.getElementById('propFiles');
+    if (fileInput) fileInput.value = '';
+    
+    const previewContainer = document.getElementById('propPreviewContainer');
+    if (previewContainer) previewContainer.innerHTML = '';
+    
+    const placeholder = document.getElementById('propPlaceholder');
+    if (placeholder) placeholder.style.display = 'block';
+}
+
+// 2. Ускоренная отправка заявки
+async function submitProposal() {
+    const btn = document.getElementById('btnSubmitProp');
+    const files = document.getElementById('propFiles').files;
+    
+    // Получаем чистые значения полей
+    const brand = document.getElementById('propBrand').value.trim();
+    const size = document.getElementById('propSize').value.trim();
+    const cond = parseInt(document.getElementById('propCond').value);
+    const contact = document.getElementById('propContact').value.trim();
+
+    // ЖЕСТКАЯ ПРОВЕРКА ПОЛЕЙ
+    if (!files.length || !brand || !size || isNaN(cond) || !contact) {
+        showToast('Заполните все поля и прикрепите фото!', 'error');
+        return;
+    }
+
+    // Визуальное состояние загрузки
+    btn.innerText = '[ ВЗЛОМ ШЛЮЗА: ЗАГРУЗКА... ]';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.7';
+
+    try {
+        // УСКОРЕНИЕ: Загружаем все фото ПАРАЛЛЕЛЬНО через Promise.all
+        const uploadPromises = Array.from(files).map(async (file) => {
+            const fileExt = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
+            const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+            
+            const { data, error } = await _supabase.storage.from('proposals').upload(fileName, file);
+            if (error) throw error;
+            
+            return _supabase.storage.from('proposals').getPublicUrl(fileName).data.publicUrl;
+        });
+
+        const imageUrls = await Promise.all(uploadPromises);
+
+        // Сохраняем данные в таблицу БД
+        const { error: dbError } = await _supabase.from('proposals').insert([{
+            brand: brand,
+            measurements: size,
+            condition: cond,
+            contact: contact,
+            images: imageUrls
+        }]);
+
+        if (dbError) throw dbError;
+
+        // ЗАКРЫВАЕМ ОКНО ТОЛЬКО ПОСЛЕ УСПЕШНОЙ ЗАПИСИ В БД
+        closeModal('proposeModal');
+        
+        // Показываем успех
+        setTimeout(() => {
+            showTerminalModal(
+                'DATA_UPLOADED.LOG', 
+                'Ваша заявка успешно отправлена на сервер.<br>Менеджер свяжется с вами, если вещь подходит.', 
+                '[ ПРИНЯТО ]', 
+                null
+            );
+            // ЖЕСТКАЯ ОЧИСТКА
+            resetProposalForm();
+        }, 400);
+
+    } catch (err) {
+        console.error("Ошибка предложки:", err);
+        showToast('Сбой системы: ' + err.message, 'error');
     } finally {
         btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
         btn.style.pointerEvents = 'auto';
