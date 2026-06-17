@@ -492,7 +492,16 @@
         .pswp__img { object-fit: contain; }
 
         .rules-content { padding: 30px; font-size: 14px; line-height: 1.6; color: #ddd; background: #0a0a0a; max-height: 60vh; overflow-y: auto;}
-        .rules-content h3 { color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;}
+        .rules-content h3 { 
+    color: var(--accent-green); 
+    font-family: var(--font-mono); 
+    border-bottom: 1px solid #333; 
+    padding-bottom: 10px; 
+    margin-top: 25px;
+    display: flex; /* Чтобы скобки не улетали */
+    align-items: flex-start;
+    gap: 5px;
+}
         .rules-content h3:first-child { margin-top: 0; }
         .rules-content ul { padding-left: 20px; }
         .rules-content li { margin-bottom: 10px; }
@@ -1113,10 +1122,20 @@
     height: 100%; 
     overflow-x: auto; 
     overflow-y: hidden;
-    scroll-snap-type: x mandatory; 
+    scroll-snap-type: x mandatory; /* Жесткая фиксация */
     scrollbar-width: none; 
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x; /* Разрешаем только горизонтальный свайп внутри */
+    touch-action: pan-x; /* КРИТИЧНО: разрешаем только горизонтальный свайп, блокируем вертикальный */
+}
+
+.card-slide { 
+    flex: 0 0 100%; 
+    height: 100%; 
+    scroll-snap-align: center; 
+    scroll-snap-stop: always; /* Фотки листаются строго по одной, нельзя пролететь сразу 3 */
+    background-size: cover; 
+    background-position: center; 
+    position: relative; 
 }
 .card-slider-container::-webkit-scrollbar { 
     display: none; /* Прячем скроллбар в Chrome/Safari */

@@ -1253,8 +1253,20 @@ function renderNextBatch() {
             let isScrolling = false;
             let startX = 0;
 
-            slider.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; isScrolling = false; }, {passive: true});
-            slider.addEventListener('touchmove', (e) => { if(Math.abs(e.touches[0].clientX - startX) > 10) isScrolling = true; }, {passive: true});
+            slider.addEventListener('touchstart', (e) => { 
+                startX = e.touches[0].clientX; 
+                isScrolling = false; 
+            }, {passive: true});
+
+            slider.addEventListener('touchmove', (e) => { 
+                const touchX = e.touches[0].clientX;
+                const diffX = Math.abs(touchX - startX);
+                if(diffX > 5) {
+                    isScrolling = true;
+                    // Если пользователь начал листать вбок, не даем странице двигаться вверх/вниз
+                    if (e.cancelable) e.stopPropagation(); 
+                }
+            }, {passive: false});
             slider.addEventListener('click', (e) => {
                 if (!isScrolling) openProductModalById(item.id);
             });
