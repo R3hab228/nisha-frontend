@@ -1080,3 +1080,58 @@
 .driver-stage-no-animation {
     z-index: 99999 !important;
 }
+/* --- СЛАЙДЕР ВНУТРИ КАРТОЧЕК В СЕТКЕ --- */
+.card-slider-wrapper { 
+    position: relative; 
+    width: 100%; 
+    height: 260px; 
+    background-color: #151515; 
+    border-bottom: 1px solid var(--border-color); 
+    overflow: hidden; 
+}
+.card-slider-container { 
+    display: flex; 
+    width: 100%; 
+    height: 100%; 
+    overflow-x: auto; 
+    scroll-snap-type: x mandatory; 
+    scrollbar-width: none; /* Прячем скроллбар в Firefox */
+    -webkit-overflow-scrolling: touch;
+}
+.card-slider-container::-webkit-scrollbar { 
+    display: none; /* Прячем скроллбар в Chrome/Safari */
+}
+.card-slide { 
+    flex: 0 0 100%; 
+    height: 100%; 
+    scroll-snap-align: start; 
+    background-size: cover; 
+    background-position: center; 
+    position: relative; 
+}
+
+/* ТОЧКИ (ИНДИКАТОРЫ ФОТО) */
+.card-dots-container { 
+    position: absolute; 
+    bottom: 8px; 
+    left: 0; 
+    width: 100%; 
+    display: flex; 
+    justify-content: center; 
+    gap: 5px; 
+    pointer-events: none; 
+    z-index: 10; 
+}
+.card-dot { 
+    width: 5px; 
+    height: 5px; 
+    background: rgba(255, 255, 255, 0.4); 
+    border-radius: 50%; 
+    transition: 0.2s; 
+    box-shadow: 0 0 2px rgba(0,0,0,0.8); 
+}
+.card-dot.active { 
+    background: var(--accent-green); 
+    transform: scale(1.3); 
+    box-shadow: 0 0 5px var(--accent-green);
+}

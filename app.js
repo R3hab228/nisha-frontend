@@ -1210,10 +1210,6 @@ function renderNextBatch() {
                 }
             }
 
-            // ВАЖНО: Определяем картинку и видео ровно один раз!
-            const optImg = getOptimizedImageUrl(item, false);
-            const isVideo = item.images && item.images.length > 0 && item.images[0].endsWith('.mp4');
-            
             let itemPrice = Number(item.price) || 0;
             let finalPrice = isHacked ? Math.floor(itemPrice * 0.9) : itemPrice;
             let priceHTML = isHacked 
@@ -1230,27 +1226,43 @@ function renderNextBatch() {
             const safeBrand = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.brand || 'No brand') : (item.brand || 'No brand');
             const safeSize = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(item.size || '-') : (item.size || '-');
 
-          // ГОТОВИМ БЛОК ФОТО/ВИДЕО
+            // --- НОВОЕ: СЛАЙДЕР И ТОЧКИ ---
             let mediaHTML = '';
-            if (isVideo) {
-                const videoUrl = item.images[0];
+            // Берем миниатюры, если их нет - берем оригиналы, если и их нет - пустой массив
+            const thumbsArray = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails : (item.images && item.images.length > 0 ? item.images : []);
+
+            if (thumbsArray.length > 0) {
+                let slidesStr = '';
+                let dotsStr = '';
+
+                thumbsArray.forEach((thumbUrl, idx) => {
+                    // Проверяем, является ли ОРИГИНАЛЬНЫЙ файл по этому индексу видео
+                    const isVid = item.images && item.images[idx] && item.images[idx].endsWith('.mp4');
+                    
+                    if (isVid) {
+                        slidesStr += `
+                            <div class="card-slide" style="background: #0a0a0a;">
+                                <div style="position:absolute; z-index:5; top:5px; left:5px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:var(--accent-green); font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
+                                <video class="grid-lazy-video" src="${item.images[idx]}#t=0.001" muted loop playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"></video>
+                            </div>`;
+                    } else {
+                        // Фотка загружается сразу через background-image
+                        slidesStr += `<div class="card-slide" style="background-image: url('${thumbUrl}');"></div>`;
+                    }
+                    // Добавляем точку для каждого слайда
+                    dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
+                });
+
                 mediaHTML = `
-                    <div class="mock-image" id="img-${item.id}" style="position: relative; overflow: hidden; padding: 0; background: #0a0a0a;">
-                        <!-- Перенесли плашку VIDEO в ЛЕВЫЙ НИЖНИЙ УГОЛ (bottom: 8px), чтобы не перекрывала бейджики -->
-                        <div style="position:absolute; z-index:5; bottom:8px; left:8px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:3px; color:var(--accent-green); font-size:10px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
-                        <video 
-                            class="grid-lazy-video"
-                            src="${videoUrl}#t=0,3" 
-                            muted 
-                            loop 
-                            playsinline 
-                            webkit-playsinline
-                            preload="metadata"
-                            style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"
-                        ></video>
-                    </div>`;
+                    <div class="card-slider-wrapper">
+                        <div class="card-slider-container" onscroll="updateCardDots(this, '${item.id}')" id="slider-${item.id}">
+                            ${slidesStr}
+                        </div>
+                        ${thumbsArray.length > 1 ? `<div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>` : ''}
+                    </div>
+                `;
             } else {
-                mediaHTML = `<div class="mock-image skeleton" id="img-${item.id}" style="position: relative; overflow: hidden;"></div>`;
+                 mediaHTML = `<div class="mock-image" style="background:#111; color:#555; display:flex; align-items:center; justify-content:center; font-family: monospace; font-size: 14px;">NO PHOTO</div>`;
             }
             
             card.innerHTML = `
@@ -1267,27 +1279,6 @@ function renderNextBatch() {
                     <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" data-i18n="product.add_to_cart">${i18next.t('product.add_to_cart')}</button>
                 </div>
             `;
-
-            // ЗАГРУЗКА ТОЛЬКО ДЛЯ ФОТО (Ленивая и асинхронная)
-            if (!isVideo && optImg) {
-                const imgLoader = new Image();
-                imgLoader.decoding = "async"; // Асинхронная декодировка (не тормозит UI)
-                imgLoader.onload = () => {
-                    const imgDiv = card.querySelector(`#img-${item.id}`);
-                    if (imgDiv) {
-                        imgDiv.classList.remove('skeleton');
-                        imgDiv.style.backgroundImage = `url('${optImg}')`;
-                    }
-                };
-                imgLoader.onerror = () => {
-                    const imgDiv = card.querySelector(`#img-${item.id}`);
-                    if (imgDiv) {
-                        imgDiv.classList.remove('skeleton');
-                        imgDiv.innerText = i18next.t('grid.no_photo');
-                    }
-                };
-                imgLoader.src = optImg;
-            }
             // Нажатие на звездочку
             card.querySelector('.fav-star').addEventListener('click', (e) => toggleFav(e, item.id));
             
@@ -1309,11 +1300,9 @@ function renderNextBatch() {
 
            grid.appendChild(card);
 
-            // Если это видео - отдаем его нашему умному наблюдателю!
-            if (isVideo) {
-                const vidNode = card.querySelector('.grid-lazy-video');
-                if (vidNode) gridVideoObserver.observe(vidNode);
-            }
+            // Если есть видео - отдаем их нашему умному наблюдателю!
+            const vidNodes = card.querySelectorAll('.grid-lazy-video');
+            vidNodes.forEach(vidNode => gridVideoObserver.observe(vidNode));
 
             const oldPriceEl = card.querySelector('.old-price');
             if (oldPriceEl && typeof RoughNotation !== 'undefined') {
@@ -3706,6 +3695,18 @@ async function loginWithGoogle() {
     });
     if (error) showToast('Ошибка: ' + error.message, 'error');
 }
+// --- ЛОГИКА ДЛЯ ТОЧЕК В КАРТОЧКАХ ---
+window.updateCardDots = function(container, itemId) {
+    // Высчитываем, какой по счету слайд сейчас по центру
+    const index = Math.round(container.scrollLeft / container.clientWidth);
+    const dots = document.querySelectorAll(`#dots-${itemId} .card-dot`);
+    
+    // Переключаем активную точку
+    dots.forEach((dot, i) => {
+        if (i === index) dot.classList.add('active');
+        else dot.classList.remove('active');
+    });
+};
 
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {
