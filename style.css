@@ -1061,3 +1061,9 @@
     border-radius: 15px !important;
     border: 2px solid var(--accent-yellow) !important;
 }
+.driver-popover {
+    z-index: 100000 !important; /* Выше всех модалок */
+}
+.driver-stage-no-animation {
+    z-index: 99999 !important;
+}

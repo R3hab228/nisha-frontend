@@ -1350,11 +1350,15 @@ function renderNextBatch() {
         }, 100);
 }
 
-// --- ОТДЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ТУРА (ВЫЗЫВАЕТСЯ СРАЗУ ПОСЛЕ ПРАВИЛ) ---
 function startOnboardingTour() {
-    if (!localStorage.getItem('nisha_rules_accepted') || localStorage.getItem('nisha_tour_done') || typeof window.driver === 'undefined') return;
-
-    // Ждем секунду, чтобы сайт 100% прогрузился и сетка товаров встала на места
+    // Не запускаем, если: тур пройден, правила не приняты, или открыто любое окно (.EXE)
+    const anyModalOpen = document.querySelectorAll('.modal-overlay[style*="display: flex"]').length > 0;
+    
+    if (!localStorage.getItem('nisha_rules_accepted') || 
+        localStorage.getItem('nisha_tour_done') || 
+        anyModalOpen || 
+        typeof window.driver === 'undefined') return;
+        
     setTimeout(() => {
         const isMobile = window.innerWidth <= 900;
         const firstStar = document.querySelector('.item-card .fav-star');
@@ -3684,17 +3688,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Функция входа через Google
 async function loginWithGoogle() {
-    // Вычисляем текущий адрес сайта динамически, чтобы не было конфликта www / не-www
-    const currentUrl = window.location.origin;
+    // 1. Проверка: если зашли через инстаграм/тикток - предупреждаем
+    const isInApp = /Instagram|FBAN|FBAV|TikTok/i.test(navigator.userAgent);
+    if (isInApp) {
+        alert("Для входа через Google открой сайт в обычном браузере (Safari или Chrome)");
+        return;
+    }
 
+    // 2. Используем чистый домен без лишних параметров
     const { data, error } = await _supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: currentUrl,
+            // Редирект должен быть СТРОГО тем, что прописан в Supabase Site URL
+            redirectTo: 'https://www.nisha-store.shop',
             queryParams: {
-                prompt: 'select_account' // Принудительно дает выбрать аккаунт (помогает на мобилках)
+                prompt: 'select_account',
+                access_type: 'offline'
             }
         }
     });
-    if (error) showToast('Ошибка Google Auth: ' + error.message, 'error');
+
+    if (error) showToast('Ошибка: ' + error.message, 'error');
 }
