@@ -3507,131 +3507,12 @@ function initMobileSwipe() {
     });
 }
 // ==========================================
-// ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (CREATORS)
-// ==========================================
-function openProposeModal() {
-    if (typeof lenis !== 'undefined') lenis.stop();
-    document.getElementById('proposeModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-
-// Предпросмотр загружаемых фото в предложке
-document.getElementById('propFiles')?.addEventListener('change', function(e) {
-    const files = Array.from(e.target.files);
-    const container = document.getElementById('propPreviewContainer');
-    const placeholder = document.getElementById('propPlaceholder');
-
-    if (files.length > 5) {
-        showToast('Максимум 5 фото!', 'error');
-        this.value = ''; // Сбрасываем инпут
-        container.innerHTML = '';
-        placeholder.style.display = 'block';
-        return;
-    }
-
-    container.innerHTML = ''; // Очищаем контейнер
-
-    if (files.length > 0) {
-        placeholder.style.display = 'none'; // Прячем текст "Нажмите чтобы выбрать"
-        
-        // Создаем миниатюрки
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.createElement('div');
-                img.className = 'preview-img';
-                img.style.backgroundImage = `url('${e.target.result}')`;
-                container.appendChild(img);
-            }
-            reader.readAsDataURL(file);
-        });
-    } else {
-        placeholder.style.display = 'block';
-    }
-});
-
-
-    const btn = document.getElementById('btnSubmitProp');
-    const files = document.getElementById('propFiles').files;
-    const brand = document.getElementById('propBrand').value.trim();
-    const size = document.getElementById('propSize').value.trim();
-    const cond = parseInt(document.getElementById('propCond').value);
-    const contact = document.getElementById('propContact').value.trim();
-
-    if (!files.length || !brand || !size || isNaN(cond) || !contact) {
-        showToast('Заполните все поля и прикрепите фото!', 'error');
-        return;
-    }
-    if (cond < 1 || cond > 10) {
-        showToast('Оценка должна быть от 1 до 10', 'error');
-        return;
-    }
-
-    btn.innerText = '[ ЗАГРУЗКА ДАННЫХ... ]';
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = '0.5';
-
-    try {
-        let imageUrls = [];
-        
-        
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const fileExt = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
-            const randomString = Math.random().toString(36).substring(2, 15);
-            const fileName = `prop_${Date.now()}_${randomString}.${fileExt}`;
-            
-            const { error: uploadError } = await _supabase.storage.from('proposals').upload(fileName, file);
-            if (!uploadError) {
-                const { data } = _supabase.storage.from('proposals').getPublicUrl(fileName);
-                imageUrls.push(data.publicUrl);
-            }
-        }
-
-        // Сохраняем заявку в БД (Бот ее подхватит)
-        const { error: dbError } = await _supabase.from('proposals').insert([{
-            brand: brand,
-            measurements: size,
-            condition: cond,
-            contact: contact,
-            images: imageUrls
-        }]);
-
-        if (dbError) throw dbError;
-
-        closeModal('proposeModal');
-        
-        // Ждем пока окно плавно закроется, и только потом показываем Терминал успеха
-        setTimeout(() => {
-            showTerminalModal('DATA_UPLOADED.LOG', 'Ваша заявка успешно отправлена на сервер. Админ рассмотрит ее и свяжется с вами.', '[ ЗАКРЫТЬ ]', null);
-        }, 300);
-
-        // Очищаем форму
-        document.getElementById('propFiles').value = '';
-        document.getElementById('propFileStatus').innerText = '';
-        document.getElementById('propBrand').value = '';
-        document.getElementById('propSize').value = '';
-        document.getElementById('propCond').value = '';
-        document.getElementById('propContact').value = '';
-
-    } catch (err) {
-        console.error(err);
-        showToast('Ошибка отправки: ' + err.message, 'error');
-    } finally {
-        btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    }
-    
-
-// ==========================================
-// УЛЬТРА-БЫСТРАЯ ПРЕДЛОЖКА СО СЖАТИЕМ ФОТО
+// ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (CREATORS) - ФИКС СКОРОСТИ И ОШИБОК
 // ==========================================
 
-// 1. Функция сжатия фото перед загрузкой (уменьшает вес в 20 раз)
+// 1. Функция сжатия фото (уменьшает вес в 20 раз)
 async function compressImage(file) {
-    if (file.type === 'video/mp4') return file; // Видео не сжимаем на фронте
-
+    if (file.type === 'video/mp4') return file;
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -3642,27 +3523,16 @@ async function compressImage(file) {
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
-
-                // Максимальный размер - 1200px по большой стороне
                 const MAX_SIZE = 1200;
                 if (width > height) {
-                    if (width > MAX_SIZE) {
-                        height *= MAX_SIZE / width;
-                        width = MAX_SIZE;
-                    }
+                    if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
                 } else {
-                    if (height > MAX_SIZE) {
-                        width *= MAX_SIZE / height;
-                        height = MAX_SIZE;
-                    }
+                    if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                 }
-
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-
-                // Конвертируем в Blob (качество 0.7 - идеально для веба)
                 canvas.toBlob((blob) => {
                     resolve(new File([blob], file.name, { type: 'image/jpeg' }));
                 }, 'image/jpeg', 0.7);
@@ -3671,6 +3541,7 @@ async function compressImage(file) {
     });
 }
 
+// 2. Очистка формы
 function resetProposalForm() {
     ['propBrand', 'propSize', 'propCond', 'propContact'].forEach(id => {
         const el = document.getElementById(id);
@@ -3684,82 +3555,26 @@ function resetProposalForm() {
     if (placeholder) placeholder.style.display = 'block';
 }
 
-// ПРОВЕРЬ, ЧТО ЭТА СТРОЧКА ЕСТЬ:
-async function submitProposal() { 
-    const btn = document.getElementById('btnSubmitProp');
-    const fileInput = document.getElementById('propFiles');
-    const files = fileInput.files;
-    
-    // Тут мы получаем brand (добавь эту строку, если её нет)
-    const brand = document.getElementById('propBrand').value.trim(); 
-    const size = document.getElementById('propSize').value.trim();
-    const cond = parseInt(document.getElementById('propCond').value);
-    const contact = document.getElementById('propContact').value.trim();
-
-    // ВОТ ТОТ САМЫЙ БЛОК ИЗ ТВОЕГО СКРИНШОТА:
-    if (!files.length || !brand || !size || isNaN(cond) || !contact) {
-        showToast('Заполните все поля и прикрепите фото!', 'error');
-        return; // Теперь он внутри функции и ошибки не будет
-    }
-
-    if (cond < 1 || cond > 10) {
-        showToast('Оценка должна быть от 1 до 10', 'error');
-        return;
-    }
-} 
-
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = '0.7';
-
-    try {
-        btn.innerText = '[ СЖАТИЕ ФОТО... ]';
-        const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
-        
-        let imageUrls = [];
-        for (let i = 0; i < compressedFiles.length; i++) {
-            btn.innerText = `[ ЗАГРУЗКА: ${i + 1} / ${compressedFiles.length} ]`;
-            const file = compressedFiles[i];
-            const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 5)}.jpg`;
-            
-            const { error } = await _supabase.storage.from('proposals').upload(fileName, file);
-            if (error) throw error;
-            
-            const { data } = _supabase.storage.from('proposals').getPublicUrl(fileName);
-            imageUrls.push(data.publicUrl);
-        }
-
-        btn.innerText = '[ СОХРАНЕНИЕ В БАЗУ... ]';
-        const { error: dbError } = await _supabase.from('proposals').insert([{
-            brand, measurements: size, condition: cond, contact, images: imageUrls
-        }]);
-
-        if (dbError) throw dbError;
-
-        closeModal('proposeModal');
-        setTimeout(() => {
-            showTerminalModal('SYSTEM_OK.LOG', 'Данные успешно переданы.', '[ OK ]', null);
-            resetProposalForm();
-        }, 400);
-
-    } catch (err) {
-        console.error(err);
-        showToast('Ошибка: ' + err.message, 'error');
-        btn.innerText = '[ ОШИБКА ОТПРАВКИ ]';
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    }
-
+// 3. Главная функция отправки
+async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
     const fileInput = document.getElementById('propFiles');
     const files = fileInput.files;
     
     const brand = document.getElementById('propBrand').value.trim();
     const size = document.getElementById('propSize').value.trim();
-    const cond = parseInt(document.getElementById('propCond').value);
+    const condInput = document.getElementById('propCond').value;
+    const cond = parseInt(condInput);
     const contact = document.getElementById('propContact').value.trim();
 
+    // ПРОВЕРКА
     if (!files.length || !brand || !size || isNaN(cond) || !contact) {
-        showToast('Заполните все поля и фото!', 'error');
+        showToast('Заполните все поля и прикрепите фото!', 'error');
+        return;
+    }
+
+    if (cond < 1 || cond > 10) {
+        showToast('Оценка должна быть от 1 до 10', 'error');
         return;
     }
 
@@ -3767,22 +3582,23 @@ async function submitProposal() {
     btn.style.opacity = '0.7';
 
     try {
-        btn.innerText = '[ СЖАТИЕ ФОТО... ]';
+        btn.innerText = '[ 1/2 СЖАТИЕ... ]';
         const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
         
         let imageUrls = [];
-        // Загружаем по очереди, но быстро, чтобы обновлять текст на кнопке
         for (let i = 0; i < compressedFiles.length; i++) {
-            btn.innerText = `[ ЗАГРУЗКА: ${i + 1} / ${compressedFiles.length} ]`;
+            btn.innerText = `[ 2/2 ЗАГРУЗКА: ${i + 1} / ${compressedFiles.length} ]`;
             const file = compressedFiles[i];
             const fileName = `prop_${Date.now()}_${Math.random().toString(36).substring(2, 5)}.jpg`;
-            const { error } = await _supabase.storage.from('proposals').upload(fileName, file);
-            if (error) throw error;
-            const url = _supabase.storage.from('proposals').getPublicUrl(fileName).data.publicUrl;
-            imageUrls.push(url);
+            
+            const { error: uploadError } = await _supabase.storage.from('proposals').upload(fileName, file);
+            if (uploadError) throw uploadError;
+            
+            const { data } = _supabase.storage.from('proposals').getPublicUrl(fileName);
+            imageUrls.push(data.publicUrl);
         }
 
-        btn.innerText = '[ СОХРАНЕНИЕ В БАЗУ... ]';
+        btn.innerText = '[ СОХРАНЕНИЕ... ]';
         const { error: dbError } = await _supabase.from('proposals').insert([{
             brand, measurements: size, condition: cond, contact, images: imageUrls
         }]);
@@ -3791,17 +3607,18 @@ async function submitProposal() {
 
         closeModal('proposeModal');
         setTimeout(() => {
-            showTerminalModal('SYSTEM_OK.LOG', 'Данные успешно переданы.', '[ OK ]', null);
+            showTerminalModal('SYSTEM_OK.LOG', 'Заявка принята. Система очищена.', '[ OK ]', null);
             resetProposalForm();
         }, 400);
 
     } catch (err) {
         console.error(err);
-        showToast('Ошибка: ' + err.message, 'error');
-        btn.innerText = '[ ОШИБКА ОТПРАВКИ ]';
+        showToast('Ошибка отправки: ' + err.message, 'error');
+        btn.innerText = '[ ПОПРОБОВАТЬ СНОВА ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     }
+}
 
 // ==========================================
 // 19. СВАЙП ФОТОГРАФИЙ В МОДАЛКЕ ТОВАРА
