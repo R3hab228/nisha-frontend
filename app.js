@@ -802,7 +802,7 @@ async function checkSession() {
                     }
                 })
                 .subscribe();
-                
+
             await loadFavorites();
             
           // ЧИСТАЯ ЗАГРУЗКА КОРЗИНЫ АВТОРИЗОВАННОГО ПОЛЬЗОВАТЕЛЯ
@@ -3686,7 +3686,8 @@ async function loginWithGoogle() {
     const { data, error } = await _supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin 
+            // Жестко указываем домен для возврата после входа
+            redirectTo: 'https://www.nisha-store.shop' 
         }
     });
     if (error) showToast('Ошибка Google Auth: ' + error.message, 'error');
