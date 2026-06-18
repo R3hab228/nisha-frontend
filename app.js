@@ -3545,15 +3545,21 @@ async function submitProposal() {
     btn.style.opacity = '0.7';
 
     try {
-        btn.innerText = '[ 1/2 СЖАТИЕ... ]';
-        // Сжимаем фото
-        const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
-        // Переводим в Base64 текст
+        // ЭТАП 1: РЕАЛЬНЫЙ ПРОГРЕСС СЖАТИЯ
+        let compressedFiles = [];
+        for (let i = 0; i < files.length; i++) {
+            btn.innerText = `[ СЖАТИЕ ФОТО: ${i + 1}/${files.length} ]`;
+            const compressed = await compressImage(files[i]);
+            compressedFiles.push(compressed);
+        }
+
+        // ЭТАП 2: КОНВЕРТАЦИЯ В ТЕКСТ (Занимает миллисекунды)
+        btn.innerText = '[ ПОДГОТОВКА ПАКЕТА... ]';
         const base64Images = await Promise.all(compressedFiles.map(f => fileToBase64(f)));
 
-        btn.innerText = '[ 2/2 ОТПРАВКА НА СЕРВЕР... ]';
+        // ЭТАП 3: ОТПРАВКА НА СЕРВЕР (Ожидание ответа)
+        btn.innerText = '[ ПЕРЕДАЧА НА СЕРВЕР... ]';
         
-        // ОТПРАВЛЯЕМ НА НАШ БЭКЕНД
         const res = await fetch('https://nisha-api.onrender.com/api/propose', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3569,6 +3575,7 @@ async function submitProposal() {
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
 
+        // ФИНАЛ: ЗАКРЫТИЕ
         closeModal('proposeModal');
         setTimeout(() => {
             showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка принята сервером.', '[ ПРИНЯТО ]', null);
@@ -3586,6 +3593,8 @@ async function submitProposal() {
         btn.style.opacity = '1';
     }
 }
+
+
 
 // 6. Свайп фотографий в модалке товара
 function initSliderSwipe() {
