@@ -2844,13 +2844,15 @@ async function openWaitlist() {
     });
     
     if(phoneOrTg && phoneOrTg.trim() !== "") {
-        const { error } = await _supabase.from('waitlist').insert([{ 
-            item_id: currentOpenedItem.id, 
-            phone: phoneOrTg.trim() 
-        }]);
+        const res = await fetch('https://nisha-api.onrender.com/api/waitlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: currentOpenedItem.id, phone: phoneOrTg.trim() })
+        });
+        const data = await res.json();
         
-        if (error) {
-            Swal.fire({ icon: 'error', title: 'ОШИБКА', text: 'Вы уже подписаны на эту вещь!', background: '#111', color: '#fff', confirmButtonColor: '#333' });
+        if (!data.success) {
+            Swal.fire({ icon: 'error', title: 'ОШИБКА', text: data.message || 'Ошибка подписки', background: '#111', color: '#fff', confirmButtonColor: '#333' });
         } else {
             Swal.fire({ icon: 'success', title: 'УСПЕШНО', text: 'Мы сообщим вам о появлении!', background: '#111', color: '#fff', confirmButtonColor: '#333' });
             
@@ -2991,50 +2993,40 @@ function triggerEasterEgg() {
 // ==========================================
 // 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (УНИКАЛЬНЫЕ ЗА ДЕНЬ)
 // ==========================================
+
 async function initHitCounter() {
+    const counterEl = document.getElementById('hitCounterValue');
+    if (!counterEl) return;
+
+    let visitorId = "unknown";
+    if (typeof FingerprintJS !== 'undefined') {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        visitorId = result.visitorId;
+        clientFingerprint = visitorId;
+    }
+
+    const today = new Date().toLocaleDateString('en-CA'); 
+    const lastVisitData = JSON.parse(localStorage.getItem('nisha_visit_data') || '{}');
+    
+    // Записываем локально, чтобы не дергать сервер при каждом обновлении страницы
+    if (lastVisitData.date !== today || lastVisitData.id !== visitorId) {
+        localStorage.setItem('nisha_visit_data', JSON.stringify({ date: today, id: visitorId }));
+    }
+
     try {
-        if (!_supabase) return;
+        // Бэкенд всё сделает сам
+        const res = await fetch('https://nisha-api.onrender.com/api/hit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ visitorId: visitorId, date: today })
+        });
+        const data = await res.json();
         
-        const counterEl = document.getElementById('hitCounterValue');
-        if (!counterEl) return;
-
-        // Генерируем уникальный отпечаток устройства через FingerprintJS
-        let visitorId = "unknown";
-        if (typeof FingerprintJS !== 'undefined') {
-            const fp = await FingerprintJS.load();
-            const result = await fp.get();
-            visitorId = result.visitorId; // Уникальный хэш железа/браузера
-            clientFingerprint = visitorId; // Запоминаем для анти-спама просмотров
+        if (data.success && data.count) {
+            const strCount = data.count.toString().padStart(5, '0');
+            counterEl.innerText = strCount.split('').join(' ');
         }
-
-        const today = new Date().toLocaleDateString('en-CA'); 
-        
-        // Проверяем по LocalStorage с привязкой к ID железа
-        const lastVisitData = JSON.parse(localStorage.getItem('nisha_visit_data') || '{}');
-
-        // Если сегодня еще не заходили с этого устройства
-        if (lastVisitData.date !== today || lastVisitData.id !== visitorId) {
-            localStorage.setItem('nisha_visit_data', JSON.stringify({ date: today, id: visitorId }));
-            
-            // Записываем визит в базу
-            await _supabase.rpc('increment_daily_visitor');
-        }
-
-        // Скачиваем актуальное число посещений
-        const { data, error } = await _supabase
-            .from('daily_visits')
-            .select('visitor_count')
-            .eq('visit_date', today)
-            .limit(1);
-
-        let count = 1;
-        if (!error && data && data.length > 0) {
-            count = data[0].visitor_count;
-        }
-
-        const strCount = count.toString().padStart(5, '0');
-        counterEl.innerText = strCount.split('').join(' ');
-
     } catch (err) {
         console.error("Ошибка счетчика:", err);
     }
@@ -3521,6 +3513,13 @@ document.getElementById('propFiles')?.addEventListener('change', function(e) {
 });
 
 // 5. Главная функция отправки данных на сервер
+// Вспомогательная функция (конвертирует фото в текст для передачи на сервер)
+const fileToBase64 = file => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+});
+
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
     const fileInput = document.getElementById('propFiles');
@@ -3532,7 +3531,6 @@ async function submitProposal() {
     const cond = parseInt(document.getElementById('propCond').value);
     const contact = document.getElementById('propContact').value.trim();
 
-    // Проверка заполнения
     if (!files.length || !brand || !size || isNaN(cond) || !contact) {
         showToast('Заполните все поля и прикрепите фото!', 'error');
         return;
@@ -3546,46 +3544,35 @@ async function submitProposal() {
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
 
-   try {
-        btn.innerText = `[ ПОДГОТОВКА ФАЙЛОВ ]`;
+    try {
+        btn.innerText = '[ 1/2 СЖАТИЕ... ]';
+        // Сжимаем фото
         const compressedFiles = await Promise.all(Array.from(files).map(f => compressImage(f)));
-        
-        let imageUrls = [];
-        
-        // Цикл загрузки фото (показывает от 1 до 4)
-        for (let i = 0; i < compressedFiles.length; i++) {
-            btn.innerText = `[ ЗАГРУЗКА: ${i + 1} ИЗ ${compressedFiles.length} ]`;
-            
-            const file = compressedFiles[i];
-            const fileExt = file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g, '');
-            const randomString = Math.random().toString(36).substring(2, 15);
-            const fileName = `prop_${Date.now()}_${randomString}.${fileExt}`;
-            
-            const { error: uploadError } = await _supabase.storage.from('proposals').upload(fileName, file);
-            if (!uploadError) {
-                const { data } = _supabase.storage.from('proposals').getPublicUrl(fileName);
-                imageUrls.push(data.publicUrl);
-            }
-        }
+        // Переводим в Base64 текст
+        const base64Images = await Promise.all(compressedFiles.map(f => fileToBase64(f)));
 
-        btn.innerText = '[ СОХРАНЕНИЕ ДАННЫХ ]';
-        const { error: dbError } = await _supabase.from('proposals').insert([{
-            brand: brand,
-            measurements: size,
-            condition: cond,
-            contact: contact,
-            images: imageUrls
-        }]);
-
-        if (dbError) throw dbError;
+        btn.innerText = '[ 2/2 ОТПРАВКА НА СЕРВЕР... ]';
+        
+        // ОТПРАВЛЯЕМ НА НАШ БЭКЕНД
+        const res = await fetch('https://nisha-api.onrender.com/api/propose', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                brand: brand,
+                measurements: size,
+                condition: cond,
+                contact: contact,
+                imagesBase64: base64Images
+            })
+        });
+        
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
 
         closeModal('proposeModal');
-        
         setTimeout(() => {
-            showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка принята и будет рассмотрена.', '[ ПРИНЯТО ]', null);
+            showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка принята сервером.', '[ ПРИНЯТО ]', null);
             resetProposalForm();
-            
-            // Возвращаем кнопку в исходное состояние
             btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
             btn.style.pointerEvents = 'auto';
             btn.style.opacity = '1';
@@ -3593,7 +3580,7 @@ async function submitProposal() {
 
     } catch (err) {
         console.error(err);
-        showToast('Ошибка отправки: ' + err.message, 'error');
+        showToast('Сбой сервера: ' + err.message, 'error');
         btn.innerText = '[ ПОВТОРИТЬ ПОПЫТКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
