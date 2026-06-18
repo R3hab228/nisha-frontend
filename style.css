@@ -1191,14 +1191,27 @@
     transform: scale(1.3); 
     box-shadow: 0 0 5px var(--accent-green);
 }
-/* Специальный класс для блокировки фона, когда открыт поиск */
+/* Блокируем только основной скролл сайта */
 body.search-lock {
     overflow: hidden !important;
-    touch-action: none; /* Запрещает любые движения на фоне */
+    height: 100vh;
 }
 
-/* При этом выпадающий список ДОЛЖЕН скроллиться */
-.live-search-dropdown {
+.live-search-dropdown { 
+    position: absolute; 
+    top: 100%; 
+    left: 0; 
+    width: 100%; 
+    background: #0a0a0a; 
+    border: 2px solid var(--accent-green); 
+    border-top: none; 
+    max-height: 350px; /* Немного увеличили окно */
+    overflow-y: auto !important; /* Включаем обычный скролл */
+    z-index: 2000; 
+    display: none; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9); 
+    
+    /* РАЗРЕШАЕМ СВАЙП ПАЛЬЦЕМ */
+    -webkit-overflow-scrolling: touch; 
     touch-action: pan-y !important; 
-    overscroll-behavior: contain !important;
 }

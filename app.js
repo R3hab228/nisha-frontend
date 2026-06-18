@@ -3098,11 +3098,11 @@ let searchDebounce;
 function handleLiveSearch() {
     clearTimeout(searchDebounce);
     const dropdown = document.getElementById('liveSearchDropdown');
-    const searchTerm = document.getElementById('mainSearch').value.trim();
+    const searchInput = document.getElementById('mainSearch');
+    const searchTerm = searchInput.value.trim();
 
     if (searchTerm.length < 2) {
-        dropdown.style.display = 'none';
-        document.body.classList.remove('search-lock'); // Снимаем блокировку
+        closeSearch();
         applyFilters();
         return;
     }
@@ -3115,11 +3115,10 @@ function handleLiveSearch() {
             keys: [{ name: 'name', weight: 0.6 }, { name: 'brand', weight: 0.5 }]
         };
         const fuse = new Fuse(allItems, fuseOptions);
-        const results = fuse.search(cleanSearchTerm).slice(0, 8); // Увеличили до 8 объектов
+        const results = fuse.search(cleanSearchTerm).slice(0, 8);
 
         dropdown.innerHTML = '';
         if (results.length > 0) {
-            // ВКЛЮЧАЕМ БЛОКИРОВКУ ФОНА, так как результаты есть
             document.body.classList.add('search-lock');
             
             results.forEach(result => {
@@ -3135,15 +3134,32 @@ function handleLiveSearch() {
                     </div>`;
             });
             dropdown.style.display = 'block';
+
+            // ЭТА ЧАСТЬ ПРЯЧЕТ КЛАВИАТУРУ ПРИ СКРОЛЛЕ РЕЗУЛЬТАТОВ
+            dropdown.ongetscroll = () => {}; // Сброс старых событий
+            dropdown.addEventListener('touchstart', () => {
+                // Если коснулись списка — убираем фокус с инпута, чтобы спрятать клавиатуру
+                if (document.activeElement === searchInput) {
+                    searchInput.blur();
+                }
+            }, {passive: true});
+
         } else {
             dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
             dropdown.style.display = 'block';
-            document.body.classList.remove('search-lock'); // Если ничего не нашли - не блокируем
+            document.body.classList.remove('search-lock');
         }
         applyFilters();
     }, 300);
 }
 
+function closeSearch() {
+    const dropdown = document.getElementById('liveSearchDropdown');
+    const searchInput = document.getElementById('mainSearch');
+    if (dropdown) dropdown.style.display = 'none';
+    document.body.classList.remove('search-lock');
+    if (searchInput) searchInput.blur(); // Принудительно прячем клавиатуру
+}
 // Добавим вспомогательную функцию для чистого закрытия
 function closeSearch() {
     const dropdown = document.getElementById('liveSearchDropdown');
