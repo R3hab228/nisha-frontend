@@ -328,6 +328,7 @@ function acceptRules() {
     setTimeout(startOnboardingTour, 400); 
 }
 window.onload = async () => {
+     document.body.classList.remove('search-lock');
     try {
         try {
             // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
@@ -3099,49 +3100,33 @@ function handleLiveSearch() {
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchTerm = document.getElementById('mainSearch').value.trim();
 
-    // Если поиск открыт - отключаем Lenis, чтобы фон не дергался
-    if (searchTerm.length >= 2) {
-        if (typeof lenis !== 'undefined') lenis.stop();
-    } else {
-        if (typeof lenis !== 'undefined') lenis.start();
-    }
-
-    // НОВАЯ ФИШКА: Если юзер начал искать, выключаем режим "Только избранное"
-    if (searchTerm.length > 0 && showingOnlyFavs) {
-        showingOnlyFavs = false;
-        const favNav = document.getElementById('favNav');
-        if (favNav) favNav.style.color = 'var(--accent-yellow)';
-    }
-
     if (searchTerm.length < 2) {
         dropdown.style.display = 'none';
-        applyFilters(); // Обновляем основную сетку, если стерли текст
+        document.body.classList.remove('search-lock'); // Снимаем блокировку
+        applyFilters();
         return;
     }
 
     searchDebounce = setTimeout(() => {
-        // Поиск через Fuse.js
         const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
         const fuseOptions = {
             includeScore: true, 
             threshold: 0.3, 
-            ignoreLocation: true,
-            keys: [
-                { name: 'name', weight: 0.6 }, 
-                { name: 'brand', weight: 0.5 },
-                { name: 'tags', weight: 0.8 } // Поиск по тегам в живом поиске
-            ]
+            keys: [{ name: 'name', weight: 0.6 }, { name: 'brand', weight: 0.5 }]
         };
         const fuse = new Fuse(allItems, fuseOptions);
-        const results = fuse.search(cleanSearchTerm).slice(0, 5); // Берем топ 5 совпадений
+        const results = fuse.search(cleanSearchTerm).slice(0, 8); // Увеличили до 8 объектов
 
         dropdown.innerHTML = '';
         if (results.length > 0) {
+            // ВКЛЮЧАЕМ БЛОКИРОВКУ ФОНА, так как результаты есть
+            document.body.classList.add('search-lock');
+            
             results.forEach(result => {
                 const item = result.item;
-                const img = getOptimizedImageUrl(item, true); // ПРАВИЛЬНЫЙ вызов функции картинок
+                const img = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : (item.images[0] || '');
                 dropdown.innerHTML += `
-                    <div class="live-search-item" onclick="openProductModalById('${item.id}'); document.getElementById('liveSearchDropdown').style.display='none';">
+                    <div class="live-search-item" onclick="openProductModalById('${item.id}'); closeSearch();">
                         <div class="live-search-img" style="background-image: url('${img}')"></div>
                         <div class="live-search-info">
                             <span class="live-search-title">${item.name}</span>
@@ -3151,22 +3136,24 @@ function handleLiveSearch() {
             });
             dropdown.style.display = 'block';
         } else {
-            dropdown.innerHTML = '<div style="padding: 10px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
+            dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
             dropdown.style.display = 'block';
+            document.body.classList.remove('search-lock'); // Если ничего не нашли - не блокируем
         }
-        
-        applyFilters(); // Параллельно фильтруем фоновую сетку
+        applyFilters();
     }, 300);
 }
 
-// Скрываем дропдаун при клике вне него
+// Добавим вспомогательную функцию для чистого закрытия
+function closeSearch() {
+    const dropdown = document.getElementById('liveSearchDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+    document.body.classList.remove('search-lock');
+}
+
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-wrapper')) {
-        const dropdown = document.getElementById('liveSearchDropdown');
-        if (dropdown) {
-            dropdown.style.display = 'none';
-            if (typeof lenis !== 'undefined') lenis.start(); // Включаем скролл обратно
-        }
+        closeSearch(); // Используем нашу новую функцию
     }
 });
 async function toggleFavFromModal(event) {
