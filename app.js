@@ -1840,25 +1840,16 @@ async function calculateDeliveryCost() {
     const totalCost = cart.reduce((sum, item) => sum + item.price, 0);
     
     try {
-        const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
+        // ЗАПРАШИВАЕМ ГОТОВУЮ ЦЕНУ У НАШЕГО СЕРВЕРА
+        const res = await fetch('https://nisha-api.onrender.com/api/calc-delivery', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                modelName: 'InternetDocument', 
-                calledMethod: 'getDocumentPrice', 
-                methodProperties: { 
-                    CitySender: "8d5a980d-391c-11dd-90d9-001a92567626", // Ref Киева (как отправителя)
-                    CityRecipient: selectedCityRef,
-                    Weight: "1",
-                    ServiceType: "WarehouseWarehouse",
-                    Cost: totalCost.toString()
-                } 
-            })
+            body: JSON.stringify({ cityRef: selectedCityRef, cartTotal: totalCost })
         });
-        const responseData = await res.json();
+        const data = await res.json();
         
-        if(responseData.success && responseData.data.length > 0) {
-            document.getElementById('calcCostVal').innerText = responseData.data[0].Cost + " грн";
+        if(data.success) {
+            document.getElementById('calcCostVal').innerText = data.cost + " грн";
         } else {
             document.getElementById('calcCostVal').innerText = "По тарифам НП";
         }
@@ -3303,38 +3294,35 @@ async function applyPromoCode() {
 
     btn.innerText = '...';
     
-    // Ищем промокод в Базе Данных (С учетом лимитов)
-    const { data, error } = await _supabase
-        .from('promo_codes')
-        .select('discount_percent, is_active, max_uses, current_uses')
-        .eq('code', input)
-        .limit(1);
+    // Считаем общую сумму ДО скидки
+    const originalTotal = cart.reduce((sum, item) => sum + item.price, 0);
 
-    if (data && data.length > 0 && data[0].is_active) {
-        const promo = data[0];
+    try {
+        // ОТПРАВЛЯЕМ ЗАПРОС НА НАШ БЭКЕНД
+        const res = await fetch('https://nisha-api.onrender.com/api/check-promo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: input, cartTotal: originalTotal })
+        });
         
-        // Проверяем лимит на фронтенде
-        if (promo.max_uses !== null && promo.current_uses >= promo.max_uses) {
-            currentPromoDiscount = 0;
-            appliedPromoCode = '';
-            msg.innerHTML = `<span style="color: var(--accent-red);">[!] Лимит активаций этого кода исчерпан</span>`;
-        } else {
-            currentPromoDiscount = promo.discount_percent;
+        const data = await res.json();
+
+        if (data.success) {
+            currentPromoDiscount = data.discount_percent;
             appliedPromoCode = input;
             
-            // Считаем экономию
-            const originalTotal = cart.reduce((sum, item) => sum + item.price, 0);
-            const savedMoney = Math.floor(originalTotal * currentPromoDiscount);
-            
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Вы сэкономили: <b>${savedMoney} грн</b></span></span>`;
+            const savedText = i18next.t('checkout.saved', { defaultValue: 'Вы сэкономили' });
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Скидка ${data.discount_percent * 100}%<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} грн</b></span></span>`;
+        } else {
+            currentPromoDiscount = 0;
+            appliedPromoCode = '';
+            msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${data.message}</span>`;
         }
-    } else {
-        currentPromoDiscount = 0;
-        appliedPromoCode = '';
-        msg.innerHTML = `<span style="color: var(--accent-red);">[!] Неверный или неактивный код</span>`;
+    } catch (err) {
+        msg.innerHTML = `<span style="color: var(--accent-red);">[!] Ошибка связи с сервером</span>`;
     }
     
-    btn.innerText = 'ПРИМЕНИТЬ';
+    btn.innerText = i18next.t('checkout.apply', { defaultValue: 'ПРИМЕНИТЬ' });
     updateCartUI();
 }
 // --- ЛОГИКА СВАЙПА В КОРЗИНЕ (SWIPE TO DELETE) ---

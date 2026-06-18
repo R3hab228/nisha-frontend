@@ -52,7 +52,7 @@
 
         /* ЖИВОЙ ПОИСК */
           .search-wrapper { position: relative; flex-grow: 1; }
-      .live-search-dropdown { 
+     .live-search-dropdown { 
     position: absolute; 
     top: 100%; 
     left: 0; 
@@ -60,15 +60,29 @@
     background: #0a0a0a; 
     border: 2px solid var(--accent-green); 
     border-top: none; 
-    max-height: 300px; 
-    overflow-y: auto; 
+    max-height: 50vh; /* Делаем высоту зависимой от экрана, чтобы точно влезло */
+    
+    /* ЖЕСТКИЙ ФИКС МОБИЛЬНОГО СКРОЛЛА */
+    overflow-y: scroll !important; 
+    -webkit-overflow-scrolling: touch !important; 
+    overscroll-behavior-y: contain !important; 
+    pointer-events: auto !important; 
+    
     z-index: 2000; 
     display: none; 
-    box-shadow: 0 10px 30px rgba(0,255,0,0.1); 
-    
-    /* ФИКС СКРОЛЛА */
-    overscroll-behavior: contain; /* Блокирует скролл сайта под выпадающим списком */
-    -webkit-overflow-scrolling: touch; /* Делает скролл на iPhone плавным */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9); 
+}
+
+/* Делаем сам элемент списка более крупным для удобного тапа пальцем */
+.live-search-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    padding: 15px 10px; /* Увеличили padding для пальца */
+    border-bottom: 1px dashed #333; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    touch-action: pan-y; /* Разрешаем браузеру скроллить по этому элементу */
 }
      .live-search-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px dashed #333; cursor: pointer; transition: 0.2s; }
 .live-search-item:hover { background: #1a1a1a; padding-left: 15px; }
