@@ -3099,6 +3099,13 @@ function handleLiveSearch() {
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchTerm = document.getElementById('mainSearch').value.trim();
 
+    // Если поиск открыт - отключаем Lenis, чтобы фон не дергался
+    if (searchTerm.length >= 2) {
+        if (typeof lenis !== 'undefined') lenis.stop();
+    } else {
+        if (typeof lenis !== 'undefined') lenis.start();
+    }
+
     // НОВАЯ ФИШКА: Если юзер начал искать, выключаем режим "Только избранное"
     if (searchTerm.length > 0 && showingOnlyFavs) {
         showingOnlyFavs = false;
@@ -3156,7 +3163,10 @@ function handleLiveSearch() {
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-wrapper')) {
         const dropdown = document.getElementById('liveSearchDropdown');
-        if (dropdown) dropdown.style.display = 'none';
+        if (dropdown) {
+            dropdown.style.display = 'none';
+            if (typeof lenis !== 'undefined') lenis.start(); // Включаем скролл обратно
+        }
     }
 });
 async function toggleFavFromModal(event) {

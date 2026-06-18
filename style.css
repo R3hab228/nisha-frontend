@@ -52,7 +52,24 @@
 
         /* ЖИВОЙ ПОИСК */
           .search-wrapper { position: relative; flex-grow: 1; }
-      .live-search-dropdown { position: absolute; top: 100%; left: 0; width: 100%; background: #0a0a0a; border: 2px solid var(--accent-green); border-top: none; max-height: 300px; overflow-y: auto; z-index: 2000; display: none; box-shadow: 0 10px 30px rgba(0,255,0,0.1); }
+      .live-search-dropdown { 
+    position: absolute; 
+    top: 100%; 
+    left: 0; 
+    width: 100%; 
+    background: #0a0a0a; 
+    border: 2px solid var(--accent-green); 
+    border-top: none; 
+    max-height: 300px; 
+    overflow-y: auto; 
+    z-index: 2000; 
+    display: none; 
+    box-shadow: 0 10px 30px rgba(0,255,0,0.1); 
+    
+    /* ФИКС СКРОЛЛА */
+    overscroll-behavior: contain; /* Блокирует скролл сайта под выпадающим списком */
+    -webkit-overflow-scrolling: touch; /* Делает скролл на iPhone плавным */
+}
      .live-search-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px dashed #333; cursor: pointer; transition: 0.2s; }
 .live-search-item:hover { background: #1a1a1a; padding-left: 15px; }
 .live-search-img { width: 40px; height: 40px; background-color: #000; background-size: cover; background-position: center; border: 1px solid #444; }
