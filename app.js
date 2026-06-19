@@ -301,8 +301,7 @@ function checkRules() {
         const modal = document.getElementById('rulesModal');
         if (modal) {
             modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            if (typeof lenis !== 'undefined') lenis.stop(); 
+            // Убрали блокировку скролла, чтобы текст можно было листать
         }
     }
 }
@@ -311,8 +310,6 @@ function showRulesModal() {
     const modal = document.getElementById('rulesModal');
     if (modal) {
         modal.style.display = 'flex'; 
-        document.body.style.overflow = 'hidden'; 
-        if (typeof lenis !== 'undefined') lenis.stop(); 
     }
 }
 
