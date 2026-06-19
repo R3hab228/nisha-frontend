@@ -2763,6 +2763,43 @@ function openProductModal(item) {
         }
     }
 
+    // --- ДИНАМИЧЕСКИЕ БЕЙДЖИ И ПРОВЕРКА НА ПРЕДЛОЖКУ ---
+    const badgesContainer = document.querySelector('.trust-badges');
+    if (badgesContainer) {
+        // Проверяем: есть ли флаг is_drop ИЛИ тег "drop"
+        const isDropItem = item.is_drop === true || (item.tags && item.tags.map(t => t.toLowerCase()).includes('drop'));
+        
+        let refundBadgeHTML = '';
+        if (isDropItem) {
+            // Если это предложка — красный опасный бейдж
+            refundBadgeHTML = `
+                <div class="badge-item danger-badge" onclick="showBadgeInfo('drop')">
+                    <span class="badge-icon">[!]</span> 
+                    <span class="badge-text">ПРЕДЛОЖКА</span>
+                </div>`;
+        } else {
+            // Обычная вещь магазина — 14 дней возврат
+            refundBadgeHTML = `
+                <div class="badge-item" onclick="showBadgeInfo('refund')">
+                    <span class="badge-icon">14D</span> 
+                    <span class="badge-text">ВОЗВРАТ 14 ДНЕЙ</span>
+                </div>`;
+        }
+
+        // Рендерим бейджи с обработчиками кликов
+        badgesContainer.innerHTML = `
+            <div class="badge-item" onclick="showBadgeInfo('legit')">
+                <span class="badge-icon">100%</span> 
+                <span class="badge-text">ПРОШЛО ЛЕГИТ-ЧЕК</span>
+            </div>
+            <div class="badge-item" onclick="showBadgeInfo('fast')">
+                <span class="badge-icon">24H</span> 
+                <span class="badge-text">БЫСТРАЯ ОТПРАВКА</span>
+            </div>
+            ${refundBadgeHTML}
+        `;
+    }
+
     document.getElementById('productModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
@@ -3644,6 +3681,31 @@ window.updateCardDots = function(container, itemId) {
             else dot.classList.remove('active');
         });
     }
+};
+
+// ==========================================
+// ИНФОРМАЦИОННЫЕ ОКНА ДЛЯ БЕЙДЖЕЙ ТОВАРОВ
+// ==========================================
+window.showBadgeInfo = function(type) {
+    let title = '';
+    let text = '';
+
+    if (type === 'legit') {
+        title = 'LEGIT_CHECK.EXE';
+        text = 'Все вещи проходят строгую физическую и цифровую проверку на оригинальность нашими экспертами.<br><br>Мы выступаем гарантом сделки. Мы не продаем реплики и фейки.';
+    } else if (type === 'fast') {
+        title = 'FAST_SHIPPING.SYS';
+        text = 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
+    } else if (type === 'refund') {
+        title = 'REFUND_POLICY.LOG';
+        text = 'Возврат и обмен товара возможен в течение 14 дней с момента покупки.<br><br><b>Обязательное условие:</b> сохранение всех магазинных бирок и изначального товарного вида.';
+    } else if (type === 'drop') {
+        title = 'WARNING: DROP_ITEM';
+        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Эта вещь загружена сторонним продавцом (Creator).</span><br><br>Обязательно проводите полный осмотр вещи на отделении Новой Почты. <b style="color:var(--accent-red);">Если вы забрали посылку домой — возврат или обмен НЕВОЗМОЖЕН</b>, так как деньги сразу переводятся владельцу вещи.';
+    }
+    
+    // Вызываем стильное терминальное окно
+    showTerminalModal(title, text, '[ ПОНЯТНО ]', null);
 };
 
 // Запускаем инициализацию после загрузки
