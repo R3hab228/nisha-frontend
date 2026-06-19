@@ -301,7 +301,6 @@ function checkRules() {
         const modal = document.getElementById('rulesModal');
         if (modal) {
             modal.style.display = 'flex';
-            // Убрали блокировку скролла, чтобы текст можно было листать
         }
     }
 }
