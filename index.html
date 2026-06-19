@@ -289,52 +289,61 @@
 </div>
 
 <div class="modal-overlay" id="rulesModal" style="background: rgba(0,0,0,0.95); z-index: 5000;">
-    <div class="modal-window" style="max-width: 700px; max-height: 85vh; display: flex; flex-direction: column;">
+    <!-- Окно занимает максимум 85% высоты экрана и использует Flexbox -->
+    <div class="modal-window" style="max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 10px 10px 0 0;">
         
+        <!-- ШАПКА: Всегда сверху -->
         <div class="modal-header" style="background: #000; flex-shrink: 0;">
             <span class="modal-title typewriter" style="color: var(--accent-red);">USER_AGREEMENT.TXT</span>
         </div>
         
-        <!-- Используем TEXTAREA: его скролл невозможно заблокировать -->
-        <div style="flex-grow: 1; padding: 15px; background: #0a0a0a; display: flex; flex-direction: column;">
-            <p style="color: var(--accent-yellow); font-family: var(--font-mono); font-size: 14px; font-weight: bold; margin-top: 0;" data-i18n="rules.title">
-                ВНИМАНИЕ! ПЕРЕД ИСПОЛЬЗОВАНИЕМ САЙТА ОЗНАКОМЬТЕСЬ С ПРАВИЛАМИ.
-            </p>
+        <!-- КОНТЕНТ: Скроллится ТОЛЬКО этот блок -->
+        <div class="rules-content" style="flex-grow: 1; overflow-y: auto; padding: 25px; background: #0a0a0a; color: #ddd; font-size: 14px; line-height: 1.6; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
+            <p style="color: var(--accent-yellow); font-family: var(--font-mono); font-size: 16px; font-weight: bold; margin-top: 0;" data-i18n="rules.title">ВНИМАНИЕ! ПЕРЕД ИСПОЛЬЗОВАНИЕМ САЙТА ОЗНАКОМЬТЕСЬ С ПРАВИЛАМИ.</p>
             
-            <textarea readonly style="width: 100%; flex-grow: 1; background: #000; color: #ddd; border: 1px inset #333; padding: 15px; font-family: var(--font-main); font-size: 13px; line-height: 1.6; resize: none; outline: none; -webkit-overflow-scrolling: touch; margin-bottom: 10px;">
-[ 1. ОБЩИЕ ПОЛОЖЕНИЯ ]
-1. Данный ресурс является онлайн-витриной магазина и маркетплейса NISHA.
-2. Мы выступаем гарантом сделки: все товары проходят строгий легит-чек. Мы не продаем реплики.
-3. На сайте представлены как вещи из нашего архива, так и вещи от проверенных продавцов (Creators).
-4. Состояние каждой вещи оценивается по шкале от 1 до 10. Скрытые дефекты исключены.
+            <h3 data-i18n="rules.h1" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 1. ОБЩИЕ ПОЛОЖЕНИЯ ]</h3>
+            <ul style="padding-left: 20px;">
+                <li data-i18n="rules.p1_1" style="margin-bottom: 10px;">Данный ресурс является онлайн-витриной магазина и маркетплейса <b>NISHA</b>.</li>
+                <li data-i18n="rules.p1_2" style="margin-bottom: 10px;">Мы выступаем гарантом сделки: все товары проходят строгий легит-чек. Мы не продаем реплики.</li>
+                <li data-i18n="rules.p1_3" style="margin-bottom: 10px;">На сайте представлены как вещи из нашего архива, так и вещи от проверенных продавцов (Creators).</li>
+                <li data-i18n="rules.p1_4" style="margin-bottom: 10px;">Состояние каждой вещи оценивается по шкале от 1 до 10. Скрытые дефекты исключены.</li>
+            </ul>
 
-[ 2. ОФОРМЛЕНИЕ ЗАКАЗА И БРОНЬ ]
-1. При оформлении заказа товар автоматически получает статус RESERVED.
-2. Бронь держится ровно 2 часа для внесения оплаты.
-3. Менеджер свяжется с вами в Telegram или по телефону для предоставления реквизитов.
-4. Администрация оставляет за собой право отменить заказ, если покупатель не выходит на связь.
+            <h3 data-i18n="rules.h2" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 2. ОФОРМЛЕНИЕ ЗАКАЗА И БРОНЬ ]</h3>
+            <ul style="padding-left: 20px;">
+                <li data-i18n="rules.p2_1" style="margin-bottom: 10px;">При оформлении заказа товар автоматически получает статус <b>RESERVED</b>.</li>
+                <li data-i18n="rules.p2_2" style="margin-bottom: 10px;">Бронь держится ровно <b>2 часа</b> для внесения оплаты.</li>
+                <li data-i18n="rules.p2_3" style="margin-bottom: 10px;">Менеджер свяжется с вами в Telegram или по телефону для предоставления реквизитов.</li>
+                <li data-i18n="rules.p2_4" style="margin-bottom: 10px;">Администрация оставляет за собой право отменить заказ, если покупатель не выходит на связь.</li>
+            </ul>
 
-[ 3. ОПЛАТА И ДОСТАВКА ]
-1. Доставка осуществляется исключительно компанией «Нова Пошта».
-2. Форматы оплаты: полная предоплата или наложенный платеж с минимальной предоплатой 200 грн.
-3. Отправка посылок происходит в день заказа (при оплате до 16:00) или на следующий рабочий день.
+            <h3 data-i18n="rules.h3" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 3. ОПЛАТА И ДОСТАВКА ]</h3>
+            <ul style="padding-left: 20px;">
+                <li data-i18n="rules.p3_1" style="margin-bottom: 10px;">Доставка осуществляется исключительно компанией <b>«Нова Пошта»</b>.</li>
+                <li data-i18n="rules.p3_2" style="margin-bottom: 10px;">Форматы оплаты: полная предоплата или наложенный платеж с минимальной предоплатой <b>200 грн</b>.</li>
+                <li data-i18n="rules.p3_3" style="margin-bottom: 10px;">Отправка посылок происходит в день заказа (при оплате до 16:00) или на следующий рабочий день.</li>
+            </ul>
 
-[ 4. ГАРАНТИИ И УСЛОВИЯ ВОЗВРАТА (ВАЖНО!) ]
-1. Мы требуем проводить полный осмотр и примерку ИСКЛЮЧИТЕЛЬНО в отделении «Новой Почты».
-2. Если вещь вам не подошла — вы просто отказываетесь от нее на почте (предоплата 200 грн не возвращается).
-3. ЕСЛИ ВЫ ЗАБРАЛИ ПОСЫЛКУ ДОМОЙ — ВОЗВРАТ ИЛИ ОБМЕН НЕВОЗМОЖЕН.
-4. Как только вы вынесли вещь с почты, сделка считается закрытой, а деньги переводятся владельцу вещи. NISHA снимает с себя ответственность.
+            <h3 data-i18n="rules.h4" style="color: var(--accent-red); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 4. ГАРАНТИИ И УСЛОВИЯ ВОЗВРАТА (ВАЖНО!) ]</h3>
+            <ul style="padding-left: 20px;">
+                <li data-i18n="rules.p4_1" style="margin-bottom: 10px;">Мы требуем проводить полный осмотр и примерку <b>исключительно в отделении «Новой Почты»</b>.</li>
+                <li data-i18n="rules.p4_2" style="margin-bottom: 10px;">Если вещь вам не подошла — вы просто отказываетесь от нее на почте (предоплата 200 грн не возвращается).</li>
+                <li data-i18n="rules.p4_3" style="color: var(--accent-red); margin-bottom: 10px;"><b>ЕСЛИ ВЫ ЗАБРАЛИ ПОСЫЛКУ ДОМОЙ — ВОЗВРАТ ИЛИ ОБМЕН НЕВОЗМОЖЕН.</b></li>
+                <li data-i18n="rules.p4_4" style="margin-bottom: 10px;">Как только вы вынесли вещь с почты, сделка считается закрытой, а деньги переводятся владельцу вещи. После этого NISHA снимает с себя ответственность.</li>
+            </ul>
 
-[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]
-1. Комиссия площадки за продажу вашей вещи составляет 15%.
-2. Все финансовые операции проходят только через наши реквизиты.
-3. Выплата продавцу осуществляется на карту сразу после того, как покупатель заберет посылку с почты.
-4. В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.
-            </textarea>
+            <h3 data-i18n="rules.h5" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]</h3>
+            <ul style="padding-left: 20px;">
+                <li data-i18n="rules.p5_1" style="margin-bottom: 10px;">Комиссия площадки за продажу вашей вещи составляет <b>15%</b>.</li>
+                <li data-i18n="rules.p5_2" style="margin-bottom: 10px;">Все финансовые операции проходят <b>только через наши реквизиты</b>.</li>
+                <li data-i18n="rules.p5_3" style="margin-bottom: 10px;">Выплата продавцу осуществляется на карту сразу после того, как покупатель заберет посылку с почты.</li>
+                <li data-i18n="rules.p5_4" style="margin-bottom: 10px;">В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.</li>
+            </ul>
         </div>
 
-        <div class="rules-footer" style="padding: 15px; background: #000; border-top: 2px inset var(--border-light); flex-shrink: 0;">
-            <button class="accept-btn btn-target" onclick="acceptRules()" data-i18n="rules.btn_accept">[ Я СОГЛАСЕН С ПРАВИЛАМИ ]</button>
+        <!-- КНОПКА: Всегда внизу -->
+        <div class="rules-footer" style="background: #000; padding: 15px; border-top: 2px inset var(--border-light); flex-shrink: 0;">
+            <button class="accept-btn btn-target" onclick="acceptRules()" data-i18n="rules.btn_accept" style="background: #111; color: var(--accent-green); font-weight: bold; padding: 15px 20px; font-size: 15px; font-family: var(--font-mono); border: 2px outset #444; cursor: pointer; text-transform: uppercase; width: 100%;">[ Я СОГЛАСЕН С ПРАВИЛАМИ ]</button>
         </div>
     </div>
 </div>

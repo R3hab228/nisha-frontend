@@ -566,26 +566,22 @@
     display: flex;
     flex-direction: column;
 }
-.rules-content { 
-    padding: 25px; 
-    font-size: 14px; 
-    line-height: 1.6; 
-    color: #ddd; 
-    background: #0a0a0a; 
-    flex-grow: 1; /* Растягивается, чтобы занять всё свободное место */
-    overflow-y: auto !important; /* Полоса прокрутки только для текста */
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-    pointer-events: auto;
+.rules-content { padding: 30px; font-size: 14px; line-height: 1.6; color: #ddd; background: #0a0a0a; max-height: 60vh; overflow-y: auto;}
+        .rules-content h3 { 
+    color: var(--accent-green); 
+    font-family: var(--font-mono); 
+    border-bottom: 1px solid #333; 
+    padding-bottom: 10px; 
+    margin-top: 25px;
+    display: flex; /* Чтобы скобки не улетали */
+    align-items: flex-start;
+    gap: 5px;
 }
-.rules-footer { 
-    padding: 20px; 
-    background: #000; 
-    border-top: 2px inset var(--border-light); 
-    display: flex; 
-    justify-content: center;
-    flex-shrink: 0; /* ЗАПРЕЩАЕМ КНОПКЕ СЖИМАТЬСЯ ИЛИ ИСЧЕЗАТЬ */
-}
+        .rules-content h3:first-child { margin-top: 0; }
+        .rules-content ul { padding-left: 20px; }
+        .rules-content li { margin-bottom: 10px; }
+        .rules-content strong { color: #fff; }
+        .rules-footer { padding: 20px; background: #000; border-top: 2px inset var(--border-light); display: flex; justify-content: center;}
         .accept-btn { background: #111; color: var(--accent-green); font-weight: bold; padding: 15px 20px; font-size: 15px; font-family: var(--font-mono); border: 2px outset #444; cursor: pointer; text-transform: uppercase; width: 100%; transition: 0.2s;}
         .accept-btn:hover { border-color: var(--accent-green); }
         .accept-btn:active { border-style: inset; }
