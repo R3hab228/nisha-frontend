@@ -2770,21 +2770,18 @@ function openProductModal(item) {
         
         let refundBadgeHTML = '';
         if (isDropItem) {
-            // Крутая SVG иконка треугольника с восклицательным знаком
             const alertSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
-            
-            // Если это предложка — красный опасный бейдж
             refundBadgeHTML = `
                 <div class="badge-item danger-badge" onclick="showBadgeInfo('drop')">
                     <span class="badge-icon">${alertSvg}</span> 
-                    <span class="badge-text">ПРЕДЛОЖКА</span>
+                    <span class="badge-text" data-i18n="product.badge_drop">ПРЕДЛОЖКА</span>
                 </div>`;
         } else {
-            // Обычная вещь магазина — 14 дней возврат
+            // Меняем на строгий бейдж (т.к. возвратов нет)
             refundBadgeHTML = `
                 <div class="badge-item" onclick="showBadgeInfo('refund')">
-                    <span class="badge-icon">14D</span> 
-                    <span class="badge-text">ВОЗВРАТ 14 ДНЕЙ</span>
+                    <span class="badge-icon">0D</span> 
+                    <span class="badge-text" data-i18n="product.badge_norefund">БЕЗ ВОЗВРАТОВ</span>
                 </div>`;
         }
 
@@ -3322,11 +3319,9 @@ async function applyPromoCode() {
 
     btn.innerText = '...';
     
-    // Считаем общую сумму ДО скидки
     const originalTotal = cart.reduce((sum, item) => sum + item.price, 0);
 
     try {
-        // ОТПРАВЛЯЕМ ЗАПРОС НА НАШ БЭКЕНД
         const res = await fetch('https://nisha-api.onrender.com/api/check-promo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3335,16 +3330,25 @@ async function applyPromoCode() {
         
         const data = await res.json();
 
+        // Достаем переводы из i18next (чтобы язык всегда был правильный)
+        const savedText = i18next.t('checkout.saved', { defaultValue: 'Вы сэкономили' });
+        const successText = i18next.t('checkout.promo_success', { defaultValue: 'Код активирован! Скидка' });
+        const limitErrorText = i18next.t('checkout.promo_limit', { defaultValue: 'Лимит активаций исчерпан' });
+        const invalidErrorText = i18next.t('checkout.promo_invalid', { defaultValue: 'Неверный или неактивный код' });
+        const serverErrorText = i18next.t('checkout.promo_error', { defaultValue: 'Ошибка сервера' });
+
         if (data.success) {
             currentPromoDiscount = data.discount_percent;
             appliedPromoCode = input;
             
-            const savedText = i18next.t('checkout.saved', { defaultValue: 'Вы сэкономили' });
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Скидка ${data.discount_percent * 100}%<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} грн</b></span></span>`;
+            // Теперь текст 100% будет на том языке, который выбран на сайте
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${successText} ${data.discount_percent * 100}%<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} грн</b></span></span>`;
         } else {
             currentPromoDiscount = 0;
             appliedPromoCode = '';
-            msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${data.message}</span>`;
+            // Выводим правильную ошибку в зависимости от того, что ответил сервер
+            const errorMessage = data.message.includes('Лимит') ? limitErrorText : invalidErrorText;
+            msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${errorMessage}</span>`;
         }
     } catch (err) {
         msg.innerHTML = `<span style="color: var(--accent-red);">[!] Ошибка связи с сервером</span>`;

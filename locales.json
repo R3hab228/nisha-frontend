@@ -18,7 +18,7 @@
       "product": {
         "views": "ПРОСМОТРІВ:", "condition": "СТАН РЕЧІ:", "size": "РОЗМІР:", "brand": "БРЕНД:",
         "add_to_cart": "У КОШИК", "notify": "ПОВІДОМИТИ ПРО НАЯВНІСТЬ",
-        "badge_orig": "ПРОЙШЛО ЛЕГІТ-ЧЕК", "badge_fast": "ШВИДКА ВІДПРАВКА", "badge_refund": "ПОВЕРНЕННЯ 14 ДНІВ",
+        "badge_orig": "ПРОЙШЛО ЛЕГІТ-ЧЕК", "badge_fast": "ШВИДКА ВІДПРАВКА", "badge_refund": " БЕЗ ПОВЕРНЕНЬ ", "badge_norefund": "БЕЗ ПОВЕРНЕНЬ",
         "similar": "[ СХОЖІ РЕЧІ ]", "delivery": "Доставка та оплата", "delivery_text": "Відправка Новою Поштою. Працюємо по повній передоплаті або накладеним платежем з передоплатою 200 грн.",
         "measure": "Як ми робимо заміри?", "measure_text": "Всі заміри знімаються з речі на рівній поверхні. Похибка 1-2 см."
       },
@@ -149,6 +149,7 @@
         "views": "ПРОСМОТРОВ:", "condition": "СОСТОЯНИЕ ВЕЩИ:", "size": "РАЗМЕР:", "brand": "БРЕНД:",
         "add_to_cart": "В КОРЗИНУ", "notify": "УВЕДОМИТЬ О ПОЯВЛЕНИИ",
         "badge_orig": "ПРОШЛО ЛЕГИТ-ЧЕК", "badge_fast": "БЫСТРАЯ ОТПРАВКА", "badge_refund": "ВОЗВРАТ 14 ДНЕЙ",
+        "badge_norefund": "БЕЗ ВОЗВРАТОВ",
         "similar": "[ ПОХОЖИЕ ВЕЩИ ]", "delivery": "Доставка и оплата", "delivery_text": "Отправка Новой Почтой. Работаем по полной предоплате или наложенным платежом по минимальной предоплате 200 грн.",
         "measure": "Как мы делаем замеры?", "measure_text": "Все замеры снимаются с вещи, лежащей на ровной поверхности. Погрешность может составлять 1-2 см."
       },
@@ -278,7 +279,7 @@
       "product": {
         "views": "VIEWS:", "condition": "CONDITION:", "size": "SIZE:", "brand": "BRAND:",
         "add_to_cart": "ADD TO CART", "notify": "NOTIFY ME",
-        "badge_orig": "VERIFIED AUTHENTIC", "badge_fast": "FAST SHIPPING", "badge_refund": "14-DAY RETURNS",
+        "badge_orig": "VERIFIED AUTHENTIC", "badge_fast": "FAST SHIPPING", "badge_refund": "NO RETURNS ", "badge_norefund": "NO RETURNS",
         "similar": "[ SIMILAR ITEMS ]", "delivery": "Shipping & Payment", "delivery_text": "Worldwide shipping available. Returns accepted within 14 days.",
         "measure": "How do we measure?", "measure_text": "All measurements are taken with the item laying flat. Allow a 1-2 cm error."
       },
