@@ -472,9 +472,41 @@
         .share-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05);}
         .share-btn:active { transform: scale(0.95); }
 
-       .trust-badges { display: flex; gap: 10px; margin-top: 20px; border-top: 1px dashed #333; padding-top: 20px; }
-        .badge-item { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; background: #0a0a0a; border: 1px solid #222; padding: 10px 12px; border-left: 3px solid #333; transition: 0.2s; cursor: pointer; }
-        .badge-item:hover { border-left-color: var(--accent-green); background: #111; transform: translateY(-2px); }
+       /* --- БЕЙДЖИ В КАРТОЧКЕ ТОВАРА --- */
+.trust-badges { 
+    display: flex; 
+    gap: 10px; 
+    margin-top: 20px; 
+    border-top: 1px dashed #333; 
+    padding-top: 20px; 
+}
+.badge-item { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-start; /* ВЫРАВНИВАЕМ ВСЕ БЕЙДЖИ ПО ВЕРХНЕМУ КРАЮ */
+    align-items: flex-start; 
+    gap: 5px; 
+    background: #0a0a0a; 
+    border: 1px solid #222; 
+    padding: 10px 12px; 
+    border-left: 3px solid #333; 
+    transition: 0.2s; 
+    cursor: pointer; 
+    min-height: 60px; /* ФИКСИРУЕМ ОДИНАКОВУЮ ВЫСОТУ ДЛЯ ВСЕХ */
+}
+.badge-item:hover { border-left-color: var(--accent-green); background: #111; transform: translateY(-2px); }
+
+/* КРАСНЫЙ БЕЙДЖ ДЛЯ ПРЕДЛОЖКИ */
+.badge-item.danger-badge { border-left-color: var(--accent-red); }
+.badge-item.danger-badge:hover { background: rgba(255,0,0,0.05); border-left-color: var(--accent-red); }
+.badge-item.danger-badge .badge-icon { 
+    color: var(--accent-red); 
+    background: transparent; /* Убрал фон, чтобы SVG смотрелся лучше */
+    padding: 0; 
+    display: flex; /* Для выравнивания иконки */
+}
+.badge-item.danger-badge .badge-text { color: var(--accent-red); }
         
         /* КРАСНЫЙ БЕЙДЖ ДЛЯ ПРЕДЛОЖКИ */
         .badge-item.danger-badge { border-left-color: var(--accent-red); }
@@ -528,41 +560,32 @@
         /* PhotoSwipe Image fix */
         .pswp__img { object-fit: contain; }
 
-        .rules-content { 
-            padding: 25px; 
-            font-size: 14px; 
-            line-height: 1.6; 
-            color: #ddd; 
-            background: #0a0a0a; 
-            max-height: 50vh; /* Ограничиваем высоту, чтобы кнопка влезла */
-            overflow-y: auto !important; 
-            overscroll-behavior-y: contain;
-            -webkit-overflow-scrolling: touch;
-            pointer-events: auto;
-        }
-        .rules-content h3 { 
-            color: var(--accent-green) !important; 
-            font-family: var(--font-mono); 
-            border-bottom: 1px solid #333; 
-            padding-bottom: 10px; 
-            margin-top: 25px;
-            white-space: normal;
-            word-wrap: break-word;
-        }
-        .rules-content h3:first-child { margin-top: 0; }
-        .rules-content ul { padding-left: 20px; }
-        .rules-content li { margin-bottom: 10px; }
-        .rules-content strong { color: #fff; }
-        .rules-footer { 
-            padding: 20px; 
-            background: #000; 
-            border-top: 2px inset var(--border-light); 
-            display: flex; 
-            justify-content: center;
-            position: sticky; /* ПРИКЛЕИВАЕМ КНОПКУ К НИЗУ */
-            bottom: 0; 
-            z-index: 10;
-        }
+        /* --- ФИКС МОДАЛКИ С ПРАВИЛАМИ --- */
+#rulesModal .modal-window {
+    max-height: 80vh !important; /* Окно не может быть больше 80% высоты экрана */
+    display: flex;
+    flex-direction: column;
+}
+.rules-content { 
+    padding: 25px; 
+    font-size: 14px; 
+    line-height: 1.6; 
+    color: #ddd; 
+    background: #0a0a0a; 
+    flex-grow: 1; /* Растягивается, чтобы занять всё свободное место */
+    overflow-y: auto !important; /* Полоса прокрутки только для текста */
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    pointer-events: auto;
+}
+.rules-footer { 
+    padding: 20px; 
+    background: #000; 
+    border-top: 2px inset var(--border-light); 
+    display: flex; 
+    justify-content: center;
+    flex-shrink: 0; /* ЗАПРЕЩАЕМ КНОПКЕ СЖИМАТЬСЯ ИЛИ ИСЧЕЗАТЬ */
+}
         .accept-btn { background: #111; color: var(--accent-green); font-weight: bold; padding: 15px 20px; font-size: 15px; font-family: var(--font-mono); border: 2px outset #444; cursor: pointer; text-transform: uppercase; width: 100%; transition: 0.2s;}
         .accept-btn:hover { border-color: var(--accent-green); }
         .accept-btn:active { border-style: inset; }
