@@ -416,9 +416,9 @@ window.onload = async () => {
         }
 
         
-        if (typeof autoAnimate === 'function') {
+       if (typeof autoAnimate === 'function') {
             autoAnimate(document.getElementById('historyGrid'));
-            autoAnimate(document.getElementById('ordersListArea'));
+            // Убрали ordersListArea, теперь мы анимируем его сами через CSS
         }
 
         checkRules();
@@ -2572,7 +2572,7 @@ function renderFilteredOrders() {
             : `<div class="order-ttn" style="color:#777;">ТТН: Ожидается генерация...</div>`;
 
         listArea.innerHTML += `
-            <div class="order-card">
+            <div class="order-card order-card-anim">
                 <div class="order-header">
                     <span class="order-id">ЗАКАЗ #${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
                     <span class="order-status status-${order.status}">${order.status.toUpperCase()}</span>
