@@ -587,10 +587,53 @@
         .accept-btn:active { border-style: inset; }
 
        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
-        .toast { background: rgba(0, 0, 0, 0.95); border: 1px solid var(--accent-green); color: #fff; padding: 15px 20px; font-family: var(--font-mono); font-size: 13px; box-shadow: 0 0 15px rgba(0,255,0,0.2); border-left: 5px solid var(--accent-green); display: flex; align-items: center; gap: 10px; animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards, fadeOut 0.5s 3.5s forwards; max-width: 320px; width: max-content; box-sizing: border-box; word-break: break-word;}
+        
+        .toast { 
+            background: rgba(0, 0, 0, 0.95); 
+            border: 1px solid var(--accent-green); 
+            color: #fff; 
+            padding: 15px 20px; 
+            font-family: var(--font-mono); 
+            font-size: 13px; 
+            box-shadow: 0 0 15px rgba(0,255,0,0.2); 
+            border-left: 5px solid var(--accent-green); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            /* Тайминг уменьшен до 2.5s */
+            animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards, fadeOut 0.5s 2.5s forwards; 
+            max-width: 320px; 
+            width: max-content; 
+            box-sizing: border-box; 
+            word-break: break-word;
+            position: relative; 
+            overflow: hidden; 
+        }
+
+        /* ПОЛОСКА ТАЙМЕРА ВНИЗУ ТОСТА */
+        .toast::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px; 
+            background: var(--accent-green);
+            width: 100%;
+            /* Анимация полоски на 2.5s */
+            animation: toastTimer 2.5s linear forwards; 
+        }
+
+        .toast.error::after {
+            background: var(--accent-red);
+        }
+
+        @keyframes toastTimer {
+            0% { width: 100%; }
+            100% { width: 0%; }
+        }
         
         /* Жестко фиксируем ширину иконки и префикса, чтобы они не ломались */
-        .toast::before { min-width: max-content; white-space: nowrap; display: inline-block; }
+        .toast::before { min-width: max-content; white-space: nowrap; display: inline-block; z-index: 2; }
         
         @media (max-width: 900px) {
             .toast-container { right: 10px; left: 10px; }

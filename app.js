@@ -268,9 +268,10 @@ function showToast(message, type = 'success', imgUrl = null) {
     toast.innerHTML = html;
     container.appendChild(toast);
     
+    // 2500 миллисекунд (2.5 секунды) + 500мс на саму анимацию затухания
     setTimeout(() => { 
         if(container.contains(toast)) container.removeChild(toast); 
-    }, 3500);
+    }, 3000);
 }
 
 // --- КРУТЫЕ ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ ---
