@@ -2447,17 +2447,24 @@ async function executeOrderFinal(emailToSave) {
     }
 }
 
+// Глобальные переменные для фильтрации заказов
+let globalOrdersData = [];
+let currentOrderTab = 'accepted'; // accepted, shipped, cancelled
+
 async function fetchMyOrders() {
     const listArea = document.getElementById('ordersListArea');
+    const tabsContainer = document.getElementById('ordersTabs');
     if(!listArea) return;
+    
     listArea.innerHTML = '<div style="text-align:center; color:#aaa; font-family: monospace;">[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]</div>';
+    tabsContainer.style.display = 'none'; // Прячем табы на время загрузки
 
-    let ordersData = [];
     let fetchError = null;
 
     if (currentUser) {
         const { data, error } = await _supabase.from('orders').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-        ordersData = data; fetchError = error;
+        globalOrdersData = data || []; 
+        fetchError = error;
     } else {
         const phoneInput = document.getElementById('ordersSearchPhone');
         const phone = phoneInput ? phoneInput.value.replace(/[^\d+]/g, '') : '';
@@ -2467,7 +2474,6 @@ async function fetchMyOrders() {
             return; 
         }
 
-        // ЗАЩИТА: Проверяем, подтверждал ли он этот номер через OTP в текущей сессии
         const { data: otpCheck } = await _supabase.from('otp_codes').select('is_verified').eq('phone', phone).limit(1);
         if (!otpCheck || otpCheck.length === 0 || !otpCheck[0].is_verified) {
             listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.</div>
@@ -2476,7 +2482,8 @@ async function fetchMyOrders() {
         }
 
         const { data, error } = await _supabase.rpc('get_orders_by_phone', { search_phone: phone });
-        ordersData = data; fetchError = error;
+        globalOrdersData = data || []; 
+        fetchError = error;
     }
 
     if (fetchError) { 
@@ -2484,7 +2491,7 @@ async function fetchMyOrders() {
         return; 
     }
 
-    if (!ordersData || ordersData.length === 0) { 
+    if (globalOrdersData.length === 0) { 
         listArea.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">
                 <div style="font-size: 30px; margin-bottom: 15px;">📦</div>
@@ -2494,8 +2501,52 @@ async function fetchMyOrders() {
         return; 
     }
 
-    listArea.innerHTML = '';
-    ordersData.forEach(order => {
+    // Если данные есть, показываем табы и рендерим
+    tabsContainer.style.display = 'flex';
+    
+    // Сбрасываем таб на "Принятые" при новом поиске
+    currentOrderTab = 'accepted';
+    document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.order-tab.tab-yellow').classList.add('active');
+    
+    renderFilteredOrders();
+}
+
+window.switchOrderTab = function(tabName) {
+    if (currentOrderTab === tabName) return; // Не рендерим, если нажали на тот же таб
+    currentOrderTab = tabName;
+    
+    // Обновляем классы активности
+    document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
+    if (tabName === 'accepted') document.querySelector('.order-tab.tab-yellow').classList.add('active');
+    if (tabName === 'shipped') document.querySelector('.order-tab.tab-blue').classList.add('active');
+    if (tabName === 'cancelled') document.querySelector('.order-tab.tab-red').classList.add('active');
+    
+    renderFilteredOrders();
+};
+
+function renderFilteredOrders() {
+    const listArea = document.getElementById('ordersListArea');
+    listArea.innerHTML = ''; // Очищаем (Auto-animate сделает плавное исчезновение/появление)
+
+    // Фильтруем локально
+    const filteredData = globalOrdersData.filter(order => {
+        const s = order.status.toLowerCase();
+        if (currentOrderTab === 'accepted') return s.includes('принят') || s.includes('оплачен');
+        if (currentOrderTab === 'shipped') return s.includes('отправлен') || s.includes('завершен');
+        if (currentOrderTab === 'cancelled') return s.includes('отменен') || s.includes('возврат');
+        return false;
+    });
+
+    if (filteredData.length === 0) {
+        let emptyMsg = currentOrderTab === 'accepted' ? 'Нет активных заказов.' : 
+                       currentOrderTab === 'shipped' ? 'Нет отправленных посылок.' : 'Нет отмененных заказов.';
+        listArea.innerHTML = `<div style="text-align:center; color:#666; font-family: monospace; padding: 30px;">[ ${emptyMsg} ]</div>`;
+        return;
+    }
+
+    // Рендерим отфильтрованные карточки
+    filteredData.forEach(order => {
         const date = new Date(order.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
         let itemsHtml = '';
         if (order.items && Array.isArray(order.items)) {
@@ -2531,24 +2582,16 @@ async function fetchMyOrders() {
             </div>`;
     });
 
-    // Генерация штрих-кодов через JsBarcode
+    // Перерисовываем штрихкоды
     if (typeof JsBarcode !== 'undefined') {
         document.querySelectorAll('.barcode-svg').forEach(svg => {
             const ttn = svg.getAttribute('data-ttn');
             if (ttn) {
-                JsBarcode(svg, ttn, {
-                    format: "CODE128",
-                    lineColor: "#000",
-                    background: "transparent",
-                    width: 1.5,
-                    height: 50,
-                    displayValue: false
-                });
+                JsBarcode(svg, ttn, { format: "CODE128", lineColor: "#000", background: "transparent", width: 1.5, height: 50, displayValue: false });
             }
         });
     }
 }
-
 // ==========================================
 // 12. МОДАЛКА ТОВАРА & ПОХОЖИЕ ТОВАРЫ & PHOTOSWIPE
 // ==========================================
