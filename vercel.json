@@ -7,6 +7,10 @@
     {
       "source": "/share/:id",
       "destination": "https://nisha-api.onrender.com/share/:id"
+    },
+    {
+      "source": "/cdn-images/:match*",
+      "destination": "https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items-images/:match*"
     }
   ],
   "headers": [
