@@ -3291,7 +3291,7 @@ function shareItem() {
     if (!currentOpenedItem) return;
     
     // Прямая ссылка на твой новый домен
-    const shareUrl = `https://https://nisha-store.shop/?item=${currentOpenedItem.id}`;
+    const shareUrl = `https://www.nisha-store.shop/share/${currentOpenedItem.id}`;
     
     const shareData = {
         title: `NISHA | ${currentOpenedItem.name}`,
