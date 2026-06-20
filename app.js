@@ -2777,10 +2777,12 @@ function openProductModal(item) {
                     <span class="badge-text" data-i18n="product.badge_drop">ПРЕДЛОЖКА</span>
                 </div>`;
         } else {
-            // Меняем на строгий бейдж (т.к. возвратов нет)
+            // Крутая зеленая иконка "NO RETURN" (Перечеркнутый круг с R)
+            const noReturnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
+            
             refundBadgeHTML = `
                 <div class="badge-item" onclick="showBadgeInfo('refund')">
-                    <span class="badge-icon">0D</span> 
+                    <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${noReturnSvg}</span> 
                     <span class="badge-text" data-i18n="product.badge_norefund">БЕЗ ВОЗВРАТОВ</span>
                 </div>`;
         }
@@ -3703,8 +3705,8 @@ window.showBadgeInfo = function(type) {
         title = 'FAST_SHIPPING.SYS';
         text = 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
     } else if (type === 'refund') {
-        title = 'REFUND_POLICY.LOG';
-        text = 'Возврат и обмен товара возможен в течение 14 дней с момента покупки.<br><br><b>Обязательное условие:</b> сохранение всех магазинных бирок и изначального товарного вида.';
+        title = 'NO_RETURN_POLICY.LOG';
+        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><br>Мы настоятельно требуем проводить полный осмотр и примерку вещи <b style="color:#fff;">ИСКЛЮЧИТЕЛЬНО в отделении Новой Почты.</b><br><br>Если вещь вам не подошла — вы просто отказываетесь от посылки на почте. <b style="color:var(--accent-red);">Если вы забрали посылку домой — возврат или обмен НЕВОЗМОЖЕН.</b>';
     } else if (type === 'drop') {
         title = 'WARNING: DROP_ITEM';
         text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Эта вещь загружена сторонним продавцом (Creator).</span><br><br>Обязательно проводите полный осмотр вещи на отделении Новой Почты. <b style="color:var(--accent-red);">Если вы забрали посылку домой — возврат или обмен НЕВОЗМОЖЕН</b>, так как деньги сразу переводятся владельцу вещи.';
