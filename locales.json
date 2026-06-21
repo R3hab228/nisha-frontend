@@ -18,7 +18,7 @@
       "product": {
         "views": "ПЕРЕГЛЯДІВ:", "condition": "СТАН РЕЧІ:", "size": "РОЗМІР:", "brand": "БРЕНД:",
         "add_to_cart": "У КОШИК", "notify": "ПОВІДОМИТИ ПРО НАЯВНІСТЬ",
-        "badge_orig": "ПРОЙШЛО ЛЕГІТ-ЧЕК", "badge_fast": "ШВИДКА ВІДПРАВКА", "badge_refund": "ПОВЕРНЕННЯ 14 ДНІВ", "badge_norefund": "БЕЗ ПОВЕРНЕНЬ", "badge_drop": "ВІД ПРОДАВЦЯ",
+        "badge_orig": "ПРОЙШЛО ЛЕГІТ-ЧЕК", "badge_fast": "ШВИДКА ВІДПРАВКА", "badge_refund": "БЕЗ ПОВЕРНЕНЬ", "badge_norefund": "БЕЗ ПОВЕРНЕНЬ", "badge_drop": "ВІД ПРОДАВЦЯ",
         "similar": "[ СХОЖІ РЕЧІ ]", "delivery": "Доставка та оплата", "delivery_text": "Відправка Новою Поштою. Працюємо по повній передоплаті або накладеним платежем з передоплатою 200 грн.",
         "measure": "Як ми робимо заміри?", "measure_text": "Всі заміри знімаються з речі на рівній поверхні. Похибка 1-2 см."
       },
@@ -35,7 +35,8 @@
         "empty": "[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]", "loading": "Очікування даних...",
         "empty_title": "[ ІСТОРІЯ ЗАМОВЛЕНЬ ПОРОЖНЯ ]", "empty_desc": "Здається, ви ще нічого не купували.<br>Час це виправити! Поверніться на головну та оберіть щось круте.",
         "tab_accepted": "ПРИЙНЯТІ", "tab_shipped": "ВІДПРАВЛЕНІ", "tab_cancelled": "СКАСОВАНІ",
-        "empty_accepted": "Немає активних замовлень.", "empty_shipped": "Немає відправлених посилок.", "empty_cancelled": "Немає скасованих замовлень."
+        "empty_accepted": "Немає активних замовлень.", "empty_shipped": "Немає відправлених посилок.", "empty_cancelled": "Немає скасованих замовлень.",
+        "access_granted": "ДОСТУП ДОЗВОЛЕНО. ПРОФІЛЬ"
       },
       "footer": { 
         "visitors": "ВІДВІДУВАЧІ:", 
@@ -80,8 +81,8 @@
         "h5": "[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦІВ (DROP_ITEM) ]",
         "p5_1": "Комісія майданчика за продаж вашої речі становить <b>15%</b>.",
         "p5_2": "Всі фінансові операції проходять <b>тільки через наші реквізити</b>.",
-        "p5_3": "Виплата продавцю здійснюється на картку одразу після того, як покупець забере посилку з пошти.",
-        "p5_4": "У разі відправки підробки або приховування дефектів, продавець зобов'язаний оплатити доставку в обидві сторони, інакше отримує статус BANNED.",
+        "p5_3": "Виплата продавцу здійснюється на картку одразу після того, як покупець забере посилку з пошти.",
+        "p5_4": "У разі відправки підробки або приховування дефектів, продавець зобов'язаний оплатить доставку в обидві сторони, інакше отримує статус BANNED.",
         "btn_accept": "[ Я ЗГОДЕН З ПРАВИЛАМИ ]"
       },
       "tour": {
@@ -125,7 +126,8 @@
         "desc2": "Очікуйте SMS / повідомлення в ТГ з номером накладної."
       },
       "reviews_modal": {
-        "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму."
+        "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",
+        "empty_reviews": "В ДАНИЙ МОМЕНТ ВІДГУКИ ВІДСУТНІ"
       },
       "loader": {
         "connecting": "Підключення до БД..."
@@ -151,7 +153,7 @@
       "product": {
         "views": "ПРОСМОТРОВ:", "condition": "СОСТОЯНИЕ ВЕЩИ:", "size": "РАЗМЕР:", "brand": "БРЕНД:",
         "add_to_cart": "В КОРЗИНУ", "notify": "УВЕДОМИТЬ О ПОЯВЛЕНИИ",
-        "badge_orig": "ПРОШЛО ЛЕГИТ-ЧЕК", "badge_fast": "БЫСТРАЯ ОТПРАВКА", "badge_refund": "ВОЗВРАТ 14 ДНЕЙ", "badge_norefund": "БЕЗ ВОЗВРАТОВ", "badge_drop": "ПРЕДЛОЖКА",
+        "badge_orig": "ПРОШЛО ЛЕГИТ-ЧЕК", "badge_fast": "БЫСТРАЯ ОТПРАВКА", "badge_refund": "БЕЗ ВОЗВРАТОВ", "badge_norefund": "БЕЗ ВОЗВРАТОВ", "badge_drop": "ПРЕДЛОЖКА",
         "similar": "[ ПОХОЖИЕ ВЕЩИ ]", "delivery": "Доставка и оплата", "delivery_text": "Отправка Новой Почтой. Работаем по полной предоплате или наложенным платежом по минимальной предоплате 200 грн.",
         "measure": "Как мы делаем замеры?", "measure_text": "Все замеры снимаются с вещи, лежащей на ровной поверхности. Погрешность может составлять 1-2 см."
       },
@@ -168,7 +170,8 @@
         "empty": "[ ИСТОРИЯ ЗАКАЗОВ ПУСТА ]", "loading": "Ожидание данных...",
         "empty_title": "[ ИСТОРИЯ ЗАКАЗОВ ПУСТА ]", "empty_desc": "Кажется, вы еще ничего не покупали.<br>Пора это исправить! Выберите что-то крутое на главной.",
         "tab_accepted": "ПРИНЯТЫЕ", "tab_shipped": "ОТПРАВЛЕНЫ", "tab_cancelled": "ОТМЕНЕНЫ",
-        "empty_accepted": "Нет активных заказов.", "empty_shipped": "Нет отправленных посылок.", "empty_cancelled": "Нет отмененных заказов."
+        "empty_accepted": "Нет активных заказов.", "empty_shipped": "Нет отправленных посылок.", "empty_cancelled": "Нет отмененных заказов.",
+        "access_granted": "ДОСТУП РАЗРЕШЕН. ПРОФИЛЬ"
       },
       "footer": { 
         "visitors": "VISITORS:", 
@@ -179,7 +182,7 @@
         "refund_policy": "Возврат и обмен товара надлежащего качества осуществляется в течение 14 дней с момента покупки.",
         "copyright": "© 2026 NISHA. Все права защищены."
       },
-      "marquee": "NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНЫХ КРУТЫХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!",
+      "marquee": "NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНИХ КРУТИХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!",
       "messages": {
         "lang_changed": "Язык изменен на",
         "login_success": "Успешный вход!", "logout": "Вы вышли из системы", "reg_success": "ПИСЬМО ОТПРАВЛЕНО! Перейдите по ссылке в почте для активации.",
@@ -258,7 +261,8 @@
         "desc2": "Ожидайте SMS / сообщение в ТГ с номером накладной."
       },
       "reviews_modal": {
-        "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама."
+        "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",
+        "empty_reviews": "В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ"
       },
       "loader": {
         "connecting": "Подключение к БД..."
@@ -284,7 +288,7 @@
       "product": {
         "views": "VIEWS:", "condition": "CONDITION:", "size": "SIZE:", "brand": "BRAND:",
         "add_to_cart": "ADD TO CART", "notify": "NOTIFY ME",
-        "badge_orig": "VERIFIED AUTHENTIC", "badge_fast": "FAST SHIPPING", "badge_refund": "14-DAY RETURNS", "badge_norefund": "NO RETURNS", "badge_drop": "CREATOR ITEM",
+        "badge_orig": "VERIFIED AUTHENTIC", "badge_fast": "FAST SHIPPING", "badge_refund": "NO RETURNS", "badge_norefund": "NO RETURNS", "badge_drop": "CREATOR ITEM",
         "similar": "[ SIMILAR ITEMS ]", "delivery": "Shipping & Payment", "delivery_text": "Worldwide shipping available. Returns accepted within 14 days.",
         "measure": "How do we measure?", "measure_text": "All measurements are taken with the item laying flat. Allow a 1-2 cm error."
       },
@@ -301,7 +305,8 @@
         "empty": "[ ORDER HISTORY IS EMPTY ]", "loading": "Waiting for data...",
         "empty_title": "[ ORDER HISTORY IS EMPTY ]", "empty_desc": "Looks like you haven't bought anything yet.<br>Time to fix that! Go back and pick something cool.",
         "tab_accepted": "ACCEPTED", "tab_shipped": "SHIPPED", "tab_cancelled": "CANCELLED",
-        "empty_accepted": "No active orders.", "empty_shipped": "No shipped parcels.", "empty_cancelled": "No cancelled orders."
+        "empty_accepted": "No active orders.", "empty_shipped": "No shipped parcels.", "empty_cancelled": "No cancelled orders.",
+        "access_granted": "ACCESS GRANTED. PROFILE"
       },
       "footer": { 
         "visitors": "VISITORS:", 
@@ -391,7 +396,8 @@
         "desc2": "Wait for an SMS / TG message with the tracking number."
       },
       "reviews_modal": {
-        "desc": "Here are reviews from real buyers. Completed orders are confirmed by the system. No scam."
+        "desc": "Here are reviews from real buyers. Completed orders are confirmed by the system. No scam.",
+        "empty_reviews": "NO REVIEWS AT THE MOMENT"
       },
       "loader": {
         "connecting": "Connecting to DB..."

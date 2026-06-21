@@ -499,9 +499,9 @@
 
         <!-- НОВЫЙ БЛОК: ВКЛАДКИ ЗАКАЗОВ -->
         <div class="orders-tabs" id="ordersTabs" style="display: none;">
-            <button class="order-tab tab-yellow active" onclick="switchOrderTab('accepted')">ПРИНЯТЫЕ</button>
-            <button class="order-tab tab-blue" onclick="switchOrderTab('shipped')">ОТПРАВЛЕНЫ</button>
-            <button class="order-tab tab-red" onclick="switchOrderTab('cancelled')">ОТМЕНЕНЫ</button>
+            <button class="order-tab tab-yellow active" onclick="switchOrderTab('accepted')" data-i18n="orders_modal.tab_accepted">ПРИНЯТЫЕ</button>
+            <button class="order-tab tab-blue" onclick="switchOrderTab('shipped')" data-i18n="orders_modal.tab_shipped">ОТПРАВЛЕНЫ</button>
+            <button class="order-tab tab-red" onclick="switchOrderTab('cancelled')" data-i18n="orders_modal.tab_cancelled">ОТМЕНЕНЫ</button>
         </div>
 
         <div class="orders-container" id="ordersListArea" style="max-height: 55vh; overflow-y: auto;">

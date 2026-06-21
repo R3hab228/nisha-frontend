@@ -694,7 +694,7 @@ async function openReviewsModal() {
     const { data, error } = await _supabase.from('reviews').select('*').eq('is_published', true).order('created_at', { ascending: false });
     
     if (error || !data || data.length === 0) {
-        container.innerHTML = '<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">[ В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ ]</div>';
+        container.innerHTML = `<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">[ ${i18next.t('reviews_modal.empty_reviews', { defaultValue: 'В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ' })} ]</div>`;
         return;
     }
     
@@ -1269,10 +1269,10 @@ function renderNextBatch() {
                 <div class="item-info" onclick="openProductModalById('${item.id}')">
                     <h3 class="item-title">${item.name}</h3>
                     <div class="item-price">${priceHTML}</div>
-                    <div class="item-size">Размер: ${item.size}</div>
+                    <div class="item-size">${i18next.t('product.size')} ${item.size}</div>
                     <div class="item-footer"><span>${item.brand}</span><span>${item.condition}</span></div>
                 </div>
-                <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">В КОРЗИНУ</button>
+                <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${i18next.t('product.add_to_cart')}</button>
             `;
 
             // ЛОГИКА: Клик по слайдеру тоже открывает модалку, но НЕ при свайпе
@@ -2464,7 +2464,7 @@ async function executeOrderFinal(emailToSave) {
 
     if (currentUser) {
         if(guestInputGroup) guestInputGroup.style.display = 'none';
-        if(guestText) guestText.innerHTML = `ДОСТУП РАЗРЕШЕН. ПРОФИЛЬ: <span style="color:var(--accent-green); font-weight:bold;">${userProfile?.username || currentUser.email}</span>`;
+        if(guestText) guestText.innerHTML = `${i18next.t('orders_modal.access_granted')}: <span style="color:var(--accent-green); font-weight:bold;">${userProfile?.username || currentUser.email}</span>`;
         fetchMyOrders();
     } else {
         if(guestInputGroup) guestInputGroup.style.display = 'flex';
@@ -2869,11 +2869,11 @@ function openProductModal(item) {
         badgesContainer.innerHTML = `
             <div class="badge-item" onclick="showBadgeInfo('legit')">
                 <span class="badge-icon">100%</span> 
-                <span class="badge-text">ПРОШЛО ЛЕГИТ-ЧЕК</span>
+                <span class="badge-text" data-i18n="product.badge_legit">ПРОШЛО ЛЕГИТ-ЧЕК</span>
             </div>
             <div class="badge-item" onclick="showBadgeInfo('fast')">
                 <span class="badge-icon">24H</span> 
-                <span class="badge-text">БЫСТРАЯ ОТПРАВКА</span>
+                <span class="badge-text" data-i18n="product.badge_fast">БЫСТРАЯ ОТПРАВКА</span>
             </div>
             ${refundBadgeHTML}
         `;
