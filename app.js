@@ -3389,9 +3389,11 @@ async function applyPromoCode() {
 
     btn.innerText = '...';
     
+    // Считаем общую сумму ДО скидки
     const originalTotal = cart.reduce((sum, item) => sum + item.price, 0);
 
     try {
+        // Отправляем запрос на наш Бэкенд
         const res = await fetch('https://nisha-api.onrender.com/api/check-promo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3400,31 +3402,40 @@ async function applyPromoCode() {
         
         const data = await res.json();
 
-        // Достаем переводы из i18next (чтобы язык всегда был правильный)
-        const savedText = i18next.t('checkout.saved', { defaultValue: 'Вы сэкономили' });
-        const successText = i18next.t('checkout.promo_success', { defaultValue: 'Код активирован! Скидка' });
-        const limitErrorText = i18next.t('checkout.promo_limit', { defaultValue: 'Лимит активаций исчерпан' });
-        const invalidErrorText = i18next.t('checkout.promo_invalid', { defaultValue: 'Неверный или неактивный код' });
-        const serverErrorText = i18next.t('checkout.promo_error', { defaultValue: 'Ошибка сервера' });
+        // Достаем актуальный язык, чтобы переводы не зависали
+        const currentLang = localStorage.getItem('nisha_lang') || 'ru';
+        
+        // Меняем язык i18next ПЕРЕД получением перевода (страховка)
+        if (i18next.language !== currentLang) {
+            await i18next.changeLanguage(currentLang);
+        }
+
+        const savedText = i18next.t('checkout.saved');
+        const successText = i18next.t('checkout.promo_success');
+        const limitErrorText = i18next.t('checkout.promo_limit');
+        const invalidErrorText = i18next.t('checkout.promo_invalid');
+        const serverErrorText = i18next.t('checkout.promo_error');
 
         if (data.success) {
             currentPromoDiscount = data.discount_percent;
             appliedPromoCode = input;
             
-            // Теперь текст 100% будет на том языке, который выбран на сайте
             msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${successText} ${data.discount_percent * 100}%<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} грн</b></span></span>`;
         } else {
             currentPromoDiscount = 0;
             appliedPromoCode = '';
-            // Выводим правильную ошибку в зависимости от того, что ответил сервер
-            const errorMessage = data.message.includes('Лимит') ? limitErrorText : invalidErrorText;
-            msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${errorMessage}</span>`;
+            
+            let errorMsg = invalidErrorText;
+            if (data.message && data.message.includes('Лимит')) {
+                errorMsg = limitErrorText;
+            }
+            msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${errorMsg}</span>`;
         }
     } catch (err) {
-        msg.innerHTML = `<span style="color: var(--accent-red);">[!] Ошибка связи с сервером</span>`;
+        msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${i18next.t('checkout.promo_error')}</span>`;
     }
     
-    btn.innerText = i18next.t('checkout.apply', { defaultValue: 'ПРИМЕНИТЬ' });
+    btn.innerText = i18next.t('checkout.apply');
     updateCartUI();
 }
 // --- ЛОГИКА СВАЙПА В КОРЗИНЕ (SWIPE TO DELETE) ---
