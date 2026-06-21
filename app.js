@@ -3783,6 +3783,21 @@ window.showBadgeInfo = function(type) {
     // Вызываем стильное терминальное окно
     showTerminalModal(title, text, '[ ПОНЯТНО ]', null);
 };
+// ==========================================
+// ЛОГИКА ГЛАЗИКА (ПОКАЗАТЬ/СКРЫТЬ ПАРОЛЬ)
+// ==========================================
+window.togglePasswordVisibility = function(inputId, iconElement) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        iconElement.classList.add('visible'); // Глазик становится зеленым, линия исчезает
+    } else {
+        input.type = 'password';
+        iconElement.classList.remove('visible'); // Глазик становится красным, линия появляется
+    }
+};
 
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {

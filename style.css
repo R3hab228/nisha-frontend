@@ -1382,3 +1382,57 @@ body.search-lock {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+/* --- ГЛАЗИК ПАРОЛЯ --- */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper .auth-input,
+.password-wrapper .form-input {
+    width: 100%;
+    padding-right: 40px !important; /* Освобождаем место для глазика */
+}
+
+.eye-icon {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.eye-icon:active {
+    transform: scale(0.8);
+}
+
+/* Красный перечеркнутый глаз (Пароль скрыт) */
+.eye-icon svg {
+    stroke: var(--accent-red);
+    transition: stroke 0.3s ease;
+}
+
+/* Зеленый открытый глаз (Пароль виден) */
+.eye-icon.visible svg {
+    stroke: var(--accent-green);
+}
+
+/* Анимация перечеркивающей линии */
+.eye-slash {
+    transition: stroke-dashoffset 0.3s ease, opacity 0.3s ease;
+    stroke-dasharray: 30;
+    stroke-dashoffset: 0;
+    opacity: 1;
+}
+
+.eye-icon.visible .eye-slash {
+    stroke-dashoffset: 30;
+    opacity: 0;
+}
