@@ -2268,6 +2268,9 @@ async function openCheckoutModal() {
     document.getElementById('checkoutModal').style.display = 'flex'; 
     document.body.style.overflow = 'hidden';
     checkPhoneAuth();
+    
+    // ЗАПУСКАЕМ АВТООПРЕДЕЛЕНИЕ ГОРОДА
+    autoDetectCity();
 }
 
 async function submitOrder() {
@@ -3826,6 +3829,42 @@ window.togglePasswordVisibility = function(inputId, iconElement) {
         iconElement.classList.remove('visible'); // Глазик становится красным, линия появляется
     }
 };
+// ==========================================
+// АВТООПРЕДЕЛЕНИЕ ГОРОДА ПО IP (GEO IP)
+// ==========================================
+async function autoDetectCity() {
+    const cityInput = document.getElementById('orderCity');
+    
+    // Если поле уже заполнено (например, юзер закрыл и открыл окно), не трогаем его
+    if (!cityInput || cityInput.value.trim() !== '') return;
+
+    const originalPlaceholder = cityInput.placeholder;
+    cityInput.placeholder = "Поиск спутников..."; // Терминальный вайб
+
+    try {
+        // Бесплатный и надежный API без лимитов
+        const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+        const data = await res.json();
+
+        // Проверяем, что человек из Украины и город определился
+        if (data.country_code === 'UA' && data.city) {
+            const detectedCity = data.city;
+            
+            // Вписываем английское название (Новая Почта умеет его переводить в укр)
+            cityInput.value = detectedCity;
+            
+            showToast(`[GEO] Город определен: ${detectedCity}`, 'success');
+
+            // Имитируем, что юзер сам напечатал город, чтобы вылез список Новой Почты
+            searchNPCity(detectedCity);
+        } else {
+            cityInput.placeholder = originalPlaceholder;
+        }
+    } catch (err) {
+        console.error("Ошибка GeoIP:", err);
+        cityInput.placeholder = originalPlaceholder;
+    }
+}
 
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {
