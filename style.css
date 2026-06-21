@@ -44,11 +44,27 @@
         .pulsing-dot { width: 6px; height: 6px; background: var(--accent-red); border-radius: 50%; animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); } 70% { box-shadow: 0 0 0 5px rgba(255,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,0,0,0); } }
         
-        .btn-target { position: relative; transition: 0.1s; }
-        .btn-target::before { content: '>'; position: absolute; left: 8px; opacity: 0; transform: translateX(-10px); transition: 0.2s ease-out; font-weight: bold; }
-        .btn-target::after { content: '<'; position: absolute; right: 8px; opacity: 0; transform: translateX(10px); transition: 0.2s ease-out; font-weight: bold; }
-        .btn-target:hover::before { opacity: 1; transform: translateX(0); }
-        .btn-target:hover::after { opacity: 1; transform: translateX(0); }
+        /* --- ЖЕСТКИЙ ФИКС СТРЕЛОЧЕК НА КНОПКАХ --- */
+        .btn-target { 
+            position: relative; 
+            transition: 0.1s; 
+            padding-left: 25px !important; /* Еще больше места слева */
+            padding-right: 25px !important; /* Еще больше места справа */
+        }
+        
+        /* Стрелки жестко прибиты к краям кнопки */
+        .btn-target::before { content: '>'; position: absolute; left: 8px; opacity: 0; transform: translateX(-5px); transition: 0.2s ease-out; font-weight: bold; color: inherit; }
+        .btn-target::after { content: '<'; position: absolute; right: 8px; opacity: 0; transform: translateX(5px); transition: 0.2s ease-out; font-weight: bold; color: inherit; }
+        
+        @media (min-width: 901px) {
+            .btn-target:hover::before { opacity: 1; transform: translateX(0); }
+            .btn-target:hover::after { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* На мобилках полностью убиваем стрелочки, чтобы они 100% не наехали на текст */
+        @media (max-width: 900px) {
+            .btn-target::before, .btn-target::after { display: none !important; content: none !important; }
+        }
 
         /* ЖИВОЙ ПОИСК */
           .search-wrapper { position: relative; flex-grow: 1; }
