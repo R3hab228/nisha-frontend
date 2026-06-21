@@ -1247,6 +1247,16 @@ function renderNextBatch() {
             card.className = `item-card ${item.status !== 'available' ? 'sold-out' : ''}`;
             card.setAttribute('data-id', item.id);
             
+            // --- ЛОГИКА ОТОБРАЖЕНИЯ ЦЕНЫ ---
+            let priceHTML = '';
+            if (item.is_sale && item.old_price) {
+                // Если вещь на сейле — показываем блекло-зеленую зачеркнутую цену и новую яркую
+                priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${item.old_price} грн</span><span style="color: var(--accent-green);">${item.price} грн</span>`;
+            } else {
+                // Обычная цена
+                priceHTML = `<span style="color: var(--accent-green);">${item.price} грн</span>`;
+            }
+
             card.innerHTML = `
                 ${badgeHTML}
                 <div class="${starClass}" onclick="toggleFav(event, '${item.id}')">★</div>
@@ -1258,7 +1268,7 @@ function renderNextBatch() {
                 </div>
                 <div class="item-info" onclick="openProductModalById('${item.id}')">
                     <h3 class="item-title">${item.name}</h3>
-                    <div class="item-price">${isHacked ? Math.floor(item.price * 0.9) : item.price} грн</div>
+                    <div class="item-price">${priceHTML}</div>
                     <div class="item-size">Размер: ${item.size}</div>
                     <div class="item-footer"><span>${item.brand}</span><span>${item.condition}</span></div>
                 </div>
@@ -3047,13 +3057,20 @@ function renderHistory() {
             }
         }
         
+        // Проверяем, есть ли старая цена (сохраненная в истории)
+        let priceText = `${h.price} грн`;
+        // Если хочешь, чтобы в истории тоже было зачеркнуто (если ты сохранял old_price), можно добавить тут логику, но пока оставим просто зеленую цену для минимализма, как было, или сделаем:
+        if (h.old_price) {
+            priceText = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${h.old_price}</span>${h.price} грн`;
+        }
+
         card.innerHTML = `
             <div class="history-img" style="position: relative; overflow: hidden; padding: 0;">
                 ${mediaHTML}
             </div>
             <div class="history-info">
                 <div class="history-name" title="${h.name}">${h.name}</div>
-                <div class="history-price">${h.price} грн</div>
+                <div class="history-price">${priceText}</div>
             </div>`;
             
         container.appendChild(card);
