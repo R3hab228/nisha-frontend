@@ -636,8 +636,15 @@
         .toast::before { min-width: max-content; white-space: nowrap; display: inline-block; z-index: 2; }
         
         @media (max-width: 900px) {
-            .toast-container { right: 10px; left: 10px; }
-            .toast { max-width: 100%; width: 100%; }
+            .toast-container { 
+                right: 15px; 
+                left: auto; /* Убрали растягивание влево */
+                align-items: flex-end; /* Выравниваем по правому краю */
+            }
+            .toast { 
+                max-width: 90vw; /* Максимум 90% ширины экрана */
+                width: max-content; /* Возвращаем аккуратную ширину по контенту */
+            }
         }
         .toast.error { border-color: var(--accent-red); box-shadow: 0 0 15px rgba(255,0,0,0.2); }
         .toast.error::before { content: '[!]'; color: var(--accent-red); font-weight: bold;}

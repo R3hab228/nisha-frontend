@@ -2211,21 +2211,26 @@ async function generateAndSendOTP() {
 }
 
 async function openCheckoutModal() { 
-    // 1. БЫСТРАЯ ПРОВЕРКА: А вдруг товар уже купили, пока он лежал в корзине?
-    const btn = document.querySelector('.cart-checkout-btn');
+    // 1. Находим ИМЕННО кнопку "ОФОРМИТЬ ЗАКАЗ" внизу панели корзины
+    const btn = document.querySelector('.cart-panel .cart-checkout-btn');
+    if (!btn) return; // Защита от ошибок, если кнопка не найдена
+    
+    // Сохраняем оригинальный текст и блокируем кнопку
     const originalText = btn.innerText;
     btn.innerText = "[ ПРОВЕРКА НАЛИЧИЯ... ]";
     btn.style.pointerEvents = "none";
 
+    // 2. БЫСТРАЯ ПРОВЕРКА: А вдруг товар уже купили, пока он лежал в корзине?
     const itemIds = cart.map(i => i.id);
     const { data: dbItems, error } = await _supabase.from('items').select('id, name, status').in('id', itemIds);
 
     let hasSoldItems = false;
     if (dbItems && !error) {
-        // Фильтруем корзину, оставляя только доступные товары
+        // Фильтруем корзину, оставляя только доступные товары (и забронированные тобой)
         cart = cart.filter(cartItem => {
             const dbItem = dbItems.find(i => i.id === cartItem.id);
-            if (!dbItem || dbItem.status !== 'available') {
+            // Если товара нет в БД или его статус 'sold' — удаляем из корзины
+            if (!dbItem || dbItem.status === 'sold') {
                 showToast(`Товар "${cartItem.name}" уже кто-то купил! 😢`, 'error');
                 hasSoldItems = true;
                 return false; 
