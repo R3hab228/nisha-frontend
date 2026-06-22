@@ -2991,12 +2991,24 @@ async function openWaitlist() {
 // ==========================================
 // 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
 // ==========================================
+// ==========================================
+// 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
+// ==========================================
 function addToHistory(item) {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     hist = hist.filter(i => i.id !== item.id);
     const img = (item.images && item.images.length > 0) ? item.images[0] : '';
     
-    hist.unshift({ id: item.id, name: item.name, price: item.price, img: img });
+    // ДОБАВИЛИ is_sale и old_price для правильного отображения скидок
+    hist.unshift({ 
+        id: item.id, 
+        name: item.name, 
+        price: item.price, 
+        old_price: item.old_price, 
+        is_sale: item.is_sale, 
+        img: img 
+    });
+    
     if(hist.length > 8) hist.pop(); 
     
     localStorage.setItem('nisha_history', JSON.stringify(hist));
@@ -3033,6 +3045,14 @@ function renderHistory() {
         const optImg = h.img;
         const isVideo = optImg && optImg.endsWith('.mp4');
         
+        // --- ЛОГИКА ЦЕНЫ СО СКИДКОЙ ДЛЯ ИСТОРИИ ---
+        let priceText = '';
+        if (h.is_sale && h.old_price) {
+            priceText = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${h.old_price}</span>${h.price} грн`;
+        } else {
+            priceText = `${h.price} грн`;
+        }
+
         const card = document.createElement('div');
         card.className = 'history-card';
         card.onclick = () => openProductModalById(h.id);
