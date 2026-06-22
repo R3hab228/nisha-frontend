@@ -1454,3 +1454,44 @@ body.search-lock {
     stroke-dashoffset: 30;
     opacity: 0;
 }
+/* --- 1. ПУЛЬСАЦИЯ ДЛЯ НОВЫХ (НЕПРОСМОТРЕННЫХ) ТОВАРОВ --- */
+.item-card.unseen-pulse {
+    animation: unseenPulseAnim 2s infinite alternate;
+}
+@keyframes unseenPulseAnim {
+    0% { border-color: var(--border-color); box-shadow: none; }
+    100% { border-color: rgba(220, 20, 60, 0.8); box-shadow: 0 0 15px rgba(220, 20, 60, 0.2); }
+}
+
+/* --- 2. ЗУМ ФОТО ПО ДАБЛ-ТАПУ --- */
+.slide {
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Плавное увеличение */
+}
+.slide.zoomed-in {
+    transform: scale(1.8); /* Увеличиваем почти в 2 раза */
+    z-index: 50;
+    cursor: zoom-out;
+}
+
+/* --- 3. ИСТОРИЯ ПОИСКА --- */
+.search-history-title {
+    padding: 10px 15px;
+    color: #555;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-bottom: 1px dashed #222;
+    background: #050505;
+}
+.search-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px dashed #222;
+    cursor: pointer;
+    color: #aaa;
+    font-family: var(--font-mono);
+}
+.search-history-item:hover { background: #111; color: var(--accent-green); }
+.search-history-clear { color: var(--accent-red); font-size: 10px; cursor: pointer; }

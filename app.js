@@ -1197,6 +1197,9 @@ function renderNextBatch() {
     if (!grid) return;
     
     const end = Math.min(renderedCount + batchSize, filteredItems.length);
+    // Получаем список ID тех товаров, которые юзер уже смотрел
+    let viewedHistory = JSON.parse(localStorage.getItem('nisha_history') || '[]');
+    let viewedIds = viewedHistory.map(h => h.id);
     
     for (let i = renderedCount; i < end; i++) {
         try {
@@ -1243,8 +1246,13 @@ function renderNextBatch() {
             });
 
             const starClass = favorites.includes(item.id) ? 'fav-star active' : 'fav-star';
+            
+            // Если товара нет в локальной истории просмотров — он НОВЫЙ для этого юзера
+            const isUnseen = !viewedIds.includes(item.id) && item.status === 'available';
+            const pulseClass = isUnseen ? 'unseen-pulse' : '';
+
             const card = document.createElement('div');
-            card.className = `item-card ${item.status !== 'available' ? 'sold-out' : ''}`;
+            card.className = `item-card ${item.status !== 'available' ? 'sold-out' : ''} ${pulseClass}`;
             card.setAttribute('data-id', item.id);
             
             // --- ЛОГИКА ОТОБРАЖЕНИЯ ЦЕНЫ ---
@@ -2636,6 +2644,10 @@ function renderFilteredOrders() {
 function openProductModalById(itemId) {
     const item = allItems.find(i => i.id === itemId);
     if (item) { 
+        // Снимаем красное мерцание с карточки в ленте
+        const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
+        if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
+
         closeModal('ordersModal'); 
         openProductModal(item); 
     } else { 
@@ -3211,11 +3223,51 @@ function toggleMobileSidebar() {
 }
 // Задержка поиска, чтобы не лагало при быстром вводе текста
 let searchDebounce;
+// Функция сохранения истории поиска
+function saveRecentSearch(term) {
+    if (!term || term.length < 2) return;
+    let history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
+    history = history.filter(t => t.toLowerCase() !== term.toLowerCase());
+    history.unshift(term);
+    if (history.length > 5) history.pop(); // Храним только 5 последних
+    localStorage.setItem('nisha_search_history', JSON.stringify(history));
+}
+
+// Отображение истории поиска
+function showSearchHistory() {
+    const dropdown = document.getElementById('liveSearchDropdown');
+    let history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
+    if (history.length === 0) return;
+
+    let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); document.getElementById('liveSearchDropdown').style.display='none'; event.stopPropagation();">[ ОЧИСТИТЬ ]</span></div>`;
+    history.forEach(term => {
+        html += `<div class="search-history-item" onclick="document.getElementById('mainSearch').value='${term}'; handleLiveSearch();">
+                    <span>> ${term}</span>
+                 </div>`;
+    });
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+    document.body.classList.add('search-lock');
+}
+
 function handleLiveSearch() {
     clearTimeout(searchDebounce);
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
     const searchTerm = searchInput.value.trim();
+
+    // Если поле пустое, показываем историю
+    if (searchTerm.length === 0) {
+        showSearchHistory();
+        applyFilters();
+        return;
+    }
+
+    if (searchTerm.length < 2) {
+        closeSearch();
+        applyFilters();
+        return;
+    }
 
     if (searchTerm.length < 2) {
         closeSearch();
@@ -3777,16 +3829,36 @@ function initSliderSwipe() {
 
     let touchStartX = 0;
     let touchEndX = 0;
+    let lastTapTime = 0;
 
     sliderContainer.addEventListener('touchstart', (e) => {
         if (e.touches.length > 1) return;
         touchStartX = e.touches[0].clientX;
-    }, { passive: true });
+
+        // ЛОГИКА ДАБЛ-ТАПА (Двойное касание)
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
+        if (tapLength < 300 && tapLength > 0) {
+            // Это двойной тап! Находим текущий слайд и увеличиваем его
+            const slides = document.querySelectorAll('.slide');
+            if (slides[currentSlide]) {
+                slides[currentSlide].classList.toggle('zoomed-in');
+            }
+            e.preventDefault(); // Блокируем стандартный зум браузера
+        }
+        lastTapTime = currentTime;
+
+    }, { passive: false });
 
     sliderContainer.addEventListener('touchend', (e) => {
         touchEndX = e.changedTouches[0].clientX;
         const diff = touchStartX - touchEndX;
-        if (Math.abs(diff) > 50) {
+        
+        const currentSlideEl = document.querySelectorAll('.slide')[currentSlide];
+        const isZoomed = currentSlideEl && currentSlideEl.classList.contains('zoomed-in');
+
+        // Свайпаем только если фотка НЕ увеличена
+        if (Math.abs(diff) > 50 && !isZoomed) {
             if (diff > 0) moveSlide(1);
             else moveSlide(-1);
         }

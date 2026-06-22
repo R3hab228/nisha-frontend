@@ -108,7 +108,7 @@
             <span id="clearSearchBtn" class="clear-search-btn" onclick="clearSearchInput()">✖</span>
             <div id="liveSearchDropdown" class="live-search-dropdown"></div>
         </div>
-        <button class="search-btn btn-target" onclick="applyFilters(); document.getElementById('liveSearchDropdown').style.display='none';" data-i18n="search.btn">Искать</button>
+<button class="search-btn btn-target" onclick="saveRecentSearch(document.getElementById('mainSearch').value.trim()); applyFilters(); document.getElementById('liveSearchDropdown').style.display='none';" data-i18n="search.btn">Искать</button>
     </div>
 
     <div class="main-container">
