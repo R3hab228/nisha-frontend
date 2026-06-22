@@ -764,13 +764,15 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     fill: none;
-    opacity: 0; /* Проявляется при свайпе */
+    opacity: 0; 
     transition: opacity 0.1s linear;
+    overflow: visible !important; /* РАЗРЕШАЕМ КРЫШКЕ ВЫХОДИТЬ ЗА КРАЯ SVG */
 }
 
-/* Сама крышка корзины (будет крутиться через JS) */
+/* Сама крышка корзины */
 .trash-lid {
-    transform-origin: right center; /* Точка вращения - правый край крышки */
+    /* Точка вращения теперь точно в правом верхнем углу базы корзины (X: 19px, Y: 6px) */
+    transform-origin: 19px 6px; 
     transition: transform 0.1s linear;
 }
 
