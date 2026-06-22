@@ -287,6 +287,11 @@
     opacity: 1;
     transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.4s ease;
     will-change: max-height, opacity;
+    
+    /* ЖЕСТКИЙ ФИКС ПРЫЖКОВ */
+    overscroll-behavior-x: contain; /* Запрещает "тянуть" весь сайт при свайпе вбок */
+    touch-action: pan-x; /* Разрешает ТОЛЬКО горизонтальный свайп, блокируя вертикальный */
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Класс закрытого состояния */
@@ -1287,7 +1292,10 @@
     scroll-snap-type: x mandatory; /* Жесткая фиксация */
     scrollbar-width: none; 
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x; /* КРИТИЧНО: разрешаем только горизонтальный свайп, блокируем вертикальный */
+    
+    /* ЖЕСТКИЙ ФИКС ТОРМОЗОВ */
+    overscroll-behavior-x: contain; /* Отключает "резинку" по краям, которая тормозит сайт */
+    touch-action: pan-x; /* КРИТИЧНО: разрешаем только горизонтальный свайп */
 }
 
 .card-slide { 

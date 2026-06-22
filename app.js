@@ -1284,28 +1284,6 @@ function renderNextBatch() {
                 <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${i18next.t('product.add_to_cart')}</button>
             `;
 
-            // ЛОГИКА: Клик по слайдеру тоже открывает модалку, но НЕ при свайпе
-            const slider = card.querySelector('.card-slider-container');
-            let isScrolling = false;
-            let startX = 0;
-
-            slider.addEventListener('touchstart', (e) => { 
-                startX = e.touches[0].clientX; 
-                isScrolling = false; 
-            }, {passive: true});
-
-            slider.addEventListener('touchmove', (e) => { 
-                const touchX = e.touches[0].clientX;
-                const diffX = Math.abs(touchX - startX);
-                if(diffX > 5) {
-                    isScrolling = true;
-                    // Если пользователь начал листать вбок, не даем странице двигаться вверх/вниз
-                    if (e.cancelable) e.stopPropagation(); 
-                }
-            }, {passive: false});
-            slider.addEventListener('click', (e) => {
-                if (!isScrolling) openProductModalById(item.id);
-            });
 
             grid.appendChild(card);
             const vids = card.querySelectorAll('.grid-lazy-video');
