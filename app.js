@@ -1944,7 +1944,14 @@ function renderCartItems() {
         row.className = 'cart-item-row';
         
         row.innerHTML = `
-            <div class="swipe-background">УДАЛИТЬ</div>
+            <div class="swipe-background">
+                <svg class="trash-icon" viewBox="0 0 24 24">
+                    <!-- Крышка корзины -->
+                    <path class="trash-lid" d="M3 6h18 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    <!-- База корзины -->
+                    <path class="trash-base" d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M10 11v6 M14 11v6"></path>
+                </svg>
+            </div>
             <div class="swipe-surface" 
                  data-index="${index}"
                  ontouchstart="handleSwipeStart(event)" 
@@ -3537,16 +3544,26 @@ window.handleSwipeMove = function(e) {
         let moveX = diff > 200 ? 200 + (diff - 200) * 0.2 : diff;
         e.currentTarget.style.transform = `translateX(-${moveX}px)`;
         
-        // 1. Сама карточка товара растворяется
         let surfaceOpacity = Math.max(0.2, 1 - (moveX / 200));
         e.currentTarget.style.opacity = surfaceOpacity;
 
-        // 2. Надпись "УДАЛИТЬ" на фоне ПЛАВНО ПРОЯВЛЯЕТСЯ
+        // --- МАГИЯ КОРЗИНЫ ---
         const parentRow = e.currentTarget.closest('.cart-item-row');
-        const bgText = parentRow.querySelector('.swipe-background');
-        if (bgText) {
-            let bgOpacity = Math.min(1, moveX / 150); // На 150px надпись станет полностью яркой
-            bgText.style.opacity = bgOpacity;
+        const trashIcon = parentRow.querySelector('.trash-icon');
+        const trashLid = parentRow.querySelector('.trash-lid');
+        
+        if (trashIcon && trashLid) {
+            // 1. Иконка плавно появляется из темноты
+            let bgOpacity = Math.min(1, moveX / 80); 
+            trashIcon.style.opacity = bgOpacity;
+
+            // 2. Крышка приоткрывается (до 45 градусов), если потянули дальше 50px
+            if (moveX > 50) {
+                let openAngle = Math.min(45, (moveX - 50) * 0.6);
+                trashLid.style.transform = `rotate(${openAngle}deg)`;
+            } else {
+                trashLid.style.transform = `rotate(0deg)`;
+            }
         }
     }
 };
@@ -3571,13 +3588,15 @@ window.handleSwipeEnd = function(e) {
             removeFromCart(itemIndex, null, parentRow);
         }, 200);
     } else {
-        // Если не дотянули — возвращаем на место
+        // Если не дотянули — возвращаем карточку на место
         rowSurface.style.transform = `translateX(0px)`;
         rowSurface.style.opacity = '1';
         
-        // Прячем надпись "УДАЛИТЬ" обратно
-        const bgText = parentRow.querySelector('.swipe-background');
-        if (bgText) bgText.style.opacity = '0';
+        // Прячем иконку и захлопываем крышку
+        const trashIcon = parentRow.querySelector('.trash-icon');
+        const trashLid = parentRow.querySelector('.trash-lid');
+        if (trashIcon) trashIcon.style.opacity = '0';
+        if (trashLid) trashLid.style.transform = `rotate(0deg)`;
     }
     
     // Сбрасываем переменные

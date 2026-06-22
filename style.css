@@ -746,22 +746,32 @@
     overflow: hidden; /* Прячет красную кнопку удаления, пока не свайпнешь */
 }
 
-/* --- СТИЛЬНЫЙ ФОН ПРИ СВАЙПЕ (БЕЗ КОЛХОЗА) --- */
+/* --- ПРЕМИАЛЬНАЯ АНИМАЦИЯ КОРЗИНЫ --- */
 .swipe-background {
     position: absolute;
     top: 0; right: 0; width: 100%; height: 100%;
-    background: #050505; /* Почти черный, в цвет корзины */
-    color: var(--accent-red); 
-    font-family: var(--font-mono); 
-    font-weight: bold;
-    font-size: 20px; 
-    letter-spacing: 5px;
+    background: #050505; /* Темный фон */
     display: flex; align-items: center; justify-content: flex-end;
-    padding-right: 30px; 
+    padding-right: 35px; /* Отступ справа */
     z-index: 1; 
-    /* Текст будет проявляться плавно через JS */
-    opacity: 0;
+}
+
+.trash-icon {
+    width: 24px;
+    height: 24px;
+    stroke: var(--accent-red);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    opacity: 0; /* Проявляется при свайпе */
     transition: opacity 0.1s linear;
+}
+
+/* Сама крышка корзины (будет крутиться через JS) */
+.trash-lid {
+    transform-origin: right center; /* Точка вращения - правый край крышки */
+    transition: transform 0.1s linear;
 }
 
 .swipe-surface {
