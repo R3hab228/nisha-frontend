@@ -1213,7 +1213,8 @@ function renderNextBatch() {
                 badgeHTML = '<div class="reserved-badge">RESERVED</div>';
             } else {
                 const hasSale = item.is_sale;
-                const hasHot = (item.views_count || 0) >= 15;
+                
+                const hasHot = (item.views_count || 0) >= 25;
 
                 if (hasSale || hasHot) {
                     badgeHTML = `<div class="system-status-bar">`;
@@ -2759,8 +2760,6 @@ function openProductModal(item) {
                 p_item_uuid: item.id, 
                 p_viewer_id: viewerId 
             }).then(({ data, error }) => {
-                // Сервер сам проверит, был ли уже просмотр от этого юзера/железа. 
-                // Если не было — накинет +1 и вернет новую цифру.
                 if (!error && data !== null) {
                     viewCount.innerText = data;
                     item.views_count = data; // Обновляем локально, чтобы не отставало
