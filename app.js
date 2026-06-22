@@ -808,12 +808,35 @@ async function checkSession() {
 
             await loadFavorites();
             
-          // ЧИСТАЯ ЗАГРУЗКА КОРЗИНЫ АВТОРИЗОВАННОГО ПОЛЬЗОВАТЕЛЯ
+          // --- УМНОЕ ВОССТАНОВЛЕНИЕ БРОШЕННОЙ КОРЗИНЫ ---
             if (userProfile && userProfile.cart && userProfile.cart.length > 0) {
-                cart = userProfile.cart; 
+                const dbCart = userProfile.cart;
+                
+                // Если текущая локальная корзина пуста — просто берем из БД
+                if (cart.length === 0) {
+                    cart = dbCart;
+                    showToast('Корзина восстановлена', 'success');
+                } else {
+                    // Если локально что-то есть, объединяем обе корзины без дубликатов
+                    let mergedCart = [...cart];
+                    let addedCount = 0;
+                    
+                    dbCart.forEach(dbItem => {
+                        if (!mergedCart.some(localItem => localItem.id === dbItem.id)) {
+                            mergedCart.push(dbItem);
+                            addedCount++;
+                        }
+                    });
+                    
+                    cart = mergedCart;
+                    if (addedCount > 0) showToast('Корзины синхронизированы', 'success');
+                }
+                
+                // Сохраняем объединенный результат локально и отправляем обратно в БД
                 localStorage.setItem('nisha_cart', JSON.stringify(cart));
+                await syncCartToServer();
             } else {
-                // Если корзина в БД пуста, но юзер что-то накликал как гость - сохраняем это в БД
+                // Если в БД пусто, но юзер накидал вещей гостем — отправляем их в базу
                 if (cart.length > 0) {
                     await syncCartToServer();
                 }
