@@ -1197,9 +1197,9 @@ function renderNextBatch() {
     if (!grid) return;
     
     const end = Math.min(renderedCount + batchSize, filteredItems.length);
-    // Получаем список ID тех товаров, которые юзер уже смотрел
-    let viewedHistory = JSON.parse(localStorage.getItem('nisha_history') || '[]');
-    let viewedIds = viewedHistory.map(h => h.id);
+    
+    // Берем специальный массив ВСЕХ просмотренных товаров (не только из короткой истории)
+    let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
     
     for (let i = renderedCount; i < end; i++) {
         try {
@@ -1247,8 +1247,8 @@ function renderNextBatch() {
 
             const starClass = favorites.includes(item.id) ? 'fav-star active' : 'fav-star';
             
-            // Если товара нет в локальной истории просмотров — он НОВЫЙ для этого юзера
-            const isUnseen = !viewedIds.includes(item.id) && item.status === 'available';
+            // Проверяем по новому долговечному массиву
+            const isUnseen = !seenItemsIds.includes(item.id) && item.status === 'available';
             const pulseClass = isUnseen ? 'unseen-pulse' : '';
 
             const card = document.createElement('div');
@@ -2651,9 +2651,18 @@ function renderFilteredOrders() {
 function openProductModalById(itemId) {
     const item = allItems.find(i => i.id === itemId);
     if (item) { 
-        // Снимаем красное мерцание с карточки в ленте
+        // 1. Снимаем красное мерцание визуально (сразу)
         const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
+
+        // 2. НАВСЕГДА ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ
+        let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
+        if (!seenItemsIds.includes(itemId)) {
+            seenItemsIds.push(itemId);
+            // Храним до 500 просмотренных ID (чтобы не забивать память телефона, 500 ID весят пару килобайт)
+            if (seenItemsIds.length > 500) seenItemsIds.shift(); 
+            localStorage.setItem('nisha_seen_items', JSON.stringify(seenItemsIds));
+        }
 
         closeModal('ordersModal'); 
         openProductModal(item); 
