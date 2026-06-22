@@ -3046,18 +3046,18 @@ function renderHistory() {
         const isVideo = optImg && optImg.endsWith('.mp4');
         
         // --- ЛОГИКА ЦЕНЫ СО СКИДКОЙ ДЛЯ ИСТОРИИ ---
-        let priceText = '';
+        let finalPriceHTML = '';
         if (h.is_sale && h.old_price) {
-            priceText = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${h.old_price}</span>${h.price} грн`;
+            finalPriceHTML = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${h.old_price}</span>${h.price} грн`;
         } else {
-            priceText = `${h.price} грн`;
+            finalPriceHTML = `${h.price} грн`;
         }
 
         const card = document.createElement('div');
         card.className = 'history-card';
         card.onclick = () => openProductModalById(h.id);
         
-        // Готовим надежный HTML для медиа-блока (Без lozad.js)
+        // Готовим надежный HTML для медиа-блока
         let mediaHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555;">NO FOTO</div>';
         
         if (optImg) {
@@ -3075,25 +3075,18 @@ function renderHistory() {
                     <div style="position:absolute; z-index:5; top:4px; left:4px; background:rgba(0,0,0,0.8); padding:2px 4px; border-radius:2px; color:var(--accent-green); font-size:8px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
                 `;
             } else {
-                // Картинка: надежный background-image
+                // Картинка
                 mediaHTML = `<div style="width:100%; height:100%; background-image:url('${optImg}'); background-size:cover; background-position:center;"></div>`;
             }
         }
         
-        // Проверяем, есть ли старая цена (сохраненная в истории)
-        let priceText = `${h.price} грн`;
-        // Если хочешь, чтобы в истории тоже было зачеркнуто (если ты сохранял old_price), можно добавить тут логику, но пока оставим просто зеленую цену для минимализма, как было, или сделаем:
-        if (h.old_price) {
-            priceText = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${h.old_price}</span>${h.price} грн`;
-        }
-
         card.innerHTML = `
             <div class="history-img" style="position: relative; overflow: hidden; padding: 0;">
                 ${mediaHTML}
             </div>
             <div class="history-info">
                 <div class="history-name" title="${h.name}">${h.name}</div>
-                <div class="history-price">${priceText}</div>
+                <div class="history-price">${finalPriceHTML}</div>
             </div>`;
             
         container.appendChild(card);
