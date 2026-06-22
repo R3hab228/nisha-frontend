@@ -1944,7 +1944,7 @@ function renderCartItems() {
         row.className = 'cart-item-row';
         
         row.innerHTML = `
-            <div class="swipe-background">🗑 ВЫБРОСИТЬ</div>
+            <div class="swipe-background">УДАЛИТЬ</div>
             <div class="swipe-surface" 
                  data-index="${index}"
                  ontouchstart="handleSwipeStart(event)" 
@@ -3533,15 +3533,21 @@ window.handleSwipeMove = function(e) {
     cartSwipeCurrentX = e.touches[0].clientX;
     let diff = cartSwipeStartX - cartSwipeCurrentX;
     
-    // Позволяем тянуть только влево
     if (diff > 0) {
-        // Добавляем эффект "пружины" после 200px
         let moveX = diff > 200 ? 200 + (diff - 200) * 0.2 : diff;
         e.currentTarget.style.transform = `translateX(-${moveX}px)`;
         
-        // Чем дальше тянешь, тем прозрачнее становится товар (эффект растворения)
-        let opacity = Math.max(0.2, 1 - (moveX / 200));
-        e.currentTarget.style.opacity = opacity;
+        // 1. Сама карточка товара растворяется
+        let surfaceOpacity = Math.max(0.2, 1 - (moveX / 200));
+        e.currentTarget.style.opacity = surfaceOpacity;
+
+        // 2. Надпись "УДАЛИТЬ" на фоне ПЛАВНО ПРОЯВЛЯЕТСЯ
+        const parentRow = e.currentTarget.closest('.cart-item-row');
+        const bgText = parentRow.querySelector('.swipe-background');
+        if (bgText) {
+            let bgOpacity = Math.min(1, moveX / 150); // На 150px надпись станет полностью яркой
+            bgText.style.opacity = bgOpacity;
+        }
     }
 };
 
@@ -3565,9 +3571,13 @@ window.handleSwipeEnd = function(e) {
             removeFromCart(itemIndex, null, parentRow);
         }, 200);
     } else {
-        // Если не дотянули — возвращаем на место с эффектом "пружины"
+        // Если не дотянули — возвращаем на место
         rowSurface.style.transform = `translateX(0px)`;
         rowSurface.style.opacity = '1';
+        
+        // Прячем надпись "УДАЛИТЬ" обратно
+        const bgText = parentRow.querySelector('.swipe-background');
+        if (bgText) bgText.style.opacity = '0';
     }
     
     // Сбрасываем переменные

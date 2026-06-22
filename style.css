@@ -746,15 +746,22 @@
     overflow: hidden; /* Прячет красную кнопку удаления, пока не свайпнешь */
 }
 
+/* --- СТИЛЬНЫЙ ФОН ПРИ СВАЙПЕ (БЕЗ КОЛХОЗА) --- */
 .swipe-background {
     position: absolute;
     top: 0; right: 0; width: 100%; height: 100%;
-    background: var(--accent-red);
-    color: #fff; font-family: var(--font-mono); font-weight: bold;
+    background: #050505; /* Почти черный, в цвет корзины */
+    color: var(--accent-red); 
+    font-family: var(--font-mono); 
+    font-weight: bold;
+    font-size: 20px; 
+    letter-spacing: 5px;
     display: flex; align-items: center; justify-content: flex-end;
-    padding-right: 25px; z-index: 1;
-    font-size: 15px; letter-spacing: 1px;
-    box-shadow: inset -20px 0 30px rgba(0,0,0,0.3); /* Легкое затемнение края */
+    padding-right: 30px; 
+    z-index: 1; 
+    /* Текст будет проявляться плавно через JS */
+    opacity: 0;
+    transition: opacity 0.1s linear;
 }
 
 .swipe-surface {
