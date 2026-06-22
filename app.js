@@ -345,7 +345,7 @@ window.onload = async () => {
             }
 
             // Дожим через системный PUSH + Фоновое обновление при возвращении из других приложух
-            document.addEventListener("visibilitychange", () => {
+            document.addEventListener("visibilitychange", async () => {
                 if (document.hidden) {
                     // Юзер свернул сайт (ушел в TikTok)
                     if (cart.length > 0 && typeof Push !== 'undefined') {
@@ -358,9 +358,14 @@ window.onload = async () => {
                     }
                 } else {
                     // ЮЗЕР ВЕРНУЛСЯ НА САЙТ!
-                    // Тихо скачиваем свежую базу в фоне (без лоадеров), чтобы актуализировать плашки SOLD
-                    if (_supabase && allItems.length > 0) {
-                        loadAllItems(); 
+                    if (_supabase) {
+                        // ЖЕСТКОЕ ВОССТАНОВЛЕНИЕ СЕССИИ (чтобы не разлогинивало после глубокого сна браузера)
+                        await checkSession();
+                        
+                        // Только после проверки сессии тихо обновляем базу товаров
+                        if (allItems.length > 0) {
+                            loadAllItems(); 
+                        }
                     }
                 }
             });
@@ -1308,7 +1313,6 @@ function renderNextBatch() {
             `;
 
             // --- ФИКС КЛИКА ПО КАРТИНКЕ ТОВАРА ---
-            // Слушаем клики по области с картинками, но игнорируем, если был свайп (touchmove)
             const sliderWrapper = card.querySelector('.card-slider-wrapper');
             let isDraggingSlider = false;
             let startX = 0;
@@ -1321,21 +1325,21 @@ function renderNextBatch() {
             }, {passive: true});
             
             sliderWrapper.addEventListener('touchmove', (e) => { 
-                // Если палец сдвинулся больше чем на 10px, считаем это свайпом
                 if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) {
                     isDraggingSlider = true;
                 }
             }, {passive: true});
             
-            sliderWrapper.addEventListener('touchend', (e) => {
-                if (!isDraggingSlider) {
+            // Используем только один слушатель CLICK (браузер сам переведет тап в клик)
+            sliderWrapper.addEventListener('click', (e) => {
+                // Если юзер свайпал — блокируем клик
+                if (isDraggingSlider) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                } else {
+                    // Если просто тапнул — открываем товар
                     openProductModalById(item.id);
                 }
-            });
-
-            // Для клика мышкой на ПК
-            sliderWrapper.addEventListener('click', (e) => {
-                openProductModalById(item.id);
             });
             // ------------------------------------
 
