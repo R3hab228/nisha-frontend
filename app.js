@@ -1284,6 +1284,37 @@ function renderNextBatch() {
                 <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${i18next.t('product.add_to_cart')}</button>
             `;
 
+            // --- ФИКС КЛИКА ПО КАРТИНКЕ ТОВАРА ---
+            // Слушаем клики по области с картинками, но игнорируем, если был свайп (touchmove)
+            const sliderWrapper = card.querySelector('.card-slider-wrapper');
+            let isDraggingSlider = false;
+            let startX = 0;
+            let startY = 0;
+            
+            sliderWrapper.addEventListener('touchstart', (e) => { 
+                isDraggingSlider = false; 
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }, {passive: true});
+            
+            sliderWrapper.addEventListener('touchmove', (e) => { 
+                // Если палец сдвинулся больше чем на 10px, считаем это свайпом
+                if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) {
+                    isDraggingSlider = true;
+                }
+            }, {passive: true});
+            
+            sliderWrapper.addEventListener('touchend', (e) => {
+                if (!isDraggingSlider) {
+                    openProductModalById(item.id);
+                }
+            });
+
+            // Для клика мышкой на ПК
+            sliderWrapper.addEventListener('click', (e) => {
+                openProductModalById(item.id);
+            });
+            // ------------------------------------
 
             grid.appendChild(card);
             const vids = card.querySelectorAll('.grid-lazy-video');
