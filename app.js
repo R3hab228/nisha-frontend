@@ -1922,7 +1922,6 @@ function renderCartItems() {
         return;
     }
 
-    // Предупреждение о том, что товары не забронированы (Спокойный дизайн)
     list.innerHTML = `
         <div style="padding: 8px 10px; margin-bottom: 15px; border-bottom: 1px solid #222; text-align: center;">
             <span style="color: #666; font-size: 11px; font-family: var(--font-main);">
@@ -1937,8 +1936,9 @@ function renderCartItems() {
         row.className = 'cart-item-row';
         
         row.innerHTML = `
-            <div class="swipe-background" onclick="removeFromCart(${index}, event, this.closest('.cart-item-row'))">УДАЛИТЬ</div>
+            <div class="swipe-background">🗑 ВЫБРОСИТЬ</div>
             <div class="swipe-surface" 
+                 data-index="${index}"
                  ontouchstart="handleSwipeStart(event)" 
                  ontouchmove="handleSwipeMove(event)" 
                  ontouchend="handleSwipeEnd(event)">
@@ -3015,9 +3015,6 @@ function addToHistory(item) {
     renderHistory();
 }
 
-// Изменено под создание DOM элементов для AutoAnimate и Tilt
-// Изменено под создание DOM элементов для AutoAnimate, Tilt и поддержку ВИДЕО
-// Изменено под создание DOM элементов для AutoAnimate, Tilt и жесткую загрузку медиа
 function renderHistory() {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     const container = document.getElementById('historyGrid');
@@ -3471,37 +3468,60 @@ async function applyPromoCode() {
     btn.innerText = i18next.t('checkout.apply');
     updateCartUI();
 }
-// --- ЛОГИКА СВАЙПА В КОРЗИНЕ (SWIPE TO DELETE) ---
-let touchStartX = 0;
-let touchCurrentX = 0;
+// --- ИНТЕРАКТИВНЫЙ СВАЙП ДЛЯ КОРЗИНЫ (ВЫБРОСИТЬ ТОВАР) ---
+let cartSwipeStartX = 0;
+let cartSwipeCurrentX = 0;
 
-function handleSwipeStart(e) {
-    touchStartX = e.touches[0].clientX;
-    e.currentTarget.style.transition = 'none'; // Убираем плавность при ведении пальцем
-}
+window.handleSwipeStart = function(e) {
+    cartSwipeStartX = e.touches[0].clientX;
+    e.currentTarget.style.transition = 'none'; // Отключаем плавность, чтобы товар "прилип" к пальцу
+};
 
-function handleSwipeMove(e) {
-    touchCurrentX = e.touches[0].clientX;
-    let diff = touchStartX - touchCurrentX;
+window.handleSwipeMove = function(e) {
+    cartSwipeCurrentX = e.touches[0].clientX;
+    let diff = cartSwipeStartX - cartSwipeCurrentX;
     
-    // Разрешаем тянуть только влево (до 80px)
-    if (diff > 0 && diff < 100) {
-        e.currentTarget.style.transform = `translateX(-${diff}px)`;
+    // Позволяем тянуть только влево
+    if (diff > 0) {
+        // Добавляем эффект "пружины" после 200px
+        let moveX = diff > 200 ? 200 + (diff - 200) * 0.2 : diff;
+        e.currentTarget.style.transform = `translateX(-${moveX}px)`;
+        
+        // Чем дальше тянешь, тем прозрачнее становится товар (эффект растворения)
+        let opacity = Math.max(0.2, 1 - (moveX / 200));
+        e.currentTarget.style.opacity = opacity;
     }
-}
+};
 
-function handleSwipeEnd(e) {
-    let diff = touchStartX - touchCurrentX;
-    e.currentTarget.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+window.handleSwipeEnd = function(e) {
+    let diff = cartSwipeStartX - cartSwipeCurrentX;
+    const rowSurface = e.currentTarget;
+    const parentRow = rowSurface.closest('.cart-item-row');
+    const itemIndex = parseInt(rowSurface.getAttribute('data-index'));
     
-    // Если свайпнули больше чем на 50px - фиксируем открытую кнопку
-    if (diff > 50) {
-        e.currentTarget.style.transform = `translateX(-80px)`;
+    // Возвращаем плавную анимацию
+    rowSurface.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+    
+    // Если протащили больше 120 пикселей — УДАЛЯЕМ
+    if (diff > 120) {
+        // Товар "улетает" за левый край экрана
+        rowSurface.style.transform = `translateX(-150%)`;
+        rowSurface.style.opacity = '0';
+        
+        // Ждем 200мс, пока проиграет анимация, и окончательно удаляем из базы
+        setTimeout(() => {
+            removeFromCart(itemIndex, null, parentRow);
+        }, 200);
     } else {
-        // Иначе возвращаем обратно
-        e.currentTarget.style.transform = `translateX(0px)`;
+        // Если не дотянули — возвращаем на место с эффектом "пружины"
+        rowSurface.style.transform = `translateX(0px)`;
+        rowSurface.style.opacity = '1';
     }
-}
+    
+    // Сбрасываем переменные
+    cartSwipeStartX = 0;
+    cartSwipeCurrentX = 0;
+};
 // ==========================================
 // 18. ZERO-LAG СВАЙП КАРТОЧКИ (ИДЕАЛЬНОЕ СЛЕДОВАНИЕ ЗА ПАЛЬЦЕМ)
 // ==========================================

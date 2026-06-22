@@ -752,7 +752,9 @@
     background: var(--accent-red);
     color: #fff; font-family: var(--font-mono); font-weight: bold;
     display: flex; align-items: center; justify-content: flex-end;
-    padding-right: 20px; z-index: 1; cursor: pointer;
+    padding-right: 25px; z-index: 1;
+    font-size: 15px; letter-spacing: 1px;
+    box-shadow: inset -20px 0 30px rgba(0,0,0,0.3); /* Легкое затемнение края */
 }
 
 .swipe-surface {
