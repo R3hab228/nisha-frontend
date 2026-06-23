@@ -147,6 +147,14 @@
                             <label><input type="checkbox" class="size-cb" value="42" onchange="applyFilters()"> <span data-i18n="sidebar.shoes_1">Обувь (40 - 42)</span></label>
                         </li>
                         <li><label><input type="checkbox" class="size-cb" value="44" onchange="applyFilters()"> <span data-i18n="sidebar.shoes_2">Обувь (43 - 46)</span></label></li>
+                        
+                        <!-- НОВАЯ ГАЛОЧКА: Скрыть проданное -->
+                        <li style="margin-top: 15px; border-top: 1px dashed #444; padding-top: 15px;">
+                            <label>
+                                <input type="checkbox" id="hideUnavailableCb" onchange="applyFilters()"> 
+                                <span data-i18n="sidebar.hide_unavailable" style="color: var(--accent-green); font-weight: bold;">Скрыть проданное/бронь</span>
+                            </label>
+                        </li>
                     </ul>
                 </div>
             </div>

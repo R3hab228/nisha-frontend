@@ -10,6 +10,7 @@
         "size_s": "Розмір S", "size_m": "Розмір M", "size_l": "Розмір L", "size_xl": "Розмір XL / XXL",
         "shoes_1": "Взуття (40 - 42)", "shoes_2": "Взуття (43 - 46)",
         "auth_title": "ПРОФІЛЬ / ВХІД", "login": "УВІЙТИ", "reg": "РЕЄСТРАЦІЯ", "create": "СТВОРИТИ АКАУНТ", "logout": "ВИЙТИ", "back": "НАЗАД",
+        "hide_unavailable": "Сховати продане/бронь",
         "auth_req": "АВТОРИЗАЦІЯ В СИСТЕМІ", "auth_desc": "Авторизуйтесь для доступу до обраного та історії."
       },
       "sort": { "found": "Знайдено речей:", "sorting": "Сортування:", "new": "Нові", "cheap": "Дешеві" },
@@ -145,6 +146,7 @@
         "size_s": "Размер S", "size_m": "Размер M", "size_l": "Размер L", "size_xl": "Размер XL / XXL",
         "shoes_1": "Обувь (40 - 42)", "shoes_2": "Обувь (43 - 46)",
         "auth_title": "ПРОФИЛЬ / ВХОД", "login": "ВОЙТИ", "reg": "РЕГИСТРАЦИЯ", "create": "СОЗДАТЬ АККАУНТ", "logout": "ВЫЙТИ", "back": "НАЗАД",
+        "hide_unavailable": "Скрыть проданное/бронь",
         "auth_req": "АВТОРИЗАЦИЯ В СИСТЕМЕ", "auth_desc": "Авторизуйтесь для доступа к избранному и истории."
       },
       "sort": { "found": "Найдено вещей:", "sorting": "Сортировка:", "new": "Новые", "cheap": "Дешевые" },
@@ -280,6 +282,7 @@
         "size_s": "Size S", "size_m": "Size M", "size_l": "Size L", "size_xl": "Size XL / XXL",
         "shoes_1": "Shoes (40 - 42)", "shoes_2": "Shoes (43 - 46)",
         "auth_title": "PROFILE / LOGIN", "login": "LOGIN", "reg": "REGISTER", "create": "CREATE ACCOUNT", "logout": "LOGOUT", "back": "BACK",
+        "hide_unavailable": "Hide sold/reserved",
         "auth_req": "SYSTEM AUTHORIZATION", "auth_desc": "Log in to access your favorites and history."
       },
       "sort": { "found": "Items found:", "sorting": "Sort by:", "new": "Newest", "cheap": "Cheapest" },

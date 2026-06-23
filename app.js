@@ -1126,6 +1126,9 @@ function applyFilters() {
             const searchTerm = searchInput ? searchInput.value.trim() : '';
             const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => cb.value);
             
+            // Читаем нашу новую галочку
+            const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
+            
             let sortedItems = [...allItems];
             
             const sortCheap = document.getElementById('sort-cheap');
@@ -1186,7 +1189,10 @@ function applyFilters() {
                 const itemFinalPrice = isHacked ? Math.floor((Number(item.price)||0) * 0.9) : (Number(item.price)||0);
                 const matchesPrice = itemFinalPrice >= minPrice && itemFinalPrice <= maxPrice;
                 
-                return matchesCategory && matchesBrand && matchesSize && matchesFav && matchesPrice;
+                // Проверяем: если галочка нажата, оставляем ТОЛЬКО 'available'
+                const matchesAvailability = !hideUnavailable || item.status === 'available';
+                
+                return matchesCategory && matchesBrand && matchesSize && matchesFav && matchesPrice && matchesAvailability;
             });
             
             if (grid) grid.innerHTML = ''; 
