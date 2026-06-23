@@ -4073,26 +4073,34 @@ async function autoDetectCity() {
 // ==========================================
 // УМНЫЙ СБОР ОТЗЫВОВ ЗА ПОЛУЧЕННЫЕ ПОСЫЛКИ
 // ==========================================
+// ==========================================
+// УМНЫЙ СБОР ОТЗЫВОВ ЗА ПОЛУЧЕННЫЕ ПОСЫЛКИ
+// ==========================================
 window.promptOrderReview = function(orderId, itemName, itemImage) {
     const html = `
-        <div style="text-align: center; margin-top: 10px;">
-            <div style="width: 100px; height: 100px; margin: 0 auto 15px auto; background-image: url('${itemImage}'); background-size: cover; background-position: center; border: 2px solid #333; border-radius: 5px;"></div>
-            <div style="color: var(--accent-green); font-family: var(--font-mono); font-size: 15px; font-weight: bold; margin-bottom: 20px;">${itemName}</div>
-            <textarea id="autoReviewInput" class="form-input" style="height: 100px; resize: none;" placeholder="Пару слов о покупке..."></textarea>
+        <div style="display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box;">
+            <div style="width: 120px; height: 120px; margin-bottom: 15px; background-image: url('${itemImage}'); background-size: cover; background-position: center; border: 2px inset #555;"></div>
+            <div style="color: #fff; font-family: var(--font-mono); font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center;">${itemName}</div>
+            <textarea id="autoReviewInput" class="form-input" style="width: 100%; height: 90px; resize: none; box-sizing: border-box; text-align: center;" placeholder="Напишите пару слов о вещи..."></textarea>
         </div>
     `;
 
     Swal.fire({
-        title: 'DELIVERY_SUCCESS.LOG',
+        title: '> DELIVERY_SUCCESS.LOG',
         html: html,
         background: '#0a0a0a',
         color: '#fff',
         showCancelButton: true,
-        confirmButtonColor: 'var(--accent-green)',
-        cancelButtonColor: '#333',
-        confirmButtonText: '<span style="color:#000; font-weight:bold; font-family:monospace;">[ ОТПРАВИТЬ ]</span>',
-        cancelButtonText: '<span style="color:#fff; font-family:monospace;">ПОЗЖЕ</span>',
-        customClass: { title: 'typewriter', popup: 'modal-window' }
+        buttonsStyling: false, // КРИТИЧНО: Отключает стандартные уродливые стили
+        confirmButtonText: '[ ОТПРАВИТЬ ]',
+        cancelButtonText: '[ ПОЗЖЕ ]',
+        customClass: { 
+            popup: 'terminal-swal-popup', 
+            title: 'terminal-swal-title typewriter',
+            actions: 'terminal-swal-actions',
+            confirmButton: 'swal-green-btn btn-target',
+            cancelButton: 'swal-dark-btn btn-target'
+        }
     }).then(async (result) => {
         if (result.isConfirmed) {
             const text = document.getElementById('autoReviewInput').value.trim();
@@ -4101,7 +4109,6 @@ window.promptOrderReview = function(orderId, itemName, itemImage) {
                 await _supabase.from('reviews').insert([{ user_name: uName, text: text, rating: 5 }]);
                 showToast('Отзыв опубликован! Спасибо.', 'success');
                 
-                // Запоминаем, что отзыв оставлен
                 let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
                 reviewedOrders.push(orderId);
                 localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
@@ -4109,10 +4116,61 @@ window.promptOrderReview = function(orderId, itemName, itemImage) {
                 showToast('Текст слишком короткий!', 'error');
             }
         } else if (result.isDismissed) {
-            // Если нажал "Позже" - запоминаем, чтобы не бесить при каждой перезагрузке страницы
             let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
             reviewedOrders.push(orderId); 
             localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
+        }
+    });
+};
+
+// ==========================================
+// ЛОГИКА НАПИСАНИЯ ОТЗЫВА НА САЙТЕ (ИЗ ОКНА LEGIT CHECK)
+// ==========================================
+window.writeReviewOnSite = async function() {
+    if (!currentUser) {
+        showToast(i18next.t('messages.cart_error_auth', {defaultValue: 'Сначала войдите в систему!'}), 'error');
+        closeModal('reviewsModal');
+        openProfileModal();
+        return;
+    }
+
+    Swal.fire({
+        title: '> NEW_REVIEW.EXE',
+        html: '<textarea id="manualReviewInput" class="form-input" style="width: 100%; height: 100px; resize: none; box-sizing: border-box; text-align: center;" placeholder="Напишите ваше мнение о покупке..."></textarea>',
+        background: '#0a0a0a',
+        color: '#fff',
+        showCancelButton: true,
+        buttonsStyling: false, // Отключаем стандартные кнопки
+        confirmButtonText: '[ ОТПРАВИТЬ ]',
+        cancelButtonText: '[ ОТМЕНА ]',
+        customClass: { 
+            popup: 'terminal-swal-popup', 
+            title: 'terminal-swal-title typewriter',
+            actions: 'terminal-swal-actions',
+            confirmButton: 'swal-green-btn btn-target',
+            cancelButton: 'swal-dark-btn btn-target'
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const text = document.getElementById('manualReviewInput').value.trim();
+            if (text.length > 2) {
+                const uName = userProfile?.username || currentUser.email.split('@')[0];
+                
+                const { error } = await _supabase.from('reviews').insert([{
+                    user_name: uName, 
+                    text: text, 
+                    rating: 5
+                }]);
+
+                if (error) {
+                    showToast('Ошибка при отправке: ' + error.message, 'error');
+                } else {
+                    showToast('Отзыв успешно опубликован!', 'success');
+                    openReviewsModal(); 
+                }
+            } else {
+                showToast('Текст слишком короткий!', 'error');
+            }
         }
     });
 };
