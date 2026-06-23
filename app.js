@@ -3210,8 +3210,8 @@ function renderHistory() {
         }
         
         card.innerHTML = `
-            <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="Удалить">X</div>
             <div class="history-img" style="position: relative; overflow: hidden; padding: 0;">
+                <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="Удалить">X</div>
                 ${mediaHTML}
             </div>
             <div class="history-info">
