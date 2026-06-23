@@ -2404,26 +2404,22 @@ async function submitOrder() {
     // ПРОВЕРЯЕМ, ЗАПОМНИЛ ЛИ САЙТ ВЫБОР ЮЗЕРА РАНЕЕ
     const savedEmailPreference = localStorage.getItem('nisha_email_preference');
     
-    // Если юзер уже нажимал "Пропустить" в прошлом заказе — сразу оформляем без Email
     if (savedEmailPreference === 'skipped') {
         return await executeOrderFinal('');
     }
-    
-    // Если юзер уже нажимал "ДА" и ввел Email — берем сохраненный Email
     if (savedEmailPreference && savedEmailPreference.includes('@')) {
         return await executeOrderFinal(savedEmailPreference);
     }
 
-    // Если всё ок и юзер делает заказ впервые — открываем окно вопроса про Email
+    if (currentUser && currentUser.email) {
+        localStorage.setItem('nisha_email_preference', currentUser.email);
+        return await executeOrderFinal(currentUser.email);
+    }
+
+    // Если это ГОСТЬ (не вошел в аккаунт) и делает заказ впервые — тогда спрашиваем
     const prompt = document.getElementById('emailPromptOverlay');
     const emailInput = document.getElementById('promptEmailInput');
-    
-    if (currentUser && currentUser.email) {
-        emailInput.value = currentUser.email;
-    } else {
-        emailInput.value = '';
-    }
-    
+    emailInput.value = '';
     prompt.style.display = 'flex';
 }
 
@@ -2705,13 +2701,41 @@ function renderFilteredOrders() {
                </div>` 
             : `<div class="order-ttn" style="color:#777;">ТТН: Ожидается генерация...</div>`;
 
+        // --- ЛОГИКА КНОПКИ ОТЗЫВА ---
+        let reviewBtnHtml = '';
+        if (order.status.toLowerCase() === 'завершен') {
+            // Проверяем, оставлял ли юзер УЖЕ отзыв именно на этот заказ
+            let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
+            
+            if (!reviewedOrders.includes(order.id) && order.items && order.items.length > 0) {
+                const firstItem = order.items[0];
+                // Безопасное имя (экранируем кавычки, чтобы не сломать HTML)
+                const safeName = firstItem.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                
+                // Делаем иконку меньше и тоньше (stroke-width="1.5")
+                const msgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; position: relative; top: 2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
+                
+                // Компактный дизайн: не жирный шрифт, маленькие отступы, тонкая рамка
+                reviewBtnHtml = `
+                    <div style="margin-top: 10px; padding: 6px; border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 3px; background: transparent; cursor: pointer; color: var(--accent-green); font-size: 11px; font-weight: normal; font-family: var(--font-main); text-align: center; transition: 0.2s;" 
+                         onclick="closeModal('ordersModal'); promptOrderReview('${order.id}', '${safeName}', '${firstItem.image}', '${firstItem.id}')" 
+                         onmouseover="this.style.background='rgba(0, 255, 0, 0.05)'; this.style.borderColor='var(--accent-green)';" 
+                         onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(0, 255, 0, 0.3)';">
+                        ${msgIcon} Оставить отзыв
+                    </div>
+                `;
+            }
+        }
+
+        // --- ВСТАВЛЯЕМ КНОПКУ ОТЗЫВА В КАРТОЧКУ ---
         listArea.innerHTML += `
-            <div class="order-card order-card-anim">
+            <div class="order-card">
                 <div class="order-header">
                     <span class="order-id">ЗАКАЗ #${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
                     <span class="order-status status-${order.status}">${order.status.toUpperCase()}</span>
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>
+                ${reviewBtnHtml}
                 <div class="order-footer">${ttnHtml}<div class="order-total">ИТОГО: ${order.total_sum} грн</div></div>
             </div>`;
     });
