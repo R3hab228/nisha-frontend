@@ -807,11 +807,38 @@ async function checkSession() {
                             '[ ПОСМОТРЕТЬ ]',
                             () => openOrdersModal()
                         );
+
+                        // ЕСЛИ НОВЫЙ СТАТУС "ЗАВЕРШЕН" - ЧЕРЕЗ 5 СЕКУНД ПРОСИМ ОТЗЫВ
+                        if (newStatus.toLowerCase() === 'завершен' && payload.new.items && payload.new.items.length > 0) {
+                            setTimeout(() => {
+                                const item = payload.new.items[0];
+                                promptOrderReview(payload.new.id, item.name, item.image);
+                            }, 5000);
+                        }
                     }
                 })
                 .subscribe();
 
             await loadFavorites();
+           
+            const { data: completedOrders } = await _supabase.from('orders')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('status', 'Завершен')
+                .order('created_at', { ascending: false });
+
+            if (completedOrders && completedOrders.length > 0) {
+                let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
+                // Ищем первый заказ, который юзер еще не оценил
+                const orderToReview = completedOrders.find(o => !reviewedOrders.includes(o.id));
+                
+                if (orderToReview && orderToReview.items && orderToReview.items.length > 0) {
+                    const item = orderToReview.items[0]; // Берем картинку первой вещи из заказа
+                    setTimeout(() => {
+                        promptOrderReview(orderToReview.id, item.name, item.image);
+                    }, 2500); // Ждем 2.5 секунды после загрузки сайта, чтобы было красиво
+                }
+            }
             
           // --- УМНОЕ ВОССТАНОВЛЕНИЕ БРОШЕННОЙ КОРЗИНЫ ---
             if (userProfile && userProfile.cart && userProfile.cart.length > 0) {
@@ -4043,6 +4070,52 @@ async function autoDetectCity() {
         cityInput.placeholder = originalPlaceholder;
     }
 }
+// ==========================================
+// УМНЫЙ СБОР ОТЗЫВОВ ЗА ПОЛУЧЕННЫЕ ПОСЫЛКИ
+// ==========================================
+window.promptOrderReview = function(orderId, itemName, itemImage) {
+    const html = `
+        <div style="text-align: center; margin-top: 10px;">
+            <div style="width: 100px; height: 100px; margin: 0 auto 15px auto; background-image: url('${itemImage}'); background-size: cover; background-position: center; border: 2px solid #333; border-radius: 5px;"></div>
+            <div style="color: var(--accent-green); font-family: var(--font-mono); font-size: 15px; font-weight: bold; margin-bottom: 20px;">${itemName}</div>
+            <textarea id="autoReviewInput" class="form-input" style="height: 100px; resize: none;" placeholder="Пару слов о покупке..."></textarea>
+        </div>
+    `;
+
+    Swal.fire({
+        title: 'DELIVERY_SUCCESS.LOG',
+        html: html,
+        background: '#0a0a0a',
+        color: '#fff',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--accent-green)',
+        cancelButtonColor: '#333',
+        confirmButtonText: '<span style="color:#000; font-weight:bold; font-family:monospace;">[ ОТПРАВИТЬ ]</span>',
+        cancelButtonText: '<span style="color:#fff; font-family:monospace;">ПОЗЖЕ</span>',
+        customClass: { title: 'typewriter', popup: 'modal-window' }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const text = document.getElementById('autoReviewInput').value.trim();
+            if (text.length > 2) {
+                const uName = userProfile?.username || currentUser.email.split('@')[0];
+                await _supabase.from('reviews').insert([{ user_name: uName, text: text, rating: 5 }]);
+                showToast('Отзыв опубликован! Спасибо.', 'success');
+                
+                // Запоминаем, что отзыв оставлен
+                let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
+                reviewedOrders.push(orderId);
+                localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
+            } else {
+                showToast('Текст слишком короткий!', 'error');
+            }
+        } else if (result.isDismissed) {
+            // Если нажал "Позже" - запоминаем, чтобы не бесить при каждой перезагрузке страницы
+            let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
+            reviewedOrders.push(orderId); 
+            localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
+        }
+    });
+};
 
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {
