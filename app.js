@@ -710,9 +710,8 @@ async function openReviewsModal() {
         <div class="review-card-ui">
             <div class="review-head">
                 <span class="review-name">@${rev.user_name}</span>
-                <span class="review-rating">${'★'.repeat(rev.rating)}</span>
             </div>
-            <div class="review-text-body">${rev.text}</div>
+            <div class="review-text-body" style="margin-top: 5px;">${rev.text}</div>
             <div class="review-date">${date}</div>
         </div>`;
     });
