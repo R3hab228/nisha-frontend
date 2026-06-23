@@ -2167,23 +2167,63 @@ document.addEventListener('mousedown', (e) => {
 let otpVerified = false;
 let otpInterval = null;
 
-function checkPhoneAuth() {
+async function checkPhoneAuth() {
     const btnSubmit = document.getElementById('btnSubmitOrder');
     const btnOtp = document.getElementById('btnGetOtp');
     const statusOtp = document.getElementById('otpStatus');
-    
-    if (currentUser) {
-        otpVerified = true;
-        btnSubmit.style.opacity = "1";
-        btnSubmit.style.pointerEvents = "auto";
-        if(btnOtp) btnOtp.style.display = "none";
-        if(statusOtp) statusOtp.style.display = "none";
-    } else {
-        otpVerified = false;
-        btnSubmit.style.opacity = "0.5";
-        btnSubmit.style.pointerEvents = "none";
-        if(btnOtp) btnOtp.style.display = "block";
+    const rawPhone = document.getElementById('orderPhone').value;
+    const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
+
+    // Блокируем кнопку заказа по умолчанию
+    otpVerified = false;
+    btnSubmit.style.opacity = "0.5";
+    btnSubmit.style.pointerEvents = "none";
+
+    // Если номер короткий - просто показываем кнопку подтверждения
+    if (!cleanPhone || cleanPhone.length < 10) {
+        if(btnOtp) {
+            btnOtp.style.display = "block";
+            btnOtp.disabled = false;
+            btnOtp.innerHTML = "Подтвердить";
+            btnOtp.style.background = "var(--text-main)";
+            btnOtp.style.borderColor = "#eee";
+            btnOtp.style.opacity = "1";
+        }
         if(statusOtp) statusOtp.style.display = "block";
+        return;
+    }
+
+    // Если номер введен - ТИХО спрашиваем у базы: "Этот номер уже подтверждали?"
+    if (_supabase) {
+        const { data: existCode } = await _supabase.from('otp_codes').select('is_verified').eq('phone', cleanPhone).limit(1);
+        
+        if (existCode && existCode.length > 0 && existCode[0].is_verified) {
+            // Номер УЖЕ подтвержден! Зеленый свет.
+            otpVerified = true;
+            btnSubmit.style.opacity = "1";
+            btnSubmit.style.pointerEvents = "auto";
+            
+            if(statusOtp) statusOtp.style.display = "none";
+            if(btnOtp) {
+                btnOtp.style.display = "block";
+                btnOtp.disabled = true; 
+                btnOtp.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>УСПЕХ!</span>";
+                btnOtp.style.background = "var(--text-main)";
+                btnOtp.style.borderColor = "var(--accent-green)";
+                btnOtp.style.opacity = "1";
+            }
+        } else {
+            // Номер есть, но еще НЕ подтвержден. Ждем нажатия.
+            if(btnOtp) {
+                btnOtp.style.display = "block";
+                btnOtp.disabled = false;
+                btnOtp.innerHTML = "Подтвердить";
+                btnOtp.style.background = "var(--text-main)";
+                btnOtp.style.borderColor = "#eee";
+                btnOtp.style.opacity = "1";
+            }
+            if(statusOtp) statusOtp.style.display = "block";
+        }
     }
 }
 
@@ -2198,38 +2238,16 @@ async function generateAndSendOTP() {
         return;
     }
 
+    const btnOtp = document.getElementById('btnGetOtp');
+    if (btnOtp.disabled) return; // Если уже зеленый - ничего не делаем
+    
+    // Блокируем кнопку от двойных нажатий
+    btnOtp.disabled = true;
+    btnOtp.innerText = "Связь с БД...";
+    btnOtp.style.opacity = "0.5";
+
+    // 1. Проверяем Черный Список
     const { data: blacklisted } = await _supabase.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
-    
-   const btnOtp = document.getElementById('btnGetOtp');
-    if (btnOtp.disabled) return; 
-    
-    // 1. СНАЧАЛА ПРОВЕРЯЕМ БАЗУ: ВДРУГ НОМЕР УЖЕ ПОДТВЕРЖДЕН?
-    const { data: existCode } = await _supabase.from('otp_codes').select('is_verified').eq('phone', cleanPhone).limit(1);
-    if (existCode && existCode.length > 0 && existCode[0].is_verified) {
-        otpVerified = true;
-        document.getElementById('otpStatus').innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>[✔] Этот номер уже есть в базе и подтвержден!</span>";
-        
-        btnOtp.disabled = true; 
-        btnOtp.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>УСПЕХ!</span>";
-        btnOtp.style.background = "var(--text-main)"; // Оставляем стандартный серый фон
-        btnOtp.style.borderColor = "var(--accent-green)"; // Даем зеленую рамку
-        btnOtp.style.opacity = "1";
-        btnOtp.style.display = "block";
-        
-        const btnSubmit = document.getElementById('btnSubmitOrder');
-        btnSubmit.style.opacity = "1";
-        btnSubmit.style.pointerEvents = "auto";
-        return; // Останавливаем выполнение, код слать не нужно
-    }
-
-    // 2. ПРОВЕРКА НА БОТА (reCAPTCHA v3)
-    btnOtp.innerText = "Проверка...";
-    const isHuman = await verifyCaptchaAction('request_otp');
-    if (!isHuman) {
-        btnOtp.innerText = "Подтвердить";
-        return; 
-    }
-
     if (blacklisted && blacklisted.length > 0) {
         document.getElementById('otpStatus').innerHTML = "<span style='color:red; font-weight:bold;'>[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.</span>";
         showToast('Доступ запрещен', 'error');
@@ -2237,15 +2255,18 @@ async function generateAndSendOTP() {
         return; 
     }
     
-    btnOtp.disabled = true;
+    // 2. Снова проверяем, вдруг он уже подтвержден (двойная страховка)
+    const { data: existCode } = await _supabase.from('otp_codes').select('is_verified').eq('phone', cleanPhone).limit(1);
+    if (existCode && existCode.length > 0 && existCode[0].is_verified) {
+        checkPhoneAuth(); // Просто вызываем UI-обновление
+        return; 
+    }
+
+    // 3. Запускаем Таймер ожидания (60 секунд)
     let timer = 60;
     btnOtp.innerText = `Ждите ${timer}с`;
-    btnOtp.style.opacity = "0.5";
-    
-    // Очищаем старый таймер, если он был
     if (otpInterval) clearInterval(otpInterval);
     
-    // Сохраняем в глобальную переменную, чтобы можно было убить снаружи
     otpInterval = setInterval(() => {
         timer--;
         btnOtp.innerText = `Ждите ${timer}с`;
@@ -2257,17 +2278,20 @@ async function generateAndSendOTP() {
         }
     }, 1000);
 
-    // ВЫЗЫВАЕМ БЕЗОПАСНУЮ ГЕНЕРАЦИЮ НА СЕРВЕРЕ (Хакер не видит код)
+    // 4. Генерируем код в базе
     const { error } = await _supabase.rpc('generate_secure_otp', { p_phone: cleanPhone });
     
     if (error) {
         showToast('Ошибка сервера', 'error');
+        clearInterval(otpInterval);
+        btnOtp.disabled = false;
+        btnOtp.innerText = "Подтвердить";
         return;
     }
     
+    // 5. Открываем бота
     const payloadPhone = cleanPhone.replace('+', '');
     const tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
-    
     
     if (/android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
         window.location.href = tgLink;
@@ -2277,40 +2301,23 @@ async function generateAndSendOTP() {
     
     document.getElementById('otpStatus').innerHTML = "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... <span style='color:var(--accent-yellow)'>⏳</span>";
     
-    // ОТКЛЮЧАЕМ СТАРУЮ ПОДПИСКУ, ЕСЛИ ОНА БЫЛА
+    // 6. Слушаем подтверждение в реальном времени
     if (otpRealtimeChannel) _supabase.removeChannel(otpRealtimeChannel);
 
-    // СЛУШАЕМ БАЗУ ЧЕРЕЗ REALTIME (БЕЗ НАГРУЗКИ ТАЙМЕРАМИ)
     otpRealtimeChannel = _supabase.channel('custom-otp-channel')
         .on('postgres_changes', { 
             event: 'UPDATE', 
             schema: 'public', 
             table: 'otp_codes',
-            filter: `phone=eq.${cleanPhone}` // Слушаем только свой номер!
+            filter: `phone=eq.${cleanPhone}` 
         }, payload => {
             if (payload.new.is_verified) {
-                otpVerified = true;
-                document.getElementById('otpStatus').innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>[✔] Номер подтвержден! Можно завершать заказ.</span>";
-                
-                const btnSubmit = document.getElementById('btnSubmitOrder');
-                btnSubmit.style.opacity = "1";
-                btnSubmit.style.pointerEvents = "auto";
-                
-                // === ЖЕСТКО УБИВАЕМ ТАЙМЕР И ОБНОВЛЯЕМ КНОПКУ ===
+                // Если бот подтвердил номер — жестко убиваем таймер и красим кнопку
                 let id = window.setTimeout(function() {}, 0);
                 while (id--) { window.clearTimeout(id); }
-
-                const btnOtp = document.getElementById('btnGetOtp');
-                if (btnOtp) {
-                    btnOtp.disabled = true; 
-                    btnOtp.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>УСПЕХ!</span>";
-                    btnOtp.style.background = "var(--text-main)"; // Серый фон
-                    btnOtp.style.borderColor = "var(--accent-green)"; // Зеленая рамка
-                    btnOtp.style.opacity = "1";
-                    btnOtp.style.display = "block";
-                }
                 
-                _supabase.removeChannel(otpRealtimeChannel); // Отключаемся, дело сделано
+                checkPhoneAuth(); // Обновит UI на успешный
+                _supabase.removeChannel(otpRealtimeChannel); 
             }
         })
         .subscribe();
