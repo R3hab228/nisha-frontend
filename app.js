@@ -707,8 +707,11 @@ async function openReviewsModal() {
     data.forEach(rev => {
         const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
         
-        // Если есть картинка - рисуем красивый квадрат справа
-        const imgHtml = rev.item_image ? `<div style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1);"></div>` : '';
+        // Если есть картинка - рисуем красивый квадрат справа. Делаем кликабельным, если есть item_id
+        const cursorStyle = rev.item_id ? 'cursor: pointer;' : '';
+        const clickAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')"` : '';
+        
+        const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); ${cursorStyle}"></div>` : '';
         
         html += `
         <div class="review-card-ui">
@@ -814,13 +817,7 @@ async function checkSession() {
                             () => openOrdersModal()
                         );
 
-                        // ЕСЛИ НОВЫЙ СТАТУС "ЗАВЕРШЕН" - ЧЕРЕЗ 5 СЕКУНД ПРОСИМ ОТЗЫВ
-                        if (newStatus.toLowerCase() === 'завершен' && payload.new.items && payload.new.items.length > 0) {
-                            setTimeout(() => {
-                                const item = payload.new.items[0];
-                                promptOrderReview(payload.new.id, item.name, item.image);
-                            }, 5000);
-                        }
+                        promptOrderReview(payload.new.id, item.name, item.image, item.id);
                     }
                 })
                 .subscribe();
@@ -850,9 +847,7 @@ async function checkSession() {
                 
                 if (orderToReview && orderToReview.items && orderToReview.items.length > 0) {
                     const item = orderToReview.items[0]; 
-                    setTimeout(() => {
-                        promptOrderReview(orderToReview.id, item.name, item.image);
-                    }, 2500); 
+                    promptOrderReview(orderToReview.id, item.name, item.image, item.id);
                 }
             }
             
@@ -2751,6 +2746,7 @@ function openProductModalById(itemId) {
         }
 
         closeModal('ordersModal'); 
+        closeModal('reviewsModal'); 
         openProductModal(item); 
     } else { 
         showToast('Товар больше не доступен в базе', 'error'); 
@@ -4095,9 +4091,10 @@ async function autoDetectCity() {
 // ==========================================
 // УМНЫЙ СБОР ОТЗЫВОВ ЗА ПОЛУЧЕННЫЕ ПОСЫЛКИ
 // ==========================================
-window.promptOrderReview = function(orderId, itemName, itemImage) {
+window.promptOrderReview = function(orderId, itemName, itemImage, itemId) {
     document.getElementById('autoReviewOrderId').value = orderId;
     document.getElementById('autoReviewItemImage').value = itemImage || '';
+    document.getElementById('autoReviewItemId').value = itemId || ''; // Сохраняем ID товара
     document.getElementById('autoReviewName').innerText = itemName;
     document.getElementById('autoReviewImg').style.backgroundImage = `url('${itemImage}')`;
     document.getElementById('autoReviewInput').value = ''; 
@@ -4111,6 +4108,7 @@ window.submitAutoReview = async function() {
     const text = document.getElementById('autoReviewInput').value.trim();
     const orderId = document.getElementById('autoReviewOrderId').value;
     const itemImage = document.getElementById('autoReviewItemImage').value;
+    const itemId = document.getElementById('autoReviewItemId').value;
 
     if (text.length < 3) {
         showToast('Текст слишком короткий!', 'error');
@@ -4119,17 +4117,21 @@ window.submitAutoReview = async function() {
 
     const uName = userProfile?.username || currentUser.email.split('@')[0];
     
-    // Пишем в БД отзыв вместе с ID заказа и фоткой
+    // Пишем в БД отзыв вместе с ID заказа, фоткой и ID ТОВАРА
     const { error } = await _supabase.from('reviews').insert([{ 
         user_name: uName, 
         text: text, 
         rating: 5,
         order_id: orderId,
-        item_image: itemImage !== '' ? itemImage : null
+        item_image: itemImage !== '' ? itemImage : null,
+        item_id: itemId !== '' ? itemId : null
     }]);
     
     if (!error) {
         showToast('Отзыв опубликован! Спасибо.', 'success');
+        let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
+        reviewedOrders.push(orderId);
+        localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
         closeModal('autoReviewModal');
     } else {
         showToast('Ошибка: ' + error.message, 'error');
