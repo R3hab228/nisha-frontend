@@ -4077,56 +4077,51 @@ async function autoDetectCity() {
 // УМНЫЙ СБОР ОТЗЫВОВ ЗА ПОЛУЧЕННЫЕ ПОСЫЛКИ
 // ==========================================
 window.promptOrderReview = function(orderId, itemName, itemImage) {
-    const html = `
-        <div style="display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box;">
-            <div style="width: 120px; height: 120px; margin-bottom: 15px; background-image: url('${itemImage}'); background-size: cover; background-position: center; border: 2px inset #555;"></div>
-            <div style="color: #fff; font-family: var(--font-mono); font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center;">${itemName}</div>
-            <textarea id="autoReviewInput" class="form-input" style="width: 100%; height: 90px; resize: none; box-sizing: border-box; text-align: center;" placeholder="Напишите пару слов о вещи..."></textarea>
-        </div>
-    `;
+    document.getElementById('autoReviewOrderId').value = orderId;
+    document.getElementById('autoReviewName').innerText = itemName;
+    document.getElementById('autoReviewImg').style.backgroundImage = `url('${itemImage}')`;
+    document.getElementById('autoReviewInput').value = ''; // Очищаем поле
 
-    Swal.fire({
-        title: '> DELIVERY_SUCCESS.LOG',
-        html: html,
-        background: '#0a0a0a',
-        color: '#fff',
-        showCancelButton: true,
-        buttonsStyling: false, // КРИТИЧНО: Отключает стандартные уродливые стили
-        confirmButtonText: '[ ОТПРАВИТЬ ]',
-        cancelButtonText: '[ ПОЗЖЕ ]',
-        customClass: { 
-            popup: 'terminal-swal-popup', 
-            title: 'terminal-swal-title typewriter',
-            actions: 'terminal-swal-actions',
-            confirmButton: 'swal-green-btn btn-target',
-            cancelButton: 'swal-dark-btn btn-target'
-        }
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            const text = document.getElementById('autoReviewInput').value.trim();
-            if (text.length > 2) {
-                const uName = userProfile?.username || currentUser.email.split('@')[0];
-                await _supabase.from('reviews').insert([{ user_name: uName, text: text, rating: 5 }]);
-                showToast('Отзыв опубликован! Спасибо.', 'success');
-                
-                let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
-                reviewedOrders.push(orderId);
-                localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
-            } else {
-                showToast('Текст слишком короткий!', 'error');
-            }
-        } else if (result.isDismissed) {
-            let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
-            reviewedOrders.push(orderId); 
-            localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
-        }
-    });
+    if (typeof lenis !== 'undefined') lenis.stop();
+    document.getElementById('autoReviewModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+};
+
+window.submitAutoReview = async function() {
+    const text = document.getElementById('autoReviewInput').value.trim();
+    const orderId = document.getElementById('autoReviewOrderId').value;
+
+    if (text.length < 3) {
+        showToast('Текст слишком короткий!', 'error');
+        return;
+    }
+
+    const uName = userProfile?.username || currentUser.email.split('@')[0];
+    const { error } = await _supabase.from('reviews').insert([{ user_name: uName, text: text, rating: 5 }]);
+    
+    if (!error) {
+        showToast('Отзыв опубликован! Спасибо.', 'success');
+        let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
+        reviewedOrders.push(orderId);
+        localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
+        closeModal('autoReviewModal');
+    } else {
+        showToast('Ошибка: ' + error.message, 'error');
+    }
+};
+
+window.skipAutoReview = function() {
+    const orderId = document.getElementById('autoReviewOrderId').value;
+    let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
+    reviewedOrders.push(orderId); 
+    localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
+    closeModal('autoReviewModal');
 };
 
 // ==========================================
-// ЛОГИКА НАПИСАНИЯ ОТЗЫВА НА САЙТЕ (ИЗ ОКНА LEGIT CHECK)
+// ЛОГИКА НАПИСАНИЯ ОТЗЫВА НА САЙТЕ (КНОПКА ИЗ СПИСКА)
 // ==========================================
-window.writeReviewOnSite = async function() {
+window.writeReviewOnSite = function() {
     if (!currentUser) {
         showToast(i18next.t('messages.cart_error_auth', {defaultValue: 'Сначала войдите в систему!'}), 'error');
         closeModal('reviewsModal');
@@ -4134,45 +4129,46 @@ window.writeReviewOnSite = async function() {
         return;
     }
 
-    Swal.fire({
-        title: '> NEW_REVIEW.EXE',
-        html: '<textarea id="manualReviewInput" class="form-input" style="width: 100%; height: 100px; resize: none; box-sizing: border-box; text-align: center;" placeholder="Напишите ваше мнение о покупке..."></textarea>',
-        background: '#0a0a0a',
-        color: '#fff',
-        showCancelButton: true,
-        buttonsStyling: false, // Отключаем стандартные кнопки
-        confirmButtonText: '[ ОТПРАВИТЬ ]',
-        cancelButtonText: '[ ОТМЕНА ]',
-        customClass: { 
-            popup: 'terminal-swal-popup', 
-            title: 'terminal-swal-title typewriter',
-            actions: 'terminal-swal-actions',
-            confirmButton: 'swal-green-btn btn-target',
-            cancelButton: 'swal-dark-btn btn-target'
-        }
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            const text = document.getElementById('manualReviewInput').value.trim();
-            if (text.length > 2) {
-                const uName = userProfile?.username || currentUser.email.split('@')[0];
-                
-                const { error } = await _supabase.from('reviews').insert([{
-                    user_name: uName, 
-                    text: text, 
-                    rating: 5
-                }]);
+    document.getElementById('manualReviewInput').value = ''; // Очищаем поле
+    closeModal('reviewsModal'); // Прячем список отзывов
+    
+    setTimeout(() => {
+        if (typeof lenis !== 'undefined') lenis.stop();
+        document.getElementById('writeReviewModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }, 300); // Открываем форму отзыва плавно
+};
 
-                if (error) {
-                    showToast('Ошибка при отправке: ' + error.message, 'error');
-                } else {
-                    showToast('Отзыв успешно опубликован!', 'success');
-                    openReviewsModal(); 
-                }
-            } else {
-                showToast('Текст слишком короткий!', 'error');
-            }
-        }
-    });
+window.submitManualReview = async function() {
+    const text = document.getElementById('manualReviewInput').value.trim();
+    
+    if (text.length < 3) {
+        showToast('Текст слишком короткий!', 'error');
+        return;
+    }
+
+    const btn = document.querySelector('#writeReviewModal .cart-checkout-btn');
+    btn.style.pointerEvents = 'none';
+    btn.innerText = '...';
+
+    const uName = userProfile?.username || currentUser.email.split('@')[0];
+    
+    const { error } = await _supabase.from('reviews').insert([{ user_name: uName, text: text, rating: 5 }]);
+
+    btn.style.pointerEvents = 'auto';
+    btn.innerText = 'ОТПРАВИТЬ';
+
+    if (error) {
+        showToast('Ошибка при отправке: ' + error.message, 'error');
+    } else {
+        showToast('Отзыв успешно опубликован!', 'success');
+        closeModal('writeReviewModal');
+        
+        // Магия: ждем пока закроется окно, и заново открываем СПИСОК ОТЗЫВОВ (он скачает свежую базу с твоим отзывом!)
+        setTimeout(() => {
+            openReviewsModal();
+        }, 400);
+    }
 };
 
 // Запускаем инициализацию после загрузки

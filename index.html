@@ -654,5 +654,44 @@
         </div>
     </div>
 </div>
+<!-- ОКНО ДЛЯ НАПИСАНИЯ ОТЗЫВА ВРУЧНУЮ -->
+<div class="modal-overlay" id="writeReviewModal">
+    <div class="modal-window" style="max-width: 500px;">
+        <div class="modal-header">
+            <span class="modal-title typewriter" style="animation: none;">NEW_REVIEW.EXE</span>
+            <button class="close-btn" onclick="closeModal('writeReviewModal')">X</button>
+        </div>
+        <div class="form-layout">
+            <textarea id="manualReviewInput" class="form-input" style="height: 120px; resize: none; text-align: center;" placeholder="Напишите ваше мнение о покупке..."></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="cart-checkout-btn btn-target" onclick="submitManualReview()" style="flex: 1;">ОТПРАВИТЬ</button>
+                <button class="cart-checkout-btn btn-target" onclick="closeModal('writeReviewModal')" style="flex: 1; background: #333; color: #fff; border-color: #555;">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ОКНО АВТО-ОТЗЫВА ЗА ПОСЫЛКУ -->
+<div class="modal-overlay" id="autoReviewModal">
+    <div class="modal-window" style="max-width: 500px;">
+        <div class="modal-header">
+            <span class="modal-title typewriter" style="animation: none; color: var(--accent-green);">DELIVERY_SUCCESS.LOG</span>
+            <button class="close-btn" onclick="closeModal('autoReviewModal')">X</button>
+        </div>
+        <div class="form-layout" style="align-items: center; text-align: center;">
+            <div id="autoReviewImg" style="width: 120px; height: 120px; background-size: cover; background-position: center; border: 2px inset #555; margin-bottom: 10px;"></div>
+            <div id="autoReviewName" style="color: #fff; font-family: var(--font-mono); font-weight: bold; margin-bottom: 15px;"></div>
+            
+            <input type="hidden" id="autoReviewOrderId">
+            
+            <textarea id="autoReviewInput" class="form-input" style="width: 100%; height: 90px; resize: none; text-align: center;" placeholder="Пару слов о покупке..."></textarea>
+            
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: 10px;">
+                <button class="cart-checkout-btn btn-target" onclick="submitAutoReview()" style="flex: 1;">ОТПРАВИТЬ</button>
+                <button class="cart-checkout-btn btn-target" onclick="skipAutoReview()" style="flex: 1; background: #333; color: #fff; border-color: #555;">ПОЗЖЕ</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
