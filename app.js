@@ -1312,30 +1312,28 @@ function renderNextBatch() {
     
     // ПРОВЕРЯЕМ УСТРОЙСТВО
     const isMobile = window.innerWidth <= 900;
-    const batchSize = 12; 
     
-    // На ПК очищаем сетку перед новой страницей. На телефоне - НЕ очищаем (добавляем вниз)
-    if (!isMobile) {
-        grid.innerHTML = ''; 
-    }
-
-    // Удаляем старую плашку пагинации, если она была
+    // Удаляем старую плашку пагинации, если она была (на всякий случай)
     let oldPagination = document.getElementById('mainPagination');
     if (oldPagination) oldPagination.remove();
 
-    // Считаем индексы
     let startIndex = 0;
     let endIndex = 0;
 
     if (isMobile) {
-        // НА МОБИЛКЕ: продолжаем с того места, где остановились
+        // --- НА МОБИЛКЕ: ГРУЗИМ ВСЕ ТОВАРЫ СРАЗУ ---
+        if (renderedCount === 0) grid.innerHTML = ''; // Очищаем при новом поиске
         startIndex = renderedCount;
-        endIndex = Math.min(renderedCount + batchSize, filteredItems.length);
+        endIndex = filteredItems.length; // Грузим от начала и до самого конца массива
     } else {
-        // НА ПК: берем конкретную страницу
-        startIndex = (window.currentPage - 1) * itemsPageSize;
+        // --- НА ПК: СТРОГАЯ ПАГИНАЦИЯ ПО 12 ШТУК ---
+        grid.innerHTML = ''; 
+        startIndex = (window.currentPage - 1) * itemsPageSize; // itemsPageSize у нас 12
         endIndex = Math.min(startIndex + itemsPageSize, filteredItems.length);
     }
+    
+    // Защита: если уже всё отрендерено, ничего не делаем
+    if (startIndex >= endIndex) return;
     
     let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
     
@@ -1446,13 +1444,12 @@ function renderNextBatch() {
         } catch (err) { console.error(err); }
     }
 
-    // --- ФИНАЛИЗАЦИЯ (РАЗДЕЛЕНИЕ ЛОГИКИ) ---
+    // --- ФИНАЛИЗАЦИЯ ---
     if (isMobile) {
-        // НА МОБИЛКЕ: обновляем счетчик. 
-        // Остальные вещи загрузятся сами, когда юзер доскроллит до невидимого #loadingTrigger внизу
+        // Телефон: запоминаем, что загрузили всё
         renderedCount = endIndex;
     } else {
-        // НА ПК: Рисуем плашку со страницами
+        // ПК: рисуем черную плашку со страницами
         const totalPages = Math.ceil(filteredItems.length / itemsPageSize);
         if (totalPages > 1) {
             const paginationWrap = document.createElement('div');
@@ -1467,6 +1464,7 @@ function renderNextBatch() {
                 <div class="page-numbers">[ СТРАНИЦА <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> ИЗ ${totalPages} ]</div>
                 <button class="page-arrow" onclick="changePage(1)" ${nextDisabled}>&#10095;</button>
             `;
+            // Вставляем ПОСЛЕ сетки товаров, чтобы прижималось к низу
             grid.parentNode.insertBefore(paginationWrap, grid.nextSibling);
         }
     }
