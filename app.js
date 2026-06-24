@@ -1423,12 +1423,17 @@ function renderNextBatch() {
         } catch (err) { console.error(err); }
     }
 
-    // --- ОТРИСОВКА КРАСИВОЙ ПАГИНАЦИИ (СТРЕЛОЧКИ И НОМЕР) ---
+   // --- ОТРИСОВКА КРАСИВОЙ ПАГИНАЦИИ (СТРЕЛОЧКИ И НОМЕР) ---
+    
+    // 1. Сначала жестко удаляем старую плашку, чтобы не дублировалась
+    let oldPagination = document.getElementById('mainPagination');
+    if (oldPagination) oldPagination.remove();
+
     if (totalPages > 1) {
         const paginationWrap = document.createElement('div');
+        paginationWrap.id = 'mainPagination';
         paginationWrap.className = 'pagination-wrapper';
         
-        // Делаем кнопки неактивными, если мы на первой или последней странице
         const prevDisabled = window.currentPage === 1 ? 'disabled' : '';
         const nextDisabled = window.currentPage === totalPages ? 'disabled' : '';
 
@@ -1437,7 +1442,9 @@ function renderNextBatch() {
             <div class="page-numbers">[ СТРАНИЦА <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> ИЗ ${totalPages} ]</div>
             <button class="page-arrow" onclick="changePage(1)" ${nextDisabled}>&#10095;</button>
         `;
-        grid.appendChild(paginationWrap);
+        
+        // 2. ВАЖНО: Вставляем плашку ПОСЛЕ сетки, а не внутрь неё!
+        grid.parentNode.insertBefore(paginationWrap, grid.nextSibling);
     }
 }
 
