@@ -1306,6 +1306,33 @@ window.changePage = function(step) {
     }, 300);
 };
 
+window.currentPage = 1;
+
+window.changePage = function(step) {
+    window.currentPage += step;
+    const grid = document.getElementById('itemsGrid');
+    
+    if (grid) {
+        grid.style.opacity = '0';
+        grid.style.transform = 'translateY(10px)';
+    }
+
+    setTimeout(() => {
+        renderNextBatch(); 
+        
+        const sortingEl = document.querySelector('.sorting');
+        if (sortingEl) {
+            const y = sortingEl.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+        
+        if (grid) {
+            grid.style.opacity = '1';
+            grid.style.transform = 'translateY(0)';
+        }
+    }, 300);
+};
+
 function renderNextBatch() {
     const grid = document.getElementById('itemsGrid');
     if (!grid) return;
@@ -1313,7 +1340,7 @@ function renderNextBatch() {
     // ПРОВЕРЯЕМ УСТРОЙСТВО
     const isMobile = window.innerWidth <= 900;
     
-    // Удаляем старую плашку пагинации, если она была (на всякий случай)
+    // Удаляем старую плашку пагинации, если она была
     let oldPagination = document.getElementById('mainPagination');
     if (oldPagination) oldPagination.remove();
 
@@ -1322,17 +1349,17 @@ function renderNextBatch() {
 
     if (isMobile) {
         // --- НА МОБИЛКЕ: ГРУЗИМ ВСЕ ТОВАРЫ СРАЗУ ---
-        if (renderedCount === 0) grid.innerHTML = ''; // Очищаем при новом поиске
+        if (renderedCount === 0) grid.innerHTML = ''; 
         startIndex = renderedCount;
-        endIndex = filteredItems.length; // Грузим от начала и до самого конца массива
+        endIndex = filteredItems.length; 
     } else {
         // --- НА ПК: СТРОГАЯ ПАГИНАЦИЯ ПО 12 ШТУК ---
         grid.innerHTML = ''; 
-        startIndex = (window.currentPage - 1) * itemsPageSize; // itemsPageSize у нас 12
+        startIndex = (window.currentPage - 1) * itemsPageSize; 
         endIndex = Math.min(startIndex + itemsPageSize, filteredItems.length);
     }
     
-    // Защита: если уже всё отрендерено, ничего не делаем
+    // Защита от дублей
     if (startIndex >= endIndex) return;
     
     let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
@@ -1444,12 +1471,14 @@ function renderNextBatch() {
         } catch (err) { console.error(err); }
     }
 
-    // --- ФИНАЛИЗАЦИЯ ---
+    // --- ФИНАЛИЗАЦИЯ И СТРАХОВКА ---
     if (isMobile) {
-        // Телефон: запоминаем, что загрузили всё
         renderedCount = endIndex;
     } else {
-        // ПК: рисуем черную плашку со страницами
+        // ЖЕСТКАЯ ЗАЩИТА: На ПК говорим старому "скроллеру", что загружено всё, чтобы он не вмешивался.
+        renderedCount = filteredItems.length; 
+        
+        // Рисуем панель пагинации
         const totalPages = Math.ceil(filteredItems.length / itemsPageSize);
         if (totalPages > 1) {
             const paginationWrap = document.createElement('div');
@@ -1464,7 +1493,6 @@ function renderNextBatch() {
                 <div class="page-numbers">[ СТРАНИЦА <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> ИЗ ${totalPages} ]</div>
                 <button class="page-arrow" onclick="changePage(1)" ${nextDisabled}>&#10095;</button>
             `;
-            // Вставляем ПОСЛЕ сетки товаров, чтобы прижималось к низу
             grid.parentNode.insertBefore(paginationWrap, grid.nextSibling);
         }
     }
