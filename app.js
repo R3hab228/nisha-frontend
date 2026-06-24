@@ -1220,7 +1220,7 @@ function applyFilters() {
             });
             
             if (grid) grid.innerHTML = ''; 
-            renderedCount = 0; 
+            window.currentPage = 1; // Сбрасываем на первую страницу при любом поиске 
             
             const countEl = document.getElementById('itemCount');
             if (countEl) {
@@ -1275,21 +1275,48 @@ const gridVideoObserver = new IntersectionObserver((entries) => {
         }
     });
 }, { rootMargin: "50px" }); // Начинает грузить чуть заранее
+window.currentPage = 1;
+
+window.changePage = function(step) {
+    window.currentPage += step;
+    const grid = document.getElementById('itemsGrid');
+    
+    if (grid) {
+        grid.style.opacity = '0'; // Плавно прячем сетку
+        grid.style.transform = 'translateY(10px)';
+    }
+
+    setTimeout(() => {
+        renderNextBatch(); 
+        
+        // Плавно скроллим наверх к сортировке, чтобы юзеру не пришлось листать руками
+        const sortingEl = document.querySelector('.sorting');
+        if (sortingEl) {
+            const y = sortingEl.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+        
+        // Плавно показываем новые товары
+        if (grid) {
+            grid.style.opacity = '1';
+            grid.style.transform = 'translateY(0)';
+        }
+    }, 300);
+};
+
 function renderNextBatch() {
-    const batchSize = 12;
     const grid = document.getElementById('itemsGrid');
     if (!grid) return;
     
-    // 1. УДАЛЯЕМ СТАРУЮ КНОПКУ ПЕРЕД ДОБАВЛЕНИЕМ НОВЫХ ТОВАРОВ (ЧТОБЫ ОНА НЕ ДУБЛИРОВАЛАСЬ)
-    const oldBtn = document.getElementById('loadMoreBtn');
-    if (oldBtn) oldBtn.remove();
-
-    const end = Math.min(renderedCount + batchSize, filteredItems.length);
+    grid.innerHTML = ''; // Очищаем старые товары
     
-    // Берем специальный массив ВСЕХ просмотренных товаров (не только из короткой истории)
+    const startIndex = (window.currentPage - 1) * itemsPageSize;
+    const endIndex = Math.min(startIndex + itemsPageSize, filteredItems.length);
+    const totalPages = Math.ceil(filteredItems.length / itemsPageSize);
+    
     let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
     
-    for (let i = renderedCount; i < end; i++) {
+    for (let i = startIndex; i < endIndex; i++) {
         try {
             const item = filteredItems[i];
             if (!item) continue;
@@ -1305,12 +1332,8 @@ function renderNextBatch() {
 
                 if (hasSale || hasHot) {
                     badgeHTML = `<div class="system-status-bar">`;
-                    if (hasSale) {
-                        badgeHTML += `<span class="status-item status-sale">% SALE</span>`;
-                    }
-                    if (hasSale && hasHot) {
-                        badgeHTML += `<div class="status-divider"></div>`;
-                    }
+                    if (hasSale) badgeHTML += `<span class="status-item status-sale">% SALE</span>`;
+                    if (hasSale && hasHot) badgeHTML += `<div class="status-divider"></div>`;
                     if (hasHot) {
                         const chartSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
                         badgeHTML += `<span class="status-item status-hot">${chartSvg} HOT</span>`;
@@ -1334,7 +1357,6 @@ function renderNextBatch() {
             });
 
             const starClass = favorites.includes(item.id) ? 'fav-star active' : 'fav-star';
-            
             const isUnseen = !seenItemsIds.includes(item.id) && item.status === 'available';
             const pulseClass = isUnseen ? 'unseen-pulse' : '';
 
@@ -1378,28 +1400,20 @@ function renderNextBatch() {
 
             const sliderWrapper = card.querySelector('.card-slider-wrapper');
             let isDraggingSlider = false;
-            let startX = 0;
-            let startY = 0;
+            let startX = 0; let startY = 0;
             
             sliderWrapper.addEventListener('touchstart', (e) => { 
                 isDraggingSlider = false; 
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
             }, {passive: true});
             
             sliderWrapper.addEventListener('touchmove', (e) => { 
-                if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) {
-                    isDraggingSlider = true;
-                }
+                if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) isDraggingSlider = true;
             }, {passive: true});
             
             sliderWrapper.addEventListener('click', (e) => {
-                if (isDraggingSlider) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                } else {
-                    openProductModalById(item.id);
-                }
+                if (isDraggingSlider) { e.preventDefault(); e.stopPropagation(); } 
+                else { openProductModalById(item.id); }
             });
 
             grid.appendChild(card);
@@ -1408,26 +1422,22 @@ function renderNextBatch() {
 
         } catch (err) { console.error(err); }
     }
-    renderedCount = end;
 
-    // 2. ЕСЛИ В БАЗЕ ЕЩЕ ОСТАЛИСЬ ВЕЩИ — СОЗДАЕМ КНОПКУ "ПОКАЗАТЬ ЕЩЕ"
-    if (renderedCount < filteredItems.length) {
-        const loadMoreBtn = document.createElement('div');
-        loadMoreBtn.id = 'loadMoreBtn';
-        loadMoreBtn.className = 'lazy-loader';
-        loadMoreBtn.innerText = 'ПОКАЗАТЬ ЕЩЕ'; // Без скобочек, как ты и просил
+    // --- ОТРИСОВКА КРАСИВОЙ ПАГИНАЦИИ (СТРЕЛОЧКИ И НОМЕР) ---
+    if (totalPages > 1) {
+        const paginationWrap = document.createElement('div');
+        paginationWrap.className = 'pagination-wrapper';
         
-        // При клике меняем текст на "Загрузка..." и подгружаем еще 12 вещей
-        loadMoreBtn.onclick = function() {
-            this.innerText = 'ЗАГРУЗКА...';
-            this.style.pointerEvents = 'none';
-            this.style.opacity = '0.7';
-            setTimeout(() => {
-                renderNextBatch();
-            }, 150); // Небольшая задержка для плавности
-        };
-        
-        grid.appendChild(loadMoreBtn);
+        // Делаем кнопки неактивными, если мы на первой или последней странице
+        const prevDisabled = window.currentPage === 1 ? 'disabled' : '';
+        const nextDisabled = window.currentPage === totalPages ? 'disabled' : '';
+
+        paginationWrap.innerHTML = `
+            <button class="page-arrow" onclick="changePage(-1)" ${prevDisabled}>&#10094;</button>
+            <div class="page-numbers">[ СТРАНИЦА <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> ИЗ ${totalPages} ]</div>
+            <button class="page-arrow" onclick="changePage(1)" ${nextDisabled}>&#10095;</button>
+        `;
+        grid.appendChild(paginationWrap);
     }
 }
 

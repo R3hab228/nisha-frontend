@@ -1624,3 +1624,58 @@ body.search-lock {
 @media (max-width: 900px) {
     .grid-slider-btn { display: none !important; }
 }
+/* --- ПАГИНАЦИЯ (СТРЕЛОЧКИ И СТРАНИЦЫ) --- */
+.pagination-wrapper {
+    grid-column: 1 / -1; /* Растягиваем на всю ширину сетки */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin: 40px 0 20px 0;
+    padding: 15px;
+    background: #0a0a0a;
+    border: 1px dashed #333;
+}
+
+.page-arrow {
+    background: transparent;
+    color: var(--accent-green);
+    border: 2px outset #333;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    outline: none;
+}
+
+.page-arrow:hover:not(:disabled) {
+    background: var(--accent-green);
+    color: #000;
+    border-color: var(--accent-green);
+}
+
+.page-arrow:active:not(:disabled) {
+    border-style: inset;
+    transform: scale(0.9);
+}
+
+.page-arrow:disabled {
+    color: #444;
+    border-color: #222;
+    cursor: not-allowed;
+}
+
+.page-numbers {
+    color: #888;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+/* Скрываем старую кнопку, если она вдруг где-то осталась в HTML */
+.lazy-loader { display: none !important; }
