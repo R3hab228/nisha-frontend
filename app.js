@@ -3091,22 +3091,22 @@ function openProductModal(item) {
     if (simCont) {
         simCont.innerHTML = '';
         
-        // НОВАЯ УМНАЯ ЛОГИКА РЕКОМЕНДАЦИЙ
         let similar = allItems.filter(i => i.id !== item.id && (i.category === item.category || i.brand === item.brand));
         
-        // Если похожих брендов/категорий мало (меньше 4), добиваем товарами примерно той же цены (+- 30%)
         if (similar.length < 4) {
             const priceMargin = item.price * 0.3;
             const extra = allItems.filter(i => i.id !== item.id && !similar.includes(i) && i.price >= item.price - priceMargin && i.price <= item.price + priceMargin);
             similar = [...similar, ...extra];
         }
         
-        // Берем ровно 4 штуки, случайным образом перемешанные (чтобы не показывалось одно и то же)
         similar = similar.sort(() => 0.5 - Math.random()).slice(0, 4);
+        
+        // Достаем историю просмотров, чтобы проверить, видел ли юзер эти похожие вещи
+        let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
             
         if(similar.length > 0) {
             similar.forEach(s => {
-                const sImg = getOptimizedImageUrl(s, true); // Миниатюра для похожих
+                const sImg = getOptimizedImageUrl(s, true); 
                 
                 // --- МИНИ-БЕЙДЖИ ДЛЯ ПОХОЖИХ ТОВАРОВ ---
                 let miniBadgeHTML = '';
@@ -3123,14 +3123,21 @@ function openProductModal(item) {
                     miniBadgeHTML += `</div>`;
                 }
 
-                // --- ЦЕНА СО СКИДКОЙ ДЛЯ ПОХОЖИХ ---
                 let miniPriceHTML = `${s.price} грн`;
                 if (s.is_sale && s.old_price) {
                     miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${s.old_price}</span><span style="color: var(--accent-green);">${s.price} грн</span>`;
                 }
 
+                // --- НОВОЕ: ПУЛЬСАЦИЯ ДЛЯ НОВЫХ ПОХОЖИХ ВЕЩЕЙ ---
+                const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
+                const pulseAnim = isUnseen ? 'animation: unseenPulseAnim 2s infinite alternate;' : '';
+                const baseBorder = isUnseen ? 'var(--accent-red)' : '#333';
+
                 simCont.innerHTML += `
-                    <div style="min-width: 120px; cursor: pointer; border: 1px solid #333; background: #000; transition: 0.2s;" onmouseover="this.style.borderColor='var(--accent-green)'" onmouseout="this.style.borderColor='#333'" onclick="openProductModalById('${s.id}')">
+                    <div style="min-width: 120px; cursor: pointer; border: 1px solid ${baseBorder}; background: #000; transition: 0.2s; ${pulseAnim}" 
+                         onmouseover="this.style.borderColor='var(--accent-green)'" 
+                         onmouseout="this.style.borderColor='${baseBorder}'" 
+                         onclick="openProductModalById('${s.id}')">
                         <div style="position: relative; height: 100px; background-image:url('${sImg}'); background-size: cover; background-position: center;">
                             ${miniBadgeHTML}
                         </div>
@@ -3141,7 +3148,6 @@ function openProductModal(item) {
             simCont.innerHTML = '<div style="color:#555; font-size:12px; font-family: var(--font-mono);">Похожих товаров пока нет.</div>';
         }
     }
-
     // --- ДИНАМИЧЕСКИЕ БЕЙДЖИ И ПРОВЕРКА НА ПРЕДЛОЖКУ ---
     const badgesContainer = document.querySelector('.trust-badges');
     if (badgesContainer) {
