@@ -3107,10 +3107,34 @@ function openProductModal(item) {
         if(similar.length > 0) {
             similar.forEach(s => {
                 const sImg = getOptimizedImageUrl(s, true); // Миниатюра для похожих
+                
+                // --- МИНИ-БЕЙДЖИ ДЛЯ ПОХОЖИХ ТОВАРОВ ---
+                let miniBadgeHTML = '';
+                const hasSale = s.is_sale;
+                const hasHot = (s.views_count || 0) >= 25;
+
+                if (hasSale || hasHot) {
+                    miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 4px; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none;">`;
+                    if (hasSale) miniBadgeHTML += `<span style="color: #cc0000;">% SALE</span>`;
+                    if (hasSale && hasHot) miniBadgeHTML += `<div style="width: 1px; height: 8px; background: #888;"></div>`;
+                    if (hasHot) {
+                        miniBadgeHTML += `<span style="color: #0044cc;"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -1px;"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> HOT</span>`;
+                    }
+                    miniBadgeHTML += `</div>`;
+                }
+
+                // --- ЦЕНА СО СКИДКОЙ ДЛЯ ПОХОЖИХ ---
+                let miniPriceHTML = `${s.price} грн`;
+                if (s.is_sale && s.old_price) {
+                    miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${s.old_price}</span><span style="color: var(--accent-green);">${s.price} грн</span>`;
+                }
+
                 simCont.innerHTML += `
                     <div style="min-width: 120px; cursor: pointer; border: 1px solid #333; background: #000; transition: 0.2s;" onmouseover="this.style.borderColor='var(--accent-green)'" onmouseout="this.style.borderColor='#333'" onclick="openProductModalById('${s.id}')">
-                        <div style="height: 100px; background-image:url('${sImg}'); background-size: cover; background-position: center;"></div>
-                        <div style="padding: 8px; font-size: 11px; color: #fff; font-family: var(--font-mono); text-align: center;">${s.price} грн</div>
+                        <div style="position: relative; height: 100px; background-image:url('${sImg}'); background-size: cover; background-position: center;">
+                            ${miniBadgeHTML}
+                        </div>
+                        <div style="padding: 8px; font-size: 11px; color: #fff; font-family: var(--font-mono); text-align: center;">${miniPriceHTML}</div>
                     </div>`;
             });
         } else {
