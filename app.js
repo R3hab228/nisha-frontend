@@ -34,10 +34,11 @@ function changeLanguage(lng) {
     if (typeof i18next !== 'undefined') {
         i18next.changeLanguage(lng).then(() => {
             updateContentLanguage();
-            // ФИКС ЗАДЕРЖКИ: Принудительно обновляем текст на кнопках в ленте
-            document.querySelectorAll('.grid-cart-btn').forEach(btn => {
-                btn.innerText = i18next.t('product.add_to_cart');
-            });
+            
+            // --- МАГИЯ: Заставляем ленту и корзину мгновенно перерисоваться ---
+            // Теперь все кнопки, размеры и карточки обновятся сами без костылей!
+            applyFilters(); 
+            if (typeof renderCartItems === 'function') renderCartItems();
             
             const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
             showToast(msg, 'success');
@@ -2969,11 +2970,11 @@ function openProductModal(item) {
    
     document.querySelector('.modal-desc').innerHTML = `
         <div style="margin-bottom: 5px;">
-            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">РАЗМЕР:</span></strong> 
+            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">${i18next.t('product.size')}</span></strong> 
             <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${item.size}</span>
         </div>
         <div style="margin-bottom: 15px;">
-            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">БРЕНД:</span></strong> 
+            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${i18next.t('product.brand')}</span></strong> 
             <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${item.brand}</span>
         </div>
         <div style="color: #aaa; font-size: 13px;">${descText}</div>
@@ -3146,7 +3147,7 @@ function openProductModal(item) {
             simCont.innerHTML = '<div style="color:#555; font-size:12px; font-family: var(--font-mono);">Похожих товаров пока нет.</div>';
         }
     }
-    // --- ДИНАМИЧЕСКИЕ БЕЙДЖИ И ПРОВЕРКА НА ПРЕДЛОЖКУ ---
+   // --- ДИНАМИЧЕСКИЕ БЕЙДЖИ И ПРОВЕРКА НА ПРЕДЛОЖКУ ---
     const badgesContainer = document.querySelector('.trust-badges');
     if (badgesContainer) {
         const isDropItem = item.is_drop === true || (item.tags && item.tags.map(t => t.toLowerCase()).includes('drop'));
@@ -3159,35 +3160,34 @@ function openProductModal(item) {
             refundBadgeHTML = `
                 <div class="badge-item danger-badge" onclick="showBadgeInfo('drop')">
                     <span class="badge-icon">${alertSvg}</span> 
-                    <span class="badge-text">ПРЕДЛОЖКА</span>
+                    <span class="badge-text" data-i18n="product.badge_drop">${i18next.t('product.badge_drop')}</span>
                 </div>`;
         } else if (isReturnable) {
             const returnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
             refundBadgeHTML = `
                 <div class="badge-item" onclick="showBadgeInfo('refund_yes')">
                     <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${returnSvg}</span> 
-                    <span class="badge-text">ВОЗВРАТ (14 ДНЕЙ)</span>
+                    <span class="badge-text" data-i18n="product.badge_refund">${i18next.t('product.badge_refund')}</span>
                 </div>`;
         } else {
             const noReturnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
             refundBadgeHTML = `
                 <div class="badge-item" onclick="showBadgeInfo('refund_no')">
                     <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${noReturnSvg}</span> 
-                    <span class="badge-text">БЕЗ ВОЗВРАТОВ</span>
+                    <span class="badge-text" data-i18n="product.badge_norefund">${i18next.t('product.badge_norefund')}</span>
                 </div>`;
         }
 
-        // Иконка щита для безопасной сделки
         const secureSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`;
 
         badgesContainer.innerHTML = `
             <div class="badge-item" onclick="showBadgeInfo('secure')">
                 <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${secureSvg}</span> 
-                <span class="badge-text">БЕЗОПАСНАЯ СДЕЛКА</span>
+                <span class="badge-text" data-i18n="product.badge_orig">${i18next.t('product.badge_orig')}</span>
             </div>
             <div class="badge-item" onclick="showBadgeInfo('fast')">
                 <span class="badge-icon">24H</span> 
-                <span class="badge-text">БЫСТРАЯ ОТПРАВКА</span>
+                <span class="badge-text" data-i18n="product.badge_fast">${i18next.t('product.badge_fast')}</span>
             </div>
             ${refundBadgeHTML}
         `;
