@@ -3525,27 +3525,29 @@ function toggleMobileSidebar() {
         btn.style.color = 'var(--accent-red)';
         btn.style.background = '#111'; 
         
-        // --- МАГИЯ ЗДЕСЬ ---
-        // Узнаем точную высоту кнопки, чтобы приклеить фильтры ровно под неё
+        // 1. ОТРЫВАЕМ КНОПКУ ОТ СЕТКИ И ФИКСИРУЕМ К ЭКРАНУ (спасает от прыжков)
+        btn.style.position = 'fixed';
+        btn.style.top = '0';
+        btn.style.left = '0';
+        btn.style.width = '100%';
+        btn.style.zIndex = '1000'; // Кнопка всегда поверх всего
+        
         const btnHeight = btn.offsetHeight || 50; 
         
-        // Отрываем меню от страницы и приклеиваем под кнопку
+        // 2. ФИКСИРУЕМ САЙДБАР РОВНО ПОД КНОПКОЙ
         sidebar.style.position = 'fixed';
         sidebar.style.top = btnHeight + 'px';
         sidebar.style.left = '0';
         sidebar.style.width = '100%';
-        sidebar.style.zIndex = '99';
+        sidebar.style.zIndex = '999';
         
-        // Ограничиваем высоту меню размером экрана и разрешаем скроллить ВНУТРИ него
         sidebar.style.maxHeight = `calc(100vh - ${btnHeight}px)`; 
         sidebar.style.overflowY = 'auto'; 
         sidebar.style.boxShadow = '0 20px 40px rgba(0,0,0,0.9)';
         
-        // Жестко блокируем ленту товаров (чтобы случайно не листалась под фильтрами)
         document.body.classList.add('search-lock'); 
         if (typeof lenis !== 'undefined') lenis.stop(); 
         
-        // Прячем предложку
         if (fab) fab.style.display = 'none';
         
     } else {
@@ -3554,7 +3556,11 @@ function toggleMobileSidebar() {
         btn.style.color = 'var(--accent-green)';
         btn.style.background = '#050505'; 
         
-        // Возвращаем меню на свое родное место (сбрасываем JS-стили)
+        // 1. ВОЗВРАЩАЕМ КНОПКУ В РОДНОЕ СОСТОЯНИЕ
+        btn.style.position = 'sticky';
+        btn.style.zIndex = '100';
+        
+        // 2. ВОЗВРАЩАЕМ САЙДБАР НА МЕСТО
         sidebar.style.position = '';
         sidebar.style.top = '';
         sidebar.style.left = '';
@@ -3564,12 +3570,14 @@ function toggleMobileSidebar() {
         sidebar.style.overflowY = '';
         sidebar.style.boxShadow = '';
         
-        // Разблокируем ленту товаров
         document.body.classList.remove('search-lock');
         if (typeof lenis !== 'undefined') lenis.start();
         
-        // Возвращаем предложку
         if (fab) fab.style.display = 'flex';
+
+        // 3. ПЛАВНО КИДАЕМ ЮЗЕРА НАВЕРХ К ТОВАРАМ
+        // Так как товаров стало меньше, чтобы страница не дергалась - скроллим вверх
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 // Задержка поиска, чтобы не лагало при быстром вводе текста
