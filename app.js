@@ -846,40 +846,12 @@ async function checkSession() {
                             '[ ПОСМОТРЕТЬ ]',
                             () => openOrdersModal()
                         );
-
-                        promptOrderReview(payload.new.id, item.name, item.image, item.id);
                     }
                 })
                 .subscribe();
 
             await loadFavorites();
-           // --- ПРОВЕРКА НА ПОЛУЧЕННУЙ ТОВАР (ОТЗЫВ) ---
-            const { data: completedOrders } = await _supabase.from('orders')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .eq('status', 'Завершен')
-                .order('created_at', { ascending: false });
-
-            if (completedOrders && completedOrders.length > 0) {
-                // Делаем запрос в базу: какие из этих заказов юзер УЖЕ оценил?
-                const completedIds = completedOrders.map(o => o.id);
-                const { data: existingReviews } = await _supabase.from('reviews')
-                    .select('order_id')
-                    .in('order_id', completedIds);
-                
-                const reviewedIdsDb = existingReviews ? existingReviews.map(r => r.order_id) : [];
-
-                // Берем локальные "отказы" (если юзер нажал "Позже")
-                let dismissedOrders = JSON.parse(localStorage.getItem('nisha_dismissed_reviews') || '[]');
-
-                // Ищем заказ, которого нет ни в БД отзывов, ни в локальных "отказах"
-                const orderToReview = completedOrders.find(o => !reviewedIdsDb.includes(o.id) && !dismissedOrders.includes(o.id));
-                
-                if (orderToReview && orderToReview.items && orderToReview.items.length > 0) {
-                    const item = orderToReview.items[0]; 
-                    promptOrderReview(orderToReview.id, item.name, item.image, item.id);
-                }
-            }
+           
             
           // --- УМНОЕ ВОССТАНОВЛЕНИЕ БРОШЕННОЙ КОРЗИНЫ ---
             if (userProfile && userProfile.cart && userProfile.cart.length > 0) {
