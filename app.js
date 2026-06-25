@@ -33,12 +33,16 @@ document.addEventListener('click', (e) => {
 function changeLanguage(lng) {
     if (typeof i18next !== 'undefined') {
         i18next.changeLanguage(lng).then(() => {
+            // ЖЕСТКО сохраняем язык перед перерисовкой, чтобы UAH сработало
+            localStorage.setItem('nisha_lang', lng); 
+            
             updateContentLanguage();
             
-            // --- МАГИЯ: Заставляем ленту и корзину мгновенно перерисоваться ---
-            // Теперь все кнопки, размеры и карточки обновятся сами без костылей!
+            // Мгновенно перерисовываем вообще ВСЕ цены и тексты на сайте
             applyFilters(); 
             if (typeof renderCartItems === 'function') renderCartItems();
+            if (typeof updateCartUI === 'function') updateCartUI();
+            if (typeof renderHistory === 'function') renderHistory();
             
             const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
             showToast(msg, 'success');
@@ -229,9 +233,10 @@ window.addEventListener('scroll', () => {
 
 
 let allItems = []; 
-// Умное определение валюты в зависимости от языка
+// Умное определение валюты (жестко читаем из памяти)
 function getCurrency() {
-    return (typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн';
+    const lang = localStorage.getItem('nisha_lang') || 'ru';
+    return lang === 'en' ? 'UAH' : 'грн';
 }
 let currentUser = null;
 let userProfile = null;
@@ -1444,7 +1449,7 @@ function renderNextBatch() {
                 <div class="item-info" onclick="openProductModalById('${item.id}')">
                     <h3 class="item-title">${item.name}</h3>
                     <div class="item-price">${priceHTML}</div>
-                    <div class="item-size">${i18next.t('product.size')} ${item.size}</div>
+                    <div class="item-size"><span data-i18n="grid.size_prefix">${i18next.t('grid.size_prefix')}</span>${item.size}</div>
                     <div class="item-footer"><span>${item.brand}</span><span>${item.condition}</span></div>
                 </div>
 <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${i18next.t('product.add_to_cart')}</button>
