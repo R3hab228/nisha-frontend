@@ -1177,13 +1177,14 @@ function applyFilters() {
                 
                 const fuseOptions = {
                     includeScore: true, 
-                    threshold: 0.3, // Строгий поиск
+                    threshold: 0.4, // Сделали чуть мягче, чтобы прощал опечатки в брендах
                     ignoreLocation: true,
-                    useExtendedSearch: true, // КРИТИЧНО ДЛЯ ТЕГОВ: заставляет Fuse искать внутри массивов
+                    useExtendedSearch: true, 
                     keys: [
-                        { name: 'tags', weight: 1.0 }, // ТЕГИ - самый главный приоритет
-                        { name: 'name', weight: 0.5 }, 
-                        { name: 'brand', weight: 0.5 }, 
+                        { name: 'tags', weight: 1.0 }, 
+                        { name: 'brand', weight: 0.8 }, // Повысили приоритет бренда
+                        { name: 'name', weight: 0.8 }, 
+                        { name: 'size', weight: 0.8 },  // ДОБАВИЛИ ПОИСК ПО РАЗМЕРУ
                         { name: 'category', weight: 0.2 }
                     ]
                 };
@@ -3582,13 +3583,14 @@ function handleLiveSearch() {
         const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
         const fuseOptions = {
             includeScore: true, 
-            threshold: 0.3, 
+            threshold: 0.4, 
             ignoreLocation: true,
-            useExtendedSearch: true, // Включаем глубокий поиск по массиву тегов
+            useExtendedSearch: true, 
             keys: [
-                { name: 'tags', weight: 1.0 }, // Теги на первом месте
-                { name: 'name', weight: 0.5 }, 
-                { name: 'brand', weight: 0.5 }
+                { name: 'tags', weight: 1.0 }, 
+                { name: 'brand', weight: 0.8 }, 
+                { name: 'name', weight: 0.8 }, 
+                { name: 'size', weight: 0.8 } // ДОБАВИЛИ РАЗМЕР В ЖИВОЙ ПОИСК
             ]
         };
         const fuse = new Fuse(allItems, fuseOptions);
