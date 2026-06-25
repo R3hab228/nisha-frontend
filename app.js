@@ -2678,7 +2678,14 @@ async function executeOrderFinal(emailToSave) {
 
     if (currentUser) {
         if(guestInputGroup) guestInputGroup.style.display = 'none';
-        if(guestText) guestText.innerHTML = `${i18next.t('orders_modal.access_granted')}: <span style="color:var(--accent-green); font-weight:bold;">${userProfile?.username || currentUser.email}</span>`;
+        
+        // Умное получение никнейма (спасает от заглушки "User")
+        let dName = userProfile?.username;
+        if (!dName || dName === 'User') {
+            dName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@')[0];
+        }
+        
+        if(guestText) guestText.innerHTML = `${i18next.t('orders_modal.access_granted', {defaultValue: 'Доступ разрешен'})}: <span style="color:var(--accent-green); font-weight:bold;">@${dName}</span>`;
         fetchMyOrders();
     } else {
         if(guestInputGroup) guestInputGroup.style.display = 'flex';
@@ -2823,24 +2830,26 @@ function renderFilteredOrders() {
         // --- ЛОГИКА КНОПКИ ОТЗЫВА ---
         let reviewBtnHtml = '';
         if (order.status.toLowerCase() === 'завершен') {
-            // Проверяем, оставлял ли юзер УЖЕ отзыв именно на этот заказ
             let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
             
             if (!reviewedOrders.includes(order.id) && order.items && order.items.length > 0) {
                 const firstItem = order.items[0];
-                // Безопасное имя (экранируем кавычки, чтобы не сломать HTML)
                 const safeName = firstItem.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                
-                // Делаем иконку меньше и тоньше (stroke-width="1.5")
                 const msgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; position: relative; top: 2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
                 
-                // Чистый текст-ссылка без рамок и фонов
                 reviewBtnHtml = `
                     <div style="margin-top: 10px; cursor: pointer; color: var(--accent-green); font-size: 12px; font-family: var(--font-main); text-align: center; transition: 0.2s;" 
                          onclick="closeModal('ordersModal'); promptOrderReview('${order.id}', '${safeName}', '${firstItem.image}', '${firstItem.id}')" 
                          onmouseover="this.style.textDecoration='underline'; this.style.color='#fff';" 
                          onmouseout="this.style.textDecoration='none'; this.style.color='var(--accent-green)';">
                         ${msgIcon} Оставить отзыв
+                    </div>
+                `;
+            } else if (reviewedOrders.includes(order.id)) {
+                // Если отзыв уже оставлен — показываем серый текст (некликабельный)
+                reviewBtnHtml = `
+                    <div style="margin-top: 10px; color: #555; font-size: 12px; font-family: var(--font-mono); text-align: center; pointer-events: none;">
+                        [✔] ОТЗЫВ ОСТАВЛЕН
                     </div>
                 `;
             }
