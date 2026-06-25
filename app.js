@@ -50,29 +50,26 @@ function changeLanguage(lng) {
 }
 
 
-// === НАСТРОЙКИ ОБНОВЛЕНИЯ САЙТА ===
-const UPDATE_REASON = "Запрет добавления в корзину без регистрации + фикс обучения";
-
+// === АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ САЙТА (БЕЗ КЭША) ===
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(registration => {
             console.log('[PWA] SW зарегистрирован');
+            
+            // Принудительно проверяем обновления при каждом заходе
+            registration.update();
+
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        showTerminalModal(
-                            'SYSTEM_UPDATE.EXE',
-                            `Вышла новая версия сайта.<br><br><span style="color:var(--accent-yellow); font-family: monospace;">Причина: (${UPDATE_REASON})</span><br><br>Нажмите кнопку ниже, чтобы очистить кэш и применить исправления.`,
-                            '[ ОБНОВИТЬ СЕЙЧАС ]',
-                            () => {
-                                caches.keys().then(names => {
-                                    for (let name of names) caches.delete(name);
-                                }).then(() => {
-                                    window.location.reload(true);
-                                });
-                            }
-                        );
+                        console.log('[PWA] Найдено обновление! Тихо чистим кэш...');
+                        // Без вопросов чистим кэш и моментально перезагружаем страницу
+                        caches.keys().then(names => {
+                            for (let name of names) caches.delete(name);
+                        }).then(() => {
+                            window.location.reload(true);
+                        });
                     }
                 };
             };
@@ -1444,7 +1441,7 @@ function renderNextBatch() {
                     <div class="item-size">${i18next.t('product.size')} ${item.size}</div>
                     <div class="item-footer"><span>${item.brand}</span><span>${item.condition}</span></div>
                 </div>
-                <button class="grid-cart-btn" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${i18next.t('product.add_to_cart')}</button>
+<button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${i18next.t('product.add_to_cart')}</button>
             `;
 
             const sliderWrapper = card.querySelector('.card-slider-wrapper');
@@ -2972,11 +2969,11 @@ function openProductModal(item) {
    
     document.querySelector('.modal-desc').innerHTML = `
         <div style="margin-bottom: 5px;">
-            <strong style="color: #fff; font-family: var(--font-mono);">РАЗМЕР:</strong> 
+            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">РАЗМЕР:</span></strong> 
             <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${item.size}</span>
         </div>
         <div style="margin-bottom: 15px;">
-            <strong style="color: #fff; font-family: var(--font-mono);">БРЕНД:</strong> 
+            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">БРЕНД:</span></strong> 
             <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${item.brand}</span>
         </div>
         <div style="color: #aaa; font-size: 13px;">${descText}</div>
