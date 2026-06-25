@@ -197,16 +197,20 @@ function changeLanguage(lng) {
 const lenis = new Lenis({
     lerp: 0.1, 
     wheelMultiplier: 1, 
-    smoothWheel: true,
-    smoothTouch: false, 
-    syncTouch: false    // <--- СТАВИМ FALSE! Это уберет "тугость" и дребезжание на телефонах
+    smoothWheel: true
 });
 
-function raf(time) {
-    lenis.raf(time);
+if (window.innerWidth > 900) {
+    // На ПК запускаем плавный скролл
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
     requestAnimationFrame(raf);
+} else {
+    // На мобилках полностью убиваем скрипт, чтобы работал легкий родной скролл телефона
+    lenis.destroy();
 }
-requestAnimationFrame(raf);
 
 // Открытие нового модального окна профиля
 function openProfileModal() {
