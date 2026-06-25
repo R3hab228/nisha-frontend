@@ -3514,7 +3514,6 @@ function toggleMobileSidebar() {
     const btn = document.getElementById('mobileFilterBtn');
     sidebar.classList.toggle('active-mobile');
     
-    // Берем язык для перевода прямо из словаря
     const hideText = i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' });
     const showText = i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' });
 
@@ -3522,10 +3521,14 @@ function toggleMobileSidebar() {
         btn.innerText = hideText;
         btn.style.borderColor = 'var(--accent-red)';
         btn.style.color = 'var(--accent-red)';
+        btn.style.background = '#111'; // Кнопка темнеет
+        document.body.style.overflow = 'hidden'; // БЛОКИРУЕМ СКРОЛЛ ЛЕНТЫ
     } else {
         btn.innerText = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
+        btn.style.background = '#050505'; // Кнопка возвращается в норму
+        document.body.style.overflow = ''; // ВОЗВРАЩАЕМ СКРОЛЛ ЛЕНТЫ
     }
 }
 // Задержка поиска, чтобы не лагало при быстром вводе текста
