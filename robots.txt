@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://nisha-frontend.vercel.app/sitemap.xml
+Sitemap: https://www.nisha-store.shop/sitemap.xml
