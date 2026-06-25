@@ -3867,15 +3867,15 @@ function initMobileSwipe() {
         let canDrag = false;
 
         modalWin.addEventListener('touchstart', (e) => {
-            if (window.innerWidth > 900) return;
-            
-            // Защита: не активируем свайп, если трогаем фото, кнопки или вводим текст
-            if (e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                canDrag = false;
-                return;
-            }
+                if (window.innerWidth > 900) return;
+                
+                // ЗАЩИТА: Отключаем свайп окна, если юзер листает внутренние списки (правила, заказы, отзывы)
+                if (e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.rules-content') || e.target.closest('.orders-container') || e.target.closest('#reviewsContainerList')) {
+                    canDrag = false;
+                    return;
+                }
 
-            startY = e.touches[0].clientY;
+                startY = e.touches[0].clientY;
             canDrag = (modalWin.scrollTop <= 0); 
             isDragging = false;
 
