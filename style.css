@@ -165,9 +165,6 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     display: flex; flex-direction: column; 
     cursor: pointer; position: relative; 
     transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; 
-    transform-style: preserve-3d;
-    will-change: transform;
-    backface-visibility: hidden;
 }
 .item-card:hover { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
 
