@@ -274,7 +274,7 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .modal-info { width: 50%; display: flex; flex-direction: column; position: relative;}
 .price-views-row { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 20px;}
 .modal-price { color: var(--accent-green); font-size: 36px; font-weight: bold; font-family: var(--font-mono); margin: 0; line-height: 1;}
-.item-views { color: #666; font-size: 11px; font-family: var(--font-mono); display: flex; align-items: center; gap: 5px; margin-top: 5px;}
+.item-views { color: #888; font-size: 13px; font-weight: bold; font-family: var(--font-mono); display: flex; align-items: center; gap: 6px; margin-top: 5px; }
 
 .modal-desc { color: #ddd; font-size: 14px; line-height: 1.6; margin-bottom: 20px; padding: 15px 0; border-top: 1px dashed #333; border-bottom: 1px dashed #333; font-family: var(--font-main);}
 
