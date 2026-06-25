@@ -47,7 +47,8 @@
         "cheap": "Дешевые"
       },
       "mobile": {
-        "show_filters": "[+] ПОКАЗАТЬ ФИЛЬТРЫ"
+        "show_filters": "[+] ПОКАЗАТЬ ФИЛЬТРЫ",
+        "hide_filters": "[-] СКРЫТЬ ФИЛЬТРЫ"
       },
       "history": {
         "title": "HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:"
@@ -266,7 +267,8 @@
         "cheap": "Дешеві"
       },
       "mobile": {
-        "show_filters": "[+] ПОКАЗАТИ ФІЛЬТРИ"
+        "show_filters": "[+] ПОКАЗАТИ ФІЛЬТРИ",
+        "hide_filters": "[-] ПРИХОВАТИ ФІЛЬТРИ"
       },
       "history": {
         "title": "HISTORY.LOG // ВИ НЕЩОДАВНО ДИВИЛИСЯ:"
@@ -485,7 +487,8 @@
         "cheap": "Cheapest"
       },
       "mobile": {
-        "show_filters": "[+] SHOW FILTERS"
+        "show_filters": "[+] SHOW FILTERS",
+        "hide_filters": "[-] HIDE FILTERS"
       },
       "history": {
         "title": "HISTORY.LOG // RECENTLY VIEWED:"

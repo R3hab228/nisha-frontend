@@ -279,9 +279,10 @@
             <!-- НАДПИСЬ КОПИРАЙТА -->
             <p style="margin-top: 10px; color: #444;" data-i18n="footer.copyright">© 2026 NISHA. All rights reserved.</p>
             
-            <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ СТРОГО ПОД НЕЙ И ПО ЦЕНТРУ -->
-            <div class="footer-lang-dropdown" id="footerLangWrapper">
+            <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ -->
+            <div class="footer-lang-dropdown" id="footerLangWrapper" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                 <span id="currentLangLabelFooter" onclick="document.getElementById('footerLangWrapper').classList.toggle('active')">[RU] ▼</span>
+                <span id="currentFlag" style="font-size: 18px; pointer-events: none;">🇷🇺</span>
                 <div class="footer-lang-menu">
                     <a href="javascript:void(0)" onclick="setLang('ua')">UA</a>
                     <a href="javascript:void(0)" onclick="setLang('ru')">RU</a>

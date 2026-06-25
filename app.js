@@ -46,6 +46,25 @@ function changeLanguage(lng) {
             
             const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
             showToast(msg, 'success');
+
+            // --- МЕНЯЕМ ФЛАГ ---
+            const flagEl = document.getElementById('currentFlag');
+            let newFlag = '🇷🇺';
+            if (lng === 'ua') newFlag = '🇺🇦';
+            if (lng === 'en') newFlag = '🇬🇧';
+            if (flagEl) flagEl.innerText = newFlag;
+            localStorage.setItem('nisha_flag', newFlag); // Запоминаем флаг
+            
+            // Если мобильное меню открыто/закрыто — переводим кнопку фильтров
+            const sidebar = document.querySelector('.sidebar');
+            const btn = document.getElementById('mobileFilterBtn');
+            if (btn && sidebar) {
+                if (sidebar.classList.contains('active-mobile')) {
+                    btn.innerText = i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' });
+                } else {
+                    btn.innerText = i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' });
+                }
+            }
             
             if (currentUser && _supabase) {
                 _supabase.from('profiles').update({ language: lng }).eq('id', currentUser.id).then();
@@ -3400,10 +3419,17 @@ function renderHistory() {
             }
         }
         
+        // --- МИНИ-БЕЙДЖИ ДЛЯ ИСТОРИИ ---
+        let miniBadgeHTML = '';
+        if (h.is_sale) {
+            miniBadgeHTML = `<div style="position: absolute; bottom: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none; color: #cc0000;">% SALE</div>`;
+        }
+
         card.innerHTML = `
             <div class="history-img" style="position: relative; overflow: hidden; padding: 0;">
                 <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="Удалить">X</div>
                 ${mediaHTML}
+                ${miniBadgeHTML}
             </div>
             <div class="history-info">
                 <div class="history-name" title="${h.name}">${h.name}</div>
@@ -3523,12 +3549,16 @@ function toggleMobileSidebar() {
     const btn = document.getElementById('mobileFilterBtn');
     sidebar.classList.toggle('active-mobile');
     
+    // Берем язык для перевода прямо из словаря
+    const hideText = i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' });
+    const showText = i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' });
+
     if (sidebar.classList.contains('active-mobile')) {
-        btn.innerText = '[-] СКРЫТЬ ФИЛЬТРЫ';
+        btn.innerText = hideText;
         btn.style.borderColor = 'var(--accent-red)';
         btn.style.color = 'var(--accent-red)';
     } else {
-        btn.innerText = '[+] ПОКАЗАТЬ ФИЛЬТРЫ';
+        btn.innerText = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
     }
