@@ -229,6 +229,10 @@ window.addEventListener('scroll', () => {
 
 
 let allItems = []; 
+// Умное определение валюты в зависимости от языка
+function getCurrency() {
+    return (typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн';
+}
 let currentUser = null;
 let userProfile = null;
 let favorites = [];
@@ -1412,10 +1416,11 @@ function renderNextBatch() {
             card.setAttribute('data-id', item.id);
             
             let priceHTML = '';
+            const curr = getCurrency();
             if (item.is_sale && item.old_price) {
-                priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${item.old_price} грн</span><span style="color: var(--accent-green);">${item.price} грн</span>`;
+                priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${item.old_price} ${curr}</span><span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
             } else {
-                priceHTML = `<span style="color: var(--accent-green);">${item.price} грн</span>`;
+                priceHTML = `<span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
             }
 
             let controlsHTML = '';
@@ -1869,7 +1874,7 @@ function updateCartUI() {
     if (currentPromoDiscount > 0) {
         total = Math.floor(total - (total * currentPromoDiscount));
     }
-    document.getElementById('cartTotal').innerText = total + ' грн';
+    document.getElementById('cartTotal').innerText = total + ' ' + getCurrency();
     
     if (typeof renderCartItems === 'function') renderCartItems(); 
 }
@@ -2155,8 +2160,8 @@ function renderCartItems() {
                     <div class="cart-item-size">${i18next.t('grid.size_prefix')}${item.size}</div>
                 </div>
                 <div class="cart-item-price-wrapper">
-                    <div class="cart-item-price">${item.price} грн</div>
-                    <div class="cart-item-remove hide-on-mobile" onclick="removeFromCart(${index}, event, this.closest('.cart-item-row'))" title="Удалить">×</div>
+                    <div class="cart-item-price">${item.price} ${getCurrency()}</div>
+                    <div class="cart-item-remove hide-on-mobile" onclick="removeFromCart(${index}, event, this.closest('.cart-item-row'))">×</div>
                 </div>
             </div>
         `;
@@ -2919,7 +2924,7 @@ function openProductModal(item) {
         }
     }
     let finalPrice = isHacked ? Math.floor(item.price * 0.9) : item.price;
-    document.getElementById('modalItemPrice').innerText = finalPrice + ' грн';
+    document.getElementById('modalItemPrice').innerText = finalPrice + ' ' + getCurrency();
     document.getElementById('modalItemSizeDesc').innerText = item.size;
     document.getElementById('modalItemBrand').innerText = item.brand;
     
@@ -3122,9 +3127,10 @@ function openProductModal(item) {
                     miniBadgeHTML += `</div>`;
                 }
 
-                let miniPriceHTML = `${s.price} грн`;
+                const curr = getCurrency();
+                let miniPriceHTML = `${s.price} ${curr}`;
                 if (s.is_sale && s.old_price) {
-                    miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${s.old_price}</span><span style="color: var(--accent-green);">${s.price} грн</span>`;
+                    miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${s.old_price}</span><span style="color: var(--accent-green);">${s.price} ${curr}</span>`;
                 }
 
                 // --- НОВОЕ: ПУЛЬСАЦИЯ ДЛЯ НОВЫХ ПОХОЖИХ ВЕЩЕЙ ---
@@ -3355,10 +3361,11 @@ function renderHistory() {
         
         // --- ЛОГИКА ЦЕНЫ СО СКИДКОЙ ДЛЯ ИСТОРИИ ---
         let finalPriceHTML = '';
+        const curr = getCurrency();
         if (h.is_sale && h.old_price) {
-            finalPriceHTML = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${h.old_price}</span>${h.price} грн`;
+            finalPriceHTML = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${h.old_price}</span>${h.price} ${curr}`;
         } else {
-            finalPriceHTML = `${h.price} грн`;
+            finalPriceHTML = `${h.price} ${curr}`;
         }
 
         const card = document.createElement('div');

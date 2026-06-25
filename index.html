@@ -344,11 +344,11 @@
                 <li data-i18n="rules.p3_3" style="margin-bottom: 10px;">Отправка посылок происходит в день заказа (при оплате до 16:00) или на следующий рабочий день.</li>
             </ul>
 
-            <h3 style="color: var(--accent-red); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 4. ГАРАНТИИ И УСЛОВИЯ ВОЗВРАТА (ВАЖНО!) ]</h3>
+            <h3 data-i18n="rules.h4" style="color: var(--accent-red); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 4. ГАРАНТИИ И УСЛОВИЯ ВОЗВРАТА (ВАЖНО!) ]</h3>
             <ul style="padding-left: 20px;">
-                <li style="margin-bottom: 10px;">Мы настоятельно рекомендуем внимательно изучать фото, замеры и описание перед оформлением заказа.</li>
-                <li style="margin-bottom: 10px;"><span style="color: var(--accent-red); font-weight: bold;">ТОВАРЫ "БЕЗ ВОЗВРАТА":</span> Если в карточке указано "БЕЗ ВОЗВРАТОВ" (а также любые вещи со статусом "ПРЕДЛОЖКА") — данный товар <b style="color: var(--accent-red); text-decoration: underline;">не подлежит возврату или обмену ни при каких условиях.</b> Пожалуйста, делайте покупки обдуманно.</li>
-                <li style="margin-bottom: 10px;"><span style="color: var(--accent-green); font-weight: bold;">ТОВАРЫ "С ВОЗВРАТОМ":</span> Если товар имеет зеленый бейдж "Возврат 14 дней", вы можете вернуть его согласно законодательству. Обязательное условие: сохранение бирок и отсутствие следов носки.</li>
+                <li data-i18n="rules.p4_1" style="margin-bottom: 10px;">Мы настоятельно рекомендуем внимательно изучать фото, замеры и описание перед оформлением заказа.</li>
+                <li data-i18n="rules.p4_2" style="margin-bottom: 10px;"><span style="color: var(--accent-red); font-weight: bold;">ТОВАРЫ "БЕЗ ВОЗВРАТА":</span> Если в карточке указано "БЕЗ ВОЗВРАТОВ" (а также любые вещи со статусом "ПРЕДЛОЖКА") — данный товар <b style="color: var(--accent-red); text-decoration: underline;">не подлежит возврату или обмену ни при каких условиях.</b> Пожалуйста, делайте покупки обдуманно.</li>
+                <li data-i18n="rules.p4_3" style="margin-bottom: 10px;"><span style="color: var(--accent-green); font-weight: bold;">ТОВАРЫ "С ВОЗВРАТОМ":</span> Если товар имеет зеленый бейдж "Возврат 14 дней", вы можете вернуть его согласно законодательству. Обязательное условие: сохранение бирок и отсутствие следов носки.</li>
             </ul>
 
             <h3 data-i18n="rules.h5" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]</h3>
@@ -706,8 +706,8 @@
             <textarea id="autoReviewInput" class="form-input" style="width: 100%; height: 90px; resize: none; text-align: center;" placeholder="Пару слов о покупке..."></textarea>
             
             <div style="display: flex; gap: 10px; width: 100%; margin-top: 10px;">
-                <button class="cart-checkout-btn btn-target" onclick="submitAutoReview()" style="flex: 1;">ОТПРАВИТЬ</button>
-                <button class="cart-checkout-btn btn-target" onclick="skipAutoReview()" style="flex: 1; background: #333; color: #fff; border-color: #555;">ПОЗЖЕ</button>
+                <button class="cart-checkout-btn btn-target" onclick="skipAutoReview()" style="flex: 1; background: #333; color: #fff; border-color: #555;" data-i18n="reviews_modal.later">ПОЗЖЕ</button>
+                <button class="cart-checkout-btn btn-target" onclick="submitAutoReview()" style="flex: 1;" data-i18n="reviews_modal.send">ОТПРАВИТЬ</button>
             </div>
         </div>
     </div>

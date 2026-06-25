@@ -134,7 +134,9 @@
       },
       "reviews_modal": {
         "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",
-        "empty_reviews": "В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ"
+        "empty_reviews": "В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ",
+        "send": "ОТПРАВИТЬ",
+        "later": "ПОЗЖЕ"
       },
       "profile": {
         "saved": "СОХРАНЕНО:",
@@ -203,6 +205,10 @@
         "p3_1": "Доставка осуществляется исключительно компанией <b>«Нова Пошта»</b>.",
         "p3_2": "Форматы оплаты: полная предоплата или наложенный платеж с минимальной предоплатой <b>200 грн</b>.",
         "p3_3": "Отправка посылок происходит в день заказа (при оплате до 16:00) или на следующий рабочий день.",
+        "h4": "[ 4. ГАРАНТИИ И УСЛОВИЯ ВОЗВРАТА (ВАЖНО!) ]",
+        "p4_1": "Мы настоятельно рекомендуем внимательно изучать фото, замеры и описание перед оформлением заказа.",
+        "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">ТОВАРЫ \"БЕЗ ВОЗВРАТА\":</span> Если в карточке указано \"БЕЗ ВОЗВРАТОВ\" (а также любые вещи со статусом \"ПРЕДЛОЖКА\") — данный товар <b style=\"color: var(--accent-red); text-decoration: underline;\">не подлежит возврату или обмену ни при каких условиях.</b> Пожалуйста, делайте покупки обдуманно.",
+        "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">ТОВАРЫ \"С ВОЗВРАТОМ\":</span> Если товар имеет зеленый бейдж \"Возврат 14 дней\", вы можете вернуть его согласно законодательству. Обязательное условие: сохранение бирок и отсутствие следов носки.",
         "h5": "[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]",
         "p5_1": "Комиссия площадки за продажу вашей вещи составляет <b>15%</b>.",
         "p5_2": "Все финансовые операции проходят <b>только через наши реквизиты</b>.",
@@ -347,7 +353,9 @@
       },
       "reviews_modal": {
         "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",
-        "empty_reviews": "НА ДАНИЙ МОМЕНТ ВІДГУКИ ВІДСУТНІ"
+        "empty_reviews": "НА ДАНИЙ МОМЕНТ ВІДГУКИ ВІДСУТНІ",
+        "send": "ВІДПРАВИТИ",
+        "later": "ПІЗНІШЕ"
       },
       "profile": {
         "saved": "ЗБЕРЕЖЕНО:",
@@ -416,6 +424,10 @@
         "p3_1": "Доставка здійснюється виключно компанією <b>«Нова Пошта»</b>.",
         "p3_2": "Формати оплати: повна передоплата або післяплата з мінімальною передоплатою <b>200 грн</b>.",
         "p3_3": "Відправлення посилок відбувається в день замовлення (при оплаті до 16:00) або на наступний робочий день.",
+        "h4": "[ 4. ГАРАНТІЇ ТА УМОВИ ПОВЕРНЕННЯ (ВАЖЛИВО!) ]",
+        "p4_1": "Ми наполегливо рекомендуємо уважно вивчати фото, заміри та опис перед оформленням замовлення.",
+        "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">ТОВАРИ \"БЕЗ ПОВЕРНЕННЯ\":</span> Якщо в картці вказано \"БЕЗ ПОВЕРНЕННЯ\" (а також будь-які речі зі статусом \"ПРЕДЛОЖКА\") — даний товар <b style=\"color: var(--accent-red); text-decoration: underline;\">не підлягає поверненню або обміну за жодних умов.</b> Будь ласка, робіть покупки обдумано.",
+        "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">ТОВАРИ \"З ПОВЕРНЕННЯМ\":</span> Якщо товар має зелений бейдж \"Повернення 14 днів\", ви можете повернути його згідно із законодавством. Обов'язкова умова: збереження бірок та відсутність слідів носіння.",
         "h5": "[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦІВ (DROP_ITEM) ]",
         "p5_1": "Комісія майданчика за продаж вашої речі становить <b>15%</b>.",
         "p5_2": "Всі фінансові операції проходять <b>тільки через наші реквізити</b>.",
@@ -560,7 +572,9 @@
       },
       "reviews_modal": {
         "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
-        "empty_reviews": "NO REVIEWS AT THE MOMENT"
+        "empty_reviews": "NO REVIEWS AT THE MOMENT",
+        "send": "SEND",
+        "later": "LATER"
       },
       "profile": {
         "saved": "SAVED:",
@@ -629,6 +643,10 @@
         "p3_1": "Delivery is carried out exclusively by <b>«Nova Poshta»</b>.",
         "p3_2": "Payment formats: full prepayment or cash on delivery with a minimum prepayment of <b>200 UAH</b>.",
         "p3_3": "Parcels are dispatched on the day of the order (if paid before 16:00) or on the next working day.",
+        "h4": "[ 4. GUARANTEES AND RETURN POLICY (IMPORTANT!) ]",
+        "p4_1": "We strongly recommend carefully studying the photos, measurements, and descriptions before placing an order.",
+        "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">\"NO RETURNS\" ITEMS:</span> If the card says \"NO RETURNS\" (as well as any items with the \"DROP ITEM\" status) — this item <b style=\"color: var(--accent-red); text-decoration: underline;\">is not subject to return or exchange under any circumstances.</b> Please shop thoughtfully.",
+        "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">\"WITH RETURNS\" ITEMS:</span> If the item has a green \"14 days return\" badge, you can return it according to the law. Mandatory condition: original tags must be attached and the item must be unworn.",
         "h5": "[ 5. RULES FOR SELLERS (DROP_ITEM) ]",
         "p5_1": "The platform's commission for selling your item is <b>15%</b>.",
         "p5_2": "All financial transactions are conducted <b>only through our payment details</b>.",
