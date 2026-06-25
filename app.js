@@ -3525,29 +3525,48 @@ function toggleMobileSidebar() {
         btn.style.color = 'var(--accent-red)';
         btn.style.background = '#111'; 
         
-        // УБРАЛИ БЛОКИРОВКУ СКРОЛЛА! Теперь фильтры можно листать.
-        // document.body.classList.add('search-lock'); 
-        // if (typeof lenis !== 'undefined') lenis.stop(); 
+        // --- МАГИЯ ЗДЕСЬ ---
+        // Узнаем точную высоту кнопки, чтобы приклеить фильтры ровно под неё
+        const btnHeight = btn.offsetHeight || 50; 
         
-        // Прячем предложку, чтобы не лезла на текст
+        // Отрываем меню от страницы и приклеиваем под кнопку
+        sidebar.style.position = 'fixed';
+        sidebar.style.top = btnHeight + 'px';
+        sidebar.style.left = '0';
+        sidebar.style.width = '100%';
+        sidebar.style.zIndex = '99';
+        
+        // Ограничиваем высоту меню размером экрана и разрешаем скроллить ВНУТРИ него
+        sidebar.style.maxHeight = `calc(100vh - ${btnHeight}px)`; 
+        sidebar.style.overflowY = 'auto'; 
+        sidebar.style.boxShadow = '0 20px 40px rgba(0,0,0,0.9)';
+        
+        // Жестко блокируем ленту товаров (чтобы случайно не листалась под фильтрами)
+        document.body.classList.add('search-lock'); 
+        if (typeof lenis !== 'undefined') lenis.stop(); 
+        
+        // Прячем предложку
         if (fab) fab.style.display = 'none';
-
-        // КРАСИВЫЙ СКРОЛЛ: Прыгаем ровно к началу фильтров
-        setTimeout(() => {
-            // Вычисляем точную позицию кнопки на экране и скроллим к ней
-            const y = btn.getBoundingClientRect().top + window.scrollY;
-            window.scrollTo({ top: y, behavior: 'smooth' });
-        }, 50); // Ждем 50мс, пока начнется CSS-анимация раскрытия
-
+        
     } else {
         btn.innerText = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
         btn.style.background = '#050505'; 
         
-        // Убрали разблокировку (так как больше не блокируем)
-        // document.body.classList.remove('search-lock');
-        // if (typeof lenis !== 'undefined') lenis.start();
+        // Возвращаем меню на свое родное место (сбрасываем JS-стили)
+        sidebar.style.position = '';
+        sidebar.style.top = '';
+        sidebar.style.left = '';
+        sidebar.style.width = '';
+        sidebar.style.zIndex = '';
+        sidebar.style.maxHeight = '';
+        sidebar.style.overflowY = '';
+        sidebar.style.boxShadow = '';
+        
+        // Разблокируем ленту товаров
+        document.body.classList.remove('search-lock');
+        if (typeof lenis !== 'undefined') lenis.start();
         
         // Возвращаем предложку
         if (fab) fab.style.display = 'flex';
