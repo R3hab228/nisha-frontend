@@ -609,22 +609,26 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     #authBox { display: none !important; }
     .mobile-profile-link { display: block !important; }
     
-    /* --- ВЫПАДАЮЩЕЕ МЕНЮ ФИЛЬТРОВ --- */
+    /* --- ЖЕЛЕЗОБЕТОННОЕ МЕНЮ ФИЛЬТРОВ --- */
     .sidebar { 
         display: flex !important; width: 100%; max-height: 0; opacity: 0; overflow: hidden; 
-        padding: 0 15px; margin: 0; transition: max-height 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease; 
-        visibility: hidden; position: fixed; top: 54px; left: 0; background: rgba(10, 10, 10, 0.98); 
-        backdrop-filter: blur(10px); z-index: 1499; border-bottom: 2px solid var(--accent-green); 
-        box-shadow: 0 20px 40px rgba(0,0,0,0.9); overflow-y: auto; 
+        padding: 0 15px; margin: 0; transition: opacity 0.3s ease; /* Плавное проявление без дерганий */
+        visibility: hidden; position: fixed; top: 0; left: 0; bottom: 0; background: rgba(5, 5, 5, 0.98); 
+        backdrop-filter: blur(10px); z-index: 2000; /* Фон лежит ПОД кнопкой */
     }
-    .sidebar.active-mobile { max-height: 85vh; opacity: 1; padding-top: 20px; padding-bottom: 30px; visibility: visible; }
+    .sidebar.active-mobile { 
+        max-height: 100vh; opacity: 1; visibility: visible; overflow-y: auto; 
+        padding-top: 80px; /* ЖЕСТКО сдвигаем весь текст фильтров вниз, чтобы не лез на кнопку */
+        padding-bottom: 30px; 
+    }
     
     /* --- ПРИЛИПАЮЩАЯ КНОПКА --- */
     #mobileFilterBtn { 
         display: block; width: 100%; background: #050505; color: var(--accent-green); 
         border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; 
         margin: 0 0 15px 0; cursor: pointer; text-align: center; font-size: 14px; 
-        transition: background 0.3s, color 0.3s; position: sticky; top: 0; z-index: 1500; 
+        transition: background 0.3s, color 0.3s; position: sticky; top: 0; 
+        z-index: 2001; /* Кнопка ВСЕГДА самый верхний элемент на экране */
         box-shadow: 0 10px 20px rgba(0,0,0,0.9);
     }
     .content-area { padding-top: 0; }
