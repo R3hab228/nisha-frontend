@@ -1499,8 +1499,13 @@ function renderNextBatch() {
 }
 
 function startOnboardingTour() {
-    // Не запускаем, если: тур пройден, правила не приняты, или открыто любое окно (.EXE)
-    const anyModalOpen = document.querySelectorAll('.modal-overlay[style*="display: flex"]').length > 0;
+    // ЖЕСТКАЯ ЗАЩИТА: Не запускаем тур, если есть хоть одно открытое модальное окно,
+    // или если мы не в самом верху ленты, или если тур уже пройден.
+    
+    // Проверяем, есть ли элементы со стилем display: flex (значит они открыты)
+    const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
+        return window.getComputedStyle(el).display === 'flex';
+    });
     
     if (!localStorage.getItem('nisha_rules_accepted') || 
         localStorage.getItem('nisha_tour_done') || 
@@ -1508,6 +1513,11 @@ function startOnboardingTour() {
         typeof window.driver === 'undefined') return;
         
     setTimeout(() => {
+        // Двойная проверка через 800мс (вдруг окно только-только начало открываться)
+        const checkAgain = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
+            return window.getComputedStyle(el).display === 'flex';
+        });
+        if (checkAgain) return;
         const isMobile = window.innerWidth <= 900;
         const firstStar = document.querySelector('.item-card .fav-star');
         const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
