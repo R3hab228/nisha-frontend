@@ -113,6 +113,9 @@
     </div>
 
     <div class="main-container">
+        <!-- Перемещенная кнопка: теперь она НАД сайдбаром, поэтому фильтры раскрываются под ней, а кнопка остается сверху -->
+        <button id="mobileFilterBtn" onclick="toggleMobileSidebar()" data-i18n="mobile.show_filters">[+] ПОКАЗАТЬ ФИЛЬТРЫ</button>
+        
         <aside class="sidebar">
             <div class="filter-box">
                 <div class="filter-title" data-i18n="sidebar.categories">КАТЕГОРИИ</div>
@@ -205,7 +208,6 @@
         </aside>
 
         <main class="content-area">
-            <button id="mobileFilterBtn" onclick="toggleMobileSidebar()" data-i18n="mobile.show_filters">[+] ПОКАЗАТЬ ФИЛЬТРЫ</button>
             
             <div class="sorting">
                 <span><span data-i18n="sort.found">Найдено вещей:</span> <strong id="itemCount" style="color: var(--accent-green);">0</strong></span>

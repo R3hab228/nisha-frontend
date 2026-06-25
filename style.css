@@ -609,38 +609,29 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     #authBox { display: none !important; }
     .mobile-profile-link { display: block !important; }
     
-    /* --- ЖЕЛЕЗОБЕТОННОЕ МЕНЮ ФИЛЬТРОВ --- */
+    /* --- МЕНЮ ФИЛЬТРОВ (Аккордеон) --- */
     .sidebar { 
         display: flex !important; width: 100%; max-height: 0; opacity: 0; overflow: hidden; 
-        padding: 0 15px; margin: 0; transition: opacity 0.3s ease; 
-        visibility: hidden; 
-        
-        /* Меню теперь висит ровно ПОД кнопкой, а не на весь экран */
-        position: fixed; top: 54px; left: 0; bottom: 0; 
-        background: rgba(5, 5, 5, 0.98); backdrop-filter: blur(10px); z-index: 2000; 
+        padding: 0 15px; margin: 0; transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out; 
+        visibility: hidden; background: #0a0a0a; border-bottom: 1px dashed var(--accent-green);
     }
     .sidebar.active-mobile { 
-        max-height: calc(100vh - 54px); opacity: 1; visibility: visible; 
-        overflow-y: auto; 
-        padding-top: 20px; /* Вернули нормальный отступ */
-        padding-bottom: 30px; 
+        max-height: 1200px; /* Раздвигаем контент */
+        opacity: 1; visibility: visible; 
+        padding-top: 20px; padding-bottom: 20px; 
     }
     
-    /* --- ФИКСИРОВАННАЯ КНОПКА --- */
+    /* --- КНОПКА --- */
     #mobileFilterBtn { 
         display: block; width: 100%; background: #050505; color: var(--accent-green); 
         border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; 
         margin: 0; cursor: pointer; text-align: center; font-size: 14px; 
         transition: background 0.3s, color 0.3s; 
         
-        /* ЖЕСТКО прибиваем кнопку к верху и не даем ей двигаться */
         position: sticky; 
         top: 0; 
-        left: 0;
-        z-index: 2001; 
-        box-shadow: 0 10px 20px rgba(0,0,0,0.9);
+        z-index: 100; 
     }
-    .content-area { padding-top: 0; }
 
     .items-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .card-slider-wrapper { height: 160px; }
