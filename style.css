@@ -614,7 +614,27 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         overflow: hidden; padding: 0; margin: 0; transition: all 0.4s ease-in-out; visibility: hidden;
     }
     .sidebar.active-mobile { max-height: 1500px; opacity: 1; padding-top: 15px; padding-bottom: 15px; visibility: visible; }
-    #mobileFilterBtn { display: block; width: 100%; background: #111; color: var(--accent-green); border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; margin-bottom: 15px; cursor: pointer; text-align: center; font-size: 14px;}
+/* --- Плавающий мобильный фильтр --- */
+    #mobileFilterBtn { 
+        display: block; 
+        width: 100%; 
+        background: #0a0a0a; /* Делаем фон плотным, чтобы товары под ним не просвечивались */
+        color: var(--accent-green); 
+        border: 2px dashed #444; 
+        padding: 15px; 
+        font-family: var(--font-mono); 
+        font-weight: bold; 
+        margin-bottom: 15px; 
+        cursor: pointer; 
+        text-align: center; 
+        font-size: 14px;
+        
+        /* МАГИЯ ПРИЛИПАНИЯ */
+        position: sticky;
+        top: 0; /* Прилипает к самому верху экрана */
+        z-index: 1500; /* Всегда поверх товаров, но под модальными окнами */
+        box-shadow: 0 10px 20px rgba(0,0,0,0.9); /* Красивая тень, падающая на ленту */
+    }
 
     .items-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .card-slider-wrapper { height: 160px; }
