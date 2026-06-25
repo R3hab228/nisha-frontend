@@ -280,13 +280,12 @@
             <p style="margin-top: 10px; color: #444;" data-i18n="footer.copyright">© 2026 NISHA. All rights reserved.</p>
             
             <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ -->
-            <div class="footer-lang-dropdown" id="footerLangWrapper" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <span id="currentLangLabelFooter" onclick="document.getElementById('footerLangWrapper').classList.toggle('active')">[RU] ▼</span>
-                <span id="currentFlag" style="font-size: 18px; pointer-events: none;">🇷🇺</span>
+            <div class="footer-lang-dropdown" id="footerLangWrapper">
+                <span id="currentLangLabelFooter" onclick="document.getElementById('footerLangWrapper').classList.toggle('active')">🇷🇺 [RU] ▼</span>
                 <div class="footer-lang-menu">
-                    <a href="javascript:void(0)" onclick="setLang('ua')">UA</a>
-                    <a href="javascript:void(0)" onclick="setLang('ru')">RU</a>
-                    <a href="javascript:void(0)" onclick="setLang('en')">EN</a>
+                    <a href="javascript:void(0)" onclick="setLang('ua')">🇺🇦 UA</a>
+                    <a href="javascript:void(0)" onclick="setLang('ru')">🇷🇺 RU</a>
+                    <a href="javascript:void(0)" onclick="setLang('en')">🇬🇧 EN</a>
                 </div>
             </div>
 
@@ -294,17 +293,26 @@
     </footer>
 </div>
 
-<!-- СКРИПТ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ЯЗЫКА (чтобы менялся текст на кнопке) -->
+<!-- СКРИПТ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ЯЗЫКА (с поддержкой флагов) -->
 <script>
+    function getFlagByLang(lang) {
+        if (lang === 'ua') return '🇺🇦';
+        if (lang === 'en') return '🇬🇧';
+        return '🇷🇺'; // По умолчанию русский
+    }
+
     function setLang(lang) {
         changeLanguage(lang); 
-        document.getElementById('currentLangLabelFooter').innerText = '[' + lang.toUpperCase() + '] ▼';
+        const flag = getFlagByLang(lang);
+        document.getElementById('currentLangLabelFooter').innerText = flag + ' [' + lang.toUpperCase() + '] ▼';
         document.getElementById('footerLangWrapper').classList.remove('active');
     }
+
     document.addEventListener("DOMContentLoaded", () => {
         const savedLang = localStorage.getItem('nisha_lang') || 'ru';
+        const flag = getFlagByLang(savedLang);
         const el = document.getElementById('currentLangLabelFooter');
-        if(el) el.innerText = '[' + savedLang.toUpperCase() + '] ▼';
+        if(el) el.innerText = flag + ' [' + savedLang.toUpperCase() + '] ▼';
     });
 </script>
 </div>

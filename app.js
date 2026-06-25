@@ -47,13 +47,6 @@ function changeLanguage(lng) {
             const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
             showToast(msg, 'success');
 
-            // --- МЕНЯЕМ ФЛАГ ---
-            const flagEl = document.getElementById('currentFlag');
-            let newFlag = '🇷🇺';
-            if (lng === 'ua') newFlag = '🇺🇦';
-            if (lng === 'en') newFlag = '🇬🇧';
-            if (flagEl) flagEl.innerText = newFlag;
-            localStorage.setItem('nisha_flag', newFlag); // Запоминаем флаг
             
             // Если мобильное меню открыто/закрыто — переводим кнопку фильтров
             const sidebar = document.querySelector('.sidebar');
