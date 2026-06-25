@@ -197,20 +197,16 @@ function changeLanguage(lng) {
 const lenis = new Lenis({
     lerp: 0.1, 
     wheelMultiplier: 1, 
-    smoothWheel: true
+    smoothWheel: true,
+    smoothTouch: false, // На телефонах оставляем нативный скролл (он идеален)
+    syncTouch: true     // Синхронизируем мобильный скролл с анимациями
 });
 
-if (window.innerWidth > 900) {
-    // На ПК запускаем плавный скролл
-    function raf(time) {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
-    }
+function raf(time) {
+    lenis.raf(time);
     requestAnimationFrame(raf);
-} else {
-    // На мобилках полностью убиваем скрипт, чтобы работал легкий родной скролл телефона
-    lenis.destroy();
 }
+requestAnimationFrame(raf);
 
 // Открытие нового модального окна профиля
 function openProfileModal() {
@@ -219,10 +215,9 @@ function openProfileModal() {
     document.body.style.overflow = 'hidden';
 }
 
-// Умная кнопка [+] Предложки (ОПТИМИЗИРОВАННАЯ ВЕРСИЯ)
+// Умная кнопка [+] Предложки (Работает везде, даже на телефоне)
 let fabTimeout;
 let lastScrollY = window.scrollY;
-let isTicking = false; // Защита от перегрузки процессора при скролле
 
 window.addEventListener('scroll', () => {
     if (!isTicking) {

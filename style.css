@@ -688,22 +688,8 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         font-size: 16px; 
     }
 
-    /* =================================================== */
-    /* СНИМАЕМ НАГРУЗКУ С ПРОЦЕССОРА (УБИРАЕМ 3D СЛОИ)     */
-    /* =================================================== */
-    * { 
-        transform-style: flat !important; 
-    }
-    
-    .item-card, .item-info, .mock-image, .sold-badge, .reserved-badge, 
-    .history-img, .history-info, .system-status-bar, .fav-star {
-        transform: none !important; 
-    }
-
-    /* ПРИНУДИТЕЛЬНО ВКЛЮЧАЕМ РОДНУЮ ИНЕРЦИЮ (ОСОБЕННО ДЛЯ АЙФОНОВ) */
-    html, body {
-        -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior-y: auto !important;
-        scroll-behavior: auto !important;
+    .order-total {
+        text-align: right; 
+        font-size: 16px; 
     }
 }
