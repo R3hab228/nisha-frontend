@@ -3149,10 +3149,13 @@ function openProductModal(item) {
                 </div>`;
         }
 
+        // Иконка щита для безопасной сделки
+        const secureSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`;
+
         badgesContainer.innerHTML = `
-            <div class="badge-item" onclick="showBadgeInfo('legit')">
-                <span class="badge-icon">100%</span> 
-                <span class="badge-text">ПРОШЛО ЛЕГИТ-ЧЕК</span>
+            <div class="badge-item" onclick="showBadgeInfo('secure')">
+                <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${secureSvg}</span> 
+                <span class="badge-text">БЕЗОПАСНАЯ СДЕЛКА</span>
             </div>
             <div class="badge-item" onclick="showBadgeInfo('fast')">
                 <span class="badge-icon">24H</span> 
@@ -4200,9 +4203,9 @@ window.showBadgeInfo = function(type) {
     let title = '';
     let text = '';
 
-    if (type === 'legit') {
-        title = 'LEGIT_CHECK.EXE';
-        text = 'Все вещи проходят строгую физическую и цифровую проверку на оригинальность нашими экспертами.<br><br>Мы выступаем гарантом сделки. Мы не продаем реплики и фейки.';
+    if (type === 'secure') {
+        title = 'SECURE_PAYMENT.EXE';
+        text = 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Мы настоятельно рекомендуем проверять товар на отделении Новой Почты. Если вещь оказалась не такой, как в описании — вы просто отказываетесь от посылки.';
     } else if (type === 'fast') {
         title = 'FAST_SHIPPING.SYS';
         text = 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
