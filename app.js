@@ -3512,7 +3512,7 @@ function updatePriceUI() {
 function toggleMobileSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const btn = document.getElementById('mobileFilterBtn');
-    const fab = document.querySelector('.fab-propose'); // Находим кнопку "Предложка"
+    const fab = document.querySelector('.fab-propose'); 
     
     sidebar.classList.toggle('active-mobile');
     
@@ -3525,21 +3525,29 @@ function toggleMobileSidebar() {
         btn.style.color = 'var(--accent-red)';
         btn.style.background = '#111'; 
         
-        // ЖЕЛЕЗОБЕТОННАЯ БЛОКИРОВКА СЗАДИ (Работает даже на iOS)
-        document.body.classList.add('search-lock'); 
-        if (typeof lenis !== 'undefined') lenis.stop(); // Останавливаем движок скролла
+        // УБРАЛИ БЛОКИРОВКУ СКРОЛЛА! Теперь фильтры можно листать.
+        // document.body.classList.add('search-lock'); 
+        // if (typeof lenis !== 'undefined') lenis.stop(); 
         
         // Прячем предложку, чтобы не лезла на текст
         if (fab) fab.style.display = 'none';
+
+        // КРАСИВЫЙ СКРОЛЛ: Прыгаем ровно к началу фильтров
+        setTimeout(() => {
+            // Вычисляем точную позицию кнопки на экране и скроллим к ней
+            const y = btn.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }, 50); // Ждем 50мс, пока начнется CSS-анимация раскрытия
+
     } else {
         btn.innerText = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
         btn.style.background = '#050505'; 
         
-        // РАЗМОРАЖИВАЕМ ЛЕНТУ
-        document.body.classList.remove('search-lock');
-        if (typeof lenis !== 'undefined') lenis.start();
+        // Убрали разблокировку (так как больше не блокируем)
+        // document.body.classList.remove('search-lock');
+        // if (typeof lenis !== 'undefined') lenis.start();
         
         // Возвращаем предложку
         if (fab) fab.style.display = 'flex';
