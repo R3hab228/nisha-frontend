@@ -3512,6 +3512,8 @@ function updatePriceUI() {
 function toggleMobileSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const btn = document.getElementById('mobileFilterBtn');
+    const fab = document.querySelector('.fab-propose'); // Находим кнопку "Предложка"
+    
     sidebar.classList.toggle('active-mobile');
     
     const hideText = i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' });
@@ -3521,14 +3523,26 @@ function toggleMobileSidebar() {
         btn.innerText = hideText;
         btn.style.borderColor = 'var(--accent-red)';
         btn.style.color = 'var(--accent-red)';
-        btn.style.background = '#111'; // Кнопка темнеет
-        document.body.style.overflow = 'hidden'; // БЛОКИРУЕМ СКРОЛЛ ЛЕНТЫ
+        btn.style.background = '#111'; 
+        
+        // ЖЕЛЕЗОБЕТОННАЯ БЛОКИРОВКА СЗАДИ (Работает даже на iOS)
+        document.body.classList.add('search-lock'); 
+        if (typeof lenis !== 'undefined') lenis.stop(); // Останавливаем движок скролла
+        
+        // Прячем предложку, чтобы не лезла на текст
+        if (fab) fab.style.display = 'none';
     } else {
         btn.innerText = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
-        btn.style.background = '#050505'; // Кнопка возвращается в норму
-        document.body.style.overflow = ''; // ВОЗВРАЩАЕМ СКРОЛЛ ЛЕНТЫ
+        btn.style.background = '#050505'; 
+        
+        // РАЗМОРАЖИВАЕМ ЛЕНТУ
+        document.body.classList.remove('search-lock');
+        if (typeof lenis !== 'undefined') lenis.start();
+        
+        // Возвращаем предложку
+        if (fab) fab.style.display = 'flex';
     }
 }
 // Задержка поиска, чтобы не лагало при быстром вводе текста
