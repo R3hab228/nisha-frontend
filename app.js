@@ -4189,7 +4189,7 @@ window.showBadgeInfo = function(type) {
         text = 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
     } else if (type === 'refund_no') {
         title = 'NO_RETURN_POLICY.LOG';
-        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно требуем проводить полный осмотр и примерку вещи <b style="color:#fff;">ИСКЛЮЧИТЕЛЬНО в отделении Новой Почты.</b><br><br>Если вещь вам не подошла — вы просто отказываетесь от посылки на почте. <b style="color:var(--accent-red);">Если вы забрали посылку домой — возврат или обмен НЕВОЗМОЖЕН.</b>';
+        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>';
     } else if (type === 'refund_yes') {
         title = 'RETURN_POLICY.SYS';
         text = '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>';
