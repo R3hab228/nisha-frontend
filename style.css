@@ -188,6 +188,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 .status-item { display: flex; align-items: center; gap: 4px; }
 .status-sale { color: #cc0000; }
 .status-hot { color: #0044cc; }
+.status-new { color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.5); letter-spacing: 1px; } /* НОВЫЙ БЕЙДЖ */
 .status-divider { width: 1px; height: 10px; background: #888; }
 .old-price { text-decoration: line-through; color: var(--text-muted); font-size: 13px; margin-right: 8px; font-weight: normal; }
 .hacked-price-tag { color: var(--accent-green); font-size: 12px; border: 1px solid var(--accent-green); padding: 1px 4px; margin-left: 5px; animation: pulse 1s infinite;}
