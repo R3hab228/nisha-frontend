@@ -3452,39 +3452,50 @@ function triggerEasterEgg() {
     updateCartUI();
 }
 // ==========================================
-// 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (УНИКАЛЬНЫЕ ЗА ДЕНЬ)
+// 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (ЖЕЛЕЗОБЕТОННЫЙ UNIQUE VISITORS)
 // ==========================================
-
 async function initHitCounter() {
     const counterEl = document.getElementById('hitCounterValue');
     if (!counterEl) return;
 
-    let visitorId = "unknown";
-    if (typeof FingerprintJS !== 'undefined') {
-        const fp = await FingerprintJS.load();
-        const result = await fp.get();
-        visitorId = result.visitorId;
-        clientFingerprint = visitorId;
+    // 1. Добываем уникальный ID устройства
+    let visitorId = localStorage.getItem('nisha_visitor_id');
+    if (!visitorId) {
+        // Если зашел первый раз в жизни - генерируем ID
+        visitorId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        localStorage.setItem('nisha_visitor_id', visitorId);
     }
+    clientFingerprint = visitorId; // Сохраняем для просмотров товаров
 
-    const today = new Date().toLocaleDateString('en-CA'); 
-    const lastVisitData = JSON.parse(localStorage.getItem('nisha_visit_data') || '{}');
-    
-    // Записываем локально, чтобы не дергать сервер при каждом обновлении страницы
-    if (lastVisitData.date !== today || lastVisitData.id !== visitorId) {
-        localStorage.setItem('nisha_visit_data', JSON.stringify({ date: today, id: visitorId }));
-    }
+    const todayDate = new Date().toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+    const lastVisitDate = localStorage.getItem('nisha_last_visit_date');
+
+    // 2. Проверяем, заходил ли он УЖЕ СЕГОДНЯ
+    const isNewVisitToday = (lastVisitDate !== todayDate);
 
     try {
-        // Бэкенд всё сделает сам
+        // Отправляем запрос на наш сервер. 
+        // Если isNewVisitToday = true, сервер прибавит +1 к БД.
+        // Если false - сервер просто вернет текущее число (без прибавления).
         const res = await fetch('https://nisha-api.onrender.com/api/hit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ visitorId: visitorId, date: today })
+            body: JSON.stringify({ 
+                visitorId: visitorId, 
+                date: todayDate,
+                countAsNew: isNewVisitToday 
+            })
         });
+        
         const data = await res.json();
         
         if (data.success && data.count) {
+            // Если запрос успешен и это был новый заход — запоминаем, что сегодня он уже был
+            if (isNewVisitToday) {
+                localStorage.setItem('nisha_last_visit_date', todayDate);
+            }
+            
+            // Красиво выводим число (например: 0 0 1 2 4)
             const strCount = data.count.toString().padStart(5, '0');
             counterEl.innerText = strCount.split('').join(' ');
         }
