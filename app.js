@@ -847,10 +847,8 @@ async function checkSession() {
                 }, payload => {
                     const newStatus = payload.new.status;
                     if (newStatus !== payload.old.status) {
-                        // Показываем зеленый ТОСТ сверху
                         showToast(`Заказ #${payload.new.id.split('-')[0].toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
                         
-                        // И показываем большое окно
                         showTerminalModal(
                             'SYSTEM_NOTIFICATION.LOG',
                             `ВНИМАНИЕ! Статус вашего заказа изменился.<br><br>` +
@@ -859,6 +857,22 @@ async function checkSession() {
                             '[ ПОСМОТРЕТЬ ]',
                             () => openOrdersModal()
                         );
+                    }
+                })
+                .subscribe();
+
+           // --- УВЕДОМЛЕНИЯ ОБ ОТВЕТАХ НА ВОПРОСЫ ---
+            _supabase.channel('qa-updates')
+                .on('postgres_changes', { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'item_questions',
+                    filter: `user_id=eq.${currentUser.id}` 
+                }, payload => {
+                    // Если админ написал ответ (раньше было пусто, а теперь есть текст)
+                    if (payload.new.answer && !payload.old.answer) {
+                        const msg = i18next.t('messages.qa_answered', {defaultValue: 'Вам ответили на вопрос!'});
+                        showToast(msg, 'success');
                     }
                 })
                 .subscribe();
@@ -2993,6 +3007,20 @@ function openProductModal(item) {
             <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${item.brand}</span>
         </div>
         <div style="color: #aaa; font-size: 13px;">${descText}</div>
+        
+        <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ -->
+        <div id="productQAContainer" style="margin-top: 20px; border-top: 1px dashed #333; padding-top: 10px; display: none;"></div>
+
+        <!-- КНОПКА ЗАДАТЬ ВОПРОС -->
+        <div style="margin-top: 15px; text-align: right;">
+            <button onclick="toggleQuestionForm()" style="background: transparent; border: none; color: var(--accent-green); font-family: var(--font-mono); font-weight: bold; cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline;" data-i18n="product.ask_btn">${i18next.t('product.ask_btn', {defaultValue: 'Задать вопрос?'})}</button>
+        </div>
+        <div id="questionFormContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 5px;">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <input type="text" id="questionInput" class="form-input" placeholder="Ваш вопрос..." data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
+                <button class="search-btn btn-target" onclick="submitQuestion('${item.id}', '${item.name.replace(/'/g, "\\'")}')" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${i18next.t('product.ask_send', {defaultValue: 'ОТПРАВИТЬ'})}</button>
+            </div>
+        </div>
     `;
    // ЗАЩИЩЕННЫЕ ПРОСМОТРЫ (ANTI-SPAM)
     const viewCount = document.getElementById('modalItemViews');
@@ -3237,6 +3265,25 @@ function openProductModal(item) {
     if (url.searchParams.has('item')) {
         url.searchParams.delete('item');
         window.history.replaceState(null, '', url.pathname + url.search);
+    }
+    // Загружаем вопросы и ответы для этого товара
+    if (_supabase) {
+        _supabase.from('item_questions').select('*').eq('item_id', item.id).order('created_at', { ascending: true }).then(({ data, error }) => {
+            const qaCont = document.getElementById('productQAContainer');
+            if (data && data.length > 0 && qaCont) {
+                qaCont.style.display = 'block';
+                qaCont.innerHTML = '<h4 style="color:#555; margin: 0 0 10px 0; font-family: var(--font-mono); font-size:12px;">Q&A:</h4>';
+                data.forEach(q => {
+                    let answerHtml = q.answer ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">↳ NISHA: ${q.answer}</div>` : '';
+                    qaCont.innerHTML += `
+                        <div style="border-left: 2px solid #333; padding-left: 10px; margin-bottom: 12px; font-family: var(--font-main);">
+                            <span style="color:#888; font-size:11px; font-family:var(--font-mono);">@${q.user_name}:</span>
+                            <div style="color:#ddd; font-size:13px; margin-top:2px;">${q.question}</div>
+                            ${answerHtml}
+                        </div>`;
+                });
+            }
+        });
     }
 }
 
