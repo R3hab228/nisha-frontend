@@ -667,16 +667,28 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         padding-top: 20px; padding-bottom: 20px; 
     }
     
-    /* --- КНОПКА --- */
+    /* --- КНОПКА (ЖЕЛЕЗОБЕТОННЫЙ ФИКС) --- */
     #mobileFilterBtn { 
-        display: block; width: 100%; background: #050505; color: var(--accent-green); 
+        display: block; width: 100%; background: #0a0a0a; color: var(--accent-green); 
         border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; 
         margin: 0; cursor: pointer; text-align: center; font-size: 14px; 
         transition: background 0.3s, color 0.3s; 
         
-        position: sticky; 
-        top: 0; 
+        /* Секрет тут: мы жестко прибиваем её к экрану на 50px от верха (сразу под шапкой) */
+        position: fixed; 
+        top: 65px; /* Отступ равен высоте твоей черной шапки с логотипом */
+        left: 0;
         z-index: 100; 
+    }
+    
+    /* Сдвигаем саму ленту вниз, чтобы она не залезла под фиксированную кнопку */
+    .items-grid {
+        padding-top: 55px; /* Высота кнопки */
+    }
+    
+    /* Фильтры тоже должны выпадать ровно из-под кнопки */
+    .sidebar {
+        top: 120px; /* 65px шапка + 55px кнопка */
     }
 
     .items-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
