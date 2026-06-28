@@ -3213,10 +3213,18 @@ function openProductModal(item) {
 
     addToHistory(item);
 
-    // НОВЫЙ КОД: Плавный скролл модалки на самый верх
     const modalWin = document.querySelector('#productModal .modal-window');
     if (modalWin) {
         modalWin.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- УМНАЯ ОЧИСТКА URL ---
+    // Если мы перешли по ссылке на этот товар, стираем ?item=... из адресной строки,
+    // чтобы при следующем обновлении страницы окно не вылезло снова.
+    const url = new URL(window.location);
+    if (url.searchParams.has('item')) {
+        url.searchParams.delete('item');
+        window.history.replaceState(null, '', url.pathname + url.search);
     }
 }
 
