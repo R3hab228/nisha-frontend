@@ -67,6 +67,7 @@
         "privacy_policy": "Политика конфиденциальности",
         "refund_policy": "Возврат и обмен товара надлежащего качества осуществляется в течение 14 дней с момента покупки.",
         "install": "⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ",
+        "support_text": "Нашли баг или есть идея? Пишите:",
         "copyright": "© 2026 NISHA. All rights reserved."
       },
       "product": {
@@ -287,7 +288,9 @@
         "privacy_policy": "Політика конфіденційності",
         "refund_policy": "Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.",
         "install": "⬇ ВСТАНОВИТИ ДОДАТОК",
+        "support_text": "Знайшли баг чи є ідея? Пишіть:",
         "copyright": "© 2026 NISHA. All rights reserved."
+        
       },
       "product": {
         "size": "РОЗМІР:",
@@ -507,6 +510,7 @@
         "privacy_policy": "Privacy Policy",
         "refund_policy": "Returns and exchanges of quality goods are available within 14 days of purchase.",
         "install": "⬇ INSTALL APP",
+        "support_text": "Found a bug or have an idea? Email us:",
         "copyright": "© 2026 NISHA. All rights reserved."
       },
       "product": {
