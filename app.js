@@ -194,8 +194,11 @@ function changeLanguage(lng) {
         });
     }
 }
+// ==========================================
+// БЕЗОПАСНЫЙ ПЛАВНЫЙ СКРОЛЛ (ТОЛЬКО ДЛЯ ПК)
+// ==========================================
 let lenis;
-// Включаем искусственный плавный скролл ТОЛЬКО на ПК. На телефонах будет идеальный родной скролл без лагов.
+
 if (window.innerWidth > 900) {
     lenis = new Lenis({
         lerp: 0.1, 
@@ -210,12 +213,18 @@ if (window.innerWidth > 900) {
     requestAnimationFrame(raf);
 }
 
-// Защита для модальных окон (чтобы они не выдавали ошибку, если lenis отключен на телефоне)
+// Железобетонные функции остановки и запуска
 window.stopLenis = function() {
-    if (typeof lenis !== 'undefined' && lenis) window.stopLenis();
+    if (typeof lenis !== 'undefined' && lenis) {
+        // Вызываем оригинальный метод библиотеки, чтобы избежать рекурсии
+        Object.getPrototypeOf(lenis).stop.call(lenis); 
+    }
 };
+
 window.startLenis = function() {
-    if (typeof lenis !== 'undefined' && lenis) window.startLenis();
+    if (typeof lenis !== 'undefined' && lenis) {
+        Object.getPrototypeOf(lenis).start.call(lenis); 
+    }
 };
 
 // Открытие нового модального окна профиля
