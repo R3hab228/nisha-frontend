@@ -234,34 +234,36 @@ function openProfileModal() {
     document.body.style.overflow = 'hidden';
 }
 
-// --- УМНАЯ КНОПКА [+] ПРЕДЛОЖКИ (ЖЕЛЕЗОБЕТОННАЯ ВЕРСИЯ) ---
+// --- УМНЫЕ ПЛАВАЮЩИЕ КНОПКИ (ПРЕДЛОЖКА И ФИЛЬТРЫ) ---
 let fabScrollTimeout;
 let lastScrollY = window.scrollY || document.documentElement.scrollTop;
 
 window.addEventListener('scroll', () => {
     const fab = document.querySelector('.fab-propose');
+    const filterBtn = document.getElementById('mobileFilterBtn');
     
-    // Если кнопка висит над корзиной или открыто меню/модалка — не трогаем её
-    if (!fab || fab.classList.contains('cart-active') || document.body.classList.contains('search-lock')) return;
+    if (document.body.classList.contains('search-lock')) return;
 
     const currentScrollY = window.scrollY || document.documentElement.scrollTop;
     
-    // Защита от микро-дерганий (реагирует только если проскроллили больше 10 пикселей)
     if (Math.abs(currentScrollY - lastScrollY) > 10) {
         if (currentScrollY > lastScrollY && currentScrollY > 150) {
-            // Крутим ВНИЗ - прячем кнопку
-            fab.classList.add('hidden-scroll');
+            // Крутим ВНИЗ - Прячем обе кнопки (чтобы не мешали смотреть шмотки)
+            if (fab && !fab.classList.contains('cart-active')) fab.classList.add('hidden-scroll');
+            if (filterBtn && window.innerWidth <= 900) filterBtn.classList.add('hidden-scroll');
         } else {
-            // Крутим ВВЕРХ - показываем кнопку
-            fab.classList.remove('hidden-scroll');
+            // Крутим ВВЕРХ - Показываем обе кнопки
+            if (fab) fab.classList.remove('hidden-scroll');
+            if (filterBtn) filterBtn.classList.remove('hidden-scroll');
         }
         lastScrollY = currentScrollY;
     }
 
-    // Возвращаем кнопку, если юзер остановился и читает ленту (пауза 800мс)
+    // Возвращаем кнопки, если юзер остановился (пауза 800мс)
     clearTimeout(fabScrollTimeout);
     fabScrollTimeout = setTimeout(() => {
         if (fab) fab.classList.remove('hidden-scroll');
+        if (filterBtn) filterBtn.classList.remove('hidden-scroll');
     }, 800);
 }, { passive: true });
 
@@ -3615,55 +3617,15 @@ function toggleMobileSidebar() {
         btn.style.color = 'var(--accent-red)';
         btn.style.background = '#111'; 
         
-        btn.style.position = 'fixed';
-        btn.style.top = '0';
-        btn.style.left = '0';
-        btn.style.width = '100%';
-        btn.style.zIndex = '1000'; 
-        
-        const btnHeight = btn.offsetHeight || 50; 
-        
-        sidebar.style.position = 'fixed';
-        sidebar.style.top = btnHeight + 'px';
-        sidebar.style.left = '0';
-        sidebar.style.width = '100%';
-        sidebar.style.zIndex = '999';
-        
-        sidebar.style.maxHeight = `calc(100vh - ${btnHeight}px)`; 
-        sidebar.style.overflowY = 'auto'; 
-        sidebar.style.boxShadow = '0 20px 40px rgba(0,0,0,0.9)';
-        
-        document.body.classList.add('search-lock'); 
-        if (typeof lenis !== 'undefined') window.stopLenis(); 
-        
+        // Прячем предложку, чтобы не мешала
         if (fab) fab.style.display = 'none';
-        
     } else {
-        // --- МАГИЯ ЗДЕСЬ ---
-        // Мгновенно кидаем скролл в 0 ДО ТОГО, как разблокируем страницу. 
-        // Браузер забудет, что ты был далеко внизу, и баг с дерганьем исчезнет!
-        window.scrollTo(0, 0);
-        
         btn.innerText = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
         btn.style.background = '#050505'; 
         
-        btn.style.position = 'sticky';
-        btn.style.zIndex = '100';
-        
-        sidebar.style.position = '';
-        sidebar.style.top = '';
-        sidebar.style.left = '';
-        sidebar.style.width = '';
-        sidebar.style.zIndex = '';
-        sidebar.style.maxHeight = '';
-        sidebar.style.overflowY = '';
-        sidebar.style.boxShadow = '';
-        
-        document.body.classList.remove('search-lock');
-        if (typeof lenis !== 'undefined') window.startLenis();
-        
+        // Возвращаем предложку
         if (fab) fab.style.display = 'flex';
     }
 }
