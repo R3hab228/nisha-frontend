@@ -655,35 +655,24 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     #authBox { display: none !important; }
     .mobile-profile-link { display: block !important; }
     
-    /* --- МЕНЮ ФИЛЬТРОВ (Аккордеон) --- */
+    /* --- ПРОСТЫЕ ФИЛЬТРЫ (АККОРДЕОН) --- */
     .sidebar { 
         display: flex !important; width: 100%; max-height: 0; opacity: 0; overflow: hidden; 
-        padding: 0 15px; margin: 0; transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out; 
-        visibility: hidden; background: #0a0a0a; border-bottom: 1px dashed var(--accent-green);
+        padding: 0; margin: 0; transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out; 
+        visibility: hidden; background: #0a0a0a; 
     }
     .sidebar.active-mobile { 
-        max-height: 1200px; /* Раздвигаем контент */
+        max-height: 1500px; /* Раскрываем */
         opacity: 1; visibility: visible; 
-        padding-top: 20px; padding-bottom: 20px; 
+        padding-top: 15px; padding-bottom: 15px; 
     }
     
-    /* --- КНОПКА (ЖЕЛЕЗОБЕТОННЫЙ ФИКС) --- */
+    /* --- КНОПКА --- */
     #mobileFilterBtn { 
-        display: block; width: 100%; background: #0a0a0a; color: var(--accent-green); 
+        display: block; width: 100%; background: #050505; color: var(--accent-green); 
         border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; 
-        margin: 0; cursor: pointer; text-align: center; font-size: 14px; 
-        transition: background 0.3s, color 0.3s; 
-        
-        /* Секрет тут: мы жестко прибиваем её к экрану на 50px от верха (сразу под шапкой) */
-        position: fixed; 
-        top: 65px; /* Отступ равен высоте твоей черной шапки с логотипом */
-        left: 0;
-        z-index: 100; 
-    }
-    
-    /* Сдвигаем саму ленту вниз, чтобы она не залезла под фиксированную кнопку */
-    .items-grid {
-        padding-top: 55px; /* Высота кнопки */
+        margin-bottom: 15px; cursor: pointer; text-align: center; font-size: 14px; 
+        position: relative; /* Обычная кнопка, никаких прыжков */
     }
     
     /* Фильтры тоже должны выпадать ровно из-под кнопки */
