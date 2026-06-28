@@ -1402,9 +1402,15 @@ function renderNextBatch() {
             thumbsArray.forEach((thumbUrl, idx) => {
                 const isVid = item.images && item.images[idx] && item.images[idx].endsWith('.mp4');
                 if (isVid) {
-                    slidesStr += `<div class="card-slide" style="background: #0a0a0a;"><video class="grid-lazy-video" src="${item.images[idx]}#t=0.001" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover; pointer-events:none;"></video></div>`;
+                    slidesStr += `
+                        <div class="card-slide img-8bit-loading" style="background: #0a0a0a;">
+                            <video class="grid-lazy-video" src="${item.images[idx]}#t=0.001" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;" oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"></video>
+                        </div>`;
                 } else {
-                    slidesStr += `<div class="card-slide" style="background-image: url('${thumbUrl}');"></div>`;
+                    slidesStr += `
+                        <div class="card-slide img-8bit-loading" style="background-image: none;">
+                            <img src="${thumbUrl}" style="display:none;" onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');">
+                        </div>`;
                 }
                 dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
             });
@@ -3045,9 +3051,8 @@ function openProductModal(item) {
             const currentThumb = (item.thumbnails && item.thumbnails[index]) ? item.thumbnails[index] : (isVideo ? 'https://via.placeholder.com/400x400.png?text=VIDEO&bg=000000&color=00ff00' : url);
             
             if (isVideo) {
-                // ХАК #t=0.001 ЗАСТАВЛЯЕТ ЛЮБОЙ ТЕЛЕФОН ПОКАЗАТЬ ПЕРВЫЙ КАДР!
                 wrapper.innerHTML += `
-                    <div class="slide" style="background:#000; display:flex; justify-content:center; align-items:center;">
+                    <div class="slide img-8bit-loading" style="background:#000; display:flex; justify-content:center; align-items:center;">
                         <video 
                             class="modal-video-player"
                             autoplay="autoplay" 
@@ -3057,13 +3062,17 @@ function openProductModal(item) {
                             webkit-playsinline="webkit-playsinline" 
                             preload="metadata"
                             controls 
-                            style="width:100%; height:100%; max-height:400px; object-fit:contain;"
+                            style="width:100%; height:100%; max-height:400px; object-fit:contain; opacity:0;"
+                            oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"
                         >
                             <source src="${url}#t=0.001" type="video/mp4">
                         </video>
                     </div>`;
             } else {
-                wrapper.innerHTML += `<a href="${url}" data-pswp-width="1200" data-pswp-height="1600" target="_blank" class="slide" style="background-image:url('${url}');"></a>`;
+                wrapper.innerHTML += `
+                    <a href="${url}" data-pswp-width="1200" data-pswp-height="1600" target="_blank" class="slide img-8bit-loading" style="background-image:none;">
+                        <img src="${url}" style="display:none;" onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');">
+                    </a>`;
             }
             
             thumbs.innerHTML += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" onclick="setSlide(${index})">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;

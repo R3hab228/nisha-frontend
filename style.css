@@ -586,6 +586,54 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     letter-spacing: 1px;
 }
 .lazy-loader { display: none !important; }
+/* ========================================= */
+/* --- 8-BIT IMAGE LOADING (СИСТЕМА ЗАГРУЗКИ) --- */
+/* ========================================= */
+
+.img-8bit-loading {
+    background-color: #050505 !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Создаем пиксельную сетку на фоне */
+.img-8bit-loading::before {
+    content: '';
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111), 
+        linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    opacity: 0.5;
+}
+
+/* Мигающий текст загрузки по центру */
+.img-8bit-loading::after {
+    content: '[ LOADING ]';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--accent-green);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    animation: blink-caret 0.5s step-end infinite;
+    text-shadow: 0 0 5px rgba(0,255,0,0.5);
+    z-index: 2;
+}
+
+/* Эффект резкого появления (вспышка монитора), когда картинка скачалась */
+.img-8bit-loaded {
+    animation: crtFlash 0.4s ease-out forwards;
+}
+
+@keyframes crtFlash {
+    0% { filter: brightness(2.5) contrast(1.5) saturate(0); opacity: 0.5; }
+    50% { filter: brightness(1.5) contrast(1.2) saturate(2); opacity: 1; }
+    100% { filter: brightness(1) contrast(1) saturate(1); opacity: 1; }
+}
 
 /* ========================================= */
 /* --- ВСЕ МОБИЛЬНЫЕ СТИЛИ В ОДНОМ МЕСТЕ --- */
