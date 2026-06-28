@@ -3063,15 +3063,16 @@ function openProductModal(item) {
                             preload="metadata"
                             controls 
                             style="width:100%; height:100%; max-height:400px; object-fit:contain; opacity:0;"
-                            oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"
+                            oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading');"
                         >
                             <source src="${url}#t=0.001" type="video/mp4">
                         </video>
                     </div>`;
             } else {
+                // ВАЖНО: Добавили класс hidden-loader-img, чтобы PhotoSwipe его игнорировал
                 wrapper.innerHTML += `
                     <a href="${url}" data-pswp-width="1200" data-pswp-height="1600" target="_blank" class="slide img-8bit-loading" style="background-image:none;">
-                        <img src="${url}" style="display:none;" onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');">
+                        <img src="${url}" class="hidden-loader-img" onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading');">
                     </a>`;
             }
             

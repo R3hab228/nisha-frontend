@@ -624,15 +624,13 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     z-index: 2;
 }
 
-/* Эффект резкого появления (вспышка монитора), когда картинка скачалась */
-.img-8bit-loaded {
-    animation: crtFlash 0.4s ease-out forwards;
-}
-
-@keyframes crtFlash {
-    0% { filter: brightness(2.5) contrast(1.5) saturate(0); opacity: 0.5; }
-    50% { filter: brightness(1.5) contrast(1.2) saturate(2); opacity: 1; }
-    100% { filter: brightness(1) contrast(1) saturate(1); opacity: 1; }
+/* Прячем загрузчики от PhotoSwipe, чтобы не двоилось */
+.hidden-loader-img {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 /* ========================================= */
