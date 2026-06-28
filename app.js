@@ -1511,25 +1511,27 @@ function renderNextBatch() {
 }
 
 function startOnboardingTour() {
-    // ЖЕСТКАЯ ЗАЩИТА: Не запускаем тур, если есть хоть одно открытое модальное окно,
-    // или если мы не в самом верху ленты, или если тур уже пройден.
-    
-    // Проверяем, есть ли элементы со стилем display: flex (значит они открыты)
-    const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
-        return window.getComputedStyle(el).display === 'flex';
-    });
-    
+    // 1. Проверяем, пройден ли тур и приняты ли правила
     if (!localStorage.getItem('nisha_rules_accepted') || 
         localStorage.getItem('nisha_tour_done') || 
-        anyModalOpen || 
         typeof window.driver === 'undefined') return;
-        
-    setTimeout(() => {
-        // Двойная проверка через 800мс (вдруг окно только-только начало открываться)
-        const checkAgain = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
+
+    // 2. Функция, которая ждет идеального момента для запуска
+    const checkAndRun = setInterval(() => {
+        // Проверяем открытые окна
+        const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
             return window.getComputedStyle(el).display === 'flex';
         });
-        if (checkAgain) return;
+        
+        // Проверяем, есть ли сейчас на экране зеленые или красные всплывающие тосты
+        const toastContainer = document.getElementById('toastContainer');
+        const anyToastVisible = toastContainer && toastContainer.children.length > 0;
+
+        // Если открыто окно ИЛИ висит сообщение-тост — ждем дальше
+        if (anyModalOpen || anyToastVisible) return;
+
+        // Если всё чисто — УБИВАЕМ ТАЙМЕР и запускаем тур!
+        clearInterval(checkAndRun);
         const isMobile = window.innerWidth <= 900;
         const firstStar = document.querySelector('.item-card .fav-star');
         const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
@@ -1578,7 +1580,7 @@ function startOnboardingTour() {
             }
         });
         driverObj.drive();
-    }, 800);
+    }, 500); // Проверяем каждые полсекунды
 }
 
 // Функция добавления в корзину прямо с главной страницы
