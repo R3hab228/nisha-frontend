@@ -194,23 +194,33 @@ function changeLanguage(lng) {
         });
     }
 }
-const lenis = new Lenis({
-    lerp: 0.1, 
-    wheelMultiplier: 1, 
-    smoothWheel: true,
-    smoothTouch: false, 
-    syncTouch: false    // <--- СТАВИМ FALSE! Это уберет "тугость" и дребезжание на телефонах
-});
+let lenis;
+// Включаем искусственный плавный скролл ТОЛЬКО на ПК. На телефонах будет идеальный родной скролл без лагов.
+if (window.innerWidth > 900) {
+    lenis = new Lenis({
+        lerp: 0.1, 
+        wheelMultiplier: 1, 
+        smoothWheel: true
+    });
 
-function raf(time) {
-    lenis.raf(time);
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
     requestAnimationFrame(raf);
 }
-requestAnimationFrame(raf);
+
+// Защита для модальных окон (чтобы они не выдавали ошибку, если lenis отключен на телефоне)
+window.stopLenis = function() {
+    if (typeof lenis !== 'undefined' && lenis) window.stopLenis();
+};
+window.startLenis = function() {
+    if (typeof lenis !== 'undefined' && lenis) window.startLenis();
+};
 
 // Открытие нового модального окна профиля
 function openProfileModal() {
-    if (typeof lenis !== 'undefined') lenis.stop();
+    if (typeof lenis !== 'undefined') window.stopLenis();
     document.getElementById('profileModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
@@ -347,7 +357,7 @@ function acceptRules() {
     const modal = document.getElementById('rulesModal');
     if (modal) modal.style.display = 'none';
     document.body.style.overflow = 'auto';
-    if (typeof lenis !== 'undefined') lenis.start(); 
+    if (typeof lenis !== 'undefined') window.startLenis(); 
     showToast(i18next.t('messages.rules_accepted'), 'success');
     
     // Запускаем тур сразу после закрытия окна правил
@@ -698,7 +708,7 @@ function closeModal(id) {
     setTimeout(() => {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto'; 
-        if (typeof lenis !== 'undefined') lenis.start(); 
+        if (typeof lenis !== 'undefined') window.startLenis(); 
         
         if (win) {
             win.style.transform = '';
@@ -718,7 +728,7 @@ async function openReviewsModal() {
     const modal = document.getElementById('reviewsModal');
     modal.style.display = 'flex'; 
     document.body.style.overflow = 'hidden'; 
-    if (typeof lenis !== 'undefined') lenis.stop(); 
+    if (typeof lenis !== 'undefined') window.stopLenis(); 
     
     const container = document.getElementById('reviewsContainerList');
     if (!container) return;
@@ -962,7 +972,7 @@ async function handleAuth(action, isModal = false) {
 }
 
 function openProfileModal() {
-    if (typeof lenis !== 'undefined') lenis.stop();
+    if (typeof lenis !== 'undefined') window.stopLenis();
     document.getElementById('profileModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
@@ -2475,7 +2485,7 @@ async function openCheckoutModal() {
     btn.innerText = originalText;
     btn.style.pointerEvents = "auto";
 
-    if (typeof lenis !== 'undefined') lenis.stop();
+    if (typeof lenis !== 'undefined') window.stopLenis();
     document.getElementById('checkoutModal').style.display = 'flex'; 
     document.body.style.overflow = 'hidden';
     checkPhoneAuth();
@@ -2666,7 +2676,7 @@ async function executeOrderFinal(emailToSave) {
     document.getElementById('ordersModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    if (typeof lenis !== 'undefined') lenis.stop(); 
+    if (typeof lenis !== 'undefined') window.stopLenis(); 
     
     const guestInputGroup = document.getElementById('guestOrderInputGroup');
     const guestText = document.getElementById('guestOrderText');
@@ -2903,7 +2913,7 @@ function openProductModalById(itemId) {
 
 function openProductModal(item) {
     currentOpenedItem = item;
-    if (typeof lenis !== 'undefined') lenis.stop();
+    if (typeof lenis !== 'undefined') window.stopLenis();
     
     document.getElementById('modalItemTitle').innerText = item.name;
     // Красим звездочку в модалке, если товар уже в избранном
@@ -3547,7 +3557,7 @@ function toggleMobileSidebar() {
         sidebar.style.boxShadow = '0 20px 40px rgba(0,0,0,0.9)';
         
         document.body.classList.add('search-lock'); 
-        if (typeof lenis !== 'undefined') lenis.stop(); 
+        if (typeof lenis !== 'undefined') window.stopLenis(); 
         
         if (fab) fab.style.display = 'none';
         
@@ -3575,7 +3585,7 @@ function toggleMobileSidebar() {
         sidebar.style.boxShadow = '';
         
         document.body.classList.remove('search-lock');
-        if (typeof lenis !== 'undefined') lenis.start();
+        if (typeof lenis !== 'undefined') window.startLenis();
         
         if (fab) fab.style.display = 'flex';
     }
@@ -4041,7 +4051,7 @@ function initMobileSwipe() {
 
 // 1. Открытие модального окна предложки
 function openProposeModal() {
-    if (typeof lenis !== 'undefined') lenis.stop();
+    if (typeof lenis !== 'undefined') window.stopLenis();
     const modal = document.getElementById('proposeModal');
     if (modal) {
         modal.style.display = 'flex';
@@ -4383,7 +4393,7 @@ window.promptOrderReview = function(orderId, itemName, itemImage, itemId) {
     document.getElementById('autoReviewImg').style.backgroundImage = `url('${itemImage}')`;
     document.getElementById('autoReviewInput').value = ''; 
 
-    if (typeof lenis !== 'undefined') lenis.stop();
+    if (typeof lenis !== 'undefined') window.stopLenis();
     document.getElementById('autoReviewModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 };
@@ -4448,7 +4458,7 @@ window.writeReviewOnSite = function() {
     closeModal('reviewsModal'); // Прячем список отзывов
     
     setTimeout(() => {
-        if (typeof lenis !== 'undefined') lenis.stop();
+        if (typeof lenis !== 'undefined') window.stopLenis();
         document.getElementById('writeReviewModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }, 300); // Открываем форму отзыва плавно
