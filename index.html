@@ -1,732 +1,578 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!doctype html>
+<html lang=ru>
 <head>
-    
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: blob: 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms https://*.cloudflare.com; frame-src https://oauth.telegram.org https://www.google.com;">
-    <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "x4ejx2xb0y");
-    </script>
-    <meta name="google-site-verification" content="JeoGyai8Mik-tYQnacXcxAae-_8SnmN4HpOMr06dfRs" />
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="NISHA | Underground Store">
-    <meta property="og:description" content="Площадка для продажи винтажных, архивных и эксклюзивных вещей.">
-    <meta property="og:image" content="https://i.ibb.co/3s6HhXz/icon.ico">
-    <meta name="theme-color" content="#00ff00">
-    <!-- Подключаем иконку для вкладки браузера и телефонов -->
-    <link rel="icon" type="image/png" href="/icon-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/icon-512.png">
-    <link rel="icon" type="image/png" href="/icon.png">
-    <link rel="manifest" href="manifest.json">
-    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
-    <script type="module">
-        import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js';
-        window.PhotoSwipeLightbox = PhotoSwipeLightbox;
-        document.addEventListener('DOMContentLoaded', () => {
-            window.pswpLightbox = new PhotoSwipeLightbox({
-                gallery: '#sliderWrapper',
-                children: 'a.slide',
-                pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
-            });
-            window.pswpLightbox.init();
-        });
-    </script>
-    <link rel="stylesheet" href="style.css">
+<meta charset=UTF-8>
+<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv=Content-Security-Policy content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: blob: 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms https://*.cloudflare.com; frame-src https://oauth.telegram.org https://www.google.com;">
+<script>!function(e,t,n,c,a,r,s){e[n]=e[n]||function(){(e[n].q=e[n].q||[]).push(arguments)},(r=t.createElement(c)).async=1,r.src="https://www.clarity.ms/tag/x4ejx2xb0y",(s=t.getElementsByTagName(c)[0]).parentNode.insertBefore(r,s)}(window,document,"clarity","script")</script>
+<meta name=google-site-verification content=JeoGyai8Mik-tYQnacXcxAae-_8SnmN4HpOMr06dfRs>
+<meta property=og:type content=website>
+<meta property=og:title content="NISHA | Underground Store">
+<meta property=og:description content="Площадка для продажи винтажных, архивных и эксклюзивных вещей.">
+<meta property=og:image content=https://i.ibb.co/3s6HhXz/icon.ico>
+<meta name=theme-color content=#00ff00>
+<link rel=icon type=image/png href=/icon-192.png>
+<link rel=apple-touch-icon sizes=180x180 href=/icon-512.png>
+<link rel=icon type=image/png href=/icon.png>
+<link rel=manifest href=manifest.json>
+<link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
+<link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
+<script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
+<link rel=stylesheet href=style.css>
 </head>
 <body>
-
-<div class="toast-container" id="toastContainer"></div>
-
-<div id="glitchOverlay">
-    <div class="glitch-text" id="glitchMessage">SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]</div>
+<div class=toast-container id=toastContainer></div>
+<div id=glitchOverlay>
+<div class=glitch-text id=glitchMessage>SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]</div>
+</div>
+<div id=orderSuccessOverlay style=display:none>
+<div class=success-terminal-box>
+<div class=success-icon-wrapper>
+<svg class=animated-check viewBox="0 0 24 24">
+<path d="M20 6L9 17l-5-5" fill=none stroke=var(--accent-green) stroke-width=2 stroke-linecap=round stroke-linejoin=round />
+</svg>
+</div>
+<div class="success-title typewriter">ORDER_CONFIRMED.LOG</div>
+<div class=success-divider></div>
+<div class=success-text>
+<span data-i18n=success_modal.desc1>Товары успешно забронированы.</span><br>
+<span style=color:#888;font-size:12px data-i18n=success_modal.desc2>Ожидайте SMS / сообщение в ТГ с номером накладной.</span>
+</div>
+</div>
+</div>
+<div id=emailPromptOverlay style=display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);backdrop-filter:blur(5px);z-index:9999;justify-content:center;align-items:center;flex-direction:column>
+<div class=success-terminal-box style=opacity:1;transform:scale(1);animation:none>
+<div class="success-title typewriter" style=color:#0af>NOTIFICATIONS.SYS</div>
+<div class=success-divider style="background:repeating-linear-gradient(90deg,#0af,#0af 5px,transparent 5px,transparent 10px)"></div>
+<div class=success-text style=margin-bottom:15px data-i18n=email_prompt.desc>
+Отправлять вам чеки и статусы доставки (ТТН) на E-mail?
+</div>
+<input type=email id=promptEmailInput class=form-input placeholder=your@email.com style=margin-bottom:15px;text-align:center;border-color:#0af>
+<div style=display:flex;gap:10px>
+<button id=btnEmailYes onclick=confirmEmailPrompt(!0) style="flex:1;padding:10px;font-size:13px;background:#0af;color:#000;font-family:var(--font-mono);font-weight:700;border:2px outset #fff;cursor:pointer;text-transform:uppercase" data-i18n=email_prompt.yes>[ ДА ]</button>
+<button id=btnEmailSkip onclick=confirmEmailPrompt(!1) style="flex:1;padding:10px;font-size:13px;background:#333;border:2px outset #555;color:#fff;font-family:var(--font-mono);font-weight:700;cursor:pointer;text-transform:uppercase;white-space:nowrap" data-i18n=email_prompt.skip>[ ПРОПУСТИТЬ ]</button>
+</div>
+</div>
 </div>
 
-<div id="orderSuccessOverlay" style="display: none;">
-    <div class="success-terminal-box">
-        <div class="success-icon-wrapper">
-            <svg class="animated-check" viewBox="0 0 24 24">
-                <path d="M20 6L9 17l-5-5" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div class="success-title typewriter">ORDER_CONFIRMED.LOG</div>
-        <div class="success-divider"></div>
-        <div class="success-text">
-            <span data-i18n="success_modal.desc1">Товары успешно забронированы.</span><br>
-            <span style="color: #888; font-size: 12px;" data-i18n="success_modal.desc2">Ожидайте SMS / сообщение в ТГ с номером накладной.</span>
-        </div>
-    </div>
+<div class=wrapper>
+<header>
+<div class=header-top>
+<h1 onclick='window.location.href="/"' style=cursor:pointer;user-select:none title="На главную">
+<span class=typewriter>[ NISHA ]</span>
+</h1>
+<nav class=top-nav>
+<a href=javascript:void(0) onclick=resetToMain() data-i18n=nav.home>ГЛАВНАЯ</a>
+<a href=javascript:void(0) onclick=filterFavorites() id=favNav><span data-i18n=nav.favorites>ИЗБРАННОЕ</span> <span id=favCountBadge>[0]</span></a>
+<a href=javascript:void(0) onclick=openReviewsModal() style=color:var(--accent-yellow) data-i18n=nav.reviews>ОТЗЫВЫ</a>
+<a href=javascript:void(0) onclick=openOrdersModal() style=color:#0af data-i18n=nav.orders>МОИ ЗАКАЗЫ</a>
+<a href=javascript:void(0) onclick=openProfileModal() class=mobile-profile-link style=color:#f0f data-i18n=nav.profile>ПРОФИЛЬ</a>
+</nav>
 </div>
-<!-- ОКНО ЗАПРОСА E-MAIL -->
-<div id="emailPromptOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
-    <div class="success-terminal-box" style="opacity: 1; transform: scale(1); animation: none;">
-        <div class="success-title typewriter" style="color: #00aaff;">NOTIFICATIONS.SYS</div>
-        <div class="success-divider" style="background: repeating-linear-gradient(90deg, #00aaff, #00aaff 5px, transparent 5px, transparent 10px);"></div>
-        <div class="success-text" style="margin-bottom: 15px;" data-i18n="email_prompt.desc">
-            Отправлять вам чеки и статусы доставки (ТТН) на E-mail?
-        </div>
-        <input type="email" id="promptEmailInput" class="form-input" placeholder="your@email.com" style="margin-bottom: 15px; text-align: center; border-color: #00aaff;">
-        <div style="display: flex; gap: 10px;">
-            <button id="btnEmailYes" onclick="confirmEmailPrompt(true)" style="flex: 1; padding: 10px; font-size: 13px; background: #00aaff; color: #000; font-family: var(--font-mono); font-weight: bold; border: 2px outset #fff; cursor: pointer; text-transform: uppercase;" data-i18n="email_prompt.yes">[ ДА ]</button>
-            <button id="btnEmailSkip" onclick="confirmEmailPrompt(false)" style="flex: 1; padding: 10px; font-size: 13px; background: #333; border: 2px outset #555; color: #fff; font-family: var(--font-mono); font-weight: bold; cursor: pointer; text-transform: uppercase; white-space: nowrap;" data-i18n="email_prompt.skip">[ ПРОПУСТИТЬ ]</button>
-        </div>
-        </div>
-    </div>
+<div class=marquee-container>
+<marquee scrollamount=6 data-i18n=marquee>NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНЫХ КРУТЫХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!</marquee>
 </div>
-<div class="wrapper">
-    <header>
-        <div class="header-top">
-            <!-- Добавили onclick и курсор для кликабельности -->
-            <h1 onclick="window.location.href='/'" style="cursor: pointer; user-select: none;" title="На главную">
-                <span class="typewriter">[ NISHA ]</span>
-            </h1>
-            
-            <nav class="top-nav">
-                <a href="javascript:void(0)" onclick="resetToMain()" data-i18n="nav.home">ГЛАВНАЯ</a>
-                <a href="javascript:void(0)" onclick="filterFavorites()" id="favNav"><span data-i18n="nav.favorites">ИЗБРАННОЕ</span> <span id="favCountBadge">[0]</span></a>
-               <a href="javascript:void(0)" onclick="openReviewsModal()" style="color: var(--accent-yellow);" data-i18n="nav.reviews">ОТЗЫВЫ</a>
-                <a href="javascript:void(0)" onclick="openOrdersModal()" style="color: #00aaff;" data-i18n="nav.orders">МОИ ЗАКАЗЫ</a>
-                <a href="javascript:void(0)" onclick="openProfileModal()" class="mobile-profile-link" style="color: #ff00ff;" data-i18n="nav.profile">ПРОФИЛЬ</a>
-            </nav>
-        </div>
-
-        <div class="marquee-container">
-            <marquee scrollamount="6" data-i18n="marquee">NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНЫХ КРУТЫХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!</marquee>
-        </div>
-    </header>
-
-    <div class="search-section">
-        <div class="search-wrapper">
-            <!-- Оборачиваем в форму, чтобы жестко запретить Гуглу лезть сюда -->
-            <form autocomplete="off" onsubmit="event.preventDefault();" style="margin:0; padding:0; display:flex; width:100%;">
-                <input type="text" class="search-input" id="mainSearch" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Поиск вещи..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
-            </form>
-            <span id="clearSearchBtn" class="clear-search-btn" onclick="clearSearchInput()">✖</span>
-            <div id="liveSearchDropdown" class="live-search-dropdown"></div>
-        </div>
-<button class="search-btn btn-target" onclick="saveRecentSearch(document.getElementById('mainSearch').value.trim()); applyFilters(); document.getElementById('liveSearchDropdown').style.display='none';" data-i18n="search.btn">Искать</button>
-    </div>
-
-    <div class="main-container">
-        <aside class="sidebar">
-            <div class="filter-box">
-                <div class="filter-title" data-i18n="sidebar.categories">КАТЕГОРИИ</div>
-                <ul class="filter-list scrollable-list">
-                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('', this)" class="active-filter" data-i18n="sidebar.all">[>] Все вещи</a></li>
-                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Верхняя одежда', this)" data-i18n="sidebar.outerwear">[>] Верхняя одежда</a></li>
-                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Кофты и Свитера', this)" data-i18n="sidebar.sweaters">[>] Кофты и Свитера</a></li>
-                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Штаны и Джинсы', this)" data-i18n="sidebar.pants">[>] Штаны и Джинсы</a></li>
-                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Обувь', this)" data-i18n="sidebar.shoes">[>] Обувь</a></li>
-                    <li><a href="javascript:void(0)" onclick="setCategoryFilter('Аксессуары', this)" data-i18n="sidebar.accs">[>] Аксессуары</a></li>
-                </ul>
-            </div>
-
-            <div class="filter-box">
-                <div class="filter-title" data-i18n="sidebar.sizes_title">РАЗМЕРЫ И ЦЕНА</div>
-                <div class="price-filter-container">
-                    <div class="price-values"><span data-i18n="sidebar.from">ОТ</span> <span id="priceMinVal">0</span> <span data-i18n="sidebar.to">ДО</span> <span id="priceMaxVal">15000</span> <span data-i18n="sidebar.uah">грн</span></div>
-                    
-                    <div class="range-slider">
-                        <div class="range-fill" id="rangeFill"></div>
-                        <input type="range" id="priceMin" min="0" max="15000" step="100" value="0" oninput="updatePriceUI()">
-                        <input type="range" id="priceMax" min="0" max="15000" step="100" value="15000" oninput="updatePriceUI()">
-                    </div>
-
-                    <div style="margin-top: 20px; border-top: 1px dashed #444; padding-top: 10px;"></div>
-                    <ul class="filter-list checkbox-list">
-                        <li><label><input type="checkbox" class="size-cb" value="S" onchange="applyFilters()"> <span data-i18n="sidebar.size_s">Размер S</span></label></li>
-                        <li><label><input type="checkbox" class="size-cb" value="M" onchange="applyFilters()"> <span data-i18n="sidebar.size_m">Размер M</span></label></li>
-                        <li><label><input type="checkbox" class="size-cb" value="L" onchange="applyFilters()"> <span data-i18n="sidebar.size_l">Размер L</span></label></li>
-                        <li><label><input type="checkbox" class="size-cb" value="XL" onchange="applyFilters()"> <span data-i18n="sidebar.size_xl">Размер XL / XXL</span></label></li>
-                        <li style="margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
-                            <label><input type="checkbox" class="size-cb" value="42" onchange="applyFilters()"> <span data-i18n="sidebar.shoes_1">Обувь (40 - 42)</span></label>
-                        </li>
-                        <li><label><input type="checkbox" class="size-cb" value="44" onchange="applyFilters()"> <span data-i18n="sidebar.shoes_2">Обувь (43 - 46)</span></label></li>
-                        
-                        <!-- НОВАЯ ГАЛОЧКА: Скрыть проданное -->
-                        <li style="margin-top: 15px; border-top: 1px dashed #444; padding-top: 15px;">
-                            <label>
-                                <input type="checkbox" id="hideUnavailableCb" onchange="applyFilters()"> 
-                                <span data-i18n="sidebar.hide_unavailable">Скрыть проданное/бронь</span>
-                            </label>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- БЛОК ПРОФИЛЯ ДЛЯ ПК (В САЙДБАРЕ) -->
-            <div class="filter-box" id="authBox">
-                <div class="filter-title" data-i18n="sidebar.auth_title">ПРОФИЛЬ / ВХОД</div>
-                <div class="auth-fields" id="loginForm">
-                    <input type="email" id="authEmail" class="auth-input" placeholder="Email">
-                    <input type="text" id="authUsername" class="form-input" placeholder="Никнейм" style="display: none;">
-                  <div class="password-wrapper">
-    <input type="password" id="authPass" class="auth-input" placeholder="Пароль">
-    <div class="eye-icon" onclick="togglePasswordVisibility('authPass', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-            <line class="eye-slash" x1="2" y1="2" x2="22" y2="22"></line>
-        </svg>
-    </div>
+</header>
+<div class=search-section>
+<div class=search-wrapper>
+<form autocomplete=off onsubmit=event.preventDefault() style=margin:0;padding:0;display:flex;width:100%>
+<input class=search-input id=mainSearch autocomplete=off autocorrect=off spellcheck=false placeholder="Поиск вещи..." oninput=handleLiveSearch() style=width:100%;padding-right:40px>
+</form>
+<span id=clearSearchBtn class=clear-search-btn onclick=clearSearchInput()>✖</span>
+<div id=liveSearchDropdown class=live-search-dropdown></div>
 </div>
-                    
-                    <button class="auth-btn btn-target" id="btnLogin" onclick="handleAuth('login')" data-i18n="sidebar.login">ВОЙТИ</button>
-                    <button class="auth-btn btn-target" id="btnShowReg" onclick="toggleRegMode()" style="background: #333; color: #fff;" data-i18n="sidebar.reg">РЕГИСТРАЦИЯ</button>
-                    <!-- Кнопка Google для ПК -->
-<button class="auth-btn btn-target" onclick="loginWithGoogle()" style="background: #fff; color: #000; border-color: #fff; margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-    <img src="https://www.google.com/favicon.ico" width="14"> GOOGLE ID
+<button class="search-btn btn-target" onclick='saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),document.getElementById("liveSearchDropdown").style.display="none"' data-i18n=search.btn>Искать</button>
+</div>
+<div class=main-container>
+<aside class=sidebar>
+<div class=filter-box>
+<div class=filter-title data-i18n=sidebar.categories>КАТЕГОРИИ</div>
+<ul class="filter-list scrollable-list">
+<li><a href=javascript:void(0) onclick='setCategoryFilter("",this)' class=active-filter data-i18n=sidebar.all>[>] Все вещи</a></li>
+<li><a href=javascript:void(0) onclick='setCategoryFilter("Верхняя одежда",this)' data-i18n=sidebar.outerwear>[>] Верхняя одежда</a></li>
+<li><a href=javascript:void(0) onclick='setCategoryFilter("Кофты и Свитера",this)' data-i18n=sidebar.sweaters>[>] Кофты и Свитера</a></li>
+<li><a href=javascript:void(0) onclick='setCategoryFilter("Штаны и Джинсы",this)' data-i18n=sidebar.pants>[>] Штаны и Джинсы</a></li>
+<li><a href=javascript:void(0) onclick='setCategoryFilter("Обувь",this)' data-i18n=sidebar.shoes>[>] Обувь</a></li>
+<li><a href=javascript:void(0) onclick='setCategoryFilter("Аксессуары",this)' data-i18n=sidebar.accs>[>] Аксессуары</a></li>
+</ul>
+</div>
+<div class=filter-box>
+<div class=filter-title data-i18n=sidebar.sizes_title>РАЗМЕРЫ И ЦЕНА</div>
+<div class=price-filter-container>
+<div class=price-values><span data-i18n=sidebar.from>ОТ</span> <span id=priceMinVal>0</span> <span data-i18n=sidebar.to>ДО</span> <span id=priceMaxVal>15000</span> <span data-i18n=sidebar.uah>грн</span></div>
+<div class=range-slider>
+<div class=range-fill id=rangeFill></div>
+<input type=range id=priceMin min=0 max=15000 step=100 value=0 oninput=updatePriceUI()>
+<input type=range id=priceMax min=0 max=15000 step=100 value=15000 oninput=updatePriceUI()>
+</div>
+<div style="margin-top:20px;border-top:1px dashed #444;padding-top:10px"></div>
+<ul class="filter-list checkbox-list">
+<li><label><input type=checkbox class=size-cb value=S onchange=applyFilters()> <span data-i18n=sidebar.size_s>Размер S</span></label></li>
+<li><label><input type=checkbox class=size-cb value=M onchange=applyFilters()> <span data-i18n=sidebar.size_m>Размер M</span></label></li>
+<li><label><input type=checkbox class=size-cb value=L onchange=applyFilters()> <span data-i18n=sidebar.size_l>Размер L</span></label></li>
+<li><label><input type=checkbox class=size-cb value=XL onchange=applyFilters()> <span data-i18n=sidebar.size_xl>Размер XL / XXL</span></label></li>
+<li style="margin-top:10px;border-top:1px dashed #444;padding-top:10px">
+<label><input type=checkbox class=size-cb value=42 onchange=applyFilters()> <span data-i18n=sidebar.shoes_1>Обувь (40 - 42)</span></label>
+</li>
+<li><label><input type=checkbox class=size-cb value=44 onchange=applyFilters()> <span data-i18n=sidebar.shoes_2>Обувь (43 - 46)</span></label></li>
+<li style="margin-top:15px;border-top:1px dashed #444;padding-top:15px">
+<label>
+<input type=checkbox id=hideUnavailableCb onchange=applyFilters()>
+<span data-i18n=sidebar.hide_unavailable>Скрыть проданное/бронь</span>
+</label>
+</li>
+</ul>
+</div>
+</div>
+<div class=filter-box id=authBox>
+<div class=filter-title data-i18n=sidebar.auth_title>ПРОФИЛЬ / ВХОД</div>
+<div class=auth-fields id=loginForm>
+<input type=email id=authEmail class=auth-input placeholder=Email>
+<input id=authUsername class=form-input placeholder=Никнейм style=display:none>
+<div class=password-wrapper>
+<input type=password id=authPass class=auth-input placeholder=Пароль>
+<div class=eye-icon onclick='togglePasswordVisibility("authPass",this)'>
+<svg viewBox="0 0 24 24" fill=none stroke-width=2 stroke-linecap=round stroke-linejoin=round>
+<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+<circle cx=12 cy=12 r=3></circle>
+<line class=eye-slash x1=2 y1=2 x2=22 y2=22></line>
+</svg>
+</div>
+</div>
+<button class="auth-btn btn-target" id=btnLogin onclick='handleAuth("login")' data-i18n=sidebar.login>ВОЙТИ</button>
+<button class="auth-btn btn-target" id=btnShowReg onclick=toggleRegMode() style=background:#333;color:#fff data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
+<button class="auth-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:8px>
+<img src=https://www.google.com/favicon.ico width=14> GOOGLE ID
 </button>
-                    <button class="auth-btn btn-target" id="btnRegister" onclick="handleAuth('register')" style="display:none; background: var(--accent-green); color: #000;" data-i18n="sidebar.create">СОЗДАТЬ АККАУНТ</button>
-                    <button class="auth-btn btn-target" id="btnBackLogin" onclick="toggleRegMode()" style="display:none; background: #333; color: #fff;">НАЗАД</button>
-                </div>
-                
-               <div class="auth-fields" id="profileForm" style="display: none; flex-direction: column;">
-                    <div style="background: #0a0a0a; border: 1px solid #333; padding: 15px; text-align: left; font-family: var(--font-mono); box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
-                        <div style="color: var(--accent-green); font-size: 11px; margin-bottom: 5px;">НИКНЕЙМ:</div>
-                        <div style="color: #fff; font-size: 14px; font-family: var(--font-main); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 15px;" id="profileName">Loading...</div>
-                        
-                        <div style="color: #666; font-size: 11px; margin-bottom: 5px;">E-MAIL:</div>
-                        <div style="color: #aaa; font-size: 12px; border-bottom: 1px dashed #333; padding-bottom: 12px; margin-bottom: 12px; overflow: hidden; text-overflow: ellipsis;" id="profileEmail">Loading...</div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #888; font-size: 12px;" data-i18n="profile.saved">СОХРАНЕНО:</span>
-                            <span style="color: var(--accent-red); font-size: 16px; font-weight: bold; text-shadow: 0 0 10px rgba(255,0,0,0.4);">❤ <span id="profileLikesCount">0</span></span>
-                        </div>
-                    </div>
-                    <button class="auth-btn btn-target" onclick="logout()" style="background: #333; color: #fff; margin-top: 10px;" data-i18n="sidebar.logout">ВЫЙТИ</button>
-                </div>
-            </div>
-        </aside>
-
-        <main class="content-area">
-            <button id="mobileFilterBtn" onclick="toggleMobileSidebar()" data-i18n="mobile.show_filters">[+] ПОКАЗАТЬ ФИЛЬТРЫ</button>
-            
-            <div class="sorting">
-                <span><span data-i18n="sort.found">Найдено вещей:</span> <strong id="itemCount" style="color: var(--accent-green);">0</strong></span>
-                <span><span data-i18n="sort.sorting">Сортировка:</span> 
-                    <a href="javascript:void(0)" id="sort-new" class="active-sort" onclick="sortItems('new')" data-i18n="sort.new">Новые</a> | 
-                    <a href="javascript:void(0)" id="sort-cheap" onclick="sortItems('cheap')" data-i18n="sort.cheap">Дешевые</a>
-                </span>
-            </div>
-            
-            <div class="items-grid" id="itemsGrid">
-                <!-- Win95 LOADER -->
-                <div id="win95-loader" style="grid-column: 1 / -1; display: flex; justify-content: center; padding: 50px 10px;">
-                    <div style="background: #c0c0c0; border-top: 2px solid #fff; border-left: 2px solid #fff; border-right: 2px solid #0a0a0a; border-bottom: 2px solid #0a0a0a; padding: 2px; width: 100%; max-width: 300px; box-shadow: 4px 4px 0px rgba(0,0,0,0.8);">
-                        <div style="background: #000080; color: #fff; font-family: 'Tahoma', sans-serif; font-weight: bold; font-size: 12px; padding: 3px 5px; display: flex; justify-content: space-between; align-items: center;">
-                            <span>Loading_NISHA.exe</span>
-                            <div style="background: #c0c0c0; color: #000; border: 1px solid #000; width: 14px; height: 14px; display: flex; justify-content: center; align-items: center; font-size: 10px;">X</div>
-                        </div>
-                        <div style="padding: 20px; text-align: center;">
-                            <div id="lottie-box" style="width: 60px; height: 60px; margin: 0 auto;"></div>
-                            <p style="color: #000; margin-top: 15px; margin-bottom: 0; font-family: 'Tahoma', sans-serif; font-size: 13px;">Подключение к БД...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="loadingTrigger" class="lazy-loader"></div>
-        </main>
-    </div>
-
-    <div class="history-section" id="historySection">
-        <div class="history-title" onclick="toggleHistory()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-            <span data-i18n="history.title">HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:</span>
-            <span id="historyArrow" style="transition: transform 0.2s; color: var(--accent-green);">▼</span>
-        </div>
-        <div class="history-grid" id="historyGrid"></div>
-    </div>
-
-    <div class="cart-panel" id="cartPanel">
-        <div class="cart-info" id="cartInfoWrapper" onclick="toggleCartDropdown(event)">
-            <div class="cart-click-area">
-                <span data-i18n="cart.in_cart">В КОРЗИНЕ:</span> <b id="cartCount">0</b> <span data-i18n="cart.items_total">ВЕЩЕЙ | ИТОГО:</span> <span id="cartTotal">0 грн</span>
-            </div>
-            
-            <div id="cartDropdown" class="cart-dropdown">
-                <div class="cart-dropdown-header">
-                    <span data-i18n="cart.title">[ ВАШИ ПОКУПКИ ]</span>
-                    <button class="cart-close-mobile" onclick="toggleCartDropdown(event)">&times;</button>
-                </div>
-                <div id="cartDropdownList" class="cart-dropdown-list">
-                    <!-- Сюда JS вставит товары -->
-                </div>
-            </div>
-        </div>
-        
-        <button onclick="openCheckoutModal()" class="cart-checkout-btn btn-target" data-i18n="cart.checkout">ОФОРМИТЬ ЗАКАЗ</button>
-    </div>
-
-   <footer>
-        <div class="hit-counter"><span data-i18n="footer.visitors">VISITORS:</span> <span id="hitCounterValue">_ _ _ _ _</span></div>
-        <div class="legal-info">
-            <p data-i18n="footer.legal_text">Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.</p>
-            <div>
-                <a href="javascript:void(0)" onclick="showRulesModal()" data-i18n="footer.privacy_policy">Політика конфіденційності</a>
-            </div>
-
-            <!-- ОБНОВЛЕННАЯ КНОПКА (Без фона, зеленая, по центру) -->
-            <button id="installAppBtn" style="display: none; background: transparent; color: var(--accent-green); font-family: var(--font-mono); font-weight: bold; font-size: 14px; padding: 15px 10px; border: none; cursor: pointer; margin: 5px auto 10px auto; width: 100%; text-align: center; text-transform: uppercase;" data-i18n="footer.install">⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ</button>
-
-            <p style="margin-top: 10px; color: #555;" data-i18n="footer.refund_policy">Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
-            
-            <!-- ПОЧТА ДЛЯ БАГОВ И ИДЕЙ -->
-            <div style="margin-top: 15px; border-top: 1px dashed #333; padding-top: 15px; font-family: var(--font-mono); font-size: 11px;">
-                <span style="color: var(--accent-red); font-weight: bold;">[ SUPPORT ]</span> 
-                <span style="color: #888;" data-i18n="footer.support_text">Нашли баг или есть идея? Пишите:</span> 
-                <a href="mailto:nisha.store.ua@gmail.com" style="color: var(--accent-green); text-decoration: none; font-weight: bold; margin-left: 5px;">nisha.store.ua@gmail.com</a>
-            </div>
-
-            <!-- НАДПИСЬ КОПИРАЙТА -->
-            <p style="margin-top: 15px; color: #444;" data-i18n="footer.copyright">© 2026 NISHA. All rights reserved.</p>
-            
-            <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ -->
-            <div class="footer-lang-dropdown" id="footerLangWrapper">
-                <span id="currentLangLabelFooter" onclick="document.getElementById('footerLangWrapper').classList.toggle('active')">🇷🇺 [RU] ▼</span>
-                <div class="footer-lang-menu">
-                    <a href="javascript:void(0)" onclick="setLang('ua')">🇺🇦 UA</a>
-                    <a href="javascript:void(0)" onclick="setLang('ru')">🇷🇺 RU</a>
-                    <a href="javascript:void(0)" onclick="setLang('en')">🇬🇧 EN</a>
-                </div>
-            </div>
-
-        </div>
-    </footer>
+<button class="auth-btn btn-target" id=btnRegister onclick='handleAuth("register")' style=display:none;background:var(--accent-green);color:#000 data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
+<button class="auth-btn btn-target" id=btnBackLogin onclick=toggleRegMode() style=display:none;background:#333;color:#fff>НАЗАД</button>
 </div>
-
-<!-- СКРИПТ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ЯЗЫКА (с поддержкой флагов) -->
-<script>
-    function getFlagByLang(lang) {
-        if (lang === 'ua') return '🇺🇦';
-        if (lang === 'en') return '🇬🇧';
-        return '🇷🇺'; // По умолчанию русский
-    }
-
-    function setLang(lang) {
-        changeLanguage(lang); 
-        const flag = getFlagByLang(lang);
-        document.getElementById('currentLangLabelFooter').innerText = flag + ' [' + lang.toUpperCase() + '] ▼';
-        document.getElementById('footerLangWrapper').classList.remove('active');
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const savedLang = localStorage.getItem('nisha_lang') || 'ru';
-        const flag = getFlagByLang(savedLang);
-        const el = document.getElementById('currentLangLabelFooter');
-        if(el) el.innerText = flag + ' [' + savedLang.toUpperCase() + '] ▼';
-    });
-</script>
+<div class=auth-fields id=profileForm style=display:none;flex-direction:column>
+<div style="background:#0a0a0a;border:1px solid #333;padding:15px;text-align:left;font-family:var(--font-mono);box-shadow:inset 0 0 10px rgba(0,0,0,.5)">
+<div style=color:var(--accent-green);font-size:11px;margin-bottom:5px>НИКНЕЙМ:</div>
+<div style=color:#fff;font-size:14px;font-family:var(--font-main);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:15px id=profileName>Loading...</div>
+<div style=color:#666;font-size:11px;margin-bottom:5px>E-MAIL:</div>
+<div style="color:#aaa;font-size:12px;border-bottom:1px dashed #333;padding-bottom:12px;margin-bottom:12px;overflow:hidden;text-overflow:ellipsis" id=profileEmail>Loading...</div>
+<div style=display:flex;justify-content:space-between;align-items:center>
+<span style=color:#888;font-size:12px data-i18n=profile.saved>СОХРАНЕНО:</span>
+<span style="color:var(--accent-red);font-size:16px;font-weight:700;text-shadow:0 0 10px rgba(255,0,0,.4)">❤ <span id=profileLikesCount>0</span></span>
 </div>
-
-<div class="modal-overlay" id="rulesModal" style="background: rgba(0,0,0,0.95); z-index: 5000;">
-    <!-- Окно занимает максимум 85% высоты экрана и использует Flexbox -->
-    <div class="modal-window" style="max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 10px 10px 0 0;">
-        
-        <!-- ШАПКА: Всегда сверху -->
-        <div class="modal-header" style="background: #000; flex-shrink: 0;">
-            <span class="modal-title typewriter" style="color: var(--accent-red);">USER_AGREEMENT.TXT</span>
-        </div>
-        
-        <!-- КОНТЕНТ: Скроллится ТОЛЬКО этот блок -->
-        <div class="rules-content" style="flex-grow: 1; overflow-y: auto; padding: 25px; background: #0a0a0a; color: #ddd; font-size: 14px; line-height: 1.6; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
-            <p style="color: var(--accent-yellow); font-family: var(--font-mono); font-size: 16px; font-weight: bold; margin-top: 0;" data-i18n="rules.title">ВНИМАНИЕ! ПЕРЕД ИСПОЛЬЗОВАНИЕМ САЙТА ОЗНАКОМЬТЕСЬ С ПРАВИЛАМИ.</p>
-            
-            <h3 data-i18n="rules.h1" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 1. ОБЩИЕ ПОЛОЖЕНИЯ ]</h3>
-            <ul style="padding-left: 20px;">
-                <li data-i18n="rules.p1_1" style="margin-bottom: 10px;">Данный ресурс является онлайн-витриной магазина и маркетплейса <b>NISHA</b>.</li>
-                <li data-i18n="rules.p1_2" style="margin-bottom: 10px;">Мы выступаем гарантом сделки: вы платите только тогда, когда лично убедитесь, что товар полностью соответствует описанию.</li>
-                <li data-i18n="rules.p1_3" style="margin-bottom: 10px;">На сайте представлены как вещи из нашего архива, так и вещи от проверенных продавцов (Creators).</li>
-                <li data-i18n="rules.p1_4" style="margin-bottom: 10px;">Состояние каждой вещи оценивается по шкале от 1 до 10. Скрытые дефекты указываються в описании.</li>
-            </ul>
-
-            <h3 data-i18n="rules.h2" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 2. ОФОРМЛЕНИЕ ЗАКАЗА И БРОНЬ ]</h3>
-            <ul style="padding-left: 20px;">
-                <li data-i18n="rules.p2_1" style="margin-bottom: 10px;">При оформлении заказа товар автоматически получает статус <b>RESERVED</b>.</li>
-                <li data-i18n="rules.p2_2" style="margin-bottom: 10px;">Бронь держится ровно <b>2 часа</b> для внесения оплаты.</li>
-                <li data-i18n="rules.p2_3" style="margin-bottom: 10px;">Менеджер свяжется с вами в Telegram или по телефону для предоставления реквизитов.</li>
-                <li data-i18n="rules.p2_4" style="margin-bottom: 10px;">Администрация оставляет за собой право отменить заказ, если покупатель не выходит на связь.</li>
-            </ul>
-
-            <h3 data-i18n="rules.h3" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 3. ОПЛАТА И ДОСТАВКА ]</h3>
-            <ul style="padding-left: 20px;">
-                <li data-i18n="rules.p3_1" style="margin-bottom: 10px;">Доставка осуществляется исключительно компанией <b>«Нова Пошта»</b>.</li>
-                <li data-i18n="rules.p3_2" style="margin-bottom: 10px;">Форматы оплаты: полная предоплата или наложенный платеж с минимальной предоплатой <b>200 грн</b>.</li>
-                <li data-i18n="rules.p3_3" style="margin-bottom: 10px;">Отправка посылок происходит в день заказа (при оплате до 16:00) или на следующий рабочий день.</li>
-            </ul>
-
-            <h3 data-i18n="rules.h4" style="color: var(--accent-red); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 4. ГАРАНТИИ И УСЛОВИЯ ВОЗВРАТА (ВАЖНО!) ]</h3>
-            <ul style="padding-left: 20px;">
-                <li data-i18n="rules.p4_1" style="margin-bottom: 10px;">Мы настоятельно рекомендуем внимательно изучать фото, замеры и описание перед оформлением заказа.</li>
-                <li data-i18n="rules.p4_2" style="margin-bottom: 10px;"><span style="color: var(--accent-red); font-weight: bold;">ТОВАРЫ "БЕЗ ВОЗВРАТА":</span> Если в карточке указано "БЕЗ ВОЗВРАТОВ" (а также любые вещи со статусом "ПРЕДЛОЖКА") — данный товар <b style="color: var(--accent-red); text-decoration: underline;">не подлежит возврату или обмену ни при каких условиях.</b> Пожалуйста, делайте покупки обдуманно.</li>
-                <li data-i18n="rules.p4_3" style="margin-bottom: 10px;"><span style="color: var(--accent-green); font-weight: bold;">ТОВАРЫ "С ВОЗВРАТОМ":</span> Если товар имеет зеленый бейдж "Возврат 14 дней", вы можете вернуть его согласно законодательству. Обязательное условие: сохранение бирок и отсутствие следов носки.</li>
-            </ul>
-
-            <h3 data-i18n="rules.h5" style="color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px;">[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]</h3>
-            <ul style="padding-left: 20px;">
-                <li data-i18n="rules.p5_1" style="margin-bottom: 10px;">Комиссия площадки за продажу вашей вещи составляет <b>15%</b>.</li>
-                <li data-i18n="rules.p5_2" style="margin-bottom: 10px;">Все финансовые операции проходят <b>только через наши реквизиты</b>.</li>
-                <li data-i18n="rules.p5_3" style="margin-bottom: 10px;">Выплата продавцу осуществляется на карту сразу после того, как покупатель заберет посылку с почты.</li>
-                <li data-i18n="rules.p5_4" style="margin-bottom: 10px;">В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.</li>
-            </ul>
-        </div>
-
-        <!-- КНОПКА: Всегда внизу -->
-        <div class="rules-footer" style="background: #000; padding: 15px; border-top: 2px inset var(--border-light); flex-shrink: 0;">
-            <button class="accept-btn btn-target" onclick="acceptRules()" data-i18n="rules.btn_accept" style="background: #111; color: var(--accent-green); font-weight: bold; padding: 15px 20px; font-size: 15px; font-family: var(--font-mono); border: 2px outset #444; cursor: pointer; text-transform: uppercase; width: 100%;">[ Я СОГЛАСЕН С ПРАВИЛАМИ ]</button>
-        </div>
-    </div>
 </div>
-
-<div class="modal-overlay" id="productModal">
-    <div class="modal-window">
-        <div class="modal-header">
-            <span class="modal-title typewriter" id="modalTypewriterTitle">ITEM_INFO.EXE</span>
-            <button class="close-btn" onclick="closeModal('productModal')">X</button>
-        </div>
-        <div class="modal-content">
-            <div class="modal-gallery">
-               <div class="slider-container" id="sliderContainer">
-                    <div id="photoCounter" class="photo-counter">1/1</div>
-                    <div class="slider-wrapper" id="sliderWrapper"></div>
-                    <button class="slider-btn prev" onclick="moveSlide(-1)">&#10094;</button>
-                    <button class="slider-btn next" onclick="moveSlide(1)">&#10095;</button>
-                </div>
-                <div class="modal-thumbnails" id="modalThumbnails"></div>
-            </div>
-            <div class="modal-info">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h2 id="modalItemTitle" style="margin: 0; color: #fff; font-size: 22px; padding-right: 15px; line-height: 1.2;">Название товара</h2>
-                    <div id="modalFavStar" class="fav-star-modal" onclick="toggleFavFromModal(event)" title="Избранное">★</div>
-                </div>
-                
-               <div class="price-views-row">
-                    <div class="modal-price" id="modalItemPrice">0 грн</div>
-                    <div class="item-views">
-                        [ 
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg> 
-                        <span id="modalItemViews">0</span> 
-                        ]
-                    </div>
-                </div>
-
-                <div class="condition-container">
-                    <div class="condition-text"><span data-i18n="product.condition">СОСТОЯНИЕ ВЕЩИ:</span><span style="color: var(--accent-green);" id="modalItemCond">9 / 10</span></div>
-                    <div class="condition-bar-bg"><div class="condition-bar-fill" id="modalCondFill"></div></div>
-                </div>
-                
-                <!-- НОВЫЙ БЛОК ДЛЯ ТЕГОВ -->
-                <div id="modalItemTags" style="margin-bottom: 15px; font-family: var(--font-mono); font-size: 13px; font-weight: bold; display: none;"></div>
-                
-                <div class="modal-desc">
-                    <strong style="color: var(--accent-green);">РАЗМЕР: <span id="modalItemSizeDesc">L</span></strong><br>
-                    <strong>БРЕНД:</strong> <span id="modalItemBrand">Brand</span><br><br>
-                    Описание товара.
-                </div>
-                
-                <div class="info-accordions">
-                    <div class="custom-details">
-                        <div class="custom-summary" onclick="toggleAccordion(this)" data-i18n="product.delivery">Доставка и оплата</div>
-                        <div class="custom-content-wrapper">
-                            <div><div class="details-content" data-i18n="product.delivery_text">Отправка Новой Почтой. Працюємо по повній передоплаті...</div></div>
-                        </div>
-                    </div>
-                    <div class="custom-details">
-                        <div class="custom-summary" onclick="toggleAccordion(this)" data-i18n="product.measure">Как мы делаем замеры?</div>
-                        <div class="custom-content-wrapper">
-                            <div><div class="details-content" data-i18n="product.measure_text">Все замеры снимаются с вещи на ровной поверхности...</div></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="buy-share-row" id="actionButtonsRow">
-                    <button class="buy-tg-btn cart-add btn-target" id="modalCartBtn" onclick="addToCartFromModal()" data-i18n="product.add_to_cart">В КОРЗИНУ</button>
-                    <button class="buy-tg-btn btn-target" id="modalWaitlistBtn" onclick="openWaitlist()" style="display:none; background: #333; color: #fff;" data-i18n="product.notify">УВЕДОМИТЬ О ПОЯВЛЕНИИ</button>
-                    <button class="share-btn" onclick="shareItem()" title="Поделиться">[↗]</button>
-                </div>
-                
-              <div class="trust-badges">
-                    <div class="badge-item"><span class="badge-icon">100%</span> <span class="badge-text" data-i18n="product.badge_orig">ПРОШЛО ЛЕГИТ-ЧЕК</span></div>
-                    <div class="badge-item"><span class="badge-icon">24H</span> <span class="badge-text" data-i18n="product.badge_fast">БЫСТРАЯ ОТПРАВКА</span></div>
-                    <div class="badge-item"><span class="badge-icon">14D</span> <span class="badge-text" data-i18n="product.badge_refund">ВОЗВРАТ 14 ДНЕЙ</span></div>
-                </div>
-                
-                <div style="margin-top: 20px; border-top: 2px dashed #333; padding-top: 15px;">
-                    <h3 style="color:var(--accent-yellow); font-family:var(--font-mono); font-size:14px; margin:0 0 10px 0;" data-i18n="product.similar">[ ПОХОЖИЕ ВЕЩИ ]</h3>
-                    <div id="similarItemsContainer" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+<button class="auth-btn btn-target" onclick=logout() style=background:#333;color:#fff;margin-top:10px data-i18n=sidebar.logout>ВЫЙТИ</button>
 </div>
-
-<div class="modal-overlay" id="checkoutModal">
-    <div class="modal-window" style="max-width: 550px;">
-        <div class="modal-header">
-            <span class="modal-title typewriter" style="animation: none;">SECURE_CHECKOUT.EXE</span>
-            <button class="close-btn" onclick="closeModal('checkoutModal')">X</button>
-        </div>
-        
-        <div class="form-layout" id="checkoutFormLayout">
-            <p style="margin:0; font-size:13px; color:#aaa;" data-i18n="checkout.desc">Заполните данные для отправки. Бронь 2 часа.</p>
-            <input type="text" id="botTrap" style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;" tabindex="-1" autocomplete="off">
-            
-            <label data-i18n="checkout.name">ФИО Получателя:</label>
-            <input type="text" id="orderName" class="form-input" placeholder="Іванов Іван Іванович">
-            
-            <label data-i18n="checkout.phone">Телефон (ОБЯЗАТЕЛЬНО):</label>
-            <div style="display:flex; gap:10px;">
-                <input type="tel" id="orderPhone" class="form-input" placeholder="+380..." inputmode="numeric">
-                <button class="search-btn btn-target" id="btnGetOtp" onclick="generateAndSendOTP()" style="white-space:nowrap; padding: 10px 15px; font-size: 12px;" data-i18n="checkout.btn_otp">Подтвердить</button>
-            </div>
-            <div id="otpStatus" style="color: var(--accent-red); font-size: 11px; font-family: var(--font-mono); margin-top: -5px;" data-i18n="checkout.otp_status">Сначала подтвердите номер для заказа!</div>
-            
-            <label data-i18n="checkout.city">Город (Новая Почта):</label>
-            <div style="position: relative;">
-                <input type="text" id="orderCity" class="form-input" placeholder="Київ..." oninput="debouncedNPCitySearch(this.value)" autocomplete="off">
-                <div id="cityDropdown" class="custom-dropdown"></div>
-            </div>
-            
-            <label data-i18n="checkout.branch">Отделение или Почтомат:</label>
-            <div style="position: relative;">
-                <input type="text" id="orderBranch" class="form-input" placeholder="Відділення..." onfocus="loadNPBranches()" oninput="filterNPBranches(this.value)" autocomplete="off">
-                <div id="branchDropdown" class="custom-dropdown"></div>
-            </div>
-            <!-- НОВОЕ: ПРОМОКОД -->
-            <label style="margin-top: 10px;" data-i18n="checkout.promo">Промокод (если есть):</label>
-            <div class="promo-wrapper">
-                <input type="text" id="promoInput" class="form-input" placeholder="Введите код...">
-                <button class="search-btn btn-target" onclick="applyPromoCode()" style="padding: 10px;" data-i18n="checkout.apply">ПРИМЕНИТЬ</button>
-            </div>
-            <div id="promoMessage" class="promo-msg"></div>
-            <div id="deliveryCostInfo" style="background:#111; padding:10px; border:1px solid #444; font-family:var(--font-mono); font-size:12px; color:var(--accent-green); display:none; margin-top: 5px;">
-                <span data-i18n="checkout.calc">Ориентировочная стоимость доставки:</span> <span id="calcCostVal" style="font-weight:bold; color:#fff;">Считаем...</span>
-            </div>
-
-            <button class="cart-checkout-btn btn-target" id="btnSubmitOrder" onclick="submitOrder()" style="margin-top: 15px; width: 100%; opacity: 0.5; pointer-events: none;" data-i18n="checkout.btn_submit">ПОДТВЕРДИТЬ ЗАКАЗ</button>
-        </div>
-    </div>
 </div>
-
-<div class="modal-overlay" id="ordersModal">
-    <div class="modal-window" style="max-width: 650px;">
-        <div class="modal-header">
-            <span class="modal-title typewriter" style="animation: none;">MY_ORDERS.DB</span>
-            <button class="close-btn" onclick="closeModal('ordersModal')">X</button>
-        </div>
-        
-        <div class="form-layout" id="ordersAuthSection" style="border-bottom: 1px dashed #333; padding-bottom: 15px;">
-            <p id="guestOrderText" style="margin:0; font-size:13px; color:#aaa;" data-i18n="orders_modal.desc">Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
-            <div id="guestOrderInputGroup" style="display: flex; gap: 10px; margin-top: 10px;">
-                <input type="tel" id="ordersSearchPhone" class="form-input" placeholder="+380..." inputmode="numeric">
-                <button class="search-btn btn-target" onclick="fetchMyOrders()" data-i18n="orders_modal.btn">НАЙТИ</button>
-            </div>
-        </div>
-
-        <!-- НОВЫЙ БЛОК: ВКЛАДКИ ЗАКАЗОВ -->
-        <div class="orders-tabs" id="ordersTabs" style="display: none;">
-            <button class="order-tab tab-yellow active" onclick="switchOrderTab('accepted')" data-i18n="orders_modal.tab_accepted">ПРИНЯТЫЕ</button>
-            <button class="order-tab tab-blue" onclick="switchOrderTab('shipped')" data-i18n="orders_modal.tab_shipped">ОТПРАВЛЕНЫ</button>
-            <button class="order-tab tab-red" onclick="switchOrderTab('cancelled')" data-i18n="orders_modal.tab_cancelled">ОТМЕНЕНЫ</button>
-        </div>
-
-        <div class="orders-container" id="ordersListArea" style="max-height: 55vh; overflow-y: auto;">
-            <div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 30px;" data-i18n="orders_modal.loading">
-                Ожидание данных...
-            </div>
-        </div>
-    </div>
+</aside>
+<main class=content-area>
+<button id=mobileFilterBtn onclick=toggleMobileSidebar() data-i18n=mobile.show_filters>[+] ПОКАЗАТЬ ФИЛЬТРЫ</button>
+<div class=sorting>
+<span><span data-i18n=sort.found>Найдено вещей:</span> <strong id=itemCount style=color:var(--accent-green)>0</strong></span>
+<span><span data-i18n=sort.sorting>Сортировка:</span>
+<a href=javascript:void(0) id=sort-new class=active-sort onclick='sortItems("new")' data-i18n=sort.new>Новые</a> |
+<a href=javascript:void(0) id=sort-cheap onclick='sortItems("cheap")' data-i18n=sort.cheap>Дешевые</a>
+</span>
 </div>
-
-<div class="modal-overlay" id="reviewsModal">
-    <div class="modal-window" style="max-width: 600px;">
-        <div class="modal-header">
-            <span class="modal-title typewriter" style="animation: none;">REVIEWS.TXT</span>
-            <button class="close-btn" onclick="closeModal('reviewsModal')">X</button>
-        </div>
-        <div class="orders-container">
-            <p style="color: #aaa; margin-top: 0; font-size: 14px;" data-i18n="reviews_modal.desc">Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
-            <div id="reviewsContainerList" style="display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
-                <!-- Сюда скрипт сам загрузит отзывы -->
-            </div>
-        </div>
-    </div>
+<div class=items-grid id=itemsGrid>
+<div id=win95-loader style="grid-column:1/-1;display:flex;justify-content:center;padding:50px 10px">
+<div style="background:silver;border-top:2px solid #fff;border-left:2px solid #fff;border-right:2px solid #0a0a0a;border-bottom:2px solid #0a0a0a;padding:2px;width:100%;max-width:300px;box-shadow:4px 4px 0 rgba(0,0,0,.8)">
+<div style="background:navy;color:#fff;font-family:Tahoma,sans-serif;font-weight:700;font-size:12px;padding:3px 5px;display:flex;justify-content:space-between;align-items:center">
+<span>Loading_NISHA.exe</span>
+<div style="background:silver;color:#000;border:1px solid #000;width:14px;height:14px;display:flex;justify-content:center;align-items:center;font-size:10px">X</div>
 </div>
+<div style=padding:20px;text-align:center>
+<div id=lottie-box style="width:60px;height:60px;margin:0 auto"></div>
+<p style=color:#000;margin-top:15px;margin-bottom:0;font-family:Tahoma,sans-serif;font-size:13px>Подключение к БД...</p>
+</div>
+</div>
+</div>
+</div>
+<div id=loadingTrigger class=lazy-loader></div>
+</main>
+</div>
+<div class=history-section id=historySection>
+<div class=history-title onclick=toggleHistory() style=cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none>
+<span data-i18n=history.title>HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:</span>
+<span id=historyArrow style="transition:transform .2s;color:var(--accent-green)">▼</span>
+</div>
+<div class=history-grid id=historyGrid></div>
+</div>
+<div class=cart-panel id=cartPanel>
+<div class=cart-info id=cartInfoWrapper onclick=toggleCartDropdown(event)>
+<div class=cart-click-area>
+<span data-i18n=cart.in_cart>В КОРЗИНЕ:</span> <b id=cartCount>0</b> <span data-i18n=cart.items_total>ВЕЩЕЙ | ИТОГО:</span> <span id=cartTotal>0 грн</span>
+</div>
+<div id=cartDropdown class=cart-dropdown>
+<div class=cart-dropdown-header>
+<span data-i18n=cart.title>[ ВАШИ ПОКУПКИ ]</span>
+<button class=cart-close-mobile onclick=toggleCartDropdown(event)>&times;</button>
+</div>
+<div id=cartDropdownList class=cart-dropdown-list>
+</div>
+</div>
+</div>
+<button onclick=openCheckoutModal() class="cart-checkout-btn btn-target" data-i18n=cart.checkout>ОФОРМИТЬ ЗАКАЗ</button>
+</div>
+<footer>
+<div class=hit-counter><span data-i18n=footer.visitors>VISITORS:</span> <span id=hitCounterValue>_ _ _ _ _</span></div>
+<div class=legal-info>
+<p data-i18n=footer.legal_text>Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.</p>
+<div>
+<a href=javascript:void(0) onclick=showRulesModal() data-i18n=footer.privacy_policy>Політика конфіденційності</a>
+</div>
+<button id=installAppBtn style="display:none;background:0 0;color:var(--accent-green);font-family:var(--font-mono);font-weight:700;font-size:14px;padding:15px 10px;border:none;cursor:pointer;margin:5px auto 10px auto;width:100%;text-align:center;text-transform:uppercase" data-i18n=footer.install>⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ</button>
+<p style=margin-top:10px;color:#555 data-i18n=footer.refund_policy>Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
+<div style="margin-top:15px;border-top:1px dashed #333;padding-top:15px;font-family:var(--font-mono);font-size:11px">
+<span style=color:var(--accent-red);font-weight:700>[ SUPPORT ]</span>
+<span style=color:#888 data-i18n=footer.support_text>Нашли баг или есть идея? Пишите:</span>
+<a href=mailto:nisha.store.ua@gmail.com style=color:var(--accent-green);text-decoration:none;font-weight:700;margin-left:5px>nisha.store.ua@gmail.com</a>
+</div>
+<p style=margin-top:15px;color:#444 data-i18n=footer.copyright>© 2026 NISHA. All rights reserved.</p>
+<div class=footer-lang-dropdown id=footerLangWrapper>
+<span id=currentLangLabelFooter onclick='document.getElementById("footerLangWrapper").classList.toggle("active")'>🇷🇺 [RU] ▼</span>
+<div class=footer-lang-menu>
+<a href=javascript:void(0) onclick='setLang("ua")'>🇺🇦 UA</a>
+<a href=javascript:void(0) onclick='setLang("ru")'>🇷🇺 RU</a>
+<a href=javascript:void(0) onclick='setLang("en")'>🇬🇧 EN</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<script>function getFlagByLang(e){return"ua"===e?"🇺🇦":"en"===e?"🇬🇧":"🇷🇺"}function setLang(e){changeLanguage(e);const t=getFlagByLang(e);document.getElementById("currentLangLabelFooter").innerText=t+" ["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{const e=localStorage.getItem("nisha_lang")||"ru",t=getFlagByLang(e),n=document.getElementById("currentLangLabelFooter");n&&(n.innerText=t+" ["+e.toUpperCase()+"] ▼")}))</script>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
-    <script defer src="https://unpkg.com/rough-notation/lib/rough-notation.iife.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@formkit/auto-animate@1.1.1/index.global.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
-    <script defer src="https://unpkg.com/imask"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-    <script defer src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
-    <!-- БИБЛИОТЕКА ДЛЯ ОБУЧЕНИЯ (ОНБОРДИНГ) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
-    <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-    <script defer src="https://browser.sentry-cdn.com/7.105.0/bundle.min.js" crossorigin="anonymous"></script>
-    <script defer src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js"></script>
-    <script defer src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
-
-    <script src="config.js"></script>
-    <script defer src="app.js"></script>
-
-    <!-- ПЛАВАЮЩАЯ КНОПКА ПРЕДЛОЖКИ -->
-<button class="fab-propose" onclick="openProposeModal()" title="Предложить вещь">
-    <span style="display:block;">[+]</span>
+<div class=modal-overlay id=rulesModal style=background:rgba(0,0,0,.95);z-index:5000>
+<div class=modal-window style="max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;border-radius:10px 10px 0 0">
+<div class=modal-header style=background:#000;flex-shrink:0>
+<span class="modal-title typewriter" style=color:var(--accent-red)>USER_AGREEMENT.TXT</span>
+</div>
+<div class=rules-content style=flex-grow:1;overflow-y:auto;padding:25px;background:#0a0a0a;color:#ddd;font-size:14px;line-height:1.6;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain>
+<p style=color:var(--accent-yellow);font-family:var(--font-mono);font-size:16px;font-weight:700;margin-top:0 data-i18n=rules.title>ВНИМАНИЕ! ПЕРЕД ИСПОЛЬЗОВАНИЕМ САЙТА ОЗНАКОМЬТЕСЬ С ПРАВИЛАМИ.</p>
+<h3 data-i18n=rules.h1 style="color:var(--accent-green);font-family:var(--font-mono);border-bottom:1px solid #333;padding-bottom:10px;margin-top:25px">[ 1. ОБЩИЕ ПОЛОЖЕНИЯ ]</h3>
+<ul style=padding-left:20px>
+<li data-i18n=rules.p1_1 style=margin-bottom:10px>Данный ресурс является онлайн-витриной магазина и маркетплейса <b>NISHA</b>.</li>
+<li data-i18n=rules.p1_2 style=margin-bottom:10px>Мы выступаем гарантом сделки: вы платите только тогда, когда лично убедитесь, что товар полностью соответствует описанию.</li>
+<li data-i18n=rules.p1_3 style=margin-bottom:10px>На сайте представлены как вещи из нашего архива, так и вещи от проверенных продавцов (Creators).</li>
+<li data-i18n=rules.p1_4 style=margin-bottom:10px>Состояние каждой вещи оценивается по шкале от 1 до 10. Скрытые дефекты указываються в описании.</li>
+</ul>
+<h3 data-i18n=rules.h2 style="color:var(--accent-green);font-family:var(--font-mono);border-bottom:1px solid #333;padding-bottom:10px;margin-top:25px">[ 2. ОФОРМЛЕНИЕ ЗАКАЗА И БРОНЬ ]</h3>
+<ul style=padding-left:20px>
+<li data-i18n=rules.p2_1 style=margin-bottom:10px>При оформлении заказа товар автоматически получает статус <b>RESERVED</b>.</li>
+<li data-i18n=rules.p2_2 style=margin-bottom:10px>Бронь держится ровно <b>2 часа</b> для внесения оплаты.</li>
+<li data-i18n=rules.p2_3 style=margin-bottom:10px>Менеджер свяжется с вами в Telegram или по телефону для предоставления реквизитов.</li>
+<li data-i18n=rules.p2_4 style=margin-bottom:10px>Администрация оставляет за собой право отменить заказ, если покупатель не выходит на связь.</li>
+</ul>
+<h3 data-i18n=rules.h3 style="color:var(--accent-green);font-family:var(--font-mono);border-bottom:1px solid #333;padding-bottom:10px;margin-top:25px">[ 3. ОПЛАТА И ДОСТАВКА ]</h3>
+<ul style=padding-left:20px>
+<li data-i18n=rules.p3_1 style=margin-bottom:10px>Доставка осуществляется исключительно компанией <b>«Нова Пошта»</b>.</li>
+<li data-i18n=rules.p3_2 style=margin-bottom:10px>Форматы оплаты: полная предоплата или наложенный платеж с минимальной предоплатой <b>200 грн</b>.</li>
+<li data-i18n=rules.p3_3 style=margin-bottom:10px>Отправка посылок происходит в день заказа (при оплате до 16:00) или на следующий рабочий день.</li>
+</ul>
+<h3 data-i18n=rules.h4 style="color:var(--accent-red);font-family:var(--font-mono);border-bottom:1px solid #333;padding-bottom:10px;margin-top:25px">[ 4. ГАРАНТИИ И УСЛОВИЯ ВОЗВРАТА (ВАЖНО!) ]</h3>
+<ul style=padding-left:20px>
+<li data-i18n=rules.p4_1 style=margin-bottom:10px>Мы настоятельно рекомендуем внимательно изучать фото, замеры и описание перед оформлением заказа.</li>
+<li data-i18n=rules.p4_2 style=margin-bottom:10px><span style=color:var(--accent-red);font-weight:700>ТОВАРЫ "БЕЗ ВОЗВРАТА":</span> Если в карточке указано "БЕЗ ВОЗВРАТОВ" (а также любые вещи со статусом "ПРЕДЛОЖКА") — данный товар <b style=color:var(--accent-red);text-decoration:underline>не подлежит возврату или обмену ни при каких условиях.</b> Пожалуйста, делайте покупки обдуманно.</li>
+<li data-i18n=rules.p4_3 style=margin-bottom:10px><span style=color:var(--accent-green);font-weight:700>ТОВАРЫ "С ВОЗВРАТОМ":</span> Если товар имеет зеленый бейдж "Возврат 14 дней", вы можете вернуть его согласно законодательству. Обязательное условие: сохранение бирок и отсутствие следов носки.</li>
+</ul>
+<h3 data-i18n=rules.h5 style="color:var(--accent-green);font-family:var(--font-mono);border-bottom:1px solid #333;padding-bottom:10px;margin-top:25px">[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]</h3>
+<ul style=padding-left:20px>
+<li data-i18n=rules.p5_1 style=margin-bottom:10px>Комиссия площадки за продажу вашей вещи составляет <b>15%</b>.</li>
+<li data-i18n=rules.p5_2 style=margin-bottom:10px>Все финансовые операции проходят <b>только через наши реквизиты</b>.</li>
+<li data-i18n=rules.p5_3 style=margin-bottom:10px>Выплата продавцу осуществляется на карту сразу после того, как покупатель заберет посылку с почты.</li>
+<li data-i18n=rules.p5_4 style=margin-bottom:10px>В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.</li>
+</ul>
+</div>
+<div class=rules-footer style="background:#000;padding:15px;border-top:2px inset var(--border-light);flex-shrink:0">
+<button class="accept-btn btn-target" onclick=acceptRules() data-i18n=rules.btn_accept style="background:#111;color:var(--accent-green);font-weight:700;padding:15px 20px;font-size:15px;font-family:var(--font-mono);border:2px outset #444;cursor:pointer;text-transform:uppercase;width:100%">[ Я СОГЛАСЕН С ПРАВИЛАМИ ]</button>
+</div>
+</div>
+</div>
+<div class=modal-overlay id=productModal>
+<div class=modal-window>
+<div class=modal-header>
+<span class="modal-title typewriter" id=modalTypewriterTitle>ITEM_INFO.EXE</span>
+<button class=close-btn onclick='closeModal("productModal")'>X</button>
+</div>
+<div class=modal-content>
+<div class=modal-gallery>
+<div class=slider-container id=sliderContainer>
+<div id=photoCounter class=photo-counter>1/1</div>
+<div class=slider-wrapper id=sliderWrapper></div>
+<button class="slider-btn prev" onclick=moveSlide(-1)>&#10094;</button>
+<button class="slider-btn next" onclick=moveSlide(1)>&#10095;</button>
+</div>
+<div class=modal-thumbnails id=modalThumbnails></div>
+</div>
+<div class=modal-info>
+<div style=display:flex;justify-content:space-between;align-items:center;margin-bottom:10px>
+<h2 id=modalItemTitle style=margin:0;color:#fff;font-size:22px;padding-right:15px;line-height:1.2>Название товара</h2>
+<div id=modalFavStar class=fav-star-modal onclick=toggleFavFromModal(event) title=Избранное>★</div>
+</div>
+<div class=price-views-row>
+<div class=modal-price id=modalItemPrice>0 грн</div>
+<div class=item-views>
+[
+<svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round>
+<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+<circle cx=12 cy=12 r=3></circle>
+</svg>
+<span id=modalItemViews>0</span>
+]
+</div>
+</div>
+<div class=condition-container>
+<div class=condition-text><span data-i18n=product.condition>СОСТОЯНИЕ ВЕЩИ:</span><span style=color:var(--accent-green) id=modalItemCond>9 / 10</span></div>
+<div class=condition-bar-bg><div class=condition-bar-fill id=modalCondFill></div></div>
+</div>
+<div id=modalItemTags style=margin-bottom:15px;font-family:var(--font-mono);font-size:13px;font-weight:700;display:none></div>
+<div class=modal-desc>
+<strong style=color:var(--accent-green)>РАЗМЕР: <span id=modalItemSizeDesc>L</span></strong><br>
+<strong>БРЕНД:</strong> <span id=modalItemBrand>Brand</span><br><br>
+Описание товара.
+</div>
+<div class=info-accordions>
+<div class=custom-details>
+<div class=custom-summary onclick=toggleAccordion(this) data-i18n=product.delivery>Доставка и оплата</div>
+<div class=custom-content-wrapper>
+<div><div class=details-content data-i18n=product.delivery_text>Отправка Новой Почтой. Працюємо по повній передоплаті...</div></div>
+</div>
+</div>
+<div class=custom-details>
+<div class=custom-summary onclick=toggleAccordion(this) data-i18n=product.measure>Как мы делаем замеры?</div>
+<div class=custom-content-wrapper>
+<div><div class=details-content data-i18n=product.measure_text>Все замеры снимаются с вещи на ровной поверхности...</div></div>
+</div>
+</div>
+</div>
+<div class=buy-share-row id=actionButtonsRow>
+<button class="buy-tg-btn cart-add btn-target" id=modalCartBtn onclick=addToCartFromModal() data-i18n=product.add_to_cart>В КОРЗИНУ</button>
+<button class="buy-tg-btn btn-target" id=modalWaitlistBtn onclick=openWaitlist() style=display:none;background:#333;color:#fff data-i18n=product.notify>УВЕДОМИТЬ О ПОЯВЛЕНИИ</button>
+<button class=share-btn onclick=shareItem() title=Поделиться>[↗]</button>
+</div>
+<div class=trust-badges>
+<div class=badge-item><span class=badge-icon>100%</span> <span class=badge-text data-i18n=product.badge_orig>ПРОШЛО ЛЕГИТ-ЧЕК</span></div>
+<div class=badge-item><span class=badge-icon>24H</span> <span class=badge-text data-i18n=product.badge_fast>БЫСТРАЯ ОТПРАВКА</span></div>
+<div class=badge-item><span class=badge-icon>14D</span> <span class=badge-text data-i18n=product.badge_refund>ВОЗВРАТ 14 ДНЕЙ</span></div>
+</div>
+<div style="margin-top:20px;border-top:2px dashed #333;padding-top:15px">
+<h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:14px;margin:0 0 10px 0" data-i18n=product.similar>[ ПОХОЖИЕ ВЕЩИ ]</h3>
+<div id=similarItemsContainer style=display:flex;gap:10px;overflow-x:auto;padding-bottom:10px></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class=modal-overlay id=checkoutModal>
+<div class=modal-window style=max-width:550px>
+<div class=modal-header>
+<span class="modal-title typewriter" style=animation:none>SECURE_CHECKOUT.EXE</span>
+<button class=close-btn onclick='closeModal("checkoutModal")'>X</button>
+</div>
+<div class=form-layout id=checkoutFormLayout>
+<p style=margin:0;font-size:13px;color:#aaa data-i18n=checkout.desc>Заполните данные для отправки. Бронь 2 часа.</p>
+<input id=botTrap style=opacity:0;position:absolute;top:0;left:0;height:0;width:0;z-index:-1 tabindex=-1 autocomplete=off>
+<label data-i18n=checkout.name>ФИО Получателя:</label>
+<input id=orderName class=form-input placeholder="Іванов Іван Іванович">
+<label data-i18n=checkout.phone>Телефон (ОБЯЗАТЕЛЬНО):</label>
+<div style=display:flex;gap:10px>
+<input type=tel id=orderPhone class=form-input placeholder=+380... inputmode=numeric>
+<button class="search-btn btn-target" id=btnGetOtp onclick=generateAndSendOTP() style="white-space:nowrap;padding:10px 15px;font-size:12px" data-i18n=checkout.btn_otp>Подтвердить</button>
+</div>
+<div id=otpStatus style=color:var(--accent-red);font-size:11px;font-family:var(--font-mono);margin-top:-5px data-i18n=checkout.otp_status>Сначала подтвердите номер для заказа!</div>
+<label data-i18n=checkout.city>Город (Новая Почта):</label>
+<div style=position:relative>
+<input id=orderCity class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off>
+<div id=cityDropdown class=custom-dropdown></div>
+</div>
+<label data-i18n=checkout.branch>Отделение или Почтомат:</label>
+<div style=position:relative>
+<input id=orderBranch class=form-input placeholder=Відділення... onfocus=loadNPBranches() oninput=filterNPBranches(this.value) autocomplete=off>
+<div id=branchDropdown class=custom-dropdown></div>
+</div>
+<label style=margin-top:10px data-i18n=checkout.promo>Промокод (если есть):</label>
+<div class=promo-wrapper>
+<input id=promoInput class=form-input placeholder="Введите код...">
+<button class="search-btn btn-target" onclick=applyPromoCode() style=padding:10px data-i18n=checkout.apply>ПРИМЕНИТЬ</button>
+</div>
+<div id=promoMessage class=promo-msg></div>
+<div id=deliveryCostInfo style="background:#111;padding:10px;border:1px solid #444;font-family:var(--font-mono);font-size:12px;color:var(--accent-green);display:none;margin-top:5px">
+<span data-i18n=checkout.calc>Ориентировочная стоимость доставки:</span> <span id=calcCostVal style=font-weight:700;color:#fff>Считаем...</span>
+</div>
+<button class="cart-checkout-btn btn-target" id=btnSubmitOrder onclick=submitOrder() style=margin-top:15px;width:100%;opacity:.5;pointer-events:none data-i18n=checkout.btn_submit>ПОДТВЕРДИТЬ ЗАКАЗ</button>
+</div>
+</div>
+</div>
+<div class=modal-overlay id=ordersModal>
+<div class=modal-window style=max-width:650px>
+<div class=modal-header>
+<span class="modal-title typewriter" style=animation:none>MY_ORDERS.DB</span>
+<button class=close-btn onclick='closeModal("ordersModal")'>X</button>
+</div>
+<div class=form-layout id=ordersAuthSection style="border-bottom:1px dashed #333;padding-bottom:15px">
+<p id=guestOrderText style=margin:0;font-size:13px;color:#aaa data-i18n=orders_modal.desc>Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
+<div id=guestOrderInputGroup style=display:flex;gap:10px;margin-top:10px>
+<input type=tel id=ordersSearchPhone class=form-input placeholder=+380... inputmode=numeric>
+<button class="search-btn btn-target" onclick=fetchMyOrders() data-i18n=orders_modal.btn>НАЙТИ</button>
+</div>
+</div>
+<div class=orders-tabs id=ordersTabs style=display:none>
+<button class="order-tab tab-yellow active" onclick='switchOrderTab("accepted")' data-i18n=orders_modal.tab_accepted>ПРИНЯТЫЕ</button>
+<button class="order-tab tab-blue" onclick='switchOrderTab("shipped")' data-i18n=orders_modal.tab_shipped>ОТПРАВЛЕНЫ</button>
+<button class="order-tab tab-red" onclick='switchOrderTab("cancelled")' data-i18n=orders_modal.tab_cancelled>ОТМЕНЕНЫ</button>
+</div>
+<div class=orders-container id=ordersListArea style=max-height:55vh;overflow-y:auto>
+<div style=text-align:center;color:#555;font-family:var(--font-mono);padding:30px data-i18n=orders_modal.loading>
+Ожидание данных...
+</div>
+</div>
+</div>
+</div>
+<div class=modal-overlay id=reviewsModal>
+<div class=modal-window style=max-width:600px>
+<div class=modal-header>
+<span class="modal-title typewriter" style=animation:none>REVIEWS.TXT</span>
+<button class=close-btn onclick='closeModal("reviewsModal")'>X</button>
+</div>
+<div class=orders-container>
+<p style=color:#aaa;margin-top:0;font-size:14px data-i18n=reviews_modal.desc>Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
+<div id=reviewsContainerList style=display:flex;flex-direction:column;gap:15px;max-height:60vh;overflow-y:auto;padding-right:10px>
+</div>
+</div>
+</div>
+</div>
+<script defer src=https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2></script>
+<script defer src=https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js></script>
+<script defer src=https://cdn.jsdelivr.net/npm/fuse.js@7.0.0></script>
+<script defer src=https://unpkg.com/rough-notation/lib/rough-notation.iife.js></script>
+<script defer src=https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js></script>
+<script defer src=https://cdn.jsdelivr.net/npm/@formkit/auto-animate@1.1.1/index.global.js></script>
+<script defer src=https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js></script>
+<script defer src=https://unpkg.com/imask></script>
+<script defer src=https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js></script>
+<script defer src=https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js></script>
+<link rel=stylesheet href=https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css>
+<script defer src=https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js></script>
+<script defer src=https://browser.sentry-cdn.com/7.105.0/bundle.min.js crossorigin=anonymous></script>
+<script defer src=https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js></script>
+<script defer src=https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js></script>
+<script src=config.js></script>
+<script defer src=app.js></script>
+<button class=fab-propose onclick=openProposeModal() title="Предложить вещь">
+<span style=display:block>[+]</span>
 </button>
-
-<div class="modal-overlay" id="profileModal">
-    <div class="modal-window" style="max-width: 450px;">
-        <div class="modal-header">
-            <span class="modal-title typewriter" style="animation: none;">USER_PROFILE.EXE</span>
-            <button class="close-btn" onclick="closeModal('profileModal')">X</button>
-        </div>
-        <div class="form-layout" id="modalAuthBox" style="padding: 25px 20px;">
-            
-            <div class="auth-fields" id="modalLoginForm" style="display: flex; flex-direction: column; gap: 15px;">
-                <p style="margin:0 0 5px 0; color:#aaa; font-size:13px; text-align: center; font-family: var(--font-mono);" data-i18n="sidebar.auth_req">АВТОРИЗАЦИЯ В СИСТЕМЕ</p>
-                
-                <input type="email" id="modalAuthEmail" class="form-input" placeholder="Email" style="padding: 15px;">
-                <input type="text" id="modalAuthUsername" class="form-input" placeholder="Никнейм" style="display: none; padding: 15px;">
-                <div class="password-wrapper">
-    <input type="password" id="modalAuthPass" class="form-input" placeholder="Пароль" style="padding: 15px;">
-    <div class="eye-icon" onclick="togglePasswordVisibility('modalAuthPass', this)" style="right: 15px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-            <line class="eye-slash" x1="2" y1="2" x2="22" y2="22"></line>
-        </svg>
-    </div>
+<div class=modal-overlay id=profileModal>
+<div class=modal-window style=max-width:450px>
+<div class=modal-header>
+<span class="modal-title typewriter" style=animation:none>USER_PROFILE.EXE</span>
+<button class=close-btn onclick='closeModal("profileModal")'>X</button>
 </div>
-                
-                <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
-                    <button class="cart-checkout-btn btn-target" id="modalBtnLogin" onclick="handleAuth('login', true)" style="width:100%;" data-i18n="sidebar.login">ВОЙТИ</button>
-                    <button class="cart-checkout-btn btn-target" id="modalBtnShowReg" onclick="toggleRegMode(true)" style="background: #111; color: #fff; width:100%; border-color:#444;" data-i18n="sidebar.reg">РЕГИСТРАЦИЯ</button>
-                    <!-- Кнопка Google для Мобилок -->
-<button class="cart-checkout-btn btn-target" onclick="loginWithGoogle()" style="background: #fff; color: #000; border-color: #fff; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-    <img src="https://www.google.com/favicon.ico" width="18"> ВОЙТИ ЧЕРЕЗ GOOGLE
+<div class=form-layout id=modalAuthBox style="padding:25px 20px">
+<div class=auth-fields id=modalLoginForm style=display:flex;flex-direction:column;gap:15px>
+<p style="margin:0 0 5px 0;color:#aaa;font-size:13px;text-align:center;font-family:var(--font-mono)" data-i18n=sidebar.auth_req>АВТОРИЗАЦИЯ В СИСТЕМЕ</p>
+<input type=email id=modalAuthEmail class=form-input placeholder=Email style=padding:15px>
+<input id=modalAuthUsername class=form-input placeholder=Никнейм style=display:none;padding:15px>
+<div class=password-wrapper>
+<input type=password id=modalAuthPass class=form-input placeholder=Пароль style=padding:15px>
+<div class=eye-icon onclick='togglePasswordVisibility("modalAuthPass",this)' style=right:15px>
+<svg viewBox="0 0 24 24" fill=none stroke-width=2 stroke-linecap=round stroke-linejoin=round>
+<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+<circle cx=12 cy=12 r=3></circle>
+<line class=eye-slash x1=2 y1=2 x2=22 y2=22></line>
+</svg>
+</div>
+</div>
+<div style=margin-top:10px;display:flex;flex-direction:column;gap:12px>
+<button class="cart-checkout-btn btn-target" id=modalBtnLogin onclick='handleAuth("login",!0)' style=width:100% data-i18n=sidebar.login>ВОЙТИ</button>
+<button class="cart-checkout-btn btn-target" id=modalBtnShowReg onclick=toggleRegMode(!0) style=background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
+<button class="cart-checkout-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:10px>
+<img src=https://www.google.com/favicon.ico width=18> ВОЙТИ ЧЕРЕЗ GOOGLE
 </button>
-                    <button class="cart-checkout-btn btn-target" id="modalBtnRegister" onclick="handleAuth('register', true)" style="display:none; background: var(--accent-green); color: #000; width:100%;" data-i18n="sidebar.create">СОЗДАТЬ АККАУНТ</button>
-                    <button class="cart-checkout-btn btn-target" id="modalBtnBackLogin" onclick="toggleRegMode(true)" style="display:none; background: #111; color: #fff; width:100%; border-color:#444;" data-i18n="sidebar.back">НАЗАД</button>
-                </div>
-            </div>
-            
-           <div class="auth-fields" id="modalProfileForm" style="display: none; text-align:center;">
-                <!-- Инфо блок -->
-                <div style="background: #0a0a0a; border: 1px solid #333; padding: 20px; text-align: left; font-family: var(--font-mono); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                    <div style="color: var(--accent-green); font-size: 11px; margin-bottom: 5px;">НИКНЕЙМ:</div>
-                    <div style="color: #fff; font-size: 16px; font-family: var(--font-main); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 15px;" id="modalProfileName">Loading...</div>
-                    
-                    <div style="color: #666; font-size: 11px; margin-bottom: 5px;">E-MAIL:</div>
-                    <div style="color: #aaa; font-size: 13px; border-bottom: 1px dashed #333; padding-bottom: 15px; margin-bottom: 15px; overflow: hidden; text-overflow: ellipsis;" id="modalProfileEmail">Loading...</div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #888; font-size: 13px;" data-i18n="profile.saved">СОХРАНЕНО:</span>
-                        <span style="color: var(--accent-red); font-size: 18px; font-weight: bold; text-shadow: 0 0 15px rgba(255,0,0,0.4);">❤ <span id="modalProfileLikesCount">0</span></span>
-                    </div>
-                </div>
-
-               <button class="cart-checkout-btn" onclick="logout(); closeModal('profileModal');" style="background: #333; color: #fff; margin-top: 25px; width: 100%; border-color: #555; text-transform: uppercase;" data-i18n="profile.logout">[ ВЫЙТИ ИЗ СИСТЕМЫ ]</button>
-            </div>
-            
-        </div>
-    </div>
+<button class="cart-checkout-btn btn-target" id=modalBtnRegister onclick='handleAuth("register",!0)' style=display:none;background:var(--accent-green);color:#000;width:100% data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
+<button class="cart-checkout-btn btn-target" id=modalBtnBackLogin onclick=toggleRegMode(!0) style=display:none;background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.back>НАЗАД</button>
 </div>
-
-
-<div class="modal-overlay" id="proposeModal">
-    <div class="modal-window" style="max-width: 550px;">
-        <div class="modal-header">
-            <span class="modal-title typewriter" style="animation: none;" data-i18n="propose.title">DROP_ITEM.EXE</span>
-         <button class="close-btn" onclick="closeModal('proposeModal'); resetProposalForm();">X</button>
-        </div>
-        
-        <div class="form-layout">
-            <div style="background: #111; padding: 15px; border-left: 3px solid var(--accent-red); margin-bottom: 10px;">
-                <p style="margin:0 0 5px 0; color:var(--accent-red); font-family:var(--font-mono); font-weight:bold; font-size:13px;" data-i18n="propose.safe_title">[ СИСТЕМА БЕЗОПАСНОЙ СДЕЛКИ ]</p>
-                <p style="margin:0; font-size:11px; color:#aaa; line-height:1.4;">
-                    <span data-i18n="propose.safe_1">1. Мы берем комиссию 15% с продажи.</span><br>
-                    <span data-i18n="propose.safe_2">2. <b>ДЕНЬГИ ПРИНИМАЕМ МЫ.</b> Вы получаете выплату только после того, как клиент забрал посылку.</span><br>
-                    <span data-i18n="propose.safe_3">3. Если клиент отказывается от вещи из-за скрытых вами дефектов или подделки — <b>вы оплачиваете доставку в обе стороны</b>, иначе вещь утилизируется.</span><br>
-                    <span data-i18n="propose.safe_4">4. На одном из фото ОБЯЗАТЕЛЬНО должна быть бумажка с вашим ником и датой.</span>
-                </p>
-            </div>
-            
-            <label data-i18n="propose.media_label">ФОТО / ВИДЕО (ДО 5 ШТУК):</label>
-            <input type="file" id="propFiles" class="form-input" accept="image/*,video/mp4" multiple style="display: none;">
-            
-            <div id="propDropzone" class="upload-dropzone" onclick="document.getElementById('propFiles').click()">
-                <div id="propPlaceholder" style="color: #666; font-family: var(--font-mono); font-size: 13px;" data-i18n="propose.media_click">📸 Нажмите, чтобы выбрать файлы</div>
-                <div id="propPreviewContainer" class="preview-container"></div>
-            </div>
-            
-            <label data-i18n="propose.brand_label">БРЕНД И МОДЕЛЬ:</label>
-            <input type="text" id="propBrand" class="form-input" placeholder="Например: Arcteryx Beta AR" data-i18n-ph="propose.brand_place">
-            
-            <label data-i18n="propose.size_label">РАЗМЕР И ЗАМЕРЫ:</label>
-            <input type="text" id="propSize" class="form-input" placeholder="Например: M (Длина 70, Грудь 55)" data-i18n-ph="propose.size_place">
-            
-            <label data-i18n="propose.cond_label">ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
-            <input type="number" id="propCond" class="form-input" placeholder="9" min="1" max="10" data-i18n-ph="propose.cond_place">
-            
-            <label data-i18n="propose.contact_label">СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
-            <input type="text" id="propContact" class="form-input" placeholder="@твои_ник или +380..." data-i18n-ph="propose.contact_place">
-            
-            <button class="cart-checkout-btn btn-target" id="btnSubmitProp" onclick="submitProposal()" style="margin-top: 15px; width: 100%;" data-i18n="propose.btn_submit">[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
-        </div>
-    </div>
 </div>
-<!-- ОКНО ДЛЯ НАПИСАНИЯ ОТЗЫВА ВРУЧНУЮ -->
-<div class="modal-overlay" id="writeReviewModal">
-    <div class="modal-window" style="max-width: 500px;">
-        <div class="modal-header">
-            <span class="modal-title typewriter" style="animation: none;">NEW_REVIEW.EXE</span>
-            <button class="close-btn" onclick="closeModal('writeReviewModal')">X</button>
-        </div>
-        <div class="form-layout">
-            <textarea id="manualReviewInput" class="form-input" style="height: 120px; resize: none; text-align: center;" placeholder="Напишите ваше мнение о покупке..."></textarea>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="cart-checkout-btn btn-target" onclick="submitManualReview()" style="flex: 1;">ОТПРАВИТЬ</button>
-                <button class="cart-checkout-btn btn-target" onclick="closeModal('writeReviewModal')" style="flex: 1; background: #333; color: #fff; border-color: #555;">ОТМЕНА</button>
-            </div>
-        </div>
-    </div>
+<div class=auth-fields id=modalProfileForm style=display:none;text-align:center>
+<div style="background:#0a0a0a;border:1px solid #333;padding:20px;text-align:left;font-family:var(--font-mono);box-shadow:inset 0 0 20px rgba(0,0,0,.5)">
+<div style=color:var(--accent-green);font-size:11px;margin-bottom:5px>НИКНЕЙМ:</div>
+<div style=color:#fff;font-size:16px;font-family:var(--font-main);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:15px id=modalProfileName>Loading...</div>
+<div style=color:#666;font-size:11px;margin-bottom:5px>E-MAIL:</div>
+<div style="color:#aaa;font-size:13px;border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px;overflow:hidden;text-overflow:ellipsis" id=modalProfileEmail>Loading...</div>
+<div style=display:flex;justify-content:space-between;align-items:center>
+<span style=color:#888;font-size:13px data-i18n=profile.saved>СОХРАНЕНО:</span>
+<span style="color:var(--accent-red);font-size:18px;font-weight:700;text-shadow:0 0 15px rgba(255,0,0,.4)">❤ <span id=modalProfileLikesCount>0</span></span>
 </div>
-
-<!-- ОКНО АВТО-ОТЗЫВА ЗА ПОСЫЛКУ -->
-<div class="modal-overlay" id="autoReviewModal">
-    <div class="modal-window" style="max-width: 500px;">
-        <div class="modal-header">
-            <span class="modal-title typewriter" style="animation: none; color: var(--accent-green);">DELIVERY_SUCCESS.LOG</span>
-            <button class="close-btn" onclick="closeModal('autoReviewModal')">X</button>
-        </div>
-        <div class="form-layout" style="align-items: center; text-align: center;">
-            <div id="autoReviewImg" style="width: 120px; height: 120px; background-size: cover; background-position: center; border: 2px inset #555; margin-bottom: 10px;"></div>
-            <div id="autoReviewName" style="color: #fff; font-family: var(--font-mono); font-weight: bold; margin-bottom: 15px;"></div>
-            
-            <input type="hidden" id="autoReviewOrderId">
-            <input type="hidden" id="autoReviewItemImage">
-            <input type="hidden" id="autoReviewItemId"> <!-- Добавили ID товара -->
-            
-            <textarea id="autoReviewInput" class="form-input" style="width: 100%; height: 90px; resize: none; text-align: center;" placeholder="Пару слов о покупке..."></textarea>
-            
-            <div style="display: flex; gap: 10px; width: 100%; margin-top: 10px;">
-                <button class="cart-checkout-btn btn-target" onclick="skipAutoReview()" style="flex: 1; background: #333; color: #fff; border-color: #555;" data-i18n="reviews_modal.later">ПОЗЖЕ</button>
-                <button class="cart-checkout-btn btn-target" onclick="submitAutoReview()" style="flex: 1;" data-i18n="reviews_modal.send">ОТПРАВИТЬ</button>
-            </div>
-        </div>
-    </div>
+</div>
+<button class=cart-checkout-btn onclick='logout(),closeModal("profileModal")' style=background:#333;color:#fff;margin-top:25px;width:100%;border-color:#555;text-transform:uppercase data-i18n=profile.logout>[ ВЫЙТИ ИЗ СИСТЕМЫ ]</button>
+</div>
+</div>
+</div>
+</div>
+<div class=modal-overlay id=proposeModal>
+<div class=modal-window style=max-width:550px>
+<div class=modal-header>
+<span class="modal-title typewriter" style=animation:none data-i18n=propose.title>DROP_ITEM.EXE</span>
+<button class=close-btn onclick='closeModal("proposeModal"),resetProposalForm()'>X</button>
+</div>
+<div class=form-layout>
+<div style="background:#111;padding:15px;border-left:3px solid var(--accent-red);margin-bottom:10px">
+<p style="margin:0 0 5px 0;color:var(--accent-red);font-family:var(--font-mono);font-weight:700;font-size:13px" data-i18n=propose.safe_title>[ СИСТЕМА БЕЗОПАСНОЙ СДЕЛКИ ]</p>
+<p style=margin:0;font-size:11px;color:#aaa;line-height:1.4>
+<span data-i18n=propose.safe_1>1. Мы берем комиссию 15% с продажи.</span><br>
+<span data-i18n=propose.safe_2>2. <b>ДЕНЬГИ ПРИНИМАЕМ МЫ.</b> Вы получаете выплату только после того, как клиент забрал посылку.</span><br>
+<span data-i18n=propose.safe_3>3. Если клиент отказывается от вещи из-за скрытых вами дефектов или подделки — <b>вы оплачиваете доставку в обе стороны</b>, иначе вещь утилизируется.</span><br>
+<span data-i18n=propose.safe_4>4. На одном из фото ОБЯЗАТЕЛЬНО должна быть бумажка с вашим ником и датой.</span>
+</p>
+</div>
+<label data-i18n=propose.media_label>ФОТО / ВИДЕО (ДО 5 ШТУК):</label>
+<input type=file id=propFiles class=form-input accept=image/*,video/mp4 multiple style=display:none>
+<div id=propDropzone class=upload-dropzone onclick='document.getElementById("propFiles").click()'>
+<div id=propPlaceholder style=color:#666;font-family:var(--font-mono);font-size:13px data-i18n=propose.media_click>📸 Нажмите, чтобы выбрать файлы</div>
+<div id=propPreviewContainer class=preview-container></div>
+</div>
+<label data-i18n=propose.brand_label>БРЕНД И МОДЕЛЬ:</label>
+<input id=propBrand class=form-input placeholder="Например: Arcteryx Beta AR" data-i18n-ph=propose.brand_place>
+<label data-i18n=propose.size_label>РАЗМЕР И ЗАМЕРЫ:</label>
+<input id=propSize class=form-input placeholder="Например: M (Длина 70, Грудь 55)" data-i18n-ph=propose.size_place>
+<label data-i18n=propose.cond_label>ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
+<input type=number id=propCond class=form-input placeholder=9 min=1 max=10 data-i18n-ph=propose.cond_place>
+<label data-i18n=propose.contact_label>СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
+<input id=propContact class=form-input placeholder="@твои_ник или +380..." data-i18n-ph=propose.contact_place>
+<button class="cart-checkout-btn btn-target" id=btnSubmitProp onclick=submitProposal() style=margin-top:15px;width:100% data-i18n=propose.btn_submit>[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
+</div>
+</div>
+</div>
+<div class=modal-overlay id=writeReviewModal>
+<div class=modal-window style=max-width:500px>
+<div class=modal-header>
+<span class="modal-title typewriter" style=animation:none>NEW_REVIEW.EXE</span>
+<button class=close-btn onclick='closeModal("writeReviewModal")'>X</button>
+</div>
+<div class=form-layout>
+<textarea id=manualReviewInput class=form-input style=height:120px;resize:none;text-align:center placeholder="Напишите ваше мнение о покупке..."></textarea>
+<div style=display:flex;gap:10px;margin-top:10px>
+<button class="cart-checkout-btn btn-target" onclick=submitManualReview() style=flex:1>ОТПРАВИТЬ</button>
+<button class="cart-checkout-btn btn-target" onclick='closeModal("writeReviewModal")' style=flex:1;background:#333;color:#fff;border-color:#555>ОТМЕНА</button>
+</div>
+</div>
+</div>
+</div>
+<div class=modal-overlay id=autoReviewModal>
+<div class=modal-window style=max-width:500px>
+<div class=modal-header>
+<span class="modal-title typewriter" style=animation:none;color:var(--accent-green)>DELIVERY_SUCCESS.LOG</span>
+<button class=close-btn onclick='closeModal("autoReviewModal")'>X</button>
+</div>
+<div class=form-layout style=align-items:center;text-align:center>
+<div id=autoReviewImg style="width:120px;height:120px;background-size:cover;background-position:center;border:2px inset #555;margin-bottom:10px"></div>
+<div id=autoReviewName style=color:#fff;font-family:var(--font-mono);font-weight:700;margin-bottom:15px></div>
+<input type=hidden id=autoReviewOrderId>
+<input type=hidden id=autoReviewItemImage>
+<input type=hidden id=autoReviewItemId>
+<textarea id=autoReviewInput class=form-input style=width:100%;height:90px;resize:none;text-align:center placeholder="Пару слов о покупке..."></textarea>
+<div style=display:flex;gap:10px;width:100%;margin-top:10px>
+<button class="cart-checkout-btn btn-target" onclick=skipAutoReview() style=flex:1;background:#333;color:#fff;border-color:#555 data-i18n=reviews_modal.later>ПОЗЖЕ</button>
+<button class="cart-checkout-btn btn-target" onclick=submitAutoReview() style=flex:1 data-i18n=reviews_modal.send>ОТПРАВИТЬ</button>
+</div>
+</div>
+</div>
 </div>
 </body>
 </html>
