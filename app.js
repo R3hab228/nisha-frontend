@@ -3027,7 +3027,8 @@ function openProductModal(item) {
         <div id="questionFormContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 5px;">
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <input type="text" id="questionInput" class="form-input" placeholder="Ваш вопрос..." data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
-                <button class="search-btn btn-target" onclick="submitQuestion('${item.id}', '${item.name.replace(/'/g, "\\'")}')" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${i18next.t('product.ask_send', {defaultValue: 'ОТПРАВИТЬ'})}</button>
+                <!-- Передаем только ID, а имя найдем внутри JS -->
+                <button class="search-btn btn-target" onclick="submitQuestion('${item.id}')" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${i18next.t('product.ask_send', {defaultValue: 'ОТПРАВИТЬ'})}</button>
             </div>
         </div>
     `;
@@ -4634,7 +4635,7 @@ window.toggleQuestionForm = function() {
     }
 };
 
-window.submitQuestion = async function(itemId, itemName) {
+window.submitQuestion = async function(itemId) {
     if (!currentUser) {
         showToast('Для отправки вопроса нужно войти в аккаунт!', 'error');
         openProfileModal();
@@ -4653,6 +4654,12 @@ window.submitQuestion = async function(itemId, itemName) {
     
     if (questionData.date !== today) questionData = { date: today, count: 0 };
     if (questionData.count >= 2) return showToast('Лимит: 2 вопроса в день.', 'error');
+
+    // ДОСТАЕМ БЕЗОПАСНОЕ ИМЯ ТОВАРА ПРЯМО ИЗ ГЛОБАЛЬНОЙ ПЕРЕМЕННОЙ
+    let itemName = "Товар";
+    if (currentOpenedItem && currentOpenedItem.id === itemId) {
+        itemName = currentOpenedItem.name;
+    }
 
     try {
         const res = await fetch('https://nisha-api.onrender.com/api/question', {
@@ -4674,7 +4681,7 @@ window.submitQuestion = async function(itemId, itemName) {
             localStorage.setItem('nisha_questions', JSON.stringify(questionData));
             input.value = '';
             window.toggleQuestionForm(); 
-            showToast('Вопрос отправлен! Мы ответим на E-mail.', 'success');
+            showToast('Вопрос отправлен!', 'success');
         } else {
             showToast('Ошибка при отправке вопроса.', 'error');
         }
