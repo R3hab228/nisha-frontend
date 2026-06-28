@@ -4612,21 +4612,77 @@ window.removeHistoryItem = function(event, itemId) {
 // ЛОГИКА СТРЕЛОЧЕК В ЛЕНТЕ НА ПК
 // ==========================================
 window.scrollGridSlider = function(event, itemId, direction) {
-    // Останавливаем клик, чтобы не открылась карточка товара
     event.stopPropagation();
-    
     const slider = document.getElementById(`slider-${itemId}`);
     if (!slider) return;
-
-    // Ширина одной фотографии
     const slideWidth = slider.offsetWidth;
-    
-    // Скроллим на одну фотку влево (-1) или вправо (1)
-    slider.scrollBy({
-        left: slideWidth * direction,
-        behavior: 'smooth'
-    });
+    slider.scrollBy({ left: slideWidth * direction, behavior: 'smooth' });
 };
+
+// ==========================================
+// ЛОГИКА "ЗАДАТЬ ВОПРОС"
+// ==========================================
+window.toggleQuestionForm = function() {
+    const container = document.getElementById('questionFormContainer');
+    if (!container) return;
+    
+    if (container.style.maxHeight === '0px' || container.style.maxHeight === '') {
+        container.style.maxHeight = '100px';
+        setTimeout(() => document.getElementById('questionInput').focus(), 100);
+    } else {
+        container.style.maxHeight = '0px';
+    }
+};
+
+window.submitQuestion = async function(itemId, itemName) {
+    if (!currentUser) {
+        showToast('Для отправки вопроса нужно войти в аккаунт!', 'error');
+        openProfileModal();
+        return;
+    }
+
+    const input = document.getElementById('questionInput');
+    const text = input.value.trim();
+    if (text.length < 5) {
+        showToast('Вопрос слишком короткий!', 'error');
+        return;
+    }
+
+    const today = new Date().toLocaleDateString('en-CA');
+    let questionData = JSON.parse(localStorage.getItem('nisha_questions') || '{"date":"","count":0}');
+    
+    if (questionData.date !== today) questionData = { date: today, count: 0 };
+    if (questionData.count >= 2) return showToast('Лимит: 2 вопроса в день.', 'error');
+
+    try {
+        const res = await fetch('https://nisha-api.onrender.com/api/question', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                userId: currentUser.id,
+                email: currentUser.email || 'Неизвестно',
+                itemId: itemId, 
+                itemName: itemName, 
+                questionText: text 
+            })
+        });
+
+        const data = await res.json();
+        
+        if (data.success) {
+            questionData.count += 1;
+            localStorage.setItem('nisha_questions', JSON.stringify(questionData));
+            input.value = '';
+            window.toggleQuestionForm(); 
+            showToast('Вопрос отправлен! Мы ответим на E-mail.', 'success');
+        } else {
+            showToast('Ошибка при отправке вопроса.', 'error');
+        }
+    } catch (err) {
+        showToast('Ошибка соединения с сервером.', 'error');
+    }
+};
+
 
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {
