@@ -3017,8 +3017,14 @@ function openProductModal(item) {
         </div>
         <div style="color: #aaa; font-size: 13px;">${descText}</div>
         
-        <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ -->
-        <div id="productQAContainer" style="margin-top: 20px; border-top: 1px dashed #333; padding-top: 10px; display: none;"></div>
+        <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ (АККОРДЕОН) -->
+        <div id="qaWrapper" class="qa-wrapper">
+            <h4 class="qa-title" onclick="document.getElementById('qaList').classList.toggle('collapsed'); this.querySelector('span').style.transform = document.getElementById('qaList').classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';">
+                Q&A: Вопросы покупателей
+                <span style="transition: transform 0.2s; color: var(--accent-green);">▼</span>
+            </h4>
+            <div id="qaList" class="qa-content"></div>
+        </div>
 
         <!-- КНОПКА ЗАДАТЬ ВОПРОС -->
         <div style="margin-top: 15px; text-align: right;">
@@ -3276,25 +3282,8 @@ function openProductModal(item) {
         url.searchParams.delete('item');
         window.history.replaceState(null, '', url.pathname + url.search);
     }
-    // Загружаем вопросы и ответы для этого товара
-    if (_supabase) {
-        _supabase.from('item_questions').select('*').eq('item_id', item.id).order('created_at', { ascending: true }).then(({ data, error }) => {
-            const qaCont = document.getElementById('productQAContainer');
-            if (data && data.length > 0 && qaCont) {
-                qaCont.style.display = 'block';
-                qaCont.innerHTML = '<h4 style="color:#555; margin: 0 0 10px 0; font-family: var(--font-mono); font-size:12px;">Q&A:</h4>';
-                data.forEach(q => {
-                    let answerHtml = q.answer ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">↳ NISHA: ${q.answer}</div>` : '';
-                    qaCont.innerHTML += `
-                        <div style="border-left: 2px solid #333; padding-left: 10px; margin-bottom: 12px; font-family: var(--font-main);">
-                            <span style="color:#888; font-size:11px; font-family:var(--font-mono);">@${q.user_name}:</span>
-                            <div style="color:#ddd; font-size:13px; margin-top:2px;">${q.question}</div>
-                            ${answerHtml}
-                        </div>`;
-                });
-            }
-        });
-    }
+    // Загружаем вопросы и рендерим
+    if (_supabase) window.loadItemQuestions(item.id);
 }
 
 let currentSlide = 0;
@@ -4689,6 +4678,43 @@ window.submitQuestion = async function(itemId) {
         showToast('Ошибка соединения с сервером.', 'error');
     }
 };
+// ==========================================
+// ЛОГИКА ОТОБРАЖЕНИЯ И ОБНОВЛЕНИЯ Q&A
+// ==========================================
+window.loadItemQuestions = async function(itemId) {
+    const { data, error } = await _supabase.from('item_questions').select('*').eq('item_id', itemId).order('created_at', { ascending: true });
+    
+    const wrapper = document.getElementById('qaWrapper');
+    const list = document.getElementById('qaList');
+    
+    if (data && data.length > 0 && wrapper && list) {
+        wrapper.style.display = 'block';
+        list.innerHTML = '';
+        data.forEach(q => {
+            let answerHtml = q.answer ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">↳ NISHA: ${q.answer}</div>` : '';
+            list.innerHTML += `
+                <div style="border-left: 2px solid #333; padding-left: 10px; margin-bottom: 12px; font-family: var(--font-main);">
+                    <span style="color:#888; font-size:11px; font-family:var(--font-mono);">@${q.user_name}:</span>
+                    <div style="color:#ddd; font-size:13px; margin-top:2px;">${q.question}</div>
+                    ${answerHtml}
+                </div>`;
+        });
+    } else if (wrapper) {
+        wrapper.style.display = 'none'; // Прячем весь блок, если вопросов нет
+    }
+};
+
+// Подписываемся на обновления в реальном времени (когда открыта карточка)
+if (_supabase) {
+    _supabase.channel('public-qa-updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'item_questions' }, payload => {
+            // Если сейчас открыта карточка товара и пришло обновление именно по этому товару
+            if (currentOpenedItem && payload.new && payload.new.item_id === currentOpenedItem.id) {
+                window.loadItemQuestions(currentOpenedItem.id); // Перерисовываем список вопросов наживую!
+            }
+        })
+        .subscribe();
+}
 
 
 // Запускаем инициализацию после загрузки
