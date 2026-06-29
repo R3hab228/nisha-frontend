@@ -1613,18 +1613,34 @@ localStorage.removeItem('nisha_cart_reminded');
 // Изменено для создания DOM элементов вручную (чтобы работал AutoAnimate и Tilt.js)
 
 function sortItems(type) {
+    // 1. Переключаем активный класс
     document.getElementById('sort-new').classList.remove('active-sort');
     document.getElementById('sort-cheap').classList.remove('active-sort');
     document.getElementById('sort-' + type).classList.add('active-sort');
     
-    // Эффект мигания счетчика
+    // 2. Делаем красивое мигание желтым цветом, чтобы показать, что процесс пошел
     const countEl = document.getElementById('itemCount');
     if (countEl) {
-        countEl.style.opacity = '0';
-        setTimeout(() => { countEl.style.opacity = '1'; }, 200);
+        countEl.style.transition = '0.3s';
+        countEl.style.opacity = '0.2';
+        countEl.style.color = 'var(--accent-yellow)';
+        setTimeout(() => { 
+            countEl.style.opacity = '1'; 
+            countEl.style.color = 'var(--accent-green)';
+        }, 300);
     }
     
+    // 3. Запускаем саму сортировку (ту, которую мы обновили в прошлом шаге)
     applyFilters();
+    
+    // 4. Плавно прокручиваем экран к товарам, чтобы юзер сразу увидел самые дешевые
+    setTimeout(() => {
+        const grid = document.getElementById('itemsGrid');
+        if (grid) {
+            const y = grid.getBoundingClientRect().top + window.scrollY - 100;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    }, 100);
 }
 
 function setCategoryFilter(cat, element) { 
