@@ -1,4 +1,3 @@
-
 // ==========================================
 // HAPTIC FEEDBACK (ТАКТИЛЬНАЯ ОТДАЧА ДЛЯ ТЕЛЕФОНОВ)
 // ==========================================
@@ -59,6 +58,7 @@ function changeLanguage(lng) {
             const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
             showToast(msg, 'success');
 
+            
             // Если мобильное меню открыто/закрыто — переводим кнопку фильтров
             const sidebar = document.querySelector('.sidebar');
             const btn = document.getElementById('mobileFilterBtn');
@@ -76,6 +76,7 @@ function changeLanguage(lng) {
         });
     }
 }
+
 
 // === АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ САЙТА (БЕЗ КЭША) ===
 if ('serviceWorker' in navigator) {
@@ -1017,6 +1018,15 @@ async function logout() {
 let renderedCount = 0;
 let filteredItems = [];
 
+// Было
+function getOptimizedImageUrl(item, wantsThumb = false) {
+    if (!item) return '';
+    if (wantsThumb && item.thumbnails && item.thumbnails.length > 0) {
+        return item.thumbnails[0];
+    }
+    return (item.images && item.images.length > 0) ? item.images[0] : '';
+}
+
 // СТАЛО: Заменяем домен Supabase на наш локальный прокси
 function getOptimizedImageUrl(item, wantsThumb = false) {
     if (!item) return '';
@@ -1590,8 +1600,8 @@ async function addToCartById(itemId) {
     localStorage.setItem('nisha_cart', JSON.stringify(cart));
     await syncCartToServer();
     
-    localStorage.setItem('nisha_cart_time', Date.now());
-    localStorage.removeItem('nisha_cart_reminded');
+localStorage.setItem('nisha_cart_time', Date.now());
+localStorage.removeItem('nisha_cart_reminded');
     updateCartUI();
     showToast(i18next.t('messages.cart_add'), 'success', getOptimizedImageUrl(item, true));
 }
@@ -1625,6 +1635,7 @@ function setCategoryFilter(cat, element) {
     
     applyFilters(); 
 }
+// --- АНИМАЦИЯ ПОЛЕТА В КОРЗИНУ ---
 // --- АНИМАЦИЯ ПОЛЕТА В КОРЗИНУ ---
 function addToCartWithAnimation(itemId, btnElement, event) {
     if (event) event.stopPropagation(); 
@@ -1860,42 +1871,22 @@ async function addToCartFromModal() {
 
 function updateCartUI() {
     const p = document.getElementById('cartPanel');
-    const fab = document.querySelector('.fab-propose');
     if (!p) return; 
     
     if (cart.length === 0) { 
-        p.classList.remove('show'); 
-        if(fab) {
-            fab.classList.remove('cart-active'); // Опускаем кнопку вниз
-            fab.classList.remove('hidden-scroll'); // ПРИНУДИТЕЛЬНО возвращаем, если она была спрятана
-            fab.style.display = 'flex'; // ЖЕЛЕЗОБЕТОННО делаем видимой
-            fab.style.opacity = '1';
-            fab.style.pointerEvents = 'auto';
-        }
+        p.classList.remove('show'); // Плавно уезжает вниз
         return; 
     }
     
-    p.classList.add('show'); 
-    if(fab) fab.classList.add('cart-active'); // Поднимаем кнопку над корзиной
-    
+    p.classList.add('show'); // Плавно выезжает вверх
     document.getElementById('cartCount').innerText = cart.length;
     let total = cart.reduce((sum, item) => sum + item.price, 0);
-    
-    // Применяем скидку по промокоду, если она есть
-    if (typeof currentPromoDiscount !== 'undefined' && currentPromoDiscount > 0) {
-        const savedMoney = Math.floor(total * currentPromoDiscount);
-        total = total - savedMoney;
-        
-        // Динамически обновляем надпись экономии в модалке заказа
-        const msg = document.getElementById('promoMessage');
-        if (msg && appliedPromoCode) {
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Ви зекономили: <b>${savedMoney} грн</b></span></span>`;
-        }
+    if (currentPromoDiscount > 0) {
+        total = Math.floor(total - (total * currentPromoDiscount));
     }
     document.getElementById('cartTotal').innerText = total + ' ' + getCurrency();
     
-    // Вызываем отрисовку внутреннего списка (если она объявлена)
-    if (typeof renderCartItems === 'function') renderCartItems();
+    if (typeof renderCartItems === 'function') renderCartItems(); 
 }
 
 // ==========================================
@@ -2255,6 +2246,47 @@ async function removeFromCart(index, event, rowElement) {
         await executeRemoval();
     }
 }
+
+function updateCartUI() {
+    const p = document.getElementById('cartPanel');
+    const fab = document.querySelector('.fab-propose');
+    if (!p) return; 
+    
+    if (cart.length === 0) { 
+        p.classList.remove('show'); 
+        if(fab) {
+            fab.classList.remove('cart-active'); // Опускаем кнопку вниз
+            fab.classList.remove('hidden-scroll'); // ПРИНУДИТЕЛЬНО возвращаем, если она была спрятана
+            fab.style.display = 'flex'; // ЖЕЛЕЗОБЕТОННО делаем видимой
+            fab.style.opacity = '1';
+            fab.style.pointerEvents = 'auto';
+        }
+        return; 
+    }
+    
+    p.classList.add('show'); 
+    if(fab) fab.classList.add('cart-active'); // Поднимаем кнопку над корзиной
+    
+    document.getElementById('cartCount').innerText = cart.length;
+    let total = cart.reduce((sum, item) => sum + item.price, 0);
+    
+    // Применяем скидку по промокоду, если она есть
+    if (typeof currentPromoDiscount !== 'undefined' && currentPromoDiscount > 0) {
+        const savedMoney = Math.floor(total * currentPromoDiscount);
+        total = total - savedMoney;
+        
+        // Динамически обновляем надпись экономии в модалке заказа
+        const msg = document.getElementById('promoMessage');
+        if (msg && appliedPromoCode) {
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Ви зекономили: <b>${savedMoney} грн</b></span></span>`;
+        }
+    }
+    document.getElementById('cartTotal').innerText = total + ' грн';
+    
+    // Вызываем отрисовку внутреннего списка (если она объявлена)
+    if (typeof renderCartItems === 'function') renderCartItems();
+}
+
 
 function closeCartDropdown(e) {
     if (e) e.stopPropagation();
@@ -2669,6 +2701,14 @@ async function executeOrderFinal(emailToSave) {
                 btnSubmit.style.opacity = "1";
             }, 3500);
         }, 300); // Ждем треть секунды, чтобы юзер увидел 100%
+        
+        setTimeout(() => { 
+            overlay.style.display = 'none'; 
+            loadAllItems(); 
+            btnSubmit.innerText = "ПОДТВЕРДИТЬ ЗАКАЗ";
+            btnSubmit.style.pointerEvents = "auto";
+            btnSubmit.style.opacity = "1";
+        }, 3500);
 
     } catch (err) {
         showToast('Ошибка при оформлении: ' + err.message, 'error');
@@ -3377,6 +3417,9 @@ async function openWaitlist() {
 // ==========================================
 // 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
 // ==========================================
+// ==========================================
+// 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
+// ==========================================
 function addToHistory(item) {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     hist = hist.filter(i => i.id !== item.id);
@@ -3682,6 +3725,12 @@ function handleLiveSearch() {
         return;
     }
 
+    if (searchTerm.length < 2) {
+        closeSearch();
+        applyFilters();
+        return;
+    }
+
     searchDebounce = setTimeout(() => {
         // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ FUSE.JS (СИНХРОННО С ГЛАВНОЙ ЛЕНТОЙ)
         const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
@@ -3744,9 +3793,10 @@ function closeSearch() {
     if (searchInput) searchInput.blur(); // Принудительно прячем клавиатуру
 }
 
+
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-wrapper')) {
-        closeSearch(); 
+        closeSearch(); // Используем нашу новую функцию
     }
 });
 async function toggleFavFromModal(event) {
@@ -4682,4 +4732,3 @@ document.addEventListener('DOMContentLoaded', () => {
     initMobileSwipe();
     
 });
-
