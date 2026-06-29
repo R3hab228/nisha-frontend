@@ -2688,13 +2688,6 @@ async function executeOrderFinal(emailToSave) {
             }, 3500);
         }, 300); // Ждем треть секунды, чтобы юзер увидел 100%
         
-        setTimeout(() => { 
-            overlay.style.display = 'none'; 
-            loadAllItems(); 
-            btnSubmit.innerText = "ПОДТВЕРДИТЬ ЗАКАЗ";
-            btnSubmit.style.pointerEvents = "auto";
-            btnSubmit.style.opacity = "1";
-        }, 3500);
 
     } catch (err) {
         showToast('Ошибка при оформлении: ' + err.message, 'error');
@@ -3403,9 +3396,6 @@ async function openWaitlist() {
 // ==========================================
 // 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
 // ==========================================
-// ==========================================
-// 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
-// ==========================================
 function addToHistory(item) {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     hist = hist.filter(i => i.id !== item.id);
@@ -3637,7 +3627,6 @@ function toggleMobileSidebar() {
 
     const sidebar = document.querySelector('.sidebar');
     const btn = document.getElementById('mobileFilterBtn');
-    // ... дальше старый код
     const fab = document.querySelector('.fab-propose'); 
     
     sidebar.classList.toggle('active-mobile');
