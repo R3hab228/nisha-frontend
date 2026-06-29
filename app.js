@@ -26,14 +26,6 @@ console.log(`
     LOOKING AT THE SOURCE CODE? 
 `);
 
-function updateContentLanguage() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        el.innerText = i18next.t(key);
-    });
-    const searchInput = document.getElementById('mainSearch');
-    if (searchInput) searchInput.placeholder = i18next.t('search.placeholder');
-}
 
 function toggleLangDropdown(event) {
     event.stopPropagation();
@@ -198,21 +190,6 @@ function startSearchTypewriter() {
     }, 100); // Скорость печати
 }
 
-
-function changeLanguage(lng) {
-    if (typeof i18next !== 'undefined') {
-        i18next.changeLanguage(lng).then(() => {
-            updateContentLanguage();
-            const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
-            showToast(msg, 'success');
-            
-            // --- СИНХРОНИЗАЦИЯ ЯЗЫКА С БАЗОЙ ---
-            if (currentUser && _supabase) {
-                _supabase.from('profiles').update({ language: lng }).eq('id', currentUser.id).then();
-            }
-        });
-    }
-}
 // ==========================================
 // БЕЗОПАСНЫЙ ПЛАВНЫЙ СКРОЛЛ (ТОЛЬКО ДЛЯ ПК)
 // ==========================================
@@ -1622,7 +1599,7 @@ async function addToCartById(itemId) {
     
     localStorage.setItem('nisha_cart', JSON.stringify(cart));
     await syncCartToServer();
-    // В самом конце функции addToCartById(itemId) перед updateCartUI() добавь:
+    
 localStorage.setItem('nisha_cart_time', Date.now());
 localStorage.removeItem('nisha_cart_reminded');
     updateCartUI();
@@ -3815,12 +3792,7 @@ function closeSearch() {
     document.body.classList.remove('search-lock');
     if (searchInput) searchInput.blur(); // Принудительно прячем клавиатуру
 }
-// Добавим вспомогательную функцию для чистого закрытия
-function closeSearch() {
-    const dropdown = document.getElementById('liveSearchDropdown');
-    if (dropdown) dropdown.style.display = 'none';
-    document.body.classList.remove('search-lock');
-}
+
 
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-wrapper')) {
