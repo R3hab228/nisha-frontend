@@ -2,18 +2,17 @@
 // HAPTIC FEEDBACK (ТАКТИЛЬНАЯ ОТДАЧА ДЛЯ ТЕЛЕФОНОВ)
 // ==========================================
 function triggerHaptic(type = 'light') {
-    // Проверяем, что это телефон и браузер поддерживает вибрацию
     if (window.innerWidth > 900 || !navigator.vibrate) return;
     
     try {
         switch(type) {
-            case 'light': navigator.vibrate(10); break; // Очень короткий щелчок (Лайк, Фильтры)
-            case 'medium': navigator.vibrate(20); break; // Плотный щелчок (Открытие карточки)
-            case 'heavy': navigator.vibrate(40); break; // Тяжелый удар (Удаление из корзины)
-            case 'success': navigator.vibrate([15, 50, 15]); break; // Двойной щелчок (Добавлено в корзину)
-            case 'error': navigator.vibrate([20, 40, 20, 40, 20]); break; // Тройное дребезжание (Ошибка/Лимит)
+            case 'light': navigator.vibrate(25); break;  // 25мс - телефон точно почувствует
+            case 'medium': navigator.vibrate(40); break; 
+            case 'heavy': navigator.vibrate(70); break;  
+            case 'success': navigator.vibrate([20, 60, 20]); break; 
+            case 'error': navigator.vibrate([30, 50, 30, 50, 30]); break; 
         }
-    } catch(e) {} // Глушим любые ошибки старых айфонов
+    } catch(e) {} 
 }
 
 console.log(`
@@ -2198,10 +2197,33 @@ function renderCartItems() {
         return;
     }
 
+    // --- ЛОГИКА ПРОГРЕСС-БАРА ДОСТАВКИ ---
+    const FREE_SHIPPING_LIMIT = 2000; // Сумма для бесплатной доставки (можешь поменять на свою)
+    let cartTotalForBar = cart.reduce((sum, item) => sum + item.price, 0);
+    let remainingAmount = FREE_SHIPPING_LIMIT - cartTotalForBar;
+    let progressPercent = Math.min(100, (cartTotalForBar / FREE_SHIPPING_LIMIT) * 100);
+    let barColor = remainingAmount > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+    const curr = getCurrency();
+
+    let shippingText = remainingAmount > 0 
+        ? `${i18next.t('cart.add_more', {defaultValue: 'Добавь еще на'})} ${remainingAmount} ${curr}`
+        : `<span style="color: var(--accent-green); font-weight: bold; text-shadow: 0 0 5px rgba(0,255,0,0.5);">${i18next.t('cart.free_unlocked', {defaultValue: '[ ДОСТАВКА БЕСПЛАТНА ]'})}</span>`;
+
     list.innerHTML = `
-        <div style="padding: 8px 10px; margin-bottom: 15px; border-bottom: 1px solid #222; text-align: center;">
+        <!-- ПРОГРЕСС-БАР -->
+        <div style="margin: 0 10px 15px 10px; border: 1px dashed #333; background: #050505; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: #aaa; margin-bottom: 10px; text-transform: uppercase;">
+                <span>FREE SHIPPING</span>
+                <span>${shippingText}</span>
+            </div>
+            <div style="height: 6px; background: #111; border: 1px solid #222; position: relative;">
+                <div style="height: 100%; width: ${progressPercent}%; background: ${barColor}; transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 0 10px ${barColor};"></div>
+            </div>
+        </div>
+
+        <div style="padding: 0 10px 15px 10px; border-bottom: 1px solid #222; text-align: center;">
             <span style="color: #666; font-size: 11px; font-family: var(--font-main);">
-                ⚠️ Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.
+                ⚠️ ${i18next.t('cart.warning', {defaultValue: 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'})}
             </span>
         </div>
     `;

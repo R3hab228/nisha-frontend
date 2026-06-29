@@ -59,7 +59,10 @@
         "title": "[ ВАШИ ПОКУПКИ ]",
         "checkout": "ОФОРМИТЬ ЗАКАЗ",
         "empty_title": "КОРЗИНА ПУСТА",
-        "empty_desc": "Вы еще ничего не добавили."
+        "empty_desc": "Вы еще ничего не добавили.",
+        "add_more": "Добавь еще на",
+        "free_unlocked": "[ ДОСТАВКА БЕСПЛАТНА ]",
+        "warning": "Товары не забронированы и могут быть куплены кем-то другим до момента оплаты."
       },
       "footer": {
         "visitors": "VISITORS:",
@@ -280,7 +283,10 @@
         "title": "[ ВАШІ ПОКУПКИ ]",
         "checkout": "ОФОРМИТИ ЗАМОВЛЕННЯ",
         "empty_title": "КОШИК ПОРОЖНІЙ",
-        "empty_desc": "Ви ще нічого не додали."
+        "empty_desc": "Ви ще нічого не додали.",
+        "add_more": "Додай ще на",
+        "free_unlocked": "[ ДОСТАВКА БЕЗКОШТОВНА ]",
+        "warning": "Товари не заброньовані і можуть бути куплені кимось іншим до моменту оплати."
       },
       "footer": {
         "visitors": "VISITORS:",
@@ -502,7 +508,10 @@
         "title": "[ YOUR CART ]",
         "checkout": "CHECKOUT",
         "empty_title": "CART IS EMPTY",
-        "empty_desc": "You haven't added anything yet."
+        "empty_desc": "You haven't added anything yet.",
+        "add_more": "Add items for",
+        "free_unlocked": "[ FREE SHIPPING UNLOCKED ]",
+        "warning": "Items are not reserved and can be purchased by someone else until payment is made."
       },
       "footer": {
         "visitors": "VISITORS:",
