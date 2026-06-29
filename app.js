@@ -2197,8 +2197,7 @@ function renderCartItems() {
         return;
     }
 
-    // --- ИДЕАЛЬНЫЙ ПРОГРЕСС-БАР ---
-    // --- ПРОГРЕСС-БАР СО ШКАЛОЙ ---
+    // --- ГЕЙМДИЗАЙН ПРОГРЕСС-БАР (ФИНАЛ) ---
     const FREE_SHIPPING_LIMIT = 2000;
     let cartTotalForBar = cart.reduce((sum, item) => sum + item.price, 0);
     let remainingAmount = FREE_SHIPPING_LIMIT - cartTotalForBar;
@@ -2207,32 +2206,32 @@ function renderCartItems() {
     let barColor = remainingAmount > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)';
     const curr = getCurrency();
 
-    // Если доставка бесплатная, меняем надпись по центру
-    let centerText = remainingAmount > 0 
-        ? "FREE SHIPPING" 
-        : `<span style="color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.4);">[ ДОСТАВКА БЕСПЛАТНА ]</span>`;
+    // Текст без скобок, уменьшенный шрифт
+    let topTextHTML = remainingAmount > 0 
+        ? `FREE SHIPPING` 
+        : `<span style="color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.4); font-size: 10px;">ДОСТАВКА БЕСПЛАТНА</span>`;
 
     list.innerHTML = `
-        <div style="padding: 10px; margin-bottom: 10px; border-bottom: 1px dashed #333; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 10px; margin-bottom: 10px; border-bottom: 1px dashed #333; display: flex; flex-direction: column; gap: 10px;">
             
             <!-- Центральная надпись -->
-            <div style="text-align: center; font-size: 11px; font-family: var(--font-mono); color: #888; letter-spacing: 1px; font-weight: bold;">
-                ${centerText}
+            <div style="text-align: center; font-size: 11px; font-family: var(--font-mono); font-weight: bold; color: #aaa; letter-spacing: 2px;">
+                ${topTextHTML}
             </div>
-
-            <!-- Шкала с цифрами по краям -->
-            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                <span style="color: var(--accent-green); font-family: var(--font-mono); font-size: 10px; font-weight: bold;">0</span>
+            
+            <!-- Блок со шкалой и цифрами по бокам -->
+            <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 10px; font-weight: bold;">
+                <span style="color: #555;">0</span>
                 
-                <div style="height: 4px; width: 100%; background: #222; border-radius: 2px; overflow: hidden; position: relative; flex-grow: 1;">
+                <div style="flex-grow: 1; height: 4px; background: #222; border-radius: 2px; position: relative; overflow: hidden;">
                     <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${progressPercent}%; background: ${barColor}; transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);"></div>
                 </div>
                 
-                <span style="color: #666; font-family: var(--font-mono); font-size: 10px;">2000 ${curr}</span>
+                <span style="color: var(--accent-green);">${FREE_SHIPPING_LIMIT} ${curr}</span>
             </div>
 
-            <!-- Предупреждение -->
-            <div style="color: #555; font-size: 10px; font-family: var(--font-main); text-align: center; margin-top: 5px;">
+            <!-- Текст предупреждения -->
+            <div style="color: #666; font-size: 10px; font-family: var(--font-main); text-align: center; margin-top: 5px;">
                 ${i18next.t('cart.warning', {defaultValue: 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'})}
             </div>
         </div>
