@@ -1,1 +1,67 @@
-const CACHE_NAME="nisha-cache-v105",STATIC_URLS=["/","/index.html","/app.js","/config.js","/style.css","/locales.json"];self.addEventListener("install",e=>{self.skipWaiting(),e.waitUntil(caches.open(CACHE_NAME).then(e=>e.addAll(STATIC_URLS)))}),self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(e=>Promise.all(e.map(e=>{if(e!==CACHE_NAME)return caches.delete(e)})))),self.clients.claim()}),self.addEventListener("fetch",e=>{if(!e.request.url.startsWith("http"))return;let t=new URL(e.request.url);!(t.pathname.endsWith(".mp4")||t.pathname.endsWith(".webm")||t.href.includes("supabase.co/storage")||t.href.includes("/cdn-images/")||e.request.headers.get("range")||t.pathname.startsWith("/api/")||t.hostname.includes("supabase.co")||t.hostname.includes("novaposhta")||t.hostname.includes("onrender.com"))&&e.respondWith(caches.match(e.request).then(t=>{let n=fetch(e.request).then(t=>{if(t&&200===t.status&&"basic"===t.type){let n=t.clone();caches.open(CACHE_NAME).then(t=>t.put(e.request,n))}return t}).catch(()=>{});return t||n}))});
+const CACHE_NAME = 'nisha-cache-v106'; 
+const STATIC_URLS = ['/', '/index.html', '/app.js', '/config.js', '/style.css', '/locales.json'];
+
+self.addEventListener('install', event => {
+    self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_URLS))
+    );
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
+                })
+            );
+        })
+    );
+    self.clients.claim();
+});
+
+self.addEventListener('fetch', event => {
+    if (!event.request.url.startsWith('http')) return;
+
+    const url = new URL(event.request.url);
+
+    if (
+        url.pathname.endsWith('.mp4') || 
+        url.pathname.endsWith('.webm') || 
+        url.href.includes('supabase.co/storage') ||
+        url.href.includes('/cdn-images/') ||
+        event.request.headers.get('range')
+    ) {
+        return; 
+    }
+
+    if (
+        url.pathname.startsWith('/api/') || 
+        url.hostname.includes('supabase.co') || 
+        url.hostname.includes('novaposhta') ||
+        url.hostname.includes('onrender.com')
+    ) {
+        return; 
+    }
+
+    event.respondWith(
+        caches.match(event.request).then(cachedResponse => {
+            const fetchPromise = fetch(event.request).then(networkResponse => {
+                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+                }
+                return networkResponse;
+            }).catch(() => {
+                // Если пропал интернет и страницы нет в кэше — отдаем главную страницу (интерфейс загрузится из кэша)
+                // Так как у нас Single Page App, главная страница сможет сказать "Нет связи с БД" вместо вылета динозавра
+                if (event.request.mode === 'navigate') {
+                    return caches.match('/');
+                }
+            });
+            
+            return cachedResponse || fetchPromise;
+        })
+    );
+});
