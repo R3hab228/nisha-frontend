@@ -2016,7 +2016,7 @@ async function loadNPBranches(searchString = "") {
     // ВСТАВИТЬ ЭТУ СТРОЧКУ ЗАЩИТЫ:
     if (typeof searchString !== 'string') searchString = ""; 
 
-    if(!selectedCityRef) return;
+    
     if(!selectedCityRef) return;
     
     const input = document.getElementById('orderBranch');
@@ -3709,11 +3709,6 @@ function handleLiveSearch() {
         return;
     }
 
-    if (searchTerm.length < 2) {
-        closeSearch();
-        applyFilters();
-        return;
-    }
 
     searchDebounce = setTimeout(() => {
         // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ FUSE.JS (СИНХРОННО С ГЛАВНОЙ ЛЕНТОЙ)
