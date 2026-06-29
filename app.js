@@ -59,23 +59,23 @@ function triggerHaptic(e="light"){if(!(window.innerWidth>900)&&navigator.vibrate
                 <div style="font-size: 30px; margin-bottom: 15px;">🛒</div>
                 <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;">${i18next.t("cart.empty_title")}</div>
                 <div style="color:#888; font-size: 12px; line-height: 1.5;">${i18next.t("cart.empty_desc")}</div>
-            </div>`;return}let t=cart.reduce((e,t)=>e+t.price,0),r=2e3-t,a=getCurrency(),n=r>0?"FREE SHIPPING":`<span style="color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.4); font-size: 10px;">ДОСТАВКА БЕСПЛАТНА</span>`;e.innerHTML=`
+            </div>`;return}let t=cart.reduce((e,t)=>e+t.price,0),r=2e3-t,a=getCurrency(),n=r>0?"FREE SHIPPING":`<span style="color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.4);">ДОСТАВКА БЕСПЛАТНА</span>`;e.innerHTML=`
         <div style="padding: 10px; margin-bottom: 10px; border-bottom: 1px dashed #333; display: flex; flex-direction: column; gap: 10px;">
             
-            <!-- Центральная надпись -->
+            <!-- Центральная надпись (всегда 11px) -->
             <div style="text-align: center; font-size: 11px; font-family: var(--font-mono); font-weight: bold; color: #aaa; letter-spacing: 2px;">
                 ${n}
             </div>
             
-            <!-- Блок со шкалой и цифрами по бокам -->
+            <!-- Блок со шкалой и динамическими цветами -->
             <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 10px; font-weight: bold;">
-                <span style="color: #555;">0</span>
+                <span style="color: ${r>0?"var(--accent-green)":"#555"}; transition: color 0.3s;">0</span>
                 
                 <div style="flex-grow: 1; height: 4px; background: #222; border-radius: 2px; position: relative; overflow: hidden;">
                     <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${Math.min(100,t/2e3*100)}%; background: ${r>0?"var(--accent-yellow)":"var(--accent-green)"}; transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);"></div>
                 </div>
                 
-                <span style="color: var(--accent-green);">2000 ${a}</span>
+                <span style="color: ${r>0?"#555":"var(--accent-green)"}; transition: color 0.3s;">2000 ${a}</span>
             </div>
 
             <!-- Текст предупреждения -->
