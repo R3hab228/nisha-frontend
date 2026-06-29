@@ -1,5 +1,5 @@
-const CACHE_NAME = 'nisha-cache-v106'; 
-const STATIC_URLS = ['/', '/index.html', '/app.js', '/config.js', '/style.css', '/locales.json'];
+const CACHE_NAME = 'nisha-cache-v107'; // Поменяли версию на 107
+const STATIC_URLS = ['/', '/index.html', '/app.js', '/config.js', '/style.css', '/locales.json', '/404.html']; // Добавили 404.html
 
 self.addEventListener('install', event => {
     self.skipWaiting();
@@ -54,10 +54,9 @@ self.addEventListener('fetch', event => {
                 }
                 return networkResponse;
             }).catch(() => {
-                // Если пропал интернет и страницы нет в кэше — отдаем главную страницу (интерфейс загрузится из кэша)
-                // Так как у нас Single Page App, главная страница сможет сказать "Нет связи с БД" вместо вылета динозавра
+                // Если пропал интернет — достаем из кэша нашу хакерскую страницу
                 if (event.request.mode === 'navigate') {
-                    return caches.match('/');
+                    return caches.match('/404.html');
                 }
             });
             
