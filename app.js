@@ -1875,22 +1875,41 @@ async function addToCartFromModal() {
 
 function updateCartUI() {
     const p = document.getElementById('cartPanel');
+    const fab = document.querySelector('.fab-propose');
     if (!p) return; 
     
     if (cart.length === 0) { 
-        p.classList.remove('show'); // Плавно уезжает вниз
+        p.classList.remove('show'); 
+        if(fab) {
+            fab.classList.remove('cart-active'); 
+            fab.classList.remove('hidden-scroll'); 
+            fab.style.display = 'flex'; 
+            fab.style.opacity = '1';
+            fab.style.pointerEvents = 'auto';
+        }
         return; 
     }
     
-    p.classList.add('show'); // Плавно выезжает вверх
-    document.getElementById('cartCount').innerText = cart.length;
-    let total = cart.reduce((sum, item) => sum + item.price, 0);
-    if (currentPromoDiscount > 0) {
-        total = Math.floor(total - (total * currentPromoDiscount));
-    }
-    document.getElementById('cartTotal').innerText = total + ' ' + getCurrency();
+    p.classList.add('show'); 
+    if(fab) fab.classList.add('cart-active'); 
     
-    if (typeof renderCartItems === 'function') renderCartItems(); 
+    document.getElementById('cartCount').innerText = cart.length;
+    let total = cart.reduce((sum, item) => sum + (parseInt(String(item.price).replace(/[^\d]/g, ''), 10) || 0), 0);
+    
+    // Применяем скидку по промокоду, если она есть
+    if (typeof currentPromoDiscount !== 'undefined' && currentPromoDiscount > 0) {
+        const savedMoney = Math.floor(total * currentPromoDiscount);
+        total = total - savedMoney;
+        
+        const msg = document.getElementById('promoMessage');
+        if (msg && appliedPromoCode) {
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Вы сэкономили: <b>${savedMoney} ${getCurrency()}</b></span></span>`;
+        }
+    }
+    
+    document.getElementById('cartTotal').innerText = total + ' ' + getCurrency(); // Заменили жесткие "грн" на мультиязычные
+    
+    if (typeof renderCartItems === 'function') renderCartItems();
 }
 
 // ==========================================
@@ -2251,45 +2270,6 @@ async function removeFromCart(index, event, rowElement) {
     }
 }
 
-function updateCartUI() {
-    const p = document.getElementById('cartPanel');
-    const fab = document.querySelector('.fab-propose');
-    if (!p) return; 
-    
-    if (cart.length === 0) { 
-        p.classList.remove('show'); 
-        if(fab) {
-            fab.classList.remove('cart-active'); // Опускаем кнопку вниз
-            fab.classList.remove('hidden-scroll'); // ПРИНУДИТЕЛЬНО возвращаем, если она была спрятана
-            fab.style.display = 'flex'; // ЖЕЛЕЗОБЕТОННО делаем видимой
-            fab.style.opacity = '1';
-            fab.style.pointerEvents = 'auto';
-        }
-        return; 
-    }
-    
-    p.classList.add('show'); 
-    if(fab) fab.classList.add('cart-active'); // Поднимаем кнопку над корзиной
-    
-    document.getElementById('cartCount').innerText = cart.length;
-    let total = cart.reduce((sum, item) => sum + item.price, 0);
-    
-    // Применяем скидку по промокоду, если она есть
-    if (typeof currentPromoDiscount !== 'undefined' && currentPromoDiscount > 0) {
-        const savedMoney = Math.floor(total * currentPromoDiscount);
-        total = total - savedMoney;
-        
-        // Динамически обновляем надпись экономии в модалке заказа
-        const msg = document.getElementById('promoMessage');
-        if (msg && appliedPromoCode) {
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Ви зекономили: <b>${savedMoney} грн</b></span></span>`;
-        }
-    }
-    document.getElementById('cartTotal').innerText = total + ' грн';
-    
-    // Вызываем отрисовку внутреннего списка (если она объявлена)
-    if (typeof renderCartItems === 'function') renderCartItems();
-}
 
 
 function closeCartDropdown(e) {
