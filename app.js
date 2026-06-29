@@ -2310,7 +2310,13 @@ function updateCartUI() {
     
     if (cart.length === 0) { 
         p.classList.remove('show'); 
-        if(fab) fab.classList.remove('cart-active'); // Опускаем кнопку вниз
+        if(fab) {
+            fab.classList.remove('cart-active'); // Опускаем кнопку вниз
+            fab.classList.remove('hidden-scroll'); // ПРИНУДИТЕЛЬНО возвращаем, если она была спрятана
+            fab.style.display = 'flex'; // ЖЕЛЕЗОБЕТОННО делаем видимой
+            fab.style.opacity = '1';
+            fab.style.pointerEvents = 'auto';
+        }
         return; 
     }
     
