@@ -2197,14 +2197,6 @@ function renderCartItems() {
         return;
     }
 
-    // --- ЛОГИКА ПРОГРЕСС-БАРА ДОСТАВКИ ---
-    const FREE_SHIPPING_LIMIT = 2000; // Сумма для бесплатной доставки (можешь поменять на свою)
-    let cartTotalForBar = cart.reduce((sum, item) => sum + item.price, 0);
-    let remainingAmount = FREE_SHIPPING_LIMIT - cartTotalForBar;
-    let progressPercent = Math.min(100, (cartTotalForBar / FREE_SHIPPING_LIMIT) * 100);
-    let barColor = remainingAmount > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)';
-    const curr = getCurrency();
-
     // --- МИНИМАЛИСТИЧНЫЙ ПРОГРЕСС-БАР ---
     const FREE_SHIPPING_LIMIT = 2000;
     let cartTotalForBar = cart.reduce((sum, item) => sum + item.price, 0);
@@ -2238,6 +2230,7 @@ function renderCartItems() {
     `;
 
    cart.forEach((item, index) => {
+        
         const imgUrl = getOptimizedImageUrl(item, true);
         const row = document.createElement('div');
         row.className = 'cart-item-row';
