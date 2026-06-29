@@ -996,11 +996,6 @@ async function handleAuth(action, isModal = false) {
     else { await checkSession(); if(isModal) closeModal('profileModal'); }
 }
 
-function openProfileModal() {
-    if (typeof lenis !== 'undefined') window.stopLenis();
-    document.getElementById('profileModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
 
 async function logout() {
     await _supabase.auth.signOut();
@@ -1017,15 +1012,6 @@ async function logout() {
 
 let renderedCount = 0;
 let filteredItems = [];
-
-// Было
-function getOptimizedImageUrl(item, wantsThumb = false) {
-    if (!item) return '';
-    if (wantsThumb && item.thumbnails && item.thumbnails.length > 0) {
-        return item.thumbnails[0];
-    }
-    return (item.images && item.images.length > 0) ? item.images[0] : '';
-}
 
 // СТАЛО: Заменяем домен Supabase на наш локальный прокси
 function getOptimizedImageUrl(item, wantsThumb = false) {
