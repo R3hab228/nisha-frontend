@@ -227,17 +227,20 @@
 </div>
 <p style=margin-top:15px;color:#444 data-i18n=footer.copyright>© 2026 NISHA. All rights reserved.</p>
 <div class=footer-lang-dropdown id=footerLangWrapper>
-<span id=currentLangLabelFooter onclick='document.getElementById("footerLangWrapper").classList.toggle("active")'>🇷🇺 [RU] ▼</span>
+<span id=currentLangLabelFooter onclick='document.getElementById("footerLangWrapper").classList.toggle("active")' style=display:flex;align-items:center;justify-content:center;gap:8px>
+<img id=currentFlagImg src=https://flagcdn.com/24x18/ru.png width=20 height=15 alt=RU style=border-radius:2px;pointer-events:none>
+<span>[RU] ▼</span>
+</span>
 <div class=footer-lang-menu>
-<a href=javascript:void(0) onclick='setLang("ua")'>🇺🇦 UA</a>
-<a href=javascript:void(0) onclick='setLang("ru")'>🇷🇺 RU</a>
-<a href=javascript:void(0) onclick='setLang("en")'>🇬🇧 EN</a>
+<a href=javascript:void(0) onclick='setLang("ua")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src=https://flagcdn.com/24x18/ua.png width=20 height=15 style=border-radius:2px> UA</a>
+<a href=javascript:void(0) onclick='setLang("ru")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src=https://flagcdn.com/24x18/ru.png width=20 height=15 style=border-radius:2px> RU</a>
+<a href=javascript:void(0) onclick='setLang("en")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src=https://flagcdn.com/24x18/gb.png width=20 height=15 style=border-radius:2px> EN</a>
 </div>
 </div>
 </div>
 </footer>
 </div>
-<script>function getFlagByLang(e){return"ua"===e?"🇺🇦":"en"===e?"🇬🇧":"🇷🇺"}function setLang(e){changeLanguage(e);const t=getFlagByLang(e);document.getElementById("currentLangLabelFooter").innerText=t+" ["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{const e=localStorage.getItem("nisha_lang")||"ru",t=getFlagByLang(e),n=document.getElementById("currentLangLabelFooter");n&&(n.innerText=t+" ["+e.toUpperCase()+"] ▼")}))</script>
+<script>function getFlagUrlByLang(e){return"ua"===e?"https://flagcdn.com/24x18/ua.png":"en"===e?"https://flagcdn.com/24x18/gb.png":"https://flagcdn.com/24x18/ru.png"}function setLang(e){localStorage.setItem("nisha_lang",e),localStorage.setItem("i18nextLng",e),changeLanguage(e);const t=getFlagUrlByLang(e);document.getElementById("currentFlagImg").src=t,document.getElementById("currentLangLabelFooter").querySelector("span").innerText="["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{let e=localStorage.getItem("nisha_lang");e||(e=(localStorage.getItem("i18nextLng")||"ru").substring(0,2).toLowerCase(),["ru","ua","en"].includes(e)||(e="ru"),localStorage.setItem("nisha_lang",e));const t=getFlagUrlByLang(e),n=document.getElementById("currentFlagImg"),a=document.getElementById("currentLangLabelFooter");n&&a&&(n.src=t,a.querySelector("span").innerText="["+e.toUpperCase()+"] ▼")}))</script>
 
 <div class=modal-overlay id=rulesModal style=background:rgba(0,0,0,.95);z-index:5000>
 <div class=modal-window style="max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;border-radius:10px 10px 0 0">
