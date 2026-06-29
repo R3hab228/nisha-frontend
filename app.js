@@ -1811,13 +1811,13 @@ async function toggleFav(event, itemId) {
         return; 
     }
 
-    // Блокируем спам кликами на 300мс (чтобы не ломался массив)
     if (isToggling) return;
     isToggling = true;
     setTimeout(() => { isToggling = false; }, 300);
-    triggerHaptic('light');
 
-    // 1. Узнаем статус И жестко обновляем локальный массив
+    // ВЫЗЫВАЕМ ВИБРАЦИЮ
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+
     const isFav = favorites.includes(itemId);
 
     if (isFav) {
@@ -3658,9 +3658,12 @@ function updatePriceUI() {
 }
 
 function toggleMobileSidebar() {
-    triggerHaptic('light');
+    // ВЫЗЫВАЕМ ВИБРАЦИЮ
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+
     const sidebar = document.querySelector('.sidebar');
     const btn = document.getElementById('mobileFilterBtn');
+    // ... дальше старый код
     const fab = document.querySelector('.fab-propose'); 
     
     sidebar.classList.toggle('active-mobile');
