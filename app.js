@@ -2205,24 +2205,33 @@ function renderCartItems() {
     let barColor = remainingAmount > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)';
     const curr = getCurrency();
 
+    // --- МИНИМАЛИСТИЧНЫЙ ПРОГРЕСС-БАР ---
+    const FREE_SHIPPING_LIMIT = 2000;
+    let cartTotalForBar = cart.reduce((sum, item) => sum + item.price, 0);
+    let remainingAmount = FREE_SHIPPING_LIMIT - cartTotalForBar;
+    let progressPercent = Math.min(100, (cartTotalForBar / FREE_SHIPPING_LIMIT) * 100);
+    let barColor = remainingAmount > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+    const curr = getCurrency();
+
     let shippingText = remainingAmount > 0 
         ? `${i18next.t('cart.add_more', {defaultValue: 'Добавь еще на'})} ${remainingAmount} ${curr}`
-        : `<span style="color: var(--accent-green); font-weight: bold; text-shadow: 0 0 5px rgba(0,255,0,0.5);">${i18next.t('cart.free_unlocked', {defaultValue: '[ ДОСТАВКА БЕСПЛАТНА ]'})}</span>`;
+        : `<span style="color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.5);">${i18next.t('cart.free_unlocked', {defaultValue: '[ БЕСПЛАТНАЯ ДОСТАВКА ]'})}</span>`;
 
     list.innerHTML = `
-        <!-- ПРОГРЕСС-БАР -->
-        <div style="margin: 0 10px 15px 10px; border: 1px dashed #333; background: #050505; padding: 12px;">
-            <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: #aaa; margin-bottom: 10px; text-transform: uppercase;">
+        <div style="padding: 0 10px 15px 10px; border-bottom: 1px solid #222; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Верхняя строка: Текст + Сумма (всё в одну линию) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-family: var(--font-mono); color: #888; text-transform: uppercase;">
                 <span>FREE SHIPPING</span>
-                <span>${shippingText}</span>
+                <span style="text-align: right; white-space: nowrap;">${shippingText}</span>
             </div>
-            <div style="height: 6px; background: #111; border: 1px solid #222; position: relative;">
-                <div style="height: 100%; width: ${progressPercent}%; background: ${barColor}; transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 0 10px ${barColor};"></div>
+            
+            <!-- Тонкая неоновая полоска -->
+            <div style="height: 2px; width: 100%; background: #222; position: relative;">
+                <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${progressPercent}%; background: ${barColor}; transition: width 0.4s ease-out; box-shadow: 0 0 8px ${barColor};"></div>
             </div>
-        </div>
 
-        <div style="padding: 0 10px 15px 10px; border-bottom: 1px solid #222; text-align: center;">
-            <span style="color: #666; font-size: 11px; font-family: var(--font-main);">
+            <!-- Мелкий текст-предупреждение -->
+            <span style="color: #555; font-size: 10px; font-family: var(--font-main); margin-top: 5px;">
                 ⚠️ ${i18next.t('cart.warning', {defaultValue: 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'})}
             </span>
         </div>
