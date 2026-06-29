@@ -1191,70 +1191,39 @@ function updateSidebarCounters() {
 let itemsPageSize = 12; 
 function applyFilters() {
     const grid = document.getElementById('itemsGrid');
-    
-    
     if (grid) grid.classList.add('fade-out');
 
     setTimeout(() => {
         try {
             const searchInput = document.getElementById('mainSearch');
-            const searchTerm = searchInput ? searchInput.value.trim() : '';
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
             const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => cb.value);
-            
-            // Читаем нашу новую галочку
             const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
             
-            let sortedItems = [...allItems];
-            
-            const sortCheap = document.getElementById('sort-cheap');
-            if (sortCheap && sortCheap.classList.contains('active-sort')) {
-                // Оставляем ТОЛЬКО те товары, цена которых 500 грн или ниже
-                sortedItems = sortedItems.filter(item => {
-                    let price = Number(item.price) || 0;
-                    let finalPrice = isHacked ? price * 0.9 : price;
-                    return finalPrice <= 500;
-                });
-                
-                // На всякий случай сортируем их от самых дешевых к 500
-                sortedItems.sort((a, b) => {
-                    let pA = Number(a.price) || 0;
-                    let pB = Number(b.price) || 0;
-                    return (isHacked ? pA * 0.9 : pA) - (isHacked ? pB * 0.9 : pB);
-                });
-            }
-
-            if (searchTerm !== '' && typeof Fuse !== 'undefined') {
-                // Жесткая очистка: убираем решетку и переводим в нижний регистр для точного совпадения
-                const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
-                
-                const fuseOptions = {
-                    includeScore: true, 
-                    threshold: 0.4, // Сделали чуть мягче, чтобы прощал опечатки в брендах
-                    ignoreLocation: true,
-                    useExtendedSearch: true, 
-                    keys: [
-                        { name: 'tags', weight: 1.0 }, 
-                        { name: 'brand', weight: 0.8 }, // Повысили приоритет бренда
-                        { name: 'name', weight: 0.8 }, 
-                        { name: 'size', weight: 0.8 },  // ДОБАВИЛИ ПОИСК ПО РАЗМЕРУ
-                        { name: 'category', weight: 0.2 }
-                    ]
-                };
-                const fuse = new Fuse(sortedItems, fuseOptions);
-                const fuseResults = fuse.search(cleanSearchTerm);
-                sortedItems = fuseResults.map(result => result.item);
-            }
-
             const minInput = document.getElementById('priceMin');
             const maxInput = document.getElementById('priceMax');
             const minPrice = minInput ? parseInt(minInput.value) : 0;
             const maxPrice = maxInput ? parseInt(maxInput.value) : 15000;
 
+            let sortedItems = [...allItems];
+
+            // 1. УМНЫЙ ПОИСК (FUSE.JS)
+            if (searchTerm !== '' && typeof Fuse !== 'undefined') {
+                const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
+                const fuseOptions = {
+                    includeScore: true, threshold: 0.4, ignoreLocation: true, useExtendedSearch: true, 
+                    keys: [{ name: 'tags', weight: 1.0 }, { name: 'brand', weight: 0.8 }, { name: 'name', weight: 0.8 }, { name: 'size', weight: 0.8 }, { name: 'category', weight: 0.2 }]
+                };
+                const fuse = new Fuse(sortedItems, fuseOptions);
+                sortedItems = fuse.search(cleanSearchTerm).map(result => result.item);
+            }
+
+            // 2. ЖЕСТКАЯ ФИЛЬТРАЦИЯ
             filteredItems = sortedItems.filter(item => {
                 if (!item) return false;
                 const itemCategory = item.category || '';
                 const itemBrand = item.brand ? item.brand.toLowerCase() : '';
-                const itemSize = item.size || '';
+                const itemSize = item.size ? item.size.trim() : '';
                 const searchBrand = currentBrand ? currentBrand.toLowerCase() : '';
                 
                 const matchesCategory = currentCategory === '' || itemCategory === currentCategory;
@@ -1265,55 +1234,55 @@ function applyFilters() {
                 
                 const itemFinalPrice = isHacked ? Math.floor((Number(item.price)||0) * 0.9) : (Number(item.price)||0);
                 const matchesPrice = itemFinalPrice >= minPrice && itemFinalPrice <= maxPrice;
-                
-                // Проверяем: если галочка нажата, оставляем ТОЛЬКО 'available'
                 const matchesAvailability = !hideUnavailable || item.status === 'available';
                 
                 return matchesCategory && matchesBrand && matchesSize && matchesFav && matchesPrice && matchesAvailability;
             });
+
+            // 3. ПРАВИЛЬНАЯ СОРТИРОВКА (Без удаления товаров!)
+            const sortCheap = document.getElementById('sort-cheap');
+            if (sortCheap && sortCheap.classList.contains('active-sort')) {
+                filteredItems.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0)); // От дешевых к дорогим
+            } else {
+                filteredItems.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)); // Свежие сверху
+            }
             
+            // СБРОС И РЕНДЕР
             if (grid) grid.innerHTML = ''; 
-            renderedCount = 0; // Сброс для телефона
-            window.currentPage = 1; // Сброс для ПК
-            window.currentPage = 1; // Сбрасываем на первую страницу при любом поиске 
+            renderedCount = 0; 
+            window.currentPage = 1; 
             
             const countEl = document.getElementById('itemCount');
             if (countEl) {
-                // Считаем только доступные вещи (исключаем проданные и забронированные)
                 const availableItems = filteredItems.filter(item => item.status === 'available');
                 countEl.innerText = availableItems.length;
             }
 
             if (filteredItems.length === 0) {
                 if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ ТОВАРОВ НЕ НАЙДЕНО ]</div>`;
-                const trigger = document.getElementById('loadingTrigger');
-                if(trigger) trigger.innerText = '';
             } else {
                 renderNextBatch(); 
             }
-            // Сохраняем состояние в URL (без перезагрузки)
+
+            // Обновляем URL
             const url = new URL(window.location);
-            if (currentCategory) url.searchParams.set('cat', currentCategory);
-            else url.searchParams.delete('cat');
-            if (searchTerm) url.searchParams.set('q', searchTerm);
-            else url.searchParams.delete('q');
+            if (currentCategory) url.searchParams.set('cat', currentCategory); else url.searchParams.delete('cat');
+            if (searchTerm) url.searchParams.set('q', searchTerm); else url.searchParams.delete('q');
             window.history.replaceState(null, '', url);
 
-            // === ОБНОВЛЯЕМ ЦИФРЫ В САЙДБАРЕ ===
             updateSidebarCounters();
             
-           if (grid) {
-                // Небольшая задержка, чтобы браузер успел отрисовать карточки без фризов
-                setTimeout(() => {
-                    requestAnimationFrame(() => {
-                        grid.classList.remove('fade-out');
-                    });
-                }, 50);
+            if (grid) {
+                requestAnimationFrame(() => {
+                    setTimeout(() => grid.classList.remove('fade-out'), 50);
+                });
             }
         } catch (err) {
             console.error("ОШИБКА ФИЛЬТРАЦИИ:", err);
-            if (grid) grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${err.message} ]</div>`;
-            if (grid) grid.classList.remove('fade-out');
+            if (grid) {
+                grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${err.message} ]</div>`;
+                grid.classList.remove('fade-out');
+            }
         }
     }, 300); 
 }
@@ -1386,7 +1355,12 @@ function renderNextBatch() {
     // Защита от дублей
     if (startIndex >= endIndex) return;
     
-    let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
+    // Жесткая защита массива просмотренных товаров
+    let seenItemsIds = [];
+    try {
+        seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items')) || [];
+        if (!Array.isArray(seenItemsIds)) seenItemsIds = [];
+    } catch(e) { seenItemsIds = []; }
     
     for (let i = startIndex; i < endIndex; i++) {
         try {
@@ -1419,7 +1393,7 @@ function renderNextBatch() {
             let dotsStr = '';
 
             thumbsArray.forEach((thumbUrl, idx) => {
-                const isVid = item.images && item.images[idx] && item.images[idx].endsWith('.mp4');
+                const isVid = item.images && item.images[idx] && typeof item.images[idx] === 'string' && item.images[idx].endsWith('.mp4');
                 if (isVid) {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading" style="background: #0a0a0a;">
