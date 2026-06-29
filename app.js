@@ -1697,25 +1697,35 @@ function setCategoryFilter(cat, element) {
     applyFilters(); 
 }
 // --- АНИМАЦИЯ ПОЛЕТА В КОРЗИНУ ---
+// --- АНИМАЦИЯ ПОЛЕТА В КОРЗИНУ ---
 function addToCartWithAnimation(itemId, btnElement, event) {
     if (event) event.stopPropagation(); 
     
     const item = allItems.find(i => i.id === itemId);
     if (!item) return;
+
+    // Если гость - прерываем полет картинки, логика корзины сама покажет окно входа
+    if (!currentUser) {
+        addToCartById(itemId); // Вызовет окно авторизации
+        return;
+    }
     
-    triggerHaptic('success');
+    // ВАЖНО: Добавляем в корзину (БЕЗ ЭТОГО НИЧЕГО НЕ СОХРАНИТСЯ)
+    addToCartById(itemId);
+    
+    // БЕЗОПАСНАЯ ВИБРАЦИЯ
+    if (typeof triggerHaptic === 'function') triggerHaptic('success');
     
     const cartIcon = document.getElementById('cartInfoWrapper');
-    if (!cartIcon) return; // Убрали багнутую проверку на картинки!
+    if (!cartIcon) return; 
 
     const btnRect = btnElement.getBoundingClientRect();
-    const cartRect = cartIcon.getBoundingClientRect();
 
     const flyingImg = document.createElement('div');
     flyingImg.className = 'flying-item';
 
     // Если фото есть - ставим его. Если нет - ставим темный фон.
-   if (item.images && item.images.length > 0) {
+    if (item.images && item.images.length > 0) {
         flyingImg.style.backgroundImage = `url('${getOptimizedImageUrl(item, true)}')`;
     } else {
         flyingImg.style.backgroundColor = '#111';
@@ -1892,6 +1902,14 @@ async function syncCartToServer() {
 
 async function addToCartFromModal() {
     if (!currentOpenedItem) return;
+    
+    // --- ПРОВЕРКА НА ГОСТЯ В МОДАЛКЕ ---
+    if (!currentUser) {
+        showToast(i18next.t('messages.cart_error_auth', {defaultValue: 'Сначала войдите в систему!'}), 'error');
+        closeModal('productModal'); // Закрываем товар
+        openProfileModal(); // Открываем авторизацию
+        return;
+    }
     
     if (cart.some(i => i.id === currentOpenedItem.id)) { 
         showToast(i18next.t('messages.cart_exist'), 'error');
