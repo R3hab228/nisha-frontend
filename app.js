@@ -1195,6 +1195,9 @@ function applyFilters() {
                 sortedItems = fuse.search(cleanSearchTerm).map(result => result.item);
             }
 
+            
+            const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
+
             // 2. ЖЕСТКАЯ ФИЛЬТРАЦИЯ
             filteredItems = sortedItems.filter(item => {
                 if (!item) return false;
@@ -1209,17 +1212,18 @@ function applyFilters() {
                 const isFav = favorites.includes(item.id);
                 const matchesFav = !showingOnlyFavs || isFav;
                 
-                const itemFinalPrice = isHacked ? Math.floor((Number(item.price)||0) * 0.9) : (Number(item.price)||0);
+                // ИСПОЛЬЗУЕМ БЕЗОПАСНУЮ ЦЕНУ
+                const itemFinalPrice = isHacked ? Math.floor(getSafePrice(item.price) * 0.9) : getSafePrice(item.price);
                 const matchesPrice = itemFinalPrice >= minPrice && itemFinalPrice <= maxPrice;
                 const matchesAvailability = !hideUnavailable || item.status === 'available';
                 
                 return matchesCategory && matchesBrand && matchesSize && matchesFav && matchesPrice && matchesAvailability;
             });
 
-            // 3. ПРАВИЛЬНАЯ СОРТИРОВКА (Без удаления товаров!)
+            // 3. ПРАВИЛЬНАЯ СОРТИРОВКА
             const sortCheap = document.getElementById('sort-cheap');
             if (sortCheap && sortCheap.classList.contains('active-sort')) {
-                filteredItems.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0)); // От дешевых к дорогим
+                filteredItems.sort((a, b) => getSafePrice(a.price) - getSafePrice(b.price)); // Идеально от дешевых к дорогим
             } else {
                 filteredItems.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)); // Свежие сверху
             }
