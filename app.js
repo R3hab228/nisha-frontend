@@ -1373,7 +1373,7 @@ function renderNextBatch() {
                 } else {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading" style="background-image: none;">
-                            <img src="${thumbUrl}" loading="lazy" style="display:none;" onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');">
+                            <img src="${thumbUrl}" loading="lazy" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');">
                         </div>`;
                 }
                 dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
