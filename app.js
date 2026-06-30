@@ -1383,7 +1383,9 @@ function renderNextBatch() {
                 } else {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading" style="background-image: none;">
-                            <img src="${thumbUrl}" loading="lazy" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');">
+                           <img src="${thumbUrl}" loading="lazy" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" 
+onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
+onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
                 }
                 dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
@@ -3326,6 +3328,32 @@ function openProductModal(item) {
     }
     // Загружаем вопросы и рендерим
     if (_supabase) window.loadItemQuestions(item.id);
+
+    // === SEO JSON-LD РАЗМЕТКА ДЛЯ GOOGLE ===
+    let schemaScript = document.getElementById('seo-schema');
+    if (!schemaScript) {
+        schemaScript = document.createElement('script');
+        schemaScript.id = 'seo-schema';
+        schemaScript.type = 'application/ld+json';
+        document.head.appendChild(schemaScript);
+    }
+    const schemaData = {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": item.name,
+        "image": (item.images && item.images.length > 0) ? item.images[0] : "",
+        "description": item.description || item.name,
+        "brand": { "@type": "Brand", "name": item.brand },
+        "offers": {
+            "@type": "Offer",
+            "url": window.location.href,
+            "priceCurrency": "UAH",
+            "price": item.price,
+            "availability": item.status === 'available' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "itemCondition": "https://schema.org/UsedCondition"
+        }
+    };
+    schemaScript.innerText = JSON.stringify(schemaData);
 }
 
 let currentSlide = 0;
@@ -4741,6 +4769,26 @@ if (_supabase) {
         })
         .subscribe();
 }
+// ==========================================
+// УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА)
+// ==========================================
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        // Юзер ушел на другую вкладку
+        if (cart.length > 0) {
+            document.title = `(${cart.length}) 🛒 Ждем тебя | NISHA`;
+        } else {
+            document.title = `Zzz... | NISHA`;
+        }
+    } else {
+        // Юзер вернулся
+        if (currentOpenedItem) {
+            document.title = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
+        } else {
+            document.title = 'NISHA | Underground Store';
+        }
+    }
+});
 
 
 // Запускаем инициализацию после загрузки
