@@ -4790,6 +4790,27 @@ document.addEventListener("visibilitychange", () => {
         }
     }
 });
+// ==========================================
+// PULL-TO-REFRESH (КАК В НАТИВНЫХ ПРИЛОЖЕНИЯХ)
+// ==========================================
+let touchStartY = 0;
+document.addEventListener('touchstart', e => {
+    // Работает только если мы в самом верху страницы
+    if (window.scrollY === 0) touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+    if (window.scrollY === 0 && touchStartY > 0) {
+        let touchEndY = e.changedTouches[0].clientY;
+        // Если потянули вниз больше чем на 150px
+        if (touchEndY - touchStartY > 150) {
+            triggerHaptic('medium'); // Вибрация
+            showToast('ОБНОВЛЕНИЕ БАЗЫ ДАННЫХ...', 'success');
+            loadAllItems(); // Перезагружаем товары из базы без перезагрузки страницы
+        }
+    }
+    touchStartY = 0;
+}, { passive: true });
 
 
 // Запускаем инициализацию после загрузки
