@@ -91,13 +91,20 @@ if ('serviceWorker' in navigator) {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        console.log('[PWA] Найдено обновление! Тихо чистим кэш...');
-                        // Без вопросов чистим кэш и моментально перезагружаем страницу
-                        caches.keys().then(names => {
-                            for (let name of names) caches.delete(name);
-                        }).then(() => {
-                            window.location.reload(true);
-                        });
+                        console.log('[PWA] Найдено обновление!');
+                        // Вызываем твой красивый терминал вместо жесткой перезагрузки!
+                        showTerminalModal(
+                            'SYSTEM_UPDATE.EXE', 
+                            'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.', 
+                            '[ ОБНОВИТЬ СЕЙЧАС ]', 
+                            () => {
+                                caches.keys().then(names => {
+                                    for (let name of names) caches.delete(name);
+                                }).then(() => {
+                                    window.location.reload(true);
+                                });
+                            }
+                        );
                     }
                 };
             };
@@ -724,15 +731,18 @@ function closeModal(id) {
             win.style.transform = '';
             win.style.opacity = '';
             win.style.transition = '';
-            win.style.animation = ''; // <--- ВОТ ТУТ МЫ ВОЗВРАЩАЕМ АНИМАЦИЮ
+            win.style.animation = ''; 
         }
         modal.style.opacity = '';
         modal.style.transition = '';
         modal.style.backgroundColor = '';
         
-        if (id === 'productModal') renderHistory(); 
+        // НОВОЕ: Возвращаем заголовок
+        if (id === 'productModal') {
+            document.title = 'NISHA | Underground Store';
+            renderHistory(); 
+        }
     }, 300);
-}
 
 async function openReviewsModal() { 
     const modal = document.getElementById('reviewsModal');
@@ -2955,6 +2965,7 @@ function openProductModalById(itemId) {
 function openProductModal(item) {
     currentOpenedItem = item;
     if (typeof lenis !== 'undefined') window.stopLenis();
+    document.title = `NISHA | ${item.brand} - ${item.name}`;
     
     document.getElementById('modalItemTitle').innerText = item.name;
     // Красим звездочку в модалке, если товар уже в избранном
@@ -4230,10 +4241,15 @@ async function submitProposal() {
     if (!fileInput || !fileInput.files) return;
 
     const files = fileInput.files;
-    const brand = document.getElementById('propBrand').value.trim();
-    const size = document.getElementById('propSize').value.trim();
+    const rawBrand = document.getElementById('propBrand').value.trim();
+    const rawSize = document.getElementById('propSize').value.trim();
     const cond = parseInt(document.getElementById('propCond').value);
-    const contact = document.getElementById('propContact').value.trim();
+    const rawContact = document.getElementById('propContact').value.trim();
+
+    // БЕЗОПАСНОСТЬ: Чистим поля от HTML и скриптов
+    const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand;
+    const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize;
+    const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact;
 
     if (!files.length || !brand || !size || isNaN(cond) || !contact) {
         showToast('Заполните все поля и прикрепите фото!', 'error');
