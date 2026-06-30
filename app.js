@@ -1059,11 +1059,27 @@ async function loadAllItems() {
 
     // Если кэша нет (юзер зашел первый раз), оставляем крутиться Win95 Loader из HTML
     
-    // 2. ФОНОВЫЙ ЗАПРОС К БД (Тихо проверяем, есть ли новые вещи)
-    const { data, error } = await _supabase.from('items').select('*').order('created_at', { ascending: false });
+    // 2. ФОНОВЫЙ ЗАПРОС К НАШЕМУ СЕРВЕРУ (Берем из Redis за 1мс)
+    let data = [];
+    let error = null;
     
+    try {
+        const res = await fetch('https://nisha-api.onrender.com/api/items');
+        const json = await res.json();
+        
+        if (json.success) {
+            data = json.data;
+            // Для дебага можешь оставить эту строчку, чтобы видеть откуда пришли данные
+            console.log(`[DATA SOURCE] Товары загружены из: ${json.source.toUpperCase()}`); 
+        } else {
+            throw new Error(json.error);
+        }
+    } catch (err) {
+        error = err;
+    }
+
     if (error) { 
-        if (allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
+        if (allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА API: ${error.message} ]</div>`;
         return; 
     }
     
