@@ -3159,10 +3159,11 @@ function openProductModal(item) {
                         </video>
                     </div>`;
             } else {
-                // ВАЖНО: Добавили класс hidden-loader-img, чтобы PhotoSwipe его игнорировал
+                // ИДЕАЛЬНОЕ РЕШЕНИЕ: Используем обычный img и авто-определение размеров для PhotoSwipe
                 wrapper.innerHTML += `
-                    <a href="${url}" data-pswp-width="1200" data-pswp-height="1600" target="_blank" class="slide img-8bit-loading" style="background-image:none;">
-                        <img src="${url}" class="hidden-loader-img" onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading');">
+                    <a href="${url}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide img-8bit-loading" style="background-image:none; display:flex; align-items:center; justify-content:center;">
+                        <img src="${url}" style="width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.3s;" 
+                        onload="this.style.opacity='1'; this.parentElement.setAttribute('data-pswp-width', this.naturalWidth); this.parentElement.setAttribute('data-pswp-height', this.naturalHeight); this.parentElement.classList.remove('img-8bit-loading');">
                     </a>`;
             }
             
