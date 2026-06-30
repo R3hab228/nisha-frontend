@@ -7,19 +7,15 @@
     {
       "source": "/share/:id",
       "destination": "https://nisha-api.onrender.com/share/:id"
-    },
-    {
-      "source": "/cdn-images/:match*",
-      "destination": "https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items-images/:match*"
     }
   ],
   "headers": [
     {
-      "source": "/cdn-images/(.*)",
+      "source": "/sw.js",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     },
