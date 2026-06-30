@@ -306,6 +306,36 @@ if (!SUPABASE_ANON_KEY) {
     const { createClient } = supabase;
     _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
+// ==========================================
+// СИСТЕМА ВЕЧНОЙ СЕССИИ (JWT REFRESH)
+// ==========================================
+if (_supabase) {
+    _supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'TOKEN_REFRESHED') {
+            console.log('[AUTH] Токен безопасности успешно продлен (Refresh Token).');
+            currentUser = session.user;
+        } else if (event === 'SIGNED_OUT') {
+            console.log('[AUTH] Выполнен выход из аккаунта.');
+            currentUser = null;
+            userProfile = null;
+            favorites = [];
+            updateFavBadge();
+            // Скрываем профиль, показываем логин
+            const loginForm = document.getElementById('loginForm');
+            const profileForm = document.getElementById('profileForm');
+            if (loginForm) loginForm.style.display = 'flex';
+            if (profileForm) profileForm.style.display = 'none';
+            // Мобилка
+            const mLog = document.getElementById('modalLoginForm');
+            const mProf = document.getElementById('modalProfileForm');
+            if (mLog) mLog.style.display = 'flex';
+            if (mProf) mProf.style.display = 'none';
+        } else if (event === 'SIGNED_IN') {
+            // Если юзер вошел в соседней вкладке, текущая тоже должна обновиться
+            if (!currentUser) await checkSession();
+        }
+    });
+}
 
 function showToast(message, type = 'success', imgUrl = null) {
     const container = document.getElementById('toastContainer');
