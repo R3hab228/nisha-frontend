@@ -92,7 +92,6 @@ if ('serviceWorker' in navigator) {
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
                         console.log('[PWA] Найдено обновление!');
-                        // Вызываем твой красивый терминал вместо жесткой перезагрузки!
                         showTerminalModal(
                             'SYSTEM_UPDATE.EXE', 
                             'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.', 
@@ -731,18 +730,19 @@ function closeModal(id) {
             win.style.transform = '';
             win.style.opacity = '';
             win.style.transition = '';
-            win.style.animation = ''; 
+            win.style.animation = '';
         }
         modal.style.opacity = '';
         modal.style.transition = '';
         modal.style.backgroundColor = '';
         
-        // НОВОЕ: Возвращаем заголовок
+        // ВОЗВРАЩАЕМ ЗАГОЛОВОК
         if (id === 'productModal') {
             document.title = 'NISHA | Underground Store';
             renderHistory(); 
         }
     }, 300);
+}
 
 async function openReviewsModal() { 
     const modal = document.getElementById('reviewsModal');
