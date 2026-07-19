@@ -1059,12 +1059,29 @@ let renderedCount = 0;
 let filteredItems = [];
 
 function getOptimizedImageUrl(item, wantsThumb = false) {
-    if (!item) return '';
-    // Просто берем прямую ссылку из базы, ничего не подменяя!
-    if (wantsThumb && item.thumbnails && item.thumbnails.length > 0) {
-        return item.thumbnails[0];
+    // 1. Базовая защита: если товара нет или это не объект — прерываем
+    if (!item || typeof item !== 'object') return '';
+
+    // 2. Вспомогательная функция: проверяем, что ссылка — это реально текст, а не null/undefined
+    const isValid = (url) => typeof url === 'string' && url.trim().length > 10;
+
+    let resultUrl = '';
+
+    // 3. СКОРОСТЬ: Пытаемся взять легкую миниатюру (WebP, весит копейки, грузится за 0.01с)
+    if (wantsThumb && Array.isArray(item.thumbnails) && item.thumbnails.length > 0) {
+        if (isValid(item.thumbnails[0])) {
+            resultUrl = item.thumbnails[0];
+        }
     }
-    return (item.images && item.images.length > 0) ? item.images[0] : '';
+
+    // 4. НАДЕЖНОСТЬ (Фоллбэк): Если миниатюры нет или ссылка сломана, БЕРЕМ ОРИГИНАЛ
+    if (!resultUrl && Array.isArray(item.images) && item.images.length > 0) {
+        if (isValid(item.images[0])) {
+            resultUrl = item.images[0];
+        }
+    }
+
+    return resultUrl;
 }
 
 async function loadAllItems() {
