@@ -1486,9 +1486,23 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
                 if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) isDraggingSlider = true;
             }, {passive: true});
             
+            // Умный обработчик кликов (отличает 1 тап от 2 тапов)
+            let clickTimer = null;
             sliderWrapper.addEventListener('click', (e) => {
-                if (isDraggingSlider) { e.preventDefault(); e.stopPropagation(); } 
-                else { openProductModalById(item.id); }
+                if (isDraggingSlider) { e.preventDefault(); e.stopPropagation(); return; } 
+                
+                if (clickTimer === null) {
+                    // Это первый клик. Ждем 250мс, вдруг будет второй?
+                    clickTimer = setTimeout(() => {
+                        clickTimer = null;
+                        openProductModalById(item.id); // Одинарный клик -> Открываем товар
+                    }, 250);
+                } else {
+                    // Это второй клик (Двойной тап!)
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                    handleDoubleTapLike(e, item.id, sliderWrapper); // Вызываем лайк
+                }
             });
 
             grid.appendChild(card);
@@ -2587,10 +2601,32 @@ async function openCheckoutModal() {
     if (typeof lenis !== 'undefined') window.stopLenis();
     document.getElementById('checkoutModal').style.display = 'flex'; 
     document.body.style.overflow = 'hidden';
-    checkPhoneAuth();
     
-    // ЗАПУСКАЕМ АВТООПРЕДЕЛЕНИЕ ГОРОДА
-    autoDetectCity();
+    // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА (Seamless Checkout)
+    const savedDataRaw = localStorage.getItem('nisha_checkout_data');
+    if (savedDataRaw) {
+        try {
+            const saved = JSON.parse(savedDataRaw);
+            document.getElementById('orderName').value = saved.name || '';
+            document.getElementById('orderPhone').value = saved.phone || '';
+            document.getElementById('orderCity').value = saved.city || '';
+            document.getElementById('orderBranch').value = saved.branch || '';
+            
+            selectedCityRef = saved.cityRef || '';
+            selectedBranchRef = saved.branchRef || '';
+            
+            // Если есть телефон - запускаем проверку кнопки
+            if (saved.phone) checkPhoneAuth();
+            
+            // Если есть НП - сразу считаем доставку!
+            if (selectedCityRef && selectedBranchRef && cart.length > 0) {
+                calculateDeliveryCost();
+            }
+        } catch(e) { autoDetectCity(); }
+    } else {
+        checkPhoneAuth();
+        autoDetectCity(); // Если данных нет - определяем город по IP
+    }
 }
 
 async function submitOrder() {
@@ -2697,6 +2733,16 @@ async function executeOrderFinal(emailToSave) {
     const branch = document.getElementById('orderBranch').value.trim();
 
     const orderItemIds = cart.map(i => i.id);
+    // СОХРАНЯЕМ ДАННЫЕ КЛИЕНТА НА БУДУЩЕЕ
+    const checkoutData = {
+        name: name,
+        phone: phoneRaw,
+        city: city,
+        branch: branch,
+        cityRef: selectedCityRef,
+        branchRef: selectedBranchRef
+    };
+    localStorage.setItem('nisha_checkout_data', JSON.stringify(checkoutData));
 
     try {
         // ВАЖНО: передаем p_email в базу!
@@ -4860,6 +4906,29 @@ document.addEventListener('touchend', e => {
     }
     touchStartY = 0;
 }, { passive: true });
+// ==========================================
+// ЛОГИКА АНИМАЦИИ ДВОЙНОГО ТАПА
+// ==========================================
+window.handleDoubleTapLike = async function(event, itemId, container) {
+    if (event) { event.preventDefault(); event.stopPropagation(); }
+
+    // 1. Создаем и показываем звезду
+    const star = document.createElement('div');
+    star.className = 'double-tap-star-anim';
+    star.innerText = '★'; 
+    container.appendChild(star);
+
+    // Удаляем элемент после завершения анимации
+    setTimeout(() => star.remove(), 800);
+    
+    // Включаем жесткую вибрацию телефона
+    if (typeof triggerHaptic === 'function') triggerHaptic('heavy');
+
+    // 2. Если товар еще не в избранном — добавляем его!
+    if (!favorites.includes(itemId)) {
+        await toggleFav(null, itemId);
+    }
+};
 
 
 // Запускаем инициализацию после загрузки
