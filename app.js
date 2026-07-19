@@ -1058,22 +1058,13 @@ async function logout() {
 let renderedCount = 0;
 let filteredItems = [];
 
-// СТАЛО: Заменяем домен Supabase на наш локальный прокси
 function getOptimizedImageUrl(item, wantsThumb = false) {
     if (!item) return '';
-    
-    let url = '';
+    // Просто берем прямую ссылку из базы, ничего не подменяя!
     if (wantsThumb && item.thumbnails && item.thumbnails.length > 0) {
-        url = item.thumbnails[0];
-    } else {
-        url = (item.images && item.images.length > 0) ? item.images[0] : '';
+        return item.thumbnails[0];
     }
-    
-    // Подменяем прямой линк на наш CDN-роут
-    if (url && url.includes('supabase.co')) {
-        return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items-images', '/cdn-images');
-    }
-    return url;
+    return (item.images && item.images.length > 0) ? item.images[0] : '';
 }
 
 async function loadAllItems() {
