@@ -3242,7 +3242,7 @@ function openProductModal(item) {
         // Достаем историю просмотров, чтобы проверить, видел ли юзер эти похожие вещи
         let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
             
-        if(similar.length > 0) {
+       if(similar.length > 0) {
             similar.forEach(s => {
                 const sImg = getOptimizedImageUrl(s, true); 
                 
@@ -3267,20 +3267,33 @@ function openProductModal(item) {
                     miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${s.old_price}</span><span style="color: var(--accent-green);">${s.price} ${curr}</span>`;
                 }
 
-                // --- НОВОЕ: ПУЛЬСАЦИЯ ДЛЯ НОВЫХ ПОХОЖИХ ВЕЩЕЙ ---
+                // --- ПУЛЬСАЦИЯ ДЛЯ НОВЫХ ПОХОЖИХ ВЕЩЕЙ ---
                 const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
                 const pulseAnim = isUnseen ? 'animation: unseenPulseAnim 2s infinite alternate;' : '';
                 const baseBorder = isUnseen ? 'var(--accent-red)' : '#333';
 
+                // --- ИСПРАВЛЕНИЕ: НАДЕЖНАЯ ЗАГРУЗКА КАРТИНКИ (ВМЕСТО ФОНА) ---
+                let imageBlockHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; font-family:var(--font-mono); font-size:10px;">NO FOTO</div>`;
+                
+                if (sImg) {
+                    if (sImg.endsWith('.mp4')) {
+                        imageBlockHTML = `<video src="${sImg}#t=0.001" style="width:100%; height:100%; object-fit:cover; pointer-events:none;" preload="metadata"></video>`;
+                    } else {
+                        // Используем реальный тег <img> с обработчиком ошибок (onerror)
+                        imageBlockHTML = `<img src="${sImg}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;font-size:10px;font-family:var(--font-mono);\\'>ERROR</div>';">`;
+                    }
+                }
+
                 simCont.innerHTML += `
-                    <div style="min-width: 120px; cursor: pointer; border: 1px solid ${baseBorder}; background: #000; transition: 0.2s; ${pulseAnim}" 
+                    <div style="min-width: 120px; cursor: pointer; border: 1px solid ${baseBorder}; background: #000; transition: 0.2s; ${pulseAnim} display:flex; flex-direction:column;" 
                          onmouseover="this.style.borderColor='var(--accent-green)'" 
                          onmouseout="this.style.borderColor='${baseBorder}'" 
                          onclick="openProductModalById('${s.id}')">
-                        <div style="position: relative; height: 100px; background-image:url('${sImg}'); background-size: cover; background-position: center;">
+                        <div style="position: relative; height: 100px; width: 100%; overflow: hidden; background: #111;">
                             ${miniBadgeHTML}
+                            ${imageBlockHTML}
                         </div>
-                        <div style="padding: 8px; font-size: 11px; color: #fff; font-family: var(--font-mono); text-align: center;">${miniPriceHTML}</div>
+                        <div style="padding: 8px; font-size: 11px; color: #fff; font-family: var(--font-mono); text-align: center; margin-top: auto;">${miniPriceHTML}</div>
                     </div>`;
             });
         } else {
