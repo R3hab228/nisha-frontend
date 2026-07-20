@@ -728,7 +728,55 @@ window.onload = async () => {
 };
 
 // Идеально плавное закрытие по крестику
+// ==========================================
+// ДВУХКНОПОЧНЫЙ ТЕРМИНАЛ ДЛЯ ПОДТВЕРЖДЕНИЙ
+// ==========================================
+function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancelBtnText, onConfirm) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 100000; display: flex; justify-content: center; align-items: center; flex-direction: column;";
+    
+    overlay.innerHTML = `
+        <div class="success-terminal-box" style="animation: none; transform: scale(1); opacity: 1;">
+            <div class="success-title typewriter" style="color: var(--accent-yellow);">${title}</div>
+            <div class="success-divider" style="background: repeating-linear-gradient(90deg, var(--accent-yellow), var(--accent-yellow) 5px, transparent 5px, transparent 10px);"></div>
+            <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${htmlText}</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="cart-checkout-btn btn-target confirm-yes" style="flex: 1; background: var(--accent-red); border-color: var(--accent-red); color: #fff;">${confirmBtnText}</button>
+                <button class="cart-checkout-btn btn-target confirm-no" style="flex: 1; background: #333; border-color: #555; color: #fff;">${cancelBtnText}</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    overlay.querySelector('.confirm-yes').addEventListener('click', () => { overlay.remove(); if (onConfirm) onConfirm(); });
+    overlay.querySelector('.confirm-no').addEventListener('click', () => { overlay.remove(); });
+}
+
+// Идеально плавное закрытие по крестику (С ЗАЩИТОЙ ДАННЫХ)
 function closeModal(id) { 
+    if (id === 'proposeModal') {
+        const files = document.getElementById('propFiles')?.files?.length || 0;
+        const brand = document.getElementById('propBrand')?.value.trim() || '';
+        const size = document.getElementById('propSize')?.value.trim() || '';
+        const contact = document.getElementById('propContact')?.value.trim() || '';
+        
+        // Если юзер ввел хоть что-то — вызываем терминал
+        if (files > 0 || brand !== '' || size !== '' || contact !== '') {
+            showConfirmTerminalModal(
+                'WARNING_DATA_LOSS.SYS', 
+                'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.', 
+                '[ ЗАКРЫТЬ ]', 
+                '[ ОТМЕНА ]', 
+                () => { resetProposalForm(); executeCloseModal(id); } // Если согласился - стираем и закрываем
+            );
+            return; 
+        }
+    }
+    executeCloseModal(id); // Если защищать не нужно — просто закрываем
+}
+
+// Вся старая логика анимаций перенесена сюда
+function executeCloseModal(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
     
@@ -737,13 +785,9 @@ function closeModal(id) {
     if (win) {
         win.style.animation = 'none';
         win.offsetHeight; 
-
         win.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
-        if (window.innerWidth > 900) {
-            win.style.transform = 'scale(0.95) translateY(20px)'; 
-        } else {
-            win.style.transform = 'translateY(100vh)'; 
-        }
+        if (window.innerWidth > 900) { win.style.transform = 'scale(0.95) translateY(20px)'; } 
+        else { win.style.transform = 'translateY(100vh)'; }
         win.style.opacity = '0';
     }
 
@@ -756,21 +800,10 @@ function closeModal(id) {
         document.body.style.overflow = 'auto'; 
         if (typeof lenis !== 'undefined') window.startLenis(); 
         
-        if (win) {
-            win.style.transform = '';
-            win.style.opacity = '';
-            win.style.transition = '';
-            win.style.animation = '';
-        }
-        modal.style.opacity = '';
-        modal.style.transition = '';
-        modal.style.backgroundColor = '';
+        if (win) { win.style.transform = ''; win.style.opacity = ''; win.style.transition = ''; win.style.animation = ''; }
+        modal.style.opacity = ''; modal.style.transition = ''; modal.style.backgroundColor = '';
         
-        // ВОЗВРАЩАЕМ ЗАГОЛОВОК
-        if (id === 'productModal') {
-            document.title = 'NISHA | Underground Store';
-            renderHistory(); 
-        }
+        if (id === 'productModal') { document.title = 'NISHA | Underground Store'; renderHistory(); }
     }, 300);
 }
 
@@ -793,24 +826,38 @@ async function openReviewsModal() {
     }
     
     let html = '';
+    // Глобальная функция для открытия 1 картинки в PhotoSwipe
+    window.openReviewImage = function(url) {
+        if (!window.PhotoSwipeLightbox) return;
+        const lightbox = new window.PhotoSwipeLightbox({
+            dataSource: [{ src: url, width: 1000, height: 1000 }],
+            pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+        });
+        lightbox.init();
+        lightbox.loadAndOpen(0);
+    };
+
+    let html = '';
     data.forEach(rev => {
         const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
         
-        // БЕЗОПАСНОСТЬ: Очищаем текст от HTML-тегов хакеров
+        // БЕЗОПАСНОСТЬ: Очищаем текст от HTML-тегов
         const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : rev.text;
         const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : rev.user_name;
         
-        // Если есть картинка - рисуем красивый квадрат справа. Делаем кликабельным, если есть item_id
-        const cursorStyle = rev.item_id ? 'cursor: pointer;' : '';
-        const clickAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')"` : '';
+        // Клик по фото открывает PhotoSwipe (Зум на весь экран)
+        const clickAction = rev.item_image ? `onclick="openReviewImage('${rev.item_image}')"` : '';
+        const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
         
-        const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); ${cursorStyle}"></div>` : '';
-        
+        // Клик по имени автора открывает сам товар
+        const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
+        const productLinkAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')" title="Открыть товар"` : '';
+
         html += `
         <div class="review-card-ui">
             <div class="review-head" style="align-items: flex-start; justify-content: space-between; display: flex;">
                 <div style="display: flex; flex-direction: column;">
-                    <span class="review-name" style="color: #fff; font-weight: bold; font-family: var(--font-main); font-size: 14px;">@${safeName}</span>
+                    <span class="review-name" ${productLinkAction} style="color: #fff; font-weight: bold; font-family: var(--font-main); font-size: 14px; ${productLinkStyle}">@${safeName}</span>
                     <div class="review-date" style="text-align: left; margin-top: 4px; color: #555; font-size: 11px; font-family: var(--font-mono);">${date}</div>
                 </div>
                 ${imgHtml}
@@ -2172,14 +2219,23 @@ function renderBranches(branches) {
 }
 
 // --- РАСЧЕТ СТОИМОСТИ ДОСТАВКИ ---
+// --- РАСЧЕТ СТОИМОСТИ ДОСТАВКИ ---
 async function calculateDeliveryCost() {
     if(!selectedCityRef || cart.length === 0) return;
     
     document.getElementById('deliveryCostInfo').style.display = 'block';
     document.getElementById('calcCostVal').innerText = "Рассчитываем...";
     
-    const totalCost = cart.reduce((sum, item) => sum + item.price, 0);
+    const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
+    const totalCost = cart.reduce((sum, item) => sum + getSafePrice(item.price), 0);
     
+    // НОВОЕ: ПРОВЕРКА НА БЕСПЛАТНУЮ ДОСТАВКУ (От 2000 грн)
+    const FREE_SHIPPING_LIMIT = 2000;
+    if (totalCost >= FREE_SHIPPING_LIMIT) {
+        document.getElementById('calcCostVal').innerHTML = `<span style="color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.4);">0 грн (БЕСПЛАТНО)</span>`;
+        return; // Завершаем функцию, чтобы не дергать API Новой Почты!
+    }
+
     try {
         // ЗАПРАШИВАЕМ ГОТОВУЮ ЦЕНУ У НАШЕГО СЕРВЕРА
         const res = await fetch('https://nisha-api.onrender.com/api/calc-delivery', {
