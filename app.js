@@ -824,20 +824,22 @@ async function openReviewsModal() {
         container.innerHTML = `<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">[ ${i18next.t('reviews_modal.empty_reviews', { defaultValue: 'В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ' })} ]</div>`;
         return;
     }
-    
-    let html = '';
-    // Глобальная функция для открытия 1 картинки в PhotoSwipe
-    window.openReviewImage = function(url) {
-        if (!window.PhotoSwipeLightbox) return;
-        const lightbox = new window.PhotoSwipeLightbox({
-            dataSource: [{ src: url, width: 1000, height: 1000 }],
-            pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
-        });
-        lightbox.init();
-        lightbox.loadAndOpen(0);
-    };
 
-    let html = '';
+    // Глобальная функция для открытия 1 картинки в PhotoSwipe
+    if (!window.openReviewImage) {
+        window.openReviewImage = function(url) {
+            if (!window.PhotoSwipeLightbox) return;
+            const lightbox = new window.PhotoSwipeLightbox({
+                dataSource: [{ src: url, width: 1000, height: 1000 }],
+                pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+            });
+            lightbox.init();
+            lightbox.loadAndOpen(0);
+        };
+    }
+    
+    let html = ''; // Объявляем переменную только один раз!
+    
     data.forEach(rev => {
         const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
         
@@ -868,7 +870,6 @@ async function openReviewsModal() {
     
     container.innerHTML = html;
 }
-
 
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
