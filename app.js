@@ -4575,36 +4575,35 @@ window.updateCardDots = function(container, itemId) {
 window.showBadgeInfo = function(type) {
     let title = '';
     let text = '';
+    const btnText = i18next.t('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' });
 
     if (type === 'secure') {
-        title = 'SECURE_PAYMENT.EXE';
+        title = i18next.t('badge_info.secure_title', { defaultValue: 'SECURE_PAYMENT.EXE' });
         
         // Узнаем, можно ли вернуть текущий товар
         const isReturnable = currentOpenedItem && currentOpenedItem.is_returnable === true;
         const isDropItem = currentOpenedItem && (currentOpenedItem.is_drop === true || (currentOpenedItem.tags && currentOpenedItem.tags.map(t => t.toLowerCase()).includes('drop')));
 
         if (!isReturnable || isDropItem) {
-            // Текст для вещей БЕЗ ВОЗВРАТА (Жесткий)
-            text = 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Данная вещь продается <b style="color:var(--accent-red);">без права на возврат или обмен ни при каких условиях</b>.<br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.';
+            text = i18next.t('badge_info.secure_no_return_text');
         } else {
-            // Текст для вещей С ВОЗВРАТОМ
-            text = 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style="color:var(--accent-green);">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>';
+            text = i18next.t('badge_info.secure_return_text');
         }
     } else if (type === 'fast') {
-        title = 'FAST_SHIPPING.SYS';
-        text = 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
+        title = i18next.t('badge_info.fast_title', { defaultValue: 'FAST_SHIPPING.SYS' });
+        text = i18next.t('badge_info.fast_text');
     } else if (type === 'refund_no') {
-        title = 'NO_RETURN_POLICY.LOG';
-        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>';
+        title = i18next.t('badge_info.refund_no_title', { defaultValue: 'NO_RETURN_POLICY.LOG' });
+        text = i18next.t('badge_info.refund_no_text');
     } else if (type === 'refund_yes') {
-        title = 'RETURN_POLICY.SYS';
-        text = '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>';
+        title = i18next.t('badge_info.refund_yes_title', { defaultValue: 'RETURN_POLICY.SYS' });
+        text = i18next.t('badge_info.refund_yes_text');
     } else if (type === 'drop') {
-        title = 'WARNING: DROP_ITEM';
-        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Эта вещь загружена сторонним продавцом (Creator).</span><br><br>Обязательно проводите полный осмотр вещи на отделении Новой Почты. <b style="color:var(--accent-red);">Если вы забрали посылку домой — возврат или обмен НЕВОЗМОЖЕН</b>, так как деньги сразу переводятся владельцу вещи.';
+        title = i18next.t('badge_info.drop_title', { defaultValue: 'WARNING: DROP_ITEM' });
+        text = i18next.t('badge_info.drop_text');
     }
     
-    showTerminalModal(title, text, '[ ПОНЯТНО ]', null);
+    showTerminalModal(title, text, btnText, null);
 };
 // ==========================================
 // ЛОГИКА ГЛАЗИКА (ПОКАЗАТЬ/СКРЫТЬ ПАРОЛЬ)
