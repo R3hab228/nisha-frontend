@@ -1106,32 +1106,6 @@ async function logout() {
 let renderedCount = 0;
 let filteredItems = [];
 
-// СТАЛО: Подмена прямых линков на наш кэширующий CDN-прокси
-function getOptimizedImageUrl(item, wantsThumb = false) {
-    if (!item || typeof item !== 'object') return '';
-    const isValid = (url) => typeof url === 'string' && url.trim().length > 10;
-    
-    let resultUrl = '';
-    
-    if (wantsThumb && Array.isArray(item.thumbnails) && item.thumbnails.length > 0) {
-        if (isValid(item.thumbnails[0])) resultUrl = item.thumbnails[0];
-    }
-    
-    if (!resultUrl && Array.isArray(item.images) && item.images.length > 0) {
-        if (isValid(item.images[0])) resultUrl = item.images[0];
-    }
-    
-    // МАГИЯ: Если ссылка на Supabase, меняем её на наш сервер на Render
-    if (resultUrl && resultUrl.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
-        // Мы берем только имя файла и подставляем к твоему API
-        const fileName = resultUrl.split('/').pop();
-        // ВАЖНО: Тут должен быть адрес твоего сервера Render
-        return `https://nisha-api.onrender.com/cdn-images/${fileName}`;
-    }
-    
-    return resultUrl;
-}
-
 async function loadAllItems() {
     const grid = document.getElementById('itemsGrid');
     
