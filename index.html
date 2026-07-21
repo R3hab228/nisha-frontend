@@ -13,35 +13,14 @@
 <meta name=theme-color content=#00ff00>
 <link rel=preconnect href=https://nmpuefxqtkhvtltdvllz.supabase.co crossorigin>
 <link rel=dns-prefetch href=https://nmpuefxqtkhvtltdvllz.supabase.co>
-<!-- Эта строка заставляет Google Chrome (Android) брать эту иконку для закладок -->
-    <link rel="shortcut icon" href="/icon-192.png?v=3">
-    
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=3">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icon-512.png?v=3">
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon.png?v=3">
-    <link rel="manifest" href="/manifest.json?v=3">
+<link rel="shortcut icon" href="/icon-192.png?v=3">
+<link rel=icon type=image/png sizes=192x192 href="/icon-192.png?v=3">
+<link rel=apple-touch-icon sizes=180x180 href="/icon-512.png?v=3">
+<link rel=icon type=image/png sizes=32x32 href="/icon.png?v=3">
+<link rel=manifest href="/manifest.json?v=3">
 <link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
-<script type="module">
-        import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js';
-        window.PhotoSwipeLightbox = PhotoSwipeLightbox;
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            window.pswpLightbox = new PhotoSwipeLightbox({
-                gallery: '#sliderWrapper',
-                children: 'a.slide',
-                // --- НОВЫЕ КРУТЫЕ НАСТРОЙКИ ---
-                showHideAnimationType: 'fade', // Резкое и плавное исчезновение (без улетания вниз)
-                zoomAnimationDuration: 200,    // Ускоряем зум (было 333мс, стало 200мс)
-                bgOpacity: 0.9,                // Делаем фон чуть прозрачным (как в инсте)
-                closeOnVerticalDrag: true,     // РАЗРЕШАЕМ ЗАКРЫТИЕ СВАЙПОМ ВНИЗ!
-                wheelToZoom: true,             // Зум колесиком мышки на ПК
-                // ------------------------------
-                pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
-            });
-            window.pswpLightbox.init();
-        });
-    </script>
+<script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",showHideAnimationType:"fade",zoomAnimationDuration:200,bgOpacity:.9,closeOnVerticalDrag:!0,wheelToZoom:!0,pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
 <link rel=stylesheet href=style.css>
 </head>
 <body>
