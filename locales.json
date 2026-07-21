@@ -88,7 +88,11 @@
         "badge_refund": "ВОЗВРАТ 14 ДНЕЙ",
         "badge_norefund": "БЕЗ ВОЗВРАТОВ",
         "badge_drop": "ПРЕДЛОЖКА",
-        "similar": "[ ПОХОЖИЕ ВЕЩИ ]"
+        "similar": "[ ПОХОЖИЕ ВЕЩИ ]",
+        "qa_title": "Q&A: Вопросы покупателей",
+        "ask_btn": "Задать вопрос?",
+        "ask_ph": "Ваш вопрос...",
+        "ask_send": "ОТПРАВИТЬ"
       },
       "grid": {
         "size_prefix": "Размер: "
@@ -313,7 +317,11 @@
         "badge_refund": "ПОВЕРНЕННЯ 14 ДНІВ",
         "badge_norefund": "БЕЗ ПОВЕРНЕННЯ",
         "badge_drop": "ДРОП",
-        "similar": "[ СХОЖІ РЕЧІ ]"
+        "similar": "[ СХОЖІ РЕЧІ ]",
+        "qa_title": "Q&A: Питання покупців",
+        "ask_btn": "Поставити запитання?",
+        "ask_ph": "Ваше запитання...",
+        "ask_send": "ВІДПРАВИТИ"
       },
       "grid": {
         "size_prefix": "Розмір: "
@@ -537,7 +545,11 @@
         "badge_refund": "14 DAYS RETURN",
         "badge_norefund": "NO RETURNS",
         "badge_drop": "DROP ITEM",
-        "similar": "[ SIMILAR ITEMS ]"
+        "similar": "[ SIMILAR ITEMS ]",
+        "qa_title": "Q&A: Customer questions",
+        "ask_btn": "Ask a question?",
+        "ask_ph": "Your question...",
+        "ask_send": "SEND"
       },
       "grid": {
         "size_prefix": "Size: "
