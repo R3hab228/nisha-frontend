@@ -1533,24 +1533,33 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
                 if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) isDraggingSlider = true;
             }, {passive: true});
             
-            // Умный обработчик: Моментальное открытие + Двойной тап для лайка
-            let lastClickTime = 0;
+            // Идеальный баланс: Двойной тап + Очень быстрое открытие
+            let clickTimer = null;
             
+            // Визуальный отклик (чтобы юзер чувствовал, что клик прошел)
+            sliderWrapper.addEventListener('touchstart', () => {
+                if(!isDraggingSlider) sliderWrapper.style.transform = 'scale(0.98)';
+            }, {passive: true});
+            
+            sliderWrapper.addEventListener('touchend', () => {
+                sliderWrapper.style.transform = 'scale(1)';
+            }, {passive: true});
+
             sliderWrapper.addEventListener('click', (e) => {
                 if (isDraggingSlider) { e.preventDefault(); e.stopPropagation(); return; } 
                 
-                const currentTime = new Date().getTime();
-                const timeDiff = currentTime - lastClickTime;
-                
-                // Если кликнули дважды очень быстро (меньше 300мс)
-                if (timeDiff < 300 && timeDiff > 0) {
-                    handleDoubleTapLike(e, item.id, sliderWrapper); // Вызываем анимацию лайка
+                if (clickTimer === null) {
+                    // Ждем всего 180мс. Глаз этого почти не заметит, но система успеет поймать двойной клик.
+                    clickTimer = setTimeout(() => {
+                        clickTimer = null;
+                        openProductModalById(item.id); 
+                    }, 180);
                 } else {
-                    // Это первый клик - открываем карточку моментально!
-                    openProductModalById(item.id); 
+                    // Это был двойной тап! Отменяем открытие окна и ставим лайк.
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                    handleDoubleTapLike(e, item.id, sliderWrapper); 
                 }
-                
-                lastClickTime = currentTime;
             });
 
             grid.appendChild(card);
