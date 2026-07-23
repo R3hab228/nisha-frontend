@@ -13,14 +13,35 @@
 <meta name=theme-color content=#00ff00>
 <link rel=preconnect href=https://nmpuefxqtkhvtltdvllz.supabase.co crossorigin>
 <link rel=dns-prefetch href=https://nmpuefxqtkhvtltdvllz.supabase.co>
-<link rel="shortcut icon" href="/icon-192.png?v=3">
-<link rel=icon type=image/png sizes=192x192 href="/icon-192.png?v=3">
-<link rel=apple-touch-icon sizes=180x180 href="/icon-512.png?v=3">
-<link rel=icon type=image/png sizes=32x32 href="/icon.png?v=3">
-<link rel=manifest href="/manifest.json?v=3">
+<!-- Эта строка заставляет Google Chrome (Android) брать эту иконку для закладок -->
+    <link rel="shortcut icon" href="/icon-192.png?v=3">
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=3">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-512.png?v=3">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon.png?v=3">
+    <link rel="manifest" href="/manifest.json?v=3">
 <link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
-<script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",showHideAnimationType:"fade",zoomAnimationDuration:200,bgOpacity:.9,closeOnVerticalDrag:!0,wheelToZoom:!0,pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
+<script type="module">
+        import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js';
+        window.PhotoSwipeLightbox = PhotoSwipeLightbox;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            window.pswpLightbox = new PhotoSwipeLightbox({
+                gallery: '#sliderWrapper',
+                children: 'a.slide',
+                // --- НОВЫЕ КРУТЫЕ НАСТРОЙКИ ---
+                showHideAnimationType: 'fade', // Резкое и плавное исчезновение (без улетания вниз)
+                zoomAnimationDuration: 200,    // Ускоряем зум (было 333мс, стало 200мс)
+                bgOpacity: 0.9,                // Делаем фон чуть прозрачным (как в инсте)
+                closeOnVerticalDrag: true,     // РАЗРЕШАЕМ ЗАКРЫТИЕ СВАЙПОМ ВНИЗ!
+                wheelToZoom: true,             // Зум колесиком мышки на ПК
+                // ------------------------------
+                pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+            });
+            window.pswpLightbox.init();
+        });
+    </script>
 <link rel=stylesheet href=style.css>
 </head>
 <body>
@@ -536,10 +557,15 @@
 <input id=propBrand class=form-input placeholder="Например: Arcteryx Beta AR" data-i18n-ph=propose.brand_place>
 <label data-i18n=propose.size_label>РАЗМЕР И ЗАМЕРЫ:</label>
 <input id=propSize class=form-input placeholder="Например: M (Длина 70, Грудь 55)" data-i18n-ph=propose.size_place>
-<label data-i18n=propose.cond_label>ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
-<input type=number id=propCond class=form-input placeholder=9 min=1 max=10 data-i18n-ph=propose.cond_place>
-<label data-i18n=propose.contact_label>СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
-<input id=propContact class=form-input placeholder="@твои_ник или +380..." data-i18n-ph=propose.contact_place>
+<label data-i18n="propose.cond_label">ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
+            <input type="number" id="propCond" class="form-input" placeholder="9" min="1" max="10" data-i18n-ph="propose.cond_place">
+            
+            <!-- НОВОЕ ПОЛЕ: ЖЕЛАЕМАЯ ЦЕНА -->
+            <label>ЖЕЛАЕМАЯ ЦЕНА (ГРН):</label>
+            <input type="number" id="propPrice" class="form-input" placeholder="Например: 1500" min="1">
+            
+            <label data-i18n="propose.contact_label">СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
+            <input type="text" id="propContact" class="form-input" placeholder="@твои_ник или +380..." data-i18n-ph="propose.contact_place">
 <button class="cart-checkout-btn btn-target" id=btnSubmitProp onclick=submitProposal() style=margin-top:15px;width:100% data-i18n=propose.btn_submit>[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
 </div>
 </div>
