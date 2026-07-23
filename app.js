@@ -4504,10 +4504,11 @@ async function submitProposal() {
         }).catch(e => console.log("Фоновая отправка: ", e)); // Игнорируем задержку Render
 
         // ФИНАЛ: ЗАКРЫТИЕ (Мгновенно)
-        closeModal('proposeModal');
+        resetProposalForm(); // 1. Сначала очищаем форму!
+        executeCloseModal('proposeModal'); // 2. Жестко закрываем окно в обход защиты
+        
         setTimeout(() => {
             showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка отправлена на сервер.', '[ ПРИНЯТО ]', null);
-            resetProposalForm();
             btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
             btn.style.pointerEvents = 'auto';
             btn.style.opacity = '1';
