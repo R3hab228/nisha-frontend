@@ -4393,7 +4393,7 @@ async function compressImage(file) {
 // 3. Полная очистка формы (вызывать после успеха)
 function resetProposalForm() {
     // ВАЖНО: Добавили 'propPrice' в список на очистку!
-    const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact'];
+    const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName'];
     fields.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
@@ -4452,16 +4452,18 @@ async function submitProposal() {
     if (!fileInput || !fileInput.files) return;
 
     const files = fileInput.files;
+    const rawName = document.getElementById('propName').value.trim(); // НОВОЕ ПОЛЕ
     const rawBrand = document.getElementById('propBrand').value.trim();
     const rawSize = document.getElementById('propSize').value.trim();
     const cond = parseInt(document.getElementById('propCond').value);
     const price = parseInt(document.getElementById('propPrice').value) || 0; // Считываем цену
     const rawContact = document.getElementById('propContact').value.trim();
+    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName; // НОВОЕ
     const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand;
     const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize;
     const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact;
 
-    if (!files.length || !brand || !size || isNaN(cond) || !contact) {
+    if (!files.length || !nameItem || !brand || !size || isNaN(cond) || !contact) {
         showToast('Заполните все поля и прикрепите фото!', 'error');
         return;
     }
@@ -4494,14 +4496,15 @@ async function submitProposal() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                name: nameItem, // ОТПРАВЛЯЕМ НАЗВАНИЕ
                 brand: brand,
                 measurements: size,
                 condition: cond,
-                price: price, // Отправляем цену на сервер!
+                price: price,
                 contact: contact,
                 imagesBase64: base64Images
             })
-        }).catch(e => console.log("Фоновая отправка: ", e)); // Игнорируем задержку Render
+        }).catch(e => console.log("Фоновая отправка: ", e));
 
         // ФИНАЛ: ЗАКРЫТИЕ (Мгновенно)
         resetProposalForm(); // 1. Сначала очищаем форму!
