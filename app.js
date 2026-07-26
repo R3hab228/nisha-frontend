@@ -537,33 +537,39 @@ window.onload = async () => {
                 if (favNav) favNav.style.color = '#fff';
             }
 
-            // Восстанавливаем категорию (из URL или из сохраненной памяти)
+            // --- ФИКС: ИДЕАЛЬНОЕ ВОССТАНОВЛЕНИЕ КАТЕГОРИИ И UI ---
             const savedCat = urlParams.get('cat') || sessionStorage.getItem('nisha_last_category');
+            
+            // 1. Очищаем все выделения в меню категорий
+            const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
+            catLinks.forEach(el => el.classList.remove('active-filter'));
+
             if (savedCat) {
                 currentCategory = savedCat;
-                const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
                 
-                // Очищаем старые выделения
-                catLinks.forEach(el => el.classList.remove('active-filter'));
-                
-                // Находим нужную ссылку и выделяем
+                // 2. Ищем ссылку, внутри onclick которой есть наша сохраненная категория, и красим её
                 catLinks.forEach(link => {
-                    // Используем атрибут data-i18n, чтобы не зависеть от языка и символов [>]
-                    // Извлекаем текст из onclick атрибута: setCategoryFilter('Штаны и Джинсы', this)
                     const onclickText = link.getAttribute('onclick') || '';
                     if (onclickText.includes(`'${currentCategory}'`)) {
                         link.classList.add('active-filter');
                     }
                 });
             } else {
-                // Если ничего не сохранено - выделяем первую ссылку ("Все вещи")
+                // Если ничего не сохранено - выделяем "Все вещи"
                 const firstLink = document.querySelector('.sidebar .filter-list:first-of-type a');
                 if (firstLink) firstLink.classList.add('active-filter');
             }
 
-            if (urlParams.has('q')) {
+            // --- НОВОЕ: ВОССТАНОВЛЕНИЕ ПОИСКОВОГО ЗАПРОСА В UI ---
+            const savedQuery = urlParams.get('q');
+            if (savedQuery) {
                 const sInput = document.getElementById('mainSearch');
-                if (sInput) sInput.value = urlParams.get('q');
+                if (sInput) {
+                    sInput.value = savedQuery;
+                    // Показываем крестик для сброса поиска
+                    const clearBtn = document.getElementById('clearSearchBtn');
+                    if (clearBtn) clearBtn.style.display = 'block';
+                }
             }
 
             await loadAllItems();
