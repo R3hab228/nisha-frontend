@@ -1228,6 +1228,14 @@ function updateSidebarCounters() {
         } else {
             link.innerHTML = baseText;
         }
+
+        // --- ЖЕЛЕЗОБЕТОННЫЙ ВОЗВРАТ ЗЕЛЕНОГО ВЫДЕЛЕНИЯ ---
+        link.classList.remove('active-filter'); // Сначала очищаем
+        if (currentCategory !== '' && catName === currentCategory) {
+            link.classList.add('active-filter');
+        } else if (currentCategory === '' && catName === 'Все вещи') {
+            link.classList.add('active-filter');
+        }
     });
 
     // Считаем размеры (только для ТЕКУЩЕЙ выбранной категории и ТОЛЬКО ДОСТУПНЫЕ)
