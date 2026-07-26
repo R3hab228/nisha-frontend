@@ -1237,6 +1237,7 @@ function updateSidebarCounters() {
             link.classList.add('active-filter');
         }
     });
+    
 
     // Считаем размеры (только для ТЕКУЩЕЙ выбранной категории и ТОЛЬКО ДОСТУПНЫЕ)
     const sizeCounts = {};
