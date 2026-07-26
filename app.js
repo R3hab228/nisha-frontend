@@ -1343,6 +1343,22 @@ function applyFilters() {
             if (searchTerm) url.searchParams.set('q', searchTerm); else url.searchParams.delete('q');
             window.history.replaceState(null, '', url);
 
+            // --- ЖЕЛЕЗОБЕТОННЫЙ ФИКС ЗЕЛЕНОГО ВЫДЕЛЕНИЯ ---
+            const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
+            catLinks.forEach(el => el.classList.remove('active-filter'));
+            
+            if (currentCategory) {
+                catLinks.forEach(link => {
+                    const onclickText = link.getAttribute('onclick') || '';
+                    if (onclickText.includes(`'${currentCategory}'`)) {
+                        link.classList.add('active-filter');
+                    }
+                });
+            } else {
+                const firstLink = document.querySelector('.sidebar .filter-list:first-of-type a');
+                if (firstLink) firstLink.classList.add('active-filter');
+            }
+
             updateSidebarCounters();
             
             if (grid) {
