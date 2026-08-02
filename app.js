@@ -343,7 +343,6 @@ function showToast(message, type = 'success', imgUrl = null) {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     
-    // Если передали картинку — добавляем её слева от текста
     let html = '';
     if (imgUrl) {
         html += `<div style="width: 35px; height: 35px; background-image: url('${imgUrl}'); background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #444; flex-shrink: 0;"></div>`;
@@ -353,10 +352,56 @@ function showToast(message, type = 'success', imgUrl = null) {
     toast.innerHTML = html;
     container.appendChild(toast);
     
-    // 2500 миллисекунд (2.5 секунды) + 500мс на саму анимацию затухания
-    setTimeout(() => { 
+    // Таймер авто-удаления
+    const removeTimeout = setTimeout(() => { 
         if(container.contains(toast)) container.removeChild(toast); 
     }, 3000);
+
+    // ==========================================
+    // ЛОГИКА СВАЙПА ВПРАВО (SWIPE TO DISMISS)
+    // ==========================================
+    let startX = 0;
+    let currentX = 0;
+
+    toast.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        toast.style.transition = 'none'; // Отключаем CSS-плавность на время свайпа
+    }, {passive: true});
+
+    toast.addEventListener('touchmove', (e) => {
+        currentX = e.touches[0].clientX;
+        const diffX = currentX - startX;
+        
+        // Позволяем тянуть только вправо
+        if (diffX > 0) {
+            toast.style.transform = `translateX(${diffX}px)`;
+            toast.style.opacity = Math.max(0, 1 - (diffX / 150)); // Прозрачность падает по мере свайпа
+        }
+    }, {passive: true});
+
+    toast.addEventListener('touchend', (e) => {
+        const diffX = currentX - startX;
+        
+        toast.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out'; // Возвращаем плавность
+
+        if (diffX > 80) {
+            // Если смахнули достаточно далеко - удаляем
+            clearTimeout(removeTimeout); // Отменяем авто-удаление, мы уже удаляем руками
+            toast.style.transform = `translateX(150%)`;
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (container.contains(toast)) container.removeChild(toast);
+            }, 300);
+        } else {
+            // Если смахнули слабо - возвращаем на место
+            toast.style.transform = `translateX(0)`;
+            toast.style.opacity = '1';
+        }
+        
+        // Сброс
+        startX = 0;
+        currentX = 0;
+    });
 }
 
 // --- КРУТЫЕ ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ ---
