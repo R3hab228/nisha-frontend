@@ -99,6 +99,12 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 .top-nav a:hover { color: var(--accent-green); border: 1px dotted var(--accent-green); background: rgba(0, 255, 0, 0.1); }
 #favNav { color: var(--accent-yellow); }
 #favNav span { color: var(--accent-red); }
+.top-nav a:hover { color: var(--accent-green); border: 1px dotted var(--accent-green); background: rgba(0, 255, 0, 0.1); }
+#favNav { color: var(--accent-yellow); }
+#favNav span { color: var(--accent-red); }
+
+/* --- НОВОЕ: Прячем кнопку профиля на ПК --- */
+.mobile-profile-link { display: none !important; }
 
 .marquee-container { background-color: #000; color: var(--accent-yellow); padding: 5px 30px; font-family: var(--font-mono); border-bottom: 1px solid #444; font-size: 14px; }
 
@@ -707,13 +713,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .toast { max-width: 90vw; width: max-content; }
     
     .header-top { flex-direction: column; gap: 10px; padding: 15px;}
-    .top-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-    .top-nav a { margin: 0; padding: 8px; font-size: 12px; }
-    /* Прячем кнопку профиля по умолчанию (для ПК) */
-.mobile-profile-link {
-    display: none !important;
-}
-    .main-container { flex-direction: column; padding: 10px; gap: 15px;}
+
     
     .sorting { font-size: 11px; padding: 10px 8px; letter-spacing: -0.2px; }
     
