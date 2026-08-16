@@ -3400,11 +3400,23 @@ function openProductModal(item) {
     if (simCont) {
         simCont.innerHTML = '';
         
-        let similar = allItems.filter(i => i.id !== item.id && (i.category === item.category || i.brand === item.brand));
+        // Считываем состояние галочки "Скрыть проданное"
+        const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
+        
+        // Фильтруем похожие товары (учитывая статус, если надо)
+        let similar = allItems.filter(i => {
+            if (i.id === item.id) return false; // Саму открытую вещь не показываем
+            if (hideUnavailable && i.status !== 'available') return false; // Прячем проданное, если стоит галочка
+            return (i.category === item.category || i.brand === item.brand);
+        });
         
         if (similar.length < 4) {
             const priceMargin = item.price * 0.3;
-            const extra = allItems.filter(i => i.id !== item.id && !similar.includes(i) && i.price >= item.price - priceMargin && i.price <= item.price + priceMargin);
+            const extra = allItems.filter(i => {
+                if (i.id === item.id || similar.includes(i)) return false;
+                if (hideUnavailable && i.status !== 'available') return false; // Прячем проданное, если стоит галочка
+                return i.price >= item.price - priceMargin && i.price <= item.price + priceMargin;
+            });
             similar = [...similar, ...extra];
         }
         
@@ -3677,10 +3689,16 @@ function renderHistory() {
     section.style.display = 'block';
     container.innerHTML = '';
     
+    // Считываем состояние галочки "Скрыть проданное"
+    const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
+
     hist.forEach(h => {
         // --- УЗНАЕМ РЕАЛЬНЫЙ СТАТУС ВЕЩИ ИЗ БАЗЫ ---
         const realItem = allItems.find(i => i.id === h.id);
         const currentStatus = realItem ? realItem.status : 'available';
+
+        // --- ФИКС: Прячем из истории, если нажата галочка "Скрыть проданное" ---
+        if (hideUnavailable && currentStatus !== 'available') return; // Просто пропускаем этот товар!
 
         const optImg = h.img;
         const isVideo = optImg && optImg.endsWith('.mp4');
