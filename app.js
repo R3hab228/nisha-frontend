@@ -3630,9 +3630,6 @@ function addToHistory(item) {
 // ==========================================
 // 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
 // ==========================================
-// ==========================================
-// 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
-// ==========================================
 function renderHistory() {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     const container = document.getElementById('historyGrid');
@@ -3672,22 +3669,21 @@ function renderHistory() {
             finalPriceHTML = `${h.price} ${curr}`;
         }
 
-        // --- ЛОГИКА ОТОБРАЖЕНИЯ SOLD / RESERVED (1 в 1 как в ленте) ---
+        // --- ЛОГИКА ОТОБРАЖЕНИЯ SOLD / RESERVED ---
         let statusOverlayHTML = '';
         let imageFilter = '';
 
         if (currentStatus === 'sold') {
-            // Используем стандартный класс .sold-badge
-            statusOverlayHTML = `<div class="sold-badge" style="font-size: 16px !important; letter-spacing: 2px !important; padding: 2px 10px !important;">SOLD</div>`;
-            imageFilter = 'filter: grayscale(80%) brightness(0.6);'; 
+            // Убрали translateZ и скорректировали позицию, чтобы было ровно по центру
+            statusOverlayHTML = `<div class="sold-badge" style="font-size: 16px !important; letter-spacing: 2px !important; padding: 2px 10px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">SOLD</div>`;
+            imageFilter = 'filter: grayscale(80%) brightness(0.5);'; 
         } else if (currentStatus === 'reserved') {
-            // Используем стандартный класс .reserved-badge
-            statusOverlayHTML = `<div class="reserved-badge" style="font-size: 14px !important; letter-spacing: 1px !important; padding: 2px 5px !important;">RESERVED</div>`;
+            statusOverlayHTML = `<div class="reserved-badge" style="font-size: 14px !important; letter-spacing: 1px !important; padding: 2px 5px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">RESERVED</div>`;
         }
 
         const card = document.createElement('div');
-        // Добавляем класс sold-out к самой карточке истории, чтобы она тоже стала полупрозрачной
-        card.className = `history-card ${currentStatus !== 'available' ? 'sold-out' : ''}`;
+        // Убрали класс sold-out с самой карточки, чтобы крестик и цена оставались яркими!
+        card.className = `history-card`;
         card.onclick = () => openProductModalById(h.id);
         
         let mediaHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555;">NO FOTO</div>';
@@ -3695,11 +3691,11 @@ function renderHistory() {
         if (optImg) {
             if (isVideo) {
                 mediaHTML = `
-                    <video src="${optImg}#t=0.001" muted playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none; ${imageFilter}"></video>
+                    <video src="${optImg}#t=0.001" muted playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none; ${imageFilter} transition: 0.3s;"></video>
                     <div style="position:absolute; z-index:5; top:4px; left:4px; background:rgba(0,0,0,0.8); padding:2px 4px; border-radius:2px; color:var(--accent-green); font-size:8px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
                 `;
             } else {
-                mediaHTML = `<div style="width:100%; height:100%; background-image:url('${optImg}'); background-size:cover; background-position:center; ${imageFilter}"></div>`;
+                mediaHTML = `<div style="width:100%; height:100%; background-image:url('${optImg}'); background-size:cover; background-position:center; ${imageFilter} transition: 0.3s;"></div>`;
             }
         }
         
@@ -3709,14 +3705,15 @@ function renderHistory() {
         }
 
         card.innerHTML = `
-            <div class="history-img" style="position: relative; overflow: hidden; padding: 0;">
-                <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="Удалить">X</div>
+            <div class="history-img" style="position: relative; overflow: hidden; padding: 0; background: #111;">
                 ${mediaHTML}
                 ${miniBadgeHTML}
                 ${statusOverlayHTML}
+                <!-- Крестик вынесен ПОВЕРХ всего и не попадает под фильтры! -->
+                <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="Удалить" style="z-index: 20;">X</div>
             </div>
             <div class="history-info">
-                <div class="history-name" title="${h.name}">${h.name}</div>
+                <div class="history-name" title="${h.name}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${h.name}</div>
                 <div class="history-price">${finalPriceHTML}</div>
             </div>`;
             
