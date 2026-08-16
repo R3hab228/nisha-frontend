@@ -718,10 +718,35 @@ window.onload = async () => {
             document.getElementById('ordersSearchPhone').value = currentUser.phone;
         }
 
-        // Если правила уже были приняты ранее, но тур не пройден — запускаем
+       // Если правила уже были приняты ранее, но тур не пройден — запускаем
         if (localStorage.getItem('nisha_rules_accepted')) {
             startOnboardingTour();
         }
+
+        // --- СИСТЕМА ЛИЧНЫХ ОТВЕТОВ ОТ ПОДДЕРЖКИ ---
+        setTimeout(async () => {
+            try {
+                // 1. Проверяем, не ответили ли нам, пока нас не было
+                const { data: replies } = await _supabase.from('support_replies').select('*').eq('client_id', clientFingerprint).eq('is_read', false);
+                if (replies && replies.length > 0) {
+                    replies.forEach(r => {
+                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
+                            _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
+                        });
+                    });
+                }
+
+                // 2. Слушаем в реальном времени, если мы прямо сейчас на сайте
+                _supabase.channel('support-replies-channel')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_replies', filter: `client_id=eq.${clientFingerprint}` }, payload => {
+                        const r = payload.new;
+                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
+                            _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
+                        });
+                    })
+                    .subscribe();
+            } catch(e) {}
+        }, 3000); // Ждем 3 секунды после загрузки сайта, чтобы не мешать
 
     } catch (err) {
        
@@ -5091,7 +5116,7 @@ async function submitSupportTicket() {
         const res = await fetch('https://nisha-api.onrender.com/api/support', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contact: userContact, message: safeText })
+            body: JSON.stringify({ contact: userContact, message: safeText, clientId: clientFingerprint })
         });
         
         const data = await res.json();
