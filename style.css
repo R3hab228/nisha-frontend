@@ -15,8 +15,10 @@
 
 /* ФИКС: Жестко запрещаем вылезание за экран (Черные полосы) */
 html, body {
-    max-width: 100vw;
+    width: 100%;
+    max-width: 100%;
     overflow-x: hidden;
+    position: relative;
 }
 
 * { box-sizing: border-box; }
@@ -745,9 +747,18 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .hide-on-mobile { display: none !important; }
     
     .cart-dropdown { 
-        display: flex !important; width: 100vw; left: -15px; bottom: calc(100% + 20px) !important; 
+        display: flex !important; 
+        position: fixed !important; /* Отвязываем от родителя */
+        width: 100% !important;     /* Никаких вылезаний за экран */
+        left: 0 !important;         /* Ровно по краю */
+        bottom: 80px !important;    /* Поднимаем над кнопкой заказа */
         border-left: none; border-right: none; opacity: 0; visibility: hidden; 
         transform: translateY(15px); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); pointer-events: none; 
+    }
+
+    /* --- НОВОЕ: СЕРОЕ ФОТО В МОДАЛКЕ ПРОДАННОГО ТОВАРА --- */
+    .is-sold-modal .slider-wrapper {
+        filter: grayscale(80%) brightness(0.5);
     }
     .cart-dropdown.active { opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto; }
     .cart-click-area { cursor: pointer; }
