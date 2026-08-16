@@ -5071,17 +5071,23 @@ async function openSupportModal() {
         showCancelButton: true,
         confirmButtonText: 'ОТПРАВИТЬ СИГНАЛ',
         cancelButtonText: 'ОТМЕНА',
-        // --- СТИЛИЗАЦИЯ ПОД ТЕРМИНАЛ NISHA ---
-        customClass: { 
-            popup: 'modal-window', // Квадратная форма, граница outset
-            title: 'modal-title typewriter', // Твой зеленый хакерский заголовок
-            htmlContainer: 'modal-desc', // Цвет текста как в описании товара
-            input: 'form-input', // Окно ввода 1 в 1 как в предложке
-            confirmButton: 'cart-checkout-btn btn-target', // Зеленая кнопка заказа
-            cancelButton: 'cart-checkout-btn btn-target', // Серая кнопка отмены
-            actions: 'buy-share-row' // Чтобы кнопки стояли ровно в ряд
+        // --- ФИКС ПОЗИЦИИ (ПРИЛЕПЛЯЕМ ВНИЗ) ---
+        position: 'bottom', // Окно появится в самом низу экрана
+        showClass: {
+            popup: 'swal2-show', // Оставляем базовую плавность
+            backdrop: 'swal2-backdrop-show'
         },
-        buttonsStyling: false // ОТКЛЮЧАЕМ СТАНДАРТНЫЕ СТИЛИ SWEETALERT!
+        // ------------------------------------
+        customClass: { 
+            popup: 'modal-window', 
+            title: 'modal-title typewriter', 
+            htmlContainer: 'modal-desc', 
+            input: 'form-input', 
+            confirmButton: 'cart-checkout-btn btn-target', 
+            cancelButton: 'cart-checkout-btn btn-target',
+            actions: 'buy-share-row' 
+        },
+        buttonsStyling: false 
     });
     
     if (supportMessage && supportMessage.trim() !== "") {
