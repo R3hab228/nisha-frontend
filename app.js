@@ -4107,7 +4107,7 @@ if(installBtn) {
 function shareItem() {
     if (!currentOpenedItem) return;
     
-    const shareUrl = `https://www.nisha-store.shop/share/${currentOpenedItem.id}`;
+    const shareUrl = `https://nisha-api.onrender.com/share/${currentOpenedItem.id}`;
     const shareTitle = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
     const shareText = `Зацени: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`;
 
