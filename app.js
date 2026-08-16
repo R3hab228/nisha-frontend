@@ -723,30 +723,57 @@ window.onload = async () => {
             startOnboardingTour();
         }
 
-        // --- СИСТЕМА ЛИЧНЫХ ОТВЕТОВ ОТ ПОДДЕРЖКИ ---
+       // ==============================================================
+        // --- СИСТЕМА ЛИЧНЫХ ОТВЕТОВ ОТ ПОДДЕРЖКИ (ФИКС) ---
+        // ==============================================================
         setTimeout(async () => {
+            console.log("[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:", clientFingerprint);
             try {
-                // 1. Проверяем, не ответили ли нам, пока нас не было
-                const { data: replies } = await _supabase.from('support_replies').select('*').eq('client_id', clientFingerprint).eq('is_read', false);
+                // 1. ПРОВЕРКА ПРОПУЩЕННЫХ СООБЩЕНИЙ (OFFLINE)
+                const { data: replies, error: replErr } = await _supabase
+                    .from('support_replies')
+                    .select('*')
+                    .eq('client_id', clientFingerprint)
+                    .eq('is_read', false);
+                
+                if (replErr) console.error("[СИСТЕМА ОТВЕТОВ] Ошибка БД:", replErr.message);
+
                 if (replies && replies.length > 0) {
+                    console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
                     replies.forEach(r => {
+                        // Показываем терминал
                         showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
+                            // После прочтения - помечаем как прочитанное (чтобы не показывало дважды)
                             _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
                     });
                 }
 
-                // 2. Слушаем в реальном времени, если мы прямо сейчас на сайте
+                // 2. ПРОСЛУШИВАНИЕ В РЕАЛЬНОМ ВРЕМЕНИ (ONLINE)
+                console.log("[СИСТЕМА ОТВЕТОВ] Подписка на Realtime включена.");
                 _supabase.channel('support-replies-channel')
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_replies', filter: `client_id=eq.${clientFingerprint}` }, payload => {
+                    .on('postgres_changes', { 
+                        event: 'INSERT', 
+                        schema: 'public', 
+                        table: 'support_replies', 
+                        filter: `client_id=eq.${clientFingerprint}` 
+                    }, payload => {
+                        console.log("[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение Online:", payload.new);
                         const r = payload.new;
+                        
                         showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
                             _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
                     })
-                    .subscribe();
-            } catch(e) {}
-        }, 3000); // Ждем 3 секунды после загрузки сайта, чтобы не мешать
+                    .subscribe((status) => {
+                        if (status === 'SUBSCRIBED') {
+                            console.log("[СИСТЕМА ОТВЕТОВ] Успешно подключен к каналу!");
+                        }
+                    });
+            } catch(e) {
+                console.error("[СИСТЕМА ОТВЕТОВ] Глобальная ошибка:", e);
+            }
+        }, 3000);
 
     } catch (err) {
        
