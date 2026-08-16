@@ -3417,12 +3417,13 @@ function openProductModal(item) {
             similar.forEach(s => {
                 const sImg = getOptimizedImageUrl(s, true); 
                 
-                // --- МИНИ-БЕЙДЖИ ДЛЯ ПОХОЖИХ ТОВАРОВ ---
+                // 1. МИНИ-БЕЙДЖИ (% SALE / HOT) - остаются в левом верхнем углу
                 let miniBadgeHTML = '';
                 const hasSale = s.is_sale;
                 const hasHot = (s.views_count || 0) >= 25;
 
-                if (hasSale || hasHot) {
+                // Показываем SALE и HOT только если вещь НЕ продана (статус 'available')
+                if ((hasSale || hasHot) && s.status === 'available') {
                     miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 4px; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none;">`;
                     if (hasSale) miniBadgeHTML += `<span style="color: #cc0000;">% SALE</span>`;
                     if (hasSale && hasHot) miniBadgeHTML += `<div style="width: 1px; height: 8px; background: #888;"></div>`;
@@ -3438,23 +3439,39 @@ function openProductModal(item) {
                     miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${s.old_price}</span><span style="color: var(--accent-green);">${s.price} ${curr}</span>`;
                 }
 
-                // --- ПУЛЬСАЦИЯ ДЛЯ НОВЫХ ПОХОЖИХ ВЕЩЕЙ ---
                 const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
                 const pulseAnim = isUnseen ? 'animation: unseenPulseAnim 2s infinite alternate;' : '';
                 const baseBorder = isUnseen ? 'var(--accent-red)' : '#333';
 
-                // --- ИСПРАВЛЕНИЕ: НАДЕЖНАЯ ЗАГРУЗКА КАРТИНКИ (ВМЕСТО ФОНА) ---
+                // 2. ЛОГИКА ОТОБРАЖЕНИЯ SOLD / RESERVED
+                let statusOverlayHTML = '';
+                let imageFilter = '';
+
+                if (s.status === 'sold') {
+                    // Плашка SOLD (по центру, чуть уменьшена для мини-карточек)
+                    statusOverlayHTML = `<div class="sold-badge" style="font-size: 14px !important; letter-spacing: 2px !important; padding: 2px 8px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">SOLD</div>`;
+                    imageFilter = 'filter: grayscale(80%) brightness(0.5);'; 
+                    // Перечеркиваем цену, если вещь продана
+                    miniPriceHTML = `<span style="color:#888; text-decoration:line-through;">${s.price} ${curr}</span>`;
+                } else if (s.status === 'reserved') {
+                    // Плашка RESERVED
+                    statusOverlayHTML = `<div class="reserved-badge" style="font-size: 11px !important; letter-spacing: 1px !important; padding: 2px 4px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">RESERVED</div>`;
+                    imageFilter = 'filter: brightness(0.6);'; 
+                }
+
+                // 3. СБОРКА КАРТИНКИ ИЛИ ВИДЕО (Надежная загрузка)
                 let imageBlockHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; font-family:var(--font-mono); font-size:10px;">NO FOTO</div>`;
                 
                 if (sImg) {
                     if (sImg.endsWith('.mp4')) {
-                        imageBlockHTML = `<video src="${sImg}#t=0.001" style="width:100%; height:100%; object-fit:cover; pointer-events:none;" preload="metadata"></video>`;
+                        imageBlockHTML = `<video src="${sImg}#t=0.001" style="width:100%; height:100%; object-fit:cover; pointer-events:none; ${imageFilter} transition: 0.3s;" preload="metadata"></video>`;
                     } else {
-                        // Используем реальный тег <img> с обработчиком ошибок (onerror)
-                        imageBlockHTML = `<img src="${sImg}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;font-size:10px;font-family:var(--font-mono);\\'>ERROR</div>';">`;
+                        // Используем реальный тег <img> с обработчиком ошибок (onerror) и накладываем фильтр, если вещь продана
+                        imageBlockHTML = `<img src="${sImg}" style="width:100%; height:100%; object-fit:cover; display:block; ${imageFilter} transition: 0.3s;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;font-size:10px;font-family:var(--font-mono);\\'>ERROR</div>';">`;
                     }
                 }
 
+                // 4. ФИНАЛЬНЫЙ РЕНДЕР КАРТОЧКИ
                 simCont.innerHTML += `
                     <div style="min-width: 120px; cursor: pointer; border: 1px solid ${baseBorder}; background: #000; transition: 0.2s; ${pulseAnim} display:flex; flex-direction:column;" 
                          onmouseover="this.style.borderColor='var(--accent-green)'" 
@@ -3462,6 +3479,7 @@ function openProductModal(item) {
                          onclick="openProductModalById('${s.id}')">
                         <div style="position: relative; height: 100px; width: 100%; overflow: hidden; background: #111;">
                             ${miniBadgeHTML}
+                            ${statusOverlayHTML}
                             ${imageBlockHTML}
                         </div>
                         <div style="padding: 8px; font-size: 11px; color: #fff; font-family: var(--font-mono); text-align: center; margin-top: auto;">${miniPriceHTML}</div>
