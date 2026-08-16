@@ -4101,26 +4101,36 @@ if(installBtn) {
         deferredPrompt = null;
     });
 }
+// ==========================================
+// ПОДЕЛИТЬСЯ ТОВАРОМ (NATIVE SHARE)
+// ==========================================
 function shareItem() {
     if (!currentOpenedItem) return;
     
-    // Прямая ссылка на твой новый домен
     const shareUrl = `https://www.nisha-store.shop/share/${currentOpenedItem.id}`;
-    
-    const shareData = {
-        title: `NISHA | ${currentOpenedItem.name}`,
-        text: `Зацени какую вещь нашел: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`,
-        url: shareUrl 
-    };
+    const shareTitle = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
+    const shareText = `Зацени: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`;
 
-    // Если это телефон — открываем нативное меню "Поделиться"
-    if (navigator.share && /mobile|android|iphone/i.test(navigator.userAgent)) {
-        navigator.share(shareData).catch(err => console.log('Шеринг отменен'));
+    // Если браузер поддерживает нативное меню "Поделиться" (Все смартфоны и Mac)
+    if (navigator.share) {
+        navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+        }).catch((err) => {
+            console.log('Шеринг отменен пользователем');
+        });
     } else {
-        // Если это ПК (или браузер не поддерживает share) — просто копируем ссылку
+        // Если это обычный ПК на Windows (копируем ссылку)
         navigator.clipboard.writeText(shareUrl)
-            .then(() => showToast(i18next.t('messages.link_copied'), 'success'))
-            .catch(() => showToast(i18next.t('messages.copy_error'), 'error'));
+            .then(() => {
+                const msg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'Ссылка скопирована!'}) : 'Ссылка скопирована!';
+                showToast(msg, 'success');
+            })
+            .catch(() => {
+                const msg = typeof i18next !== 'undefined' ? i18next.t('messages.copy_error', {defaultValue: 'Ошибка копирования'}) : 'Ошибка копирования';
+                showToast(msg, 'error');
+            });
     }
 }
 let currentPromoDiscount = 0; 
