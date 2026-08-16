@@ -3630,6 +3630,9 @@ function addToHistory(item) {
 // ==========================================
 // 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
 // ==========================================
+// ==========================================
+// 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
+// ==========================================
 function renderHistory() {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     const container = document.getElementById('historyGrid');
@@ -3637,7 +3640,6 @@ function renderHistory() {
     
     if(!container || !section) return;
 
-    // Проверяем, существуют ли еще эти товары в реальной базе
     if (allItems.length > 0) {
         const validHist = hist.filter(h => allItems.some(dbItem => dbItem.id === h.id));
         if (validHist.length !== hist.length) {
@@ -3670,19 +3672,22 @@ function renderHistory() {
             finalPriceHTML = `${h.price} ${curr}`;
         }
 
-        // --- ЛОГИКА ОТОБРАЖЕНИЯ SOLD / RESERVED ---
+        // --- ЛОГИКА ОТОБРАЖЕНИЯ SOLD / RESERVED (1 в 1 как в ленте) ---
         let statusOverlayHTML = '';
         let imageFilter = '';
 
         if (currentStatus === 'sold') {
-            statusOverlayHTML = `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: rgba(0,0,0,0.8); color: var(--accent-red); border: 2px solid var(--accent-red); padding: 2px 10px; font-family: var(--font-mono); font-weight: bold; font-size: 16px; z-index: 10; letter-spacing: 2px; pointer-events: none; box-shadow: 0 0 10px var(--accent-red);">SOLD</div>`;
-            imageFilter = 'filter: grayscale(80%) brightness(0.6);'; // Делаем серым
+            // Используем стандартный класс .sold-badge
+            statusOverlayHTML = `<div class="sold-badge" style="font-size: 16px !important; letter-spacing: 2px !important; padding: 2px 10px !important;">SOLD</div>`;
+            imageFilter = 'filter: grayscale(80%) brightness(0.6);'; 
         } else if (currentStatus === 'reserved') {
-            statusOverlayHTML = `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: rgba(0,0,0,0.8); color: var(--accent-yellow); border: 2px solid var(--accent-yellow); padding: 2px 5px; font-family: var(--font-mono); font-weight: bold; font-size: 12px; z-index: 10; letter-spacing: 1px; pointer-events: none; box-shadow: 0 0 10px var(--accent-yellow);">RESERVED</div>`;
+            // Используем стандартный класс .reserved-badge
+            statusOverlayHTML = `<div class="reserved-badge" style="font-size: 14px !important; letter-spacing: 1px !important; padding: 2px 5px !important;">RESERVED</div>`;
         }
 
         const card = document.createElement('div');
-        card.className = 'history-card';
+        // Добавляем класс sold-out к самой карточке истории, чтобы она тоже стала полупрозрачной
+        card.className = `history-card ${currentStatus !== 'available' ? 'sold-out' : ''}`;
         card.onclick = () => openProductModalById(h.id);
         
         let mediaHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555;">NO FOTO</div>';
@@ -3698,7 +3703,6 @@ function renderHistory() {
             }
         }
         
-        // --- МИНИ-БЕЙДЖИ ДЛЯ ИСТОРИИ ---
         let miniBadgeHTML = '';
         if (h.is_sale && currentStatus === 'available') {
             miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none; color: #cc0000;">% SALE</div>`;
@@ -3712,7 +3716,7 @@ function renderHistory() {
                 ${statusOverlayHTML}
             </div>
             <div class="history-info">
-                <div class="history-name" title="${h.name}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${h.name}</div>
+                <div class="history-name" title="${h.name}">${h.name}</div>
                 <div class="history-price">${finalPriceHTML}</div>
             </div>`;
             
