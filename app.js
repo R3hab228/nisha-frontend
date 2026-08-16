@@ -5159,6 +5159,30 @@ async function submitSupportTicket() {
     btn.style.pointerEvents = 'auto';
     btn.innerText = 'ОТПРАВИТЬ СИГНАЛ';
 }
+// ==========================================
+// УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА)
+// ==========================================
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        // Юзер свернул браузер или ушел на другую вкладку
+        if (cart.length > 0) {
+            // Если в корзине что-то есть, давим на психику
+            document.title = `(${cart.length}) 🛒 Ждем тебя | NISHA`;
+        } else {
+            // Если корзина пустая, просто "засыпаем"
+            document.title = `Zzz... | NISHA`;
+        }
+    } else {
+        // Юзер вернулся обратно на наш сайт
+        if (typeof currentOpenedItem !== 'undefined' && currentOpenedItem) {
+            // Если у него открыта карточка товара
+            document.title = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
+        } else {
+            // Если он просто в ленте
+            document.title = 'NISHA | Underground Store';
+        }
+    }
+});
 
 
 // Запускаем инициализацию после загрузки
