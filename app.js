@@ -5065,37 +5065,37 @@ async function openSupportModal() {
         title: 'SUPPORT_TICKET.EXE',
         text: 'Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.',
         input: 'textarea',
-        background: '#111',
-        color: '#fff',
         inputPlaceholder: 'Начни печатать...',
+        background: '#111',
+        color: '#c0c0c0',
         showCancelButton: true,
-        confirmButtonColor: 'var(--accent-green)',
-        cancelButtonColor: '#333',
-        confirmButtonText: '<span style="color:#000; font-weight:bold; font-family:monospace;">ОТПРАВИТЬ СИГНАЛ</span>',
-        cancelButtonText: '<span style="color:#fff; font-family:monospace;">ОТМЕНА</span>',
-        customClass: { title: 'typewriter', popup: 'modal-window', input: 'form-input' }
+        confirmButtonText: 'ОТПРАВИТЬ СИГНАЛ',
+        cancelButtonText: 'ОТМЕНА',
+        // --- СТИЛИЗАЦИЯ ПОД ТЕРМИНАЛ NISHA ---
+        customClass: { 
+            popup: 'modal-window', // Квадратная форма, граница outset
+            title: 'modal-title typewriter', // Твой зеленый хакерский заголовок
+            htmlContainer: 'modal-desc', // Цвет текста как в описании товара
+            input: 'form-input', // Окно ввода 1 в 1 как в предложке
+            confirmButton: 'cart-checkout-btn btn-target', // Зеленая кнопка заказа
+            cancelButton: 'cart-checkout-btn btn-target', // Серая кнопка отмены
+            actions: 'buy-share-row' // Чтобы кнопки стояли ровно в ряд
+        },
+        buttonsStyling: false // ОТКЛЮЧАЕМ СТАНДАРТНЫЕ СТИЛИ SWEETALERT!
     });
     
     if (supportMessage && supportMessage.trim() !== "") {
-        // Защита от спама (очистка)
         const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(supportMessage.trim()) : supportMessage.trim();
-        
-        // Берем email или телефон юзера (если он залогинен)
         const userContact = currentUser ? (currentUser.email || currentUser.phone || 'Аноним') : 'Гость';
 
         try {
-            // Отправляем на наш сервер (мы добавим этот роут на следующем шаге)
             const res = await fetch('https://nisha-api.onrender.com/api/support', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    contact: userContact, 
-                    message: safeText 
-                })
+                body: JSON.stringify({ contact: userContact, message: safeText })
             });
             
             const data = await res.json();
-            
             if (data.success) {
                 showToast('Сообщение успешно доставлено админу!', 'success');
             } else {
