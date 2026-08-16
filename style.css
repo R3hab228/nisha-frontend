@@ -712,9 +712,28 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .toast-container { right: 15px; left: auto; align-items: flex-end; }
     .toast { max-width: 90vw; width: max-content; }
     
-    .header-top { flex-direction: column; gap: 15px; padding: 15px; align-items: center; text-align: center; }
-    .top-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
-    .top-nav a { margin-left: 0 !important; font-size: 12px; padding: 5px; }
+    .header-top { flex-direction: column; gap: 15px; padding: 15px; }
+    .top-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        row-gap: 16px; /* Расстояние между верхней и нижней строкой */
+    }
+    .top-nav a {
+        margin: 0 !important;
+        padding: 0;
+        font-size: 13px; /* Оптимальный размер, как на скрине */
+        white-space: nowrap; /* Чтобы текст не ломался внутри кнопки */
+        letter-spacing: 0.5px;
+    }
+    /* Верхний ряд: 3 кнопки на всю ширину (30% + 40% + 30%) */
+    .top-nav a:nth-child(1) { width: 30%; text-align: left; }
+    .top-nav a:nth-child(2) { width: 40%; text-align: center; }
+    .top-nav a:nth-child(3) { width: 30%; text-align: right; }
+    /* Нижний ряд: 2 кнопки по центру (с отступом между ними) */
+    .top-nav a:nth-child(4) { margin-right: 6% !important; }
+    .top-nav a:nth-child(5) { margin-left: 6% !important; }
 
     
     .sorting { font-size: 11px; padding: 10px 8px; letter-spacing: -0.2px; }
