@@ -3627,6 +3627,9 @@ function addToHistory(item) {
     renderHistory();
 }
 
+// ==========================================
+// 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
+// ==========================================
 function renderHistory() {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     const container = document.getElementById('historyGrid');
@@ -3634,6 +3637,7 @@ function renderHistory() {
     
     if(!container || !section) return;
 
+    // Проверяем, существуют ли еще эти товары в реальной базе
     if (allItems.length > 0) {
         const validHist = hist.filter(h => allItems.some(dbItem => dbItem.id === h.id));
         if (validHist.length !== hist.length) {
@@ -3651,10 +3655,13 @@ function renderHistory() {
     container.innerHTML = '';
     
     hist.forEach(h => {
+        // --- УЗНАЕМ РЕАЛЬНЫЙ СТАТУС ВЕЩИ ИЗ БАЗЫ ---
+        const realItem = allItems.find(i => i.id === h.id);
+        const currentStatus = realItem ? realItem.status : 'available';
+
         const optImg = h.img;
         const isVideo = optImg && optImg.endsWith('.mp4');
         
-        // --- ЛОГИКА ЦЕНЫ СО СКИДКОЙ ДЛЯ ИСТОРИИ ---
         let finalPriceHTML = '';
         const curr = getCurrency();
         if (h.is_sale && h.old_price) {
@@ -3663,36 +3670,37 @@ function renderHistory() {
             finalPriceHTML = `${h.price} ${curr}`;
         }
 
+        // --- ЛОГИКА ОТОБРАЖЕНИЯ SOLD / RESERVED ---
+        let statusOverlayHTML = '';
+        let imageFilter = '';
+
+        if (currentStatus === 'sold') {
+            statusOverlayHTML = `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: rgba(0,0,0,0.8); color: var(--accent-red); border: 2px solid var(--accent-red); padding: 2px 10px; font-family: var(--font-mono); font-weight: bold; font-size: 16px; z-index: 10; letter-spacing: 2px; pointer-events: none; box-shadow: 0 0 10px var(--accent-red);">SOLD</div>`;
+            imageFilter = 'filter: grayscale(80%) brightness(0.6);'; // Делаем серым
+        } else if (currentStatus === 'reserved') {
+            statusOverlayHTML = `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: rgba(0,0,0,0.8); color: var(--accent-yellow); border: 2px solid var(--accent-yellow); padding: 2px 5px; font-family: var(--font-mono); font-weight: bold; font-size: 12px; z-index: 10; letter-spacing: 1px; pointer-events: none; box-shadow: 0 0 10px var(--accent-yellow);">RESERVED</div>`;
+        }
+
         const card = document.createElement('div');
         card.className = 'history-card';
         card.onclick = () => openProductModalById(h.id);
         
-        // Готовим надежный HTML для медиа-блока
         let mediaHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555;">NO FOTO</div>';
         
         if (optImg) {
             if (isVideo) {
-                // Видео: вытягиваем первый кадр через #t=0.001
                 mediaHTML = `
-                    <video 
-                        src="${optImg}#t=0.001" 
-                        muted 
-                        playsinline 
-                        webkit-playsinline 
-                        preload="metadata"
-                        style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"
-                    ></video>
+                    <video src="${optImg}#t=0.001" muted playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none; ${imageFilter}"></video>
                     <div style="position:absolute; z-index:5; top:4px; left:4px; background:rgba(0,0,0,0.8); padding:2px 4px; border-radius:2px; color:var(--accent-green); font-size:8px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
                 `;
             } else {
-                // Картинка
-                mediaHTML = `<div style="width:100%; height:100%; background-image:url('${optImg}'); background-size:cover; background-position:center;"></div>`;
+                mediaHTML = `<div style="width:100%; height:100%; background-image:url('${optImg}'); background-size:cover; background-position:center; ${imageFilter}"></div>`;
             }
         }
         
         // --- МИНИ-БЕЙДЖИ ДЛЯ ИСТОРИИ ---
         let miniBadgeHTML = '';
-        if (h.is_sale) {
+        if (h.is_sale && currentStatus === 'available') {
             miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none; color: #cc0000;">% SALE</div>`;
         }
 
@@ -3701,9 +3709,10 @@ function renderHistory() {
                 <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="Удалить">X</div>
                 ${mediaHTML}
                 ${miniBadgeHTML}
+                ${statusOverlayHTML}
             </div>
             <div class="history-info">
-                <div class="history-name" title="${h.name}">${h.name}</div>
+                <div class="history-name" title="${h.name}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${h.name}</div>
                 <div class="history-price">${finalPriceHTML}</div>
             </div>`;
             
@@ -3714,11 +3723,8 @@ function renderHistory() {
         }
     });
 
-    // СИНХРОНИЗАЦИЯ С БД (если юзер вошел в аккаунт)
     if (currentUser && _supabase) {
-        _supabase.from('profiles').update({ 
-            viewed_history: hist.map(h => h.id) 
-        }).eq('id', currentUser.id).then();
+        _supabase.from('profiles').update({ viewed_history: hist.map(h => h.id) }).eq('id', currentUser.id).then();
     }
 }
 
