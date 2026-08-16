@@ -723,13 +723,13 @@ window.onload = async () => {
             startOnboardingTour();
         }
 
-       // ==============================================================
+        // ==============================================================
         // --- СИСТЕМА ЛИЧНЫХ ОТВЕТОВ ОТ ПОДДЕРЖКИ (ФИКС) ---
         // ==============================================================
         setTimeout(async () => {
             console.log("[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:", clientFingerprint);
             try {
-                // 1. ПРОВЕРКА ПРОПУЩЕННЫХ СООБЩЕНИЙ (OFFLINE)
+                // 1. Проверяем пропущенные сообщения (Offline)
                 const { data: replies, error: replErr } = await _supabase
                     .from('support_replies')
                     .select('*')
@@ -741,15 +741,13 @@ window.onload = async () => {
                 if (replies && replies.length > 0) {
                     console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
                     replies.forEach(r => {
-                        // Показываем терминал
                         showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
-                            // После прочтения - помечаем как прочитанное (чтобы не показывало дважды)
                             _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
                     });
                 }
 
-                // 2. ПРОСЛУШИВАНИЕ В РЕАЛЬНОМ ВРЕМЕНИ (ONLINE)
+                // 2. Слушаем в реальном времени (Online)
                 console.log("[СИСТЕМА ОТВЕТОВ] Подписка на Realtime включена.");
                 _supabase.channel('support-replies-channel')
                     .on('postgres_changes', { 
@@ -760,7 +758,6 @@ window.onload = async () => {
                     }, payload => {
                         console.log("[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение Online:", payload.new);
                         const r = payload.new;
-                        
                         showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
                             _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
@@ -773,7 +770,7 @@ window.onload = async () => {
             } catch(e) {
                 console.error("[СИСТЕМА ОТВЕТОВ] Глобальная ошибка:", e);
             }
-        }, 3000);
+        }, 3000); // Ждем 3 секунды после загрузки сайта, чтобы не мешать
 
     } catch (err) {
        
