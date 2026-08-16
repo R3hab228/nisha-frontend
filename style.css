@@ -709,6 +709,10 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .header-top { flex-direction: column; gap: 10px; padding: 15px;}
     .top-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
     .top-nav a { margin: 0; padding: 8px; font-size: 12px; }
+    /* Прячем кнопку профиля по умолчанию (для ПК) */
+.mobile-profile-link {
+    display: none !important;
+}
     .main-container { flex-direction: column; padding: 10px; gap: 15px;}
     
     .sorting { font-size: 11px; padding: 10px 8px; letter-spacing: -0.2px; }
