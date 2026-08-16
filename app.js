@@ -5058,59 +5058,57 @@ window.handleDoubleTapLike = async function(event, itemId, container) {
     }
 };
 // ==========================================
-// ФОРМА ПОДДЕРЖКИ (SUPPORT -> TELEGRAM)
+// ФОРМА ПОДДЕРЖКИ (NATIVE MODAL)
 // ==========================================
-async function openSupportModal() {
-    const { value: supportMessage } = await Swal.fire({
-        title: 'SUPPORT_TICKET.EXE',
-        text: 'Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.',
-        input: 'textarea',
-        inputPlaceholder: 'Начни печатать...',
-        background: '#111',
-        color: '#c0c0c0',
-        showCancelButton: true,
-        confirmButtonText: 'ОТПРАВИТЬ СИГНАЛ',
-        cancelButtonText: 'ОТМЕНА',
-        // --- ФИКС ПОЗИЦИИ (ПРИЛЕПЛЯЕМ ВНИЗ) ---
-        position: 'bottom', // Окно появится в самом низу экрана
-        showClass: {
-            popup: 'swal2-show', // Оставляем базовую плавность
-            backdrop: 'swal2-backdrop-show'
-        },
-        // ------------------------------------
-        customClass: { 
-            popup: 'modal-window', 
-            title: 'modal-title typewriter', 
-            htmlContainer: 'modal-desc', 
-            input: 'form-input', 
-            confirmButton: 'cart-checkout-btn btn-target', 
-            cancelButton: 'cart-checkout-btn btn-target',
-            actions: 'buy-share-row' 
-        },
-        buttonsStyling: false 
-    });
-    
-    if (supportMessage && supportMessage.trim() !== "") {
-        const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(supportMessage.trim()) : supportMessage.trim();
-        const userContact = currentUser ? (currentUser.email || currentUser.phone || 'Аноним') : 'Гость';
 
-        try {
-            const res = await fetch('https://nisha-api.onrender.com/api/support', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contact: userContact, message: safeText })
-            });
-            
-            const data = await res.json();
-            if (data.success) {
-                showToast('Сообщение успешно доставлено админу!', 'success');
-            } else {
-                showToast('Ошибка при отправке: ' + data.message, 'error');
-            }
-        } catch (e) {
-            showToast('Сервер временно недоступен', 'error');
-        }
+// 1. Открытие окна (1 в 1 как остальные модалки)
+function openSupportModalWindow() {
+    if (typeof lenis !== 'undefined') window.stopLenis();
+    document.getElementById('supportInput').value = ''; // Очищаем поле при открытии
+    document.getElementById('supportModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// 2. Отправка сообщения
+async function submitSupportTicket() {
+    const input = document.getElementById('supportInput');
+    const btn = document.getElementById('btnSubmitSupport');
+    const message = input.value.trim();
+
+    if (message.length < 5) {
+        showToast('Опиши проблему подробнее (минимум 5 символов)', 'error');
+        return;
     }
+
+    // Блокируем кнопку на время отправки
+    btn.style.pointerEvents = 'none';
+    btn.innerText = '[ ОТПРАВКА... ]';
+
+    const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message;
+    const userContact = currentUser ? (currentUser.email || currentUser.phone || 'Аноним') : 'Гость';
+
+    try {
+        const res = await fetch('https://nisha-api.onrender.com/api/support', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contact: userContact, message: safeText })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            showToast('Сообщение успешно доставлено админу!', 'success');
+            closeModal('supportModal'); // Закрываем окно при успехе
+        } else {
+            showToast('Ошибка при отправке: ' + data.message, 'error');
+        }
+    } catch (e) {
+        showToast('Сервер временно недоступен', 'error');
+    }
+
+    // Возвращаем кнопку в норму
+    btn.style.pointerEvents = 'auto';
+    btn.innerText = 'ОТПРАВИТЬ СИГНАЛ';
 }
 
 
