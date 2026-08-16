@@ -1141,17 +1141,15 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
 async function loadAllItems() {
     const grid = document.getElementById('itemsGrid');
     
-    // 1. МГНОВЕННАЯ ЗАГРУЗКА (Достаем базу из кэша телефона, если она там есть)
+    // 1. МГНОВЕННАЯ ЗАГРУЗКА (Из кэша)
     const cachedData = localStorage.getItem('nisha_cached_db');
     if (cachedData && allItems.length === 0) {
         try {
             allItems = JSON.parse(cachedData);
-            applyFilters(); // Отрисовываем сетку за 0.1 сек, юзер ничего не ждет!
-        } catch(e) { console.error("Ошибка чтения кэша"); }
+            applyFilters(); 
+        } catch(e) { console.error("Ошибка кэша"); }
     }
 
-    // Если кэша нет (юзер зашел первый раз), оставляем крутиться Win95 Loader из HTML
-    
     // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров)
     const { data, error } = await _supabase.from('items').select('*').limit(1000).order('created_at', { ascending: false });
     
@@ -1160,11 +1158,11 @@ async function loadAllItems() {
         return; 
     }
     
-    // Проверяем, изменились ли данные по сравнению с кэшем
-    const isChanged = JSON.stringify(data) !== JSON.stringify(allItems);
+    // --- ФИКС БАГА "6 ТОВАРОВ": Сравниваем не только текст, но и длину массивов! ---
+    const isChanged = (JSON.stringify(data) !== JSON.stringify(allItems)) || (data.length !== allItems.length);
     
-    allItems = data;
-    localStorage.setItem('nisha_cached_db', JSON.stringify(data)); // Сохраняем свежую базу в память
+    allItems = data; // Жестко перезаписываем глобальный массив свежими данными
+    localStorage.setItem('nisha_cached_db', JSON.stringify(data)); 
     
     // --- СИНХРОНИЗАЦИЯ ИСТОРИИ ПРОСМОТРОВ ИЗ БД ---
     if (userProfile && userProfile.viewed_history && userProfile.viewed_history.length > 0) {
@@ -1181,7 +1179,7 @@ async function loadAllItems() {
         }
     }
 
-    // ФИКС КОРЗИНЫ: Если товар удалили из БД, тихо убираем его из локальной корзины юзера
+    // ФИКС КОРЗИНЫ
     const validCart = cart.filter(cItem => allItems.some(dbItem => dbItem.id === cItem.id));
     if (validCart.length !== cart.length) {
         cart = validCart;
@@ -1189,9 +1187,9 @@ async function loadAllItems() {
         updateCartUI();
     }
 
-    // 3. ПЕРЕРИСОВКА: Делаем ее ТОЛЬКО если это первый заход, ИЛИ если данные реально поменялись (чтобы экран не моргал просто так)
+    // 3. ПЕРЕРИСОВКА (Если данные реально обновились)
     if (!cachedData || isChanged) {
-        applyFilters();
+        applyFilters(); // Вызываем фильтры с НОВЫМИ 50 товарами
     }
 }
 
@@ -1285,11 +1283,24 @@ function applyFilters() {
             const maxPrice = maxInput ? parseInt(maxInput.value) : 15000;
 
             // УМНАЯ ОЧИСТКА ЦЕНЫ (Убирает пробелы, буквы "грн" и защищает от NaN)
+           // УМНАЯ ОЧИСТКА ЦЕНЫ
             const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
 
-            // 1. СНАЧАЛА ЖЕСТКАЯ ФИЛЬТРАЦИЯ (Размеры, Категории, Проданное, Цена)
+            // 1. СНАЧАЛА ЖЕСТКАЯ ФИЛЬТРАЦИЯ
             filteredItems = allItems.filter(item => {
                 if (!item) return false;
+                
+                const isFav = favorites.includes(item.id);
+                const matchesAvailability = !hideUnavailable || item.status === 'available';
+                
+                // --- ФИКС ЛОГИКИ ИЗБРАННОГО ---
+                if (showingOnlyFavs) {
+                    // В режиме Избранного игнорируем ВСЁ (категории, размеры, цены, поиск). 
+                    // Показываем просто лайкнутые вещи (с учетом галочки "Скрыть проданное").
+                    return isFav && matchesAvailability;
+                }
+
+                // --- ОБЫЧНЫЙ РЕЖИМ ЛЕНТЫ (Работают все фильтры) ---
                 const itemCategory = item.category || '';
                 const itemBrand = item.brand ? item.brand.toLowerCase() : '';
                 const itemSize = item.size ? item.size.trim() : '';
@@ -1298,26 +1309,21 @@ function applyFilters() {
                 const matchesCategory = currentCategory === '' || itemCategory === currentCategory;
                 const matchesBrand = searchBrand === '' || itemBrand.includes(searchBrand);
                 const matchesSize = checkedSizes.length === 0 || checkedSizes.includes(itemSize);
-                const isFav = favorites.includes(item.id);
-                const matchesFav = !showingOnlyFavs || isFav;
                 
-                // ИСПОЛЬЗУЕМ БЕЗОПАСНУЮ ЦЕНУ
                 const itemFinalPrice = isHacked ? Math.floor(getSafePrice(item.price) * 0.9) : getSafePrice(item.price);
                 const matchesPrice = itemFinalPrice >= minPrice && itemFinalPrice <= maxPrice;
-                const matchesAvailability = !hideUnavailable || item.status === 'available';
                 
-                return matchesCategory && matchesBrand && matchesSize && matchesFav && matchesPrice && matchesAvailability;
+                return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability;
             });
 
-            // 2. ПОТОМ УМНЫЙ ПОИСК (FUSE.JS) - Ищем ТОЛЬКО среди отфильтрованных вещей
-            if (searchTerm !== '' && typeof Fuse !== 'undefined') {
+            // 2. ПОТОМ УМНЫЙ ПОИСК (FUSE.JS) - Ищем ТОЛЬКО если мы НЕ в режиме Избранного!
+            if (searchTerm !== '' && typeof Fuse !== 'undefined' && !showingOnlyFavs) {
                 const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
                 const fuseOptions = {
                     includeScore: true, threshold: 0.4, ignoreLocation: true, useExtendedSearch: true, 
                     keys: [{ name: 'tags', weight: 1.0 }, { name: 'brand', weight: 0.8 }, { name: 'name', weight: 0.8 }, { name: 'size', weight: 0.8 }, { name: 'category', weight: 0.2 }]
                 };
                 const fuse = new Fuse(filteredItems, fuseOptions);
-                // Перезаписываем отфильтрованный массив результатами поиска
                 filteredItems = fuse.search(cleanSearchTerm).map(result => result.item);
             }
 
