@@ -700,6 +700,41 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 .qa-content::-webkit-scrollbar { width: 4px; }
 .qa-content::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 
+/* ========================================== */
+/* СЛАЙДЕР ДЛЯ ОТЗЫВОВ (MAX 3 ШТУКИ) */
+/* ========================================== */
+#reviewsContainerList {
+    display: flex;
+    flex-direction: row !important; /* Выстраиваем отзывы в линию */
+    gap: 15px;
+    overflow-x: auto; /* Включаем горизонтальную прокрутку */
+    overflow-y: hidden !important; 
+    scroll-snap-type: x mandatory; /* Магнитная прокрутка (Snap) */
+    scrollbar-width: none; /* Прячем скроллбар в Firefox */
+    -webkit-overflow-scrolling: touch; 
+    padding-bottom: 10px; /* Место для тени */
+    scroll-behavior: smooth;
+}
+
+/* Прячем уродливую полосу прокрутки в Chrome/Safari */
+#reviewsContainerList::-webkit-scrollbar {
+    display: none;
+}
+
+/* Настраиваем саму карточку отзыва, чтобы она не сжималась */
+.review-card-ui {
+    min-width: 85%; /* На телефоне будет видно 1 отзыв + краешек следующего */
+    flex-shrink: 0; /* Запрещаем сжиматься */
+    scroll-snap-align: center; /* Магнит ровно по центру */
+}
+
+/* Для ПК делаем карточки чуть меньше, чтобы влезало 2-3 штуки */
+@media (min-width: 901px) {
+    .review-card-ui {
+        min-width: 48%; /* На ПК будет видно 2 отзыва */
+    }
+}
+
 /* ========================================= */
 /* --- ВСЕ МОБИЛЬНЫЕ СТИЛИ В ОДНОМ МЕСТЕ --- */
 /* ========================================= */
