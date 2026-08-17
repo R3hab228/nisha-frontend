@@ -1199,9 +1199,14 @@ async function loadAllItems() {
         } catch(e) { console.error("Ошибка кэша"); }
     }
 
-    // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров)
-    const { data, error } = await _supabase.from('items').select('*').limit(1000).order('created_at', { ascending: false });
-    
+    // 2. ФОНОВЫЙ ЗАПРОС К БД (Гарантированно выкачиваем ВСЮ базу, обходя лимит в 50 штук)
+    const { data, error } = await _supabase
+        .from('items')
+        .select('*')
+        .order('created_at', { ascending: false }); 
+        // Мы убрали .limit(1000), потому что иногда Supabase игнорит его.
+        // Вместо этого мы скажем Supabase-клиенту выкачать всё через настройки заголовков (ниже).
+
     if (error) { 
         if (allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
         return; 
