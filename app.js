@@ -304,7 +304,17 @@ if (!SUPABASE_ANON_KEY) {
     setTimeout(() => showToast('Критическая ошибка: Нет связи с БД', 'error'), 2000);
 } else {
     const { createClient } = supabase;
-    _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ФИКС: Снимаем глобальный лимит API в 50 строк прямо при подключении к БД!
+    _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: {
+            headers: {
+                'Prefer': 'count=exact'
+            }
+        },
+        db: {
+            schema: 'public'
+        }
+    });
 }
 // ==========================================
 // СИСТЕМА ВЕЧНОЙ СЕССИИ (JWT REFRESH)
