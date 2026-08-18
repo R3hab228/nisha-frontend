@@ -3243,7 +3243,13 @@ async function openProductModalById(itemId) {
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
 
         // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ
-        let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
+        // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ (Без повторного объявления let)
+        const currentSeen = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
+        if (!currentSeen.includes(itemId)) {
+            currentSeen.push(itemId);
+            if (currentSeen.length > 500) currentSeen.shift(); 
+            localStorage.setItem('nisha_seen_items', JSON.stringify(currentSeen));
+        }
         if (!seenItemsIds.includes(itemId)) {
             seenItemsIds.push(itemId);
             if (seenItemsIds.length > 500) seenItemsIds.shift(); 
