@@ -1544,7 +1544,7 @@ function renderNextBatch() {
     if (startIndex >= endIndex) return;
     
     // Жесткая защита массива просмотренных товаров
-    let seenItemsIds = [];
+    
     try {
         seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items')) || [];
         if (!Array.isArray(seenItemsIds)) seenItemsIds = [];
