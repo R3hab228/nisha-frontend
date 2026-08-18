@@ -23,14 +23,35 @@
     <link rel="preconnect" href="https://nmpuefxqtkhvtltdvllz.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="https://nmpuefxqtkhvtltdvllz.supabase.co">
 
-    <link rel="shortcut icon" href="/icon-192.png?v=3">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=3">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icon-512.png?v=3">
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon.png?v=3">
-    <link rel="manifest" href="/manifest.json?v=3">
+    <link rel="shortcut icon" href="/icon-192.png?v=4">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=4">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-512.png?v=4">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon.png?v=4">
+    <link rel="manifest" href="/manifest.json?v=4">
     
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
+    
+    <style>
+        /* Улучшенные скроллбары для всех модальных окон */
+        .modal-window::-webkit-scrollbar, .rules-content::-webkit-scrollbar, .orders-container::-webkit-scrollbar, .custom-dropdown::-webkit-scrollbar {
+            width: 4px;
+        }
+        .modal-window::-webkit-scrollbar-track, .rules-content::-webkit-scrollbar-track, .orders-container::-webkit-scrollbar-track, .custom-dropdown::-webkit-scrollbar-track {
+            background: #000; 
+        }
+        .modal-window::-webkit-scrollbar-thumb, .rules-content::-webkit-scrollbar-thumb, .orders-container::-webkit-scrollbar-thumb, .custom-dropdown::-webkit-scrollbar-thumb {
+            background: var(--accent-green); 
+            border-radius: 2px;
+        }
+        /* Хакерский стиль инпутов при фокусе */
+        .form-input:focus {
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.4) !important;
+            border-color: var(--accent-green) !important;
+            background: #050505 !important;
+        }
+    </style>
+
     <script type="module">
         import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js';
         window.PhotoSwipeLightbox = PhotoSwipeLightbox;
@@ -41,7 +62,7 @@
                 children: 'a.slide',
                 showHideAnimationType: 'fade', 
                 zoomAnimationDuration: 200,    
-                bgOpacity: 0.9,                
+                bgOpacity: 0.95,                
                 closeOnVerticalDrag: true,     
                 wheelToZoom: true,             
                 pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
@@ -82,7 +103,7 @@
         <div class="success-text" style="margin-bottom: 15px;" data-i18n="email_prompt.desc">
             Отправлять вам чеки и статусы доставки (ТТН) на E-mail?
         </div>
-        <input type="email" id="promptEmailInput" class="form-input" placeholder="your@email.com" style="margin-bottom: 15px; text-align: center; border-color: #00aaff;">
+        <input type="email" id="promptEmailInput" class="form-input" placeholder="[ your@email.com ]" style="margin-bottom: 15px; text-align: center; border-color: #00aaff;">
         <div style="display: flex; gap: 10px;">
             <button id="btnEmailYes" onclick="confirmEmailPrompt(true)" style="flex: 1; padding: 10px; font-size: 13px; background: #00aaff; color: #000; font-family: var(--font-mono); font-weight: bold; border: 2px outset #fff; cursor: pointer; text-transform: uppercase;" data-i18n="email_prompt.yes">[ ДА ]</button>
             <button id="btnEmailSkip" onclick="confirmEmailPrompt(false)" style="flex: 1; padding: 10px; font-size: 13px; background: #333; border: 2px outset #555; color: #fff; font-family: var(--font-mono); font-weight: bold; cursor: pointer; text-transform: uppercase; white-space: nowrap;" data-i18n="email_prompt.skip">[ ПРОПУСТИТЬ ]</button>
@@ -114,7 +135,7 @@
     <div class="search-section">
         <div class="search-wrapper">
             <form autocomplete="off" onsubmit="event.preventDefault(); saveRecentSearch(document.getElementById('mainSearch').value.trim()); applyFilters(); closeSearch();" style="margin:0; padding:0; display:flex; width:100%;">
-                <input type="text" class="search-input" id="mainSearch" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Поиск вещи..." oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
+                <input type="text" class="search-input" id="mainSearch" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="[ Поиск вещи... ]" oninput="handleLiveSearch()" style="width: 100%; padding-right: 40px;">
             </form>
             <span id="clearSearchBtn" class="clear-search-btn" onclick="clearSearchInput()">✖</span>
             <div id="liveSearchDropdown" class="live-search-dropdown"></div>
@@ -170,10 +191,10 @@
             <div class="filter-box" id="authBox">
                 <div class="filter-title" data-i18n="sidebar.auth_title">ПРОФИЛЬ / ВХОД</div>
                 <div class="auth-fields" id="loginForm">
-                    <input type="email" id="authEmail" class="auth-input" placeholder="Email">
-                    <input type="text" id="authUsername" class="form-input" placeholder="Никнейм" style="display: none;">
+                    <input type="email" id="authEmail" class="auth-input" placeholder="[ Email ]">
+                    <input type="text" id="authUsername" class="form-input" placeholder="[ Никнейм ]" style="display: none;">
                   <div class="password-wrapper">
-                    <input type="password" id="authPass" class="auth-input" placeholder="Пароль">
+                    <input type="password" id="authPass" class="auth-input" placeholder="[ Пароль ]">
                     <div class="eye-icon" onclick="togglePasswordVisibility('authPass', this)">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -222,7 +243,6 @@
             </div>
             
             <div class="items-grid" id="itemsGrid">
-                <!-- Win95 LOADER -->
                 <div id="win95-loader" style="grid-column: 1 / -1; display: flex; justify-content: center; padding: 50px 10px;">
                     <div style="background: #c0c0c0; border-top: 2px solid #fff; border-left: 2px solid #fff; border-right: 2px solid #0a0a0a; border-bottom: 2px solid #0a0a0a; padding: 2px; width: 100%; max-width: 300px; box-shadow: 4px 4px 0px rgba(0,0,0,0.8);">
                         <div style="background: #000080; color: #fff; font-family: 'Tahoma', sans-serif; font-weight: bold; font-size: 12px; padding: 3px 5px; display: flex; justify-content: space-between; align-items: center;">
@@ -261,7 +281,6 @@
                     <button class="cart-close-mobile" onclick="toggleCartDropdown(event)">&times;</button>
                 </div>
                 <div id="cartDropdownList" class="cart-dropdown-list">
-                    <!-- Сюда JS вставит товары -->
                 </div>
             </div>
         </div>
@@ -281,7 +300,6 @@
 
             <p style="margin-top: 10px; color: #555;" data-i18n="footer.refund_policy">Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
             
-            <!-- ПОЧТА ДЛЯ БАГОВ И ИДЕЙ -->
             <div style="margin-top: 15px; border-top: 1px dashed #333; padding-top: 15px; font-family: var(--font-mono); font-size: 11px;">
                 <span style="color: var(--accent-red); font-weight: bold;">[ SUPPORT ]</span> 
                 <span style="color: #888;" data-i18n="footer.support_text">Нашли баг или есть идея? Пишите:</span> 
@@ -301,7 +319,6 @@
                     <a href="javascript:void(0)" onclick="setLang('en')" style="display:flex; align-items:center; gap:8px; justify-content:center;"><img src="https://flagcdn.com/24x18/gb.png" width="20" height="15" style="border-radius:2px;"> EN</a>
                 </div>
             </div>
-
         </div>
     </footer>
 </div>
@@ -342,7 +359,6 @@
         }
     });
 </script>
-</div>
 
 <div class="modal-overlay" id="rulesModal" style="background: rgba(0,0,0,0.95); z-index: 5000;">
     <div class="modal-window" style="max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 10px 10px 0 0;">
@@ -503,30 +519,30 @@
             <input type="text" id="botTrap" style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;" tabindex="-1" autocomplete="off">
             
             <label data-i18n="checkout.name">ФИО Получателя:</label>
-            <input type="text" id="orderName" class="form-input" placeholder="Іванов Іван Іванович">
+            <input type="text" id="orderName" class="form-input" placeholder="[ Іванов Іван Іванович ]">
             
             <label data-i18n="checkout.phone">Телефон (ОБЯЗАТЕЛЬНО):</label>
             <div style="display:flex; gap:10px;">
-                <input type="tel" id="orderPhone" class="form-input" placeholder="+380..." inputmode="numeric">
+                <input type="tel" id="orderPhone" class="form-input" placeholder="[ +380... ]" inputmode="numeric">
                 <button class="search-btn btn-target" id="btnGetOtp" onclick="generateAndSendOTP()" style="white-space:nowrap; padding: 10px 15px; font-size: 12px;" data-i18n="checkout.btn_otp">Подтвердить</button>
             </div>
             <div id="otpStatus" style="color: var(--accent-red); font-size: 11px; font-family: var(--font-mono); margin-top: -5px;" data-i18n="checkout.otp_status">Сначала подтвердите номер для заказа!</div>
             
             <label data-i18n="checkout.city">Город (Новая Почта):</label>
             <div style="position: relative;">
-                <input type="text" id="orderCity" class="form-input" placeholder="Київ..." oninput="debouncedNPCitySearch(this.value)" autocomplete="off">
+                <input type="text" id="orderCity" class="form-input" placeholder="[ Київ... ]" oninput="debouncedNPCitySearch(this.value)" autocomplete="off">
                 <div id="cityDropdown" class="custom-dropdown"></div>
             </div>
             
             <label data-i18n="checkout.branch">Отделение или Почтомат:</label>
             <div style="position: relative;">
-                <input type="text" id="orderBranch" class="form-input" placeholder="Відділення..." onfocus="loadNPBranches()" oninput="filterNPBranches(this.value)" autocomplete="off">
+                <input type="text" id="orderBranch" class="form-input" placeholder="[ Відділення... ]" onfocus="loadNPBranches()" oninput="filterNPBranches(this.value)" autocomplete="off">
                 <div id="branchDropdown" class="custom-dropdown"></div>
             </div>
             
             <label style="margin-top: 10px;" data-i18n="checkout.promo">Промокод (если есть):</label>
             <div class="promo-wrapper">
-                <input type="text" id="promoInput" class="form-input" placeholder="Введите код...">
+                <input type="text" id="promoInput" class="form-input" placeholder="[ Введите код... ]">
                 <button class="search-btn btn-target" onclick="applyPromoCode()" style="padding: 10px;" data-i18n="checkout.apply">ПРИМЕНИТЬ</button>
             </div>
             <div id="promoMessage" class="promo-msg"></div>
@@ -549,7 +565,7 @@
         <div class="form-layout" id="ordersAuthSection" style="border-bottom: 1px dashed #333; padding-bottom: 15px;">
             <p id="guestOrderText" style="margin:0; font-size:13px; color:#aaa;" data-i18n="orders_modal.desc">Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
             <div id="guestOrderInputGroup" style="display: flex; gap: 10px; margin-top: 10px;">
-                <input type="tel" id="ordersSearchPhone" class="form-input" placeholder="+380..." inputmode="numeric">
+                <input type="tel" id="ordersSearchPhone" class="form-input" placeholder="[ +380... ]" inputmode="numeric">
                 <button class="search-btn btn-target" onclick="fetchMyOrders()" data-i18n="orders_modal.btn">НАЙТИ</button>
             </div>
         </div>
@@ -583,26 +599,6 @@
     </div>
 </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
-    <script defer src="https://unpkg.com/rough-notation/lib/rough-notation.iife.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.1/index.global.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js"></script>
-    <script defer src="https://unpkg.com/imask"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-    <script defer src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
-    <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-    <script defer src="https://browser.sentry-cdn.com/7.105.0/bundle.min.js" crossorigin="anonymous"></script>
-    <script defer src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js"></script>
-    <script defer src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
-    
-    <script src="config.js"></script>
-    <script defer src="app.js"></script>
-
 <button class="fab-propose" onclick="openProposeModal()" title="Предложить вещь">
     <span style="display:block;">[+]</span>
 </button>
@@ -618,10 +614,10 @@
             <div class="auth-fields" id="modalLoginForm" style="display: flex; flex-direction: column; gap: 15px;">
                 <p style="margin:0 0 5px 0; color:#aaa; font-size:13px; text-align: center; font-family: var(--font-mono);" data-i18n="sidebar.auth_req">АВТОРИЗАЦИЯ В СИСТЕМЕ</p>
                 
-                <input type="email" id="modalAuthEmail" class="form-input" placeholder="Email" style="padding: 15px;">
-                <input type="text" id="modalAuthUsername" class="form-input" placeholder="Никнейм" style="display: none; padding: 15px;">
+                <input type="email" id="modalAuthEmail" class="form-input" placeholder="[ Email ]" style="padding: 15px;">
+                <input type="text" id="modalAuthUsername" class="form-input" placeholder="[ Никнейм ]" style="display: none; padding: 15px;">
                 <div class="password-wrapper">
-                    <input type="password" id="modalAuthPass" class="form-input" placeholder="Пароль" style="padding: 15px;">
+                    <input type="password" id="modalAuthPass" class="form-input" placeholder="[ Пароль ]" style="padding: 15px;">
                     <div class="eye-icon" onclick="togglePasswordVisibility('modalAuthPass', this)" style="right: 15px;">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -681,25 +677,25 @@
             </div>
             
             <label>НАЗВАНИЕ ВЕЩИ:</label>
-            <input type="text" id="propName" class="form-input" placeholder="Например: Худи на зипке, Пуховик...">
+            <input type="text" id="propName" class="form-input" placeholder="[ Например: Худи на зипке, Пуховик... ]">
             
             <label>БРЕНД (Если есть):</label>
-            <input type="text" id="propBrand" class="form-input" placeholder="Например: Nike, Carhartt или No Name...">
+            <input type="text" id="propBrand" class="form-input" placeholder="[ Например: Nike, Carhartt или No Name... ]">
             
             <label>РАЗМЕР:</label>
-            <input type="text" id="propSize" class="form-input" placeholder="Например: M или 42">
+            <input type="text" id="propSize" class="form-input" placeholder="[ Например: M или 42 ]">
             
             <label>ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
-            <textarea id="propDesc" class="form-input" maxlength="250" style="height: 80px; resize: none;" placeholder="Опиши состояние, нюансы..."></textarea>
+            <textarea id="propDesc" class="form-input" maxlength="250" style="height: 80px; resize: none;" placeholder="[ Опиши состояние, нюансы... ]"></textarea>
             
             <label data-i18n="propose.cond_label">ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
-            <input type="number" id="propCond" class="form-input" placeholder="9" min="1" max="10" data-i18n-ph="propose.cond_place">
+            <input type="number" id="propCond" class="form-input" placeholder="[ 9 ]" min="1" max="10" data-i18n-ph="propose.cond_place">
             
             <label>ЖЕЛАЕМАЯ ЦЕНА (ГРН):</label>
-            <input type="number" id="propPrice" class="form-input" placeholder="Например: 1500" min="1">
+            <input type="number" id="propPrice" class="form-input" placeholder="[ Например: 1500 ]" min="1">
             
             <label data-i18n="propose.contact_label">СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
-            <input type="text" id="propContact" class="form-input" placeholder="@твои_ник или +380..." data-i18n-ph="propose.contact_place">
+            <input type="text" id="propContact" class="form-input" placeholder="[ @твои_ник или +380... ]" data-i18n-ph="propose.contact_place">
             
             <button class="cart-checkout-btn btn-target" id="btnSubmitProp" onclick="submitProposal()" style="margin-top: 15px; width: 100%;" data-i18n="propose.btn_submit">[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
         </div>
@@ -713,7 +709,7 @@
             <button class="close-btn" onclick="closeModal('writeReviewModal')">X</button>
         </div>
         <div class="form-layout">
-            <textarea id="manualReviewInput" class="form-input" style="height: 120px; resize: none; text-align: center;" placeholder="Напишите ваше мнение о покупке..."></textarea>
+            <textarea id="manualReviewInput" class="form-input" style="height: 120px; resize: none; text-align: center;" placeholder="[ Напишите ваше мнение о покупке... ]"></textarea>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="cart-checkout-btn btn-target" onclick="submitManualReview()" style="flex: 1;">ОТПРАВИТЬ</button>
                 <button class="cart-checkout-btn btn-target" onclick="closeModal('writeReviewModal')" style="flex: 1; background: #333; color: #fff; border-color: #555;">ОТМЕНА</button>
@@ -736,7 +732,7 @@
             <input type="hidden" id="autoReviewItemImage">
             <input type="hidden" id="autoReviewItemId"> 
             
-            <textarea id="autoReviewInput" class="form-input" style="width: 100%; height: 90px; resize: none; text-align: center;" placeholder="Пару слов о покупке..."></textarea>
+            <textarea id="autoReviewInput" class="form-input" style="width: 100%; height: 90px; resize: none; text-align: center;" placeholder="[ Пару слов о покупке... ]"></textarea>
             
             <div style="display: flex; gap: 10px; width: 100%; margin-top: 10px;">
                 <button class="cart-checkout-btn btn-target" onclick="skipAutoReview()" style="flex: 1; background: #333; color: #fff; border-color: #555;" data-i18n="reviews_modal.later">ПОЗЖЕ</button>
@@ -755,12 +751,42 @@
         </div>
         <div class="form-layout">
             <p style="margin: 0; color: #aaa; font-size: 13px; font-family: var(--font-main);">Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.</p>
-            <textarea id="supportInput" class="form-input" style="height: 120px; resize: none; text-align: left;" placeholder="Начни печатать..."></textarea>
+            <textarea id="supportInput" class="form-input" style="height: 120px; resize: none; text-align: left;" placeholder="[ Начни печатать... ]"></textarea>
             
             <button class="cart-checkout-btn btn-target" id="btnSubmitSupport" onclick="submitSupportTicket()" style="margin-top: 10px; width: 100%;">ОТПРАВИТЬ СИГНАЛ</button>
         </div>
     </div>
 </div>
 
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
+    <script defer src="https://unpkg.com/rough-notation/lib/rough-notation.iife.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.1/index.global.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js"></script>
+    <script defer src="https://unpkg.com/imask"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script defer src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    <script defer src="https://browser.sentry-cdn.com/7.105.0/bundle.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js"></script>
+    <script defer src="https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
+    
+    <script src="config.js"></script>
+    <script defer src="app.js"></script>
+
+    <script>
+    // ЯДЕРНЫЙ СБРОС КЭША ПРИ ЗАГРУЗКЕ
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+            }
+        });
+    }
+    </script>
 </body>
 </html>
