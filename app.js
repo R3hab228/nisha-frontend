@@ -4488,6 +4488,7 @@ function openProposeModal() {
     }
 }
 
+
 // 2. Сжатие фото (уменьшает вес в 20 раз, чтобы грузилось мгновенно)
 async function compressImage(file) {
     if (file.type === 'video/mp4') return file;
