@@ -4478,33 +4478,10 @@ function initMobileSwipe() {
 // ПОЛНАЯ ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (DROP_ITEM.EXE)
 // ==========================================
 
-// 1. Открытие модального окна предложки + ДИАГНОСТИКА КЭША
+// 1. Открытие модального окна предложки
 function openProposeModal() {
     if (typeof lenis !== 'undefined') window.stopLenis();
     const modal = document.getElementById('proposeModal');
-    
-    // ДИАГНОСТИКА: Ищем наше новое поле "ОПИСАНИЕ"
-    const descField = document.getElementById('propDesc');
-    
-    if (!descField) {
-        // ЕСЛИ ПОЛЯ НЕТ - ЗНАЧИТ БРАУЗЕР ГЛЮЧИТ И ПОКАЗЫВАЕТ СТАРУЮ ВЕРСИЮ
-        alert("ОБНАРУЖЕН СТАРЫЙ КЭШ!\nФорма не обновилась. Сейчас я принудительно удалю кэш и перезагружу страницу.");
-        
-        // Жесткая зачистка всего, что только можно
-        if ('caches' in window) {
-            caches.keys().then((names) => {
-                names.forEach((name) => { caches.delete(name); });
-            });
-        }
-        localStorage.removeItem('nisha_cached_db');
-        sessionStorage.clear();
-        
-        // Принудительно перезагружаем страницу с сервера, игнорируя кэш
-        window.location.href = window.location.href.split('?')[0] + '?clearCache=' + new Date().getTime();
-        return; // Останавливаем открытие старого окна
-    }
-
-    // ЕСЛИ ПОЛЕ ЕСТЬ - всё ок, открываем новую форму
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
