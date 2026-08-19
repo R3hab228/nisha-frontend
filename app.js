@@ -1400,19 +1400,20 @@ function applyFilters() {
             }
             
             // СБРОС И РЕНДЕР
+           // СБРОС И РЕНДЕР
             if (grid) grid.innerHTML = ''; 
             renderedCount = 0; 
             window.currentPage = 1; 
             
             const countEl = document.getElementById('itemCount');
             if (countEl) {
-                // Считаем ТОЛЬКО доступные к покупке товары (без SOLD/RESERVED), если не нажата галочка "Скрыть проданное".
-                // Если нажата - считаем всё, что осталось после фильтрации.
+                // ФИКС: Точно считаем только то, что сейчас на экране
                 const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
                 
                 if (hideUnavailable) {
-                    countEl.innerText = filteredItems.length;
+                    countEl.innerText = filteredItems.length; // Если нажата галочка - все вещи в filteredItems уже 'available'
                 } else {
+                    // Если галочка НЕ нажата (показываем всё), но юзер хочет видеть, сколько реально ДОСТУПНО
                     const availableItemsOnly = filteredItems.filter(item => item.status === 'available');
                     countEl.innerText = availableItemsOnly.length;
                 }
