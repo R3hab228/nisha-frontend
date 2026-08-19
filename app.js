@@ -3879,11 +3879,15 @@ function renderHistory() {
         }
     });
 
+    // Синхронизация с БД (если юзер вошел в аккаунт)
     if (currentUser && _supabase) {
         _supabase.from('profiles').update({ viewed_history: hist.map(h => h.id) }).eq('id', currentUser.id).then();
     }
 }
 
+// ==========================================
+// 15. ПАСХАЛКА (СЕКРЕТНАЯ СКИДКА)
+// ==========================================
 function triggerEasterEgg() {
     isHacked = true;
     const overlay = document.getElementById('glitchOverlay');
@@ -3899,15 +3903,18 @@ function triggerEasterEgg() {
     
     applyFilters(); 
     
+    // Применяем скидку ко всем товарам УЖЕ лежащим в корзине
     cart.forEach(item => { 
         item.price = Math.floor(item.price * 0.9); 
     });
     localStorage.setItem('nisha_cart', JSON.stringify(cart));
-    syncCartToServer();
-    updateCartUI();
+    
+    if (typeof syncCartToServer === 'function') syncCartToServer();
+    if (typeof updateCartUI === 'function') updateCartUI();
 }
+
 // ==========================================
-// 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (ЖЕЛЕЗОБЕТОННЫЕ УНИКАЛЬНЫЕ ЗА ДЕНЬ)
+// 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (ЖЕЛЕЗОБЕТОННЫЙ)
 // ==========================================
 async function initHitCounter() {
     const counterEl = document.getElementById('hitCounterValue');
@@ -3966,7 +3973,7 @@ async function initHitCounter() {
     } catch (err) {
         console.error("Счетчик работает в оффлайн-режиме (Сервер спит):", err.message);
         // ВАЖНО: Мы больше не ставим тут '0 0 0 0 0'! 
-        // Юзер просто продолжит видеть старую цифру из кэша (шаг 3), пока сервер не проснется.
+        // Юзер просто продолжит видеть старую цифру из кэша, пока сервер не проснется.
     }
 }
 // ==========================================
