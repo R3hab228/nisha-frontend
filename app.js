@@ -1646,7 +1646,7 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             let startX = 0; let startY = 0;
             
             // --- ЖЕЛЕЗОБЕТОННЫЙ СВАЙП, КЛИК И ДВОЙНОЙ ТАП ---
-            const sliderWrapper = card.querySelector('.card-slider-wrapper');
+            
             let isDraggingSlider = false;
             let startX = 0; 
             let startY = 0;
