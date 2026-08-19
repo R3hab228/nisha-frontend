@@ -1641,16 +1641,13 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
 <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${i18next.t('product.add_to_cart')}</button>
             `;
 
-            const sliderWrapper = card.querySelector('.card-slider-wrapper');
-            let isDraggingSlider = false;
-            let startX = 0; let startY = 0;
-            
-            // --- ЖЕЛЕЗОБЕТОННЫЙ СВАЙП, КЛИК И ДВОЙНОЙ ТАП ---
-            
+           const sliderWrapper = card.querySelector('.card-slider-wrapper');
             let isDraggingSlider = false;
             let startX = 0; 
             let startY = 0;
             let clickTimer = null;
+
+            // --- ЖЕЛЕЗОБЕТОННЫЙ СВАЙП, КЛИК И ДВОЙНОЙ ТАП ---
 
             // 1. Палец коснулся экрана
             sliderWrapper.addEventListener('touchstart', (e) => { 
