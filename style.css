@@ -707,16 +707,18 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 /* ЖЕСТКИЙ СЛАЙДЕР ДЛЯ ОТЗЫВОВ (ГОРИЗОНТАЛЬНО ПО 2 ШТУКИ) */
 /* ========================================== */
 #reviewsContainerList {
-    display: flex;
-    flex-direction: row !important; 
+    display: flex !important;
+    flex-direction: row !important; /* ЖЕСТКО СТРОИМ В РЯД */
+    flex-wrap: nowrap !important;   /* ЗАПРЕЩАЕМ ПАДАТЬ ВНИЗ */
     gap: 15px;
-    overflow-x: auto; 
+    overflow-x: auto !important; 
     overflow-y: hidden !important; 
-    scroll-snap-type: x mandatory; /* Магнитная сетка */
+    scroll-snap-type: x mandatory; 
     scrollbar-width: none; 
     -webkit-overflow-scrolling: touch; 
     padding-bottom: 10px; 
-    scroll-behavior: smooth; 
+    scroll-behavior: auto; 
+    width: 100% !important;
 }
 
 #reviewsContainerList::-webkit-scrollbar {
@@ -725,27 +727,25 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 
 .review-card-ui {
     /* Ровно половина экрана минус отступы */
-    min-width: calc(50% - 7.5px); 
-    max-width: calc(50% - 7.5px); 
-    flex-shrink: 0; 
-    /* ВАЖНО: Убираем магнит с каждой карточки */
+    min-width: calc(50% - 7.5px) !important; 
+    max-width: calc(50% - 7.5px) !important; 
+    flex-shrink: 0 !important; 
     scroll-snap-align: none; 
 }
 
-/* МАГИЯ: Магнитим только каждую ВТОРУЮ (нечетную) карточку к левому краю! */
-/* Это заставит телефон листать строго по 2 отзыва за 1 свайп */
+/* Магнитим только каждую ВТОРУЮ карточку */
 .review-card-ui:nth-child(odd) {
     scroll-snap-align: start; 
 }
 
 @media (min-width: 901px) {
     .review-card-ui {
-        min-width: calc(33.333% - 10px); 
-        max-width: calc(33.333% - 10px); 
+        min-width: calc(33.333% - 10px) !important; 
+        max-width: calc(33.333% - 10px) !important; 
         scroll-snap-align: none;
     }
     .review-card-ui:nth-child(3n + 1) {
-        scroll-snap-align: start; /* На ПК магнитим по 3 штуки */
+        scroll-snap-align: start; 
     }
 }
 @media (max-width: 900px) {
