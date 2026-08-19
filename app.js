@@ -3252,23 +3252,23 @@ async function openProductModalById(itemId) {
     }
 
     // Если товар найден (где угодно) - открываем!
+  
     if (item) { 
         // Снимаем красное мерцание визуально
         const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
 
-        // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ
-        // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ (Без повторного объявления let)
-        const currentSeen = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
-        if (!currentSeen.includes(itemId)) {
-            currentSeen.push(itemId);
-            if (currentSeen.length > 500) currentSeen.shift(); 
-            localStorage.setItem('nisha_seen_items', JSON.stringify(currentSeen));
-        }
-        if (!seenItemsIds.includes(itemId)) {
-            seenItemsIds.push(itemId);
-            if (seenItemsIds.length > 500) seenItemsIds.shift(); 
-            localStorage.setItem('nisha_seen_items', JSON.stringify(seenItemsIds));
+        // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ (ИСПРАВЛЕНО: Сначала достаем из памяти)
+        let localSeenIds = [];
+        try {
+            localSeenIds = JSON.parse(localStorage.getItem('nisha_seen_items')) || [];
+            if (!Array.isArray(localSeenIds)) localSeenIds = [];
+        } catch(e) { localSeenIds = []; }
+
+        if (!localSeenIds.includes(itemId)) {
+            localSeenIds.push(itemId);
+            if (localSeenIds.length > 500) localSeenIds.shift(); 
+            localStorage.setItem('nisha_seen_items', JSON.stringify(localSeenIds));
         }
 
         closeModal('ordersModal'); 
