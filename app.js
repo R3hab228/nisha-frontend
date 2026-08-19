@@ -1645,54 +1645,63 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             let isDraggingSlider = false;
             let startX = 0; let startY = 0;
             
+            // --- ЖЕЛЕЗОБЕТОННЫЙ СВАЙП, КЛИК И ДВОЙНОЙ ТАП ---
+            const sliderWrapper = card.querySelector('.card-slider-wrapper');
+            let isDraggingSlider = false;
+            let startX = 0; 
+            let startY = 0;
+            let clickTimer = null;
+
+            // 1. Палец коснулся экрана
             sliderWrapper.addEventListener('touchstart', (e) => { 
                 isDraggingSlider = false; 
-                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX; 
+                startY = e.touches[0].clientY;
+                // Визуальный эффект нажатия (пружина)
+                sliderWrapper.style.transform = 'scale(0.98)';
             }, {passive: true});
             
+            // 2. Палец двигается (свайп картинок)
             sliderWrapper.addEventListener('touchmove', (e) => { 
-                if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) isDraggingSlider = true;
+                if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) {
+                    isDraggingSlider = true;
+                    sliderWrapper.style.transform = 'scale(1)'; // Снимаем эффект нажатия при свайпе
+                }
             }, {passive: true});
             
-            // --- ЖЕЛЕЗОБЕТОННЫЙ КЛИК И ДВОЙНОЙ ТАП ---
-            let lastTap = 0;
-            
-            sliderWrapper.addEventListener('touchstart', () => {
-                if(!isDraggingSlider) sliderWrapper.style.transform = 'scale(0.98)';
-            }, {passive: true});
-            
-            sliderWrapper.addEventListener('touchend', () => {
-                sliderWrapper.style.transform = 'scale(1)';
+            // 3. Палец оторвался от экрана (Решаем: это клик, свайп или двойной тап?)
+            sliderWrapper.addEventListener('touchend', (e) => {
+                sliderWrapper.style.transform = 'scale(1)'; // Возвращаем карточку в нормальный вид
+                
+                // Если юзер свайпал фотки влево-вправо -> Ничего не делаем, окно не открываем
+                if (isDraggingSlider) return;
+
+                // Если юзер просто тапнул:
+                if (clickTimer === null) {
+                    // Ждем 250мс (вдруг он ударит второй раз?)
+                    clickTimer = setTimeout(() => {
+                        clickTimer = null;
+                        openProductModalById(item.id); // Второго удара не было -> Открываем карточку
+                    }, 250);
+                } else {
+                    // Это был ВТОРОЙ удар! (Двойной тап)
+                    clearTimeout(clickTimer); // Отменяем открытие окна
+                    clickTimer = null;
+                    handleDoubleTapLike(e, item.id, sliderWrapper); // Запускаем анимацию красной звезды!
+                }
             }, {passive: true});
 
-            // Нам нужно вешать клик не на слайдер (который перехватывает свайпы), а на саму карточку!
+            // Блокируем стандартный мышиный клик, чтобы он не мешал тачам на телефоне
             sliderWrapper.addEventListener('click', (e) => {
-                if (isDraggingSlider) { 
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
-                    return; 
-                } 
-                
-                const currentTime = new Date().getTime();
-                const tapLength = currentTime - lastTap;
-                
-                if (tapLength < 300 && tapLength > 0) {
-                    // ЭТО ДВОЙНОЙ ТАП -> Ставим лайк
-                    handleDoubleTapLike(e, item.id, sliderWrapper); 
-                } else {
-                    // ЭТО ОДИНАРНЫЙ КЛИК -> Открываем товар сразу
-                    // Используем таймаут в 50мс, чтобы дать шанс сработать двойному тапу, не блокируя UI
-                    setTimeout(() => {
-                        // Если за эти 50мс не было второго клика - открываем!
-                        if (new Date().getTime() - lastTap > 300) {
-                            openProductModalById(item.id);
-                        }
-                    }, 350); 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                // Для ПК (где нет touch): если юзер кликнул мышкой, открываем модалку
+                if (window.innerWidth > 900) {
+                    openProductModalById(item.id);
                 }
-                lastTap = currentTime;
             });
 
-            // --- ОПТИМИЗАЦИЯ: Добавляем карточку во временный фрагмент, а не в реальную сетку ---
+            // --- ОПТИМИЗАЦИЯ: Добавляем карточку во временный фрагмент ---
             fragment.appendChild(card); 
             
             const vids = card.querySelectorAll('.grid-lazy-video');

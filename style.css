@@ -704,7 +704,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 /* --- ВСЕ МОБИЛЬНЫЕ СТИЛИ В ОДНОМ МЕСТЕ --- */
 /* ========================================= */
 /* ========================================== */
-/* ИДЕАЛЬНЫЙ СЛАЙДЕР ДЛЯ ОТЗЫВОВ (ПО 2 ШТУКИ) */
+/* ЖЕСТКИЙ СЛАЙДЕР ДЛЯ ОТЗЫВОВ (ГОРИЗОНТАЛЬНО ПО 2 ШТУКИ) */
 /* ========================================== */
 #reviewsContainerList {
     display: flex;
@@ -712,11 +712,11 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     gap: 15px;
     overflow-x: auto; 
     overflow-y: hidden !important; 
-    scroll-snap-type: x mandatory; 
+    scroll-snap-type: x mandatory; /* Магнитная сетка */
     scrollbar-width: none; 
     -webkit-overflow-scrolling: touch; 
     padding-bottom: 10px; 
-    scroll-behavior: auto; 
+    scroll-behavior: smooth; 
 }
 
 #reviewsContainerList::-webkit-scrollbar {
@@ -724,17 +724,28 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 }
 
 .review-card-ui {
+    /* Ровно половина экрана минус отступы */
     min-width: calc(50% - 7.5px); 
     max-width: calc(50% - 7.5px); 
     flex-shrink: 0; 
+    /* ВАЖНО: Убираем магнит с каждой карточки */
+    scroll-snap-align: none; 
+}
+
+/* МАГИЯ: Магнитим только каждую ВТОРУЮ (нечетную) карточку к левому краю! */
+/* Это заставит телефон листать строго по 2 отзыва за 1 свайп */
+.review-card-ui:nth-child(odd) {
     scroll-snap-align: start; 
-    scroll-snap-stop: always; 
 }
 
 @media (min-width: 901px) {
     .review-card-ui {
         min-width: calc(33.333% - 10px); 
         max-width: calc(33.333% - 10px); 
+        scroll-snap-align: none;
+    }
+    .review-card-ui:nth-child(3n + 1) {
+        scroll-snap-align: start; /* На ПК магнитим по 3 штуки */
     }
 }
 @media (max-width: 900px) {
