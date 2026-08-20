@@ -933,17 +933,7 @@ async function openReviewsModal() {
         </div>`;
     });
     
-    // --- НОВОЕ: ДОБАВЛЯЕМ ПОДСКАЗКУ ДЛЯ СВАЙПА (Только если отзывов больше одного) ---
-    let swipeHintHTML = '';
-    if (data.length > 1) {
-        swipeHintHTML = `
-        <div style="text-align: right; margin-top: -10px; margin-bottom: 10px; color: var(--accent-green); font-family: var(--font-mono); font-size: 11px; font-weight: bold; animation: pulse 2s infinite;">
-            ЛИСТАТЬ ВБОК ➔
-        </div>`;
-    }
-    
-    // Вставляем сначала подсказку, а потом сами отзывы
-    container.innerHTML = swipeHintHTML + html;
+    container.innerHTML = html;
 }
 
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -1410,19 +1400,20 @@ function applyFilters() {
             }
             
             // СБРОС И РЕНДЕР
+           // СБРОС И РЕНДЕР
             if (grid) grid.innerHTML = ''; 
             renderedCount = 0; 
             window.currentPage = 1; 
             
             const countEl = document.getElementById('itemCount');
             if (countEl) {
-                // Считаем ТОЛЬКО доступные к покупке товары (без SOLD/RESERVED), если не нажата галочка "Скрыть проданное".
-                // Если нажата - считаем всё, что осталось после фильтрации.
+                // ФИКС: Точно считаем только то, что сейчас на экране
                 const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
                 
                 if (hideUnavailable) {
-                    countEl.innerText = filteredItems.length;
+                    countEl.innerText = filteredItems.length; // Если нажата галочка - все вещи в filteredItems уже 'available'
                 } else {
+                    // Если галочка НЕ нажата (показываем всё), но юзер хочет видеть, сколько реально ДОСТУПНО
                     const availableItemsOnly = filteredItems.filter(item => item.status === 'available');
                     countEl.innerText = availableItemsOnly.length;
                 }
@@ -1651,58 +1642,64 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
 <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${i18next.t('product.add_to_cart')}</button>
             `;
 
-            const sliderWrapper = card.querySelector('.card-slider-wrapper');
+           const sliderWrapper = card.querySelector('.card-slider-wrapper');
             let isDraggingSlider = false;
-            let startX = 0; let startY = 0;
-            
+            let startX = 0; 
+            let startY = 0;
+            let clickTimer = null;
+
+            // --- ЖЕЛЕЗОБЕТОННЫЙ СВАЙП, КЛИК И ДВОЙНОЙ ТАП ---
+
+            // 1. Палец коснулся экрана
             sliderWrapper.addEventListener('touchstart', (e) => { 
                 isDraggingSlider = false; 
-                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX; 
+                startY = e.touches[0].clientY;
+                // Визуальный эффект нажатия (пружина)
+                sliderWrapper.style.transform = 'scale(0.98)';
             }, {passive: true});
             
+            // 2. Палец двигается (свайп картинок)
             sliderWrapper.addEventListener('touchmove', (e) => { 
-                if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) isDraggingSlider = true;
+                if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) {
+                    isDraggingSlider = true;
+                    sliderWrapper.style.transform = 'scale(1)'; // Снимаем эффект нажатия при свайпе
+                }
             }, {passive: true});
             
-            // --- ЖЕЛЕЗОБЕТОННЫЙ КЛИК И ДВОЙНОЙ ТАП ---
-            let lastTap = 0;
-            
-            sliderWrapper.addEventListener('touchstart', () => {
-                if(!isDraggingSlider) sliderWrapper.style.transform = 'scale(0.98)';
-            }, {passive: true});
-            
-            sliderWrapper.addEventListener('touchend', () => {
-                sliderWrapper.style.transform = 'scale(1)';
+            // 3. Палец оторвался от экрана (Решаем: это клик, свайп или двойной тап?)
+            sliderWrapper.addEventListener('touchend', (e) => {
+                sliderWrapper.style.transform = 'scale(1)'; // Возвращаем карточку в нормальный вид
+                
+                // Если юзер свайпал фотки влево-вправо -> Ничего не делаем, окно не открываем
+                if (isDraggingSlider) return;
+
+                // Если юзер просто тапнул:
+                if (clickTimer === null) {
+                    // Ждем 250мс (вдруг он ударит второй раз?)
+                    clickTimer = setTimeout(() => {
+                        clickTimer = null;
+                        openProductModalById(item.id); // Второго удара не было -> Открываем карточку
+                    }, 250);
+                } else {
+                    // Это был ВТОРОЙ удар! (Двойной тап)
+                    clearTimeout(clickTimer); // Отменяем открытие окна
+                    clickTimer = null;
+                    handleDoubleTapLike(e, item.id, sliderWrapper); // Запускаем анимацию красной звезды!
+                }
             }, {passive: true});
 
-            // Нам нужно вешать клик не на слайдер (который перехватывает свайпы), а на саму карточку!
+            // Блокируем стандартный мышиный клик, чтобы он не мешал тачам на телефоне
             sliderWrapper.addEventListener('click', (e) => {
-                if (isDraggingSlider) { 
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
-                    return; 
-                } 
-                
-                const currentTime = new Date().getTime();
-                const tapLength = currentTime - lastTap;
-                
-                if (tapLength < 300 && tapLength > 0) {
-                    // ЭТО ДВОЙНОЙ ТАП -> Ставим лайк
-                    handleDoubleTapLike(e, item.id, sliderWrapper); 
-                } else {
-                    // ЭТО ОДИНАРНЫЙ КЛИК -> Открываем товар сразу
-                    // Используем таймаут в 50мс, чтобы дать шанс сработать двойному тапу, не блокируя UI
-                    setTimeout(() => {
-                        // Если за эти 50мс не было второго клика - открываем!
-                        if (new Date().getTime() - lastTap > 300) {
-                            openProductModalById(item.id);
-                        }
-                    }, 350); 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                // Для ПК (где нет touch): если юзер кликнул мышкой, открываем модалку
+                if (window.innerWidth > 900) {
+                    openProductModalById(item.id);
                 }
-                lastTap = currentTime;
             });
 
-            // --- ОПТИМИЗАЦИЯ: Добавляем карточку во временный фрагмент, а не в реальную сетку ---
+            // --- ОПТИМИЗАЦИЯ: Добавляем карточку во временный фрагмент ---
             fragment.appendChild(card); 
             
             const vids = card.querySelectorAll('.grid-lazy-video');
@@ -3256,23 +3253,23 @@ async function openProductModalById(itemId) {
     }
 
     // Если товар найден (где угодно) - открываем!
+  
     if (item) { 
         // Снимаем красное мерцание визуально
         const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
 
-        // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ
-        // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ (Без повторного объявления let)
-        const currentSeen = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
-        if (!currentSeen.includes(itemId)) {
-            currentSeen.push(itemId);
-            if (currentSeen.length > 500) currentSeen.shift(); 
-            localStorage.setItem('nisha_seen_items', JSON.stringify(currentSeen));
-        }
-        if (!seenItemsIds.includes(itemId)) {
-            seenItemsIds.push(itemId);
-            if (seenItemsIds.length > 500) seenItemsIds.shift(); 
-            localStorage.setItem('nisha_seen_items', JSON.stringify(seenItemsIds));
+        // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ (ИСПРАВЛЕНО: Сначала достаем из памяти)
+        let localSeenIds = [];
+        try {
+            localSeenIds = JSON.parse(localStorage.getItem('nisha_seen_items')) || [];
+            if (!Array.isArray(localSeenIds)) localSeenIds = [];
+        } catch(e) { localSeenIds = []; }
+
+        if (!localSeenIds.includes(itemId)) {
+            localSeenIds.push(itemId);
+            if (localSeenIds.length > 500) localSeenIds.shift(); 
+            localStorage.setItem('nisha_seen_items', JSON.stringify(localSeenIds));
         }
 
         closeModal('ordersModal'); 
@@ -3880,11 +3877,15 @@ function renderHistory() {
         }
     });
 
+    // Синхронизация с БД (если юзер вошел в аккаунт)
     if (currentUser && _supabase) {
         _supabase.from('profiles').update({ viewed_history: hist.map(h => h.id) }).eq('id', currentUser.id).then();
     }
 }
 
+// ==========================================
+// 15. ПАСХАЛКА (СЕКРЕТНАЯ СКИДКА)
+// ==========================================
 function triggerEasterEgg() {
     isHacked = true;
     const overlay = document.getElementById('glitchOverlay');
@@ -3900,15 +3901,18 @@ function triggerEasterEgg() {
     
     applyFilters(); 
     
+    // Применяем скидку ко всем товарам УЖЕ лежащим в корзине
     cart.forEach(item => { 
         item.price = Math.floor(item.price * 0.9); 
     });
     localStorage.setItem('nisha_cart', JSON.stringify(cart));
-    syncCartToServer();
-    updateCartUI();
+    
+    if (typeof syncCartToServer === 'function') syncCartToServer();
+    if (typeof updateCartUI === 'function') updateCartUI();
 }
+
 // ==========================================
-// 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (ЖЕЛЕЗОБЕТОННЫЕ УНИКАЛЬНЫЕ ЗА ДЕНЬ)
+// 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (ЖЕЛЕЗОБЕТОННЫЙ)
 // ==========================================
 async function initHitCounter() {
     const counterEl = document.getElementById('hitCounterValue');
@@ -3967,7 +3971,7 @@ async function initHitCounter() {
     } catch (err) {
         console.error("Счетчик работает в оффлайн-режиме (Сервер спит):", err.message);
         // ВАЖНО: Мы больше не ставим тут '0 0 0 0 0'! 
-        // Юзер просто продолжит видеть старую цифру из кэша (шаг 3), пока сервер не проснется.
+        // Юзер просто продолжит видеть старую цифру из кэша, пока сервер не проснется.
     }
 }
 // ==========================================
