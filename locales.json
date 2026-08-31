@@ -163,7 +163,9 @@
       },
       "profile": {
         "saved": "СОХРАНЕНО:",
-        "logout": "[ ВЫЙТИ ИЗ СИСТЕМЫ ]"
+        "logout": "[ ВЫЙТИ ИЗ СИСТЕМЫ ]",
+        "nickname": "НИКНЕЙМ:",
+        "email": "E-MAIL:"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -406,7 +408,9 @@
       },
       "profile": {
         "saved": "ЗБЕРЕЖЕНО:",
-        "logout": "[ ВИЙТИ З СИСТЕМИ ]"
+        "logout": "[ ВИЙТИ З СИСТЕМИ ]",
+        "nickname": "НІКНЕЙМ:",
+        "email": "E-MAIL:"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -648,7 +652,9 @@
       },
       "profile": {
         "saved": "SAVED:",
-        "logout": "[ LOGOUT ]"
+        "logout": "[ LOGOUT ]",
+        "nickname": "NICKNAME:",
+        "email": "E-MAIL:"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
