@@ -5321,6 +5321,38 @@ function updateCharCount(textarea) {
     }
 }
 
+// ==========================================
+// ПЕРЕХОД К СЛЕДУЮЩЕМУ ПОЛЮ ПО НАЖАТИЮ ENTER (ДЛЯ ПК)
+// ==========================================
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const activeEl = document.activeElement;
+
+        // Если мы печатаем в Textarea (например, в описании), Enter должен делать перенос строки. Не трогаем!
+        if (activeEl.tagName === 'TEXTAREA') return;
+
+        // Если фокус на обычном поле ввода (input)
+        if (activeEl.tagName === 'INPUT') {
+            e.preventDefault(); // Блокируем случайную отправку или перезагрузку страницы
+
+            // Находим родительский блок формы, в которой мы сейчас находимся (Окно предложки, авторизация, корзина)
+            const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields');
+            
+            if (form) {
+                // Собираем все видимые поля ввода и кнопки в этой форме по порядку
+                const focusables = Array.from(form.querySelectorAll('input:not([type="hidden"]):not([style*="display: none"]):not([disabled]), textarea, button:not([style*="display: none"]):not([disabled])'));
+                
+                const currentIndex = focusables.indexOf(activeEl);
+                
+                // Если мы нашли текущее поле и оно не последнее в списке — прыгаем на следующее!
+                if (currentIndex > -1 && currentIndex < focusables.length - 1) {
+                    focusables[currentIndex + 1].focus();
+                }
+            }
+        }
+    }
+});
+
 
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {
