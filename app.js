@@ -3649,6 +3649,32 @@ function openProductModal(item) {
         }
     };
     schemaScript.innerText = JSON.stringify(schemaData);
+
+    // ==============================================================
+    // ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ ТЕГОВ ДЛЯ TELEGRAM И ДРУГИХ МЕССЕНДЖЕРОВ
+    // ==============================================================
+    const setMetaTag = (property, content) => {
+        let tag = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+        if (!tag) {
+            tag = document.createElement('meta');
+            if (property.startsWith('og:')) tag.setAttribute('property', property);
+            else tag.setAttribute('name', property);
+            document.head.appendChild(tag);
+        }
+        tag.setAttribute('content', content);
+    };
+
+    let statusPrefix = item.status === 'sold' ? '🔴 SOLD | ' : (item.status === 'reserved' ? '🟡 RESERVED | ' : '🟢 ');
+    let ogTitle = `${statusPrefix}NISHA: ${item.brand} - ${item.name}`;
+    let ogDesc = `Размер: ${item.size} | Цена: ${item.price} грн`;
+    let ogImage = (item.images && item.images.length > 0) ? item.images[0] : 'https://i.ibb.co/3s6HhXz/icon.ico';
+
+    setMetaTag('og:title', ogTitle);
+    setMetaTag('og:description', ogDesc);
+    setMetaTag('og:image', ogImage);
+    setMetaTag('twitter:title', ogTitle);
+    setMetaTag('twitter:description', ogDesc);
+    setMetaTag('twitter:image', ogImage);
 }
 
 let currentSlide = 0;
@@ -4198,11 +4224,11 @@ if(installBtn) {
 function shareItem() {
     if (!currentOpenedItem) return;
     
-    const shareUrl = `https://nisha-api.onrender.com/share/${currentOpenedItem.id}`;
+    // Ссылка ведет на твой красивый домен, а Телеграм сам найдет картинку
+    const shareUrl = `https://www.nisha-store.shop/?item=${currentOpenedItem.id}`;
     const shareTitle = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
     const shareText = `Зацени: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`;
 
-    // Если браузер поддерживает нативное меню "Поделиться" (Все смартфоны и Mac)
     if (navigator.share) {
         navigator.share({
             title: shareTitle,
