@@ -544,8 +544,8 @@
 <label data-i18n="propose.size_label">РАЗМЕР:</label>
 <input id="propSize" class="form-input" placeholder="Например: M или 42" data-i18n-ph="propose.size_place">
 
-<label data-i18n="propose.desc_label">ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
-<textarea id="propDesc" class="form-input" maxlength="250" style="height:80px;resize:none" placeholder="Опиши состояние, нюансы..." data-i18n-ph="propose.desc_place"></textarea>
+<label id="descLabel" data-i18n="propose.desc_label">ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
+<textarea id="propDesc" class="form-input" maxlength="250" style="height:80px;resize:none" placeholder="Опиши состояние, нюансы..." data-i18n-ph="propose.desc_place" oninput="updateCharCount(this)"></textarea>
 
 <label data-i18n="propose.cond_label">ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
 <input type="number" id="propCond" class="form-input" placeholder="9" min="1" max="10" data-i18n-ph="propose.cond_place">

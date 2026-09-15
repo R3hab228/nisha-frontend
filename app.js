@@ -4639,21 +4639,29 @@ const fileToBase64 = file => new Promise((resolve) => {
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
     
-    // ДОСТАЕМ ИМЕННО ФАЙЛЫ ИЗ МАССИВА ОБЪЕКТОВ
+    // БЕРЕМ ФАЙЛЫ ИЗ НАШЕГО ОТСОРТИРОВАННОГО МАССИВА!
     const files = currentProposalFiles.map(obj => obj.file);
-    const rawName = document.getElementById('propName').value.trim(); // НОВОЕ ПОЛЕ
+    
+    // СЧИТЫВАЕМ ВСЕ ПОЛЯ
+    const rawName = document.getElementById('propName').value.trim();
     const rawBrand = document.getElementById('propBrand').value.trim();
     const rawSize = document.getElementById('propSize').value.trim();
+    const rawDesc = document.getElementById('propDesc').value.trim(); // ДОСТАЕМ ОПИСАНИЕ
     const cond = parseInt(document.getElementById('propCond').value);
-    const price = parseInt(document.getElementById('propPrice').value) || 0; // Считываем цену
+    const price = parseInt(document.getElementById('propPrice').value) || 0; 
     const rawContact = document.getElementById('propContact').value.trim();
-    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName; // НОВОЕ
+    
+    // ОЧИЩАЕМ ОТ ВРЕДОНОСНОГО КОДА (ЕСЛИ ЕСТЬ DOMPURIFY)
+    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName; 
     const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand;
     const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize;
+    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc; // ЧИСТИМ ОПИСАНИЕ
     const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact;
 
-    if (!files.length || !nameItem || !brand || !size || isNaN(cond) || !contact) {
-        showToast('Заполните все поля и прикрепите фото!', 'error');
+    // ЖЕСТКАЯ ПРОВЕРКА (Если пусто хотя бы одно поле — выдаем ошибку)
+    if (!files.length || !nameItem || !brand || !size || !desc || isNaN(cond) || price <= 0 || !contact) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        showToast('Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!', 'error');
         return;
     }
 
@@ -4676,6 +4684,12 @@ async function submitProposal() {
 
         // ЭТАП 2: КОНВЕРТАЦИЯ В ТЕКСТ (Занимает миллисекунды)
         btn.innerText = '[ ПОДГОТОВКА ПАКЕТА... ]';
+        // Вспомогательная функция (конвертирует фото в текст для передачи на сервер)
+        const fileToBase64 = file => new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+        });
         const base64Images = await Promise.all(compressedFiles.map(f => fileToBase64(f)));
 
         // ЭТАП 3: ФОНОВАЯ ОТПРАВКА НА СЕРВЕР (Не ждем ответа, чтобы не висло)
@@ -4685,11 +4699,12 @@ async function submitProposal() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                name: nameItem, // ОТПРАВЛЯЕМ НАЗВАНИЕ
+                name: nameItem,
                 brand: brand,
                 measurements: size,
                 condition: cond,
                 price: price,
+                description: desc, // ОТПРАВЛЯЕМ ОПИСАНИЕ НА СЕРВЕР!
                 contact: contact,
                 imagesBase64: base64Images
             })
@@ -5283,6 +5298,19 @@ document.addEventListener("visibilitychange", () => {
         }
     }
 });
+
+// --- ЖИВОЙ СЧЕТЧИК СИМВОЛОВ ДЛЯ ПРЕДЛОЖКИ ---
+function updateCharCount(textarea) {
+    const label = document.getElementById('descLabel');
+    if (!label) return;
+    const currentLen = textarea.value.length;
+    // Оставляем оригинальный перевод, но меняем цифру
+    let originalText = i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' });
+    label.innerText = originalText.replace('250', `${currentLen}/250`);
+    
+    if (currentLen === 250) label.style.color = 'var(--accent-red)';
+    else label.style.color = 'var(--accent-green)';
+}
 
 
 // Запускаем инициализацию после загрузки
