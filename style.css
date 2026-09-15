@@ -514,8 +514,8 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .preview-img:active { cursor: grabbing; }
 
 /* Анимации для перетаскивания (Drag and Drop) */
-.sortable-ghost { opacity: 0.3; border: 2px dashed var(--accent-green) !important; background: #000; filter: grayscale(100%); }
-.sortable-drag { cursor: grabbing !important; box-shadow: 0 15px 25px rgba(0,255,0,0.3) !important; transform: scale(1.1); z-index: 1000; }
+.sortable-ghost { opacity: 0.2; background: #000; border: 2px dashed var(--accent-green) !important; transform: scale(0.9); }
+.sortable-drag { cursor: grabbing !important; box-shadow: 0 15px 25px rgba(0,255,0,0.4) !important; transform: scale(1.15); z-index: 99999 !important; opacity: 0.9; }
 
 .driver-popover { background-color: #0a0a0a !important; color: #fff !important; border: 2px dashed var(--accent-green) !important; font-family: var(--font-mono) !important; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2) !important; border-radius: 0 !important; z-index: 100000 !important; }
 .driver-popover-title { font-size: 16px !important; color: var(--accent-green) !important; text-transform: uppercase; }

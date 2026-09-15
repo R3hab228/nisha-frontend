@@ -4556,27 +4556,35 @@ function renderProposalPreviews() {
         // ИНИЦИАЛИЗАЦИЯ ИДЕАЛЬНОГО МОБИЛЬНОГО ПЕРЕТАСКИВАНИЯ
         if (window.Sortable) {
             Sortable.create(container, {
-                animation: 150, 
-                delay: 200, 
-                delayOnTouchOnly: true, 
-                forceFallback: true, // ВАЖНО: Включает родной мобильный свайп библиотеки
-                fallbackOnBody: true, // ВАЖНО: Привязывает фото к экрану, а не к модалке (решает проблему с пальцем)
+                animation: 250, 
+                delay: 150, // Уменьшили задержку, чтобы быстрее "прилипало" к пальцу
+                delayOnTouchOnly: true,
+                touchStartThreshold: 5, // Защита от случайного захвата при скролле вниз
+                forceFallback: true, 
+                fallbackOnBody: false, // ФИКС: Оставляем фотку внутри модалки, чтобы координаты не ломались!
+                fallbackTolerance: 5,
+                swapThreshold: 0.5, // ФИКС: Меняются местами уже на середине (не надо тянуть далеко)
                 ghostClass: 'sortable-ghost', 
                 dragClass: 'sortable-drag', 
                 onStart: function () {
                     if (typeof triggerHaptic === 'function') triggerHaptic('medium'); 
                     document.body.classList.add('sort-lock');
+                    
+                    // Жестко блокируем скролл модалки, чтобы она не уползала из-под пальца
+                    const modalWin = document.querySelector('#proposeModal .modal-window');
+                    if (modalWin) modalWin.style.overflow = 'hidden';
                 },
                 onEnd: function (evt) {
                     document.body.classList.remove('sort-lock');
                     if (typeof triggerHaptic === 'function') triggerHaptic('light'); 
                     
-                    // Просто синхронизируем массив с новым порядком DOM-элементов
+                    // Возвращаем модалке способность скроллиться
+                    const modalWin = document.querySelector('#proposeModal .modal-window');
+                    if (modalWin) modalWin.style.overflow = 'auto';
+                    
+                    // Синхронизируем массив с новым порядком DOM-элементов
                     const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
                     currentProposalFiles.splice(evt.newIndex, 0, movedItem);
-                    
-                    // ВАЖНО: Мы больше НЕ вызываем renderProposalPreviews() здесь! 
-                    // Это убьет проблему "черных фото", так как библиотека сама уже переместила элементы на экране.
                 }
             });
         }
