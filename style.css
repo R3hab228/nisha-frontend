@@ -510,12 +510,25 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .upload-dropzone { background: #0a0a0a; border: 2px dashed #444; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; border-radius: 4px; min-height: 80px; display: flex; align-items: center; justify-content: center; flex-direction: column;}
 .upload-dropzone:hover { border-color: var(--accent-green); background: #111; }
 .preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; width: 100%; justify-content: center;}
-.preview-img { width: 65px; height: 65px; background-size: cover; background-position: center; border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); position: relative; cursor: grab; transition: transform 0.1s; touch-action: none; }
+.preview-img { 
+    width: 65px; height: 65px; background-size: cover; background-position: center; 
+    border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); 
+    position: relative; cursor: grab; transition: transform 0.1s; 
+    
+    /* ЖЕСТКАЯ ЗАЩИТА ОТ ВЫДЕЛЕНИЯ И КОПИРОВАНИЯ НА ТЕЛЕФОНАХ */
+    touch-action: none; 
+    user-select: none; 
+    -webkit-user-select: none; 
+    -webkit-touch-callout: none; /* Убирает лупу и меню копирования на iOS */
+    -webkit-user-drag: none; /* Запрещает стандартный браузерный Drag-and-Drop */
+}
 .preview-img:active { cursor: grabbing; }
 
 /* Анимации для перетаскивания (Drag and Drop) */
 .sortable-ghost { opacity: 0.2; background: #000; border: 2px dashed var(--accent-green) !important; transform: scale(0.9); }
 .sortable-drag { cursor: grabbing !important; box-shadow: 0 15px 25px rgba(0,255,0,0.4) !important; transform: scale(1.15); z-index: 99999 !important; opacity: 0.9; }
+/* ФИКС КООРДИНАТ ДЛЯ ТЕЛЕФОНОВ: */
+.sortable-fallback { opacity: 1 !important; pointer-events: none !important; z-index: 99999 !important; }
 
 .driver-popover { background-color: #0a0a0a !important; color: #fff !important; border: 2px dashed var(--accent-green) !important; font-family: var(--font-mono) !important; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2) !important; border-radius: 0 !important; z-index: 100000 !important; }
 .driver-popover-title { font-size: 16px !important; color: var(--accent-green) !important; text-transform: uppercase; }
