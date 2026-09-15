@@ -510,7 +510,7 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .upload-dropzone { background: #0a0a0a; border: 2px dashed #444; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; border-radius: 4px; min-height: 80px; display: flex; align-items: center; justify-content: center; flex-direction: column;}
 .upload-dropzone:hover { border-color: var(--accent-green); background: #111; }
 .preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; width: 100%; justify-content: center;}
-.preview-img { width: 65px; height: 65px; background-size: cover; background-position: center; border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); position: relative; cursor: grab; transition: transform 0.1s; }
+.preview-img { width: 65px; height: 65px; background-size: cover; background-position: center; border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); position: relative; cursor: grab; transition: transform 0.1s; touch-action: none; }
 .preview-img:active { cursor: grabbing; }
 
 /* Анимации для перетаскивания (Drag and Drop) */

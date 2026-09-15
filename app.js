@@ -4480,7 +4480,7 @@ async function compressImage(file) {
 }
 
 // --- ГЛОБАЛЬНЫЙ МАССИВ ДЛЯ ФОТОГРАФИЙ ПРЕДЛОЖКИ ---
-let currentProposalFiles = [];
+let currentProposalFiles = []; // Теперь тут будут объекты: { file, url }
 
 // 3. Полная очистка формы
 function resetProposalForm() {
@@ -4491,7 +4491,7 @@ function resetProposalForm() {
     renderProposalPreviews();
 }
 
-// 4. Умная загрузка, сортировка и удаление фото
+// 4. Умная загрузка фото (создаем ссылки на фото ОДИН РАЗ, чтобы не было черных экранов)
 document.getElementById('propFiles')?.addEventListener('change', function(e) {
     const newFiles = Array.from(e.target.files);
     if (newFiles.length === 0) return;
@@ -4501,13 +4501,19 @@ document.getElementById('propFiles')?.addEventListener('change', function(e) {
         return;
     }
 
-    // Добавляем новые файлы к старым
-    currentProposalFiles = currentProposalFiles.concat(newFiles);
-    this.value = ''; // Сбрасываем инпут
+    // Сохраняем файл и сразу генерируем ему URL
+    newFiles.forEach(file => {
+        currentProposalFiles.push({
+            file: file,
+            url: file.type.startsWith('video/') ? null : URL.createObjectURL(file)
+        });
+    });
+    
+    this.value = ''; 
     renderProposalPreviews();
 });
 
-// Функция отрисовки превью с Drag-and-Drop
+// Функция отрисовки превью с ИДЕАЛЬНЫМ Drag-and-Drop
 function renderProposalPreviews() {
     const container = document.getElementById('propPreviewContainer');
     const placeholder = document.getElementById('propPlaceholder');
@@ -4516,62 +4522,61 @@ function renderProposalPreviews() {
     if (currentProposalFiles.length > 0) {
         placeholder.style.display = 'none';
 
-        currentProposalFiles.forEach((file, index) => {
+        currentProposalFiles.forEach((item, index) => {
             const img = document.createElement('div');
             img.className = 'preview-img';
             img.setAttribute('data-index', index);
 
-            // Иконка перетаскивания (6 точек)
             const dragIcon = '<div style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); padding:2px; border-radius:2px; pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>';
 
-            if (file.type.startsWith('video/')) {
+            if (!item.url) { // Это видео
                 img.style.backgroundColor = '#111';
                 img.innerHTML = `<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">▶ VID</span>${dragIcon}`;
             } else {
-                img.style.backgroundImage = `url('${URL.createObjectURL(file)}')`;
+                img.style.backgroundImage = `url('${item.url}')`;
                 img.innerHTML = dragIcon;
             }
 
-            // Кнопка удаления конкретного фото
             const delBtn = document.createElement('div');
             delBtn.innerHTML = '✖';
             delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:20; font-family:var(--font-mono); border: 1px solid #000;';
+            
             delBtn.onclick = (e) => {
-                e.stopPropagation(); // Чтобы не открывалось окно выбора файлов
-                currentProposalFiles.splice(index, 1);
+                e.stopPropagation(); 
+                currentProposalFiles.splice(index, 1); // Удаляем
                 if (typeof triggerHaptic === 'function') triggerHaptic('light');
-                renderProposalPreviews();
+                renderProposalPreviews(); // Перерисовываем ТОЛЬКО при удалении или добавлении
             };
             img.appendChild(delBtn);
-            
-            // Чтобы клик по картинке не открывал выбор файлов снова
             img.onclick = (e) => e.stopPropagation();
 
             container.appendChild(img);
         });
 
-        // ИНИЦИАЛИЗАЦИЯ ПЕРЕТАСКИВАНИЯ (SortableJS)
+        // ИНИЦИАЛИЗАЦИЯ ИДЕАЛЬНОГО МОБИЛЬНОГО ПЕРЕТАСКИВАНИЯ
         if (window.Sortable) {
             Sortable.create(container, {
-                animation: 200, // Плавность полета
-                ghostClass: 'sortable-ghost', // Класс для места, куда упадет фотка
-                dragClass: 'sortable-drag', // Класс для фотки, которую тащим
-                delay: 200, // ВАЖНО ДЛЯ ТЕЛЕФОНОВ: задержка 0.2с при зажатии (чтобы не путать со скроллом)
-                delayOnTouchOnly: true, // Задержка только на смартфонах
+                animation: 150, 
+                delay: 200, 
+                delayOnTouchOnly: true, 
+                forceFallback: true, // ВАЖНО: Включает родной мобильный свайп библиотеки
+                fallbackOnBody: true, // ВАЖНО: Привязывает фото к экрану, а не к модалке (решает проблему с пальцем)
+                ghostClass: 'sortable-ghost', 
+                dragClass: 'sortable-drag', 
                 onStart: function () {
                     if (typeof triggerHaptic === 'function') triggerHaptic('medium'); 
-                    // НОВОЕ: Включаем жесткую блокировку окна (чтобы оно не закрывалось)
                     document.body.classList.add('sort-lock');
                 },
                 onEnd: function (evt) {
-                    // Переставляем файлы
-                    const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
-                    currentProposalFiles.splice(evt.newIndex, 0, movedItem);
+                    document.body.classList.remove('sort-lock');
                     if (typeof triggerHaptic === 'function') triggerHaptic('light'); 
                     
-                    // НОВОЕ: Снимаем блокировку окна
-                    document.body.classList.remove('sort-lock');
-                    renderProposalPreviews(); 
+                    // Просто синхронизируем массив с новым порядком DOM-элементов
+                    const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
+                    currentProposalFiles.splice(evt.newIndex, 0, movedItem);
+                    
+                    // ВАЖНО: Мы больше НЕ вызываем renderProposalPreviews() здесь! 
+                    // Это убьет проблему "черных фото", так как библиотека сама уже переместила элементы на экране.
                 }
             });
         }
@@ -4591,8 +4596,8 @@ const fileToBase64 = file => new Promise((resolve) => {
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
     
-    // БЕРЕМ ФАЙЛЫ ИЗ НАШЕГО ОТСОРТИРОВАННОГО МАССИВА!
-    const files = currentProposalFiles;
+    // ДОСТАЕМ ИМЕННО ФАЙЛЫ ИЗ МАССИВА ОБЪЕКТОВ
+    const files = currentProposalFiles.map(obj => obj.file);
     const rawName = document.getElementById('propName').value.trim(); // НОВОЕ ПОЛЕ
     const rawBrand = document.getElementById('propBrand').value.trim();
     const rawSize = document.getElementById('propSize').value.trim();
