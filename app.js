@@ -3296,9 +3296,9 @@ function openProductModal(item) {
         
         <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ (АККОРДЕОН) -->
         <div id="qaWrapper" class="qa-wrapper">
-            <h4 class="qa-title" onclick="document.getElementById('qaList').classList.toggle('collapsed'); this.querySelector('span').style.transform = document.getElementById('qaList').classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';">
+            <h4 class="qa-title" onclick="document.getElementById('qaList').classList.toggle('collapsed'); this.querySelector('.qa-arrow').style.transform = document.getElementById('qaList').classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';">
                 <span data-i18n="product.qa_title">${i18next.t('product.qa_title', {defaultValue: 'Q&A: Вопросы покупателей'})}</span>
-                <span style="transition: transform 0.2s; color: var(--accent-green);">▼</span>
+                <span class="qa-arrow" style="transition: transform 0.2s; color: var(--accent-green); display: inline-block;">▼</span>
             </h4>
             <div id="qaList" class="qa-content"></div>
         </div>
