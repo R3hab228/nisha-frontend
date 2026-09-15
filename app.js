@@ -4539,7 +4539,7 @@ function renderProposalPreviews() {
 
             const delBtn = document.createElement('div');
             delBtn.innerHTML = '✖';
-            delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:20; font-family:var(--font-mono); border: 1px solid #000;';
+            delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:10; font-family:var(--font-mono); border: 1px solid #000;';
             
             delBtn.onclick = (e) => {
                 e.stopPropagation(); 
