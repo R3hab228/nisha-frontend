@@ -4378,8 +4378,8 @@ function initMobileSwipe() {
         modalWin.addEventListener('touchstart', (e) => {
                 if (window.innerWidth > 900) return;
                 
-                // ЗАЩИТА: Отключаем свайп окна, если юзер листает внутренние списки (правила, заказы, отзывы)
-                if (e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.rules-content') || e.target.closest('.orders-container') || e.target.closest('#reviewsContainerList')) {
+                // ЗАЩИТА: Отключаем свайп окна, если юзер листает списки ИЛИ ПЕРЕТАСКИВАЕТ ФОТО
+                if (document.body.classList.contains('sort-lock') || e.target.closest('.preview-container') || e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.rules-content') || e.target.closest('.orders-container') || e.target.closest('#reviewsContainerList')) {
                     canDrag = false;
                     return;
                 }
@@ -4559,14 +4559,19 @@ function renderProposalPreviews() {
                 delay: 200, // ВАЖНО ДЛЯ ТЕЛЕФОНОВ: задержка 0.2с при зажатии (чтобы не путать со скроллом)
                 delayOnTouchOnly: true, // Задержка только на смартфонах
                 onStart: function () {
-                    if (typeof triggerHaptic === 'function') triggerHaptic('medium'); // Вибрация при взятии
+                    if (typeof triggerHaptic === 'function') triggerHaptic('medium'); 
+                    // НОВОЕ: Включаем жесткую блокировку окна (чтобы оно не закрывалось)
+                    document.body.classList.add('sort-lock');
                 },
                 onEnd: function (evt) {
-                    // Переставляем файлы внутри нашего массива данных
+                    // Переставляем файлы
                     const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
                     currentProposalFiles.splice(evt.newIndex, 0, movedItem);
-                    if (typeof triggerHaptic === 'function') triggerHaptic('light'); // Вибрация при отпускании
-                    renderProposalPreviews(); // Перерисовываем, чтобы обновить индексы
+                    if (typeof triggerHaptic === 'function') triggerHaptic('light'); 
+                    
+                    // НОВОЕ: Снимаем блокировку окна
+                    document.body.classList.remove('sort-lock');
+                    renderProposalPreviews(); 
                 }
             });
         }
