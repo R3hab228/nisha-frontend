@@ -5299,17 +5299,26 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// --- ЖИВОЙ СЧЕТЧИК СИМВОЛОВ ДЛЯ ПРЕДЛОЖКИ ---
+// --- ЖИВОЙ СЧЕТЧИК СИМВОЛОВ ДЛЯ ПРЕДЛОЖКИ (ОБРАТНЫЙ ОТСЧЕТ) ---
 function updateCharCount(textarea) {
     const label = document.getElementById('descLabel');
     if (!label) return;
-    const currentLen = textarea.value.length;
-    // Оставляем оригинальный перевод, но меняем цифру
-    let originalText = i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' });
-    label.innerText = originalText.replace('250', `${currentLen}/250`);
     
-    if (currentLen === 250) label.style.color = 'var(--accent-red)';
-    else label.style.color = 'var(--accent-green)';
+    // Считаем сколько осталось символов
+    const remaining = 250 - textarea.value.length;
+    
+    // Берем оригинальный текст перевода (для любого языка)
+    let originalText = i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' });
+    
+    // Просто заменяем число 250 на остаток
+    label.innerText = originalText.replace('250', remaining);
+    
+    // Красим в красный, если лимит исчерпан
+    if (remaining <= 0) {
+        label.style.color = 'var(--accent-red)';
+    } else {
+        label.style.color = 'var(--accent-green)';
+    }
 }
 
 
