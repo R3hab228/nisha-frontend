@@ -4479,59 +4479,101 @@ async function compressImage(file) {
     });
 }
 
-// 3. Полная очистка формы (вызывать после успеха)
+// --- ГЛОБАЛЬНЫЙ МАССИВ ДЛЯ ФОТОГРАФИЙ ПРЕДЛОЖКИ ---
+let currentProposalFiles = [];
+
+// 3. Полная очистка формы
 function resetProposalForm() {
-    // ВАЖНО: Добавили 'propPrice' в список на очистку!
-    const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName'];
-    fields.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-    const fileInput = document.getElementById('propFiles');
-    if (fileInput) fileInput.value = '';
-    const container = document.getElementById('propPreviewContainer');
-    if (container) container.innerHTML = '';
-    const placeholder = document.getElementById('propPlaceholder');
-    if (placeholder) placeholder.style.display = 'block';
+    const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc'];
+    fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('propFiles').value = '';
+    currentProposalFiles = [];
+    renderProposalPreviews();
 }
 
-// 4. Логика предпросмотра выбранных фото (срабатывает при выборе файлов)
+// 4. Умная загрузка, сортировка и удаление фото
 document.getElementById('propFiles')?.addEventListener('change', function(e) {
-    const files = Array.from(e.target.files);
-    const container = document.getElementById('propPreviewContainer');
-    const placeholder = document.getElementById('propPlaceholder');
+    const newFiles = Array.from(e.target.files);
+    if (newFiles.length === 0) return;
 
-    if (files.length > 5) {
-        showToast('Максимум 5 фото!', 'error');
-        this.value = '';
-        container.innerHTML = '';
-        placeholder.style.display = 'block';
+    if (currentProposalFiles.length + newFiles.length > 5) {
+        showToast('Максимум 5 фото/видео!', 'error');
         return;
     }
 
+    // Добавляем новые файлы к старым
+    currentProposalFiles = currentProposalFiles.concat(newFiles);
+    this.value = ''; // Сбрасываем инпут
+    renderProposalPreviews();
+});
+
+// Функция отрисовки превью с Drag-and-Drop
+function renderProposalPreviews() {
+    const container = document.getElementById('propPreviewContainer');
+    const placeholder = document.getElementById('propPlaceholder');
     container.innerHTML = '';
-    if (files.length > 0) {
-        if (placeholder) placeholder.style.display = 'none';
-        
-        // ФИКС: Используем синхронное создание ссылок. 
-        // Теперь порядок строго соответствует тому, как ты выбрал фото в галерее!
-        files.forEach(file => {
+
+    if (currentProposalFiles.length > 0) {
+        placeholder.style.display = 'none';
+
+        currentProposalFiles.forEach((file, index) => {
             const img = document.createElement('div');
             img.className = 'preview-img';
-            
-            // Если это видео - ставим красивую заглушку, чтобы не тормозило
+            img.setAttribute('data-index', index);
+
+            // Иконка перетаскивания (6 точек)
+            const dragIcon = '<div style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); padding:2px; border-radius:2px; pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>';
+
             if (file.type.startsWith('video/')) {
                 img.style.backgroundColor = '#111';
-                img.innerHTML = '<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">▶ ВИДЕО</span>';
+                img.innerHTML = `<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">▶ VID</span>${dragIcon}`;
             } else {
                 img.style.backgroundImage = `url('${URL.createObjectURL(file)}')`;
+                img.innerHTML = dragIcon;
             }
+
+            // Кнопка удаления конкретного фото
+            const delBtn = document.createElement('div');
+            delBtn.innerHTML = '✖';
+            delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:20; font-family:var(--font-mono); border: 1px solid #000;';
+            delBtn.onclick = (e) => {
+                e.stopPropagation(); // Чтобы не открывалось окно выбора файлов
+                currentProposalFiles.splice(index, 1);
+                if (typeof triggerHaptic === 'function') triggerHaptic('light');
+                renderProposalPreviews();
+            };
+            img.appendChild(delBtn);
+            
+            // Чтобы клик по картинке не открывал выбор файлов снова
+            img.onclick = (e) => e.stopPropagation();
+
             container.appendChild(img);
         });
+
+        // ИНИЦИАЛИЗАЦИЯ ПЕРЕТАСКИВАНИЯ (SortableJS)
+        if (window.Sortable) {
+            Sortable.create(container, {
+                animation: 200, // Плавность полета
+                ghostClass: 'sortable-ghost', // Класс для места, куда упадет фотка
+                dragClass: 'sortable-drag', // Класс для фотки, которую тащим
+                delay: 200, // ВАЖНО ДЛЯ ТЕЛЕФОНОВ: задержка 0.2с при зажатии (чтобы не путать со скроллом)
+                delayOnTouchOnly: true, // Задержка только на смартфонах
+                onStart: function () {
+                    if (typeof triggerHaptic === 'function') triggerHaptic('medium'); // Вибрация при взятии
+                },
+                onEnd: function (evt) {
+                    // Переставляем файлы внутри нашего массива данных
+                    const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
+                    currentProposalFiles.splice(evt.newIndex, 0, movedItem);
+                    if (typeof triggerHaptic === 'function') triggerHaptic('light'); // Вибрация при отпускании
+                    renderProposalPreviews(); // Перерисовываем, чтобы обновить индексы
+                }
+            });
+        }
     } else {
-        if (placeholder) placeholder.style.display = 'block';
+        placeholder.style.display = 'block';
     }
-});
+}
 
 // 5. Главная функция отправки данных на сервер
 // Вспомогательная функция (конвертирует фото в текст для передачи на сервер)
@@ -4543,10 +4585,9 @@ const fileToBase64 = file => new Promise((resolve) => {
 
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
-    const fileInput = document.getElementById('propFiles');
-    if (!fileInput || !fileInput.files) return;
-
-    const files = fileInput.files;
+    
+    // БЕРЕМ ФАЙЛЫ ИЗ НАШЕГО ОТСОРТИРОВАННОГО МАССИВА!
+    const files = currentProposalFiles;
     const rawName = document.getElementById('propName').value.trim(); // НОВОЕ ПОЛЕ
     const rawBrand = document.getElementById('propBrand').value.trim();
     const rawSize = document.getElementById('propSize').value.trim();
