@@ -5378,6 +5378,21 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// ==========================================
+// СЛАЙДЕР ОТЗЫВОВ (ПРОКРУТКА)
+// ==========================================
+window.scrollReviews = function(direction) {
+    const slider = document.getElementById('reviewsContainerList');
+    if (!slider) return;
+    
+    // Высчитываем ширину одной карточки + отступ
+    const card = slider.querySelector('.review-card-ui');
+    if (!card) return;
+    
+    const scrollAmount = card.offsetWidth + 15; // 15px это gap
+    slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
+};
+
 
 // Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {

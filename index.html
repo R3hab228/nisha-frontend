@@ -441,13 +441,21 @@
 <div class=modal-overlay id=reviewsModal>
 <div class=modal-window style=max-width:600px>
 <div class=modal-header>
-<span class="modal-title typewriter" style=animation:none>REVIEWS.TXT</span>
+<span class="modal-title" style="animation:none; font-family:var(--font-mono); letter-spacing:1px;">REVIEWS.TXT<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite;"></span></span>
 <button class=close-btn onclick='closeModal("reviewsModal")'>X</button>
 </div>
-<div class=orders-container>
+<div class=orders-container style="position:relative; padding-bottom: 40px;">
 <p style=color:#aaa;margin-top:0;font-size:14px data-i18n=reviews_modal.desc>Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
-<div id=reviewsContainerList>
+
+<!-- КАРУСЕЛЬ ОТЗЫВОВ -->
+<div id=reviewsContainerList class="reviews-slider"></div>
+
+<!-- СТРЕЛОЧКИ ДЛЯ ПК -->
+<div class="reviews-nav">
+    <button onclick="scrollReviews(-1)">&#10094;</button>
+    <button onclick="scrollReviews(1)">&#10095;</button>
 </div>
+
 </div>
 </div>
 </div>
