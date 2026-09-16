@@ -4576,7 +4576,10 @@ if (dropzone) {
     });
 }
 
-// 6. Отрисовка превью с ИДЕАЛЬНЫМ ПЕРЕТАСКИВАНИЕМ (ПК + МОБИЛКА)
+// Глобальная переменная для хранения сортировщика (чтобы не было лагов)
+let proposalSortable = null;
+
+// 6. Отрисовка превью с ИДЕАЛЬНЫМ ПЕРЕТАСКИВАНИЕМ И КЛИКОМ
 function renderProposalPreviews() {
     const container = document.getElementById('propPreviewContainer');
     const placeholder = document.getElementById('propPlaceholder');
@@ -4604,6 +4607,7 @@ function renderProposalPreviews() {
             delBtn.innerHTML = '✖';
             delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:10; font-family:var(--font-mono); border: 1px solid #000;';
             
+            // Удаление фото
             delBtn.onclick = (e) => {
                 e.stopPropagation(); 
                 currentProposalFiles.splice(index, 1);
@@ -4611,16 +4615,39 @@ function renderProposalPreviews() {
                 renderProposalPreviews(); 
             };
             img.appendChild(delBtn);
-            img.onclick = (e) => e.stopPropagation();
+
+            // ФИКС: Клик по картинке (Открывает на весь экран!)
+            img.onclick = (e) => {
+                e.stopPropagation();
+                if (!item.url) return; // Видео пока не открываем, только фото
+                
+                // Подключаем родную галерею
+                if (window.PhotoSwipeLightbox) {
+                    const photos = currentProposalFiles.filter(f => f.url);
+                    const clickedIndex = photos.findIndex(f => f === item);
+                    
+                    const pswp = new window.PhotoSwipeLightbox({
+                        dataSource: photos.map(f => ({ src: f.url, width: 1000, height: 1000 })),
+                        pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+                    });
+                    pswp.init();
+                    pswp.loadAndOpen(clickedIndex);
+                }
+            };
 
             container.appendChild(img);
         });
 
+        // ФИКС ЛАГОВ: Убиваем старый сортировщик перед созданием нового!
+        if (proposalSortable) {
+            proposalSortable.destroy();
+        }
+
         if (window.Sortable) {
             const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
-            Sortable.create(container, {
-                animation: 250, 
+            proposalSortable = Sortable.create(container, {
+                animation: 150, // Ускорили анимацию (было 250)
                 delay: isTouchDevice ? 150 : 0, 
                 delayOnTouchOnly: true,
                 touchStartThreshold: 5,

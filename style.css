@@ -553,7 +553,8 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .preview-img { 
     width: 65px; height: 65px; background-size: cover; background-position: center; 
     border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); 
-    position: relative; cursor: grab; transition: transform 0.1s; 
+    position: relative; cursor: grab; 
+    /* УДАЛИЛИ transition, чтобы не лагало! */
     touch-action: none; 
     user-select: none; 
     -webkit-user-select: none; 
