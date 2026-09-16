@@ -520,8 +520,8 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .review-card-ui { 
     background: #0a0a0a; border: 1px solid #333; padding: 15px; 
     border-left: 3px solid var(--accent-green); display: flex; flex-direction: column; 
-    transition: 0.2s;
-    height: 100%; /* Заставляет обе карточки в колонке быть одинаковой высоты */
+    transition: 0.2s; 
+    height: max-content; /* ФИКС: Карточка принимает высоту только своего контента */
 }
 @media (min-width: 901px) {
     .review-card-ui { min-width: 48%; max-width: 48%; } /* На ПК ровно 2 отзыва */
