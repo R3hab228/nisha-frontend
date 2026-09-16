@@ -493,20 +493,35 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .promo-wrapper { display: flex; gap: 10px; margin-top: 5px; }
 .promo-msg { font-size: 11px; font-family: var(--font-mono); margin-top: 5px; }
 
-/* КАРУСЕЛЬ ОТЗЫВОВ */
+/* КАРУСЕЛЬ ОТЗЫВОВ (Колонки по 2 шт) */
 .reviews-slider { 
     display: flex; gap: 15px; overflow-x: auto; overflow-y: hidden; 
     padding-bottom: 10px; scroll-snap-type: x mandatory; 
     -webkit-overflow-scrolling: touch; scrollbar-width: none; 
 }
-.reviews-slider::-webkit-scrollbar { display: none; } /* Прячем ползунок */
+.reviews-slider::-webkit-scrollbar { display: none; }
 
+/* Каждая колонка вмещает 2 отзыва */
+.review-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 90%; 
+    max-width: 90%;
+    scroll-snap-align: center; 
+    scroll-snap-stop: always;
+}
+
+@media (min-width: 901px) {
+    .review-column { min-width: 48%; max-width: 48%; } /* На ПК ровно 2 колонки на экране */
+}
+
+/* Сама карточка отзыва */
 .review-card-ui { 
-    min-width: 85%; /* На телефоне покажет 1 отзыв и кусочек второго */
-    max-width: 85%; 
-    background: #0a0a0a; border: 1px solid #333; padding: 20px; 
+    background: #0a0a0a; border: 1px solid #333; padding: 15px; 
     border-left: 3px solid var(--accent-green); display: flex; flex-direction: column; 
-    transition: 0.2s; scroll-snap-align: center; scroll-snap-stop: always; 
+    transition: 0.2s;
+    height: 100%; /* Заставляет обе карточки в колонке быть одинаковой высоты */
 }
 @media (min-width: 901px) {
     .review-card-ui { min-width: 48%; max-width: 48%; } /* На ПК ровно 2 отзыва */

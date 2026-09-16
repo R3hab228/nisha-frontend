@@ -893,35 +893,41 @@ async function openReviewsModal() {
         };
     }
     
-    let html = ''; // Объявляем переменную только один раз!
+    let html = ''; 
     
-    data.forEach(rev => {
-        const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
+    // Разбиваем массив отзывов на группы по 2 штуки
+    for (let i = 0; i < data.length; i += 2) {
+        html += `<div class="review-column">`; // Открываем колонку
         
-        // БЕЗОПАСНОСТЬ: Очищаем текст от HTML-тегов
-        const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : rev.text;
-        const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : rev.user_name;
+        // Берем 2 отзыва (или 1, если он последний)
+        const pair = data.slice(i, i + 2);
         
-        // Клик по фото открывает PhotoSwipe (Зум на весь экран)
-        const clickAction = rev.item_image ? `onclick="openReviewImage('${rev.item_image}')"` : '';
-        const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
-        
-        // Клик по имени автора открывает сам товар
-        const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
-        const productLinkAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')" title="Открыть товар"` : '';
+        pair.forEach(rev => {
+            const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
+            const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : rev.text;
+            const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : rev.user_name;
+            
+            const clickAction = rev.item_image ? `onclick="openReviewImage('${rev.item_image}')"` : '';
+            const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
+            
+            const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
+            const productLinkAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')" title="Открыть товар"` : '';
 
-        html += `
-        <div class="review-card-ui">
-            <div class="review-head" style="align-items: flex-start; justify-content: space-between; display: flex;">
-                <div style="display: flex; flex-direction: column;">
-                    <span class="review-name" ${productLinkAction} style="color: #fff; font-weight: bold; font-family: var(--font-main); font-size: 14px; ${productLinkStyle}">@${safeName}</span>
-                    <div class="review-date" style="text-align: left; margin-top: 4px; color: #555; font-size: 11px; font-family: var(--font-mono);">${date}</div>
+            html += `
+            <div class="review-card-ui">
+                <div class="review-head" style="align-items: flex-start; justify-content: space-between; display: flex;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span class="review-name" ${productLinkAction} style="color: #fff; font-weight: bold; font-family: var(--font-main); font-size: 14px; ${productLinkStyle}">@${safeName}</span>
+                        <div class="review-date" style="text-align: left; margin-top: 4px; color: #555; font-size: 11px; font-family: var(--font-mono);">${date}</div>
+                    </div>
+                    ${imgHtml}
                 </div>
-                ${imgHtml}
-            </div>
-            <div class="review-text-body" style="margin-top: 10px; color: #ccc; font-size: 13px; line-height: 1.5; font-style: italic;">${safeText}</div>
-        </div>`;
-    });
+                <div class="review-text-body" style="margin-top: 10px; color: #ccc; font-size: 13px; line-height: 1.5; font-style: italic;">${safeText}</div>
+            </div>`;
+        });
+        
+        html += `</div>`; // Закрываем колонку
+    }
     
     container.innerHTML = html;
 }
