@@ -170,8 +170,8 @@
       "propose": {
         "title": "DROP_ITEM.EXE",
         "safe_title": "[ СИСТЕМА БЕЗОПАСНОЙ СДЕЛКИ ]",
-        "safe_1": "1. Мы берем комиссию 15% с продажи.",
-        "safe_2": "2. <b>ДЕНЬГИ ПРИНИМАЕМ МЫ.</b> Вы получаете выплату только после того, как клиент забрал посылку.",
+        "safe_1": "1. Мы берем комиссию 8% с продажи (мин. 30 грн).",
+        "safe_2": "2. <b>ДЕНЬГИ ПРИНИМАЕМ МЫ.</b> Вы получаете выплату в течение 24 часов после того, как клиент забрал посылку.",
         "safe_3": "3. Если клиент отказывается от вещи из-за скрытых вами дефектов или подделки — <b>вы оплачиваете доставку в обе стороны</b>, иначе вещь утилизируется.",
         "safe_4": "4. На одном из фото ОБЯЗАТЕЛЬНО должна быть бумажка с вашим ником и датой.",
         "media_label": "ФОТО / ВИДЕО (ДО 5 ШТУК):",
@@ -241,9 +241,9 @@
         "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">ТОВАРЫ \"БЕЗ ВОЗВРАТА\":</span> Если в карточке указано \"БЕЗ ВОЗВРАТОВ\" (а также любые вещи со статусом \"ПРЕДЛОЖКА\") — данный товар <b style=\"color: var(--accent-red); text-decoration: underline;\">не подлежит возврату или обмену ни при каких условиях.</b> Пожалуйста, делайте покупки обдуманно.",
         "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">ТОВАРЫ \"С ВОЗВРАТОМ\":</span> Если товар имеет зеленый бейдж \"Возврат 14 дней\", вы можете вернуть его согласно законодательству. Обязательное условие: сохранение бирок и отсутствие следов носки.",
         "h5": "[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]",
-        "p5_1": "Комиссия площадки за продажу вашей вещи составляет <b>15%</b>.",
+       "p5_1": "Комиссия площадки за продажу вашей вещи составляет <b>8%</b> (минимум 30 грн).",
         "p5_2": "Все финансовые операции проходят <b>только через наши реквизиты</b>.",
-        "p5_3": "Выплата продавцу осуществляется на карту сразу после того, как покупатель заберет посылку с почты.",
+        "p5_3": "Выплата продавцу осуществляется на карту в течение <b>24 часов</b> после того, как покупатель заберет посылку с почты.",
         "p5_4": "В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.",
         "btn_accept": "[ Я СОГЛАСЕН С ПРАВИЛАМИ ]"
       }
@@ -421,8 +421,8 @@
       "propose": {
         "title": "DROP_ITEM.EXE",
         "safe_title": "[ СИСТЕМА БЕЗПЕЧНОЇ УГОДИ ]",
-        "safe_1": "1. Ми беремо комісію 15% з продажу.",
-        "safe_2": "2. <b>ГРОШІ ПРИЙМАЄМО МИ.</b> Ви отримуєте виплату тільки після того, як клієнт забрав посилку.",
+        "safe_1": "1. Ми беремо комісію 8% з продажу (мін. 30 грн).",
+        "safe_2": "2. <b>ГРОШІ ПРИЙМАЄМО МИ.</b> Ви отримуєте виплату протягом 24 годин після того, як клієнт забрав посилку.",
         "safe_3": "3. Якщо клієнт відмовляється від речі через приховані вами дефекти або підробку — <b>ви оплачуєте доставку в обидві сторони</b>, інакше річ утилізується.",
         "safe_4": "4. На одному з фото ОБОВ'ЯЗКОВО має бути папірець з вашим ніком та датою.",
         "media_label": "ФОТО / ВІДЕО (ДО 5 ШТУК):",
@@ -492,9 +492,9 @@
         "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">ТОВАРИ \"БЕЗ ПОВЕРНЕННЯ\":</span> Якщо в картці вказано \"БЕЗ ПОВЕРНЕННЯ\" (а також будь-які речі зі статусом \"ПРЕДЛОЖКА\") — даний товар <b style=\"color: var(--accent-red); text-decoration: underline;\">не підлягає поверненню або обміну за жодних умов.</b> Будь ласка, робіть покупки обдумано.",
         "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">ТОВАРИ \"З ПОВЕРНЕННЯМ\":</span> Якщо товар має зелений бейдж \"Повернення 14 днів\", ви можете повернути його згідно із законодавством. Обов'язкова умова: збереження бірок та відсутність слідів носіння.",
         "h5": "[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦІВ (DROP_ITEM) ]",
-        "p5_1": "Комісія майданчика за продаж вашої речі становить <b>15%</b>.",
+        "p5_1": "Комісія майданчика за продаж вашої речі становить <b>8%</b> (мінімум 30 грн).",
         "p5_2": "Всі фінансові операції проходять <b>тільки через наші реквізити</b>.",
-        "p5_3": "Виплата продавцю здійснюється на картку одразу після того, як покупець забере посилку з пошти.",
+        "p5_3": "Виплата продавцю здійснюється на картку протягом <b>24 годин</b> після того, як покупець забере посилку з пошти.",
         "p5_4": "У разі відправки підробки або приховування дефектів, продавець зобов'язаний оплатити доставку в обидві сторони, інакше отримує статус BANNED.",
         "btn_accept": "[ Я ЗГОДЕН З ПРАВИЛАМИ ]"
       }
@@ -671,8 +671,8 @@
       "propose": {
         "title": "DROP_ITEM.EXE",
         "safe_title": "[ SECURE TRANSACTION SYSTEM ]",
-        "safe_1": "1. We take a 15% commission on sales.",
-        "safe_2": "2. <b>WE ACCEPT PAYMENTS.</b> You receive the payout only after the client picks up the package.",
+        "safe_1": "1. We take an 8% commission on sales (min. 30 UAH).",
+        "safe_2": "2. <b>WE ACCEPT PAYMENTS.</b> You receive the payout within 24 hours after the client picks up the package.",
         "safe_3": "3. If a client rejects the item due to hidden defects or it being a replica, <b>you pay for two-way shipping</b>.",
         "safe_4": "4. One of the photos MUST include a piece of paper with your nickname and date.",
         "media_label": "PHOTO / VIDEO (UP TO 5):",
@@ -742,9 +742,9 @@
         "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">\"NO RETURNS\" ITEMS:</span> If the card says \"NO RETURNS\" (as well as any items with the \"DROP ITEM\" status) — this item <b style=\"color: var(--accent-red); text-decoration: underline;\">is not subject to return or exchange under any circumstances.</b> Please shop thoughtfully.",
         "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">\"WITH RETURNS\" ITEMS:</span> If the item has a green \"14 days return\" badge, you can return it according to the law. Mandatory condition: original tags must be attached and the item must be unworn.",
         "h5": "[ 5. RULES FOR SELLERS (DROP_ITEM) ]",
-        "p5_1": "The platform's commission for selling your item is <b>15%</b>.",
+        "p5_1": "The platform's commission for selling your item is <b>8%</b> (minimum 30 UAH).",
         "p5_2": "All financial transactions are conducted <b>only through our payment details</b>.",
-        "p5_3": "The payout to the seller is made to their card immediately after the buyer picks up the parcel.",
+        "p5_3": "The payout to the seller is made to their card within <b>24 hours</b> after the buyer picks up the parcel.",
         "p5_4": "In case of sending a fake or hiding defects, the seller is obliged to pay for shipping both ways, otherwise they receive a BANNED status.",
         "btn_accept": "[ I AGREE TO THE RULES ]"
       }
