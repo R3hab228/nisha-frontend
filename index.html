@@ -127,7 +127,7 @@
 </div>
 </div>
 <div class=filter-box id=authBox>
-<div class=filter-title style="border-bottom:1px dashed #444;padding-bottom:10px;margin-bottom:15px"><span style="font-family:var(--font-mono);color:#fff;font-size:16px;font-weight:bold;letter-spacing:1px;">PROFILE/LOGIN.EXE<span style="display:inline-block;width:10px;height:16px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite;"></span></span></div>
+<div class=filter-title style="border-bottom:1px dashed #444;padding-bottom:10px;margin-bottom:15px"><span style=font-family:var(--font-mono);color:#fff;font-size:16px;font-weight:700;letter-spacing:1px>PROFILE/LOGIN.EXE<span style="display:inline-block;width:10px;height:16px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite"></span></span></div>
 <div class=auth-fields id=loginForm>
 <input type=email id=authEmail class=auth-input placeholder=Email>
 <input id=authUsername class=form-input placeholder=Никнейм style=display:none>
@@ -243,7 +243,6 @@
 </footer>
 </div>
 <script>function getFlagUrlByLang(e){return"ua"===e?"https://flagcdn.com/24x18/ua.png":"en"===e?"https://flagcdn.com/24x18/gb.png":"https://flagcdn.com/24x18/ru.png"}function setLang(e){localStorage.setItem("nisha_lang",e),localStorage.setItem("i18nextLng",e),changeLanguage(e);const t=getFlagUrlByLang(e);document.getElementById("currentFlagImg").src=t,document.getElementById("currentLangLabelFooter").querySelector("span").innerText="["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{let e=localStorage.getItem("nisha_lang");e||(e=(localStorage.getItem("i18nextLng")||"ru").substring(0,2).toLowerCase(),["ru","ua","en"].includes(e)||(e="ru"),localStorage.setItem("nisha_lang",e));const t=getFlagUrlByLang(e),n=document.getElementById("currentFlagImg"),a=document.getElementById("currentLangLabelFooter");n&&a&&(n.src=t,a.querySelector("span").innerText="["+e.toUpperCase()+"] ▼")}))</script>
-
 <div class=modal-overlay id=rulesModal style=background:rgba(0,0,0,.95);z-index:5000>
 <div class=modal-window style="max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;border-radius:10px 10px 0 0">
 <div class=modal-header style=background:#000;flex-shrink:0>
@@ -279,9 +278,9 @@
 </ul>
 <h3 data-i18n=rules.h5 style="color:var(--accent-green);font-family:var(--font-mono);border-bottom:1px solid #333;padding-bottom:10px;margin-top:25px">[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]</h3>
 <ul style=padding-left:20px>
-<li data-i18n="rules.p5_1" style="margin-bottom: 10px;">Комиссия площадки за продажу вашей вещи составляет <b>8%</b> (минимум 30 грн).</li>
-<li data-i18n="rules.p5_2" style="margin-bottom: 10px;">Все финансовые операции проходят <b>только через наши реквизиты</b>.</li>
-<li data-i18n="rules.p5_3" style="margin-bottom: 10px;">Выплата продавцу осуществляется на карту в течение <b>24 часов</b> после того, как покупатель заберет посылку с почты.</li> 
+<li data-i18n=rules.p5_1 style=margin-bottom:10px>Комиссия площадки за продажу вашей вещи составляет <b>8%</b> (минимум 30 грн).</li>
+<li data-i18n=rules.p5_2 style=margin-bottom:10px>Все финансовые операции проходят <b>только через наши реквизиты</b>.</li>
+<li data-i18n=rules.p5_3 style=margin-bottom:10px>Выплата продавцу осуществляется на карту в течение <b>24 часов</b> после того, как покупатель заберет посылку с почты.</li>
 <li data-i18n=rules.p5_4 style=margin-bottom:10px>В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.</li>
 </ul>
 </div>
@@ -441,21 +440,16 @@
 <div class=modal-overlay id=reviewsModal>
 <div class=modal-window style=max-width:600px>
 <div class=modal-header>
-<span class="modal-title" style="animation:none; font-family:var(--font-mono); letter-spacing:1px;">REVIEWS.TXT<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite;"></span></span>
+<span class=modal-title style=animation:none;font-family:var(--font-mono);letter-spacing:1px>REVIEWS.TXT<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite"></span></span>
 <button class=close-btn onclick='closeModal("reviewsModal")'>X</button>
 </div>
-<div class=orders-container style="position:relative; padding-bottom: 40px;">
+<div class=orders-container style=position:relative;padding-bottom:40px>
 <p style=color:#aaa;margin-top:0;font-size:14px data-i18n=reviews_modal.desc>Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
-
-<!-- КАРУСЕЛЬ ОТЗЫВОВ -->
-<div id=reviewsContainerList class="reviews-slider"></div>
-
-<!-- СТРЕЛОЧКИ ДЛЯ ПК -->
-<div class="reviews-nav">
-    <button onclick="scrollReviews(-1)">&#10094;</button>
-    <button onclick="scrollReviews(1)">&#10095;</button>
+<div id=reviewsContainerList class=reviews-slider></div>
+<div class=reviews-nav>
+<button onclick=scrollReviews(-1)>&#10094;</button>
+<button onclick=scrollReviews(1)>&#10095;</button>
 </div>
-
 </div>
 </div>
 </div>
@@ -475,96 +469,87 @@
 <script defer src=https://browser.sentry-cdn.com/7.105.0/bundle.min.js crossorigin=anonymous></script>
 <script defer src=https://unpkg.com/i18next@23.10.1/dist/umd/i18next.min.js></script>
 <script defer src=https://unpkg.com/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js></script>
-<script defer src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script defer src=https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js></script>
 <script src=config.js></script>
 <script defer src=app.js></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>
-<div class="modal-overlay" id="profileModal">
-<div class="modal-window" style="max-width:450px">
-<div class="modal-header">
-<span class="modal-title" style="animation:none; font-family:var(--font-mono); letter-spacing:1px; text-transform:uppercase;">PROFILE/LOGIN.EXE<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite;"></span></span>
-<button class="close-btn" onclick="closeModal('profileModal')">X</button>
+<div class=modal-overlay id=profileModal>
+<div class=modal-window style=max-width:450px>
+<div class=modal-header>
+<span class=modal-title style=animation:none;font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase>PROFILE/LOGIN.EXE<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite"></span></span>
+<button class=close-btn onclick='closeModal("profileModal")'>X</button>
 </div>
-<div class="form-layout" id="modalAuthBox" style="padding:25px 20px">
-<div class="auth-fields" id="modalLoginForm" style="display:flex;flex-direction:column;gap:15px">
-<p style="margin:0 0 5px 0;color:#aaa;font-size:13px;text-align:center;font-family:var(--font-mono)" data-i18n="sidebar.auth_req">АВТОРИЗАЦИЯ В СИСТЕМЕ</p>
-<input type="email" id="modalAuthEmail" class="form-input" placeholder="Email" style="padding:15px" data-i18n-ph="profile.email_ph">
-<input id="modalAuthUsername" class="form-input" placeholder="Никнейм" style="display:none;padding:15px" data-i18n-ph="profile.nickname_ph">
-<div class="password-wrapper">
-<input type="password" id="modalAuthPass" class="form-input" placeholder="Пароль" style="padding:15px" data-i18n-ph="profile.password_ph">
-<div class="eye-icon" onclick="togglePasswordVisibility('modalAuthPass',this)" style="right:15px">
-<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<div class=form-layout id=modalAuthBox style="padding:25px 20px">
+<div class=auth-fields id=modalLoginForm style=display:flex;flex-direction:column;gap:15px>
+<p style="margin:0 0 5px 0;color:#aaa;font-size:13px;text-align:center;font-family:var(--font-mono)" data-i18n=sidebar.auth_req>АВТОРИЗАЦИЯ В СИСТЕМЕ</p>
+<input type=email id=modalAuthEmail class=form-input placeholder=Email style=padding:15px data-i18n-ph=profile.email_ph>
+<input id=modalAuthUsername class=form-input placeholder=Никнейм style=display:none;padding:15px data-i18n-ph=profile.nickname_ph>
+<div class=password-wrapper>
+<input type=password id=modalAuthPass class=form-input placeholder=Пароль style=padding:15px data-i18n-ph=profile.password_ph>
+<div class=eye-icon onclick='togglePasswordVisibility("modalAuthPass",this)' style=right:15px>
+<svg viewBox="0 0 24 24" fill=none stroke-width=2 stroke-linecap=round stroke-linejoin=round>
 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-<circle cx="12" cy="12" r="3"></circle>
-<line class="eye-slash" x1="2" y1="2" x2="22" y2="22"></line>
+<circle cx=12 cy=12 r=3></circle>
+<line class=eye-slash x1=2 y1=2 x2=22 y2=22></line>
 </svg>
 </div>
 </div>
-<div style="margin-top:10px;display:flex;flex-direction:column;gap:12px">
-<button class="cart-checkout-btn btn-target" id="modalBtnLogin" onclick="handleAuth('login',!0)" style="width:100%" data-i18n="sidebar.login">ВОЙТИ</button>
-<button class="cart-checkout-btn btn-target" id="modalBtnShowReg" onclick="toggleRegMode(!0)" style="background:#111;color:#fff;width:100%;border-color:#444" data-i18n="sidebar.reg">РЕГИСТРАЦИЯ</button>
-<button class="cart-checkout-btn btn-target" onclick="loginWithGoogle()" style="background:#fff;color:#000;border-color:#fff;width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:10px">
-<img src="https://www.google.com/favicon.ico" width="18"> ВОЙТИ ЧЕРЕЗ GOOGLE
+<div style=margin-top:10px;display:flex;flex-direction:column;gap:12px>
+<button class="cart-checkout-btn btn-target" id=modalBtnLogin onclick='handleAuth("login",!0)' style=width:100% data-i18n=sidebar.login>ВОЙТИ</button>
+<button class="cart-checkout-btn btn-target" id=modalBtnShowReg onclick=toggleRegMode(!0) style=background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
+<button class="cart-checkout-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:10px>
+<img src=https://www.google.com/favicon.ico width=18> ВОЙТИ ЧЕРЕЗ GOOGLE
 </button>
-<button class="cart-checkout-btn btn-target" id="modalBtnRegister" onclick="handleAuth('register',!0)" style="display:none;background:var(--accent-green);color:#000;width:100%" data-i18n="sidebar.create">СОЗДАТЬ АККАУНТ</button>
-<button class="cart-checkout-btn btn-target" id="modalBtnBackLogin" onclick="toggleRegMode(!0)" style="display:none;background:#111;color:#fff;width:100%;border-color:#444" data-i18n="sidebar.back">НАЗАД</button>
+<button class="cart-checkout-btn btn-target" id=modalBtnRegister onclick='handleAuth("register",!0)' style=display:none;background:var(--accent-green);color:#000;width:100% data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
+<button class="cart-checkout-btn btn-target" id=modalBtnBackLogin onclick=toggleRegMode(!0) style=display:none;background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.back>НАЗАД</button>
 </div>
 </div>
-<div class="auth-fields" id="modalProfileForm" style="display:none;text-align:center">
+<div class=auth-fields id=modalProfileForm style=display:none;text-align:center>
 <div style="background:#0a0a0a;border:1px solid #333;padding:20px;text-align:left;font-family:var(--font-mono);box-shadow:inset 0 0 20px rgba(0,0,0,.5)">
-<div style="color:var(--accent-green);font-size:11px;margin-bottom:5px" data-i18n="profile.nickname">НИКНЕЙМ:</div>
-<div style="color:#fff;font-size:16px;font-family:var(--font-main);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:15px" id="modalProfileName">Loading...</div>
-<div style="color:#666;font-size:11px;margin-bottom:5px" data-i18n="profile.email">E-MAIL:</div>
-<div style="color:#aaa;font-size:13px;border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px;overflow:hidden;text-overflow:ellipsis" id="modalProfileEmail">Loading...</div>
-<div style="display:flex;justify-content:space-between;align-items:center">
-<span style="color:#888;font-size:13px" data-i18n="profile.saved">СОХРАНЕНО:</span>
-<span style="color:var(--accent-red);font-size:18px;font-weight:700;text-shadow:0 0 15px rgba(255,0,0,.4)">❤ <span id="modalProfileLikesCount">0</span></span>
+<div style=color:var(--accent-green);font-size:11px;margin-bottom:5px data-i18n=profile.nickname>НИКНЕЙМ:</div>
+<div style=color:#fff;font-size:16px;font-family:var(--font-main);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:15px id=modalProfileName>Loading...</div>
+<div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.email>E-MAIL:</div>
+<div style="color:#aaa;font-size:13px;border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px;overflow:hidden;text-overflow:ellipsis" id=modalProfileEmail>Loading...</div>
+<div style=display:flex;justify-content:space-between;align-items:center>
+<span style=color:#888;font-size:13px data-i18n=profile.saved>СОХРАНЕНО:</span>
+<span style="color:var(--accent-red);font-size:18px;font-weight:700;text-shadow:0 0 15px rgba(255,0,0,.4)">❤ <span id=modalProfileLikesCount>0</span></span>
 </div>
 </div>
-<button class="cart-checkout-btn" onclick="logout(); closeModal('profileModal')" style="background:#333;color:#fff;margin-top:25px;width:100%;border-color:#555;text-transform:uppercase" data-i18n="profile.logout">[ ВЫЙТИ ИЗ СИСТЕМЫ ]</button>
+<button class=cart-checkout-btn onclick='logout(),closeModal("profileModal")' style=background:#333;color:#fff;margin-top:25px;width:100%;border-color:#555;text-transform:uppercase data-i18n=profile.logout>[ ВЫЙТИ ИЗ СИСТЕМЫ ]</button>
 </div>
 </div>
 </div>
 </div>
-<div class="modal-overlay" id="proposeModal">
-<div class="modal-window" style="max-width:550px">
-<div class="modal-header">
-<span class="modal-title typewriter" style="animation:none" data-i18n="propose.title">DROP_ITEM.EXE</span>
-<!-- ФИКС: Очищаем форму при закрытии окна крестиком -->
-<button class="close-btn" onclick="closeModal('proposeModal')">X</button>
+<div class=modal-overlay id=proposeModal>
+<div class=modal-window style=max-width:550px>
+<div class=modal-header>
+<span class="modal-title typewriter" style=animation:none data-i18n=propose.title>DROP_ITEM.EXE</span>
+<button class=close-btn onclick='closeModal("proposeModal")'>X</button>
 </div>
-<div class="form-layout">
-<label data-i18n="propose.media_label">ФОТО / ВИДЕО (ДО 5 ШТУК):</label>
-<input type="file" id="propFiles" class="form-input" accept="image/*,video/mp4" multiple style="display:none">
-<div id="propDropzone" class="upload-dropzone" onclick="document.getElementById('propFiles').click()">
-<div id="propPlaceholder" style="color:#666;font-family:var(--font-mono);font-size:13px" data-i18n="propose.media_click">📸 Нажмите, чтобы выбрать файлы</div>
-<div id="propPreviewContainer" class="preview-container"></div>
+<div class=form-layout>
+<label data-i18n=propose.media_label>ФОТО / ВИДЕО (ДО 5 ШТУК):</label>
+<input type=file id=propFiles class=form-input accept=image/*,video/mp4 multiple style=display:none>
+<div id=propDropzone class=upload-dropzone onclick='document.getElementById("propFiles").click()'>
+<div id=propPlaceholder style=color:#666;font-family:var(--font-mono);font-size:13px data-i18n=propose.media_click>📸 Нажмите, чтобы выбрать файлы</div>
+<div id=propPreviewContainer class=preview-container></div>
 </div>
-<!-- ФИКС: Добавлены теги переводов data-i18n -->
-<label data-i18n="propose.name_label">НАЗВАНИЕ ВЕЩИ:</label>
-<input id="propName" class="form-input" placeholder="Например: Худи на зипке..." data-i18n-ph="propose.name_place">
-
-<label data-i18n="propose.brand_label">БРЕНД (Если есть):</label>
-<input id="propBrand" class="form-input" placeholder="Например: Nike, Carhartt..." data-i18n-ph="propose.brand_place">
-
-<label data-i18n="propose.size_label">РАЗМЕР:</label>
-<input id="propSize" class="form-input" placeholder="Например: M или 42" data-i18n-ph="propose.size_place">
-
-<label id="descLabel" data-i18n="propose.desc_label">ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
-<textarea id="propDesc" class="form-input" maxlength="250" style="height:80px;resize:none" placeholder="Опиши состояние, нюансы..." data-i18n-ph="propose.desc_place" oninput="updateCharCount(this)"></textarea>
-
-<label data-i18n="propose.cond_label">ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
-<input type="number" id="propCond" class="form-input" placeholder="9" min="1" max="10" data-i18n-ph="propose.cond_place">
-
-<label data-i18n="propose.price_label">ЖЕЛАЕМАЯ ЦЕНА (ГРН):</label>
-<input type="number" id="propPrice" class="form-input" placeholder="Например: 1500" min="1" data-i18n-ph="propose.price_place">
-
-<label data-i18n="propose.contact_label">СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
-<input id="propContact" class="form-input" placeholder="@твои_ник или +380..." data-i18n-ph="propose.contact_place">
-
-<button class="cart-checkout-btn btn-target" id="btnSubmitProp" onclick="submitProposal()" style="margin-top:15px;width:100%" data-i18n="propose.btn_submit">[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
+<label data-i18n=propose.name_label>НАЗВАНИЕ ВЕЩИ:</label>
+<input id=propName class=form-input placeholder="Например: Худи на зипке..." data-i18n-ph=propose.name_place>
+<label data-i18n=propose.brand_label>БРЕНД (Если есть):</label>
+<input id=propBrand class=form-input placeholder="Например: Nike, Carhartt..." data-i18n-ph=propose.brand_place>
+<label data-i18n=propose.size_label>РАЗМЕР:</label>
+<input id=propSize class=form-input placeholder="Например: M или 42" data-i18n-ph=propose.size_place>
+<label id=descLabel data-i18n=propose.desc_label>ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
+<textarea id=propDesc class=form-input maxlength=250 style=height:80px;resize:none placeholder="Опиши состояние, нюансы..." data-i18n-ph=propose.desc_place oninput=updateCharCount(this)></textarea>
+<label data-i18n=propose.cond_label>ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
+<input type=number id=propCond class=form-input placeholder=9 min=1 max=10 data-i18n-ph=propose.cond_place>
+<label data-i18n=propose.price_label>ЖЕЛАЕМАЯ ЦЕНА (ГРН):</label>
+<input type=number id=propPrice class=form-input placeholder="Например: 1500" min=1 data-i18n-ph=propose.price_place>
+<label data-i18n=propose.contact_label>СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
+<input id=propContact class=form-input placeholder="@твои_ник или +380..." data-i18n-ph=propose.contact_place>
+<button class="cart-checkout-btn btn-target" id=btnSubmitProp onclick=submitProposal() style=margin-top:15px;width:100% data-i18n=propose.btn_submit>[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
 </div>
 </div>
 </div>
