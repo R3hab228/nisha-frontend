@@ -564,7 +564,7 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .preview-img:active { cursor: grabbing; }
 
 /* Анимации для перетаскивания (Drag and Drop) */
-.sortable-ghost { opacity: 0.2; background: #000; border: 2px dashed var(--accent-green) !important; transform: scale(0.9); }
+.sortable-ghost { opacity: 0.3; background: #111; border: 2px dashed var(--accent-green) !important; }
 .sortable-drag { cursor: grabbing !important; box-shadow: 0 15px 25px rgba(0,255,0,0.4) !important; transform: scale(1.15); z-index: 99999 !important; opacity: 0.9; }
 /* ФИКС КООРДИНАТ ДЛЯ ТЕЛЕФОНОВ: */
 .sortable-fallback { opacity: 1 !important; pointer-events: none !important; z-index: 99999 !important; }

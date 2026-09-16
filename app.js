@@ -4585,43 +4585,46 @@ function renderProposalPreviews() {
             container.appendChild(img);
         });
 
-        // ИНИЦИАЛИЗАЦИЯ ИДЕАЛЬНОГО МОБИЛЬНОГО ПЕРЕТАСКИВАНИЯ
+        // ИНИЦИАЛИЗАЦИЯ ИДЕАЛЬНОГО ПЕРЕТАСКИВАНИЯ (ПК + МОБИЛКА)
         if (window.Sortable) {
+            // Определяем, телефон это или компьютер
+            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
             Sortable.create(container, {
-                animation: 200, 
-                delay: 200, // Возвращаем 0.2с, чтобы палец успел зафиксироваться
+                animation: 250, // Плавность полета
+                delay: isTouchDevice ? 200 : 0, // На ПК перетаскиваем мгновенно, на телефоне ждем 0.2с
                 delayOnTouchOnly: true,
                 touchStartThreshold: 5,
-                forceFallback: true, 
-                fallbackOnBody: true, // ВАЖНО: Возвращаем привязку к экрану, иначе на телефонах не работает
-                fallbackClass: "sortable-fallback", // Новый класс для фикса багов с координатами
+                // ФИКС БАГА НА ПК: Включаем "костыли" только для телефонов! На ПК используем родную гладкую мышь.
+                forceFallback: isTouchDevice, 
+                fallbackOnBody: isTouchDevice, 
+                fallbackClass: "sortable-fallback",
                 ghostClass: 'sortable-ghost', 
                 dragClass: 'sortable-drag', 
                 onStart: function () {
-                    if (typeof triggerHaptic === 'function') triggerHaptic('medium'); 
+                    if (isTouchDevice && typeof triggerHaptic === 'function') triggerHaptic('medium'); 
                     
-                    // Жестко блокируем вообще все скроллы на странице!
-                    document.body.style.overflow = 'hidden';
-                    document.body.classList.add('sort-lock');
-                    
-                    const modalWin = document.querySelector('#proposeModal .modal-window');
-                    if (modalWin) {
-                        modalWin.style.overflow = 'hidden';
-                        modalWin.style.touchAction = 'none'; // Глушим любые мобильные свайпы окна
+                    if (isTouchDevice) {
+                        document.body.style.overflow = 'hidden';
+                        document.body.classList.add('sort-lock');
+                        const modalWin = document.querySelector('#proposeModal .modal-window');
+                        if (modalWin) {
+                            modalWin.style.overflow = 'hidden';
+                            modalWin.style.touchAction = 'none';
+                        }
                     }
                 },
                 onEnd: function (evt) {
-                    // Возвращаем скроллы как было
-                    document.body.style.overflow = '';
-                    document.body.classList.remove('sort-lock');
-                    
-                    const modalWin = document.querySelector('#proposeModal .modal-window');
-                    if (modalWin) {
-                        modalWin.style.overflow = 'auto';
-                        modalWin.style.touchAction = 'auto';
+                    if (isTouchDevice) {
+                        document.body.style.overflow = '';
+                        document.body.classList.remove('sort-lock');
+                        const modalWin = document.querySelector('#proposeModal .modal-window');
+                        if (modalWin) {
+                            modalWin.style.overflow = 'auto';
+                            modalWin.style.touchAction = 'auto';
+                        }
+                        if (typeof triggerHaptic === 'function') triggerHaptic('light'); 
                     }
-
-                    if (typeof triggerHaptic === 'function') triggerHaptic('light'); 
                     
                     // Синхронизируем наш скрытый массив
                     const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
