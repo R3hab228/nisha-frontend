@@ -4523,29 +4523,60 @@ function resetProposalForm() {
     renderProposalPreviews();
 }
 
-// 4. Умная загрузка фото (создаем ссылки на фото ОДИН РАЗ, чтобы не было черных экранов)
-document.getElementById('propFiles')?.addEventListener('change', function(e) {
-    const newFiles = Array.from(e.target.files);
+// --- ОБЩАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ ФАЙЛОВ ---
+function handleNewProposalFiles(newFiles) {
     if (newFiles.length === 0) return;
 
-    if (currentProposalFiles.length + newFiles.length > 5) {
+    // Оставляем только фото и видео
+    const validFiles = newFiles.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+
+    if (currentProposalFiles.length + validFiles.length > 5) {
         showToast('Максимум 5 фото/видео!', 'error');
         return;
     }
 
-    // Сохраняем файл и сразу генерируем ему URL
-    newFiles.forEach(file => {
+    validFiles.forEach(file => {
         currentProposalFiles.push({
             file: file,
             url: file.type.startsWith('video/') ? null : URL.createObjectURL(file)
         });
     });
     
-    this.value = ''; 
     renderProposalPreviews();
+}
+
+// 4. Загрузка через клик (кнопка)
+document.getElementById('propFiles')?.addEventListener('change', function(e) {
+    handleNewProposalFiles(Array.from(e.target.files));
+    this.value = ''; 
 });
 
-// Функция отрисовки превью с ИДЕАЛЬНЫМ Drag-and-Drop
+// 5. DRAG & DROP (ПЕРЕТАСКИВАНИЕ ФАЙЛОВ С ПК В БРАУЗЕР)
+const dropzone = document.getElementById('propDropzone');
+if (dropzone) {
+    // Отключаем стандартное поведение браузера (чтобы он не открывал картинку на весь экран)
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+
+    // Добавляем красивую зеленую подсветку, когда файл над зоной
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => dropzone.classList.add('drag-active'), false);
+    });
+
+    // Убираем подсветку
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => dropzone.classList.remove('drag-active'), false);
+    });
+
+    // Ловим файлы при отпускании мышки
+    dropzone.addEventListener('drop', e => {
+        const droppedFiles = Array.from(e.dataTransfer.files);
+        handleNewProposalFiles(droppedFiles);
+    });
+}
+
+// 6. Отрисовка превью с ИДЕАЛЬНЫМ ПЕРЕТАСКИВАНИЕМ (ПК + МОБИЛКА)
 function renderProposalPreviews() {
     const container = document.getElementById('propPreviewContainer');
     const placeholder = document.getElementById('propPlaceholder');
@@ -4561,7 +4592,7 @@ function renderProposalPreviews() {
 
             const dragIcon = '<div style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); padding:2px; border-radius:2px; pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>';
 
-            if (!item.url) { // Это видео
+            if (!item.url) { 
                 img.style.backgroundColor = '#111';
                 img.innerHTML = `<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">▶ VID</span>${dragIcon}`;
             } else {
@@ -4575,9 +4606,9 @@ function renderProposalPreviews() {
             
             delBtn.onclick = (e) => {
                 e.stopPropagation(); 
-                currentProposalFiles.splice(index, 1); // Удаляем
+                currentProposalFiles.splice(index, 1);
                 if (typeof triggerHaptic === 'function') triggerHaptic('light');
-                renderProposalPreviews(); // Перерисовываем ТОЛЬКО при удалении или добавлении
+                renderProposalPreviews(); 
             };
             img.appendChild(delBtn);
             img.onclick = (e) => e.stopPropagation();
@@ -4585,27 +4616,21 @@ function renderProposalPreviews() {
             container.appendChild(img);
         });
 
-        // ИНИЦИАЛИЗАЦИЯ ИДЕАЛЬНОГО ПЕРЕТАСКИВАНИЯ (ПК + МОБИЛКА)
         if (window.Sortable) {
-            // Определяем, телефон это или компьютер
             const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
             Sortable.create(container, {
-                animation: 250, // Плавность полета
-                delay: isTouchDevice ? 200 : 0, // На ПК перетаскиваем мгновенно, на телефоне ждем 0.2с
+                animation: 250, 
+                delay: isTouchDevice ? 150 : 0, 
                 delayOnTouchOnly: true,
                 touchStartThreshold: 5,
-                // ФИКС БАГА НА ПК: Включаем "костыли" только для телефонов! На ПК используем родную гладкую мышь.
                 forceFallback: isTouchDevice, 
-                fallbackOnBody: isTouchDevice, 
-                fallbackClass: "sortable-fallback",
+                fallbackOnBody: false, 
                 ghostClass: 'sortable-ghost', 
                 dragClass: 'sortable-drag', 
                 onStart: function () {
-                    if (isTouchDevice && typeof triggerHaptic === 'function') triggerHaptic('medium'); 
-                    
                     if (isTouchDevice) {
-                        document.body.style.overflow = 'hidden';
+                        if (typeof triggerHaptic === 'function') triggerHaptic('medium'); 
                         document.body.classList.add('sort-lock');
                         const modalWin = document.querySelector('#proposeModal .modal-window');
                         if (modalWin) {
@@ -4616,7 +4641,6 @@ function renderProposalPreviews() {
                 },
                 onEnd: function (evt) {
                     if (isTouchDevice) {
-                        document.body.style.overflow = '';
                         document.body.classList.remove('sort-lock');
                         const modalWin = document.querySelector('#proposeModal .modal-window');
                         if (modalWin) {
@@ -4626,7 +4650,6 @@ function renderProposalPreviews() {
                         if (typeof triggerHaptic === 'function') triggerHaptic('light'); 
                     }
                     
-                    // Синхронизируем наш скрытый массив
                     const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
                     currentProposalFiles.splice(evt.newIndex, 0, movedItem);
                 }
