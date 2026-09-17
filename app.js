@@ -4758,50 +4758,42 @@ async function submitProposal() {
     btn.style.opacity = '0.7';
 
     try {
-        // ЭТАП 1: РЕАЛЬНЫЙ ПРОГРЕСС СЖАТИЯ
+        // ЭТАП 1: ПРОСТОЕ СЖАТИЕ ФОТО
         let compressedFiles = [];
         for (let i = 0; i < files.length; i++) {
             btn.innerText = `[ СЖАТИЕ ФОТО: ${i + 1}/${files.length} ]`;
-            
-            // ФИКС: Делаем микро-паузу (100мс), чтобы слабые телефоны успевали очистить оперативную память
             await new Promise(r => setTimeout(r, 100)); 
-            
-            // Если какое-то фото битое, catch ниже поймает ошибку
             const compressed = await compressImage(files[i]);
             compressedFiles.push(compressed);
         }
 
-        // ЭТАП 2: КОНВЕРТАЦИЯ В ТЕКСТ (Занимает миллисекунды)
-        btn.innerText = '[ ПОДГОТОВКА ПАКЕТА... ]';
-        // Вспомогательная функция (конвертирует фото в текст для передачи на сервер)
-        const fileToBase64 = file => new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-        });
-        const base64Images = await Promise.all(compressedFiles.map(f => fileToBase64(f)));
-
-        // ЭТАП 3: ФОНОВАЯ ОТПРАВКА НА СЕРВЕР (Не ждем ответа, чтобы не висло)
+        // ЭТАП 2: ОТПРАВКА НАПРЯМУЮ БЕЗ КОНВЕРТАЦИИ
         btn.innerText = '[ ПЕРЕДАЧА НА СЕРВЕР... ]';
         
-        fetch('https://nisha-api.onrender.com/api/propose', {
+        // Создаем пакет данных (FormData)
+        const formData = new FormData();
+        formData.append('name', nameItem);
+        formData.append('brand', brand);
+        formData.append('measurements', size);
+        formData.append('condition', cond);
+        formData.append('price', price);
+        formData.append('description', desc);
+        formData.append('contact', contact);
+        
+        // Кладем туда файлы как они есть!
+        compressedFiles.forEach((file, index) => {
+            formData.append('images', file, `prop_${index}.jpg`);
+        });
+
+        // Отправляем на сервер в фоне
+        fetch('https://nisha-api.onrender.com/api/propose-files', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: nameItem,
-                brand: brand,
-                measurements: size,
-                condition: cond,
-                price: price,
-                description: desc, // ОТПРАВЛЯЕМ ОПИСАНИЕ НА СЕРВЕР!
-                contact: contact,
-                imagesBase64: base64Images
-            })
+            body: formData // Никакого JSON, просто файлы!
         }).catch(e => console.log("Фоновая отправка: ", e));
 
         // ФИНАЛ: ЗАКРЫТИЕ (Мгновенно)
-        resetProposalForm(); // 1. Сначала очищаем форму!
-        executeCloseModal('proposeModal'); // 2. Жестко закрываем окно в обход защиты
+        resetProposalForm(); 
+        executeCloseModal('proposeModal'); 
         
         setTimeout(() => {
             showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка отправлена на сервер.', '[ ПРИНЯТО ]', null);
