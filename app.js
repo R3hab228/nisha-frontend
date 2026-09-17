@@ -5342,7 +5342,7 @@ function openSupportModalWindow() {
     document.body.style.overflow = 'hidden';
 }
 
-// 2. Отправка сообщения
+// 2. БЫСТРАЯ Отправка сообщения (В фоне)
 async function submitSupportTicket() {
     const input = document.getElementById('supportInput');
     const btn = document.getElementById('btnSubmitSupport');
@@ -5350,38 +5350,34 @@ async function submitSupportTicket() {
 
     if (message.length < 5) {
         showToast('Опиши проблему подробнее (минимум 5 символов)', 'error');
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
         return;
     }
 
-    // Блокируем кнопку на время отправки
     btn.style.pointerEvents = 'none';
     btn.innerText = '[ ОТПРАВКА... ]';
 
     const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message;
     const userContact = currentUser ? (currentUser.email || currentUser.phone || 'Аноним') : 'Гость';
 
-    try {
-        const res = await fetch('https://nisha-api.onrender.com/api/support', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contact: userContact, message: safeText, clientId: clientFingerprint })
-        });
-        
-        const data = await res.json();
-        
-        if (data.success) {
-            showToast('Сообщение успешно доставлено админу!', 'success');
-            closeModal('supportModal'); // Закрываем окно при успехе
-        } else {
-            showToast('Ошибка при отправке: ' + data.message, 'error');
-        }
-    } catch (e) {
-        showToast('Сервер временно недоступен', 'error');
-    }
+    // 1. Отправляем запрос на сервер и НЕ ЖДЕМ ответа! (Используем .catch для тихой записи ошибок)
+    fetch('https://nisha-api.onrender.com/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contact: userContact, message: safeText, clientId: clientFingerprint })
+    }).catch(e => console.log("Фоновая отправка в саппорт не удалась: ", e));
 
-    // Возвращаем кнопку в норму
-    btn.style.pointerEvents = 'auto';
-    btn.innerText = 'ОТПРАВИТЬ СИГНАЛ';
+    // 2. Моментально показываем успех и закрываем окно!
+    if (typeof triggerHaptic === 'function') triggerHaptic('success');
+    showToast('Сообщение успешно доставлено админу!', 'success');
+    closeModal('supportModal');
+
+    // 3. Возвращаем кнопку в норму (на всякий случай, если окно откроют снова)
+    setTimeout(() => {
+        btn.style.pointerEvents = 'auto';
+        btn.innerText = 'ОТПРАВИТЬ СИГНАЛ';
+        input.value = '';
+    }, 500);
 }
 // ==========================================
 // УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА)
