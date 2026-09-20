@@ -410,18 +410,22 @@ function acceptRules() {
     setTimeout(startOnboardingTour, 400); 
 }
 window.onload = async () => {
-     document.body.classList.remove('search-lock');
+    document.body.classList.remove('search-lock');
      
-     // --- УМНЫЙ ЗАПРОС PUSH УВЕДОМЛЕНИЙ ---
-     setTimeout(() => {
-         // Спрашиваем только если браузер поддерживает пуши и мы еще не спрашивали
-         if ('Notification' in window && 'serviceWorker' in navigator) {
-             const pushAsked = localStorage.getItem('nisha_push_asked');
-             if (!pushAsked && Notification.permission === 'default') {
-                 document.getElementById('pushPromptOverlay').style.display = 'flex';
-             }
-         }
-     }, 5000); // Показываем через 5 секунд после захода на сайт
+    // --- УМНЫЙ ЗАПРОС PUSH УВЕДОМЛЕНИЙ ---
+    setTimeout(() => {
+        // Спрашиваем только если браузер поддерживает пуши и мы еще не спрашивали
+        if ('Notification' in window && 'serviceWorker' in navigator) {
+            const pushAsked = localStorage.getItem('nisha_push_asked');
+            if (!pushAsked && Notification.permission === 'default') {
+                const promptOverlay = document.getElementById('pushPromptOverlay');
+                if (promptOverlay) promptOverlay.style.display = 'flex';
+            }
+        }
+    }, 5000); // Показываем через 5 секунд после захода на сайт
+
+    try {
+        try {
             // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
             if (cart.length > 0) {
                 let lastTime = localStorage.getItem('nisha_cart_time');
@@ -5551,9 +5555,7 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 
-// Запускаем инициализацию после загрузки
 document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
     initMobileSwipe();
-    
 });
