@@ -1173,6 +1173,15 @@ async function logout() {
 let renderedCount = 0;
 let filteredItems = [];
 
+// Глобальный перехватчик URL для CDN (Вынесли наверх, чтобы браузер его видел сразу!)
+window.toCDN = function(url) {
+    if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
+        // Используем твой бесплатный рабочий домен Cloudflare Workers!
+        return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+    }
+    return url || '';
+};
+
 function getOptimizedImageUrl(item, wantsThumb = false) {
     if (!item || typeof item !== 'object') return '';
     const isValid = (url) => typeof url === 'string' && url.trim().length > 10;
@@ -1186,15 +1195,6 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
     if (!resultUrl && Array.isArray(item.images) && item.images.length > 0) {
         if (isValid(item.images[0])) resultUrl = item.images[0];
     }
-
-    // Глобальный перехватчик URL для CDN
-window.toCDN = function(url) {
-    if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
-        // Используем твой бесплатный рабочий домен Cloudflare Workers!
-        return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
-    }
-    return url || '';
-};
 
     // 🔥 МАГИЯ CDN: Применяем глобальную подмену
     return window.toCDN(resultUrl);
