@@ -241,10 +241,12 @@
         "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">ТОВАРЫ \"БЕЗ ВОЗВРАТА\":</span> Если в карточке указано \"БЕЗ ВОЗВРАТОВ\" (а также любые вещи со статусом \"ПРЕДЛОЖКА\") — данный товар <b style=\"color: var(--accent-red); text-decoration: underline;\">не подлежит возврату или обмену ни при каких условиях.</b> Пожалуйста, делайте покупки обдуманно.",
         "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">ТОВАРЫ \"С ВОЗВРАТОМ\":</span> Если товар имеет зеленый бейдж \"Возврат 14 дней\", вы можете вернуть его согласно законодательству. Обязательное условие: сохранение бирок и отсутствие следов носки.",
         "h5": "[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]",
-       "p5_1": "Комиссия площадки за продажу вашей вещи составляет <b>8%</b> (минимум 30 грн).",
+       "p5_1": "Комиссия площадки за продажу вашей вещи составляет <b>8%</b> (минимум 30 грн, но <b>не более 400 грн</b> за одну единицу товара).",
         "p5_2": "Все финансовые операции проходят <b>только через наши реквизиты</b>.",
         "p5_3": "Выплата продавцу осуществляется на карту в течение <b>24 часов</b> после того, как покупатель заберет посылку с почты.",
         "p5_4": "В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.",
+        "p5_5": "<span style=\"color: var(--accent-red); font-weight: bold;\">ЗАПРЕЩЕНО:</span> указывать в описании ссылки на свои Instagram-магазины, личные контакты или писать фразы в стиле «замеры в ЛС». Все замеры и нюансы должны быть указаны сразу. Личные контакты вписываются СТРОГО в специальное скрытое поле.",
+        "p5_6": "Заявки, нарушающие эти правила оформления, получают статус <b style=\"color: var(--accent-red);\">REJECTED</b> и моментально отклоняются модератором без предупреждения.",
         "btn_accept": "[ Я СОГЛАСЕН С ПРАВИЛАМИ ]"
       }
     }
@@ -492,10 +494,12 @@
         "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">ТОВАРИ \"БЕЗ ПОВЕРНЕННЯ\":</span> Якщо в картці вказано \"БЕЗ ПОВЕРНЕННЯ\" (а також будь-які речі зі статусом \"ПРЕДЛОЖКА\") — даний товар <b style=\"color: var(--accent-red); text-decoration: underline;\">не підлягає поверненню або обміну за жодних умов.</b> Будь ласка, робіть покупки обдумано.",
         "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">ТОВАРИ \"З ПОВЕРНЕННЯМ\":</span> Якщо товар має зелений бейдж \"Повернення 14 днів\", ви можете повернути його згідно із законодавством. Обов'язкова умова: збереження бірок та відсутність слідів носіння.",
         "h5": "[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦІВ (DROP_ITEM) ]",
-        "p5_1": "Комісія майданчика за продаж вашої речі становить <b>8%</b> (мінімум 30 грн).",
+        "p5_1": "Комісія майданчика за продаж вашої речі становить <b>8%</b> (мінімум 30 грн, але <b>не більше 400 грн</b> за одну одиницю товару).",
         "p5_2": "Всі фінансові операції проходять <b>тільки через наші реквізити</b>.",
         "p5_3": "Виплата продавцю здійснюється на картку протягом <b>24 годин</b> після того, як покупець забере посилку з пошти.",
         "p5_4": "У разі відправки підробки або приховування дефектів, продавець зобов'язаний оплатити доставку в обидві сторони, інакше отримує статус BANNED.",
+        "p5_5": "<span style=\"color: var(--accent-red); font-weight: bold;\">ЗАБОРОНЕНО:</span> вказувати в описі посилання на свої Instagram-магазини, особисті контакти або писати фрази в стилі «заміри в ПП». Всі заміри та нюанси мають бути вказані одразу. Особисті контакти вписуються СУВОРО у спеціальне приховане поле.",
+        "p5_6": "Заявки, що порушують ці правила оформлення, отримують статус <b style=\"color: var(--accent-red);\">REJECTED</b> і миттєво відхиляються модератором без попередження.",
         "btn_accept": "[ Я ЗГОДЕН З ПРАВИЛАМИ ]"
       }
     }
@@ -742,10 +746,12 @@
         "p4_2": "<span style=\"color: var(--accent-red); font-weight: bold;\">\"NO RETURNS\" ITEMS:</span> If the card says \"NO RETURNS\" (as well as any items with the \"DROP ITEM\" status) — this item <b style=\"color: var(--accent-red); text-decoration: underline;\">is not subject to return or exchange under any circumstances.</b> Please shop thoughtfully.",
         "p4_3": "<span style=\"color: var(--accent-green); font-weight: bold;\">\"WITH RETURNS\" ITEMS:</span> If the item has a green \"14 days return\" badge, you can return it according to the law. Mandatory condition: original tags must be attached and the item must be unworn.",
         "h5": "[ 5. RULES FOR SELLERS (DROP_ITEM) ]",
-        "p5_1": "The platform's commission for selling your item is <b>8%</b> (minimum 30 UAH).",
+        "p5_1": "The platform's commission for selling your item is <b>8%</b> (minimum 30 UAH, but <b>no more than 400 UAH</b> per item).",
         "p5_2": "All financial transactions are conducted <b>only through our payment details</b>.",
         "p5_3": "The payout to the seller is made to their card within <b>24 hours</b> after the buyer picks up the parcel.",
         "p5_4": "In case of sending a fake or hiding defects, the seller is obliged to pay for shipping both ways, otherwise they receive a BANNED status.",
+        "p5_5": "<span style=\"color: var(--accent-red); font-weight: bold;\">PROHIBITED:</span> including links to personal Instagram shops, contacts, or phrases like «measurements in DMs» in the description. All measurements and flaws must be stated upfront. Personal contacts must ONLY be entered in the dedicated hidden field.",
+        "p5_6": "Proposals violating these formatting rules will receive a <b style=\"color: var(--accent-red);\">REJECTED</b> status and will be instantly dismissed by the moderator without warning.",
         "btn_accept": "[ I AGREE TO THE RULES ]"
       }
     }
