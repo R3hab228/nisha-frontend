@@ -57,23 +57,20 @@
 </div>
 </div>
 </div>
-
-<!-- ОКНО ЗАПРОСА PUSH-УВЕДОМЛЕНИЙ -->
-<div id="pushPromptOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); backdrop-filter:blur(5px); z-index:10000; justify-content:center; align-items:center; flex-direction:column;">
-    <div class="success-terminal-box" style="opacity:1; transform:scale(1); animation:none;">
-        <div class="success-title typewriter">SYSTEM_BROADCAST.MSG</div>
-        <div class="success-divider"></div>
-        <div class="success-text" style="margin-bottom:20px; text-align: left; color: #ddd;">
-            Разрешить отправку <b>важных</b> системных уведомлений?<br><br>
-            <span style="color:#888; font-size: 13px; line-height: 1.5; display: inline-block;">- Статус ваших предложенных вещей (Одобрено/Отклонено)<br>- Дайджест новых товаров (раз в 4 часа)</span>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button class="cart-checkout-btn btn-target" onclick="handlePushPermission(false)" style="flex:1; background:#333; color:var(--accent-red); border-color:var(--accent-red);">[ ОТКЛОНИТЬ ]</button>
-            <button class="cart-checkout-btn btn-target" onclick="handlePushPermission(true)" style="flex:1; background:var(--accent-green); color:#000; border-color:#fff;">[ РАЗРЕШИТЬ ]</button>
-        </div>
-    </div>
+<div id=pushPromptOverlay style=display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);backdrop-filter:blur(5px);z-index:10000;justify-content:center;align-items:center;flex-direction:column>
+<div class=success-terminal-box style=opacity:1;transform:scale(1);animation:none>
+<div class="success-title typewriter">SYSTEM_BROADCAST.MSG</div>
+<div class=success-divider></div>
+<div class=success-text style=margin-bottom:20px;text-align:left;color:#ddd>
+Разрешить отправку <b>важных</b> системных уведомлений?<br><br>
+<span style=color:#888;font-size:13px;line-height:1.5;display:inline-block>- Статус ваших предложенных вещей (Одобрено/Отклонено)<br>- Дайджест новых товаров (раз в 4 часа)</span>
 </div>
-
+<div style=display:flex;gap:10px>
+<button class="cart-checkout-btn btn-target" onclick=handlePushPermission(!1) style=flex:1;background:#333;color:var(--accent-red);border-color:var(--accent-red)>[ ОТКЛОНИТЬ ]</button>
+<button class="cart-checkout-btn btn-target" onclick=handlePushPermission(!0) style=flex:1;background:var(--accent-green);color:#000;border-color:#fff>[ РАЗРЕШИТЬ ]</button>
+</div>
+</div>
+</div>
 <div class=wrapper>
 <header>
 <div class=header-top>
@@ -295,12 +292,12 @@
 </ul>
 <h3 data-i18n=rules.h5 style="color:var(--accent-green);font-family:var(--font-mono);border-bottom:1px solid #333;padding-bottom:10px;margin-top:25px">[ 5. ПРАВИЛА ДЛЯ ПРОДАВЦОВ (DROP_ITEM) ]</h3>
 <ul style=padding-left:20px>
-<li data-i18n="rules.p5_1" style="margin-bottom: 10px;">Комиссия площадки за продажу вашей вещи составляет <b>8%</b> (минимум 30 грн, но <b>не более 400 грн</b>).</li>
-<li data-i18n="rules.p5_2" style="margin-bottom: 10px;">Все финансовые операции проходят <b>только через наши реквизиты</b>.</li>
-<li data-i18n="rules.p5_3" style="margin-bottom: 10px;">Выплата продавцу осуществляется на карту в течение <b>24 часов</b> после того, как покупатель заберет посылку.</li> 
-<li data-i18n="rules.p5_4" style="margin-bottom: 10px;">В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.</li>
-<li data-i18n="rules.p5_5" style="margin-bottom: 10px;"></li>
-<li data-i18n="rules.p5_6" style="margin-bottom: 10px;"></li>
+<li data-i18n=rules.p5_1 style=margin-bottom:10px>Комиссия площадки за продажу вашей вещи составляет <b>8%</b> (минимум 30 грн, но <b>не более 400 грн</b>).</li>
+<li data-i18n=rules.p5_2 style=margin-bottom:10px>Все финансовые операции проходят <b>только через наши реквизиты</b>.</li>
+<li data-i18n=rules.p5_3 style=margin-bottom:10px>Выплата продавцу осуществляется на карту в течение <b>24 часов</b> после того, как покупатель заберет посылку.</li>
+<li data-i18n=rules.p5_4 style=margin-bottom:10px>В случае отправки подделки или сокрытия дефектов, продавец обязан оплатить доставку в обе стороны, иначе получает статус BANNED.</li>
+<li data-i18n=rules.p5_5 style=margin-bottom:10px></li>
+<li data-i18n=rules.p5_6 style=margin-bottom:10px></li>
 </ul>
 </div>
 <div class=rules-footer style="background:#000;padding:15px;border-top:2px inset var(--border-light);flex-shrink:0">
