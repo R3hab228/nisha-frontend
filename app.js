@@ -1187,12 +1187,17 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
         if (isValid(item.images[0])) resultUrl = item.images[0];
     }
 
-    // 🔥 МАГИЯ CDN: Подменяем оригинальный домен Supabase на твой прокси-домен от Cloudflare
-    if (resultUrl.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
-        return resultUrl.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://cdn.nisha-store.shop');
+    // Глобальный перехватчик URL для CDN
+window.toCDN = function(url) {
+    if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
+        // Замени 'cdn.nisha-store.shop' на тот домен, который ты привязал к Воркеру!
+        return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://cdn.nisha-store.shop');
     }
+    return url || '';
+};
 
-    return resultUrl;
+    // 🔥 МАГИЯ CDN: Применяем глобальную подмену
+    return window.toCDN(resultUrl);
 }
 
 async function loadAllItems() {
@@ -1556,16 +1561,21 @@ function renderNextBatch() {
             let dotsStr = '';
 
             thumbsArray.forEach((thumbUrl, idx) => {
-                const isVid = item.images && item.images[idx] && typeof item.images[idx] === 'string' && item.images[idx].endsWith('.mp4');
+                const rawVidUrl = item.images && item.images[idx] ? item.images[idx] : '';
+                const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
+                
+                const cdnThumb = window.toCDN(thumbUrl);
+                const cdnVidUrl = window.toCDN(rawVidUrl);
+
                 if (isVid) {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading" style="background: #0a0a0a;">
-                            <video class="grid-lazy-video" src="${item.images[idx]}#t=0.001" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;" oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"></video>
+                            <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;" oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"></video>
                         </div>`;
                 } else {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading" style="background-image: none;">
-                           <img src="${thumbUrl}" loading="lazy" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" 
+                           <img src="${cdnThumb}" loading="lazy" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" 
 onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
@@ -3408,8 +3418,13 @@ function openProductModal(item) {
    // Поддержка ФОТО и ВИДЕО (.mp4)
     if (item.images && item.images.length > 0) {
         item.images.forEach((url, index) => {
-            const isVideo = url.endsWith('.mp4');
-            const currentThumb = (item.thumbnails && item.thumbnails[index]) ? item.thumbnails[index] : (isVideo ? 'https://via.placeholder.com/400x400.png?text=VIDEO&bg=000000&color=00ff00' : url);
+            const cdnUrl = window.toCDN(url);
+            const isVideo = cdnUrl.endsWith('.mp4');
+            let currentThumb = (item.thumbnails && item.thumbnails[index]) ? window.toCDN(item.thumbnails[index]) : cdnUrl;
+            
+            if (isVideo && (!item.thumbnails || !item.thumbnails[index])) {
+                currentThumb = 'https://via.placeholder.com/400x400.png?text=VIDEO&bg=000000&color=00ff00';
+            }
             
             if (isVideo) {
                 wrapper.innerHTML += `
