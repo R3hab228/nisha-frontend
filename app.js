@@ -1190,8 +1190,8 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
     // Глобальный перехватчик URL для CDN
 window.toCDN = function(url) {
     if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
-        // Замени 'cdn.nisha-store.shop' на тот домен, который ты привязал к Воркеру!
-        return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://cdn.nisha-store.shop');
+        // Используем твой бесплатный рабочий домен Cloudflare Workers!
+        return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
     }
     return url || '';
 };
