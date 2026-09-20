@@ -674,7 +674,16 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     font-size: 14px;
     letter-spacing: 1px;
 }
-.lazy-loader { display: none !important; }
+.lazy-loader { 
+    display: none; 
+    text-align: center; 
+    padding: 20px; 
+    font-family: var(--font-mono); 
+    font-size: 14px; 
+    color: var(--accent-green); 
+    width: 100%; 
+    grid-column: 1 / -1; 
+}
 /* ========================================= */
 /* --- 8-BIT IMAGE LOADING (СИСТЕМА ЗАГРУЗКИ) --- */
 /* ========================================= */

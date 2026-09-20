@@ -1397,6 +1397,13 @@ function applyFilters() {
             renderedCount = 0; 
             window.currentPage = 1; 
             
+            // Активируем триггер ленивой загрузки для телефонов
+            const scrollTrigger = document.getElementById('loadingTrigger');
+            if (scrollTrigger && window.innerWidth <= 900) {
+                scrollTrigger.style.display = 'block';
+                scrollTrigger.innerHTML = '';
+            }
+            
             const countEl = document.getElementById('itemCount');
             if (countEl) {
                 // Считаем ровно то, что отфильтровано и выводится на экран
@@ -1661,6 +1668,16 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
     // --- ФИНАЛИЗАЦИЯ И СТРАХОВКА ---
     if (isMobile) {
         renderedCount = endIndex;
+        
+        // Прячем триггер, если долистали до самого конца базы
+        const scrollTrigger = document.getElementById('loadingTrigger');
+        if (scrollTrigger) {
+            if (renderedCount >= filteredItems.length) {
+                scrollTrigger.style.display = 'none';
+            } else {
+                scrollTrigger.innerHTML = ''; // Очищаем текст для следующего скролла
+            }
+        }
     } else {
         renderedCount = filteredItems.length; 
         
