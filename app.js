@@ -414,15 +414,25 @@ window.onload = async () => {
      
     // --- УМНЫЙ ЗАПРОС PUSH УВЕДОМЛЕНИЙ ---
     setTimeout(() => {
-        // Спрашиваем только если браузер поддерживает пуши и мы еще не спрашивали
         if ('Notification' in window && 'serviceWorker' in navigator) {
             const pushAsked = localStorage.getItem('nisha_push_asked');
-            if (!pushAsked && Notification.permission === 'default') {
+            console.log('[PUSH] Статус запроса:', pushAsked, 'Разрешение:', Notification.permission);
+            
+            // Показываем плашку, если мы еще НЕ спрашивали юзера в нашем интерфейсе
+            // (Независимо от того, что стоит в системных настройках браузера)
+            if (pushAsked !== 'true') {
                 const promptOverlay = document.getElementById('pushPromptOverlay');
-                if (promptOverlay) promptOverlay.style.display = 'flex';
+                if (promptOverlay) {
+                    promptOverlay.style.display = 'flex';
+                    console.log('[PUSH] Плашка показана успешно.');
+                } else {
+                    console.error('[PUSH] ОШИБКА: Элемент pushPromptOverlay не найден в HTML!');
+                }
             }
+        } else {
+            console.log('[PUSH] Браузер не поддерживает уведомления (или мы не на HTTPS).');
         }
-    }, 5000); // Показываем через 5 секунд после захода на сайт
+    }, 5000);
 
     try {
         try {
