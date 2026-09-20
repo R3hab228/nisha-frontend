@@ -411,8 +411,17 @@ function acceptRules() {
 }
 window.onload = async () => {
      document.body.classList.remove('search-lock');
-    try {
-        try {
+     
+     // --- УМНЫЙ ЗАПРОС PUSH УВЕДОМЛЕНИЙ ---
+     setTimeout(() => {
+         // Спрашиваем только если браузер поддерживает пуши и мы еще не спрашивали
+         if ('Notification' in window && 'serviceWorker' in navigator) {
+             const pushAsked = localStorage.getItem('nisha_push_asked');
+             if (!pushAsked && Notification.permission === 'default') {
+                 document.getElementById('pushPromptOverlay').style.display = 'flex';
+             }
+         }
+     }, 5000); // Показываем через 5 секунд после захода на сайт
             // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
             if (cart.length > 0) {
                 let lastTime = localStorage.getItem('nisha_cart_time');
@@ -4808,6 +4817,7 @@ async function submitProposal() {
         formData.append('price', price);
         formData.append('description', desc);
         formData.append('contact', contact);
+        formData.append('clientId', clientFingerprint); // Добавили ID клиента!
         
         // Кладем туда файлы как они есть!
         compressedFiles.forEach((file, index) => {
@@ -5498,6 +5508,47 @@ window.scrollReviews = function(direction) {
     const scrollAmount = card.offsetWidth + 15; // 15px это gap
     slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
 };
+// --- ФУНКЦИИ ДЛЯ PUSH УВЕДОМЛЕНИЙ ---
+const PUBLIC_VAPID_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeZ1TANY_x4q08gS7KqRkS13B8vLqTzQ1J2-Y9F1bY_h2l3oH-9E'; // Сгенерированный публичный ключ
+
+async function handlePushPermission(isAllowed) {
+    document.getElementById('pushPromptOverlay').style.display = 'none';
+    localStorage.setItem('nisha_push_asked', 'true');
+
+    if (!isAllowed) return;
+
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Подписываем телефон
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+            });
+
+            // Отправляем подписку в нашу базу Supabase
+            if (_supabase && clientFingerprint) {
+                await _supabase.from('push_subscriptions').upsert({
+                    client_id: clientFingerprint,
+                    subscription_data: JSON.parse(JSON.stringify(subscription))
+                });
+                showToast('Уведомления успешно подключены!', 'success');
+            }
+        }
+    } catch (e) { console.error('Ошибка подписки на PUSH:', e); }
+}
+
+// Вспомогательная функция для VAPID ключа
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+    return outputArray;
+}
 
 
 // Запускаем инициализацию после загрузки
