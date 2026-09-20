@@ -5523,7 +5523,7 @@ window.scrollReviews = function(direction) {
     slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
 };
 // --- ФУНКЦИИ ДЛЯ PUSH УВЕДОМЛЕНИЙ ---
-const PUBLIC_VAPID_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeZ1TANY_x4q08gS7KqRkS13B8vLqTzQ1J2-Y9F1bY_h2l3oH-9E'; // Сгенерированный публичный ключ
+const PUBLIC_VAPID_KEY = 'BP32Pw4ejbj9KAQw5yIhoTt2PQ43I5bnWhaQih-9YM87qZZL2Ys7yTm-R0fpliMjqX4cUl1fs6PD5B0YMsH3DXw'; // Сгенерированный публичный ключ
 
 async function handlePushPermission(isAllowed) {
     document.getElementById('pushPromptOverlay').style.display = 'none';
