@@ -1237,7 +1237,7 @@ async function loadAllItems() {
 
     // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров)
     // ОПТИМИЗАЦИЯ: запрашиваем только легкие поля, без 'description' и 'measurements', они подгрузятся при клике
-    const { data, error } = await _supabase.from('items').select('id, name, brand, price, old_price, is_sale, status, thumbnails, images, category, size, views_count, created_at, condition, is_drop, gender').limit(1000).order('created_at', { ascending: false });
+    const { data, error } = await _supabase.from('items').select('id, name, brand, price, old_price, is_sale, status, thumbnails, images, category, size, views_count, created_at, condition, is_drop').limit(1000).order('created_at', { ascending: false });
     
     if (error) { 
         if (allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
