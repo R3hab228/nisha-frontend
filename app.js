@@ -4258,8 +4258,8 @@ if(installBtn) {
 function shareItem() {
     if (!currentOpenedItem) return;
     
-    // Ссылка ведет на твой красивый домен, а Телеграм сам найдет картинку
-    const shareUrl = `https://www.nisha-store.shop/?item=${currentOpenedItem.id}`;
+    // Используем наш бэкенд для красивых превью в Telegram (OpenGraph)
+    const shareUrl = `https://nisha-api.onrender.com/share/${currentOpenedItem.id}`;
     const shareTitle = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
     const shareText = `Зацени: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`;
 
