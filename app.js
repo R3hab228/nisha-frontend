@@ -1223,12 +1223,12 @@ async function loadAllItems() {
     }
     
     // --- ФИКС БАГА "6 ТОВАРОВ": Сравниваем не только текст, но и длину массивов! ---
+    // Если данные изменились, сохраняем в кэш
     const isChanged = (JSON.stringify(data) !== JSON.stringify(allItems)) || (data.length !== allItems.length);
-    
-    allItems = data; // Жестко перезаписываем глобальный массив свежими данными
+    allItems = data; 
     localStorage.setItem('nisha_cached_db', JSON.stringify(data)); 
     
-    // --- СИНХРОНИЗАЦИЯ ИСТОРИИ ПРОСМОТРОВ ИЗ БД ---
+    // --- ИСТОРИЯ ПРОСМОТРОВ ---
     if (userProfile && userProfile.viewed_history && userProfile.viewed_history.length > 0) {
         let dbHistory = [];
         userProfile.viewed_history.forEach(uuid => {
@@ -1238,8 +1238,35 @@ async function loadAllItems() {
                 dbHistory.push({ id: histItem.id, name: histItem.name, price: histItem.price, img: img });
             }
         });
-        if (dbHistory.length > 0) {
-            localStorage.setItem('nisha_history', JSON.stringify(dbHistory));
+        localStorage.setItem('nisha_history', JSON.stringify(dbHistory));
+        renderHistory();
+    }
+
+    // --- УМНОЕ ОБНОВЛЕНИЕ КАТАЛОГА ---
+    if (!cachedData) {
+        // Если кэша не было вообще, рендерим сразу
+        applyFilters(); 
+    } else if (isChanged) {
+        // Если кэш был, но в фоне прилетели новинки
+        const isScrolledDown = (window.scrollY > 100) || (typeof renderedCount !== 'undefined' && renderedCount > 12);
+        
+        if (isScrolledDown) {
+            // Если человек уже листает каталог, НЕ сбрасываем скролл! Показываем уведомление
+            const msg = typeof i18next !== 'undefined' ? i18next.t('messages.new_items', {defaultValue: 'Появились новые вещи! Обновите страницу.'}) : 'Появились новые вещи! Обновите страницу.';
+            showToast(msg, 'success');
+            
+            // Добавим кнопку-подсказку наверх
+            const btn = document.createElement('div');
+            btn.innerHTML = '↑ Новые вещи';
+            btn.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--accent-red); color:#fff; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer; z-index:9999; box-shadow:0 0 10px rgba(0,0,0,0.5); font-family:var(--font-mono); font-size:12px;';
+            btn.onclick = () => { window.scrollTo({top:0, behavior:'smooth'}); applyFilters(); btn.remove(); };
+            document.body.appendChild(btn);
+            
+            // Спрячем через 10 секунд
+            setTimeout(() => { if(btn.parentNode) btn.remove(); }, 10000);
+        } else {
+            // Если человек в самом верху (только зашел), просто плавно перерисовываем
+            applyFilters();
         }
     }
 
