@@ -1356,6 +1356,23 @@ function updateSidebarCounters() {
         }
     });
 }
+
+// ОПТИМИЗАЦИЯ PREFETCH: Функция для предзагрузки фоток высокого качества
+window.prefetchItemImages = function(id) {
+    if (!window._prefetchedItems) window._prefetchedItems = new Set();
+    if (window._prefetchedItems.has(id)) return;
+    
+    window._prefetchedItems.add(id);
+    const item = allItems.find(i => i.id === id);
+    if (item && item.images) {
+        // Загружаем в память браузера первые 2 фотки из галереи товара
+        item.images.slice(0, 2).forEach(url => {
+            const img = new Image();
+            img.src = window.toCDN ? window.toCDN(url) : url;
+        });
+    }
+};
+
 let itemsPageSize = 12; 
 function applyFilters() {
     const grid = document.getElementById('itemsGrid');
@@ -1589,6 +1606,9 @@ function renderNextBatch() {
             let slidesStr = '';
             let dotsStr = '';
 
+            // ОПТИМИЗАЦИЯ LCP: Первые 4 картинки грузим мгновенно, остальные лениво
+            const loadAttr = (i < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
+
             thumbsArray.forEach((thumbUrl, idx) => {
                 const rawVidUrl = item.images && item.images[idx] ? item.images[idx] : '';
                 const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
@@ -1604,7 +1624,7 @@ function renderNextBatch() {
                 } else {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading" style="background-image: none;">
-                           <img src="${cdnThumb}" loading="lazy" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" 
+                           <img src="${cdnThumb}" ${loadAttr} style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" 
 onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
@@ -1619,6 +1639,10 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             const card = document.createElement('div');
             card.className = `item-card ${item.status !== 'available' ? 'sold-out' : ''} ${pulseClass}`;
             card.setAttribute('data-id', item.id);
+            
+            // ОПТИМИЗАЦИЯ PREFETCH: Предзагрузка при наведении
+            card.setAttribute('onmouseenter', `window.prefetchItemImages('${item.id}')`);
+            card.setAttribute('ontouchstart', `window.prefetchItemImages('${item.id}')`);
             
             let priceHTML = '';
             const curr = getCurrency();
