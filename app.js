@@ -240,33 +240,40 @@ function openProfileModal() {
 let fabScrollTimeout;
 let lastScrollY = window.scrollY || document.documentElement.scrollTop;
 
+let scrollTicking = false;
 window.addEventListener('scroll', () => {
-    const fab = document.querySelector('.fab-propose');
-    const filterBtn = document.getElementById('mobileFilterBtn');
-    
     if (document.body.classList.contains('search-lock')) return;
 
-    const currentScrollY = window.scrollY || document.documentElement.scrollTop;
-    
-    if (Math.abs(currentScrollY - lastScrollY) > 10) {
-        if (currentScrollY > lastScrollY && currentScrollY > 150) {
-            // Крутим ВНИЗ - Прячем обе кнопки (чтобы не мешали смотреть шмотки)
-            if (fab && !fab.classList.contains('cart-active')) fab.classList.add('hidden-scroll');
-            if (filterBtn && window.innerWidth <= 900) filterBtn.classList.add('hidden-scroll');
-        } else {
-            // Крутим ВВЕРХ - Показываем обе кнопки
-            if (fab) fab.classList.remove('hidden-scroll');
-            if (filterBtn) filterBtn.classList.remove('hidden-scroll');
-        }
-        lastScrollY = currentScrollY;
-    }
+    if (!scrollTicking) {
+        window.requestAnimationFrame(() => {
+            const fab = document.querySelector('.fab-propose');
+            const filterBtn = document.getElementById('mobileFilterBtn');
+            const currentScrollY = window.scrollY || document.documentElement.scrollTop;
+            
+            if (Math.abs(currentScrollY - lastScrollY) > 10) {
+                if (currentScrollY > lastScrollY && currentScrollY > 150) {
+                    // Прокрутка вниз - скрываем элементы
+                    if (fab && !fab.classList.contains('cart-active')) fab.classList.add('hidden-scroll');
+                    if (filterBtn && window.innerWidth <= 900) filterBtn.classList.add('hidden-scroll');
+                } else {
+                    // Прокрутка вверх - возвращаем элементы
+                    if (fab) fab.classList.remove('hidden-scroll');
+                    if (filterBtn) filterBtn.classList.remove('hidden-scroll');
+                }
+                lastScrollY = currentScrollY;
+            }
 
-    // Возвращаем кнопки, если юзер остановился (пауза 800мс)
-    clearTimeout(fabScrollTimeout);
-    fabScrollTimeout = setTimeout(() => {
-        if (fab) fab.classList.remove('hidden-scroll');
-        if (filterBtn) filterBtn.classList.remove('hidden-scroll');
-    }, 800);
+            // Возвращаем UI, если скролл остановился (на 800мс)
+            clearTimeout(fabScrollTimeout);
+            fabScrollTimeout = setTimeout(() => {
+                if (fab) fab.classList.remove('hidden-scroll');
+                if (filterBtn) filterBtn.classList.remove('hidden-scroll');
+            }, 800);
+
+            scrollTicking = false;
+        });
+        scrollTicking = true;
+    }
 }, { passive: true });
 
 

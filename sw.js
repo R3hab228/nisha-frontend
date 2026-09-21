@@ -21,33 +21,54 @@ self.addEventListener('activate', event => {
     self.clients.claim();
 });
 
+const IMAGE_CACHE = 'nisha-images-v1';
+
 self.addEventListener('fetch', event => {
-    // 1. Игнорируем не-HTTP запросы и POST/PUT/DELETE запросы (SW не должен их кэшировать)
     if (!event.request.url.startsWith('http') || event.request.method !== 'GET') return;
 
     const url = new URL(event.request.url);
 
-    // 2. ЖЕСТКОЕ ИСКЛЮЧЕНИЕ: Игнорируем тяжелые медиа и БД
+    // Игнорируем тяжелое видео и чужие API
     if (
         url.pathname.endsWith('.mp4') || 
         url.pathname.endsWith('.webm') || 
-        url.href.includes('supabase.co/storage') ||
-        url.href.includes('/cdn-images/') ||
-        event.request.headers.get('range')
-    ) {
-        return; 
-    }
-
-    if (
+        event.request.headers.get('range') ||
         url.pathname.startsWith('/api/') || 
-        url.hostname.includes('supabase.co') || 
         url.hostname.includes('novaposhta') ||
         url.hostname.includes('onrender.com')
     ) {
         return; 
     }
 
-    // 3. Стратегия Stale-While-Revalidate с умным оффлайном
+    // НАСТОЯЩИЙ ОФЛАЙН: Кэшируем картинки товаров (Cloudflare CDN / Supabase)
+    const isImage = url.hostname.includes('workers.dev') || url.hostname.includes('supabase.co/storage');
+    
+    if (isImage) {
+        event.respondWith(
+            caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
+                if (cachedResponse) return cachedResponse; // Cache-First для картинок
+                
+                return fetch(event.request).then(networkResponse => {
+                    // Кэшируем даже если status === 0 (Opaque cross-origin response)
+                    if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(IMAGE_CACHE).then(cache => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
+                    return networkResponse;
+                }).catch(() => {
+                    // Если нет интернета и картинки нет в кэше - возвращаем пустой пиксель
+                    return new Response('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>', {
+                        headers: {'Content-Type': 'image/svg+xml'}
+                    });
+                });
+            })
+        );
+        return; 
+    }
+
+    // Для остальных файлов (HTML, JS, CSS): Stale-While-Revalidate
     event.respondWith(
         caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
             const fetchPromise = fetch(event.request).then(networkResponse => {
@@ -57,11 +78,8 @@ self.addEventListener('fetch', event => {
                 }
                 return networkResponse;
             }).catch(() => {
-                // Если пропал интернет:
                 if (event.request.mode === 'navigate') {
-                    // Пытаемся отдать "оболочку" сайта (index.html), игнорируя GET-параметры (?item=...)
                     return caches.match('/', { ignoreSearch: true }).then(res => {
-                        // Если даже оболочки нет в кэше - отдаем красивую страницу 404 (Терминал без интернета)
                         return res || caches.match('/404.html');
                     });
                 }
