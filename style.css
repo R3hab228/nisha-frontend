@@ -204,7 +204,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 
 .item-info { padding: 10px 12px; display: flex; flex-direction: column; flex-grow: 1; transform: translateZ(10px);}
 .item-title { color: var(--text-main); font-size: 14px; margin: 0 0 6px 0; line-height: 1.3; height: 38px; font-weight: bold; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;}
-.item-price { color: var(--accent-green); font-size: 22px; font-weight: bold; margin-bottom: 12px; font-family: var(--font-mono);}
+.item-price { color: var(--accent-green); font-size: 20px; font-weight: bold; margin-bottom: 12px; font-family: var(--font-mono);}
 .item-size { background-color: #222; color: #aaa; font-size: 12px; padding: 4px 8px; border: 1px solid #444; align-self: flex-start; margin-bottom: auto; text-transform: uppercase;}
 .item-footer { margin-top: 15px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; border-top: 1px dashed #222; padding-top: 10px; text-transform: uppercase; font-weight: bold;}
 
@@ -845,7 +845,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .items-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
     .card-slider-wrapper { height: 160px; }
     .item-title { font-size: 12px; height: 32px; margin-bottom: 4px; }
-    .item-price { font-size: 18px; margin-bottom: 5px; }
+    .item-price { font-size: 15px; margin-bottom: 5px; }
     .item-size { font-size: 10px; padding: 2px 6px; }
 
     .modal-overlay { align-items: flex-end !important; padding: 20px 0 0 0; overflow: hidden !important; } 

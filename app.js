@@ -672,19 +672,26 @@ window.onload = async () => {
                     else if (payload.eventType === 'UPDATE') {
                         const updatedItem = payload.new;
                         const index = allItems.findIndex(i => i.id === updatedItem.id);
+                        let needsGridUpdate = false;
                         if (index !== -1) {
+                            const oldItem = allItems[index];
+                            needsGridUpdate = oldItem.is_top !== updatedItem.is_top || 
+                                              oldItem.top_until !== updatedItem.top_until || 
+                                              oldItem.status !== updatedItem.status ||
+                                              oldItem.is_sale !== updatedItem.is_sale ||
+                                              oldItem.price !== updatedItem.price;
                             allItems[index] = updatedItem;
-                            // АВТО-УДАЛЕНИЕ ИЗ КОРЗИНЫ: Если вещь стала available (cron-job снял бронь 15 минут)
-                        if (updatedItem.status === 'available') {
-                            const cartIdx = cart.findIndex(c => c.id === updatedItem.id);
-                            if (cartIdx !== -1) {
-                                cart.splice(cartIdx, 1);
-                                localStorage.setItem('nisha_cart', JSON.stringify(cart));
-                                syncCartToServer();
-                                updateCartUI();
-                                showToast(`Время брони (15 мин) вышло. ${updatedItem.name} удалена из корзины.`, 'error');
+                            // Проверка если продано -> удаляем из корзины
+                            if (updatedItem.status === 'available') {
+                                const cartIdx = cart.findIndex(c => c.id === updatedItem.id);
+                                if (cartIdx !== -1) {
+                                    cart.splice(cartIdx, 1);
+                                    localStorage.setItem('nisha_cart', JSON.stringify(cart));
+                                    syncCartToServer();
+                                    updateCartUI();
+                                    showToast(`Бронь истекла (15 мин) удалена. ${updatedItem.name} снова в наличии.`, 'error');
+                                }
                             }
-                        }
                         }
                         
                         const card = document.querySelector(`.item-card[data-id="${updatedItem.id}"]`);
@@ -696,7 +703,6 @@ window.onload = async () => {
                             if (updatedItem.status === 'sold') {
                                 card.classList.add('sold-out');
                                 card.insertAdjacentHTML('afterbegin', '<div class="sold-badge">SOLD</div>');
-                                showToast(`Товар продан: ${updatedItem.name}`, 'error');
                             } else if (updatedItem.status === 'reserved') {
                                 card.classList.add('reserved-item');
                                 card.insertAdjacentHTML('afterbegin', '<div class="reserved-badge">RESERVED</div>');
@@ -710,8 +716,10 @@ window.onload = async () => {
                             }
                         }
                         
-                        // Перерисовываем сетку, чтобы обновить сортировку (если товар стал TOP) и бейджики
-                        applyFilters();
+                        // Перерисовываем сетку только если изменился важный статус (иначе при просмотре view_count всё сбрасывается)
+                        if (needsGridUpdate) {
+                            applyFilters();
+                        }
                     }
                 })
                 .subscribe();
@@ -3276,26 +3284,11 @@ function renderFilteredOrders() {
 async function openProductModalById(itemId) {
     let item = allItems.find(i => i.id === itemId);
     
-    // ВСЕГДА догружаем полные данные (описание, замеры), так как в allItems теперь облегченная версия для экономии памяти
-    if (typeof _supabase !== 'undefined') {
-        try {
-            let { data } = await _supabase.from('items').select('*').eq('id', itemId).limit(1);
-            if (data && data.length > 0) {
-                item = data[0];
-            } else {
-                let { data: archData } = await _supabase.from('archived_items').select('*').eq('id', itemId).limit(1);
-                if (archData && archData.length > 0) item = archData[0];
-            }
-        } catch(e) { console.error("Ошибка поиска товара в БД", e); }
-    }
-
-    // Если товар найден (где угодно) - открываем!
-    if (item) { 
-        // Снимаем красное мерцание визуально
+    // МГНОВЕННО открываем модалку, если товар есть в кэше
+    if (item) {
         const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
 
-        // ЗАПОМИНАЕМ, ЧТО ЮЗЕР ЭТО ВИДЕЛ
         let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
         if (!seenItemsIds.includes(itemId)) {
             seenItemsIds.push(itemId);
@@ -3306,8 +3299,51 @@ async function openProductModalById(itemId) {
         closeModal('ordersModal'); 
         closeModal('reviewsModal'); 
         openProductModal(item); 
-    } else { 
-        showToast('Товар был полностью удален с сервера', 'error'); 
+    }
+    
+    // В ФОНЕ подгружаем полное описание и замеры
+    if (typeof _supabase !== 'undefined') {
+        try {
+            let { data } = await _supabase.from('items').select('*').eq('id', itemId).limit(1);
+            let fullItem = null;
+            if (data && data.length > 0) {
+                fullItem = data[0];
+            } else {
+                let { data: archData } = await _supabase.from('archived_items').select('*').eq('id', itemId).limit(1);
+                if (archData && archData.length > 0) fullItem = archData[0];
+            }
+            
+            // Если товара не было в кэше вообще (переход по прямой ссылке), открываем сейчас
+            if (!item && fullItem) {
+                openProductModal(fullItem);
+                return;
+            }
+            
+            // Если модалка открыта и мы догрузили описание - просто вставляем текст
+            if (fullItem && currentOpenedItem && currentOpenedItem.id === fullItem.id) {
+                currentOpenedItem = fullItem;
+                if (fullItem.description) {
+                    const descText = fullItem.description ? fullItem.description.replace(/\n/g, '<br>') : `<span style="color:#666;">[ Описание отсутствует ]</span>`;
+                    const descContainer = document.querySelector('.modal-desc');
+                    if (descContainer) {
+                        // Обновляем текст описания, не трогая Q&A
+                        descContainer.innerHTML = `
+                            <div style="margin-bottom: 5px;">
+                                <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">${i18next.t('product.size')}</span></strong> 
+                                <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${fullItem.size}</span>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${i18next.t('product.brand')}</span></strong> 
+                                <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${fullItem.brand}</span>
+                            </div>
+                            <div style="color: #aaa; font-size: 13px;">${descText}</div>
+                        ` + (descContainer.innerHTML.substring(descContainer.innerHTML.indexOf('<!-- Блок Вопросов и Ответов (Q&A) -->') !== -1 ? descContainer.innerHTML.indexOf('<!-- Блок Вопросов и Ответов (Q&A) -->') : descContainer.innerHTML.indexOf('<div id="qaWrapper"')));
+                    }
+                }
+            }
+        } catch(e) { console.error("Ошибка сети:", e); }
+    } else if (!item) {
+        showToast('Товар не найден', 'error'); 
     }
 }
 
