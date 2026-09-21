@@ -314,8 +314,8 @@ if (!SUPABASE_ANON_KEY) {
     _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         global: {
             fetch: (url, options) => {
-                // Используем CDN только для общего списка товаров. Единичные запросы (с eq.id) идут напрямую в Supabase, чтобы избежать багов кэширования Cloudflare.
-                if (typeof url === 'string' && url.includes('/rest/v1/items') && !url.includes('id=eq.') && (!options || options.method === 'GET' || !options.method)) {
+                // Используем CDN ТОЛЬКО для главного списка товаров (limit=1000). Точечные запросы идут напрямую!
+                if (typeof url === 'string' && url.includes('/rest/v1/items') && url.includes('limit=1000') && !url.includes('id=eq.') && (!options || options.method === 'GET' || !options.method)) {
                     url = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'nisha-cdn.mtyagniryadno.workers.dev');
                 }
                 return fetch(url, options);
@@ -680,7 +680,7 @@ window.onload = async () => {
                                               oldItem.status !== updatedItem.status ||
                                               oldItem.is_sale !== updatedItem.is_sale ||
                                               oldItem.price !== updatedItem.price;
-                            allItems[index] = updatedItem;
+                            Object.assign(allItems[index], updatedItem);
                             // Проверка если продано -> удаляем из корзины
                             if (updatedItem.status === 'available') {
                                 const cartIdx = cart.findIndex(c => c.id === updatedItem.id);
@@ -1282,6 +1282,69 @@ async function loadAllItems() {
     if (!cachedData || isChanged) {
         applyFilters(); 
     }
+    
+    // 4. ФОНОВАЯ ПРОВЕРКА (Обход кеша CDN) - синхронизируем актуальные статусы TOP/SOLD
+    syncCriticalStatuses();
+}
+
+// --- СИНХРОНИЗАЦИЯ КРИТИЧЕСКИХ СТАТУСОВ (TOP, RESERVED, SOLD) в обход CDN ---
+async function syncCriticalStatuses() {
+    if (typeof _supabase === 'undefined') return;
+    try {
+        // Ищем подозрительные товары (те, что в кэше висят как TOP или не available)
+        const suspectIds = allItems.filter(i => i.is_top || i.status !== 'available').map(i => i.id).slice(0, 50);
+        
+        let filterStr = 'is_top.eq.true';
+        if (suspectIds.length > 0) {
+            filterStr = `id.in.(${suspectIds.join(',')}),is_top.eq.true`;
+        }
+        
+        // Выполняем точечный запрос к БД, минуя CDN кэш! (так как URL не содержит limit=1000)
+        const { data } = await _supabase.from('items').select('id, is_top, top_until, status').or(filterStr);
+        
+        if (data) {
+            let changed = false;
+            
+            // Проверяем все подозрительные товары
+            suspectIds.forEach(sid => {
+                const fresh = data.find(d => d.id === sid);
+                const old = allItems.find(i => i.id === sid);
+                if (old) {
+                    if (fresh) {
+                        if (old.is_top !== fresh.is_top || old.top_until !== fresh.top_until || old.status !== fresh.status) {
+                            old.is_top = fresh.is_top;
+                            old.top_until = fresh.top_until;
+                            old.status = fresh.status;
+                            changed = true;
+                        }
+                    } else {
+                        // Если товара нет в свежей выборке (значит is_top=false и статус available)
+                        if (old.is_top !== false || old.status !== 'available') {
+                            old.is_top = false;
+                            old.top_until = null;
+                            old.status = 'available';
+                            changed = true;
+                        }
+                    }
+                }
+            });
+            
+            // И добавляем те товары, которые реально стали TOP, но их не было в suspectIds
+            data.forEach(fresh => {
+                const old = allItems.find(i => i.id === fresh.id);
+                if (old) {
+                    if (old.is_top !== fresh.is_top || old.top_until !== fresh.top_until || old.status !== fresh.status) {
+                        old.is_top = fresh.is_top;
+                        old.top_until = fresh.top_until;
+                        old.status = fresh.status;
+                        changed = true;
+                    }
+                }
+            });
+            
+            if (changed) applyFilters();
+        }
+    } catch(e) { console.error("Sync error:", e); }
 }
 
 // --- ОБНОВЛЕНИЕ КРАСНЫХ СЧЕТЧИКОВ В БОКОВОМ МЕНЮ ---
