@@ -1242,34 +1242,11 @@ async function loadAllItems() {
         renderHistory();
     }
 
-    // --- УМНОЕ ОБНОВЛЕНИЕ КАТАЛОГА ---
-    if (!cachedData) {
-        // Если кэша не было вообще, рендерим сразу
+    // --- ОБНОВЛЕНИЕ КАТАЛОГА ---
+    if (!cachedData || isChanged) {
         applyFilters(); 
-    } else if (isChanged) {
-        // Если кэш был, но в фоне прилетели новинки
-        const isScrolledDown = (window.scrollY > 100) || (typeof renderedCount !== 'undefined' && renderedCount > 12);
-        
-        if (isScrolledDown) {
-            // Если человек уже листает каталог, НЕ сбрасываем скролл! Показываем уведомление
-            const msg = typeof i18next !== 'undefined' ? i18next.t('messages.new_items', {defaultValue: 'Появились новые вещи! Обновите страницу.'}) : 'Появились новые вещи! Обновите страницу.';
-            showToast(msg, 'success');
-            
-            // Добавим кнопку-подсказку наверх
-            const btn = document.createElement('div');
-            btn.innerHTML = '↑ Новые вещи';
-            btn.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--accent-red); color:#fff; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer; z-index:9999; box-shadow:0 0 10px rgba(0,0,0,0.5); font-family:var(--font-mono); font-size:12px;';
-            btn.onclick = () => { window.scrollTo({top:0, behavior:'smooth'}); applyFilters(); btn.remove(); };
-            document.body.appendChild(btn);
-            
-            // Спрячем через 10 секунд
-            setTimeout(() => { if(btn.parentNode) btn.remove(); }, 10000);
-        } else {
-            // Если человек в самом верху (только зашел), просто плавно перерисовываем
-            applyFilters();
-        }
     }
-
+}
     // ФИКС КОРЗИНЫ
     const validCart = cart.filter(cItem => allItems.some(dbItem => dbItem.id === cItem.id));
     if (validCart.length !== cart.length) {
