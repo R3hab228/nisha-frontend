@@ -411,28 +411,6 @@ function acceptRules() {
 }
 window.onload = async () => {
     document.body.classList.remove('search-lock');
-     
-    // --- УМНЫЙ ЗАПРОС PUSH УВЕДОМЛЕНИЙ ---
-    setTimeout(() => {
-        if ('Notification' in window && 'serviceWorker' in navigator) {
-            const pushAsked = localStorage.getItem('nisha_push_asked');
-            console.log('[PUSH] Статус запроса:', pushAsked, 'Разрешение:', Notification.permission);
-            
-            // Показываем плашку, если мы еще НЕ спрашивали юзера в нашем интерфейсе
-            // (Независимо от того, что стоит в системных настройках браузера)
-            if (pushAsked !== 'true') {
-                const promptOverlay = document.getElementById('pushPromptOverlay');
-                if (promptOverlay) {
-                    promptOverlay.style.display = 'flex';
-                    console.log('[PUSH] Плашка показана успешно.');
-                } else {
-                    console.error('[PUSH] ОШИБКА: Элемент pushPromptOverlay не найден в HTML!');
-                }
-            }
-        } else {
-            console.log('[PUSH] Браузер не поддерживает уведомления (или мы не на HTTPS).');
-        }
-    }, 5000);
 
     try {
         try {
@@ -5520,48 +5498,6 @@ window.scrollReviews = function(direction) {
     const scrollAmount = card.offsetWidth + 15; // 15px это gap
     slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
 };
-// --- ФУНКЦИИ ДЛЯ PUSH УВЕДОМЛЕНИЙ ---
-const PUBLIC_VAPID_KEY = 'BP32Pw4ejbj9KAQw5yIhoTt2PQ43I5bnWhaQih-9YM87qZZL2Ys7yTm-R0fpliMjqX4cUl1fs6PD5B0YMsH3DXw'; // Сгенерированный публичный ключ
-
-async function handlePushPermission(isAllowed) {
-    document.getElementById('pushPromptOverlay').style.display = 'none';
-    localStorage.setItem('nisha_push_asked', 'true');
-
-    if (!isAllowed) return;
-
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            const registration = await navigator.serviceWorker.ready;
-            
-            // Подписываем телефон
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
-            });
-
-            // Отправляем подписку в нашу базу Supabase
-            if (_supabase && clientFingerprint) {
-                await _supabase.from('push_subscriptions').upsert({
-                    client_id: clientFingerprint,
-                    subscription_data: JSON.parse(JSON.stringify(subscription))
-                });
-                showToast('Уведомления успешно подключены!', 'success');
-            }
-        }
-    } catch (e) { console.error('Ошибка подписки на PUSH:', e); }
-}
-
-// Вспомогательная функция для VAPID ключа
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
-    return outputArray;
-}
-
 
 document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
