@@ -1202,6 +1202,12 @@ async function logout() {
 let renderedCount = 0;
 let filteredItems = [];
 
+// Запрещаем браузеру восстанавливать скролл при перезагрузке страницы
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+window.scrollTo(0, 0);
+
 // Глобальный перехватчик URL для CDN (Вынесли наверх, чтобы браузер его видел сразу!)
 window.toCDN = function(url) {
     if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
