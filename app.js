@@ -1249,11 +1249,6 @@ async function loadAllItems() {
         renderHistory();
     }
 
-    // --- ОБНОВЛЕНИЕ КАТАЛОГА ---
-    if (!cachedData || isChanged) {
-        applyFilters(); 
-    }
-}
     // ФИКС КОРЗИНЫ
     const validCart = cart.filter(cItem => allItems.some(dbItem => dbItem.id === cItem.id));
     if (validCart.length !== cart.length) {
@@ -1264,7 +1259,7 @@ async function loadAllItems() {
 
     // 3. ПЕРЕРИСОВКА (Если данные реально обновились)
     if (!cachedData || isChanged) {
-        applyFilters(); // Вызываем фильтры с НОВЫМИ 50 товарами
+        applyFilters(); 
     }
 }
 
