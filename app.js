@@ -1236,7 +1236,8 @@ async function loadAllItems() {
     }
 
     // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров)
-    const { data, error } = await _supabase.from('items').select('*').limit(1000).order('created_at', { ascending: false });
+    // ОПТИМИЗАЦИЯ: запрашиваем только легкие поля, без 'description' и 'measurements', они подгрузятся при клике
+    const { data, error } = await _supabase.from('items').select('id, name, brand, price, old_price, is_sale, status, thumbnails, images, category, size, views_count, created_at, condition, is_drop, gender').limit(1000).order('created_at', { ascending: false });
     
     if (error) { 
         if (allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
@@ -3231,18 +3232,15 @@ function renderFilteredOrders() {
 // 12. МОДАЛКА ТОВАРА & ПОХОЖИЕ ТОВАРЫ & PHOTOSWIPE
 // ==========================================
 async function openProductModalById(itemId) {
-    // 1. Сначала ищем в быстрой памяти (моментально)
     let item = allItems.find(i => i.id === itemId);
     
-    // 2. ФОЛЛБЭК: Если товара нет (он продан и убран из ленты или в Архиве)
-    if (!item && typeof _supabase !== 'undefined') {
+    // ВСЕГДА догружаем полные данные (описание, замеры), так как в allItems теперь облегченная версия для экономии памяти
+    if (typeof _supabase !== 'undefined') {
         try {
-            // Ищем в основной таблице
             let { data } = await _supabase.from('items').select('*').eq('id', itemId).limit(1);
             if (data && data.length > 0) {
                 item = data[0];
             } else {
-                // Если там нет - ищем в Архиве!
                 let { data: archData } = await _supabase.from('archived_items').select('*').eq('id', itemId).limit(1);
                 if (archData && archData.length > 0) item = archData[0];
             }
