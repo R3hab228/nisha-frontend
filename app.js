@@ -314,8 +314,8 @@ if (!SUPABASE_ANON_KEY) {
     _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         global: {
             fetch: (url, options) => {
-                // Пускаем запросы к базе товаров через наш Cloudflare Worker для кэширования!
-                if (typeof url === 'string' && url.includes('/rest/v1/items') && (!options || options.method === 'GET' || !options.method)) {
+                // Используем CDN только для общего списка товаров. Единичные запросы (с eq.id) идут напрямую в Supabase, чтобы избежать багов кэширования Cloudflare.
+                if (typeof url === 'string' && url.includes('/rest/v1/items') && !url.includes('id=eq.') && (!options || options.method === 'GET' || !options.method)) {
                     url = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'nisha-cdn.mtyagniryadno.workers.dev');
                 }
                 return fetch(url, options);
@@ -709,6 +709,9 @@ window.onload = async () => {
                                 if(waitBtn) waitBtn.style.display = 'block';
                             }
                         }
+                        
+                        // Перерисовываем сетку, чтобы обновить сортировку (если товар стал TOP) и бейджики
+                        applyFilters();
                     }
                 })
                 .subscribe();
