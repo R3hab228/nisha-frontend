@@ -311,7 +311,17 @@ if (!SUPABASE_ANON_KEY) {
     setTimeout(() => showToast('Критическая ошибка: Нет связи с БД', 'error'), 2000);
 } else {
     const { createClient } = supabase;
-    _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: {
+            fetch: (url, options) => {
+                // Пускаем запросы к базе товаров через наш Cloudflare Worker для кэширования!
+                if (typeof url === 'string' && url.includes('/rest/v1/items') && (!options || options.method === 'GET' || !options.method)) {
+                    url = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'nisha-cdn.mtyagniryadno.workers.dev');
+                }
+                return fetch(url, options);
+            }
+        }
+    });
 }
 // ==========================================
 // СИСТЕМА ВЕЧНОЙ СЕССИИ (JWT REFRESH)
