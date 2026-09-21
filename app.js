@@ -1724,7 +1724,7 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
         renderedCount = filteredItems.length; 
         
         const totalPages = Math.ceil(filteredItems.length / itemsPageSize);
-        if (totalPages > 1) {
+        if (totalPages >= 1) {
             const paginationWrap = document.createElement('div');
             paginationWrap.id = 'mainPagination';
             paginationWrap.className = 'pagination-wrapper';
