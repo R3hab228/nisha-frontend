@@ -675,13 +675,25 @@ window.onload = async () => {
                         let needsGridUpdate = false;
                         if (index !== -1) {
                             const oldItem = allItems[index];
+                            
+                            // Проверка: упала ли цена / появилась ли скидка
+                            const priceDropped = (!oldItem.is_sale && updatedItem.is_sale) || (oldItem.price > updatedItem.price);
+                            const imgUrl = (updatedItem.thumbnails && updatedItem.thumbnails.length > 0) ? updatedItem.thumbnails[0] : ((updatedItem.images && updatedItem.images.length > 0) ? updatedItem.images[0] : null);
+
                             needsGridUpdate = oldItem.is_top !== updatedItem.is_top || 
                                               oldItem.top_until !== updatedItem.top_until || 
                                               oldItem.status !== updatedItem.status ||
                                               oldItem.is_sale !== updatedItem.is_sale ||
                                               oldItem.price !== updatedItem.price;
+                                              
                             Object.assign(allItems[index], updatedItem);
-                            // Проверка если продано -> удаляем из корзины
+                            
+                            // Если цена снизилась, показываем ТОСТ СКИДКА!!! как в избранном
+                            if (priceDropped && updatedItem.status === 'available') {
+                                showToast('СКИДКА!!!', 'success', imgUrl);
+                            }
+
+                            // Если время вышло -> убираем из корзины
                             if (updatedItem.status === 'available') {
                                 const cartIdx = cart.findIndex(c => c.id === updatedItem.id);
                                 if (cartIdx !== -1) {
