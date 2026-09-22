@@ -1,34 +1,4 @@
 ﻿// ==========================================
-});
-    initMobileSwipe();
-        // Вытаскиваем напрямую базовые статусы ВСЕХ вещей из БД, минуя CDN кэш!
-        const { data } = await _supabase.from('items').select('id, is_top, top_until, status');
-        
-        if (data) {
-            let changed = false;
-            
-            // 1. Очистка от призраков (удаляем из кэша вещи, которые удалены из БД)
-            const validIds = new Set(data.map(d => d.id));
-            const originalLength = allItems.length;
-            allItems = allItems.filter(i => validIds.has(i.id));
-            if (allItems.length !== originalLength) changed = true;
-            
-            // 2. Синхронизация критических статусов
-            const dataMap = new Map();
-            data.forEach(d => dataMap.set(d.id, d));
-            
-            allItems.forEach(old => {
-                const fresh = dataMap.get(old.id);
-                if (fresh) {
-                    if (old.is_top !== fresh.is_top || old.top_until !== fresh.top_until || old.status !== fresh.status) {
-                        old.is_top = fresh.is_top;
-                        old.top_until = fresh.top_until;
-                        old.status = fresh.status;
-                        changed = true;
-                    }
-                }
-            });
-// ==========================================
 // HAPTIC FEEDBACK (ТАКТИЛЬНАЯ ОТДАЧА ДЛЯ ТЕЛЕФОНОВ)
 // ==========================================
 function triggerHaptic(type = 'light') {
