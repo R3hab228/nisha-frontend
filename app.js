@@ -1,3 +1,33 @@
+﻿// ==========================================
+});
+    initMobileSwipe();
+        // Вытаскиваем напрямую базовые статусы ВСЕХ вещей из БД, минуя CDN кэш!
+        const { data } = await _supabase.from('items').select('id, is_top, top_until, status');
+        
+        if (data) {
+            let changed = false;
+            
+            // 1. Очистка от призраков (удаляем из кэша вещи, которые удалены из БД)
+            const validIds = new Set(data.map(d => d.id));
+            const originalLength = allItems.length;
+            allItems = allItems.filter(i => validIds.has(i.id));
+            if (allItems.length !== originalLength) changed = true;
+            
+            // 2. Синхронизация критических статусов
+            const dataMap = new Map();
+            data.forEach(d => dataMap.set(d.id, d));
+            
+            allItems.forEach(old => {
+                const fresh = dataMap.get(old.id);
+                if (fresh) {
+                    if (old.is_top !== fresh.is_top || old.top_until !== fresh.top_until || old.status !== fresh.status) {
+                        old.is_top = fresh.is_top;
+                        old.top_until = fresh.top_until;
+                        old.status = fresh.status;
+                        changed = true;
+                    }
+                }
+            });
 // ==========================================
 // HAPTIC FEEDBACK (ТАКТИЛЬНАЯ ОТДАЧА ДЛЯ ТЕЛЕФОНОВ)
 // ==========================================
@@ -1309,48 +1339,25 @@ async function loadAllItems() {
 async function syncCriticalStatuses() {
     if (typeof _supabase === 'undefined') return;
     try {
-        // Ищем подозрительные товары (те, что в кэше висят как TOP или не available)
-        const suspectIds = allItems.filter(i => i.is_top || i.status !== 'available').map(i => i.id).slice(0, 50);
-        
-        let filterStr = 'is_top.eq.true';
-        if (suspectIds.length > 0) {
-            filterStr = `id.in.(${suspectIds.join(',')}),is_top.eq.true`;
-        }
-        
-        // Выполняем точечный запрос к БД, минуя CDN кэш! (так как URL не содержит limit=1000)
-        const { data } = await _supabase.from('items').select('id, is_top, top_until, status').or(filterStr);
+        // Вытаскиваем напрямую базовые статусы ВСЕХ вещей из БД, минуя CDN кэш!
+        const { data } = await _supabase.from('items').select('id, is_top, top_until, status');
         
         if (data) {
             let changed = false;
             
-            // Проверяем все подозрительные товары
-            suspectIds.forEach(sid => {
-                const fresh = data.find(d => d.id === sid);
-                const old = allItems.find(i => i.id === sid);
-                if (old) {
-                    if (fresh) {
-                        if (old.is_top !== fresh.is_top || old.top_until !== fresh.top_until || old.status !== fresh.status) {
-                            old.is_top = fresh.is_top;
-                            old.top_until = fresh.top_until;
-                            old.status = fresh.status;
-                            changed = true;
-                        }
-                    } else {
-                        // Если товара нет в свежей выборке (значит is_top=false и статус available)
-                        if (old.is_top !== false || old.status !== 'available') {
-                            old.is_top = false;
-                            old.top_until = null;
-                            old.status = 'available';
-                            changed = true;
-                        }
-                    }
-                }
-            });
+            // 1. Очистка от призраков (удаляем из кэша вещи, которые удалены из БД)
+            const validIds = new Set(data.map(d => d.id));
+            const originalLength = allItems.length;
+            allItems = allItems.filter(i => validIds.has(i.id));
+            if (allItems.length !== originalLength) changed = true;
             
-            // И добавляем те товары, которые реально стали TOP, но их не было в suspectIds
-            data.forEach(fresh => {
-                const old = allItems.find(i => i.id === fresh.id);
-                if (old) {
+            // 2. Синхронизация критических статусов
+            const dataMap = new Map();
+            data.forEach(d => dataMap.set(d.id, d));
+            
+            allItems.forEach(old => {
+                const fresh = dataMap.get(old.id);
+                if (fresh) {
                     if (old.is_top !== fresh.is_top || old.top_until !== fresh.top_until || old.status !== fresh.status) {
                         old.is_top = fresh.is_top;
                         old.top_until = fresh.top_until;
@@ -1359,7 +1366,6 @@ async function syncCriticalStatuses() {
                     }
                 }
             });
-            // Подтягиваем последние 5 добавленных товаров, чтобы новые предложки появлялись моментально
             const { data: latestItems } = await _supabase.from('items')
                 .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, is_drop')
                 .order('created_at', { ascending: false })
