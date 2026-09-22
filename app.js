@@ -1347,6 +1347,25 @@ async function syncCriticalStatuses() {
                     }
                 }
             });
+            // Подтягиваем последние 5 добавленных товаров, чтобы новые предложки появлялись моментально
+            const { data: latestItems } = await _supabase.from('items')
+                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, is_drop')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (latestItems) {
+                let latestAdded = false;
+                latestItems.forEach(newItem => {
+                    if (!allItems.find(i => i.id === newItem.id)) {
+                        allItems.unshift(newItem);
+                        latestAdded = true;
+                        changed = true;
+                    }
+                });
+                if (latestAdded) {
+                    allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                }
+            }
             
             if (changed) applyFilters();
         }
