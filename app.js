@@ -5697,7 +5697,6 @@ document.addEventListener('DOMContentLoaded', () => {
 let pushPrompted = false;
 async function subscribeUserToPush(registration) {
     try {
-    try {
         if (Notification.permission === 'denied') return;
         
         let targetSub = await registration.pushManager.getSubscription();
