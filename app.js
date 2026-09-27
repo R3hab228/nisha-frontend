@@ -5740,12 +5740,28 @@ async function subscribeUserToPush(registration) {
     }
 }
 
-document.addEventListener('click', () => {
+document.addEventListener('click', (e) => {
     if (pushPrompted) return;
+    
+    // 1. Игнорируем, если открыто любое модальное окно (Товар, Корзина, Оформление и тд)
+    const isModalOpen = Array.from(document.querySelectorAll('[id$="Modal"], .modal-overlay, #cartSidebar')).some(m => {
+        const style = window.getComputedStyle(m);
+        return style.display === 'flex' || style.display === 'block' || m.classList.contains('active');
+    });
+    if (isModalOpen) return;
+    
+    // 2. Игнорируем клик по карточке товара (чтобы не перебивать открытие товара)
+    if (e.target.closest('.item-card')) return;
+
+    // 3. Игнорируем клики по нижнему навигатору/корзине
+    if (e.target.closest('.bottom-nav, #cartBtn, #profileBtn')) return;
+
+    // Если всё чисто — мы в ленте товаров, и клик был по безопасному элементу (фильтр, лого, фон)
     pushPrompted = true;
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(reg => {
             subscribeUserToPush(reg);
         });
     }
+});
 }, { once: true });
