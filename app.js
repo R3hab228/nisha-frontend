@@ -452,14 +452,18 @@ window.onload = async () => {
             document.addEventListener("visibilitychange", async () => {
                 if (document.hidden) {
                     // Юзер свернул сайт (ушел в TikTok)
-                    if (cart.length > 0 && typeof Push !== 'undefined') {
-                        Push.create("NISHA STORE", {
-                            body: "Ваша корзина ждет! Оформляйте, пока не забрали.",
-                            icon: '/icon-192.png',
-                            badge: '/badge.png',
-                            timeout: 5000,
-                            onClick: function () { window.focus(); this.close(); }
-                        });
+                    if (cart.length > 0) {
+                        if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                            navigator.serviceWorker.ready.then(reg => {
+                                reg.showNotification("NISHA STORE", {
+                                    body: "Ваша корзина ждет! Оформляйте, пока не забрали.",
+                                    icon: '/icon-192.png',
+                                    badge: '/badge.png',
+                                    vibrate: [200, 100, 200],
+                                    data: { url: '/' }
+                                });
+                            });
+                        }
                     }
                 } else {
                     // ЮЗЕР ВЕРНУЛСЯ НА САЙТ!
