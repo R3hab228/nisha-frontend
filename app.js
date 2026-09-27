@@ -5697,45 +5697,47 @@ document.addEventListener('DOMContentLoaded', () => {
 let pushPrompted = false;
 async function subscribeUserToPush(registration) {
     try {
+    try {
         if (Notification.permission === 'denied') return;
         
-        const sub = await registration.pushManager.getSubscription();
-        if (sub) {
-            // Уже есть локально, на всякий случай отправляем на сервер чтобы обновить
+        let targetSub = await registration.pushManager.getSubscription();
+        
+        if (!targetSub) {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+            
+            const res = await fetch('https://nisha-api.onrender.com/api/vapid-key');
+            if (!res.ok) return;
+            const { publicKey } = await res.json();
+            
+            const padding = '='.repeat((4 - publicKey.length % 4) % 4);
+            const base64 = (publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+
+            targetSub = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: outputArray
+            });
+        }
+        
+        if (targetSub) {
+            const payload = {
+                subscription: targetSub,
+                userId: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : null
+            };
             await fetch('https://nisha-api.onrender.com/api/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(sub)
+                body: JSON.stringify(payload)
             });
-            return;
         }
-
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
-        
-        const res = await fetch('https://nisha-api.onrender.com/api/vapid-key');
-        if (!res.ok) return;
-        const { publicKey } = await res.json();
-        
-        const padding = '='.repeat((4 - publicKey.length % 4) % 4);
-        const base64 = (publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-
-        const newSub = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: outputArray
-        });
-        
-        await fetch('https://nisha-api.onrender.com/api/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newSub)
-        });
     } catch(e) {
+        console.error('Push error:', e);
+    }
         console.error('Push error:', e);
     }
 }
