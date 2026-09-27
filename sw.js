@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v107'; // Поменяли версию на 107
+﻿const CACHE_NAME = 'nisha-cache-v107'; // Поменяли версию на 107
 const STATIC_URLS = ['/', '/index.html', '/app.js', '/config.js', '/style.css', '/locales.json', '/404.html']; // Добавили 404.html
 
 self.addEventListener('install', event => {
@@ -96,7 +96,7 @@ self.addEventListener('push', event => {
         const options = {
             body: data.body,
             icon: '/icon-192.png',
-            badge: '/icon.png',
+            badge: '/badge.png',
             vibrate: [200, 100, 200],
             data: { url: data.url || '/' }
         };
