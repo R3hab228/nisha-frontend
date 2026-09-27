@@ -99,6 +99,7 @@ if ('serviceWorker' in navigator) {
                             () => {
                                 caches.keys().then(names => {
                                     for (let name of names) caches.delete(name);
+// WEB PUSH ПОДПИСКА
                                 }).then(() => {
                                     window.location.reload(true);
                                 });
@@ -5684,3 +5685,62 @@ document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
     initMobileSwipe();
 });
+
+// ==========================================
+// WEB PUSH ПОДПИСКА
+// ==========================================
+let pushPrompted = false;
+async function subscribeUserToPush(registration) {
+    try {
+        if (Notification.permission === 'denied') return;
+        
+        const sub = await registration.pushManager.getSubscription();
+        if (sub) {
+            // Уже есть локально, на всякий случай отправляем на сервер чтобы обновить
+            await fetch('https://nisha-api.onrender.com/api/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sub)
+            });
+            return;
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+        
+        const res = await fetch('https://nisha-api.onrender.com/api/vapid-key');
+        if (!res.ok) return;
+        const { publicKey } = await res.json();
+        
+        const padding = '='.repeat((4 - publicKey.length % 4) % 4);
+        const base64 = (publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+
+        const newSub = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: outputArray
+        });
+        
+        await fetch('https://nisha-api.onrender.com/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSub)
+        });
+    } catch(e) {
+        console.error('Push error:', e);
+    }
+}
+
+document.addEventListener('click', () => {
+    if (pushPrompted) return;
+    pushPrompted = true;
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+            subscribeUserToPush(reg);
+        });
+    }
+}, { once: true });
