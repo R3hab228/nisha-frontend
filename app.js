@@ -5763,4 +5763,3 @@ document.addEventListener('click', (e) => {
         });
     }
 });
-}, { once: true });
