@@ -5738,8 +5738,6 @@ async function subscribeUserToPush(registration) {
     } catch(e) {
         console.error('Push error:', e);
     }
-        console.error('Push error:', e);
-    }
 }
 
 document.addEventListener('click', (e) => {
