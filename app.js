@@ -455,7 +455,8 @@ window.onload = async () => {
                     if (cart.length > 0 && typeof Push !== 'undefined') {
                         Push.create("NISHA STORE", {
                             body: "Ваша корзина ждет! Оформляйте, пока не забрали.",
-                            icon: '/icon.ico',
+                            icon: '/icon-192.png',
+                            badge: '/badge.png',
                             timeout: 5000,
                             onClick: function () { window.focus(); this.close(); }
                         });
