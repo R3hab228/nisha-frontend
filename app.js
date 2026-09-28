@@ -1053,6 +1053,14 @@ async function checkSession() {
             
             if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
             if(document.getElementById('modalProfileEmail')) document.getElementById('modalProfileEmail').innerText = uEmail;
+            // --- ПРИВЯЗКА ПУШЕЙ К ПРОФИЛЮ ---
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => {
+                    if (typeof subscribeUserToPush === 'function') {
+                        subscribeUserToPush(reg, true); // silent = true
+                    }
+                });
+            }
             
            // --- УВЕДОМЛЕНИЯ О СТАТУСЕ ЗАКАЗА В РЕАЛЬНОМ ВРЕМЕНИ ---
             if (orderStatusChannel) _supabase.removeChannel(orderStatusChannel);
@@ -5651,13 +5659,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // WEB PUSH ПОДПИСКА
 // ==========================================
 let pushPrompted = false;
-async function subscribeUserToPush(registration) {
+async function subscribeUserToPush(registration, silent = false) {
     try {
         if (Notification.permission === 'denied') return;
         
         let targetSub = await registration.pushManager.getSubscription();
         
         if (!targetSub) {
+            if (silent) return;
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') return;
             
