@@ -214,20 +214,6 @@ function startSearchTypewriter() {
 
     typeLoop();
 }
-const mainSearchInput = document.getElementById('mainSearch');
-if (mainSearchInput) {
-    mainSearchInput.addEventListener('input', function() {
-        document.getElementById('clearSearchBtn').style.display = this.value.length > 0 ? 'block' : 'none';
-    });
-    
-    mainSearchInput.addEventListener('focus', () => {
-        mainSearchInput.placeholder = i18next.t('search.placeholder') || 'Поиск...';
-    });
-    
-    mainSearchInput.addEventListener('blur', () => {
-        if (mainSearchInput.value.length === 0) startSearchTypewriter();
-    });
-}
 // ==========================================
 // БЕЗОПАСНЫЙ ПЛАВНЫЙ СКРОЛЛ (ТОЛЬКО ДЛЯ ПК)
 // ==========================================
