@@ -128,6 +128,18 @@ function updateContentLanguage() {
     // Переводим обычный текст
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
+    
+    // Переводим Placeholder'ы инпутов
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const key = el.getAttribute('data-i18n-ph');
+        el.placeholder = i18next.t(key);
+    });
+
+    // Запускаем печатную машинку поиска
+    currentSearchLang = i18next.language || 'ru';
+    startSearchTypewriter();
+}
+
         el.innerHTML = i18next.t(key);
     });
 function startSearchTypewriter() {
@@ -201,7 +213,6 @@ function startSearchTypewriter() {
     }
 
     typeLoop();
-}
 }
 
 // ==========================================
