@@ -4950,7 +4950,7 @@ async function submitProposal() {
         formData.append('price', price);
         formData.append('description', desc);
         formData.append('contact', contact);
-        formData.append('clientId', clientFingerprint); // Добавили ID клиента!
+        formData.append('clientId', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint); // Добавили ID клиента!
         
         // Кладем туда файлы как они есть!
         compressedFiles.forEach((file, index) => {
@@ -5682,7 +5682,7 @@ async function subscribeUserToPush(registration) {
         if (targetSub) {
             const payload = {
                 subscription: targetSub,
-                userId: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : null
+                userId: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint
             };
             await fetch('https://nisha-api.onrender.com/api/subscribe', {
                 method: 'POST',
