@@ -2511,13 +2511,6 @@ async function calculateDeliveryCost() {
     
     const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
     const totalCost = cart.reduce((sum, item) => sum + getSafePrice(item.price), 0);
-    
-    // НОВОЕ: ПРОВЕРКА НА БЕСПЛАТНУЮ ДОСТАВКУ (От 2000 грн)
-    const FREE_SHIPPING_LIMIT = 2000;
-    if (totalCost >= FREE_SHIPPING_LIMIT) {
-        document.getElementById('calcCostVal').innerHTML = `<span style="color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.4);">0 грн (БЕСПЛАТНО)</span>`;
-        return; // Завершаем функцию, чтобы не дергать API Новой Почты!
-    }
 
     try {
         // ЗАПРАШИВАЕМ ГОТОВУЮ ЦЕНУ У НАШЕГО СЕРВЕРА
@@ -2576,47 +2569,14 @@ function renderCartItems() {
         return;
     }
 
-    // --- ГЕЙМДИЗАЙН ПРОГРЕСС-БАР (УМНЫЕ ЦВЕТА И ШРИФТЫ) ---
-    const FREE_SHIPPING_LIMIT = 2000;
-    let cartTotalForBar = cart.reduce((sum, item) => sum + item.price, 0);
-    let remainingAmount = FREE_SHIPPING_LIMIT - cartTotalForBar;
-    let progressPercent = Math.min(100, (cartTotalForBar / FREE_SHIPPING_LIMIT) * 100);
-    
-    let barColor = remainingAmount > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)';
-    const curr = getCurrency();
-
-    // Текст 1 в 1 как FREE SHIPPING
-    let topTextHTML = remainingAmount > 0 
-        ? `FREE SHIPPING` 
-        : `<span style="color: var(--accent-green); text-shadow: 0 0 5px rgba(0,255,0,0.4);">ДОСТАВКА БЕСПЛАТНА</span>`;
-
-    // Динамические цвета для цифр
-    let colorZero = remainingAmount > 0 ? 'var(--accent-green)' : '#555';
-    let colorTarget = remainingAmount > 0 ? '#555' : 'var(--accent-green)';
-
     list.innerHTML = `
         <div style="padding: 10px; margin-bottom: 10px; border-bottom: 1px dashed #333; display: flex; flex-direction: column; gap: 10px;">
-            
-            <!-- Центральная надпись (всегда 11px) -->
-            <div style="text-align: center; font-size: 11px; font-family: var(--font-mono); font-weight: bold; color: #aaa; letter-spacing: 2px;">
-                ${topTextHTML}
-            </div>
-            
-            <!-- Блок со шкалой и динамическими цветами -->
-            <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 10px; font-weight: bold;">
-                <span style="color: ${colorZero}; transition: color 0.3s;">0</span>
-                
-                <div style="flex-grow: 1; height: 4px; background: #222; border-radius: 2px; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${progressPercent}%; background: ${barColor}; transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);"></div>
-                </div>
-                
-                <span style="color: ${colorTarget}; transition: color 0.3s;">${FREE_SHIPPING_LIMIT} ${curr}</span>
-            </div>
-
             <!-- Текст предупреждения -->
             <div style="color: #666; font-size: 10px; font-family: var(--font-main); text-align: center; margin-top: 5px;">
-                ${i18next.t('cart.warning', {defaultValue: 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'})}
+                ${i18next.t('cart.warning', {defaultValue: 'Вещи не бронируются и могут быть куплены кем-то другим в любой момент.'})}
             </div>
+        </div>
+    `;
         </div>
     `;
 
