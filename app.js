@@ -130,62 +130,78 @@ function updateContentLanguage() {
         const key = el.getAttribute('data-i18n');
         el.innerHTML = i18next.t(key);
     });
-    
-    // Переводим Placeholder'ы инпутов
-    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
-        const key = el.getAttribute('data-i18n-ph');
-        el.placeholder = i18next.t(key);
-    });
-
-    // Запускаем печатную машинку для поиска
-    currentSearchLang = i18next.language || 'ru';
-    startSearchTypewriter();
-}
-
 function startSearchTypewriter() {
     const searchInput = document.getElementById('mainSearch');
     if (!searchInput) return;
 
-    if (searchTypewriterInterval) clearInterval(searchTypewriterInterval);
+    if (searchTypewriterInterval) clearTimeout(searchTypewriterInterval);
+    if (window.searchCursorBlinkInterval) clearInterval(window.searchCursorBlinkInterval);
 
     const translatedWords = {
-        'ua': 'Пошук речей...',
-        'ru': 'Поиск вещи...',
-        'en': 'Search items...'
+        'ua': ['Пошук речей...'],
+        'ru': ['Поиск вещи...'],
+        'en': ['Search items...']
     };
     
-    const word = translatedWords[currentSearchLang] || translatedWords['ru'];
+    const words = translatedWords[currentSearchLang] || translatedWords['ru'];
+    let wordIndex = 0;
     let charIndex = 0;
+    let isDeleting = false;
     let showCursor = true;
-    let isTyping = true;
 
-    // Скорость печатания 100мс
-    searchTypewriterInterval = setInterval(() => {
+    function typeLoop() {
+        if (!document.getElementById('mainSearch')) return;
+        
         if (document.activeElement === searchInput || searchInput.value.length > 0) {
-            searchInput.placeholder = word;
+            searchInput.placeholder = words[wordIndex];
+            searchTypewriterInterval = setTimeout(typeLoop, 500);
             return;
         }
 
-        if (isTyping) {
+        const currentWord = words[wordIndex];
+
+        if (isDeleting) {
+            charIndex--;
+            searchInput.placeholder = currentWord.substring(0, charIndex) + '|';
+            if (charIndex === 0) {
+                isDeleting = false;
+                wordIndex = (wordIndex + 1) % words.length;
+                searchTypewriterInterval = setTimeout(typeLoop, 500);
+                return;
+            }
+            searchTypewriterInterval = setTimeout(typeLoop, 50);
+        } else {
             charIndex++;
-            searchInput.placeholder = word.substring(0, charIndex) + '|';
+            searchInput.placeholder = currentWord.substring(0, charIndex) + '|';
             
-            if (charIndex === word.length) {
-                isTyping = false;
-                clearInterval(searchTypewriterInterval);
+            if (charIndex === currentWord.length) {
+                isDeleting = true;
+                let blinkCount = 0;
+                const maxBlinks = 4; // 4 * 0.6с = 2.4 секунды паузы перед удалением
                 
-                // Запускаем комфортное моргание курсора 0.6с
-                searchTypewriterInterval = setInterval(() => {
+                window.searchCursorBlinkInterval = setInterval(() => {
                     if (document.activeElement === searchInput || searchInput.value.length > 0) {
-                        searchInput.placeholder = word;
+                        searchInput.placeholder = currentWord;
                         return;
                     }
                     showCursor = !showCursor;
-                    searchInput.placeholder = word + (showCursor ? '|' : '');
+                    searchInput.placeholder = currentWord + (showCursor ? '|' : '');
+                    blinkCount++;
+                    
+                    if (blinkCount >= maxBlinks) {
+                        clearInterval(window.searchCursorBlinkInterval);
+                        showCursor = true;
+                        searchTypewriterInterval = setTimeout(typeLoop, 50);
+                    }
                 }, 600);
+                return;
             }
+            searchTypewriterInterval = setTimeout(typeLoop, 100);
         }
-    }, 100);
+    }
+
+    typeLoop();
+}
 }
 
 // ==========================================
