@@ -128,6 +128,8 @@ function updateContentLanguage() {
     // Переводим обычный текст
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
+        el.innerHTML = i18next.t(key);
+    });
     
     // Переводим Placeholder'ы инпутов
     document.querySelectorAll('[data-i18n-ph]').forEach(el => {
@@ -140,8 +142,6 @@ function updateContentLanguage() {
     startSearchTypewriter();
 }
 
-        el.innerHTML = i18next.t(key);
-    });
 function startSearchTypewriter() {
     const searchInput = document.getElementById('mainSearch');
     if (!searchInput) return;
@@ -214,7 +214,20 @@ function startSearchTypewriter() {
 
     typeLoop();
 }
-
+const mainSearchInput = document.getElementById('mainSearch');
+if (mainSearchInput) {
+    mainSearchInput.addEventListener('input', function() {
+        document.getElementById('clearSearchBtn').style.display = this.value.length > 0 ? 'block' : 'none';
+    });
+    
+    mainSearchInput.addEventListener('focus', () => {
+        mainSearchInput.placeholder = i18next.t('search.placeholder') || 'Поиск...';
+    });
+    
+    mainSearchInput.addEventListener('blur', () => {
+        if (mainSearchInput.value.length === 0) startSearchTypewriter();
+    });
+}
 // ==========================================
 // БЕЗОПАСНЫЙ ПЛАВНЫЙ СКРОЛЛ (ТОЛЬКО ДЛЯ ПК)
 // ==========================================
