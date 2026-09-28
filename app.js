@@ -148,53 +148,44 @@ function startSearchTypewriter() {
 
     if (searchTypewriterInterval) clearInterval(searchTypewriterInterval);
 
-    // Словари для анимации (Только один текст "Поиск вещи...")
-    const prefixes = {
-        'ua': '',
-        'ru': '',
-        'en': ''
-    };
-    
-    // Переводы фразы "Поиск вещи..."
     const translatedWords = {
-        'ua': ['Пошук речі...'],
-        'ru': ['Поиск вещи...'],
-        'en': ['Search items...']
+        'ua': 'Пошук речей...',
+        'ru': 'Поиск вещи...',
+        'en': 'Search items...'
     };
     
-    const words = translatedWords[currentSearchLang] || translatedWords['ru'];
-    const prefix = ''; // Префикс больше не нужен
-    let wordIndex = 0;
+    const word = translatedWords[currentSearchLang] || translatedWords['ru'];
     let charIndex = 0;
-    let isDeleting = false;
+    let showCursor = true;
+    let isTyping = true;
 
+    // Скорость печатания 100мс
     searchTypewriterInterval = setInterval(() => {
-        // Если фокус в инпуте или юзер что-то написал - останавливаем анимацию
         if (document.activeElement === searchInput || searchInput.value.length > 0) {
-            searchInput.placeholder = prefix + '...';
+            searchInput.placeholder = word;
             return;
         }
 
-        const currentWord = words[wordIndex];
-
-        if (isDeleting) {
-            charIndex--;
-        } else {
+        if (isTyping) {
             charIndex++;
+            searchInput.placeholder = word.substring(0, charIndex) + '|';
+            
+            if (charIndex === word.length) {
+                isTyping = false;
+                clearInterval(searchTypewriterInterval);
+                
+                // Запускаем комфортное моргание курсора 0.6с
+                searchTypewriterInterval = setInterval(() => {
+                    if (document.activeElement === searchInput || searchInput.value.length > 0) {
+                        searchInput.placeholder = word;
+                        return;
+                    }
+                    showCursor = !showCursor;
+                    searchInput.placeholder = word + (showCursor ? '|' : '');
+                }, 600);
+            }
         }
-
-        searchInput.placeholder = prefix + currentWord.substring(0, charIndex) + '|';
-
-        // Логика паузы и переключения слов
-        if (!isDeleting && charIndex === currentWord.length) {
-            isDeleting = true;
-            clearInterval(searchTypewriterInterval);
-            setTimeout(startSearchTypewriter, 1500); // Пауза в конце слова
-        } else if (isDeleting && charIndex === 0) {
-            isDeleting = false;
-            wordIndex = (wordIndex + 1) % words.length;
-        }
-    }, 100); // Скорость печати
+    }, 100);
 }
 
 // ==========================================
