@@ -1,5 +1,20 @@
-﻿const CACHE_NAME = 'nisha-cache-v113'; // Поменяли версию на 111
+﻿const CACHE_NAME = 'nisha-cache-v114';
+const IMAGE_CACHE = 'nisha-images-v1';
+const API_CACHE = 'nisha-api-v1';
 const STATIC_URLS = ['/', '/index.html', '/app.js', '/config.js', '/style.css', '/locales.json', '/404.html', '/badge.png'];
+
+// Функция лимитирования кэша
+function trimCache(cacheName, maxItems) {
+    caches.open(cacheName).then(cache => {
+        cache.keys().then(keys => {
+            if (keys.length > maxItems) {
+                cache.delete(keys[0]).then(() => {
+                    trimCache(cacheName, maxItems);
+                });
+            }
+        });
+    });
+}
 
 self.addEventListener('install', event => {
     self.skipWaiting();
@@ -13,7 +28,9 @@ self.addEventListener('activate', event => {
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
+                    if (cacheName !== CACHE_NAME && cacheName !== IMAGE_CACHE && cacheName !== API_CACHE) {
+                        return caches.delete(cacheName);
+                    }
                 })
             );
         })
@@ -21,14 +38,12 @@ self.addEventListener('activate', event => {
     self.clients.claim();
 });
 
-const IMAGE_CACHE = 'nisha-images-v1';
-
 self.addEventListener('fetch', event => {
     if (!event.request.url.startsWith('http') || event.request.method !== 'GET') return;
 
     const url = new URL(event.request.url);
 
-    // Игнорируем тяжелое видео и чужие API
+    // Исключения (видео, сторонние API)
     if (
         url.pathname.endsWith('.mp4') || 
         url.pathname.endsWith('.webm') || 
@@ -40,25 +55,42 @@ self.addEventListener('fetch', event => {
         return; 
     }
 
-    // НАСТОЯЩИЙ ОФЛАЙН: Кэшируем картинки товаров (Cloudflare CDN / Supabase)
+    // --- ПЕРЕХВАТ SUPABASE API ДЛЯ ОФЛАЙНА ---
+    if (url.hostname.includes('supabase.co') && url.pathname.includes('/rest/v1/items')) {
+        event.respondWith(
+            fetch(event.request).then(networkResponse => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(API_CACHE).then(cache => cache.put(event.request, responseToCache));
+                }
+                return networkResponse;
+            }).catch(() => {
+                // Если нет сети, отдаем из кэша (вчерашние товары)
+                return caches.match(event.request);
+            })
+        );
+        return;
+    }
+
+    // --- ИЗОБРАЖЕНИЯ (Cache-First + Лимит) ---
     const isImage = url.hostname.includes('workers.dev') || url.hostname.includes('supabase.co/storage');
     
     if (isImage) {
         event.respondWith(
             caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
-                if (cachedResponse) return cachedResponse; // Cache-First для картинок
+                if (cachedResponse) return cachedResponse;
                 
                 return fetch(event.request).then(networkResponse => {
-                    // Кэшируем даже если status === 0 (Opaque cross-origin response)
                     if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
                         const responseToCache = networkResponse.clone();
                         caches.open(IMAGE_CACHE).then(cache => {
-                            cache.put(event.request, responseToCache);
+                            cache.put(event.request, responseToCache).then(() => {
+                                trimCache(IMAGE_CACHE, 50); // Лимитируем до 50 штук
+                            });
                         });
                     }
                     return networkResponse;
                 }).catch(() => {
-                    // Если нет интернета и картинки нет в кэше - возвращаем пустой пиксель
                     return new Response('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>', {
                         headers: {'Content-Type': 'image/svg+xml'}
                     });
@@ -68,7 +100,7 @@ self.addEventListener('fetch', event => {
         return; 
     }
 
-    // Для остальных файлов (HTML, JS, CSS): Stale-While-Revalidate
+    // --- ОСТАЛЬНЫЕ ФАЙЛЫ (Stale-While-Revalidate) ---
     event.respondWith(
         caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
             const fetchPromise = fetch(event.request).then(networkResponse => {
@@ -89,7 +121,8 @@ self.addEventListener('fetch', event => {
         })
     );
 });
-// Ловим Push-уведомления от сервера
+
+// Перехват Push-уведомлений
 self.addEventListener('push', event => {
     if (event.data) {
         const data = event.data.json();
@@ -106,7 +139,7 @@ self.addEventListener('push', event => {
     }
 });
 
-// Открываем сайт при клике на уведомление
+// Клик по уведомлению
 self.addEventListener('notificationclick', event => {
     event.notification.close();
     event.waitUntil(
