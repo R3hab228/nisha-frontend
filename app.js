@@ -2568,15 +2568,11 @@ function renderCartItems() {
             </div>`;
         return;
     }
-
     list.innerHTML = `
         <div style="padding: 10px; margin-bottom: 10px; border-bottom: 1px dashed #333; display: flex; flex-direction: column; gap: 10px;">
-            <!-- Текст предупреждения -->
             <div style="color: #666; font-size: 10px; font-family: var(--font-main); text-align: center; margin-top: 5px;">
                 ${i18next.t('cart.warning', {defaultValue: 'Вещи не бронируются и могут быть куплены кем-то другим в любой момент.'})}
             </div>
-        </div>
-    `;
         </div>
     `;
 
