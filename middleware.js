@@ -17,7 +17,7 @@ export default async function middleware(req) {
     return;
   }
 
-  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + itemId + '&select=name,price,brand,photos,thumbnails';
+  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + itemId + '&select=name,price,brand,images,thumbnails';
   
   try {
     const dbRes = await fetch(supabaseUrl, {
@@ -37,8 +37,8 @@ export default async function middleware(req) {
       let imageUrl = 'https://i.ibb.co/3s6HhXz/icon.ico'; // дефолт
       let videoUrl = '';
       
-      if (item.photos && item.photos.length > 0) {
-        const photo = item.photos[0];
+      if (item.images && item.images.length > 0) {
+        const photo = item.images[0];
         
         if (photo.endsWith('.mp4')) {
             videoUrl = photo; // Задаем как видео
