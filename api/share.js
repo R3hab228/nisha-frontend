@@ -41,26 +41,26 @@
     }
 
     const videoTags = videoUrl ? 
-      <meta property="og:video" content=" + videoUrl + ">
-       <meta property="og:video:type" content="video/mp4"> : '';
+      '<meta property="og:video" content="' + videoUrl + '">' + 
+      '<meta property="og:video:type" content="video/mp4">' : '';
 
-    const html = <!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<title> + title + </title>
-<meta property="og:type" content="website">
-<meta property="og:title" content=" + title + ">
-<meta property="og:description" content=" + description + ">
-<meta property="og:image" content=" + imageUrl + ">
-<meta property="og:url" content="https://www.nisha-store.shop/share/ + id + ">
- + videoTags + 
-<meta name="twitter:card" content="summary_large_image">
-</head>
-<body>
-<script>window.location.replace('/?item= + id + ');</script>
-</body>
-</html>;
+    const html = '<!DOCTYPE html>\n' +
+'<html lang="ru">\n' +
+'<head>\n' +
+'<meta charset="UTF-8">\n' +
+'<title>' + title + '</title>\n' +
+'<meta property="og:type" content="website">\n' +
+'<meta property="og:title" content="' + title + '">\n' +
+'<meta property="og:description" content="' + description + '">\n' +
+'<meta property="og:image" content="' + imageUrl + '">\n' +
+'<meta property="og:url" content="https://www.nisha-store.shop/share/' + id + '">\n' +
+videoTags + '\n' +
+'<meta name="twitter:card" content="summary_large_image">\n' +
+'</head>\n' +
+'<body>\n' +
+'<script>window.location.replace("/?item=' + id + '");</script>\n' +
+'</body>\n' +
+'</html>';
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
