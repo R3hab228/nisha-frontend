@@ -5632,6 +5632,19 @@ document.addEventListener('keydown', function(e) {
             }
         }
     }
+
+    if (window.innerWidth > 900) {
+        const pModal = document.getElementById('productModal');
+        if (pModal && pModal.style.display === 'flex') {
+            if (e.key === 'Escape') {
+                closeModal('productModal');
+            } else if (e.key === 'ArrowLeft') {
+                if (typeof moveSlide === 'function') moveSlide(-1);
+            } else if (e.key === 'ArrowRight') {
+                if (typeof moveSlide === 'function') moveSlide(1);
+            }
+        }
+    }
 });
 
 // ==========================================
@@ -5779,6 +5792,8 @@ window.updateCardDOM = function(item) {
         }
     });
 };
+
+
 
 
 
