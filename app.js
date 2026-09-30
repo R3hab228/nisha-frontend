@@ -884,6 +884,7 @@ function closeModal(id) {
 
 // Вся старая логика анимаций перенесена сюда
 function executeCloseModal(id) {
+    if (id === 'checkoutModal' && window.otpPollInterval) clearInterval(window.otpPollInterval);
     const modal = document.getElementById(id);
     if (!modal) return;
     
