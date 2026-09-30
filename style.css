@@ -972,3 +972,13 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
     cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyOCcgaGVpZ2h0PScyOCcgdmlld0JveD0nMCAwIDI4IDI4Jz48cGF0aCBkPSdNOSAxMS41VjNhMiAyIDAgMCAxIDQgMHY1aDFhMiAyIDAgMCAxIDIgMS41aDFhMiAyIDAgMCAxIDIgMS41aDFhMiAyIDAgMCAxIDEgM3Y0YTcgNyAwIDAgMS03IDdIOWE3IDcgMCAwIDEtNS0zLjVMMi41IDE5YTIgMiAwIDAgMSAyLTNsNC41IDEuNVYxMS41eicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg=="), pointer !important;
 }
 
+
+
+
+/* RED ARROW FOR SCROLLBARS */
+::-webkit-scrollbar,
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+    cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCAyIEw0IDIyIEwxMCAxNiBMMTUgMjQgTDE4IDIyIEwxMyAxNSBMMjAgMTUgWicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==") 0 0, auto !important;
+}
