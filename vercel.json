@@ -1,4 +1,4 @@
-{
+﻿{
   "rewrites": [
     {
       "source": "/sitemap.xml",
@@ -6,7 +6,7 @@
     },
     {
       "source": "/share/:id",
-      "destination": "https://nisha-api.onrender.com/share/:id"
+      "destination": "/api/share"
     }
   ],
   "headers": [
@@ -40,7 +40,7 @@
         },
         {
           "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
+          "value": "strict-origin-origin-when-cross-origin"
         }
       ]
     }
