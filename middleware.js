@@ -6,21 +6,18 @@ export default async function middleware(req) {
   const url = new URL(req.url);
   const itemId = url.searchParams.get('item');
   
-  // 1. Если это не ссылка на товар - ничего не делаем, грузим обычный сайт
   if (!itemId) {
     return;
   }
 
-  // 2. Проверяем, кто запросил ссылку (Бот Телеграма/Инсты или живой человек)
   const userAgent = req.headers.get('user-agent') || '';
   const isBot = /bot|telegram|facebook|twitter|whatsapp|viber|skype|vkShare/i.test(userAgent);
 
   if (!isBot) {
-    return; // Живому человеку отдаем обычный сайт (он сам подгрузит данные)
+    return;
   }
 
-  // 3. Бот запросил товар! Идем в Supabase, чтобы достать фотку и цену
-  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + itemId + '&select=name,price,brand,photos';
+  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + itemId + '&select=name,price,brand,photos,thumbnails';
   
   try {
     const dbRes = await fetch(supabaseUrl, {
@@ -34,21 +31,31 @@ export default async function middleware(req) {
     const item = data[0];
 
     if (item) {
-      // Формируем красивые данные для Telegram
       const title = 'NISHA | ' + (item.brand || '') + ' ' + (item.name || '');
       const description = 'Цена: ' + item.price + ' грн.';
       
       let imageUrl = 'https://i.ibb.co/3s6HhXz/icon.ico'; // дефолт
+      let videoUrl = '';
+      
       if (item.photos && item.photos.length > 0) {
         const photo = item.photos[0];
-        if (photo.startsWith('http')) {
-            imageUrl = photo;
+        
+        if (photo.endsWith('.mp4')) {
+            videoUrl = photo; // Задаем как видео
+            // Если есть превью для видео - берем его, иначе оставляем дефолт лого
+            if (item.thumbnails && item.thumbnails.length > 0 && item.thumbnails[0]) {
+                imageUrl = item.thumbnails[0];
+            }
         } else {
-            imageUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/item-photos/' + photo;
+            imageUrl = photo;
         }
       }
 
-      // 4. Отдаем боту HTML-заглушку ТОЛЬКО с мета-тегами
+      // Добавляем теги для видео, если это mp4
+      const videoTags = videoUrl ? 
+        <meta property="og:video" content=" + videoUrl + ">
+         <meta property="og:video:type" content="video/mp4"> : '';
+
       const html = <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -58,9 +65,12 @@ export default async function middleware(req) {
   <meta property="og:title" content=" + title + ">
   <meta property="og:description" content=" + description + ">
   <meta property="og:image" content=" + imageUrl + ">
+   + videoTags + 
   <meta name="twitter:card" content="summary_large_image">
 </head>
-<body></body>
+<body>
+  <script>window.location.replace('/?item= + itemId + ');</script>
+</body>
 </html>;
 
       return new Response(html, {
