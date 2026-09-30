@@ -1462,7 +1462,7 @@ window.prefetchItemImages = function(id) {
     }
 };
 
-let itemsPageSize = 12; 
+let itemsPageSize = window.innerWidth <= 900 ? 12 : 15; 
 function applyFilters() {
     const grid = document.getElementById('itemsGrid');
     if (grid) grid.classList.add('fade-out');
@@ -1661,7 +1661,7 @@ function renderNextBatch() {
 
     let startIndex = 0;
     let endIndex = 0;
-    const BATCH_SIZE = 12; // Грузим строго по 12 товаров за раз!
+    const BATCH_SIZE = window.innerWidth <= 900 ? 12 : 15; itemsPageSize = BATCH_SIZE; // Грузим строго по 12 товаров за раз!
 
     if (isMobile) {
         if (renderedCount === 0) grid.innerHTML = ''; 
@@ -5792,6 +5792,7 @@ window.updateCardDOM = function(item) {
         }
     });
 };
+
 
 
 
