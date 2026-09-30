@@ -4975,18 +4975,23 @@ async function submitProposal() {
         });
 
         // Отправляем на сервер в фоне
-        fetch('https://nisha-api.onrender.com/api/propose-files', {
+                // Ждем ответа от сервера!
+        btn.innerText = '[ ЗАГРУЗКА... ]';
+        const response = await fetch('https://nisha-api.onrender.com/api/propose-files', {
             method: 'POST',
-            body: formData // Никакого JSON, просто файлы!
-        }).catch(e => console.log("Фоновая отправка: ", e));
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Сервер недоступен (Render просыпается). Попробуйте еще раз через 10 секунд.');
+        }
 
-        // ФИНАЛ: ЗАКРЫТИЕ (Мгновенно)
         resetProposalForm(); 
         executeCloseModal('proposeModal'); 
         
         setTimeout(() => {
-            showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка отправлена на сервер.', '[ ПРИНЯТО ]', null);
-            btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
+            showTerminalModal('SYSTEM_OK.LOG', 'Заявка успешно отправлена.', '[ ЗАКРЫТЬ ]', null);
+            btn.innerText = '[ ПРЕДЛОЖИТЬ ]';
             btn.style.pointerEvents = 'auto';
             btn.style.opacity = '1';
         }, 300);
@@ -5833,7 +5838,6 @@ window.updateCardDOM = function(item) {
         }
     });
 };
-
 
 
 
