@@ -962,3 +962,14 @@ body, html, .modal-overlay {
 a, button, select, .clickable, [onclick], .slider-btn, .thumb, .custom-summary, .buy-tg-btn, .share-btn, .badge-item, .order-item-row, .accept-btn, .cart-close-mobile, .cart-item-remove, .grid-cart-btn, #currentLangLabelFooter, .clear-search-btn, .reviews-nav button, .fab-propose, .upload-dropzone, .order-tab, .eye-icon, .search-history-item, .search-history-clear, .history-item-remove, .grid-slider-btn {
     cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCAyIEw0IDIyIEwxMCAxNiBMMTUgMjQgTDE4IDIyIEwxMyAxNSBMMjAgMTUgWicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg=="), pointer !important;
 }
+
+/* RED HAND POINTER */
+a, button, select, label, .clickable, [onclick], 
+.slider-btn, .thumb, .custom-summary, .buy-tg-btn, .share-btn, .badge-item, 
+.order-item-row, .accept-btn, .cart-close-mobile, .cart-item-remove, 
+.grid-cart-btn, #currentLangLabelFooter, .clear-search-btn, .reviews-nav button, 
+.fab-propose, .upload-dropzone, .order-tab, .eye-icon, .search-history-item, 
+.search-history-clear, .history-item-remove, .grid-slider-btn,
+.preview-img, .preview-img:active, .sortable-drag, .cart-click-area {
+    cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyOCcgaGVpZ2h0PScyOCcgdmlld0JveD0nMCAwIDI4IDI4Jz48cGF0aCBkPSdNOSAxMS41VjNhMiAyIDAgMCAxIDQgMHY1aDFhMiAyIDAgMCAxIDIgMS41aDFhMiAyIDAgMCAxIDIgMS41aDFhMiAyIDAgMCAxIDEgM3Y0YTcgNyAwIDAgMS03IDdIOWE3IDcgMCAwIDEtNS0zLjVMMi41IDE5YTIgMiAwIDAgMSAyLTNsNC41IDEuNVYxMS41eicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==") 11 3, pointer !important;
+}
