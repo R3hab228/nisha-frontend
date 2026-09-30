@@ -5800,14 +5800,3 @@ window.updateCardDOM = function(item) {
 
 
 
-// HACKER SYMBOL ANIMATION
-document.addEventListener("DOMContentLoaded", () => {
-    const hackerSym = document.getElementById("hacker-symbol");
-    if (hackerSym) {
-        const symbols = ['\u{13080}', '\u{130ED}', '\u{13153}', '\u{131A3}', '\u2671', '\u2623', '\u2620'];
-        setInterval(() => {
-            const r = Math.floor(Math.random() * symbols.length);
-            hackerSym.innerText = symbols[r];
-        }, 400);
-    }
-});

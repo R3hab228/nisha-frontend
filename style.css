@@ -983,8 +983,5 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
     cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCAyIEw0IDIyIEwxMCAxNiBMMTUgMjQgTDE4IDIyIEwxMyAxNSBMMjAgMTUgWicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==") 0 0, auto !important;
 }
 
-@keyframes glitch {
-    0% { opacity: 1; text-shadow: 0 0 5px var(--accent-green); }
-    50% { opacity: 0.6; text-shadow: 2px 0 5px var(--accent-green), -2px 0 5px var(--accent-green); }
-    100% { opacity: 1; text-shadow: 0 0 5px var(--accent-green); }
-}
+
+
