@@ -6,7 +6,7 @@
     },
     {
       "source": "/share/:id",
-      "destination": "https://nisha-api.onrender.com/share/:id"
+      "destination": "/api/share"
     }
   ]
 }
