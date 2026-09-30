@@ -5165,7 +5165,7 @@ async function autoDetectCity() {
             let detectedCity = enToUaCities[data.city] || data.city;
             if (detectedCity === data.city && data.latitude && data.longitude) {
                 try {
-                    const nomRes = await fetch(https://nominatim.openstreetmap.org/reverse?lat= + data.latitude + &lon= + data.longitude + &format=json&accept-language=uk);
+                    const nomRes = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + data.latitude + '&lon=' + data.longitude + '&format=json&accept-language=uk');
                     const nomData = await nomRes.json();
                     if (nomData && nomData.address) {
                         detectedCity = nomData.address.city || nomData.address.town || nomData.address.village || detectedCity;
