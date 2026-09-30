@@ -1514,7 +1514,7 @@ function applyFilters() {
             });
 
             // 2. ПОТОМ УМНЫЙ ПОИСК (FUSE.JS) - Ищем ТОЛЬКО если мы НЕ в режиме Избранного!
-            if (searchTerm !== '' && typeof Fuse !== 'undefined' && !showingOnlyFavs) {
+            if (searchTerm !== '' && typeof Fuse !== 'undefined' && !showingOnlyFavs && currentCategory === '') {
                 const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
                 const fuseOptions = {
                     includeScore: true, threshold: 0.4, ignoreLocation: true, useExtendedSearch: true, 
@@ -2117,6 +2117,14 @@ function clearSearchInput() {
 // Добавляем слушатель, чтобы крестик появлялся при вводе
 const mainSearchInput = document.getElementById('mainSearch');
 if (mainSearchInput) {
+    mainSearchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveRecentSearch(this.value.trim());
+            applyFilters();
+            closeSearch();
+        }
+    });
     mainSearchInput.addEventListener('input', function() {
         document.getElementById('clearSearchBtn').style.display = this.value.length > 0 ? 'block' : 'none';
     });
