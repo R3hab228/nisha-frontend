@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --bg-main: #000000;
     --bg-panel: #111111;
     --bg-card: #0a0a0a;
@@ -43,7 +43,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 .pulsing-dot { width: 6px; height: 6px; background: var(--accent-red); border-radius: 50%; animation: pulse-red 1.5s infinite; }
 @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); } 70% { box-shadow: 0 0 0 5px rgba(255,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,0,0,0); } }
 
-/* --- ЖЕСТКИЙ ФИКС СТРЕЛОЧЕК НА КНОПКАХ --- */
+/* --- Р–Р•РЎРўРљРР™ Р¤РРљРЎ РЎРўР Р•Р›РћР§Р•Рљ РќРђ РљРќРћРџРљРђРҐ --- */
 .btn-target { 
     position: relative; 
     transition: 0.1s; 
@@ -58,7 +58,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     .btn-target:hover::after { opacity: 1; transform: translateX(0); }
 }
 
-/* ЖИВОЙ ПОИСК */
+/* Р–РР’РћР™ РџРћРРЎРљ */
 .search-wrapper { position: relative; flex-grow: 1; }
 .live-search-dropdown { 
     position: absolute; 
@@ -103,7 +103,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 #favNav { color: var(--accent-yellow); }
 #favNav span { color: var(--accent-red); }
 
-/* --- НОВОЕ: Прячем кнопку профиля на ПК --- */
+/* --- РќРћР’РћР•: РџСЂСЏС‡РµРј РєРЅРѕРїРєСѓ РїСЂРѕС„РёР»СЏ РЅР° РџРљ --- */
 .mobile-profile-link { display: none !important; }
 
 .marquee-container { background-color: #000; color: var(--accent-yellow); padding: 5px 30px; font-family: var(--font-mono); border-bottom: 1px solid #444; font-size: 14px; }
@@ -158,7 +158,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     gap: 20px; align-content: start;
     opacity: 1;
     transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-    flex-grow: 1; /* ВАЖНО: Растягивает сетку вниз, прижимая пагинацию */
+    flex-grow: 1; /* Р’РђР–РќРћ: Р Р°СЃС‚СЏРіРёРІР°РµС‚ СЃРµС‚РєСѓ РІРЅРёР·, РїСЂРёР¶РёРјР°СЏ РїР°РіРёРЅР°С†РёСЋ */
 }
 .items-grid.fade-out {
     opacity: 0;
@@ -208,7 +208,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 .item-size { background-color: #222; color: #aaa; font-size: 12px; padding: 4px 8px; border: 1px solid #444; align-self: flex-start; margin-bottom: auto; text-transform: uppercase;}
 .item-footer { margin-top: 15px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; border-top: 1px dashed #222; padding-top: 10px; text-transform: uppercase; font-weight: bold;}
 
-/* --- ПРАВИЛЬНОЕ ЗАТЕМНЕНИЕ ПРОДАННЫХ ТОВАРОВ --- */
+/* --- РџР РђР’РР›Р¬РќРћР• Р—РђРўР•РњРќР•РќРР• РџР РћР”РђРќРќР«РҐ РўРћР’РђР РћР’ --- */
 .sold-out .card-slider-wrapper,
 .sold-out .mock-image { 
     filter: grayscale(80%) brightness(0.5); 
@@ -229,7 +229,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     box-shadow: 0 0 15px var(--accent-red); pointer-events: none;
 }
 
-/* --- ПРАВИЛЬНОЕ ЗАТЕМНЕНИЕ ЗАБРОНИРОВАННЫХ ТОВАРОВ --- */
+/* --- РџР РђР’РР›Р¬РќРћР• Р—РђРўР•РњРќР•РќРР• Р—РђР‘Р РћРќРР РћР’РђРќРќР«РҐ РўРћР’РђР РћР’ --- */
 .reserved-item .card-slider-wrapper,
 .reserved-item .mock-image { 
     filter: brightness(0.6); 
@@ -369,14 +369,14 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
     background: transparent; 
     border: none; 
     font-weight: bold; 
-    margin-left: 15px; /* Отодвигаем от даты */
+    margin-left: 15px; /* РћС‚РѕРґРІРёРіР°РµРј РѕС‚ РґР°С‚С‹ */
     font-size: 14px; 
     letter-spacing: 0.5px;
 }
-.status-Принят { color: var(--accent-yellow); text-shadow: 0 0 8px rgba(255, 204, 0, 0.4); }
-.status-Оплачен, .status-Завершен { color: var(--accent-green); text-shadow: 0 0 8px rgba(0, 255, 0, 0.4); }
-.status-Отправлен { color: #00aaff; text-shadow: 0 0 8px rgba(0, 170, 255, 0.4); }
-.status-Отменен { color: var(--accent-red); text-decoration: line-through; }
+.status-РџСЂРёРЅСЏС‚ { color: var(--accent-yellow); text-shadow: 0 0 8px rgba(255, 204, 0, 0.4); }
+.status-РћРїР»Р°С‡РµРЅ, .status-Р—Р°РІРµСЂС€РµРЅ { color: var(--accent-green); text-shadow: 0 0 8px rgba(0, 255, 0, 0.4); }
+.status-РћС‚РїСЂР°РІР»РµРЅ { color: #00aaff; text-shadow: 0 0 8px rgba(0, 170, 255, 0.4); }
+.status-РћС‚РјРµРЅРµРЅ { color: var(--accent-red); text-decoration: line-through; }
 
 .order-items-list { display: flex; flex-direction: column; gap: 10px; }
 .order-item-row { display: flex; gap: 15px; align-items: center; background: #111; padding: 10px; border: 1px solid #222; cursor: pointer; transition: 0.2s;}
@@ -494,39 +494,39 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .promo-wrapper { display: flex; gap: 10px; margin-top: 5px; }
 .promo-msg { font-size: 11px; font-family: var(--font-mono); margin-top: 5px; }
 
-/* КАРУСЕЛЬ ОТЗЫВОВ (Колонки по 2 шт) */
+/* РљРђР РЈРЎР•Р›Р¬ РћРўР—Р«Р’РћР’ (РљРѕР»РѕРЅРєРё РїРѕ 2 С€С‚) */
 .reviews-slider { 
-    display: flex; gap: 15px; overflow-x: auto; overflow-y: hidden; 
-    padding-bottom: 10px; scroll-snap-type: x mandatory; 
-    -webkit-overflow-scrolling: touch; scrollbar-width: none; 
+    display: grid; grid-template-rows: auto auto; grid-auto-flow: column; grid-auto-columns: 90%; gap: 15px; overflow-x: auto; overflow-y: hidden;
+    padding-bottom: 10px; scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
 .reviews-slider::-webkit-scrollbar { display: none; }
-
-/* Каждая колонка вмещает 2 отзыва */
-.review-column {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    min-width: 90%; 
-    max-width: 90%;
-    scroll-snap-align: center; 
-    scroll-snap-stop: always;
-}
-
 @media (min-width: 901px) {
-    .review-column { min-width: 48%; max-width: 48%; } /* На ПК ровно 2 колонки на экране */
+    .reviews-slider { grid-auto-columns: calc(50% - 7.5px); }
 }
 
-/* Сама карточка отзыва */
 .review-card-ui { 
-    background: #0a0a0a; border: 1px solid #333; padding: 15px; 
-    border-left: 3px solid var(--accent-green); display: flex; flex-direction: column; 
-    transition: 0.2s; 
-    height: max-content; /* ФИКС: Карточка принимает высоту только своего контента */
+    background: #0a0a0a; border: 1px solid #333; padding: 15px;
+    border-left: 3px solid var(--accent-green); display: flex; flex-direction: column;
+    transition: 0.2s; height: max-content; width: 100%; box-sizing: border-box;
+    scroll-snap-align: start; scroll-snap-stop: always;
 }
-@media (min-width: 901px) {
-    .review-card-ui { min-width: 48%; max-width: 48%; } /* На ПК ровно 2 отзыва */
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .review-card-ui:hover { border-color: var(--accent-green); background: #111; }
 .review-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
@@ -534,7 +534,7 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .review-text-body { color: #ccc; font-size: 14px; line-height: 1.6; font-style: italic; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
 .review-date { color: #555; font-size: 11px; font-family: var(--font-mono); text-align: left; margin-top: 4px;}
 
-/* Стрелочки перелистывания (только для ПК) */
+/* РЎС‚СЂРµР»РѕС‡РєРё РїРµСЂРµР»РёСЃС‚С‹РІР°РЅРёСЏ (С‚РѕР»СЊРєРѕ РґР»СЏ РџРљ) */
 .reviews-nav { display: none; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); gap: 20px; }
 .reviews-nav button { background: transparent; color: var(--accent-green); border: 1px solid #333; width: 40px; height: 30px; cursor: pointer; transition: 0.2s; font-size: 16px; display: flex; align-items: center; justify-content: center;}
 .reviews-nav button:hover { border-color: var(--accent-green); background: #111;}
@@ -555,7 +555,7 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
     width: 65px; height: 65px; background-size: cover; background-position: center; 
     border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); 
     position: relative; cursor: grab; 
-    /* УДАЛИЛИ transition, чтобы не лагало! */
+    /* РЈР”РђР›РР›Р transition, С‡С‚РѕР±С‹ РЅРµ Р»Р°РіР°Р»Рѕ! */
     touch-action: none; 
     user-select: none; 
     -webkit-user-select: none; 
@@ -563,10 +563,10 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 }
 .preview-img:active { cursor: grabbing; }
 
-/* Анимации для перетаскивания (Drag and Drop) */
+/* РђРЅРёРјР°С†РёРё РґР»СЏ РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ (Drag and Drop) */
 .sortable-ghost { opacity: 0.3; background: #111; border: 2px dashed var(--accent-green) !important; }
 .sortable-drag { cursor: grabbing !important; box-shadow: 0 15px 25px rgba(0,255,0,0.4) !important; transform: scale(1.15); z-index: 99999 !important; opacity: 0.9; }
-/* ФИКС КООРДИНАТ ДЛЯ ТЕЛЕФОНОВ: */
+/* Р¤РРљРЎ РљРћРћР Р”РРќРђРў Р”Р›РЇ РўР•Р›Р•Р¤РћРќРћР’: */
 .sortable-fallback { opacity: 1 !important; pointer-events: none !important; z-index: 99999 !important; }
 
 .driver-popover { background-color: #0a0a0a !important; color: #fff !important; border: 2px dashed var(--accent-green) !important; font-family: var(--font-mono) !important; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2) !important; border-radius: 0 !important; z-index: 100000 !important; }
@@ -628,17 +628,17 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 .grid-slider-btn.prev { left: 5px; border-radius: 0 4px 4px 0; }
 .grid-slider-btn.next { right: 5px; border-radius: 4px 0 0 4px; }
 
-/* --- ПАГИНАЦИЯ (СТРЕЛОЧКИ И СТРАНИЦЫ) --- */
+/* --- РџРђР“РРќРђР¦РРЇ (РЎРўР Р•Р›РћР§РљР Р РЎРўР РђРќРР¦Р«) --- */
 .pagination-wrapper {
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 20px;
-    margin: 40px auto 20px auto; /* Идеальное центрирование и отступы */
+    margin: 40px auto 20px auto; /* РРґРµР°Р»СЊРЅРѕРµ С†РµРЅС‚СЂРёСЂРѕРІР°РЅРёРµ Рё РѕС‚СЃС‚СѓРїС‹ */
     padding: 10px;
-    background: transparent; /* Убрали грубый фон */
-    border: none; /* Убрали рамку */
+    background: transparent; /* РЈР±СЂР°Р»Рё РіСЂСѓР±С‹Р№ С„РѕРЅ */
+    border: none; /* РЈР±СЂР°Р»Рё СЂР°РјРєСѓ */
 }
 .page-arrow {
     background: transparent;
@@ -686,7 +686,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     grid-column: 1 / -1; 
 }
 /* ========================================= */
-/* --- 8-BIT IMAGE LOADING (СИСТЕМА ЗАГРУЗКИ) --- */
+/* --- 8-BIT IMAGE LOADING (РЎРРЎРўР•РњРђ Р—РђР“Р РЈР—РљР) --- */
 /* ========================================= */
 
 .img-8bit-loading {
@@ -695,7 +695,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     overflow: hidden;
 }
 
-/* Создаем пиксельную сетку на фоне */
+/* РЎРѕР·РґР°РµРј РїРёРєСЃРµР»СЊРЅСѓСЋ СЃРµС‚РєСѓ РЅР° С„РѕРЅРµ */
 .img-8bit-loading::before {
     content: '';
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -707,7 +707,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     opacity: 0.5;
 }
 
-/* Мигающий текст загрузки по центру */
+/* РњРёРіР°СЋС‰РёР№ С‚РµРєСЃС‚ Р·Р°РіСЂСѓР·РєРё РїРѕ С†РµРЅС‚СЂСѓ */
 .img-8bit-loading::after {
     content: '[ LOADING ]';
     position: absolute;
@@ -718,13 +718,13 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     font-size: 10px;
     font-weight: bold;
     letter-spacing: 2px;
-    white-space: nowrap; /* <-- ВОТ ЭТО ЗАПРЕЩАЕТ СКОБКАМ ПАДАТЬ ВНИЗ */
+    white-space: nowrap; /* <-- Р’РћРў Р­РўРћ Р—РђРџР Р•Р©РђР•Рў РЎРљРћР‘РљРђРњ РџРђР”РђРўР¬ Р’РќРР— */
     animation: blink-caret 0.5s step-end infinite;
     text-shadow: 0 0 5px rgba(0,255,0,0.5);
     z-index: 2;
 }
 
-/* Прячем загрузчики от PhotoSwipe, чтобы не двоилось */
+/* РџСЂСЏС‡РµРј Р·Р°РіСЂСѓР·С‡РёРєРё РѕС‚ PhotoSwipe, С‡С‚РѕР±С‹ РЅРµ РґРІРѕРёР»РѕСЃСЊ */
 .hidden-loader-img {
     display: none !important;
     pointer-events: none !important;
@@ -732,12 +732,12 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     width: 0 !important;
     height: 0 !important;
 }
-/* --- Q&A АККОРДЕОН --- */
+/* --- Q&A РђРљРљРћР Р”Р•РћРќ --- */
 .qa-wrapper {
     margin-top: 20px;
     border-top: 1px dashed #333;
     padding-top: 10px;
-    display: none; /* Скрыто, пока нет вопросов */
+    display: none; /* РЎРєСЂС‹С‚Рѕ, РїРѕРєР° РЅРµС‚ РІРѕРїСЂРѕСЃРѕРІ */
 }
 .qa-title {
     color: #555;
@@ -767,7 +767,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 .qa-content::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 
 /* ========================================= */
-/* --- ВСЕ МОБИЛЬНЫЕ СТИЛИ В ОДНОМ МЕСТЕ --- */
+/* --- Р’РЎР• РњРћР‘РР›Р¬РќР«Р• РЎРўРР›Р Р’ РћР”РќРћРњ РњР•РЎРўР• --- */
 /* ========================================= */
 @media (max-width: 900px) {
     html { -webkit-text-size-adjust: 100%; } 
@@ -789,8 +789,8 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     flex-wrap: wrap;
     justify-content: center;
     width: 100%;
-    row-gap: 14px;     /* Отступ между верхней и нижней строкой */
-    column-gap: 22px;  /* Отступ между кнопками в ряду (можно уменьшить до 16-20px) */
+    row-gap: 14px;     /* РћС‚СЃС‚СѓРї РјРµР¶РґСѓ РІРµСЂС…РЅРµР№ Рё РЅРёР¶РЅРµР№ СЃС‚СЂРѕРєРѕР№ */
+    column-gap: 22px;  /* РћС‚СЃС‚СѓРї РјРµР¶РґСѓ РєРЅРѕРїРєР°РјРё РІ СЂСЏРґСѓ (РјРѕР¶РЅРѕ СѓРјРµРЅСЊС€РёС‚СЊ РґРѕ 16-20px) */
 }
 
 .top-nav a {
@@ -802,7 +802,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     text-align: center;
 }
 
-/* Принудительный перенос строки после 3-й кнопки */
+/* РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅС‹Р№ РїРµСЂРµРЅРѕСЃ СЃС‚СЂРѕРєРё РїРѕСЃР»Рµ 3-Р№ РєРЅРѕРїРєРё */
 .top-nav a:nth-child(3)::after {
     content: "";
     display: block;
@@ -815,29 +815,29 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     #authBox { display: none !important; }
     .mobile-profile-link { display: block !important; }
     
-    /* --- ПРОСТЫЕ ФИЛЬТРЫ (АККОРДЕОН) --- */
+    /* --- РџР РћРЎРўР«Р• Р¤РР›Р¬РўР Р« (РђРљРљРћР Р”Р•РћРќ) --- */
     .sidebar { 
         display: flex !important; width: 100%; max-height: 0; opacity: 0; overflow: hidden; 
         padding: 0; margin: 0; transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out; 
         visibility: hidden; background: #0a0a0a; 
     }
     .sidebar.active-mobile { 
-        max-height: 1500px; /* Раскрываем */
+        max-height: 1500px; /* Р Р°СЃРєСЂС‹РІР°РµРј */
         opacity: 1; visibility: visible; 
         padding-top: 15px; padding-bottom: 15px; 
     }
     
-    /* --- КНОПКА --- */
+    /* --- РљРќРћРџРљРђ --- */
     #mobileFilterBtn { 
         display: block; width: 100%; background: #050505; color: var(--accent-green); 
         border: 2px dashed #444; padding: 15px; font-family: var(--font-mono); font-weight: bold; 
         margin-bottom: 15px; cursor: pointer; text-align: center; font-size: 14px; 
-        position: relative; /* Обычная кнопка, никаких прыжков */
+        position: relative; /* РћР±С‹С‡РЅР°СЏ РєРЅРѕРїРєР°, РЅРёРєР°РєРёС… РїСЂС‹Р¶РєРѕРІ */
     }
     
-    /* Фильтры тоже должны выпадать ровно из-под кнопки */
+    /* Р¤РёР»СЊС‚СЂС‹ С‚РѕР¶Рµ РґРѕР»Р¶РЅС‹ РІС‹РїР°РґР°С‚СЊ СЂРѕРІРЅРѕ РёР·-РїРѕРґ РєРЅРѕРїРєРё */
     .sidebar {
-        top: 120px; /* 65px шапка + 55px кнопка */
+        top: 120px; /* 65px С€Р°РїРєР° + 55px РєРЅРѕРїРєР° */
     }
 
    .main-container { flex-direction: column; padding: 15px; gap: 15px; overflow-x: hidden; }
@@ -880,7 +880,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .lang-switcher-wrapper { bottom: 140px !important; right: 15px !important; z-index: 9999; }
     .lang-switcher-btn { width: 40px; height: 40px; font-size: 18px; }
 
-    /* --- Красивый подвал заказа на мобилке --- */
+    /* --- РљСЂР°СЃРёРІС‹Р№ РїРѕРґРІР°Р» Р·Р°РєР°Р·Р° РЅР° РјРѕР±РёР»РєРµ --- */
     .order-footer {
         flex-direction: column; 
         align-items: stretch; 
@@ -898,19 +898,19 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     }
 
     /* =================================================== */
-    /* СНИМАЕМ НАГРУЗКУ С ПРОЦЕССОРА (УБИРАЕМ 3D СЛОИ)     */
+    /* РЎРќРРњРђР•Рњ РќРђР“Р РЈР—РљРЈ РЎ РџР РћР¦Р•РЎРЎРћР Рђ (РЈР‘РР РђР•Рњ 3D РЎР›РћР)     */
     /* =================================================== */
     * { 
         transform-style: flat !important; 
     }
     
-    /* ПРИНУДИТЕЛЬНО ВКЛЮЧАЕМ РОДНУЮ ИНЕРЦИЮ (ОСОБЕННО ДЛЯ АЙФОНОВ) */
+    /* РџР РРќРЈР”РРўР•Р›Р¬РќРћ Р’РљР›Р®Р§РђР•Рњ Р РћР”РќРЈР® РРќР•Р Р¦РР® (РћРЎРћР‘Р•РќРќРћ Р”Р›РЇ РђР™Р¤РћРќРћР’) */
     .item-card, .item-info, .mock-image, 
     .history-img, .history-info, .system-status-bar, .fav-star {
         transform: none !important; 
     }
 
-    /* ПРИНУДИТЕЛЬНО ВКЛЮЧАЕМ РОДНУЮ ИНЕРЦИЮ (ОСОБЕННО ДЛЯ АЙФОНОВ) */
+    /* РџР РРќРЈР”РРўР•Р›Р¬РќРћ Р’РљР›Р®Р§РђР•Рњ Р РћР”РќРЈР® РРќР•Р Р¦РР® (РћРЎРћР‘Р•РќРќРћ Р”Р›РЇ РђР™Р¤РћРќРћР’) */
     html, body {
         -webkit-overflow-scrolling: touch !important;
         overscroll-behavior-y: auto !important;
@@ -918,7 +918,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     }
 }
 /* ========================================== */
-/* АНИМАЦИЯ ДВОЙНОГО ТАПА (DOUBLE TAP TO LIKE) */
+/* РђРќРРњРђР¦РРЇ Р”Р’РћР™РќРћР“Рћ РўРђРџРђ (DOUBLE TAP TO LIKE) */
 /* ========================================== */
 .double-tap-star-anim {
     position: absolute;
@@ -929,7 +929,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     font-size: 90px;
     z-index: 100;
     opacity: 0;
-    pointer-events: none; /* Чтобы клики проходили сквозь неё */
+    pointer-events: none; /* Р§С‚РѕР±С‹ РєР»РёРєРё РїСЂРѕС…РѕРґРёР»Рё СЃРєРІРѕР·СЊ РЅРµС‘ */
     text-shadow: 0 0 30px rgba(255, 0, 0, 0.9);
     animation: popStar 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
@@ -940,15 +940,15 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     40% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
-/* --- АДАПТИВНЫЕ ПЛАШКИ SOLD/RESERVED ДЛЯ ТЕЛЕФОНА --- */
+/* --- РђР”РђРџРўРР’РќР«Р• РџР›РђРЁРљР SOLD/RESERVED Р”Р›РЇ РўР•Р›Р•Р¤РћРќРђ --- */
     .sold-badge, .reserved-badge {
-        font-size: 16px !important; /* Уменьшаем шрифт, чтобы влез */
+        font-size: 16px !important; /* РЈРјРµРЅСЊС€Р°РµРј С€СЂРёС„С‚, С‡С‚РѕР±С‹ РІР»РµР· */
         letter-spacing: 2px !important;
         padding: 5px !important;
-        width: 90%; /* Плашка не будет шире самой карточки */
+        width: 90%; /* РџР»Р°С€РєР° РЅРµ Р±СѓРґРµС‚ С€РёСЂРµ СЃР°РјРѕР№ РєР°СЂС‚РѕС‡РєРё */
         text-align: center;
         box-sizing: border-box;
-        /* Возвращаем центрирование и наклон, но без тяжелого 3D (translateZ) */
+        /* Р’РѕР·РІСЂР°С‰Р°РµРј С†РµРЅС‚СЂРёСЂРѕРІР°РЅРёРµ Рё РЅР°РєР»РѕРЅ, РЅРѕ Р±РµР· С‚СЏР¶РµР»РѕРіРѕ 3D (translateZ) */
         transform: translate(-50%, -50%) rotate(-15deg) !important; 
-        white-space: nowrap; /* Запрещаем перенос на вторую строку */
+        white-space: nowrap; /* Р—Р°РїСЂРµС‰Р°РµРј РїРµСЂРµРЅРѕСЃ РЅР° РІС‚РѕСЂСѓСЋ СЃС‚СЂРѕРєСѓ */
     }

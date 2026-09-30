@@ -947,14 +947,14 @@ async function openReviewsModal() {
     
     let html = ''; 
     
-    // Разбиваем массив отзывов на группы по 2 штуки
-    for (let i = 0; i < data.length; i += 2) {
-        html += `<div class="review-column">`; // Открываем колонку
-        
-        // Берем 2 отзыва (или 1, если он последний)
-        const pair = data.slice(i, i + 2);
-        
-        pair.forEach(rev => {
+
+
+
+
+
+
+
+    data.forEach(rev => {
             const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
             const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : rev.text;
             const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : rev.user_name;
@@ -977,9 +977,9 @@ async function openReviewsModal() {
                 <div class="review-text-body" style="margin-top: 10px; color: #ccc; font-size: 13px; line-height: 1.5; font-style: italic;">${safeText}</div>
             </div>`;
         });
-        
-        html += `</div>`; // Закрываем колонку
-    }
+
+
+
     
     container.innerHTML = html;
 }
@@ -5640,14 +5640,14 @@ document.addEventListener('keydown', function(e) {
 window.scrollReviews = function(direction) {
     const slider = document.getElementById('reviewsContainerList');
     if (!slider) return;
-    
-    // Высчитываем ширину одной карточки + отступ
     const card = slider.querySelector('.review-card-ui');
     if (!card) return;
-    
-    const scrollAmount = card.offsetWidth + 15; // 15px это gap
+    const colWidth = card.offsetWidth + 15;
+    const scrollAmount = window.innerWidth > 900 ? (colWidth * 2) : colWidth;
     slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
 };
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     initSliderSwipe();
@@ -5779,3 +5779,7 @@ window.updateCardDOM = function(item) {
         }
     });
 };
+
+
+
+
