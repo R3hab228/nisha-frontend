@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // HAPTIC FEEDBACK (ТАКТИЛЬНАЯ ОТДАЧА ДЛЯ ТЕЛЕФОНОВ)
 // ==========================================
 function triggerHaptic(type = 'light') {
@@ -1464,11 +1464,13 @@ window.prefetchItemImages = function(id) {
 };
 
 let itemsPageSize = window.innerWidth <= 900 ? 12 : 15; 
+let applyFiltersTimeout;
 function applyFilters() {
     const grid = document.getElementById('itemsGrid');
     if (grid) grid.classList.add('fade-out');
 
-    setTimeout(() => {
+    clearTimeout(applyFiltersTimeout);
+    applyFiltersTimeout = setTimeout(() => {
         try {
             const searchInput = document.getElementById('mainSearch');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
