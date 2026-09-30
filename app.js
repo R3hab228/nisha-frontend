@@ -5799,3 +5799,15 @@ window.updateCardDOM = function(item) {
 
 
 
+
+// HACKER SYMBOL ANIMATION
+document.addEventListener("DOMContentLoaded", () => {
+    const hackerSym = document.getElementById("hacker-symbol");
+    if (hackerSym) {
+        const symbols = ['𓂀', '𓃭', '𓅓', '𓆣', '♱', '☣', '☠'];
+        setInterval(() => {
+            const r = Math.floor(Math.random() * symbols.length);
+            hackerSym.innerText = symbols[r];
+        }, 120);
+    }
+});
