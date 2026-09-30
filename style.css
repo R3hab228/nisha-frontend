@@ -248,7 +248,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 .history-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; max-height: 250px; opacity: 1; transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.4s ease; will-change: max-height, opacity; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;}
 .history-grid.collapsed { max-height: 0; opacity: 0; padding-bottom: 0; overflow: hidden; }
 .history-grid::-webkit-scrollbar { height: 6px; }
-.history-card { min-width: 140px; background: #111; border: 1px solid #333; text-decoration: none; display: flex; flex-direction: column; transition: 0.1s; cursor: pointer; transform-style: preserve-3d;}
+.history-card { width: 140px; flex: 0 0 140px; background: #111; border: 1px solid #333; text-decoration: none; display: flex; flex-direction: column; transition: 0.1s; cursor: pointer; transform-style: preserve-3d;}
 .history-card:hover { border-color: var(--accent-green); }
 .history-img { height: 100px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; color: #444; font-size: 10px; border-bottom: 1px solid #333; font-family: var(--font-mono); text-align: center; background-size: cover; background-position: center; transform: translateZ(10px);}
 .history-info { padding: 10px; display: flex; flex-direction: column; transform: translateZ(5px);}
@@ -982,6 +982,7 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
 ::-webkit-scrollbar-corner {
     cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCAyIEw0IDIyIEwxMCAxNiBMMTUgMjQgTDE4IDIyIEwxMyAxNSBMMjAgMTUgWicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==") 0 0, auto !important;
 }
+
 
 
 

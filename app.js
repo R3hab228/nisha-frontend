@@ -2727,7 +2727,8 @@ async function checkPhoneAuth() {
 
     // Если номер введен - ТИХО спрашиваем у базы: "Этот номер уже подтверждали?"
     if (_supabase) {
-        const { data: existCode } = await _supabase.from('otp_codes').select('is_verified').eq('phone', cleanPhone).limit(1);
+        const { data: vResult } = await _supabase.rpc('check_otp_verified', { p_phone: cleanPhone });
+    const existCode = vResult ? [{is_verified: true}] : [];
         
         if (existCode && existCode.length > 0 && existCode[0].is_verified) {
             // Номер УЖЕ подтвержден! Зеленый свет.
@@ -2788,7 +2789,8 @@ async function generateAndSendOTP() {
     }
     
     // 2. Снова проверяем, вдруг он уже подтвержден (двойная страховка)
-    const { data: existCode } = await _supabase.from('otp_codes').select('is_verified').eq('phone', cleanPhone).limit(1);
+    const { data: vResult } = await _supabase.rpc('check_otp_verified', { p_phone: cleanPhone });
+    const existCode = vResult ? [{is_verified: true}] : [];
     if (existCode && existCode.length > 0 && existCode[0].is_verified) {
         checkPhoneAuth(); // Просто вызываем UI-обновление
         return; 
@@ -2834,25 +2836,17 @@ async function generateAndSendOTP() {
     document.getElementById('otpStatus').innerHTML = "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... <span style='color:var(--accent-yellow)'>⏳</span>";
     
     // 6. Слушаем подтверждение в реальном времени
-    if (otpRealtimeChannel) _supabase.removeChannel(otpRealtimeChannel);
+    if (window.otpPollInterval) clearInterval(window.otpPollInterval);
 
-    otpRealtimeChannel = _supabase.channel('custom-otp-channel')
-        .on('postgres_changes', { 
-            event: 'UPDATE', 
-            schema: 'public', 
-            table: 'otp_codes',
-            filter: `phone=eq.${cleanPhone}` 
-        }, payload => {
-            if (payload.new.is_verified) {
-                // Если бот подтвердил номер — жестко убиваем таймер и красим кнопку
-                let id = window.setTimeout(function() {}, 0);
-                while (id--) { window.clearTimeout(id); }
-                
-                checkPhoneAuth(); // Обновит UI на успешный
-                _supabase.removeChannel(otpRealtimeChannel); 
-            }
-        })
-        .subscribe();
+    window.otpPollInterval = setInterval(async () => {
+        const { data: isVerified } = await _supabase.rpc('check_otp_verified', { p_phone: cleanPhone });
+        if (isVerified) {
+            clearInterval(window.otpPollInterval);
+            let id = window.setTimeout(function() {}, 0);
+            while (id--) { window.clearTimeout(id); }
+            checkPhoneAuth();
+        }
+    }, 2000);
 }
 
 async function openCheckoutModal() { 
@@ -3175,7 +3169,8 @@ async function fetchMyOrders() {
             return; 
         }
 
-        const { data: otpCheck } = await _supabase.from('otp_codes').select('is_verified').eq('phone', phone).limit(1);
+        const { data: vResult } = await _supabase.rpc('check_otp_verified', { p_phone: phone });
+        const otpCheck = vResult ? [{is_verified: true}] : [];
         if (!otpCheck || otpCheck.length === 0 || !otpCheck[0].is_verified) {
             listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.</div>
             <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" onclick="document.getElementById('orderPhone').value='${phone}'; generateAndSendOTP();">ПОДТВЕРДИТЬ НОМЕР В БОТЕ</button>`;
