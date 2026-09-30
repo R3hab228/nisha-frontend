@@ -4415,7 +4415,7 @@ function shareItem() {
     if (!currentOpenedItem) return;
     
     // Возвращаем ссылку на основной домен (без красивых превью в Telegram)
-    const shareUrl = `https://www.nisha-store.shop/share/${currentOpenedItem.id}`;
+    const shareUrl = `https://www.nisha-store.shop/?item=${currentOpenedItem.id}`;
     const shareTitle = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
     const shareText = `Зацени: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`;
 
