@@ -1,12 +1,12 @@
 // ==========================================
-// HAPTIC FEEDBACK (ТАКТИЛЬНАЯ ОТДАЧА ДЛЯ ТЕЛЕФОНОВ)
+// HAPTIC FEEDBACK (РўРђРљРўРР›Р¬РќРђРЇ РћРўР”РђР§Рђ Р”Р›РЇ РўР•Р›Р•Р¤РћРќРћР’)
 // ==========================================
 function triggerHaptic(type = 'light') {
     if (window.innerWidth > 900 || !navigator.vibrate) return;
     
     try {
         switch(type) {
-            case 'light': navigator.vibrate(25); break;  // 25мс - телефон точно почувствует
+            case 'light': navigator.vibrate(25); break;  // 25РјСЃ - С‚РµР»РµС„РѕРЅ С‚РѕС‡РЅРѕ РїРѕС‡СѓРІСЃС‚РІСѓРµС‚
             case 'medium': navigator.vibrate(40); break; 
             case 'heavy': navigator.vibrate(70); break;  
             case 'success': navigator.vibrate([20, 60, 20]); break; 
@@ -42,14 +42,14 @@ document.addEventListener('click', (e) => {
 function changeLanguage(lng) {
     if (typeof i18next !== 'undefined') {
         i18next.changeLanguage(lng).then(() => {
-            // ЖЕЛЕЗОБЕТОННОЕ сохранение:
+            // Р–Р•Р›Р•Р—РћР‘Р•РўРћРќРќРћР• СЃРѕС…СЂР°РЅРµРЅРёРµ:
             localStorage.setItem('nisha_lang', lng); 
-            // Сохраняем языковой флаг для плагина i18next
+            // РЎРѕС…СЂР°РЅСЏРµРј СЏР·С‹РєРѕРІРѕР№ С„Р»Р°Рі РґР»СЏ РїР»Р°РіРёРЅР° i18next
             localStorage.setItem('i18nextLng', lng); 
             
             updateContentLanguage();
             
-            // Мгновенно перерисовываем вообще ВСЕ цены и тексты на сайте
+            // РњРіРЅРѕРІРµРЅРЅРѕ РїРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј РІРѕРѕР±С‰Рµ Р’РЎР• С†РµРЅС‹ Рё С‚РµРєСЃС‚С‹ РЅР° СЃР°Р№С‚Рµ
             applyFilters(); 
             if (typeof renderCartItems === 'function') renderCartItems();
             if (typeof updateCartUI === 'function') updateCartUI();
@@ -59,14 +59,14 @@ function changeLanguage(lng) {
             showToast(msg, 'success');
 
             
-            // Если мобильное меню открыто/закрыто — переводим кнопку фильтров
+            // Р•СЃР»Рё РјРѕР±РёР»СЊРЅРѕРµ РјРµРЅСЋ РѕС‚РєСЂС‹С‚Рѕ/Р·Р°РєСЂС‹С‚Рѕ вЂ” РїРµСЂРµРІРѕРґРёРј РєРЅРѕРїРєСѓ С„РёР»СЊС‚СЂРѕРІ
             const sidebar = document.querySelector('.sidebar');
             const btn = document.getElementById('mobileFilterBtn');
             if (btn && sidebar) {
                 if (sidebar.classList.contains('active-mobile')) {
-                    btn.innerText = i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' });
+                    btn.innerText = i18next.t('mobile.hide_filters', { defaultValue: '[-] РЎРљР Р«РўР¬ Р¤РР›Р¬РўР Р«' });
                 } else {
-                    btn.innerText = i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' });
+                    btn.innerText = i18next.t('mobile.show_filters', { defaultValue: '[+] РџРћРљРђР—РђРўР¬ Р¤РР›Р¬РўР Р«' });
                 }
             }
             
@@ -78,28 +78,28 @@ function changeLanguage(lng) {
 }
 
 
-// === АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ САЙТА (БЕЗ КЭША) ===
+// === РђР’РўРћРњРђРўРР§Р•РЎРљРћР• РћР‘РќРћР’Р›Р•РќРР• РЎРђР™РўРђ (Р‘Р•Р— РљР­РЁРђ) ===
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(registration => {
-            console.log('[PWA] SW зарегистрирован');
+            console.log('[PWA] SW Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ');
             
-            // Принудительно проверяем обновления при каждом заходе
+            // РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РїСЂРѕРІРµСЂСЏРµРј РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРё РєР°Р¶РґРѕРј Р·Р°С…РѕРґРµ
             registration.update();
 
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        console.log('[PWA] Найдено обновление!');
+                        console.log('[PWA] РќР°Р№РґРµРЅРѕ РѕР±РЅРѕРІР»РµРЅРёРµ!');
                         showTerminalModal(
                             'SYSTEM_UPDATE.EXE', 
-                            'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.', 
-                            '[ ОБНОВИТЬ СЕЙЧАС ]', 
+                            'Р’С‹РїСѓС‰РµРЅР° РЅРѕРІР°СЏ РІРµСЂСЃРёСЏ СЃР°Р№С‚Р° (РёСЃРїСЂР°РІР»РµРЅРёРµ Р±Р°РіРѕРІ, РЅРѕРІС‹Рµ С„РёС‡Рё).<br><br>Р РµРєРѕРјРµРЅРґСѓРµРј РѕР±РЅРѕРІРёС‚СЊ СЃС‚СЂР°РЅРёС†Сѓ.', 
+                            '[ РћР‘РќРћР’РРўР¬ РЎР•Р™Р§РђРЎ ]', 
                             () => {
                                 caches.keys().then(names => {
                                     for (let name of names) caches.delete(name);
-// WEB PUSH ПОДПИСКА
+// WEB PUSH РџРћР”РџРРЎРљРђ
                                 }).then(() => {
                                     window.location.reload(true);
                                 });
@@ -108,7 +108,7 @@ if ('serviceWorker' in navigator) {
                     }
                 };
             };
-        }).catch(err => console.log('[PWA] Ошибка SW: ', err));
+        }).catch(err => console.log('[PWA] РћС€РёР±РєР° SW: ', err));
     });
 }
 if (typeof Sentry !== 'undefined') {
@@ -118,26 +118,26 @@ if (typeof Sentry !== 'undefined') {
         environment: "production",
         tracesSampleRate: 1.0, 
     });
-    console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
+    console.log('[ SENTRY ] РЎРРЎРўР•РњРђ РњРћРќРРўРћР РРќР“Рђ РђРљРўРР’РќРђ.');
 }
-// Переменные для анимации поиска
+// РџРµСЂРµРјРµРЅРЅС‹Рµ РґР»СЏ Р°РЅРёРјР°С†РёРё РїРѕРёСЃРєР°
 let searchTypewriterInterval = null;
 let currentSearchLang = 'ru';
 
 function updateContentLanguage() {
-    // Переводим обычный текст
+    // РџРµСЂРµРІРѕРґРёРј РѕР±С‹С‡РЅС‹Р№ С‚РµРєСЃС‚
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         el.innerHTML = i18next.t(key);
     });
     
-    // Переводим Placeholder'ы инпутов
+    // РџРµСЂРµРІРѕРґРёРј Placeholder'С‹ РёРЅРїСѓС‚РѕРІ
     document.querySelectorAll('[data-i18n-ph]').forEach(el => {
         const key = el.getAttribute('data-i18n-ph');
         el.placeholder = i18next.t(key);
     });
 
-    // Запускаем печатную машинку поиска
+    // Р—Р°РїСѓСЃРєР°РµРј РїРµС‡Р°С‚РЅСѓСЋ РјР°С€РёРЅРєСѓ РїРѕРёСЃРєР°
     currentSearchLang = i18next.language || 'ru';
     startSearchTypewriter();
 }
@@ -150,8 +150,8 @@ function startSearchTypewriter() {
     if (window.searchCursorBlinkInterval) clearInterval(window.searchCursorBlinkInterval);
 
     const translatedWords = {
-        'ua': ['Пошук речей...'],
-        'ru': ['Поиск вещи...'],
+        'ua': ['РџРѕС€СѓРє СЂРµС‡РµР№...'],
+        'ru': ['РџРѕРёСЃРє РІРµС‰Рё...'],
         'en': ['Search items...']
     };
     
@@ -189,7 +189,7 @@ function startSearchTypewriter() {
             if (charIndex === currentWord.length) {
                 isDeleting = true;
                 let blinkCount = 0;
-                const maxBlinks = 4; // 4 * 0.6с = 2.4 секунды паузы перед удалением
+                const maxBlinks = 4; // 4 * 0.6СЃ = 2.4 СЃРµРєСѓРЅРґС‹ РїР°СѓР·С‹ РїРµСЂРµРґ СѓРґР°Р»РµРЅРёРµРј
                 
                 window.searchCursorBlinkInterval = setInterval(() => {
                     if (document.activeElement === searchInput || searchInput.value.length > 0) {
@@ -215,7 +215,7 @@ function startSearchTypewriter() {
     typeLoop();
 }
 // ==========================================
-// БЕЗОПАСНЫЙ ПЛАВНЫЙ СКРОЛЛ (ТОЛЬКО ДЛЯ ПК)
+// Р‘Р•Р—РћРџРђРЎРќР«Р™ РџР›РђР’РќР«Р™ РЎРљР РћР›Р› (РўРћР›Р¬РљРћ Р”Р›РЇ РџРљ)
 // ==========================================
 let lenis;
 
@@ -233,10 +233,10 @@ if (window.innerWidth > 900) {
     requestAnimationFrame(raf);
 }
 
-// Железобетонные функции остановки и запуска
+// Р–РµР»РµР·РѕР±РµС‚РѕРЅРЅС‹Рµ С„СѓРЅРєС†РёРё РѕСЃС‚Р°РЅРѕРІРєРё Рё Р·Р°РїСѓСЃРєР°
 window.stopLenis = function() {
     if (typeof lenis !== 'undefined' && lenis) {
-        // Вызываем оригинальный метод библиотеки, чтобы избежать рекурсии
+        // Р’С‹Р·С‹РІР°РµРј РѕСЂРёРіРёРЅР°Р»СЊРЅС‹Р№ РјРµС‚РѕРґ Р±РёР±Р»РёРѕС‚РµРєРё, С‡С‚РѕР±С‹ РёР·Р±РµР¶Р°С‚СЊ СЂРµРєСѓСЂСЃРёРё
         Object.getPrototypeOf(lenis).stop.call(lenis); 
     }
 };
@@ -247,14 +247,14 @@ window.startLenis = function() {
     }
 };
 
-// Открытие нового модального окна профиля
+// РћС‚РєСЂС‹С‚РёРµ РЅРѕРІРѕРіРѕ РјРѕРґР°Р»СЊРЅРѕРіРѕ РѕРєРЅР° РїСЂРѕС„РёР»СЏ
 function openProfileModal() {
     if (typeof lenis !== 'undefined') window.stopLenis();
     document.getElementById('profileModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
-// --- УМНЫЕ ПЛАВАЮЩИЕ КНОПКИ (ПРЕДЛОЖКА И ФИЛЬТРЫ) ---
+// --- РЈРњРќР«Р• РџР›РђР’РђР®Р©РР• РљРќРћРџРљР (РџР Р•Р”Р›РћР–РљРђ Р Р¤РР›Р¬РўР Р«) ---
 let fabScrollTimeout;
 let lastScrollY = window.scrollY || document.documentElement.scrollTop;
 
@@ -270,18 +270,18 @@ window.addEventListener('scroll', () => {
             
             if (Math.abs(currentScrollY - lastScrollY) > 10) {
                 if (currentScrollY > lastScrollY && currentScrollY > 150) {
-                    // Прокрутка вниз - скрываем элементы
+                    // РџСЂРѕРєСЂСѓС‚РєР° РІРЅРёР· - СЃРєСЂС‹РІР°РµРј СЌР»РµРјРµРЅС‚С‹
                     if (fab && !fab.classList.contains('cart-active')) fab.classList.add('hidden-scroll');
                     if (filterBtn && window.innerWidth <= 900) filterBtn.classList.add('hidden-scroll');
                 } else {
-                    // Прокрутка вверх - возвращаем элементы
+                    // РџСЂРѕРєСЂСѓС‚РєР° РІРІРµСЂС… - РІРѕР·РІСЂР°С‰Р°РµРј СЌР»РµРјРµРЅС‚С‹
                     if (fab) fab.classList.remove('hidden-scroll');
                     if (filterBtn) filterBtn.classList.remove('hidden-scroll');
                 }
                 lastScrollY = currentScrollY;
             }
 
-            // Возвращаем UI, если скролл остановился (на 800мс)
+            // Р’РѕР·РІСЂР°С‰Р°РµРј UI, РµСЃР»Рё СЃРєСЂРѕР»Р» РѕСЃС‚Р°РЅРѕРІРёР»СЃСЏ (РЅР° 800РјСЃ)
             clearTimeout(fabScrollTimeout);
             fabScrollTimeout = setTimeout(() => {
                 if (fab) fab.classList.remove('hidden-scroll');
@@ -296,10 +296,10 @@ window.addEventListener('scroll', () => {
 
 
 let allItems = []; 
-// Умное определение валюты (жестко читаем из памяти)
+// РЈРјРЅРѕРµ РѕРїСЂРµРґРµР»РµРЅРёРµ РІР°Р»СЋС‚С‹ (Р¶РµСЃС‚РєРѕ С‡РёС‚Р°РµРј РёР· РїР°РјСЏС‚Рё)
 function getCurrency() {
     const lang = localStorage.getItem('nisha_lang') || 'ru';
-    return lang === 'en' ? 'UAH' : 'грн';
+    return lang === 'en' ? 'UAH' : 'РіСЂРЅ';
 }
 let currentUser = null;
 let userProfile = null;
@@ -312,8 +312,8 @@ let currentOpenedItem = null;
 let isHacked = false; 
 let _supabase = null;
 let clientFingerprint = "guest_" + Date.now(); 
-let orderStatusChannel = null; // Канал заказов
-let qaUpdatesChannel = null; // Канал вопросов
+let orderStatusChannel = null; // РљР°РЅР°Р» Р·Р°РєР°Р·РѕРІ
+let qaUpdatesChannel = null; // РљР°РЅР°Р» РІРѕРїСЂРѕСЃРѕРІ
 
 
 let envData = (typeof window.ENV !== 'undefined') ? window.ENV : ((typeof CONFIG !== 'undefined') ? CONFIG : {});
@@ -325,14 +325,14 @@ const SUPABASE_ANON_KEY = rawAnonKey.replace(/[^\x20-\x7E]/g, '').trim();
 
 
 if (!SUPABASE_ANON_KEY) {
-    console.error("ОШИБКА: Ключ Supabase пустой. База данных недоступна.");
-    setTimeout(() => showToast('Критическая ошибка: Нет связи с БД', 'error'), 2000);
+    console.error("РћРЁРР‘РљРђ: РљР»СЋС‡ Supabase РїСѓСЃС‚РѕР№. Р‘Р°Р·Р° РґР°РЅРЅС‹С… РЅРµРґРѕСЃС‚СѓРїРЅР°.");
+    setTimeout(() => showToast('РљСЂРёС‚РёС‡РµСЃРєР°СЏ РѕС€РёР±РєР°: РќРµС‚ СЃРІСЏР·Рё СЃ Р‘Р”', 'error'), 2000);
 } else {
     const { createClient } = supabase;
     _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         global: {
             fetch: (url, options) => {
-                // Используем CDN ТОЛЬКО для главного списка товаров (limit=1000). Точечные запросы идут напрямую!
+                // РСЃРїРѕР»СЊР·СѓРµРј CDN РўРћР›Р¬РљРћ РґР»СЏ РіР»Р°РІРЅРѕРіРѕ СЃРїРёСЃРєР° С‚РѕРІР°СЂРѕРІ (limit=1000). РўРѕС‡РµС‡РЅС‹Рµ Р·Р°РїСЂРѕСЃС‹ РёРґСѓС‚ РЅР°РїСЂСЏРјСѓСЋ!
                 if (typeof url === 'string' && url.includes('/rest/v1/items') && url.includes('limit=1000') && !url.includes('id=eq.') && (!options || options.method === 'GET' || !options.method)) {
                     url = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'nisha-cdn.mtyagniryadno.workers.dev');
                 }
@@ -342,31 +342,31 @@ if (!SUPABASE_ANON_KEY) {
     });
 }
 // ==========================================
-// СИСТЕМА ВЕЧНОЙ СЕССИИ (JWT REFRESH)
+// РЎРРЎРўР•РњРђ Р’Р•Р§РќРћР™ РЎР•РЎРЎРР (JWT REFRESH)
 // ==========================================
 if (_supabase) {
     _supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'TOKEN_REFRESHED') {
-            console.log('[AUTH] Токен безопасности успешно продлен (Refresh Token).');
+            console.log('[AUTH] РўРѕРєРµРЅ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё СѓСЃРїРµС€РЅРѕ РїСЂРѕРґР»РµРЅ (Refresh Token).');
             currentUser = session.user;
         } else if (event === 'SIGNED_OUT') {
-            console.log('[AUTH] Выполнен выход из аккаунта.');
+            console.log('[AUTH] Р’С‹РїРѕР»РЅРµРЅ РІС‹С…РѕРґ РёР· Р°РєРєР°СѓРЅС‚Р°.');
             currentUser = null;
             userProfile = null;
             favorites = [];
             updateFavBadge();
-            // Скрываем профиль, показываем логин
+            // РЎРєСЂС‹РІР°РµРј РїСЂРѕС„РёР»СЊ, РїРѕРєР°Р·С‹РІР°РµРј Р»РѕРіРёРЅ
             const loginForm = document.getElementById('loginForm');
             const profileForm = document.getElementById('profileForm');
             if (loginForm) loginForm.style.display = 'flex';
             if (profileForm) profileForm.style.display = 'none';
-            // Мобилка
+            // РњРѕР±РёР»РєР°
             const mLog = document.getElementById('modalLoginForm');
             const mProf = document.getElementById('modalProfileForm');
             if (mLog) mLog.style.display = 'flex';
             if (mProf) mProf.style.display = 'none';
         } else if (event === 'SIGNED_IN') {
-            // Если юзер вошел в соседней вкладке, текущая тоже должна обновиться
+            // Р•СЃР»Рё СЋР·РµСЂ РІРѕС€РµР» РІ СЃРѕСЃРµРґРЅРµР№ РІРєР»Р°РґРєРµ, С‚РµРєСѓС‰Р°СЏ С‚РѕР¶Рµ РґРѕР»Р¶РЅР° РѕР±РЅРѕРІРёС‚СЊСЃСЏ
             if (!currentUser) await checkSession();
         }
     });
@@ -378,7 +378,7 @@ function showToast(message, type = 'success', imgUrl = null) {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     
-    // Если передали картинку — добавляем её слева от текста
+    // Р•СЃР»Рё РїРµСЂРµРґР°Р»Рё РєР°СЂС‚РёРЅРєСѓ вЂ” РґРѕР±Р°РІР»СЏРµРј РµС‘ СЃР»РµРІР° РѕС‚ С‚РµРєСЃС‚Р°
     let html = '';
     if (imgUrl) {
         html += `<div style="width: 35px; height: 35px; background-image: url('${imgUrl}'); background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #444; flex-shrink: 0;"></div>`;
@@ -388,13 +388,13 @@ function showToast(message, type = 'success', imgUrl = null) {
     toast.innerHTML = html;
     container.appendChild(toast);
     
-    // 2500 миллисекунд (2.5 секунды) + 500мс на саму анимацию затухания
+    // 2500 РјРёР»Р»РёСЃРµРєСѓРЅРґ (2.5 СЃРµРєСѓРЅРґС‹) + 500РјСЃ РЅР° СЃР°РјСѓ Р°РЅРёРјР°С†РёСЋ Р·Р°С‚СѓС…Р°РЅРёСЏ
     setTimeout(() => { 
         if(container.contains(toast)) container.removeChild(toast); 
     }, 3000);
 }
 
-// --- КРУТЫЕ ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ ---
+// --- РљР РЈРўР«Р• РўР•Р РњРРќРђР›Р¬РќР«Р• РћРљРќРђ Р”Р›РЇ РЈР’Р•Р”РћРњР›Р•РќРР™ ---
 function showTerminalModal(title, htmlText, btnText, callback) {
     const overlay = document.createElement('div');
     overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column;";
@@ -441,7 +441,7 @@ function acceptRules() {
     if (typeof lenis !== 'undefined') window.startLenis(); 
     showToast(i18next.t('messages.rules_accepted'), 'success');
     
-    // Запускаем тур сразу после закрытия окна правил
+    // Р—Р°РїСѓСЃРєР°РµРј С‚СѓСЂ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ Р·Р°РєСЂС‹С‚РёСЏ РѕРєРЅР° РїСЂР°РІРёР»
     setTimeout(startOnboardingTour, 400); 
 }
 window.onload = async () => {
@@ -449,31 +449,31 @@ window.onload = async () => {
 
     try {
         try {
-            // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
+            // --- РЈРњРќР«Р™ Р”РћР–РРњ РљРћР Р—РРќР« (РЎСЂР°Р±Р°С‚С‹РІР°РµС‚ РїСЂРё РІРѕР·РІСЂР°С‰РµРЅРёРё РЅР° СЃР°Р№С‚) ---
             if (cart.length > 0) {
                 let lastTime = localStorage.getItem('nisha_cart_time');
-                // Проверяем: если прошел 1 час И мы еще не напоминали
+                // РџСЂРѕРІРµСЂСЏРµРј: РµСЃР»Рё РїСЂРѕС€РµР» 1 С‡Р°СЃ Р РјС‹ РµС‰Рµ РЅРµ РЅР°РїРѕРјРёРЅР°Р»Рё
                 if (lastTime && (Date.now() - parseInt(lastTime)) > 3600000 && !localStorage.getItem('nisha_cart_reminded')) {
                     setTimeout(() => {
                         showTerminalModal(
                             'SYSTEM_ALERT.LOG',
-                            'Мы заметили, что вы не завершили заказ. Редкие вещи забирают быстро!<br><br><b style="color:var(--accent-yellow);">Используйте промокод COMEBACK5 для скидки 5%!</b>',
-                            '[ ПРОДОЛЖИТЬ ПОКУПКИ ]', null
+                            'РњС‹ Р·Р°РјРµС‚РёР»Рё, С‡С‚Рѕ РІС‹ РЅРµ Р·Р°РІРµСЂС€РёР»Рё Р·Р°РєР°Р·. Р РµРґРєРёРµ РІРµС‰Рё Р·Р°Р±РёСЂР°СЋС‚ Р±С‹СЃС‚СЂРѕ!<br><br><b style="color:var(--accent-yellow);">РСЃРїРѕР»СЊР·СѓР№С‚Рµ РїСЂРѕРјРѕРєРѕРґ COMEBACK5 РґР»СЏ СЃРєРёРґРєРё 5%!</b>',
+                            '[ РџР РћР”РћР›Р–РРўР¬ РџРћРљРЈРџРљР ]', null
                         );
                         localStorage.setItem('nisha_cart_reminded', 'true');
                     }, 2000);
                 }
             }
 
-            // Дожим через системный PUSH + Фоновое обновление при возвращении из других приложух
+            // Р”РѕР¶РёРј С‡РµСЂРµР· СЃРёСЃС‚РµРјРЅС‹Р№ PUSH + Р¤РѕРЅРѕРІРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ РїСЂРё РІРѕР·РІСЂР°С‰РµРЅРёРё РёР· РґСЂСѓРіРёС… РїСЂРёР»РѕР¶СѓС…
             document.addEventListener("visibilitychange", async () => {
                 if (document.hidden) {
-                    // Юзер свернул сайт (ушел в TikTok)
+                    // Р®Р·РµСЂ СЃРІРµСЂРЅСѓР» СЃР°Р№С‚ (СѓС€РµР» РІ TikTok)
                     if (cart.length > 0) {
                         if ('serviceWorker' in navigator && Notification.permission === 'granted') {
                             navigator.serviceWorker.ready.then(reg => {
                                 reg.showNotification("NISHA STORE", {
-                                    body: "Ваша корзина ждет! Оформляйте, пока не забрали.",
+                                    body: "Р’Р°С€Р° РєРѕСЂР·РёРЅР° Р¶РґРµС‚! РћС„РѕСЂРјР»СЏР№С‚Рµ, РїРѕРєР° РЅРµ Р·Р°Р±СЂР°Р»Рё.",
                                     icon: '/icon-192.png',
                                     badge: '/badge.png',
                                     vibrate: [200, 100, 200],
@@ -483,12 +483,12 @@ window.onload = async () => {
                         }
                     }
                 } else {
-                    // ЮЗЕР ВЕРНУЛСЯ НА САЙТ!
+                    // Р®Р—Р•Р  Р’Р•Р РќРЈР›РЎРЇ РќРђ РЎРђР™Рў!
                     if (_supabase) {
-                        // ЖЕСТКОЕ ВОССТАНОВЛЕНИЕ СЕССИИ (чтобы не разлогинивало после глубокого сна браузера)
+                        // Р–Р•РЎРўРљРћР• Р’РћРЎРЎРўРђРќРћР’Р›Р•РќРР• РЎР•РЎРЎРР (С‡С‚РѕР±С‹ РЅРµ СЂР°Р·Р»РѕРіРёРЅРёРІР°Р»Рѕ РїРѕСЃР»Рµ РіР»СѓР±РѕРєРѕРіРѕ СЃРЅР° Р±СЂР°СѓР·РµСЂР°)
                         await checkSession();
                         
-                        // Только после проверки сессии тихо обновляем базу товаров
+                        // РўРѕР»СЊРєРѕ РїРѕСЃР»Рµ РїСЂРѕРІРµСЂРєРё СЃРµСЃСЃРёРё С‚РёС…Рѕ РѕР±РЅРѕРІР»СЏРµРј Р±Р°Р·Сѓ С‚РѕРІР°СЂРѕРІ
                         if (allItems.length > 0) {
                             loadAllItems(); 
                         }
@@ -503,11 +503,11 @@ window.onload = async () => {
                 if (!savedLng) {
                     const browserLang = navigator.language || navigator.userLanguage;
                     if (browserLang.toLowerCase().includes('ru')) {
-                        savedLng = 'ru'; savedFlag = '🇷🇺';
+                        savedLng = 'ru'; savedFlag = 'рџ‡·рџ‡є';
                     } else if (browserLang.toLowerCase().includes('en')) {
-                        savedLng = 'en'; savedFlag = '🇬🇧';
+                        savedLng = 'en'; savedFlag = 'рџ‡¬рџ‡§';
                     } else {
-                        savedLng = 'ua'; savedFlag = '🇺🇦';
+                        savedLng = 'ua'; savedFlag = 'рџ‡єрџ‡¦';
                     }
                     localStorage.setItem('nisha_lang', savedLng);
                     localStorage.setItem('nisha_flag', savedFlag);
@@ -517,7 +517,7 @@ window.onload = async () => {
                     i18next.use(i18nextBrowserLanguageDetector);
                 }
 
-                // Загружаем словари из отдельного файла
+                // Р—Р°РіСЂСѓР¶Р°РµРј СЃР»РѕРІР°СЂРё РёР· РѕС‚РґРµР»СЊРЅРѕРіРѕ С„Р°Р№Р»Р°
                 const locRes = await fetch('/locales.json');
                 const localesData = await locRes.json();
 
@@ -533,7 +533,7 @@ window.onload = async () => {
                 if (flagEl) flagEl.innerText = savedFlag;
             }
         } catch (langErr) {
-            console.warn("[ ЯЗЫКИ ] Ошибка загрузки словарей:", langErr);
+            console.warn("[ РЇР—Р«РљР ] РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё СЃР»РѕРІР°СЂРµР№:", langErr);
         }
 
 
@@ -550,7 +550,7 @@ window.onload = async () => {
         
        if (typeof autoAnimate === 'function') {
             autoAnimate(document.getElementById('historyGrid'));
-            // Убрали ordersListArea, теперь мы анимируем его сами через CSS
+            // РЈР±СЂР°Р»Рё ordersListArea, С‚РµРїРµСЂСЊ РјС‹ Р°РЅРёРјРёСЂСѓРµРј РµРіРѕ СЃР°РјРё С‡РµСЂРµР· CSS
         }
 
         checkRules();
@@ -571,24 +571,24 @@ window.onload = async () => {
             await checkSession();
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Восстанавливаем вкладку "Избранное"
+            // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІРєР»Р°РґРєСѓ "РР·Р±СЂР°РЅРЅРѕРµ"
             if (sessionStorage.getItem('nisha_showing_favs') === 'true') {
                 showingOnlyFavs = true;
                 const favNav = document.getElementById('favNav');
                 if (favNav) favNav.style.color = '#fff';
             }
 
-            // --- ФИКС: ИДЕАЛЬНОЕ ВОССТАНОВЛЕНИЕ КАТЕГОРИИ И UI ---
+            // --- Р¤РРљРЎ: РР”Р•РђР›Р¬РќРћР• Р’РћРЎРЎРўРђРќРћР’Р›Р•РќРР• РљРђРўР•Р“РћР РР Р UI ---
             const savedCat = urlParams.get('cat') || sessionStorage.getItem('nisha_last_category');
             
-            // 1. Очищаем все выделения в меню категорий
+            // 1. РћС‡РёС‰Р°РµРј РІСЃРµ РІС‹РґРµР»РµРЅРёСЏ РІ РјРµРЅСЋ РєР°С‚РµРіРѕСЂРёР№
             const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
             catLinks.forEach(el => el.classList.remove('active-filter'));
 
             if (savedCat) {
                 currentCategory = savedCat;
                 
-                // 2. Ищем ссылку, внутри onclick которой есть наша сохраненная категория, и красим её
+                // 2. РС‰РµРј СЃСЃС‹Р»РєСѓ, РІРЅСѓС‚СЂРё onclick РєРѕС‚РѕСЂРѕР№ РµСЃС‚СЊ РЅР°С€Р° СЃРѕС…СЂР°РЅРµРЅРЅР°СЏ РєР°С‚РµРіРѕСЂРёСЏ, Рё РєСЂР°СЃРёРј РµС‘
                 catLinks.forEach(link => {
                     const onclickText = link.getAttribute('onclick') || '';
                     if (onclickText.includes(`'${currentCategory}'`)) {
@@ -596,18 +596,18 @@ window.onload = async () => {
                     }
                 });
             } else {
-                // Если ничего не сохранено - выделяем "Все вещи"
+                // Р•СЃР»Рё РЅРёС‡РµРіРѕ РЅРµ СЃРѕС…СЂР°РЅРµРЅРѕ - РІС‹РґРµР»СЏРµРј "Р’СЃРµ РІРµС‰Рё"
                 const firstLink = document.querySelector('.sidebar .filter-list:first-of-type a');
                 if (firstLink) firstLink.classList.add('active-filter');
             }
 
-            // --- НОВОЕ: ВОССТАНОВЛЕНИЕ ПОИСКОВОГО ЗАПРОСА В UI ---
+            // --- РќРћР’РћР•: Р’РћРЎРЎРўРђРќРћР’Р›Р•РќРР• РџРћРРЎРљРћР’РћР“Рћ Р—РђРџР РћРЎРђ Р’ UI ---
             const savedQuery = urlParams.get('q');
             if (savedQuery) {
                 const sInput = document.getElementById('mainSearch');
                 if (sInput) {
                     sInput.value = savedQuery;
-                    // Показываем крестик для сброса поиска
+                    // РџРѕРєР°Р·С‹РІР°РµРј РєСЂРµСЃС‚РёРє РґР»СЏ СЃР±СЂРѕСЃР° РїРѕРёСЃРєР°
                     const clearBtn = document.getElementById('clearSearchBtn');
                     if (clearBtn) clearBtn.style.display = 'block';
                 }
@@ -615,7 +615,7 @@ window.onload = async () => {
 
             await loadAllItems();
 
-         // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА (УМНАЯ) ---
+         // --- РџР РћР’Р•Р РљРђ Р РђРЎРЎР«Р›РћРљ РћРў РђР”РњРРќРђ (РЈРњРќРђРЇ) ---
             setTimeout(async () => {
                 try {
                     const { data: broadcasts } = await _supabase.from('site_broadcasts').select('*').order('created_at', { ascending: false }).limit(1);
@@ -628,7 +628,7 @@ window.onload = async () => {
                         const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
 
                         if (!hasSeen) {
-                            let broadcastContent = ''; // Переименовали переменную для 100% безопасности
+                            let broadcastContent = ''; // РџРµСЂРµРёРјРµРЅРѕРІР°Р»Рё РїРµСЂРµРјРµРЅРЅСѓСЋ РґР»СЏ 100% Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё
                             if (bData.image_url) {
                                 broadcastContent += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
                             }
@@ -644,14 +644,14 @@ window.onload = async () => {
                             };
 
                             if (localStorage.getItem('nisha_tour_done')) {
-                                showTerminalModal('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
+                                showTerminalModal('SYSTEM_BROADCAST.MSG', broadcastContent, '[ Р—РђРљР Р«РўР¬ ]', markAsSeen);
                             } else {
                                 window.pendingBroadcastHtml = broadcastContent;
                                 window.pendingBroadcastId = bData.id;
                             }
                         }
                     }
-                } catch(e) { console.warn("Ошибка загрузки рассылки", e); }
+                } catch(e) { console.warn("РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё СЂР°СЃСЃС‹Р»РєРё", e); }
             }, 3000);
 
             const openItemId = urlParams.get('item');
@@ -659,7 +659,7 @@ window.onload = async () => {
                 setTimeout(() => openProductModalById(openItemId), 500);
             }
             
-           // --- НОВОЕ: РАССЫЛКА В РЕАЛЬНОМ ВРЕМЕНИ ДЛЯ ТЕХ, КТО УЖЕ НА САЙТЕ ---
+           // --- РќРћР’РћР•: Р РђРЎРЎР«Р›РљРђ Р’ Р Р•РђР›Р¬РќРћРњ Р’Р Р•РњР•РќР Р”Р›РЇ РўР•РҐ, РљРўРћ РЈР–Р• РќРђ РЎРђР™РўР• ---
             _supabase.channel('public:site_broadcasts')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'site_broadcasts' }, payload => {
                     const bData = payload.new;
@@ -671,8 +671,8 @@ window.onload = async () => {
                         bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                     }
 
-                    // Сразу показываем рассылку поверх всего, даже если страница не обновлялась
-                    showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
+                    // РЎСЂР°Р·Сѓ РїРѕРєР°Р·С‹РІР°РµРј СЂР°СЃСЃС‹Р»РєСѓ РїРѕРІРµСЂС… РІСЃРµРіРѕ, РґР°Р¶Рµ РµСЃР»Рё СЃС‚СЂР°РЅРёС†Р° РЅРµ РѕР±РЅРѕРІР»СЏР»Р°СЃСЊ
+                    showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ Р—РђРљР Р«РўР¬ ]', () => {
                         localStorage.setItem('nisha_last_broadcast', bData.id);
                     });
                 })
@@ -680,18 +680,18 @@ window.onload = async () => {
 
          _supabase.channel('public:items')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, payload => {
-                    // ЕСЛИ ДОБАВИЛИ НОВУЮ ВЕЩЬ ЧЕРЕЗ БОТА
+                    // Р•РЎР›Р Р”РћР‘РђР’РР›Р РќРћР’РЈР® Р’Р•Р©Р¬ Р§Р•Р Р•Р— Р‘РћРўРђ
                     if (payload.eventType === 'INSERT') {
-                        allItems.unshift(payload.new); // Добавляем в начало массива
-                        showToast(`🆕 Новая вещь на сайте: ${payload.new.name}`, 'success');
-                        applyFilters(); // Плавно перерисовываем сетку
+                        allItems.unshift(payload.new); // Р”РѕР±Р°РІР»СЏРµРј РІ РЅР°С‡Р°Р»Рѕ РјР°СЃСЃРёРІР°
+                        showToast(`рџ†• РќРѕРІР°СЏ РІРµС‰СЊ РЅР° СЃР°Р№С‚Рµ: ${payload.new.name}`, 'success');
+                        applyFilters(); // РџР»Р°РІРЅРѕ РїРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј СЃРµС‚РєСѓ
                     } 
-                    // ЕСЛИ АДМИН УДАЛИЛ ВЕЩЬ
+                    // Р•РЎР›Р РђР”РњРРќ РЈР”РђР›РР› Р’Р•Р©Р¬
                     else if (payload.eventType === 'DELETE') {
                         allItems = allItems.filter(i => i.id !== payload.old.id);
                         applyFilters();
                     }
-                    // ЕСЛИ ВЕЩЬ КУПИЛИ ИЛИ ОБНОВИЛИ
+                    // Р•РЎР›Р Р’Р•Р©Р¬ РљРЈРџРР›Р РР›Р РћР‘РќРћР’РР›Р
                     else if (payload.eventType === 'UPDATE') {
                         const updatedItem = payload.new;
                         const index = allItems.findIndex(i => i.id === updatedItem.id);
@@ -699,7 +699,7 @@ window.onload = async () => {
                         if (index !== -1) {
                             const oldItem = allItems[index];
                             
-                            // Проверка: упала ли цена / появилась ли скидка
+                            // РџСЂРѕРІРµСЂРєР°: СѓРїР°Р»Р° Р»Рё С†РµРЅР° / РїРѕСЏРІРёР»Р°СЃСЊ Р»Рё СЃРєРёРґРєР°
                             const priceDropped = (!oldItem.is_sale && updatedItem.is_sale) || (oldItem.price > updatedItem.price);
                             const imgUrl = (updatedItem.thumbnails && updatedItem.thumbnails.length > 0) ? updatedItem.thumbnails[0] : ((updatedItem.images && updatedItem.images.length > 0) ? updatedItem.images[0] : null);
 
@@ -709,7 +709,7 @@ window.onload = async () => {
                             Object.assign(allItems[index], updatedItem);
                             
                             if (priceDropped && updatedItem.status === 'available') {
-                                showToast('🔥 СКИДКА!!!', 'success', imgUrl);
+                                showToast('рџ”Ґ РЎРљРР”РљРђ!!!', 'success', imgUrl);
                             }
 
                             if (updatedItem.status === 'available') {
@@ -719,11 +719,11 @@ window.onload = async () => {
                                     localStorage.setItem('nisha_cart', JSON.stringify(cart));
                                     syncCartToServer();
                                     updateCartUI();
-                                    showToast(`Бронь истекла. ${updatedItem.name} снова в наличии.`, 'error');
+                                    showToast(`Р‘СЂРѕРЅСЊ РёСЃС‚РµРєР»Р°. ${updatedItem.name} СЃРЅРѕРІР° РІ РЅР°Р»РёС‡РёРё.`, 'error');
                                 }
                             }
                             
-                            // СИНХРОННОЕ ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ КАРТОЧКИ БЕЗ ПЕРЕЗАГРУЗКИ ГРИДА
+                            // РЎРРќРҐР РћРќРќРћР• Р”РРќРђРњРР§Р•РЎРљРћР• РћР‘РќРћР’Р›Р•РќРР• РљРђР РўРћР§РљР Р‘Р•Р— РџР•Р Р•Р—РђР“Р РЈР—РљР Р“Р РР”Рђ
                             if (typeof updateCardDOM === 'function') {
                                 updateCardDOM(allItems[index]);
                             }
@@ -741,17 +741,17 @@ window.onload = async () => {
                 })
                 .subscribe();
         } else {
-            document.getElementById('itemsGrid').innerHTML = `<div style="color:red; padding:20px; text-align:center;">[ БД НЕ ПОДКЛЮЧЕНА ]</div>`;
+            document.getElementById('itemsGrid').innerHTML = `<div style="color:red; padding:20px; text-align:center;">[ Р‘Р” РќР• РџРћР”РљР›Р®Р§Р•РќРђ ]</div>`;
         }
         
-       // 🚀 СОВРЕМЕННЫЙ ИНТЕЛЛЕКТУАЛЬНЫЙ СКРОЛЛ (Как в Instagram)
+       // рџљЂ РЎРћР’Р Р•РњР•РќРќР«Р™ РРќРўР•Р›Р›Р•РљРўРЈРђР›Р¬РќР«Р™ РЎРљР РћР›Р› (РљР°Рє РІ Instagram)
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
                 if (renderedCount < filteredItems.length && window.innerWidth <= 900) {
                     const scrollTrigger = document.getElementById('loadingTrigger');
                     if (scrollTrigger) {
                         scrollTrigger.style.display = 'block';
-                        scrollTrigger.innerHTML = '<span style="animation: pulse 1s infinite; color: var(--accent-green);">[ ЗАГРУЗКА АРХИВА... ]</span>';
+                        scrollTrigger.innerHTML = '<span style="animation: pulse 1s infinite; color: var(--accent-green);">[ Р—РђР“Р РЈР—РљРђ РђР РҐРР’Рђ... ]</span>';
                     }
                     setTimeout(() => {
                         renderNextBatch();
@@ -770,37 +770,37 @@ window.onload = async () => {
             document.getElementById('ordersSearchPhone').value = currentUser.phone;
         }
 
-       // Если правила уже были приняты ранее, но тур не пройден — запускаем
+       // Р•СЃР»Рё РїСЂР°РІРёР»Р° СѓР¶Рµ Р±С‹Р»Рё РїСЂРёРЅСЏС‚С‹ СЂР°РЅРµРµ, РЅРѕ С‚СѓСЂ РЅРµ РїСЂРѕР№РґРµРЅ вЂ” Р·Р°РїСѓСЃРєР°РµРј
         if (localStorage.getItem('nisha_rules_accepted')) {
             startOnboardingTour();
         }
 
         // ==============================================================
-        // --- СИСТЕМА ЛИЧНЫХ ОТВЕТОВ ОТ ПОДДЕРЖКИ (ФИКС) ---
+        // --- РЎРРЎРўР•РњРђ Р›РР§РќР«РҐ РћРўР’Р•РўРћР’ РћРў РџРћР”Р”Р•Р Р–РљР (Р¤РРљРЎ) ---
         // ==============================================================
         setTimeout(async () => {
-            console.log("[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:", clientFingerprint);
+            console.log("[РЎРРЎРўР•РњРђ РћРўР’Р•РўРћР’] РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ... РњРѕР№ ID:", clientFingerprint);
             try {
-                // 1. Проверяем пропущенные сообщения (Offline)
+                // 1. РџСЂРѕРІРµСЂСЏРµРј РїСЂРѕРїСѓС‰РµРЅРЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ (Offline)
                 const { data: replies, error: replErr } = await _supabase
                     .from('support_replies')
                     .select('*')
                     .eq('client_id', clientFingerprint)
                     .eq('is_read', false);
                 
-                if (replErr) console.error("[СИСТЕМА ОТВЕТОВ] Ошибка БД:", replErr.message);
+                if (replErr) console.error("[РЎРРЎРўР•РњРђ РћРўР’Р•РўРћР’] РћС€РёР±РєР° Р‘Р”:", replErr.message);
 
                 if (replies && replies.length > 0) {
-                    console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
+                    console.log(`[РЎРРЎРўР•РњРђ РћРўР’Р•РўРћР’] РќР°Р№РґРµРЅРѕ ${replies.length} РЅРѕРІС‹С… СЃРѕРѕР±С‰РµРЅРёР№!`);
                     replies.forEach(r => {
-                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
+                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>РћС‚РІРµС‚ РѕС‚ РџРѕРґРґРµСЂР¶РєРё:</b><br><br>${r.answer_text}`, '[ РџР РћР§РРўРђРќРћ ]', () => {
                             _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
                     });
                 }
 
-                // 2. Слушаем в реальном времени (Online)
-                console.log("[СИСТЕМА ОТВЕТОВ] Подписка на Realtime включена.");
+                // 2. РЎР»СѓС€Р°РµРј РІ СЂРµР°Р»СЊРЅРѕРј РІСЂРµРјРµРЅРё (Online)
+                console.log("[РЎРРЎРўР•РњРђ РћРўР’Р•РўРћР’] РџРѕРґРїРёСЃРєР° РЅР° Realtime РІРєР»СЋС‡РµРЅР°.");
                 _supabase.channel('support-replies-channel')
                     .on('postgres_changes', { 
                         event: 'INSERT', 
@@ -808,35 +808,35 @@ window.onload = async () => {
                         table: 'support_replies', 
                         filter: `client_id=eq.${clientFingerprint}` 
                     }, payload => {
-                        console.log("[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение Online:", payload.new);
+                        console.log("[РЎРРЎРўР•РњРђ РћРўР’Р•РўРћР’] РџСЂРёС€Р»Рѕ РЅРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ Online:", payload.new);
                         const r = payload.new;
-                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
+                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>РћС‚РІРµС‚ РѕС‚ РџРѕРґРґРµСЂР¶РєРё:</b><br><br>${r.answer_text}`, '[ РџР РћР§РРўРђРќРћ ]', () => {
                             _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
                     })
                     .subscribe((status) => {
                         if (status === 'SUBSCRIBED') {
-                            console.log("[СИСТЕМА ОТВЕТОВ] Успешно подключен к каналу!");
+                            console.log("[РЎРРЎРўР•РњРђ РћРўР’Р•РўРћР’] РЈСЃРїРµС€РЅРѕ РїРѕРґРєР»СЋС‡РµРЅ Рє РєР°РЅР°Р»Сѓ!");
                         }
                     });
             } catch(e) {
-                console.error("[СИСТЕМА ОТВЕТОВ] Глобальная ошибка:", e);
+                console.error("[РЎРРЎРўР•РњРђ РћРўР’Р•РўРћР’] Р“Р»РѕР±Р°Р»СЊРЅР°СЏ РѕС€РёР±РєР°:", e);
             }
-        }, 3000); // Ждем 3 секунды после загрузки сайта, чтобы не мешать
+        }, 3000); // Р–РґРµРј 3 СЃРµРєСѓРЅРґС‹ РїРѕСЃР»Рµ Р·Р°РіСЂСѓР·РєРё СЃР°Р№С‚Р°, С‡С‚РѕР±С‹ РЅРµ РјРµС€Р°С‚СЊ
 
     } catch (err) {
        
-        console.error("ОШИБКА ИНИЦИАЛИЗАЦИИ ПРИЛОЖЕНИЯ:", err);
+        console.error("РћРЁРР‘РљРђ РРќРР¦РРђР›РР—РђР¦РР РџР РР›РћР–Р•РќРРЇ:", err);
         const grid = document.getElementById('itemsGrid');
         if (grid) {
-            grid.innerHTML = `<div style="color:red; text-align:center; padding:40px; grid-column:1/-1;">[ СИСТЕМНАЯ ОШИБКА: ${err.message} ]</div>`;
+            grid.innerHTML = `<div style="color:red; text-align:center; padding:40px; grid-column:1/-1;">[ РЎРРЎРўР•РњРќРђРЇ РћРЁРР‘РљРђ: ${err.message} ]</div>`;
         }
     }
 };
 
-// Идеально плавное закрытие по крестику
+// РРґРµР°Р»СЊРЅРѕ РїР»Р°РІРЅРѕРµ Р·Р°РєСЂС‹С‚РёРµ РїРѕ РєСЂРµСЃС‚РёРєСѓ
 // ==========================================
-// ДВУХКНОПОЧНЫЙ ТЕРМИНАЛ ДЛЯ ПОДТВЕРЖДЕНИЙ
+// Р”Р’РЈРҐРљРќРћРџРћР§РќР«Р™ РўР•Р РњРРќРђР› Р”Р›РЇ РџРћР”РўР’Р•Р Р–Р”Р•РќРР™
 // ==========================================
 function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancelBtnText, onConfirm) {
     const overlay = document.createElement('div');
@@ -859,7 +859,7 @@ function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancelBtnText
     overlay.querySelector('.confirm-no').addEventListener('click', () => { overlay.remove(); });
 }
 
-// Идеально плавное закрытие по крестику (С ЗАЩИТОЙ ДАННЫХ)
+// РРґРµР°Р»СЊРЅРѕ РїР»Р°РІРЅРѕРµ Р·Р°РєСЂС‹С‚РёРµ РїРѕ РєСЂРµСЃС‚РёРєСѓ (РЎ Р—РђР©РРўРћР™ Р”РђРќРќР«РҐ)
 function closeModal(id) { 
     if (id === 'proposeModal') {
         const files = document.getElementById('propFiles')?.files?.length || 0;
@@ -867,22 +867,22 @@ function closeModal(id) {
         const size = document.getElementById('propSize')?.value.trim() || '';
         const contact = document.getElementById('propContact')?.value.trim() || '';
         
-        // Если юзер ввел хоть что-то — вызываем терминал
+        // Р•СЃР»Рё СЋР·РµСЂ РІРІРµР» С…РѕС‚СЊ С‡С‚Рѕ-С‚Рѕ вЂ” РІС‹Р·С‹РІР°РµРј С‚РµСЂРјРёРЅР°Р»
         if (files > 0 || brand !== '' || size !== '' || contact !== '') {
             showConfirmTerminalModal(
                 'WARNING_DATA_LOSS.SYS', 
-                'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.', 
-                '[ ЗАКРЫТЬ ]', 
-                '[ ОТМЕНА ]', 
-                () => { resetProposalForm(); executeCloseModal(id); } // Если согласился - стираем и закрываем
+                'РЈ РІР°СЃ РµСЃС‚СЊ РЅРµСЃРѕС…СЂР°РЅРµРЅРЅС‹Рµ РґР°РЅРЅС‹Рµ. Р•СЃР»Рё РІС‹ Р·Р°РєСЂРѕРµС‚Рµ РѕРєРЅРѕ, С„РѕСЂРјР° РїРѕР»РЅРѕСЃС‚СЊСЋ РѕС‡РёСЃС‚РёС‚СЃСЏ.', 
+                '[ Р—РђРљР Р«РўР¬ ]', 
+                '[ РћРўРњР•РќРђ ]', 
+                () => { resetProposalForm(); executeCloseModal(id); } // Р•СЃР»Рё СЃРѕРіР»Р°СЃРёР»СЃСЏ - СЃС‚РёСЂР°РµРј Рё Р·Р°РєСЂС‹РІР°РµРј
             );
             return; 
         }
     }
-    executeCloseModal(id); // Если защищать не нужно — просто закрываем
+    executeCloseModal(id); // Р•СЃР»Рё Р·Р°С‰РёС‰Р°С‚СЊ РЅРµ РЅСѓР¶РЅРѕ вЂ” РїСЂРѕСЃС‚Рѕ Р·Р°РєСЂС‹РІР°РµРј
 }
 
-// Вся старая логика анимаций перенесена сюда
+// Р’СЃСЏ СЃС‚Р°СЂР°СЏ Р»РѕРіРёРєР° Р°РЅРёРјР°С†РёР№ РїРµСЂРµРЅРµСЃРµРЅР° СЃСЋРґР°
 function executeCloseModal(id) {
     if (id === 'checkoutModal' && window.otpPollInterval) clearInterval(window.otpPollInterval);
     const modal = document.getElementById(id);
@@ -924,16 +924,16 @@ async function openReviewsModal() {
     const container = document.getElementById('reviewsContainerList');
     if (!container) return;
     
-    container.innerHTML = '<div style="text-align: center; color: var(--accent-green); font-family: var(--font-mono); padding: 40px 20px;">[ ЗАГРУЗКА ОТЗЫВОВ... ]</div>';
+    container.innerHTML = '<div style="text-align: center; color: var(--accent-green); font-family: var(--font-mono); padding: 40px 20px;">[ Р—РђР“Р РЈР—РљРђ РћРўР—Р«Р’РћР’... ]</div>';
     
     const { data, error } = await _supabase.from('reviews').select('*').eq('is_published', true).order('created_at', { ascending: false });
     
     if (error || !data || data.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">[ ${i18next.t('reviews_modal.empty_reviews', { defaultValue: 'В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ' })} ]</div>`;
+        container.innerHTML = `<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">[ ${i18next.t('reviews_modal.empty_reviews', { defaultValue: 'Р’ Р”РђРќРќР«Р™ РњРћРњР•РќРў РћРўР—Р«Р’Р« РћРўРЎРЈРўРЎРўР’РЈР®Рў' })} ]</div>`;
         return;
     }
 
-    // Глобальная функция для открытия 1 картинки в PhotoSwipe
+    // Р“Р»РѕР±Р°Р»СЊРЅР°СЏ С„СѓРЅРєС†РёСЏ РґР»СЏ РѕС‚РєСЂС‹С‚РёСЏ 1 РєР°СЂС‚РёРЅРєРё РІ PhotoSwipe
     if (!window.openReviewImage) {
         window.openReviewImage = function(url) {
             if (!window.PhotoSwipeLightbox) return;
@@ -961,10 +961,10 @@ async function openReviewsModal() {
             const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : rev.user_name;
             
             const clickAction = rev.item_image ? `onclick="openReviewImage('${rev.item_image}')"` : '';
-            const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
+            const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="РЈРІРµР»РёС‡РёС‚СЊ С„РѕС‚Рѕ"></div>` : '';
             
             const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
-            const productLinkAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')" title="Открыть товар"` : '';
+            const productLinkAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')" title="РћС‚РєСЂС‹С‚СЊ С‚РѕРІР°СЂ"` : '';
 
             html += `
             <div class="review-card-ui">
@@ -1001,7 +1001,7 @@ document.querySelectorAll('.modal-window, .orders-container').forEach(el => {
 
 async function checkSession() {
     try {
-        // Жесткая проверка юзера на сервере, а не в кэше
+        // Р–РµСЃС‚РєР°СЏ РїСЂРѕРІРµСЂРєР° СЋР·РµСЂР° РЅР° СЃРµСЂРІРµСЂРµ, Р° РЅРµ РІ РєСЌС€Рµ
         const { data: { user }, error: userError } = await _supabase.auth.getUser();
         
         if (user && !userError) {
@@ -1010,42 +1010,42 @@ async function checkSession() {
            if (!error && profiles && profiles.length > 0) { 
                 userProfile = profiles[0]; 
                 
-                // --- СИНХРОНИЗАЦИЯ ЯЗЫКА ИЗ БД В БРАУЗЕР ---
+                // --- РЎРРќРҐР РћРќРР—РђР¦РРЇ РЇР—Р«РљРђ РР— Р‘Р” Р’ Р‘Р РђРЈР—Р•Р  ---
                 if (userProfile.language) {
                     const currentLang = localStorage.getItem('nisha_lang') || 'ru';
                     if (userProfile.language !== currentLang) {
                         localStorage.setItem('nisha_lang', userProfile.language);
-                        const newFlag = userProfile.language === 'ru' ? '🇷🇺' : (userProfile.language === 'en' ? '🇬🇧' : '🇺🇦');
+                        const newFlag = userProfile.language === 'ru' ? 'рџ‡·рџ‡є' : (userProfile.language === 'en' ? 'рџ‡¬рџ‡§' : 'рџ‡єрџ‡¦');
                         localStorage.setItem('nisha_flag', newFlag);
                         if (typeof i18next !== 'undefined') {
                             i18next.changeLanguage(userProfile.language).then(() => {
                                 updateContentLanguage();
                                 const footLang = document.getElementById('currentLangLabelFooter');
-                                if (footLang) footLang.innerText = '[' + userProfile.language.toUpperCase() + '] ▼';
+                                if (footLang) footLang.innerText = '[' + userProfile.language.toUpperCase() + '] в–ј';
                             });
                         }
                     }
                 }
             }
 
-            // УМНАЯ ЛОГИКА ИМЕНИ:
-            // Если в БД записалось дефолтное 'User' (или пусто), то жестко берем имя из Google
+            // РЈРњРќРђРЇ Р›РћР“РРљРђ РРњР•РќР:
+            // Р•СЃР»Рё РІ Р‘Р” Р·Р°РїРёСЃР°Р»РѕСЃСЊ РґРµС„РѕР»С‚РЅРѕРµ 'User' (РёР»Рё РїСѓСЃС‚Рѕ), С‚Рѕ Р¶РµСЃС‚РєРѕ Р±РµСЂРµРј РёРјСЏ РёР· Google
             let uName = userProfile?.username;
             if (!uName || uName === 'User') {
                 uName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@')[0];
             }
             const uEmail = currentUser.email;
 
-            // БЕЗОПАСНО Обновляем ПК (Сайдбар)
+            // Р‘Р•Р—РћРџРђРЎРќРћ РћР±РЅРѕРІР»СЏРµРј РџРљ (РЎР°Р№РґР±Р°СЂ)
             const loginForm = document.getElementById('loginForm');
             const profileForm = document.getElementById('profileForm');
             if (loginForm) loginForm.style.display = 'none';
             if (profileForm) profileForm.style.display = 'flex';
             
             if(document.getElementById('profileName')) document.getElementById('profileName').innerText = uName;
-            if(document.getElementById('profileEmail')) document.getElementById('profileEmail').innerText = uEmail; // ДОБАВИЛИ E-MAIL ДЛЯ ПК
+            if(document.getElementById('profileEmail')) document.getElementById('profileEmail').innerText = uEmail; // Р”РћР‘РђР’РР›Р E-MAIL Р”Р›РЇ РџРљ
 
-            // БЕЗОПАСНО Обновляем Мобилку (Модалка)
+            // Р‘Р•Р—РћРџРђРЎРќРћ РћР±РЅРѕРІР»СЏРµРј РњРѕР±РёР»РєСѓ (РњРѕРґР°Р»РєР°)
             const mLog = document.getElementById('modalLoginForm');
             const mProf = document.getElementById('modalProfileForm');
             if (mLog) mLog.style.display = 'none';
@@ -1053,7 +1053,7 @@ async function checkSession() {
             
             if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
             if(document.getElementById('modalProfileEmail')) document.getElementById('modalProfileEmail').innerText = uEmail;
-            // --- ПРИВЯЗКА ПУШЕЙ К ПРОФИЛЮ ---
+            // --- РџР РР’РЇР—РљРђ РџРЈРЁР•Р™ Рљ РџР РћР¤РР›Р® ---
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(reg => {
                     if (typeof subscribeUserToPush === 'function') {
@@ -1062,7 +1062,7 @@ async function checkSession() {
                 });
             }
             
-           // --- УВЕДОМЛЕНИЯ О СТАТУСЕ ЗАКАЗА В РЕАЛЬНОМ ВРЕМЕНИ ---
+           // --- РЈР’Р•Р”РћРњР›Р•РќРРЇ Рћ РЎРўРђРўРЈРЎР• Р—РђРљРђР—Рђ Р’ Р Р•РђР›Р¬РќРћРњ Р’Р Р•РњР•РќР ---
             if (orderStatusChannel) _supabase.removeChannel(orderStatusChannel);
             orderStatusChannel = _supabase.channel('order-status-updates')
                 .on('postgres_changes', { 
@@ -1073,21 +1073,21 @@ async function checkSession() {
                 }, payload => {
                     const newStatus = payload.new.status;
                     if (newStatus !== payload.old.status) {
-                        showToast(`Заказ #${payload.new.id.split('-')[0].toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
+                        showToast(`Р—Р°РєР°Р· #${payload.new.id.split('-')[0].toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
                         
                         showTerminalModal(
                             'SYSTEM_NOTIFICATION.LOG',
-                            `ВНИМАНИЕ! Статус вашего заказа изменился.<br><br>` +
-                            `Заказ: #${payload.new.id.split('-')[0].toUpperCase()}<br>` +
-                            `Новый статус: <b style="color:var(--accent-green);">${newStatus.toUpperCase()}</b>`,
-                            '[ ПОСМОТРЕТЬ ]',
+                            `Р’РќРРњРђРќРР•! РЎС‚Р°С‚СѓСЃ РІР°С€РµРіРѕ Р·Р°РєР°Р·Р° РёР·РјРµРЅРёР»СЃСЏ.<br><br>` +
+                            `Р—Р°РєР°Р·: #${payload.new.id.split('-')[0].toUpperCase()}<br>` +
+                            `РќРѕРІС‹Р№ СЃС‚Р°С‚СѓСЃ: <b style="color:var(--accent-green);">${newStatus.toUpperCase()}</b>`,
+                            '[ РџРћРЎРњРћРўР Р•РўР¬ ]',
                             () => openOrdersModal()
                         );
                     }
                 })
                 .subscribe();
 
-           // --- УВЕДОМЛЕНИЯ ОБ ОТВЕТАХ НА ВОПРОСЫ ---
+           // --- РЈР’Р•Р”РћРњР›Р•РќРРЇ РћР‘ РћРўР’Р•РўРђРҐ РќРђ Р’РћРџР РћРЎР« ---
             if (qaUpdatesChannel) _supabase.removeChannel(qaUpdatesChannel);
             qaUpdatesChannel = _supabase.channel('qa-updates')
                 .on('postgres_changes', { 
@@ -1097,7 +1097,7 @@ async function checkSession() {
                     filter: `user_id=eq.${currentUser.id}` 
                 }, payload => {
                     if (payload.new.answer && !payload.old.answer) {
-                        const msg = i18next.t('messages.qa_answered', {defaultValue: 'Вам ответили на вопрос!'});
+                        const msg = i18next.t('messages.qa_answered', {defaultValue: 'Р’Р°Рј РѕС‚РІРµС‚РёР»Рё РЅР° РІРѕРїСЂРѕСЃ!'});
                         showToast(msg, 'success');
                     }
                 })
@@ -1106,16 +1106,16 @@ async function checkSession() {
             await loadFavorites();
            
             
-          // --- УМНОЕ ВОССТАНОВЛЕНИЕ БРОШЕННОЙ КОРЗИНЫ ---
+          // --- РЈРњРќРћР• Р’РћРЎРЎРўРђРќРћР’Р›Р•РќРР• Р‘Р РћРЁР•РќРќРћР™ РљРћР Р—РРќР« ---
             if (userProfile && userProfile.cart && userProfile.cart.length > 0) {
                 const dbCart = userProfile.cart;
                 
-                // Если текущая локальная корзина пуста — просто берем из БД
+                // Р•СЃР»Рё С‚РµРєСѓС‰Р°СЏ Р»РѕРєР°Р»СЊРЅР°СЏ РєРѕСЂР·РёРЅР° РїСѓСЃС‚Р° вЂ” РїСЂРѕСЃС‚Рѕ Р±РµСЂРµРј РёР· Р‘Р”
                 if (cart.length === 0) {
                     cart = dbCart;
-                    showToast('Корзина восстановлена', 'success');
+                    showToast('РљРѕСЂР·РёРЅР° РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅР°', 'success');
                 } else {
-                    // Если локально что-то есть, объединяем обе корзины без дубликатов
+                    // Р•СЃР»Рё Р»РѕРєР°Р»СЊРЅРѕ С‡С‚Рѕ-С‚Рѕ РµСЃС‚СЊ, РѕР±СЉРµРґРёРЅСЏРµРј РѕР±Рµ РєРѕСЂР·РёРЅС‹ Р±РµР· РґСѓР±Р»РёРєР°С‚РѕРІ
                     let mergedCart = [...cart];
                     let addedCount = 0;
                     
@@ -1127,14 +1127,14 @@ async function checkSession() {
                     });
                     
                     cart = mergedCart;
-                    if (addedCount > 0) showToast('Корзины синхронизированы', 'success');
+                    if (addedCount > 0) showToast('РљРѕСЂР·РёРЅС‹ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅС‹', 'success');
                 }
                 
-                // Сохраняем объединенный результат локально и отправляем обратно в БД
+                // РЎРѕС…СЂР°РЅСЏРµРј РѕР±СЉРµРґРёРЅРµРЅРЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚ Р»РѕРєР°Р»СЊРЅРѕ Рё РѕС‚РїСЂР°РІР»СЏРµРј РѕР±СЂР°С‚РЅРѕ РІ Р‘Р”
                 localStorage.setItem('nisha_cart', JSON.stringify(cart));
                 await syncCartToServer();
             } else {
-                // Если в БД пусто, но юзер накидал вещей гостем — отправляем их в базу
+                // Р•СЃР»Рё РІ Р‘Р” РїСѓСЃС‚Рѕ, РЅРѕ СЋР·РµСЂ РЅР°РєРёРґР°Р» РІРµС‰РµР№ РіРѕСЃС‚РµРј вЂ” РѕС‚РїСЂР°РІР»СЏРµРј РёС… РІ Р±Р°Р·Сѓ
                 if (cart.length > 0) {
                     await syncCartToServer();
                 }
@@ -1145,13 +1145,13 @@ async function checkSession() {
             userProfile = null;
             favorites = [];
             
-            // БЕЗОПАСНО ПК
+            // Р‘Р•Р—РћРџРђРЎРќРћ РџРљ
             const loginForm = document.getElementById('loginForm');
             const profileForm = document.getElementById('profileForm');
             if (loginForm) loginForm.style.display = 'flex';
             if (profileForm) profileForm.style.display = 'none';
             
-            // БЕЗОПАСНО Мобилка
+            // Р‘Р•Р—РћРџРђРЎРќРћ РњРѕР±РёР»РєР°
             const mLog = document.getElementById('modalLoginForm');
             const mProf = document.getElementById('modalProfileForm');
             if (mLog) mLog.style.display = 'flex';
@@ -1159,7 +1159,7 @@ async function checkSession() {
             
             updateFavBadge();
         }
-    } catch (err) { console.error("Ошибка в checkSession:", err); }
+    } catch (err) { console.error("РћС€РёР±РєР° РІ checkSession:", err); }
 }
 
 let isRegMode = false;
@@ -1195,13 +1195,13 @@ async function handleAuth(action, isModal = false) {
     const password = document.getElementById(p + 'Pass').value.trim();
     const username = document.getElementById(p + 'Username').value.trim();
 
-    if (!email || !password) { showToast('Введите Email и пароль!', 'error'); return; }
+    if (!email || !password) { showToast('Р’РІРµРґРёС‚Рµ Email Рё РїР°СЂРѕР»СЊ!', 'error'); return; }
 
     let result;
     if (action === 'register') {
-        if (!username) { showToast('Для регистрации нужен никнейм!', 'error'); return; }
+        if (!username) { showToast('Р”Р»СЏ СЂРµРіРёСЃС‚СЂР°С†РёРё РЅСѓР¶РµРЅ РЅРёРєРЅРµР№Рј!', 'error'); return; }
         result = await _supabase.auth.signUp({ email, password, options: { data: { username: username } } });
-        if (!result.error) showToast('Регистрация успешна! Проверьте почту.', 'success');
+        if (!result.error) showToast('Р РµРіРёСЃС‚СЂР°С†РёСЏ СѓСЃРїРµС€РЅР°! РџСЂРѕРІРµСЂСЊС‚Рµ РїРѕС‡С‚Сѓ.', 'success');
     } else {
         result = await _supabase.auth.signInWithPassword({ email, password });
         if (!result.error) showToast(i18next.t('messages.login_success'), 'success');
@@ -1228,16 +1228,16 @@ async function logout() {
 let renderedCount = 0;
 let filteredItems = [];
 
-// Запрещаем браузеру восстанавливать скролл при перезагрузке страницы
+// Р—Р°РїСЂРµС‰Р°РµРј Р±СЂР°СѓР·РµСЂСѓ РІРѕСЃСЃС‚Р°РЅР°РІР»РёРІР°С‚СЊ СЃРєСЂРѕР»Р» РїСЂРё РїРµСЂРµР·Р°РіСЂСѓР·РєРµ СЃС‚СЂР°РЅРёС†С‹
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
 window.scrollTo(0, 0);
 
-// Глобальный перехватчик URL для CDN (Вынесли наверх, чтобы браузер его видел сразу!)
+// Р“Р»РѕР±Р°Р»СЊРЅС‹Р№ РїРµСЂРµС…РІР°С‚С‡РёРє URL РґР»СЏ CDN (Р’С‹РЅРµСЃР»Рё РЅР°РІРµСЂС…, С‡С‚РѕР±С‹ Р±СЂР°СѓР·РµСЂ РµРіРѕ РІРёРґРµР» СЃСЂР°Р·Сѓ!)
 window.toCDN = function(url) {
     if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
-        // Используем твой бесплатный рабочий домен Cloudflare Workers!
+        // РСЃРїРѕР»СЊР·СѓРµРј С‚РІРѕР№ Р±РµСЃРїР»Р°С‚РЅС‹Р№ СЂР°Р±РѕС‡РёР№ РґРѕРјРµРЅ Cloudflare Workers!
         return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
     }
     return url || '';
@@ -1257,38 +1257,38 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
         if (isValid(item.images[0])) resultUrl = item.images[0];
     }
 
-    // 🔥 МАГИЯ CDN: Применяем глобальную подмену
+    // рџ”Ґ РњРђР“РРЇ CDN: РџСЂРёРјРµРЅСЏРµРј РіР»РѕР±Р°Р»СЊРЅСѓСЋ РїРѕРґРјРµРЅСѓ
     return window.toCDN(resultUrl);
 }
 
 async function loadAllItems() {
     const grid = document.getElementById('itemsGrid');
     
-    // 1. МГНОВЕННАЯ ЗАГРУЗКА (Из кэша)
+    // 1. РњР“РќРћР’Р•РќРќРђРЇ Р—РђР“Р РЈР—РљРђ (РР· РєСЌС€Р°)
     const cachedData = localStorage.getItem('nisha_cached_db');
     if (cachedData && allItems.length === 0) {
         try {
             allItems = JSON.parse(cachedData);
             applyFilters(); 
-        } catch(e) { console.error("Ошибка кэша"); }
+        } catch(e) { console.error("РћС€РёР±РєР° РєСЌС€Р°"); }
     }
 
-    // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров)
-    // ОПТИМИЗАЦИЯ: запрашиваем только легкие поля, без 'description' и 'measurements', они подгрузятся при клике
+    // 2. Р¤РћРќРћР’Р«Р™ Р—РђРџР РћРЎ Рљ Р‘Р” (РЎРЅРёРјР°РµРј Р»РёРјРёС‚, Р±РµСЂРµРј 1000 С‚РѕРІР°СЂРѕРІ)
+    // РћРџРўРРњРР—РђР¦РРЇ: Р·Р°РїСЂР°С€РёРІР°РµРј С‚РѕР»СЊРєРѕ Р»РµРіРєРёРµ РїРѕР»СЏ, Р±РµР· 'description' Рё 'measurements', РѕРЅРё РїРѕРґРіСЂСѓР·СЏС‚СЃСЏ РїСЂРё РєР»РёРєРµ
     const { data, error } = await _supabase.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, is_drop').limit(1000).order('created_at', { ascending: false });
     
     if (error) { 
-        if (allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
+        if (allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ РћРЁРР‘РљРђ Р‘Р”: ${error.message} ]</div>`;
         return; 
     }
     
-    // --- ФИКС БАГА "6 ТОВАРОВ": Сравниваем не только текст, но и длину массивов! ---
-    // Если данные изменились, сохраняем в кэш
+    // --- Р¤РРљРЎ Р‘РђР“Рђ "6 РўРћР’РђР РћР’": РЎСЂР°РІРЅРёРІР°РµРј РЅРµ С‚РѕР»СЊРєРѕ С‚РµРєСЃС‚, РЅРѕ Рё РґР»РёРЅСѓ РјР°СЃСЃРёРІРѕРІ! ---
+    // Р•СЃР»Рё РґР°РЅРЅС‹Рµ РёР·РјРµРЅРёР»РёСЃСЊ, СЃРѕС…СЂР°РЅСЏРµРј РІ РєСЌС€
     const isChanged = (JSON.stringify(data) !== JSON.stringify(allItems)) || (data.length !== allItems.length);
     allItems = data; 
     localStorage.setItem('nisha_cached_db', JSON.stringify(data)); 
     
-    // --- ИСТОРИЯ ПРОСМОТРОВ ---
+    // --- РРЎРўРћР РРЇ РџР РћРЎРњРћРўР РћР’ ---
     if (userProfile && userProfile.viewed_history && userProfile.viewed_history.length > 0) {
         let dbHistory = [];
         userProfile.viewed_history.forEach(uuid => {
@@ -1302,7 +1302,7 @@ async function loadAllItems() {
         renderHistory();
     }
 
-    // ФИКС КОРЗИНЫ
+    // Р¤РРљРЎ РљРћР Р—РРќР«
     const validCart = cart.filter(cItem => allItems.some(dbItem => dbItem.id === cItem.id));
     if (validCart.length !== cart.length) {
         cart = validCart;
@@ -1310,32 +1310,32 @@ async function loadAllItems() {
         updateCartUI();
     }
 
-    // 3. ПЕРЕРИСОВКА (Если данные реально обновились)
+    // 3. РџР•Р Р•Р РРЎРћР’РљРђ (Р•СЃР»Рё РґР°РЅРЅС‹Рµ СЂРµР°Р»СЊРЅРѕ РѕР±РЅРѕРІРёР»РёСЃСЊ)
     if (!cachedData || isChanged) {
         applyFilters(); 
     }
     
-    // 4. ФОНОВАЯ ПРОВЕРКА (Обход кеша CDN) - синхронизируем актуальные статусы TOP/SOLD
+    // 4. Р¤РћРќРћР’РђРЇ РџР РћР’Р•Р РљРђ (РћР±С…РѕРґ РєРµС€Р° CDN) - СЃРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј Р°РєС‚СѓР°Р»СЊРЅС‹Рµ СЃС‚Р°С‚СѓСЃС‹ TOP/SOLD
     syncCriticalStatuses();
 }
 
-// --- СИНХРОНИЗАЦИЯ КРИТИЧЕСКИХ СТАТУСОВ (TOP, RESERVED, SOLD) в обход CDN ---
+// --- РЎРРќРҐР РћРќРР—РђР¦РРЇ РљР РРўРР§Р•РЎРљРРҐ РЎРўРђРўРЈРЎРћР’ (TOP, RESERVED, SOLD) РІ РѕР±С…РѕРґ CDN ---
 async function syncCriticalStatuses() {
     if (typeof _supabase === 'undefined') return;
     try {
-        // Вытаскиваем напрямую базовые статусы ВСЕХ вещей из БД, минуя CDN кэш!
+        // Р’С‹С‚Р°СЃРєРёРІР°РµРј РЅР°РїСЂСЏРјСѓСЋ Р±Р°Р·РѕРІС‹Рµ СЃС‚Р°С‚СѓСЃС‹ Р’РЎР•РҐ РІРµС‰РµР№ РёР· Р‘Р”, РјРёРЅСѓСЏ CDN РєСЌС€!
         const { data } = await _supabase.from('items').select('id, is_top, top_until, status');
         
         if (data) {
             let changed = false;
             
-            // 1. Очистка от призраков (удаляем из кэша вещи, которые удалены из БД)
+            // 1. РћС‡РёСЃС‚РєР° РѕС‚ РїСЂРёР·СЂР°РєРѕРІ (СѓРґР°Р»СЏРµРј РёР· РєСЌС€Р° РІРµС‰Рё, РєРѕС‚РѕСЂС‹Рµ СѓРґР°Р»РµРЅС‹ РёР· Р‘Р”)
             const validIds = new Set(data.map(d => d.id));
             const originalLength = allItems.length;
             allItems = allItems.filter(i => validIds.has(i.id));
             if (allItems.length !== originalLength) changed = true;
             
-            // 2. Синхронизация критических статусов
+            // 2. РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ РєСЂРёС‚РёС‡РµСЃРєРёС… СЃС‚Р°С‚СѓСЃРѕРІ
             const dataMap = new Map();
             data.forEach(d => dataMap.set(d.id, d));
             
@@ -1374,60 +1374,60 @@ async function syncCriticalStatuses() {
     } catch(e) { console.error("Sync error:", e); }
 }
 
-// --- ОБНОВЛЕНИЕ КРАСНЫХ СЧЕТЧИКОВ В БОКОВОМ МЕНЮ ---
+// --- РћР‘РќРћР’Р›Р•РќРР• РљР РђРЎРќР«РҐ РЎР§Р•РўР§РРљРћР’ Р’ Р‘РћРљРћР’РћРњ РњР•РќР® ---
 function updateSidebarCounters() {
-    // Считаем категории (только доступные товары)
+    // РЎС‡РёС‚Р°РµРј РєР°С‚РµРіРѕСЂРёРё (С‚РѕР»СЊРєРѕ РґРѕСЃС‚СѓРїРЅС‹Рµ С‚РѕРІР°СЂС‹)
     const availableItemsAll = allItems.filter(i => i.status === 'available');
-    const catCounts = { 'Все вещи': availableItemsAll.length };
+    const catCounts = { 'Р’СЃРµ РІРµС‰Рё': availableItemsAll.length };
     availableItemsAll.forEach(item => {
         if (!item) return;
-        const c = item.category || 'Без категории';
+        const c = item.category || 'Р‘РµР· РєР°С‚РµРіРѕСЂРёРё';
         catCounts[c] = (catCounts[c] || 0) + 1;
     });
 
-    // Обновляем HTML категорий
+    // РћР±РЅРѕРІР»СЏРµРј HTML РєР°С‚РµРіРѕСЂРёР№
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(link => {
-        // Убираем старый счетчик (если был)
+        // РЈР±РёСЂР°РµРј СЃС‚Р°СЂС‹Р№ СЃС‡РµС‚С‡РёРє (РµСЃР»Рё Р±С‹Р»)
         let baseText = link.innerHTML.split('<span')[0].trim();
         
-        // Определяем, какая это категория
+        // РћРїСЂРµРґРµР»СЏРµРј, РєР°РєР°СЏ СЌС‚Рѕ РєР°С‚РµРіРѕСЂРёСЏ
         let catName = '';
-        if (baseText.includes('Все вещи')) catName = 'Все вещи';
-        else if (baseText.includes('Верхняя одежда')) catName = 'Верхняя одежда';
-        else if (baseText.includes('Кофты и Свитера')) catName = 'Кофты и Свитера';
-        else if (baseText.includes('Штаны и Джинсы')) catName = 'Штаны и Джинсы';
-        else if (baseText.includes('Обувь')) catName = 'Обувь';
-        else if (baseText.includes('Аксессуары')) catName = 'Аксессуары';
+        if (baseText.includes('Р’СЃРµ РІРµС‰Рё')) catName = 'Р’СЃРµ РІРµС‰Рё';
+        else if (baseText.includes('Р’РµСЂС…РЅСЏСЏ РѕРґРµР¶РґР°')) catName = 'Р’РµСЂС…РЅСЏСЏ РѕРґРµР¶РґР°';
+        else if (baseText.includes('РљРѕС„С‚С‹ Рё РЎРІРёС‚РµСЂР°')) catName = 'РљРѕС„С‚С‹ Рё РЎРІРёС‚РµСЂР°';
+        else if (baseText.includes('РЁС‚Р°РЅС‹ Рё Р”Р¶РёРЅСЃС‹')) catName = 'РЁС‚Р°РЅС‹ Рё Р”Р¶РёРЅСЃС‹';
+        else if (baseText.includes('РћР±СѓРІСЊ')) catName = 'РћР±СѓРІСЊ';
+        else if (baseText.includes('РђРєСЃРµСЃСЃСѓР°СЂС‹')) catName = 'РђРєСЃРµСЃСЃСѓР°СЂС‹';
 
         const count = catCounts[catName] || 0;
         
-        // Рисуем стильный красный счетчик (скрываем, если 0)
+        // Р РёСЃСѓРµРј СЃС‚РёР»СЊРЅС‹Р№ РєСЂР°СЃРЅС‹Р№ СЃС‡РµС‚С‡РёРє (СЃРєСЂС‹РІР°РµРј, РµСЃР»Рё 0)
         if (count > 0) {
             link.innerHTML = `${baseText} <span style="color:#ff3333; font-weight:bold; font-family:var(--font-mono); font-size:11px;">(${count})</span>`;
         } else {
             link.innerHTML = baseText;
         }
 
-        // --- ЖЕЛЕЗОБЕТОННЫЙ ВОЗВРАТ ЗЕЛЕНОГО ВЫДЕЛЕНИЯ ---
-        link.classList.remove('active-filter'); // Сначала очищаем
+        // --- Р–Р•Р›Р•Р—РћР‘Р•РўРћРќРќР«Р™ Р’РћР—Р’Р РђРў Р—Р•Р›Р•РќРћР“Рћ Р’Р«Р”Р•Р›Р•РќРРЇ ---
+        link.classList.remove('active-filter'); // РЎРЅР°С‡Р°Р»Р° РѕС‡РёС‰Р°РµРј
         if (currentCategory !== '' && catName === currentCategory) {
             link.classList.add('active-filter');
-        } else if (currentCategory === '' && catName === 'Все вещи') {
+        } else if (currentCategory === '' && catName === 'Р’СЃРµ РІРµС‰Рё') {
             link.classList.add('active-filter');
         }
     });
     
 
-    // Считаем размеры (только для ТЕКУЩЕЙ выбранной категории и ТОЛЬКО ДОСТУПНЫЕ)
+    // РЎС‡РёС‚Р°РµРј СЂР°Р·РјРµСЂС‹ (С‚РѕР»СЊРєРѕ РґР»СЏ РўР•РљРЈР©Р•Р™ РІС‹Р±СЂР°РЅРЅРѕР№ РєР°С‚РµРіРѕСЂРёРё Рё РўРћР›Р¬РљРћ Р”РћРЎРўРЈРџРќР«Р•)
     const sizeCounts = {};
     allItems.forEach(item => {
         if (!item || item.status !== 'available') return;
-        if (currentCategory !== '' && item.category !== currentCategory) return; // Умный подсчет
+        if (currentCategory !== '' && item.category !== currentCategory) return; // РЈРјРЅС‹Р№ РїРѕРґСЃС‡РµС‚
         const s = item.size || '-';
         sizeCounts[s] = (sizeCounts[s] || 0) + 1;
     });
 
-    // Обновляем HTML размеров
+    // РћР±РЅРѕРІР»СЏРµРј HTML СЂР°Р·РјРµСЂРѕРІ
     document.querySelectorAll('.size-cb').forEach(cb => {
         const labelSpan = cb.nextElementSibling;
         let baseText = labelSpan.innerHTML.split('<span')[0].trim();
@@ -1440,14 +1440,14 @@ function updateSidebarCounters() {
             cb.disabled = false;
         } else {
             labelSpan.innerHTML = baseText;
-            cb.parentElement.style.opacity = '0.4'; // Делаем полупрозрачным, если размера нет
-            cb.disabled = true; // Блокируем галочку
-            cb.checked = false; // Снимаем галочку, если была
+            cb.parentElement.style.opacity = '0.4'; // Р”РµР»Р°РµРј РїРѕР»СѓРїСЂРѕР·СЂР°С‡РЅС‹Рј, РµСЃР»Рё СЂР°Р·РјРµСЂР° РЅРµС‚
+            cb.disabled = true; // Р‘Р»РѕРєРёСЂСѓРµРј РіР°Р»РѕС‡РєСѓ
+            cb.checked = false; // РЎРЅРёРјР°РµРј РіР°Р»РѕС‡РєСѓ, РµСЃР»Рё Р±С‹Р»Р°
         }
     });
 }
 
-// ОПТИМИЗАЦИЯ PREFETCH: Функция для предзагрузки фоток высокого качества
+// РћРџРўРРњРР—РђР¦РРЇ PREFETCH: Р¤СѓРЅРєС†РёСЏ РґР»СЏ РїСЂРµРґР·Р°РіСЂСѓР·РєРё С„РѕС‚РѕРє РІС‹СЃРѕРєРѕРіРѕ РєР°С‡РµСЃС‚РІР°
 window.prefetchItemImages = function(id) {
     if (!window._prefetchedItems) window._prefetchedItems = new Set();
     if (window._prefetchedItems.has(id)) return;
@@ -1455,7 +1455,7 @@ window.prefetchItemImages = function(id) {
     window._prefetchedItems.add(id);
     const item = allItems.find(i => i.id === id);
     if (item && item.images) {
-        // Загружаем в память браузера первые 2 фотки из галереи товара
+        // Р—Р°РіСЂСѓР¶Р°РµРј РІ РїР°РјСЏС‚СЊ Р±СЂР°СѓР·РµСЂР° РїРµСЂРІС‹Рµ 2 С„РѕС‚РєРё РёР· РіР°Р»РµСЂРµРё С‚РѕРІР°СЂР°
         item.images.slice(0, 2).forEach(url => {
             const img = new Image();
             img.src = window.toCDN ? window.toCDN(url) : url;
@@ -1482,25 +1482,25 @@ function applyFilters() {
             const minPrice = minInput ? parseInt(minInput.value) : 0;
             const maxPrice = maxInput ? parseInt(maxInput.value) : 15000;
 
-            // УМНАЯ ОЧИСТКА ЦЕНЫ (Убирает пробелы, буквы "грн" и защищает от NaN)
-           // УМНАЯ ОЧИСТКА ЦЕНЫ
+            // РЈРњРќРђРЇ РћР§РРЎРўРљРђ Р¦Р•РќР« (РЈР±РёСЂР°РµС‚ РїСЂРѕР±РµР»С‹, Р±СѓРєРІС‹ "РіСЂРЅ" Рё Р·Р°С‰РёС‰Р°РµС‚ РѕС‚ NaN)
+           // РЈРњРќРђРЇ РћР§РРЎРўРљРђ Р¦Р•РќР«
             const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
 
-            // 1. СНАЧАЛА ЖЕСТКАЯ ФИЛЬТРАЦИЯ
+            // 1. РЎРќРђР§РђР›Рђ Р–Р•РЎРўРљРђРЇ Р¤РР›Р¬РўР РђР¦РРЇ
             filteredItems = allItems.filter(item => {
                 if (!item) return false;
                 
                 const isFav = favorites.includes(item.id);
                 const matchesAvailability = !hideUnavailable || item.status === 'available';
                 
-                // --- ФИКС ЛОГИКИ ИЗБРАННОГО ---
+                // --- Р¤РРљРЎ Р›РћР“РРљР РР—Р‘Р РђРќРќРћР“Рћ ---
                 if (showingOnlyFavs) {
-                    // В режиме Избранного игнорируем ВСЁ (категории, размеры, цены, поиск). 
-                    // Показываем просто лайкнутые вещи (с учетом галочки "Скрыть проданное").
+                    // Р’ СЂРµР¶РёРјРµ РР·Р±СЂР°РЅРЅРѕРіРѕ РёРіРЅРѕСЂРёСЂСѓРµРј Р’РЎРЃ (РєР°С‚РµРіРѕСЂРёРё, СЂР°Р·РјРµСЂС‹, С†РµРЅС‹, РїРѕРёСЃРє). 
+                    // РџРѕРєР°Р·С‹РІР°РµРј РїСЂРѕСЃС‚Рѕ Р»Р°Р№РєРЅСѓС‚С‹Рµ РІРµС‰Рё (СЃ СѓС‡РµС‚РѕРј РіР°Р»РѕС‡РєРё "РЎРєСЂС‹С‚СЊ РїСЂРѕРґР°РЅРЅРѕРµ").
                     return isFav && matchesAvailability;
                 }
 
-                // --- ОБЫЧНЫЙ РЕЖИМ ЛЕНТЫ (Работают все фильтры) ---
+                // --- РћР‘Р«Р§РќР«Р™ Р Р•Р–РРњ Р›Р•РќРўР« (Р Р°Р±РѕС‚Р°СЋС‚ РІСЃРµ С„РёР»СЊС‚СЂС‹) ---
                 const itemCategory = item.category || '';
                 const itemBrand = item.brand ? item.brand.toLowerCase() : '';
                 const itemSize = item.size ? item.size.trim() : '';
@@ -1516,7 +1516,7 @@ function applyFilters() {
                 return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability;
             });
 
-            // 2. ПОТОМ УМНЫЙ ПОИСК (FUSE.JS) - Ищем ТОЛЬКО если мы НЕ в режиме Избранного!
+            // 2. РџРћРўРћРњ РЈРњРќР«Р™ РџРћРРЎРљ (FUSE.JS) - РС‰РµРј РўРћР›Р¬РљРћ РµСЃР»Рё РјС‹ РќР• РІ СЂРµР¶РёРјРµ РР·Р±СЂР°РЅРЅРѕРіРѕ!
             if (searchTerm !== '' && typeof Fuse !== 'undefined' && !showingOnlyFavs && currentCategory === '') {
                 const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
                 const fuseOptions = {
@@ -1527,11 +1527,11 @@ function applyFilters() {
                 filteredItems = fuse.search(cleanSearchTerm).map(result => result.item);
             }
 
-            // 3. ПРАВИЛЬНАЯ СОРТИРОВКА В САМОМ КОНЦЕ (Чтобы поиск ее не сбивал)
+            // 3. РџР РђР’РР›Р¬РќРђРЇ РЎРћР РўРР РћР’РљРђ Р’ РЎРђРњРћРњ РљРћРќР¦Р• (Р§С‚РѕР±С‹ РїРѕРёСЃРє РµРµ РЅРµ СЃР±РёРІР°Р»)
             const now = Date.now();
             const isItemTop = (item) => item.is_top === true && item.top_until && new Date(item.top_until).getTime() > now;
 
-            // 3. Сортировка элементов в сетке (с учетом закрепленных TOP)
+            // 3. РЎРѕСЂС‚РёСЂРѕРІРєР° СЌР»РµРјРµРЅС‚РѕРІ РІ СЃРµС‚РєРµ (СЃ СѓС‡РµС‚РѕРј Р·Р°РєСЂРµРїР»РµРЅРЅС‹С… TOP)
             const sortCheap = document.getElementById('sort-cheap');
             if (sortCheap && sortCheap.classList.contains('active-sort')) {
                 filteredItems.sort((a, b) => {
@@ -1548,15 +1548,15 @@ function applyFilters() {
                     if (topA && !topB) return -1;
                     if (!topA && topB) return 1;
                     return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-                }); // Свежие сверху
+                }); // РЎРІРµР¶РёРµ СЃРІРµСЂС…Сѓ
             }
             
-            // СБРОС И РЕНДЕР
+            // РЎР‘Р РћРЎ Р Р Р•РќР”Р•Р 
             if (grid) grid.innerHTML = ''; 
             renderedCount = 0; 
             window.currentPage = 1; 
             
-            // Активируем триггер ленивой загрузки для телефонов
+            // РђРєС‚РёРІРёСЂСѓРµРј С‚СЂРёРіРіРµСЂ Р»РµРЅРёРІРѕР№ Р·Р°РіСЂСѓР·РєРё РґР»СЏ С‚РµР»РµС„РѕРЅРѕРІ
             const scrollTrigger = document.getElementById('loadingTrigger');
             if (scrollTrigger && window.innerWidth <= 900) {
                 scrollTrigger.style.display = 'block';
@@ -1565,23 +1565,23 @@ function applyFilters() {
             
             const countEl = document.getElementById('itemCount');
             if (countEl) {
-                // Считаем ровно то, что отфильтровано и выводится на экран
+                // РЎС‡РёС‚Р°РµРј СЂРѕРІРЅРѕ С‚Рѕ, С‡С‚Рѕ РѕС‚С„РёР»СЊС‚СЂРѕРІР°РЅРѕ Рё РІС‹РІРѕРґРёС‚СЃСЏ РЅР° СЌРєСЂР°РЅ
                 countEl.innerText = filteredItems.length;
             }
 
             if (filteredItems.length === 0) {
-                if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ ТОВАРОВ НЕ НАЙДЕНО ]</div>`;
+                if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ РўРћР’РђР РћР’ РќР• РќРђР™Р”Р•РќРћ ]</div>`;
             } else {
                 renderNextBatch(); 
             }
 
-            // Обновляем URL
+            // РћР±РЅРѕРІР»СЏРµРј URL
             const url = new URL(window.location);
             if (currentCategory) url.searchParams.set('cat', currentCategory); else url.searchParams.delete('cat');
             if (searchTerm) url.searchParams.set('q', searchTerm); else url.searchParams.delete('q');
             window.history.replaceState(null, '', url);
 
-            // --- ЖЕЛЕЗОБЕТОННЫЙ ФИКС ЗЕЛЕНОГО ВЫДЕЛЕНИЯ ---
+            // --- Р–Р•Р›Р•Р—РћР‘Р•РўРћРќРќР«Р™ Р¤РРљРЎ Р—Р•Р›Р•РќРћР“Рћ Р’Р«Р”Р•Р›Р•РќРРЇ ---
             const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
             catLinks.forEach(el => el.classList.remove('active-filter'));
             
@@ -1605,37 +1605,39 @@ function applyFilters() {
                 });
             }
         } catch (err) {
-            console.error("ОШИБКА ФИЛЬТРАЦИИ:", err);
+            console.error("РћРЁРР‘РљРђ Р¤РР›Р¬РўР РђР¦РР:", err);
             if (grid) {
-                grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${err.message} ]</div>`;
+                grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ РћРЁРР‘РљРђ Р Р•РќР”Р•Р Рђ: ${err.message} ]</div>`;
                 grid.classList.remove('fade-out');
             }
         }
     }, 300); 
 }
-// --- УМНЫЙ ПЛЕЕР ДЛЯ ВИДЕО В СЕТКЕ (БЕРЕЖЕТ БАТАРЕЮ) ---
+// --- РЈРњРќР«Р™ РџР›Р•Р•Р  Р”Р›РЇ Р’РР”Р•Рћ Р’ РЎР•РўРљР• (Р‘Р•Р Р•Р–Р•Рў Р‘РђРўРђР Р•Р®) ---
 const gridVideoObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const video = entry.target;
         if (entry.isIntersecting) {
-            // Видео появилось на экране — запускаем
+            // Р’РёРґРµРѕ РїРѕСЏРІРёР»РѕСЃСЊ РЅР° СЌРєСЂР°РЅРµ вЂ” Р·Р°РїСѓСЃРєР°РµРј
             video.play().catch(() => {}); 
         } else {
-            // Видео ушло за экран — жесткая пауза (Экономия батареи и ОЗУ)
+            // Р’РёРґРµРѕ СѓС€Р»Рѕ Р·Р° СЌРєСЂР°РЅ вЂ” Р¶РµСЃС‚РєР°СЏ РїР°СѓР·Р° (Р­РєРѕРЅРѕРјРёСЏ Р±Р°С‚Р°СЂРµРё Рё РћР—РЈ)
             video.pause(); 
         }
     });
-}, { rootMargin: "50px" }); // Начинает грузить чуть заранее
+}, { rootMargin: "50px" }); // РќР°С‡РёРЅР°РµС‚ РіСЂСѓР·РёС‚СЊ С‡СѓС‚СЊ Р·Р°СЂР°РЅРµРµ
 
+let changePageTimeout;
 window.changePage = function(step) {
     window.currentPage += step;
     const grid = document.getElementById('itemsGrid');
     
     if (grid) {
-        grid.classList.add('fade-out'); // Плавное исчезновение
+        grid.classList.add('fade-out'); // РџР»Р°РІРЅРѕРµ РёСЃС‡РµР·РЅРѕРІРµРЅРёРµ
     }
 
-    setTimeout(() => {
+    clearTimeout(changePageTimeout);
+    changePageTimeout = setTimeout(() => {
         renderNextBatch(); 
         
         const sortingEl = document.querySelector('.sorting');
@@ -1645,9 +1647,9 @@ window.changePage = function(step) {
         }
         
         if (grid) {
-            // Небольшая задержка, чтобы браузер успел вставить новые карточки
+            // РќРµР±РѕР»СЊС€Р°СЏ Р·Р°РґРµСЂР¶РєР°, С‡С‚РѕР±С‹ Р±СЂР°СѓР·РµСЂ СѓСЃРїРµР» РІСЃС‚Р°РІРёС‚СЊ РЅРѕРІС‹Рµ РєР°СЂС‚РѕС‡РєРё
             requestAnimationFrame(() => {
-                grid.classList.remove('fade-out'); // Плавное появление
+                grid.classList.remove('fade-out'); // РџР»Р°РІРЅРѕРµ РїРѕСЏРІР»РµРЅРёРµ
             });
         }
     }, 300);
@@ -1664,7 +1666,7 @@ function renderNextBatch() {
 
     let startIndex = 0;
     let endIndex = 0;
-    const BATCH_SIZE = window.innerWidth <= 900 ? 12 : 15; itemsPageSize = BATCH_SIZE; // Грузим строго по 12 товаров за раз!
+    const BATCH_SIZE = window.innerWidth <= 900 ? 12 : 15; itemsPageSize = BATCH_SIZE; // Р“СЂСѓР·РёРј СЃС‚СЂРѕРіРѕ РїРѕ 12 С‚РѕРІР°СЂРѕРІ Р·Р° СЂР°Р·!
 
     if (isMobile) {
         if (renderedCount === 0) grid.innerHTML = ''; 
@@ -1719,7 +1721,7 @@ function renderNextBatch() {
             let slidesStr = '';
             let dotsStr = '';
 
-            // ОПТИМИЗАЦИЯ LCP: Первые 4 картинки грузим мгновенно, остальные лениво
+            // РћРџРўРРњРР—РђР¦РРЇ LCP: РџРµСЂРІС‹Рµ 4 РєР°СЂС‚РёРЅРєРё РіСЂСѓР·РёРј РјРіРЅРѕРІРµРЅРЅРѕ, РѕСЃС‚Р°Р»СЊРЅС‹Рµ Р»РµРЅРёРІРѕ
             const loadAttr = (i < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
 
             thumbsArray.forEach((thumbUrl, idx) => {
@@ -1753,7 +1755,7 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             card.className = `item-card ${item.status !== 'available' ? 'sold-out' : ''} ${pulseClass}`;
             card.setAttribute('data-id', item.id);
             
-            // ОПТИМИЗАЦИЯ PREFETCH: Предзагрузка при наведении
+            // РћРџРўРРњРР—РђР¦РРЇ PREFETCH: РџСЂРµРґР·Р°РіСЂСѓР·РєР° РїСЂРё РЅР°РІРµРґРµРЅРёРё
             card.setAttribute('onmouseenter', `window.prefetchItemImages('${item.id}')`);
             card.setAttribute('ontouchstart', `window.prefetchItemImages('${item.id}')`);
             
@@ -1776,7 +1778,7 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
 
             card.innerHTML = `
                 ${badgeHTML}
-                <div class="${starClass}" onclick="toggleFav(event, '${item.id}')">★</div>
+                <div class="${starClass}" onclick="toggleFav(event, '${item.id}')">в…</div>
                 <div class="card-slider-wrapper">
                     <div class="card-slider-container" id="slider-${item.id}" onscroll="updateCardDots(this, '${item.id}')">
                         ${slidesStr}
@@ -1805,10 +1807,10 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
                 if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) isDraggingSlider = true;
             }, {passive: true});
             
-            // Идеальный баланс: Двойной тап + Очень быстрое открытие
+            // РРґРµР°Р»СЊРЅС‹Р№ Р±Р°Р»Р°РЅСЃ: Р”РІРѕР№РЅРѕР№ С‚Р°Рї + РћС‡РµРЅСЊ Р±С‹СЃС‚СЂРѕРµ РѕС‚РєСЂС‹С‚РёРµ
             let clickTimer = null;
             
-            // Визуальный отклик (чтобы юзер чувствовал, что клик прошел)
+            // Р’РёР·СѓР°Р»СЊРЅС‹Р№ РѕС‚РєР»РёРє (С‡С‚РѕР±С‹ СЋР·РµСЂ С‡СѓРІСЃС‚РІРѕРІР°Р», С‡С‚Рѕ РєР»РёРє РїСЂРѕС€РµР»)
             sliderWrapper.addEventListener('touchstart', () => {
                 if(!isDraggingSlider) sliderWrapper.style.transform = 'scale(0.98)';
             }, {passive: true});
@@ -1821,13 +1823,13 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
                 if (isDraggingSlider) { e.preventDefault(); e.stopPropagation(); return; } 
                 
                 if (clickTimer === null) {
-                    // Ждем всего 180мс. Глаз этого почти не заметит, но система успеет поймать двойной клик.
+                    // Р–РґРµРј РІСЃРµРіРѕ 180РјСЃ. Р“Р»Р°Р· СЌС‚РѕРіРѕ РїРѕС‡С‚Рё РЅРµ Р·Р°РјРµС‚РёС‚, РЅРѕ СЃРёСЃС‚РµРјР° СѓСЃРїРµРµС‚ РїРѕР№РјР°С‚СЊ РґРІРѕР№РЅРѕР№ РєР»РёРє.
                     clickTimer = setTimeout(() => {
                         clickTimer = null;
                         openProductModalById(item.id); 
                     }, 180);
                 } else {
-                    // Это был двойной тап! Отменяем открытие окна и ставим лайк.
+                    // Р­С‚Рѕ Р±С‹Р» РґРІРѕР№РЅРѕР№ С‚Р°Рї! РћС‚РјРµРЅСЏРµРј РѕС‚РєСЂС‹С‚РёРµ РѕРєРЅР° Рё СЃС‚Р°РІРёРј Р»Р°Р№Рє.
                     clearTimeout(clickTimer);
                     clickTimer = null;
                     handleDoubleTapLike(e, item.id, sliderWrapper); 
@@ -1841,17 +1843,17 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
         } catch (err) { console.error(err); }
     }
 
-    // --- ФИНАЛИЗАЦИЯ И СТРАХОВКА ---
+    // --- Р¤РРќРђР›РР—РђР¦РРЇ Р РЎРўР РђРҐРћР’РљРђ ---
     if (isMobile) {
         renderedCount = endIndex;
         
-        // Прячем триггер, если долистали до самого конца базы
+        // РџСЂСЏС‡РµРј С‚СЂРёРіРіРµСЂ, РµСЃР»Рё РґРѕР»РёСЃС‚Р°Р»Рё РґРѕ СЃР°РјРѕРіРѕ РєРѕРЅС†Р° Р±Р°Р·С‹
         const scrollTrigger = document.getElementById('loadingTrigger');
         if (scrollTrigger) {
             if (renderedCount >= filteredItems.length) {
                 scrollTrigger.style.display = 'none';
             } else {
-                scrollTrigger.innerHTML = ''; // Очищаем текст для следующего скролла
+                scrollTrigger.innerHTML = ''; // РћС‡РёС‰Р°РµРј С‚РµРєСЃС‚ РґР»СЏ СЃР»РµРґСѓСЋС‰РµРіРѕ СЃРєСЂРѕР»Р»Р°
             }
         }
     } else {
@@ -1863,14 +1865,14 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             paginationWrap.id = 'mainPagination';
             paginationWrap.className = 'pagination-wrapper';
             
-            // УБИРАЕМ АБСОЛЮТНОЕ ПОЗИЦИОНИРОВАНИЕ
+            // РЈР‘РР РђР•Рњ РђР‘РЎРћР›Р®РўРќРћР• РџРћР—РР¦РРћРќРР РћР’РђРќРР•
             paginationWrap.style.position = 'relative';
             paginationWrap.style.width = '100%';
             paginationWrap.style.marginTop = '40px';
             paginationWrap.style.display = 'flex';
             paginationWrap.style.justifyContent = 'center';
             
-            // КРИТИЧНО: Растягиваем блок на всю ширину сетки
+            // РљР РРўРР§РќРћ: Р Р°СЃС‚СЏРіРёРІР°РµРј Р±Р»РѕРє РЅР° РІСЃСЋ С€РёСЂРёРЅСѓ СЃРµС‚РєРё
             paginationWrap.style.gridColumn = '1 / -1'; 
             
             const prevDisabled = window.currentPage === 1 ? 'disabled' : '';
@@ -1878,39 +1880,39 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
 
             paginationWrap.innerHTML = `
                 <button class="page-arrow" onclick="changePage(-1)" ${prevDisabled}>&#10094;</button>
-                <div class="page-numbers">[ СТРАНИЦА <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> ИЗ ${totalPages} ]</div>
+                <div class="page-numbers">[ РЎРўР РђРќРР¦Рђ <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> РР— ${totalPages} ]</div>
                 <button class="page-arrow" onclick="changePage(1)" ${nextDisabled}>&#10095;</button>
             `;
             
             grid.style.paddingBottom = '0px';
             
-            // Вставляем ВНУТРЬ сетки, но за счет gridColumn он займет всю ширину и встанет по центру!
+            // Р’СЃС‚Р°РІР»СЏРµРј Р’РќРЈРўР Р¬ СЃРµС‚РєРё, РЅРѕ Р·Р° СЃС‡РµС‚ gridColumn РѕРЅ Р·Р°Р№РјРµС‚ РІСЃСЋ С€РёСЂРёРЅСѓ Рё РІСЃС‚Р°РЅРµС‚ РїРѕ С†РµРЅС‚СЂСѓ!
             grid.appendChild(paginationWrap);
         }
     }
 }
 
 function startOnboardingTour() {
-    // 1. Проверяем, пройден ли тур и приняты ли правила
+    // 1. РџСЂРѕРІРµСЂСЏРµРј, РїСЂРѕР№РґРµРЅ Р»Рё С‚СѓСЂ Рё РїСЂРёРЅСЏС‚С‹ Р»Рё РїСЂР°РІРёР»Р°
     if (!localStorage.getItem('nisha_rules_accepted') || 
         localStorage.getItem('nisha_tour_done') || 
         typeof window.driver === 'undefined') return;
 
-    // 2. Функция, которая ждет идеального момента для запуска
+    // 2. Р¤СѓРЅРєС†РёСЏ, РєРѕС‚РѕСЂР°СЏ Р¶РґРµС‚ РёРґРµР°Р»СЊРЅРѕРіРѕ РјРѕРјРµРЅС‚Р° РґР»СЏ Р·Р°РїСѓСЃРєР°
     const checkAndRun = setInterval(() => {
-        // Проверяем открытые окна
+        // РџСЂРѕРІРµСЂСЏРµРј РѕС‚РєСЂС‹С‚С‹Рµ РѕРєРЅР°
         const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
             return window.getComputedStyle(el).display === 'flex';
         });
         
-        // Проверяем, есть ли сейчас на экране зеленые или красные всплывающие тосты
+        // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё СЃРµР№С‡Р°СЃ РЅР° СЌРєСЂР°РЅРµ Р·РµР»РµРЅС‹Рµ РёР»Рё РєСЂР°СЃРЅС‹Рµ РІСЃРїР»С‹РІР°СЋС‰РёРµ С‚РѕСЃС‚С‹
         const toastContainer = document.getElementById('toastContainer');
         const anyToastVisible = toastContainer && toastContainer.children.length > 0;
 
-        // Если открыто окно ИЛИ висит сообщение-тост — ждем дальше
+        // Р•СЃР»Рё РѕС‚РєСЂС‹С‚Рѕ РѕРєРЅРѕ РР›Р РІРёСЃРёС‚ СЃРѕРѕР±С‰РµРЅРёРµ-С‚РѕСЃС‚ вЂ” Р¶РґРµРј РґР°Р»СЊС€Рµ
         if (anyModalOpen || anyToastVisible) return;
 
-        // Если всё чисто — УБИВАЕМ ТАЙМЕР и запускаем тур!
+        // Р•СЃР»Рё РІСЃС‘ С‡РёСЃС‚Рѕ вЂ” РЈР‘РР’РђР•Рњ РўРђР™РњР•Р  Рё Р·Р°РїСѓСЃРєР°РµРј С‚СѓСЂ!
         clearInterval(checkAndRun);
         const isMobile = window.innerWidth <= 900;
         const firstStar = document.querySelector('.item-card .fav-star');
@@ -1948,29 +1950,29 @@ function startOnboardingTour() {
                 localStorage.setItem('nisha_tour_done', 'true');
                 driverObj.destroy();
                 
-                // ТУР ЗАКОНЧЕН. Проверяем, не ждет ли нас скрытая рассылка?
+                // РўРЈР  Р—РђРљРћРќР§Р•Рќ. РџСЂРѕРІРµСЂСЏРµРј, РЅРµ Р¶РґРµС‚ Р»Рё РЅР°СЃ СЃРєСЂС‹С‚Р°СЏ СЂР°СЃСЃС‹Р»РєР°?
                 if (window.pendingBroadcastHtml) {
                     setTimeout(() => {
-                        showTerminalModal('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
+                        showTerminalModal('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ Р—РђРљР Р«РўР¬ ]', () => {
                             localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
                         });
-                        window.pendingBroadcastHtml = null; // Очищаем память
-                    }, 600); // Ждем полсекунды после тура, чтобы было красиво
+                        window.pendingBroadcastHtml = null; // РћС‡РёС‰Р°РµРј РїР°РјСЏС‚СЊ
+                    }, 600); // Р–РґРµРј РїРѕР»СЃРµРєСѓРЅРґС‹ РїРѕСЃР»Рµ С‚СѓСЂР°, С‡С‚РѕР±С‹ Р±С‹Р»Рѕ РєСЂР°СЃРёРІРѕ
                 }
             }
         });
         driverObj.drive();
-    }, 500); // Проверяем каждые полсекунды
+    }, 500); // РџСЂРѕРІРµСЂСЏРµРј РєР°Р¶РґС‹Рµ РїРѕР»СЃРµРєСѓРЅРґС‹
 }
 
-// Функция добавления в корзину прямо с главной страницы
+// Р¤СѓРЅРєС†РёСЏ РґРѕР±Р°РІР»РµРЅРёСЏ РІ РєРѕСЂР·РёРЅСѓ РїСЂСЏРјРѕ СЃ РіР»Р°РІРЅРѕР№ СЃС‚СЂР°РЅРёС†С‹
 async function addToCartById(itemId) {
-    // --- ПРОВЕРКА НА ГОСТЯ ---
+    // --- РџР РћР’Р•Р РљРђ РќРђ Р“РћРЎРўРЇ ---
     if (!currentUser) {
         showToast(i18next.t('messages.cart_error_auth'), 'error');
-        openProfileModal(); // Автоматически открываем окно входа!
+        openProfileModal(); // РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРё РѕС‚РєСЂС‹РІР°РµРј РѕРєРЅРѕ РІС…РѕРґР°!
         
-        // Если это ПК (нет модалки), то подсвечиваем левое меню
+        // Р•СЃР»Рё СЌС‚Рѕ РџРљ (РЅРµС‚ РјРѕРґР°Р»РєРё), С‚Рѕ РїРѕРґСЃРІРµС‡РёРІР°РµРј Р»РµРІРѕРµ РјРµРЅСЋ
         if (window.innerWidth > 900) {
             const authBox = document.getElementById('authBox');
             if(authBox) {
@@ -2004,15 +2006,15 @@ localStorage.removeItem('nisha_cart_reminded');
     showToast(i18next.t('messages.cart_add'), 'success', getOptimizedImageUrl(item, true));
 }
 
-// Изменено для создания DOM элементов вручную (чтобы работал AutoAnimate и Tilt.js)
+// РР·РјРµРЅРµРЅРѕ РґР»СЏ СЃРѕР·РґР°РЅРёСЏ DOM СЌР»РµРјРµРЅС‚РѕРІ РІСЂСѓС‡РЅСѓСЋ (С‡С‚РѕР±С‹ СЂР°Р±РѕС‚Р°Р» AutoAnimate Рё Tilt.js)
 
 function sortItems(type) {
-    // 1. Переключаем активный класс
+    // 1. РџРµСЂРµРєР»СЋС‡Р°РµРј Р°РєС‚РёРІРЅС‹Р№ РєР»Р°СЃСЃ
     document.getElementById('sort-new').classList.remove('active-sort');
     document.getElementById('sort-cheap').classList.remove('active-sort');
     document.getElementById('sort-' + type).classList.add('active-sort');
     
-    // 2. Делаем красивое мигание желтым цветом, чтобы показать, что процесс пошел
+    // 2. Р”РµР»Р°РµРј РєСЂР°СЃРёРІРѕРµ РјРёРіР°РЅРёРµ Р¶РµР»С‚С‹Рј С†РІРµС‚РѕРј, С‡С‚РѕР±С‹ РїРѕРєР°Р·Р°С‚СЊ, С‡С‚Рѕ РїСЂРѕС†РµСЃСЃ РїРѕС€РµР»
     const countEl = document.getElementById('itemCount');
     if (countEl) {
         countEl.style.transition = '0.3s';
@@ -2024,10 +2026,10 @@ function sortItems(type) {
         }, 300);
     }
     
-    // 3. Запускаем саму сортировку (ту, которую мы обновили в прошлом шаге)
+    // 3. Р—Р°РїСѓСЃРєР°РµРј СЃР°РјСѓ СЃРѕСЂС‚РёСЂРѕРІРєСѓ (С‚Сѓ, РєРѕС‚РѕСЂСѓСЋ РјС‹ РѕР±РЅРѕРІРёР»Рё РІ РїСЂРѕС€Р»РѕРј С€Р°РіРµ)
     applyFilters();
     
-    // 4. Плавно прокручиваем экран к товарам, чтобы юзер сразу увидел самые дешевые
+    // 4. РџР»Р°РІРЅРѕ РїСЂРѕРєСЂСѓС‡РёРІР°РµРј СЌРєСЂР°РЅ Рє С‚РѕРІР°СЂР°Рј, С‡С‚РѕР±С‹ СЋР·РµСЂ СЃСЂР°Р·Сѓ СѓРІРёРґРµР» СЃР°РјС‹Рµ РґРµС€РµРІС‹Рµ
     setTimeout(() => {
         const grid = document.getElementById('itemsGrid');
         if (grid) {
@@ -2049,24 +2051,24 @@ function setCategoryFilter(cat, element) {
     
     applyFilters(); 
 }
-// --- АНИМАЦИЯ ПОЛЕТА В КОРЗИНУ ---
-// --- АНИМАЦИЯ ПОЛЕТА В КОРЗИНУ ---
+// --- РђРќРРњРђР¦РРЇ РџРћР›Р•РўРђ Р’ РљРћР Р—РРќРЈ ---
+// --- РђРќРРњРђР¦РРЇ РџРћР›Р•РўРђ Р’ РљРћР Р—РРќРЈ ---
 function addToCartWithAnimation(itemId, btnElement, event) {
     if (event) event.stopPropagation(); 
     
     const item = allItems.find(i => i.id === itemId);
     if (!item) return;
 
-    // Если гость - прерываем полет картинки, логика корзины сама покажет окно входа
+    // Р•СЃР»Рё РіРѕСЃС‚СЊ - РїСЂРµСЂС‹РІР°РµРј РїРѕР»РµС‚ РєР°СЂС‚РёРЅРєРё, Р»РѕРіРёРєР° РєРѕСЂР·РёРЅС‹ СЃР°РјР° РїРѕРєР°Р¶РµС‚ РѕРєРЅРѕ РІС…РѕРґР°
     if (!currentUser) {
-        addToCartById(itemId); // Вызовет окно авторизации
+        addToCartById(itemId); // Р’С‹Р·РѕРІРµС‚ РѕРєРЅРѕ Р°РІС‚РѕСЂРёР·Р°С†РёРё
         return;
     }
     
-    // ВАЖНО: Добавляем в корзину (БЕЗ ЭТОГО НИЧЕГО НЕ СОХРАНИТСЯ)
+    // Р’РђР–РќРћ: Р”РѕР±Р°РІР»СЏРµРј РІ РєРѕСЂР·РёРЅСѓ (Р‘Р•Р— Р­РўРћР“Рћ РќРР§Р•Р“Рћ РќР• РЎРћРҐР РђРќРРўРЎРЇ)
     addToCartById(itemId);
     
-    // БЕЗОПАСНАЯ ВИБРАЦИЯ
+    // Р‘Р•Р—РћРџРђРЎРќРђРЇ Р’РР‘Р РђР¦РРЇ
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
     
     const cartIcon = document.getElementById('cartInfoWrapper');
@@ -2077,37 +2079,37 @@ function addToCartWithAnimation(itemId, btnElement, event) {
     const flyingImg = document.createElement('div');
     flyingImg.className = 'flying-item';
 
-    // Если фото есть - ставим его. Если нет - ставим темный фон.
+    // Р•СЃР»Рё С„РѕС‚Рѕ РµСЃС‚СЊ - СЃС‚Р°РІРёРј РµРіРѕ. Р•СЃР»Рё РЅРµС‚ - СЃС‚Р°РІРёРј С‚РµРјРЅС‹Р№ С„РѕРЅ.
     if (item.images && item.images.length > 0) {
         flyingImg.style.backgroundImage = `url('${getOptimizedImageUrl(item, true)}')`;
     } else {
         flyingImg.style.backgroundColor = '#111';
     }
 
-    // Стартовая позиция (ровно над кнопкой)
+    // РЎС‚Р°СЂС‚РѕРІР°СЏ РїРѕР·РёС†РёСЏ (СЂРѕРІРЅРѕ РЅР°Рґ РєРЅРѕРїРєРѕР№)
     flyingImg.style.left = `${btnRect.left + (btnRect.width/2) - 30}px`;
     flyingImg.style.top = `${btnRect.top - 30}px`;
     
     document.body.appendChild(flyingImg);
 
-    // Гарантируем, что браузер сначала отрисует стартовую позицию, а только потом начнет двигать
+    // Р“Р°СЂР°РЅС‚РёСЂСѓРµРј, С‡С‚Рѕ Р±СЂР°СѓР·РµСЂ СЃРЅР°С‡Р°Р»Р° РѕС‚СЂРёСЃСѓРµС‚ СЃС‚Р°СЂС‚РѕРІСѓСЋ РїРѕР·РёС†РёСЋ, Р° С‚РѕР»СЊРєРѕ РїРѕС‚РѕРј РЅР°С‡РЅРµС‚ РґРІРёРіР°С‚СЊ
     requestAnimationFrame(() => {
         setTimeout(() => {
-            // Конечная позиция (всегда в левый нижний угол экрана, куда приедет корзина)
+            // РљРѕРЅРµС‡РЅР°СЏ РїРѕР·РёС†РёСЏ (РІСЃРµРіРґР° РІ Р»РµРІС‹Р№ РЅРёР¶РЅРёР№ СѓРіРѕР» СЌРєСЂР°РЅР°, РєСѓРґР° РїСЂРёРµРґРµС‚ РєРѕСЂР·РёРЅР°)
             flyingImg.style.left = `20px`;
             flyingImg.style.top = `${window.innerHeight - 60}px`;
             
-            // Добавили эффект вращения в полете (rotate(360deg))
+            // Р”РѕР±Р°РІРёР»Рё СЌС„С„РµРєС‚ РІСЂР°С‰РµРЅРёСЏ РІ РїРѕР»РµС‚Рµ (rotate(360deg))
             flyingImg.style.transform = 'scale(0.1) rotate(360deg)';
             flyingImg.style.opacity = '0.3';
         }, 10); 
     });
 
-    // Удаляем элемент, когда анимация закончится (0.85s = 850ms)
+    // РЈРґР°Р»СЏРµРј СЌР»РµРјРµРЅС‚, РєРѕРіРґР° Р°РЅРёРјР°С†РёСЏ Р·Р°РєРѕРЅС‡РёС‚СЃСЏ (0.85s = 850ms)
     setTimeout(() => flyingImg.remove(), 850);
 }
 
-// --- КРЕСТИК В ПОИСКЕ ---
+// --- РљР Р•РЎРўРРљ Р’ РџРћРРЎРљР• ---
 function clearSearchInput() {
     const input = document.getElementById('mainSearch');
     if (input) input.value = '';
@@ -2117,7 +2119,7 @@ function clearSearchInput() {
     applyFilters();
 }
 
-// Добавляем слушатель, чтобы крестик появлялся при вводе
+// Р”РѕР±Р°РІР»СЏРµРј СЃР»СѓС€Р°С‚РµР»СЊ, С‡С‚РѕР±С‹ РєСЂРµСЃС‚РёРє РїРѕСЏРІР»СЏР»СЃСЏ РїСЂРё РІРІРѕРґРµ
 const mainSearchInput = document.getElementById('mainSearch');
 if (mainSearchInput) {
     mainSearchInput.addEventListener('keydown', function(e) {
@@ -2132,18 +2134,18 @@ if (mainSearchInput) {
         document.getElementById('clearSearchBtn').style.display = this.value.length > 0 ? 'block' : 'none';
     });
     
-    // Останавливаем анимацию при фокусе
+    // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р°РЅРёРјР°С†РёСЋ РїСЂРё С„РѕРєСѓСЃРµ
     mainSearchInput.addEventListener('focus', () => {
-        mainSearchInput.placeholder = i18next.t('search.placeholder') || 'Поиск...';
+        mainSearchInput.placeholder = i18next.t('search.placeholder') || 'РџРѕРёСЃРє...';
     });
-    // Возвращаем при потере фокуса
+    // Р’РѕР·РІСЂР°С‰Р°РµРј РїСЂРё РїРѕС‚РµСЂРµ С„РѕРєСѓСЃР°
     mainSearchInput.addEventListener('blur', () => {
         if (mainSearchInput.value.length === 0) startSearchTypewriter();
     });
 }
 
 // ==========================================
-// 7. ИЗБРАННОЕ (ЛАЙКИ)
+// 7. РР—Р‘Р РђРќРќРћР• (Р›РђР™РљР)
 // ==========================================
 async function loadFavorites() {
     if (!currentUser) return;
@@ -2160,7 +2162,7 @@ async function loadFavorites() {
     updateFavBadge();
 }
 
-let isToggling = false; // Защита от двойного клика на телефоне
+let isToggling = false; // Р—Р°С‰РёС‚Р° РѕС‚ РґРІРѕР№РЅРѕРіРѕ РєР»РёРєР° РЅР° С‚РµР»РµС„РѕРЅРµ
 
 async function toggleFav(event, itemId) {
     if (event) {
@@ -2177,7 +2179,7 @@ async function toggleFav(event, itemId) {
     isToggling = true;
     setTimeout(() => { isToggling = false; }, 300);
 
-    // ВЫЗЫВАЕМ ВИБРАЦИЮ
+    // Р’Р«Р—Р«Р’РђР•Рњ Р’РР‘Р РђР¦РР®
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
     const isFav = favorites.includes(itemId);
@@ -2188,19 +2190,19 @@ async function toggleFav(event, itemId) {
         favorites.push(itemId);
     }
 
-    // 2. ЖЕСТКО ищем нужную звезду в сетке по ID и меняем класс + СРАЗУ КРАСИМ
+    // 2. Р–Р•РЎРўРљРћ РёС‰РµРј РЅСѓР¶РЅСѓСЋ Р·РІРµР·РґСѓ РІ СЃРµС‚РєРµ РїРѕ ID Рё РјРµРЅСЏРµРј РєР»Р°СЃСЃ + РЎР РђР—РЈ РљР РђРЎРРњ
     const gridStar = document.querySelector(`.item-card[data-id="${itemId}"] .fav-star`);
     if (gridStar) {
         if (isFav) {
             gridStar.classList.remove('active');
-            gridStar.style.color = '#444'; // Принудительно серый
+            gridStar.style.color = '#444'; // РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ СЃРµСЂС‹Р№
         } else {
             gridStar.classList.add('active');
-            gridStar.style.color = 'var(--accent-red)'; // Принудительно красный
+            gridStar.style.color = 'var(--accent-red)'; // РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РєСЂР°СЃРЅС‹Р№
         }
     }
 
-    // ЖЕСТКО ищем звезду в модалке (если открыт этот товар)
+    // Р–Р•РЎРўРљРћ РёС‰РµРј Р·РІРµР·РґСѓ РІ РјРѕРґР°Р»РєРµ (РµСЃР»Рё РѕС‚РєСЂС‹С‚ СЌС‚РѕС‚ С‚РѕРІР°СЂ)
     if (currentOpenedItem && currentOpenedItem.id === itemId) {
         const modalStar = document.getElementById('modalFavStar');
         if (modalStar) {
@@ -2214,14 +2216,14 @@ async function toggleFav(event, itemId) {
         }
     }
 
-    // Обновляем счетчики мгновенно
+    // РћР±РЅРѕРІР»СЏРµРј СЃС‡РµС‚С‡РёРєРё РјРіРЅРѕРІРµРЅРЅРѕ
     const profileLikes = document.getElementById('profileLikesCount');
     if (profileLikes) profileLikes.innerText = favorites.length;
     const modalProfileLikes = document.getElementById('modalProfileLikesCount');
     if (modalProfileLikes) modalProfileLikes.innerText = favorites.length;
     updateFavBadge();
 
-    // 3. Тихо отправляем в базу и выводим красивое уведомление с фото
+    // 3. РўРёС…Рѕ РѕС‚РїСЂР°РІР»СЏРµРј РІ Р±Р°Р·Сѓ Рё РІС‹РІРѕРґРёРј РєСЂР°СЃРёРІРѕРµ СѓРІРµРґРѕРјР»РµРЅРёРµ СЃ С„РѕС‚Рѕ
     const itemObj = allItems.find(i => i.id === itemId);
     const imgUrl = itemObj ? getOptimizedImageUrl(itemObj, true) : null;
 
@@ -2234,7 +2236,7 @@ async function toggleFav(event, itemId) {
             showToast(i18next.t('messages.fav_add'), 'success', imgUrl);
         }
     } catch (err) {
-        console.error("Ошибка лайка:", err);
+        console.error("РћС€РёР±РєР° Р»Р°Р№РєР°:", err);
     }
 }
 
@@ -2249,13 +2251,13 @@ function filterFavorites() {
         return; 
     }
     showingOnlyFavs = !showingOnlyFavs; 
-    sessionStorage.setItem('nisha_showing_favs', showingOnlyFavs); // Запоминаем
+    sessionStorage.setItem('nisha_showing_favs', showingOnlyFavs); // Р—Р°РїРѕРјРёРЅР°РµРј
     document.getElementById('favNav').style.color = showingOnlyFavs ? '#fff' : 'var(--accent-yellow)'; 
     applyFilters(); 
 }
 
 // ==========================================
-// 8. КОРЗИНА И СИНХРОНИЗАЦИЯ
+// 8. РљРћР Р—РРќРђ Р РЎРРќРҐР РћРќРР—РђР¦РРЇ
 // ==========================================
 async function syncCartToServer() {
     if (!currentUser) return;
@@ -2265,11 +2267,11 @@ async function syncCartToServer() {
 async function addToCartFromModal() {
     if (!currentOpenedItem) return;
     
-    // --- ПРОВЕРКА НА ГОСТЯ В МОДАЛКЕ ---
+    // --- РџР РћР’Р•Р РљРђ РќРђ Р“РћРЎРўРЇ Р’ РњРћР”РђР›РљР• ---
     if (!currentUser) {
-        showToast(i18next.t('messages.cart_error_auth', {defaultValue: 'Сначала войдите в систему!'}), 'error');
-        closeModal('productModal'); // Закрываем товар
-        openProfileModal(); // Открываем авторизацию
+        showToast(i18next.t('messages.cart_error_auth', {defaultValue: 'РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ СЃРёСЃС‚РµРјСѓ!'}), 'error');
+        closeModal('productModal'); // Р—Р°РєСЂС‹РІР°РµРј С‚РѕРІР°СЂ
+        openProfileModal(); // РћС‚РєСЂС‹РІР°РµРј Р°РІС‚РѕСЂРёР·Р°С†РёСЋ
         return;
     }
     
@@ -2315,24 +2317,24 @@ function updateCartUI() {
     document.getElementById('cartCount').innerText = cart.length;
     let total = cart.reduce((sum, item) => sum + (parseInt(String(item.price).replace(/[^\d]/g, ''), 10) || 0), 0);
     
-    // Применяем скидку по промокоду, если она есть
+    // РџСЂРёРјРµРЅСЏРµРј СЃРєРёРґРєСѓ РїРѕ РїСЂРѕРјРѕРєРѕРґСѓ, РµСЃР»Рё РѕРЅР° РµСЃС‚СЊ
     if (typeof currentPromoDiscount !== 'undefined' && currentPromoDiscount > 0) {
         const savedMoney = Math.floor(total * currentPromoDiscount);
         total = total - savedMoney;
         
         const msg = document.getElementById('promoMessage');
         if (msg && appliedPromoCode) {
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Вы сэкономили: <b>${savedMoney} ${getCurrency()}</b></span></span>`;
+            msg.innerHTML = `<span style="color: var(--accent-green);">[вњ”] РљРѕРґ Р°РєС‚РёРІРёСЂРѕРІР°РЅ! РЎРєРёРґРєР° ${currentPromoDiscount * 100}%<br><span style="font-size: 13px;">Р’С‹ СЃСЌРєРѕРЅРѕРјРёР»Рё: <b>${savedMoney} ${getCurrency()}</b></span></span>`;
         }
     }
     
-    document.getElementById('cartTotal').innerText = total + ' ' + getCurrency(); // Заменили жесткие "грн" на мультиязычные
+    document.getElementById('cartTotal').innerText = total + ' ' + getCurrency(); // Р—Р°РјРµРЅРёР»Рё Р¶РµСЃС‚РєРёРµ "РіСЂРЅ" РЅР° РјСѓР»СЊС‚РёСЏР·С‹С‡РЅС‹Рµ
     
     if (typeof renderCartItems === 'function') renderCartItems();
 }
 
 // ==========================================
-// 9. ИНТЕГРАЦИЯ НОВОЙ ПОЧТЫ (NOVA POSHTA)
+// 9. РРќРўР•Р“Р РђР¦РРЇ РќРћР’РћР™ РџРћР§РўР« (NOVA POSHTA)
 // ==========================================
 
 let citySearchTimeout = null;
@@ -2361,7 +2363,7 @@ function debouncedNPCitySearch(query) {
     }, 500);
 }
 
-// --- ПОИСК ГОРОДА ---
+// --- РџРћРРЎРљ Р“РћР РћР”Рђ ---
 async function searchNPCity(query) {
     try {
         const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
@@ -2391,7 +2393,7 @@ async function searchNPCity(query) {
                     const branchInput = document.getElementById('orderBranch');
                     branchInput.readOnly = false;
                     branchInput.value = '';
-                    branchInput.placeholder = "Загрузка отделений...";
+                    branchInput.placeholder = "Р—Р°РіСЂСѓР·РєР° РѕС‚РґРµР»РµРЅРёР№...";
                     
                     cachedBranches = []; 
                     loadNPBranches();
@@ -2403,36 +2405,36 @@ async function searchNPCity(query) {
             dropdown.style.display = 'none';
         }
     } catch(e) { 
-        console.error("Ошибка поиска города НП", e); 
+        console.error("РћС€РёР±РєР° РїРѕРёСЃРєР° РіРѕСЂРѕРґР° РќРџ", e); 
         document.getElementById('cityDropdown').style.display = 'none';
         showToast(i18next.t('np.city_err'), 'error');
     }
 }
 
-// --- УМНЫЙ ПОИСК ОТДЕЛЕНИЙ (Через API Новой Почты в реальном времени) ---
+// --- РЈРњРќР«Р™ РџРћРРЎРљ РћРўР”Р•Р›Р•РќРР™ (Р§РµСЂРµР· API РќРѕРІРѕР№ РџРѕС‡С‚С‹ РІ СЂРµР°Р»СЊРЅРѕРј РІСЂРµРјРµРЅРё) ---
 let branchSearchTimeout = null;
 
-// Эта функция срабатывает каждый раз, когда ты печатаешь в поле "Отделение"
+// Р­С‚Р° С„СѓРЅРєС†РёСЏ СЃСЂР°Р±Р°С‚С‹РІР°РµС‚ РєР°Р¶РґС‹Р№ СЂР°Р·, РєРѕРіРґР° С‚С‹ РїРµС‡Р°С‚Р°РµС€СЊ РІ РїРѕР»Рµ "РћС‚РґРµР»РµРЅРёРµ"
 function filterNPBranches(query) {
     const dropdown = document.getElementById('branchDropdown');
     
-    // Если начали печатать, показываем статус загрузки
+    // Р•СЃР»Рё РЅР°С‡Р°Р»Рё РїРµС‡Р°С‚Р°С‚СЊ, РїРѕРєР°Р·С‹РІР°РµРј СЃС‚Р°С‚СѓСЃ Р·Р°РіСЂСѓР·РєРё
     if (query.length > 0) {
-        dropdown.innerHTML = '<div style="color:#aaa; padding:12px; font-style: italic;">Шукаємо відділення в базі НП...</div>';
+        dropdown.innerHTML = '<div style="color:#aaa; padding:12px; font-style: italic;">РЁСѓРєР°С”РјРѕ РІС–РґРґС–Р»РµРЅРЅСЏ РІ Р±Р°Р·С– РќРџ...</div>';
         dropdown.style.display = 'block';
     }
 
     if (branchSearchTimeout) clearTimeout(branchSearchTimeout);
     
-    // Ждем 400мс, чтобы не спамить запросами на каждую букву
+    // Р–РґРµРј 400РјСЃ, С‡С‚РѕР±С‹ РЅРµ СЃРїР°РјРёС‚СЊ Р·Р°РїСЂРѕСЃР°РјРё РЅР° РєР°Р¶РґСѓСЋ Р±СѓРєРІСѓ
     branchSearchTimeout = setTimeout(() => {
         loadNPBranches(query);
     }, 400);
 }
 
-const npBranchCache = {}; // Память для отделений Новой Почты
+const npBranchCache = {}; // РџР°РјСЏС‚СЊ РґР»СЏ РѕС‚РґРµР»РµРЅРёР№ РќРѕРІРѕР№ РџРѕС‡С‚С‹
 
-// Запрос в интернет к базе Новой Почты
+// Р—Р°РїСЂРѕСЃ РІ РёРЅС‚РµСЂРЅРµС‚ Рє Р±Р°Р·Рµ РќРѕРІРѕР№ РџРѕС‡С‚С‹
 async function loadNPBranches(searchString = "") {
     if (typeof searchString !== 'string') searchString = ""; 
     if(!selectedCityRef) return;
@@ -2440,25 +2442,25 @@ async function loadNPBranches(searchString = "") {
     const input = document.getElementById('orderBranch');
     const dropdown = document.getElementById('branchDropdown');
 
-    // КЭШИРОВАНИЕ: Формируем уникальный ключ (Город + Введенный текст)
+    // РљР­РЁРР РћР’РђРќРР•: Р¤РѕСЂРјРёСЂСѓРµРј СѓРЅРёРєР°Р»СЊРЅС‹Р№ РєР»СЋС‡ (Р“РѕСЂРѕРґ + Р’РІРµРґРµРЅРЅС‹Р№ С‚РµРєСЃС‚)
     const cacheKey = selectedCityRef + "_" + searchString.trim();
     if (npBranchCache[cacheKey]) {
-        renderBranches(npBranchCache[cacheKey]); // Отдаем из памяти за 0.001 секунды
+        renderBranches(npBranchCache[cacheKey]); // РћС‚РґР°РµРј РёР· РїР°РјСЏС‚Рё Р·Р° 0.001 СЃРµРєСѓРЅРґС‹
         return;
     }
 
     try {
-        // Формируем запрос
+        // Р¤РѕСЂРјРёСЂСѓРµРј Р·Р°РїСЂРѕСЃ
         const reqBody = {
             modelName: 'Address', 
             calledMethod: 'getWarehouses', 
             methodProperties: { 
                 CityRef: selectedCityRef, 
-                Limit: "50" // 50 штук за глаза хватает для автодополнения
+                Limit: "50" // 50 С€С‚СѓРє Р·Р° РіР»Р°Р·Р° С…РІР°С‚Р°РµС‚ РґР»СЏ Р°РІС‚РѕРґРѕРїРѕР»РЅРµРЅРёСЏ
             } 
         };
 
-        // Если юзер ввел текст (например "245" или "Поштомат"), передаем это Новой Почте!
+        // Р•СЃР»Рё СЋР·РµСЂ РІРІРµР» С‚РµРєСЃС‚ (РЅР°РїСЂРёРјРµСЂ "245" РёР»Рё "РџРѕС€С‚РѕРјР°С‚"), РїРµСЂРµРґР°РµРј СЌС‚Рѕ РќРѕРІРѕР№ РџРѕС‡С‚Рµ!
         if (searchString.trim() !== "") {
             reqBody.methodProperties.FindByString = searchString.trim();
         }
@@ -2469,25 +2471,25 @@ async function loadNPBranches(searchString = "") {
             body: JSON.stringify(reqBody)
         });
 
-        if (!res.ok) throw new Error("Сетевая ошибка HTTP " + res.status);
+        if (!res.ok) throw new Error("РЎРµС‚РµРІР°СЏ РѕС€РёР±РєР° HTTP " + res.status);
 
         const data = await res.json();
         
         if(data.success && Array.isArray(data.data) && data.data.length > 0) {
-            npBranchCache[cacheKey] = data.data; // Сохраняем в память
+            npBranchCache[cacheKey] = data.data; // РЎРѕС…СЂР°РЅСЏРµРј РІ РїР°РјСЏС‚СЊ
             renderBranches(data.data);
         } else {
             dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${i18next.t('np.branch_empty')}</div>`;
             dropdown.style.display = 'block';
         }
    } catch(e) { 
-        console.error("Сбой загрузки отделений НП:", e); 
+        console.error("РЎР±РѕР№ Р·Р°РіСЂСѓР·РєРё РѕС‚РґРµР»РµРЅРёР№ РќРџ:", e); 
         dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${i18next.t('np.branch_err')}</div>`;
         dropdown.style.display = 'block';
     }
 }
 
-// Отрисовка списка
+// РћС‚СЂРёСЃРѕРІРєР° СЃРїРёСЃРєР°
 function renderBranches(branches) {
     const dropdown = document.getElementById('branchDropdown');
     dropdown.innerHTML = '';
@@ -2497,15 +2499,15 @@ function renderBranches(branches) {
         return;
     }
 
-    // ВАЖНО: Выключаем перехват скролла библиотекой Lenis для этого списка!
+    // Р’РђР–РќРћ: Р’С‹РєР»СЋС‡Р°РµРј РїРµСЂРµС…РІР°С‚ СЃРєСЂРѕР»Р»Р° Р±РёР±Р»РёРѕС‚РµРєРѕР№ Lenis РґР»СЏ СЌС‚РѕРіРѕ СЃРїРёСЃРєР°!
     dropdown.setAttribute('data-lenis-prevent', 'true');
 
     for (let i = 0; i < branches.length; i++) {
         const branch = branches[i];
-        const isPostomat = branch.Description.includes("Поштомат") || branch.Description.includes("Почтомат");
+        const isPostomat = branch.Description.includes("РџРѕС€С‚РѕРјР°С‚") || branch.Description.includes("РџРѕС‡С‚РѕРјР°С‚");
         const div = document.createElement('div');
         
-        div.innerHTML = isPostomat ? `📦 <span style="color:#00aaff">${branch.Description}</span>` : branch.Description;
+        div.innerHTML = isPostomat ? `рџ“¦ <span style="color:#00aaff">${branch.Description}</span>` : branch.Description;
 
         div.onmousedown = (e) => {
             e.preventDefault(); 
@@ -2520,19 +2522,19 @@ function renderBranches(branches) {
     dropdown.style.display = 'block';
 }
 
-// --- РАСЧЕТ СТОИМОСТИ ДОСТАВКИ ---
-// --- РАСЧЕТ СТОИМОСТИ ДОСТАВКИ ---
+// --- Р РђРЎР§Р•Рў РЎРўРћРРњРћРЎРўР Р”РћРЎРўРђР’РљР ---
+// --- Р РђРЎР§Р•Рў РЎРўРћРРњРћРЎРўР Р”РћРЎРўРђР’РљР ---
 async function calculateDeliveryCost() {
     if(!selectedCityRef || cart.length === 0) return;
     
     document.getElementById('deliveryCostInfo').style.display = 'block';
-    document.getElementById('calcCostVal').innerText = "Рассчитываем...";
+    document.getElementById('calcCostVal').innerText = "Р Р°СЃСЃС‡РёС‚С‹РІР°РµРј...";
     
     const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
     const totalCost = cart.reduce((sum, item) => sum + getSafePrice(item.price), 0);
 
     try {
-        // ЗАПРАШИВАЕМ ГОТОВУЮ ЦЕНУ У НАШЕГО СЕРВЕРА
+        // Р—РђРџР РђРЁРР’РђР•Рњ Р“РћРўРћР’РЈР® Р¦Р•РќРЈ РЈ РќРђРЁР•Р“Рћ РЎР•Р Р’Р•Р Рђ
         const res = await fetch('https://nisha-api.onrender.com/api/calc-delivery', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2541,18 +2543,18 @@ async function calculateDeliveryCost() {
         const data = await res.json();
         
         if(data.success) {
-            document.getElementById('calcCostVal').innerText = data.cost + " грн";
+            document.getElementById('calcCostVal').innerText = data.cost + " РіСЂРЅ";
         } else {
-            document.getElementById('calcCostVal').innerText = "По тарифам НП";
+            document.getElementById('calcCostVal').innerText = "РџРѕ С‚Р°СЂРёС„Р°Рј РќРџ";
         }
     } catch(e) { 
-        console.error("Ошибка расчета НП", e);
-        document.getElementById('calcCostVal').innerText = "По тарифам НП";
+        console.error("РћС€РёР±РєР° СЂР°СЃС‡РµС‚Р° РќРџ", e);
+        document.getElementById('calcCostVal').innerText = "РџРѕ С‚Р°СЂРёС„Р°Рј РќРџ";
     }
 }
 
 // ==========================================
-// ЛОГИКА ВСПЛЫВАЮЩЕЙ КОРЗИНЫ
+// Р›РћР“РРљРђ Р’РЎРџР›Р«Р’РђР®Р©Р•Р™ РљРћР Р—РРќР«
 // ==========================================
 
 function toggleCartDropdown(e) {
@@ -2561,7 +2563,7 @@ function toggleCartDropdown(e) {
     const fab = document.querySelector('.fab-propose');
     if (dropdown) {
         dropdown.classList.toggle('active');
-        // Прячем или показываем кнопку [+] в зависимости от статуса корзины
+        // РџСЂСЏС‡РµРј РёР»Рё РїРѕРєР°Р·С‹РІР°РµРј РєРЅРѕРїРєСѓ [+] РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЃС‚Р°С‚СѓСЃР° РєРѕСЂР·РёРЅС‹
         if (fab) {
             if (dropdown.classList.contains('active')) {
                 fab.style.opacity = '0';
@@ -2581,7 +2583,7 @@ function renderCartItems() {
     if (cart.length === 0) {
         list.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a; margin: 10px;">
-                <div style="font-size: 30px; margin-bottom: 15px;">🛒</div>
+                <div style="font-size: 30px; margin-bottom: 15px;">рџ›’</div>
                 <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;">${i18next.t('cart.empty_title')}</div>
                 <div style="color:#888; font-size: 12px; line-height: 1.5;">${i18next.t('cart.empty_desc')}</div>
             </div>`;
@@ -2590,7 +2592,7 @@ function renderCartItems() {
     list.innerHTML = `
         <div style="padding: 10px; margin-bottom: 10px; border-bottom: 1px dashed #333; display: flex; flex-direction: column; gap: 10px;">
             <div style="color: #666; font-size: 10px; font-family: var(--font-main); text-align: center; margin-top: 5px;">
-                ${i18next.t('cart.warning', {defaultValue: 'Вещи не бронируются и могут быть куплены кем-то другим в любой момент.'})}
+                ${i18next.t('cart.warning', {defaultValue: 'Р’РµС‰Рё РЅРµ Р±СЂРѕРЅРёСЂСѓСЋС‚СЃСЏ Рё РјРѕРіСѓС‚ Р±С‹С‚СЊ РєСѓРїР»РµРЅС‹ РєРµРј-С‚Рѕ РґСЂСѓРіРёРј РІ Р»СЋР±РѕР№ РјРѕРјРµРЅС‚.'})}
             </div>
         </div>
     `;
@@ -2604,9 +2606,9 @@ function renderCartItems() {
         row.innerHTML = `
             <div class="swipe-background">
                 <svg class="trash-icon" viewBox="0 0 24 24">
-                    <!-- Крышка корзины -->
+                    <!-- РљСЂС‹С€РєР° РєРѕСЂР·РёРЅС‹ -->
                     <path class="trash-lid" d="M3 6h18 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    <!-- База корзины -->
+                    <!-- Р‘Р°Р·Р° РєРѕСЂР·РёРЅС‹ -->
                     <path class="trash-base" d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M10 11v6 M14 11v6"></path>
                 </svg>
             </div>
@@ -2622,7 +2624,7 @@ function renderCartItems() {
                 </div>
                 <div class="cart-item-price-wrapper">
                     <div class="cart-item-price">${item.price} ${getCurrency()}</div>
-                    <div class="cart-item-remove hide-on-mobile" onclick="removeFromCart(${index}, event, this.closest('.cart-item-row'))">×</div>
+                    <div class="cart-item-remove hide-on-mobile" onclick="removeFromCart(${index}, event, this.closest('.cart-item-row'))">Г—</div>
                 </div>
             </div>
         `;
@@ -2633,12 +2635,12 @@ function renderCartItems() {
 async function removeFromCart(index, event, rowElement) {
     if (event) event.stopPropagation(); 
     
-    // Сохраняем данные удаляемого товара для уведомления
+    // РЎРѕС…СЂР°РЅСЏРµРј РґР°РЅРЅС‹Рµ СѓРґР°Р»СЏРµРјРѕРіРѕ С‚РѕРІР°СЂР° РґР»СЏ СѓРІРµРґРѕРјР»РµРЅРёСЏ
     const removedItem = cart[index];
     const imgUrl = getOptimizedImageUrl(removedItem, true);
 
     const executeRemoval = async () => {
-        // Раньше мы тут снимали бронь, теперь это не нужно, так как товар и не был забронирован
+        // Р Р°РЅСЊС€Рµ РјС‹ С‚СѓС‚ СЃРЅРёРјР°Р»Рё Р±СЂРѕРЅСЊ, С‚РµРїРµСЂСЊ СЌС‚Рѕ РЅРµ РЅСѓР¶РЅРѕ, С‚Р°Рє РєР°Рє С‚РѕРІР°СЂ Рё РЅРµ Р±С‹Р» Р·Р°Р±СЂРѕРЅРёСЂРѕРІР°РЅ
         
         cart.splice(index, 1);
         localStorage.setItem('nisha_cart', JSON.stringify(cart));
@@ -2652,10 +2654,10 @@ async function removeFromCart(index, event, rowElement) {
         }
     };
 
-    // Если передан элемент строки — сначала плавно скрываем его, потом удаляем
+    // Р•СЃР»Рё РїРµСЂРµРґР°РЅ СЌР»РµРјРµРЅС‚ СЃС‚СЂРѕРєРё вЂ” СЃРЅР°С‡Р°Р»Р° РїР»Р°РІРЅРѕ СЃРєСЂС‹РІР°РµРј РµРіРѕ, РїРѕС‚РѕРј СѓРґР°Р»СЏРµРј
     if (rowElement) {
         rowElement.classList.add('removing');
-        setTimeout(executeRemoval, 300); // Ждем 0.3 сек пока закончится анимация CSS
+        setTimeout(executeRemoval, 300); // Р–РґРµРј 0.3 СЃРµРє РїРѕРєР° Р·Р°РєРѕРЅС‡РёС‚СЃСЏ Р°РЅРёРјР°С†РёСЏ CSS
     } else {
         await executeRemoval();
     }
@@ -2674,19 +2676,19 @@ function closeCartDropdown(e) {
     }
 }
 
-// ЕДИНЫЙ ОБРАБОТЧИК КЛИКОВ ДЛЯ ЗАКРЫТИЯ ВСЕХ ВЫПАДАЮЩИХ СПИСКОВ
+// Р•Р”РРќР«Р™ РћР‘Р РђР‘РћРўР§РРљ РљР›РРљРћР’ Р”Р›РЇ Р—РђРљР Р«РўРРЇ Р’РЎР•РҐ Р’Р«РџРђР”РђР®Р©РРҐ РЎРџРРЎРљРћР’
 document.addEventListener('mousedown', (e) => {
-    // Закрытие списка городов
+    // Р—Р°РєСЂС‹С‚РёРµ СЃРїРёСЃРєР° РіРѕСЂРѕРґРѕРІ
     if (!e.target.closest('#orderCity') && !e.target.closest('#cityDropdown')) {
         const cd = document.getElementById('cityDropdown');
         if (cd) cd.style.display = 'none';
     }
-    // Закрытие списка отделений
+    // Р—Р°РєСЂС‹С‚РёРµ СЃРїРёСЃРєР° РѕС‚РґРµР»РµРЅРёР№
     if (!e.target.closest('#orderBranch') && !e.target.closest('#branchDropdown')) {
         const bd = document.getElementById('branchDropdown');
         if (bd) bd.style.display = 'none';
     }
-    // Закрытие корзины (мобильная версия)
+    // Р—Р°РєСЂС‹С‚РёРµ РєРѕСЂР·РёРЅС‹ (РјРѕР±РёР»СЊРЅР°СЏ РІРµСЂСЃРёСЏ)
     if (!e.target.closest('#cartInfoWrapper')) {
         const cartDrop = document.getElementById('cartDropdown');
         if (cartDrop && cartDrop.classList.contains('active')) {
@@ -2698,7 +2700,7 @@ document.addEventListener('mousedown', (e) => {
             }
         }
     }
-    // ЗАКРЫТИЕ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ
+    // Р—РђРљР Р«РўРР• РџР•Р Р•РљР›Р®Р§РђРўР•Р›РЇ РЇР—Р«РљРћР’
     if (!e.target.closest('#footerLangWrapper')) {
         const langWrap = document.getElementById('footerLangWrapper');
         if (langWrap) langWrap.classList.remove('active');
@@ -2706,7 +2708,7 @@ document.addEventListener('mousedown', (e) => {
 });
 
 // ==========================================
-// 10. ОФОРМЛЕНИЕ ЗАКАЗА (OTP + ANTI-SPAM)
+// 10. РћР¤РћР РњР›Р•РќРР• Р—РђРљРђР—Рђ (OTP + ANTI-SPAM)
 // ==========================================
 let otpVerified = false;
 let otpInterval = null;
@@ -2718,17 +2720,17 @@ async function checkPhoneAuth() {
     const rawPhone = document.getElementById('orderPhone').value;
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
 
-    // Блокируем кнопку заказа по умолчанию
+    // Р‘Р»РѕРєРёСЂСѓРµРј РєРЅРѕРїРєСѓ Р·Р°РєР°Р·Р° РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
     otpVerified = false;
     btnSubmit.style.opacity = "0.5";
     btnSubmit.style.pointerEvents = "none";
 
-    // Если номер короткий - просто показываем кнопку подтверждения
+    // Р•СЃР»Рё РЅРѕРјРµСЂ РєРѕСЂРѕС‚РєРёР№ - РїСЂРѕСЃС‚Рѕ РїРѕРєР°Р·С‹РІР°РµРј РєРЅРѕРїРєСѓ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ
     if (!cleanPhone || cleanPhone.length < 10) {
         if(btnOtp) {
             btnOtp.style.display = "block";
             btnOtp.disabled = false;
-            btnOtp.innerHTML = "Подтвердить";
+            btnOtp.innerHTML = "РџРѕРґС‚РІРµСЂРґРёС‚СЊ";
             btnOtp.style.background = "var(--text-main)";
             btnOtp.style.borderColor = "#eee";
             btnOtp.style.opacity = "1";
@@ -2737,13 +2739,13 @@ async function checkPhoneAuth() {
         return;
     }
 
-    // Если номер введен - ТИХО спрашиваем у базы: "Этот номер уже подтверждали?"
+    // Р•СЃР»Рё РЅРѕРјРµСЂ РІРІРµРґРµРЅ - РўРРҐРћ СЃРїСЂР°С€РёРІР°РµРј Сѓ Р±Р°Р·С‹: "Р­С‚РѕС‚ РЅРѕРјРµСЂ СѓР¶Рµ РїРѕРґС‚РІРµСЂР¶РґР°Р»Рё?"
     if (_supabase) {
         const { data: vResult } = await _supabase.rpc('check_otp_verified', { p_phone: cleanPhone });
     const existCode = vResult ? [{is_verified: true}] : [];
         
         if (existCode && existCode.length > 0 && existCode[0].is_verified) {
-            // Номер УЖЕ подтвержден! Зеленый свет.
+            // РќРѕРјРµСЂ РЈР–Р• РїРѕРґС‚РІРµСЂР¶РґРµРЅ! Р—РµР»РµРЅС‹Р№ СЃРІРµС‚.
             otpVerified = true;
             btnSubmit.style.opacity = "1";
             btnSubmit.style.pointerEvents = "auto";
@@ -2752,17 +2754,17 @@ async function checkPhoneAuth() {
             if(btnOtp) {
                 btnOtp.style.display = "block";
                 btnOtp.disabled = true; 
-                btnOtp.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>УСПЕХ!</span>";
+                btnOtp.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>РЈРЎРџР•РҐ!</span>";
                 btnOtp.style.background = "var(--text-main)";
                 btnOtp.style.borderColor = "var(--accent-green)";
                 btnOtp.style.opacity = "1";
             }
         } else {
-            // Номер есть, но еще НЕ подтвержден. Ждем нажатия.
+            // РќРѕРјРµСЂ РµСЃС‚СЊ, РЅРѕ РµС‰Рµ РќР• РїРѕРґС‚РІРµСЂР¶РґРµРЅ. Р–РґРµРј РЅР°Р¶Р°С‚РёСЏ.
             if(btnOtp) {
                 btnOtp.style.display = "block";
                 btnOtp.disabled = false;
-                btnOtp.innerHTML = "Подтвердить";
+                btnOtp.innerHTML = "РџРѕРґС‚РІРµСЂРґРёС‚СЊ";
                 btnOtp.style.background = "var(--text-main)";
                 btnOtp.style.borderColor = "#eee";
                 btnOtp.style.opacity = "1";
@@ -2779,63 +2781,63 @@ async function generateAndSendOTP() {
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
     
     if(!cleanPhone || cleanPhone.length < 10) {
-        showToast('Введите корректный номер телефона!', 'error');
+        showToast('Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°!', 'error');
         return;
     }
 
     const btnOtp = document.getElementById('btnGetOtp');
-    if (btnOtp.disabled) return; // Если уже зеленый - ничего не делаем
+    if (btnOtp.disabled) return; // Р•СЃР»Рё СѓР¶Рµ Р·РµР»РµРЅС‹Р№ - РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј
     
-    // Блокируем кнопку от двойных нажатий
+    // Р‘Р»РѕРєРёСЂСѓРµРј РєРЅРѕРїРєСѓ РѕС‚ РґРІРѕР№РЅС‹С… РЅР°Р¶Р°С‚РёР№
     btnOtp.disabled = true;
-    btnOtp.innerText = "Связь с БД...";
+    btnOtp.innerText = "РЎРІСЏР·СЊ СЃ Р‘Р”...";
     btnOtp.style.opacity = "0.5";
 
-    // 1. Проверяем Черный Список
+    // 1. РџСЂРѕРІРµСЂСЏРµРј Р§РµСЂРЅС‹Р№ РЎРїРёСЃРѕРє
     const { data: blacklisted } = await _supabase.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
     if (blacklisted && blacklisted.length > 0) {
-        document.getElementById('otpStatus').innerHTML = "<span style='color:red; font-weight:bold;'>[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.</span>";
-        showToast('Доступ запрещен', 'error');
-        btnOtp.innerText = "Подтвердить";
+        document.getElementById('otpStatus').innerHTML = "<span style='color:red; font-weight:bold;'>[!] РћРЁРР‘РљРђ Р‘Р•Р—РћРџРђРЎРќРћРЎРўР. Р’РђРЁ РќРћРњР•Р  Р—РђР‘Р›РћРљРР РћР’РђРќ.</span>";
+        showToast('Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰РµРЅ', 'error');
+        btnOtp.innerText = "РџРѕРґС‚РІРµСЂРґРёС‚СЊ";
         return; 
     }
     
-    // 2. Снова проверяем, вдруг он уже подтвержден (двойная страховка)
+    // 2. РЎРЅРѕРІР° РїСЂРѕРІРµСЂСЏРµРј, РІРґСЂСѓРі РѕРЅ СѓР¶Рµ РїРѕРґС‚РІРµСЂР¶РґРµРЅ (РґРІРѕР№РЅР°СЏ СЃС‚СЂР°С…РѕРІРєР°)
     const { data: vResult } = await _supabase.rpc('check_otp_verified', { p_phone: cleanPhone });
     const existCode = vResult ? [{is_verified: true}] : [];
     if (existCode && existCode.length > 0 && existCode[0].is_verified) {
-        checkPhoneAuth(); // Просто вызываем UI-обновление
+        checkPhoneAuth(); // РџСЂРѕСЃС‚Рѕ РІС‹Р·С‹РІР°РµРј UI-РѕР±РЅРѕРІР»РµРЅРёРµ
         return; 
     }
 
-    // 3. Запускаем Таймер ожидания (60 секунд)
+    // 3. Р—Р°РїСѓСЃРєР°РµРј РўР°Р№РјРµСЂ РѕР¶РёРґР°РЅРёСЏ (60 СЃРµРєСѓРЅРґ)
     let timer = 60;
-    btnOtp.innerText = `Ждите ${timer}с`;
+    btnOtp.innerText = `Р–РґРёС‚Рµ ${timer}СЃ`;
     if (otpInterval) clearInterval(otpInterval);
     
     otpInterval = setInterval(() => {
         timer--;
-        btnOtp.innerText = `Ждите ${timer}с`;
+        btnOtp.innerText = `Р–РґРёС‚Рµ ${timer}СЃ`;
         if (timer <= 0) {
             clearInterval(otpInterval);
             btnOtp.disabled = false;
-            btnOtp.innerText = "Подтвердить";
+            btnOtp.innerText = "РџРѕРґС‚РІРµСЂРґРёС‚СЊ";
             btnOtp.style.opacity = "1";
         }
     }, 1000);
 
-    // 4. Генерируем код в базе
+    // 4. Р“РµРЅРµСЂРёСЂСѓРµРј РєРѕРґ РІ Р±Р°Р·Рµ
     const { error } = await _supabase.rpc('generate_secure_otp', { p_phone: cleanPhone });
     
     if (error) {
-        showToast('Ошибка сервера', 'error');
+        showToast('РћС€РёР±РєР° СЃРµСЂРІРµСЂР°', 'error');
         clearInterval(otpInterval);
         btnOtp.disabled = false;
-        btnOtp.innerText = "Подтвердить";
+        btnOtp.innerText = "РџРѕРґС‚РІРµСЂРґРёС‚СЊ";
         return;
     }
     
-    // 5. Открываем бота
+    // 5. РћС‚РєСЂС‹РІР°РµРј Р±РѕС‚Р°
     const payloadPhone = cleanPhone.replace('+', '');
     const tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
     
@@ -2845,9 +2847,9 @@ async function generateAndSendOTP() {
         window.open(tgLink, '_blank');
     }
     
-    document.getElementById('otpStatus').innerHTML = "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... <span style='color:var(--accent-yellow)'>⏳</span>";
+    document.getElementById('otpStatus').innerHTML = "РџРµСЂРµР№РґРёС‚Рµ РІ Р±РѕС‚Р° Рё РЅР°Р¶РјРёС‚Рµ 'РЎРўРђР Рў' РґР»СЏ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ... <span style='color:var(--accent-yellow)'>вЏі</span>";
     
-    // 6. Слушаем подтверждение в реальном времени
+    // 6. РЎР»СѓС€Р°РµРј РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РІ СЂРµР°Р»СЊРЅРѕРј РІСЂРµРјРµРЅРё
     if (window.otpPollInterval) clearInterval(window.otpPollInterval);
 
     window.otpPollInterval = setInterval(async () => {
@@ -2862,27 +2864,27 @@ async function generateAndSendOTP() {
 }
 
 async function openCheckoutModal() { 
-    // 1. Находим ИМЕННО кнопку "ОФОРМИТЬ ЗАКАЗ" внизу панели корзины
+    // 1. РќР°С…РѕРґРёРј РРњР•РќРќРћ РєРЅРѕРїРєСѓ "РћР¤РћР РњРРўР¬ Р—РђРљРђР—" РІРЅРёР·Сѓ РїР°РЅРµР»Рё РєРѕСЂР·РёРЅС‹
     const btn = document.querySelector('.cart-panel .cart-checkout-btn');
-    if (!btn) return; // Защита от ошибок, если кнопка не найдена
+    if (!btn) return; // Р—Р°С‰РёС‚Р° РѕС‚ РѕС€РёР±РѕРє, РµСЃР»Рё РєРЅРѕРїРєР° РЅРµ РЅР°Р№РґРµРЅР°
     
-    // Сохраняем оригинальный текст и блокируем кнопку
+    // РЎРѕС…СЂР°РЅСЏРµРј РѕСЂРёРіРёРЅР°Р»СЊРЅС‹Р№ С‚РµРєСЃС‚ Рё Р±Р»РѕРєРёСЂСѓРµРј РєРЅРѕРїРєСѓ
     const originalText = btn.innerText;
-    btn.innerText = "[ ПРОВЕРКА НАЛИЧИЯ... ]";
+    btn.innerText = "[ РџР РћР’Р•Р РљРђ РќРђР›РР§РРЇ... ]";
     btn.style.pointerEvents = "none";
 
-    // 2. БЫСТРАЯ ПРОВЕРКА: А вдруг товар уже купили, пока он лежал в корзине?
+    // 2. Р‘Р«РЎРўР РђРЇ РџР РћР’Р•Р РљРђ: Рђ РІРґСЂСѓРі С‚РѕРІР°СЂ СѓР¶Рµ РєСѓРїРёР»Рё, РїРѕРєР° РѕРЅ Р»РµР¶Р°Р» РІ РєРѕСЂР·РёРЅРµ?
     const itemIds = cart.map(i => i.id);
     const { data: dbItems, error } = await _supabase.from('items').select('id, name, status').in('id', itemIds);
 
     let hasSoldItems = false;
     if (dbItems && !error) {
-        // Фильтруем корзину, оставляя только доступные товары (и забронированные тобой)
+        // Р¤РёР»СЊС‚СЂСѓРµРј РєРѕСЂР·РёРЅСѓ, РѕСЃС‚Р°РІР»СЏСЏ С‚РѕР»СЊРєРѕ РґРѕСЃС‚СѓРїРЅС‹Рµ С‚РѕРІР°СЂС‹ (Рё Р·Р°Р±СЂРѕРЅРёСЂРѕРІР°РЅРЅС‹Рµ С‚РѕР±РѕР№)
         cart = cart.filter(cartItem => {
             const dbItem = dbItems.find(i => i.id === cartItem.id);
-            // Если товара нет в БД или его статус 'sold' — удаляем из корзины
+            // Р•СЃР»Рё С‚РѕРІР°СЂР° РЅРµС‚ РІ Р‘Р” РёР»Рё РµРіРѕ СЃС‚Р°С‚СѓСЃ 'sold' вЂ” СѓРґР°Р»СЏРµРј РёР· РєРѕСЂР·РёРЅС‹
             if (!dbItem || dbItem.status === 'sold') {
-                showToast(`Товар "${cartItem.name}" уже кто-то купил! 😢`, 'error');
+                showToast(`РўРѕРІР°СЂ "${cartItem.name}" СѓР¶Рµ РєС‚Рѕ-С‚Рѕ РєСѓРїРёР»! рџў`, 'error');
                 hasSoldItems = true;
                 return false; 
             }
@@ -2891,7 +2893,7 @@ async function openCheckoutModal() {
     }
 
     if (hasSoldItems) {
-        // Если что-то удалилось, обновляем корзину и отменяем открытие окна
+        // Р•СЃР»Рё С‡С‚Рѕ-С‚Рѕ СѓРґР°Р»РёР»РѕСЃСЊ, РѕР±РЅРѕРІР»СЏРµРј РєРѕСЂР·РёРЅСѓ Рё РѕС‚РјРµРЅСЏРµРј РѕС‚РєСЂС‹С‚РёРµ РѕРєРЅР°
         localStorage.setItem('nisha_cart', JSON.stringify(cart));
         await syncCartToServer();
         updateCartUI();
@@ -2901,7 +2903,7 @@ async function openCheckoutModal() {
         return; 
     }
 
-    // Если всё на месте - открываем окно оформления
+    // Р•СЃР»Рё РІСЃС‘ РЅР° РјРµСЃС‚Рµ - РѕС‚РєСЂС‹РІР°РµРј РѕРєРЅРѕ РѕС„РѕСЂРјР»РµРЅРёСЏ
     btn.innerText = originalText;
     btn.style.pointerEvents = "auto";
 
@@ -2909,7 +2911,7 @@ async function openCheckoutModal() {
     document.getElementById('checkoutModal').style.display = 'flex'; 
     document.body.style.overflow = 'hidden';
     
-    // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА (Seamless Checkout)
+    // РђР’РўРћ-Р—РђРџРћР›РќР•РќРР• Р”РђРќРќР«РҐ РљР›РР•РќРўРђ (Seamless Checkout)
     const savedDataRaw = localStorage.getItem('nisha_checkout_data');
     if (savedDataRaw) {
         try {
@@ -2922,17 +2924,17 @@ async function openCheckoutModal() {
             selectedCityRef = saved.cityRef || '';
             selectedBranchRef = saved.branchRef || '';
             
-            // Если есть телефон - запускаем проверку кнопки
+            // Р•СЃР»Рё РµСЃС‚СЊ С‚РµР»РµС„РѕРЅ - Р·Р°РїСѓСЃРєР°РµРј РїСЂРѕРІРµСЂРєСѓ РєРЅРѕРїРєРё
             if (saved.phone) checkPhoneAuth();
             
-            // Если есть НП - сразу считаем доставку!
+            // Р•СЃР»Рё РµСЃС‚СЊ РќРџ - СЃСЂР°Р·Сѓ СЃС‡РёС‚Р°РµРј РґРѕСЃС‚Р°РІРєСѓ!
             if (selectedCityRef && selectedBranchRef && cart.length > 0) {
                 calculateDeliveryCost();
             }
         } catch(e) { autoDetectCity(); }
     } else {
         checkPhoneAuth();
-        autoDetectCity(); // Если данных нет - определяем город по IP
+        autoDetectCity(); // Р•СЃР»Рё РґР°РЅРЅС‹С… РЅРµС‚ - РѕРїСЂРµРґРµР»СЏРµРј РіРѕСЂРѕРґ РїРѕ IP
     }
 }
 
@@ -2941,11 +2943,11 @@ async function submitOrder() {
     if (botTrap && botTrap.value !== "") return;
 
     if (!otpVerified) {
-        showToast('Подтвердите номер телефона!', 'error');
+        showToast('РџРѕРґС‚РІРµСЂРґРёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°!', 'error');
         return;
     }
 
-    // БЕЗОПАСНАЯ ОЧИСТКА ДАННЫХ ОТ XSS-АТАК
+    // Р‘Р•Р—РћРџРђРЎРќРђРЇ РћР§РРЎРўРљРђ Р”РђРќРќР«РҐ РћРў XSS-РђРўРђРљ
     const rawName = document.getElementById('orderName').value.trim();
     const rawCity = document.getElementById('orderCity').value.trim();
     const rawBranch = document.getElementById('orderBranch').value.trim();
@@ -2962,13 +2964,13 @@ async function submitOrder() {
         return; 
     }
 
-    // НОВАЯ ЖЕСТКАЯ ВАЛИДАЦИЯ НОВОЙ ПОЧТЫ
+    // РќРћР’РђРЇ Р–Р•РЎРўРљРђРЇ Р’РђР›РР”РђР¦РРЇ РќРћР’РћР™ РџРћР§РўР«
     if (!selectedCityRef || !selectedBranchRef) {
-        showToast('Выберите Город и Отделение строго из выпадающего списка!', 'error');
+        showToast('Р’С‹Р±РµСЂРёС‚Рµ Р“РѕСЂРѕРґ Рё РћС‚РґРµР»РµРЅРёРµ СЃС‚СЂРѕРіРѕ РёР· РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР°!', 'error');
         return;
     }
 
-    // ПРОВЕРЯЕМ, ЗАПОМНИЛ ЛИ САЙТ ВЫБОР ЮЗЕРА РАНЕЕ
+    // РџР РћР’Р•Р РЇР•Рњ, Р—РђРџРћРњРќРР› Р›Р РЎРђР™Рў Р’Р«Р‘РћР  Р®Р—Р•Р Рђ Р РђРќР•Р•
     const savedEmailPreference = localStorage.getItem('nisha_email_preference');
     
     if (savedEmailPreference === 'skipped') {
@@ -2983,7 +2985,7 @@ async function submitOrder() {
         return await executeOrderFinal(currentUser.email);
     }
 
-    // Если это ГОСТЬ (не вошел в аккаунт) и делает заказ впервые — тогда спрашиваем
+    // Р•СЃР»Рё СЌС‚Рѕ Р“РћРЎРўР¬ (РЅРµ РІРѕС€РµР» РІ Р°РєРєР°СѓРЅС‚) Рё РґРµР»Р°РµС‚ Р·Р°РєР°Р· РІРїРµСЂРІС‹Рµ вЂ” С‚РѕРіРґР° СЃРїСЂР°С€РёРІР°РµРј
     const prompt = document.getElementById('emailPromptOverlay');
     const emailInput = document.getElementById('promptEmailInput');
     emailInput.value = '';
@@ -2999,13 +3001,13 @@ async function confirmEmailPrompt(wantsEmail) {
         finalEmail = emailInput.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(finalEmail)) {
-            showToast('Введите корректный E-mail!', 'error');
+            showToast('Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ E-mail!', 'error');
             return; 
         }
-        // Запоминаем Email навсегда
+        // Р—Р°РїРѕРјРёРЅР°РµРј Email РЅР°РІСЃРµРіРґР°
         localStorage.setItem('nisha_email_preference', finalEmail);
     } else {
-        // Запоминаем, что юзер отказался
+        // Р—Р°РїРѕРјРёРЅР°РµРј, С‡С‚Рѕ СЋР·РµСЂ РѕС‚РєР°Р·Р°Р»СЃСЏ
         localStorage.setItem('nisha_email_preference', 'skipped');
     }
 
@@ -3016,17 +3018,17 @@ async function confirmEmailPrompt(wantsEmail) {
 async function executeOrderFinal(emailToSave) {
     const btnSubmit = document.getElementById('btnSubmitOrder');
     
-    // --- КРУТОЙ ПРОГРЕСС-БАР ЗАГРУЗКИ ---
+    // --- РљР РЈРўРћР™ РџР РћР“Р Р•РЎРЎ-Р‘РђР  Р—РђР“Р РЈР—РљР ---
     btnSubmit.style.pointerEvents = "none";
     btnSubmit.style.position = "relative";
     btnSubmit.style.overflow = "hidden";
     btnSubmit.style.color = "#000";
     btnSubmit.innerHTML = `
-        <span style="position: relative; z-index: 2;">[ ОБРАБОТКА ДАННЫХ... ]</span>
+        <span style="position: relative; z-index: 2;">[ РћР‘Р РђР‘РћРўРљРђ Р”РђРќРќР«РҐ... ]</span>
         <div id="btnProgressBar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: #fff; z-index: 1; transition: width 3s cubic-bezier(0.1, 0.7, 1.0, 0.1);"></div>
     `;
     
-    // Запускаем фейковую анимацию до 90% (остальные 10% заполнятся, когда БД ответит)
+    // Р—Р°РїСѓСЃРєР°РµРј С„РµР№РєРѕРІСѓСЋ Р°РЅРёРјР°С†РёСЋ РґРѕ 90% (РѕСЃС‚Р°Р»СЊРЅС‹Рµ 10% Р·Р°РїРѕР»РЅСЏС‚СЃСЏ, РєРѕРіРґР° Р‘Р” РѕС‚РІРµС‚РёС‚)
     setTimeout(() => {
         const bar = document.getElementById('btnProgressBar');
         if(bar) bar.style.width = "90%";
@@ -3040,7 +3042,7 @@ async function executeOrderFinal(emailToSave) {
     const branch = document.getElementById('orderBranch').value.trim();
 
     const orderItemIds = cart.map(i => i.id);
-    // СОХРАНЯЕМ ДАННЫЕ КЛИЕНТА НА БУДУЩЕЕ
+    // РЎРћРҐР РђРќРЇР•Рњ Р”РђРќРќР«Р• РљР›РР•РќРўРђ РќРђ Р‘РЈР”РЈР©Р•Р•
     const checkoutData = {
         name: name,
         phone: phoneRaw,
@@ -3052,7 +3054,7 @@ async function executeOrderFinal(emailToSave) {
     localStorage.setItem('nisha_checkout_data', JSON.stringify(checkoutData));
 
     try {
-        // ВАЖНО: передаем p_email в базу!
+        // Р’РђР–РќРћ: РїРµСЂРµРґР°РµРј p_email РІ Р±Р°Р·Сѓ!
         const { data: orderId, error: orderError } = await _supabase.rpc('create_secure_order', {
             p_user_id: currentUser ? currentUser.id : null,
             p_name: name,
@@ -3069,7 +3071,7 @@ async function executeOrderFinal(emailToSave) {
 
         if (orderError) throw orderError; 
 
-        // УСПЕШНЫЙ ЗАКАЗ
+        // РЈРЎРџР•РЁРќР«Р™ Р—РђРљРђР—
         localStorage.setItem('nisha_last_phone', phone);
         localStorage.setItem('nisha_last_order', Date.now());
 
@@ -3079,7 +3081,7 @@ async function executeOrderFinal(emailToSave) {
         
         updateCartUI();
         
-        // Добиваем прогресс-бар до 100% перед закрытием
+        // Р”РѕР±РёРІР°РµРј РїСЂРѕРіСЂРµСЃСЃ-Р±Р°СЂ РґРѕ 100% РїРµСЂРµРґ Р·Р°РєСЂС‹С‚РёРµРј
         const bar = document.getElementById('btnProgressBar');
         if(bar) {
             bar.style.transition = "width 0.2s ease";
@@ -3088,10 +3090,10 @@ async function executeOrderFinal(emailToSave) {
 
         setTimeout(() => {
             closeModal('checkoutModal');
-            // Возвращаем кнопку в норму
+            // Р’РѕР·РІСЂР°С‰Р°РµРј РєРЅРѕРїРєСѓ РІ РЅРѕСЂРјСѓ
             btnSubmit.innerHTML = i18next.t('checkout.btn_submit');
             
-            // Показываем терминал успешного заказа
+            // РџРѕРєР°Р·С‹РІР°РµРј С‚РµСЂРјРёРЅР°Р» СѓСЃРїРµС€РЅРѕРіРѕ Р·Р°РєР°Р·Р°
             const overlay = document.getElementById('orderSuccessOverlay');
             overlay.style.display = 'flex';
             
@@ -3101,11 +3103,11 @@ async function executeOrderFinal(emailToSave) {
                 btnSubmit.style.pointerEvents = "auto";
                 btnSubmit.style.opacity = "1";
             }, 3500);
-        }, 300); // Ждем треть секунды, чтобы юзер увидел 100%
+        }, 300); // Р–РґРµРј С‚СЂРµС‚СЊ СЃРµРєСѓРЅРґС‹, С‡С‚РѕР±С‹ СЋР·РµСЂ СѓРІРёРґРµР» 100%
         
 
     } catch (err) {
-        showToast('Ошибка при оформлении: ' + err.message, 'error');
+        showToast('РћС€РёР±РєР° РїСЂРё РѕС„РѕСЂРјР»РµРЅРёРё: ' + err.message, 'error');
         btnSubmit.innerHTML = i18next.t('checkout.btn_submit');
         btnSubmit.style.pointerEvents = "auto";
         btnSubmit.style.opacity = "1";
@@ -3114,7 +3116,7 @@ async function executeOrderFinal(emailToSave) {
 }
 
 // ==========================================
-// 11. МОИ ЗАКАЗЫ (ИСТОРИЯ И JSBARCODE)
+// 11. РњРћР Р—РђРљРђР—Р« (РРЎРўРћР РРЇ Р JSBARCODE)
 // ==========================================
    function openOrdersModal() {
 
@@ -3130,18 +3132,18 @@ async function executeOrderFinal(emailToSave) {
     if (currentUser) {
         if(guestInputGroup) guestInputGroup.style.display = 'none';
         
-        // Умное получение никнейма (спасает от заглушки "User")
+        // РЈРјРЅРѕРµ РїРѕР»СѓС‡РµРЅРёРµ РЅРёРєРЅРµР№РјР° (СЃРїР°СЃР°РµС‚ РѕС‚ Р·Р°РіР»СѓС€РєРё "User")
         let dName = userProfile?.username;
         if (!dName || dName === 'User') {
             dName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@')[0];
         }
         
-        if(guestText) guestText.innerHTML = `${i18next.t('orders_modal.access_granted', {defaultValue: 'Доступ разрешен'})}: <span style="color:var(--accent-green); font-weight:bold;">@${dName}</span>`;
+        if(guestText) guestText.innerHTML = `${i18next.t('orders_modal.access_granted', {defaultValue: 'Р”РѕСЃС‚СѓРї СЂР°Р·СЂРµС€РµРЅ'})}: <span style="color:var(--accent-green); font-weight:bold;">@${dName}</span>`;
         fetchMyOrders();
     } else {
         if(guestInputGroup) guestInputGroup.style.display = 'flex';
-        if(guestText) guestText.innerHTML = 'Введите номер телефона, указанный при заказе, чтобы отследить статус:';
-        if(listArea) listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace; padding: 30px;">Введите номер телефона для поиска...</div>';
+        if(guestText) guestText.innerHTML = 'Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°, СѓРєР°Р·Р°РЅРЅС‹Р№ РїСЂРё Р·Р°РєР°Р·Рµ, С‡С‚РѕР±С‹ РѕС‚СЃР»РµРґРёС‚СЊ СЃС‚Р°С‚СѓСЃ:';
+        if(listArea) listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace; padding: 30px;">Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° РґР»СЏ РїРѕРёСЃРєР°...</div>';
 
         const lastPhone = localStorage.getItem('nisha_last_phone');
         const phoneInput = document.getElementById('ordersSearchPhone');
@@ -3154,7 +3156,7 @@ async function executeOrderFinal(emailToSave) {
     }
 }
 
-// Глобальные переменные для фильтрации заказов
+// Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ РґР»СЏ С„РёР»СЊС‚СЂР°С†РёРё Р·Р°РєР°Р·РѕРІ
 let globalOrdersData = [];
 let currentOrderTab = 'accepted'; // accepted, shipped, cancelled
 
@@ -3163,8 +3165,8 @@ async function fetchMyOrders() {
     const tabsContainer = document.getElementById('ordersTabs');
     if(!listArea) return;
     
-    listArea.innerHTML = '<div style="text-align:center; color:#aaa; font-family: monospace;">[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]</div>';
-    tabsContainer.style.display = 'none'; // Прячем табы на время загрузки
+    listArea.innerHTML = '<div style="text-align:center; color:#aaa; font-family: monospace;">[ Р—РђР“Р РЈР—РљРђ Р‘РђР—Р« Р”РђРќРќР«РҐ... ]</div>';
+    tabsContainer.style.display = 'none'; // РџСЂСЏС‡РµРј С‚Р°Р±С‹ РЅР° РІСЂРµРјСЏ Р·Р°РіСЂСѓР·РєРё
 
     let fetchError = null;
 
@@ -3176,16 +3178,16 @@ async function fetchMyOrders() {
         const phoneInput = document.getElementById('ordersSearchPhone');
         const phone = phoneInput ? phoneInput.value.replace(/[^\d+]/g, '') : '';
         if (!phone || phone.length < 10) { 
-            showToast('Введите корректный номер телефона!', 'error'); 
-            listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace;">[ НОМЕР НЕ ВВЕДЕН ]</div>';
+            showToast('Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°!', 'error'); 
+            listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace;">[ РќРћРњР•Р  РќР• Р’Р’Р•Р”Р•Рќ ]</div>';
             return; 
         }
 
         const { data: vResult } = await _supabase.rpc('check_otp_verified', { p_phone: phone });
         const otpCheck = vResult ? [{is_verified: true}] : [];
         if (!otpCheck || otpCheck.length === 0 || !otpCheck[0].is_verified) {
-            listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.</div>
-            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" onclick="document.getElementById('orderPhone').value='${phone}'; generateAndSendOTP();">ПОДТВЕРДИТЬ НОМЕР В БОТЕ</button>`;
+            listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">[ Р”РћРЎРўРЈРџ Р—РђРџР Р•Р©Р•Рќ ]<br><br>РЎРЅР°С‡Р°Р»Р° РїРѕРґС‚РІРµСЂРґРёС‚Рµ, С‡С‚Рѕ СЌС‚Рѕ РІР°С€ РЅРѕРјРµСЂ.</div>
+            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" onclick="document.getElementById('orderPhone').value='${phone}'; generateAndSendOTP();">РџРћР”РўР’Р•Р Р”РРўР¬ РќРћРњР•Р  Р’ Р‘РћРўР•</button>`;
             return;
         }
 
@@ -3195,24 +3197,24 @@ async function fetchMyOrders() {
     }
 
     if (fetchError) { 
-        listArea.innerHTML = `<div style="color:red; text-align:center;">[ ОШИБКА: ${fetchError.message} ]</div>`; 
+        listArea.innerHTML = `<div style="color:red; text-align:center;">[ РћРЁРР‘РљРђ: ${fetchError.message} ]</div>`; 
         return; 
     }
 
     if (globalOrdersData.length === 0) { 
         listArea.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">
-                <div style="font-size: 30px; margin-bottom: 15px;">📦</div>
+                <div style="font-size: 30px; margin-bottom: 15px;">рџ“¦</div>
                 <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;">${i18next.t('orders_modal.empty_title')}</div>
                 <div style="color:#888; font-size: 13px; line-height: 1.5;">${i18next.t('orders_modal.empty_desc')}</div>
             </div>`; 
         return; 
     }
 
-    // Если данные есть, показываем табы и рендерим
+    // Р•СЃР»Рё РґР°РЅРЅС‹Рµ РµСЃС‚СЊ, РїРѕРєР°Р·С‹РІР°РµРј С‚Р°Р±С‹ Рё СЂРµРЅРґРµСЂРёРј
     tabsContainer.style.display = 'flex';
     
-    // Сбрасываем таб на "Принятые" при новом поиске
+    // РЎР±СЂР°СЃС‹РІР°РµРј С‚Р°Р± РЅР° "РџСЂРёРЅСЏС‚С‹Рµ" РїСЂРё РЅРѕРІРѕРј РїРѕРёСЃРєРµ
     currentOrderTab = 'accepted';
     document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
     document.querySelector('.order-tab.tab-yellow').classList.add('active');
@@ -3221,10 +3223,10 @@ async function fetchMyOrders() {
 }
 
 window.switchOrderTab = function(tabName) {
-    if (currentOrderTab === tabName) return; // Не рендерим, если нажали на тот же таб
+    if (currentOrderTab === tabName) return; // РќРµ СЂРµРЅРґРµСЂРёРј, РµСЃР»Рё РЅР°Р¶Р°Р»Рё РЅР° С‚РѕС‚ Р¶Рµ С‚Р°Р±
     currentOrderTab = tabName;
     
-    // Обновляем классы активности
+    // РћР±РЅРѕРІР»СЏРµРј РєР»Р°СЃСЃС‹ Р°РєС‚РёРІРЅРѕСЃС‚Рё
     document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
     if (tabName === 'accepted') document.querySelector('.order-tab.tab-yellow').classList.add('active');
     if (tabName === 'shipped') document.querySelector('.order-tab.tab-blue').classList.add('active');
@@ -3235,25 +3237,25 @@ window.switchOrderTab = function(tabName) {
 
 function renderFilteredOrders() {
     const listArea = document.getElementById('ordersListArea');
-    listArea.innerHTML = ''; // Очищаем (Auto-animate сделает плавное исчезновение/появление)
+    listArea.innerHTML = ''; // РћС‡РёС‰Р°РµРј (Auto-animate СЃРґРµР»Р°РµС‚ РїР»Р°РІРЅРѕРµ РёСЃС‡РµР·РЅРѕРІРµРЅРёРµ/РїРѕСЏРІР»РµРЅРёРµ)
 
-    // Фильтруем локально
+    // Р¤РёР»СЊС‚СЂСѓРµРј Р»РѕРєР°Р»СЊРЅРѕ
     const filteredData = globalOrdersData.filter(order => {
         const s = order.status.toLowerCase();
-        if (currentOrderTab === 'accepted') return s.includes('принят') || s.includes('оплачен');
-        if (currentOrderTab === 'shipped') return s.includes('отправлен') || s.includes('завершен');
-        if (currentOrderTab === 'cancelled') return s.includes('отменен') || s.includes('возврат');
+        if (currentOrderTab === 'accepted') return s.includes('РїСЂРёРЅСЏС‚') || s.includes('РѕРїР»Р°С‡РµРЅ');
+        if (currentOrderTab === 'shipped') return s.includes('РѕС‚РїСЂР°РІР»РµРЅ') || s.includes('Р·Р°РІРµСЂС€РµРЅ');
+        if (currentOrderTab === 'cancelled') return s.includes('РѕС‚РјРµРЅРµРЅ') || s.includes('РІРѕР·РІСЂР°С‚');
         return false;
     });
 
     if (filteredData.length === 0) {
-        let emptyMsg = currentOrderTab === 'accepted' ? 'Нет активных заказов.' : 
-                       currentOrderTab === 'shipped' ? 'Нет отправленных посылок.' : 'Нет отмененных заказов.';
+        let emptyMsg = currentOrderTab === 'accepted' ? 'РќРµС‚ Р°РєС‚РёРІРЅС‹С… Р·Р°РєР°Р·РѕРІ.' : 
+                       currentOrderTab === 'shipped' ? 'РќРµС‚ РѕС‚РїСЂР°РІР»РµРЅРЅС‹С… РїРѕСЃС‹Р»РѕРє.' : 'РќРµС‚ РѕС‚РјРµРЅРµРЅРЅС‹С… Р·Р°РєР°Р·РѕРІ.';
         listArea.innerHTML = `<div style="text-align:center; color:#666; font-family: monospace; padding: 30px;">[ ${emptyMsg} ]</div>`;
         return;
     }
 
-    // Рендерим отфильтрованные карточки
+    // Р РµРЅРґРµСЂРёРј РѕС‚С„РёР»СЊС‚СЂРѕРІР°РЅРЅС‹Рµ РєР°СЂС‚РѕС‡РєРё
     filteredData.forEach(order => {
         const date = new Date(order.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
         let itemsHtml = '';
@@ -3261,27 +3263,27 @@ function renderFilteredOrders() {
            order.items.forEach(item => {
                 const imgStyle = item.image ? `background-image: url('${item.image}');` : '';
                 itemsHtml += `
-                    <div class="order-item-row" onclick="openProductModalById('${item.id}')" title="Открыть карточку товара">
+                    <div class="order-item-row" onclick="openProductModalById('${item.id}')" title="РћС‚РєСЂС‹С‚СЊ РєР°СЂС‚РѕС‡РєСѓ С‚РѕРІР°СЂР°">
                         <div class="order-item-img" style="${imgStyle}">${item.image ? '' : 'NO IMG'}</div>
                         <div class="order-item-details">
                             <div class="order-item-name">${item.name}</div>
-                            <div class="order-item-meta"><span>Размер: ${item.size}</span><span class="order-item-price">${item.currentPrice} грн</span></div>
+                            <div class="order-item-meta"><span>Р Р°Р·РјРµСЂ: ${item.size}</span><span class="order-item-price">${item.currentPrice} РіСЂРЅ</span></div>
                         </div>
                     </div>`;
             });
         }
 
         const ttnHtml = order.tracking_number 
-            ? `<div class="order-ttn">ТТН: <span style="color:var(--accent-green); font-weight:bold;">${order.tracking_number}</span>
+            ? `<div class="order-ttn">РўРўРќ: <span style="color:var(--accent-green); font-weight:bold;">${order.tracking_number}</span>
                  <div style="background:#fff; text-align:center; padding: 10px; margin-top: 10px; border-radius:4px;">
                      <svg class="barcode-svg" data-ttn="${order.tracking_number}"></svg>
                  </div>
                </div>` 
-            : `<div class="order-ttn" style="color:#777;">ТТН: Ожидается генерация...</div>`;
+            : `<div class="order-ttn" style="color:#777;">РўРўРќ: РћР¶РёРґР°РµС‚СЃСЏ РіРµРЅРµСЂР°С†РёСЏ...</div>`;
 
-        // --- ЛОГИКА КНОПКИ ОТЗЫВА ---
+        // --- Р›РћР“РРљРђ РљРќРћРџРљР РћРўР—Р«Р’Рђ ---
         let reviewBtnHtml = '';
-        if (order.status.toLowerCase() === 'завершен') {
+        if (order.status.toLowerCase() === 'Р·Р°РІРµСЂС€РµРЅ') {
             let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
             
             if (!reviewedOrders.includes(order.id) && order.items && order.items.length > 0) {
@@ -3294,33 +3296,33 @@ function renderFilteredOrders() {
                          onclick="closeModal('ordersModal'); promptOrderReview('${order.id}', '${safeName}', '${firstItem.image}', '${firstItem.id}')" 
                          onmouseover="this.style.textDecoration='underline'; this.style.color='#fff';" 
                          onmouseout="this.style.textDecoration='none'; this.style.color='var(--accent-green)';">
-                        ${msgIcon} Оставить отзыв
+                        ${msgIcon} РћСЃС‚Р°РІРёС‚СЊ РѕС‚Р·С‹РІ
                     </div>
                 `;
             } else if (reviewedOrders.includes(order.id)) {
-                // Если отзыв уже оставлен — показываем серый текст (некликабельный)
+                // Р•СЃР»Рё РѕС‚Р·С‹РІ СѓР¶Рµ РѕСЃС‚Р°РІР»РµРЅ вЂ” РїРѕРєР°Р·С‹РІР°РµРј СЃРµСЂС‹Р№ С‚РµРєСЃС‚ (РЅРµРєР»РёРєР°Р±РµР»СЊРЅС‹Р№)
                 reviewBtnHtml = `
                     <div style="margin-top: 10px; color: #555; font-size: 12px; font-family: var(--font-mono); text-align: center; pointer-events: none;">
-                        [✔] ОТЗЫВ ОСТАВЛЕН
+                        [вњ”] РћРўР—Р«Р’ РћРЎРўРђР’Р›Р•Рќ
                     </div>
                 `;
             }
         }
 
-        // --- ВСТАВЛЯЕМ КНОПКУ ОТЗЫВА В КАРТОЧКУ ---
+        // --- Р’РЎРўРђР’Р›РЇР•Рњ РљРќРћРџРљРЈ РћРўР—Р«Р’Рђ Р’ РљРђР РўРћР§РљРЈ ---
         listArea.innerHTML += `
             <div class="order-card">
                 <div class="order-header">
-                    <span class="order-id">ЗАКАЗ #${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
+                    <span class="order-id">Р—РђРљРђР— #${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
                     <span class="order-status status-${order.status}">${order.status.toUpperCase()}</span>
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>
                 ${reviewBtnHtml}
-                <div class="order-footer">${ttnHtml}<div class="order-total">ИТОГО: ${order.total_sum} грн</div></div>
+                <div class="order-footer">${ttnHtml}<div class="order-total">РРўРћР“Рћ: ${order.total_sum} РіСЂРЅ</div></div>
             </div>`;
     });
 
-    // Перерисовываем штрихкоды
+    // РџРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј С€С‚СЂРёС…РєРѕРґС‹
     if (typeof JsBarcode !== 'undefined') {
         document.querySelectorAll('.barcode-svg').forEach(svg => {
             const ttn = svg.getAttribute('data-ttn');
@@ -3331,12 +3333,12 @@ function renderFilteredOrders() {
     }
 }
 // ==========================================
-// 12. МОДАЛКА ТОВАРА & ПОХОЖИЕ ТОВАРЫ & PHOTOSWIPE
+// 12. РњРћР”РђР›РљРђ РўРћР’РђР Рђ & РџРћРҐРћР–РР• РўРћР’РђР Р« & PHOTOSWIPE
 // ==========================================
 async function openProductModalById(itemId) {
     let item = allItems.find(i => i.id === itemId);
     
-    // МГНОВЕННО открываем модалку, если товар есть в кэше
+    // РњР“РќРћР’Р•РќРќРћ РѕС‚РєСЂС‹РІР°РµРј РјРѕРґР°Р»РєСѓ, РµСЃР»Рё С‚РѕРІР°СЂ РµСЃС‚СЊ РІ РєСЌС€Рµ
     if (item) {
         const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
@@ -3353,7 +3355,7 @@ async function openProductModalById(itemId) {
         openProductModal(item); 
     }
     
-    // В ФОНЕ подгружаем полное описание и замеры
+    // Р’ Р¤РћРќР• РїРѕРґРіСЂСѓР¶Р°РµРј РїРѕР»РЅРѕРµ РѕРїРёСЃР°РЅРёРµ Рё Р·Р°РјРµСЂС‹
     if (typeof _supabase !== 'undefined') {
         try {
             let { data } = await _supabase.from('items').select('*').eq('id', itemId).limit(1);
@@ -3365,20 +3367,20 @@ async function openProductModalById(itemId) {
                 if (archData && archData.length > 0) fullItem = archData[0];
             }
             
-            // Если товара не было в кэше вообще (переход по прямой ссылке), открываем сейчас
+            // Р•СЃР»Рё С‚РѕРІР°СЂР° РЅРµ Р±С‹Р»Рѕ РІ РєСЌС€Рµ РІРѕРѕР±С‰Рµ (РїРµСЂРµС…РѕРґ РїРѕ РїСЂСЏРјРѕР№ СЃСЃС‹Р»РєРµ), РѕС‚РєСЂС‹РІР°РµРј СЃРµР№С‡Р°СЃ
             if (!item && fullItem) {
                 openProductModal(fullItem);
                 return;
             }
             
-            // Если модалка открыта и мы догрузили описание - просто вставляем текст
+            // Р•СЃР»Рё РјРѕРґР°Р»РєР° РѕС‚РєСЂС‹С‚Р° Рё РјС‹ РґРѕРіСЂСѓР·РёР»Рё РѕРїРёСЃР°РЅРёРµ - РїСЂРѕСЃС‚Рѕ РІСЃС‚Р°РІР»СЏРµРј С‚РµРєСЃС‚
             if (fullItem && currentOpenedItem && currentOpenedItem.id === fullItem.id) {
                 currentOpenedItem = fullItem;
                 if (fullItem.description) {
-                    const descText = fullItem.description ? fullItem.description.replace(/\n/g, '<br>') : `<span style="color:#666;">[ Описание отсутствует ]</span>`;
+                    const descText = fullItem.description ? fullItem.description.replace(/\n/g, '<br>') : `<span style="color:#666;">[ РћРїРёСЃР°РЅРёРµ РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ ]</span>`;
                     const descContainer = document.querySelector('.modal-desc');
                     if (descContainer) {
-                        // Обновляем текст описания, не трогая Q&A
+                        // РћР±РЅРѕРІР»СЏРµРј С‚РµРєСЃС‚ РѕРїРёСЃР°РЅРёСЏ, РЅРµ С‚СЂРѕРіР°СЏ Q&A
                         descContainer.innerHTML = `
                             <div style="margin-bottom: 5px;">
                                 <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">${i18next.t('product.size')}</span></strong> 
@@ -3389,13 +3391,13 @@ async function openProductModalById(itemId) {
                                 <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${fullItem.brand}</span>
                             </div>
                             <div style="color: #aaa; font-size: 13px;">${descText}</div>
-                        ` + (descContainer.innerHTML.substring(descContainer.innerHTML.indexOf('<!-- Блок Вопросов и Ответов (Q&A) -->') !== -1 ? descContainer.innerHTML.indexOf('<!-- Блок Вопросов и Ответов (Q&A) -->') : descContainer.innerHTML.indexOf('<div id="qaWrapper"')));
+                        ` + (descContainer.innerHTML.substring(descContainer.innerHTML.indexOf('<!-- Р‘Р»РѕРє Р’РѕРїСЂРѕСЃРѕРІ Рё РћС‚РІРµС‚РѕРІ (Q&A) -->') !== -1 ? descContainer.innerHTML.indexOf('<!-- Р‘Р»РѕРє Р’РѕРїСЂРѕСЃРѕРІ Рё РћС‚РІРµС‚РѕРІ (Q&A) -->') : descContainer.innerHTML.indexOf('<div id="qaWrapper"')));
                     }
                 }
             }
-        } catch(e) { console.error("Ошибка сети:", e); }
+        } catch(e) { console.error("РћС€РёР±РєР° СЃРµС‚Рё:", e); }
     } else if (!item) {
-        showToast('Товар не найден', 'error'); 
+        showToast('РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ', 'error'); 
     }
 }
 
@@ -3405,7 +3407,7 @@ function openProductModal(item) {
     document.title = `NISHA | ${item.brand} - ${item.name}`;
     
     document.getElementById('modalItemTitle').innerText = item.name;
-    // Красим звездочку в модалке, если товар уже в избранном
+    // РљСЂР°СЃРёРј Р·РІРµР·РґРѕС‡РєСѓ РІ РјРѕРґР°Р»РєРµ, РµСЃР»Рё С‚РѕРІР°СЂ СѓР¶Рµ РІ РёР·Р±СЂР°РЅРЅРѕРј
     const modalStar = document.getElementById('modalFavStar');
     if (modalStar) {
         if (favorites.includes(item.id)) {
@@ -3422,24 +3424,24 @@ function openProductModal(item) {
     const condStr = item.condition || '9 / 10';
     const condMatch = condStr.match(/(\d+)/);
     
-    // Получаем саму оценку (по умолчанию 9)
+    // РџРѕР»СѓС‡Р°РµРј СЃР°РјСѓ РѕС†РµРЅРєСѓ (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ 9)
     let condNum = 9;
     if (condMatch && condMatch[1]) condNum = parseInt(condMatch[1]);
     
-    // Устанавливаем ширину полоски в процентах
+    // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С€РёСЂРёРЅСѓ РїРѕР»РѕСЃРєРё РІ РїСЂРѕС†РµРЅС‚Р°С…
     const condFill = document.getElementById('modalCondFill');
     condFill.style.width = (condNum * 10) + '%';
     
-    // Получаем элемент текста "9 / 10"
+    // РџРѕР»СѓС‡Р°РµРј СЌР»РµРјРµРЅС‚ С‚РµРєСЃС‚Р° "9 / 10"
     const condText = document.getElementById('modalItemCond');
     condText.innerText = condStr;
 
-    // Умная раскраска в зависимости от оценки
+    // РЈРјРЅР°СЏ СЂР°СЃРєСЂР°СЃРєР° РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РѕС†РµРЅРєРё
     if (condNum <= 3) {
         condFill.style.backgroundColor = 'var(--accent-red)';
         condText.style.color = 'var(--accent-red)';
     } else if (condNum <= 6) {
-        condFill.style.backgroundColor = '#ff9900'; // Оранжевый
+        condFill.style.backgroundColor = '#ff9900'; // РћСЂР°РЅР¶РµРІС‹Р№
         condText.style.color = '#ff9900';
     } else if (condNum <= 8) {
         condFill.style.backgroundColor = 'var(--accent-yellow)';
@@ -3449,7 +3451,7 @@ function openProductModal(item) {
         condText.style.color = 'var(--accent-green)';
     }
 
-    // --- РЕНДЕР ХЭШТЕГОВ ---
+    // --- Р Р•РќР”Р•Р  РҐР­РЁРўР•Р“РћР’ ---
     const tagsContainer = document.getElementById('modalItemTags');
     if (tagsContainer) {
         if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
@@ -3462,7 +3464,7 @@ function openProductModal(item) {
         }
     }
 
-    const descText = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
+    const descText = item.description ? item.description : "РћСЂРёРіРёРЅР°Р». Р›СЋР±С‹Рµ РїСЂРѕРІРµСЂРєРё. РћС‚Р»РёС‡РЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ. Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ Р·Р°РјРµСЂС‹ РїРѕ Р·Р°РїСЂРѕСЃСѓ РІ Р›РЎ.";
    
     document.querySelector('.modal-desc').innerHTML = `
         <div style="margin-bottom: 5px;">
@@ -3475,39 +3477,39 @@ function openProductModal(item) {
         </div>
         <div style="color: #aaa; font-size: 13px;">${descText}</div>
         
-        <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ (АККОРДЕОН) -->
+        <!-- Р‘Р›РћРљ Р’РћРџР РћРЎРћР’ Р РћРўР’Р•РўРћР’ (РђРљРљРћР Р”Р•РћРќ) -->
         <div id="qaWrapper" class="qa-wrapper">
             <h4 class="qa-title" onclick="document.getElementById('qaList').classList.toggle('collapsed'); this.querySelector('.qa-arrow').style.transform = document.getElementById('qaList').classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';">
-                <span data-i18n="product.qa_title">${i18next.t('product.qa_title', {defaultValue: 'Q&A: Вопросы покупателей'})}</span>
-                <span class="qa-arrow" style="transition: transform 0.2s; color: var(--accent-green); display: inline-block;">▼</span>
+                <span data-i18n="product.qa_title">${i18next.t('product.qa_title', {defaultValue: 'Q&A: Р’РѕРїСЂРѕСЃС‹ РїРѕРєСѓРїР°С‚РµР»РµР№'})}</span>
+                <span class="qa-arrow" style="transition: transform 0.2s; color: var(--accent-green); display: inline-block;">в–ј</span>
             </h4>
             <div id="qaList" class="qa-content"></div>
         </div>
 
-        <!-- КНОПКА ЗАДАТЬ ВОПРОС -->
+        <!-- РљРќРћРџРљРђ Р—РђР”РђРўР¬ Р’РћРџР РћРЎ -->
         <div style="margin-top: 15px; text-align: right;">
-            <button onclick="toggleQuestionForm()" style="background: transparent; border: none; color: var(--accent-green); font-family: var(--font-mono); font-weight: bold; cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline;" data-i18n="product.ask_btn">${i18next.t('product.ask_btn', {defaultValue: 'Задать вопрос?'})}</button>
+            <button onclick="toggleQuestionForm()" style="background: transparent; border: none; color: var(--accent-green); font-family: var(--font-mono); font-weight: bold; cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline;" data-i18n="product.ask_btn">${i18next.t('product.ask_btn', {defaultValue: 'Р—Р°РґР°С‚СЊ РІРѕРїСЂРѕСЃ?'})}</button>
         </div>
         <div id="questionFormContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 5px;">
             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <input type="text" id="questionInput" class="form-input" placeholder="Ваш вопрос..." data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
-                <!-- Передаем только ID, а имя найдем внутри JS -->
-                <button class="search-btn btn-target" onclick="submitQuestion('${item.id}')" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${i18next.t('product.ask_send', {defaultValue: 'ОТПРАВИТЬ'})}</button>
+                <input type="text" id="questionInput" class="form-input" placeholder="Р’Р°С€ РІРѕРїСЂРѕСЃ..." data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
+                <!-- РџРµСЂРµРґР°РµРј С‚РѕР»СЊРєРѕ ID, Р° РёРјСЏ РЅР°Р№РґРµРј РІРЅСѓС‚СЂРё JS -->
+                <button class="search-btn btn-target" onclick="submitQuestion('${item.id}')" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${i18next.t('product.ask_send', {defaultValue: 'РћРўРџР РђР’РРўР¬'})}</button>
             </div>
         </div>
     `;
-   // --- ЗАЩИЩЕННЫЕ ПРОСМОТРЫ ТОВАРА (ЖЕЛЕЗОБЕТОННЫЙ ANTI-SPAM) ---
+   // --- Р—РђР©РР©Р•РќРќР«Р• РџР РћРЎРњРћРўР Р« РўРћР’РђР Рђ (Р–Р•Р›Р•Р—РћР‘Р•РўРћРќРќР«Р™ ANTI-SPAM) ---
     const viewCount = document.getElementById('modalItemViews');
     if (viewCount) {
-        viewCount.innerText = item.views_count || 0; // Сразу показываем то, что есть в кэше
+        viewCount.innerText = item.views_count || 0; // РЎСЂР°Р·Сѓ РїРѕРєР°Р·С‹РІР°РµРј С‚Рѕ, С‡С‚Рѕ РµСЃС‚СЊ РІ РєСЌС€Рµ
         
         if (_supabase) {
-            // Достаем массив тех товаров, которым мы УЖЕ прибавили просмотр
+            // Р”РѕСЃС‚Р°РµРј РјР°СЃСЃРёРІ С‚РµС… С‚РѕРІР°СЂРѕРІ, РєРѕС‚РѕСЂС‹Рј РјС‹ РЈР–Р• РїСЂРёР±Р°РІРёР»Рё РїСЂРѕСЃРјРѕС‚СЂ
             let viewedItems = JSON.parse(localStorage.getItem('nisha_added_views') || '[]');
             
-            // Если мы ЕЩЕ НЕ смотрели этот товар -> прибавляем +1 на сервере
+            // Р•СЃР»Рё РјС‹ Р•Р©Р• РќР• СЃРјРѕС‚СЂРµР»Рё СЌС‚РѕС‚ С‚РѕРІР°СЂ -> РїСЂРёР±Р°РІР»СЏРµРј +1 РЅР° СЃРµСЂРІРµСЂРµ
             if (!viewedItems.includes(item.id)) {
-                // Генерируем уникальный ID клиента, если его нет
+                // Р“РµРЅРµСЂРёСЂСѓРµРј СѓРЅРёРєР°Р»СЊРЅС‹Р№ ID РєР»РёРµРЅС‚Р°, РµСЃР»Рё РµРіРѕ РЅРµС‚
                 if (!clientFingerprint || clientFingerprint.startsWith('guest_')) {
                     clientFingerprint = localStorage.getItem('nisha_visitor_id') || 'user_' + Math.random().toString(36).substr(2, 9);
                 }
@@ -3518,16 +3520,16 @@ function openProductModal(item) {
                     p_viewer_id: viewerId 
                 }).then(({ data, error }) => {
                     if (!error && data !== null) {
-                        viewCount.innerText = data; // Показываем новую цифру
-                        item.views_count = data; // Сохраняем в память массива
+                        viewCount.innerText = data; // РџРѕРєР°Р·С‹РІР°РµРј РЅРѕРІСѓСЋ С†РёС„СЂСѓ
+                        item.views_count = data; // РЎРѕС…СЂР°РЅСЏРµРј РІ РїР°РјСЏС‚СЊ РјР°СЃСЃРёРІР°
                         
-                        // Запоминаем, что мы уже накрутили +1 этому товару
+                        // Р—Р°РїРѕРјРёРЅР°РµРј, С‡С‚Рѕ РјС‹ СѓР¶Рµ РЅР°РєСЂСѓС‚РёР»Рё +1 СЌС‚РѕРјСѓ С‚РѕРІР°СЂСѓ
                         viewedItems.push(item.id);
                         localStorage.setItem('nisha_added_views', JSON.stringify(viewedItems));
                     }
                 });
             } else {
-                // Если мы УЖЕ смотрели его раньше, просто запрашиваем актуальную цифру (без накрутки)
+                // Р•СЃР»Рё РјС‹ РЈР–Р• СЃРјРѕС‚СЂРµР»Рё РµРіРѕ СЂР°РЅСЊС€Рµ, РїСЂРѕСЃС‚Рѕ Р·Р°РїСЂР°С€РёРІР°РµРј Р°РєС‚СѓР°Р»СЊРЅСѓСЋ С†РёС„СЂСѓ (Р±РµР· РЅР°РєСЂСѓС‚РєРё)
                 _supabase.from('items').select('views_count').eq('id', item.id).limit(1).then(({ data, error }) => {
                     if (!error && data && data.length > 0) {
                         viewCount.innerText = data[0].views_count || 0;
@@ -3552,8 +3554,8 @@ function openProductModal(item) {
     thumbs.innerHTML = '';
     
     
-   // Поддержка ФОТО и ВИДЕО (.mp4)
-   // Скрываем стрелочки, если слайд только один
+   // РџРѕРґРґРµСЂР¶РєР° Р¤РћРўРћ Рё Р’РР”Р•Рћ (.mp4)
+   // РЎРєСЂС‹РІР°РµРј СЃС‚СЂРµР»РѕС‡РєРё, РµСЃР»Рё СЃР»Р°Р№Рґ С‚РѕР»СЊРєРѕ РѕРґРёРЅ
     const totalMedia = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails.length : (item.images ? item.images.length : 0);
     const prevBtn = document.querySelector('.slider-btn.prev');
     const nextBtn = document.querySelector('.slider-btn.next');
@@ -3566,7 +3568,7 @@ function openProductModal(item) {
         if (nextBtn) nextBtn.style.display = 'block';
     }
 
-   // Поддержка ФОТО и ВИДЕО (.mp4)
+   // РџРѕРґРґРµСЂР¶РєР° Р¤РћРўРћ Рё Р’РР”Р•Рћ (.mp4)
     if (item.images && item.images.length > 0) {
         item.images.forEach((url, index) => {
             const cdnUrl = window.toCDN(url);
@@ -3596,7 +3598,7 @@ function openProductModal(item) {
                         </video>
                     </div>`;
             } else {
-                // ДОБАВЛЯЕМ SKELETON: Пока фото грузится - слайдер красиво переливается
+                // Р”РћР‘РђР’Р›РЇР•Рњ SKELETON: РџРѕРєР° С„РѕС‚Рѕ РіСЂСѓР·РёС‚СЃСЏ - СЃР»Р°Р№РґРµСЂ РєСЂР°СЃРёРІРѕ РїРµСЂРµР»РёРІР°РµС‚СЃСЏ
                 wrapper.innerHTML += `
                     <a href="${url}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide skeleton" style="background-image:none; display:flex; align-items:center; justify-content:center; border: 1px solid #222;">
                         <img src="${url}" loading="lazy" style="width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.4s ease-in-out;" 
@@ -3604,29 +3606,29 @@ function openProductModal(item) {
                     </a>`;
             }
             
-            thumbs.innerHTML += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" onclick="setSlide(${index})">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
+            thumbs.innerHTML += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" onclick="setSlide(${index})">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">в–¶</span>' : ''}</div>`;
         });
     } else {
-        wrapper.innerHTML = `<a class="slide" style="background:#111; pointer-events:none;">НЕТ ФОТО</a>`;
+        wrapper.innerHTML = `<a class="slide" style="background:#111; pointer-events:none;">РќР•Рў Р¤РћРўРћ</a>`;
     }
 
     setSlide(0);
 
-    // Дополнительный пинок для запуска плеера
+    // Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РїРёРЅРѕРє РґР»СЏ Р·Р°РїСѓСЃРєР° РїР»РµРµСЂР°
     setTimeout(() => {
         const modalVideos = document.querySelectorAll('#sliderWrapper video.modal-video-player');
         modalVideos.forEach(vid => {
             let playPromise = vid.play();
             if (playPromise !== undefined) {
                 playPromise.catch(() => {
-                    // Если браузер заблокировал автоплей, он хотя бы покажет первый кадр благодаря хаку #t=0.001
-                    console.log("Ожидание клика (политика браузера)");
+                    // Р•СЃР»Рё Р±СЂР°СѓР·РµСЂ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°Р» Р°РІС‚РѕРїР»РµР№, РѕРЅ С…РѕС‚СЏ Р±С‹ РїРѕРєР°Р¶РµС‚ РїРµСЂРІС‹Р№ РєР°РґСЂ Р±Р»Р°РіРѕРґР°СЂСЏ С…Р°РєСѓ #t=0.001
+                    console.log("РћР¶РёРґР°РЅРёРµ РєР»РёРєР° (РїРѕР»РёС‚РёРєР° Р±СЂР°СѓР·РµСЂР°)");
                 });
             }
         });
     }, 100);
 
-    // Перезапуск PhotoSwipe после вставки новых картинок
+    // РџРµСЂРµР·Р°РїСѓСЃРє PhotoSwipe РїРѕСЃР»Рµ РІСЃС‚Р°РІРєРё РЅРѕРІС‹С… РєР°СЂС‚РёРЅРѕРє
     if (window.pswpLightbox) {
         try { window.pswpLightbox.init(); } catch (e) {} 
     }
@@ -3635,13 +3637,13 @@ function openProductModal(item) {
     if (simCont) {
         simCont.innerHTML = '';
         
-        // Считываем состояние галочки "Скрыть проданное"
+        // РЎС‡РёС‚С‹РІР°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РіР°Р»РѕС‡РєРё "РЎРєСЂС‹С‚СЊ РїСЂРѕРґР°РЅРЅРѕРµ"
         const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
         
-        // Фильтруем похожие товары (учитывая статус, если надо)
+        // Р¤РёР»СЊС‚СЂСѓРµРј РїРѕС…РѕР¶РёРµ С‚РѕРІР°СЂС‹ (СѓС‡РёС‚С‹РІР°СЏ СЃС‚Р°С‚СѓСЃ, РµСЃР»Рё РЅР°РґРѕ)
         let similar = allItems.filter(i => {
-            if (i.id === item.id) return false; // Саму открытую вещь не показываем
-            if (hideUnavailable && i.status !== 'available') return false; // Прячем проданное, если стоит галочка
+            if (i.id === item.id) return false; // РЎР°РјСѓ РѕС‚РєСЂС‹С‚СѓСЋ РІРµС‰СЊ РЅРµ РїРѕРєР°Р·С‹РІР°РµРј
+            if (hideUnavailable && i.status !== 'available') return false; // РџСЂСЏС‡РµРј РїСЂРѕРґР°РЅРЅРѕРµ, РµСЃР»Рё СЃС‚РѕРёС‚ РіР°Р»РѕС‡РєР°
             return (i.category === item.category || i.brand === item.brand);
         });
         
@@ -3649,7 +3651,7 @@ function openProductModal(item) {
             const priceMargin = item.price * 0.3;
             const extra = allItems.filter(i => {
                 if (i.id === item.id || similar.includes(i)) return false;
-                if (hideUnavailable && i.status !== 'available') return false; // Прячем проданное, если стоит галочка
+                if (hideUnavailable && i.status !== 'available') return false; // РџСЂСЏС‡РµРј РїСЂРѕРґР°РЅРЅРѕРµ, РµСЃР»Рё СЃС‚РѕРёС‚ РіР°Р»РѕС‡РєР°
                 return i.price >= item.price - priceMargin && i.price <= item.price + priceMargin;
             });
             similar = [...similar, ...extra];
@@ -3657,20 +3659,20 @@ function openProductModal(item) {
         
         similar = similar.sort(() => 0.5 - Math.random()).slice(0, 4);
         
-        // Достаем историю просмотров, чтобы проверить, видел ли юзер эти похожие вещи
+        // Р”РѕСЃС‚Р°РµРј РёСЃС‚РѕСЂРёСЋ РїСЂРѕСЃРјРѕС‚СЂРѕРІ, С‡С‚РѕР±С‹ РїСЂРѕРІРµСЂРёС‚СЊ, РІРёРґРµР» Р»Рё СЋР·РµСЂ СЌС‚Рё РїРѕС…РѕР¶РёРµ РІРµС‰Рё
         let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
             
        if(similar.length > 0) {
             similar.forEach(s => {
                 const sImg = getOptimizedImageUrl(s, true); 
                 
-                // 1. МИНИ-БЕЙДЖИ (% SALE / HOT) - остаются в левом верхнем углу
+                // 1. РњРРќР-Р‘Р•Р™Р”Р–Р (% SALE / HOT) - РѕСЃС‚Р°СЋС‚СЃСЏ РІ Р»РµРІРѕРј РІРµСЂС…РЅРµРј СѓРіР»Сѓ
                 let miniBadgeHTML = '';
                 const hasSale = s.is_sale;
                 const hasHot = (s.views_count || 0) >= 25;
                 const isTop = s.is_top === true && s.top_until && new Date(s.top_until).getTime() > Date.now();
 
-                // Бейджи SALE, HOT, TOP (только 'available')
+                // Р‘РµР№РґР¶Рё SALE, HOT, TOP (С‚РѕР»СЊРєРѕ 'available')
                 if ((hasSale || hasHot || isTop) && s.status === 'available') {
                     miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 4px; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none;">`;
                     if (isTop) {
@@ -3695,35 +3697,35 @@ function openProductModal(item) {
                 const pulseAnim = isUnseen ? 'animation: unseenPulseAnim 2s infinite alternate;' : '';
                 const baseBorder = isUnseen ? 'var(--accent-red)' : '#333';
 
-                // 2. ЛОГИКА ОТОБРАЖЕНИЯ SOLD / RESERVED
+                // 2. Р›РћР“РРљРђ РћРўРћР‘Р РђР–Р•РќРРЇ SOLD / RESERVED
                 let statusOverlayHTML = '';
                 let imageFilter = '';
 
                 if (s.status === 'sold') {
-                    // Плашка SOLD (по центру, чуть уменьшена для мини-карточек)
+                    // РџР»Р°С€РєР° SOLD (РїРѕ С†РµРЅС‚СЂСѓ, С‡СѓС‚СЊ СѓРјРµРЅСЊС€РµРЅР° РґР»СЏ РјРёРЅРё-РєР°СЂС‚РѕС‡РµРє)
                     statusOverlayHTML = `<div class="sold-badge" style="font-size: 14px !important; letter-spacing: 2px !important; padding: 2px 8px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">SOLD</div>`;
                     imageFilter = 'filter: grayscale(80%) brightness(0.5);'; 
-                    // Перечеркиваем цену, если вещь продана
+                    // РџРµСЂРµС‡РµСЂРєРёРІР°РµРј С†РµРЅСѓ, РµСЃР»Рё РІРµС‰СЊ РїСЂРѕРґР°РЅР°
                     miniPriceHTML = `<span style="color:#888; text-decoration:line-through;">${s.price} ${curr}</span>`;
                 } else if (s.status === 'reserved') {
-                    // Плашка RESERVED
+                    // РџР»Р°С€РєР° RESERVED
                     statusOverlayHTML = `<div class="reserved-badge" style="font-size: 11px !important; letter-spacing: 1px !important; padding: 2px 4px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">RESERVED</div>`;
                     imageFilter = 'filter: brightness(0.6);'; 
                 }
 
-                // 3. СБОРКА КАРТИНКИ ИЛИ ВИДЕО (Надежная загрузка)
+                // 3. РЎР‘РћР РљРђ РљРђР РўРРќРљР РР›Р Р’РР”Р•Рћ (РќР°РґРµР¶РЅР°СЏ Р·Р°РіСЂСѓР·РєР°)
                 let imageBlockHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; font-family:var(--font-mono); font-size:10px;">NO FOTO</div>`;
                 
                 if (sImg) {
                     if (sImg.endsWith('.mp4')) {
                         imageBlockHTML = `<video src="${sImg}#t=0.001" style="width:100%; height:100%; object-fit:cover; pointer-events:none; ${imageFilter} transition: 0.3s;" preload="metadata"></video>`;
                     } else {
-                        // Используем реальный тег <img> с обработчиком ошибок (onerror) и накладываем фильтр, если вещь продана
+                        // РСЃРїРѕР»СЊР·СѓРµРј СЂРµР°Р»СЊРЅС‹Р№ С‚РµРі <img> СЃ РѕР±СЂР°Р±РѕС‚С‡РёРєРѕРј РѕС€РёР±РѕРє (onerror) Рё РЅР°РєР»Р°РґС‹РІР°РµРј С„РёР»СЊС‚СЂ, РµСЃР»Рё РІРµС‰СЊ РїСЂРѕРґР°РЅР°
                         imageBlockHTML = `<img src="${sImg}" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block; ${imageFilter} transition: 0.3s;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;font-size:10px;font-family:var(--font-mono);\\'>ERROR</div>';">`;
                     }
                 }
 
-                // 4. ФИНАЛЬНЫЙ РЕНДЕР КАРТОЧКИ
+                // 4. Р¤РРќРђР›Р¬РќР«Р™ Р Р•РќР”Р•Р  РљРђР РўРћР§РљР
                 simCont.innerHTML += `
                     <div style="min-width: 120px; cursor: pointer; border: 1px solid ${baseBorder}; background: #000; transition: 0.2s; ${pulseAnim} display:flex; flex-direction:column;" 
                          onmouseover="this.style.borderColor='var(--accent-green)'" 
@@ -3738,10 +3740,10 @@ function openProductModal(item) {
                     </div>`;
             });
         } else {
-            simCont.innerHTML = '<div style="color:#555; font-size:12px; font-family: var(--font-mono);">Похожих товаров пока нет.</div>';
+            simCont.innerHTML = '<div style="color:#555; font-size:12px; font-family: var(--font-mono);">РџРѕС…РѕР¶РёС… С‚РѕРІР°СЂРѕРІ РїРѕРєР° РЅРµС‚.</div>';
         }
     }
-   // --- ДИНАМИЧЕСКИЕ БЕЙДЖИ И ПРОВЕРКА НА ПРЕДЛОЖКУ ---
+   // --- Р”РРќРђРњРР§Р•РЎРљРР• Р‘Р•Р™Р”Р–Р Р РџР РћР’Р•Р РљРђ РќРђ РџР Р•Р”Р›РћР–РљРЈ ---
     const badgesContainer = document.querySelector('.trust-badges');
     if (badgesContainer) {
         const isDropItem = item.is_drop === true || (item.tags && item.tags.map(t => t.toLowerCase()).includes('drop'));
@@ -3804,18 +3806,18 @@ function openProductModal(item) {
         modalWin.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // --- УМНАЯ ОЧИСТКА URL ---
-    // Если мы перешли по ссылке на этот товар, стираем ?item=... из адресной строки,
-    // чтобы при следующем обновлении страницы окно не вылезло снова.
+    // --- РЈРњРќРђРЇ РћР§РРЎРўРљРђ URL ---
+    // Р•СЃР»Рё РјС‹ РїРµСЂРµС€Р»Рё РїРѕ СЃСЃС‹Р»РєРµ РЅР° СЌС‚РѕС‚ С‚РѕРІР°СЂ, СЃС‚РёСЂР°РµРј ?item=... РёР· Р°РґСЂРµСЃРЅРѕР№ СЃС‚СЂРѕРєРё,
+    // С‡С‚РѕР±С‹ РїСЂРё СЃР»РµРґСѓСЋС‰РµРј РѕР±РЅРѕРІР»РµРЅРёРё СЃС‚СЂР°РЅРёС†С‹ РѕРєРЅРѕ РЅРµ РІС‹Р»РµР·Р»Рѕ СЃРЅРѕРІР°.
     const url = new URL(window.location);
     if (url.searchParams.has('item')) {
         url.searchParams.delete('item');
         window.history.replaceState(null, '', url.pathname + url.search);
     }
-    // Загружаем вопросы и рендерим
+    // Р—Р°РіСЂСѓР¶Р°РµРј РІРѕРїСЂРѕСЃС‹ Рё СЂРµРЅРґРµСЂРёРј
     if (_supabase) window.loadItemQuestions(item.id);
 
-    // === SEO JSON-LD РАЗМЕТКА ДЛЯ GOOGLE ===
+    // === SEO JSON-LD Р РђР—РњР•РўРљРђ Р”Р›РЇ GOOGLE ===
     let schemaScript = document.getElementById('seo-schema');
     if (!schemaScript) {
         schemaScript = document.createElement('script');
@@ -3842,7 +3844,7 @@ function openProductModal(item) {
     schemaScript.innerText = JSON.stringify(schemaData);
 
     // ==============================================================
-    // ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ ТЕГОВ ДЛЯ TELEGRAM И ДРУГИХ МЕССЕНДЖЕРОВ
+    // Р”РРќРђРњРР§Р•РЎРљРћР• РћР‘РќРћР’Р›Р•РќРР• РўР•Р“РћР’ Р”Р›РЇ TELEGRAM Р Р”Р РЈР“РРҐ РњР•РЎРЎР•РќР”Р–Р•Р РћР’
     // ==============================================================
     const setMetaTag = (property, content) => {
         let tag = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
@@ -3855,9 +3857,9 @@ function openProductModal(item) {
         tag.setAttribute('content', content);
     };
 
-    let statusPrefix = item.status === 'sold' ? '🔴 SOLD | ' : (item.status === 'reserved' ? '🟡 RESERVED | ' : '🟢 ');
+    let statusPrefix = item.status === 'sold' ? 'рџ”ґ SOLD | ' : (item.status === 'reserved' ? 'рџџЎ RESERVED | ' : 'рџџў ');
     let ogTitle = `${statusPrefix}NISHA: ${item.brand} - ${item.name}`;
-    let ogDesc = `Размер: ${item.size} | Цена: ${item.price} грн`;
+    let ogDesc = `Р Р°Р·РјРµСЂ: ${item.size} | Р¦РµРЅР°: ${item.price} РіСЂРЅ`;
     let ogImage = (item.images && item.images.length > 0) ? item.images[0] : 'https://i.ibb.co/3s6HhXz/icon.ico';
 
     setMetaTag('og:title', ogTitle);
@@ -3869,7 +3871,7 @@ function openProductModal(item) {
 }
 
 let currentSlide = 0;
-let totalSlides = 0; // Добавили переменную
+let totalSlides = 0; // Р”РѕР±Р°РІРёР»Рё РїРµСЂРµРјРµРЅРЅСѓСЋ
 
 function moveSlide(step) {
     const slides = document.querySelectorAll('.slide');
@@ -3887,7 +3889,7 @@ function setSlide(index) {
 
 function updateSlider() {
     const sliderWrapper = document.getElementById('sliderWrapper');
-    if (!sliderWrapper) return; // Тут return легален, он внутри функции
+    if (!sliderWrapper) return; // РўСѓС‚ return Р»РµРіР°Р»РµРЅ, РѕРЅ РІРЅСѓС‚СЂРё С„СѓРЅРєС†РёРё
 
     sliderWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
     
@@ -3906,14 +3908,14 @@ function updateSlider() {
 }
 
 // ==========================================
-// 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
+// 14. РРЎРўРћР РРЇ РџР РћРЎРњРћРўР РћР’ (HISTORY LOG)
 // ==========================================
 function addToHistory(item) {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     hist = hist.filter(i => i.id !== item.id);
     const img = (item.images && item.images.length > 0) ? item.images[0] : '';
     
-    // ДОБАВИЛИ is_sale и old_price для правильного отображения скидок
+    // Р”РћР‘РђР’РР›Р is_sale Рё old_price РґР»СЏ РїСЂР°РІРёР»СЊРЅРѕРіРѕ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ СЃРєРёРґРѕРє
     hist.unshift({ 
         id: item.id, 
         name: item.name, 
@@ -3930,7 +3932,7 @@ function addToHistory(item) {
 }
 
 // ==========================================
-// 14. ИСТОРИЯ ПРОСМОТРОВ (HISTORY LOG)
+// 14. РРЎРўРћР РРЇ РџР РћРЎРњРћРўР РћР’ (HISTORY LOG)
 // ==========================================
 function renderHistory() {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
@@ -3955,16 +3957,16 @@ function renderHistory() {
     section.style.display = 'block';
     container.innerHTML = '';
     
-    // Считываем состояние галочки "Скрыть проданное"
+    // РЎС‡РёС‚С‹РІР°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РіР°Р»РѕС‡РєРё "РЎРєСЂС‹С‚СЊ РїСЂРѕРґР°РЅРЅРѕРµ"
     const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
 
     hist.forEach(h => {
-        // --- УЗНАЕМ РЕАЛЬНЫЙ СТАТУС ВЕЩИ ИЗ БАЗЫ ---
+        // --- РЈР—РќРђР•Рњ Р Р•РђР›Р¬РќР«Р™ РЎРўРђРўРЈРЎ Р’Р•Р©Р РР— Р‘РђР—Р« ---
         const realItem = allItems.find(i => i.id === h.id);
         const currentStatus = realItem ? realItem.status : 'available';
 
-        // --- ФИКС: Прячем из истории, если нажата галочка "Скрыть проданное" ---
-        if (hideUnavailable && currentStatus !== 'available') return; // Просто пропускаем этот товар!
+        // --- Р¤РРљРЎ: РџСЂСЏС‡РµРј РёР· РёСЃС‚РѕСЂРёРё, РµСЃР»Рё РЅР°Р¶Р°С‚Р° РіР°Р»РѕС‡РєР° "РЎРєСЂС‹С‚СЊ РїСЂРѕРґР°РЅРЅРѕРµ" ---
+        if (hideUnavailable && currentStatus !== 'available') return; // РџСЂРѕСЃС‚Рѕ РїСЂРѕРїСѓСЃРєР°РµРј СЌС‚РѕС‚ С‚РѕРІР°СЂ!
 
         const optImg = h.img;
         const isVideo = optImg && optImg.endsWith('.mp4');
@@ -3977,12 +3979,12 @@ function renderHistory() {
             finalPriceHTML = `${h.price} ${curr}`;
         }
 
-        // --- ЛОГИКА ОТОБРАЖЕНИЯ SOLD / RESERVED ---
+        // --- Р›РћР“РРљРђ РћРўРћР‘Р РђР–Р•РќРРЇ SOLD / RESERVED ---
         let statusOverlayHTML = '';
         let imageFilter = '';
 
         if (currentStatus === 'sold') {
-            // Убрали translateZ и скорректировали позицию, чтобы было ровно по центру
+            // РЈР±СЂР°Р»Рё translateZ Рё СЃРєРѕСЂСЂРµРєС‚РёСЂРѕРІР°Р»Рё РїРѕР·РёС†РёСЋ, С‡С‚РѕР±С‹ Р±С‹Р»Рѕ СЂРѕРІРЅРѕ РїРѕ С†РµРЅС‚СЂСѓ
             statusOverlayHTML = `<div class="sold-badge" style="font-size: 16px !important; letter-spacing: 2px !important; padding: 2px 10px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">SOLD</div>`;
             imageFilter = 'filter: grayscale(80%) brightness(0.5);'; 
         } else if (currentStatus === 'reserved') {
@@ -3990,7 +3992,7 @@ function renderHistory() {
         }
 
         const card = document.createElement('div');
-        // Убрали класс sold-out с самой карточки, чтобы крестик и цена оставались яркими!
+        // РЈР±СЂР°Р»Рё РєР»Р°СЃСЃ sold-out СЃ СЃР°РјРѕР№ РєР°СЂС‚РѕС‡РєРё, С‡С‚РѕР±С‹ РєСЂРµСЃС‚РёРє Рё С†РµРЅР° РѕСЃС‚Р°РІР°Р»РёСЃСЊ СЏСЂРєРёРјРё!
         card.className = `history-card`;
         card.onclick = () => openProductModalById(h.id);
         
@@ -4000,7 +4002,7 @@ function renderHistory() {
             if (isVideo) {
                 mediaHTML = `
                     <video src="${optImg}#t=0.001" muted playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none; ${imageFilter} transition: 0.3s;"></video>
-                    <div style="position:absolute; z-index:5; top:4px; left:4px; background:rgba(0,0,0,0.8); padding:2px 4px; border-radius:2px; color:var(--accent-green); font-size:8px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
+                    <div style="position:absolute; z-index:5; top:4px; left:4px; background:rgba(0,0,0,0.8); padding:2px 4px; border-radius:2px; color:var(--accent-green); font-size:8px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">в–¶ VIDEO</div>
                 `;
             } else {
                 mediaHTML = `<div style="width:100%; height:100%; background-image:url('${optImg}'); background-size:cover; background-position:center; ${imageFilter} transition: 0.3s;"></div>`;
@@ -4017,8 +4019,8 @@ function renderHistory() {
                 ${mediaHTML}
                 ${miniBadgeHTML}
                 ${statusOverlayHTML}
-                <!-- Крестик вынесен ПОВЕРХ всего и не попадает под фильтры! -->
-                <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="Удалить" style="z-index: 20;">X</div>
+                <!-- РљСЂРµСЃС‚РёРє РІС‹РЅРµСЃРµРЅ РџРћР’Р•Р РҐ РІСЃРµРіРѕ Рё РЅРµ РїРѕРїР°РґР°РµС‚ РїРѕРґ С„РёР»СЊС‚СЂС‹! -->
+                <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="РЈРґР°Р»РёС‚СЊ" style="z-index: 20;">X</div>
             </div>
             <div class="history-info">
                 <div class="history-name" title="${h.name}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${h.name}</div>
@@ -4042,7 +4044,7 @@ function triggerEasterEgg() {
     const overlay = document.getElementById('glitchOverlay');
     
     if (overlay) {
-        document.getElementById('glitchMessage').innerHTML = "SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]<br><span style='font-size: 20px; color:#fff; font-family: Tahoma;'>Секретная скидка -10% активирована</span>";
+        document.getElementById('glitchMessage').innerHTML = "SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]<br><span style='font-size: 20px; color:#fff; font-family: Tahoma;'>РЎРµРєСЂРµС‚РЅР°СЏ СЃРєРёРґРєР° -10% Р°РєС‚РёРІРёСЂРѕРІР°РЅР°</span>";
         overlay.style.display = 'flex';
         
         setTimeout(() => { 
@@ -4060,33 +4062,33 @@ function triggerEasterEgg() {
     updateCartUI();
 }
 // ==========================================
-// 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (ЖЕЛЕЗОБЕТОННЫЕ УНИКАЛЬНЫЕ ЗА ДЕНЬ)
+// 16. РЎР§Р•РўР§РРљ РџРћРЎР•РўРРўР•Р›Р•Р™ (Р–Р•Р›Р•Р—РћР‘Р•РўРћРќРќР«Р• РЈРќРРљРђР›Р¬РќР«Р• Р—Рђ Р”Р•РќР¬)
 // ==========================================
 async function initHitCounter() {
     const counterEl = document.getElementById('hitCounterValue');
     if (!counterEl) return;
 
     try {
-        // 1. Добываем уникальный ID устройства
+        // 1. Р”РѕР±С‹РІР°РµРј СѓРЅРёРєР°Р»СЊРЅС‹Р№ ID СѓСЃС‚СЂРѕР№СЃС‚РІР°
         let visitorId = localStorage.getItem('nisha_visitor_id');
         if (!visitorId) {
             visitorId = 'user_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('nisha_visitor_id', visitorId);
         }
-        clientFingerprint = visitorId; // Для защиты просмотров в карточке товара
+        clientFingerprint = visitorId; // Р”Р»СЏ Р·Р°С‰РёС‚С‹ РїСЂРѕСЃРјРѕС‚СЂРѕРІ РІ РєР°СЂС‚РѕС‡РєРµ С‚РѕРІР°СЂР°
 
-        // 2. Узнаем сегодняшнюю дату
-        const todayDate = new Date().toLocaleDateString('en-CA'); // Формат YYYY-MM-DD
+        // 2. РЈР·РЅР°РµРј СЃРµРіРѕРґРЅСЏС€РЅСЋСЋ РґР°С‚Сѓ
+        const todayDate = new Date().toLocaleDateString('en-CA'); // Р¤РѕСЂРјР°С‚ YYYY-MM-DD
         const lastVisitDate = localStorage.getItem('nisha_last_visit_date');
 
-        // 3. СРАЗУ показываем последнюю известную цифру из памяти (чтобы не было нулей при старте)
+        // 3. РЎР РђР—РЈ РїРѕРєР°Р·С‹РІР°РµРј РїРѕСЃР»РµРґРЅСЋСЋ РёР·РІРµСЃС‚РЅСѓСЋ С†РёС„СЂСѓ РёР· РїР°РјСЏС‚Рё (С‡С‚РѕР±С‹ РЅРµ Р±С‹Р»Рѕ РЅСѓР»РµР№ РїСЂРё СЃС‚Р°СЂС‚Рµ)
         const cachedCount = localStorage.getItem('nisha_last_hit_count') || '0';
         counterEl.innerText = String(cachedCount).padStart(5, '0').split('').join(' ');
 
-        // 4. Проверяем, был ли юзер ТУТ СЕГОДНЯ
+        // 4. РџСЂРѕРІРµСЂСЏРµРј, Р±С‹Р» Р»Рё СЋР·РµСЂ РўРЈРў РЎР•Р“РћР”РќРЇ
         const isNewVisitToday = (lastVisitDate !== todayDate);
 
-        // 5. Отправляем запрос на сервер
+        // 5. РћС‚РїСЂР°РІР»СЏРµРј Р·Р°РїСЂРѕСЃ РЅР° СЃРµСЂРІРµСЂ
         const res = await fetch('https://nisha-api.onrender.com/api/hit', {
             method: 'POST',
             headers: { 
@@ -4104,26 +4106,26 @@ async function initHitCounter() {
         const data = await res.json();
         
         if (data && data.success && data.count !== undefined) {
-            // Если это был новый визит — запоминаем
+            // Р•СЃР»Рё СЌС‚Рѕ Р±С‹Р» РЅРѕРІС‹Р№ РІРёР·РёС‚ вЂ” Р·Р°РїРѕРјРёРЅР°РµРј
             if (isNewVisitToday) {
                 localStorage.setItem('nisha_last_visit_date', todayDate);
             }
             
-            // Сохраняем актуальную цифру для следующих заходов
+            // РЎРѕС…СЂР°РЅСЏРµРј Р°РєС‚СѓР°Р»СЊРЅСѓСЋ С†РёС„СЂСѓ РґР»СЏ СЃР»РµРґСѓСЋС‰РёС… Р·Р°С…РѕРґРѕРІ
             localStorage.setItem('nisha_last_hit_count', data.count);
             
-            // Выводим с пробелами
+            // Р’С‹РІРѕРґРёРј СЃ РїСЂРѕР±РµР»Р°РјРё
             const strCount = data.count.toString().padStart(5, '0');
             counterEl.innerText = strCount.split('').join(' ');
         }
     } catch (err) {
-        console.error("Счетчик работает в оффлайн-режиме (Сервер спит):", err.message);
-        // ВАЖНО: Мы больше не ставим тут '0 0 0 0 0'! 
-        // Юзер просто продолжит видеть старую цифру из кэша (шаг 3), пока сервер не проснется.
+        console.error("РЎС‡РµС‚С‡РёРє СЂР°Р±РѕС‚Р°РµС‚ РІ РѕС„С„Р»Р°Р№РЅ-СЂРµР¶РёРјРµ (РЎРµСЂРІРµСЂ СЃРїРёС‚):", err.message);
+        // Р’РђР–РќРћ: РњС‹ Р±РѕР»СЊС€Рµ РЅРµ СЃС‚Р°РІРёРј С‚СѓС‚ '0 0 0 0 0'! 
+        // Р®Р·РµСЂ РїСЂРѕСЃС‚Рѕ РїСЂРѕРґРѕР»Р¶РёС‚ РІРёРґРµС‚СЊ СЃС‚Р°СЂСѓСЋ С†РёС„СЂСѓ РёР· РєСЌС€Р° (С€Р°Рі 3), РїРѕРєР° СЃРµСЂРІРµСЂ РЅРµ РїСЂРѕСЃРЅРµС‚СЃСЏ.
     }
 }
 // ==========================================
-// 17. UI ФИЛЬТРОВ И МОБИЛЬНОЕ МЕНЮ
+// 17. UI Р¤РР›Р¬РўР РћР’ Р РњРћР‘РР›Р¬РќРћР• РњР•РќР®
 // ==========================================
 let priceTimeout;
 function updatePriceUI() {
@@ -4132,7 +4134,7 @@ function updatePriceUI() {
     let minVal = parseInt(minInput.value);
     let maxVal = parseInt(maxInput.value);
 
-    // Защита, чтобы ползунки не заходили друг за друга
+    // Р—Р°С‰РёС‚Р°, С‡С‚РѕР±С‹ РїРѕР»Р·СѓРЅРєРё РЅРµ Р·Р°С…РѕРґРёР»Рё РґСЂСѓРі Р·Р° РґСЂСѓРіР°
     if (minVal >= maxVal) {
         if (event.target.id === 'priceMin') { minInput.value = maxVal - 100; minVal = maxVal - 100; }
         else { maxInput.value = minVal + 100; maxVal = minVal + 100; }
@@ -4141,19 +4143,19 @@ function updatePriceUI() {
     document.getElementById('priceMinVal').innerText = minVal;
     document.getElementById('priceMaxVal').innerText = maxVal;
 
-    // Рисуем зеленую полоску между ползунками
+    // Р РёСЃСѓРµРј Р·РµР»РµРЅСѓСЋ РїРѕР»РѕСЃРєСѓ РјРµР¶РґСѓ РїРѕР»Р·СѓРЅРєР°РјРё
     const percentMin = (minVal / 15000) * 100;
     const percentMax = (maxVal / 15000) * 100;
     document.getElementById('rangeFill').style.left = percentMin + '%';
     document.getElementById('rangeFill').style.right = (100 - percentMax) + '%';
 
-    // Применяем фильтр с задержкой (чтобы не лагало при дергании ползунка)
+    // РџСЂРёРјРµРЅСЏРµРј С„РёР»СЊС‚СЂ СЃ Р·Р°РґРµСЂР¶РєРѕР№ (С‡С‚РѕР±С‹ РЅРµ Р»Р°РіР°Р»Рѕ РїСЂРё РґРµСЂРіР°РЅРёРё РїРѕР»Р·СѓРЅРєР°)
     clearTimeout(priceTimeout);
     priceTimeout = setTimeout(() => { applyFilters(); }, 300);
 }
 
 function toggleMobileSidebar() {
-    // ВЫЗЫВАЕМ ВИБРАЦИЮ
+    // Р’Р«Р—Р«Р’РђР•Рњ Р’РР‘Р РђР¦РР®
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
     const sidebar = document.querySelector('.sidebar');
@@ -4162,8 +4164,8 @@ function toggleMobileSidebar() {
     
     sidebar.classList.toggle('active-mobile');
     
-    const hideText = i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' });
-    const showText = i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' });
+    const hideText = i18next.t('mobile.hide_filters', { defaultValue: '[-] РЎРљР Р«РўР¬ Р¤РР›Р¬РўР Р«' });
+    const showText = i18next.t('mobile.show_filters', { defaultValue: '[+] РџРћРљРђР—РђРўР¬ Р¤РР›Р¬РўР Р«' });
 
     if (sidebar.classList.contains('active-mobile')) {
         btn.innerText = hideText;
@@ -4171,7 +4173,7 @@ function toggleMobileSidebar() {
         btn.style.color = 'var(--accent-red)';
         btn.style.background = '#111'; 
         
-        // Прячем предложку, чтобы не мешала
+        // РџСЂСЏС‡РµРј РїСЂРµРґР»РѕР¶РєСѓ, С‡С‚РѕР±С‹ РЅРµ РјРµС€Р°Р»Р°
         if (fab) fab.style.display = 'none';
     } else {
         btn.innerText = showText;
@@ -4179,29 +4181,29 @@ function toggleMobileSidebar() {
         btn.style.color = 'var(--accent-green)';
         btn.style.background = '#050505'; 
         
-        // Возвращаем предложку
+        // Р’РѕР·РІСЂР°С‰Р°РµРј РїСЂРµРґР»РѕР¶РєСѓ
         if (fab) fab.style.display = 'flex';
     }
 }
-// Задержка поиска, чтобы не лагало при быстром вводе текста
+// Р—Р°РґРµСЂР¶РєР° РїРѕРёСЃРєР°, С‡С‚РѕР±С‹ РЅРµ Р»Р°РіР°Р»Рѕ РїСЂРё Р±С‹СЃС‚СЂРѕРј РІРІРѕРґРµ С‚РµРєСЃС‚Р°
 let searchDebounce;
-// Функция сохранения истории поиска
+// Р¤СѓРЅРєС†РёСЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ РёСЃС‚РѕСЂРёРё РїРѕРёСЃРєР°
 function saveRecentSearch(term) {
     if (!term || term.length < 2) return;
     let history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
     history = history.filter(t => t.toLowerCase() !== term.toLowerCase());
     history.unshift(term);
-    if (history.length > 5) history.pop(); // Храним только 5 последних
+    if (history.length > 5) history.pop(); // РҐСЂР°РЅРёРј С‚РѕР»СЊРєРѕ 5 РїРѕСЃР»РµРґРЅРёС…
     localStorage.setItem('nisha_search_history', JSON.stringify(history));
 }
 
-// Отображение истории поиска
+// РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РёСЃС‚РѕСЂРёРё РїРѕРёСЃРєР°
 function showSearchHistory() {
     const dropdown = document.getElementById('liveSearchDropdown');
     let history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
     if (history.length === 0) return;
 
-    let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); closeSearch(); event.stopPropagation();">[ ОЧИСТИТЬ ]</span></div>`;
+    let html = `<div class="search-history-title">рџ•’ РќР•Р”РђР’РќРР• Р—РђРџР РћРЎР« <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); closeSearch(); event.stopPropagation();">[ РћР§РРЎРўРРўР¬ ]</span></div>`;
     history.forEach(term => {
         const safeTerm = term.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         html += `<div class="search-history-item" onclick="document.getElementById('mainSearch').value='${safeTerm}'; handleLiveSearch();">
@@ -4219,21 +4221,21 @@ function handleLiveSearch() {
     const searchInput = document.getElementById('mainSearch');
     const searchTerm = searchInput.value.trim();
 
-    // Если поле пустое, показываем историю (ленту НЕ трогаем)
+    // Р•СЃР»Рё РїРѕР»Рµ РїСѓСЃС‚РѕРµ, РїРѕРєР°Р·С‹РІР°РµРј РёСЃС‚РѕСЂРёСЋ (Р»РµРЅС‚Сѓ РќР• С‚СЂРѕРіР°РµРј)
     if (searchTerm.length === 0) {
         showSearchHistory();
         return; 
     }
 
     if (searchTerm.length < 2) {
-        // ФИКС: Просто прячем подсказки, но НЕ УБИВАЕМ фокус клавиатуры!
+        // Р¤РРљРЎ: РџСЂРѕСЃС‚Рѕ РїСЂСЏС‡РµРј РїРѕРґСЃРєР°Р·РєРё, РЅРѕ РќР• РЈР‘РР’РђР•Рњ С„РѕРєСѓСЃ РєР»Р°РІРёР°С‚СѓСЂС‹!
         if (dropdown) dropdown.style.display = 'none';
         document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
         return; 
     }
 
     searchDebounce = setTimeout(() => {
-        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ FUSE.JS ДЛЯ ВЫПАДАЮЩЕГО СПИСКА
+        // РЈР›РЈР§РЁР•РќРќР«Р™ РџРћРРЎРљ Р§Р•Р Р•Р— FUSE.JS Р”Р›РЇ Р’Р«РџРђР”РђР®Р©Р•Р“Рћ РЎРџРРЎРљРђ
         const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
         const fuseOptions = {
             includeScore: true, 
@@ -4255,7 +4257,7 @@ function handleLiveSearch() {
                 const item = result.item;
                 const img = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : (item.images[0] || '');
                 
-                // Подсветка совпадений зеленым цветом
+                // РџРѕРґСЃРІРµС‚РєР° СЃРѕРІРїР°РґРµРЅРёР№ Р·РµР»РµРЅС‹Рј С†РІРµС‚РѕРј
                 let highlightedName = item.name;
                 if (result.matches) {
                     const nameMatch = result.matches.find(m => m.key === 'name');
@@ -4277,7 +4279,7 @@ function handleLiveSearch() {
                         <div class="live-search-img" style="background-image: url('${img}')"></div>
                         <div class="live-search-info">
                             <span class="live-search-title">${highlightedName}</span>
-                            <span class="live-search-price">${item.price} грн</span>
+                            <span class="live-search-price">${item.price} РіСЂРЅ</span>
                         </div>
                     </div>`;
             });
@@ -4289,13 +4291,13 @@ function handleLiveSearch() {
             }, {passive: true});
 
         } else {
-            dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
+            dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ РЎРћР’РџРђР”Р•РќРР™ РќР•Рў ]</div>';
             dropdown.style.display = 'block';
             document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
         }
         
-        // ВАЖНО: Мы удалили отсюда applyFilters()!
-        // Теперь лента не будет прыгать во время набора текста.
+        // Р’РђР–РќРћ: РњС‹ СѓРґР°Р»РёР»Рё РѕС‚СЃСЋРґР° applyFilters()!
+        // РўРµРїРµСЂСЊ Р»РµРЅС‚Р° РЅРµ Р±СѓРґРµС‚ РїСЂС‹РіР°С‚СЊ РІРѕ РІСЂРµРјСЏ РЅР°Р±РѕСЂР° С‚РµРєСЃС‚Р°.
     }, 300);
 }
 
@@ -4304,85 +4306,85 @@ function closeSearch() {
     const searchInput = document.getElementById('mainSearch');
     if (dropdown) dropdown.style.display = 'none';
     document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
-    if (searchInput) searchInput.blur(); // Принудительно прячем клавиатуру
+    if (searchInput) searchInput.blur(); // РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РїСЂСЏС‡РµРј РєР»Р°РІРёР°С‚СѓСЂСѓ
 }
 
 
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-wrapper')) {
-        closeSearch(); // Используем нашу новую функцию
+        closeSearch(); // РСЃРїРѕР»СЊР·СѓРµРј РЅР°С€Сѓ РЅРѕРІСѓСЋ С„СѓРЅРєС†РёСЋ
     }
 });
 async function toggleFavFromModal(event) {
     if (!currentOpenedItem) return;
     
-    // Снимаем фокус с телефона, чтобы не залипало
+    // РЎРЅРёРјР°РµРј С„РѕРєСѓСЃ СЃ С‚РµР»РµС„РѕРЅР°, С‡С‚РѕР±С‹ РЅРµ Р·Р°Р»РёРїР°Р»Рѕ
     const modalStar = document.getElementById('modalFavStar');
     if (modalStar) modalStar.blur();
 
-    // Просто вызываем главную защищенную функцию
+    // РџСЂРѕСЃС‚Рѕ РІС‹Р·С‹РІР°РµРј РіР»Р°РІРЅСѓСЋ Р·Р°С‰РёС‰РµРЅРЅСѓСЋ С„СѓРЅРєС†РёСЋ
     await toggleFav(event, currentOpenedItem.id);
 }
 // ==========================================
-// ПЛАВНЫЕ АККОРДЕОНЫ (В МОДАЛКЕ ТОВАРА)
+// РџР›РђР’РќР«Р• РђРљРљРћР Р”Р•РћРќР« (Р’ РњРћР”РђР›РљР• РўРћР’РђР Рђ)
 // ==========================================
 function toggleAccordion(element) {
-    const parent = element.parentElement; // Получаем блок .custom-details
+    const parent = element.parentElement; // РџРѕР»СѓС‡Р°РµРј Р±Р»РѕРє .custom-details
     const isOpen = parent.classList.contains('open');
     
-    // (Опционально) Закрываем другие открытые вкладки, если хочешь, чтобы открытой была только одна
+    // (РћРїС†РёРѕРЅР°Р»СЊРЅРѕ) Р—Р°РєСЂС‹РІР°РµРј РґСЂСѓРіРёРµ РѕС‚РєСЂС‹С‚С‹Рµ РІРєР»Р°РґРєРё, РµСЃР»Рё С…РѕС‡РµС€СЊ, С‡С‚РѕР±С‹ РѕС‚РєСЂС‹С‚РѕР№ Р±С‹Р»Р° С‚РѕР»СЊРєРѕ РѕРґРЅР°
     document.querySelectorAll('.custom-details').forEach(el => el.classList.remove('open'));
     
-    // Если кликнули по закрытой - открываем её
+    // Р•СЃР»Рё РєР»РёРєРЅСѓР»Рё РїРѕ Р·Р°РєСЂС‹С‚РѕР№ - РѕС‚РєСЂС‹РІР°РµРј РµС‘
     if (!isOpen) {
         parent.classList.add('open');
     }
 }
 // ==========================================
-// СКРЫТИЕ/ПОКАЗ ИСТОРИИ ПРОСМОТРОВ (ПЛАВНО)
+// РЎРљР Р«РўРР•/РџРћРљРђР— РРЎРўРћР РР РџР РћРЎРњРћРўР РћР’ (РџР›РђР’РќРћ)
 // ==========================================
 function toggleHistory() {
     const grid = document.getElementById('historyGrid');
     const arrow = document.getElementById('historyArrow');
     
-    // Вместо жесткого display: none, просто добавляем/убираем класс
+    // Р’РјРµСЃС‚Рѕ Р¶РµСЃС‚РєРѕРіРѕ display: none, РїСЂРѕСЃС‚Рѕ РґРѕР±Р°РІР»СЏРµРј/СѓР±РёСЂР°РµРј РєР»Р°СЃСЃ
     grid.classList.toggle('collapsed');
     
     if (grid.classList.contains('collapsed')) {
-        arrow.style.transform = 'rotate(-90deg)'; // Стрелка влево (закрыто)
+        arrow.style.transform = 'rotate(-90deg)'; // РЎС‚СЂРµР»РєР° РІР»РµРІРѕ (Р·Р°РєСЂС‹С‚Рѕ)
     } else {
-        arrow.style.transform = 'rotate(0deg)';   // Стрелка вниз (открыто)
+        arrow.style.transform = 'rotate(0deg)';   // РЎС‚СЂРµР»РєР° РІРЅРёР· (РѕС‚РєСЂС‹С‚Рѕ)
     }
 }
 // ==========================================
-// СБРОС НА ГЛАВНУЮ СТРАНИЦУ (ФИКС ИЗБРАННОГО)
+// РЎР‘Р РћРЎ РќРђ Р“Р›РђР’РќРЈР® РЎРўР РђРќРР¦РЈ (Р¤РРљРЎ РР—Р‘Р РђРќРќРћР“Рћ)
 // ==========================================
 function resetToMain() {
-    // 1. Скроллим наверх
+    // 1. РЎРєСЂРѕР»Р»РёРј РЅР°РІРµСЂС…
     window.scrollTo(0,0);
     
-    // 2. Сбрасываем глобальные переменные
+    // 2. РЎР±СЂР°СЃС‹РІР°РµРј РіР»РѕР±Р°Р»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ
     currentCategory = '';
     currentBrand = '';
-    showingOnlyFavs = false; // ВЫКЛЮЧАЕМ РЕЖИМ ИЗБРАННОГО
+    showingOnlyFavs = false; // Р’Р«РљР›Р®Р§РђР•Рњ Р Р•Р–РРњ РР—Р‘Р РђРќРќРћР“Рћ
     
-    // 3. Очищаем строку поиска
+    // 3. РћС‡РёС‰Р°РµРј СЃС‚СЂРѕРєСѓ РїРѕРёСЃРєР°
     const searchInput = document.getElementById('mainSearch');
     if (searchInput) searchInput.value = '';
     
-    // 4. Снимаем галочки с размеров
+    // 4. РЎРЅРёРјР°РµРј РіР°Р»РѕС‡РєРё СЃ СЂР°Р·РјРµСЂРѕРІ
     document.querySelectorAll('.size-cb').forEach(cb => cb.checked = false);
     
-    // 5. Возвращаем кнопке "ИЗБРАННОЕ" желтый цвет (выключаем белый)
+    // 5. Р’РѕР·РІСЂР°С‰Р°РµРј РєРЅРѕРїРєРµ "РР—Р‘Р РђРќРќРћР•" Р¶РµР»С‚С‹Р№ С†РІРµС‚ (РІС‹РєР»СЋС‡Р°РµРј Р±РµР»С‹Р№)
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
     
-    // 6. Визуально переключаем активную категорию в сайдбаре на "Все вещи"
+    // 6. Р’РёР·СѓР°Р»СЊРЅРѕ РїРµСЂРµРєР»СЋС‡Р°РµРј Р°РєС‚РёРІРЅСѓСЋ РєР°С‚РµРіРѕСЂРёСЋ РІ СЃР°Р№РґР±Р°СЂРµ РЅР° "Р’СЃРµ РІРµС‰Рё"
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
     const allItemsLink = document.querySelector('.sidebar .filter-list:first-of-type a');
     if (allItemsLink) allItemsLink.classList.add('active-filter');
 
-    // 7. Применяем фильтры (перерисовываем сетку)
+    // 7. РџСЂРёРјРµРЅСЏРµРј С„РёР»СЊС‚СЂС‹ (РїРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј СЃРµС‚РєСѓ)
     applyFilters();
 }
 // ==========================================
@@ -4391,35 +4393,35 @@ function resetToMain() {
 let deferredPrompt;
 const installBtn = document.getElementById('installAppBtn');
 
-// Браузер сам решает, когда показать предложение установки. Мы его перехватываем.
+// Р‘СЂР°СѓР·РµСЂ СЃР°Рј СЂРµС€Р°РµС‚, РєРѕРіРґР° РїРѕРєР°Р·Р°С‚СЊ РїСЂРµРґР»РѕР¶РµРЅРёРµ СѓСЃС‚Р°РЅРѕРІРєРё. РњС‹ РµРіРѕ РїРµСЂРµС…РІР°С‚С‹РІР°РµРј.
 window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); // Останавливаем стандартное всплывающее окно браузера
-    deferredPrompt = e; // Сохраняем событие
-    if(installBtn) installBtn.style.display = 'block'; // Показываем нашу зеленую кнопку
+    e.preventDefault(); // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃС‚Р°РЅРґР°СЂС‚РЅРѕРµ РІСЃРїР»С‹РІР°СЋС‰РµРµ РѕРєРЅРѕ Р±СЂР°СѓР·РµСЂР°
+    deferredPrompt = e; // РЎРѕС…СЂР°РЅСЏРµРј СЃРѕР±С‹С‚РёРµ
+    if(installBtn) installBtn.style.display = 'block'; // РџРѕРєР°Р·С‹РІР°РµРј РЅР°С€Сѓ Р·РµР»РµРЅСѓСЋ РєРЅРѕРїРєСѓ
 });
 
 if(installBtn) {
     installBtn.addEventListener('click', async () => {
         if (!deferredPrompt) return;
-        deferredPrompt.prompt(); // Показываем системное окно установки
+        deferredPrompt.prompt(); // РџРѕРєР°Р·С‹РІР°РµРј СЃРёСЃС‚РµРјРЅРѕРµ РѕРєРЅРѕ СѓСЃС‚Р°РЅРѕРІРєРё
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
-            console.log('Пользователь установил PWA');
-            installBtn.style.display = 'none'; // Прячем кнопку после установки
+            console.log('РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СѓСЃС‚Р°РЅРѕРІРёР» PWA');
+            installBtn.style.display = 'none'; // РџСЂСЏС‡РµРј РєРЅРѕРїРєСѓ РїРѕСЃР»Рµ СѓСЃС‚Р°РЅРѕРІРєРё
         }
         deferredPrompt = null;
     });
 }
 // ==========================================
-// ПОДЕЛИТЬСЯ ТОВАРОМ (NATIVE SHARE)
+// РџРћР”Р•Р›РРўР¬РЎРЇ РўРћР’РђР РћРњ (NATIVE SHARE)
 // ==========================================
 function shareItem() {
     if (!currentOpenedItem) return;
     
-    // Возвращаем ссылку на основной домен (без красивых превью в Telegram)
+    // Р’РѕР·РІСЂР°С‰Р°РµРј СЃСЃС‹Р»РєСѓ РЅР° РѕСЃРЅРѕРІРЅРѕР№ РґРѕРјРµРЅ (Р±РµР· РєСЂР°СЃРёРІС‹С… РїСЂРµРІСЊСЋ РІ Telegram)
     const shareUrl = `https://www.nisha-store.shop/share/${currentOpenedItem.id}`;
     const shareTitle = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
-    const shareText = `Зацени: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`;
+    const shareText = `Р—Р°С†РµРЅРё: ${currentOpenedItem.brand} (${currentOpenedItem.size}).`;
 
     if (navigator.share) {
         navigator.share({
@@ -4427,17 +4429,17 @@ function shareItem() {
             text: shareText,
             url: shareUrl
         }).catch((err) => {
-            console.log('Шеринг отменен пользователем');
+            console.log('РЁРµСЂРёРЅРі РѕС‚РјРµРЅРµРЅ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј');
         });
     } else {
-        // Если это обычный ПК на Windows (копируем ссылку)
+        // Р•СЃР»Рё СЌС‚Рѕ РѕР±С‹С‡РЅС‹Р№ РџРљ РЅР° Windows (РєРѕРїРёСЂСѓРµРј СЃСЃС‹Р»РєСѓ)
         navigator.clipboard.writeText(shareUrl)
             .then(() => {
-                const msg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'Ссылка скопирована!'}) : 'Ссылка скопирована!';
+                const msg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'РЎСЃС‹Р»РєР° СЃРєРѕРїРёСЂРѕРІР°РЅР°!'}) : 'РЎСЃС‹Р»РєР° СЃРєРѕРїРёСЂРѕРІР°РЅР°!';
                 showToast(msg, 'success');
             })
             .catch(() => {
-                const msg = typeof i18next !== 'undefined' ? i18next.t('messages.copy_error', {defaultValue: 'Ошибка копирования'}) : 'Ошибка копирования';
+                const msg = typeof i18next !== 'undefined' ? i18next.t('messages.copy_error', {defaultValue: 'РћС€РёР±РєР° РєРѕРїРёСЂРѕРІР°РЅРёСЏ'}) : 'РћС€РёР±РєР° РєРѕРїРёСЂРѕРІР°РЅРёСЏ';
                 showToast(msg, 'error');
             });
     }
@@ -4454,11 +4456,11 @@ async function applyPromoCode() {
 
     btn.innerText = '...';
     
-    // Считаем общую сумму ДО скидки
+    // РЎС‡РёС‚Р°РµРј РѕР±С‰СѓСЋ СЃСѓРјРјСѓ Р”Рћ СЃРєРёРґРєРё
     const originalTotal = cart.reduce((sum, item) => sum + item.price, 0);
 
     try {
-        // Отправляем запрос на наш Бэкенд
+        // РћС‚РїСЂР°РІР»СЏРµРј Р·Р°РїСЂРѕСЃ РЅР° РЅР°С€ Р‘СЌРєРµРЅРґ
         const res = await fetch('https://nisha-api.onrender.com/api/check-promo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -4467,10 +4469,10 @@ async function applyPromoCode() {
         
         const data = await res.json();
 
-        // Достаем актуальный язык, чтобы переводы не зависали
+        // Р”РѕСЃС‚Р°РµРј Р°РєС‚СѓР°Р»СЊРЅС‹Р№ СЏР·С‹Рє, С‡С‚РѕР±С‹ РїРµСЂРµРІРѕРґС‹ РЅРµ Р·Р°РІРёСЃР°Р»Рё
         const currentLang = localStorage.getItem('nisha_lang') || 'ru';
         
-        // Меняем язык i18next ПЕРЕД получением перевода (страховка)
+        // РњРµРЅСЏРµРј СЏР·С‹Рє i18next РџР•Р Р•Р” РїРѕР»СѓС‡РµРЅРёРµРј РїРµСЂРµРІРѕРґР° (СЃС‚СЂР°С…РѕРІРєР°)
         if (i18next.language !== currentLang) {
             await i18next.changeLanguage(currentLang);
         }
@@ -4485,13 +4487,13 @@ async function applyPromoCode() {
             currentPromoDiscount = data.discount_percent;
             appliedPromoCode = input;
             
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${successText} ${data.discount_percent * 100}%<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} грн</b></span></span>`;
+            msg.innerHTML = `<span style="color: var(--accent-green);">[вњ”] ${successText} ${data.discount_percent * 100}%<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} РіСЂРЅ</b></span></span>`;
         } else {
             currentPromoDiscount = 0;
             appliedPromoCode = '';
             
             let errorMsg = invalidErrorText;
-            if (data.message && data.message.includes('Лимит')) {
+            if (data.message && data.message.includes('Р›РёРјРёС‚')) {
                 errorMsg = limitErrorText;
             }
             msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${errorMsg}</span>`;
@@ -4503,13 +4505,13 @@ async function applyPromoCode() {
     btn.innerText = i18next.t('checkout.apply');
     updateCartUI();
 }
-// --- ИНТЕРАКТИВНЫЙ СВАЙП ДЛЯ КОРЗИНЫ (ВЫБРОСИТЬ ТОВАР) ---
+// --- РРќРўР•Р РђРљРўРР’РќР«Р™ РЎР’РђР™Рџ Р”Р›РЇ РљРћР Р—РРќР« (Р’Р«Р‘Р РћРЎРРўР¬ РўРћР’РђР ) ---
 let cartSwipeStartX = 0;
 let cartSwipeCurrentX = 0;
 
 window.handleSwipeStart = function(e) {
     cartSwipeStartX = e.touches[0].clientX;
-    e.currentTarget.style.transition = 'none'; // Отключаем плавность, чтобы товар "прилип" к пальцу
+    e.currentTarget.style.transition = 'none'; // РћС‚РєР»СЋС‡Р°РµРј РїР»Р°РІРЅРѕСЃС‚СЊ, С‡С‚РѕР±С‹ С‚РѕРІР°СЂ "РїСЂРёР»РёРї" Рє РїР°Р»СЊС†Сѓ
 };
 
 window.handleSwipeMove = function(e) {
@@ -4523,17 +4525,17 @@ window.handleSwipeMove = function(e) {
         let surfaceOpacity = Math.max(0.2, 1 - (moveX / 200));
         e.currentTarget.style.opacity = surfaceOpacity;
 
-        // --- МАГИЯ КОРЗИНЫ ---
+        // --- РњРђР“РРЇ РљРћР Р—РРќР« ---
         const parentRow = e.currentTarget.closest('.cart-item-row');
         const trashIcon = parentRow.querySelector('.trash-icon');
         const trashLid = parentRow.querySelector('.trash-lid');
         
         if (trashIcon && trashLid) {
-            // 1. Иконка плавно появляется из темноты
+            // 1. РРєРѕРЅРєР° РїР»Р°РІРЅРѕ РїРѕСЏРІР»СЏРµС‚СЃСЏ РёР· С‚РµРјРЅРѕС‚С‹
             let bgOpacity = Math.min(1, moveX / 80); 
             trashIcon.style.opacity = bgOpacity;
 
-            // 2. Крышка приоткрывается (до 45 градусов), если потянули дальше 50px
+            // 2. РљСЂС‹С€РєР° РїСЂРёРѕС‚РєСЂС‹РІР°РµС‚СЃСЏ (РґРѕ 45 РіСЂР°РґСѓСЃРѕРІ), РµСЃР»Рё РїРѕС‚СЏРЅСѓР»Рё РґР°Р»СЊС€Рµ 50px
             if (moveX > 50) {
                 let openAngle = Math.min(45, (moveX - 50) * 0.6);
                 trashLid.style.transform = `rotate(${openAngle}deg)`;
@@ -4550,38 +4552,38 @@ window.handleSwipeEnd = function(e) {
     const parentRow = rowSurface.closest('.cart-item-row');
     const itemIndex = parseInt(rowSurface.getAttribute('data-index'));
     
-    // Возвращаем плавную анимацию
+    // Р’РѕР·РІСЂР°С‰Р°РµРј РїР»Р°РІРЅСѓСЋ Р°РЅРёРјР°С†РёСЋ
     rowSurface.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
     
-    // Если протащили больше 120 пикселей — УДАЛЯЕМ
+    // Р•СЃР»Рё РїСЂРѕС‚Р°С‰РёР»Рё Р±РѕР»СЊС€Рµ 120 РїРёРєСЃРµР»РµР№ вЂ” РЈР”РђР›РЇР•Рњ
     if (diff > 120) {
         triggerHaptic('heavy');
-        // Товар "улетает" за левый край экрана
+        // РўРѕРІР°СЂ "СѓР»РµС‚Р°РµС‚" Р·Р° Р»РµРІС‹Р№ РєСЂР°Р№ СЌРєСЂР°РЅР°
         rowSurface.style.transform = `translateX(-150%)`;
         rowSurface.style.opacity = '0';
         
-        // Ждем 200мс, пока проиграет анимация, и окончательно удаляем из базы
+        // Р–РґРµРј 200РјСЃ, РїРѕРєР° РїСЂРѕРёРіСЂР°РµС‚ Р°РЅРёРјР°С†РёСЏ, Рё РѕРєРѕРЅС‡Р°С‚РµР»СЊРЅРѕ СѓРґР°Р»СЏРµРј РёР· Р±Р°Р·С‹
         setTimeout(() => {
             removeFromCart(itemIndex, null, parentRow);
         }, 200);
     } else {
-        // Если не дотянули — возвращаем карточку на место
+        // Р•СЃР»Рё РЅРµ РґРѕС‚СЏРЅСѓР»Рё вЂ” РІРѕР·РІСЂР°С‰Р°РµРј РєР°СЂС‚РѕС‡РєСѓ РЅР° РјРµСЃС‚Рѕ
         rowSurface.style.transform = `translateX(0px)`;
         rowSurface.style.opacity = '1';
         
-        // Прячем иконку и захлопываем крышку
+        // РџСЂСЏС‡РµРј РёРєРѕРЅРєСѓ Рё Р·Р°С…Р»РѕРїС‹РІР°РµРј РєСЂС‹С€РєСѓ
         const trashIcon = parentRow.querySelector('.trash-icon');
         const trashLid = parentRow.querySelector('.trash-lid');
         if (trashIcon) trashIcon.style.opacity = '0';
         if (trashLid) trashLid.style.transform = `rotate(0deg)`;
     }
     
-    // Сбрасываем переменные
+    // РЎР±СЂР°СЃС‹РІР°РµРј РїРµСЂРµРјРµРЅРЅС‹Рµ
     cartSwipeStartX = 0;
     cartSwipeCurrentX = 0;
 };
 // ==========================================
-// 18. ZERO-LAG СВАЙП КАРТОЧКИ (ИДЕАЛЬНОЕ СЛЕДОВАНИЕ ЗА ПАЛЬЦЕМ)
+// 18. ZERO-LAG РЎР’РђР™Рџ РљРђР РўРћР§РљР (РР”Р•РђР›Р¬РќРћР• РЎР›Р•Р”РћР’РђРќРР• Р—Рђ РџРђР›Р¬Р¦Р•Рњ)
 // ==========================================
 function initMobileSwipe() {
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -4596,7 +4598,7 @@ function initMobileSwipe() {
         modalWin.addEventListener('touchstart', (e) => {
                 if (window.innerWidth > 900) return;
                 
-                // ЗАЩИТА: Отключаем свайп окна, если юзер листает списки ИЛИ ПЕРЕТАСКИВАЕТ ФОТО
+                // Р—РђР©РРўРђ: РћС‚РєР»СЋС‡Р°РµРј СЃРІР°Р№Рї РѕРєРЅР°, РµСЃР»Рё СЋР·РµСЂ Р»РёСЃС‚Р°РµС‚ СЃРїРёСЃРєРё РР›Р РџР•Р Р•РўРђРЎРљРР’РђР•Рў Р¤РћРўРћ
                 if (document.body.classList.contains('sort-lock') || e.target.closest('.preview-container') || e.target.closest('.modal-gallery') || e.target.closest('.pswp') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.rules-content') || e.target.closest('.orders-container') || e.target.closest('#reviewsContainerList')) {
                     canDrag = false;
                     return;
@@ -4620,7 +4622,7 @@ function initMobileSwipe() {
                 isDragging = true;
                 if (e.cancelable) e.preventDefault(); 
                 
-                // Используем requestAnimationFrame для мгновенной реакции экрана (без задержек)
+                // РСЃРїРѕР»СЊР·СѓРµРј requestAnimationFrame РґР»СЏ РјРіРЅРѕРІРµРЅРЅРѕР№ СЂРµР°РєС†РёРё СЌРєСЂР°РЅР° (Р±РµР· Р·Р°РґРµСЂР¶РµРє)
                 requestAnimationFrame(() => {
                     modalWin.style.transform = `translateY(${diffY}px)`;
                     let opacity = 1 - (diffY / window.innerHeight);
@@ -4653,10 +4655,10 @@ function initMobileSwipe() {
     });
 }
 // ==========================================
-// ПОЛНАЯ ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (DROP_ITEM.EXE)
+// РџРћР›РќРђРЇ Р›РћР“РРљРђ РџР Р•Р”Р›РћР–РљР РўРћР’РђР РћР’ (DROP_ITEM.EXE)
 // ==========================================
 
-// 1. Открытие модального окна предложки
+// 1. РћС‚РєСЂС‹С‚РёРµ РјРѕРґР°Р»СЊРЅРѕРіРѕ РѕРєРЅР° РїСЂРµРґР»РѕР¶РєРё
 function openProposeModal() {
     if (typeof lenis !== 'undefined') window.stopLenis();
     const modal = document.getElementById('proposeModal');
@@ -4666,13 +4668,13 @@ function openProposeModal() {
     }
 }
 
-// 2. Сжатие фото (САМОЕ ПРОСТОЕ И ЛЕГКОЕ ДЛЯ ПАМЯТИ)
+// 2. РЎР¶Р°С‚РёРµ С„РѕС‚Рѕ (РЎРђРњРћР• РџР РћРЎРўРћР• Р Р›Р•Р“РљРћР• Р”Р›РЇ РџРђРњРЇРўР)
 async function compressImage(file) {
-    // 1. Видео просто пропускаем
+    // 1. Р’РёРґРµРѕ РїСЂРѕСЃС‚Рѕ РїСЂРѕРїСѓСЃРєР°РµРј
     if (file.type.startsWith('video/')) return file;
 
     return new Promise((resolve) => {
-        // 2. Создаем легкую "ссылку" на файл внутри телефона (не жрет RAM!)
+        // 2. РЎРѕР·РґР°РµРј Р»РµРіРєСѓСЋ "СЃСЃС‹Р»РєСѓ" РЅР° С„Р°Р№Р» РІРЅСѓС‚СЂРё С‚РµР»РµС„РѕРЅР° (РЅРµ Р¶СЂРµС‚ RAM!)
         const objectUrl = URL.createObjectURL(file);
         const img = new Image();
 
@@ -4680,9 +4682,9 @@ async function compressImage(file) {
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
-            const MAX_SIZE = 1200; // Жмем до 1200px
+            const MAX_SIZE = 1200; // Р–РјРµРј РґРѕ 1200px
 
-            // Пропорционально уменьшаем размеры
+            // РџСЂРѕРїРѕСЂС†РёРѕРЅР°Р»СЊРЅРѕ СѓРјРµРЅСЊС€Р°РµРј СЂР°Р·РјРµСЂС‹
             if (width > height && width > MAX_SIZE) {
                 height *= MAX_SIZE / width;
                 width = MAX_SIZE;
@@ -4697,35 +4699,35 @@ async function compressImage(file) {
             ctx.drawImage(img, 0, 0, width, height);
 
             canvas.toBlob((blob) => {
-                // Обязательно удаляем "ссылку", чтобы очистить память
+                // РћР±СЏР·Р°С‚РµР»СЊРЅРѕ СѓРґР°Р»СЏРµРј "СЃСЃС‹Р»РєСѓ", С‡С‚РѕР±С‹ РѕС‡РёСЃС‚РёС‚СЊ РїР°РјСЏС‚СЊ
                 URL.revokeObjectURL(objectUrl);
                 
-                // Если всё ок - отдаем сжатый файл
+                // Р•СЃР»Рё РІСЃС‘ РѕРє - РѕС‚РґР°РµРј СЃР¶Р°С‚С‹Р№ С„Р°Р№Р»
                 if (blob) {
                     resolve(new File([blob], file.name, { type: 'image/jpeg' }));
                 } else {
-                    // Страховка: если канвас глюканул, отдаем оригинал, чтобы не было ошибки
+                    // РЎС‚СЂР°С…РѕРІРєР°: РµСЃР»Рё РєР°РЅРІР°СЃ РіР»СЋРєР°РЅСѓР», РѕС‚РґР°РµРј РѕСЂРёРіРёРЅР°Р», С‡С‚РѕР±С‹ РЅРµ Р±С‹Р»Рѕ РѕС€РёР±РєРё
                     resolve(file);
                 }
             }, 'image/jpeg', 0.7);
         };
 
         img.onerror = () => {
-            // Страховка: если формат странный (например айфоновский HEIC), 
-            // просто пропускаем фото без сжатия, чтобы не блокировать юзера!
+            // РЎС‚СЂР°С…РѕРІРєР°: РµСЃР»Рё С„РѕСЂРјР°С‚ СЃС‚СЂР°РЅРЅС‹Р№ (РЅР°РїСЂРёРјРµСЂ Р°Р№С„РѕРЅРѕРІСЃРєРёР№ HEIC), 
+            // РїСЂРѕСЃС‚Рѕ РїСЂРѕРїСѓСЃРєР°РµРј С„РѕС‚Рѕ Р±РµР· СЃР¶Р°С‚РёСЏ, С‡С‚РѕР±С‹ РЅРµ Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ СЋР·РµСЂР°!
             URL.revokeObjectURL(objectUrl);
             resolve(file); 
         };
 
-        // Запускаем процесс
+        // Р—Р°РїСѓСЃРєР°РµРј РїСЂРѕС†РµСЃСЃ
         img.src = objectUrl;
     });
 }
 
-// --- ГЛОБАЛЬНЫЙ МАССИВ ДЛЯ ФОТОГРАФИЙ ПРЕДЛОЖКИ ---
-let currentProposalFiles = []; // Теперь тут будут объекты: { file, url }
+// --- Р“Р›РћР‘РђР›Р¬РќР«Р™ РњРђРЎРЎРР’ Р”Р›РЇ Р¤РћРўРћР“Р РђР¤РР™ РџР Р•Р”Р›РћР–РљР ---
+let currentProposalFiles = []; // РўРµРїРµСЂСЊ С‚СѓС‚ Р±СѓРґСѓС‚ РѕР±СЉРµРєС‚С‹: { file, url }
 
-// 3. Полная очистка формы
+// 3. РџРѕР»РЅР°СЏ РѕС‡РёСЃС‚РєР° С„РѕСЂРјС‹
 function resetProposalForm() {
     const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc'];
     fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -4734,15 +4736,15 @@ function resetProposalForm() {
     renderProposalPreviews();
 }
 
-// --- ОБЩАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ ФАЙЛОВ ---
+// --- РћР‘Р©РђРЇ Р¤РЈРќРљР¦РРЇ Р”РћР‘РђР’Р›Р•РќРРЇ Р¤РђР™Р›РћР’ ---
 function handleNewProposalFiles(newFiles) {
     if (newFiles.length === 0) return;
 
-    // Оставляем только фото и видео
+    // РћСЃС‚Р°РІР»СЏРµРј С‚РѕР»СЊРєРѕ С„РѕС‚Рѕ Рё РІРёРґРµРѕ
     const validFiles = newFiles.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
 
     if (currentProposalFiles.length + validFiles.length > 5) {
-        showToast('Максимум 5 фото/видео!', 'error');
+        showToast('РњР°РєСЃРёРјСѓРј 5 С„РѕС‚Рѕ/РІРёРґРµРѕ!', 'error');
         return;
     }
 
@@ -4756,41 +4758,41 @@ function handleNewProposalFiles(newFiles) {
     renderProposalPreviews();
 }
 
-// 4. Загрузка через клик (кнопка)
+// 4. Р—Р°РіСЂСѓР·РєР° С‡РµСЂРµР· РєР»РёРє (РєРЅРѕРїРєР°)
 document.getElementById('propFiles')?.addEventListener('change', function(e) {
     handleNewProposalFiles(Array.from(e.target.files));
     this.value = ''; 
 });
 
-// 5. DRAG & DROP (ПЕРЕТАСКИВАНИЕ ФАЙЛОВ С ПК В БРАУЗЕР)
+// 5. DRAG & DROP (РџР•Р Р•РўРђРЎРљРР’РђРќРР• Р¤РђР™Р›РћР’ РЎ РџРљ Р’ Р‘Р РђРЈР—Р•Р )
 const dropzone = document.getElementById('propDropzone');
 if (dropzone) {
-    // Отключаем стандартное поведение браузера (чтобы он не открывал картинку на весь экран)
+    // РћС‚РєР»СЋС‡Р°РµРј СЃС‚Р°РЅРґР°СЂС‚РЅРѕРµ РїРѕРІРµРґРµРЅРёРµ Р±СЂР°СѓР·РµСЂР° (С‡С‚РѕР±С‹ РѕРЅ РЅРµ РѕС‚РєСЂС‹РІР°Р» РєР°СЂС‚РёРЅРєСѓ РЅР° РІРµСЃСЊ СЌРєСЂР°РЅ)
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropzone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
     });
 
-    // Добавляем красивую зеленую подсветку, когда файл над зоной
+    // Р”РѕР±Р°РІР»СЏРµРј РєСЂР°СЃРёРІСѓСЋ Р·РµР»РµРЅСѓСЋ РїРѕРґСЃРІРµС‚РєСѓ, РєРѕРіРґР° С„Р°Р№Р» РЅР°Рґ Р·РѕРЅРѕР№
     ['dragenter', 'dragover'].forEach(eventName => {
         dropzone.addEventListener(eventName, () => dropzone.classList.add('drag-active'), false);
     });
 
-    // Убираем подсветку
+    // РЈР±РёСЂР°РµРј РїРѕРґСЃРІРµС‚РєСѓ
     ['dragleave', 'drop'].forEach(eventName => {
         dropzone.addEventListener(eventName, () => dropzone.classList.remove('drag-active'), false);
     });
 
-    // Ловим файлы при отпускании мышки
+    // Р›РѕРІРёРј С„Р°Р№Р»С‹ РїСЂРё РѕС‚РїСѓСЃРєР°РЅРёРё РјС‹С€РєРё
     dropzone.addEventListener('drop', e => {
         const droppedFiles = Array.from(e.dataTransfer.files);
         handleNewProposalFiles(droppedFiles);
     });
 }
 
-// Глобальная переменная для хранения сортировщика (чтобы не было лагов)
+// Р“Р»РѕР±Р°Р»СЊРЅР°СЏ РїРµСЂРµРјРµРЅРЅР°СЏ РґР»СЏ С…СЂР°РЅРµРЅРёСЏ СЃРѕСЂС‚РёСЂРѕРІС‰РёРєР° (С‡С‚РѕР±С‹ РЅРµ Р±С‹Р»Рѕ Р»Р°РіРѕРІ)
 let proposalSortable = null;
 
-// 6. Отрисовка превью с ИДЕАЛЬНЫМ ПЕРЕТАСКИВАНИЕМ И КЛИКОМ
+// 6. РћС‚СЂРёСЃРѕРІРєР° РїСЂРµРІСЊСЋ СЃ РР”Р•РђР›Р¬РќР«Рњ РџР•Р Р•РўРђРЎРљРР’РђРќРР•Рњ Р РљР›РРљРћРњ
 function renderProposalPreviews() {
     const container = document.getElementById('propPreviewContainer');
     const placeholder = document.getElementById('propPlaceholder');
@@ -4808,17 +4810,17 @@ function renderProposalPreviews() {
 
             if (!item.url) { 
                 img.style.backgroundColor = '#111';
-                img.innerHTML = `<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">▶ VID</span>${dragIcon}`;
+                img.innerHTML = `<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">в–¶ VID</span>${dragIcon}`;
             } else {
                 img.style.backgroundImage = `url('${item.url}')`;
                 img.innerHTML = dragIcon;
             }
 
             const delBtn = document.createElement('div');
-            delBtn.innerHTML = '✖';
+            delBtn.innerHTML = 'вњ–';
             delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:10; font-family:var(--font-mono); border: 1px solid #000;';
             
-            // Удаление фото
+            // РЈРґР°Р»РµРЅРёРµ С„РѕС‚Рѕ
             delBtn.onclick = (e) => {
                 e.stopPropagation(); 
                 currentProposalFiles.splice(index, 1);
@@ -4827,12 +4829,12 @@ function renderProposalPreviews() {
             };
             img.appendChild(delBtn);
 
-            // ФИКС: Клик по картинке (Открывает на весь экран!)
+            // Р¤РРљРЎ: РљР»РёРє РїРѕ РєР°СЂС‚РёРЅРєРµ (РћС‚РєСЂС‹РІР°РµС‚ РЅР° РІРµСЃСЊ СЌРєСЂР°РЅ!)
             img.onclick = (e) => {
                 e.stopPropagation();
-                if (!item.url) return; // Видео пока не открываем, только фото
+                if (!item.url) return; // Р’РёРґРµРѕ РїРѕРєР° РЅРµ РѕС‚РєСЂС‹РІР°РµРј, С‚РѕР»СЊРєРѕ С„РѕС‚Рѕ
                 
-                // Подключаем родную галерею
+                // РџРѕРґРєР»СЋС‡Р°РµРј СЂРѕРґРЅСѓСЋ РіР°Р»РµСЂРµСЋ
                 if (window.PhotoSwipeLightbox) {
                     const photos = currentProposalFiles.filter(f => f.url);
                     const clickedIndex = photos.findIndex(f => f === item);
@@ -4849,7 +4851,7 @@ function renderProposalPreviews() {
             container.appendChild(img);
         });
 
-        // ФИКС ЛАГОВ: Убиваем старый сортировщик перед созданием нового!
+        // Р¤РРљРЎ Р›РђР“РћР’: РЈР±РёРІР°РµРј СЃС‚Р°СЂС‹Р№ СЃРѕСЂС‚РёСЂРѕРІС‰РёРє РїРµСЂРµРґ СЃРѕР·РґР°РЅРёРµРј РЅРѕРІРѕРіРѕ!
         if (proposalSortable) {
             proposalSortable.destroy();
         }
@@ -4858,7 +4860,7 @@ function renderProposalPreviews() {
             const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
             proposalSortable = Sortable.create(container, {
-                animation: 150, // Ускорили анимацию (было 250)
+                animation: 150, // РЈСЃРєРѕСЂРёР»Рё Р°РЅРёРјР°С†РёСЋ (Р±С‹Р»Рѕ 250)
                 delay: isTouchDevice ? 150 : 0, 
                 delayOnTouchOnly: true,
                 touchStartThreshold: 5,
@@ -4898,8 +4900,8 @@ function renderProposalPreviews() {
     }
 }
 
-// 5. Главная функция отправки данных на сервер
-// Вспомогательная функция (конвертирует фото в текст для передачи на сервер)
+// 5. Р“Р»Р°РІРЅР°СЏ С„СѓРЅРєС†РёСЏ РѕС‚РїСЂР°РІРєРё РґР°РЅРЅС‹С… РЅР° СЃРµСЂРІРµСЂ
+// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅР°СЏ С„СѓРЅРєС†РёСЏ (РєРѕРЅРІРµСЂС‚РёСЂСѓРµС‚ С„РѕС‚Рѕ РІ С‚РµРєСЃС‚ РґР»СЏ РїРµСЂРµРґР°С‡Рё РЅР° СЃРµСЂРІРµСЂ)
 const fileToBase64 = file => new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -4909,34 +4911,34 @@ const fileToBase64 = file => new Promise((resolve) => {
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
     
-    // БЕРЕМ ФАЙЛЫ ИЗ НАШЕГО ОТСОРТИРОВАННОГО МАССИВА!
+    // Р‘Р•Р Р•Рњ Р¤РђР™Р›Р« РР— РќРђРЁР•Р“Рћ РћРўРЎРћР РўРР РћР’РђРќРќРћР“Рћ РњРђРЎРЎРР’Рђ!
     const files = currentProposalFiles.map(obj => obj.file);
     
-    // СЧИТЫВАЕМ ВСЕ ПОЛЯ
+    // РЎР§РРўР«Р’РђР•Рњ Р’РЎР• РџРћР›РЇ
     const rawName = document.getElementById('propName').value.trim();
     const rawBrand = document.getElementById('propBrand').value.trim();
     const rawSize = document.getElementById('propSize').value.trim();
-    const rawDesc = document.getElementById('propDesc').value.trim(); // ДОСТАЕМ ОПИСАНИЕ
+    const rawDesc = document.getElementById('propDesc').value.trim(); // Р”РћРЎРўРђР•Рњ РћРџРРЎРђРќРР•
     const cond = parseInt(document.getElementById('propCond').value);
     const price = parseInt(document.getElementById('propPrice').value) || 0; 
     const rawContact = document.getElementById('propContact').value.trim();
     
-    // ОЧИЩАЕМ ОТ ВРЕДОНОСНОГО КОДА (ЕСЛИ ЕСТЬ DOMPURIFY)
+    // РћР§РР©РђР•Рњ РћРў Р’Р Р•Р”РћРќРћРЎРќРћР“Рћ РљРћР”Рђ (Р•РЎР›Р Р•РЎРўР¬ DOMPURIFY)
     const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName; 
     const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand;
     const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize;
-    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc; // ЧИСТИМ ОПИСАНИЕ
+    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc; // Р§РРЎРўРРњ РћРџРРЎРђРќРР•
     const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact;
 
-    // ЖЕСТКАЯ ПРОВЕРКА (Если пусто хотя бы одно поле — выдаем ошибку)
+    // Р–Р•РЎРўРљРђРЇ РџР РћР’Р•Р РљРђ (Р•СЃР»Рё РїСѓСЃС‚Рѕ С…РѕС‚СЏ Р±С‹ РѕРґРЅРѕ РїРѕР»Рµ вЂ” РІС‹РґР°РµРј РѕС€РёР±РєСѓ)
     if (!files.length || !nameItem || !brand || !size || !desc || isNaN(cond) || price <= 0 || !contact) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        showToast('Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!', 'error');
+        showToast('РџРѕР¶Р°Р»СѓР№СЃС‚Р°, Р·Р°РїРѕР»РЅРёС‚Рµ РђР‘РЎРћР›Р®РўРќРћ Р’РЎР• РїРѕР»СЏ!', 'error');
         return;
     }
 
     if (cond < 1 || cond > 10) {
-        showToast('Оценка состояния от 1 до 10!', 'error');
+        showToast('РћС†РµРЅРєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ РѕС‚ 1 РґРѕ 10!', 'error');
         return;
     }
 
@@ -4944,19 +4946,19 @@ async function submitProposal() {
     btn.style.opacity = '0.7';
 
     try {
-        // ЭТАП 1: ПРОСТОЕ СЖАТИЕ ФОТО
+        // Р­РўРђРџ 1: РџР РћРЎРўРћР• РЎР–РђРўРР• Р¤РћРўРћ
         let compressedFiles = [];
         for (let i = 0; i < files.length; i++) {
-            btn.innerText = `[ СЖАТИЕ ФОТО: ${i + 1}/${files.length} ]`;
+            btn.innerText = `[ РЎР–РђРўРР• Р¤РћРўРћ: ${i + 1}/${files.length} ]`;
             await new Promise(r => setTimeout(r, 100)); 
             const compressed = await compressImage(files[i]);
             compressedFiles.push(compressed);
         }
 
-        // ЭТАП 2: ОТПРАВКА НАПРЯМУЮ БЕЗ КОНВЕРТАЦИИ
-        btn.innerText = '[ ПЕРЕДАЧА НА СЕРВЕР... ]';
+        // Р­РўРђРџ 2: РћРўРџР РђР’РљРђ РќРђРџР РЇРњРЈР® Р‘Р•Р— РљРћРќР’Р•Р РўРђР¦РР
+        btn.innerText = '[ РџР•Р Р•Р”РђР§Рђ РќРђ РЎР•Р Р’Р•Р ... ]';
         
-        // Создаем пакет данных (FormData)
+        // РЎРѕР·РґР°РµРј РїР°РєРµС‚ РґР°РЅРЅС‹С… (FormData)
         const formData = new FormData();
         formData.append('name', nameItem);
         formData.append('brand', brand);
@@ -4965,34 +4967,34 @@ async function submitProposal() {
         formData.append('price', price);
         formData.append('description', desc);
         formData.append('contact', contact);
-        formData.append('clientId', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint); // Добавили ID клиента!
+        formData.append('clientId', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint); // Р”РѕР±Р°РІРёР»Рё ID РєР»РёРµРЅС‚Р°!
         
-        // Кладем туда файлы как они есть!
+        // РљР»Р°РґРµРј С‚СѓРґР° С„Р°Р№Р»С‹ РєР°Рє РѕРЅРё РµСЃС‚СЊ!
         compressedFiles.forEach((file, index) => {
             formData.append('images', file, `prop_${index}.jpg`);
         });
 
-        // Отправляем на сервер в фоне
+        // РћС‚РїСЂР°РІР»СЏРµРј РЅР° СЃРµСЂРІРµСЂ РІ С„РѕРЅРµ
         fetch('https://nisha-api.onrender.com/api/propose-files', {
             method: 'POST',
-            body: formData // Никакого JSON, просто файлы!
-        }).catch(e => console.log("Фоновая отправка: ", e));
+            body: formData // РќРёРєР°РєРѕРіРѕ JSON, РїСЂРѕСЃС‚Рѕ С„Р°Р№Р»С‹!
+        }).catch(e => console.log("Р¤РѕРЅРѕРІР°СЏ РѕС‚РїСЂР°РІРєР°: ", e));
 
-        // ФИНАЛ: ЗАКРЫТИЕ (Мгновенно)
+        // Р¤РРќРђР›: Р—РђРљР Р«РўРР• (РњРіРЅРѕРІРµРЅРЅРѕ)
         resetProposalForm(); 
         executeCloseModal('proposeModal'); 
         
         setTimeout(() => {
-            showTerminalModal('SYSTEM_OK.LOG', 'Ваша заявка отправлена на сервер.', '[ ПРИНЯТО ]', null);
-            btn.innerText = '[ ОТПРАВИТЬ ЗАЯВКУ ]';
+            showTerminalModal('SYSTEM_OK.LOG', 'Р’Р°С€Р° Р·Р°СЏРІРєР° РѕС‚РїСЂР°РІР»РµРЅР° РЅР° СЃРµСЂРІРµСЂ.', '[ РџР РРќРЇРўРћ ]', null);
+            btn.innerText = '[ РћРўРџР РђР’РРўР¬ Р—РђРЇР’РљРЈ ]';
             btn.style.pointerEvents = 'auto';
             btn.style.opacity = '1';
         }, 300);
 
     } catch (err) {
         console.error(err);
-        showToast('Сбой сервера: ' + err.message, 'error');
-        btn.innerText = '[ ПОВТОРИТЬ ПОПЫТКУ ]';
+        showToast('РЎР±РѕР№ СЃРµСЂРІРµСЂР°: ' + err.message, 'error');
+        btn.innerText = '[ РџРћР’РўРћР РРўР¬ РџРћРџР«РўРљРЈ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     }
@@ -5000,7 +5002,7 @@ async function submitProposal() {
 
 
 
-// 6. Свайп фотографий в модалке товара
+// 6. РЎРІР°Р№Рї С„РѕС‚РѕРіСЂР°С„РёР№ РІ РјРѕРґР°Р»РєРµ С‚РѕРІР°СЂР°
 function initSliderSwipe() {
     const sliderContainer = document.getElementById('sliderContainer');
     if (!sliderContainer) return;
@@ -5013,16 +5015,16 @@ function initSliderSwipe() {
         if (e.touches.length > 1) return;
         touchStartX = e.touches[0].clientX;
 
-        // ЛОГИКА ДАБЛ-ТАПА (Двойное касание)
+        // Р›РћР“РРљРђ Р”РђР‘Р›-РўРђРџРђ (Р”РІРѕР№РЅРѕРµ РєР°СЃР°РЅРёРµ)
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTapTime;
         if (tapLength < 300 && tapLength > 0) {
-            // Это двойной тап! Находим текущий слайд и увеличиваем его
+            // Р­С‚Рѕ РґРІРѕР№РЅРѕР№ С‚Р°Рї! РќР°С…РѕРґРёРј С‚РµРєСѓС‰РёР№ СЃР»Р°Р№Рґ Рё СѓРІРµР»РёС‡РёРІР°РµРј РµРіРѕ
             const slides = document.querySelectorAll('.slide');
             if (slides[currentSlide]) {
                 slides[currentSlide].classList.toggle('zoomed-in');
             }
-            e.preventDefault(); // Блокируем стандартный зум браузера
+            e.preventDefault(); // Р‘Р»РѕРєРёСЂСѓРµРј СЃС‚Р°РЅРґР°СЂС‚РЅС‹Р№ Р·СѓРј Р±СЂР°СѓР·РµСЂР°
         }
         lastTapTime = currentTime;
 
@@ -5035,7 +5037,7 @@ function initSliderSwipe() {
         const currentSlideEl = document.querySelectorAll('.slide')[currentSlide];
         const isZoomed = currentSlideEl && currentSlideEl.classList.contains('zoomed-in');
 
-        // Свайпаем только если фотка НЕ увеличена
+        // РЎРІР°Р№РїР°РµРј С‚РѕР»СЊРєРѕ РµСЃР»Рё С„РѕС‚РєР° РќР• СѓРІРµР»РёС‡РµРЅР°
         if (Math.abs(diff) > 50 && !isZoomed) {
             if (diff > 0) moveSlide(1);
             else moveSlide(-1);
@@ -5043,11 +5045,11 @@ function initSliderSwipe() {
     }, { passive: true });
 }
 
-// 7. Функция входа через Google
+// 7. Р¤СѓРЅРєС†РёСЏ РІС…РѕРґР° С‡РµСЂРµР· Google
 async function loginWithGoogle() {
     const isInApp = /Instagram|FBAN|FBAV|TikTok/i.test(navigator.userAgent);
     if (isInApp) {
-        alert("Для входа через Google открой сайт в обычном браузере (Safari или Chrome)");
+        alert("Р”Р»СЏ РІС…РѕРґР° С‡РµСЂРµР· Google РѕС‚РєСЂРѕР№ СЃР°Р№С‚ РІ РѕР±С‹С‡РЅРѕРј Р±СЂР°СѓР·РµСЂРµ (Safari РёР»Рё Chrome)");
         return;
     }
     const { data, error } = await _supabase.auth.signInWithOAuth({
@@ -5057,11 +5059,11 @@ async function loginWithGoogle() {
             queryParams: { prompt: 'select_account', access_type: 'offline' }
         }
     });
-    if (error) showToast('Ошибка: ' + error.message, 'error');
+    if (error) showToast('РћС€РёР±РєР°: ' + error.message, 'error');
 }
-// --- ЛОГИКА ДЛЯ ТОЧЕК В КАРТОЧКАХ ---
+// --- Р›РћР“РРљРђ Р”Р›РЇ РўРћР§Р•Рљ Р’ РљРђР РўРћР§РљРђРҐ ---
 window.updateCardDots = function(container, itemId) {
-    // Используем ширину контейнера для вычисления индекса
+    // РСЃРїРѕР»СЊР·СѓРµРј С€РёСЂРёРЅСѓ РєРѕРЅС‚РµР№РЅРµСЂР° РґР»СЏ РІС‹С‡РёСЃР»РµРЅРёСЏ РёРЅРґРµРєСЃР°
     const index = Math.round(container.scrollLeft / container.offsetWidth);
     const dotsContainer = document.getElementById(`dots-${itemId}`);
     if (dotsContainer) {
@@ -5074,7 +5076,7 @@ window.updateCardDots = function(container, itemId) {
 };
 
 // ==========================================
-// ИНФОРМАЦИОННЫЕ ОКНА ДЛЯ БЕЙДЖЕЙ ТОВАРОВ
+// РРќР¤РћР РњРђР¦РРћРќРќР«Р• РћРљРќРђ Р”Р›РЇ Р‘Р•Р™Р”Р–Р•Р™ РўРћР’РђР РћР’
 // ==========================================
 window.showBadgeInfo = function(type) {
     let title = '';
@@ -5083,35 +5085,35 @@ window.showBadgeInfo = function(type) {
     if (type === 'secure') {
         title = 'SECURE_PAYMENT.EXE';
         
-        // Узнаем, можно ли вернуть текущий товар
+        // РЈР·РЅР°РµРј, РјРѕР¶РЅРѕ Р»Рё РІРµСЂРЅСѓС‚СЊ С‚РµРєСѓС‰РёР№ С‚РѕРІР°СЂ
         const isReturnable = currentOpenedItem && currentOpenedItem.is_returnable === true;
         const isDropItem = currentOpenedItem && (currentOpenedItem.is_drop === true || (currentOpenedItem.tags && currentOpenedItem.tags.map(t => t.toLowerCase()).includes('drop')));
 
         if (!isReturnable || isDropItem) {
-            // Текст для вещей БЕЗ ВОЗВРАТА (Жесткий)
-            text = 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Данная вещь продается <b style="color:var(--accent-red);">без права на возврат или обмен ни при каких условиях</b>.<br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.';
+            // РўРµРєСЃС‚ РґР»СЏ РІРµС‰РµР№ Р‘Р•Р— Р’РћР—Р’Р РђРўРђ (Р–РµСЃС‚РєРёР№)
+            text = 'NISHA РІС‹СЃС‚СѓРїР°РµС‚ РіР°СЂР°РЅС‚РѕРј СЃРґРµР»РєРё. Р’Р°С€Рё РґРµРЅСЊРіРё РЅР°РґРµР¶РЅРѕ Р·Р°С‰РёС‰РµРЅС‹.<br><br>Р”Р°РЅРЅР°СЏ РІРµС‰СЊ РїСЂРѕРґР°РµС‚СЃСЏ <b style="color:var(--accent-red);">Р±РµР· РїСЂР°РІР° РЅР° РІРѕР·РІСЂР°С‚ РёР»Рё РѕР±РјРµРЅ РЅРё РїСЂРё РєР°РєРёС… СѓСЃР»РѕРІРёСЏС…</b>.<br><br>РњС‹ РЅР°СЃС‚РѕСЏС‚РµР»СЊРЅРѕ РїСЂРѕСЃРёРј РІР°СЃ РІРЅРёРјР°С‚РµР»СЊРЅРѕ РёР·СѓС‡Р°С‚СЊ С„РѕС‚Рѕ, Р·Р°РјРµСЂС‹ Рё РѕРїРёСЃР°РЅРёРµ РїРµСЂРµРґ РѕС„РѕСЂРјР»РµРЅРёРµРј Р·Р°РєР°Р·Р°.';
         } else {
-            // Текст для вещей С ВОЗВРАТОМ
-            text = 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style="color:var(--accent-green);">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>';
+            // РўРµРєСЃС‚ РґР»СЏ РІРµС‰РµР№ РЎ Р’РћР—Р’Р РђРўРћРњ
+            text = 'NISHA РІС‹СЃС‚СѓРїР°РµС‚ РіР°СЂР°РЅС‚РѕРј СЃРґРµР»РєРё. Р’Р°С€Рё РґРµРЅСЊРіРё РЅР°РґРµР¶РЅРѕ Р·Р°С‰РёС‰РµРЅС‹.<br><br>Р’С‹ РјРѕР¶РµС‚Рµ РїСЂРёРјРµСЂРёС‚СЊ РІРµС‰СЊ РЅР° РїРѕС‡С‚Рµ. Р”Р°Р¶Рµ РµСЃР»Рё РІС‹ Р·Р°Р±СЂР°Р»Рё РµС‘ РґРѕРјРѕР№, РЅР° РґР°РЅРЅС‹Р№ С‚РѕРІР°СЂ РґРµР№СЃС‚РІСѓРµС‚ <b style="color:var(--accent-green);">РіР°СЂР°РЅС‚РёСЏ РІРѕР·РІСЂР°С‚Р° Рё РѕР±РјРµРЅР° РІ С‚РµС‡РµРЅРёРµ 14 РґРЅРµР№</b>.<br><br><i>РћР±СЏР·Р°С‚РµР»СЊРЅРѕРµ СѓСЃР»РѕРІРёРµ РІРѕР·РІСЂР°С‚Р°: СЃРѕС…СЂР°РЅРµРЅРёРµ С‚РѕРІР°СЂРЅРѕРіРѕ РІРёРґР° Рё РѕС‚СЃСѓС‚СЃС‚РІРёРµ СЃР»РµРґРѕРІ РЅРѕСЃРєРё.</i>';
         }
     } else if (type === 'fast') {
         title = 'FAST_SHIPPING.SYS';
-        text = 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
+        text = 'РћС‚РїСЂР°РІРєР° Р·Р°РєР°Р·Р° РѕСЃСѓС‰РµСЃС‚РІР»СЏРµС‚СЃСЏ РІ РґРµРЅСЊ РѕРїР»Р°С‚С‹ (РїСЂРё РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРё РґРѕ 16:00) РёР»Рё РЅР° СЃР»РµРґСѓСЋС‰РёР№ СЂР°Р±РѕС‡РёР№ РґРµРЅСЊ.';
     } else if (type === 'refund_no') {
         title = 'NO_RETURN_POLICY.LOG';
-        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>';
+        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ РўРћР’РђР  РќР• РџРћР”Р›Р•Р–РРў Р’РћР—Р’Р РђРўРЈ ]</span><br><br>РњС‹ РЅР°СЃС‚РѕСЏС‚РµР»СЊРЅРѕ РїСЂРѕСЃРёРј РІР°СЃ РІРЅРёРјР°С‚РµР»СЊРЅРѕ РёР·СѓС‡Р°С‚СЊ С„РѕС‚Рѕ, Р·Р°РјРµСЂС‹ Рё РѕРїРёСЃР°РЅРёРµ РїРµСЂРµРґ РѕС„РѕСЂРјР»РµРЅРёРµРј Р·Р°РєР°Р·Р°.<br><br><b style="color:var(--accent-red);">Р”Р°РЅРЅР°СЏ РІРµС‰СЊ РЅРµ РїРѕРґР»РµР¶РёС‚ РІРѕР·РІСЂР°С‚Сѓ РёР»Рё РѕР±РјРµРЅСѓ РЅРё РїСЂРё РєР°РєРёС… СѓСЃР»РѕРІРёСЏС….</b>';
     } else if (type === 'refund_yes') {
         title = 'RETURN_POLICY.SYS';
-        text = '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>';
+        text = '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ Р”РћРЎРўРЈРџР•Рќ Р’РћР—Р’Р РђРў ]</span><br><br>Р”Р°РЅРЅС‹Р№ С‚РѕРІР°СЂ РїРѕРґР»РµР¶РёС‚ РІРѕР·РІСЂР°С‚Сѓ Рё РѕР±РјРµРЅСѓ РІ С‚РµС‡РµРЅРёРµ <b>14 РґРЅРµР№</b> СЃ РјРѕРјРµРЅС‚Р° РїРѕРєСѓРїРєРё, СЃРѕРіР»Р°СЃРЅРѕ Р·Р°РєРѕРЅРѕРґР°С‚РµР»СЊСЃС‚РІСѓ РЈРєСЂР°РёРЅС‹.<br><br><i>РЈСЃР»РѕРІРёРµ РІРѕР·РІСЂР°С‚Р°: СЃРѕС…СЂР°РЅРµРЅРёРµ С‚РѕРІР°СЂРЅРѕРіРѕ РІРёРґР°, РІСЃРµС… Р±РёСЂРѕРє Рё РѕС‚СЃСѓС‚СЃС‚РІРёРµ СЃР»РµРґРѕРІ РЅРѕСЃРєРё.</i>';
     } else if (type === 'drop') {
         title = 'WARNING: DROP_ITEM';
-        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Эта вещь загружена сторонним продавцом (Creator).</span><br><br>Обязательно проводите полный осмотр вещи на отделении Новой Почты. <b style="color:var(--accent-red);">Если вы забрали посылку домой — возврат или обмен НЕВОЗМОЖЕН</b>, так как деньги сразу переводятся владельцу вещи.';
+        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ Р’РќРРњРђРќРР• ]</span><br><span style="color:#fff;">Р­С‚Р° РІРµС‰СЊ Р·Р°РіСЂСѓР¶РµРЅР° СЃС‚РѕСЂРѕРЅРЅРёРј РїСЂРѕРґР°РІС†РѕРј (Creator).</span><br><br>РћР±СЏР·Р°С‚РµР»СЊРЅРѕ РїСЂРѕРІРѕРґРёС‚Рµ РїРѕР»РЅС‹Р№ РѕСЃРјРѕС‚СЂ РІРµС‰Рё РЅР° РѕС‚РґРµР»РµРЅРёРё РќРѕРІРѕР№ РџРѕС‡С‚С‹. <b style="color:var(--accent-red);">Р•СЃР»Рё РІС‹ Р·Р°Р±СЂР°Р»Рё РїРѕСЃС‹Р»РєСѓ РґРѕРјРѕР№ вЂ” РІРѕР·РІСЂР°С‚ РёР»Рё РѕР±РјРµРЅ РќР•Р’РћР—РњРћР–Р•Рќ</b>, С‚Р°Рє РєР°Рє РґРµРЅСЊРіРё СЃСЂР°Р·Сѓ РїРµСЂРµРІРѕРґСЏС‚СЃСЏ РІР»Р°РґРµР»СЊС†Сѓ РІРµС‰Рё.';
     }
     
-    showTerminalModal(title, text, '[ ПОНЯТНО ]', null);
+    showTerminalModal(title, text, '[ РџРћРќРЇРўРќРћ ]', null);
 };
 // ==========================================
-// ЛОГИКА ГЛАЗИКА (ПОКАЗАТЬ/СКРЫТЬ ПАРОЛЬ)
+// Р›РћР“РРљРђ Р“Р›РђР—РРљРђ (РџРћРљРђР—РђРўР¬/РЎРљР Р«РўР¬ РџРђР РћР›Р¬)
 // ==========================================
 window.togglePasswordVisibility = function(inputId, iconElement) {
     const input = document.getElementById(inputId);
@@ -5119,24 +5121,24 @@ window.togglePasswordVisibility = function(inputId, iconElement) {
 
     if (input.type === 'password') {
         input.type = 'text';
-        iconElement.classList.add('visible'); // Глазик становится зеленым, линия исчезает
+        iconElement.classList.add('visible'); // Р“Р»Р°Р·РёРє СЃС‚Р°РЅРѕРІРёС‚СЃСЏ Р·РµР»РµРЅС‹Рј, Р»РёРЅРёСЏ РёСЃС‡РµР·Р°РµС‚
     } else {
         input.type = 'password';
-        iconElement.classList.remove('visible'); // Глазик становится красным, линия появляется
+        iconElement.classList.remove('visible'); // Р“Р»Р°Р·РёРє СЃС‚Р°РЅРѕРІРёС‚СЃСЏ РєСЂР°СЃРЅС‹Рј, Р»РёРЅРёСЏ РїРѕСЏРІР»СЏРµС‚СЃСЏ
     }
 };
 // ==========================================
-// АВТООПРЕДЕЛЕНИЕ ГОРОДА ПО IP (GEO IP)
+// РђР’РўРћРћРџР Р•Р”Р•Р›Р•РќРР• Р“РћР РћР”Рђ РџРћ IP (GEO IP)
 // ==========================================
 async function autoDetectCity() {
     const cityInput = document.getElementById('orderCity');
     const branchInput = document.getElementById('orderBranch');
     
-    // Если поле уже заполнено, не трогаем его
+    // Р•СЃР»Рё РїРѕР»Рµ СѓР¶Рµ Р·Р°РїРѕР»РЅРµРЅРѕ, РЅРµ С‚СЂРѕРіР°РµРј РµРіРѕ
     if (!cityInput || cityInput.value.trim() !== '') return;
 
     const originalPlaceholder = cityInput.placeholder;
-    cityInput.placeholder = "Поиск спутников..."; 
+    cityInput.placeholder = "РџРѕРёСЃРє СЃРїСѓС‚РЅРёРєРѕРІ..."; 
 
     try {
         const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
@@ -5144,26 +5146,26 @@ async function autoDetectCity() {
 
                 if (data.country_code === 'UA' && data.city) {
             const enToUaCities = {
-                'Kyiv': 'Київ', 'Kiev': 'Київ', 'Kharkiv': 'Харків', 'Kharkov': 'Харків',
-                'Odesa': 'Одеса', 'Odessa': 'Одеса', 'Dnipro': 'Дніпро', 'Dnipropetrovsk': 'Дніпро',
-                'Donetsk': 'Донецьк', 'Zaporizhzhia': 'Запоріжжя', 'Zaporozhye': 'Запоріжжя',
-                'Lviv': 'Львів', 'Lvov': 'Львів', 'Kryvyi Rih': 'Кривий Ріг', 'Krivoy Rog': 'Кривий Ріг',
-                'Mykolaiv': 'Миколаїв', 'Nikolaev': 'Миколаїв', 'Mariupol': 'Маріуполь',
-                'Luhansk': 'Луганськ', 'Lugansk': 'Луганськ', 'Vinnytsia': 'Вінниця', 'Vinnitsa': 'Вінниця',
-                'Makiivka': 'Макіївка', 'Makeyevka': 'Макіївка', 'Simferopol': 'Сімферополь',
-                'Chernihiv': 'Чернігів', 'Chernigov': 'Чернігів', 'Kherson': 'Херсон',
-                'Poltava': 'Полтава', 'Khmelnytskyi': 'Хмельницький', 'Khmelnytskyy': 'Хмельницький',
-                'Cherkasy': 'Черкаси', 'Cherkassy': 'Черкаси', 'Chernivtsi': 'Чернівці', 'Chernovtsy': 'Чернівці',
-                'Zhytomyr': 'Житомир', 'Zhitomir': 'Житомир', 'Sumy': 'Суми',
-                'Rivne': 'Рівне', 'Rovno': 'Рівне', 'Horlivka': 'Горлівка', 'Gorlovka': 'Горлівка',
-                'Ivano-Frankivsk': 'Івано-Франківськ', 'Ivano-Frankovsk': 'Івано-Франківськ',
-                'Kamianske': 'Кам\'янське', 'Dniprodzerzhynsk': 'Кам\'янське', 'Kropyvnytskyi': 'Кропивницький', 'Kirovohrad': 'Кропивницький',
-                'Ternopil': 'Тернопіль', 'Ternopol': 'Тернопіль', 'Kremenchuk': 'Кременчук', 'Kremenchug': 'Кременчук',
-                'Lutsk': 'Луцьк', 'Bila Tserkva': 'Біла Церква', 'Belaya Tserkov': 'Біла Церква',
-                'Kramatorsk': 'Краматорськ', 'Melitopol': 'Мелітополь', 'Uzhhorod': 'Ужгород', 'Uzhgorod': 'Ужгород',
-                'Brovary': 'Бровари', 'Berdiansk': 'Бердянськ', 'Berdyansk': 'Бердянськ',
-                'Pavlohrad': 'Павлоград', 'Pavlograd': 'Павлоград', 'Sievierodonetsk': 'Сєвєродонецьк', 'Severodonetsk': 'Сєвєродонецьк',
-                'Kamianets-Podilskyi': 'Кам\'янець-Подільський', 'Kamenets-Podolskiy': 'Кам\'янець-Подільський'
+                'Kyiv': 'РљРёС—РІ', 'Kiev': 'РљРёС—РІ', 'Kharkiv': 'РҐР°СЂРєС–РІ', 'Kharkov': 'РҐР°СЂРєС–РІ',
+                'Odesa': 'РћРґРµСЃР°', 'Odessa': 'РћРґРµСЃР°', 'Dnipro': 'Р”РЅС–РїСЂРѕ', 'Dnipropetrovsk': 'Р”РЅС–РїСЂРѕ',
+                'Donetsk': 'Р”РѕРЅРµС†СЊРє', 'Zaporizhzhia': 'Р—Р°РїРѕСЂС–Р¶Р¶СЏ', 'Zaporozhye': 'Р—Р°РїРѕСЂС–Р¶Р¶СЏ',
+                'Lviv': 'Р›СЊРІС–РІ', 'Lvov': 'Р›СЊРІС–РІ', 'Kryvyi Rih': 'РљСЂРёРІРёР№ Р С–Рі', 'Krivoy Rog': 'РљСЂРёРІРёР№ Р С–Рі',
+                'Mykolaiv': 'РњРёРєРѕР»Р°С—РІ', 'Nikolaev': 'РњРёРєРѕР»Р°С—РІ', 'Mariupol': 'РњР°СЂС–СѓРїРѕР»СЊ',
+                'Luhansk': 'Р›СѓРіР°РЅСЃСЊРє', 'Lugansk': 'Р›СѓРіР°РЅСЃСЊРє', 'Vinnytsia': 'Р’С–РЅРЅРёС†СЏ', 'Vinnitsa': 'Р’С–РЅРЅРёС†СЏ',
+                'Makiivka': 'РњР°РєС–С—РІРєР°', 'Makeyevka': 'РњР°РєС–С—РІРєР°', 'Simferopol': 'РЎС–РјС„РµСЂРѕРїРѕР»СЊ',
+                'Chernihiv': 'Р§РµСЂРЅС–РіС–РІ', 'Chernigov': 'Р§РµСЂРЅС–РіС–РІ', 'Kherson': 'РҐРµСЂСЃРѕРЅ',
+                'Poltava': 'РџРѕР»С‚Р°РІР°', 'Khmelnytskyi': 'РҐРјРµР»СЊРЅРёС†СЊРєРёР№', 'Khmelnytskyy': 'РҐРјРµР»СЊРЅРёС†СЊРєРёР№',
+                'Cherkasy': 'Р§РµСЂРєР°СЃРё', 'Cherkassy': 'Р§РµСЂРєР°СЃРё', 'Chernivtsi': 'Р§РµСЂРЅС–РІС†С–', 'Chernovtsy': 'Р§РµСЂРЅС–РІС†С–',
+                'Zhytomyr': 'Р–РёС‚РѕРјРёСЂ', 'Zhitomir': 'Р–РёС‚РѕРјРёСЂ', 'Sumy': 'РЎСѓРјРё',
+                'Rivne': 'Р С–РІРЅРµ', 'Rovno': 'Р С–РІРЅРµ', 'Horlivka': 'Р“РѕСЂР»С–РІРєР°', 'Gorlovka': 'Р“РѕСЂР»С–РІРєР°',
+                'Ivano-Frankivsk': 'Р†РІР°РЅРѕ-Р¤СЂР°РЅРєС–РІСЃСЊРє', 'Ivano-Frankovsk': 'Р†РІР°РЅРѕ-Р¤СЂР°РЅРєС–РІСЃСЊРє',
+                'Kamianske': 'РљР°Рј\'СЏРЅСЃСЊРєРµ', 'Dniprodzerzhynsk': 'РљР°Рј\'СЏРЅСЃСЊРєРµ', 'Kropyvnytskyi': 'РљСЂРѕРїРёРІРЅРёС†СЊРєРёР№', 'Kirovohrad': 'РљСЂРѕРїРёРІРЅРёС†СЊРєРёР№',
+                'Ternopil': 'РўРµСЂРЅРѕРїС–Р»СЊ', 'Ternopol': 'РўРµСЂРЅРѕРїС–Р»СЊ', 'Kremenchuk': 'РљСЂРµРјРµРЅС‡СѓРє', 'Kremenchug': 'РљСЂРµРјРµРЅС‡СѓРє',
+                'Lutsk': 'Р›СѓС†СЊРє', 'Bila Tserkva': 'Р‘С–Р»Р° Р¦РµСЂРєРІР°', 'Belaya Tserkov': 'Р‘С–Р»Р° Р¦РµСЂРєРІР°',
+                'Kramatorsk': 'РљСЂР°РјР°С‚РѕСЂСЃСЊРє', 'Melitopol': 'РњРµР»С–С‚РѕРїРѕР»СЊ', 'Uzhhorod': 'РЈР¶РіРѕСЂРѕРґ', 'Uzhgorod': 'РЈР¶РіРѕСЂРѕРґ',
+                'Brovary': 'Р‘СЂРѕРІР°СЂРё', 'Berdiansk': 'Р‘РµСЂРґСЏРЅСЃСЊРє', 'Berdyansk': 'Р‘РµСЂРґСЏРЅСЃСЊРє',
+                'Pavlohrad': 'РџР°РІР»РѕРіСЂР°Рґ', 'Pavlograd': 'РџР°РІР»РѕРіСЂР°Рґ', 'Sievierodonetsk': 'РЎС”РІС”СЂРѕРґРѕРЅРµС†СЊРє', 'Severodonetsk': 'РЎС”РІС”СЂРѕРґРѕРЅРµС†СЊРє',
+                'Kamianets-Podilskyi': 'РљР°Рј\'СЏРЅРµС†СЊ-РџРѕРґС–Р»СЊСЃСЊРєРёР№', 'Kamenets-Podolskiy': 'РљР°Рј\'СЏРЅРµС†СЊ-РџРѕРґС–Р»СЊСЃСЊРєРёР№'
             };
             let detectedCity = enToUaCities[data.city] || data.city;
             if (detectedCity === data.city && data.latitude && data.longitude) {
@@ -5176,7 +5178,7 @@ async function autoDetectCity() {
                 } catch(e) {}
             }
             
-            // Тихо спрашиваем Новую Почту, как правильно называется этот город
+            // РўРёС…Рѕ СЃРїСЂР°С€РёРІР°РµРј РќРѕРІСѓСЋ РџРѕС‡С‚Сѓ, РєР°Рє РїСЂР°РІРёР»СЊРЅРѕ РЅР°Р·С‹РІР°РµС‚СЃСЏ СЌС‚РѕС‚ РіРѕСЂРѕРґ
             const npRes = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -5187,43 +5189,43 @@ async function autoDetectCity() {
             });
             const npData = await npRes.json();
 
-            // Если Новая Почта нашла город по английскому названию
+            // Р•СЃР»Рё РќРѕРІР°СЏ РџРѕС‡С‚Р° РЅР°С€Р»Р° РіРѕСЂРѕРґ РїРѕ Р°РЅРіР»РёР№СЃРєРѕРјСѓ РЅР°Р·РІР°РЅРёСЋ
             if(npData.success && npData.data[0] && npData.data[0].Addresses.length > 0) {
                 const cityObj = npData.data[0].Addresses[0];
                 
-                // Вписываем правильное украинское название!
+                // Р’РїРёСЃС‹РІР°РµРј РїСЂР°РІРёР»СЊРЅРѕРµ СѓРєСЂР°РёРЅСЃРєРѕРµ РЅР°Р·РІР°РЅРёРµ!
                 cityInput.value = cityObj.Present; 
                 
-                // Сохраняем Ref (ID Города) для поиска отделений!
+                // РЎРѕС…СЂР°РЅСЏРµРј Ref (ID Р“РѕСЂРѕРґР°) РґР»СЏ РїРѕРёСЃРєР° РѕС‚РґРµР»РµРЅРёР№!
                 selectedCityRef = cityObj.DeliveryCity || cityObj.Ref; 
                 
-                // Разблокируем поле отделений
+                // Р Р°Р·Р±Р»РѕРєРёСЂСѓРµРј РїРѕР»Рµ РѕС‚РґРµР»РµРЅРёР№
                 if (branchInput) {
                     branchInput.readOnly = false;
-                    branchInput.placeholder = "Выберите отделение...";
+                    branchInput.placeholder = "Р’С‹Р±РµСЂРёС‚Рµ РѕС‚РґРµР»РµРЅРёРµ...";
                 }
                 
-                showToast(`[GEO] Локация: ${cityObj.MainDescription}`, 'success');
+                showToast(`[GEO] Р›РѕРєР°С†РёСЏ: ${cityObj.MainDescription}`, 'success');
             } else {
-                // Если НП не поняла английское название
+                // Р•СЃР»Рё РќРџ РЅРµ РїРѕРЅСЏР»Р° Р°РЅРіР»РёР№СЃРєРѕРµ РЅР°Р·РІР°РЅРёРµ
                 cityInput.value = detectedCity; 
-                searchNPCity(detectedCity); // Оставляем старый метод как фоллбэк
+                searchNPCity(detectedCity); // РћСЃС‚Р°РІР»СЏРµРј СЃС‚Р°СЂС‹Р№ РјРµС‚РѕРґ РєР°Рє С„РѕР»Р»Р±СЌРє
             }
         } else {
             cityInput.placeholder = originalPlaceholder;
         }
     } catch (err) {
-        console.error("Ошибка GeoIP:", err);
+        console.error("РћС€РёР±РєР° GeoIP:", err);
         cityInput.placeholder = originalPlaceholder;
     }
 }
 // ==========================================
-// УМНЫЙ СБОР ОТЗЫВОВ ЗА ПОЛУЧЕННЫЕ ПОСЫЛКИ
+// РЈРњРќР«Р™ РЎР‘РћР  РћРўР—Р«Р’РћР’ Р—Рђ РџРћР›РЈР§Р•РќРќР«Р• РџРћРЎР«Р›РљР
 // ==========================================
 window.promptOrderReview = function(orderId, itemName, itemImage, itemId) {
     document.getElementById('autoReviewOrderId').value = orderId;
     document.getElementById('autoReviewItemImage').value = itemImage || '';
-    document.getElementById('autoReviewItemId').value = itemId || ''; // Сохраняем ID товара
+    document.getElementById('autoReviewItemId').value = itemId || ''; // РЎРѕС…СЂР°РЅСЏРµРј ID С‚РѕРІР°СЂР°
     document.getElementById('autoReviewName').innerText = itemName;
     document.getElementById('autoReviewImg').style.backgroundImage = `url('${itemImage}')`;
     document.getElementById('autoReviewInput').value = ''; 
@@ -5240,7 +5242,7 @@ window.submitAutoReview = async function() {
     const itemId = document.getElementById('autoReviewItemId').value;
 
     if (text.length < 3) {
-        showToast('Текст слишком короткий!', 'error');
+        showToast('РўРµРєСЃС‚ СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёР№!', 'error');
         return;
     }
 
@@ -5249,7 +5251,7 @@ window.submitAutoReview = async function() {
         uName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@')[0];
     }
     
-    // Пишем в БД отзыв вместе с ID заказа, фоткой и ID ТОВАРА
+    // РџРёС€РµРј РІ Р‘Р” РѕС‚Р·С‹РІ РІРјРµСЃС‚Рµ СЃ ID Р·Р°РєР°Р·Р°, С„РѕС‚РєРѕР№ Рё ID РўРћР’РђР Рђ
     const { error } = await _supabase.from('reviews').insert([{ 
         user_name: uName, 
         text: text, 
@@ -5260,13 +5262,13 @@ window.submitAutoReview = async function() {
     }]);
     
     if (!error) {
-        showToast('Отзыв опубликован! Спасибо.', 'success');
+        showToast('РћС‚Р·С‹РІ РѕРїСѓР±Р»РёРєРѕРІР°РЅ! РЎРїР°СЃРёР±Рѕ.', 'success');
         let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
         reviewedOrders.push(orderId);
         localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
         closeModal('autoReviewModal');
     } else {
-        showToast('Ошибка: ' + error.message, 'error');
+        showToast('РћС€РёР±РєР°: ' + error.message, 'error');
     }
 };
 
@@ -5279,31 +5281,31 @@ window.skipAutoReview = function() {
 };
 
 // ==========================================
-// ЛОГИКА НАПИСАНИЯ ОТЗЫВА НА САЙТЕ (КНОПКА ИЗ СПИСКА)
+// Р›РћР“РРљРђ РќРђРџРРЎРђРќРРЇ РћРўР—Р«Р’Рђ РќРђ РЎРђР™РўР• (РљРќРћРџРљРђ РР— РЎРџРРЎРљРђ)
 // ==========================================
 window.writeReviewOnSite = function() {
     if (!currentUser) {
-        showToast(i18next.t('messages.cart_error_auth', {defaultValue: 'Сначала войдите в систему!'}), 'error');
+        showToast(i18next.t('messages.cart_error_auth', {defaultValue: 'РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ СЃРёСЃС‚РµРјСѓ!'}), 'error');
         closeModal('reviewsModal');
         openProfileModal();
         return;
     }
 
-    document.getElementById('manualReviewInput').value = ''; // Очищаем поле
-    closeModal('reviewsModal'); // Прячем список отзывов
+    document.getElementById('manualReviewInput').value = ''; // РћС‡РёС‰Р°РµРј РїРѕР»Рµ
+    closeModal('reviewsModal'); // РџСЂСЏС‡РµРј СЃРїРёСЃРѕРє РѕС‚Р·С‹РІРѕРІ
     
     setTimeout(() => {
         if (typeof lenis !== 'undefined') window.stopLenis();
         document.getElementById('writeReviewModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
-    }, 300); // Открываем форму отзыва плавно
+    }, 300); // РћС‚РєСЂС‹РІР°РµРј С„РѕСЂРјСѓ РѕС‚Р·С‹РІР° РїР»Р°РІРЅРѕ
 };
 
 window.submitManualReview = async function() {
     const text = document.getElementById('manualReviewInput').value.trim();
     
     if (text.length < 3) {
-        showToast('Текст слишком короткий!', 'error');
+        showToast('РўРµРєСЃС‚ СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёР№!', 'error');
         return;
     }
 
@@ -5316,48 +5318,48 @@ window.submitManualReview = async function() {
     const { error } = await _supabase.from('reviews').insert([{ user_name: uName, text: text, rating: 5 }]);
 
     btn.style.pointerEvents = 'auto';
-    btn.innerText = 'ОТПРАВИТЬ';
+    btn.innerText = 'РћРўРџР РђР’РРўР¬';
 
     if (error) {
-        showToast('Ошибка при отправке: ' + error.message, 'error');
+        showToast('РћС€РёР±РєР° РїСЂРё РѕС‚РїСЂР°РІРєРµ: ' + error.message, 'error');
     } else {
-        showToast('Отзыв успешно опубликован!', 'success');
+        showToast('РћС‚Р·С‹РІ СѓСЃРїРµС€РЅРѕ РѕРїСѓР±Р»РёРєРѕРІР°РЅ!', 'success');
         closeModal('writeReviewModal');
         
-        // Магия: ждем пока закроется окно, и заново открываем СПИСОК ОТЗЫВОВ (он скачает свежую базу с твоим отзывом!)
+        // РњР°РіРёСЏ: Р¶РґРµРј РїРѕРєР° Р·Р°РєСЂРѕРµС‚СЃСЏ РѕРєРЅРѕ, Рё Р·Р°РЅРѕРІРѕ РѕС‚РєСЂС‹РІР°РµРј РЎРџРРЎРћРљ РћРўР—Р«Р’РћР’ (РѕРЅ СЃРєР°С‡Р°РµС‚ СЃРІРµР¶СѓСЋ Р±Р°Р·Сѓ СЃ С‚РІРѕРёРј РѕС‚Р·С‹РІРѕРј!)
         setTimeout(() => {
             openReviewsModal();
         }, 400);
     }
 };
 // ==========================================
-// ЛОГИКА УДАЛЕНИЯ ИЗ ИСТОРИИ ПРОСМОТРОВ
+// Р›РћР“РРљРђ РЈР”РђР›Р•РќРРЇ РР— РРЎРўРћР РР РџР РћРЎРњРћРўР РћР’
 // ==========================================
 window.removeHistoryItem = function(event, itemId) {
-    // Останавливаем "проваливание" клика, чтобы не открылась карточка товара
+    // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј "РїСЂРѕРІР°Р»РёРІР°РЅРёРµ" РєР»РёРєР°, С‡С‚РѕР±С‹ РЅРµ РѕС‚РєСЂС‹Р»Р°СЃСЊ РєР°СЂС‚РѕС‡РєР° С‚РѕРІР°СЂР°
     event.stopPropagation(); 
     
-    // Получаем текущую историю
+    // РџРѕР»СѓС‡Р°РµРј С‚РµРєСѓС‰СѓСЋ РёСЃС‚РѕСЂРёСЋ
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     
-    // Убираем товар с нужным ID
+    // РЈР±РёСЂР°РµРј С‚РѕРІР°СЂ СЃ РЅСѓР¶РЅС‹Рј ID
     hist = hist.filter(item => item.id !== itemId);
     
-    // Сохраняем обратно в память телефона/ПК
+    // РЎРѕС…СЂР°РЅСЏРµРј РѕР±СЂР°С‚РЅРѕ РІ РїР°РјСЏС‚СЊ С‚РµР»РµС„РѕРЅР°/РџРљ
     localStorage.setItem('nisha_history', JSON.stringify(hist));
     
-    // Синхронизируем удаление с БД (если юзер вошел в аккаунт)
+    // РЎРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј СѓРґР°Р»РµРЅРёРµ СЃ Р‘Р” (РµСЃР»Рё СЋР·РµСЂ РІРѕС€РµР» РІ Р°РєРєР°СѓРЅС‚)
     if (currentUser && _supabase) {
         _supabase.from('profiles').update({ 
             viewed_history: hist.map(h => h.id) 
         }).eq('id', currentUser.id).then();
     }
     
-    // Мгновенно перерисовываем блок истории (карточка исчезнет)
+    // РњРіРЅРѕРІРµРЅРЅРѕ РїРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј Р±Р»РѕРє РёСЃС‚РѕСЂРёРё (РєР°СЂС‚РѕС‡РєР° РёСЃС‡РµР·РЅРµС‚)
     renderHistory(); 
 };
 // ==========================================
-// ЛОГИКА СТРЕЛОЧЕК В ЛЕНТЕ НА ПК
+// Р›РћР“РРљРђ РЎРўР Р•Р›РћР§Р•Рљ Р’ Р›Р•РќРўР• РќРђ РџРљ
 // ==========================================
 window.scrollGridSlider = function(event, itemId, direction) {
     event.stopPropagation();
@@ -5368,7 +5370,7 @@ window.scrollGridSlider = function(event, itemId, direction) {
 };
 
 // ==========================================
-// ЛОГИКА "ЗАДАТЬ ВОПРОС"
+// Р›РћР“РРљРђ "Р—РђР”РђРўР¬ Р’РћРџР РћРЎ"
 // ==========================================
 window.toggleQuestionForm = function() {
     const container = document.getElementById('questionFormContainer');
@@ -5384,7 +5386,7 @@ window.toggleQuestionForm = function() {
 
 window.submitQuestion = async function(itemId) {
     if (!currentUser) {
-        showToast('Для отправки вопроса нужно войти в аккаунт!', 'error');
+        showToast('Р”Р»СЏ РѕС‚РїСЂР°РІРєРё РІРѕРїСЂРѕСЃР° РЅСѓР¶РЅРѕ РІРѕР№С‚Рё РІ Р°РєРєР°СѓРЅС‚!', 'error');
         openProfileModal();
         return;
     }
@@ -5392,7 +5394,7 @@ window.submitQuestion = async function(itemId) {
     const input = document.getElementById('questionInput');
     const text = input.value.trim();
     if (text.length < 5) {
-        showToast('Вопрос слишком короткий!', 'error');
+        showToast('Р’РѕРїСЂРѕСЃ СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёР№!', 'error');
         return;
     }
 
@@ -5402,11 +5404,11 @@ window.submitQuestion = async function(itemId) {
     if (questionData.date !== today) questionData = { date: today, count: 0 };
     if (questionData.count >= 2) {
         triggerHaptic('error');
-        return showToast('Лимит: 2 вопроса в день.', 'error');
+        return showToast('Р›РёРјРёС‚: 2 РІРѕРїСЂРѕСЃР° РІ РґРµРЅСЊ.', 'error');
     }
 
-    // ДОСТАЕМ БЕЗОПАСНОЕ ИМЯ ТОВАРА ПРЯМО ИЗ ГЛОБАЛЬНОЙ ПЕРЕМЕННОЙ
-    let itemName = "Товар";
+    // Р”РћРЎРўРђР•Рњ Р‘Р•Р—РћРџРђРЎРќРћР• РРњРЇ РўРћР’РђР Рђ РџР РЇРњРћ РР— Р“Р›РћР‘РђР›Р¬РќРћР™ РџР•Р Р•РњР•РќРќРћР™
+    let itemName = "РўРѕРІР°СЂ";
     if (currentOpenedItem && currentOpenedItem.id === itemId) {
         itemName = currentOpenedItem.name;
     }
@@ -5417,7 +5419,7 @@ window.submitQuestion = async function(itemId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 userId: currentUser.id,
-                email: currentUser.email || 'Неизвестно',
+                email: currentUser.email || 'РќРµРёР·РІРµСЃС‚РЅРѕ',
                 itemId: itemId, 
                 itemName: itemName, 
                 questionText: text 
@@ -5431,16 +5433,16 @@ window.submitQuestion = async function(itemId) {
             localStorage.setItem('nisha_questions', JSON.stringify(questionData));
             input.value = '';
             window.toggleQuestionForm(); 
-            showToast('Вопрос отправлен!', 'success');
+            showToast('Р’РѕРїСЂРѕСЃ РѕС‚РїСЂР°РІР»РµРЅ!', 'success');
         } else {
-            showToast('Ошибка при отправке вопроса.', 'error');
+            showToast('РћС€РёР±РєР° РїСЂРё РѕС‚РїСЂР°РІРєРµ РІРѕРїСЂРѕСЃР°.', 'error');
         }
     } catch (err) {
-        showToast('Ошибка соединения с сервером.', 'error');
+        showToast('РћС€РёР±РєР° СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ СЃРµСЂРІРµСЂРѕРј.', 'error');
     }
 };
 // ==========================================
-// ЛОГИКА ОТОБРАЖЕНИЯ И ОБНОВЛЕНИЯ Q&A
+// Р›РћР“РРљРђ РћРўРћР‘Р РђР–Р•РќРРЇ Р РћР‘РќРћР’Р›Р•РќРРЇ Q&A
 // ==========================================
 window.loadItemQuestions = async function(itemId) {
     const { data, error } = await _supabase.from('item_questions').select('*').eq('item_id', itemId).order('created_at', { ascending: true });
@@ -5452,12 +5454,12 @@ window.loadItemQuestions = async function(itemId) {
         wrapper.style.display = 'block';
         list.innerHTML = '';
         data.forEach(q => {
-            // БЕЗОПАСНОСТЬ: Очищаем текст
+            // Р‘Р•Р—РћРџРђРЎРќРћРЎРўР¬: РћС‡РёС‰Р°РµРј С‚РµРєСЃС‚
             const safeQ = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.question) : q.question;
             const safeA = q.answer ? (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.answer) : q.answer) : null;
             const safeU = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.user_name) : q.user_name;
 
-            let answerHtml = safeA ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">↳ NISHA: ${safeA}</div>` : '';
+            let answerHtml = safeA ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">в†і NISHA: ${safeA}</div>` : '';
             list.innerHTML += `
                 <div style="border-left: 2px solid #333; padding-left: 10px; margin-bottom: 12px; font-family: var(--font-main);">
                     <span style="color:#888; font-size:11px; font-family:var(--font-mono);">@${safeU}:</span>
@@ -5466,34 +5468,34 @@ window.loadItemQuestions = async function(itemId) {
                 </div>`;
         });
     } else if (wrapper) {
-        wrapper.style.display = 'none'; // Прячем весь блок, если вопросов нет
+        wrapper.style.display = 'none'; // РџСЂСЏС‡РµРј РІРµСЃСЊ Р±Р»РѕРє, РµСЃР»Рё РІРѕРїСЂРѕСЃРѕРІ РЅРµС‚
     }
 };
 
-// Подписываемся на обновления в реальном времени (когда открыта карточка)
+// РџРѕРґРїРёСЃС‹РІР°РµРјСЃСЏ РЅР° РѕР±РЅРѕРІР»РµРЅРёСЏ РІ СЂРµР°Р»СЊРЅРѕРј РІСЂРµРјРµРЅРё (РєРѕРіРґР° РѕС‚РєСЂС‹С‚Р° РєР°СЂС‚РѕС‡РєР°)
 if (_supabase) {
     _supabase.channel('public-qa-updates')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'item_questions' }, payload => {
-            // Если сейчас открыта карточка товара и пришло обновление именно по этому товару
+            // Р•СЃР»Рё СЃРµР№С‡Р°СЃ РѕС‚РєСЂС‹С‚Р° РєР°СЂС‚РѕС‡РєР° С‚РѕРІР°СЂР° Рё РїСЂРёС€Р»Рѕ РѕР±РЅРѕРІР»РµРЅРёРµ РёРјРµРЅРЅРѕ РїРѕ СЌС‚РѕРјСѓ С‚РѕРІР°СЂСѓ
             if (currentOpenedItem && payload.new && payload.new.item_id === currentOpenedItem.id) {
-                window.loadItemQuestions(currentOpenedItem.id); // Перерисовываем список вопросов наживую!
+                window.loadItemQuestions(currentOpenedItem.id); // РџРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј СЃРїРёСЃРѕРє РІРѕРїСЂРѕСЃРѕРІ РЅР°Р¶РёРІСѓСЋ!
             }
         })
         .subscribe();
 }
 // ==========================================
-// УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА)
+// РЈРњРќРђРЇ Р’РљР›РђР”РљРђ (Р’РћР—Р’Р РђРў РљР›РР•РќРўРђ)
 // ==========================================
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-        // Юзер ушел на другую вкладку
+        // Р®Р·РµСЂ СѓС€РµР» РЅР° РґСЂСѓРіСѓСЋ РІРєР»Р°РґРєСѓ
         if (cart.length > 0) {
-            document.title = `(${cart.length}) 🛒 Ждем тебя | NISHA`;
+            document.title = `(${cart.length}) рџ›’ Р–РґРµРј С‚РµР±СЏ | NISHA`;
         } else {
             document.title = `Zzz... | NISHA`;
         }
     } else {
-        // Юзер вернулся
+        // Р®Р·РµСЂ РІРµСЂРЅСѓР»СЃСЏ
         if (currentOpenedItem) {
             document.title = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
         } else {
@@ -5502,138 +5504,138 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 // ==========================================
-// PULL-TO-REFRESH (КАК В НАТИВНЫХ ПРИЛОЖЕНИЯХ)
+// PULL-TO-REFRESH (РљРђРљ Р’ РќРђРўРР’РќР«РҐ РџР РР›РћР–Р•РќРРЇРҐ)
 // ==========================================
 let touchStartY = 0;
 document.addEventListener('touchstart', e => {
-    // Работает только если мы в самом верху страницы
+    // Р Р°Р±РѕС‚Р°РµС‚ С‚РѕР»СЊРєРѕ РµСЃР»Рё РјС‹ РІ СЃР°РјРѕРј РІРµСЂС…Сѓ СЃС‚СЂР°РЅРёС†С‹
     if (window.scrollY === 0) touchStartY = e.touches[0].clientY;
 }, { passive: true });
 
 document.addEventListener('touchend', e => {
     if (window.scrollY === 0 && touchStartY > 0) {
         let touchEndY = e.changedTouches[0].clientY;
-        // Если потянули вниз больше чем на 150px
+        // Р•СЃР»Рё РїРѕС‚СЏРЅСѓР»Рё РІРЅРёР· Р±РѕР»СЊС€Рµ С‡РµРј РЅР° 150px
         if (touchEndY - touchStartY > 150) {
-            triggerHaptic('medium'); // Вибрация
-            showToast('ОБНОВЛЕНИЕ БАЗЫ ДАННЫХ...', 'success');
-            loadAllItems(); // Перезагружаем товары из базы без перезагрузки страницы
+            triggerHaptic('medium'); // Р’РёР±СЂР°С†РёСЏ
+            showToast('РћР‘РќРћР’Р›Р•РќРР• Р‘РђР—Р« Р”РђРќРќР«РҐ...', 'success');
+            loadAllItems(); // РџРµСЂРµР·Р°РіСЂСѓР¶Р°РµРј С‚РѕРІР°СЂС‹ РёР· Р±Р°Р·С‹ Р±РµР· РїРµСЂРµР·Р°РіСЂСѓР·РєРё СЃС‚СЂР°РЅРёС†С‹
         }
     }
     touchStartY = 0;
 }, { passive: true });
 // ==========================================
-// ЛОГИКА АНИМАЦИИ ДВОЙНОГО ТАПА
+// Р›РћР“РРљРђ РђРќРРњРђР¦РР Р”Р’РћР™РќРћР“Рћ РўРђРџРђ
 // ==========================================
 window.handleDoubleTapLike = async function(event, itemId, container) {
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
-    // 1. Создаем и показываем звезду
+    // 1. РЎРѕР·РґР°РµРј Рё РїРѕРєР°Р·С‹РІР°РµРј Р·РІРµР·РґСѓ
     const star = document.createElement('div');
     star.className = 'double-tap-star-anim';
-    star.innerText = '★'; 
+    star.innerText = 'в…'; 
     container.appendChild(star);
 
-    // Удаляем элемент после завершения анимации
+    // РЈРґР°Р»СЏРµРј СЌР»РµРјРµРЅС‚ РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ Р°РЅРёРјР°С†РёРё
     setTimeout(() => star.remove(), 800);
     
-    // Включаем жесткую вибрацию телефона
+    // Р’РєР»СЋС‡Р°РµРј Р¶РµСЃС‚РєСѓСЋ РІРёР±СЂР°С†РёСЋ С‚РµР»РµС„РѕРЅР°
     if (typeof triggerHaptic === 'function') triggerHaptic('heavy');
 
-    // 2. Если товар еще не в избранном — добавляем его!
+    // 2. Р•СЃР»Рё С‚РѕРІР°СЂ РµС‰Рµ РЅРµ РІ РёР·Р±СЂР°РЅРЅРѕРј вЂ” РґРѕР±Р°РІР»СЏРµРј РµРіРѕ!
     if (!favorites.includes(itemId)) {
         await toggleFav(null, itemId);
     }
 };
 // ==========================================
-// ФОРМА ПОДДЕРЖКИ (NATIVE MODAL)
+// Р¤РћР РњРђ РџРћР”Р”Р•Р Р–РљР (NATIVE MODAL)
 // ==========================================
 
-// 1. Открытие окна (1 в 1 как остальные модалки)
+// 1. РћС‚РєСЂС‹С‚РёРµ РѕРєРЅР° (1 РІ 1 РєР°Рє РѕСЃС‚Р°Р»СЊРЅС‹Рµ РјРѕРґР°Р»РєРё)
 function openSupportModalWindow() {
     if (typeof lenis !== 'undefined') window.stopLenis();
-    document.getElementById('supportInput').value = ''; // Очищаем поле при открытии
+    document.getElementById('supportInput').value = ''; // РћС‡РёС‰Р°РµРј РїРѕР»Рµ РїСЂРё РѕС‚РєСЂС‹С‚РёРё
     document.getElementById('supportModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
-// 2. БЫСТРАЯ Отправка сообщения (В фоне)
+// 2. Р‘Р«РЎРўР РђРЇ РћС‚РїСЂР°РІРєР° СЃРѕРѕР±С‰РµРЅРёСЏ (Р’ С„РѕРЅРµ)
 async function submitSupportTicket() {
     const input = document.getElementById('supportInput');
     const btn = document.getElementById('btnSubmitSupport');
     const message = input.value.trim();
 
     if (message.length < 5) {
-        showToast('Опиши проблему подробнее (минимум 5 символов)', 'error');
+        showToast('РћРїРёС€Рё РїСЂРѕР±Р»РµРјСѓ РїРѕРґСЂРѕР±РЅРµРµ (РјРёРЅРёРјСѓРј 5 СЃРёРјРІРѕР»РѕРІ)', 'error');
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         return;
     }
 
     btn.style.pointerEvents = 'none';
-    btn.innerText = '[ ОТПРАВКА... ]';
+    btn.innerText = '[ РћРўРџР РђР’РљРђ... ]';
 
     const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message;
-    const userContact = currentUser ? (currentUser.email || currentUser.phone || 'Аноним') : 'Гость';
+    const userContact = currentUser ? (currentUser.email || currentUser.phone || 'РђРЅРѕРЅРёРј') : 'Р“РѕСЃС‚СЊ';
 
-    // 1. Отправляем запрос на сервер и НЕ ЖДЕМ ответа! (Используем .catch для тихой записи ошибок)
+    // 1. РћС‚РїСЂР°РІР»СЏРµРј Р·Р°РїСЂРѕСЃ РЅР° СЃРµСЂРІРµСЂ Рё РќР• Р–Р”Р•Рњ РѕС‚РІРµС‚Р°! (РСЃРїРѕР»СЊР·СѓРµРј .catch РґР»СЏ С‚РёС…РѕР№ Р·Р°РїРёСЃРё РѕС€РёР±РѕРє)
     fetch('https://nisha-api.onrender.com/api/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contact: userContact, message: safeText, clientId: clientFingerprint })
-    }).catch(e => console.log("Фоновая отправка в саппорт не удалась: ", e));
+    }).catch(e => console.log("Р¤РѕРЅРѕРІР°СЏ РѕС‚РїСЂР°РІРєР° РІ СЃР°РїРїРѕСЂС‚ РЅРµ СѓРґР°Р»Р°СЃСЊ: ", e));
 
-    // 2. Моментально показываем успех и закрываем окно!
+    // 2. РњРѕРјРµРЅС‚Р°Р»СЊРЅРѕ РїРѕРєР°Р·С‹РІР°РµРј СѓСЃРїРµС… Рё Р·Р°РєСЂС‹РІР°РµРј РѕРєРЅРѕ!
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
-    showToast('Сообщение успешно доставлено админу!', 'success');
+    showToast('РЎРѕРѕР±С‰РµРЅРёРµ СѓСЃРїРµС€РЅРѕ РґРѕСЃС‚Р°РІР»РµРЅРѕ Р°РґРјРёРЅСѓ!', 'success');
     closeModal('supportModal');
 
-    // 3. Возвращаем кнопку в норму (на всякий случай, если окно откроют снова)
+    // 3. Р’РѕР·РІСЂР°С‰Р°РµРј РєРЅРѕРїРєСѓ РІ РЅРѕСЂРјСѓ (РЅР° РІСЃСЏРєРёР№ СЃР»СѓС‡Р°Р№, РµСЃР»Рё РѕРєРЅРѕ РѕС‚РєСЂРѕСЋС‚ СЃРЅРѕРІР°)
     setTimeout(() => {
         btn.style.pointerEvents = 'auto';
-        btn.innerText = 'ОТПРАВИТЬ СИГНАЛ';
+        btn.innerText = 'РћРўРџР РђР’РРўР¬ РЎРР“РќРђР›';
         input.value = '';
     }, 500);
 }
 // ==========================================
-// УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА)
+// РЈРњРќРђРЇ Р’РљР›РђР”РљРђ (Р’РћР—Р’Р РђРў РљР›РР•РќРўРђ)
 // ==========================================
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-        // Юзер свернул браузер или ушел на другую вкладку
+        // Р®Р·РµСЂ СЃРІРµСЂРЅСѓР» Р±СЂР°СѓР·РµСЂ РёР»Рё СѓС€РµР» РЅР° РґСЂСѓРіСѓСЋ РІРєР»Р°РґРєСѓ
         if (cart.length > 0) {
-            // Если в корзине что-то есть, давим на психику
-            document.title = `(${cart.length}) 🛒 Ждем тебя | NISHA`;
+            // Р•СЃР»Рё РІ РєРѕСЂР·РёРЅРµ С‡С‚Рѕ-С‚Рѕ РµСЃС‚СЊ, РґР°РІРёРј РЅР° РїСЃРёС…РёРєСѓ
+            document.title = `(${cart.length}) рџ›’ Р–РґРµРј С‚РµР±СЏ | NISHA`;
         } else {
-            // Если корзина пустая, просто "засыпаем"
+            // Р•СЃР»Рё РєРѕСЂР·РёРЅР° РїСѓСЃС‚Р°СЏ, РїСЂРѕСЃС‚Рѕ "Р·Р°СЃС‹РїР°РµРј"
             document.title = `Zzz... | NISHA`;
         }
     } else {
-        // Юзер вернулся обратно на наш сайт
+        // Р®Р·РµСЂ РІРµСЂРЅСѓР»СЃСЏ РѕР±СЂР°С‚РЅРѕ РЅР° РЅР°С€ СЃР°Р№С‚
         if (typeof currentOpenedItem !== 'undefined' && currentOpenedItem) {
-            // Если у него открыта карточка товара
+            // Р•СЃР»Рё Сѓ РЅРµРіРѕ РѕС‚РєСЂС‹С‚Р° РєР°СЂС‚РѕС‡РєР° С‚РѕРІР°СЂР°
             document.title = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
         } else {
-            // Если он просто в ленте
+            // Р•СЃР»Рё РѕРЅ РїСЂРѕСЃС‚Рѕ РІ Р»РµРЅС‚Рµ
             document.title = 'NISHA | Underground Store';
         }
     }
 });
 
-// --- ЖИВОЙ СЧЕТЧИК СИМВОЛОВ ДЛЯ ПРЕДЛОЖКИ (ОБРАТНЫЙ ОТСЧЕТ) ---
+// --- Р–РР’РћР™ РЎР§Р•РўР§РРљ РЎРРњР’РћР›РћР’ Р”Р›РЇ РџР Р•Р”Р›РћР–РљР (РћР‘Р РђРўРќР«Р™ РћРўРЎР§Р•Рў) ---
 function updateCharCount(textarea) {
     const label = document.getElementById('descLabel');
     if (!label) return;
     
-    // Считаем сколько осталось символов
+    // РЎС‡РёС‚Р°РµРј СЃРєРѕР»СЊРєРѕ РѕСЃС‚Р°Р»РѕСЃСЊ СЃРёРјРІРѕР»РѕРІ
     const remaining = 250 - textarea.value.length;
     
-    // Берем оригинальный текст перевода (для любого языка)
-    let originalText = i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' });
+    // Р‘РµСЂРµРј РѕСЂРёРіРёРЅР°Р»СЊРЅС‹Р№ С‚РµРєСЃС‚ РїРµСЂРµРІРѕРґР° (РґР»СЏ Р»СЋР±РѕРіРѕ СЏР·С‹РєР°)
+    let originalText = i18next.t('propose.desc_label', { defaultValue: 'РћРџРРЎРђРќРР• Р Р”Р•Р¤Р•РљРўР« (Р”Рћ 250 РЎРРњР’РћР›РћР’):' });
     
-    // Просто заменяем число 250 на остаток
+    // РџСЂРѕСЃС‚Рѕ Р·Р°РјРµРЅСЏРµРј С‡РёСЃР»Рѕ 250 РЅР° РѕСЃС‚Р°С‚РѕРє
     label.innerText = originalText.replace('250', remaining);
     
-    // Красим в красный, если лимит исчерпан
+    // РљСЂР°СЃРёРј РІ РєСЂР°СЃРЅС‹Р№, РµСЃР»Рё Р»РёРјРёС‚ РёСЃС‡РµСЂРїР°РЅ
     if (remaining <= 0) {
         label.style.color = 'var(--accent-red)';
     } else {
@@ -5642,29 +5644,29 @@ function updateCharCount(textarea) {
 }
 
 // ==========================================
-// ПЕРЕХОД К СЛЕДУЮЩЕМУ ПОЛЮ ПО НАЖАТИЮ ENTER (ДЛЯ ПК)
+// РџР•Р Р•РҐРћР” Рљ РЎР›Р•Р”РЈР®Р©Р•РњРЈ РџРћР›Р® РџРћ РќРђР–РђРўРР® ENTER (Р”Р›РЇ РџРљ)
 // ==========================================
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         const activeEl = document.activeElement;
 
-        // Если мы печатаем в Textarea (например, в описании), Enter должен делать перенос строки. Не трогаем!
+        // Р•СЃР»Рё РјС‹ РїРµС‡Р°С‚Р°РµРј РІ Textarea (РЅР°РїСЂРёРјРµСЂ, РІ РѕРїРёСЃР°РЅРёРё), Enter РґРѕР»Р¶РµРЅ РґРµР»Р°С‚СЊ РїРµСЂРµРЅРѕСЃ СЃС‚СЂРѕРєРё. РќРµ С‚СЂРѕРіР°РµРј!
         if (activeEl.tagName === 'TEXTAREA') return;
 
-        // Если фокус на обычном поле ввода (input)
+        // Р•СЃР»Рё С„РѕРєСѓСЃ РЅР° РѕР±С‹С‡РЅРѕРј РїРѕР»Рµ РІРІРѕРґР° (input)
         if (activeEl.tagName === 'INPUT') {
-            e.preventDefault(); // Блокируем случайную отправку или перезагрузку страницы
+            e.preventDefault(); // Р‘Р»РѕРєРёСЂСѓРµРј СЃР»СѓС‡Р°Р№РЅСѓСЋ РѕС‚РїСЂР°РІРєСѓ РёР»Рё РїРµСЂРµР·Р°РіСЂСѓР·РєСѓ СЃС‚СЂР°РЅРёС†С‹
 
-            // Находим родительский блок формы, в которой мы сейчас находимся (Окно предложки, авторизация, корзина)
+            // РќР°С…РѕРґРёРј СЂРѕРґРёС‚РµР»СЊСЃРєРёР№ Р±Р»РѕРє С„РѕСЂРјС‹, РІ РєРѕС‚РѕСЂРѕР№ РјС‹ СЃРµР№С‡Р°СЃ РЅР°С…РѕРґРёРјСЃСЏ (РћРєРЅРѕ РїСЂРµРґР»РѕР¶РєРё, Р°РІС‚РѕСЂРёР·Р°С†РёСЏ, РєРѕСЂР·РёРЅР°)
             const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields');
             
             if (form) {
-                // Собираем все видимые поля ввода и кнопки в этой форме по порядку
+                // РЎРѕР±РёСЂР°РµРј РІСЃРµ РІРёРґРёРјС‹Рµ РїРѕР»СЏ РІРІРѕРґР° Рё РєРЅРѕРїРєРё РІ СЌС‚РѕР№ С„РѕСЂРјРµ РїРѕ РїРѕСЂСЏРґРєСѓ
                 const focusables = Array.from(form.querySelectorAll('input:not([type="hidden"]):not([style*="display: none"]):not([disabled]), textarea, button:not([style*="display: none"]):not([disabled])'));
                 
                 const currentIndex = focusables.indexOf(activeEl);
                 
-                // Если мы нашли текущее поле и оно не последнее в списке — прыгаем на следующее!
+                // Р•СЃР»Рё РјС‹ РЅР°С€Р»Рё С‚РµРєСѓС‰РµРµ РїРѕР»Рµ Рё РѕРЅРѕ РЅРµ РїРѕСЃР»РµРґРЅРµРµ РІ СЃРїРёСЃРєРµ вЂ” РїСЂС‹РіР°РµРј РЅР° СЃР»РµРґСѓСЋС‰РµРµ!
                 if (currentIndex > -1 && currentIndex < focusables.length - 1) {
                     focusables[currentIndex + 1].focus();
                 }
@@ -5687,7 +5689,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ==========================================
-// СЛАЙДЕР ОТЗЫВОВ (ПРОКРУТКА)
+// РЎР›РђР™Р”Р•Р  РћРўР—Р«Р’РћР’ (РџР РћРљР РЈРўРљРђ)
 // ==========================================
 window.scrollReviews = function(direction) {
     const slider = document.getElementById('reviewsContainerList');
@@ -5707,7 +5709,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// WEB PUSH ПОДПИСКА
+// WEB PUSH РџРћР”РџРРЎРљРђ
 // ==========================================
 let pushPrompted = false;
 async function subscribeUserToPush(registration, silent = false) {
@@ -5758,20 +5760,20 @@ async function subscribeUserToPush(registration, silent = false) {
 document.addEventListener('click', (e) => {
     if (pushPrompted) return;
     
-    // 1. Игнорируем, если открыто любое модальное окно (Товар, Корзина, Оформление и тд)
+    // 1. РРіРЅРѕСЂРёСЂСѓРµРј, РµСЃР»Рё РѕС‚РєСЂС‹С‚Рѕ Р»СЋР±РѕРµ РјРѕРґР°Р»СЊРЅРѕРµ РѕРєРЅРѕ (РўРѕРІР°СЂ, РљРѕСЂР·РёРЅР°, РћС„РѕСЂРјР»РµРЅРёРµ Рё С‚Рґ)
     const isModalOpen = Array.from(document.querySelectorAll('[id$="Modal"], .modal-overlay, #cartSidebar')).some(m => {
         const style = window.getComputedStyle(m);
         return style.display === 'flex' || style.display === 'block' || m.classList.contains('active');
     });
     if (isModalOpen) return;
     
-    // 2. Игнорируем клик по карточке товара (чтобы не перебивать открытие товара)
+    // 2. РРіРЅРѕСЂРёСЂСѓРµРј РєР»РёРє РїРѕ РєР°СЂС‚РѕС‡РєРµ С‚РѕРІР°СЂР° (С‡С‚РѕР±С‹ РЅРµ РїРµСЂРµР±РёРІР°С‚СЊ РѕС‚РєСЂС‹С‚РёРµ С‚РѕРІР°СЂР°)
     if (e.target.closest('.item-card')) return;
 
-    // 3. Игнорируем клики по нижнему навигатору/корзине
+    // 3. РРіРЅРѕСЂРёСЂСѓРµРј РєР»РёРєРё РїРѕ РЅРёР¶РЅРµРјСѓ РЅР°РІРёРіР°С‚РѕСЂСѓ/РєРѕСЂР·РёРЅРµ
     if (e.target.closest('.bottom-nav, #cartBtn, #profileBtn')) return;
 
-    // Если всё чисто — мы в ленте товаров, и клик был по безопасному элементу (фильтр, лого, фон)
+    // Р•СЃР»Рё РІСЃС‘ С‡РёСЃС‚Рѕ вЂ” РјС‹ РІ Р»РµРЅС‚Рµ С‚РѕРІР°СЂРѕРІ, Рё РєР»РёРє Р±С‹Р» РїРѕ Р±РµР·РѕРїР°СЃРЅРѕРјСѓ СЌР»РµРјРµРЅС‚Сѓ (С„РёР»СЊС‚СЂ, Р»РѕРіРѕ, С„РѕРЅ)
     pushPrompted = true;
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(reg => {
@@ -5779,16 +5781,16 @@ document.addEventListener('click', (e) => {
         });
     }
 });
-// ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ БЕЙДЖИКОВ НА КАРТОЧКЕ
+// Р”РРќРђРњРР§Р•РЎРљРћР• РћР‘РќРћР’Р›Р•РќРР• Р‘Р•Р™Р”Р–РРљРћР’ РќРђ РљРђР РўРћР§РљР•
 window.updateCardDOM = function(item) {
     const cards = document.querySelectorAll(`.item-card[data-id="${item.id}"]`);
     cards.forEach(card => {
-        // Очищаем старые бейджи статуса
+        // РћС‡РёС‰Р°РµРј СЃС‚Р°СЂС‹Рµ Р±РµР№РґР¶Рё СЃС‚Р°С‚СѓСЃР°
         const oldBadges = card.querySelectorAll('.sold-badge, .reserved-badge, .system-status-bar');
         oldBadges.forEach(b => b.remove());
         card.classList.remove('sold-out', 'reserved-item');
 
-        // Добавляем новые бейджи SOLD / RESERVED
+        // Р”РѕР±Р°РІР»СЏРµРј РЅРѕРІС‹Рµ Р±РµР№РґР¶Рё SOLD / RESERVED
         if (item.status === 'sold') {
             card.classList.add('sold-out');
             card.insertAdjacentHTML('afterbegin', '<div class="sold-badge">SOLD</div>');
@@ -5796,7 +5798,7 @@ window.updateCardDOM = function(item) {
             card.classList.add('reserved-item');
             card.insertAdjacentHTML('afterbegin', '<div class="reserved-badge">RESERVED</div>');
         } else {
-            // Для доступных товаров - генерируем систему SALE / HOT / TOP
+            // Р”Р»СЏ РґРѕСЃС‚СѓРїРЅС‹С… С‚РѕРІР°СЂРѕРІ - РіРµРЅРµСЂРёСЂСѓРµРј СЃРёСЃС‚РµРјСѓ SALE / HOT / TOP
             const hasSale = item.is_sale;
             const hasHot = (item.views_count || 0) >= 25;
             const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > Date.now();
@@ -5819,7 +5821,7 @@ window.updateCardDOM = function(item) {
             }
         }
         
-        // Обновляем цену динамически
+        // РћР±РЅРѕРІР»СЏРµРј С†РµРЅСѓ РґРёРЅР°РјРёС‡РµСЃРєРё
         const priceDiv = card.querySelector('.price-container');
         if (priceDiv) {
             const curr = getCurrency();

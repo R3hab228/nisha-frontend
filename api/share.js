@@ -22,8 +22,9 @@ module.exports = async function handler(req, res) {
       return res.redirect('/?item=' + id);
     }
 
-    const title = 'NISHA | ' + (item.brand || '') + ' ' + (item.name || '');
-    const description = 'Цена: ' + item.price + ' грн.';
+    const escapeHTML = (str) => String(str).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const title = escapeHTML('NISHA | ' + (item.brand || '') + ' ' + (item.name || ''));
+    const description = escapeHTML('Цена: ' + item.price + ' грн.');
     
     let imageUrl = 'https://i.ibb.co/3s6HhXz/icon.ico';
     let videoUrl = '';
@@ -31,12 +32,12 @@ module.exports = async function handler(req, res) {
     if (item.images && item.images.length > 0) {
       const photo = item.images[0];
       if (photo.endsWith('.mp4')) {
-          videoUrl = photo;
+          videoUrl = escapeHTML(photo);
           if (item.thumbnails && item.thumbnails.length > 0 && item.thumbnails[0]) {
-              imageUrl = item.thumbnails[0];
+              imageUrl = escapeHTML(item.thumbnails[0]);
           }
       } else {
-          imageUrl = photo;
+          imageUrl = escapeHTML(photo);
       }
     }
 
