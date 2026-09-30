@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
 '<meta property="og:image" content="' + imageUrl + '">\n' +
 '<meta property="og:url" content="https://www.nisha-store.shop/share/' + id + '">\n' +
 videoTags + '\n' +
-'<meta name="twitter:card" content="summary_large_image">\n' +
+'<meta name="twitter:card" content="summary">\n' +
 '</head>\n' +
 '<body>\n' +
 '<script>window.location.replace("/?item=' + id + '");</script>\n' +
