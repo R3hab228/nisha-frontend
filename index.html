@@ -93,9 +93,9 @@
 <input class=search-input id=mainSearch autocomplete=off autocorrect=off spellcheck=false placeholder="Поиск вещи..." oninput=handleLiveSearch() style=width:100%;padding-right:40px>
 </form>
 <span id=clearSearchBtn class=clear-search-btn onclick=clearSearchInput()>✖</span>
-<div id=liveSearchDropdown class=live-search-dropdown></div>
+<div id=liveSearchDropdown class=live-search-dropdown data-lenis-prevent></div>
 </div>
-<button class="search-btn btn-target" onclick='saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),document.getElementById("liveSearchDropdown").style.display="none"' data-i18n=search.btn>Искать</button>
+<button class="search-btn btn-target" onclick='saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),closeSearch()' data-i18n=search.btn>Искать</button>
 </div>
 <div class=main-container>
 <aside class=sidebar>
@@ -618,6 +618,7 @@
 </div>
 </body>
 </html>
+
 
 
 

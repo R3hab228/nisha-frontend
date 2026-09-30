@@ -445,7 +445,7 @@ function acceptRules() {
     setTimeout(startOnboardingTour, 400); 
 }
 window.onload = async () => {
-    document.body.classList.remove('search-lock');
+    document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
 
     try {
         try {
@@ -2110,6 +2110,7 @@ function clearSearchInput() {
     if (input) input.value = '';
     document.getElementById('clearSearchBtn').style.display = 'none';
     document.getElementById('liveSearchDropdown').style.display = 'none';
+    document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
     applyFilters();
 }
 
@@ -4189,7 +4190,7 @@ function showSearchHistory() {
     let history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
     if (history.length === 0) return;
 
-    let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); document.getElementById('liveSearchDropdown').style.display='none'; event.stopPropagation();">[ ОЧИСТИТЬ ]</span></div>`;
+    let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); closeSearch(); event.stopPropagation();">[ ОЧИСТИТЬ ]</span></div>`;
     history.forEach(term => {
         const safeTerm = term.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         html += `<div class="search-history-item" onclick="document.getElementById('mainSearch').value='${safeTerm}'; handleLiveSearch();">
@@ -4198,7 +4199,7 @@ function showSearchHistory() {
     });
     dropdown.innerHTML = html;
     dropdown.style.display = 'block';
-    document.body.classList.add('search-lock');
+    document.body.classList.add('search-lock'); if (typeof window.stopLenis === 'function') window.stopLenis();
 }
 
 function handleLiveSearch() {
@@ -4216,7 +4217,7 @@ function handleLiveSearch() {
     if (searchTerm.length < 2) {
         // ФИКС: Просто прячем подсказки, но НЕ УБИВАЕМ фокус клавиатуры!
         if (dropdown) dropdown.style.display = 'none';
-        document.body.classList.remove('search-lock');
+        document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
         return; 
     }
 
@@ -4237,7 +4238,7 @@ function handleLiveSearch() {
 
         dropdown.innerHTML = '';
         if (results.length > 0) {
-            document.body.classList.add('search-lock');
+            document.body.classList.add('search-lock'); if (typeof window.stopLenis === 'function') window.stopLenis();
             
             results.forEach(result => {
                 const item = result.item;
@@ -4279,7 +4280,7 @@ function handleLiveSearch() {
         } else {
             dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
             dropdown.style.display = 'block';
-            document.body.classList.remove('search-lock');
+            document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
         }
         
         // ВАЖНО: Мы удалили отсюда applyFilters()!
@@ -4291,7 +4292,7 @@ function closeSearch() {
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
     if (dropdown) dropdown.style.display = 'none';
-    document.body.classList.remove('search-lock');
+    document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
     if (searchInput) searchInput.blur(); // Принудительно прячем клавиатуру
 }
 
