@@ -4196,8 +4196,9 @@ function showSearchHistory() {
 
     let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); document.getElementById('liveSearchDropdown').style.display='none'; event.stopPropagation();">[ ОЧИСТИТЬ ]</span></div>`;
     history.forEach(term => {
-        html += `<div class="search-history-item" onclick="document.getElementById('mainSearch').value='${term}'; handleLiveSearch();">
-                    <span>> ${term}</span>
+        const safeTerm = term.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        html += `<div class="search-history-item" onclick="document.getElementById('mainSearch').value='${safeTerm}'; handleLiveSearch();">
+                    <span>> ${safeTerm}</span>
                  </div>`;
     });
     dropdown.innerHTML = html;
@@ -5792,6 +5793,7 @@ window.updateCardDOM = function(item) {
         }
     });
 };
+
 
 
 
