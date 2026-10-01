@@ -1,4 +1,4 @@
-﻿// --- VIBRATION HELPER ---
+// --- VIBRATION HELPER ---
 window.triggerVibration = function(duration = 150) {
     if ('vibrate' in navigator) {
         try { navigator.vibrate(duration); } catch(e){}
@@ -4956,15 +4956,11 @@ async function submitProposal() {
 
     try {
         // ЭТАП 1: ПРОСТОЕ СЖАТИЕ ФОТО
-        let compressedFiles = [];
-        for (let i = 0; i < files.length; i++) {
-            btn.innerText = `[ СЖАТИЕ ФОТО: ${i + 1}/${files.length} ]`;
-            await new Promise(r => setTimeout(r, 100)); 
-            const compressed = await compressImage(files[i]);
-            compressedFiles.push(compressed);
-        }
-
-        // ЭТАП 2: ОТПРАВКА НАПРЯМУЮ БЕЗ КОНВЕРТАЦИИ
+        // Шаг 1: Параллельное сжатие фото
+        btn.innerText = '[ Сжатие фото... ]';
+        const compressPromises = files.map(f => compressImage(f));
+        const compressedFiles = await Promise.all(compressPromises);
+        
         btn.innerText = '[ ПЕРЕДАЧА НА СЕРВЕР... ]';
         
         // Создаем пакет данных (FormData)
