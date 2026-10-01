@@ -1,5 +1,5 @@
 ﻿// --- VIBRATION HELPER ---
-window.triggerVibration = function(duration = 50) {
+window.triggerVibration = function(duration = 150) {
     if ('vibrate' in navigator) {
         try { navigator.vibrate(duration); } catch(e){}
     }
@@ -2172,7 +2172,7 @@ async function loadFavorites() {
 let isToggling = false; // Защита от двойного клика на телефоне
 
 async function toggleFav(event, itemId) {
-    window.triggerVibration(50);
+    window.triggerVibration(150);
     if (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -2947,7 +2947,7 @@ async function openCheckoutModal() {
 }
 
 async function submitOrder() {
-    window.triggerVibration(50);
+    window.triggerVibration(150);
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== "") return;
 
@@ -5542,7 +5542,7 @@ document.addEventListener('touchend', e => {
 // ЛОГИКА АНИМАЦИИ ДВОЙНОГО ТАПА
 // ==========================================
 window.handleDoubleTapLike = async function(event, itemId, container) {
-    window.triggerVibration(50);
+    window.triggerVibration(150);
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
     // 1. Создаем и показываем звезду
