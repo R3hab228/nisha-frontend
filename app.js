@@ -4958,7 +4958,7 @@ async function submitProposal() {
         // ЭТАП 1: ПРОСТОЕ СЖАТИЕ ФОТО
         let compressedFiles = [];
         for (let i = 0; i < files.length; i++) {
-            btn.innerText = [ СЖАТИЕ ФОТО: / ];
+            btn.innerText = `[ СЖАТИЕ ФОТО: ${i + 1}/${files.length} ]`;
             // Убрали искусственную задержку 100мс!
             const compressed = await compressImage(files[i]);
             compressedFiles.push(compressed);
