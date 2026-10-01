@@ -1,4 +1,4 @@
-﻿// --- VIBRATION HELPER ---
+// --- VIBRATION HELPER ---
 window.triggerVibration = function(duration = 150) {
     if ('vibrate' in navigator) {
         try { navigator.vibrate(duration); } catch(e){}
@@ -4986,21 +4986,18 @@ async function submitProposal() {
         // Отправляем на сервер в фоне
                 // Ждем ответа от сервера!
         btn.innerText = '[ ЗАГРУЗКА... ]';
-        const response = await fetch('https://nisha-api.onrender.com/api/propose-files', {
+        btn.innerText = '[ Отправка... ]';
+        fetch('https://nisha-api.onrender.com/api/propose-files', {
             method: 'POST',
             body: formData
-        });
+        }).catch(e => console.error('Background upload failed', e));
         
-        if (!response.ok) {
-            throw new Error('Сервер недоступен (Render просыпается). Попробуйте еще раз через 10 секунд.');
-        }
-
-        resetProposalForm(); 
-        executeCloseModal('proposeModal'); 
+        resetProposalForm();
+        executeCloseModal('proposeModal');
         
         setTimeout(() => {
             showTerminalModal('SYSTEM_OK.LOG', 'Заявка успешно отправлена.', '[ ЗАКРЫТЬ ]', null);
-            btn.innerText = '[ ПРЕДЛОЖИТЬ ]';
+            btn.innerText = '[ ОТПРАВИТЬ ]';
             btn.style.pointerEvents = 'auto';
             btn.style.opacity = '1';
         }, 300);
