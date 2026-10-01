@@ -1,4 +1,4 @@
-﻿// --- VIBRATION HELPER ---
+// --- VIBRATION HELPER ---
 window.triggerVibration = function(duration = 150) {
     if ('vibrate' in navigator) {
         try { navigator.vibrate(duration); } catch(e){}
@@ -4958,16 +4958,14 @@ async function submitProposal() {
         // ЭТАП 1: ПРОСТОЕ СЖАТИЕ ФОТО
         let compressedFiles = [];
         for (let i = 0; i < files.length; i++) {
-            btn.innerText = `[ СЖАТИЕ ФОТО: ${i + 1}/${files.length} ]`;
-            await new Promise(r => setTimeout(r, 100)); 
+            btn.innerText = [ СЖАТИЕ ФОТО: / ];
+            // Убрали искусственную задержку 100мс!
             const compressed = await compressImage(files[i]);
             compressedFiles.push(compressed);
         }
-
-        // ЭТАП 2: ОТПРАВКА НАПРЯМУЮ БЕЗ КОНВЕРТАЦИИ
+        
         btn.innerText = '[ ПЕРЕДАЧА НА СЕРВЕР... ]';
         
-        // Создаем пакет данных (FormData)
         const formData = new FormData();
         formData.append('name', nameItem);
         formData.append('brand', brand);
@@ -4976,34 +4974,29 @@ async function submitProposal() {
         formData.append('price', price);
         formData.append('description', desc);
         formData.append('contact', contact);
-        formData.append('clientId', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint); // Добавили ID клиента!
+        formData.append('clientId', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint);
         
-        // Кладем туда файлы как они есть!
         compressedFiles.forEach((file, index) => {
             formData.append('images', file, `prop_${index}.jpg`);
         });
-
-        // Отправляем на сервер в фоне
-                // Ждем ответа от сервера!
-        btn.innerText = '[ ЗАГРУЗКА... ]';
-        const response = await fetch('https://nisha-api.onrender.com/api/propose-files', {
+        
+        // Фоновая отправка!
+        fetch('https://nisha-api.onrender.com/api/propose-files', {
             method: 'POST',
             body: formData
-        });
+        }).then(res => {
+            if (!res.ok) console.error('Server returned error', res.status);
+        }).catch(e => console.error('Background upload failed', e));
         
-        if (!response.ok) {
-            throw new Error('Сервер недоступен (Render просыпается). Попробуйте еще раз через 10 секунд.');
-        }
-
-        resetProposalForm(); 
-        executeCloseModal('proposeModal'); 
+        resetProposalForm();
+        executeCloseModal('proposeModal');
         
         setTimeout(() => {
             showTerminalModal('SYSTEM_OK.LOG', 'Заявка успешно отправлена.', '[ ЗАКРЫТЬ ]', null);
             btn.innerText = '[ ПРЕДЛОЖИТЬ ]';
             btn.style.pointerEvents = 'auto';
             btn.style.opacity = '1';
-        }, 300);
+        }, 100);
 
     } catch (err) {
         console.error(err);
