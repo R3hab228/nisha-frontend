@@ -5542,6 +5542,7 @@ document.addEventListener('touchend', e => {
 // ЛОГИКА АНИМАЦИИ ДВОЙНОГО ТАПА
 // ==========================================
 window.handleDoubleTapLike = async function(event, itemId, container) {
+    window.triggerVibration(50);
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
     // 1. Создаем и показываем звезду
