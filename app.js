@@ -1,4 +1,11 @@
-﻿// ==========================================
+﻿// --- VIBRATION HELPER ---
+window.triggerVibration = function(duration = 50) {
+    if ('vibrate' in navigator) {
+        try { navigator.vibrate(duration); } catch(e){}
+    }
+};
+
+// ==========================================
 // HAPTIC FEEDBACK (ТАКТИЛЬНАЯ ОТДАЧА ДЛЯ ТЕЛЕФОНОВ)
 // ==========================================
 function triggerHaptic(type = 'light') {
@@ -2165,6 +2172,7 @@ async function loadFavorites() {
 let isToggling = false; // Защита от двойного клика на телефоне
 
 async function toggleFav(event, itemId) {
+    window.triggerVibration(50);
     if (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -2939,6 +2947,7 @@ async function openCheckoutModal() {
 }
 
 async function submitOrder() {
+    window.triggerVibration(50);
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== "") return;
 
