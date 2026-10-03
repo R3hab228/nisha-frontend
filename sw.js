@@ -85,7 +85,7 @@ self.addEventListener('fetch', event => {
                         const responseToCache = networkResponse.clone();
                         caches.open(IMAGE_CACHE).then(cache => {
                             cache.put(event.request, responseToCache).then(() => {
-                                trimCache(IMAGE_CACHE, 50); // Лимитируем до 50 штук
+                                trimCache(IMAGE_CACHE, 500); // Лимитируем до 50 штук
                             });
                         });
                     }
