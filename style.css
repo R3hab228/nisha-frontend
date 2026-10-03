@@ -1,4 +1,4 @@
-﻿:root {
+:root {
     --bg-main: #000000;
     --bg-panel: #111111;
     --bg-card: #0a0a0a;
@@ -30,7 +30,7 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border-light); border: 1px solid #222; cursor: pointer; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent-green); }
 
-.wrapper { width: 100%; min-height: 100vh; display: flex; flex-direction: column; background-color: rgba(17, 17, 17, 0.85); position: relative; z-index: 1;}
+.wrapper { width: 100%; max-width: 1400px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background-color: rgba(17, 17, 17, 0.85); position: relative; z-index: 1; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
 
 header { background: linear-gradient(to bottom, #002244, #000a1a); border-bottom: 2px solid var(--border-light); border-style: inset; }
 .header-top { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; }
@@ -976,4 +976,7 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
 }
 
 
+
+
+@media (min-width: 901px) { body { zoom: 0.9; } }
 
