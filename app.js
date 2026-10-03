@@ -3432,35 +3432,7 @@ function openProductModal(item) {
     if (typeof lenis !== 'undefined') window.stopLenis();
     document.title = `NISHA | ${item.brand} - ${item.name}`;
     
-    // SEO Microdata Injection
-    let schemaScript = document.getElementById('product-schema');
-    if (!schemaScript) {
-        schemaScript = document.createElement('script');
-        schemaScript.type = 'application/ld+json';
-        schemaScript.id = 'product-schema';
-        document.head.appendChild(schemaScript);
-    }
-    const schemaData = {
-        "@context": "https://schema.org/",
-        "@type": "Product",
-        "name": item.name,
-        "image": item.images && item.images.length > 0 ? window.toCDN(item.images[0]) : "",
-        "description": item.description ? item.description.replace(/\n/g, ' ') : "Винтажная вещь из магазина NISHA",
-        "brand": {
-            "@type": "Brand",
-            "name": item.brand || "NISHA"
-        },
-        "offers": {
-            "@type": "Offer",
-            "url": window.location.href,
-            "priceCurrency": "UAH",
-            "price": item.price,
-            "availability": item.status === 'sold' ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
-            "itemCondition": "https://schema.org/UsedCondition"
-        }
-    };
-    schemaScript.textContent = JSON.stringify(schemaData);
-    
+
     document.getElementById('modalItemTitle').innerText = item.name;
     
     if (window.ttq) {
