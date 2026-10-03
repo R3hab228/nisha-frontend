@@ -2004,6 +2004,14 @@ async function addToCartById(itemId) {
     }
     cart.push(cartItem);
     
+    if (window.ttq) {
+        ttq.track('AddToCart', {
+            contents: [{ content_id: cartItem.id, content_name: cartItem.name }],
+            value: cartItem.price,
+            currency: 'UAH'
+        });
+    }
+    
     localStorage.setItem('nisha_cart', JSON.stringify(cart));
     await syncCartToServer();
     
@@ -3080,6 +3088,15 @@ async function executeOrderFinal(emailToSave) {
 
         if (orderError) throw orderError; 
 
+        if (window.ttq) {
+            let totalValue = cart.reduce((sum, i) => sum + (i.price || 0), 0);
+            ttq.track('CompletePayment', {
+                contents: cart.map(i => ({ content_id: i.id, content_name: i.name })),
+                value: totalValue,
+                currency: 'UAH'
+            });
+        }
+
         // УСПЕШНЫЙ ЗАКАЗ
         localStorage.setItem('nisha_last_phone', phone);
         localStorage.setItem('nisha_last_order', Date.now());
@@ -3416,6 +3433,15 @@ function openProductModal(item) {
     document.title = `NISHA | ${item.brand} - ${item.name}`;
     
     document.getElementById('modalItemTitle').innerText = item.name;
+    
+    if (window.ttq) {
+        ttq.track('ViewContent', {
+            content_id: item.id,
+            content_name: item.name,
+            value: item.price,
+            currency: 'UAH'
+        });
+    }
     // Красим звездочку в модалке, если товар уже в избранном
     const modalStar = document.getElementById('modalFavStar');
     if (modalStar) {
