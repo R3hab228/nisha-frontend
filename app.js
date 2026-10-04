@@ -1,4 +1,4 @@
-﻿// --- VIBRATION HELPER ---
+// --- VIBRATION HELPER ---
 window.triggerVibration = function(duration = 150) {
     if ('vibrate' in navigator) {
         try { navigator.vibrate(duration); } catch(e){}
@@ -473,29 +473,28 @@ window.onload = async () => {
             }
 
             // Дожим через системный PUSH + Фоновое обновление при возвращении из других приложух
+            let cartAbandonTimeout;
             document.addEventListener("visibilitychange", async () => {
                 if (document.hidden) {
-                    // Юзер свернул сайт (ушел в TikTok)
                     if (cart.length > 0) {
-                        if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-                            navigator.serviceWorker.ready.then(reg => {
-                                reg.showNotification("NISHA STORE", {
-                                    body: "Ваша корзина ждет! Оформляйте, пока не забрали.",
-                                    icon: '/icon-192.png',
-                                    badge: '/badge.png',
-                                    vibrate: [200, 100, 200],
-                                    data: { url: '/' }
+                        cartAbandonTimeout = setTimeout(() => {
+                            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                                navigator.serviceWorker.ready.then(reg => {
+                                    reg.showNotification("NISHA STORE", {
+                                        body: "Твои товары все еще ждут в корзине! Оформи, пока их не забрали.",
+                                        icon: '/icon-192.png',
+                                        badge: '/badge.png',
+                                        vibrate: [200, 100, 200],
+                                        data: { url: '/' }
+                                    });
                                 });
-                            });
-                        }
+                            }
+                        }, 10 * 60 * 1000);
                     }
                 } else {
-                    // ЮЗЕР ВЕРНУЛСЯ НА САЙТ!
+                    if (cartAbandonTimeout) clearTimeout(cartAbandonTimeout);
                     if (_supabase) {
-                        // ЖЕСТКОЕ ВОССТАНОВЛЕНИЕ СЕССИИ (чтобы не разлогинивало после глубокого сна браузера)
                         await checkSession();
-                        
-                        // Только после проверки сессии тихо обновляем базу товаров
                         if (allItems.length > 0) {
                             loadAllItems(); 
                         }
