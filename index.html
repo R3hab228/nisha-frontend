@@ -441,11 +441,31 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         <span id="paymentSelectedText">Полная предоплата</span>
         <span style="color:#666; font-size:10px;">▼</span>
     </div>
-    <div id="paymentDropdown" class="custom-dropdown" style="display:none; position:absolute; width:100%; z-index:200; border-top:1px solid var(--accent-green);">
-        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" onclick="document.getElementById('paymentSelectedText').innerText=this.innerText; document.getElementById('orderPaymentMethod').value=this.innerText; document.getElementById('paymentDropdown').style.display='none';">Полная предоплата</div>
-        <div style="padding:12px; cursor:pointer;" onclick="document.getElementById('paymentSelectedText').innerText=this.innerText; document.getElementById('orderPaymentMethod').value=this.innerText; document.getElementById('paymentDropdown').style.display='none';">Наложка (предоплата 200грн)</div>
+    <div id="paymentDropdown" class="custom-dropdown" style="display:none; position:absolute; width:100%; z-index:200; border-top:1px solid var(--accent-green); opacity:0; visibility:hidden; transform:translateY(-5px); transition:all 0.2s ease;">
+        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" onclick="document.getElementById('paymentSelectedText').innerText=this.innerText; document.getElementById('orderPaymentMethod').value=this.innerText; togglePaymentDropdown();">Полная предоплата</div>
+        <div style="padding:12px; cursor:pointer;" onclick="document.getElementById('paymentSelectedText').innerText=this.innerText; document.getElementById('orderPaymentMethod').value=this.innerText; togglePaymentDropdown();">Наложка (предоплата 200грн)</div>
     </div>
     <input type="hidden" id="orderPaymentMethod" value="Полная предоплата">
+<script>
+function togglePaymentDropdown() {
+    const pd = document.getElementById('paymentDropdown');
+    if (pd.style.opacity === '1') {
+        pd.style.opacity = '0';
+        pd.style.visibility = 'hidden';
+        pd.style.transform = 'translateY(-5px)';
+        setTimeout(() => { pd.style.display = 'none'; }, 200);
+    } else {
+        pd.style.display = 'block';
+        setTimeout(() => {
+            pd.style.opacity = '1';
+            pd.style.visibility = 'visible';
+            pd.style.transform = 'translateY(0)';
+        }, 10);
+    }
+}
+document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
+// update the onclick of options to use togglePaymentDropdown
+</script>
 </div>
 <label style=margin-top:10px data-i18n=checkout.promo>Промокод (если есть):</label>
 <div class=promo-wrapper>
