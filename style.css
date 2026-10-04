@@ -1,4 +1,4 @@
-﻿:root {
+:root {
     --bg-main: #000000;
     --bg-panel: #111111;
     --bg-card: #0a0a0a;
@@ -974,6 +974,9 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
     0% { opacity: 0; transform: translateY(-10px); }
     100% { opacity: 1; transform: translateY(0); }
 }
+
+
+
 
 
 
