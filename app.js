@@ -1,4 +1,4 @@
-// --- VIBRATION HELPER ---
+﻿// --- VIBRATION HELPER ---
 window.triggerVibration = function(duration = 150) {
     if ('vibrate' in navigator) {
         try { navigator.vibrate(duration); } catch(e){}
@@ -3057,6 +3057,8 @@ async function executeOrderFinal(emailToSave) {
     const phone = phoneRaw.replace(/[^\d+]/g, '');
     const city = document.getElementById('orderCity').value.trim();
     const branch = document.getElementById('orderBranch').value.trim();
+    const paymentMethod = document.getElementById('orderPaymentMethod') ? document.getElementById('orderPaymentMethod').value : '';
+    const nameWithPayment = paymentMethod ? name + ' [' + paymentMethod + ']' : name;
 
     const orderItemIds = cart.map(i => i.id);
     // СОХРАНЯЕМ ДАННЫЕ КЛИЕНТА НА БУДУЩЕЕ
@@ -3074,7 +3076,7 @@ async function executeOrderFinal(emailToSave) {
         // ВАЖНО: передаем p_email в базу!
         const { data: orderId, error: orderError } = await _supabase.rpc('create_secure_order', {
             p_user_id: currentUser ? currentUser.id : null,
-            p_name: name,
+            p_name: nameWithPayment,
             p_phone: phone,
             p_email: emailToSave,
             p_tg: '',
