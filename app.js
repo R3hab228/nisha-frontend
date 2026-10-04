@@ -3301,13 +3301,16 @@ function renderFilteredOrders() {
             });
         }
 
-        const ttnHtml = order.tracking_number 
-            ? `<div class="order-ttn">ТТН: <span style="color:var(--accent-green); font-weight:bold;">${order.tracking_number}</span>
-                 <div style="background:#fff; text-align:center; padding: 10px; margin-top: 10px; border-radius:4px;">
-                     <svg class="barcode-svg" data-ttn="${order.tracking_number}"></svg>
-                 </div>
-               </div>` 
-            : `<div class="order-ttn" style="color:#777;">ТТН: Ожидается генерация...</div>`;
+        let ttnHtml = "";
+        if (order.status.toUpperCase() !== "ОТМЕНЕН") {
+            ttnHtml = order.tracking_number
+                ? `<div class="order-ttn">ТТН: <span style="color:var(--accent-green); font-weight:bold;">${order.tracking_number}</span>
+                     <div style="background:#fff; text-align:center; padding: 10px; margin-top: 10px; border-radius:4px;">
+                         <svg class="barcode-svg" data-ttn="${order.tracking_number}"></svg>
+                     </div>
+                   </div>`
+                : `<div class="order-ttn" style="color:#777;">ТТН: Ожидается генерация...</div>`;
+        }
 
         // --- ЛОГИКА КНОПКИ ОТЗЫВА ---
         let reviewBtnHtml = '';
