@@ -1012,3 +1012,78 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
     50%, 90% { transform: rotate(180deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* WIN95 ANIMATED PIXEL HOURGLASS (AUTHENTIC RETRO LOADER) */
+.win95-pixel-hourglass {
+    display: inline-block;
+    vertical-align: middle;
+    transform-origin: 7.5px 12px;
+    animation: hgFlip 2.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    shape-rendering: crispEdges;
+}
+
+@keyframes hgFlip {
+    0%, 75% { transform: rotate(0deg); }
+    86%, 100% { transform: rotate(180deg); }
+}
+
+.hg-stream {
+    animation: hgStreamFade 2.8s infinite steps(1);
+}
+@keyframes hgStreamFade {
+    0%, 72% { opacity: 1; }
+    72.1%, 100% { opacity: 0; }
+}
+
+.hg-drop-1 {
+    animation: hgDrop1 0.22s infinite linear;
+}
+@keyframes hgDrop1 {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(3px); }
+}
+
+.hg-drop-2 {
+    animation: hgDrop2 0.22s infinite linear;
+    animation-delay: 0.11s;
+}
+@keyframes hgDrop2 {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(3px); }
+}
+
+.hg-top-1 { animation: hgTop1 2.8s infinite steps(1); }
+@keyframes hgTop1 { 0%, 12% { opacity: 1; } 12.1%, 100% { opacity: 0; } }
+
+.hg-top-2 { animation: hgTop2 2.8s infinite steps(1); }
+@keyframes hgTop2 { 0%, 24% { opacity: 1; } 24.1%, 100% { opacity: 0; } }
+
+.hg-top-3 { animation: hgTop3 2.8s infinite steps(1); }
+@keyframes hgTop3 { 0%, 36% { opacity: 1; } 36.1%, 100% { opacity: 0; } }
+
+.hg-top-4 { animation: hgTop4 2.8s infinite steps(1); }
+@keyframes hgTop4 { 0%, 48% { opacity: 1; } 48.1%, 100% { opacity: 0; } }
+
+.hg-top-5 { animation: hgTop5 2.8s infinite steps(1); }
+@keyframes hgTop5 { 0%, 60% { opacity: 1; } 60.1%, 100% { opacity: 0; } }
+
+.hg-top-6 { animation: hgTop6 2.8s infinite steps(1); }
+@keyframes hgTop6 { 0%, 72% { opacity: 1; } 72.1%, 100% { opacity: 0; } }
+
+.hg-bot-1 { animation: hgBot1 2.8s infinite steps(1); }
+@keyframes hgBot1 { 0%, 12% { opacity: 0; } 12.1%, 100% { opacity: 1; } }
+
+.hg-bot-2 { animation: hgBot2 2.8s infinite steps(1); }
+@keyframes hgBot2 { 0%, 24% { opacity: 0; } 24.1%, 100% { opacity: 1; } }
+
+.hg-bot-3 { animation: hgBot3 2.8s infinite steps(1); }
+@keyframes hgBot3 { 0%, 36% { opacity: 0; } 36.1%, 100% { opacity: 1; } }
+
+.hg-bot-4 { animation: hgBot4 2.8s infinite steps(1); }
+@keyframes hgBot4 { 0%, 48% { opacity: 0; } 48.1%, 100% { opacity: 1; } }
+
+.hg-bot-5 { animation: hgBot5 2.8s infinite steps(1); }
+@keyframes hgBot5 { 0%, 60% { opacity: 0; } 60.1%, 100% { opacity: 1; } }
+
+.hg-bot-6 { animation: hgBot6 2.8s infinite steps(1); }
+@keyframes hgBot6 { 0%, 72% { opacity: 0; } 72.1%, 100% { opacity: 1; } }

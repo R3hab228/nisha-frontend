@@ -634,15 +634,15 @@ window.onload = async () => {
         updateCartUI(); 
         
         
-        if (typeof lottie !== 'undefined' && document.getElementById('lottie-box')) {
-            lottie.loadAnimation({
-                container: document.getElementById('lottie-box'),
-                renderer: 'svg',
-                loop: true,
-                autoplay: true,
-                path: 'https://lottie.host/80c43ca5-5dc1-477c-ab0f-b47209e9db6b/rY8Vz5P1t8.json' 
-            });
-        }
+        // win95-pixel-hourglass rendered natively via SVG
+
+
+
+
+
+
+
+
         
         if (_supabase) {
             await checkSession();
@@ -1271,7 +1271,50 @@ async function checkSession() {
 const WIN95_HOURGLASS_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAYCAYAAAAlBadpAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAB6SURBVDhPzY1RDoAwCEO5/6U1ksAGax2oHzZBse1DOV5I9CHSngWuiMKdcdgOVDT3rs3/XtHU0+0H8O5A6gwYhEEgc/j2APCUmWF4gIGfwqyMvACzkgtkAwbhotSJcNbG47B9M5/CGUSZwcGsvnU3ozsLXBGFO+PwU53EDRInk3MqPwAAAABJRU5ErkJggg==";
 
 function getWin95HourglassHtml(height = 14) {
-    return `<img src="${WIN95_HOURGLASS_DATA}" alt="⏳" class="win95-loading-hourglass" style="height:${height}px;width:auto;" />`;
+    return `<svg class="win95-pixel-hourglass" style="height:${height}px;width:auto" viewBox="0 0 15 24" shape-rendering="crispEdges">
+<path fill="#fff" d="M3,4 H12 V8 H11 V9 H10 V10 H9 V11 H8 V13 H9 V14 H10 V15 H11 V16 H12 V20 H3 V16 H4 V15 H5 V14 H6 V13 H7 V11 H6 V10 H5 V9 H4 V8 H3 Z" />
+<rect x="3" y="2" width="9" height="1" fill="#fff" />
+<rect x="3" y="21" width="9" height="1" fill="#fff" />
+<g class="hg-top-1"><rect x="3" y="4" width="9" height="1" fill="#000" /></g>
+<g class="hg-top-2"><rect x="3" y="5" width="9" height="1" fill="#000" /></g>
+<g class="hg-top-3"><rect x="3" y="6" width="9" height="1" fill="#000" /></g>
+<g class="hg-top-4"><rect x="4" y="7" width="7" height="1" fill="#000" /></g>
+<g class="hg-top-5"><rect x="5" y="8" width="5" height="1" fill="#000" /></g>
+<g class="hg-top-6"><rect x="6" y="9" width="3" height="1" fill="#000" /><rect x="7" y="10" width="1" height="1" fill="#000" /></g>
+<g class="hg-stream"><rect class="hg-drop-1" x="7" y="11" width="1" height="1" fill="#000" /><rect class="hg-drop-2" x="7" y="13" width="1" height="1" fill="#000" /></g>
+<g class="hg-bot-1"><rect x="3" y="19" width="9" height="1" fill="#000" /></g>
+<g class="hg-bot-2"><rect x="3" y="18" width="9" height="1" fill="#000" /></g>
+<g class="hg-bot-3"><rect x="4" y="17" width="7" height="1" fill="#000" /></g>
+<g class="hg-bot-4"><rect x="5" y="16" width="5" height="1" fill="#000" /></g>
+<g class="hg-bot-5"><rect x="6" y="15" width="3" height="1" fill="#000" /></g>
+<g class="hg-bot-6"><rect x="7" y="14" width="1" height="1" fill="#000" /></g>
+<rect x="1" y="1" width="13" height="1" fill="#000" />
+<rect x="1" y="2" width="2" height="1" fill="#000" />
+<rect x="12" y="2" width="2" height="1" fill="#000" />
+<rect x="1" y="3" width="13" height="1" fill="#000" />
+<rect x="2" y="4" width="1" height="4" fill="#000" />
+<rect x="12" y="4" width="1" height="4" fill="#000" />
+<rect x="2" y="8" width="2" height="1" fill="#000" />
+<rect x="11" y="8" width="2" height="1" fill="#000" />
+<rect x="3" y="9" width="2" height="1" fill="#000" />
+<rect x="10" y="9" width="2" height="1" fill="#000" />
+<rect x="4" y="10" width="2" height="1" fill="#000" />
+<rect x="9" y="10" width="2" height="1" fill="#000" />
+<rect x="5" y="11" width="2" height="2" fill="#000" />
+<rect x="8" y="11" width="2" height="2" fill="#000" />
+<rect x="4" y="13" width="2" height="1" fill="#000" />
+<rect x="9" y="13" width="2" height="1" fill="#000" />
+<rect x="3" y="14" width="2" height="1" fill="#000" />
+<rect x="10" y="14" width="2" height="1" fill="#000" />
+<rect x="2" y="15" width="2" height="1" fill="#000" />
+<rect x="11" y="15" width="2" height="1" fill="#000" />
+<rect x="2" y="16" width="1" height="4" fill="#000" />
+<rect x="12" y="16" width="1" height="4" fill="#000" />
+<rect x="1" y="20" width="13" height="1" fill="#000" />
+<rect x="1" y="21" width="2" height="1" fill="#000" />
+<rect x="12" y="21" width="2" height="1" fill="#000" />
+<rect x="1" y="22" width="13" height="1" fill="#000" />
+</svg>`;
 }
 window.getWin95HourglassHtml = getWin95HourglassHtml;
 
