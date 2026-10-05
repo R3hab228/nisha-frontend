@@ -342,6 +342,47 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 
 .custom-dropdown { position: absolute; top: 100%; left: 0; width: 100%; background: #111; border: 1px solid var(--accent-green); border-top: none; max-height: 200px; overflow-y: auto; z-index: 100; display: none; font-family: var(--font-main); font-size: 14px; box-shadow: 0 10px 20px rgba(0,0,0,0.8); overscroll-behavior: contain; }
 
+/* ==========================================
+   ORDERS MODAL WINDOW (FIXED OPTIMAL DIMENSIONS ON PC)
+   ========================================== */
+#ordersModal .modal-window {
+    width: 650px;
+    max-width: 92vw;
+    height: 600px;
+    max-height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#ordersModal .modal-header {
+    flex-shrink: 0;
+}
+
+#ordersModal #ordersAuthSection {
+    flex-shrink: 0;
+}
+
+#ordersModal #ordersTabs {
+    flex-shrink: 0;
+}
+
+#ordersModal #ordersListArea {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+#ordersModal #ordersListArea > div:only-child:not(.order-card) {
+    margin: auto;
+    width: 100%;
+}
+
 .orders-container { padding: 20px; display: flex; flex-direction: column; gap: 20px;}
 .order-card { background: #0a0a0a; border: 1px solid #444; padding: 15px; display: flex; flex-direction: column; gap: 15px; transition: 0.2s;}
 .order-card:hover { border-color: #777; }
@@ -833,6 +874,8 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 
     .modal-overlay { align-items: flex-end !important; padding: 20px 0 0 0; overflow: hidden !important; } 
     .modal-window { width: 100%; height: auto !important; min-height: 55vh; max-height: 85vh !important; margin-top: 0 !important; border-radius: 20px 20px 0 0; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; animation: slideUpMobile 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; will-change: transform; overscroll-behavior-y: none; }
+    #ordersModal .modal-window { width: 100% !important; max-width: 100% !important; height: auto !important; min-height: 55vh !important; max-height: 85vh !important; overflow-y: auto !important; }
+    #ordersModal #ordersListArea { max-height: 55vh !important; overflow-y: auto !important; padding: 15px !important; flex: none !important; }
     .modal-content { padding: 15px; padding-bottom: 20px; flex-direction: column; gap: 15px; }
     .modal-gallery, .modal-info { width: 100%; }
     .slider-container { height: 75vw; max-height: 400px; border-radius: 8px; } 

@@ -548,7 +548,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 </div>
 </div>
 <div class=modal-overlay id=ordersModal>
-<div class=modal-window style=max-width:650px>
+<div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>MY_ORDERS.DB</span>
 <button class=close-btn onclick='closeModal("ordersModal")'>X</button>
@@ -565,7 +565,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <button class="order-tab tab-blue" onclick='switchOrderTab("shipped")' data-i18n=orders_modal.tab_shipped>ОТПРАВЛЕНЫ</button>
 <button class="order-tab tab-red" onclick='switchOrderTab("cancelled")' data-i18n=orders_modal.tab_cancelled>ОТМЕНЕНЫ</button>
 </div>
-<div class=orders-container id=ordersListArea style=max-height:55vh;overflow-y:auto>
+<div class=orders-container id=ordersListArea>
 <div style=text-align:center;color:#555;font-family:var(--font-mono);padding:30px data-i18n=orders_modal.loading>
 Ожидание данных...
 </div>
