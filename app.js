@@ -425,6 +425,67 @@ function showTerminalModal(title, htmlText, btnText, callback) {
     });
 }
 
+
+// ==========================================
+// УМНЫЙ КОНТРОЛЬ БРОАДКАСТОВ (ТОЛЬКО В ЛЕНТЕ ТОВАРОВ)
+// ==========================================
+function isUserInProductFeed() {
+    // 1. Проверяем, открыто ли хоть одно модальное окно на сайте
+    const overlays = document.querySelectorAll('.modal-overlay');
+    for (let m of overlays) {
+        if (m.style.display === 'flex' || m.style.display === 'block') {
+            return false;
+        }
+        const comp = window.getComputedStyle(m);
+        if (comp.display !== 'none' && comp.visibility !== 'hidden' && comp.opacity !== '0') {
+            return false;
+        }
+    }
+    // 2. Проверяем оверлей успешного заказа
+    const successOverlay = document.getElementById('orderSuccessOverlay');
+    if (successOverlay && window.getComputedStyle(successOverlay).display !== 'none') {
+        return false;
+    }
+    // 3. Проверяем SweetAlert
+    if (document.querySelector('.swal2-container')) {
+        return false;
+    }
+    return true;
+}
+window.isUserInProductFeed = isUserInProductFeed;
+
+let pendingBroadcastQueue = null;
+
+function tryShowBroadcast(title, htmlText, btnText, callback) {
+    if (isUserInProductFeed()) {
+        showTerminalModal(title, htmlText, btnText, callback);
+        pendingBroadcastQueue = null;
+    } else {
+        // Если юзер в модалке (заказ, товар, профиль и т.д.) — ставим рассылку в очередь
+        pendingBroadcastQueue = { title, htmlText, btnText, callback };
+    }
+}
+window.tryShowBroadcast = tryShowBroadcast;
+
+function checkPendingBroadcast() {
+    if (!pendingBroadcastQueue) return;
+    setTimeout(() => {
+        if (pendingBroadcastQueue && isUserInProductFeed()) {
+            const { title, htmlText, btnText, callback } = pendingBroadcastQueue;
+            pendingBroadcastQueue = null;
+            showTerminalModal(title, htmlText, btnText, callback);
+        }
+    }, 350);
+}
+window.checkPendingBroadcast = checkPendingBroadcast;
+
+// Фоновый таймер: как только юзер вернулся в ленту товаров — показываем отложенный броадкаст
+setInterval(() => {
+    if (pendingBroadcastQueue && isUserInProductFeed()) {
+        checkPendingBroadcast();
+    }
+}, 1500);
+
 function checkRules() {
     if (!localStorage.getItem('nisha_rules_accepted')) {
         const modal = document.getElementById('rulesModal');
@@ -651,7 +712,7 @@ window.onload = async () => {
                             };
 
                             if (localStorage.getItem('nisha_tour_done')) {
-                                showTerminalModal('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
+                                tryShowBroadcast('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
                             } else {
                                 window.pendingBroadcastHtml = broadcastContent;
                                 window.pendingBroadcastId = bData.id;
@@ -679,7 +740,7 @@ window.onload = async () => {
                     }
 
                     // Сразу показываем рассылку поверх всего, даже если страница не обновлялась
-                    showTerminalModal('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
+                    tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
                         localStorage.setItem('nisha_last_broadcast', bData.id);
                     });
                 })
@@ -919,6 +980,7 @@ function executeCloseModal(id) {
         modal.style.opacity = ''; modal.style.transition = ''; modal.style.backgroundColor = '';
         
         if (id === 'productModal') { document.title = 'NISHA | Underground Store'; renderHistory(); }
+        if (typeof checkPendingBroadcast === 'function') checkPendingBroadcast();
     }, 300);
 }
 
@@ -2079,7 +2141,7 @@ function startOnboardingTour() {
                 // ТУР ЗАКОНЧЕН. Проверяем, не ждет ли нас скрытая рассылка?
                 if (window.pendingBroadcastHtml) {
                     setTimeout(() => {
-                        showTerminalModal('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
+                        tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
                             localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
                         });
                         window.pendingBroadcastHtml = null; // Очищаем память
