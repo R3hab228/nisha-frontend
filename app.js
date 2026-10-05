@@ -1457,32 +1457,6 @@ window.savePhoneFromInput = async function(isModal = false) {
         }
     } catch(e) {}
 
-    // Проверяем, подтвержден ли номер уже в базе
-    let isAlreadyVerified = false;
-    try {
-        const { data: vResult } = await _supabase.rpc('check_otp_verified', { p_phone: clean });
-        isAlreadyVerified = Boolean(vResult);
-    } catch(e) {}
-
-    if (isAlreadyVerified) {
-        try {
-            await _supabase.from('profiles').update({ phone: clean }).eq('id', currentUser.id);
-            try { await _supabase.auth.updateUser({ data: { phone: clean } }); } catch(e) {}
-        } catch(err) {
-            console.error('Ошибка сохранения телефона:', err);
-        }
-
-        if (!userProfile) userProfile = {};
-        userProfile.phone = clean;
-        localStorage.setItem('nisha_last_phone', clean);
-
-        renderProfilePhone(clean);
-        const msg = typeof i18next !== 'undefined' ? i18next.t('messages.phone_verified', { defaultValue: 'Номер подтвержден!' }) : 'Номер подтвержден!';
-        showToast(msg, 'success');
-        updateProposeAndCheckoutFields();
-        return;
-    }
-
     // Если не подтвержден — генерируем OTP и отправляем в бота для подтверждения
     const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-check-btn' : '#profilePhoneInputWrap .win95-check-btn');
     if (saveBtn) {
@@ -1511,10 +1485,14 @@ window.savePhoneFromInput = async function(isModal = false) {
     const payloadPhone = clean.replace('+', '');
     const tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
 
-    if (/android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
+    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
+    if (isMobile) {
         window.location.href = tgLink;
     } else {
-        window.open(tgLink, '_blank');
+        const win = window.open(tgLink, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+            window.location.href = tgLink;
+        }
     }
 
     showToast('Перейдите в бота и нажмите СТАРТ для подтверждения номера...', 'info');
