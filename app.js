@@ -1131,9 +1131,19 @@ async function checkSession() {
             if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
             if (localStorage.getItem('nisha_pending_otp_phone') && typeof checkPendingPhoneVerification === 'function') {
                 checkPendingPhoneVerification();
+                if (localStorage.getItem('nisha_pending_otp_phone') && !window.profileOtpPollInterval) {
+                    window.profileOtpPollInterval = setInterval(() => {
+                        checkPendingPhoneVerification();
+                    }, 2000);
+                }
             }
             if (localStorage.getItem('nisha_pending_otp_tg') && typeof checkPendingTgVerification === 'function') {
                 checkPendingTgVerification();
+                if (localStorage.getItem('nisha_pending_otp_tg') && !window.profileTgPollInterval) {
+                    window.profileTgPollInterval = setInterval(() => {
+                        checkPendingTgVerification();
+                    }, 2000);
+                }
             }
             // --- ПРИВЯЗКА ПУШЕЙ К ПРОФИЛЮ ---
             if ('serviceWorker' in navigator) {
@@ -1325,6 +1335,7 @@ window.removeProfilePhone = async function(isModal = false) {
     if (userProfile) userProfile.phone = null;
     localStorage.removeItem('nisha_last_phone');
     localStorage.removeItem('nisha_pending_otp_phone');
+    localStorage.removeItem('nisha_pending_otp_phone_time');
 
     renderProfilePhone('');
     showToast('Номер телефона удален!', 'info');
@@ -1336,7 +1347,10 @@ window.showPhoneInput = function(isModal = false) {
     const wrap = document.getElementById(isModal ? 'modalProfilePhoneInputWrap' : 'profilePhoneInputWrap');
     const input = document.getElementById(isModal ? 'modalProfilePhoneInput' : 'profilePhoneInput');
     const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-save-btn' : '#profilePhoneInputWrap .win95-save-btn');
-    if (saveBtn) {
+    if (saveBtn && localStorage.getItem('nisha_pending_otp_phone')) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = getWin95HourglassHtml(14);
+    } else if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerText = '✓';
     }
@@ -1362,6 +1376,7 @@ window.hidePhoneInput = function(isModal = false) {
     }
     window.pendingOtpPhone = null;
     localStorage.removeItem('nisha_pending_otp_phone');
+    localStorage.removeItem('nisha_pending_otp_phone_time');
     const btn = document.getElementById(isModal ? 'modalProfileAddPhoneBtn' : 'profileAddPhoneBtn');
     const wrap = document.getElementById(isModal ? 'modalProfilePhoneInputWrap' : 'profilePhoneInputWrap');
     const input = document.getElementById(isModal ? 'modalProfilePhoneInput' : 'profilePhoneInput');
@@ -1384,6 +1399,21 @@ async function checkPendingPhoneVerification() {
     const pendingPhone = window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone');
     if (!pendingPhone) return;
 
+    const phoneStartTime = parseInt(localStorage.getItem('nisha_pending_otp_phone_time') || '0', 10);
+    if (phoneStartTime && (Date.now() - phoneStartTime > 120000)) {
+        if (window.profileOtpPollInterval) {
+            clearInterval(window.profileOtpPollInterval);
+            window.profileOtpPollInterval = null;
+        }
+        window.pendingOtpPhone = null;
+        localStorage.removeItem('nisha_pending_otp_phone');
+        localStorage.removeItem('nisha_pending_otp_phone_time');
+        const saveBtns = document.querySelectorAll('#profilePhoneInputWrap .win95-save-btn, #modalProfilePhoneInputWrap .win95-save-btn');
+        saveBtns.forEach(b => { b.disabled = false; b.innerText = '\u2713'; });
+        showToast('\u0412\u0440\u0435\u043C\u044F \u043E\u0436\u0438\u0434\u0430\u043D\u0438\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u043D\u043E\u043C\u0435\u0440\u0430 \u0438\u0441\u0442\u0435\u043A\u043B\u043E', 'error');
+        return;
+    }
+
     if (currentUser) {
         try {
             const { data: isAvail } = await _supabase.rpc('check_contact_available', {
@@ -1398,6 +1428,7 @@ async function checkPendingPhoneVerification() {
                 }
                 window.pendingOtpPhone = null;
                 localStorage.removeItem('nisha_pending_otp_phone');
+                localStorage.removeItem('nisha_pending_otp_phone_time');
                 showToast('\u041D\u043E\u043C\u0435\u0440 \u0443\u0436\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0435!', 'error');
                 const saveBtns = document.querySelectorAll('#profilePhoneInputWrap .win95-save-btn, #modalProfilePhoneInputWrap .win95-save-btn');
                 saveBtns.forEach(b => { b.disabled = false; b.innerText = '\u2713'; });
@@ -1415,6 +1446,7 @@ async function checkPendingPhoneVerification() {
             }
             window.pendingOtpPhone = null;
             localStorage.removeItem('nisha_pending_otp_phone');
+            localStorage.removeItem('nisha_pending_otp_phone_time');
 
             if (currentUser) {
                 try {
@@ -1446,6 +1478,21 @@ async function checkPendingTgVerification() {
     const pendingTg = window.pendingOtpTg || localStorage.getItem('nisha_pending_otp_tg');
     if (!pendingTg) return;
 
+    const tgStartTime = parseInt(localStorage.getItem('nisha_pending_otp_tg_time') || '0', 10);
+    if (tgStartTime && (Date.now() - tgStartTime > 120000)) {
+        if (window.profileTgPollInterval) {
+            clearInterval(window.profileTgPollInterval);
+            window.profileTgPollInterval = null;
+        }
+        window.pendingOtpTg = null;
+        localStorage.removeItem('nisha_pending_otp_tg');
+        localStorage.removeItem('nisha_pending_otp_tg_time');
+        const saveBtns = document.querySelectorAll('#profileTgInputWrap .win95-save-btn, #modalProfileTgInputWrap .win95-save-btn');
+        saveBtns.forEach(b => { b.disabled = false; b.innerText = '\u2713'; });
+        showToast('\u0412\u0440\u0435\u043C\u044F \u043E\u0436\u0438\u0434\u0430\u043D\u0438\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F Telegram \u0438\u0441\u0442\u0435\u043A\u043B\u043E', 'error');
+        return;
+    }
+
     const cleanUser = pendingTg.replace(/^@+/, '').trim().toLowerCase();
     if (!cleanUser) return;
 
@@ -1463,6 +1510,7 @@ async function checkPendingTgVerification() {
                 }
                 window.pendingOtpTg = null;
                 localStorage.removeItem('nisha_pending_otp_tg');
+                localStorage.removeItem('nisha_pending_otp_tg_time');
                 showToast('\u042D\u0442\u043E\u0442 Telegram \u0443\u0436\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0435!', 'error');
                 const saveBtns = document.querySelectorAll('#profileTgInputWrap .win95-save-btn, #modalProfileTgInputWrap .win95-save-btn');
                 saveBtns.forEach(b => { b.disabled = false; b.innerText = '\u2713'; });
@@ -1480,6 +1528,7 @@ async function checkPendingTgVerification() {
             }
             window.pendingOtpTg = null;
             localStorage.removeItem('nisha_pending_otp_tg');
+            localStorage.removeItem('nisha_pending_otp_tg_time');
 
             const formattedTg = '@' + pendingTg.replace(/^@+/, '').trim();
 
@@ -1576,9 +1625,19 @@ function updateProposeAndCheckoutFields() {
 }
 window.updateProposeAndCheckoutFields = updateProposeAndCheckoutFields;
 
+let lastPhoneSendTimestamp = 0;
+let lastTgSendTimestamp = 0;
+
 window.savePhoneFromInput = async function(isModal = false) {
     if (!currentUser) {
         showToast('Сначала авторизуйтесь!', 'error');
+        return;
+    }
+
+    const now = Date.now();
+    const phoneCooldownRemaining = Math.ceil((10000 - (now - lastPhoneSendTimestamp)) / 1000);
+    if (phoneCooldownRemaining > 0) {
+        showToast(`\u041F\u043E\u0434\u043E\u0436\u0434\u0438\u0442\u0435 ${phoneCooldownRemaining} \u0441\u0435\u043A \u043F\u0435\u0440\u0435\u0434 \u043F\u043E\u0432\u0442\u043E\u0440\u043D\u043E\u0439 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u043E\u0439!`, 'info');
         return;
     }
 
@@ -1635,6 +1694,7 @@ window.savePhoneFromInput = async function(isModal = false) {
     } catch(e) {}
 
     // Если не подтвержден — генерируем OTP и отправляем в бота для подтверждения
+    lastPhoneSendTimestamp = Date.now();
     const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-save-btn' : '#profilePhoneInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = true;
@@ -1658,6 +1718,7 @@ window.savePhoneFromInput = async function(isModal = false) {
 
     window.pendingOtpPhone = clean;
     localStorage.setItem('nisha_pending_otp_phone', clean);
+    localStorage.setItem('nisha_pending_otp_phone_time', Date.now().toString());
 
     const payloadPhone = clean.replace('+', '');
     const userPrefix = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? `${currentUser.id}_` : '';
@@ -1748,6 +1809,7 @@ window.removeProfileTg = async function(isModal = false) {
     if (userProfile) userProfile.tg = null;
     localStorage.removeItem('nisha_last_tg');
     localStorage.removeItem('nisha_pending_otp_tg');
+    localStorage.removeItem('nisha_pending_otp_tg_time');
 
     renderProfileTg('');
     showToast('Telegram удален!', 'info');
@@ -1758,6 +1820,14 @@ window.showTgInput = function(isModal = false) {
     const btn = document.getElementById(isModal ? 'modalProfileAddTgBtn' : 'profileAddTgBtn');
     const wrap = document.getElementById(isModal ? 'modalProfileTgInputWrap' : 'profileTgInputWrap');
     const input = document.getElementById(isModal ? 'modalProfileTgInput' : 'profileTgInput');
+    const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-save-btn' : '#profileTgInputWrap .win95-save-btn');
+    if (saveBtn && localStorage.getItem('nisha_pending_otp_tg')) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = getWin95HourglassHtml(14);
+    } else if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerText = '✓';
+    }
 
     if (btn) btn.style.display = 'none';
     if (wrap) wrap.style.display = 'flex';
@@ -1797,6 +1867,7 @@ window.hideTgInput = function(isModal = false) {
     }
     window.pendingOtpTg = null;
     localStorage.removeItem('nisha_pending_otp_tg');
+    localStorage.removeItem('nisha_pending_otp_tg_time');
 
     const btn = document.getElementById(isModal ? 'modalProfileAddTgBtn' : 'profileAddTgBtn');
     const wrap = document.getElementById(isModal ? 'modalProfileTgInputWrap' : 'profileTgInputWrap');
@@ -1817,6 +1888,13 @@ window.hideTgInput = function(isModal = false) {
 window.saveTgFromInput = async function(isModal = false) {
     if (!currentUser) {
         showToast('Сначала авторизуйтесь!', 'error');
+        return;
+    }
+
+    const now = Date.now();
+    const tgCooldownRemaining = Math.ceil((10000 - (now - lastTgSendTimestamp)) / 1000);
+    if (tgCooldownRemaining > 0) {
+        showToast(`\u041F\u043E\u0434\u043E\u0436\u0434\u0438\u0442\u0435 ${tgCooldownRemaining} \u0441\u0435\u043A \u043F\u0435\u0440\u0435\u0434 \u043F\u043E\u0432\u0442\u043E\u0440\u043D\u043E\u0439 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u043E\u0439!`, 'info');
         return;
     }
 
@@ -1865,6 +1943,7 @@ window.saveTgFromInput = async function(isModal = false) {
     } catch(e) {}
 
     // Генерируем запись в otp_codes с префиксом tg_
+    lastTgSendTimestamp = Date.now();
     const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-save-btn' : '#profileTgInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = true;
@@ -1888,6 +1967,7 @@ window.saveTgFromInput = async function(isModal = false) {
 
     window.pendingOtpTg = clean;
     localStorage.setItem('nisha_pending_otp_tg', clean);
+    localStorage.setItem('nisha_pending_otp_tg_time', Date.now().toString());
 
     const tgLink = `https://t.me/nisha_store1_bot?start=tg_${currentUser.id}_${cleanLower}`;
 
