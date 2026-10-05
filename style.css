@@ -980,3 +980,17 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
 
 
 
+
+/* WIN95 CHECKMARK BUTTON */
+.win95-check-btn {
+    transition: 0.05s;
+    user-select: none;
+}
+.win95-check-btn:hover {
+    border-color: #aaa !important;
+}
+.win95-check-btn:active {
+    border-style: inset !important;
+    background: #111 !important;
+    transform: translate(1px, 1px);
+}

@@ -1176,91 +1176,98 @@ async function checkSession() {
 // ==========================================
 // НОМЕР ТЕЛЕФОНА В ПРОФИЛЕ
 // ==========================================
+// НОМЕР ТЕЛЕФОНА В ПРОФИЛЕ (WIN95 СТИЛЬ)
+// ==========================================
 function renderProfilePhone(phone) {
     const hasPhone = Boolean(phone && phone.trim().length > 0);
-    const noPhoneText = (typeof i18next !== 'undefined') ? i18next.t('profile.no_phone', 'Не указан') : 'Не указан';
     
-    // ПК (Сайдбар)
+    // 1. Сайдбар (ПК)
     const pPhone = document.getElementById('profilePhone');
-    const pAddBtn = document.getElementById('profileAddPhoneBtn');
-    if (pPhone) {
+    const pBtn = document.getElementById('profileAddPhoneBtn');
+    const pWrap = document.getElementById('profilePhoneInputWrap');
+    if (pPhone && pBtn) {
         if (hasPhone) {
             pPhone.innerText = phone;
-            pPhone.style.color = '#fff';
-            pPhone.style.fontWeight = 'bold';
-            pPhone.removeAttribute('data-i18n');
-            if (pAddBtn) pAddBtn.style.display = 'none';
+            pPhone.style.display = 'block';
+            pBtn.style.display = 'none';
         } else {
-            pPhone.innerText = noPhoneText;
-            pPhone.style.color = '#aaa';
-            pPhone.style.fontWeight = 'normal';
-            pPhone.setAttribute('data-i18n', 'profile.no_phone');
-            if (pAddBtn) pAddBtn.style.display = 'inline-block';
+            pPhone.innerText = '';
+            pPhone.style.display = 'none';
+            pBtn.style.display = 'inline-block';
         }
+        if (pWrap) pWrap.style.display = 'none';
     }
 
-    // Мобилка (Модалка)
+    // 2. Модалка (Мобилка)
     const mPhone = document.getElementById('modalProfilePhone');
-    const mAddBtn = document.getElementById('modalProfileAddPhoneBtn');
-    if (mPhone) {
+    const mBtn = document.getElementById('modalProfileAddPhoneBtn');
+    const mWrap = document.getElementById('modalProfilePhoneInputWrap');
+    if (mPhone && mBtn) {
         if (hasPhone) {
             mPhone.innerText = phone;
-            mPhone.style.color = '#fff';
-            mPhone.style.fontWeight = 'bold';
-            mPhone.removeAttribute('data-i18n');
-            if (mAddBtn) mAddBtn.style.display = 'none';
+            mPhone.style.display = 'block';
+            mBtn.style.display = 'none';
         } else {
-            mPhone.innerText = noPhoneText;
-            mPhone.style.color = '#aaa';
-            mPhone.style.fontWeight = 'normal';
-            mPhone.setAttribute('data-i18n', 'profile.no_phone');
-            if (mAddBtn) mAddBtn.style.display = 'inline-block';
+            mPhone.innerText = '';
+            mPhone.style.display = 'none';
+            mBtn.style.display = 'inline-block';
         }
+        if (mWrap) mWrap.style.display = 'none';
     }
 }
 window.renderProfilePhone = renderProfilePhone;
 
-window.promptAddPhoneNumber = async function() {
+window.showPhoneInput = function(isModal = false) {
+    const btn = document.getElementById(isModal ? 'modalProfileAddPhoneBtn' : 'profileAddPhoneBtn');
+    const wrap = document.getElementById(isModal ? 'modalProfilePhoneInputWrap' : 'profilePhoneInputWrap');
+    const input = document.getElementById(isModal ? 'modalProfilePhoneInput' : 'profilePhoneInput');
+
+    if (btn) btn.style.display = 'none';
+    if (wrap) wrap.style.display = 'flex';
+    if (input) {
+        if (typeof IMask !== 'undefined' && !input._imask) {
+            input._imask = IMask(input, { mask: '+{380} (00) 000-00-00' });
+        }
+        input.focus();
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') savePhoneFromInput(isModal);
+            if (e.key === 'Escape') hidePhoneInput(isModal);
+        };
+    }
+};
+
+window.hidePhoneInput = function(isModal = false) {
+    const btn = document.getElementById(isModal ? 'modalProfileAddPhoneBtn' : 'profileAddPhoneBtn');
+    const wrap = document.getElementById(isModal ? 'modalProfilePhoneInputWrap' : 'profilePhoneInputWrap');
+    const input = document.getElementById(isModal ? 'modalProfilePhoneInput' : 'profilePhoneInput');
+
+    if (wrap) wrap.style.display = 'none';
+    if (btn) btn.style.display = 'inline-block';
+    if (input && input._imask) {
+        input._imask.value = '';
+    } else if (input) {
+        input.value = '';
+    }
+};
+
+window.savePhoneFromInput = async function(isModal = false) {
     if (!currentUser) {
         showToast('Сначала авторизуйтесь!', 'error');
         return;
     }
 
-    let inputPhone = null;
+    const input = document.getElementById(isModal ? 'modalProfilePhoneInput' : 'profilePhoneInput');
+    if (!input) return;
 
-    if (typeof Swal !== 'undefined') {
-        const titleText = (typeof i18next !== 'undefined') ? i18next.t('profile.phone', 'НОМЕР ТЕЛЕФОНА:') : 'НОМЕР ТЕЛЕФОНА:';
-        const { value: entered, isConfirmed } = await Swal.fire({
-            title: titleText,
-            input: 'tel',
-            inputLabel: 'Введите ваш номер телефона для связи и заказов:',
-            inputPlaceholder: '+380...',
-            inputValue: '+380',
-            showCancelButton: true,
-            confirmButtonText: 'СОХРАНИТЬ',
-            cancelButtonText: 'ОТМЕНА',
-            background: '#0a0a0a',
-            color: '#ffffff',
-            confirmButtonColor: '#00ff66',
-            cancelButtonColor: '#222222',
-            inputValidator: (val) => {
-                if (!val) return 'Пожалуйста, введите номер!';
-                const clean = val.replace(/[^\d+]/g, '');
-                if (clean.length < 10) return 'Номер слишком короткий (минимум 10 цифр)!';
-            }
-        });
-        if (isConfirmed && entered) inputPhone = entered;
-    } else {
-        const entered = prompt('Введите номер телефона (+380...):', '+380');
-        if (entered) inputPhone = entered;
-    }
-
-    if (!inputPhone) return;
-
-    let clean = inputPhone.replace(/[^\d+]/g, '');
+    const rawVal = input.value.trim();
+    let clean = rawVal.replace(/[^\d+]/g, '');
     if (!clean.startsWith('+') && clean.startsWith('380')) clean = '+' + clean;
-    if (clean.length < 10) {
-        showToast('Некорректный номер!', 'error');
+    if (!clean.startsWith('+') && clean.length === 10) clean = '+38' + clean;
+
+    const digitsOnly = clean.replace(/[^\d]/g, '');
+    if (digitsOnly.length < 10) {
+        showToast('Введите корректный номер (минимум 10 цифр)!', 'error');
+        input.focus();
         return;
     }
 
