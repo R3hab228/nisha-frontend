@@ -1132,6 +1132,9 @@ async function checkSession() {
             if (localStorage.getItem('nisha_pending_otp_phone') && typeof checkPendingPhoneVerification === 'function') {
                 checkPendingPhoneVerification();
             }
+            if (localStorage.getItem('nisha_pending_otp_tg') && typeof checkPendingTgVerification === 'function') {
+                checkPendingTgVerification();
+            }
             // --- ПРИВЯЗКА ПУШЕЙ К ПРОФИЛЮ ---
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(reg => {
@@ -1378,14 +1381,67 @@ async function checkPendingPhoneVerification() {
 }
 window.checkPendingPhoneVerification = checkPendingPhoneVerification;
 
+async function checkPendingTgVerification() {
+    const pendingTg = window.pendingOtpTg || localStorage.getItem('nisha_pending_otp_tg');
+    if (!pendingTg) return;
+
+    const cleanUser = pendingTg.replace(/^@+/, '').trim().toLowerCase();
+    if (!cleanUser) return;
+
+    try {
+        const { data: isVerified } = await _supabase.rpc('check_otp_verified', { p_phone: `tg_${cleanUser}` });
+        if (isVerified) {
+            if (window.profileTgPollInterval) {
+                clearInterval(window.profileTgPollInterval);
+                window.profileTgPollInterval = null;
+            }
+            window.pendingOtpTg = null;
+            localStorage.removeItem('nisha_pending_otp_tg');
+
+            const formattedTg = '@' + pendingTg.replace(/^@+/, '').trim();
+
+            if (currentUser) {
+                try {
+                    const { error: updErr } = await _supabase.from('profiles').update({ tg: formattedTg }).eq('id', currentUser.id);
+                    if (updErr && (updErr.code === '23505' || updErr.message?.includes('duplicate'))) {
+                        showToast('Этот Telegram уже привязан к другому аккаунту!', 'error');
+                        return;
+                    }
+                    await _supabase.auth.updateUser({ data: { tg: formattedTg } });
+                } catch(e) {}
+            }
+
+            if (!userProfile) userProfile = {};
+            userProfile.tg = formattedTg;
+            localStorage.setItem('nisha_last_tg', formattedTg);
+
+            renderProfileTg(formattedTg);
+            const msg = typeof i18next !== 'undefined' ? i18next.t('messages.tg_verified', { defaultValue: 'Telegram подтвержден!' }) : 'Telegram подтвержден!';
+            showToast(msg, 'success');
+            updateProposeAndCheckoutFields();
+        }
+    } catch(err) {
+        console.error('Ошибка проверки TG OTP в фоне:', err);
+    }
+}
+window.checkPendingTgVerification = checkPendingTgVerification;
+
 window.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && (window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone'))) {
-        checkPendingPhoneVerification();
+    if (document.visibilityState === 'visible') {
+        if (window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone')) {
+            checkPendingPhoneVerification();
+        }
+        if (window.pendingOtpTg || localStorage.getItem('nisha_pending_otp_tg')) {
+            checkPendingTgVerification();
+        }
     }
 });
 window.addEventListener('focus', () => {
     if (window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone')) {
         checkPendingPhoneVerification();
+    }
+    if (window.pendingOtpTg || localStorage.getItem('nisha_pending_otp_tg')) {
+        checkPendingTgVerification();
     }
 });
 
@@ -1562,6 +1618,12 @@ function renderProfileTg(tg) {
         }
         if (mWrap) mWrap.style.display = 'none';
     }
+
+    const saveBtns = document.querySelectorAll('#profileTgInputWrap .win95-check-btn, #modalProfileTgInputWrap .win95-check-btn');
+    saveBtns.forEach(b => {
+        b.disabled = false;
+        b.innerText = '✓';
+    });
 }
 window.renderProfileTg = renderProfileTg;
 
@@ -1602,6 +1664,13 @@ window.showTgInput = function(isModal = false) {
 };
 
 window.hideTgInput = function(isModal = false) {
+    if (window.profileTgPollInterval) {
+        clearInterval(window.profileTgPollInterval);
+        window.profileTgPollInterval = null;
+    }
+    window.pendingOtpTg = null;
+    localStorage.removeItem('nisha_pending_otp_tg');
+
     const btn = document.getElementById(isModal ? 'modalProfileAddTgBtn' : 'profileAddTgBtn');
     const wrap = document.getElementById(isModal ? 'modalProfileTgInputWrap' : 'profileTgInputWrap');
     const input = document.getElementById(isModal ? 'modalProfileTgInput' : 'profileTgInput');
@@ -1610,6 +1679,11 @@ window.hideTgInput = function(isModal = false) {
     if (btn) btn.style.display = 'inline-block';
     if (input) {
         input.value = '';
+    }
+    const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-check-btn' : '#profileTgInputWrap .win95-check-btn');
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerText = '✓';
     }
 };
 
@@ -1633,6 +1707,7 @@ window.saveTgFromInput = async function(isModal = false) {
     }
 
     const clean = '@' + cleanUser;
+    const cleanLower = cleanUser.toLowerCase();
 
     // Проверяем, не привязан ли этот Telegram к другому аккаунту
     try {
@@ -1650,31 +1725,49 @@ window.saveTgFromInput = async function(isModal = false) {
         }
     } catch(e) {}
 
-    try {
-        const { error: updErr } = await _supabase.from('profiles').update({ tg: clean }).eq('id', currentUser.id);
-        if (updErr) {
-            if (updErr.code === '23505' || updErr.message?.includes('duplicate')) {
-                showToast('Этот Telegram уже привязан к другому аккаунту!', 'error');
-                return;
-            }
-            throw updErr;
-        }
-        try {
-            await _supabase.auth.updateUser({ data: { tg: clean } });
-        } catch(e) {}
-    } catch(err) {
-        console.error('Ошибка сохранения Telegram:', err);
-        showToast('Ошибка сохранения Telegram!', 'error');
-        return;
+    // Генерируем запись в otp_codes с префиксом tg_
+    const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-check-btn' : '#profileTgInputWrap .win95-check-btn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerText = '⏳';
     }
 
-    if (!userProfile) userProfile = {};
-    userProfile.tg = clean;
-    localStorage.setItem('nisha_last_tg', clean);
+    try {
+        const { error: otpError } = await _supabase.rpc('generate_secure_otp', { p_phone: `tg_${cleanLower}` });
+        if (otpError) {
+            console.error('OTP generate error for tg:', otpError);
+            showToast('Ошибка сервера при генерации кода', 'error');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerText = '✓';
+            }
+            return;
+        }
+    } catch(e) {
+        console.error('OTP RPC error for tg:', e);
+    }
 
-    renderProfileTg(clean);
-    showToast('Telegram успешно сохранен!', 'success');
-    updateProposeAndCheckoutFields();
+    window.pendingOtpTg = clean;
+    localStorage.setItem('nisha_pending_otp_tg', clean);
+
+    const tgLink = `https://t.me/nisha_store1_bot?start=tg_${cleanLower}`;
+
+    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
+    if (isMobile) {
+        window.location.href = tgLink;
+    } else {
+        const win = window.open(tgLink, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+            window.location.href = tgLink;
+        }
+    }
+
+    showToast('Перейдите в бота и нажмите СТАРТ для подтверждения Telegram...', 'info');
+
+    if (window.profileTgPollInterval) clearInterval(window.profileTgPollInterval);
+    window.profileTgPollInterval = setInterval(() => {
+        checkPendingTgVerification();
+    }, 2000);
 };
 
 let isRegMode = false;

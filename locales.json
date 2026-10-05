@@ -125,7 +125,8 @@
         "req_fields": "Заполните все обязательные поля",
         "link_copied": "Ссылка скопирована!",
         "copy_error": "Ошибка копирования",
-        "phone_verified": "Номер подтвержден!"
+        "phone_verified": "Номер подтвержден!",
+        "tg_verified": "Telegram подтвержден!"
       },
       "checkout": {
         "desc": "Заполните данные для отправки. Бронь 2 часа.",
@@ -384,7 +385,8 @@
         "req_fields": "Заповніть всі обов'язкові поля",
         "link_copied": "Посилання скопійовано!",
         "copy_error": "Помилка копіювання",
-        "phone_verified": "Номер підтверджено!"
+        "phone_verified": "Номер підтверджено!",
+        "tg_verified": "Telegram підтверджено!"
       },
       "checkout": {
         "desc": "Заповніть дані для відправки. Бронь 2 години.",
@@ -642,7 +644,8 @@
         "req_fields": "Please fill in all required fields",
         "link_copied": "Link copied!",
         "copy_error": "Copy error",
-        "phone_verified": "Phone verified!"
+        "phone_verified": "Phone verified!",
+        "tg_verified": "Telegram verified!"
       },
       "checkout": {
         "desc": "Fill in shipping details. Reserved for 2 hours.",
