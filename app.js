@@ -1395,11 +1395,11 @@ window.hidePhoneInput = function(isModal = false) {
     } else if (input) {
         input.value = '';
     }
-    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-save-btn' : '#profilePhoneInputWrap .win95-save-btn');
-    if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.innerText = '✓';
-    }
+    const saveBtns = document.querySelectorAll('#profilePhoneInputWrap .win95-save-btn, #modalProfilePhoneInputWrap .win95-save-btn'); saveBtns.forEach(b => { b.disabled = false; b.innerText = '✓'; }); //
+
+
+
+
 };
 
 let isCheckingPhoneOtp = false;
@@ -1501,7 +1501,7 @@ async function checkPendingPhoneVerification() {
                     } else {
                         const { error: updErr } = await _supabase.from('profiles').update({ phone: pendingPhone }).eq('id', currentUser.id);
                         if (updErr && (updErr.code === '23505' || updErr.message?.includes('duplicate'))) {
-                            showToast('Этот номер уже привязан к другому аккаунту!', 'error');
+                            const saveBtns = document.querySelectorAll('#profilePhoneInputWrap .win95-save-btn, #modalProfilePhoneInputWrap .win95-save-btn'); saveBtns.forEach(b => { b.disabled = false; b.innerText = '✓'; }); showToast('\u042D\u0442\u043E\u0442 \u043D\u043E\u043C\u0435\u0440 \u0443\u0436\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0435!', 'error');
                             return;
                         }
                         if (!userProfile) userProfile = {};
@@ -1510,19 +1510,19 @@ async function checkPendingPhoneVerification() {
                         renderProfilePhone(pendingPhone);
                     }
                     window._hasLinkedTgOnPhoneVerify = hasLinkedTg;
-                    if (updErr && (updErr.code === '23505' || updErr.message?.includes('duplicate'))) {
-                        showToast('Этот номер уже привязан к другому аккаунту!', 'error');
-                        return;
-                    }
+                    // updErr already handled inside else
+
+
+
                     await _supabase.auth.updateUser({ data: { phone: pendingPhone } });
                 } catch(e) {}
             }
 
-            if (!userProfile) userProfile = {};
+            if (!currentUser) { if (!userProfile) userProfile = {};
             userProfile.phone = pendingPhone;
             localStorage.setItem('nisha_last_phone', pendingPhone);
 
-            renderProfilePhone(pendingPhone);
+            renderProfilePhone(pendingPhone); }
             const msg = window._hasLinkedTgOnPhoneVerify
                 ? '\u041D\u043E\u043C\u0435\u0440 \u0438 Telegram \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u044B!'
                 : (typeof i18next !== 'undefined' ? i18next.t('messages.phone_verified', { defaultValue: '\u041D\u043E\u043C\u0435\u0440 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D!' }) : '\u041D\u043E\u043C\u0435\u0440 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D!');
@@ -1605,7 +1605,7 @@ async function checkPendingTgVerification() {
                 try {
                     const { error: updErr } = await _supabase.from('profiles').update({ tg: formattedTg }).eq('id', currentUser.id);
                     if (updErr && (updErr.code === '23505' || updErr.message?.includes('duplicate'))) {
-                        showToast('Этот Telegram уже привязан к другому аккаунту!', 'error');
+                        const saveBtns = document.querySelectorAll('#profileTgInputWrap .win95-save-btn, #modalProfileTgInputWrap .win95-save-btn'); saveBtns.forEach(b => { b.disabled = false; b.innerText = '✓'; }); showToast('\u042D\u0442\u043E\u0442 Telegram \u0443\u0436\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0435!', 'error');
                         return;
                     }
                     await _supabase.auth.updateUser({ data: { tg: formattedTg } });
@@ -1951,11 +1951,11 @@ window.hideTgInput = function(isModal = false) {
     if (input) {
         input.value = '';
     }
-    const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-save-btn' : '#profileTgInputWrap .win95-save-btn');
-    if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.innerText = '✓';
-    }
+    const saveBtns = document.querySelectorAll('#profileTgInputWrap .win95-save-btn, #modalProfileTgInputWrap .win95-save-btn'); saveBtns.forEach(b => { b.disabled = false; b.innerText = '✓'; }); //
+
+
+
+
 };
 
 window.saveTgFromInput = async function(isModal = false) {
