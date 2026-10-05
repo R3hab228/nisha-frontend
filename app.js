@@ -1124,9 +1124,9 @@ async function checkSession() {
             
             if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
             if(document.getElementById('modalProfileEmail')) document.getElementById('modalProfileEmail').innerText = uEmail;
-            const uPhone = userProfile?.phone || currentUser.phone || currentUser.user_metadata?.phone || localStorage.getItem('nisha_last_phone') || '';
+            const uPhone = (userProfile?.phone || '').trim();
             renderProfilePhone(uPhone);
-            const uTg = userProfile?.tg || userProfile?.telegram || currentUser.user_metadata?.tg || currentUser.user_metadata?.telegram || localStorage.getItem('nisha_last_tg') || '';
+            const uTg = (userProfile?.tg || '').trim();
             renderProfileTg(uTg);
             if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
             if (localStorage.getItem('nisha_pending_otp_phone') && typeof checkPendingPhoneVerification === 'function') {
@@ -1255,6 +1255,7 @@ async function checkSession() {
 // ==========================================
 function renderProfilePhone(phone) {
     const hasPhone = Boolean(phone && phone.trim().length > 0);
+    const delBtnHtml = (isModal) => `<button onclick="removeProfilePhone(${isModal})" title="Удалить номер" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
     
     // 1. Сайдбар (ПК)
     const pPhone = document.getElementById('profilePhone');
@@ -1262,11 +1263,13 @@ function renderProfilePhone(phone) {
     const pWrap = document.getElementById('profilePhoneInputWrap');
     if (pPhone && pBtn) {
         if (hasPhone) {
-            pPhone.innerText = phone;
-            pPhone.style.display = 'block';
+            pPhone.innerHTML = `<span style="word-break:break-all">${phone}</span>${delBtnHtml(false)}`;
+            pPhone.style.display = 'flex';
+            pPhone.style.alignItems = 'center';
+            pPhone.style.justifyContent = 'space-between';
             pBtn.style.display = 'none';
         } else {
-            pPhone.innerText = '';
+            pPhone.innerHTML = '';
             pPhone.style.display = 'none';
             pBtn.style.display = 'inline-block';
         }
@@ -1279,11 +1282,13 @@ function renderProfilePhone(phone) {
     const mWrap = document.getElementById('modalProfilePhoneInputWrap');
     if (mPhone && mBtn) {
         if (hasPhone) {
-            mPhone.innerText = phone;
-            mPhone.style.display = 'block';
+            mPhone.innerHTML = `<span style="word-break:break-all">${phone}</span>${delBtnHtml(true)}`;
+            mPhone.style.display = 'flex';
+            mPhone.style.alignItems = 'center';
+            mPhone.style.justifyContent = 'space-between';
             mBtn.style.display = 'none';
         } else {
-            mPhone.innerText = '';
+            mPhone.innerHTML = '';
             mPhone.style.display = 'none';
             mBtn.style.display = 'inline-block';
         }
@@ -1291,6 +1296,24 @@ function renderProfilePhone(phone) {
     }
 }
 window.renderProfilePhone = renderProfilePhone;
+
+window.removeProfilePhone = async function(isModal = false) {
+    if (!currentUser) return;
+    try {
+        await _supabase.from('profiles').update({ phone: null }).eq('id', currentUser.id);
+        try { await _supabase.auth.updateUser({ data: { phone: null } }); } catch(e) {}
+    } catch(err) {
+        console.error('Ошибка удаления телефона:', err);
+    }
+
+    if (userProfile) userProfile.phone = null;
+    localStorage.removeItem('nisha_last_phone');
+    localStorage.removeItem('nisha_pending_otp_phone');
+
+    renderProfilePhone('');
+    showToast('Номер телефона удален!', 'info');
+    updateProposeAndCheckoutFields();
+};
 
 window.showPhoneInput = function(isModal = false) {
     const btn = document.getElementById(isModal ? 'modalProfileAddPhoneBtn' : 'profileAddPhoneBtn');
@@ -1446,12 +1469,18 @@ window.addEventListener('focus', () => {
 });
 
 function getUserPhone() {
-    return (userProfile?.phone || currentUser?.phone || currentUser?.user_metadata?.phone || localStorage.getItem('nisha_last_phone') || '').trim();
+    if (currentUser) {
+        return (userProfile?.phone || '').trim();
+    }
+    return (localStorage.getItem('nisha_last_phone') || '').trim();
 }
 window.getUserPhone = getUserPhone;
 
 function getUserTg() {
-    return (userProfile?.tg || userProfile?.telegram || currentUser?.user_metadata?.tg || currentUser?.user_metadata?.telegram || localStorage.getItem('nisha_last_tg') || '').trim();
+    if (currentUser) {
+        return (userProfile?.tg || '').trim();
+    }
+    return (localStorage.getItem('nisha_last_tg') || '').trim();
 }
 window.getUserTg = getUserTg;
 
@@ -1585,17 +1614,22 @@ window.savePhoneFromInput = async function(isModal = false) {
 function renderProfileTg(tg) {
     const hasTg = Boolean(tg && tg.trim().length > 0 && tg.trim() !== '@');
     
+    const formattedTg = hasTg ? (tg.startsWith('@') ? tg : '@' + tg) : '';
+    const delBtnHtml = (isModal) => `<button onclick="removeProfileTg(${isModal})" title="Удалить Telegram" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
+    
     // 1. Сайдбар (ПК)
     const pTg = document.getElementById('profileTg');
     const pBtn = document.getElementById('profileAddTgBtn');
     const pWrap = document.getElementById('profileTgInputWrap');
     if (pTg && pBtn) {
         if (hasTg) {
-            pTg.innerText = tg.startsWith('@') ? tg : '@' + tg;
-            pTg.style.display = 'block';
+            pTg.innerHTML = `<span style="word-break:break-all">${formattedTg}</span>${delBtnHtml(false)}`;
+            pTg.style.display = 'flex';
+            pTg.style.alignItems = 'center';
+            pTg.style.justifyContent = 'space-between';
             pBtn.style.display = 'none';
         } else {
-            pTg.innerText = '';
+            pTg.innerHTML = '';
             pTg.style.display = 'none';
             pBtn.style.display = 'inline-block';
         }
@@ -1608,11 +1642,13 @@ function renderProfileTg(tg) {
     const mWrap = document.getElementById('modalProfileTgInputWrap');
     if (mTg && mBtn) {
         if (hasTg) {
-            mTg.innerText = tg.startsWith('@') ? tg : '@' + tg;
-            mTg.style.display = 'block';
+            mTg.innerHTML = `<span style="word-break:break-all">${formattedTg}</span>${delBtnHtml(true)}`;
+            mTg.style.display = 'flex';
+            mTg.style.alignItems = 'center';
+            mTg.style.justifyContent = 'space-between';
             mBtn.style.display = 'none';
         } else {
-            mTg.innerText = '';
+            mTg.innerHTML = '';
             mTg.style.display = 'none';
             mBtn.style.display = 'inline-block';
         }
@@ -1626,6 +1662,24 @@ function renderProfileTg(tg) {
     });
 }
 window.renderProfileTg = renderProfileTg;
+
+window.removeProfileTg = async function(isModal = false) {
+    if (!currentUser) return;
+    try {
+        await _supabase.from('profiles').update({ tg: null }).eq('id', currentUser.id);
+        try { await _supabase.auth.updateUser({ data: { tg: null } }); } catch(e) {}
+    } catch(err) {
+        console.error('Ошибка удаления Telegram:', err);
+    }
+
+    if (userProfile) userProfile.tg = null;
+    localStorage.removeItem('nisha_last_tg');
+    localStorage.removeItem('nisha_pending_otp_tg');
+
+    renderProfileTg('');
+    showToast('Telegram удален!', 'info');
+    updateProposeAndCheckoutFields();
+};
 
 window.showTgInput = function(isModal = false) {
     const btn = document.getElementById(isModal ? 'modalProfileAddTgBtn' : 'profileAddTgBtn');
