@@ -3388,12 +3388,12 @@ async function openProductModalById(itemId) {
     // В ФОНЕ подгружаем полное описание и замеры
     if (typeof _supabase !== 'undefined') {
         try {
-            let { data } = await _supabase.from('items').select('*').eq('id', itemId).limit(1);
+            let { data } = await _supabase.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop').eq('id', itemId).limit(1);
             let fullItem = null;
             if (data && data.length > 0) {
                 fullItem = data[0];
             } else {
-                let { data: archData } = await _supabase.from('archived_items').select('*').eq('id', itemId).limit(1);
+                let { data: archData } = await _supabase.from('archived_items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop').eq('id', itemId).limit(1);
                 if (archData && archData.length > 0) fullItem = archData[0];
             }
             
