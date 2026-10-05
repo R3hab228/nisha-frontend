@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/return-policy",
+      "destination": "/return-policy.html"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "https://nisha-api.onrender.com/sitemap.xml"
     },
