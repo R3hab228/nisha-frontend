@@ -1,4 +1,4 @@
-// --- VIBRATION HELPER ---
+﻿// --- VIBRATION HELPER ---
 window.triggerVibration = function(duration = 150) {
     if ('vibrate' in navigator) {
         try { navigator.vibrate(duration); } catch(e){}
@@ -4207,7 +4207,116 @@ async function fetchMyOrders() {
     document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
     document.querySelector('.order-tab.tab-yellow').classList.add('active');
     
+    ensureOrderImagesLoaded();
     renderFilteredOrders();
+}
+
+window.orderItemsImageCache = window.orderItemsImageCache || {};
+
+function getOrderItemImage(item) {
+    if (!item) return '';
+
+    // 1. Прямые строковые свойства объекта item
+    if (item.image && typeof item.image === 'string' && item.image.trim().length > 5) {
+        return window.toCDN ? window.toCDN(item.image) : item.image;
+    }
+    for (const key of ['img', 'thumbnail', 'photo', 'picture']) {
+        if (item[key] && typeof item[key] === 'string' && item[key].trim().length > 5) {
+            return window.toCDN ? window.toCDN(item[key]) : item[key];
+        }
+    }
+
+    // 2. Прямые массивы картинок объекта item
+    if (Array.isArray(item.thumbnails) && item.thumbnails.length > 0 && typeof item.thumbnails[0] === 'string' && item.thumbnails[0].trim().length > 5) {
+        return window.toCDN ? window.toCDN(item.thumbnails[0]) : item.thumbnails[0];
+    }
+    if (Array.isArray(item.images) && item.images.length > 0 && typeof item.images[0] === 'string' && item.images[0].trim().length > 5) {
+        return window.toCDN ? window.toCDN(item.images[0]) : item.images[0];
+    }
+
+    // 3. Кэш уже подгруженных картинок заказов
+    if (item.id && window.orderItemsImageCache[item.id]) {
+        return window.orderItemsImageCache[item.id];
+    }
+
+    // 4. Поиск в глобальном каталоге allItems (по ID или названию)
+    if (typeof allItems !== 'undefined' && Array.isArray(allItems)) {
+        const catalogItem = allItems.find(p => (item.id && p && p.id === item.id) || (item.name && p && p.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()));
+        if (catalogItem) {
+            let foundUrl = '';
+            if (typeof getOptimizedImageUrl === 'function') {
+                foundUrl = getOptimizedImageUrl(catalogItem, true);
+            }
+            if (!foundUrl && Array.isArray(catalogItem.thumbnails) && catalogItem.thumbnails.length > 0) {
+                foundUrl = catalogItem.thumbnails[0];
+            }
+            if (!foundUrl && Array.isArray(catalogItem.images) && catalogItem.images.length > 0) {
+                foundUrl = catalogItem.images[0];
+            }
+            if (foundUrl) {
+                const cdnUrl = window.toCDN ? window.toCDN(foundUrl) : foundUrl;
+                if (item.id) window.orderItemsImageCache[item.id] = cdnUrl;
+                return cdnUrl;
+            }
+        }
+    }
+
+    return '';
+}
+
+async function ensureOrderImagesLoaded() {
+    if (!globalOrdersData || !Array.isArray(globalOrdersData)) return;
+    const missingIds = [];
+    globalOrdersData.forEach(order => {
+        if (order.items && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+                if (item && item.id && !getOrderItemImage(item)) {
+                    if (!missingIds.includes(item.id)) missingIds.push(item.id);
+                }
+            });
+        }
+    });
+
+    if (missingIds.length === 0) return;
+
+    try {
+        if (typeof _supabase !== 'undefined') {
+            const { data } = await _supabase.from('items').select('id, thumbnails, images').in('id', missingIds);
+            if (data && data.length > 0) {
+                data.forEach(di => {
+                    const imgUrl = (di.thumbnails && di.thumbnails.length > 0) ? di.thumbnails[0] : (di.images && di.images.length > 0 ? di.images[0] : '');
+                    if (imgUrl) {
+                        window.orderItemsImageCache[di.id] = window.toCDN ? window.toCDN(imgUrl) : imgUrl;
+                    }
+                });
+            }
+
+            const stillMissing = missingIds.filter(id => !window.orderItemsImageCache[id]);
+            if (stillMissing.length > 0) {
+                const { data: archData } = await _supabase.from('archived_items').select('id, thumbnails, images').in('id', stillMissing);
+                if (archData && archData.length > 0) {
+                    archData.forEach(di => {
+                        const imgUrl = (di.thumbnails && di.thumbnails.length > 0) ? di.thumbnails[0] : (di.images && di.images.length > 0 ? di.images[0] : '');
+                        if (imgUrl) {
+                            window.orderItemsImageCache[di.id] = window.toCDN ? window.toCDN(imgUrl) : imgUrl;
+                        }
+                    });
+                }
+            }
+
+            // Динамически подставляем картинку во все отрендеренные элементы, где было NO IMG
+            document.querySelectorAll('.order-item-img[data-item-id]').forEach(el => {
+                const itId = el.getAttribute('data-item-id');
+                const resolved = getOrderItemImage({ id: itId });
+                if (resolved) {
+                    el.style.backgroundImage = `url('${resolved}')`;
+                    el.innerText = '';
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('Could not batch fetch missing order images:', e);
+    }
 }
 
 window.switchOrderTab = function(tabName) {
@@ -4249,10 +4358,11 @@ function renderFilteredOrders() {
         let itemsHtml = '';
         if (order.items && Array.isArray(order.items)) {
            order.items.forEach(item => {
-                const imgStyle = item.image ? `background-image: url('${item.image}');` : '';
+                const itemImg = getOrderItemImage(item);
+                const imgStyle = itemImg ? `background-image: url('${itemImg}');` : '';
                 itemsHtml += `
                     <div class="order-item-row" onclick="openProductModalById('${item.id}')" title="Открыть карточку товара">
-                        <div class="order-item-img" style="${imgStyle}">${item.image ? '' : 'NO IMG'}</div>
+                        <div class="order-item-img" data-item-id="${item.id}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
                         <div class="order-item-details">
                             <div class="order-item-name">${item.name}</div>
                             <div class="order-item-meta"><span>Размер: ${item.size}</span><span class="order-item-price">${item.currentPrice} грн</span></div>
@@ -4279,12 +4389,13 @@ function renderFilteredOrders() {
             
             if (!reviewedOrders.includes(order.id) && order.items && order.items.length > 0) {
                 const firstItem = order.items[0];
+                const firstItemImg = getOrderItemImage(firstItem);
                 const safeName = firstItem.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 const msgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; position: relative; top: 2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
                 
                 reviewBtnHtml = `
                     <div style="margin-top: 10px; cursor: pointer; color: var(--accent-green); font-size: 12px; font-family: var(--font-main); text-align: center; transition: 0.2s;" 
-                         onclick="closeModal('ordersModal'); promptOrderReview('${order.id}', '${safeName}', '${firstItem.image}', '${firstItem.id}')" 
+                         onclick="closeModal('ordersModal'); promptOrderReview('${order.id}', '${safeName}', '${firstItemImg}', '${firstItem.id}')" 
                          onmouseover="this.style.textDecoration='underline'; this.style.color='#fff';" 
                          onmouseout="this.style.textDecoration='none'; this.style.color='var(--accent-green)';">
                         ${msgIcon} Оставить отзыв
@@ -4312,6 +4423,9 @@ function renderFilteredOrders() {
                 <div class="order-footer">${ttnHtml}<div class="order-total">ИТОГО: ${order.total_sum} грн</div></div>
             </div>`;
     });
+
+    // Догружаем недостающие изображения в фоне
+    ensureOrderImagesLoaded();
 
     // Перерисовываем штрихкоды
     if (typeof JsBarcode !== 'undefined') {
@@ -6230,10 +6344,14 @@ async function autoDetectCity() {
 // ==========================================
 window.promptOrderReview = function(orderId, itemName, itemImage, itemId) {
     document.getElementById('autoReviewOrderId').value = orderId;
-    document.getElementById('autoReviewItemImage').value = itemImage || '';
+    let resolvedImg = itemImage || '';
+    if (!resolvedImg && itemId) {
+        resolvedImg = getOrderItemImage({ id: itemId }) || '';
+    }
+    document.getElementById('autoReviewItemImage').value = resolvedImg;
     document.getElementById('autoReviewItemId').value = itemId || ''; // Сохраняем ID товара
     document.getElementById('autoReviewName').innerText = itemName;
-    document.getElementById('autoReviewImg').style.backgroundImage = `url('${itemImage}')`;
+    document.getElementById('autoReviewImg').style.backgroundImage = resolvedImg ? `url('${resolvedImg}')` : 'none';
     document.getElementById('autoReviewInput').value = ''; 
 
     if (typeof lenis !== 'undefined') window.stopLenis();
