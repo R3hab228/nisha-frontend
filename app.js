@@ -1305,7 +1305,7 @@ function renderProfilePhone(phone) {
         if (mWrap) mWrap.style.display = 'none';
     }
 
-    const saveBtns = document.querySelectorAll('#profilePhoneInputWrap .win95-check-btn, #modalProfilePhoneInputWrap .win95-check-btn');
+    const saveBtns = document.querySelectorAll('#profilePhoneInputWrap .win95-save-btn, #modalProfilePhoneInputWrap .win95-save-btn');
     saveBtns.forEach(b => {
         b.disabled = false;
         b.innerText = '✓';
@@ -1335,7 +1335,7 @@ window.showPhoneInput = function(isModal = false) {
     const btn = document.getElementById(isModal ? 'modalProfileAddPhoneBtn' : 'profileAddPhoneBtn');
     const wrap = document.getElementById(isModal ? 'modalProfilePhoneInputWrap' : 'profilePhoneInputWrap');
     const input = document.getElementById(isModal ? 'modalProfilePhoneInput' : 'profilePhoneInput');
-    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-check-btn' : '#profilePhoneInputWrap .win95-check-btn');
+    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-save-btn' : '#profilePhoneInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerText = '✓';
@@ -1373,7 +1373,7 @@ window.hidePhoneInput = function(isModal = false) {
     } else if (input) {
         input.value = '';
     }
-    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-check-btn' : '#profilePhoneInputWrap .win95-check-btn');
+    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-save-btn' : '#profilePhoneInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerText = '✓';
@@ -1383,6 +1383,28 @@ window.hidePhoneInput = function(isModal = false) {
 async function checkPendingPhoneVerification() {
     const pendingPhone = window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone');
     if (!pendingPhone) return;
+
+    if (currentUser) {
+        try {
+            const { data: isAvail } = await _supabase.rpc('check_contact_available', {
+                p_type: 'phone',
+                p_val: pendingPhone,
+                p_user_id: currentUser.id
+            });
+            if (isAvail === false) {
+                if (window.profileOtpPollInterval) {
+                    clearInterval(window.profileOtpPollInterval);
+                    window.profileOtpPollInterval = null;
+                }
+                window.pendingOtpPhone = null;
+                localStorage.removeItem('nisha_pending_otp_phone');
+                showToast('\u041D\u043E\u043C\u0435\u0440 \u0443\u0436\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0435!', 'error');
+                const saveBtns = document.querySelectorAll('#profilePhoneInputWrap .win95-save-btn, #modalProfilePhoneInputWrap .win95-save-btn');
+                saveBtns.forEach(b => { b.disabled = false; b.innerText = '\u2713'; });
+                return;
+            }
+        } catch(e) {}
+    }
 
     try {
         const { data: isVerified } = await _supabase.rpc('check_otp_verified', { p_phone: pendingPhone });
@@ -1426,6 +1448,28 @@ async function checkPendingTgVerification() {
 
     const cleanUser = pendingTg.replace(/^@+/, '').trim().toLowerCase();
     if (!cleanUser) return;
+
+    if (currentUser) {
+        try {
+            const { data: isAvail } = await _supabase.rpc('check_contact_available', {
+                p_type: 'tg',
+                p_val: cleanUser,
+                p_user_id: currentUser.id
+            });
+            if (isAvail === false) {
+                if (window.profileTgPollInterval) {
+                    clearInterval(window.profileTgPollInterval);
+                    window.profileTgPollInterval = null;
+                }
+                window.pendingOtpTg = null;
+                localStorage.removeItem('nisha_pending_otp_tg');
+                showToast('\u042D\u0442\u043E\u0442 Telegram \u0443\u0436\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0435!', 'error');
+                const saveBtns = document.querySelectorAll('#profileTgInputWrap .win95-save-btn, #modalProfileTgInputWrap .win95-save-btn');
+                saveBtns.forEach(b => { b.disabled = false; b.innerText = '\u2713'; });
+                return;
+            }
+        } catch(e) {}
+    }
 
     try {
         const { data: isVerified } = await _supabase.rpc('check_otp_verified', { p_phone: `tg_${cleanUser}` });
@@ -1564,6 +1608,18 @@ window.savePhoneFromInput = async function(isModal = false) {
 
     // Проверяем, не привязан ли этот номер к другому аккаунту
     try {
+        const { data: isAvail, error: rpcErr } = await _supabase.rpc('check_contact_available', {
+            p_type: 'phone',
+            p_val: clean,
+            p_user_id: currentUser.id
+        });
+        if (!rpcErr && isAvail === false) {
+            showToast('\u041D\u043E\u043C\u0435\u0440 \u0443\u0436\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0435!', 'error');
+            input.focus();
+            return;
+        }
+    } catch(e) {}
+    try {
         const { data: existingPhone } = await _supabase
             .from('profiles')
             .select('id')
@@ -1579,7 +1635,7 @@ window.savePhoneFromInput = async function(isModal = false) {
     } catch(e) {}
 
     // Если не подтвержден — генерируем OTP и отправляем в бота для подтверждения
-    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-check-btn' : '#profilePhoneInputWrap .win95-check-btn');
+    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-save-btn' : '#profilePhoneInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerHTML = getWin95HourglassHtml(14);
@@ -1604,7 +1660,8 @@ window.savePhoneFromInput = async function(isModal = false) {
     localStorage.setItem('nisha_pending_otp_phone', clean);
 
     const payloadPhone = clean.replace('+', '');
-    const tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
+    const userPrefix = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? `${currentUser.id}_` : '';
+    const tgLink = `https://t.me/nisha_store1_bot?start=otp_${userPrefix}${payloadPhone}`;
 
     const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
     if (isMobile) {
@@ -1671,7 +1728,7 @@ function renderProfileTg(tg) {
         if (mWrap) mWrap.style.display = 'none';
     }
 
-    const saveBtns = document.querySelectorAll('#profileTgInputWrap .win95-check-btn, #modalProfileTgInputWrap .win95-check-btn');
+    const saveBtns = document.querySelectorAll('#profileTgInputWrap .win95-save-btn, #modalProfileTgInputWrap .win95-save-btn');
     saveBtns.forEach(b => {
         b.disabled = false;
         b.innerText = '✓';
@@ -1750,7 +1807,7 @@ window.hideTgInput = function(isModal = false) {
     if (input) {
         input.value = '';
     }
-    const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-check-btn' : '#profileTgInputWrap .win95-check-btn');
+    const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-save-btn' : '#profileTgInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerText = '✓';
@@ -1781,6 +1838,18 @@ window.saveTgFromInput = async function(isModal = false) {
 
     // Проверяем, не привязан ли этот Telegram к другому аккаунту
     try {
+        const { data: isAvail, error: rpcErr } = await _supabase.rpc('check_contact_available', {
+            p_type: 'tg',
+            p_val: cleanUser,
+            p_user_id: currentUser.id
+        });
+        if (!rpcErr && isAvail === false) {
+            showToast('\u042D\u0442\u043E\u0442 Telegram \u0443\u0436\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u043C \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0435!', 'error');
+            input.focus();
+            return;
+        }
+    } catch(e) {}
+    try {
         const { data: existingTg } = await _supabase
             .from('profiles')
             .select('id')
@@ -1796,7 +1865,7 @@ window.saveTgFromInput = async function(isModal = false) {
     } catch(e) {}
 
     // Генерируем запись в otp_codes с префиксом tg_
-    const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-check-btn' : '#profileTgInputWrap .win95-check-btn');
+    const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-save-btn' : '#profileTgInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerHTML = getWin95HourglassHtml(14);
@@ -1820,7 +1889,7 @@ window.saveTgFromInput = async function(isModal = false) {
     window.pendingOtpTg = clean;
     localStorage.setItem('nisha_pending_otp_tg', clean);
 
-    const tgLink = `https://t.me/nisha_store1_bot?start=tg_${cleanLower}`;
+    const tgLink = `https://t.me/nisha_store1_bot?start=tg_${currentUser.id}_${cleanLower}`;
 
     const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
     if (isMobile) {
@@ -3539,7 +3608,8 @@ async function generateAndSendOTP() {
     
     // 5. Открываем бота
     const payloadPhone = cleanPhone.replace('+', '');
-    const tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
+    const userPrefix = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? `${currentUser.id}_` : '';
+    const tgLink = `https://t.me/nisha_store1_bot?start=otp_${userPrefix}${payloadPhone}`;
     
     if (/android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
         window.location.href = tgLink;
