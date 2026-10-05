@@ -1354,7 +1354,11 @@ async function checkPendingPhoneVerification() {
 
             if (currentUser) {
                 try {
-                    await _supabase.from('profiles').update({ phone: pendingPhone }).eq('id', currentUser.id);
+                    const { error: updErr } = await _supabase.from('profiles').update({ phone: pendingPhone }).eq('id', currentUser.id);
+                    if (updErr && (updErr.code === '23505' || updErr.message?.includes('duplicate'))) {
+                        showToast('Этот номер уже привязан к другому аккаунту!', 'error');
+                        return;
+                    }
                     await _supabase.auth.updateUser({ data: { phone: pendingPhone } });
                 } catch(e) {}
             }
@@ -1453,6 +1457,22 @@ window.savePhoneFromInput = async function(isModal = false) {
         const { data: blacklisted } = await _supabase.from('blacklist').select('phone').eq('phone', clean).limit(1);
         if (blacklisted && blacklisted.length > 0) {
             showToast('[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН', 'error');
+            return;
+        }
+    } catch(e) {}
+
+    // Проверяем, не привязан ли этот номер к другому аккаунту
+    try {
+        const { data: existingPhone } = await _supabase
+            .from('profiles')
+            .select('id')
+            .eq('phone', clean)
+            .neq('id', currentUser.id)
+            .limit(1);
+
+        if (existingPhone && existingPhone.length > 0) {
+            showToast('Этот номер уже привязан к другому аккаунту!', 'error');
+            input.focus();
             return;
         }
     } catch(e) {}
@@ -1614,13 +1634,38 @@ window.saveTgFromInput = async function(isModal = false) {
 
     const clean = '@' + cleanUser;
 
+    // Проверяем, не привязан ли этот Telegram к другому аккаунту
     try {
-        await _supabase.from('profiles').update({ tg: clean }).eq('id', currentUser.id);
+        const { data: existingTg } = await _supabase
+            .from('profiles')
+            .select('id')
+            .ilike('tg', clean)
+            .neq('id', currentUser.id)
+            .limit(1);
+
+        if (existingTg && existingTg.length > 0) {
+            showToast('Этот Telegram уже привязан к другому аккаунту!', 'error');
+            input.focus();
+            return;
+        }
+    } catch(e) {}
+
+    try {
+        const { error: updErr } = await _supabase.from('profiles').update({ tg: clean }).eq('id', currentUser.id);
+        if (updErr) {
+            if (updErr.code === '23505' || updErr.message?.includes('duplicate')) {
+                showToast('Этот Telegram уже привязан к другому аккаунту!', 'error');
+                return;
+            }
+            throw updErr;
+        }
         try {
             await _supabase.auth.updateUser({ data: { tg: clean } });
         } catch(e) {}
     } catch(err) {
         console.error('Ошибка сохранения Telegram:', err);
+        showToast('Ошибка сохранения Telegram!', 'error');
+        return;
     }
 
     if (!userProfile) userProfile = {};
