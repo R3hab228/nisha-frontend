@@ -438,12 +438,14 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <input id=botTrap style=opacity:0;position:absolute;top:0;left:0;height:0;width:0;z-index:-1 tabindex=-1 autocomplete=off>
 <label data-i18n=checkout.name>ФИО Получателя:</label>
 <input id=orderName class=form-input placeholder="Іванов Іван Іванович">
+<div id=checkoutPhoneWrapper>
 <label data-i18n=checkout.phone>Телефон (ОБЯЗАТЕЛЬНО):</label>
 <div style=display:flex;gap:10px>
 <input type=tel id=orderPhone class=form-input placeholder=+380... inputmode=numeric>
 <button class="search-btn btn-target" id=btnGetOtp onclick=generateAndSendOTP() style="white-space:nowrap;padding:10px 15px;font-size:12px" data-i18n=checkout.btn_otp>Подтвердить</button>
 </div>
 <div id=otpStatus style=color:var(--accent-red);font-size:11px;font-family:var(--font-mono);margin-top:-5px data-i18n=checkout.otp_status>Сначала подтвердите номер для заказа!</div>
+</div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div style=position:relative>
 <input id=orderCity class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off>
@@ -655,8 +657,10 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <input type=number id=propCond class=form-input placeholder=9 min=1 max=10 data-i18n-ph=propose.cond_place>
 <label data-i18n=propose.price_label>ЖЕЛАЕМАЯ ЦЕНА (ГРН):</label>
 <input type=number id=propPrice class=form-input placeholder="Например: 1500" min=1 data-i18n-ph=propose.price_place>
+<div id=propContactWrapper>
 <label data-i18n=propose.contact_label>СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
 <input id=propContact class=form-input placeholder="@твои_ник или +380..." data-i18n-ph=propose.contact_place>
+</div>
 <button class="cart-checkout-btn btn-target" id=btnSubmitProp onclick=submitProposal() style=margin-top:15px;width:100% data-i18n=propose.btn_submit>[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
 </div>
 </div>

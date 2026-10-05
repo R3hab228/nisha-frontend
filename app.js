@@ -363,6 +363,7 @@ if (_supabase) {
             favorites = [];
             renderProfilePhone('');
             renderProfileTg('');
+            if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
             updateFavBadge();
             // Скрываем профиль, показываем логин
             const loginForm = document.getElementById('loginForm');
@@ -1127,6 +1128,10 @@ async function checkSession() {
             renderProfilePhone(uPhone);
             const uTg = userProfile?.tg || userProfile?.telegram || currentUser.user_metadata?.tg || currentUser.user_metadata?.telegram || localStorage.getItem('nisha_last_tg') || '';
             renderProfileTg(uTg);
+            if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+            if (localStorage.getItem('nisha_pending_otp_phone') && typeof checkPendingPhoneVerification === 'function') {
+                checkPendingPhoneVerification();
+            }
             // --- ПРИВЯЗКА ПУШЕЙ К ПРОФИЛЮ ---
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(reg => {
@@ -1220,6 +1225,7 @@ async function checkSession() {
             favorites = [];
             renderProfilePhone('');
             renderProfileTg('');
+            if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
             
             // БЕЗОПАСНО ПК
             const loginForm = document.getElementById('loginForm');
@@ -1287,6 +1293,11 @@ window.showPhoneInput = function(isModal = false) {
     const btn = document.getElementById(isModal ? 'modalProfileAddPhoneBtn' : 'profileAddPhoneBtn');
     const wrap = document.getElementById(isModal ? 'modalProfilePhoneInputWrap' : 'profilePhoneInputWrap');
     const input = document.getElementById(isModal ? 'modalProfilePhoneInput' : 'profilePhoneInput');
+    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-check-btn' : '#profilePhoneInputWrap .win95-check-btn');
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerText = '✓';
+    }
 
     if (btn) btn.style.display = 'none';
     if (wrap) wrap.style.display = 'flex';
@@ -1303,6 +1314,12 @@ window.showPhoneInput = function(isModal = false) {
 };
 
 window.hidePhoneInput = function(isModal = false) {
+    if (window.profileOtpPollInterval) {
+        clearInterval(window.profileOtpPollInterval);
+        window.profileOtpPollInterval = null;
+    }
+    window.pendingOtpPhone = null;
+    localStorage.removeItem('nisha_pending_otp_phone');
     const btn = document.getElementById(isModal ? 'modalProfileAddPhoneBtn' : 'profileAddPhoneBtn');
     const wrap = document.getElementById(isModal ? 'modalProfilePhoneInputWrap' : 'profilePhoneInputWrap');
     const input = document.getElementById(isModal ? 'modalProfilePhoneInput' : 'profilePhoneInput');
@@ -1314,7 +1331,101 @@ window.hidePhoneInput = function(isModal = false) {
     } else if (input) {
         input.value = '';
     }
+    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-check-btn' : '#profilePhoneInputWrap .win95-check-btn');
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerText = '✓';
+    }
 };
+
+async function checkPendingPhoneVerification() {
+    const pendingPhone = window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone');
+    if (!pendingPhone) return;
+
+    try {
+        const { data: isVerified } = await _supabase.rpc('check_otp_verified', { p_phone: pendingPhone });
+        if (isVerified) {
+            if (window.profileOtpPollInterval) {
+                clearInterval(window.profileOtpPollInterval);
+                window.profileOtpPollInterval = null;
+            }
+            window.pendingOtpPhone = null;
+            localStorage.removeItem('nisha_pending_otp_phone');
+
+            if (currentUser) {
+                try {
+                    await _supabase.from('profiles').update({ phone: pendingPhone }).eq('id', currentUser.id);
+                    await _supabase.auth.updateUser({ data: { phone: pendingPhone } });
+                } catch(e) {}
+            }
+
+            if (!userProfile) userProfile = {};
+            userProfile.phone = pendingPhone;
+            localStorage.setItem('nisha_last_phone', pendingPhone);
+
+            renderProfilePhone(pendingPhone);
+            const msg = typeof i18next !== 'undefined' ? i18next.t('messages.phone_verified', { defaultValue: 'Номер подтвержден!' }) : 'Номер подтвержден!';
+            showToast(msg, 'success');
+            updateProposeAndCheckoutFields();
+        }
+    } catch(err) {
+        console.error('Ошибка проверки OTP в фоне:', err);
+    }
+}
+window.checkPendingPhoneVerification = checkPendingPhoneVerification;
+
+window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && (window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone'))) {
+        checkPendingPhoneVerification();
+    }
+});
+window.addEventListener('focus', () => {
+    if (window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone')) {
+        checkPendingPhoneVerification();
+    }
+});
+
+function getUserPhone() {
+    return (userProfile?.phone || currentUser?.phone || currentUser?.user_metadata?.phone || localStorage.getItem('nisha_last_phone') || '').trim();
+}
+window.getUserPhone = getUserPhone;
+
+function getUserTg() {
+    return (userProfile?.tg || userProfile?.telegram || currentUser?.user_metadata?.tg || currentUser?.user_metadata?.telegram || localStorage.getItem('nisha_last_tg') || '').trim();
+}
+window.getUserTg = getUserTg;
+
+function updateProposeAndCheckoutFields() {
+    const phone = getUserPhone();
+    const tg = getUserTg();
+
+    // 1. Предложка: если заполнены и телефон, и tg — поле связи пропадает
+    const propContactWrap = document.getElementById('propContactWrapper');
+    const propContactInput = document.getElementById('propContact');
+    if (phone && tg) {
+        if (propContactWrap) propContactWrap.style.display = 'none';
+        if (propContactInput) propContactInput.value = `${tg} | ${phone}`;
+    } else {
+        if (propContactWrap) propContactWrap.style.display = 'block';
+    }
+
+    // 2. Оформление заказа: если номер есть в профиле — поле телефон пропадает
+    const checkoutPhoneWrap = document.getElementById('checkoutPhoneWrapper');
+    const orderPhoneInput = document.getElementById('orderPhone');
+    if (phone) {
+        if (checkoutPhoneWrap) checkoutPhoneWrap.style.display = 'none';
+        if (orderPhoneInput) orderPhoneInput.value = phone;
+        otpVerified = true;
+        const btnSubmit = document.getElementById('btnSubmitOrder');
+        if (btnSubmit) {
+            btnSubmit.style.opacity = '1';
+            btnSubmit.style.pointerEvents = 'auto';
+        }
+    } else {
+        if (checkoutPhoneWrap) checkoutPhoneWrap.style.display = 'block';
+    }
+}
+window.updateProposeAndCheckoutFields = updateProposeAndCheckoutFields;
 
 window.savePhoneFromInput = async function(isModal = false) {
     if (!currentUser) {
@@ -1337,21 +1448,81 @@ window.savePhoneFromInput = async function(isModal = false) {
         return;
     }
 
+    // Проверяем Черный Список
     try {
-        await _supabase.from('profiles').update({ phone: clean }).eq('id', currentUser.id);
+        const { data: blacklisted } = await _supabase.from('blacklist').select('phone').eq('phone', clean).limit(1);
+        if (blacklisted && blacklisted.length > 0) {
+            showToast('[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН', 'error');
+            return;
+        }
+    } catch(e) {}
+
+    // Проверяем, подтвержден ли номер уже в базе
+    let isAlreadyVerified = false;
+    try {
+        const { data: vResult } = await _supabase.rpc('check_otp_verified', { p_phone: clean });
+        isAlreadyVerified = Boolean(vResult);
+    } catch(e) {}
+
+    if (isAlreadyVerified) {
         try {
-            await _supabase.auth.updateUser({ data: { phone: clean } });
-        } catch(e) {}
-    } catch(err) {
-        console.error('Ошибка сохранения телефона:', err);
+            await _supabase.from('profiles').update({ phone: clean }).eq('id', currentUser.id);
+            try { await _supabase.auth.updateUser({ data: { phone: clean } }); } catch(e) {}
+        } catch(err) {
+            console.error('Ошибка сохранения телефона:', err);
+        }
+
+        if (!userProfile) userProfile = {};
+        userProfile.phone = clean;
+        localStorage.setItem('nisha_last_phone', clean);
+
+        renderProfilePhone(clean);
+        const msg = typeof i18next !== 'undefined' ? i18next.t('messages.phone_verified', { defaultValue: 'Номер подтвержден!' }) : 'Номер подтвержден!';
+        showToast(msg, 'success');
+        updateProposeAndCheckoutFields();
+        return;
     }
 
-    if (!userProfile) userProfile = {};
-    userProfile.phone = clean;
-    localStorage.setItem('nisha_last_phone', clean);
+    // Если не подтвержден — генерируем OTP и отправляем в бота для подтверждения
+    const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-check-btn' : '#profilePhoneInputWrap .win95-check-btn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerText = '⏳';
+    }
 
-    renderProfilePhone(clean);
-    showToast('Номер успешно сохранен!', 'success');
+    try {
+        const { error: otpError } = await _supabase.rpc('generate_secure_otp', { p_phone: clean });
+        if (otpError) {
+            console.error('OTP generate error:', otpError);
+            showToast('Ошибка сервера при генерации кода', 'error');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerText = '✓';
+            }
+            return;
+        }
+    } catch(e) {
+        console.error('OTP RPC error:', e);
+    }
+
+    window.pendingOtpPhone = clean;
+    localStorage.setItem('nisha_pending_otp_phone', clean);
+
+    const payloadPhone = clean.replace('+', '');
+    const tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
+
+    if (/android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
+        window.location.href = tgLink;
+    } else {
+        window.open(tgLink, '_blank');
+    }
+
+    showToast('Перейдите в бота и нажмите СТАРТ для подтверждения номера...', 'info');
+
+    if (window.profileOtpPollInterval) clearInterval(window.profileOtpPollInterval);
+    window.profileOtpPollInterval = setInterval(() => {
+        checkPendingPhoneVerification();
+    }, 2000);
 };
 
 // ==========================================
@@ -1480,6 +1651,7 @@ window.saveTgFromInput = async function(isModal = false) {
 
     renderProfileTg(clean);
     showToast('Telegram успешно сохранен!', 'success');
+    updateProposeAndCheckoutFields();
 };
 
 let isRegMode = false;
@@ -3049,6 +3221,19 @@ async function checkPhoneAuth() {
     const rawPhone = document.getElementById('orderPhone').value;
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
 
+    if (typeof getUserPhone === 'function') {
+        const uPhone = getUserPhone().replace(/[^\d+]/g, '');
+        if (uPhone && cleanPhone && cleanPhone === uPhone) {
+            otpVerified = true;
+            if (btnSubmit) {
+                btnSubmit.style.opacity = "1";
+                btnSubmit.style.pointerEvents = "auto";
+            }
+            if (statusOtp) statusOtp.style.display = "none";
+            return;
+        }
+    } 
+
     // Блокируем кнопку заказа по умолчанию
     otpVerified = false;
     btnSubmit.style.opacity = "0.5";
@@ -3239,6 +3424,7 @@ async function openCheckoutModal() {
     if (typeof lenis !== 'undefined') window.stopLenis();
     document.getElementById('checkoutModal').style.display = 'flex'; 
     document.body.style.overflow = 'hidden';
+    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
     
     // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА (Seamless Checkout)
     const savedDataRaw = localStorage.getItem('nisha_checkout_data');
@@ -3271,6 +3457,14 @@ async function submitOrder() {
     window.triggerVibration(150);
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== "") return;
+    if (typeof getUserPhone === 'function') {
+        const uPhone = getUserPhone();
+        if (uPhone) {
+            const ordPhone = document.getElementById('orderPhone');
+            if (ordPhone) ordPhone.value = uPhone;
+            otpVerified = true;
+        }
+    }
 
     if (!otpVerified) {
         showToast('Подтвердите номер телефона!', 'error');
@@ -5015,6 +5209,7 @@ function initMobileSwipe() {
 // 1. Открытие модального окна предложки
 function openProposeModal() {
     if (typeof lenis !== 'undefined') window.stopLenis();
+    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
     const modal = document.getElementById('proposeModal');
     if (modal) {
         modal.style.display = 'flex';
@@ -5088,6 +5283,7 @@ function resetProposalForm() {
     document.getElementById('propFiles').value = '';
     currentProposalFiles = [];
     renderProposalPreviews();
+    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
 }
 
 // --- ОБЩАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ ФАЙЛОВ ---
@@ -5275,7 +5471,12 @@ async function submitProposal() {
     const rawDesc = document.getElementById('propDesc').value.trim(); // ДОСТАЕМ ОПИСАНИЕ
     const cond = parseInt(document.getElementById('propCond').value);
     const price = parseInt(document.getElementById('propPrice').value) || 0; 
-    const rawContact = document.getElementById('propContact').value.trim();
+    let rawContact = document.getElementById('propContact').value.trim();
+    if (!rawContact && typeof getUserPhone === 'function' && typeof getUserTg === 'function') {
+        const uPhone = getUserPhone();
+        const uTg = getUserTg();
+        if (uPhone && uTg) rawContact = `${uTg} | ${uPhone}`;
+    }
     
     // ОЧИЩАЕМ ОТ ВРЕДОНОСНОГО КОДА (ЕСЛИ ЕСТЬ DOMPURIFY)
     const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName.replace(/</g, '&lt;').replace(/>/g, '&gt;'); 

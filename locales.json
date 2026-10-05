@@ -124,7 +124,8 @@
         "rules_accepted": "Правила приняты",
         "req_fields": "Заполните все обязательные поля",
         "link_copied": "Ссылка скопирована!",
-        "copy_error": "Ошибка копирования"
+        "copy_error": "Ошибка копирования",
+        "phone_verified": "Номер подтвержден!"
       },
       "checkout": {
         "desc": "Заполните данные для отправки. Бронь 2 часа.",
@@ -382,7 +383,8 @@
         "rules_accepted": "Правила прийняті",
         "req_fields": "Заповніть всі обов'язкові поля",
         "link_copied": "Посилання скопійовано!",
-        "copy_error": "Помилка копіювання"
+        "copy_error": "Помилка копіювання",
+        "phone_verified": "Номер підтверджено!"
       },
       "checkout": {
         "desc": "Заповніть дані для відправки. Бронь 2 години.",
@@ -639,7 +641,8 @@
         "rules_accepted": "Rules accepted",
         "req_fields": "Please fill in all required fields",
         "link_copied": "Link copied!",
-        "copy_error": "Copy error"
+        "copy_error": "Copy error",
+        "phone_verified": "Phone verified!"
       },
       "checkout": {
         "desc": "Fill in shipping details. Reserved for 2 hours.",
