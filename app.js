@@ -963,8 +963,8 @@ async function openReviewsModal() {
 
     data.forEach(rev => {
             const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
-            const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : rev.text;
-            const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : rev.user_name;
+            const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : rev.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : rev.user_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             
             const clickAction = rev.item_image ? `onclick="openReviewImage('${rev.item_image}')"` : '';
             const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
@@ -2968,9 +2968,9 @@ async function submitOrder() {
     const rawCity = document.getElementById('orderCity').value.trim();
     const rawBranch = document.getElementById('orderBranch').value.trim();
     
-    const name = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawName) : rawName;
-    const city = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawCity) : rawCity;
-    const branch = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawBranch) : rawBranch;
+    const name = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawName) : rawName.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const city = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawCity) : rawCity.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const branch = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawBranch) : rawBranch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const phoneRaw = document.getElementById('orderPhone').value;
     const phone = phoneRaw.replace(/[^\d+]/g, '');
@@ -4964,11 +4964,11 @@ async function submitProposal() {
     const rawContact = document.getElementById('propContact').value.trim();
     
     // ОЧИЩАЕМ ОТ ВРЕДОНОСНОГО КОДА (ЕСЛИ ЕСТЬ DOMPURIFY)
-    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName; 
-    const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand;
-    const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize;
-    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc; // ЧИСТИМ ОПИСАНИЕ
-    const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact;
+    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName.replace(/</g, '&lt;').replace(/>/g, '&gt;'); 
+    const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc.replace(/</g, '&lt;').replace(/>/g, '&gt;'); // ЧИСТИМ ОПИСАНИЕ
+    const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     // ЖЕСТКАЯ ПРОВЕРКА (Если пусто хотя бы одно поле — выдаем ошибку)
     if (!files.length || !nameItem || !brand || !size || !desc || isNaN(cond) || price <= 0 || !contact) {
@@ -5493,9 +5493,9 @@ window.loadItemQuestions = async function(itemId) {
         list.innerHTML = '';
         data.forEach(q => {
             // БЕЗОПАСНОСТЬ: Очищаем текст
-            const safeQ = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.question) : q.question;
-            const safeA = q.answer ? (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.answer) : q.answer) : null;
-            const safeU = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.user_name) : q.user_name;
+            const safeQ = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.question) : q.question.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeA = q.answer ? (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.answer) : q.answer.replace(/</g, '&lt;').replace(/>/g, '&gt;')) : null;
+            const safeU = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.user_name) : q.user_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
             let answerHtml = safeA ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">↳ NISHA: ${safeA}</div>` : '';
             list.innerHTML += `
@@ -5613,7 +5613,7 @@ async function submitSupportTicket() {
     btn.style.pointerEvents = 'none';
     btn.innerText = '[ ОТПРАВКА... ]';
 
-    const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message;
+    const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const userContact = currentUser ? (currentUser.email || currentUser.phone || 'Аноним') : 'Гость';
 
     // 1. Отправляем запрос на сервер и НЕ ЖДЕМ ответа! (Используем .catch для тихой записи ошибок)
