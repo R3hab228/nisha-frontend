@@ -1,7 +1,8 @@
 module.exports = async function handler(req, res) {
   const id = req.query.id;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  if (!id) {
+  if (!id || !uuidRegex.test(id)) {
     return res.redirect('/');
   }
 
