@@ -382,7 +382,14 @@ if (_supabase) {
     });
 }
 
+let lastToastMsg = '';
+let lastToastTime = 0;
+
 function showToast(message, type = 'success', imgUrl = null) {
+    const now = Date.now();
+    if (message === lastToastMsg && (now - lastToastTime < 2500)) return;
+    lastToastMsg = message;
+    lastToastTime = now;
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const toast = document.createElement('div');
@@ -1395,7 +1402,13 @@ window.hidePhoneInput = function(isModal = false) {
     }
 };
 
+let isCheckingPhoneOtp = false;
+let isPhoneOtpCompleted = false;
+let isCheckingTgOtp = false;
+let isTgOtpCompleted = false;
+
 async function checkPendingPhoneVerification() {
+    if (isCheckingPhoneOtp || isPhoneOtpCompleted) return;
     const pendingPhone = window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone');
     if (!pendingPhone) return;
 
@@ -1414,7 +1427,9 @@ async function checkPendingPhoneVerification() {
         return;
     }
 
-    if (currentUser) {
+    isCheckingPhoneOtp = true;
+    try {
+        if (currentUser) {
         try {
             const { data: isAvail } = await _supabase.rpc('check_contact_available', {
                 p_type: 'phone',
@@ -1440,6 +1455,7 @@ async function checkPendingPhoneVerification() {
     try {
         const { data: isVerified } = await _supabase.rpc('check_otp_verified', { p_phone: pendingPhone });
         if (isVerified) {
+            isPhoneOtpCompleted = true;
             if (window.profileOtpPollInterval) {
                 clearInterval(window.profileOtpPollInterval);
                 window.profileOtpPollInterval = null;
@@ -1450,7 +1466,50 @@ async function checkPendingPhoneVerification() {
 
             if (currentUser) {
                 try {
-                    const { error: updErr } = await _supabase.from('profiles').update({ phone: pendingPhone }).eq('id', currentUser.id);
+                    let hasLinkedTg = false;
+                    const { data: profData, error: profErr } = await _supabase
+                        .from('profiles')
+                        .select('phone, tg')
+                        .eq('id', currentUser.id)
+                        .single();
+
+                    if (!profErr && profData) {
+                        if (!userProfile) userProfile = {};
+                        const confirmedPhone = profData.phone || pendingPhone;
+                        userProfile.phone = confirmedPhone;
+                        localStorage.setItem('nisha_last_phone', confirmedPhone);
+                        renderProfilePhone(confirmedPhone);
+
+                        if (profData.tg) {
+                            userProfile.tg = profData.tg;
+                            localStorage.setItem('nisha_last_tg', profData.tg);
+                            renderProfileTg(profData.tg);
+                            hasLinkedTg = true;
+
+                            if (window.profileTgPollInterval) {
+                                clearInterval(window.profileTgPollInterval);
+                                window.profileTgPollInterval = null;
+                            }
+                            window.pendingOtpTg = null;
+                            localStorage.removeItem('nisha_pending_otp_tg');
+                            localStorage.removeItem('nisha_pending_otp_tg_time');
+                        }
+
+                        if (!profData.phone) {
+                            await _supabase.from('profiles').update({ phone: pendingPhone }).eq('id', currentUser.id);
+                        }
+                    } else {
+                        const { error: updErr } = await _supabase.from('profiles').update({ phone: pendingPhone }).eq('id', currentUser.id);
+                        if (updErr && (updErr.code === '23505' || updErr.message?.includes('duplicate'))) {
+                            showToast('Этот номер уже привязан к другому аккаунту!', 'error');
+                            return;
+                        }
+                        if (!userProfile) userProfile = {};
+                        userProfile.phone = pendingPhone;
+                        localStorage.setItem('nisha_last_phone', pendingPhone);
+                        renderProfilePhone(pendingPhone);
+                    }
+                    window._hasLinkedTgOnPhoneVerify = hasLinkedTg;
                     if (updErr && (updErr.code === '23505' || updErr.message?.includes('duplicate'))) {
                         showToast('Этот номер уже привязан к другому аккаунту!', 'error');
                         return;
@@ -1464,17 +1523,24 @@ async function checkPendingPhoneVerification() {
             localStorage.setItem('nisha_last_phone', pendingPhone);
 
             renderProfilePhone(pendingPhone);
-            const msg = typeof i18next !== 'undefined' ? i18next.t('messages.phone_verified', { defaultValue: 'Номер подтвержден!' }) : 'Номер подтвержден!';
+            const msg = window._hasLinkedTgOnPhoneVerify
+                ? '\u041D\u043E\u043C\u0435\u0440 \u0438 Telegram \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u044B!'
+                : (typeof i18next !== 'undefined' ? i18next.t('messages.phone_verified', { defaultValue: '\u041D\u043E\u043C\u0435\u0440 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D!' }) : '\u041D\u043E\u043C\u0435\u0440 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D!');
+            delete window._hasLinkedTgOnPhoneVerify;
             showToast(msg, 'success');
             updateProposeAndCheckoutFields();
         }
     } catch(err) {
         console.error('Ошибка проверки OTP в фоне:', err);
     }
+    } finally {
+        isCheckingPhoneOtp = false;
+    }
 }
 window.checkPendingPhoneVerification = checkPendingPhoneVerification;
 
 async function checkPendingTgVerification() {
+    if (isCheckingTgOtp || isTgOtpCompleted) return;
     const pendingTg = window.pendingOtpTg || localStorage.getItem('nisha_pending_otp_tg');
     if (!pendingTg) return;
 
@@ -1496,7 +1562,9 @@ async function checkPendingTgVerification() {
     const cleanUser = pendingTg.replace(/^@+/, '').trim().toLowerCase();
     if (!cleanUser) return;
 
-    if (currentUser) {
+    isCheckingTgOtp = true;
+    try {
+        if (currentUser) {
         try {
             const { data: isAvail } = await _supabase.rpc('check_contact_available', {
                 p_type: 'tg',
@@ -1522,6 +1590,7 @@ async function checkPendingTgVerification() {
     try {
         const { data: isVerified } = await _supabase.rpc('check_otp_verified', { p_phone: `tg_${cleanUser}` });
         if (isVerified) {
+            isTgOtpCompleted = true;
             if (window.profileTgPollInterval) {
                 clearInterval(window.profileTgPollInterval);
                 window.profileTgPollInterval = null;
@@ -1554,6 +1623,9 @@ async function checkPendingTgVerification() {
         }
     } catch(err) {
         console.error('Ошибка проверки TG OTP в фоне:', err);
+    }
+    } finally {
+        isCheckingTgOtp = false;
     }
 }
 window.checkPendingTgVerification = checkPendingTgVerification;
@@ -1695,6 +1767,7 @@ window.savePhoneFromInput = async function(isModal = false) {
 
     // Если не подтвержден — генерируем OTP и отправляем в бота для подтверждения
     lastPhoneSendTimestamp = Date.now();
+    isPhoneOtpCompleted = false;
     const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-save-btn' : '#profilePhoneInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = true;
@@ -1944,6 +2017,7 @@ window.saveTgFromInput = async function(isModal = false) {
 
     // Генерируем запись в otp_codes с префиксом tg_
     lastTgSendTimestamp = Date.now();
+    isTgOtpCompleted = false;
     const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-save-btn' : '#profileTgInputWrap .win95-save-btn');
     if (saveBtn) {
         saveBtn.disabled = true;
