@@ -168,7 +168,9 @@
         "email": "E-MAIL:",
         "phone": "НОМЕР ТЕЛЕФОНА:",
         "no_phone": "Не указан",
-        "add_phone": "Добавить номер +"
+        "add_phone": "Добавить номер +",
+        "tg": "ТГ ЮЗ:",
+        "add_tg": "Добавить Telegram +"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -424,7 +426,9 @@
         "email": "E-MAIL:",
         "phone": "НОМЕР ТЕЛЕФОНУ:",
         "no_phone": "Не вказано",
-        "add_phone": "Додати номер +"
+        "add_phone": "Додати номер +",
+        "tg": "ТГ ЮЗ:",
+        "add_tg": "Додати Telegram +"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -679,7 +683,9 @@
         "email": "E-MAIL:",
         "phone": "PHONE NUMBER:",
         "no_phone": "Not specified",
-        "add_phone": "Add phone +"
+        "add_phone": "Add phone +",
+        "tg": "TELEGRAM:",
+        "add_tg": "Add Telegram +"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",

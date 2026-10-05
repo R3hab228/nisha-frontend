@@ -188,13 +188,23 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div style=color:#666;font-size:11px;margin-bottom:5px>E-MAIL:</div>
 <div style="color:#aaa;font-size:12px;margin-bottom:12px;overflow:hidden;text-overflow:ellipsis" id=profileEmail>Loading...</div>
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.phone>НОМЕР ТЕЛЕФОНА:</div>
-<div style="border-bottom:1px dashed #333;padding-bottom:12px;margin-bottom:12px" id=profilePhoneContainer>
+<div style="margin-bottom:12px" id=profilePhoneContainer>
 <div style="color:#fff;font-size:13px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=profilePhone></div>
 <a href=javascript:void(0) onclick="showPhoneInput(false)" id=profileAddPhoneBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
 <div id=profilePhoneInputWrap style="display:none;align-items:center;gap:6px;margin-top:4px">
 <input type=tel id=profilePhoneInput placeholder="+380..." style="background:#000;color:var(--accent-green);border:2px inset #555;padding:4px 8px;font-family:var(--font-mono);font-size:12px;width:145px;outline:none">
 <button onclick="savePhoneFromInput(false)" title="Сохранить" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
 <button onclick="hidePhoneInput(false)" title="Отмена" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+</div>
+</div>
+<div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.tg>ТГ ЮЗ:</div>
+<div style="border-bottom:1px dashed #333;padding-bottom:12px;margin-bottom:12px" id=profileTgContainer>
+<div style="color:#fff;font-size:13px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=profileTg></div>
+<a href=javascript:void(0) onclick="showTgInput(false)" id=profileAddTgBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
+<div id=profileTgInputWrap style="display:none;align-items:center;gap:6px;margin-top:4px">
+<input type=text id=profileTgInput placeholder="@username" style="background:#000;color:var(--accent-green);border:2px inset #555;padding:4px 8px;font-family:var(--font-mono);font-size:12px;width:145px;outline:none" autocomplete=off autocapitalize=none>
+<button onclick="saveTgFromInput(false)" title="Сохранить" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button onclick="hideTgInput(false)" title="Отмена" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div style=display:flex;justify-content:space-between;align-items:center>
@@ -591,13 +601,23 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.email>E-MAIL:</div>
 <div style="color:#aaa;font-size:13px;margin-bottom:15px;overflow:hidden;text-overflow:ellipsis" id=modalProfileEmail>Loading...</div>
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.phone>НОМЕР ТЕЛЕФОНА:</div>
-<div style="border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px" id=modalProfilePhoneContainer>
+<div style="margin-bottom:15px" id=modalProfilePhoneContainer>
 <div style="color:#fff;font-size:14px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=modalProfilePhone></div>
 <a href=javascript:void(0) onclick="showPhoneInput(true)" id=modalProfileAddPhoneBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
 <div id=modalProfilePhoneInputWrap style="display:none;align-items:center;gap:8px;margin-top:6px">
 <input type=tel id=modalProfilePhoneInput placeholder="+380..." style="background:#000;color:var(--accent-green);border:2px inset #555;padding:6px 10px;font-family:var(--font-mono);font-size:13px;flex:1;max-width:175px;outline:none">
 <button onclick="savePhoneFromInput(true)" title="Сохранить" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
 <button onclick="hidePhoneInput(true)" title="Отмена" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+</div>
+</div>
+<div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.tg>ТГ ЮЗ:</div>
+<div style="border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px" id=modalProfileTgContainer>
+<div style="color:#fff;font-size:14px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=modalProfileTg></div>
+<a href=javascript:void(0) onclick="showTgInput(true)" id=modalProfileAddTgBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
+<div id=modalProfileTgInputWrap style="display:none;align-items:center;gap:8px;margin-top:6px">
+<input type=text id=modalProfileTgInput placeholder="@username" style="background:#000;color:var(--accent-green);border:2px inset #555;padding:6px 10px;font-family:var(--font-mono);font-size:13px;flex:1;max-width:175px;outline:none" autocomplete=off autocapitalize=none>
+<button onclick="saveTgFromInput(true)" title="Сохранить" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button onclick="hideTgInput(true)" title="Отмена" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div style=display:flex;justify-content:space-between;align-items:center>

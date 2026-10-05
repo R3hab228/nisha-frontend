@@ -362,6 +362,7 @@ if (_supabase) {
             userProfile = null;
             favorites = [];
             renderProfilePhone('');
+            renderProfileTg('');
             updateFavBadge();
             // Скрываем профиль, показываем логин
             const loginForm = document.getElementById('loginForm');
@@ -1124,6 +1125,8 @@ async function checkSession() {
             if(document.getElementById('modalProfileEmail')) document.getElementById('modalProfileEmail').innerText = uEmail;
             const uPhone = userProfile?.phone || currentUser.phone || currentUser.user_metadata?.phone || localStorage.getItem('nisha_last_phone') || '';
             renderProfilePhone(uPhone);
+            const uTg = userProfile?.tg || userProfile?.telegram || currentUser.user_metadata?.tg || currentUser.user_metadata?.telegram || localStorage.getItem('nisha_last_tg') || '';
+            renderProfileTg(uTg);
             // --- ПРИВЯЗКА ПУШЕЙ К ПРОФИЛЮ ---
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(reg => {
@@ -1216,6 +1219,7 @@ async function checkSession() {
             userProfile = null;
             favorites = [];
             renderProfilePhone('');
+            renderProfileTg('');
             
             // БЕЗОПАСНО ПК
             const loginForm = document.getElementById('loginForm');
@@ -1348,6 +1352,134 @@ window.savePhoneFromInput = async function(isModal = false) {
 
     renderProfilePhone(clean);
     showToast('Номер успешно сохранен!', 'success');
+};
+
+// ==========================================
+// TELEGRAM В ПРОФИЛЕ (WIN95 СТИЛЬ)
+// ==========================================
+function renderProfileTg(tg) {
+    const hasTg = Boolean(tg && tg.trim().length > 0 && tg.trim() !== '@');
+    
+    // 1. Сайдбар (ПК)
+    const pTg = document.getElementById('profileTg');
+    const pBtn = document.getElementById('profileAddTgBtn');
+    const pWrap = document.getElementById('profileTgInputWrap');
+    if (pTg && pBtn) {
+        if (hasTg) {
+            pTg.innerText = tg.startsWith('@') ? tg : '@' + tg;
+            pTg.style.display = 'block';
+            pBtn.style.display = 'none';
+        } else {
+            pTg.innerText = '';
+            pTg.style.display = 'none';
+            pBtn.style.display = 'inline-block';
+        }
+        if (pWrap) pWrap.style.display = 'none';
+    }
+
+    // 2. Модалка (Мобилка)
+    const mTg = document.getElementById('modalProfileTg');
+    const mBtn = document.getElementById('modalProfileAddTgBtn');
+    const mWrap = document.getElementById('modalProfileTgInputWrap');
+    if (mTg && mBtn) {
+        if (hasTg) {
+            mTg.innerText = tg.startsWith('@') ? tg : '@' + tg;
+            mTg.style.display = 'block';
+            mBtn.style.display = 'none';
+        } else {
+            mTg.innerText = '';
+            mTg.style.display = 'none';
+            mBtn.style.display = 'inline-block';
+        }
+        if (mWrap) mWrap.style.display = 'none';
+    }
+}
+window.renderProfileTg = renderProfileTg;
+
+window.showTgInput = function(isModal = false) {
+    const btn = document.getElementById(isModal ? 'modalProfileAddTgBtn' : 'profileAddTgBtn');
+    const wrap = document.getElementById(isModal ? 'modalProfileTgInputWrap' : 'profileTgInputWrap');
+    const input = document.getElementById(isModal ? 'modalProfileTgInput' : 'profileTgInput');
+
+    if (btn) btn.style.display = 'none';
+    if (wrap) wrap.style.display = 'flex';
+    if (input) {
+        if (!input.value || !input.value.trim() || input.value === '@') {
+            input.value = '@';
+        } else if (!input.value.startsWith('@')) {
+            input.value = '@' + input.value.trim().replace(/^@+/, '');
+        }
+        input.focus();
+        const len = input.value.length;
+        input.setSelectionRange(len, len);
+
+        input.oninput = () => {
+            let val = input.value;
+            val = val.replace(/^(https?:\/\/)?(www\.)?t\.me\//i, '@');
+            val = val.replace(/[^a-zA-Z0-9_@]/g, '');
+            if (!val.startsWith('@')) {
+                val = '@' + val.replace(/@/g, '');
+            } else {
+                val = '@' + val.slice(1).replace(/@/g, '');
+            }
+            input.value = val;
+        };
+
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') saveTgFromInput(isModal);
+            if (e.key === 'Escape') hideTgInput(isModal);
+        };
+    }
+};
+
+window.hideTgInput = function(isModal = false) {
+    const btn = document.getElementById(isModal ? 'modalProfileAddTgBtn' : 'profileAddTgBtn');
+    const wrap = document.getElementById(isModal ? 'modalProfileTgInputWrap' : 'profileTgInputWrap');
+    const input = document.getElementById(isModal ? 'modalProfileTgInput' : 'profileTgInput');
+
+    if (wrap) wrap.style.display = 'none';
+    if (btn) btn.style.display = 'inline-block';
+    if (input) {
+        input.value = '';
+    }
+};
+
+window.saveTgFromInput = async function(isModal = false) {
+    if (!currentUser) {
+        showToast('Сначала авторизуйтесь!', 'error');
+        return;
+    }
+
+    const input = document.getElementById(isModal ? 'modalProfileTgInput' : 'profileTgInput');
+    if (!input) return;
+
+    let rawVal = input.value.trim();
+    rawVal = rawVal.replace(/^(https?:\/\/)?(www\.)?t\.me\//i, '@');
+    let cleanUser = rawVal.replace(/^@+/, '').replace(/[^a-zA-Z0-9_]/g, '');
+
+    if (cleanUser.length < 2) {
+        showToast('Введите корректный Telegram username!', 'error');
+        input.focus();
+        return;
+    }
+
+    const clean = '@' + cleanUser;
+
+    try {
+        await _supabase.from('profiles').update({ tg: clean }).eq('id', currentUser.id);
+        try {
+            await _supabase.auth.updateUser({ data: { tg: clean } });
+        } catch(e) {}
+    } catch(err) {
+        console.error('Ошибка сохранения Telegram:', err);
+    }
+
+    if (!userProfile) userProfile = {};
+    userProfile.tg = clean;
+    localStorage.setItem('nisha_last_tg', clean);
+
+    renderProfileTg(clean);
+    showToast('Telegram успешно сохранен!', 'success');
 };
 
 let isRegMode = false;
