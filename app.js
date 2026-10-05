@@ -361,6 +361,7 @@ if (_supabase) {
             currentUser = null;
             userProfile = null;
             favorites = [];
+            renderProfilePhone('');
             updateFavBadge();
             // Скрываем профиль, показываем логин
             const loginForm = document.getElementById('loginForm');
@@ -1059,6 +1060,8 @@ async function checkSession() {
             
             if(document.getElementById('modalProfileName')) document.getElementById('modalProfileName').innerText = uName;
             if(document.getElementById('modalProfileEmail')) document.getElementById('modalProfileEmail').innerText = uEmail;
+            const uPhone = userProfile?.phone || currentUser.phone || currentUser.user_metadata?.phone || localStorage.getItem('nisha_last_phone') || '';
+            renderProfilePhone(uPhone);
             // --- ПРИВЯЗКА ПУШЕЙ К ПРОФИЛЮ ---
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(reg => {
@@ -1150,6 +1153,7 @@ async function checkSession() {
             currentUser = null;
             userProfile = null;
             favorites = [];
+            renderProfilePhone('');
             
             // БЕЗОПАСНО ПК
             const loginForm = document.getElementById('loginForm');
@@ -1167,6 +1171,115 @@ async function checkSession() {
         }
     } catch (err) { console.error("Ошибка в checkSession:", err); }
 }
+
+
+// ==========================================
+// НОМЕР ТЕЛЕФОНА В ПРОФИЛЕ
+// ==========================================
+function renderProfilePhone(phone) {
+    const hasPhone = Boolean(phone && phone.trim().length > 0);
+    const noPhoneText = (typeof i18next !== 'undefined') ? i18next.t('profile.no_phone', 'Не указан') : 'Не указан';
+    
+    // ПК (Сайдбар)
+    const pPhone = document.getElementById('profilePhone');
+    const pAddBtn = document.getElementById('profileAddPhoneBtn');
+    if (pPhone) {
+        if (hasPhone) {
+            pPhone.innerText = phone;
+            pPhone.style.color = '#fff';
+            pPhone.style.fontWeight = 'bold';
+            pPhone.removeAttribute('data-i18n');
+            if (pAddBtn) pAddBtn.style.display = 'none';
+        } else {
+            pPhone.innerText = noPhoneText;
+            pPhone.style.color = '#aaa';
+            pPhone.style.fontWeight = 'normal';
+            pPhone.setAttribute('data-i18n', 'profile.no_phone');
+            if (pAddBtn) pAddBtn.style.display = 'inline-block';
+        }
+    }
+
+    // Мобилка (Модалка)
+    const mPhone = document.getElementById('modalProfilePhone');
+    const mAddBtn = document.getElementById('modalProfileAddPhoneBtn');
+    if (mPhone) {
+        if (hasPhone) {
+            mPhone.innerText = phone;
+            mPhone.style.color = '#fff';
+            mPhone.style.fontWeight = 'bold';
+            mPhone.removeAttribute('data-i18n');
+            if (mAddBtn) mAddBtn.style.display = 'none';
+        } else {
+            mPhone.innerText = noPhoneText;
+            mPhone.style.color = '#aaa';
+            mPhone.style.fontWeight = 'normal';
+            mPhone.setAttribute('data-i18n', 'profile.no_phone');
+            if (mAddBtn) mAddBtn.style.display = 'inline-block';
+        }
+    }
+}
+window.renderProfilePhone = renderProfilePhone;
+
+window.promptAddPhoneNumber = async function() {
+    if (!currentUser) {
+        showToast('Сначала авторизуйтесь!', 'error');
+        return;
+    }
+
+    let inputPhone = null;
+
+    if (typeof Swal !== 'undefined') {
+        const titleText = (typeof i18next !== 'undefined') ? i18next.t('profile.phone', 'НОМЕР ТЕЛЕФОНА:') : 'НОМЕР ТЕЛЕФОНА:';
+        const { value: entered, isConfirmed } = await Swal.fire({
+            title: titleText,
+            input: 'tel',
+            inputLabel: 'Введите ваш номер телефона для связи и заказов:',
+            inputPlaceholder: '+380...',
+            inputValue: '+380',
+            showCancelButton: true,
+            confirmButtonText: 'СОХРАНИТЬ',
+            cancelButtonText: 'ОТМЕНА',
+            background: '#0a0a0a',
+            color: '#ffffff',
+            confirmButtonColor: '#00ff66',
+            cancelButtonColor: '#222222',
+            inputValidator: (val) => {
+                if (!val) return 'Пожалуйста, введите номер!';
+                const clean = val.replace(/[^\d+]/g, '');
+                if (clean.length < 10) return 'Номер слишком короткий (минимум 10 цифр)!';
+            }
+        });
+        if (isConfirmed && entered) inputPhone = entered;
+    } else {
+        const entered = prompt('Введите номер телефона (+380...):', '+380');
+        if (entered) inputPhone = entered;
+    }
+
+    if (!inputPhone) return;
+
+    let clean = inputPhone.replace(/[^\d+]/g, '');
+    if (!clean.startsWith('+') && clean.startsWith('380')) clean = '+' + clean;
+    if (clean.length < 10) {
+        showToast('Некорректный номер!', 'error');
+        return;
+    }
+
+    try {
+        await _supabase.from('profiles').update({ phone: clean }).eq('id', currentUser.id);
+        try {
+            await _supabase.auth.updateUser({ data: { phone: clean } });
+        } catch(e) {}
+    } catch(err) {
+        console.error('Ошибка сохранения телефона:', err);
+    }
+
+    if (!userProfile) userProfile = {};
+    userProfile.phone = clean;
+    localStorage.setItem('nisha_last_phone', clean);
+
+    renderProfilePhone(clean);
+    showToast('Номер успешно сохранен!', 'success');
+};
 
 let isRegMode = false;
 function toggleRegMode(isModal = false) {

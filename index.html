@@ -186,7 +186,12 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div style=color:var(--accent-green);font-size:11px;margin-bottom:5px>НИКНЕЙМ:</div>
 <div style=color:#fff;font-size:14px;font-family:var(--font-main);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:15px id=profileName>Loading...</div>
 <div style=color:#666;font-size:11px;margin-bottom:5px>E-MAIL:</div>
-<div style="color:#aaa;font-size:12px;border-bottom:1px dashed #333;padding-bottom:12px;margin-bottom:12px;overflow:hidden;text-overflow:ellipsis" id=profileEmail>Loading...</div>
+<div style="color:#aaa;font-size:12px;margin-bottom:12px;overflow:hidden;text-overflow:ellipsis" id=profileEmail>Loading...</div>
+<div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.phone>НОМЕР ТЕЛЕФОНА:</div>
+<div style="border-bottom:1px dashed #333;padding-bottom:12px;margin-bottom:12px" id=profilePhoneContainer>
+<div style="color:#aaa;font-size:12px;overflow:hidden;text-overflow:ellipsis" id=profilePhone>Не указан</div>
+<a href=javascript:void(0) onclick=promptAddPhoneNumber() id=profileAddPhoneBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:4px" data-i18n=profile.add_phone>Добавить номер +</a>
+</div>
 <div style=display:flex;justify-content:space-between;align-items:center>
 <span style=color:#888;font-size:12px data-i18n=profile.saved>СОХРАНЕНО:</span>
 <span style="color:var(--accent-red);font-size:16px;font-weight:700;text-shadow:0 0 10px rgba(255,0,0,.4)">❤ <span id=profileLikesCount>0</span></span>
@@ -579,7 +584,12 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <div style=color:var(--accent-green);font-size:11px;margin-bottom:5px data-i18n=profile.nickname>НИКНЕЙМ:</div>
 <div style=color:#fff;font-size:16px;font-family:var(--font-main);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:15px id=modalProfileName>Loading...</div>
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.email>E-MAIL:</div>
-<div style="color:#aaa;font-size:13px;border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px;overflow:hidden;text-overflow:ellipsis" id=modalProfileEmail>Loading...</div>
+<div style="color:#aaa;font-size:13px;margin-bottom:15px;overflow:hidden;text-overflow:ellipsis" id=modalProfileEmail>Loading...</div>
+<div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.phone>НОМЕР ТЕЛЕФОНА:</div>
+<div style="border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px" id=modalProfilePhoneContainer>
+<div style="color:#aaa;font-size:13px;overflow:hidden;text-overflow:ellipsis" id=modalProfilePhone>Не указан</div>
+<a href=javascript:void(0) onclick=promptAddPhoneNumber() id=modalProfileAddPhoneBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:5px" data-i18n=profile.add_phone>Добавить номер +</a>
+</div>
 <div style=display:flex;justify-content:space-between;align-items:center>
 <span style=color:#888;font-size:13px data-i18n=profile.saved>СОХРАНЕНО:</span>
 <span style="color:var(--accent-red);font-size:18px;font-weight:700;text-shadow:0 0 15px rgba(255,0,0,.4)">❤ <span id=modalProfileLikesCount>0</span></span>

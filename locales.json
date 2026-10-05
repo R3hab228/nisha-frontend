@@ -165,7 +165,10 @@
         "saved": "СОХРАНЕНО:",
         "logout": "[ ВЫЙТИ ИЗ СИСТЕМЫ ]",
         "nickname": "НИКНЕЙМ:",
-        "email": "E-MAIL:"
+        "email": "E-MAIL:",
+        "phone": "НОМЕР ТЕЛЕФОНА:",
+        "no_phone": "Не указан",
+        "add_phone": "Добавить номер +"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -418,7 +421,10 @@
         "saved": "ЗБЕРЕЖЕНО:",
         "logout": "[ ВИЙТИ З СИСТЕМИ ]",
         "nickname": "НІКНЕЙМ:",
-        "email": "E-MAIL:"
+        "email": "E-MAIL:",
+        "phone": "НОМЕР ТЕЛЕФОНУ:",
+        "no_phone": "Не вказано",
+        "add_phone": "Додати номер +"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -670,7 +676,10 @@
         "saved": "SAVED:",
         "logout": "[ LOGOUT ]",
         "nickname": "NICKNAME:",
-        "email": "E-MAIL:"
+        "email": "E-MAIL:",
+        "phone": "PHONE NUMBER:",
+        "no_phone": "Not specified",
+        "add_phone": "Add phone +"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
