@@ -1249,6 +1249,16 @@ async function checkSession() {
 
 
 // ==========================================
+// WIN95 HOURGLASS ICON (RETRO PIXEL ART)
+// ==========================================
+const WIN95_HOURGLASS_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAYCAYAAAAlBadpAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAB6SURBVDhPzY1RDoAwCEO5/6U1ksAGax2oHzZBse1DOV5I9CHSngWuiMKdcdgOVDT3rs3/XtHU0+0H8O5A6gwYhEEgc/j2APCUmWF4gIGfwqyMvACzkgtkAwbhotSJcNbG47B9M5/CGUSZwcGsvnU3ozsLXBGFO+PwU53EDRInk3MqPwAAAABJRU5ErkJggg==";
+
+function getWin95HourglassHtml(height = 14) {
+    return `<img src="${WIN95_HOURGLASS_DATA}" alt="⏳" class="win95-loading-hourglass" style="height:${height}px;width:auto;" />`;
+}
+window.getWin95HourglassHtml = getWin95HourglassHtml;
+
+// ==========================================
 // НОМЕР ТЕЛЕФОНА В ПРОФИЛЕ
 // ==========================================
 // НОМЕР ТЕЛЕФОНА В ПРОФИЛЕ (WIN95 СТИЛЬ)
@@ -1294,6 +1304,12 @@ function renderProfilePhone(phone) {
         }
         if (mWrap) mWrap.style.display = 'none';
     }
+
+    const saveBtns = document.querySelectorAll('#profilePhoneInputWrap .win95-check-btn, #modalProfilePhoneInputWrap .win95-check-btn');
+    saveBtns.forEach(b => {
+        b.disabled = false;
+        b.innerText = '✓';
+    });
 }
 window.renderProfilePhone = renderProfilePhone;
 
@@ -1566,7 +1582,7 @@ window.savePhoneFromInput = async function(isModal = false) {
     const saveBtn = document.querySelector(isModal ? '#modalProfilePhoneInputWrap .win95-check-btn' : '#profilePhoneInputWrap .win95-check-btn');
     if (saveBtn) {
         saveBtn.disabled = true;
-        saveBtn.innerText = '⏳';
+        saveBtn.innerHTML = getWin95HourglassHtml(14);
     }
 
     try {
@@ -1783,7 +1799,7 @@ window.saveTgFromInput = async function(isModal = false) {
     const saveBtn = document.querySelector(isModal ? '#modalProfileTgInputWrap .win95-check-btn' : '#profileTgInputWrap .win95-check-btn');
     if (saveBtn) {
         saveBtn.disabled = true;
-        saveBtn.innerText = '⏳';
+        saveBtn.innerHTML = getWin95HourglassHtml(14);
     }
 
     try {
@@ -3531,7 +3547,7 @@ async function generateAndSendOTP() {
         window.open(tgLink, '_blank');
     }
     
-    document.getElementById('otpStatus').innerHTML = "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... <span style='color:var(--accent-yellow)'>⏳</span>";
+    document.getElementById('otpStatus').innerHTML = "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... " + getWin95HourglassHtml(14);
     
     // 6. Слушаем подтверждение в реальном времени
     if (window.otpPollInterval) clearInterval(window.otpPollInterval);

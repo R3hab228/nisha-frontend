@@ -994,3 +994,21 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
     background: #111 !important;
     transform: translate(1px, 1px);
 }
+
+/* WIN95 LOADING HOURGLASS */
+.win95-loading-hourglass {
+    height: 14px;
+    width: auto;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    display: inline-block;
+    vertical-align: middle;
+    animation: win95HourglassFlip 2.4s infinite ease-in-out;
+}
+
+@keyframes win95HourglassFlip {
+    0%, 40% { transform: rotate(0deg); }
+    50%, 90% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+}
