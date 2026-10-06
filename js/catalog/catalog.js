@@ -48,18 +48,29 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
 }
 window.getOptimizedImageUrl = getOptimizedImageUrl;
 
-// ОПТИМИЗАЦИЯ PREFETCH: предзагрузка картинок высокого качества в память браузера
+// ОПТИМИЗАЦИЯ PREFETCH: предзагрузка картинок высокого качества и миниатюр в память браузера
 window.prefetchItemImages = function(id) {
     if (!window._prefetchedItems) window._prefetchedItems = new Set();
     if (window._prefetchedItems.has(id)) return;
     
     window._prefetchedItems.add(id);
     const item = window.allItems.find(i => i.id === id);
-    if (item && item.images) {
-        item.images.slice(0, 2).forEach(url => {
-            const img = new Image();
-            img.src = window.toCDN ? window.toCDN(url) : url;
-        });
+    if (item) {
+        const toCDN = window.toCDN || ((u) => u);
+        // Предзагрузка миниатюр карточки для мгновенного свайпа в сетке
+        if (item.thumbnails && item.thumbnails.length > 1) {
+            item.thumbnails.slice(1, 4).forEach(url => {
+                const img = new Image();
+                img.src = toCDN(url);
+            });
+        }
+        // Предзагрузка фото высокого качества для модалки
+        if (item.images && item.images.length > 0) {
+            item.images.slice(0, 2).forEach(url => {
+                const img = new Image();
+                img.src = toCDN(url);
+            });
+        }
     }
 };
 
@@ -73,7 +84,7 @@ async function loadAllItems() {
     if (cachedData && window.allItems.length === 0) {
         try {
             window.allItems = JSON.parse(cachedData);
-            applyFilters(); 
+            applyFilters(true); 
         } catch(e) { console.error("Ошибка кэша"); }
     }
 
@@ -122,7 +133,7 @@ async function loadAllItems() {
 
     // 5. ПЕРЕРИСОВКА (Если данные реально обновились)
     if (!cachedData || isChanged) {
-        applyFilters(); 
+        applyFilters(true); 
     }
     
     // 6. ФОНОВАЯ ПРОВЕРКА (Обход кеша CDN) - актуальные статусы TOP/SOLD
@@ -342,12 +353,12 @@ function updateSidebarCounters() {
 window.updateSidebarCounters = updateSidebarCounters;
 
 // Основная функция фильтрации каталога
-function applyFilters() {
+function applyFilters(immediate = false) {
     const grid = document.getElementById('itemsGrid');
-    if (grid) grid.classList.add('fade-out');
+    if (!immediate && grid) grid.classList.add('fade-out');
 
     clearTimeout(applyFiltersTimeout);
-    applyFiltersTimeout = setTimeout(() => {
+    const runFilter = () => {
         try {
             const searchInput = document.getElementById('mainSearch');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -472,9 +483,13 @@ function applyFilters() {
             updateSidebarCounters();
             
             if (grid) {
-                requestAnimationFrame(() => {
-                    setTimeout(() => grid.classList.remove('fade-out'), 50);
-                });
+                if (immediate) {
+                    grid.classList.remove('fade-out');
+                } else {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => grid.classList.remove('fade-out'), 50);
+                    });
+                }
             }
         } catch (err) {
             console.error("ОШИБКА ФИЛЬТРАЦИИ:", err);
@@ -483,7 +498,13 @@ function applyFilters() {
                 grid.classList.remove('fade-out');
             }
         }
-    }, 300); 
+    };
+
+    if (immediate) {
+        runFilter();
+    } else {
+        applyFiltersTimeout = setTimeout(runFilter, 250);
+    }
 }
 window.applyFilters = applyFilters;
 
@@ -685,14 +706,6 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             }, {passive: true});
             
             let clickTimer = null;
-            
-            sliderWrapper.addEventListener('touchstart', () => {
-                if(!isDraggingSlider) sliderWrapper.style.transform = 'scale(0.98)';
-            }, {passive: true});
-            
-            sliderWrapper.addEventListener('touchend', () => {
-                sliderWrapper.style.transform = 'scale(1)';
-            }, {passive: true});
 
             sliderWrapper.addEventListener('click', (e) => {
                 if (isDraggingSlider) { e.preventDefault(); e.stopPropagation(); return; } 

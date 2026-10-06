@@ -379,12 +379,15 @@ function acceptRules() {
     // Запускаем тур сразу после закрытия окна правил
     setTimeout(startOnboardingTour, 400); 
 }
-window.onload = async () => {
+
+let appInitialized = false;
+async function initApp() {
+    if (appInitialized) return;
+    appInitialized = true;
     document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
 
     try {
-        try {
-            // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
+        // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
             if (cart.length > 0) {
                 let lastTime = localStorage.getItem('nisha_cart_time');
                 // Проверяем: если прошел 1 час И мы еще не напоминали
@@ -430,46 +433,93 @@ window.onload = async () => {
                 }
             });
 
-            if (typeof i18next !== 'undefined') {
-                let savedLng = localStorage.getItem('nisha_lang');
-                let savedFlag = localStorage.getItem('nisha_flag');
-                
-                if (!savedLng) {
-                    const browserLang = navigator.language || navigator.userLanguage;
-                    if (browserLang.toLowerCase().includes('ru')) {
-                        savedLng = 'ru'; savedFlag = '🇷🇺';
-                    } else if (browserLang.toLowerCase().includes('en')) {
-                        savedLng = 'en'; savedFlag = '🇬🇧';
-                    } else {
-                        savedLng = 'ua'; savedFlag = '🇺🇦';
-                    }
-                    localStorage.setItem('nisha_lang', savedLng);
-                    localStorage.setItem('nisha_flag', savedFlag);
-                }
-                
-                if (typeof i18nextBrowserLanguageDetector !== 'undefined') {
-                    i18next.use(i18nextBrowserLanguageDetector);
-                }
-
-                // Загружаем словари из отдельного файла
-                const locRes = await fetch('/locales.json');
-                const localesData = await locRes.json();
-
-                await i18next.init({
-                    resources: localesData,
-                    lng: savedLng, 
-                    fallbackLng: 'ru',
-                    debug: false
-                });
-                
-                updateContentLanguage();
-                const flagEl = document.getElementById('currentFlag');
-                if (flagEl) flagEl.innerText = savedFlag;
-            }
-        } catch (langErr) {
-            console.warn("[ ЯЗЫКИ ] Ошибка загрузки словарей:", langErr);
+        // 1. Восстанавливаем фильтры, категорию и поисковый запрос (синхронно, 0мс)
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Восстанавливаем вкладку "Избранное"
+        if (sessionStorage.getItem('nisha_showing_favs') === 'true') {
+            showingOnlyFavs = true;
+            const favNav = document.getElementById('favNav');
+            if (favNav) favNav.style.color = '#fff';
         }
 
+        // --- ВОССТАНОВЛЕНИЕ КАТЕГОРИИ И UI ---
+        const savedCat = urlParams.get('cat') || sessionStorage.getItem('nisha_last_category');
+        const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
+        catLinks.forEach(el => el.classList.remove('active-filter'));
+
+        if (savedCat) {
+            currentCategory = savedCat;
+            catLinks.forEach(link => {
+                const onclickText = link.getAttribute('onclick') || '';
+                if (onclickText.includes(`'${currentCategory}'`)) {
+                    link.classList.add('active-filter');
+                }
+            });
+        } else {
+            const firstLink = document.querySelector('.sidebar .filter-list:first-of-type a');
+            if (firstLink) firstLink.classList.add('active-filter');
+        }
+
+        // --- ВОССТАНОВЛЕНИЕ ПОИСКОВОГО ЗАПРОСА В UI ---
+        const savedQuery = urlParams.get('q');
+        if (savedQuery) {
+            const sInput = document.getElementById('mainSearch');
+            if (sInput) {
+                sInput.value = savedQuery;
+                const clearBtn = document.getElementById('clearSearchBtn');
+                if (clearBtn) clearBtn.style.display = 'block';
+            }
+        }
+
+        // 2. МГНОВЕННЫЙ ЗАПУСК КАТАЛОГА (из кэша отображается за 10мс, параллельно запрашивается БД)
+        const itemsPromise = (typeof loadAllItems === 'function') ? loadAllItems() : Promise.resolve();
+
+        // 3. ПАРАЛЛЕЛЬНО: Проверка сессии
+        const sessionPromise = (_supabase && typeof checkSession === 'function') ? checkSession() : Promise.resolve();
+
+        // 4. ПАРАЛЛЕЛЬНО: Загрузка словарей локализации
+        const langPromise = (async () => {
+            try {
+                if (typeof i18next !== 'undefined') {
+                    let savedLng = localStorage.getItem('nisha_lang');
+                    let savedFlag = localStorage.getItem('nisha_flag');
+                    
+                    if (!savedLng) {
+                        const browserLang = navigator.language || navigator.userLanguage;
+                        if (browserLang.toLowerCase().includes('ru')) {
+                            savedLng = 'ru'; savedFlag = '🇷🇺';
+                        } else if (browserLang.toLowerCase().includes('en')) {
+                            savedLng = 'en'; savedFlag = '🇬🇧';
+                        } else {
+                            savedLng = 'ua'; savedFlag = '🇺🇦';
+                        }
+                        localStorage.setItem('nisha_lang', savedLng);
+                        localStorage.setItem('nisha_flag', savedFlag);
+                    }
+                    
+                    if (typeof i18nextBrowserLanguageDetector !== 'undefined') {
+                        i18next.use(i18nextBrowserLanguageDetector);
+                    }
+
+                    const locRes = await fetch('/locales.json');
+                    const localesData = await locRes.json();
+
+                    await i18next.init({
+                        resources: localesData,
+                        lng: savedLng, 
+                        fallbackLng: 'ru',
+                        debug: false
+                    });
+                    
+                    updateContentLanguage();
+                    const flagEl = document.getElementById('currentFlag');
+                    if (flagEl) flagEl.innerText = savedFlag;
+                }
+            } catch (langErr) {
+                console.warn("[ ЯЗЫКИ ] Ошибка загрузки словарей:", langErr);
+            }
+        })();
 
         const phoneInput = document.getElementById('orderPhone');
         const searchPhoneInput = document.getElementById('ordersSearchPhone');
@@ -481,73 +531,14 @@ window.onload = async () => {
             IMask(searchPhoneInput, { mask: '+{380} (00) 000-00-00' });
         }
 
-        
-       if (typeof autoAnimate === 'function') {
+        if (typeof autoAnimate === 'function') {
             autoAnimate(document.getElementById('historyGrid'));
-            // Убрали ordersListArea, теперь мы анимируем его сами через CSS
         }
 
         checkRules();
         updateCartUI(); 
-        
-        
-        // win95-pixel-hourglass rendered natively via SVG
 
-
-
-
-
-
-
-
-        
-        if (_supabase) {
-            await checkSession();
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            // Восстанавливаем вкладку "Избранное"
-            if (sessionStorage.getItem('nisha_showing_favs') === 'true') {
-                showingOnlyFavs = true;
-                const favNav = document.getElementById('favNav');
-                if (favNav) favNav.style.color = '#fff';
-            }
-
-            // --- ФИКС: ИДЕАЛЬНОЕ ВОССТАНОВЛЕНИЕ КАТЕГОРИИ И UI ---
-            const savedCat = urlParams.get('cat') || sessionStorage.getItem('nisha_last_category');
-            
-            // 1. Очищаем все выделения в меню категорий
-            const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
-            catLinks.forEach(el => el.classList.remove('active-filter'));
-
-            if (savedCat) {
-                currentCategory = savedCat;
-                
-                // 2. Ищем ссылку, внутри onclick которой есть наша сохраненная категория, и красим её
-                catLinks.forEach(link => {
-                    const onclickText = link.getAttribute('onclick') || '';
-                    if (onclickText.includes(`'${currentCategory}'`)) {
-                        link.classList.add('active-filter');
-                    }
-                });
-            } else {
-                // Если ничего не сохранено - выделяем "Все вещи"
-                const firstLink = document.querySelector('.sidebar .filter-list:first-of-type a');
-                if (firstLink) firstLink.classList.add('active-filter');
-            }
-
-            // --- НОВОЕ: ВОССТАНОВЛЕНИЕ ПОИСКОВОГО ЗАПРОСА В UI ---
-            const savedQuery = urlParams.get('q');
-            if (savedQuery) {
-                const sInput = document.getElementById('mainSearch');
-                if (sInput) {
-                    sInput.value = savedQuery;
-                    // Показываем крестик для сброса поиска
-                    const clearBtn = document.getElementById('clearSearchBtn');
-                    if (clearBtn) clearBtn.style.display = 'block';
-                }
-            }
-
-            await loadAllItems();
+        await Promise.all([itemsPromise, sessionPromise, langPromise]);
 
          // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА (УМНАЯ) ---
             setTimeout(async () => {
@@ -674,9 +665,6 @@ window.onload = async () => {
                     }
                 })
                 .subscribe();
-        } else {
-            document.getElementById('itemsGrid').innerHTML = `<div style="color:red; padding:20px; text-align:center;">[ БД НЕ ПОДКЛЮЧЕНА ]</div>`;
-        }
         
        // 🚀 СОВРЕМЕННЫЙ ИНТЕЛЛЕКТУАЛЬНЫЙ СКРОЛЛ (Как в Instagram)
         const observer = new IntersectionObserver((entries) => {
@@ -724,7 +712,14 @@ window.onload = async () => {
             grid.innerHTML = `<div style="color:red; text-align:center; padding:40px; grid-column:1/-1;">[ СИСТЕМНАЯ ОШИБКА: ${err.message} ]</div>`;
         }
     }
-};
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
+window.addEventListener('load', initApp);
 
 
 // closeModal и executeCloseModal вынесены в js/ui/windows.js
@@ -1187,7 +1182,6 @@ document.addEventListener('keydown', function(e) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    initSliderSwipe();
     initMobileSwipe();
 });
 

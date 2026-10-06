@@ -339,9 +339,11 @@ function openProductModal(item) {
                             </video>
                         </div>`;
                 } else {
+                    const isFirst = (index === 0);
+                    const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"';
                     wrapper.innerHTML += `
-                        <a href="${url}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide skeleton" style="background-image:none; display:flex; align-items:center; justify-content:center; border: 1px solid #222;">
-                            <img src="${url}" loading="lazy" style="width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.4s ease-in-out;" 
+                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide skeleton" style="background-image:none; display:flex; align-items:center; justify-content:center; border: 1px solid #222;">
+                            <img src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.25s ease-in-out;" 
                             onload="this.style.opacity='1'; this.parentElement.setAttribute('data-pswp-width', this.naturalWidth); this.parentElement.setAttribute('data-pswp-height', this.naturalHeight); this.parentElement.classList.remove('skeleton'); this.parentElement.style.border='none';">
                         </a>`;
                 }
@@ -354,6 +356,16 @@ function openProductModal(item) {
     }
 
     setSlide(0);
+
+    // Мгновенная предзагрузка второй фотографии для моментального свайпа
+    if (item.images && item.images.length > 1) {
+        const toCDN = window.toCDN || ((u) => u);
+        const nextImgUrl = toCDN(item.images[1]);
+        if (!nextImgUrl.endsWith('.mp4')) {
+            const preImg = new Image();
+            preImg.src = nextImgUrl;
+        }
+    }
 
     setTimeout(() => {
         const modalVideos = document.querySelectorAll('#sliderWrapper video.modal-video-player');
@@ -612,6 +624,17 @@ function setSlide(index) {
     if (slides.length === 0) return;
     currentSlide = index;
     updateSlider();
+
+    // Предзагружаем следующее фото для непрерывного мгновенного свайпа
+    const active = window.currentOpenedItem;
+    if (active && active.images && active.images[index + 1]) {
+        const toCDN = window.toCDN || ((u) => u);
+        const nextUrl = toCDN(active.images[index + 1]);
+        if (!nextUrl.endsWith('.mp4')) {
+            const preImg = new Image();
+            preImg.src = nextUrl;
+        }
+    }
 }
 window.setSlide = setSlide;
 
@@ -639,14 +662,21 @@ window.updateSlider = updateSlider;
 function initSliderSwipe() {
     const sliderContainer = document.getElementById('sliderContainer');
     if (!sliderContainer) return;
+    if (sliderContainer._swipeBound) return;
+    sliderContainer._swipeBound = true;
 
     let touchStartX = 0;
+    let touchStartY = 0;
     let touchEndX = 0;
+    let touchEndY = 0;
     let lastTapTime = 0;
 
     sliderContainer.addEventListener('touchstart', (e) => {
         if (e.touches.length > 1) return;
         touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchEndX = touchStartX;
+        touchEndY = touchStartY;
 
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTapTime;
@@ -655,22 +685,48 @@ function initSliderSwipe() {
             if (slides[currentSlide]) {
                 slides[currentSlide].classList.toggle('zoomed-in');
             }
-            e.preventDefault();
+            if (e.cancelable) e.preventDefault();
         }
         lastTapTime = currentTime;
 
+    }, { passive: true });
+
+    sliderContainer.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 1) return;
+        touchEndX = e.touches[0].clientX;
+        touchEndY = e.touches[0].clientY;
+        const diffX = Math.abs(touchEndX - touchStartX);
+        const diffY = Math.abs(touchEndY - touchStartY);
+
+        // Если свайп идет по горизонтали — блокируем вертикальный скролл страницы
+        if (diffX > 10 && diffX > diffY) {
+            if (e.cancelable) e.preventDefault();
+        }
     }, { passive: false });
 
     sliderContainer.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].clientX;
-        const diff = touchStartX - touchEndX;
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
         
         const currentSlideEl = document.querySelectorAll('.slide')[currentSlide];
         const isZoomed = currentSlideEl && currentSlideEl.classList.contains('zoomed-in');
 
-        if (Math.abs(diff) > 50 && !isZoomed) {
-            if (diff > 0) moveSlide(1);
-            else moveSlide(-1);
+        // Четкий горизонтальный свайп (порог 40px и преобладание горизонтали над вертикалью в 1.3 раза)
+        if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.3 && !isZoomed) {
+            const slides = document.querySelectorAll('.slide');
+            if (slides.length > 1) {
+                if (diffX > 0) {
+                    // Свайп влево -> следующее фото строго на 1 шаг
+                    if (currentSlide < slides.length - 1) {
+                        setSlide(currentSlide + 1);
+                    }
+                } else {
+                    // Свайп вправо -> предыдущее фото строго на 1 шаг
+                    if (currentSlide > 0) {
+                        setSlide(currentSlide - 1);
+                    }
+                }
+            }
         }
     }, { passive: true });
 }
