@@ -122,18 +122,21 @@ function initMobileSwipe() {
         if (!modalWin || modalWin._swipeBound) return;
         modalWin._swipeBound = true;
 
+        let startX = 0;
         let startY = 0;
+        let currentX = 0;
         let currentY = 0;
         let isDragging = false;
         let canDrag = false;
+        let isGalleryTouch = false;
 
         modalWin.addEventListener('touchstart', (e) => {
             if (window.innerWidth > 900) return;
+            if (e.touches.length > 1) return;
             
-            // ЗАЩИТА: Отключаем свайп окна при скролле списков, перетаскивании фото или вводе текста
+            // ЗАЩИТА: Отключаем свайп окна при зуме в PhotoSwipe, вводе текста или специальных областях
             if (document.body.classList.contains('sort-lock') || 
                 e.target.closest('.preview-container') || 
-                e.target.closest('.modal-gallery') || 
                 e.target.closest('.pswp') || 
                 e.target.tagName === 'INPUT' || 
                 e.target.tagName === 'TEXTAREA' || 
@@ -144,7 +147,12 @@ function initMobileSwipe() {
                 return;
             }
 
+            startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
+            currentX = startX;
+            currentY = startY;
+
+            isGalleryTouch = !!e.target.closest('.modal-gallery');
             canDrag = (modalWin.scrollTop <= 0); 
             isDragging = false;
 
@@ -154,20 +162,32 @@ function initMobileSwipe() {
 
         modalWin.addEventListener('touchmove', (e) => {
             if (window.innerWidth > 900 || !canDrag) return;
+            if (e.touches.length > 1) return;
 
+            currentX = e.touches[0].clientX;
             currentY = e.touches[0].clientY;
+            const diffX = Math.abs(currentX - startX);
             const diffY = currentY - startY;
 
-            if (diffY > 0) {
+            // Если касание началось на галерее и жест горизонтальный — отдаем управление слайдеру фото
+            if (isGalleryTouch && diffX > diffY) {
+                canDrag = false;
+                isDragging = false;
+                modalWin.style.transform = 'translateY(0px)';
+                return;
+            }
+
+            // Плавное перетягивание шторки вниз
+            if (diffY > 8) {
                 isDragging = true;
                 if (e.cancelable) e.preventDefault(); 
                 
                 requestAnimationFrame(() => {
                     modalWin.style.transform = `translateY(${diffY}px)`;
-                    let opacity = 1 - (diffY / window.innerHeight);
-                    overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0, opacity * 0.95)})`;
+                    let opacity = 1 - (diffY / (window.innerHeight * 0.7));
+                    overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0.15, opacity * 0.95)})`;
                 });
-            } else {
+            } else if (diffY <= 0) {
                 isDragging = false;
                 modalWin.style.transform = `translateY(0px)`;
             }
@@ -181,11 +201,13 @@ function initMobileSwipe() {
                 isDragging = false;
                 canDrag = false;
                 
-                if (diffY > 150) { 
+                // Естественный порог 80px (или быстрый свайп) вместо жестких 150px
+                if (diffY > 80) { 
+                    if (typeof triggerHaptic === 'function') triggerHaptic('light');
                     closeModal(overlay.id);
                 } else {
-                    modalWin.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                    overlay.style.transition = 'background-color 0.3s ease';
+                    modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                    overlay.style.transition = 'background-color 0.25s ease';
                     modalWin.style.transform = `translateY(0px)`;
                     overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
                 }

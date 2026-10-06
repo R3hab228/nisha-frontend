@@ -700,11 +700,13 @@ function initSliderSwipe() {
                 if (diffX > 0) {
                     // Свайп влево -> следующее фото строго на 1 шаг
                     if (currentSlide < slides.length - 1) {
+                        if (typeof triggerHaptic === 'function') triggerHaptic('light');
                         setSlide(currentSlide + 1);
                     }
                 } else {
                     // Свайп вправо -> предыдущее фото строго на 1 шаг
                     if (currentSlide > 0) {
+                        if (typeof triggerHaptic === 'function') triggerHaptic('light');
                         setSlide(currentSlide - 1);
                     }
                 }

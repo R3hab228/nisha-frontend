@@ -1047,26 +1047,8 @@ if(installBtn) {
 
 // removeHistoryItem and Q&A functions moved to js/product/product.js
 // ==========================================
-// PULL-TO-REFRESH (КАК В НАТИВНЫХ ПРИЛОЖЕНИЯХ)
+// PULL-TO-REFRESH: Убран, чтобы не блокировать резкий скролл вверх и не вызывать ложных перезагрузок
 // ==========================================
-let touchStartY = 0;
-document.addEventListener('touchstart', e => {
-    // Работает только если мы в самом верху страницы
-    if (window.scrollY === 0) touchStartY = e.touches[0].clientY;
-}, { passive: true });
-
-document.addEventListener('touchend', e => {
-    if (window.scrollY === 0 && touchStartY > 0) {
-        let touchEndY = e.changedTouches[0].clientY;
-        // Если потянули вниз больше чем на 150px
-        if (touchEndY - touchStartY > 150) {
-            triggerHaptic('medium'); // Вибрация
-            showToast('ОБНОВЛЕНИЕ БАЗЫ ДАННЫХ...', 'success');
-            loadAllItems(); // Перезагружаем товары из базы без перезагрузки страницы
-        }
-    }
-    touchStartY = 0;
-}, { passive: true });
 // handleDoubleTapLike moved to js/catalog/catalog.js
 
 // ==========================================
