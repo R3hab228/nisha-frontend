@@ -84,7 +84,7 @@ async function loadAllItems() {
     if (cachedData && window.allItems.length === 0) {
         try {
             window.allItems = JSON.parse(cachedData);
-            applyFilters(true); 
+            applyFilters(); 
         } catch(e) { console.error("Ошибка кэша"); }
     }
 
@@ -133,7 +133,7 @@ async function loadAllItems() {
 
     // 5. ПЕРЕРИСОВКА (Если данные реально обновились)
     if (!cachedData || isChanged) {
-        applyFilters(true); 
+        applyFilters(); 
     }
     
     // 6. ФОНОВАЯ ПРОВЕРКА (Обход кеша CDN) - актуальные статусы TOP/SOLD
@@ -353,12 +353,12 @@ function updateSidebarCounters() {
 window.updateSidebarCounters = updateSidebarCounters;
 
 // Основная функция фильтрации каталога
-function applyFilters(immediate = false) {
+function applyFilters() {
     const grid = document.getElementById('itemsGrid');
-    if (!immediate && grid) grid.classList.add('fade-out');
+    if (grid) grid.classList.add('fade-out');
 
     clearTimeout(applyFiltersTimeout);
-    const runFilter = () => {
+    applyFiltersTimeout = setTimeout(() => {
         try {
             const searchInput = document.getElementById('mainSearch');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -483,13 +483,9 @@ function applyFilters(immediate = false) {
             updateSidebarCounters();
             
             if (grid) {
-                if (immediate) {
-                    grid.classList.remove('fade-out');
-                } else {
-                    requestAnimationFrame(() => {
-                        setTimeout(() => grid.classList.remove('fade-out'), 50);
-                    });
-                }
+                requestAnimationFrame(() => {
+                    setTimeout(() => grid.classList.remove('fade-out'), 50);
+                });
             }
         } catch (err) {
             console.error("ОШИБКА ФИЛЬТРАЦИИ:", err);
@@ -498,13 +494,7 @@ function applyFilters(immediate = false) {
                 grid.classList.remove('fade-out');
             }
         }
-    };
-
-    if (immediate) {
-        runFilter();
-    } else {
-        applyFiltersTimeout = setTimeout(runFilter, 250);
-    }
+    }, 180); 
 }
 window.applyFilters = applyFilters;
 

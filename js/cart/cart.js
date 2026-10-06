@@ -39,6 +39,9 @@ function setActiveCart(newCart) {
     window.cart = newCart;
     cart = newCart;
     localStorage.setItem('nisha_cart', JSON.stringify(newCart));
+    if (!newCart || newCart.length === 0) {
+        localStorage.removeItem('nisha_cart_push_sent_time');
+    }
 }
 
 function getCurrentUser() {

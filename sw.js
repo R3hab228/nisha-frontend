@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'nisha-cache-v120';
+const CACHE_NAME = 'nisha-cache-v120';
 const IMAGE_CACHE = 'nisha-images-v1';
 const API_CACHE = 'nisha-api-v1';
 const STATIC_URLS = ['/', '/index.html', '/app.js', '/config.js', '/style.css', '/locales.json', '/404.html', '/badge.png'];
@@ -125,16 +125,23 @@ self.addEventListener('fetch', event => {
 // Перехват Push-уведомлений
 self.addEventListener('push', event => {
     if (event.data) {
-        const data = event.data.json();
+        let data = {};
+        try {
+            data = event.data.json();
+        } catch(e) {
+            data = { title: 'NISHA STORE', body: event.data.text() };
+        }
         const options = {
             body: data.body,
             icon: '/icon-192.png',
             badge: '/badge.png',
             vibrate: [200, 100, 200],
+            tag: data.tag || (data.title ? 'nisha-' + encodeURIComponent(data.title) : 'nisha-push'),
+            renotify: false,
             data: { url: data.url || '/' }
         };
         event.waitUntil(
-            self.registration.showNotification(data.title, options)
+            self.registration.showNotification(data.title || 'NISHA STORE', options)
         );
     }
 });

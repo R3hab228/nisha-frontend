@@ -1051,24 +1051,59 @@ document.addEventListener('touchend', e => {
 // ==========================================
 // УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА, ПУШ, СИНХРОНИЗАЦИЯ)
 // ==========================================
-let cartAbandonTimeout;
+let cartAbandonTimeout = null;
+const CART_PUSH_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 часа кулдаун между пушами брошенной корзины
+
 document.addEventListener("visibilitychange", async () => {
-    const userCart = (typeof cart !== 'undefined') ? cart : (window.cart || []);
     if (document.hidden) {
         // Юзер свернул браузер или ушел на другую вкладку
-        if (userCart.length > 0) {
+        let userCart = [];
+        try {
+            userCart = (typeof cart !== 'undefined' && Array.isArray(cart)) ? cart : (window.cart || JSON.parse(localStorage.getItem('nisha_cart') || '[]'));
+        } catch(e) {
+            userCart = [];
+        }
+
+        if (userCart && userCart.length > 0) {
             document.title = `(${userCart.length}) 🛒 Ждем тебя | NISHA`;
+
+            // Проверяем кулдаун перед установкой таймера
+            const lastSent = parseInt(localStorage.getItem('nisha_cart_push_sent_time') || '0', 10);
+            if (Date.now() - lastSent < CART_PUSH_COOLDOWN_MS) {
+                return;
+            }
+
+            if (cartAbandonTimeout) clearTimeout(cartAbandonTimeout);
             cartAbandonTimeout = setTimeout(() => {
-                if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                // Если юзер уже вернулся на эту вкладку
+                if (!document.hidden) return;
+
+                // Проверяем актуальную корзину из localStorage
+                let freshCart = [];
+                try {
+                    freshCart = JSON.parse(localStorage.getItem('nisha_cart') || '[]');
+                } catch(e) { freshCart = []; }
+                if (!freshCart || freshCart.length === 0) return;
+
+                // Защита от дублей между вкладками: повторно проверяем кулдаун
+                const checkLastSent = parseInt(localStorage.getItem('nisha_cart_push_sent_time') || '0', 10);
+                if (Date.now() - checkLastSent < CART_PUSH_COOLDOWN_MS) return;
+
+                // Сразу помечаем время отправки, чтобы параллельные вкладки не отправили повторно
+                localStorage.setItem('nisha_cart_push_sent_time', Date.now().toString());
+
+                if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
                     navigator.serviceWorker.ready.then(reg => {
                         reg.showNotification("NISHA STORE", {
                             body: "Твои товары все еще ждут в корзине! Оформи, пока их не забрали.",
                             icon: '/icon-192.png',
                             badge: '/badge.png',
+                            tag: 'nisha-cart-abandon',
+                            renotify: false,
                             vibrate: [200, 100, 200],
                             data: { url: '/' }
                         });
-                    });
+                    }).catch(err => console.error("SW notification error:", err));
                 }
             }, 10 * 60 * 1000);
         } else {
@@ -1076,7 +1111,10 @@ document.addEventListener("visibilitychange", async () => {
         }
     } else {
         // Юзер вернулся обратно на наш сайт
-        if (cartAbandonTimeout) clearTimeout(cartAbandonTimeout);
+        if (cartAbandonTimeout) {
+            clearTimeout(cartAbandonTimeout);
+            cartAbandonTimeout = null;
+        }
         const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
         if (activeItem) {
             document.title = `NISHA | ${activeItem.brand} - ${activeItem.name}`;

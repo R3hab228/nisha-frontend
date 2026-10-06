@@ -154,6 +154,11 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     display: flex; flex-direction: column; 
     cursor: pointer; position: relative; 
     transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; 
+    animation: itemCardFadeIn 0.3s ease-out;
+}
+@keyframes itemCardFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 .item-card:hover { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
 
