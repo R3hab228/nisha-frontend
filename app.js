@@ -3839,6 +3839,69 @@ async function checkPhoneAuth() {
     }
 }
 
+// ==========================================
+// CLOUDFLARE TURNSTILE (CAPTCHA / BOT SHIELD)
+// ==========================================
+const TURNSTILE_SITE_KEY = '0x4AAAAAAFPA7MSg5EklX3ye';
+let turnstileOtpWidgetId = null;
+let turnstilePropWidgetId = null;
+window._turnstileOtpToken = null;
+window._turnstilePropToken = null;
+
+function initTurnstileWidgets() {
+    if (typeof turnstile === 'undefined') return;
+
+    // 1. Виджет для подтверждения номера телефона (OTP)
+    const otpContainer = document.getElementById('turnstile-otp-container');
+    if (otpContainer && turnstileOtpWidgetId === null && otpContainer.innerHTML.trim() === '') {
+        try {
+            turnstileOtpWidgetId = turnstile.render('#turnstile-otp-container', {
+                sitekey: TURNSTILE_SITE_KEY,
+                theme: 'dark',
+                size: 'compact',
+                callback: function(token) {
+                    window._turnstileOtpToken = token;
+                },
+                'expired-callback': function() {
+                    window._turnstileOtpToken = null;
+                },
+                'error-callback': function() {
+                    window._turnstileOtpToken = null;
+                }
+            });
+        } catch(e) {
+            console.warn('[TURNSTILE OTP ERROR]', e);
+        }
+    }
+
+    // 2. Виджет для формы "Предложить вещь"
+    const propContainer = document.getElementById('turnstile-prop-container');
+    if (propContainer && turnstilePropWidgetId === null && propContainer.innerHTML.trim() === '') {
+        try {
+            turnstilePropWidgetId = turnstile.render('#turnstile-prop-container', {
+                sitekey: TURNSTILE_SITE_KEY,
+                theme: 'dark',
+                size: 'compact',
+                callback: function(token) {
+                    window._turnstilePropToken = token;
+                },
+                'expired-callback': function() {
+                    window._turnstilePropToken = null;
+                },
+                'error-callback': function() {
+                    window._turnstilePropToken = null;
+                }
+            });
+        } catch(e) {
+            console.warn('[TURNSTILE PROP ERROR]', e);
+        }
+    }
+}
+
+window.addEventListener('load', () => {
+    setTimeout(initTurnstileWidgets, 1000);
+});
+
 let otpRealtimeChannel = null;
 
 async function generateAndSendOTP() {
@@ -3852,11 +3915,41 @@ async function generateAndSendOTP() {
 
     const btnOtp = document.getElementById('btnGetOtp');
     if (btnOtp.disabled) return; // Если уже зеленый - ничего не делаем
+
+    // Проверка Turnstile капчи
+    let turnToken = window._turnstileOtpToken || (typeof turnstile !== 'undefined' && turnstileOtpWidgetId !== null ? turnstile.getResponse(turnstileOtpWidgetId) : null);
+    if (typeof turnstile !== 'undefined' && turnstileOtpWidgetId !== null && !turnToken) {
+        showToast('Пожалуйста, подтвердите проверку Turnstile!', 'error');
+        return;
+    }
     
     // Блокируем кнопку от двойных нажатий
     btnOtp.disabled = true;
     btnOtp.innerText = "Связь с БД...";
     btnOtp.style.opacity = "0.5";
+
+    // Верификация капчи на бэкенде
+    if (turnToken) {
+        try {
+            const vRes = await fetch('https://nisha-api.onrender.com/api/verify-turnstile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: turnToken })
+            });
+            const vData = await vRes.json();
+            if (!vData.success) {
+                showToast('Ошибка проверки безопасности Turnstile', 'error');
+                if (typeof turnstile !== 'undefined' && turnstileOtpWidgetId !== null) turnstile.reset(turnstileOtpWidgetId);
+                window._turnstileOtpToken = null;
+                btnOtp.disabled = false;
+                btnOtp.innerText = "Подтвердить";
+                btnOtp.style.opacity = "1";
+                return;
+            }
+        } catch(err) {
+            console.warn('[TURNSTILE VERIFY FAILOVER]', err);
+        }
+    }
 
     // 1. Проверяем Черный Список
     const { data: blacklisted } = await _supabase.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
@@ -3977,6 +4070,7 @@ async function openCheckoutModal() {
     document.getElementById('checkoutModal').style.display = 'flex'; 
     document.body.style.overflow = 'hidden';
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+    setTimeout(initTurnstileWidgets, 100);
     
     // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА (Seamless Checkout)
     const savedDataRaw = localStorage.getItem('nisha_checkout_data');
@@ -5880,6 +5974,7 @@ function openProposeModal() {
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        setTimeout(initTurnstileWidgets, 100);
     }
 }
 
@@ -5950,6 +6045,10 @@ function resetProposalForm() {
     currentProposalFiles = [];
     renderProposalPreviews();
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+    if (typeof turnstile !== 'undefined' && turnstilePropWidgetId !== null) {
+        try { turnstile.reset(turnstilePropWidgetId); } catch(e) {}
+    }
+    window._turnstilePropToken = null;
 }
 
 // --- ОБЩАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ ФАЙЛОВ ---
@@ -6163,6 +6262,13 @@ async function submitProposal() {
         return;
     }
 
+    // Проверка Turnstile капчи
+    let propToken = window._turnstilePropToken || (typeof turnstile !== 'undefined' && turnstilePropWidgetId !== null ? turnstile.getResponse(turnstilePropWidgetId) : null);
+    if (typeof turnstile !== 'undefined' && turnstilePropWidgetId !== null && !propToken) {
+        showToast('Пожалуйста, подтвердите проверку Turnstile!', 'error');
+        return;
+    }
+
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
 
@@ -6187,6 +6293,7 @@ async function submitProposal() {
         formData.append('description', desc);
         formData.append('contact', contact);
         formData.append('clientId', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint);
+        if (propToken) formData.append('turnstileToken', propToken);
         
         compressedFiles.forEach((file, index) => {
             formData.append('images', file, `prop_${index}.jpg`);

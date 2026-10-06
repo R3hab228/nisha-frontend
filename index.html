@@ -25,6 +25,7 @@
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
 <script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",showHideAnimationType:"fade",zoomAnimationDuration:200,bgOpacity:.9,closeOnVerticalDrag:!0,wheelToZoom:!0,pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
 <link rel=stylesheet href=style.css>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity -->
 <script type="text/javascript">
@@ -489,6 +490,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <button class="search-btn btn-target" id=btnGetOtp onclick=generateAndSendOTP() style="white-space:nowrap;padding:10px 15px;font-size:12px" data-i18n=checkout.btn_otp>Подтвердить</button>
 </div>
 <div id=otpStatus style=color:var(--accent-red);font-size:11px;font-family:var(--font-mono);margin-top:-5px data-i18n=checkout.otp_status>Сначала подтвердите номер для заказа!</div>
+<div id="turnstile-otp-container" style="margin-top:8px;min-height:45px;display:flex;justify-content:flex-start"></div>
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div style=position:relative>
@@ -705,6 +707,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <label data-i18n=propose.contact_label>СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
 <input id=propContact class=form-input placeholder="@твои_ник или +380..." data-i18n-ph=propose.contact_place>
 </div>
+<div id="turnstile-prop-container" style="margin-top:12px;min-height:45px;display:flex;justify-content:center"></div>
 <button class="cart-checkout-btn btn-target" id=btnSubmitProp onclick=submitProposal() style=margin-top:15px;width:100% data-i18n=propose.btn_submit>[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
 </div>
 </div>
