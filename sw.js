@@ -1,7 +1,27 @@
-const CACHE_NAME = 'nisha-cache-v120';
+const CACHE_NAME = 'nisha-cache-v121';
 const IMAGE_CACHE = 'nisha-images-v1';
 const API_CACHE = 'nisha-api-v1';
-const STATIC_URLS = ['/', '/index.html', '/app.js', '/config.js', '/style.css', '/locales.json', '/404.html', '/badge.png'];
+const STATIC_URLS = [
+    '/',
+    '/index.html',
+    '/app.js',
+    '/config.js',
+    '/style.css',
+    '/locales.json',
+    '/404.html',
+    '/badge.png',
+    '/icon-192.png',
+    '/js/core/helpers.js',
+    '/js/ui/windows.js',
+    '/js/auth/auth.js',
+    '/js/drop/drop.js',
+    '/js/chat/chat.js',
+    '/js/reviews/reviews.js',
+    '/js/catalog/catalog.js',
+    '/js/cart/cart.js',
+    '/js/product/product.js',
+    '/js/profile/profile.js'
+];
 
 // Функция лимитирования кэша
 function trimCache(cacheName, maxItems) {
