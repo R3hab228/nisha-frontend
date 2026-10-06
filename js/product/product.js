@@ -10,10 +10,6 @@ let currentSlide = 0;
 let totalSlides = 0;
 
 // Безопасные геттеры зависимостей
-function getCatalog() {
-    return window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
-}
-
 function getFavs() {
     return window.favorites || (typeof favorites !== 'undefined' ? favorites : []);
 }
@@ -22,22 +18,8 @@ function getUser() {
     return window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
 }
 
-function getSupabase() {
-    return window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
-}
-
 function getFingerprint() {
     return window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : 'guest_' + Date.now());
-}
-
-function getOptimizedImg(item, thumb = true) {
-    if (typeof window.getOptimizedImageUrl === 'function') {
-        return window.getOptimizedImageUrl(item, thumb);
-    }
-    if (typeof getOptimizedImageUrl === 'function') {
-        return getOptimizedImageUrl(item, thumb);
-    }
-    return (item && item.images && item.images[0]) ? (window.toCDN ? window.toCDN(item.images[0]) : item.images[0]) : '';
 }
 
 // ==========================================

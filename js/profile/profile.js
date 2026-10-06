@@ -30,13 +30,6 @@ let lastPhoneSendTimestamp = 0;
 let lastTgSendTimestamp = 0;
 
 // Безопасные геттеры зависимостей
-function getSupabase() {
-    return window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
-}
-
-function getCatalog() {
-    return window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
-}
 
 function getHourglass(height = 14) {
     if (typeof window.getWin95HourglassHtml === 'function') {
@@ -1125,7 +1118,7 @@ window.saveTgFromInput = async function(isModal = false) {
 };
 
 // Проверка ожидающих OTP при смене вкладки и фокусе
-window.addEventListener('visibilitychange', () => {
+document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
         if (window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone')) {
             checkPendingPhoneVerification();

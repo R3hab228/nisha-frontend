@@ -49,16 +49,6 @@ function getSupabaseClient() {
     return window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
 }
 
-function getOptimizedImg(item) {
-    if (typeof window.getOptimizedImageUrl === 'function') {
-        return window.getOptimizedImageUrl(item, true);
-    }
-    if (typeof getOptimizedImageUrl === 'function') {
-        return getOptimizedImageUrl(item, true);
-    }
-    return (item && item.images && item.images[0]) ? (window.toCDN ? window.toCDN(item.images[0]) : item.images[0]) : '';
-}
-
 // ==========================================
 // 1. ДОБАВЛЕНИЕ В КОРЗИНУ
 // ==========================================

@@ -143,3 +143,25 @@ function copyToClipboard(text, successMsg = 'Скопировано в буфе�
     }
 }
 window.copyToClipboard = copyToClipboard;
+
+// --- БЕЗОПАСНЫЕ ГЕТТЕРЫ ДАННЫХ И КЛИЕНТОВ ---
+function getSupabase() {
+    return window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+}
+window.getSupabase = getSupabase;
+
+function getCatalog() {
+    return window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+}
+window.getCatalog = getCatalog;
+
+function getOptimizedImg(item, thumb = true) {
+    if (typeof window.getOptimizedImageUrl === 'function') {
+        return window.getOptimizedImageUrl(item, thumb);
+    }
+    if (typeof getOptimizedImageUrl === 'function') {
+        return getOptimizedImageUrl(item, thumb);
+    }
+    return (item && item.images && item.images[0]) ? (window.toCDN ? window.toCDN(item.images[0]) : item.images[0]) : '';
+}
+window.getOptimizedImg = getOptimizedImg;

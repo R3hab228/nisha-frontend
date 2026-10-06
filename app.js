@@ -403,36 +403,6 @@ async function initApp() {
                 }
             }
 
-            // Дожим через системный PUSH + Фоновое обновление при возвращении из других приложух
-            let cartAbandonTimeout;
-            document.addEventListener("visibilitychange", async () => {
-                if (document.hidden) {
-                    if (cart.length > 0) {
-                        cartAbandonTimeout = setTimeout(() => {
-                            if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-                                navigator.serviceWorker.ready.then(reg => {
-                                    reg.showNotification("NISHA STORE", {
-                                        body: "Твои товары все еще ждут в корзине! Оформи, пока их не забрали.",
-                                        icon: '/icon-192.png',
-                                        badge: '/badge.png',
-                                        vibrate: [200, 100, 200],
-                                        data: { url: '/' }
-                                    });
-                                });
-                            }
-                        }, 10 * 60 * 1000);
-                    }
-                } else {
-                    if (cartAbandonTimeout) clearTimeout(cartAbandonTimeout);
-                    if (_supabase) {
-                        await checkSession();
-                        if (allItems.length > 0) {
-                            loadAllItems(); 
-                        }
-                    }
-                }
-            });
-
         // 1. Восстанавливаем фильтры, категорию и поисковый запрос (синхронно, 0мс)
         const urlParams = new URLSearchParams(window.location.search);
         
@@ -697,12 +667,7 @@ async function initApp() {
             startOnboardingTour();
         }
 
-        // ==============================================================
-        // --- СИСТЕМА ЛИЧНЫХ ОТВЕТОВ ОТ ПОДДЕРЖКИ (js/chat/chat.js) ---
-        // ==============================================================
-        if (typeof initSupportRepliesSystem === 'function') {
-            setTimeout(initSupportRepliesSystem, 3000);
-        }
+        // initSupportRepliesSystem автозапускается внутри js/chat/chat.js
 
     } catch (err) {
        
@@ -1084,26 +1049,45 @@ document.addEventListener('touchend', e => {
 // Перенесена в js/chat/chat.js
 // ==========================================
 // ==========================================
-// УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА)
+// УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА, ПУШ, СИНХРОНИЗАЦИЯ)
 // ==========================================
-document.addEventListener("visibilitychange", () => {
+let cartAbandonTimeout;
+document.addEventListener("visibilitychange", async () => {
+    const userCart = (typeof cart !== 'undefined') ? cart : (window.cart || []);
     if (document.hidden) {
         // Юзер свернул браузер или ушел на другую вкладку
-        if (cart.length > 0) {
-            // Если в корзине что-то есть, давим на психику
-            document.title = `(${cart.length}) 🛒 Ждем тебя | NISHA`;
+        if (userCart.length > 0) {
+            document.title = `(${userCart.length}) 🛒 Ждем тебя | NISHA`;
+            cartAbandonTimeout = setTimeout(() => {
+                if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification("NISHA STORE", {
+                            body: "Твои товары все еще ждут в корзине! Оформи, пока их не забрали.",
+                            icon: '/icon-192.png',
+                            badge: '/badge.png',
+                            vibrate: [200, 100, 200],
+                            data: { url: '/' }
+                        });
+                    });
+                }
+            }, 10 * 60 * 1000);
         } else {
-            // Если корзина пустая, просто "засыпаем"
             document.title = `Zzz... | NISHA`;
         }
     } else {
         // Юзер вернулся обратно на наш сайт
-        if (typeof currentOpenedItem !== 'undefined' && currentOpenedItem) {
-            // Если у него открыта карточка товара
-            document.title = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
+        if (cartAbandonTimeout) clearTimeout(cartAbandonTimeout);
+        const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        if (activeItem) {
+            document.title = `NISHA | ${activeItem.brand} - ${activeItem.name}`;
         } else {
-            // Если он просто в ленте
             document.title = 'NISHA | Underground Store';
+        }
+        if (_supabase) {
+            await checkSession();
+            if (window.allItems && window.allItems.length > 0) {
+                loadAllItems(); 
+            }
         }
     }
 });
@@ -1181,9 +1165,7 @@ document.addEventListener('keydown', function(e) {
 
 
 
-document.addEventListener('DOMContentLoaded', () => {
-    initMobileSwipe();
-});
+// initMobileSwipe инициализируется внутри js/ui/windows.js
 
 // ==========================================
 // WEB PUSH ПОДПИСКА
