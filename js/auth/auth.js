@@ -3,7 +3,21 @@
 // ==========================================
 
 // --- CLOUDFLARE TURNSTILE (CAPTCHA / BOT SHIELD) ---
-const TURNSTILE_SITE_KEY = '0x4AAAAAAFPA7MSg5EklX3ye';
+const isLocalhost = Boolean(
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '[::1]' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.') ||
+    window.location.hostname.startsWith('10.') ||
+    window.location.protocol === 'file:'
+);
+
+// Для локальной разработки используем официальный тестовый ключ Cloudflare (Always passes),
+// чтобы challenges.cloudflare.com не возвращал ошибку 401 Unauthorized из-за несовпадения домена.
+// На боевом домене (nisha-store.shop) используется продакшн-ключ.
+const TURNSTILE_SITE_KEY = isLocalhost 
+    ? '1x00000000000000000000AA' 
+    : '0x4AAAAAAFPA7MSg5EklX3ye';
 window.TURNSTILE_SITE_KEY = TURNSTILE_SITE_KEY;
 
 let turnstileOtpWidgetId = null;
