@@ -14,6 +14,7 @@ function toggleLangDropdown(event) {
     event.stopPropagation();
     document.getElementById('langDropdown').classList.toggle('show');
 }
+window.toggleLangDropdown = toggleLangDropdown;
 
 document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('langDropdown');
@@ -59,6 +60,7 @@ function changeLanguage(lng) {
         });
     }
 }
+window.changeLanguage = changeLanguage;
 
 
 // === АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ САЙТА (БЕЗ КЭША) ===
@@ -124,6 +126,7 @@ function updateContentLanguage() {
     currentSearchLang = i18next.language || 'ru';
     startSearchTypewriter();
 }
+window.updateContentLanguage = updateContentLanguage;
 
 function startSearchTypewriter() {
     const searchInput = document.getElementById('mainSearch');
@@ -197,6 +200,7 @@ function startSearchTypewriter() {
 
     typeLoop();
 }
+window.startSearchTypewriter = startSearchTypewriter;
 // ==========================================
 // БЕЗОПАСНЫЙ ПЛАВНЫЙ СКРОЛЛ (ТОЛЬКО ДЛЯ ПК)
 // ==========================================
@@ -789,6 +793,7 @@ function triggerEasterEgg() {
     syncCartToServer();
     updateCartUI();
 }
+window.triggerEasterEgg = triggerEasterEgg;
 // ==========================================
 // 16. СЧЕТЧИК ПОСЕТИТЕЛЕЙ (ЖЕЛЕЗОБЕТОННЫЕ УНИКАЛЬНЫЕ ЗА ДЕНЬ)
 // ==========================================
@@ -852,6 +857,7 @@ async function initHitCounter() {
         // Юзер просто продолжит видеть старую цифру из кэша (шаг 3), пока сервер не проснется.
     }
 }
+window.initHitCounter = initHitCounter;
 // updatePriceUI and toggleMobileSidebar moved to js/catalog/catalog.js
 
 // Задержка поиска, чтобы не лагало при быстром вводе текста
@@ -977,6 +983,10 @@ function closeSearch() {
     document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
     if (searchInput) searchInput.blur(); // Принудительно прячем клавиатуру
 }
+window.saveRecentSearch = saveRecentSearch;
+window.showSearchHistory = showSearchHistory;
+window.handleLiveSearch = handleLiveSearch;
+window.closeSearch = closeSearch;
 
 
 document.addEventListener('click', (e) => {
@@ -1016,6 +1026,7 @@ function resetToMain() {
     // 7. Применяем фильтры (перерисовываем сетку)
     applyFilters();
 }
+window.resetToMain = resetToMain;
 // ==========================================
 // PWA INSTALL BUTTON LOGIC
 // ==========================================
@@ -1050,27 +1061,6 @@ if(installBtn) {
 // Reviews submission and prompt functions moved to js/reviews/reviews.js
 
 // removeHistoryItem and Q&A functions moved to js/product/product.js
-// ==========================================
-// ==========================================
-// УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА)
-// ==========================================
-document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-        // Юзер ушел на другую вкладку
-        if (cart.length > 0) {
-            document.title = `(${cart.length}) 🛒 Ждем тебя | NISHA`;
-        } else {
-            document.title = `Zzz... | NISHA`;
-        }
-    } else {
-        // Юзер вернулся
-        if (currentOpenedItem) {
-            document.title = `NISHA | ${currentOpenedItem.brand} - ${currentOpenedItem.name}`;
-        } else {
-            document.title = 'NISHA | Underground Store';
-        }
-    }
-});
 // ==========================================
 // PULL-TO-REFRESH (КАК В НАТИВНЫХ ПРИЛОЖЕНИЯХ)
 // ==========================================
@@ -1144,6 +1134,7 @@ function updateCharCount(textarea) {
         label.style.color = 'var(--accent-green)';
     }
 }
+window.updateCharCount = updateCharCount;
 
 // ==========================================
 // ПЕРЕХОД К СЛЕДУЮЩЕМУ ПОЛЮ ПО НАЖАТИЮ ENTER (ДЛЯ ПК)
@@ -1248,6 +1239,7 @@ async function subscribeUserToPush(registration, silent = false) {
         console.error('Push error:', e);
     }
 }
+window.subscribeUserToPush = subscribeUserToPush;
 
 document.addEventListener('click', (e) => {
     if (pushPrompted) return;
