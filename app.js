@@ -354,31 +354,65 @@ setInterval(() => {
 
 function checkRules() {
     if (!localStorage.getItem('nisha_rules_accepted')) {
-        const modal = document.getElementById('rulesModal');
-        if (modal) {
-            modal.style.display = 'flex';
-        }
+        setTimeout(() => {
+            if (!localStorage.getItem('nisha_rules_accepted')) {
+                showRulesModal();
+            }
+        }, 550);
     }
 }
 
 function showRulesModal() { 
     const modal = document.getElementById('rulesModal');
     if (modal) {
+        if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
+        document.body.style.overflow = 'hidden';
         modal.style.display = 'flex'; 
     }
 }
+window.showRulesModal = showRulesModal;
 
 function acceptRules() {
     localStorage.setItem('nisha_rules_accepted', 'true');
     const modal = document.getElementById('rulesModal');
-    if (modal) modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    if (typeof lenis !== 'undefined') window.startLenis(); 
+    if (modal) {
+        const win = modal.querySelector('.modal-window');
+        if (win) {
+            win.style.animation = 'none';
+            void win.offsetHeight;
+            win.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
+            if (window.innerWidth > 768) {
+                win.style.transform = 'scale(0.95) translateY(20px)';
+            } else {
+                win.style.transform = 'translateY(100%)';
+            }
+            win.style.opacity = '0';
+        }
+        modal.style.transition = 'opacity 0.35s ease, backdrop-filter 0.35s ease';
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.style.opacity = '';
+            modal.style.transition = '';
+            if (win) {
+                win.style.transform = '';
+                win.style.opacity = '';
+                win.style.transition = '';
+                win.style.animation = '';
+            }
+            document.body.style.overflow = 'auto';
+            if (typeof lenis !== 'undefined') window.startLenis(); 
+        }, 350);
+    } else {
+        document.body.style.overflow = 'auto';
+        if (typeof lenis !== 'undefined') window.startLenis(); 
+    }
     showToast(i18next.t('messages.rules_accepted'), 'success');
     
-    // Запускаем тур сразу после закрытия окна правил
-    setTimeout(startOnboardingTour, 400); 
+    // Запускаем тур сразу после плавного закрытия окна правил
+    setTimeout(startOnboardingTour, 420); 
 }
+window.acceptRules = acceptRules;
 
 let appInitialized = false;
 async function initApp() {
@@ -1194,6 +1228,7 @@ function handleNetworkOffline() {
         if (grid) {
             grid.style.display = 'none';
             grid.classList.remove('fade-out');
+            grid.classList.remove('feed-restore-anim');
         }
         
         // Failsafe: если вдруг элемента нет в DOM, восстанавливаем его перед itemsGrid
@@ -1211,6 +1246,8 @@ function handleNetworkOffline() {
                 msgEl.style.fontSize = '13px';
                 msgEl.style.fontWeight = 'normal';
             }
+            netError.classList.remove('fade-out');
+            netError.classList.add('fade-in');
             netError.style.display = 'flex';
         }
         if (window.scrollY > 150) {
@@ -1235,37 +1272,64 @@ function handleNetworkOnline() {
     }
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
     
-    setTimeout(async () => {
-        if (netError) netError.style.display = 'none';
-        
-        if (grid) {
-            grid.style.display = '';
-            // Если в ленте уже были товары — плавно возвращаем их
-            if (grid.querySelectorAll('.item-card').length > 0) {
-                grid.classList.add('fade-out');
-                requestAnimationFrame(() => {
-                    grid.classList.remove('fade-out');
-                });
-            } else {
-                // Если товаров еще не было (открыли сайт сразу без сети) — загружаем
-                if (typeof loadAllItems === 'function') {
-                    await loadAllItems();
-                }
-            }
+    // Даем пользователю четко увидеть статус восстановления сети
+    setTimeout(() => {
+        // Плавно гасим окно ошибки сети
+        if (netError && netError.style.display !== 'none') {
+            netError.classList.remove('fade-in');
+            netError.classList.add('fade-out');
         }
         
-        if (typeof checkSession === 'function') checkSession();
-    }, 900);
+        // После затухания ошибки плавно проявляем ленту товаров
+        setTimeout(async () => {
+            if (netError) {
+                netError.style.display = 'none';
+                netError.classList.remove('fade-out');
+                netError.classList.remove('fade-in');
+            }
+            
+            if (grid) {
+                grid.style.display = '';
+                grid.classList.remove('fade-out');
+                grid.classList.add('feed-restore-anim');
+                
+                // Если товаров еще не было (открыли сайт сразу без сети) — загружаем
+                if (grid.querySelectorAll('.item-card').length === 0) {
+                    if (typeof loadAllItems === 'function') {
+                        await loadAllItems();
+                    }
+                }
+                
+                setTimeout(() => {
+                    grid.classList.remove('feed-restore-anim');
+                }, 700);
+            }
+            
+            if (typeof checkSession === 'function') checkSession();
+        }, 280);
+    }, 850);
 }
 window.handleNetworkOnline = handleNetworkOnline;
 
 window.dismissNetError = function() {
     const netError = document.getElementById('win95-net-error');
     const grid = document.getElementById('itemsGrid');
-    if (netError) netError.style.display = 'none';
+    if (netError) {
+        netError.classList.remove('fade-in');
+        netError.classList.add('fade-out');
+        setTimeout(() => {
+            netError.style.display = 'none';
+            netError.classList.remove('fade-out');
+            netError.classList.remove('fade-in');
+        }, 280);
+    }
     if (grid) {
         grid.style.display = '';
         grid.classList.remove('fade-out');
+        grid.classList.add('feed-restore-anim');
+        setTimeout(() => {
+            grid.classList.remove('feed-restore-anim');
+        }, 700);
     }
 };
 

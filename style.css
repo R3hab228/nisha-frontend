@@ -147,6 +147,20 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     opacity: 0;
     transform: translateY(10px);
 }
+.items-grid.feed-restore-anim {
+    animation: feedRestoreAnim 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
+}
+@keyframes feedRestoreAnim {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 .items-grid.grid-offline .item-card {
     display: none !important;
 }
@@ -235,7 +249,26 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 }
 
 #win95-net-error {
-    animation: itemCardFadeIn 0.3s ease-out;
+    animation: win95NetErrorIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+#win95-net-error.fade-in {
+    animation: win95NetErrorIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+#win95-net-error.fade-out {
+    opacity: 0 !important;
+    transform: translateY(-10px) !important;
+    pointer-events: none;
+}
+@keyframes win95NetErrorIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .history-section { padding: 20px 30px; background: var(--bg-card); border-top: 2px dashed #333; display: none; margin-top: auto;}
@@ -272,6 +305,7 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 
 @keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(3px); } }
 @keyframes modalPopDesktop { from { opacity: 0; transform: scale(0.95) translateY(20px) translateZ(0); } to { opacity: 1; transform: scale(1) translateY(0) translateZ(0); } }
+@keyframes slideUpMobile { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 
 .modal-header { background: #002244; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px inset var(--border-light); position: sticky; top: 0; z-index: 20;}
 .modal-title { color: #fff; font-weight: bold; font-family: var(--font-mono); font-size: 16px; letter-spacing: 1px;}
@@ -428,7 +462,56 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 
 .pswp__img { object-fit: contain; }
 
-#rulesModal .modal-window { max-height: 80vh !important; display: flex; flex-direction: column; }
+#rulesModal {
+    animation: fadeInRulesOverlay 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+#rulesModal .modal-window {
+    max-height: 80vh !important;
+    display: flex;
+    flex-direction: column;
+    animation: rulesPopDesktop 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes fadeInRulesOverlay {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(4px);
+    }
+}
+
+@keyframes rulesPopDesktop {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(28px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    #rulesModal .modal-window {
+        animation: rulesSlideUpMobile 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+    }
+}
+
+@keyframes rulesSlideUpMobile {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 .rules-content { padding: 30px; font-size: 14px; line-height: 1.6; color: #ddd; background: #0a0a0a; max-height: 60vh; overflow-y: auto;}
 .rules-content h3 { color: var(--accent-green); font-family: var(--font-mono); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 25px; display: flex; align-items: flex-start; gap: 5px; }
 .rules-content h3:first-child { margin-top: 0; }

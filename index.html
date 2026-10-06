@@ -371,7 +371,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </footer>
 </div>
 <script>function getFlagUrlByLang(e){return"ua"===e?"https://flagcdn.com/24x18/ua.png":"en"===e?"https://flagcdn.com/24x18/gb.png":"https://flagcdn.com/24x18/ru.png"}function setLang(e){localStorage.setItem("nisha_lang",e),localStorage.setItem("i18nextLng",e),changeLanguage(e);const t=getFlagUrlByLang(e);document.getElementById("currentFlagImg").src=t,document.getElementById("currentLangLabelFooter").querySelector("span").innerText="["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{let e=localStorage.getItem("nisha_lang");e||(e=(localStorage.getItem("i18nextLng")||"ru").substring(0,2).toLowerCase(),["ru","ua","en"].includes(e)||(e="ru"),localStorage.setItem("nisha_lang",e));const t=getFlagUrlByLang(e),n=document.getElementById("currentFlagImg"),a=document.getElementById("currentLangLabelFooter");n&&a&&(n.src=t,a.querySelector("span").innerText="["+e.toUpperCase()+"] ▼")}))</script>
-<div class=modal-overlay id=rulesModal style=background:rgba(0,0,0,.95);z-index:5000>
+<div class=modal-overlay id=rulesModal style="background-color:rgba(0,0,0,.95);z-index:5000">
 <div class=modal-window style="max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;border-radius:10px 10px 0 0">
 <div class=modal-header style=background:#000;flex-shrink:0>
 <span class="modal-title typewriter" style=color:var(--accent-red)>USER_AGREEMENT.TXT</span>
