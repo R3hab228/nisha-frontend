@@ -97,7 +97,13 @@ async function loadAllItems() {
         .order('created_at', { ascending: false });
     
     if (error) { 
-        if (window.allItems.length === 0 && grid) grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
+        if (window.allItems.length === 0) {
+            if (typeof handleNetworkOffline === 'function') {
+                handleNetworkOffline();
+            } else if (grid) {
+                grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
+            }
+        }
         return; 
     }
     

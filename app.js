@@ -388,6 +388,10 @@ async function initApp() {
     if (typeof window.startLenis === 'function') window.startLenis();
     if (typeof window.cleanStorageLimits === 'function') window.cleanStorageLimits();
 
+    if (!navigator.onLine) {
+        setTimeout(handleNetworkOffline, 100);
+    }
+
     try {
         // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
             if (cart.length > 0) {
@@ -1136,6 +1140,82 @@ document.addEventListener("visibilitychange", async () => {
         }
     }
 });
+
+// ==========================================
+// WINDOWS 95 ОФЛАЙН-РЕЖИМ (Error_NISHA.exe)
+// ==========================================
+function handleNetworkOffline() {
+    const grid = document.getElementById('itemsGrid');
+    const netError = document.getElementById('win95-net-error');
+    const loader = document.getElementById('win95-loader');
+    
+    // Плавно гасим ленту товаров
+    if (grid) {
+        grid.classList.add('fade-out');
+    }
+    
+    setTimeout(() => {
+        if (loader) loader.style.display = 'none';
+        if (grid) grid.style.display = 'none';
+        
+        if (netError) {
+            const msgEl = document.getElementById('win95-error-msg');
+            if (msgEl) {
+                msgEl.innerText = 'Соединение потеряно';
+                msgEl.style.color = '#000';
+            }
+            netError.style.display = 'flex';
+        }
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+    }, 280);
+}
+window.handleNetworkOffline = handleNetworkOffline;
+
+function handleNetworkOnline() {
+    const netError = document.getElementById('win95-net-error');
+    const msgEl = document.getElementById('win95-error-msg');
+    const grid = document.getElementById('itemsGrid');
+    
+    if (msgEl) {
+        msgEl.innerHTML = '<b style="color:#008000;">Соединение восстановлено!!!</b>';
+    }
+    if (typeof triggerHaptic === 'function') triggerHaptic('success');
+    
+    setTimeout(async () => {
+        if (netError) netError.style.display = 'none';
+        
+        if (grid) {
+            grid.style.display = '';
+            // Если в ленте уже были товары — плавно возвращаем их
+            if (grid.querySelectorAll('.item-card').length > 0) {
+                requestAnimationFrame(() => {
+                    grid.classList.remove('fade-out');
+                });
+            } else {
+                // Если товаров еще не было (открыли сайт без сети) — загружаем
+                if (typeof loadAllItems === 'function') {
+                    await loadAllItems();
+                }
+            }
+        }
+        
+        if (typeof checkSession === 'function') checkSession();
+    }, 900);
+}
+window.handleNetworkOnline = handleNetworkOnline;
+
+window.dismissNetError = function() {
+    const netError = document.getElementById('win95-net-error');
+    const grid = document.getElementById('itemsGrid');
+    if (netError) netError.style.display = 'none';
+    if (grid) {
+        grid.style.display = '';
+        grid.classList.remove('fade-out');
+    }
+};
+
+window.addEventListener('offline', handleNetworkOffline);
+window.addEventListener('online', handleNetworkOnline);
 
 // --- ЖИВОЙ СЧЕТЧИК СИМВОЛОВ ДЛЯ ПРЕДЛОЖКИ (ОБРАТНЫЙ ОТСЧЕТ) ---
 function updateCharCount(textarea) {

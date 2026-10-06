@@ -231,6 +231,10 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     box-shadow: 0 0 15px var(--accent-yellow); pointer-events: none; 
 }
 
+#win95-net-error {
+    animation: itemCardFadeIn 0.3s ease-out;
+}
+
 .history-section { padding: 20px 30px; background: var(--bg-card); border-top: 2px dashed #333; display: none; margin-top: auto;}
 .history-title { color: var(--accent-green); font-family: var(--font-mono); font-size: 16px; margin: 0 0 15px 0; font-weight: bold; text-transform: uppercase;}
 .history-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; max-height: 250px; opacity: 1; transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.4s ease; will-change: max-height, opacity; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;}
