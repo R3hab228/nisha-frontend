@@ -3864,7 +3864,7 @@ function initTurnstileWidgets() {
         try {
             turnstileOtpWidgetId = turnstile.render('#turnstile-otp-container', {
                 sitekey: TURNSTILE_SITE_KEY,
-                size: 'invisible',
+                size: 'compact',
                 callback: function(token) {
                     window._turnstileOtpToken = token;
                 },
@@ -3886,7 +3886,7 @@ function initTurnstileWidgets() {
         try {
             turnstilePropWidgetId = turnstile.render('#turnstile-prop-container', {
                 sitekey: TURNSTILE_SITE_KEY,
-                size: 'invisible',
+                size: 'compact',
                 callback: function(token) {
                     window._turnstilePropToken = token;
                 },
