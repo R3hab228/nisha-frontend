@@ -3849,16 +3849,22 @@ window._turnstileOtpToken = null;
 window._turnstilePropToken = null;
 
 function initTurnstileWidgets() {
-    if (typeof turnstile === 'undefined') return;
+    if (typeof turnstile === 'undefined') {
+        if (!window._turnstileRetryCount) window._turnstileRetryCount = 0;
+        if (window._turnstileRetryCount < 6) {
+            window._turnstileRetryCount++;
+            setTimeout(initTurnstileWidgets, 500);
+        }
+        return;
+    }
 
-    // 1. Виджет для подтверждения номера телефона (OTP)
+    // 1. Фоновый невидимый виджет для подтверждения номера телефона (OTP)
     const otpContainer = document.getElementById('turnstile-otp-container');
-    if (otpContainer && turnstileOtpWidgetId === null && otpContainer.innerHTML.trim() === '') {
+    if (otpContainer && turnstileOtpWidgetId === null) {
         try {
             turnstileOtpWidgetId = turnstile.render('#turnstile-otp-container', {
                 sitekey: TURNSTILE_SITE_KEY,
-                theme: 'dark',
-                size: 'compact',
+                size: 'invisible',
                 callback: function(token) {
                     window._turnstileOtpToken = token;
                 },
@@ -3874,14 +3880,13 @@ function initTurnstileWidgets() {
         }
     }
 
-    // 2. Виджет для формы "Предложить вещь"
+    // 2. Фоновый невидимый виджет для формы "Предложить вещь"
     const propContainer = document.getElementById('turnstile-prop-container');
-    if (propContainer && turnstilePropWidgetId === null && propContainer.innerHTML.trim() === '') {
+    if (propContainer && turnstilePropWidgetId === null) {
         try {
             turnstilePropWidgetId = turnstile.render('#turnstile-prop-container', {
                 sitekey: TURNSTILE_SITE_KEY,
-                theme: 'dark',
-                size: 'compact',
+                size: 'invisible',
                 callback: function(token) {
                     window._turnstilePropToken = token;
                 },
@@ -3899,7 +3904,7 @@ function initTurnstileWidgets() {
 }
 
 window.addEventListener('load', () => {
-    setTimeout(initTurnstileWidgets, 1000);
+    setTimeout(initTurnstileWidgets, 800);
 });
 
 let otpRealtimeChannel = null;
@@ -3916,12 +3921,8 @@ async function generateAndSendOTP() {
     const btnOtp = document.getElementById('btnGetOtp');
     if (btnOtp.disabled) return; // Если уже зеленый - ничего не делаем
 
-    // Проверка Turnstile капчи
+    // Проверка Turnstile капчи в фоне (если токен уже готов)
     let turnToken = window._turnstileOtpToken || (typeof turnstile !== 'undefined' && turnstileOtpWidgetId !== null ? turnstile.getResponse(turnstileOtpWidgetId) : null);
-    if (typeof turnstile !== 'undefined' && turnstileOtpWidgetId !== null && !turnToken) {
-        showToast('Пожалуйста, подтвердите проверку Turnstile!', 'error');
-        return;
-    }
     
     // Блокируем кнопку от двойных нажатий
     btnOtp.disabled = true;
@@ -6262,12 +6263,8 @@ async function submitProposal() {
         return;
     }
 
-    // Проверка Turnstile капчи
+    // Фоновый токен Turnstile (если готов)
     let propToken = window._turnstilePropToken || (typeof turnstile !== 'undefined' && turnstilePropWidgetId !== null ? turnstile.getResponse(turnstilePropWidgetId) : null);
-    if (typeof turnstile !== 'undefined' && turnstilePropWidgetId !== null && !propToken) {
-        showToast('Пожалуйста, подтвердите проверку Turnstile!', 'error');
-        return;
-    }
 
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
