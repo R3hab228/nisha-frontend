@@ -318,7 +318,9 @@ if (!SUPABASE_ANON_KEY) {
             }
         }
     });
+    window._supabase = _supabase;
 }
+window.clientFingerprint = clientFingerprint;
 // ==========================================
 // СИСТЕМА ВЕЧНОЙ СЕССИИ (JWT REFRESH)
 // ==========================================
@@ -773,53 +775,11 @@ window.onload = async () => {
         }
 
         // ==============================================================
-        // --- СИСТЕМА ЛИЧНЫХ ОТВЕТОВ ОТ ПОДДЕРЖКИ (ФИКС) ---
+        // --- СИСТЕМА ЛИЧНЫХ ОТВЕТОВ ОТ ПОДДЕРЖКИ (js/chat/chat.js) ---
         // ==============================================================
-        setTimeout(async () => {
-            console.log("[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:", clientFingerprint);
-            try {
-                // 1. Проверяем пропущенные сообщения (Offline)
-                const { data: replies, error: replErr } = await _supabase
-                    .from('support_replies')
-                    .select('*')
-                    .eq('client_id', clientFingerprint)
-                    .eq('is_read', false);
-                
-                if (replErr) console.error("[СИСТЕМА ОТВЕТОВ] Ошибка БД:", replErr.message);
-
-                if (replies && replies.length > 0) {
-                    console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
-                    replies.forEach(r => {
-                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
-                            _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
-                        });
-                    });
-                }
-
-                // 2. Слушаем в реальном времени (Online)
-                console.log("[СИСТЕМА ОТВЕТОВ] Подписка на Realtime включена.");
-                _supabase.channel('support-replies-channel')
-                    .on('postgres_changes', { 
-                        event: 'INSERT', 
-                        schema: 'public', 
-                        table: 'support_replies', 
-                        filter: `client_id=eq.${clientFingerprint}` 
-                    }, payload => {
-                        console.log("[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение Online:", payload.new);
-                        const r = payload.new;
-                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
-                            _supabase.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
-                        });
-                    })
-                    .subscribe((status) => {
-                        if (status === 'SUBSCRIBED') {
-                            console.log("[СИСТЕМА ОТВЕТОВ] Успешно подключен к каналу!");
-                        }
-                    });
-            } catch(e) {
-                console.error("[СИСТЕМА ОТВЕТОВ] Глобальная ошибка:", e);
-            }
-        }, 3000); // Ждем 3 секунды после загрузки сайта, чтобы не мешать
+        if (typeof initSupportRepliesSystem === 'function') {
+            setTimeout(initSupportRepliesSystem, 3000);
+        }
 
     } catch (err) {
        
@@ -6425,54 +6385,9 @@ window.handleDoubleTapLike = async function(event, itemId, container) {
     }
 };
 // ==========================================
-// ФОРМА ПОДДЕРЖКИ (NATIVE MODAL)
+// ФОРМА ПОДДЕРЖКИ (SUPPORT_TICKET.EXE)
+// Перенесена в js/chat/chat.js
 // ==========================================
-
-// 1. Открытие окна (1 в 1 как остальные модалки)
-function openSupportModalWindow() {
-    if (typeof lenis !== 'undefined') window.stopLenis();
-    document.getElementById('supportInput').value = ''; // Очищаем поле при открытии
-    document.getElementById('supportModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-
-// 2. БЫСТРАЯ Отправка сообщения (В фоне)
-async function submitSupportTicket() {
-    const input = document.getElementById('supportInput');
-    const btn = document.getElementById('btnSubmitSupport');
-    const message = input.value.trim();
-
-    if (message.length < 5) {
-        showToast('Опиши проблему подробнее (минимум 5 символов)', 'error');
-        if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        return;
-    }
-
-    btn.style.pointerEvents = 'none';
-    btn.innerText = '[ ОТПРАВКА... ]';
-
-    const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const userContact = currentUser ? (currentUser.email || currentUser.phone || 'Аноним') : 'Гость';
-
-    // 1. Отправляем запрос на сервер и НЕ ЖДЕМ ответа! (Используем .catch для тихой записи ошибок)
-    fetch('https://nisha-api.onrender.com/api/support', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contact: userContact, message: safeText, clientId: clientFingerprint })
-    }).catch(e => console.log("Фоновая отправка в саппорт не удалась: ", e));
-
-    // 2. Моментально показываем успех и закрываем окно!
-    if (typeof triggerHaptic === 'function') triggerHaptic('success');
-    showToast('Сообщение успешно доставлено админу!', 'success');
-    closeModal('supportModal');
-
-    // 3. Возвращаем кнопку в норму (на всякий случай, если окно откроют снова)
-    setTimeout(() => {
-        btn.style.pointerEvents = 'auto';
-        btn.innerText = 'ОТПРАВИТЬ СИГНАЛ';
-        input.value = '';
-    }, 500);
-}
 // ==========================================
 // УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА)
 // ==========================================
