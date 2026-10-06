@@ -1060,7 +1060,8 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
 .win95-pixel-hourglass {
     display: inline-block;
     vertical-align: middle;
-    transform-origin: 7.5px 12px;
+    transform-origin: 50% 50%;
+    will-change: transform;
     animation: hgFlip 2.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
     shape-rendering: crispEdges;
 }
