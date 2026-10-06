@@ -835,7 +835,7 @@ window.onload = async () => {
 // Идеально плавное закрытие по крестику (С ЗАЩИТОЙ ДАННЫХ)
 function closeModal(id) { 
     if (id === 'proposeModal') {
-        const files = document.getElementById('propFiles')?.files?.length || 0;
+        const files = (window.currentProposalFiles && window.currentProposalFiles.length) || document.getElementById('propFiles')?.files?.length || 0;
         const brand = document.getElementById('propBrand')?.value.trim() || '';
         const size = document.getElementById('propSize')?.value.trim() || '';
         const contact = document.getElementById('propContact')?.value.trim() || '';
@@ -847,13 +847,17 @@ function closeModal(id) {
                 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.', 
                 '[ ЗАКРЫТЬ ]', 
                 '[ ОТМЕНА ]', 
-                () => { resetProposalForm(); executeCloseModal(id); } // Если согласился - стираем и закрываем
+                () => { 
+                    if (typeof resetProposalForm === 'function') resetProposalForm(); 
+                    executeCloseModal(id); 
+                }
             );
             return; 
         }
     }
     executeCloseModal(id); // Если защищать не нужно — просто закрываем
 }
+window.closeModal = closeModal;
 
 // Вся старая логика анимаций перенесена сюда
 function executeCloseModal(id) {
@@ -888,6 +892,7 @@ function executeCloseModal(id) {
         if (typeof checkPendingBroadcast === 'function') checkPendingBroadcast();
     }, 300);
 }
+window.executeCloseModal = executeCloseModal;
 
 async function openReviewsModal() { 
     const modal = document.getElementById('reviewsModal');
@@ -3793,11 +3798,13 @@ function initTurnstileWidgets() {
                     window._turnstilePropToken = null;
                 }
             });
+            window.turnstilePropWidgetId = turnstilePropWidgetId;
         } catch(e) {
             console.warn('[TURNSTILE PROP ERROR]', e);
         }
     }
 }
+window.initTurnstileWidgets = initTurnstileWidgets;
 
 window.addEventListener('load', () => {
     setTimeout(initTurnstileWidgets, 800);
@@ -5860,364 +5867,10 @@ function initMobileSwipe() {
     });
 }
 // ==========================================
-// ПОЛНАЯ ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (DROP_ITEM.EXE)
+// ЛОГИКА ПРЕДЛОЖКИ ТОВАРОВ (DROP_ITEM.EXE)
+// Перенесена в js/drop/drop.js
 // ==========================================
 
-// 1. Открытие модального окна предложки
-function openProposeModal() {
-    if (typeof lenis !== 'undefined') window.stopLenis();
-    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
-    const modal = document.getElementById('proposeModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        setTimeout(initTurnstileWidgets, 100);
-    }
-}
-
-// 2. Сжатие фото (САМОЕ ПРОСТОЕ И ЛЕГКОЕ ДЛЯ ПАМЯТИ)
-async function compressImage(file) {
-    // 1. Видео просто пропускаем
-    if (file.type.startsWith('video/')) return file;
-
-    return new Promise((resolve) => {
-        // 2. Создаем легкую "ссылку" на файл внутри телефона (не жрет RAM!)
-        const objectUrl = URL.createObjectURL(file);
-        const img = new Image();
-
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            const MAX_SIZE = 1200; // Жмем до 1200px
-
-            // Пропорционально уменьшаем размеры
-            if (width > height && width > MAX_SIZE) {
-                height *= MAX_SIZE / width;
-                width = MAX_SIZE;
-            } else if (height > MAX_SIZE) {
-                width *= MAX_SIZE / height;
-                height = MAX_SIZE;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob((blob) => {
-                // Обязательно удаляем "ссылку", чтобы очистить память
-                URL.revokeObjectURL(objectUrl);
-                
-                // Если всё ок - отдаем сжатый файл
-                if (blob) {
-                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                } else {
-                    // Страховка: если канвас глюканул, отдаем оригинал, чтобы не было ошибки
-                    resolve(file);
-                }
-            }, 'image/jpeg', 0.7);
-        };
-
-        img.onerror = () => {
-            // Страховка: если формат странный (например айфоновский HEIC), 
-            // просто пропускаем фото без сжатия, чтобы не блокировать юзера!
-            URL.revokeObjectURL(objectUrl);
-            resolve(file); 
-        };
-
-        // Запускаем процесс
-        img.src = objectUrl;
-    });
-}
-
-// --- ГЛОБАЛЬНЫЙ МАССИВ ДЛЯ ФОТОГРАФИЙ ПРЕДЛОЖКИ ---
-let currentProposalFiles = []; // Теперь тут будут объекты: { file, url }
-
-// 3. Полная очистка формы
-function resetProposalForm() {
-    const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc'];
-    fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    document.getElementById('propFiles').value = '';
-    currentProposalFiles = [];
-    renderProposalPreviews();
-    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
-    if (typeof turnstile !== 'undefined' && turnstilePropWidgetId !== null) {
-        try { turnstile.reset(turnstilePropWidgetId); } catch(e) {}
-    }
-    window._turnstilePropToken = null;
-}
-
-// --- ОБЩАЯ ФУНКЦИЯ ДОБАВЛЕНИЯ ФАЙЛОВ ---
-function handleNewProposalFiles(newFiles) {
-    if (newFiles.length === 0) return;
-
-    // Оставляем только фото и видео
-    const validFiles = newFiles.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
-
-    if (currentProposalFiles.length + validFiles.length > 5) {
-        showToast('Максимум 5 фото/видео!', 'error');
-        return;
-    }
-
-    validFiles.forEach(file => {
-        currentProposalFiles.push({
-            file: file,
-            url: file.type.startsWith('video/') ? null : URL.createObjectURL(file)
-        });
-    });
-    
-    renderProposalPreviews();
-}
-
-// 4. Загрузка через клик (кнопка)
-document.getElementById('propFiles')?.addEventListener('change', function(e) {
-    handleNewProposalFiles(Array.from(e.target.files));
-    this.value = ''; 
-});
-
-// 5. DRAG & DROP (ПЕРЕТАСКИВАНИЕ ФАЙЛОВ С ПК В БРАУЗЕР)
-const dropzone = document.getElementById('propDropzone');
-if (dropzone) {
-    // Отключаем стандартное поведение браузера (чтобы он не открывал картинку на весь экран)
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
-    });
-
-    // Добавляем красивую зеленую подсветку, когда файл над зоной
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropzone.addEventListener(eventName, () => dropzone.classList.add('drag-active'), false);
-    });
-
-    // Убираем подсветку
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, () => dropzone.classList.remove('drag-active'), false);
-    });
-
-    // Ловим файлы при отпускании мышки
-    dropzone.addEventListener('drop', e => {
-        const droppedFiles = Array.from(e.dataTransfer.files);
-        handleNewProposalFiles(droppedFiles);
-    });
-}
-
-// Глобальная переменная для хранения сортировщика (чтобы не было лагов)
-let proposalSortable = null;
-
-// 6. Отрисовка превью с ИДЕАЛЬНЫМ ПЕРЕТАСКИВАНИЕМ И КЛИКОМ
-function renderProposalPreviews() {
-    const container = document.getElementById('propPreviewContainer');
-    const placeholder = document.getElementById('propPlaceholder');
-    container.innerHTML = '';
-
-    if (currentProposalFiles.length > 0) {
-        placeholder.style.display = 'none';
-
-        currentProposalFiles.forEach((item, index) => {
-            const img = document.createElement('div');
-            img.className = 'preview-img';
-            img.setAttribute('data-index', index);
-
-            const dragIcon = '<div style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); padding:2px; border-radius:2px; pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>';
-
-            if (!item.url) { 
-                img.style.backgroundColor = '#111';
-                img.innerHTML = `<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">▶ VID</span>${dragIcon}`;
-            } else {
-                img.style.backgroundImage = `url('${item.url}')`;
-                img.innerHTML = dragIcon;
-            }
-
-            const delBtn = document.createElement('div');
-            delBtn.innerHTML = '✖';
-            delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:10; font-family:var(--font-mono); border: 1px solid #000;';
-            
-            // Удаление фото
-            delBtn.onclick = (e) => {
-                e.stopPropagation(); 
-                currentProposalFiles.splice(index, 1);
-                if (typeof triggerHaptic === 'function') triggerHaptic('light');
-                renderProposalPreviews(); 
-            };
-            img.appendChild(delBtn);
-
-            // ФИКС: Клик по картинке (Открывает на весь экран!)
-            img.onclick = (e) => {
-                e.stopPropagation();
-                if (!item.url) return; // Видео пока не открываем, только фото
-                
-                // Подключаем родную галерею
-                if (window.PhotoSwipeLightbox) {
-                    const photos = currentProposalFiles.filter(f => f.url);
-                    const clickedIndex = photos.findIndex(f => f === item);
-                    
-                    const pswp = new window.PhotoSwipeLightbox({
-                        dataSource: photos.map(f => ({ src: f.url, width: 1000, height: 1000 })),
-                        pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
-                    });
-                    pswp.init();
-                    pswp.loadAndOpen(clickedIndex);
-                }
-            };
-
-            container.appendChild(img);
-        });
-
-        // ФИКС ЛАГОВ: Убиваем старый сортировщик перед созданием нового!
-        if (proposalSortable) {
-            proposalSortable.destroy();
-        }
-
-        if (window.Sortable) {
-            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-
-            proposalSortable = Sortable.create(container, {
-                animation: 150, // Ускорили анимацию (было 250)
-                delay: isTouchDevice ? 150 : 0, 
-                delayOnTouchOnly: true,
-                touchStartThreshold: 5,
-                forceFallback: isTouchDevice, 
-                fallbackOnBody: false, 
-                ghostClass: 'sortable-ghost', 
-                dragClass: 'sortable-drag', 
-                onStart: function () {
-                    if (isTouchDevice) {
-                        if (typeof triggerHaptic === 'function') triggerHaptic('medium'); 
-                        document.body.classList.add('sort-lock');
-                        const modalWin = document.querySelector('#proposeModal .modal-window');
-                        if (modalWin) {
-                            modalWin.style.overflow = 'hidden';
-                            modalWin.style.touchAction = 'none';
-                        }
-                    }
-                },
-                onEnd: function (evt) {
-                    if (isTouchDevice) {
-                        document.body.classList.remove('sort-lock');
-                        const modalWin = document.querySelector('#proposeModal .modal-window');
-                        if (modalWin) {
-                            modalWin.style.overflow = 'auto';
-                            modalWin.style.touchAction = 'auto';
-                        }
-                        if (typeof triggerHaptic === 'function') triggerHaptic('light'); 
-                    }
-                    
-                    const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
-                    currentProposalFiles.splice(evt.newIndex, 0, movedItem);
-                }
-            });
-        }
-    } else {
-        placeholder.style.display = 'block';
-    }
-}
-
-// 5. Главная функция отправки данных на сервер
-// Вспомогательная функция (конвертирует фото в текст для передачи на сервер)
-const fileToBase64 = file => new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-});
-
-async function submitProposal() {
-    const btn = document.getElementById('btnSubmitProp');
-    
-    // БЕРЕМ ФАЙЛЫ ИЗ НАШЕГО ОТСОРТИРОВАННОГО МАССИВА!
-    const files = currentProposalFiles.map(obj => obj.file);
-    
-    // СЧИТЫВАЕМ ВСЕ ПОЛЯ
-    const rawName = document.getElementById('propName').value.trim();
-    const rawBrand = document.getElementById('propBrand').value.trim();
-    const rawSize = document.getElementById('propSize').value.trim();
-    const rawDesc = document.getElementById('propDesc').value.trim(); // ДОСТАЕМ ОПИСАНИЕ
-    const cond = parseInt(document.getElementById('propCond').value);
-    const price = parseInt(document.getElementById('propPrice').value) || 0; 
-    let rawContact = document.getElementById('propContact').value.trim();
-    if (!rawContact && typeof getUserPhone === 'function' && typeof getUserTg === 'function') {
-        const uPhone = getUserPhone();
-        const uTg = getUserTg();
-        if (uPhone && uTg) rawContact = `${uTg} | ${uPhone}`;
-    }
-    
-    // ОЧИЩАЕМ ОТ ВРЕДОНОСНОГО КОДА (ЕСЛИ ЕСТЬ DOMPURIFY)
-    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName.replace(/</g, '&lt;').replace(/>/g, '&gt;'); 
-    const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc.replace(/</g, '&lt;').replace(/>/g, '&gt;'); // ЧИСТИМ ОПИСАНИЕ
-    const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-    // ЖЕСТКАЯ ПРОВЕРКА (Если пусто хотя бы одно поле — выдаем ошибку)
-    if (!files.length || !nameItem || !brand || !size || !desc || isNaN(cond) || price <= 0 || !contact) {
-        if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        showToast('Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!', 'error');
-        return;
-    }
-
-    if (cond < 1 || cond > 10) {
-        showToast('Оценка состояния от 1 до 10!', 'error');
-        return;
-    }
-
-    // Фоновый токен Turnstile (если готов)
-    let propToken = window._turnstilePropToken || (typeof turnstile !== 'undefined' && turnstilePropWidgetId !== null ? turnstile.getResponse(turnstilePropWidgetId) : null);
-
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = '0.7';
-
-    try {
-        // ЭТАП 1: ПРОСТОЕ СЖАТИЕ ФОТО
-        let compressedFiles = [];
-        for (let i = 0; i < files.length; i++) {
-            btn.innerText = `[ СЖАТИЕ ФОТО: ${i + 1}/${files.length} ]`;
-            // Убрали искусственную задержку 100мс!
-            const compressed = await compressImage(files[i]);
-            compressedFiles.push(compressed);
-        }
-        
-        btn.innerText = '[ ПЕРЕДАЧА НА СЕРВЕР... ]';
-        
-        const formData = new FormData();
-        formData.append('name', nameItem);
-        formData.append('brand', brand);
-        formData.append('measurements', size);
-        formData.append('condition', cond);
-        formData.append('price', price);
-        formData.append('description', desc);
-        formData.append('contact', contact);
-        formData.append('clientId', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint);
-        if (propToken) formData.append('turnstileToken', propToken);
-        
-        compressedFiles.forEach((file, index) => {
-            formData.append('images', file, `prop_${index}.jpg`);
-        });
-        
-        // Фоновая отправка!
-        fetch('https://nisha-api.onrender.com/api/propose-files', {
-            method: 'POST',
-            body: formData
-        }).then(res => {
-            if (!res.ok) console.error('Server returned error', res.status);
-        }).catch(e => console.error('Background upload failed', e));
-        
-        resetProposalForm();
-        executeCloseModal('proposeModal');
-        
-        setTimeout(() => {
-            showTerminalModal('SYSTEM_OK.LOG', 'Заявка успешно отправлена.', '[ ЗАКРЫТЬ ]', null);
-            btn.innerText = '[ ПРЕДЛОЖИТЬ ]';
-            btn.style.pointerEvents = 'auto';
-            btn.style.opacity = '1';
-        }, 100);
-
-    } catch (err) {
-        console.error(err);
-        showToast('Сбой сервера: ' + err.message, 'error');
-        btn.innerText = '[ ПОВТОРИТЬ ПОПЫТКУ ]';
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    }
-}
 
 
 
