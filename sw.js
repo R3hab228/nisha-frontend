@@ -156,7 +156,7 @@ self.addEventListener('push', event => {
             icon: '/icon-192.png',
             badge: '/badge.png',
             vibrate: [200, 100, 200],
-            tag: data.tag || (data.title ? 'nisha-' + encodeURIComponent(data.title) : 'nisha-push'),
+            tag: data.tag || (data.itemId ? 'nisha-item-' + data.itemId : (data.id ? 'nisha-item-' + data.id : (data.title ? 'nisha-' + encodeURIComponent(data.title) : 'nisha-push'))),
             renotify: false,
             data: { url: data.url || '/' }
         };

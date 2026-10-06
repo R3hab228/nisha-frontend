@@ -384,7 +384,9 @@ let appInitialized = false;
 async function initApp() {
     if (appInitialized) return;
     appInitialized = true;
-    document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
+    document.body.classList.remove('search-lock'); 
+    if (typeof window.startLenis === 'function') window.startLenis();
+    if (typeof window.cleanStorageLimits === 'function') window.cleanStorageLimits();
 
     try {
         // --- УМНЫЙ ДОЖИМ КОРЗИНЫ (Срабатывает при возвращении на сайт) ---
@@ -577,9 +579,19 @@ async function initApp() {
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, payload => {
                     // ЕСЛИ ДОБАВИЛИ НОВУЮ ВЕЩЬ ЧЕРЕЗ БОТА
                     if (payload.eventType === 'INSERT') {
-                        allItems.unshift(payload.new); // Добавляем в начало массива
-                        showToast(`🆕 Новая вещь на сайте: ${payload.new.name}`, 'success');
-                        applyFilters(); // Плавно перерисовываем сетку
+                        if (!payload.new || !payload.new.id) return;
+                        window._notifiedItemIds = window._notifiedItemIds || new Set();
+                        if (window._notifiedItemIds.has(payload.new.id)) return;
+                        window._notifiedItemIds.add(payload.new.id);
+
+                        const currentItems = window.allItems || allItems || [];
+                        const alreadyExists = currentItems.some(i => i.id === payload.new.id);
+                        if (!alreadyExists) {
+                            currentItems.unshift(payload.new);
+                            window.allItems = currentItems;
+                            showToast(`🆕 Новая вещь на сайте: ${payload.new.name}`, 'success');
+                            applyFilters(); // Плавно перерисовываем сетку
+                        }
                     } 
                     // ЕСЛИ АДМИН УДАЛИЛ ВЕЩЬ
                     else if (payload.eventType === 'DELETE') {

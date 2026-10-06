@@ -38,7 +38,7 @@ async function openProductModalById(itemId) {
         let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
         if (!seenItemsIds.includes(itemId)) {
             seenItemsIds.push(itemId);
-            if (seenItemsIds.length > 500) seenItemsIds.shift(); 
+            if (seenItemsIds.length > 200) seenItemsIds = seenItemsIds.slice(-200); 
             localStorage.setItem('nisha_seen_items', JSON.stringify(seenItemsIds));
         }
 
@@ -768,7 +768,7 @@ function addToHistory(item) {
         img: img 
     });
     
-    if(hist.length > 8) hist.pop(); 
+    if (hist.length > 30) hist = hist.slice(0, 30); 
     
     localStorage.setItem('nisha_history', JSON.stringify(hist));
     renderHistory();

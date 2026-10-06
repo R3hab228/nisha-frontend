@@ -56,24 +56,8 @@ function getSupabaseClient() {
 // 1. ДОБАВЛЕНИЕ В КОРЗИНУ
 // ==========================================
 
-// Добавление в корзину прямо с главной страницы
+// Добавление в корзину прямо с главной страницы (доступно и гостям, и авторизованным)
 async function addToCartById(itemId) {
-    const user = getCurrentUser();
-    // --- ПРОВЕРКА НА ГОСТЯ ---
-    if (!user) {
-        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_error_auth') : 'Сначала войдите в систему!', 'error');
-        if (typeof openProfileModal === 'function') openProfileModal();
-        
-        // Если это ПК (нет модалки), то подсвечиваем левое меню
-        if (window.innerWidth > 900) {
-            const authBox = document.getElementById('authBox');
-            if (authBox) {
-                authBox.style.boxShadow = "0 0 20px var(--accent-red)";
-                setTimeout(() => authBox.style.boxShadow = "none", 2000);
-            }
-        }
-        return;
-    }
 
     const catalog = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
     const item = catalog.find(i => i.id === itemId);
@@ -179,19 +163,10 @@ async function syncCartToServer() {
 }
 window.syncCartToServer = syncCartToServer;
 
-// Добавление в корзину из модального окна товара
+// Добавление в корзину из модального окна товара (доступно и гостям, и авторизованным)
 async function addToCartFromModal() {
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
     if (!activeItem) return;
-    
-    const user = getCurrentUser();
-    // --- ПРОВЕРКА НА ГОСТЯ В МОДАЛКЕ ---
-    if (!user) {
-        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_error_auth', {defaultValue: 'Сначала войдите в систему!'}) : 'Сначала войдите в систему!', 'error');
-        if (typeof closeModal === 'function') closeModal('productModal'); // Закрываем товар
-        if (typeof openProfileModal === 'function') openProfileModal(); // Открываем авторизацию
-        return;
-    }
     
     let currentCart = getActiveCart();
     if (currentCart.some(i => i.id === activeItem.id)) { 

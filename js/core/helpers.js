@@ -165,3 +165,38 @@ function getOptimizedImg(item, thumb = true) {
     return (item && item.images && item.images[0]) ? (window.toCDN ? window.toCDN(item.images[0]) : item.images[0]) : '';
 }
 window.getOptimizedImg = getOptimizedImg;
+
+// --- САМООЧИСТКА И ЛИМИТЫ ПАМЯТИ (LOCALSTORAGE GARBAGE COLLECTOR) ---
+function cleanStorageLimits() {
+    try {
+        // 1. Ограничение истории просмотров (до 30 товаров)
+        const histRaw = localStorage.getItem('nisha_history');
+        if (histRaw) {
+            const hist = JSON.parse(histRaw);
+            if (Array.isArray(hist) && hist.length > 30) {
+                localStorage.setItem('nisha_history', JSON.stringify(hist.slice(0, 30)));
+            }
+        }
+
+        // 2. Ограничение просмотренных ID вещей (до 200 штук)
+        const seenRaw = localStorage.getItem('nisha_seen_items');
+        if (seenRaw) {
+            const seen = JSON.parse(seenRaw);
+            if (Array.isArray(seen) && seen.length > 200) {
+                localStorage.setItem('nisha_seen_items', JSON.stringify(seen.slice(-200)));
+            }
+        }
+
+        // 3. Ограничение истории поиска (до 15 запросов)
+        const searchRaw = localStorage.getItem('nisha_recent_searches');
+        if (searchRaw) {
+            const searches = JSON.parse(searchRaw);
+            if (Array.isArray(searches) && searches.length > 15) {
+                localStorage.setItem('nisha_recent_searches', JSON.stringify(searches.slice(0, 15)));
+            }
+        }
+    } catch(e) {
+        console.warn('Storage cleanup notice:', e);
+    }
+}
+window.cleanStorageLimits = cleanStorageLimits;
