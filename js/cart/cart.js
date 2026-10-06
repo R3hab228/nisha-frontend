@@ -662,100 +662,85 @@ document.addEventListener('mousedown', (e) => {
 // 4. ОФОРМЛЕНИЕ ЗАКАЗА (CHECKOUT)
 // ==========================================
 
-let isOpeningCheckoutModal = false;
-let isSubmittingOrder = false;
-
 async function openCheckoutModal() { 
-    if (isOpeningCheckoutModal) return;
     const btn = document.querySelector('.cart-panel .cart-checkout-btn');
     if (!btn) return; 
     
-    isOpeningCheckoutModal = true;
     const originalText = btn.innerText;
     btn.innerText = "[ ПРОВЕРКА НАЛИЧИЯ... ]";
     btn.style.pointerEvents = "none";
 
-    try {
-        let currentCart = getActiveCart();
-        const itemIds = currentCart.map(i => i.id);
-        const sb = getSupabaseClient();
-        
-        let hasSoldItems = false;
-        if (sb && itemIds.length > 0) {
-            const { data: dbItems, error } = await sb.from('items').select('id, name, status').in('id', itemIds);
+    let currentCart = getActiveCart();
+    const itemIds = currentCart.map(i => i.id);
+    const sb = getSupabaseClient();
+    
+    let hasSoldItems = false;
+    if (sb && itemIds.length > 0) {
+        const { data: dbItems, error } = await sb.from('items').select('id, name, status').in('id', itemIds);
 
-            if (dbItems && !error) {
-                currentCart = currentCart.filter(cartItem => {
-                    const dbItem = dbItems.find(i => i.id === cartItem.id);
-                    if (!dbItem || dbItem.status === 'sold') {
-                        showToast(`Товар "${cartItem.name}" уже кто-то купил! 😢`, 'error');
-                        hasSoldItems = true;
-                        return false; 
-                    }
-                    return true;
-                });
-            }
+        if (dbItems && !error) {
+            currentCart = currentCart.filter(cartItem => {
+                const dbItem = dbItems.find(i => i.id === cartItem.id);
+                if (!dbItem || dbItem.status === 'sold') {
+                    showToast(`Товар "${cartItem.name}" уже кто-то купил! 😢`, 'error');
+                    hasSoldItems = true;
+                    return false; 
+                }
+                return true;
+            });
         }
+    }
 
-        if (hasSoldItems) {
-            setActiveCart(currentCart);
-            await syncCartToServer();
-            updateCartUI();
-            btn.innerText = originalText;
-            btn.style.pointerEvents = "auto";
-            if (currentCart.length === 0) closeCartDropdown();
-            return; 
-        }
-
+    if (hasSoldItems) {
+        setActiveCart(currentCart);
+        await syncCartToServer();
+        updateCartUI();
         btn.innerText = originalText;
         btn.style.pointerEvents = "auto";
+        if (currentCart.length === 0) closeCartDropdown();
+        return; 
+    }
 
-        if (typeof window.stopLenis === 'function') window.stopLenis();
-        else if (typeof lenis !== 'undefined') lenis.stop();
-        
-        document.getElementById('checkoutModal').style.display = 'flex'; 
-        document.body.style.overflow = 'hidden';
-        if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
-        if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
-        
-        // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА
-        const savedDataRaw = localStorage.getItem('nisha_checkout_data');
-        if (savedDataRaw) {
-            try {
-                const saved = JSON.parse(savedDataRaw);
-                document.getElementById('orderName').value = saved.name || '';
-                document.getElementById('orderPhone').value = saved.phone || '';
-                document.getElementById('orderCity').value = saved.city || '';
-                document.getElementById('orderBranch').value = saved.branch || '';
-                
-                selectedCityRef = saved.cityRef || '';
-                window.selectedCityRef = selectedCityRef;
-                selectedBranchRef = saved.branchRef || '';
-                window.selectedBranchRef = selectedBranchRef;
-                
-                if (saved.phone && typeof checkPhoneAuth === 'function') checkPhoneAuth();
-                
-                if (selectedCityRef && selectedBranchRef && getActiveCart().length > 0) {
-                    calculateDeliveryCost();
-                }
-            } catch(e) { autoDetectCity(); }
-        } else {
-            if (typeof checkPhoneAuth === 'function') checkPhoneAuth();
-            autoDetectCity(); 
-        }
-    } finally {
-        isOpeningCheckoutModal = false;
-        if (btn) {
-            btn.innerText = originalText;
-            btn.style.pointerEvents = "auto";
-        }
+    btn.innerText = originalText;
+    btn.style.pointerEvents = "auto";
+
+    if (typeof window.stopLenis === 'function') window.stopLenis();
+    else if (typeof lenis !== 'undefined') lenis.stop();
+    
+    document.getElementById('checkoutModal').style.display = 'flex'; 
+    document.body.style.overflow = 'hidden';
+    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+    if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
+    
+    // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА
+    const savedDataRaw = localStorage.getItem('nisha_checkout_data');
+    if (savedDataRaw) {
+        try {
+            const saved = JSON.parse(savedDataRaw);
+            document.getElementById('orderName').value = saved.name || '';
+            document.getElementById('orderPhone').value = saved.phone || '';
+            document.getElementById('orderCity').value = saved.city || '';
+            document.getElementById('orderBranch').value = saved.branch || '';
+            
+            selectedCityRef = saved.cityRef || '';
+            window.selectedCityRef = selectedCityRef;
+            selectedBranchRef = saved.branchRef || '';
+            window.selectedBranchRef = selectedBranchRef;
+            
+            if (saved.phone && typeof checkPhoneAuth === 'function') checkPhoneAuth();
+            
+            if (selectedCityRef && selectedBranchRef && getActiveCart().length > 0) {
+                calculateDeliveryCost();
+            }
+        } catch(e) { autoDetectCity(); }
+    } else {
+        if (typeof checkPhoneAuth === 'function') checkPhoneAuth();
+        autoDetectCity(); 
     }
 }
 window.openCheckoutModal = openCheckoutModal;
 
 async function submitOrder() {
-    if (isSubmittingOrder) return;
-
     if (typeof window.triggerVibration === 'function') window.triggerVibration(150);
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== "") return;
@@ -798,27 +783,18 @@ async function submitOrder() {
         return;
     }
 
-    const currentCart = getActiveCart();
-    if (!currentCart || currentCart.length === 0) {
-        showToast('Корзина пуста!', 'error');
-        return;
-    }
-
     const savedEmailPreference = localStorage.getItem('nisha_email_preference');
     
     if (savedEmailPreference === 'skipped') {
-        isSubmittingOrder = true;
         return await executeOrderFinal('');
     }
     if (savedEmailPreference && savedEmailPreference.includes('@')) {
-        isSubmittingOrder = true;
         return await executeOrderFinal(savedEmailPreference);
     }
 
     const user = getCurrentUser();
     if (user && user.email) {
         localStorage.setItem('nisha_email_preference', user.email);
-        isSubmittingOrder = true;
         return await executeOrderFinal(user.email);
     }
 
@@ -828,14 +804,12 @@ async function submitOrder() {
         emailInput.value = '';
         prompt.style.display = 'flex';
     } else {
-        isSubmittingOrder = true;
         await executeOrderFinal('');
     }
 }
 window.submitOrder = submitOrder;
 
 async function confirmEmailPrompt(wantsEmail) {
-    if (isSubmittingOrder) return;
     const prompt = document.getElementById('emailPromptOverlay');
     const emailInput = document.getElementById('promptEmailInput');
     let finalEmail = '';
@@ -852,7 +826,6 @@ async function confirmEmailPrompt(wantsEmail) {
         localStorage.setItem('nisha_email_preference', 'skipped');
     }
 
-    isSubmittingOrder = true;
     if (prompt) prompt.style.display = 'none'; 
     await executeOrderFinal(finalEmail); 
 }
@@ -860,13 +833,9 @@ window.confirmEmailPrompt = confirmEmailPrompt;
 
 async function executeOrderFinal(emailToSave) {
     const btnSubmit = document.getElementById('btnSubmitOrder');
-    if (!btnSubmit) {
-        isSubmittingOrder = false;
-        return;
-    }
+    if (!btnSubmit) return;
     
     btnSubmit.style.pointerEvents = "none";
-    btnSubmit.setAttribute('disabled', 'true');
     btnSubmit.style.position = "relative";
     btnSubmit.style.overflow = "hidden";
     btnSubmit.style.color = "#000";
@@ -889,16 +858,6 @@ async function executeOrderFinal(emailToSave) {
     const nameWithPayment = paymentMethod ? name + ' [' + paymentMethod + ']' : name;
 
     const currentCart = getActiveCart();
-    if (!currentCart || currentCart.length === 0) {
-        showToast('Корзина пуста!', 'error');
-        isSubmittingOrder = false;
-        btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
-        btnSubmit.style.pointerEvents = "auto";
-        btnSubmit.removeAttribute('disabled');
-        btnSubmit.style.opacity = "1";
-        return;
-    }
-
     const orderItemIds = currentCart.map(i => i.id);
     const cityRef = window.selectedCityRef || selectedCityRef;
     const branchRef = window.selectedBranchRef || selectedBranchRef;
@@ -967,18 +926,14 @@ async function executeOrderFinal(emailToSave) {
                 if (overlay) overlay.style.display = 'none'; 
                 if (typeof window.loadAllItems === 'function') window.loadAllItems();
                 btnSubmit.style.pointerEvents = "auto";
-                btnSubmit.removeAttribute('disabled');
                 btnSubmit.style.opacity = "1";
-                isSubmittingOrder = false;
             }, 3500);
         }, 300);
 
     } catch (err) {
-        isSubmittingOrder = false;
         showToast('Ошибка при оформлении: ' + err.message, 'error');
         btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
         btnSubmit.style.pointerEvents = "auto";
-        btnSubmit.removeAttribute('disabled');
         btnSubmit.style.opacity = "1";
         if (typeof window.loadAllItems === 'function') window.loadAllItems();
     }

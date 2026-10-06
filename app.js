@@ -149,7 +149,6 @@ function startSearchTypewriter() {
 
     function typeLoop() {
         if (!document.getElementById('mainSearch')) return;
-        if (document.hidden) return; // Экономим батарею и ресурсы: спим в фоновой вкладке
         
         if (document.activeElement === searchInput || searchInput.value.length > 0) {
             searchInput.placeholder = words[wordIndex];
@@ -348,7 +347,7 @@ window.checkPendingBroadcast = checkPendingBroadcast;
 
 // Фоновый таймер: как только юзер вернулся в ленту товаров — показываем отложенный броадкаст
 setInterval(() => {
-    if (!document.hidden && pendingBroadcastQueue && isUserInProductFeed()) {
+    if (pendingBroadcastQueue && isUserInProductFeed()) {
         checkPendingBroadcast();
     }
 }, 1500);
@@ -1082,16 +1081,6 @@ const CART_PUSH_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 часа кулдаун
 
 document.addEventListener("visibilitychange", async () => {
     if (document.hidden) {
-        // Ставим на паузу анимацию поиска для экономии батареи и ресурсов процессора
-        if (searchTypewriterInterval) {
-            clearTimeout(searchTypewriterInterval);
-            searchTypewriterInterval = null;
-        }
-        if (window.searchCursorBlinkInterval) {
-            clearInterval(window.searchCursorBlinkInterval);
-            window.searchCursorBlinkInterval = null;
-        }
-
         // Юзер свернул браузер или ушел на другую вкладку
         let userCart = [];
         try {
@@ -1157,17 +1146,6 @@ document.addEventListener("visibilitychange", async () => {
         } else {
             document.title = 'NISHA | Underground Store';
         }
-
-        // Возобновляем анимацию строки поиска, если поле пустое
-        const sInput = document.getElementById('mainSearch');
-        if (sInput && sInput.value.length === 0 && document.activeElement !== sInput) {
-            startSearchTypewriter();
-        }
-
-        if (pendingBroadcastQueue && isUserInProductFeed()) {
-            checkPendingBroadcast();
-        }
-
         if (_supabase) {
             await checkSession();
             if (window.allItems && window.allItems.length > 0) {

@@ -155,8 +155,6 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     cursor: pointer; position: relative; 
     transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; 
     animation: itemCardFadeIn 0.3s ease-out;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 380px;
 }
 @keyframes itemCardFadeIn {
     from { opacity: 0; transform: translateY(8px); }
