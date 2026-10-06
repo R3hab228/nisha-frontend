@@ -612,22 +612,31 @@ async function initApp() {
 
                             needsGridUpdate = oldItem.is_top !== updatedItem.is_top || 
                                               oldItem.top_until !== updatedItem.top_until || 
-                                              oldItem.status !== updatedItem.status ||
+                                              oldItem.status !== updatedItem.status;
                             Object.assign(allItems[index], updatedItem);
                             
                             if (priceDropped && updatedItem.status === 'available') {
                                 showToast('🔥 СКИДКА!!!', 'success', imgUrl);
                             }
 
-                            if (updatedItem.status === 'available') {
-                                const cartIdx = cart.findIndex(c => c.id === updatedItem.id);
+                            // Если товар был куплен другим покупателем, удаляем его из корзины
+                            if (updatedItem.status === 'sold') {
+                                const currentCart = (typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || cart || []);
+                                const cartIdx = currentCart.findIndex(c => c.id === updatedItem.id);
                                 if (cartIdx !== -1) {
-                                    cart.splice(cartIdx, 1);
-                                    localStorage.setItem('nisha_cart', JSON.stringify(cart));
-                                    syncCartToServer();
-                                    updateCartUI();
-                                    showToast(`Бронь истекла. ${updatedItem.name} снова в наличии.`, 'error');
+                                    currentCart.splice(cartIdx, 1);
+                                    if (typeof setActiveCart === 'function') {
+                                        setActiveCart(currentCart);
+                                    } else {
+                                        localStorage.setItem('nisha_cart', JSON.stringify(currentCart));
+                                        window.cart = currentCart;
+                                    }
+                                    if (typeof syncCartToServer === 'function') syncCartToServer();
+                                    if (typeof updateCartUI === 'function') updateCartUI();
+                                    showToast(`Товар ${updatedItem.name} уже купили, он удален из корзины.`, 'error');
                                 }
+                            } else if (oldItem && oldItem.status === 'reserved' && updatedItem.status === 'available') {
+                                showToast(`Бронь истекла: ${updatedItem.name} снова в наличии!`, 'info', imgUrl);
                             }
                             
                             // СИНХРОННОЕ ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ КАРТОЧКИ БЕЗ ПЕРЕЗАГРУЗКИ ГРИДА
@@ -635,12 +644,16 @@ async function initApp() {
                                 updateCardDOM(allItems[index]);
                             }
                             
-                            if (currentOpenedItem && currentOpenedItem.id === updatedItem.id) {
+                            const activeModalItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+                            if (activeModalItem && activeModalItem.id === updatedItem.id) {
+                                const cartBtn = document.getElementById('modalCartBtn');
+                                const waitBtn = document.getElementById('modalWaitlistBtn');
                                 if (updatedItem.status === 'sold') {
-                                    const cartBtn = document.getElementById('modalCartBtn');
-                                    const waitBtn = document.getElementById('modalWaitlistBtn');
-                                    if(cartBtn) cartBtn.style.display = 'none';
-                                    if(waitBtn) waitBtn.style.display = 'block';
+                                    if (cartBtn) cartBtn.style.display = 'none';
+                                    if (waitBtn) waitBtn.style.display = 'block';
+                                } else if (updatedItem.status === 'available') {
+                                    if (cartBtn) cartBtn.style.display = 'block';
+                                    if (waitBtn) waitBtn.style.display = 'none';
                                 }
                             }
                         }

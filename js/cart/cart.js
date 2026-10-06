@@ -102,14 +102,7 @@ function addToCartWithAnimation(itemId, btnElement, event) {
     const item = catalog.find(i => i.id === itemId);
     if (!item) return;
 
-    const user = getCurrentUser();
-    // Если гость - прерываем полет картинки, логика корзины сама покажет окно входа
-    if (!user) {
-        addToCartById(itemId); // Вызовет окно авторизации
-        return;
-    }
-    
-    // ВАЖНО: Добавляем в корзину (БЕЗ ЭТОГО НИЧЕГО НЕ СОХРАНИТСЯ)
+    // ВАЖНО: Добавляем в корзину (доступно гостям и авторизованным)
     addToCartById(itemId);
     
     // БЕЗОПАСНАЯ ВИБРАЦИЯ
