@@ -17,8 +17,10 @@ let globalOrdersData = [];
 let currentOrderTab = 'accepted'; // accepted, shipped, cancelled
 let isTogglingFav = false; // Защита от двойного клика
 
-let orderStatusChannel = null;
-let qaUpdatesChannel = null;
+if (typeof window.orderStatusChannel === 'undefined') window.orderStatusChannel = null;
+if (typeof window.qaUpdatesChannel === 'undefined') window.qaUpdatesChannel = null;
+var orderStatusChannel = window.orderStatusChannel;
+var qaUpdatesChannel = window.qaUpdatesChannel;
 
 let isCheckingPhoneOtp = false;
 let isPhoneOtpCompleted = false;

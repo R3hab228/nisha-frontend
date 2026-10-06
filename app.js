@@ -278,9 +278,8 @@ window.addEventListener('scroll', () => {
 let isHacked = false; 
 window.isHacked = false; 
 let _supabase = null;
-let clientFingerprint = "guest_" + Date.now(); 
-let orderStatusChannel = null; // Канал заказов
-let qaUpdatesChannel = null; // Канал вопросов
+let clientFingerprint = "guest_" + Date.now();
+// orderStatusChannel and qaUpdatesChannel moved to js/profile/profile.js
 
 
 let envData = (typeof window.ENV !== 'undefined') ? window.ENV : ((typeof CONFIG !== 'undefined') ? CONFIG : {});
