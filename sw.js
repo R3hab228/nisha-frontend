@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v122';
+const CACHE_NAME = 'nisha-cache-v123';
 const IMAGE_CACHE = 'nisha-images-v1';
 const API_CACHE = 'nisha-api-v1';
 const STATIC_URLS = [
@@ -11,7 +11,7 @@ const STATIC_URLS = [
     '/404.html',
     '/badge.png',
     '/icon-192.png',
-    '/cables-offline.png',
+    '/cables.svg',
     '/js/core/helpers.js',
     '/js/ui/windows.js',
     '/js/auth/auth.js',

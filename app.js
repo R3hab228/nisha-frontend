@@ -1149,22 +1149,33 @@ function handleNetworkOffline() {
     const netError = document.getElementById('win95-net-error');
     const loader = document.getElementById('win95-loader');
     
+    // Прячем лоадер БД, если он крутился
+    if (loader) loader.style.display = 'none';
+    
     // Плавно гасим ленту товаров
     if (grid) {
         grid.classList.add('fade-out');
     }
     
     setTimeout(() => {
-        if (loader) loader.style.display = 'none';
-        if (grid) grid.style.display = 'none';
+        if (grid) {
+            grid.classList.add('grid-offline');
+            grid.classList.remove('fade-out');
+        }
         
         if (netError) {
             const msgEl = document.getElementById('win95-error-msg');
             if (msgEl) {
-                msgEl.innerText = 'Соединение потеряно';
+                msgEl.textContent = 'Соединение потеряно';
                 msgEl.style.color = '#000';
+                msgEl.style.fontFamily = "Tahoma, sans-serif";
+                msgEl.style.fontSize = '13px';
+                msgEl.style.fontWeight = 'normal';
             }
             netError.style.display = 'flex';
+        }
+        if (window.scrollY > 150) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
     }, 280);
@@ -1177,7 +1188,11 @@ function handleNetworkOnline() {
     const grid = document.getElementById('itemsGrid');
     
     if (msgEl) {
-        msgEl.innerHTML = '<b style="color:#008000;">Соединение восстановлено!!!</b>';
+        msgEl.textContent = 'Соединение восстановлено!!!';
+        msgEl.style.color = '#008000';
+        msgEl.style.fontFamily = "Tahoma, sans-serif";
+        msgEl.style.fontSize = '13px';
+        msgEl.style.fontWeight = 'normal';
     }
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
     
@@ -1185,14 +1200,15 @@ function handleNetworkOnline() {
         if (netError) netError.style.display = 'none';
         
         if (grid) {
-            grid.style.display = '';
+            grid.classList.remove('grid-offline');
             // Если в ленте уже были товары — плавно возвращаем их
             if (grid.querySelectorAll('.item-card').length > 0) {
+                grid.classList.add('fade-out');
                 requestAnimationFrame(() => {
                     grid.classList.remove('fade-out');
                 });
             } else {
-                // Если товаров еще не было (открыли сайт без сети) — загружаем
+                // Если товаров еще не было (открыли сайт сразу без сети) — загружаем
                 if (typeof loadAllItems === 'function') {
                     await loadAllItems();
                 }
@@ -1209,7 +1225,7 @@ window.dismissNetError = function() {
     const grid = document.getElementById('itemsGrid');
     if (netError) netError.style.display = 'none';
     if (grid) {
-        grid.style.display = '';
+        grid.classList.remove('grid-offline');
         grid.classList.remove('fade-out');
     }
 };

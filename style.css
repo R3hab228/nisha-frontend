@@ -147,6 +147,9 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     opacity: 0;
     transform: translateY(10px);
 }
+.items-grid.grid-offline .item-card {
+    display: none !important;
+}
 
 .item-card { 
     background-color: var(--bg-card); 
