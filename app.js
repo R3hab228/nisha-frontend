@@ -1,4 +1,4 @@
-﻿// --- VIBRATION HELPER ---
+// --- VIBRATION HELPER ---
 window.triggerVibration = function(duration = 150) {
     if ('vibrate' in navigator) {
         try { navigator.vibrate(duration); } catch(e){}
@@ -2318,6 +2318,107 @@ async function syncCriticalStatuses() {
     } catch(e) { console.error("Sync error:", e); }
 }
 
+// --- ФУНКЦИЯ УМНОГО СООТВЕТСТВИЯ РАЗМЕРОВ (ОБУВЬ И ОДЕЖДА) ---
+function itemMatchesSizeFilter(itemOrSize, filterVal) {
+    if (!itemOrSize || !filterVal) return false;
+    let sizeStr = '';
+    let category = '';
+    if (typeof itemOrSize === 'object') {
+        sizeStr = itemOrSize.size ? String(itemOrSize.size).trim() : '';
+        category = itemOrSize.category ? String(itemOrSize.category).trim() : '';
+    } else {
+        sizeStr = String(itemOrSize).trim();
+    }
+    if (!sizeStr) return false;
+    const upperSize = sizeStr.toUpperCase();
+    const fVal = String(filterVal).trim().toUpperCase();
+
+    // 1. Обувь (40 - 42) и Обувь (43 - 46)
+    const isShoesFilter1 = (fVal === '42' || fVal === '40-42' || fVal === '40 - 42');
+    const isShoesFilter2 = (fVal === '44' || fVal === '43-46' || fVal === '43 - 46');
+
+    if (isShoesFilter1 || isShoesFilter2) {
+        // Обувные фильтры применимы только к категории Обувь
+        if (category && category !== 'Обувь') return false;
+
+        if (isShoesFilter1) {
+            if (upperSize.includes('40 - 42') || upperSize.includes('40-42')) return true;
+            const numMatch = upperSize.match(/(\d+(?:[.,]\d+)?)/);
+            if (numMatch) {
+                const n = parseFloat(numMatch[1].replace(',', '.'));
+                if (n >= 35 && n <= 42.5) return true;
+            }
+            return false;
+        }
+
+        if (isShoesFilter2) {
+            if (upperSize.includes('43 - 46') || upperSize.includes('43-46')) return true;
+            const numMatch = upperSize.match(/(\d+(?:[.,]\d+)?)/);
+            if (numMatch) {
+                const n = parseFloat(numMatch[1].replace(',', '.'));
+                if (n >= 42.8 && n <= 50) return true;
+            }
+            return false;
+        }
+    }
+
+    // Обувь не должна попадать под фильтры одежды (S, M, L, XL)
+    if (category === 'Обувь') {
+        return false;
+    }
+
+    // 2. Размер S (S, XS, S-M, С)
+    if (fVal === 'S') {
+        if (upperSize === 'S' || upperSize === 'XS' || upperSize === 'С' ||
+            upperSize.startsWith('S-') || upperSize.startsWith('S -') || 
+            upperSize.startsWith('S/') || upperSize.startsWith('S ') || 
+            upperSize.startsWith('S(') || upperSize.includes('(S)') ||
+            upperSize.includes('S M L')) {
+            return true;
+        }
+        return false;
+    }
+
+    // 3. Размер M (M, М, S-M, M-L)
+    if (fVal === 'M') {
+        if (upperSize === 'M' || upperSize === 'М' || 
+            upperSize.startsWith('M-') || upperSize.startsWith('M -') || 
+            upperSize.startsWith('M/') || upperSize.startsWith('M ') || 
+            upperSize.startsWith('M(') || upperSize.startsWith('М ') || 
+            upperSize.startsWith('М(') || upperSize.includes('S M L')) {
+            return true;
+        }
+        return false;
+    }
+
+    // 4. Размер L (L, Л, кроме XL, XXL)
+    if (fVal === 'L') {
+        if (upperSize.includes('XL') || upperSize.includes('ХЛ') || 
+            upperSize.includes('XXL') || upperSize.includes('ХХЛ')) {
+            return false;
+        }
+        if (upperSize === 'L' || upperSize === 'Л' || 
+            upperSize.startsWith('L ') || upperSize.startsWith('L(') || 
+            upperSize.startsWith('Л ') || upperSize.startsWith('Л(') ||
+            upperSize.includes('S M L')) {
+            return true;
+        }
+        return false;
+    }
+
+    // 5. Размер XL / XXL (XL, XXL, ХЛ, ХХЛ, 3XL, XL / XXL)
+    if (fVal === 'XL' || fVal === 'XL / XXL') {
+        if (upperSize.includes('XL') || upperSize.includes('XXL') || 
+            upperSize.includes('ХЛ') || upperSize.includes('ХХЛ') || 
+            upperSize.includes('3XL') || upperSize.includes('XXXL')) {
+            return true;
+        }
+        return false;
+    }
+
+    return upperSize === fVal;
+}
+
 // --- ОБНОВЛЕНИЕ КРАСНЫХ СЧЕТЧИКОВ В БОКОВОМ МЕНЮ ---
 function updateSidebarCounters() {
     // Считаем категории (только доступные товары)
@@ -2363,12 +2464,10 @@ function updateSidebarCounters() {
     
 
     // Считаем размеры (только для ТЕКУЩЕЙ выбранной категории и ТОЛЬКО ДОСТУПНЫЕ)
-    const sizeCounts = {};
-    allItems.forEach(item => {
-        if (!item || item.status !== 'available') return;
-        if (currentCategory !== '' && item.category !== currentCategory) return; // Умный подсчет
-        const s = item.size || '-';
-        sizeCounts[s] = (sizeCounts[s] || 0) + 1;
+    const availableCategoryItems = allItems.filter(item => {
+        if (!item || item.status !== 'available') return false;
+        if (currentCategory !== '' && item.category !== currentCategory) return false; // Умный подсчет
+        return true;
     });
 
     // Обновляем HTML размеров
@@ -2376,7 +2475,7 @@ function updateSidebarCounters() {
         const labelSpan = cb.nextElementSibling;
         let baseText = labelSpan.innerHTML.split('<span')[0].trim();
         const sizeVal = cb.value;
-        const count = sizeCounts[sizeVal] || 0;
+        const count = availableCategoryItems.filter(item => itemMatchesSizeFilter(item, sizeVal)).length;
 
         if (count > 0) {
             labelSpan.innerHTML = `${baseText} <span style="color:#ff3333; font-weight:bold; font-family:var(--font-mono); font-size:11px;">(${count})</span>`;
@@ -2452,7 +2551,7 @@ function applyFilters() {
                 
                 const matchesCategory = currentCategory === '' || itemCategory === currentCategory;
                 const matchesBrand = searchBrand === '' || itemBrand.includes(searchBrand);
-                const matchesSize = checkedSizes.length === 0 || checkedSizes.includes(itemSize);
+                const matchesSize = checkedSizes.length === 0 || checkedSizes.some(sz => itemMatchesSizeFilter(item, sz));
                 
                 const itemFinalPrice = isHacked ? Math.floor(getSafePrice(item.price) * 0.9) : getSafePrice(item.price);
                 const matchesPrice = itemFinalPrice >= minPrice && itemFinalPrice <= maxPrice;
