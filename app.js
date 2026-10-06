@@ -768,76 +768,7 @@ window.onload = async () => {
 
 // closeModal и executeCloseModal вынесены в js/ui/windows.js
 
-async function openReviewsModal() { 
-    const modal = document.getElementById('reviewsModal');
-    modal.style.display = 'flex'; 
-    document.body.style.overflow = 'hidden'; 
-    if (typeof lenis !== 'undefined') window.stopLenis(); 
-    
-    const container = document.getElementById('reviewsContainerList');
-    if (!container) return;
-    
-    container.innerHTML = '<div style="text-align: center; color: var(--accent-green); font-family: var(--font-mono); padding: 40px 20px;">[ ЗАГРУЗКА ОТЗЫВОВ... ]</div>';
-    
-    const { data, error } = await _supabase.from('reviews').select('*').eq('is_published', true).order('created_at', { ascending: false });
-    
-    if (error || !data || data.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">[ ${i18next.t('reviews_modal.empty_reviews', { defaultValue: 'В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ' })} ]</div>`;
-        return;
-    }
-
-    // Глобальная функция для открытия 1 картинки в PhotoSwipe
-    if (!window.openReviewImage) {
-        window.openReviewImage = function(url) {
-            if (!window.PhotoSwipeLightbox) return;
-            const lightbox = new window.PhotoSwipeLightbox({
-                dataSource: [{ src: url, width: 1000, height: 1000 }],
-                pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
-            });
-            lightbox.init();
-            lightbox.loadAndOpen(0);
-        };
-    }
-    
-    let html = ''; 
-    
-
-
-
-
-
-
-
-    data.forEach(rev => {
-            const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
-            const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : rev.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : rev.user_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            
-            const clickAction = rev.item_image ? `onclick="openReviewImage('${rev.item_image}')"` : '';
-            const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
-            
-            const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
-            const productLinkAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')" title="Открыть товар"` : '';
-
-            html += `
-            <div class="review-card-ui">
-                <div class="review-head" style="align-items: flex-start; justify-content: space-between; display: flex;">
-                    <div style="display: flex; flex-direction: column;">
-                        <span class="review-name" ${productLinkAction} style="color: #fff; font-weight: bold; font-family: var(--font-main); font-size: 14px; ${productLinkStyle}">@${safeName}</span>
-                        <div class="review-date" style="text-align: left; margin-top: 4px; color: #555; font-size: 11px; font-family: var(--font-mono);">${date}</div>
-                    </div>
-                    ${imgHtml}
-                </div>
-                <div class="review-text-body" style="margin-top: 10px; color: #ccc; font-size: 13px; line-height: 1.5; font-style: italic;">${safeText}</div>
-            </div>`;
-        });
-
-
-
-    
-    container.innerHTML = html;
-}
-
+// openReviewsModal and openReviewImage moved to js/reviews/reviews.js
 
 async function checkSession() {
     try {
@@ -5572,123 +5503,8 @@ async function autoDetectCity() {
         cityInput.placeholder = originalPlaceholder;
     }
 }
-// ==========================================
-// УМНЫЙ СБОР ОТЗЫВОВ ЗА ПОЛУЧЕННЫЕ ПОСЫЛКИ
-// ==========================================
-window.promptOrderReview = function(orderId, itemName, itemImage, itemId) {
-    document.getElementById('autoReviewOrderId').value = orderId;
-    let resolvedImg = itemImage || '';
-    if (!resolvedImg && itemId) {
-        resolvedImg = getOrderItemImage({ id: itemId }) || '';
-    }
-    document.getElementById('autoReviewItemImage').value = resolvedImg;
-    document.getElementById('autoReviewItemId').value = itemId || ''; // Сохраняем ID товара
-    document.getElementById('autoReviewName').innerText = itemName;
-    document.getElementById('autoReviewImg').style.backgroundImage = resolvedImg ? `url('${resolvedImg}')` : 'none';
-    document.getElementById('autoReviewInput').value = ''; 
+// Reviews submission and prompt functions moved to js/reviews/reviews.js
 
-    if (typeof lenis !== 'undefined') window.stopLenis();
-    document.getElementById('autoReviewModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-};
-
-window.submitAutoReview = async function() {
-    const text = document.getElementById('autoReviewInput').value.trim();
-    const orderId = document.getElementById('autoReviewOrderId').value;
-    const itemImage = document.getElementById('autoReviewItemImage').value;
-    const itemId = document.getElementById('autoReviewItemId').value;
-
-    if (text.length < 3) {
-        showToast('Текст слишком короткий!', 'error');
-        return;
-    }
-
-    let uName = userProfile?.username;
-    if (!uName || uName === 'User') {
-        uName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@')[0];
-    }
-    
-    // Пишем в БД отзыв вместе с ID заказа, фоткой и ID ТОВАРА
-    const { error } = await _supabase.from('reviews').insert([{ 
-        user_name: uName, 
-        text: text, 
-        rating: 5,
-        order_id: orderId,
-        item_image: itemImage !== '' ? itemImage : null,
-        item_id: itemId !== '' ? itemId : null
-    }]);
-    
-    if (!error) {
-        showToast('Отзыв опубликован! Спасибо.', 'success');
-        let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
-        reviewedOrders.push(orderId);
-        localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
-        closeModal('autoReviewModal');
-    } else {
-        showToast('Ошибка: ' + error.message, 'error');
-    }
-};
-
-window.skipAutoReview = function() {
-    const orderId = document.getElementById('autoReviewOrderId').value;
-    let dismissedOrders = JSON.parse(localStorage.getItem('nisha_dismissed_reviews') || '[]');
-    dismissedOrders.push(orderId); 
-    localStorage.setItem('nisha_dismissed_reviews', JSON.stringify(dismissedOrders));
-    closeModal('autoReviewModal');
-};
-
-// ==========================================
-// ЛОГИКА НАПИСАНИЯ ОТЗЫВА НА САЙТЕ (КНОПКА ИЗ СПИСКА)
-// ==========================================
-window.writeReviewOnSite = function() {
-    if (!currentUser) {
-        showToast(i18next.t('messages.cart_error_auth', {defaultValue: 'Сначала войдите в систему!'}), 'error');
-        closeModal('reviewsModal');
-        openProfileModal();
-        return;
-    }
-
-    document.getElementById('manualReviewInput').value = ''; // Очищаем поле
-    closeModal('reviewsModal'); // Прячем список отзывов
-    
-    setTimeout(() => {
-        if (typeof lenis !== 'undefined') window.stopLenis();
-        document.getElementById('writeReviewModal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }, 300); // Открываем форму отзыва плавно
-};
-
-window.submitManualReview = async function() {
-    const text = document.getElementById('manualReviewInput').value.trim();
-    
-    if (text.length < 3) {
-        showToast('Текст слишком короткий!', 'error');
-        return;
-    }
-
-    const btn = document.querySelector('#writeReviewModal .cart-checkout-btn');
-    btn.style.pointerEvents = 'none';
-    btn.innerText = '...';
-
-    const uName = userProfile?.username || currentUser.email.split('@')[0];
-    
-    const { error } = await _supabase.from('reviews').insert([{ user_name: uName, text: text, rating: 5 }]);
-
-    btn.style.pointerEvents = 'auto';
-    btn.innerText = 'ОТПРАВИТЬ';
-
-    if (error) {
-        showToast('Ошибка при отправке: ' + error.message, 'error');
-    } else {
-        showToast('Отзыв успешно опубликован!', 'success');
-        closeModal('writeReviewModal');
-        
-        // Магия: ждем пока закроется окно, и заново открываем СПИСОК ОТЗЫВОВ (он скачает свежую базу с твоим отзывом!)
-        setTimeout(() => {
-            openReviewsModal();
-        }, 400);
-    }
-};
 // ==========================================
 // ЛОГИКА УДАЛЕНИЯ ИЗ ИСТОРИИ ПРОСМОТРОВ
 // ==========================================
@@ -6001,18 +5817,8 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// ==========================================
-// СЛАЙДЕР ОТЗЫВОВ (ПРОКРУТКА)
-// ==========================================
-window.scrollReviews = function(direction) {
-    const slider = document.getElementById('reviewsContainerList');
-    if (!slider) return;
-    const card = slider.querySelector('.review-card-ui');
-    if (!card) return;
-    const colWidth = card.offsetWidth + 15;
-    const scrollAmount = window.innerWidth > 900 ? (colWidth * 2) : colWidth;
-    slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
-};
+// scrollReviews moved to js/reviews/reviews.js
+
 
 
 
