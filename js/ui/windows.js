@@ -73,6 +73,23 @@ function executeCloseModal(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
     
+    if (id === 'rulesModal') {
+        if (modal.classList.contains('closing')) return;
+        modal.classList.add('closing');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('closing');
+            const win = modal.querySelector('.modal-window');
+            if (win) {
+                win.style.transform = '';
+                win.style.opacity = '';
+            }
+            document.body.style.overflow = 'auto';
+            if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
+        }, 400);
+        return;
+    }
+    
     const win = modal.querySelector('.modal-window');
     
     if (win) {

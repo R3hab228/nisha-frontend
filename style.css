@@ -500,6 +500,42 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
     #rulesModal .modal-window {
         animation: rulesSlideUpMobile 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
     }
+    #rulesModal.closing .modal-window {
+        animation: rulesSlideDown 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards !important;
+    }
+}
+
+#rulesModal.closing {
+    animation: fadeOutRulesOverlay 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+#rulesModal.closing .modal-window {
+    animation: rulesSlideDown 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards !important;
+}
+
+@keyframes fadeOutRulesOverlay {
+    0% {
+        opacity: 1;
+        backdrop-filter: blur(4px);
+    }
+    100% {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+}
+
+@keyframes rulesSlideDown {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(105vh);
+    }
 }
 
 @keyframes rulesSlideUpMobile {

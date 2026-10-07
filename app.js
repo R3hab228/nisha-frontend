@@ -365,6 +365,12 @@ function checkRules() {
 function showRulesModal() { 
     const modal = document.getElementById('rulesModal');
     if (modal) {
+        modal.classList.remove('closing');
+        const win = modal.querySelector('.modal-window');
+        if (win) {
+            win.style.transform = '';
+            win.style.opacity = '';
+        }
         if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
         document.body.style.overflow = 'hidden';
         modal.style.display = 'flex'; 
@@ -376,33 +382,19 @@ function acceptRules() {
     localStorage.setItem('nisha_rules_accepted', 'true');
     const modal = document.getElementById('rulesModal');
     if (modal) {
-        const win = modal.querySelector('.modal-window');
-        if (win) {
-            win.style.animation = 'none';
-            void win.offsetHeight;
-            win.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease';
-            if (window.innerWidth > 768) {
-                win.style.transform = 'scale(0.95) translateY(20px)';
-            } else {
-                win.style.transform = 'translateY(100%)';
-            }
-            win.style.opacity = '0';
-        }
-        modal.style.transition = 'opacity 0.35s ease, backdrop-filter 0.35s ease';
-        modal.style.opacity = '0';
+        if (modal.classList.contains('closing')) return;
+        modal.classList.add('closing');
         setTimeout(() => {
             modal.style.display = 'none';
-            modal.style.opacity = '';
-            modal.style.transition = '';
+            modal.classList.remove('closing');
+            const win = modal.querySelector('.modal-window');
             if (win) {
                 win.style.transform = '';
                 win.style.opacity = '';
-                win.style.transition = '';
-                win.style.animation = '';
             }
             document.body.style.overflow = 'auto';
             if (typeof lenis !== 'undefined') window.startLenis(); 
-        }, 350);
+        }, 400);
     } else {
         document.body.style.overflow = 'auto';
         if (typeof lenis !== 'undefined') window.startLenis(); 
@@ -410,7 +402,7 @@ function acceptRules() {
     showToast(i18next.t('messages.rules_accepted'), 'success');
     
     // Запускаем тур сразу после плавного закрытия окна правил
-    setTimeout(startOnboardingTour, 420); 
+    setTimeout(startOnboardingTour, 450); 
 }
 window.acceptRules = acceptRules;
 
