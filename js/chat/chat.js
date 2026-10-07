@@ -22,12 +22,15 @@ async function submitSupportTicket() {
     const btn = document.getElementById('btnSubmitSupport');
     if (!input || !btn) return;
 
-    const message = input.value.trim();
+    let message = input.value.trim();
 
     if (message.length < 5) {
         showToast('Опиши проблему подробнее (минимум 5 символов)', 'error');
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         return;
+    }
+    if (message.length > 100) {
+        message = message.slice(0, 100);
     }
 
     btn.style.pointerEvents = 'none';

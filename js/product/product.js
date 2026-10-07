@@ -214,7 +214,7 @@ function openProductModal(item) {
             </div>
             <div id="questionFormContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 5px;">
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="questionInput" class="form-input" placeholder="Ваш вопрос..." data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
+                    <input type="text" id="questionInput" class="form-input" maxlength="100" placeholder="Ваш вопрос..." data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
                     <button class="search-btn btn-target" onclick="submitQuestion('${item.id}')" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${typeof i18next !== 'undefined' ? i18next.t('product.ask_send', {defaultValue: 'ОТПРАВИТЬ'}) : 'ОТПРАВИТЬ'}</button>
                 </div>
             </div>
@@ -945,10 +945,13 @@ async function submitQuestion(itemId) {
 
     const input = document.getElementById('questionInput');
     if (!input) return;
-    const text = input.value.trim();
+    let text = input.value.trim();
     if (text.length < 5) {
         showToast('Вопрос слишком короткий!', 'error');
         return;
+    }
+    if (text.length > 100) {
+        text = text.slice(0, 100);
     }
 
     const today = new Date().toLocaleDateString('en-CA');

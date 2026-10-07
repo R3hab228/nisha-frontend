@@ -493,12 +493,56 @@ window.calculateDeliveryCost = calculateDeliveryCost;
 // 3. ВСПЛЫВАЮЩАЯ КОРЗИНА И СВАЙП-УДАЛЕНИЕ
 // ==========================================
 
+async function checkCartItemsAvailability() {
+    try {
+        const currentCart = getActiveCart();
+        if (!currentCart || currentCart.length === 0) return;
+        const itemIds = currentCart.map(i => i && (i.id || i)).filter(Boolean);
+        const sb = getSupabaseClient();
+        if (!sb || itemIds.length === 0) return;
+
+        const { data: dbItems, error } = await sb.from('items').select('id, name, status').in('id', itemIds);
+        if (dbItems && !error) {
+            let hasChanges = false;
+            let soldNames = [];
+            currentCart.forEach(cartItem => {
+                const dbItem = dbItems.find(i => i.id === cartItem.id);
+                const isSold = !dbItem || dbItem.status === 'sold';
+                if (cartItem._isSold !== isSold) {
+                    cartItem._isSold = isSold;
+                    hasChanges = true;
+                }
+                if (isSold) {
+                    soldNames.push(cartItem.name || 'Товар');
+                }
+            });
+
+            if (hasChanges) {
+                renderCartItems();
+            }
+
+            if (soldNames.length > 0) {
+                const soldMsg = typeof i18next !== 'undefined'
+                    ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' })
+                    : 'Товар уже куплен';
+                showToast(`⚠️ ${soldMsg}: ${soldNames[0]}`, 'error');
+            }
+        }
+    } catch (e) {
+        console.warn('[CART] Ошибка проверки наличия:', e);
+    }
+}
+window.checkCartItemsAvailability = checkCartItemsAvailability;
+
 function toggleCartDropdown(e) {
     if (e) e.stopPropagation();
     const dropdown = document.getElementById('cartDropdown');
     const fab = document.querySelector('.fab-propose');
     if (dropdown) {
         dropdown.classList.toggle('active');
+        if (dropdown.classList.contains('active')) {
+            checkCartItemsAvailability();
+        }
         if (fab) {
             if (dropdown.classList.contains('active')) {
                 fab.style.opacity = '0';
@@ -552,6 +596,11 @@ function renderCartItems() {
         const imgUrl = getOptimizedImg(item);
         const row = document.createElement('div');
         row.className = 'cart-item-row';
+        const isSold = !!item._isSold;
+        const soldBadgeHtml = isSold
+            ? `<div class="cart-sold-badge" style="color: #ff4444; font-size: 11px; font-weight: bold; margin-top: 3px; font-family: var(--font-mono); display: flex; align-items: center; gap: 4px;">⚠️ <span>${typeof i18next !== 'undefined' ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' }) : 'Товар уже куплен'}</span></div>`
+            : '';
+        const rowStyle = isSold ? 'opacity: 0.8; border-left: 3px solid #ff4444;' : '';
         
         row.innerHTML = `
             <div class="swipe-background">
@@ -562,6 +611,7 @@ function renderCartItems() {
             </div>
             <div class="swipe-surface" 
                  data-index="${index}"
+                 style="${rowStyle}"
                  ontouchstart="handleSwipeStart(event)" 
                  ontouchmove="handleSwipeMove(event)" 
                  ontouchend="handleSwipeEnd(event)">
@@ -569,6 +619,7 @@ function renderCartItems() {
                 <div class="cart-item-info">
                     <div class="cart-item-name" title="${item.name}">${item.name}</div>
                     <div class="cart-item-size">${typeof i18next !== 'undefined' ? i18next.t('grid.size_prefix') : 'Размер: '}${item.size}</div>
+                    ${soldBadgeHtml}
                 </div>
                 <div class="cart-item-price-wrapper">
                     <div class="cart-item-price">${item.price} ${getCurrency()}</div>
