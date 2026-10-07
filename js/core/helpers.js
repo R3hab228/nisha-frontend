@@ -60,7 +60,8 @@ window.showToast = showToast;
 // --- ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ (ОДНОКНОПОЧНЫЕ) ---
 function showTerminalModal(title, htmlText, btnText, callback) {
     const overlay = document.createElement('div');
-    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column;";
+    overlay.className = 'terminal-modal-overlay';
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;";
     
     overlay.innerHTML = `
         <div class="success-terminal-box">
@@ -78,13 +79,21 @@ function showTerminalModal(title, htmlText, btnText, callback) {
         overlay.remove();
         if (callback) callback();
     });
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+            if (callback) callback();
+        }
+    });
 }
 window.showTerminalModal = showTerminalModal;
 
 // --- ДВУХКНОПОЧНЫЙ ТЕРМИНАЛ ДЛЯ ПОДТВЕРЖДЕНИЙ (CONFIRM) ---
 function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancelBtnText, onConfirm) {
     const overlay = document.createElement('div');
-    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); z-index: 100000; display: flex; justify-content: center; align-items: center; flex-direction: column;";
+    overlay.className = 'terminal-modal-overlay confirm-modal-overlay';
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 100000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;";
     
     overlay.innerHTML = `
         <div class="success-terminal-box" style="animation: none; transform: scale(1); opacity: 1;">
@@ -101,6 +110,7 @@ function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancelBtnText
     
     overlay.querySelector('.confirm-yes').addEventListener('click', () => { overlay.remove(); if (onConfirm) onConfirm(); });
     overlay.querySelector('.confirm-no').addEventListener('click', () => { overlay.remove(); });
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 }
 window.showConfirmTerminalModal = showConfirmTerminalModal;
 
