@@ -30,6 +30,11 @@ const npBranchCache = {};
 let cartSwipeStartX = 0;
 let cartSwipeCurrentX = 0;
 
+// Защита от мульти-кликов (Throttle / Spam protection)
+let lastCartActionTime = 0;
+let isCheckoutOpening = false;
+let isOrderSubmitting = false;
+
 // Вспомогательные безопасные геттеры
 function getActiveCart() {
     return window.cart || cart || [];
@@ -98,6 +103,10 @@ window.addToCartById = addToCartById;
 function addToCartWithAnimation(itemId, btnElement, event) {
     if (event) event.stopPropagation(); 
     
+    const now = Date.now();
+    if (now - lastCartActionTime < 350) return;
+    lastCartActionTime = now;
+
     const catalog = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
     const item = catalog.find(i => i.id === itemId);
     if (!item) return;
@@ -158,6 +167,10 @@ window.syncCartToServer = syncCartToServer;
 
 // Добавление в корзину из модального окна товара (доступно и гостям, и авторизованным)
 async function addToCartFromModal() {
+    const now = Date.now();
+    if (now - lastCartActionTime < 350) return;
+    lastCartActionTime = now;
+
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
     if (!activeItem) return;
     
@@ -663,84 +676,91 @@ document.addEventListener('mousedown', (e) => {
 // ==========================================
 
 async function openCheckoutModal() { 
+    if (isCheckoutOpening) return;
     const btn = document.querySelector('.cart-panel .cart-checkout-btn');
     if (!btn) return; 
     
+    isCheckoutOpening = true;
     const originalText = btn.innerText;
     btn.innerText = "[ ПРОВЕРКА НАЛИЧИЯ... ]";
     btn.style.pointerEvents = "none";
 
-    let currentCart = getActiveCart();
-    const itemIds = currentCart.map(i => i.id);
-    const sb = getSupabaseClient();
-    
-    let hasSoldItems = false;
-    if (sb && itemIds.length > 0) {
-        const { data: dbItems, error } = await sb.from('items').select('id, name, status').in('id', itemIds);
+    try {
+        let currentCart = getActiveCart();
+        const itemIds = currentCart.map(i => i.id);
+        const sb = getSupabaseClient();
+        
+        let hasSoldItems = false;
+        if (sb && itemIds.length > 0) {
+            const { data: dbItems, error } = await sb.from('items').select('id, name, status').in('id', itemIds);
 
-        if (dbItems && !error) {
-            currentCart = currentCart.filter(cartItem => {
-                const dbItem = dbItems.find(i => i.id === cartItem.id);
-                if (!dbItem || dbItem.status === 'sold') {
-                    showToast(`Товар "${cartItem.name}" уже кто-то купил! 😢`, 'error');
-                    hasSoldItems = true;
-                    return false; 
-                }
-                return true;
-            });
+            if (dbItems && !error) {
+                currentCart = currentCart.filter(cartItem => {
+                    const dbItem = dbItems.find(i => i.id === cartItem.id);
+                    if (!dbItem || dbItem.status === 'sold') {
+                        showToast(`Товар "${cartItem.name}" уже кто-то купил! 😢`, 'error');
+                        hasSoldItems = true;
+                        return false; 
+                    }
+                    return true;
+                });
+            }
         }
-    }
 
-    if (hasSoldItems) {
-        setActiveCart(currentCart);
-        await syncCartToServer();
-        updateCartUI();
+        if (hasSoldItems) {
+            setActiveCart(currentCart);
+            await syncCartToServer();
+            updateCartUI();
+            btn.innerText = originalText;
+            btn.style.pointerEvents = "auto";
+            if (currentCart.length === 0) closeCartDropdown();
+            return; 
+        }
+
         btn.innerText = originalText;
         btn.style.pointerEvents = "auto";
-        if (currentCart.length === 0) closeCartDropdown();
-        return; 
-    }
 
-    btn.innerText = originalText;
-    btn.style.pointerEvents = "auto";
-
-    if (typeof window.stopLenis === 'function') window.stopLenis();
-    else if (typeof lenis !== 'undefined') lenis.stop();
-    
-    document.getElementById('checkoutModal').style.display = 'flex'; 
-    document.body.style.overflow = 'hidden';
-    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
-    if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
-    
-    // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА
-    const savedDataRaw = localStorage.getItem('nisha_checkout_data');
-    if (savedDataRaw) {
-        try {
-            const saved = JSON.parse(savedDataRaw);
-            document.getElementById('orderName').value = saved.name || '';
-            document.getElementById('orderPhone').value = saved.phone || '';
-            document.getElementById('orderCity').value = saved.city || '';
-            document.getElementById('orderBranch').value = saved.branch || '';
-            
-            selectedCityRef = saved.cityRef || '';
-            window.selectedCityRef = selectedCityRef;
-            selectedBranchRef = saved.branchRef || '';
-            window.selectedBranchRef = selectedBranchRef;
-            
-            if (saved.phone && typeof checkPhoneAuth === 'function') checkPhoneAuth();
-            
-            if (selectedCityRef && selectedBranchRef && getActiveCart().length > 0) {
-                calculateDeliveryCost();
-            }
-        } catch(e) { autoDetectCity(); }
-    } else {
-        if (typeof checkPhoneAuth === 'function') checkPhoneAuth();
-        autoDetectCity(); 
+        if (typeof window.stopLenis === 'function') window.stopLenis();
+        else if (typeof lenis !== 'undefined') lenis.stop();
+        
+        document.getElementById('checkoutModal').style.display = 'flex'; 
+        document.body.style.overflow = 'hidden';
+        if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+        if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
+        
+        // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА
+        const savedDataRaw = localStorage.getItem('nisha_checkout_data');
+        if (savedDataRaw) {
+            try {
+                const saved = JSON.parse(savedDataRaw);
+                document.getElementById('orderName').value = saved.name || '';
+                document.getElementById('orderPhone').value = saved.phone || '';
+                document.getElementById('orderCity').value = saved.city || '';
+                document.getElementById('orderBranch').value = saved.branch || '';
+                
+                selectedCityRef = saved.cityRef || '';
+                window.selectedCityRef = selectedCityRef;
+                selectedBranchRef = saved.branchRef || '';
+                window.selectedBranchRef = selectedBranchRef;
+                
+                if (saved.phone && typeof checkPhoneAuth === 'function') checkPhoneAuth();
+                
+                if (selectedCityRef && selectedBranchRef && getActiveCart().length > 0) {
+                    calculateDeliveryCost();
+                }
+            } catch(e) { autoDetectCity(); }
+        } else {
+            if (typeof checkPhoneAuth === 'function') checkPhoneAuth();
+            autoDetectCity(); 
+        }
+    } finally {
+        setTimeout(() => { isCheckoutOpening = false; }, 400);
     }
 }
 window.openCheckoutModal = openCheckoutModal;
 
 async function submitOrder() {
+    if (isOrderSubmitting) return;
     if (typeof window.triggerVibration === 'function') window.triggerVibration(150);
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== "") return;
@@ -810,6 +830,7 @@ async function submitOrder() {
 window.submitOrder = submitOrder;
 
 async function confirmEmailPrompt(wantsEmail) {
+    if (isOrderSubmitting) return;
     const prompt = document.getElementById('emailPromptOverlay');
     const emailInput = document.getElementById('promptEmailInput');
     let finalEmail = '';
@@ -832,8 +853,13 @@ async function confirmEmailPrompt(wantsEmail) {
 window.confirmEmailPrompt = confirmEmailPrompt;
 
 async function executeOrderFinal(emailToSave) {
+    if (isOrderSubmitting) return;
+    isOrderSubmitting = true;
     const btnSubmit = document.getElementById('btnSubmitOrder');
-    if (!btnSubmit) return;
+    if (!btnSubmit) {
+        isOrderSubmitting = false;
+        return;
+    }
     
     btnSubmit.style.pointerEvents = "none";
     btnSubmit.style.position = "relative";
@@ -927,10 +953,12 @@ async function executeOrderFinal(emailToSave) {
                 if (typeof window.loadAllItems === 'function') window.loadAllItems();
                 btnSubmit.style.pointerEvents = "auto";
                 btnSubmit.style.opacity = "1";
+                isOrderSubmitting = false;
             }, 3500);
         }, 300);
 
     } catch (err) {
+        isOrderSubmitting = false;
         showToast('Ошибка при оформлении: ' + err.message, 'error');
         btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
         btnSubmit.style.pointerEvents = "auto";

@@ -212,7 +212,7 @@ function initMobileSwipe() {
                     overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
                 }
             }
-        });
+        }, { passive: true });
     });
 }
 window.initMobileSwipe = initMobileSwipe;

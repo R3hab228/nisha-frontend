@@ -580,6 +580,9 @@ function renderNextBatch() {
     const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
     const curr = (typeof getCurrency === 'function') ? getCurrency() : 'грн';
 
+    const fragment = document.createDocumentFragment();
+    const newVideoElements = [];
+
     for (let i = startIndex; i < endIndex; i++) {
         try {
             const item = window.filteredItems[i];
@@ -718,12 +721,15 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
                 }
             });
 
-            grid.appendChild(card);
+            fragment.appendChild(card);
             const vids = card.querySelectorAll('.grid-lazy-video');
-            vids.forEach(v => gridVideoObserver.observe(v));
+            vids.forEach(v => newVideoElements.push(v));
 
         } catch (err) { console.error(err); }
     }
+
+    grid.appendChild(fragment);
+    newVideoElements.forEach(v => gridVideoObserver.observe(v));
 
     if (isMobile) {
         window.renderedCount = endIndex;
