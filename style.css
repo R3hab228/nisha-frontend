@@ -1031,7 +1031,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 
     .buy-share-row { 
         position: sticky; 
-        bottom: calc(10px + env(safe-area-inset-bottom, 0px)); 
+        bottom: calc(-20px + env(safe-area-inset-bottom, 0px)); 
         z-index: 100; 
         margin-top: 15px; 
         background: transparent; 
