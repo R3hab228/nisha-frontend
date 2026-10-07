@@ -105,7 +105,7 @@
         "refund_yes_title": "RETURN_POLICY.SYS",
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>",
         "drop_title": "WARNING: DROP_ITEM",
-        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ВНИМАНИЕ ]</span><br><span style=\"color:#fff;\">Эта вещь загружена сторонним продавцом (Creator).</span><br><br>Обязательно проводите полный осмотр вещи на отделении Новой Почты. <b style=\"color:var(--accent-red);\">Если вы забрали посылку домой — возврат или обмен НЕВОЗМОЖЕН</b>, так как деньги сразу переводятся владельцу вещи.",
+        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ВНИМАНИЕ ]</span><br><span style=\"color:#fff;\">Вещь от стороннего продавца (Creator). NISHA — гарант сделки.</span><br><br>Обязательно осматривайте и примеряйте вещь на отделении Новой Почты. <b style=\"color:var(--accent-red);\">После забора посылки возврат и обмен НЕВОЗМОЖЕН ни при каких условиях</b>, так как сделка считается закрытой, а деньги перечисляются владельцу.",
         "btn_understood": "[ ПОНЯТНО ]"
       },
       "grid": {
@@ -364,7 +364,7 @@
         "refund_yes_title": "RETURN_POLICY.SYS",
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ ДОСТУПНЕ ПОВЕРНЕННЯ ]</span><br><br>Даний товар підлягає поверненню та обміну протягом <b>14 днів</b> з моменту покупки, згідно із законодавством України.<br><br><i>Умова повернення: збереження товарного вигляду, всіх бірок та відсутність слідів носіння.</i>",
         "drop_title": "WARNING: DROP_ITEM",
-        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ УВАГА ]</span><br><span style=\"color:#fff;\">Ця річ завантажена стороннім продавцем (Creator).</span><br><br>Обов'язково проводьте повний огляд речі на відділенні Нової Пошти. <b style=\"color:var(--accent-red);\">Якщо ви забрали посилку додому — повернення або обмін НЕМОЖЛИВИЙ</b>, оскільки гроші відразу переводяться власнику речі.",
+        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ УВАГА ]</span><br><span style=\"color:#fff;\">Річ від стороннього продавця (Creator). NISHA — гарант угоди.</span><br><br>Обов'язково оглядайте та приміряйте річ у відділенні Нової Пошти. <b style=\"color:var(--accent-red);\">Після забору посилки повернення або обмін НЕМОЖЛИВИЙ за жодних умов</b>, оскільки угода вважається закритою, а кошти виплачуються власнику.",
         "btn_understood": "[ ЗРОЗУМІЛО ]"
       },
       "grid": {
@@ -622,7 +622,7 @@
         "refund_yes_title": "RETURN_POLICY.SYS",
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ RETURN AVAILABLE ]</span><br><br>This item can be returned and exchanged within <b>14 days</b> of purchase, according to the legislation of Ukraine.<br><br><i>Condition for return: preserving the commercial appearance, all tags, and no signs of wear.</i>",
         "drop_title": "WARNING: DROP_ITEM",
-        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">This item was uploaded by a third-party seller (Creator).</span><br><br>Be sure to fully inspect the item at the Nova Poshta branch. <b style=\"color:var(--accent-red);\">If you take the parcel home — return or exchange is IMPOSSIBLE</b>, as the money is immediately transferred to the item's owner.",
+        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller (Creator). NISHA acts as the deal escrow.</span><br><br>Always inspect and try on the item at the Nova Poshta branch. <b style=\"color:var(--accent-red);\">Once picked up, returns or exchanges are NOT POSSIBLE under any circumstances</b>, as the deal completes and funds are paid to the item owner.",
         "btn_understood": "[ GOT IT ]"
       },
       "grid": {

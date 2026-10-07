@@ -1031,8 +1031,8 @@ window.showBadgeInfo = function(type) {
         title = 'RETURN_POLICY.SYS';
         text = '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>';
     } else if (type === 'drop') {
-        title = 'WARNING: DROP_ITEM';
-        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Эта вещь загружена сторонним продавцом (Creator).</span><br><br>Обязательно проводите полный осмотр вещи на отделении Новой Почты. <b style="color:var(--accent-red);">Если вы забрали посылку домой — возврат или обмен НЕВОЗМОЖЕН</b>, так как деньги сразу переводятся владельцу вещи.';
+        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.drop_title', { defaultValue: 'WARNING: DROP_ITEM' }) : 'WARNING: DROP_ITEM';
+        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.drop_text', { defaultValue: '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Вещь от стороннего продавца (Creator). NISHA — гарант сделки.</span><br><br>Обязательно осматривайте и примеряйте вещь на отделении Новой Почты. <b style="color:var(--accent-red);">После забора посылки возврат и обмен НЕВОЗМОЖЕН ни при каких условиях</b>, так как сделка считается закрытой, а деньги перечисляются владельцу.' }) : '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Вещь от стороннего продавца (Creator). NISHA — гарант сделки.</span><br><br>Обязательно осматривайте и примеряйте вещь на отделении Новой Почты. <b style="color:var(--accent-red);">После забора посылки возврат и обмен НЕВОЗМОЖЕН ни при каких условиях</b>, так как сделка считается закрытой, а деньги перечисляются владельцу.';
     }
     
     if (typeof showTerminalModal === 'function') {
