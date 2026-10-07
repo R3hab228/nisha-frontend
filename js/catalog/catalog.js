@@ -715,11 +715,18 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             
             sliderWrapper.addEventListener('touchstart', (e) => { 
                 isDraggingSlider = false; 
-                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                if (e.touches && e.touches[0]) {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }
             }, {passive: true});
             
-            sliderWrapper.addEventListener('touchmove', (e) => { 
-                if(Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) isDraggingSlider = true;
+            sliderWrapper.addEventListener('touchend', (e) => { 
+                if (e.changedTouches && e.changedTouches[0]) {
+                    const dx = Math.abs(e.changedTouches[0].clientX - startX);
+                    const dy = Math.abs(e.changedTouches[0].clientY - startY);
+                    if (dx > 10 || dy > 10) isDraggingSlider = true;
+                }
             }, {passive: true});
             
             let clickTimer = null;
