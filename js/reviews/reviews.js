@@ -67,6 +67,7 @@ async function openReviewsModal() {
             </div>`;
         });
         container.innerHTML = html;
+        equalizeReviewCardHeights();
     };
 
     // Если кэш свежий — рендерим мгновенно с нулевой задержкой
@@ -107,6 +108,44 @@ function scrollReviews(direction) {
     slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
 }
 window.scrollReviews = scrollReviews;
+
+// Автоматическое выравнивание высоты всех отзывов пиксель-в-пиксель
+function equalizeReviewCardHeights() {
+    requestAnimationFrame(() => {
+        const slider = document.getElementById('reviewsContainerList');
+        if (!slider) return;
+        const cards = slider.querySelectorAll('.review-card-ui');
+        if (!cards.length) return;
+
+        // 1. Сбрасываем фиксированную высоту
+        cards.forEach(c => {
+            c.style.height = 'auto';
+        });
+
+        // 2. Находим максимальную естественную высоту среди всех отзывов
+        let maxHeight = 0;
+        cards.forEach(c => {
+            const h = c.offsetHeight;
+            if (h > maxHeight) maxHeight = h;
+        });
+
+        // Базовый аккуратный минимум для коротких текстов
+        if (maxHeight < 140) maxHeight = 140;
+
+        // 3. Задаем ВСЕМ карточкам единую одинаковую высоту пиксель в пиксель
+        cards.forEach(c => {
+            c.style.height = `${maxHeight}px`;
+        });
+    });
+}
+window.equalizeReviewCardHeights = equalizeReviewCardHeights;
+
+window.addEventListener('resize', () => {
+    const modal = document.getElementById('reviewsModal');
+    if (modal && window.getComputedStyle(modal).display === 'flex') {
+        equalizeReviewCardHeights();
+    }
+});
 
 // Умный сбор отзывов за полученные посылки
 function promptOrderReview(orderId, itemName, itemImage, itemId) {
