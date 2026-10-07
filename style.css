@@ -972,19 +972,19 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .sidebar { 
         display: flex !important; width: 100%; max-height: 0; opacity: 0; overflow: hidden; 
         padding-top: 0; padding-bottom: 0; margin: 0; box-sizing: border-box;
-        transition: max-height 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
-                    opacity 0.28s ease, 
-                    padding 0.35s cubic-bezier(0.25, 1, 0.5, 1),
-                    visibility 0.35s; 
+        transition: max-height 0.42s cubic-bezier(0.33, 1, 0.68, 1), 
+                    opacity 0.38s ease, 
+                    padding 0.42s cubic-bezier(0.33, 1, 0.68, 1),
+                    visibility 0.42s; 
         visibility: hidden; background: #0a0a0a; will-change: max-height, opacity;
     }
     .sidebar.active-mobile { 
         max-height: 800px;
         opacity: 1; visibility: visible; 
         padding-top: 15px; padding-bottom: 15px; 
-        transition: max-height 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
-                    opacity 0.3s ease, 
-                    padding 0.35s cubic-bezier(0.25, 1, 0.5, 1); 
+        transition: max-height 0.42s cubic-bezier(0.33, 1, 0.68, 1), 
+                    opacity 0.38s ease, 
+                    padding 0.42s cubic-bezier(0.33, 1, 0.68, 1); 
     }
     
     /* --- КНОПКА --- */
