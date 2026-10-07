@@ -1029,7 +1029,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .slider-btn { padding: 12px 6px; font-size: 14px; background: rgba(0, 0, 0, 0.5); border: none;}
     .grid-slider-btn { display: none !important; }
 
-    .buy-share-row { position: sticky; bottom: -20px; background: rgba(5, 5, 5, 0.95); padding: 15px 0 calc(25px + env(safe-area-inset-bottom, 0px)) 0; margin-top: 15px; z-index: 100; border-top: 1px solid #333; }
+    .buy-share-row { margin-top: 15px; }
 
     .hide-on-mobile { display: none !important; }
     
