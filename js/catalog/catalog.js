@@ -415,15 +415,27 @@ function applyFilters() {
                 return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability;
             });
 
-            // 2. Умный поиск Fuse.js
-            if (searchTerm !== '' && typeof Fuse !== 'undefined' && !onlyFavs && curCat === '') {
+            // 2. Умный поиск (Fuse.js или надежный fallback, работает также внутри категории и в избранном)
+            if (searchTerm !== '') {
                 const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
-                const fuseOptions = {
-                    includeScore: true, threshold: 0.4, ignoreLocation: true, useExtendedSearch: true, 
-                    keys: [{ name: 'tags', weight: 1.0 }, { name: 'brand', weight: 0.8 }, { name: 'name', weight: 0.8 }, { name: 'size', weight: 0.8 }, { name: 'category', weight: 0.2 }]
-                };
-                const fuse = new Fuse(window.filteredItems, fuseOptions);
-                window.filteredItems = fuse.search(cleanSearchTerm).map(result => result.item);
+                if (cleanSearchTerm) {
+                    if (typeof Fuse !== 'undefined') {
+                        const fuseOptions = {
+                            includeScore: true, threshold: 0.4, ignoreLocation: true, useExtendedSearch: true, 
+                            keys: [{ name: 'tags', weight: 1.0 }, { name: 'brand', weight: 0.8 }, { name: 'name', weight: 0.8 }, { name: 'size', weight: 0.8 }, { name: 'category', weight: 0.2 }]
+                        };
+                        const fuse = new Fuse(window.filteredItems, fuseOptions);
+                        window.filteredItems = fuse.search(cleanSearchTerm).map(result => result.item);
+                    } else {
+                        const lowSearch = cleanSearchTerm.toLowerCase();
+                        window.filteredItems = window.filteredItems.filter(item => {
+                            const name = (item.name || '').toLowerCase();
+                            const brand = (item.brand || '').toLowerCase();
+                            const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : (item.tags || '').toLowerCase();
+                            return name.includes(lowSearch) || brand.includes(lowSearch) || tags.includes(lowSearch);
+                        });
+                    }
+                }
             }
 
             // 3. Сортировка

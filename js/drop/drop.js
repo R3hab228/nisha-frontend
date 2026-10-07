@@ -86,6 +86,15 @@ function resetProposalForm() {
     const filesInput = document.getElementById('propFiles');
     if (filesInput) filesInput.value = '';
     
+    // Освобождаем Blob URLs из памяти устройства
+    if (Array.isArray(currentProposalFiles)) {
+        currentProposalFiles.forEach(item => {
+            if (item && item.url) {
+                try { URL.revokeObjectURL(item.url); } catch(e) {}
+            }
+        });
+    }
+
     currentProposalFiles = [];
     window.currentProposalFiles = currentProposalFiles;
     
@@ -154,10 +163,13 @@ function renderProposalPreviews() {
             delBtn.innerHTML = '✖';
             delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:10; font-family:var(--font-mono); border: 1px solid #000;';
             
-            // Удаление фото
+            // Удаление фото с освобождением памяти Blob URL
             delBtn.onclick = (e) => {
                 e.stopPropagation(); 
-                currentProposalFiles.splice(index, 1);
+                const removed = currentProposalFiles.splice(index, 1);
+                if (removed && removed.length > 0 && removed[0].url) {
+                    try { URL.revokeObjectURL(removed[0].url); } catch(e) {}
+                }
                 window.currentProposalFiles = currentProposalFiles;
                 if (typeof triggerHaptic === 'function') triggerHaptic('light');
                 renderProposalPreviews(); 
