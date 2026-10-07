@@ -86,24 +86,39 @@ function initSupportRepliesSystem() {
 
     console.log('[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:', fingerprint);
 
-    try {
-        // 1. Проверяем пропущенные сообщения (Offline)
-        sb.from('support_replies')
+    function checkUnreadSupportReplies() {
+        const activeSb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+        const activeFp = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : null);
+        if (!activeSb || !activeFp) return;
+
+        activeSb.from('support_replies')
             .select('*')
-            .eq('client_id', fingerprint)
+            .eq('client_id', activeFp)
             .eq('is_read', false)
             .then(({ data: replies, error: replErr }) => {
-                if (replErr) console.error('[СИСТЕМА ОТВЕТОВ] Ошибка БД:', replErr.message);
-
+                if (replErr) return;
                 if (replies && replies.length > 0) {
                     console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
                     replies.forEach(r => {
                         showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
-                            sb.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
+                            activeSb.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
                     });
                 }
             });
+    }
+    window.checkUnreadSupportReplies = checkUnreadSupportReplies;
+
+    try {
+        // 1. Проверяем пропущенные сообщения (Offline)
+        checkUnreadSupportReplies();
+
+        // Проверяем при возвращении пользователя во вкладку
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                checkUnreadSupportReplies();
+            }
+        });
 
         // 2. Слушаем новые сообщения в реальном времени (Realtime Online)
         console.log('[СИСТЕМА ОТВЕТОВ] Подписка на Realtime включена.');

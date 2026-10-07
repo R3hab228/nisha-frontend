@@ -235,3 +235,26 @@ function safeRemoveItem(key) {
     } catch (e) {}
 }
 window.safeRemoveItem = safeRemoveItem;
+
+// Автоматическая защита всех прямых вызовов Storage.prototype.setItem (Safari Private / QuotaExceededError)
+(function initStorageSafeGuard() {
+    try {
+        if (typeof Storage !== 'undefined' && Storage.prototype && Storage.prototype.setItem) {
+            const originalSetItem = Storage.prototype.setItem;
+            Storage.prototype.setItem = function(key, value) {
+                try {
+                    originalSetItem.call(this, key, value);
+                } catch (err) {
+                    try {
+                        if (this === localStorage && typeof cleanStorageLimits === 'function') {
+                            cleanStorageLimits();
+                        }
+                        originalSetItem.call(this, key, value);
+                    } catch (retryErr) {
+                        console.warn(`[STORAGE SAFEKEEPER] Запись "${key}" пропущена из-за лимита хранилища:`, retryErr);
+                    }
+                }
+            };
+        }
+    } catch (e) {}
+})();

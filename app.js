@@ -347,10 +347,17 @@ window.checkPendingBroadcast = checkPendingBroadcast;
 
 // Фоновый таймер: как только юзер вернулся в ленту товаров — показываем отложенный броадкаст
 setInterval(() => {
+    if (document.hidden) return; // Энергосбережение: вкладка в фоне
     if (pendingBroadcastQueue && isUserInProductFeed()) {
         checkPendingBroadcast();
     }
 }, 1500);
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && pendingBroadcastQueue && typeof isUserInProductFeed === 'function' && isUserInProductFeed()) {
+        checkPendingBroadcast();
+    }
+});
 
 function checkRules() {
     if (!localStorage.getItem('nisha_rules_accepted')) {
@@ -928,9 +935,13 @@ function getLiveSearchFuse() {
     }
     return cachedFuseInstance;
 }
+const liveSearchMemoCache = new Map();
+const MAX_SEARCH_MEMO = 25;
+
 window.invalidateFuseCache = function() {
     cachedFuseInstance = null;
     cachedFuseItemsRef = null;
+    liveSearchMemoCache.clear();
 };
 
 // Функция сохранения истории поиска (с защитой от квоты localStorage)
@@ -992,10 +1003,18 @@ function handleLiveSearch() {
     }
 
     searchDebounce = setTimeout(() => {
-        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ ПЕРЕИСПОЛЬЗУЕМЫЙ КЭШ FUSE.JS
+        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ МЕМОИЗИРОВАННЫЙ КЭШ И FUSE.JS
         const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
-        const fuse = getLiveSearchFuse();
-        const results = fuse.search(cleanSearchTerm).slice(0, 8); 
+        let results = liveSearchMemoCache.get(cleanSearchTerm);
+        if (!results) {
+            const fuse = getLiveSearchFuse();
+            results = fuse.search(cleanSearchTerm).slice(0, 8);
+            if (liveSearchMemoCache.size >= MAX_SEARCH_MEMO) {
+                const oldestKey = liveSearchMemoCache.keys().next().value;
+                liveSearchMemoCache.delete(oldestKey);
+            }
+            liveSearchMemoCache.set(cleanSearchTerm, results);
+        } 
 
         if (results.length > 0) {
             document.body.classList.add('search-lock'); if (typeof window.stopLenis === 'function') window.stopLenis();

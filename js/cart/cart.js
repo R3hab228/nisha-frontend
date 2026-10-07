@@ -27,6 +27,19 @@ let branchSearchTimeout = null;
 let cachedBranches = [];
 const npBranchCache = {};
 
+function getNPStorage(key) {
+    try {
+        const raw = sessionStorage.getItem('nisha_np_' + key);
+        return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+}
+
+function setNPStorage(key, val) {
+    try {
+        sessionStorage.setItem('nisha_np_' + key, JSON.stringify(val));
+    } catch(e) {}
+}
+
 let cartSwipeStartX = 0;
 let cartSwipeCurrentX = 0;
 
@@ -267,8 +280,47 @@ function debouncedNPCitySearch(query) {
 }
 window.debouncedNPCitySearch = debouncedNPCitySearch;
 
-// Поиск города
+function renderCitySearchResults(data) {
+    const dropdown = document.getElementById('cityDropdown');
+    dropdown.innerHTML = '';
+    
+    if(data.success && data.data[0] && data.data[0].Addresses.length > 0) {
+        data.data[0].Addresses.forEach(city => {
+            const div = document.createElement('div');
+            div.innerText = city.Present;
+            
+            div.onmousedown = (e) => {
+                e.preventDefault();
+                document.getElementById('orderCity').value = city.Present;
+                selectedCityRef = city.DeliveryCity || city.Ref; 
+                window.selectedCityRef = selectedCityRef;
+                dropdown.style.display = 'none';
+                
+                const branchInput = document.getElementById('orderBranch');
+                branchInput.readOnly = false;
+                branchInput.value = '';
+                branchInput.placeholder = "Загрузка отделений...";
+                
+                cachedBranches = []; 
+                loadNPBranches();
+            };
+            dropdown.appendChild(div);
+        });
+        dropdown.style.display = 'block';
+    } else {
+        dropdown.style.display = 'none';
+    }
+}
+
+// Поиск города (с sessionStorage кэшированием)
 async function searchNPCity(query) {
+    const normKey = 'city_' + query.trim().toLowerCase();
+    const cached = getNPStorage(normKey);
+    if (cached) {
+        renderCitySearchResults(cached);
+        return;
+    }
+
     try {
         const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
             method: 'POST',
@@ -280,35 +332,10 @@ async function searchNPCity(query) {
             })
         });
         const data = await res.json();
-        const dropdown = document.getElementById('cityDropdown');
-        dropdown.innerHTML = '';
-        
-        if(data.success && data.data[0] && data.data[0].Addresses.length > 0) {
-            data.data[0].Addresses.forEach(city => {
-                const div = document.createElement('div');
-                div.innerText = city.Present;
-                
-                div.onmousedown = (e) => {
-                    e.preventDefault();
-                    document.getElementById('orderCity').value = city.Present;
-                    selectedCityRef = city.DeliveryCity || city.Ref; 
-                    window.selectedCityRef = selectedCityRef;
-                    dropdown.style.display = 'none';
-                    
-                    const branchInput = document.getElementById('orderBranch');
-                    branchInput.readOnly = false;
-                    branchInput.value = '';
-                    branchInput.placeholder = "Загрузка отделений...";
-                    
-                    cachedBranches = []; 
-                    loadNPBranches();
-                };
-                dropdown.appendChild(div);
-            });
-            dropdown.style.display = 'block';
-        } else {
-            dropdown.style.display = 'none';
+        if (data.success) {
+            setNPStorage(normKey, data);
         }
+        renderCitySearchResults(data);
     } catch(e) { 
         console.error("Ошибка поиска города НП", e); 
         document.getElementById('cityDropdown').style.display = 'none';
@@ -334,7 +361,7 @@ function filterNPBranches(query) {
 }
 window.filterNPBranches = filterNPBranches;
 
-// Запрос отделений из базы Новой Почты
+// Запрос отделений из базы Новой Почты (с памятью и sessionStorage)
 async function loadNPBranches(searchString = "") {
     if (typeof searchString !== 'string') searchString = ""; 
     const cityRef = window.selectedCityRef || selectedCityRef;
@@ -346,6 +373,13 @@ async function loadNPBranches(searchString = "") {
     const cacheKey = cityRef + "_" + searchString.trim();
     if (npBranchCache[cacheKey]) {
         renderBranches(npBranchCache[cacheKey]); 
+        return;
+    }
+
+    const sessionBranches = getNPStorage('branch_' + cacheKey);
+    if (sessionBranches) {
+        npBranchCache[cacheKey] = sessionBranches;
+        renderBranches(sessionBranches);
         return;
     }
 
@@ -375,6 +409,7 @@ async function loadNPBranches(searchString = "") {
         
         if(data.success && Array.isArray(data.data) && data.data.length > 0) {
             npBranchCache[cacheKey] = data.data; 
+            setNPStorage('branch_' + cacheKey, data.data);
             renderBranches(data.data);
         } else {
             dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${typeof i18next !== 'undefined' ? i18next.t('np.branch_empty') : 'Отделения не найдены'}</div>`;
