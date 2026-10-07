@@ -894,23 +894,61 @@ function toggleMobileSidebar() {
     const fab = document.querySelector('.fab-propose'); 
     if (!sidebar || !btn) return;
     
-    sidebar.classList.toggle('active-mobile');
+    const isOpen = sidebar.classList.contains('active-mobile');
     
     const hideText = (typeof i18next !== 'undefined') ? i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' }) : '[-] СКРЫТЬ ФИЛЬТРЫ';
     const showText = (typeof i18next !== 'undefined') ? i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' }) : '[+] ПОКАЗАТЬ ФИЛЬТРЫ';
 
-    if (sidebar.classList.contains('active-mobile')) {
+    if (!isOpen) {
+        // --- РАСКРЫВАЕМ ПЛАВНО ---
         btn.innerText = hideText;
         btn.style.borderColor = 'var(--accent-red)';
         btn.style.color = 'var(--accent-red)';
         btn.style.background = '#111'; 
         if (fab) fab.style.display = 'none';
+
+        sidebar.classList.add('active-mobile');
+        sidebar.style.maxHeight = '0px';
+        sidebar.offsetHeight; // Принудительный reflow для старта анимации с 0
+
+        const targetHeight = sidebar.scrollHeight + 35;
+        sidebar.style.maxHeight = targetHeight + 'px';
+
+        const onOpenEnd = (e) => {
+            if (e.target === sidebar && e.propertyName === 'max-height') {
+                sidebar.removeEventListener('transitionend', onOpenEnd);
+                if (sidebar.classList.contains('active-mobile')) {
+                    sidebar.style.maxHeight = 'none';
+                }
+            }
+        };
+        sidebar.addEventListener('transitionend', onOpenEnd);
     } else {
+        // --- СКРЫВАЕМ ТАК ЖЕ ПЛАВНО ---
         btn.innerText = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
         btn.style.background = '#050505'; 
         if (fab) fab.style.display = 'flex';
+
+        // 1. Фиксируем точную текущую высоту (чтобы старт был мгновенным и плавным с текущей точки)
+        const currentHeight = sidebar.offsetHeight || (sidebar.scrollHeight + 35);
+        sidebar.style.maxHeight = currentHeight + 'px';
+        sidebar.offsetHeight; // Принудительный reflow
+
+        // 2. Плавно схлопываем до 0px
+        sidebar.classList.remove('active-mobile');
+        sidebar.style.maxHeight = '0px';
+
+        const onCloseEnd = (e) => {
+            if (e.target === sidebar && e.propertyName === 'max-height') {
+                sidebar.removeEventListener('transitionend', onCloseEnd);
+                if (!sidebar.classList.contains('active-mobile')) {
+                    sidebar.style.maxHeight = '';
+                }
+            }
+        };
+        sidebar.addEventListener('transitionend', onCloseEnd);
     }
 }
 window.toggleMobileSidebar = toggleMobileSidebar;
