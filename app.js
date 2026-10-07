@@ -238,43 +238,35 @@ window.startLenis = function() {
 // --- УМНЫЕ ПЛАВАЮЩИЕ КНОПКИ (ПРЕДЛОЖКА И ФИЛЬТРЫ) ---
 let fabScrollTimeout;
 let lastScrollY = window.scrollY || document.documentElement.scrollTop;
-let scrollTicking = false;
-let cachedFabEl = null;
-let cachedFilterBtnEl = null;
 
+let scrollTicking = false;
 window.addEventListener('scroll', () => {
     if (document.body.classList.contains('search-lock')) return;
 
     if (!scrollTicking) {
         window.requestAnimationFrame(() => {
-            if (!cachedFabEl) cachedFabEl = document.querySelector('.fab-propose');
-            if (!cachedFilterBtnEl) cachedFilterBtnEl = document.getElementById('mobileFilterBtn');
+            const fab = document.querySelector('.fab-propose');
+            const filterBtn = document.getElementById('mobileFilterBtn');
             const currentScrollY = window.scrollY || document.documentElement.scrollTop;
             
-            if (Math.abs(currentScrollY - lastScrollY) > 12) {
-                const isScrollingDown = currentScrollY > lastScrollY && currentScrollY > 150;
-                if (isScrollingDown) {
-                    if (cachedFabEl && !cachedFabEl.classList.contains('cart-active') && !cachedFabEl.classList.contains('hidden-scroll')) {
-                        cachedFabEl.classList.add('hidden-scroll');
-                    }
-                    if (cachedFilterBtnEl && window.innerWidth <= 900 && !cachedFilterBtnEl.classList.contains('hidden-scroll')) {
-                        cachedFilterBtnEl.classList.add('hidden-scroll');
-                    }
+            if (Math.abs(currentScrollY - lastScrollY) > 10) {
+                if (currentScrollY > lastScrollY && currentScrollY > 150) {
+                    // Прокрутка вниз - скрываем элементы
+                    if (fab && !fab.classList.contains('cart-active')) fab.classList.add('hidden-scroll');
+                    if (filterBtn && window.innerWidth <= 900) filterBtn.classList.add('hidden-scroll');
                 } else {
-                    if (cachedFabEl && cachedFabEl.classList.contains('hidden-scroll')) {
-                        cachedFabEl.classList.remove('hidden-scroll');
-                    }
-                    if (cachedFilterBtnEl && cachedFilterBtnEl.classList.contains('hidden-scroll')) {
-                        cachedFilterBtnEl.classList.remove('hidden-scroll');
-                    }
+                    // Прокрутка вверх - возвращаем элементы
+                    if (fab) fab.classList.remove('hidden-scroll');
+                    if (filterBtn) filterBtn.classList.remove('hidden-scroll');
                 }
                 lastScrollY = currentScrollY;
             }
 
+            // Возвращаем UI, если скролл остановился (на 800мс)
             clearTimeout(fabScrollTimeout);
             fabScrollTimeout = setTimeout(() => {
-                if (cachedFabEl && cachedFabEl.classList.contains('hidden-scroll')) cachedFabEl.classList.remove('hidden-scroll');
-                if (cachedFilterBtnEl && cachedFilterBtnEl.classList.contains('hidden-scroll')) cachedFilterBtnEl.classList.remove('hidden-scroll');
+                if (fab) fab.classList.remove('hidden-scroll');
+                if (filterBtn) filterBtn.classList.remove('hidden-scroll');
             }, 800);
 
             scrollTicking = false;
@@ -724,14 +716,11 @@ async function initApp() {
                         if (typeof renderNextBatch === 'function') {
                             renderNextBatch();
                         }
-                        // Защита от спам-вызовов: даем браузеру плавно отрисовать кадры
-                        setTimeout(() => {
-                            isBatchLoading = false;
-                        }, 250);
+                        isBatchLoading = false;
                     });
                 }
             }
-        }, { rootMargin: "400px", threshold: 0.1 }); 
+        }, { rootMargin: "600px", threshold: 0.1 }); 
         
         const scrollTrigger = document.getElementById('loadingTrigger');
         if (scrollTrigger) observer.observe(scrollTrigger);
