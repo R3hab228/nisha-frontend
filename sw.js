@@ -70,6 +70,7 @@ self.addEventListener('fetch', event => {
         url.pathname.endsWith('.webm') || 
         event.request.headers.get('range') ||
         url.pathname.startsWith('/api/') || 
+        url.pathname.startsWith('/.well-known/') || 
         url.hostname.includes('novaposhta') ||
         url.hostname.includes('onrender.com')
     ) {

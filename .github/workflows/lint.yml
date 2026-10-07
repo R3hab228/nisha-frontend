@@ -31,7 +31,7 @@ jobs:
         run: |
           node -e "
             const fs = require('fs');
-            const files = ['locales.json', 'manifest.json', 'vercel.json'];
+            const files = ['locales.json', 'manifest.json', 'vercel.json', '.well-known/assetlinks.json'];
             files.forEach(file => {
               if (fs.existsSync(file)) {
                 JSON.parse(fs.readFileSync(file, 'utf8'));
