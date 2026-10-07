@@ -627,6 +627,7 @@ async function initApp() {
                         if (!alreadyExists) {
                             currentItems.unshift(payload.new);
                             window.allItems = currentItems;
+                            if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
                             showToast(`🆕 Новая вещь на сайте: ${payload.new.name}`, 'success');
                             applyFilters(); // Плавно перерисовываем сетку
                         }
@@ -634,6 +635,7 @@ async function initApp() {
                     // ЕСЛИ АДМИН УДАЛИЛ ВЕЩЬ
                     else if (payload.eventType === 'DELETE') {
                         allItems = allItems.filter(i => i.id !== payload.old.id);
+                        if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
                         applyFilters();
                     }
                     // ЕСЛИ ВЕЩЬ КУПИЛИ ИЛИ ОБНОВИЛИ
@@ -652,6 +654,7 @@ async function initApp() {
                                               oldItem.top_until !== updatedItem.top_until || 
                                               oldItem.status !== updatedItem.status;
                             Object.assign(allItems[index], updatedItem);
+                            if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
                             
                             if (priceDropped && updatedItem.status === 'available') {
                                 showToast('🔥 СКИДКА!!!', 'success', imgUrl);
@@ -700,17 +703,22 @@ async function initApp() {
                 .subscribe();
         
        // 🚀 СОВРЕМЕННЫЙ ИНТЕЛЛЕКТУАЛЬНЫЙ СКРОЛЛ (Как в Instagram)
+        let isBatchLoading = false;
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
+            if (entries[0].isIntersecting && !isBatchLoading) {
                 if (renderedCount < filteredItems.length && window.innerWidth <= 900) {
                     const scrollTrigger = document.getElementById('loadingTrigger');
                     if (scrollTrigger) {
                         scrollTrigger.style.display = 'block';
                         scrollTrigger.innerHTML = '<span style="animation: pulse 1s infinite; color: var(--accent-green);">[ ЗАГРУЗКА АРХИВА... ]</span>';
                     }
-                    setTimeout(() => {
-                        renderNextBatch();
-                    }, 300);
+                    isBatchLoading = true;
+                    requestAnimationFrame(() => {
+                        if (typeof renderNextBatch === 'function') {
+                            renderNextBatch();
+                        }
+                        isBatchLoading = false;
+                    });
                 }
             }
         }, { rootMargin: "600px", threshold: 0.1 }); 
@@ -844,40 +852,57 @@ async function initHitCounter() {
         // 4. Проверяем, был ли юзер ТУТ СЕГОДНЯ
         const isNewVisitToday = (lastVisitDate !== todayDate);
 
-        // 5. Отправляем запрос на сервер
-        const res = await fetch('https://nisha-api.onrender.com/api/hit', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json' 
-            },
-            body: JSON.stringify({ 
-                date: todayDate,
-                countAsNew: isNewVisitToday
-            })
-        });
-        
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        
-        const data = await res.json();
-        
-        if (data && data.success && data.count !== undefined) {
-            // Если это был новый визит — запоминаем
-            if (isNewVisitToday) {
-                localStorage.setItem('nisha_last_visit_date', todayDate);
+        // 5. Отправляем запрос на сервер с ограничением по времени (4.5 сек, защита от спящего Render)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+        try {
+            const res = await fetch('https://nisha-api.onrender.com/api/hit', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json' 
+                },
+                body: JSON.stringify({ 
+                    date: todayDate,
+                    countAsNew: isNewVisitToday
+                }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            
+            const data = await res.json();
+            
+            if (data && data.success && data.count !== undefined) {
+                // Если это был новый визит — запоминаем
+                if (isNewVisitToday) {
+                    if (typeof safeSetItem === 'function') {
+                        safeSetItem('nisha_last_visit_date', todayDate);
+                    } else {
+                        localStorage.setItem('nisha_last_visit_date', todayDate);
+                    }
+                }
+                
+                // Сохраняем актуальную цифру для следующих заходов
+                if (typeof safeSetItem === 'function') {
+                    safeSetItem('nisha_last_hit_count', data.count);
+                } else {
+                    localStorage.setItem('nisha_last_hit_count', data.count);
+                }
+                
+                // Выводим с пробелами
+                const strCount = data.count.toString().padStart(5, '0');
+                counterEl.innerText = strCount.split('').join(' ');
             }
-            
-            // Сохраняем актуальную цифру для следующих заходов
-            localStorage.setItem('nisha_last_hit_count', data.count);
-            
-            // Выводим с пробелами
-            const strCount = data.count.toString().padStart(5, '0');
-            counterEl.innerText = strCount.split('').join(' ');
+        } catch (fetchErr) {
+            clearTimeout(timeoutId);
+            throw fetchErr;
         }
     } catch (err) {
-        console.error("Счетчик работает в оффлайн-режиме (Сервер спит):", err.message);
-        // ВАЖНО: Мы больше не ставим тут '0 0 0 0 0'! 
-        // Юзер просто продолжит видеть старую цифру из кэша (шаг 3), пока сервер не проснется.
+        console.warn("Счетчик работает в оффлайн-режиме (Сервер спит или нет сети):", err.message);
+        // Юзер просто продолжит видеть старую цифру из кэша (шаг 3), пока сервер не ответит.
     }
 }
 window.initHitCounter = initHitCounter;
@@ -885,20 +910,62 @@ window.initHitCounter = initHitCounter;
 
 // Задержка поиска, чтобы не лагало при быстром вводе текста
 let searchDebounce;
-// Функция сохранения истории поиска
+
+// Кэш инстанса Fuse.js для предотвращения создания тяжелого индекса на каждую букву
+let cachedFuseInstance = null;
+let cachedFuseItemsRef = null;
+
+function getLiveSearchFuse() {
+    const items = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+    if (!cachedFuseInstance || cachedFuseItemsRef !== items) {
+        cachedFuseItemsRef = items;
+        const fuseOptions = {
+            includeScore: true, 
+            includeMatches: true, 
+            threshold: 0.4, 
+            ignoreLocation: true, 
+            useExtendedSearch: true, 
+            keys: [
+                { name: 'tags', weight: 1.0 }, 
+                { name: 'brand', weight: 0.8 }, 
+                { name: 'name', weight: 0.8 }, 
+                { name: 'size', weight: 0.8 }
+            ]
+        };
+        cachedFuseInstance = new Fuse(items, fuseOptions);
+    }
+    return cachedFuseInstance;
+}
+window.invalidateFuseCache = function() {
+    cachedFuseInstance = null;
+    cachedFuseItemsRef = null;
+};
+
+// Функция сохранения истории поиска (с защитой от квоты localStorage)
 function saveRecentSearch(term) {
     if (!term || term.length < 2) return;
-    let history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
+    } catch(e) { history = []; }
     history = history.filter(t => t.toLowerCase() !== term.toLowerCase());
     history.unshift(term);
     if (history.length > 5) history.pop(); // Храним только 5 последних
-    localStorage.setItem('nisha_search_history', JSON.stringify(history));
+    
+    if (typeof safeSetItem === 'function') {
+        safeSetItem('nisha_search_history', JSON.stringify(history));
+    } else {
+        try { localStorage.setItem('nisha_search_history', JSON.stringify(history)); } catch(e){}
+    }
 }
 
 // Отображение истории поиска
 function showSearchHistory() {
     const dropdown = document.getElementById('liveSearchDropdown');
-    let history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
+    } catch(e) { history = []; }
     if (history.length === 0) return;
 
     let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); closeSearch(); event.stopPropagation();">[ ОЧИСТИТЬ ]</span></div>`;
@@ -926,34 +993,25 @@ function handleLiveSearch() {
     }
 
     if (searchTerm.length < 2) {
-        // ФИКС: Просто прячем подсказки, но НЕ УБИВАЕМ фокус клавиатуры!
+        // Просто прячем подсказки, но НЕ УБИВАЕМ фокус клавиатуры
         if (dropdown) dropdown.style.display = 'none';
         document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
         return; 
     }
 
     searchDebounce = setTimeout(() => {
-        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ FUSE.JS ДЛЯ ВЫПАДАЮЩЕГО СПИСКА
+        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ ПЕРЕИСПОЛЬЗУЕМЫЙ КЭШ FUSE.JS
         const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
-        const fuseOptions = {
-            includeScore: true, 
-            includeMatches: true, 
-            threshold: 0.4, ignoreLocation: true, useExtendedSearch: true, 
-            keys: [
-                { name: 'tags', weight: 1.0 }, { name: 'brand', weight: 0.8 }, 
-                { name: 'name', weight: 0.8 }, { name: 'size', weight: 0.8 }
-            ]
-        };
-        const fuse = new Fuse(allItems, fuseOptions);
+        const fuse = getLiveSearchFuse();
         const results = fuse.search(cleanSearchTerm).slice(0, 8); 
 
-        dropdown.innerHTML = '';
         if (results.length > 0) {
             document.body.classList.add('search-lock'); if (typeof window.stopLenis === 'function') window.stopLenis();
             
+            let html = '';
             results.forEach(result => {
                 const item = result.item;
-                const img = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : (item.images[0] || '');
+                const img = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : ((item.images && item.images[0]) ? item.images[0] : '');
                 
                 // Подсветка совпадений зеленым цветом
                 let highlightedName = item.name;
@@ -972,7 +1030,7 @@ function handleLiveSearch() {
                     }
                 }
 
-                dropdown.innerHTML += `
+                html += `
                     <div class="live-search-item" onclick="openProductModalById('${item.id}'); closeSearch();">
                         <div class="live-search-img" style="background-image: url('${img}')"></div>
                         <div class="live-search-info">
@@ -981,9 +1039,11 @@ function handleLiveSearch() {
                         </div>
                     </div>`;
             });
+
+            // Единая атомарная вставка в DOM вместо цикла innerHTML += ...
+            dropdown.innerHTML = html;
             dropdown.style.display = 'block';
 
-            dropdown.ongetscroll = () => {}; 
             dropdown.addEventListener('touchstart', () => {
                 if (document.activeElement === searchInput) searchInput.blur();
             }, {passive: true});
@@ -993,10 +1053,7 @@ function handleLiveSearch() {
             dropdown.style.display = 'block';
             document.body.classList.remove('search-lock'); if (typeof window.startLenis === 'function') window.startLenis();
         }
-        
-        // ВАЖНО: Мы удалили отсюда applyFilters()!
-        // Теперь лента не будет прыгать во время набора текста.
-    }, 300);
+    }, 250);
 }
 
 function closeSearch() {
@@ -1168,9 +1225,6 @@ document.addEventListener("visibilitychange", async () => {
         }
         if (_supabase) {
             await checkSession();
-            if (window.allItems && window.allItems.length > 0) {
-                loadAllItems(); 
-            }
         }
     }
 });
@@ -1461,30 +1515,35 @@ async function subscribeUserToPush(registration, silent = false) {
 }
 window.subscribeUserToPush = subscribeUserToPush;
 
+if (typeof Notification !== 'undefined' && Notification.permission !== 'default') {
+    pushPrompted = true;
+}
+
 document.addEventListener('click', (e) => {
     if (pushPrompted) return;
+    if (typeof Notification !== 'undefined' && Notification.permission !== 'default') {
+        pushPrompted = true;
+        return;
+    }
     
-    // 1. Игнорируем, если открыто любое модальное окно (Товар, Корзина, Оформление и тд)
-    const isModalOpen = Array.from(document.querySelectorAll('[id$="Modal"], .modal-overlay, #cartSidebar')).some(m => {
-        const style = window.getComputedStyle(m);
-        return style.display === 'flex' || style.display === 'block' || m.classList.contains('active');
-    });
-    if (isModalOpen) return;
+    // 1. Быстрая проверка без вызова getComputedStyle (устраняет Layout Thrashing)
+    const openModal = document.querySelector('.modal-overlay[style*="display: flex"], .modal-overlay[style*="display: block"], #cartSidebar.active, .swal2-container');
+    if (openModal) return;
     
     // 2. Игнорируем клик по карточке товара (чтобы не перебивать открытие товара)
     if (e.target.closest('.item-card')) return;
 
-    // 3. Игнорируем клики по нижнему навигатору/корзине
-    if (e.target.closest('.bottom-nav, #cartBtn, #profileBtn')) return;
+    // 3. Игнорируем клики по нижнему навигатору/корзине/кнопкам
+    if (e.target.closest('.bottom-nav, #cartBtn, #profileBtn, button, a')) return;
 
     // Если всё чисто — мы в ленте товаров, и клик был по безопасному элементу (фильтр, лого, фон)
     pushPrompted = true;
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(reg => {
             subscribeUserToPush(reg);
-        });
+        }).catch(() => {});
     }
-});
+}, { passive: true });
 // ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ БЕЙДЖИКОВ НА КАРТОЧКЕ
 window.updateCardDOM = function(item) {
     const cards = document.querySelectorAll(`.item-card[data-id="${item.id}"]`);

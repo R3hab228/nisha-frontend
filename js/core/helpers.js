@@ -200,3 +200,38 @@ function cleanStorageLimits() {
     }
 }
 window.cleanStorageLimits = cleanStorageLimits;
+
+// --- БЕЗОПАСНАЯ РАБОТА С ХРАНИЛИЩЕМ (SAFARI PRIVATE & QUOTA PROTECTION) ---
+function safeSetItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+        return true;
+    } catch (e) {
+        try {
+            cleanStorageLimits();
+            localStorage.setItem(key, value);
+            return true;
+        } catch (innerErr) {
+            console.warn(`[STORAGE] Не удалось записать ключ ${key}:`, innerErr);
+            return false;
+        }
+    }
+}
+window.safeSetItem = safeSetItem;
+
+function safeGetItem(key, fallback = null) {
+    try {
+        const val = localStorage.getItem(key);
+        return val !== null ? val : fallback;
+    } catch (e) {
+        return fallback;
+    }
+}
+window.safeGetItem = safeGetItem;
+
+function safeRemoveItem(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {}
+}
+window.safeRemoveItem = safeRemoveItem;
