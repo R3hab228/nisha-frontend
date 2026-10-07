@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v129';
+const CACHE_NAME = 'nisha-cache-v130';
 const IMAGE_CACHE = 'nisha-images-v1';
 const API_CACHE = 'nisha-api-v1';
 const STATIC_URLS = [
@@ -121,25 +121,32 @@ self.addEventListener('fetch', event => {
         return; 
     }
 
-    // --- ОСТАЛЬНЫЕ ФАЙЛЫ (Stale-While-Revalidate) ---
+    // --- ОСНОВНЫЕ ФАЙЛЫ САЙТА (Network-First с fallback на кэш при офлайне) ---
     event.respondWith(
-        caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
-            const fetchPromise = fetch(event.request).then(networkResponse => {
+        (async () => {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2500);
+                
+                const networkResponse = await fetch(event.request, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
                 if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
                 }
                 return networkResponse;
-            }).catch(() => {
+            } catch (err) {
+                const cachedResponse = await caches.match(event.request, { ignoreSearch: true });
+                if (cachedResponse) return cachedResponse;
+
                 if (event.request.mode === 'navigate') {
-                    return caches.match('/', { ignoreSearch: true }).then(res => {
-                        return res || caches.match('/404.html');
-                    });
+                    const fallback = await caches.match('/', { ignoreSearch: true });
+                    return fallback || caches.match('/404.html');
                 }
-            });
-            
-            return cachedResponse || fetchPromise;
-        })
+                throw err;
+            }
+        })()
     );
 });
 

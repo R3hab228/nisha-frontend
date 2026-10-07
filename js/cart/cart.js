@@ -1158,11 +1158,18 @@ async function applyPromoCode() {
     const originalTotal = currentCart.reduce((sum, item) => sum + item.price, 0);
 
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+        }, 10000);
+
         const res = await fetch('https://nisha-api.onrender.com/api/check-promo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: input, cartTotal: originalTotal })
+            body: JSON.stringify({ code: input, cartTotal: originalTotal }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
         
         const data = await res.json();
 
@@ -1197,7 +1204,11 @@ async function applyPromoCode() {
             msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${errorMsg}</span>`;
         }
     } catch (err) {
-        msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error') : 'Ошибка сервера'}</span>`;
+        if (err && err.name === 'AbortError') {
+            msg.innerHTML = `<span style="color: var(--accent-yellow);">[!] Сервер запускается, нажмите «Применить» ещё раз</span>`;
+        } else {
+            msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error') : 'Ошибка сервера'}</span>`;
+        }
     }
     
     btn.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.apply') : 'ПРИМЕНИТЬ';
