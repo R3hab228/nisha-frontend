@@ -299,7 +299,7 @@ function openProductModal(item) {
                 let currentThumb = (item.thumbnails && item.thumbnails[index]) ? toCDN(item.thumbnails[index]) : cdnUrl;
                 
                 if (isVideo && (!item.thumbnails || !item.thumbnails[index])) {
-                    currentThumb = 'https://via.placeholder.com/400x400.png?text=VIDEO&bg=000000&color=00ff00';
+                    currentThumb = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23000'/%3E%3Cpolygon points='40,30 70,50 40,70' fill='%2300ff00'/%3E%3Ctext x='50' y='88' font-family='monospace' font-size='11' font-weight='bold' fill='%2300ff00' text-anchor='middle'%3EVIDEO%3C/text%3E%3C/svg%3E";
                 }
                 
                 if (isVideo) {

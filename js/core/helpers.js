@@ -198,13 +198,14 @@ function cleanStorageLimits() {
         }
 
         // 3. Ограничение истории поиска (до 15 запросов)
-        const searchRaw = localStorage.getItem('nisha_recent_searches');
+        const searchRaw = localStorage.getItem('nisha_search_history') || localStorage.getItem('nisha_recent_searches');
         if (searchRaw) {
             const searches = JSON.parse(searchRaw);
             if (Array.isArray(searches) && searches.length > 15) {
-                localStorage.setItem('nisha_recent_searches', JSON.stringify(searches.slice(0, 15)));
+                localStorage.setItem('nisha_search_history', JSON.stringify(searches.slice(0, 15)));
             }
         }
+        localStorage.removeItem('nisha_recent_searches');
     } catch(e) {
         console.warn('Storage cleanup notice:', e);
     }

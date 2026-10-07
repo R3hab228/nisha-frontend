@@ -368,8 +368,11 @@ async function generateAndSendOTP() {
         const { data: isVerified } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
         if (isVerified) {
             clearInterval(window.otpPollInterval);
-            let id = window.setTimeout(() => {}, 0);
-            while (id--) { window.clearTimeout(id); }
+            window.otpPollInterval = null;
+            if (otpInterval) {
+                clearInterval(otpInterval);
+                otpInterval = null;
+            }
             checkPhoneAuth();
         }
     }, 2000);

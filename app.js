@@ -1057,11 +1057,6 @@ function handleLiveSearch() {
             // Единая атомарная вставка в DOM вместо цикла innerHTML += ...
             dropdown.innerHTML = html;
             dropdown.style.display = 'block';
-
-            dropdown.addEventListener('touchstart', () => {
-                if (document.activeElement === searchInput) searchInput.blur();
-            }, {passive: true});
-
         } else {
             dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
             dropdown.style.display = 'block';
@@ -1088,6 +1083,15 @@ document.addEventListener('click', (e) => {
         closeSearch(); // Используем нашу новую функцию
     }
 });
+
+document.addEventListener('touchstart', (e) => {
+    if (e.target.closest('#liveSearchDropdown')) {
+        const searchInput = document.getElementById('mainSearch');
+        if (searchInput && document.activeElement === searchInput) {
+            searchInput.blur();
+        }
+    }
+}, { passive: true });
 // toggleFavFromModal, toggleAccordion, toggleHistory moved to js/product/product.js
 // ==========================================
 // СБРОС НА ГЛАВНУЮ СТРАНИЦУ (ФИКС ИЗБРАННОГО)

@@ -845,6 +845,20 @@ async function openCheckoutModal() {
 }
 window.openCheckoutModal = openCheckoutModal;
 
+function normalizeOrderPhone(raw) {
+    if (!raw) return '';
+    const digits = raw.replace(/[^\d]/g, '');
+    if (digits.length === 10 && digits.startsWith('0')) {
+        return '+38' + digits;
+    } else if (digits.length === 9) {
+        return '+380' + digits;
+    } else if (digits.length === 12 && digits.startsWith('380')) {
+        return '+' + digits;
+    }
+    return raw.replace(/[^\d+]/g, '');
+}
+window.normalizeOrderPhone = normalizeOrderPhone;
+
 async function submitOrder() {
     if (isOrderSubmitting) return;
     if (typeof window.triggerVibration === 'function') window.triggerVibration(150);
@@ -875,7 +889,7 @@ async function submitOrder() {
     const branch = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawBranch) : rawBranch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const phoneRaw = document.getElementById('orderPhone').value;
-    const phone = phoneRaw.replace(/[^\d+]/g, '');
+    const phone = normalizeOrderPhone(phoneRaw);
 
     if(!name || !phone || !city || !branch) { 
         showToast(typeof i18next !== 'undefined' ? i18next.t('messages.req_fields') : 'Заполните обязательные поля!', 'error'); 
@@ -963,7 +977,7 @@ async function executeOrderFinal(emailToSave) {
 
     const name = document.getElementById('orderName').value.trim();
     const phoneRaw = document.getElementById('orderPhone').value;
-    const phone = phoneRaw.replace(/[^\d+]/g, '');
+    const phone = normalizeOrderPhone(phoneRaw);
     const city = document.getElementById('orderCity').value.trim();
     const branch = document.getElementById('orderBranch').value.trim();
     const paymentMethod = document.getElementById('orderPaymentMethod') ? document.getElementById('orderPaymentMethod').value : '';
