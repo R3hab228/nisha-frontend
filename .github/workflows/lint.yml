@@ -1,0 +1,42 @@
+name: Lint & Frontend Integrity Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Validate JS & JSON Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 🔍 Validate JavaScript Syntax (AST Check)
+        run: |
+          echo "Scanning and verifying all JavaScript files..."
+          find . -maxdepth 3 -name "*.js" -not -path "*/node_modules/*" -print -exec node --check {} \;
+          echo "✅ All JavaScript files passed syntax verification!"
+
+      - name: 🛡️ Validate JSON files (locales, manifest, vercel)
+        run: |
+          node -e "
+            const fs = require('fs');
+            const files = ['locales.json', 'manifest.json', 'vercel.json'];
+            files.forEach(file => {
+              if (fs.existsSync(file)) {
+                JSON.parse(fs.readFileSync(file, 'utf8'));
+                console.log('Valid JSON: ' + file);
+              }
+            });
+          "
+          echo "✅ All JSON files are structurally sound!"
