@@ -61,6 +61,7 @@ window.prefetchItemImages = function(id) {
         if (item.thumbnails && item.thumbnails.length > 1) {
             item.thumbnails.slice(1, 4).forEach(url => {
                 const img = new Image();
+                img.decoding = 'async';
                 img.src = toCDN(url);
             });
         }
@@ -68,6 +69,7 @@ window.prefetchItemImages = function(id) {
         if (item.images && item.images.length > 0) {
             item.images.slice(0, 2).forEach(url => {
                 const img = new Image();
+                img.decoding = 'async';
                 img.src = toCDN(url);
             });
         }
@@ -635,7 +637,7 @@ function renderNextBatch() {
                 } else {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading" style="background-image: none;">
-                           <img src="${cdnThumb}" ${loadAttr} style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" 
+                           <img src="${cdnThumb}" ${(idx === 0) ? loadAttr : 'loading="lazy"'} decoding="async" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" 
 onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
@@ -652,7 +654,6 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             card.setAttribute('data-id', item.id);
             
             card.setAttribute('onmouseenter', `window.prefetchItemImages('${item.id}')`);
-            card.setAttribute('ontouchstart', `window.prefetchItemImages('${item.id}')`);
             
             let priceHTML = '';
             if (item.is_sale && item.old_price) {
