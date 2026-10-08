@@ -122,7 +122,9 @@ function extractItemMeasurements(item) {
     if (!text) return [];
 
     let lines = [];
-    const kwRegex = /(?:выход\s+штанины|вихід\s+штанини|довжина\s+замк[аи]|длина\s+замка|довжина\s+рукава|длина\s+рукава|полуобхват\s+груд[еиейя]|груд[иеяь]\s+повністю|грудь\s+полностью|довжина|длина|длинна|рукав|плеч[іея]|груд[иеяь]|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок|посадка|кроковий|шаговый)/i;
+    const kwRegex = /(?:выход\s+штанины|вихід\s+штанини|довжина\s+замк[аи]|длина\s+замка|довжина\s+рукава|длина\s+рукава|полуобхват\s+груд[еиейяі]|груд[иеяьі]\s+повністю|грудь\s+полностью|довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок|посадка|кроковий|шаговый|манжет|ворот|шов|пах)/i;
+    const measureLinePattern = /^[\-\–—\•\*\s]*[а-яёa-zієїґ\s\(\)\/]{2,35}[\s\-–—:]+\d{1,3}(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?$/i;
+    const isStopLine = (str) => /^(?:стан|состояние|дефект|дефекти|нюанс|контакт|тг|tg|ціна|цена|город|місто|доставка|размер|розмір)[:\s]|(?:\d+\s*\/\s*\d+)|(?:грн|uah|\$|€|t\.me|\@)/i.test(str);
 
     // 1. Поиск по маркеру замеров (заміри, замеры, параметри, параметры, measurements и т.д.)
     const markerRegex = /(?:заміри|замеры|параметри|параметры|промери|виміри|measurements?)[:\s\-\n]/i;
@@ -135,50 +137,49 @@ function extractItemMeasurements(item) {
         for (let rawLine of rawLines) {
             let clean = rawLine.trim();
             if (!clean) {
-                if (lines.length > 0) break; // Конец блока замеров после сноски/пустой строки
+                if (lines.length > 0) break; // Конец блока замеров
                 continue;
             }
-            // Стоп-слова других блоков
-            if (/^(?:стан|состояние|дефект|дефекти|нюанс|контакт|тг|tg|ціна|цена|город|місто|доставка)[:\s]/i.test(clean)) {
-                break;
-            }
+            if (isStopLine(clean)) break;
             
-            // Если в строке несколько замеров через запятую/точку с запятой (например: "длина 70, плечи 50")
             const subItems = clean.split(/[,;]/);
             for (let sub of subItems) {
                 let s = sub.trim().replace(/^[\-\–—\•\*\d+\.\)\s]+/, '').trim();
-                if (s && /\d+/.test(s) && (kwRegex.test(s) || lines.length > 0)) {
+                if (s && /\d+/.test(s) && (kwRegex.test(s) || measureLinePattern.test(s) || lines.length > 0)) {
                     lines.push(normalizeMeasurementUnits(s));
                 }
             }
         }
     }
 
-    // 2. Если маркера "заміри:" нет (например, текст в одну строчку с описанием или замеры перечислены в предложении)
+    // 2. Если маркера "заміри:" нет: сканируем построчно и по предложениям
     if (lines.length === 0) {
-        // Разбиваем текст сначала по переводам строк и по точкам/знакам окончания предложений
-        const sentences = text.split(/[\r\n\.\!\?]+/);
+        const rawLines = text.split(/\r?\n/);
         
-        for (let sent of sentences) {
-            let cleanSent = sent.trim();
-            if (!cleanSent || !kwRegex.test(cleanSent) || !/\d+/.test(cleanSent)) {
-                continue; // Пропускаем предложения без замеров ("Шорты Quiksilver", "Цвет – хаки")
-            }
-            
-            // Внутри предложения замеры могут перечисляться через запятую или точку с запятой
-            const parts = cleanSent.split(/[,;]/);
-            for (let p of parts) {
-                let cleanPart = p.trim().replace(/^[\-\–—\•\*\s]+/, '').trim();
-                if (cleanPart && kwRegex.test(cleanPart) && /\d+/.test(cleanPart)) {
-                    lines.push(normalizeMeasurementUnits(cleanPart));
+        for (let rLine of rawLines) {
+            let clean = rLine.trim();
+            if (!clean || isStopLine(clean)) continue;
+
+            // Если строка содержит несколько замеров через запятую/точку с запятой
+            if (clean.includes(',') || clean.includes(';')) {
+                const parts = clean.split(/[,;]/);
+                for (let p of parts) {
+                    let cp = p.trim().replace(/^[\-\–—\•\*\s]+/, '').trim();
+                    if (cp && /\d+/.test(cp) && (kwRegex.test(cp) || measureLinePattern.test(cp))) {
+                        lines.push(normalizeMeasurementUnits(cp));
+                    }
                 }
+            }
+            // Если строка сама по себе является замером (например: "Длинна 71", "Плечи 36", "Подмышки 44", "Рыкав от плеча 64")
+            else if (/\d+/.test(clean) && (kwRegex.test(clean) || measureLinePattern.test(clean))) {
+                lines.push(normalizeMeasurementUnits(clean));
             }
         }
     }
 
-    // 3. Fallback: прямой поиск регуляркой пар "параметр + число"
+    // 3. Fallback: прямой поиск регуляркой всех изолированных пар "параметр + число"
     if (lines.length === 0) {
-        const inlineMatches = text.match(/(?:(?:довжина|длина|длинна|рукав|плеч[іея]|груд[иеяь]|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок)[\s\-–—:]*\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?|\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?\s*(?:стелька|устілка))/gi);
+        const inlineMatches = text.match(/(?:(?:довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок)[\s\-–—:]*\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?|\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?\s*(?:стелька|устілка))/gi);
         if (inlineMatches && inlineMatches.length > 0) {
             lines = inlineMatches.map(m => normalizeMeasurementUnits(m));
         }
