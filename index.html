@@ -31,10 +31,10 @@
 <link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
 <script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",showHideAnimationType:"fade",zoomAnimationDuration:200,bgOpacity:.9,closeOnVerticalDrag:!0,wheelToZoom:!0,pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
-<link rel=preload href="/style.css?v=142" as=style>
+<link rel=preload href="/style.css?v=143" as=style>
 <link rel=preload href=/locales.json as=fetch crossorigin=anonymous>
 <link rel=preload href=/cables.svg as=image type="image/svg+xml">
-<link rel=stylesheet href="style.css?v=142">
+<link rel=stylesheet href="style.css?v=143">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity -->
@@ -436,8 +436,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div class=slider-container id=sliderContainer>
 <div id=photoCounter class=photo-counter>1/1</div>
 <div class=slider-wrapper id=sliderWrapper></div>
-<button class="slider-btn prev" onclick=moveSlide(-1)>&#10094;</button>
-<button class="slider-btn next" onclick=moveSlide(1)>&#10095;</button>
+<button class="slider-btn prev" onmouseenter="preloadSlide(-1)" onclick=moveSlide(-1)>&#10094;</button>
+<button class="slider-btn next" onmouseenter="preloadSlide(1)" onclick=moveSlide(1)>&#10095;</button>
 </div>
 <div class=modal-thumbnails id=modalThumbnails></div>
 <div class="similar-items-section similar-desktop">
@@ -653,9 +653,9 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <script defer src="js/drop/drop.js"></script>
 <script defer src="js/chat/chat.js"></script>
 <script defer src="js/reviews/reviews.js?v=135"></script>
-<script defer src="js/catalog/catalog.js?v=136"></script>
+<script defer src="js/catalog/catalog.js?v=143"></script>
 <script defer src="js/cart/cart.js"></script>
-<script defer src="js/product/product.js?v=141"></script>
+<script defer src="js/product/product.js?v=143"></script>
 <script defer src="js/profile/profile.js"></script>
 <script defer src=app.js></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь">

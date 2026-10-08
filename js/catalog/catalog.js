@@ -527,7 +527,7 @@ window.applyFilters = applyFilters;
 const gridVideoObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const video = entry.target;
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !document.hidden) {
             video.play().catch(() => {}); 
         } else {
             video.pause(); 
@@ -535,6 +535,40 @@ const gridVideoObserver = new IntersectionObserver((entries) => {
     });
 }, { rootMargin: "50px" });
 window.gridVideoObserver = gridVideoObserver;
+
+// Пауза видео при переключении вкладки браузера
+document.addEventListener('visibilitychange', () => {
+    const videos = document.querySelectorAll('video');
+    if (document.hidden) {
+        videos.forEach(v => {
+            if (!v.paused) {
+                v._wasPlaying = true;
+                v.pause();
+            }
+        });
+    } else {
+        videos.forEach(v => {
+            if (v._wasPlaying) {
+                delete v._wasPlaying;
+                if (v.classList.contains('modal-video-player')) {
+                    const modal = document.getElementById('productModal');
+                    if (modal && modal.style.display !== 'none') {
+                        const slide = v.closest('.slide');
+                        const slides = Array.from(document.querySelectorAll('#sliderWrapper .slide'));
+                        if (slides.indexOf(slide) === window.currentSlide) {
+                            v.play().catch(() => {});
+                        }
+                    }
+                } else {
+                    const rect = v.getBoundingClientRect();
+                    if (rect.top < window.innerHeight + 50 && rect.bottom > -50) {
+                        v.play().catch(() => {});
+                    }
+                }
+            }
+        });
+    }
+});
 
 // Пагинация на ПК
 window.changePage = function(step) {
@@ -682,8 +716,8 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             let controlsHTML = '';
             if (thumbsArray.length > 1) {
                 controlsHTML = `
-                    <div class="grid-slider-btn prev" onclick="scrollGridSlider(event, '${item.id}', -1)">&#10094;</div>
-                    <div class="grid-slider-btn next" onclick="scrollGridSlider(event, '${item.id}', 1)">&#10095;</div>
+                    <div class="grid-slider-btn prev" onmouseenter="preloadGridSlide(event, '${item.id}', -1)" onclick="scrollGridSlider(event, '${item.id}', -1)">&#10094;</div>
+                    <div class="grid-slider-btn next" onmouseenter="preloadGridSlide(event, '${item.id}', 1)" onclick="scrollGridSlider(event, '${item.id}', 1)">&#10095;</div>
                     <div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>
                 `;
             }
@@ -980,6 +1014,26 @@ window.scrollGridSlider = function(event, itemId, direction) {
     if (!slider) return;
     const slideWidth = slider.offsetWidth;
     slider.scrollBy({ left: slideWidth * direction, behavior: 'smooth' });
+};
+
+window.preloadGridSlide = function(event, itemId, direction) {
+    if (event) event.stopPropagation();
+    const catalog = typeof getCatalog === 'function' ? getCatalog() : [];
+    const item = catalog.find(i => i.id === itemId);
+    if (!item) return;
+    const mediaArray = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails : (item.images || []);
+    if (mediaArray.length <= 1) return;
+    const slider = document.getElementById(`slider-${itemId}`);
+    if (!slider) return;
+    const slideWidth = slider.offsetWidth || 1;
+    const currentIdx = Math.round(slider.scrollLeft / slideWidth);
+    const targetIdx = Math.max(0, Math.min(mediaArray.length - 1, currentIdx + direction));
+    const toCDN = window.toCDN || ((u) => u);
+    const url = toCDN(mediaArray[targetIdx]);
+    if (url && !url.endsWith('.mp4')) {
+        const img = new Image();
+        img.src = url;
+    }
 };
 
 // Двойной тап для лайка

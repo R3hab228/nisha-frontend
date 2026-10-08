@@ -73,6 +73,10 @@ function executeCloseModal(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
     
+    // Мгновенная пауза любых видео в закрывающемся окне
+    const modalVideos = modal.querySelectorAll('video');
+    modalVideos.forEach(v => v.pause());
+    
     if (id === 'rulesModal') {
         if (modal.classList.contains('closing')) return;
         modal.classList.add('closing');

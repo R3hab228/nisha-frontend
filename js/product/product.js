@@ -22,6 +22,93 @@ function getFingerprint() {
     return window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : 'guest_' + Date.now());
 }
 
+// Профессиональный алгоритм многофакторного скоринга похожих вещей
+function computeItemSimilarity(source, target) {
+    if (!source || !target) return 0;
+    let score = 0;
+
+    // 1. Совпадение категории (Базовый приоритет: +50 баллов)
+    const srcCat = (source.category || '').toLowerCase().trim();
+    const tgtCat = (target.category || '').toLowerCase().trim();
+    if (srcCat && tgtCat && srcCat === tgtCat) {
+        score += 50;
+    }
+
+    // 2. Совпадение бренда (+40 баллов)
+    const srcBrand = (source.brand || '').toLowerCase().trim();
+    const tgtBrand = (target.brand || '').toLowerCase().trim();
+    if (srcBrand && tgtBrand && srcBrand === tgtBrand) {
+        score += 40;
+    }
+
+    // 3. Совпадение размера вещи (+35 баллов за точный, +20 за совместимый)
+    const srcSize = (source.size || '').toLowerCase().replace(/[\s\-_]/g, '');
+    const tgtSize = (target.size || '').toLowerCase().replace(/[\s\-_]/g, '');
+    if (srcSize && tgtSize) {
+        if (srcSize === tgtSize) {
+            score += 35;
+        } else if (srcSize.includes(tgtSize) || tgtSize.includes(srcSize)) {
+            score += 20;
+        }
+    }
+
+    // 4. Доступность для покупки (+30 за available, +5 за reserved)
+    if (target.status === 'available') {
+        score += 30;
+    } else if (target.status === 'reserved') {
+        score += 5;
+    }
+
+    // 5. Близость бюджета/цены (до +20 баллов)
+    const p1 = Number(source.price) || 0;
+    const p2 = Number(target.price) || 0;
+    if (p1 > 0 && p2 > 0) {
+        const diffRatio = Math.abs(p1 - p2) / p1;
+        if (diffRatio <= 0.15) {
+            score += 20;
+        } else if (diffRatio <= 0.35) {
+            score += 12;
+        } else if (diffRatio <= 0.60) {
+            score += 6;
+        }
+    }
+
+    // 6. Совпадение стилевых тегов (до +20 баллов)
+    const srcTags = Array.isArray(source.tags) ? source.tags.map(t => String(t).toLowerCase().trim()) : [];
+    const tgtTags = Array.isArray(target.tags) ? target.tags.map(t => String(t).toLowerCase().trim()) : [];
+    if (srcTags.length > 0 && tgtTags.length > 0) {
+        let tagMatches = 0;
+        srcTags.forEach(t => {
+            if (tgtTags.includes(t)) tagMatches++;
+        });
+        score += Math.min(20, tagMatches * 10);
+    }
+
+    // 7. Свежесть / Скидка
+    if (target.is_top) score += 5;
+    if (target.is_sale) score += 5;
+
+    // 8. Легкий естественный джиттер (0 - 8 баллов) для разнообразия выдачи
+    score += Math.random() * 8;
+
+    return score;
+}
+window.computeItemSimilarity = computeItemSimilarity;
+
+// Умная предзагрузка следующего фото при наведении на стрелку слайдера
+function preloadSlide(step) {
+    const active = window.currentOpenedItem;
+    if (!active || !active.images || active.images.length <= 1) return;
+    const targetIndex = (currentSlide + step + active.images.length) % active.images.length;
+    const toCDN = window.toCDN || ((u) => u);
+    const url = toCDN(active.images[targetIndex]);
+    if (url && !url.endsWith('.mp4')) {
+        const img = new Image();
+        img.src = url;
+    }
+}
+window.preloadSlide = preloadSlide;
+
 // ==========================================
 // 1. ОТКРЫТИЕ КАРТОЧКИ ТОВАРА (MODAL)
 // ==========================================
@@ -375,32 +462,21 @@ function openProductModal(item) {
         const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
         const catalog = getCatalog();
         
-        let similar = catalog.filter(i => {
+        let candidates = catalog.filter(i => {
             if (i.id === item.id) return false;
             if (hideUnavailable && i.status !== 'available') return false;
-            return (i.category === item.category || i.brand === item.brand);
+            return true;
         });
-        
-        if (similar.length < 6) {
-            const priceMargin = item.price * 0.3;
-            const extra = catalog.filter(i => {
-                if (i.id === item.id || similar.includes(i)) return false;
-                if (hideUnavailable && i.status !== 'available') return false;
-                return i.price >= item.price - priceMargin && i.price <= item.price + priceMargin;
-            });
-            similar = [...similar, ...extra];
-        }
 
-        if (similar.length < 6) {
-            const fallbackExtra = catalog.filter(i => {
-                if (i.id === item.id || similar.includes(i)) return false;
-                if (hideUnavailable && i.status !== 'available') return false;
-                return true;
-            });
-            similar = [...similar, ...fallbackExtra];
-        }
-        
-        similar = similar.sort(() => 0.5 - Math.random()).slice(0, 6);
+        // Профессиональное ранжирование по многофакторному весу
+        const scoredCandidates = candidates.map(c => ({
+            item: c,
+            score: computeItemSimilarity(item, c)
+        }));
+
+        scoredCandidates.sort((a, b) => b.score - a.score);
+
+        const similar = scoredCandidates.slice(0, 6).map(c => c.item);
         let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
             
         if (similar.length > 0) {
@@ -470,6 +546,12 @@ function openProductModal(item) {
             });
             if (simCont) simCont.innerHTML = cardsHTML;
             if (simContDesktop) simContDesktop.innerHTML = cardsHTML;
+
+            if (window.gridVideoObserver) {
+                document.querySelectorAll('.similar-card-img-wrap video').forEach(v => {
+                    window.gridVideoObserver.observe(v);
+                });
+            }
         } else {
             const noItemsText = (typeof i18next !== 'undefined') ? i18next.t('product.no_similar', {defaultValue: 'Похожих товаров пока нет.'}) : 'Похожих товаров пока нет.';
             const emptyHTML = `<div style="color:#555; font-size:12px; font-family: var(--font-mono);">${noItemsText}</div>`;
@@ -652,6 +734,19 @@ function updateSlider() {
     thumbs.forEach((t, i) => { 
         if(i === currentSlide) t.classList.add('active-thumb'); 
         else t.classList.remove('active-thumb'); 
+    });
+
+    // Умная пауза скрытых видео: воспроизводим только активный слайд
+    const allSlides = Array.from(document.querySelectorAll('#sliderWrapper .slide'));
+    allSlides.forEach((slide, idx) => {
+        const vid = slide.querySelector('video.modal-video-player');
+        if (vid) {
+            if (idx === currentSlide) {
+                vid.play().catch(() => {});
+            } else {
+                vid.pause();
+            }
+        }
     });
 }
 window.updateSlider = updateSlider;
