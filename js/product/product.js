@@ -210,7 +210,7 @@ function openProductModal(item) {
 
             <!-- КНОПКА ЗАДАТЬ ВОПРОС -->
             <div style="margin-top: 15px; text-align: right;">
-                <button onclick="toggleQuestionForm()" style="background: transparent; border: none; color: var(--accent-green); font-family: var(--font-mono); font-weight: bold; cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline;" data-i18n="product.ask_btn">${typeof i18next !== 'undefined' ? i18next.t('product.ask_btn', {defaultValue: 'Задать вопрос?'}) : 'Задать вопрос?'}</button>
+                <button onclick="toggleQuestionForm()" class="ask-question-btn" data-i18n="product.ask_btn">${typeof i18next !== 'undefined' ? i18next.t('product.ask_btn', {defaultValue: 'Задать вопрос?'}) : 'Задать вопрос?'}</button>
             </div>
             <div id="questionFormContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 5px;">
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
