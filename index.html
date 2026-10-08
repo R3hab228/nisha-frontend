@@ -523,7 +523,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <p style=margin:0;font-size:13px;color:#aaa data-i18n=checkout.desc>Заполните данные для отправки. Бронь 2 часа.</p>
 <input id=botTrap style=opacity:0;position:absolute;top:0;left:0;height:0;width:0;z-index:-1 tabindex=-1 autocomplete=off>
 <label data-i18n=checkout.name>ФИО Получателя:</label>
-<input id=orderName class=form-input placeholder="Іванов Іван Іванович">
+<input id=orderName class=form-input placeholder="Іванов Іван Іванович" oninput="this.value=this.value.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g,'')">
 <div id=checkoutPhoneWrapper>
 <label data-i18n=checkout.phone>Телефон (ОБЯЗАТЕЛЬНО):</label>
 <div style=display:flex;gap:10px>
@@ -654,7 +654,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <script defer src="js/chat/chat.js"></script>
 <script defer src="js/reviews/reviews.js?v=135"></script>
 <script defer src="js/catalog/catalog.js?v=143"></script>
-<script defer src="js/cart/cart.js"></script>
+<script defer src="js/cart/cart.js?v=144"></script>
 <script defer src="js/product/product.js?v=143"></script>
 <script defer src="js/profile/profile.js"></script>
 <script defer src=app.js></script>

@@ -815,6 +815,14 @@ async function openCheckoutModal() {
         if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
         
         // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА
+        const orderNameEl = document.getElementById('orderName');
+        if (orderNameEl && !orderNameEl._lettersOnlyBound) {
+            orderNameEl._lettersOnlyBound = true;
+            orderNameEl.addEventListener('input', function() {
+                this.value = this.value.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '');
+            });
+        }
+
         const savedDataRaw = localStorage.getItem('nisha_checkout_data');
         if (savedDataRaw) {
             try {
@@ -881,17 +889,18 @@ async function submitOrder() {
     }
 
     const rawName = document.getElementById('orderName').value.trim();
+    const cleanLettersName = rawName.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '').trim();
     const rawCity = document.getElementById('orderCity').value.trim();
     const rawBranch = document.getElementById('orderBranch').value.trim();
     
-    const name = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawName) : rawName.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const name = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(cleanLettersName) : cleanLettersName.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const city = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawCity) : rawCity.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const branch = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawBranch) : rawBranch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const phoneRaw = document.getElementById('orderPhone').value;
     const phone = normalizeOrderPhone(phoneRaw);
 
-    if(!name || !phone || !city || !branch) { 
+    if(!name || name.length < 2 || !phone || !city || !branch) { 
         showToast(typeof i18next !== 'undefined' ? i18next.t('messages.req_fields') : 'Заполните обязательные поля!', 'error'); 
         return; 
     }
@@ -975,7 +984,8 @@ async function executeOrderFinal(emailToSave) {
         if(bar) bar.style.width = "90%";
     }, 50);
 
-    const name = document.getElementById('orderName').value.trim();
+    const rawName = document.getElementById('orderName').value.trim();
+    const name = rawName.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '').trim();
     const phoneRaw = document.getElementById('orderPhone').value;
     const phone = normalizeOrderPhone(phoneRaw);
     const city = document.getElementById('orderCity').value.trim();
