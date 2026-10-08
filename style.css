@@ -376,6 +376,81 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .badge-icon { font-size: 14px; font-family: var(--font-mono); font-weight: bold; color: var(--accent-green); background: rgba(0,255,0,0.1); padding: 2px 6px; border-radius: 2px;}
 .badge-text { font-size: 10px; color: #888; font-family: var(--font-main); font-weight: bold; text-transform: uppercase; line-height: 1.3; }
 
+/* ==========================================
+   SIMILAR ITEMS (ПОХОЖИЕ ВЕЩИ)
+   ========================================== */
+.similar-desktop {
+    display: block;
+    margin-top: 25px;
+    border-top: 2px dashed #333;
+    padding-top: 15px;
+}
+.similar-mobile {
+    display: none !important;
+}
+
+.similar-items-desktop-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.similar-items-mobile-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.similar-item-card {
+    min-width: 0;
+    cursor: pointer;
+    background: #000;
+    transition: border-color 0.2s, transform 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    border: 1px solid #333;
+    position: relative;
+    user-select: none;
+}
+.similar-item-card:hover {
+    border-color: var(--accent-green) !important;
+    transform: translateY(-2px);
+}
+.similar-item-card.is-unseen {
+    border-color: var(--accent-red);
+    animation: unseenPulseAnim 2s infinite alternate;
+}
+.similar-items-mobile-scroll .similar-item-card {
+    min-width: 120px;
+    width: 120px;
+    flex-shrink: 0;
+}
+.similar-items-desktop-grid .similar-item-card {
+    min-width: 0;
+    width: 100%;
+}
+.similar-card-img-wrap {
+    position: relative;
+    height: 100px;
+    width: 100%;
+    overflow: hidden;
+    background: #111;
+}
+.similar-card-price {
+    padding: 6px 4px;
+    font-size: 11px;
+    color: #fff;
+    font-family: var(--font-mono);
+    text-align: center;
+    margin-top: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .form-layout { display: flex; flex-direction: column; gap: 15px; width: 100%; padding: 25px; box-sizing: border-box;}
 .form-layout label { color: var(--accent-green); font-family: var(--font-mono); font-size: 14px; font-weight: bold; margin-bottom: -10px; text-transform: uppercase;}
 .form-input { background: #000; color: #fff; border: 2px inset var(--border-light); padding: 12px; font-family: var(--font-main); font-size: 15px; outline: none; width: 100%; box-sizing: border-box; transition: 0.2s;}
@@ -1041,6 +1116,13 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     }
 
     .hide-on-mobile { display: none !important; }
+    .similar-desktop { display: none !important; }
+    .similar-mobile { 
+        display: block !important; 
+        margin-top: 20px;
+        border-top: 2px dashed #333;
+        padding-top: 15px;
+    }
     
     .cart-dropdown { 
         display: flex !important; width: 100vw; left: -15px; bottom: calc(100% + 20px) !important; 

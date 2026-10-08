@@ -31,10 +31,10 @@
 <link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
 <script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",showHideAnimationType:"fade",zoomAnimationDuration:200,bgOpacity:.9,closeOnVerticalDrag:!0,wheelToZoom:!0,pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
-<link rel=preload href="/style.css?v=139" as=style>
+<link rel=preload href="/style.css?v=140" as=style>
 <link rel=preload href=/locales.json as=fetch crossorigin=anonymous>
 <link rel=preload href=/cables.svg as=image type="image/svg+xml">
-<link rel=stylesheet href="style.css?v=139">
+<link rel=stylesheet href="style.css?v=140">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity -->
@@ -440,6 +440,10 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <button class="slider-btn next" onclick=moveSlide(1)>&#10095;</button>
 </div>
 <div class=modal-thumbnails id=modalThumbnails></div>
+<div class="similar-items-section similar-desktop">
+<h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:14px;margin:0 0 10px 0" data-i18n=product.similar>[ ПОХОЖИЕ ВЕЩИ ]</h3>
+<div id=similarItemsContainerDesktop class=similar-items-desktop-grid></div>
+</div>
 </div>
 <div class=modal-info>
 <div style=display:flex;justify-content:space-between;align-items:center;margin-bottom:10px>
@@ -501,9 +505,9 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <span class=badge-text data-i18n=product.badge_refund>ВОЗВРАТ 14 ДНЕЙ</span>
 </div>
 </div>
-<div style="margin-top:20px;border-top:2px dashed #333;padding-top:15px">
+<div class="similar-items-section similar-mobile">
 <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:14px;margin:0 0 10px 0" data-i18n=product.similar>[ ПОХОЖИЕ ВЕЩИ ]</h3>
-<div id=similarItemsContainer style=display:flex;gap:10px;overflow-x:auto;padding-bottom:10px></div>
+<div id=similarItemsContainer class=similar-items-mobile-scroll></div>
 </div>
 </div>
 </div>
@@ -651,7 +655,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <script defer src="js/reviews/reviews.js?v=135"></script>
 <script defer src="js/catalog/catalog.js?v=136"></script>
 <script defer src="js/cart/cart.js"></script>
-<script defer src="js/product/product.js"></script>
+<script defer src="js/product/product.js?v=140"></script>
 <script defer src="js/profile/profile.js"></script>
 <script defer src=app.js></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь">

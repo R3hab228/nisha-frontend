@@ -367,8 +367,11 @@ function openProductModal(item) {
 
     // Рендер похожих товаров
     const simCont = document.getElementById('similarItemsContainer');
-    if (simCont) {
-        simCont.innerHTML = '';
+    const simContDesktop = document.getElementById('similarItemsContainerDesktop');
+    if (simCont || simContDesktop) {
+        if (simCont) simCont.innerHTML = '';
+        if (simContDesktop) simContDesktop.innerHTML = '';
+
         const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
         const catalog = getCatalog();
         
@@ -378,7 +381,7 @@ function openProductModal(item) {
             return (i.category === item.category || i.brand === item.brand);
         });
         
-        if (similar.length < 4) {
+        if (similar.length < 6) {
             const priceMargin = item.price * 0.3;
             const extra = catalog.filter(i => {
                 if (i.id === item.id || similar.includes(i)) return false;
@@ -387,11 +390,21 @@ function openProductModal(item) {
             });
             similar = [...similar, ...extra];
         }
+
+        if (similar.length < 6) {
+            const fallbackExtra = catalog.filter(i => {
+                if (i.id === item.id || similar.includes(i)) return false;
+                if (hideUnavailable && i.status !== 'available') return false;
+                return true;
+            });
+            similar = [...similar, ...fallbackExtra];
+        }
         
-        similar = similar.sort(() => 0.5 - Math.random()).slice(0, 4);
+        similar = similar.sort(() => 0.5 - Math.random()).slice(0, 6);
         let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
             
-        if(similar.length > 0) {
+        if (similar.length > 0) {
+            let cardsHTML = '';
             similar.forEach(s => {
                 const sImg = getOptimizedImg(s, true); 
                 let miniBadgeHTML = '';
@@ -420,8 +433,7 @@ function openProductModal(item) {
                 }
 
                 const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
-                const pulseAnim = isUnseen ? 'animation: unseenPulseAnim 2s infinite alternate;' : '';
-                const baseBorder = isUnseen ? 'var(--accent-red)' : '#333';
+                const unseenClass = isUnseen ? 'is-unseen' : '';
 
                 let statusOverlayHTML = '';
                 let imageFilter = '';
@@ -445,21 +457,24 @@ function openProductModal(item) {
                     }
                 }
 
-                simCont.innerHTML += `
-                    <div style="min-width: 120px; cursor: pointer; border: 1px solid ${baseBorder}; background: #000; transition: 0.2s; ${pulseAnim} display:flex; flex-direction:column;" 
-                         onmouseover="this.style.borderColor='var(--accent-green)'" 
-                         onmouseout="this.style.borderColor='${baseBorder}'" 
+                cardsHTML += `
+                    <div class="similar-item-card ${unseenClass}" 
                          onclick="openProductModalById('${s.id}')">
-                        <div style="position: relative; height: 100px; width: 100%; overflow: hidden; background: #111;">
+                        <div class="similar-card-img-wrap">
                             ${miniBadgeHTML}
                             ${statusOverlayHTML}
                             ${imageBlockHTML}
                         </div>
-                        <div style="padding: 8px; font-size: 11px; color: #fff; font-family: var(--font-mono); text-align: center; margin-top: auto;">${miniPriceHTML}</div>
+                        <div class="similar-card-price">${miniPriceHTML}</div>
                     </div>`;
             });
+            if (simCont) simCont.innerHTML = cardsHTML;
+            if (simContDesktop) simContDesktop.innerHTML = cardsHTML;
         } else {
-            simCont.innerHTML = '<div style="color:#555; font-size:12px; font-family: var(--font-mono);">Похожих товаров пока нет.</div>';
+            const noItemsText = (typeof i18next !== 'undefined') ? i18next.t('product.no_similar', {defaultValue: 'Похожих товаров пока нет.'}) : 'Похожих товаров пока нет.';
+            const emptyHTML = `<div style="color:#555; font-size:12px; font-family: var(--font-mono);">${noItemsText}</div>`;
+            if (simCont) simCont.innerHTML = emptyHTML;
+            if (simContDesktop) simContDesktop.innerHTML = emptyHTML;
         }
     }
 
