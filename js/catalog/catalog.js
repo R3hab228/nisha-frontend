@@ -118,13 +118,16 @@ window.normalizeMeasurementUnits = normalizeMeasurementUnits;
 
 function extractItemMeasurements(item) {
     if (!item) return [];
-    const text = (item.description || '').trim();
+    let text = (item.description || '').trim();
+    if (!text && item.size) {
+        text = String(item.size).trim();
+    }
     if (!text) return [];
 
     let lines = [];
     const kwRegex = /(?:выход\s+штанины|вихід\s+штанини|довжина\s+замк[аи]|длина\s+замка|довжина\s+рукава|длина\s+рукава|полуобхват\s+груд[еиейяі]|груд[иеяьі]\s+повністю|грудь\s+полностью|довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок|посадка|кроковий|шаговый|манжет|ворот|шов|пах)/i;
     const measureLinePattern = /^[\-\–—\•\*\s]*[а-яёa-zієїґ\s\(\)\/]{2,35}[\s\-–—:]+\d{1,3}(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?$/i;
-    const isStopLine = (str) => /^(?:стан|состояние|дефект|дефекти|нюанс|контакт|тг|tg|ціна|цена|город|місто|доставка|размер|розмір)[:\s]|(?:\d+\s*\/\s*\d+)|(?:грн|uah|\$|€|t\.me|\@)/i.test(str);
+    const isStopLine = (str) => /^(?:стан|состояние|дефект|дефекти|нюанс|контакт|тг|tg|ціна|цена|город|місто|доставка|отправка|відправка|размер|розмір)[:\s]|(?:\d+\s*\/\s*\d+)|(?:грн|uah|\$|€|t\.me|\@)/i.test(str);
 
     // 1. Поиск по маркеру замеров (заміри, замеры, параметри, параметры, measurements и т.д.)
     const markerRegex = /(?:заміри|замеры|параметри|параметры|промери|виміри|measurements?)[:\s\-\n]/i;
@@ -142,10 +145,10 @@ function extractItemMeasurements(item) {
             }
             if (isStopLine(clean)) break;
             
-            const subItems = clean.split(/[,;]/);
+            const subItems = clean.split(/[,;•|]|\s+\/\s+/);
             for (let sub of subItems) {
-                let s = sub.trim().replace(/^[\-\–—\•\*\d+\.\)\s]+/, '').trim();
-                if (s && /\d+/.test(s) && (kwRegex.test(s) || measureLinePattern.test(s) || lines.length > 0)) {
+                let s = sub.trim().replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
+                if (s && /\d+/.test(s) && (kwRegex.test(s) || measureLinePattern.test(s))) {
                     lines.push(normalizeMeasurementUnits(s));
                 }
             }
@@ -160,11 +163,11 @@ function extractItemMeasurements(item) {
             let clean = rLine.trim();
             if (!clean || isStopLine(clean)) continue;
 
-            // Если строка содержит несколько замеров через запятую/точку с запятой
-            if (clean.includes(',') || clean.includes(';')) {
-                const parts = clean.split(/[,;]/);
+            // Если строка содержит несколько замеров через запятую/точку с запятой/разделитель
+            if (/[,;•|]|\s+\/\s+/.test(clean)) {
+                const parts = clean.split(/[,;•|]|\s+\/\s+/);
                 for (let p of parts) {
-                    let cp = p.trim().replace(/^[\-\–—\•\*\s]+/, '').trim();
+                    let cp = p.trim().replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
                     if (cp && /\d+/.test(cp) && (kwRegex.test(cp) || measureLinePattern.test(cp))) {
                         lines.push(normalizeMeasurementUnits(cp));
                     }
@@ -172,7 +175,8 @@ function extractItemMeasurements(item) {
             }
             // Если строка сама по себе является замером (например: "Длинна 71", "Плечи 36", "Подмышки 44", "Рыкав от плеча 64")
             else if (/\d+/.test(clean) && (kwRegex.test(clean) || measureLinePattern.test(clean))) {
-                lines.push(normalizeMeasurementUnits(clean));
+                let cp = clean.replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
+                lines.push(normalizeMeasurementUnits(cp));
             }
         }
     }
@@ -206,13 +210,22 @@ function getMeasurementsTooltip() {
 }
 
 window.showItemMeasurementsTooltip = function(itemOrId, e) {
-    if (window.innerWidth <= 900) return; // Строго только на ПК!
+    // Не показываем на сенсорных мобильных устройствах
+    if (('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth <= 768) return;
     
     let item = itemOrId;
     if (typeof itemOrId === 'string') {
         item = (window.allItems || []).find(i => i.id === itemOrId);
     }
     if (!item) return;
+
+    // Если у переданного объекта нет description, ищем актуальный в window.allItems
+    if (!item.description && item.id && Array.isArray(window.allItems)) {
+        const fresh = window.allItems.find(i => i.id === item.id);
+        if (fresh && fresh.description) {
+            item = fresh;
+        }
+    }
 
     const measures = extractItemMeasurements(item);
     if (!measures || measures.length === 0) return;
@@ -233,31 +246,33 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
     `;
 
     tooltip.style.display = 'block';
-    requestAnimationFrame(() => {
-        tooltip.classList.add('visible');
-        window.moveItemMeasurementsTooltip(e);
-    });
+    tooltip.classList.add('visible');
+    window.moveItemMeasurementsTooltip(e);
 };
 
 window.moveItemMeasurementsTooltip = function(e) {
     if (!e) return;
     const tooltip = getMeasurementsTooltip();
-    if (!tooltip || !tooltip.classList.contains('visible')) return;
+    if (!tooltip || tooltip.style.display === 'none') return;
+
+    const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+    const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+    if (clientX === null || clientY === null) return;
 
     const offset = 16;
     const tooltipWidth = tooltip.offsetWidth || 190;
     const tooltipHeight = tooltip.offsetHeight || 120;
 
-    let x = e.clientX + offset;
-    let y = e.clientY + offset;
+    let x = clientX + offset;
+    let y = clientY + offset;
 
     // Защита от вылета за правый край окна
     if (x + tooltipWidth > window.innerWidth - 12) {
-        x = e.clientX - tooltipWidth - offset;
+        x = clientX - tooltipWidth - offset;
     }
     // Защита от вылета за нижний край окна
     if (y + tooltipHeight > window.innerHeight - 12) {
-        y = e.clientY - tooltipHeight - offset;
+        y = clientY - tooltipHeight - offset;
     }
 
     if (x < 10) x = 10;
@@ -281,7 +296,7 @@ window.hideItemMeasurementsTooltip = function() {
 
 // Прячем тултип при скролле страницы
 window.addEventListener('scroll', () => {
-    if (window.innerWidth > 900) window.hideItemMeasurementsTooltip();
+    window.hideItemMeasurementsTooltip();
 }, { passive: true });
 
 // Загрузка всех товаров из БД и кэша
@@ -293,8 +308,13 @@ async function loadAllItems() {
     const cachedData = localStorage.getItem('nisha_cached_db');
     if (cachedData && window.allItems.length === 0) {
         try {
-            window.allItems = JSON.parse(cachedData);
-            applyFilters(); 
+            const parsed = JSON.parse(cachedData);
+            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].description === undefined) {
+                localStorage.removeItem('nisha_cached_db');
+            } else {
+                window.allItems = parsed;
+                applyFilters();
+            }
         } catch(e) { console.error("Ошибка кэша"); }
     }
 
@@ -909,20 +929,18 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             
             card.setAttribute('onmouseenter', `window.prefetchItemImages('${item.id}')`);
 
-            if (window.innerWidth > 900) {
-                card.addEventListener('mouseenter', (e) => {
-                    window.showItemMeasurementsTooltip(item, e);
-                });
-                card.addEventListener('mousemove', (e) => {
-                    window.moveItemMeasurementsTooltip(e);
-                });
-                card.addEventListener('mouseleave', () => {
-                    window.hideItemMeasurementsTooltip();
-                });
-                card.addEventListener('click', () => {
-                    window.hideItemMeasurementsTooltip();
-                });
-            }
+            card.addEventListener('mouseenter', (e) => {
+                window.showItemMeasurementsTooltip(item, e);
+            });
+            card.addEventListener('mousemove', (e) => {
+                window.moveItemMeasurementsTooltip(e);
+            });
+            card.addEventListener('mouseleave', () => {
+                window.hideItemMeasurementsTooltip();
+            });
+            card.addEventListener('click', () => {
+                window.hideItemMeasurementsTooltip();
+            });
             
             let priceHTML = '';
             if (item.is_sale && item.old_price) {

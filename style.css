@@ -1405,8 +1405,8 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
     position: fixed;
     top: -9999px;
     left: -9999px;
-    z-index: 100000;
-    pointer-events: none;
+    z-index: 100000 !important;
+    pointer-events: none !important;
     background: rgba(10, 10, 10, 0.95);
     border: 1px solid var(--accent-green);
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.9), 0 0 14px rgba(0, 255, 0, 0.2);
@@ -1425,7 +1425,7 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
 }
 
 .measurements-tooltip.visible {
-    display: block;
+    display: block !important;
     opacity: 1;
     transform: scale(1);
 }
