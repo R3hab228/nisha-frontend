@@ -85,6 +85,200 @@ window.prefetchItemImages = function(id) {
 // МОДУЛЬ ЗАМЕРОВ ДЛЯ КАРТОЧЕК (ТОЛЬКО ПК)
 // ==========================================
 
+function getCurrentSiteLang() {
+    let l = localStorage.getItem('nisha_lang') || localStorage.getItem('i18nextLng') || 'ru';
+    l = l.substring(0, 2).toLowerCase();
+    if (l === 'uk') l = 'ua';
+    if (!['ru', 'ua', 'en'].includes(l)) l = 'ru';
+    return l;
+}
+window.getCurrentSiteLang = getCurrentSiteLang;
+
+const MEASUREMENT_TRANSLATIONS = [
+    // 1. Рукав от плеча / Рукав від плеча
+    {
+        pattern: /(?:рукав\s*(?:від|от)?\s*плеч[аея]|р[ууы]кав\s*(?:від|от)?\s*плеч[аея])/i,
+        ru: 'Рукав от плеча',
+        ua: 'Рукав від плеча',
+        en: 'Sleeve from shoulder'
+    },
+    // 2. Рукав от шеи / Рукав від шиї / от горла
+    {
+        pattern: /(?:рукав\s*(?:від|от)\s*(?:ши[їи]|горл[ае]|ворот[ае]|комір[ае]))/i,
+        ru: 'Рукав от шеи',
+        ua: 'Рукав від шиї',
+        en: 'Sleeve from neck'
+    },
+    // 3. Длина по спине / Довжина по спині
+    {
+        pattern: /(?:(?:довжина|длинна?)\s*(?:по\s*спин[іе]|спин[иы]))/i,
+        ru: 'Длина по спине',
+        ua: 'Довжина по спині',
+        en: 'Back length'
+    },
+    // 4. Длина замка / Довжина замка
+    {
+        pattern: /(?:(?:довжина|длинна?)\s*замк[аи])/i,
+        ru: 'Длина замка',
+        ua: 'Довжина замка',
+        en: 'Zipper length'
+    },
+    // 5. Длина штанины / Довжина штанини
+    {
+        pattern: /(?:(?:довжина|длинна?)\s*штанин[иы])/i,
+        ru: 'Длина штанины',
+        ua: 'Довжина штанини',
+        en: 'Leg length'
+    },
+    // 6. Выход штанины / Вихід штанини
+    {
+        pattern: /(?:вихід\s*штанин[иы]|выход\s*штанин[ыи]|вихід|выход|низ\s*штанин[ыи])/i,
+        ru: 'Выход штанины',
+        ua: 'Вихід штанини',
+        en: 'Leg opening'
+    },
+    // 7. Полуобхват груди / Напівобхват грудей / ПОГ
+    {
+        pattern: /(?:полуобхват\s*груд[еиейяі]|напівобхват\s*груд[еиейяі]|пог\b)/i,
+        ru: 'Полуобхват груди',
+        ua: 'Напівобхват грудей',
+        en: 'Chest (pit-to-pit)'
+    },
+    // 8. Полуобхват талии / Напівобхват талії / ПОТ
+    {
+        pattern: /(?:полуобхват\s*тал[иі][їие]|напівобхват\s*тал[иі][їие]|пот\b)/i,
+        ru: 'Полуобхват талии',
+        ua: 'Напівобхват талії',
+        en: 'Waist width'
+    },
+    // 9. Полуобхват бедер / Напівобхват стегон / ПОБ
+    {
+        pattern: /(?:полуобхват\s*(?:бедер|стегон)|напівобхват\s*(?:бедер|стегон)|поб\b)/i,
+        ru: 'Полуобхват бедер',
+        ua: 'Напівобхват стегон',
+        en: 'Hips width'
+    },
+    // 10. Шаговый шов / Кроковий шов
+    {
+        pattern: /(?:шагов(?:ый|ий)\s*шов|кроков(?:ий|ый)\s*шов|шагов(?:ый|ий)|кроков(?:ий|ый)|шаг\b)/i,
+        ru: 'Шаговый шов',
+        ua: 'Кроковий шов',
+        en: 'Inseam'
+    },
+    // 11. Подмышки / Підмишки / Пахи
+    {
+        pattern: /(?:подмышк[иае]|підмишк[иае]|пахи|подмыхи|підмихами|пах\b)/i,
+        ru: 'Подмышки',
+        ua: 'Підмишки',
+        en: 'Pit to pit'
+    },
+    // 12. Длина / Довжина
+    {
+        pattern: /(?:довжина|длинна?)/i,
+        ru: 'Длина',
+        ua: 'Довжина',
+        en: 'Length'
+    },
+    // 13. Плечи / Плечі
+    {
+        pattern: /(?:плеч[иіея]?)/i,
+        ru: 'Плечи',
+        ua: 'Плечі',
+        en: 'Shoulders'
+    },
+    // 14. Грудь / Груди
+    {
+        pattern: /(?:груд[иіеяь])/i,
+        ru: 'Грудь',
+        ua: 'Груди',
+        en: 'Chest'
+    },
+    // 15. Рукав
+    {
+        pattern: /(?:р[ууы]кав)/i,
+        ru: 'Рукав',
+        ua: 'Рукав',
+        en: 'Sleeve'
+    },
+    // 16. Талия / Талія
+    {
+        pattern: /(?:тал[иі]я)/i,
+        ru: 'Талия',
+        ua: 'Талія',
+        en: 'Waist'
+    },
+    // 17. Пояс
+    {
+        pattern: /(?:пояс)/i,
+        ru: 'Пояс',
+        ua: 'Пояс',
+        en: 'Waist'
+    },
+    // 18. Бедра / Стегна
+    {
+        pattern: /(?:стегн[ао]|бедр[ао])/i,
+        ru: 'Бедра',
+        ua: 'Стегна',
+        en: 'Hips'
+    },
+    // 19. Штанина
+    {
+        pattern: /(?:штанин[аы])/i,
+        ru: 'Штанина',
+        ua: 'Штанина',
+        en: 'Leg length'
+    },
+    // 20. Посадка
+    {
+        pattern: /(?:посадк[аи])/i,
+        ru: 'Посадка',
+        ua: 'Посадка',
+        en: 'Rise'
+    },
+    // 21. Стелька / Устілка
+    {
+        pattern: /(?:устілк[аи]|стельк[аи])/i,
+        ru: 'Стелька',
+        ua: 'Устілка',
+        en: 'Insole'
+    },
+    // 22. Высота / Висота
+    {
+        pattern: /(?:висот[аы]|высот[аы])/i,
+        ru: 'Высота',
+        ua: 'Висота',
+        en: 'Height'
+    },
+    // 23. Ширина
+    {
+        pattern: /(?:ширин[аы])/i,
+        ru: 'Ширина',
+        ua: 'Ширина',
+        en: 'Width'
+    },
+    // 24. Замок
+    {
+        pattern: /(?:замок)/i,
+        ru: 'Замок',
+        ua: 'Замок',
+        en: 'Zipper'
+    },
+    // 25. Воротник / Комір
+    {
+        pattern: /(?:комір|воротник|ворот)/i,
+        ru: 'Воротник',
+        ua: 'Комір',
+        en: 'Collar'
+    },
+    // 26. Манжет
+    {
+        pattern: /(?:манжет)/i,
+        ru: 'Манжет',
+        ua: 'Манжет',
+        en: 'Cuff'
+    }
+];
+
 function normalizeMeasurementUnits(str) {
     if (!str) return '';
     let s = str.trim()
@@ -116,16 +310,78 @@ function normalizeMeasurementUnits(str) {
 }
 window.normalizeMeasurementUnits = normalizeMeasurementUnits;
 
-function extractItemMeasurements(item) {
+function formatMeasurementItem(str, lang) {
+    if (!str) return '';
+    let normalized = normalizeMeasurementUnits(str);
+    if (!normalized) return '';
+    if (!lang) lang = getCurrentSiteLang();
+
+    // 1. Попытка выделить Метку и Числовое значение (включая единицы см/cm/мм)
+    // Например: "Довжина 65 см", "Рукав от плеча 64 см", "Плечи: 41 см"
+    const match = normalized.match(/^(.*?)(?:[\s\-–—:]+)(\d+(?:[\.,]\d+)?\s*(?:см|cm|мм|mm)?.*)$/i);
+    
+    if (match) {
+        let rawLabel = match[1].trim().replace(/^[\-\–—\•\*\s]+/, '').trim();
+        let val = match[2].trim();
+
+        if (lang === 'en') {
+            val = val.replace(/(?:см|с)\.?/gi, 'cm');
+        } else {
+            val = val.replace(/(?:cm|c)\.?/gi, 'см');
+        }
+
+        for (let rule of MEASUREMENT_TRANSLATIONS) {
+            if (rule.pattern.test(rawLabel)) {
+                const translatedLabel = rule[lang] || rule['ru'] || rawLabel;
+                return `${translatedLabel} ${val}`;
+            }
+        }
+        return `${rawLabel} ${val}`;
+    }
+
+    // 2. Обратный порядок: число в начале (например "28.5 см стелька")
+    const matchReverse = normalized.match(/^(\d+(?:[\.,]\d+)?\s*(?:см|cm|мм|mm)?)\s+(.*)$/i);
+    if (matchReverse) {
+        let val = matchReverse[1].trim();
+        let rawLabel = matchReverse[2].trim();
+
+        if (lang === 'en') {
+            val = val.replace(/(?:см|с)\.?/gi, 'cm');
+        } else {
+            val = val.replace(/(?:cm|c)\.?/gi, 'см');
+        }
+
+        for (let rule of MEASUREMENT_TRANSLATIONS) {
+            if (rule.pattern.test(rawLabel)) {
+                const translatedLabel = rule[lang] || rule['ru'] || rawLabel;
+                return `${translatedLabel} ${val}`;
+            }
+        }
+        return `${rawLabel} ${val}`;
+    }
+
+    if (lang === 'en') {
+        normalized = normalized.replace(/(?:см|с)\.?/gi, 'cm');
+    }
+    return normalized;
+}
+window.formatMeasurementItem = formatMeasurementItem;
+
+function extractItemMeasurements(item, customLang) {
     if (!item) return [];
+    const lang = customLang || getCurrentSiteLang();
     let text = (item.description || '').trim();
     if (!text && item.size) {
         text = String(item.size).trim();
     }
     if (!text) return [];
 
+    // Предобработка: разбиваем слитные замеры, записанные в одну строку (например: "Длина 65 Плечи 41 Талия 45 Грудь 47")
+    const kwSplitRegex = /(\d+(?:[\.,]\d+)?\s*(?:см|cm|с|c|мм|mm)?)\s*[,;•|/]?\s+((?:довжина|длина|длинна|плеч[иіея]?|груд[иіеяь]|підмишк[иае]|подмышк[иае]|пахи|подмыхи|пог|пот|поб|напівобхват|полуобхват|р[ууы]кав|тал[иі]я|пояс|стегн[ао]|бедр[ао]|штанин[аы]|вихід|выход|посадк[аи]|кроков|шагов|устілк[аи]|стельк[аи]|висот[аы]|высот[аы]|ширин[аы]|замок|манжет|комір|ворот|воротник|пах)\b)/gi;
+    text = text.replace(kwSplitRegex, '$1\n$2');
+
     let lines = [];
-    const kwRegex = /(?:выход\s+штанины|вихід\s+штанини|довжина\s+замк[аи]|длина\s+замка|довжина\s+рукава|длина\s+рукава|полуобхват\s+груд[еиейяі]|груд[иеяьі]\s+повністю|грудь\s+полностью|довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок|посадка|кроковий|шаговый|манжет|ворот|шов|пах)/i;
+    const kwRegex = /(?:выход\s+штанины|вихід\s+штанини|довжина\s+замк[аи]|длина\s+замка|довжина\s+рукава|длина\s+рукава|полуобхват\s+груд[еиейяі]|груд[иеяьі]\s+повністю|грудь\s+полностью|довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок|посадка|кроковий|шаговый|манжет|ворот|комір|шов|пах)/i;
     const measureLinePattern = /^[\-\–—\•\*\s]*[а-яёa-zієїґ\s\(\)\/]{2,35}[\s\-–—:]+\d{1,3}(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?$/i;
     const isStopLine = (str) => /^(?:стан|состояние|дефект|дефекти|нюанс|контакт|тг|tg|ціна|цена|город|місто|доставка|отправка|відправка|размер|розмір)[:\s]|(?:\d+\s*\/\s*\d+)|(?:грн|uah|\$|€|t\.me|\@)/i.test(str);
 
@@ -149,7 +405,7 @@ function extractItemMeasurements(item) {
             for (let sub of subItems) {
                 let s = sub.trim().replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
                 if (s && /\d+/.test(s) && (kwRegex.test(s) || measureLinePattern.test(s))) {
-                    lines.push(normalizeMeasurementUnits(s));
+                    lines.push(formatMeasurementItem(s, lang));
                 }
             }
         }
@@ -169,23 +425,23 @@ function extractItemMeasurements(item) {
                 for (let p of parts) {
                     let cp = p.trim().replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
                     if (cp && /\d+/.test(cp) && (kwRegex.test(cp) || measureLinePattern.test(cp))) {
-                        lines.push(normalizeMeasurementUnits(cp));
+                        lines.push(formatMeasurementItem(cp, lang));
                     }
                 }
             }
             // Если строка сама по себе является замером (например: "Длинна 71", "Плечи 36", "Подмышки 44", "Рыкав от плеча 64")
             else if (/\d+/.test(clean) && (kwRegex.test(clean) || measureLinePattern.test(clean))) {
                 let cp = clean.replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
-                lines.push(normalizeMeasurementUnits(cp));
+                lines.push(formatMeasurementItem(cp, lang));
             }
         }
     }
 
     // 3. Fallback: прямой поиск регуляркой всех изолированных пар "параметр + число"
     if (lines.length === 0) {
-        const inlineMatches = text.match(/(?:(?:довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок)[\s\-–—:]*\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?|\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?\s*(?:стелька|устілка))/gi);
+        const inlineMatches = text.match(/(?:(?:довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок)[\s\-–—:]*\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?|\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?\s*(?:стелька|устілка))/gi);
         if (inlineMatches && inlineMatches.length > 0) {
-            lines = inlineMatches.map(m => normalizeMeasurementUnits(m));
+            lines = inlineMatches.map(m => formatMeasurementItem(m, lang));
         }
     }
 
@@ -227,7 +483,8 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
         }
     }
 
-    const measures = extractItemMeasurements(item);
+    const currentLang = getCurrentSiteLang();
+    const measures = extractItemMeasurements(item, currentLang);
     if (!measures || measures.length === 0) return;
 
     const tooltip = getMeasurementsTooltip();
@@ -240,8 +497,15 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
         </li>
     `).join('');
 
+    const titles = {
+        ru: '[ ЗАМЕРЫ ]',
+        ua: '[ ЗАМІРИ ]',
+        en: '[ MEASUREMENTS ]'
+    };
+    const headerTitle = titles[currentLang] || titles.ru;
+
     tooltip.innerHTML = `
-        <div class="measurements-tooltip-header">[ ЗАМЕРЫ ]</div>
+        <div class="measurements-tooltip-header">${headerTitle}</div>
         <ul class="measurements-tooltip-list">${itemsHTML}</ul>
     `;
 
