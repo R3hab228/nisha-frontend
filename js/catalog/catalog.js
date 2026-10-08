@@ -81,6 +81,159 @@ window.prefetchItemImages = function(id) {
     }, 200);
 };
 
+// ==========================================
+// МОДУЛЬ ЗАМЕРОВ ДЛЯ КАРТОЧЕК (ТОЛЬКО ПК)
+// ==========================================
+
+function extractItemMeasurements(item) {
+    if (!item) return [];
+    const text = (item.description || '').trim();
+    if (!text) return [];
+
+    let lines = [];
+
+    // 1. Поиск по маркеру замеров (заміри, замеры, параметри, параметры, measurements и т.д.)
+    const markerRegex = /(?:заміри|замеры|параметри|параметры|промери|виміри|measurements?)[:\s\-\n]/i;
+    const markerMatch = text.search(markerRegex);
+
+    if (markerMatch !== -1) {
+        const afterMarker = text.slice(markerMatch).replace(/^(?:заміри|замеры|параметри|параметры|промери|виміри|measurements?)[:\s\-]*/i, '');
+        const rawLines = afterMarker.split(/\r?\n/);
+        
+        for (let line of rawLines) {
+            let clean = line.trim().replace(/^[\-\•\*\d+\.\)\s]+/, '').trim();
+            if (!clean) {
+                if (lines.length > 0) break; // Конец блока замеров после сноски/пустой строки
+                continue;
+            }
+            // Стоп-слова других блоков
+            if (/^(?:стан|состояние|дефект|дефекти|нюанс|контакт|тг|tg|ціна|цена|город|місто|доставка)[:\s]/i.test(clean)) {
+                break;
+            }
+            if (/\d+/.test(clean)) {
+                lines.push(clean);
+            } else if (lines.length > 0) {
+                break;
+            }
+        }
+    }
+
+    // 2. Поиск по строкам с ключевыми терминами замеров и цифрами (если не было маркера "заміри")
+    if (lines.length === 0) {
+        const rawLines = text.split(/\r?\n/);
+        const kwRegex = /(?:довжина|длина|рукав|плеч[іея]|груд[иеяь]|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок|замо[кк]а)/i;
+        
+        for (let line of rawLines) {
+            let clean = line.trim().replace(/^[\-\•\*\d+\.\)\s]+/, '').trim();
+            if (clean && kwRegex.test(clean) && /\d+/.test(clean)) {
+                lines.push(clean);
+            }
+        }
+    }
+
+    // 3. Поиск в одной строке через запятую / точку с запятой / сноску
+    if (lines.length === 0) {
+        const inlineMatches = text.match(/(?:(?:довжина|длина|рукав|плеч[іея]|груд[иеяь]|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина)[\s\-:]+\d+(?:[\.,]\d+)?\s*(?:см|mm|мм)?|\d+(?:[\.,]\d+)?\s*(?:см|mm|мм)?\s*(?:стелька|устілка))/gi);
+        if (inlineMatches && inlineMatches.length > 0) {
+            lines = inlineMatches.map(m => m.trim().replace(/^[\-\•\*\s]+/, ''));
+        }
+    }
+
+    // Если параметров набралось слишком много, оставляем максимум 8 строк
+    return lines.slice(0, 8);
+}
+window.extractItemMeasurements = extractItemMeasurements;
+
+function getMeasurementsTooltip() {
+    let tooltip = document.getElementById('measurementsTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'measurementsTooltip';
+        tooltip.className = 'measurements-tooltip';
+        document.body.appendChild(tooltip);
+    }
+    return tooltip;
+}
+
+window.showItemMeasurementsTooltip = function(itemOrId, e) {
+    if (window.innerWidth <= 900) return; // Строго только на ПК!
+    
+    let item = itemOrId;
+    if (typeof itemOrId === 'string') {
+        item = (window.allItems || []).find(i => i.id === itemOrId);
+    }
+    if (!item) return;
+
+    const measures = extractItemMeasurements(item);
+    if (!measures || measures.length === 0) return;
+
+    const tooltip = getMeasurementsTooltip();
+    
+    const escape = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const itemsHTML = measures.map(m => `
+        <li class="measurements-tooltip-item">
+            <span class="measurements-dot"></span>
+            <span class="measurements-text">${escape(m)}</span>
+        </li>
+    `).join('');
+
+    tooltip.innerHTML = `
+        <div class="measurements-tooltip-header">[ ЗАМЕРЫ ]</div>
+        <ul class="measurements-tooltip-list">${itemsHTML}</ul>
+    `;
+
+    tooltip.style.display = 'block';
+    requestAnimationFrame(() => {
+        tooltip.classList.add('visible');
+        window.moveItemMeasurementsTooltip(e);
+    });
+};
+
+window.moveItemMeasurementsTooltip = function(e) {
+    if (!e) return;
+    const tooltip = getMeasurementsTooltip();
+    if (!tooltip || !tooltip.classList.contains('visible')) return;
+
+    const offset = 16;
+    const tooltipWidth = tooltip.offsetWidth || 190;
+    const tooltipHeight = tooltip.offsetHeight || 120;
+
+    let x = e.clientX + offset;
+    let y = e.clientY + offset;
+
+    // Защита от вылета за правый край окна
+    if (x + tooltipWidth > window.innerWidth - 12) {
+        x = e.clientX - tooltipWidth - offset;
+    }
+    // Защита от вылета за нижний край окна
+    if (y + tooltipHeight > window.innerHeight - 12) {
+        y = e.clientY - tooltipHeight - offset;
+    }
+
+    if (x < 10) x = 10;
+    if (y < 10) y = 10;
+
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
+};
+
+window.hideItemMeasurementsTooltip = function() {
+    const tooltip = getMeasurementsTooltip();
+    if (tooltip) {
+        tooltip.classList.remove('visible');
+        setTimeout(() => {
+            if (!tooltip.classList.contains('visible')) {
+                tooltip.style.display = 'none';
+            }
+        }, 150);
+    }
+};
+
+// Прячем тултип при скролле страницы
+window.addEventListener('scroll', () => {
+    if (window.innerWidth > 900) window.hideItemMeasurementsTooltip();
+}, { passive: true });
+
 // Загрузка всех товаров из БД и кэша
 async function loadAllItems() {
     const grid = document.getElementById('itemsGrid');
@@ -97,9 +250,9 @@ async function loadAllItems() {
 
     if (!sb) return;
 
-    // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров)
+    // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров, включая description)
     const { data, error } = await sb.from('items')
-        .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, is_drop')
+        .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop')
         .limit(1000)
         .order('created_at', { ascending: false });
     
@@ -188,7 +341,7 @@ async function syncCriticalStatuses() {
 
             // 3. Подгрузка самых свежих товаров
             const { data: latestItems } = await sb.from('items')
-                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, is_drop')
+                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop')
                 .order('created_at', { ascending: false })
                 .limit(5);
 
@@ -705,6 +858,21 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             card.setAttribute('data-id', item.id);
             
             card.setAttribute('onmouseenter', `window.prefetchItemImages('${item.id}')`);
+
+            if (window.innerWidth > 900) {
+                card.addEventListener('mouseenter', (e) => {
+                    window.showItemMeasurementsTooltip(item, e);
+                });
+                card.addEventListener('mousemove', (e) => {
+                    window.moveItemMeasurementsTooltip(e);
+                });
+                card.addEventListener('mouseleave', () => {
+                    window.hideItemMeasurementsTooltip();
+                });
+                card.addEventListener('click', () => {
+                    window.hideItemMeasurementsTooltip();
+                });
+            }
             
             let priceHTML = '';
             if (item.is_sale && item.old_price) {

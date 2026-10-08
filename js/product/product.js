@@ -114,6 +114,7 @@ window.preloadSlide = preloadSlide;
 // ==========================================
 
 async function openProductModalById(itemId) {
+    if (typeof window.hideItemMeasurementsTooltip === 'function') window.hideItemMeasurementsTooltip();
     const catalog = getCatalog();
     let item = catalog.find(i => i.id === itemId);
     
@@ -535,6 +536,9 @@ function openProductModal(item) {
 
                 cardsHTML += `
                     <div class="similar-item-card ${unseenClass}" 
+                         onmouseenter="if(window.innerWidth > 900 && typeof window.showItemMeasurementsTooltip === 'function') window.showItemMeasurementsTooltip('${s.id}', event)"
+                         onmousemove="if(window.innerWidth > 900 && typeof window.moveItemMeasurementsTooltip === 'function') window.moveItemMeasurementsTooltip(event)"
+                         onmouseleave="if(typeof window.hideItemMeasurementsTooltip === 'function') window.hideItemMeasurementsTooltip()"
                          onclick="openProductModalById('${s.id}')">
                         <div class="similar-card-img-wrap">
                             ${miniBadgeHTML}

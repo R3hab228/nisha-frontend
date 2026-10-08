@@ -1399,3 +1399,77 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
 
 .hg-bot-6 { animation: hgBot6 2.8s infinite steps(1); }
 @keyframes hgBot6 { 0%, 72% { opacity: 0; } 72.1%, 100% { opacity: 1; } }
+
+/* --- ПЛАШКА ЗАМЕРОВ У КУРСОРА (ТОЛЬКО ПК) --- */
+.measurements-tooltip {
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    z-index: 100000;
+    pointer-events: none;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--accent-green);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.9), 0 0 14px rgba(0, 255, 0, 0.2);
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    min-width: 170px;
+    max-width: 320px;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+}
+
+.measurements-tooltip.visible {
+    display: block;
+    opacity: 1;
+    transform: scale(1);
+}
+
+.measurements-tooltip-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-yellow);
+    margin-bottom: 8px;
+    letter-spacing: 1.5px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+    padding-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.measurements-tooltip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.measurements-tooltip-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #eee;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.measurements-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent-red);
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(255, 0, 0, 0.85);
+    display: inline-block;
+}
+
+.measurements-text {
+    font-family: var(--font-mono);
+    color: #e0e0e0;
+}
