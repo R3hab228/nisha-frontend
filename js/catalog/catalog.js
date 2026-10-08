@@ -95,79 +95,86 @@ function getCurrentSiteLang() {
 window.getCurrentSiteLang = getCurrentSiteLang;
 
 const MEASUREMENT_TRANSLATIONS = [
-    // 1. Рукав от плеча / Рукав від плеча
+    // 1. Длина/рукав от плеча
     {
-        pattern: /(?:рукав\s*(?:від|от)?\s*плеч[аея]|р[ууы]кав\s*(?:від|от)?\s*плеч[аея])/i,
+        pattern: /(?:(?:довжина|длинна?)\s+р[ууы]кав[аеу]?\s*(?:від|от)?\s*плеч[аея]|р[ууы]кав[аеу]?\s*(?:від|от)?\s*плеч[аея])/i,
         ru: 'Рукав от плеча',
         ua: 'Рукав від плеча',
         en: 'Sleeve from shoulder'
     },
-    // 2. Рукав от шеи / Рукав від шиї / от горла
+    // 2. Длина/рукав от шеи / от горла
     {
-        pattern: /(?:рукав\s*(?:від|от)\s*(?:ши[їи]|горл[ае]|ворот[ае]|комір[ае]))/i,
+        pattern: /(?:(?:довжина|длинна?)\s+р[ууы]кав[аеу]?\s*(?:від|от)?\s*(?:ши[їи]|горл[ае]|ворот[ае]|комір[ае])|р[ууы]кав[аеу]?\s*(?:від|от)?\s*(?:ши[їи]|горл[ае]|ворот[ае]|комір[ае]))/i,
         ru: 'Рукав от шеи',
         ua: 'Рукав від шиї',
         en: 'Sleeve from neck'
     },
-    // 3. Длина по спине / Довжина по спині
+    // 3. Длина рукава
+    {
+        pattern: /(?:(?:довжина|длинна?)\s+р[ууы]кав[аеу]?)/i,
+        ru: 'Длина рукава',
+        ua: 'Довжина рукава',
+        en: 'Sleeve length'
+    },
+    // 4. Длина по спине / Довжина по спині
     {
         pattern: /(?:(?:довжина|длинна?)\s*(?:по\s*спин[іе]|спин[иы]))/i,
         ru: 'Длина по спине',
         ua: 'Довжина по спині',
         en: 'Back length'
     },
-    // 4. Длина замка / Довжина замка
+    // 5. Длина замка / Довжина замка
     {
         pattern: /(?:(?:довжина|длинна?)\s*замк[аи])/i,
         ru: 'Длина замка',
         ua: 'Довжина замка',
         en: 'Zipper length'
     },
-    // 5. Длина штанины / Довжина штанини
+    // 6. Длина штанины / Довжина штанини
     {
         pattern: /(?:(?:довжина|длинна?)\s*штанин[иы])/i,
         ru: 'Длина штанины',
         ua: 'Довжина штанини',
         en: 'Leg length'
     },
-    // 6. Выход штанины / Вихід штанини
+    // 7. Выход штанины / Вихід штанини
     {
         pattern: /(?:вихід\s*штанин[иы]|выход\s*штанин[ыи]|вихід|выход|низ\s*штанин[ыи])/i,
         ru: 'Выход штанины',
         ua: 'Вихід штанини',
         en: 'Leg opening'
     },
-    // 7. Полуобхват груди / Напівобхват грудей / ПОГ
+    // 8. Полуобхват груди / Напівобхват грудей / ПОГ
     {
-        pattern: /(?:полуобхват\s*груд[еиейяі]|напівобхват\s*груд[еиейяі]|пог\b)/i,
+        pattern: /(?:полуобхват\s*груд[еиейяі]|напівобхват\s*груд[еиейяі]|пог(?![а-яёa-zієїґ]))/i,
         ru: 'Полуобхват груди',
         ua: 'Напівобхват грудей',
         en: 'Chest (pit-to-pit)'
     },
-    // 8. Полуобхват талии / Напівобхват талії / ПОТ
+    // 9. Полуобхват талии / Напівобхват талії / ПОТ
     {
-        pattern: /(?:полуобхват\s*тал[иі][їие]|напівобхват\s*тал[иі][їие]|пот\b)/i,
+        pattern: /(?:полуобхват\s*тал[иі][їие]|напівобхват\s*тал[иі][їие]|пот(?![а-яёa-zієїґ]))/i,
         ru: 'Полуобхват талии',
         ua: 'Напівобхват талії',
         en: 'Waist width'
     },
-    // 9. Полуобхват бедер / Напівобхват стегон / ПОБ
+    // 10. Полуобхват бедер / Напівобхват стегон / ПОБ
     {
-        pattern: /(?:полуобхват\s*(?:бедер|стегон)|напівобхват\s*(?:бедер|стегон)|поб\b)/i,
+        pattern: /(?:полуобхват\s*(?:бедер|стегон)|напівобхват\s*(?:бедер|стегон)|поб(?![а-яёa-zієїґ]))/i,
         ru: 'Полуобхват бедер',
         ua: 'Напівобхват стегон',
         en: 'Hips width'
     },
-    // 10. Шаговый шов / Кроковий шов
+    // 11. Шаговый шов / Кроковий шов
     {
-        pattern: /(?:шагов(?:ый|ий)\s*шов|кроков(?:ий|ый)\s*шов|шагов(?:ый|ий)|кроков(?:ий|ый)|шаг\b)/i,
+        pattern: /(?:шагов(?:ый|ий)\s*шов|кроков(?:ий|ый)\s*шов|шагов(?:ый|ий)|кроков(?:ий|ый)|шаг(?![а-яёa-zієїґ]))/i,
         ru: 'Шаговый шов',
         ua: 'Кроковий шов',
         en: 'Inseam'
     },
-    // 11. Подмышки / Підмишки / Пахи
+    // 12. Подмышки / Підмишки / Пахи
     {
-        pattern: /(?:подмышк[иае]|підмишк[иае]|пахи|подмыхи|підмихами|пах\b)/i,
+        pattern: /(?:подмышк[иае]|підмишк[иае]|пахи|подмыхи|підмихами|пах(?![а-яёa-zієїґ]))/i,
         ru: 'Подмышки',
         ua: 'Підмишки',
         en: 'Pit to pit'
@@ -193,9 +200,9 @@ const MEASUREMENT_TRANSLATIONS = [
         ua: 'Груди',
         en: 'Chest'
     },
-    // 15. Рукав
+    // 16. Рукав
     {
-        pattern: /(?:р[ууы]кав)/i,
+        pattern: /(?:р[ууы]кав[аеу]?)/i,
         ru: 'Рукав',
         ua: 'Рукав',
         en: 'Sleeve'
@@ -276,6 +283,20 @@ const MEASUREMENT_TRANSLATIONS = [
         ru: 'Манжет',
         ua: 'Манжет',
         en: 'Cuff'
+    },
+    // 27. Низ
+    {
+        pattern: /(?:низ(?![а-яёa-zієїґ]))/i,
+        ru: 'Низ',
+        ua: 'Низ',
+        en: 'Bottom'
+    },
+    // 28. Глубина
+    {
+        pattern: /(?:глубин[аы]|глибин[аи])/i,
+        ru: 'Глубина',
+        ua: 'Глибина',
+        en: 'Depth'
     }
 ];
 
@@ -288,11 +309,11 @@ function normalizeMeasurementUnits(str) {
 
     // 1. Если число уже сопровождается "см", "cm", "с", "c", "мм", "mm" (слитно или раздельно):
     // Преобразуем в единый формат "X см" (или "X мм") без разрыва цифр
-    if (/(\d+(?:[\.,]\d+)?)\s*(?:см|cm|с|c)\.?/i.test(s)) {
-        return s.replace(/(\d+(?:[\.,]\d+)?)\s*(?:см|cm|с|c)\.?/gi, '$1 см');
+    if (/(\d+(?:[\.,]\d+)?)\s*(?:см|cm|с|c)\.?(?![а-яёa-zієїґ])/i.test(s)) {
+        return s.replace(/(\d+(?:[\.,]\d+)?)\s*(?:см|cm|с|c)\.?(?![а-яёa-zієїґ])/gi, '$1 см');
     }
-    if (/(\d+(?:[\.,]\d+)?)\s*(?:мм|mm)\.?/i.test(s)) {
-        return s.replace(/(\d+(?:[\.,]\d+)?)\s*(?:мм|mm)\.?/gi, '$1 мм');
+    if (/(\d+(?:[\.,]\d+)?)\s*(?:мм|mm)\.?(?![а-яёa-zієїґ])/i.test(s)) {
+        return s.replace(/(\d+(?:[\.,]\d+)?)\s*(?:мм|mm)\.?(?![а-яёa-zієїґ])/gi, '$1 мм');
     }
 
     // 2. Если единиц измерения нет вообще, но число в конце строки (например "довжина 60", "ширина 47") -> дописываем "см"
@@ -318,7 +339,7 @@ function formatMeasurementItem(str, lang) {
 
     // 1. Попытка выделить Метку и Числовое значение (включая единицы см/cm/мм)
     // Например: "Довжина 65 см", "Рукав от плеча 64 см", "Плечи: 41 см"
-    const match = normalized.match(/^(.*?)(?:[\s\-–—:]+)(\d+(?:[\.,]\d+)?\s*(?:см|cm|мм|mm)?.*)$/i);
+    const match = normalized.match(/^(.*?)(?:[\s\-–—:]+)(\d+(?:[\.,]\d+)?\s*(?:см|cm|мм|mm)?(?:\s*\([^\)]*\))?)\s*$/i);
     
     if (match) {
         let rawLabel = match[1].trim().replace(/^[\-\–—\•\*\s]+/, '').trim();
@@ -336,11 +357,12 @@ function formatMeasurementItem(str, lang) {
                 return `${translatedLabel} ${val}`;
             }
         }
+        rawLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
         return `${rawLabel} ${val}`;
     }
 
     // 2. Обратный порядок: число в начале (например "28.5 см стелька")
-    const matchReverse = normalized.match(/^(\d+(?:[\.,]\d+)?\s*(?:см|cm|мм|mm)?)\s+(.*)$/i);
+    const matchReverse = normalized.match(/^(\d+(?:[\.,]\d+)?\s*(?:см|cm|мм|mm)?)\s+(.*?)$/i);
     if (matchReverse) {
         let val = matchReverse[1].trim();
         let rawLabel = matchReverse[2].trim();
@@ -357,6 +379,7 @@ function formatMeasurementItem(str, lang) {
                 return `${translatedLabel} ${val}`;
             }
         }
+        rawLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
         return `${rawLabel} ${val}`;
     }
 
@@ -376,8 +399,8 @@ function extractItemMeasurements(item, customLang) {
     }
     if (!text) return [];
 
-    // Предобработка: разбиваем слитные замеры, записанные в одну строку (например: "Длина 65 Плечи 41 Талия 45 Грудь 47")
-    const kwSplitRegex = /(\d+(?:[\.,]\d+)?\s*(?:см|cm|с|c|мм|mm)?)\s*[,;•|/]?\s+((?:довжина|длина|длинна|плеч[иіея]?|груд[иіеяь]|підмишк[иае]|подмышк[иае]|пахи|подмыхи|пог|пот|поб|напівобхват|полуобхват|р[ууы]кав|тал[иі]я|пояс|стегн[ао]|бедр[ао]|штанин[аы]|вихід|выход|посадк[аи]|кроков|шагов|устілк[аи]|стельк[аи]|висот[аы]|высот[аы]|ширин[аы]|замок|манжет|комір|ворот|воротник|пах)\b)/gi;
+    // Предобработка: разбиваем слитные замеры, записанные в одну строку (например: "довжина рукава від плеча - 66см длинна - 60см ширина - 47см")
+    const kwSplitRegex = /(\d+(?:[\.,]\d+)?\s*(?:см|cm|с|c|мм|mm)?)(?:\s*[,;•|/\-–—]+\s*|\s+)((?:(?:довжина|длина|длинна)\s+р[ууы]кав[аеу]?(?:\s*(?:від|от)?\s*плеч[аея])?|(?:довжина|длина|длинна)\s+р[ууы]кав[аеу]?(?:\s*(?:від|от)?\s*(?:ши[їи]|горл[ае]|ворот[ае]|комір[ае]))?|(?:довжина|длина|длинна)\s*(?:по\s*спин[іе]|спин[иы])|(?:довжина|длина|длинна)\s*замк[аи]|(?:довжина|длина|длинна)\s*штанин[иы]|довжина|длина|длинна|плеч[иіея]?|груд[иіеяь]|підмишк[иае]|подмышк[иае]|пахи|подмыхи|пог|пот|поб|напівобхват|полуобхват|р[ууы]кав[аеу]?|тал[иі]я|пояс|стегн[ао]|бедр[ао]|штанин[аы]|вихід|выход|посадк[аи]|кроков|шагов|устілк[аи]|стельк[аи]|висот[аы]|высот[аы]|ширин[аы]|замок|манжет|комір|ворот|воротник|пах)(?![а-яёa-zієїґ]))/gi;
     text = text.replace(kwSplitRegex, '$1\n$2');
 
     let lines = [];
@@ -401,11 +424,16 @@ function extractItemMeasurements(item, customLang) {
             }
             if (isStopLine(clean)) break;
             
-            const subItems = clean.split(/[,;•|]|\s+\/\s+/);
-            for (let sub of subItems) {
-                let s = sub.trim().replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
-                if (s && /\d+/.test(s) && (kwRegex.test(s) || measureLinePattern.test(s))) {
-                    lines.push(formatMeasurementItem(s, lang));
+            // Если в строке после маркера слитные замеры (например "длина 60 ширина 50")
+            const subLines = clean.replace(kwSplitRegex, '$1\n$2').split(/\r?\n/);
+            for (let subLine of subLines) {
+                const subItems = subLine.split(/[,;•|]|\s+\/\s+/);
+                for (let sub of subItems) {
+                    let s = sub.trim().replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
+                    if (s && /\d+/.test(s) && (kwRegex.test(s) || measureLinePattern.test(s))) {
+                        const formatted = formatMeasurementItem(s, lang);
+                        if (formatted) lines.push(formatted);
+                    }
                 }
             }
         }
@@ -419,35 +447,60 @@ function extractItemMeasurements(item, customLang) {
             let clean = rLine.trim();
             if (!clean || isStopLine(clean)) continue;
 
-            // Если строка содержит несколько замеров через запятую/точку с запятой/разделитель
-            if (/[,;•|]|\s+\/\s+/.test(clean)) {
-                const parts = clean.split(/[,;•|]|\s+\/\s+/);
-                for (let p of parts) {
-                    let cp = p.trim().replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
-                    if (cp && /\d+/.test(cp) && (kwRegex.test(cp) || measureLinePattern.test(cp))) {
-                        lines.push(formatMeasurementItem(cp, lang));
+            const subLines = clean.replace(kwSplitRegex, '$1\n$2').split(/\r?\n/);
+            for (let subLine of subLines) {
+                let sl = subLine.trim();
+                if (!sl) continue;
+
+                // Если строка содержит несколько замеров через запятую/точку с запятой/разделитель
+                if (/[,;•|]|\s+\/\s+/.test(sl)) {
+                    const parts = sl.split(/[,;•|]|\s+\/\s+/);
+                    for (let p of parts) {
+                        let cp = p.trim().replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
+                        if (cp && /\d+/.test(cp) && (kwRegex.test(cp) || measureLinePattern.test(cp))) {
+                            const formatted = formatMeasurementItem(cp, lang);
+                            if (formatted) lines.push(formatted);
+                        }
                     }
                 }
-            }
-            // Если строка сама по себе является замером (например: "Длинна 71", "Плечи 36", "Подмышки 44", "Рыкав от плеча 64")
-            else if (/\d+/.test(clean) && (kwRegex.test(clean) || measureLinePattern.test(clean))) {
-                let cp = clean.replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
-                lines.push(formatMeasurementItem(cp, lang));
+                // Если строка сама по себе является замером (например: "Длинна 71", "Плечи 36", "Подмышки 44", "Рыкав от плеча 64")
+                else if (/\d+/.test(sl) && (kwRegex.test(sl) || measureLinePattern.test(sl))) {
+                    let cp = sl.replace(/^[\-\–—\•\*\s]*(?:\d+[\.\)]\s*)?/, '').trim();
+                    const formatted = formatMeasurementItem(cp, lang);
+                    if (formatted) lines.push(formatted);
+                }
             }
         }
     }
 
     // 3. Fallback: прямой поиск регуляркой всех изолированных пар "параметр + число"
     if (lines.length === 0) {
-        const inlineMatches = text.match(/(?:(?:довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок)[\s\-–—:]*\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?|\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?\s*(?:стелька|устілка))/gi);
+        const inlineMatches = text.match(/(?:(?:довжина|длина|длинна|р[ууы]кав|плеч[иіея]|груд[иіеяь]|підмишк[иае]|подмышк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі]я|висота|высота|ширина|замок)[\s\-–—:]*\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?|\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?\s*(?:стелька|устілка))/gi);
         if (inlineMatches && inlineMatches.length > 0) {
-            lines = inlineMatches.map(m => formatMeasurementItem(m, lang));
+            lines = inlineMatches.map(m => formatMeasurementItem(m, lang)).filter(Boolean);
+        }
+    }
+
+    // Финальная санитария: если каким-то чудом в строке осталось больше одного замера
+    const sanitizedLines = [];
+    for (let l of lines) {
+        if (kwSplitRegex.test(l)) {
+            const parts = l.replace(kwSplitRegex, '$1\n$2').split(/\r?\n/);
+            for (let p of parts) {
+                const sp = p.trim();
+                if (sp) {
+                    const f = formatMeasurementItem(sp, lang);
+                    if (f) sanitizedLines.push(f);
+                }
+            }
+        } else {
+            sanitizedLines.push(l);
         }
     }
 
     // Убираем дубликаты строк и ограничиваем до 8 пунктов
     const unique = [];
-    for (let l of lines) {
+    for (let l of sanitizedLines) {
         if (!unique.includes(l)) unique.push(l);
     }
     return unique.slice(0, 8);
