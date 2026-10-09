@@ -1673,31 +1673,34 @@ window.showBadgeInfo = function(type) {
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
 
     if (type === 'secure') {
-        title = 'SECURE_PAYMENT.EXE';
+        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.secure_title', { defaultValue: 'SECURE_PAYMENT.EXE' }) : 'SECURE_PAYMENT.EXE';
         const isReturnable = activeItem && activeItem.is_returnable === true;
         const isDropItem = activeItem && (activeItem.is_drop === true || (activeItem.tags && activeItem.tags.map(t => t.toLowerCase()).includes('drop')));
 
         if (!isReturnable || isDropItem) {
-            text = 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Данная вещь продается <b style="color:var(--accent-red);">без права на возврат или обмен ни при каких условиях</b>.<br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.';
+            const defaultSecureText = 'NISHA выступает гарантом сделки. Вы не рискуете всей суммой.<br><br>Примеряйте вещь на почте: при наложке вы можете отказаться от покупки прямо в отделении.<br><br>После забора посылки домой возврат или обмен невозможен.';
+            text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.secure_no_return_text', { defaultValue: defaultSecureText }) : defaultSecureText;
         } else {
-            text = 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style="color:var(--accent-green);">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>';
+            text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.secure_return_text', { defaultValue: 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style="color:var(--accent-green);">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>' }) : 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style="color:var(--accent-green);">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>';
         }
     } else if (type === 'fast') {
-        title = 'FAST_SHIPPING.SYS';
-        text = 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
+        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.fast_title', { defaultValue: 'FAST_SHIPPING.SYS' }) : 'FAST_SHIPPING.SYS';
+        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.fast_text', { defaultValue: 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.' }) : 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
     } else if (type === 'refund_no') {
-        title = 'NO_RETURN_POLICY.LOG';
-        text = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>';
+        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_no_title', { defaultValue: 'NO_RETURN_POLICY.LOG' }) : 'NO_RETURN_POLICY.LOG';
+        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_no_text', { defaultValue: '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>' }) : '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>';
     } else if (type === 'refund_yes') {
-        title = 'RETURN_POLICY.SYS';
-        text = '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>';
+        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_yes_title', { defaultValue: 'RETURN_POLICY.SYS' }) : 'RETURN_POLICY.SYS';
+        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_yes_text', { defaultValue: '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>' }) : '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>';
     } else if (type === 'drop') {
         title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.drop_title', { defaultValue: 'WARNING: DROP_ITEM' }) : 'WARNING: DROP_ITEM';
-        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.drop_text', { defaultValue: '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Вещь от стороннего продавца (Creator). NISHA — гарант сделки.</span><br><br>Обязательно осматривайте и примеряйте вещь на отделении Новой Почты. <b style="color:var(--accent-red);">После забора посылки возврат и обмен НЕВОЗМОЖЕН ни при каких условиях</b>, так как сделка считается закрытой, а деньги перечисляются владельцу.' }) : '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Вещь от стороннего продавца (Creator). NISHA — гарант сделки.</span><br><br>Обязательно осматривайте и примеряйте вещь на отделении Новой Почты. <b style="color:var(--accent-red);">После забора посылки возврат и обмен НЕВОЗМОЖЕН ни при каких условиях</b>, так как сделка считается закрытой, а деньги перечисляются владельцу.';
+        const defaultDropText = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Вещь от стороннего продавца. NISHA — гарант сделки.</span><br><br>Осмотр и примерка — строго на «Новой Почте» (при наложке остаток оплачивается после проверки).<br><br>После забора посылки возврат невозможен: сделка считается закрытой, а деньги сразу переводятся владельцу.';
+        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.drop_text', { defaultValue: defaultDropText }) : defaultDropText;
     }
     
+    const btnText = (typeof i18next !== 'undefined') ? i18next.t('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' }) : '[ ПОНЯТНО ]';
     if (typeof showTerminalModal === 'function') {
-        showTerminalModal(title, text, '[ ПОНЯТНО ]', null);
+        showTerminalModal(title, text, btnText, null);
     }
 };
 

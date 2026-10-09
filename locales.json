@@ -96,7 +96,7 @@
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
-        "secure_no_return_text": "NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Данная вещь продается <b style=\"color:var(--accent-red);\">без права на возврат или обмен ни при каких условиях</b>.<br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.",
+        "secure_no_return_text": "NISHA выступает гарантом сделки. Вы не рискуете всей суммой.<br><br>Примеряйте вещь на почте: при наложке вы можете отказаться от покупки прямо в отделении.<br><br>После забора посылки домой возврат или обмен невозможен.",
         "secure_return_text": "NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style=\"color:var(--accent-green);\">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>",
         "fast_title": "FAST_SHIPPING.SYS",
         "fast_text": "Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.",
@@ -105,7 +105,7 @@
         "refund_yes_title": "RETURN_POLICY.SYS",
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>",
         "drop_title": "WARNING: DROP_ITEM",
-        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ВНИМАНИЕ ]</span><br><span style=\"color:#fff;\">Вещь от стороннего продавца (Creator). NISHA — гарант сделки.</span><br><br>Обязательно осматривайте и примеряйте вещь на отделении Новой Почты. <b style=\"color:var(--accent-red);\">После забора посылки возврат и обмен НЕВОЗМОЖЕН ни при каких условиях</b>, так как сделка считается закрытой, а деньги перечисляются владельцу.",
+        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ВНИМАНИЕ ]</span><br><span style=\"color:#fff;\">Вещь от стороннего продавца. NISHA — гарант сделки.</span><br><br>Осмотр и примерка — строго на «Новой Почте» (при наложке остаток оплачивается после проверки).<br><br>После забора посылки возврат невозможен: сделка считается закрытой, а деньги сразу переводятся владельцу.",
         "btn_understood": "[ ПОНЯТНО ]"
       },
       "grid": {
@@ -355,7 +355,7 @@
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
-        "secure_no_return_text": "NISHA виступає гарантом угоди. Ваші гроші надійно захищені.<br><br>Дана річ продається <b style=\"color:var(--accent-red);\">без права на повернення або обмін за жодних умов</b>.<br><br>Ми настійно просимо вас уважно вивчати фото, заміри та опис перед оформленням замовлення.",
+        "secure_no_return_text": "NISHA виступає гарантом угоди. Ви не ризикуєте всією сумою.<br><br>Приміряйте річ на пошті: при післяплаті ви можете відмовитися від покупки просто у відділенні.<br><br>Після забору посилки додому повернення або обмін неможливий.",
         "secure_return_text": "NISHA виступає гарантом угоди. Ваші гроші надійно захищені.<br><br>Ви можете приміряти річ на пошті. Навіть якщо ви забрали її додому, на даний товар діє <b style=\"color:var(--accent-green);\">гарантія повернення та обміну протягом 14 днів</b>.<br><br><i>Обов'язкова умова повернення: збереження товарного вигляду та відсутність слідів носіння.</i>",
         "fast_title": "FAST_SHIPPING.SYS",
         "fast_text": "Відправлення замовлення здійснюється в день оплати (при підтвердженні до 16:00) або на наступний робочий день.",
@@ -364,7 +364,7 @@
         "refund_yes_title": "RETURN_POLICY.SYS",
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ ДОСТУПНЕ ПОВЕРНЕННЯ ]</span><br><br>Даний товар підлягає поверненню та обміну протягом <b>14 днів</b> з моменту покупки, згідно із законодавством України.<br><br><i>Умова повернення: збереження товарного вигляду, всіх бірок та відсутність слідів носіння.</i>",
         "drop_title": "WARNING: DROP_ITEM",
-        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ УВАГА ]</span><br><span style=\"color:#fff;\">Річ від стороннього продавця (Creator). NISHA — гарант угоди.</span><br><br>Обов'язково оглядайте та приміряйте річ у відділенні Нової Пошти. <b style=\"color:var(--accent-red);\">Після забору посилки повернення або обмін НЕМОЖЛИВИЙ за жодних умов</b>, оскільки угода вважається закритою, а кошти виплачуються власнику.",
+        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ УВАГА ]</span><br><span style=\"color:#fff;\">Річ від стороннього продавця. NISHA — гарант угоди.</span><br><br>Огляд і примірка — суворо на «Новій Пошті» (при післяплаті залишок сплачується після перевірки).<br><br>Після забору посилки повернення неможливе: угода вважається закритою, а гроші одразу переказуються власнику.",
         "btn_understood": "[ ЗРОЗУМІЛО ]"
       },
       "grid": {
@@ -613,7 +613,7 @@
       },
 "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
-        "secure_no_return_text": "NISHA guarantees the transaction. Your money is secure.<br><br>This item is sold <b style=\"color:var(--accent-red);\">without the right to return or exchange under any circumstances</b>.<br><br>We strongly ask you to carefully study the photos, measurements, and description before placing an order.",
+        "secure_no_return_text": "NISHA acts as the deal escrow. You do not risk the full amount.<br><br>Try on the item at the post office: with COD you can decline the purchase right at the branch.<br><br>After taking the package home, returns or exchanges are not possible.",
         "secure_return_text": "NISHA guarantees the transaction. Your money is secure.<br><br>You can try on the item at the post office. Even if you take it home, this item has a <b style=\"color:var(--accent-green);\">14-day return and exchange guarantee</b>.<br><br><i>Mandatory condition for return: preserving the commercial appearance and no signs of wear.</i>",
         "fast_title": "FAST_SHIPPING.SYS",
         "fast_text": "Orders are dispatched on the day of payment (if confirmed before 16:00) or on the next working day.",
@@ -622,7 +622,7 @@
         "refund_yes_title": "RETURN_POLICY.SYS",
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ RETURN AVAILABLE ]</span><br><br>This item can be returned and exchanged within <b>14 days</b> of purchase, according to the legislation of Ukraine.<br><br><i>Condition for return: preserving the commercial appearance, all tags, and no signs of wear.</i>",
         "drop_title": "WARNING: DROP_ITEM",
-        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller (Creator). NISHA acts as the deal escrow.</span><br><br>Always inspect and try on the item at the Nova Poshta branch. <b style=\"color:var(--accent-red);\">Once picked up, returns or exchanges are NOT POSSIBLE under any circumstances</b>, as the deal completes and funds are paid to the item owner.",
+        "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA acts as the deal escrow.</span><br><br>Inspection and try-on — strictly at Nova Poshta (with COD, the remainder is paid after inspection).<br><br>After picking up the package, returns are not possible: the deal is considered closed, and funds are immediately transferred to the owner.",
         "btn_understood": "[ GOT IT ]"
       },
       "grid": {
