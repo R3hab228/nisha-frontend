@@ -30,6 +30,7 @@ function changeLanguage(lng) {
             localStorage.setItem('nisha_lang', lng); 
             // Сохраняем языковой флаг для плагина i18next
             localStorage.setItem('i18nextLng', lng); 
+            document.documentElement.lang = (lng === 'ua' ? 'uk' : (lng || 'ru'));
             
             updateContentLanguage();
             
@@ -461,6 +462,18 @@ async function initApp() {
         // 1. Восстанавливаем фильтры, категорию и поисковый запрос (синхронно, 0мс)
         const urlParams = new URLSearchParams(window.location.search);
         
+        // Быстрые действия из PWA ярлыков / URL action (?action=cart / ?action=fav)
+        const quickAction = urlParams.get('action');
+        if (quickAction === 'cart') {
+            setTimeout(() => { if (typeof openCart === 'function') openCart(); }, 150);
+        } else if (quickAction === 'fav') {
+            showingOnlyFavs = true;
+            sessionStorage.setItem('nisha_showing_favs', 'true');
+            const favNav = document.getElementById('favNav');
+            if (favNav) favNav.style.color = '#fff';
+            setTimeout(() => { if (typeof toggleFavFilter === 'function') toggleFavFilter(true); }, 150);
+        }
+
         // Восстанавливаем вкладку "Избранное"
         if (sessionStorage.getItem('nisha_showing_favs') === 'true') {
             showingOnlyFavs = true;
@@ -538,6 +551,7 @@ async function initApp() {
                     });
                     
                     updateContentLanguage();
+                    document.documentElement.lang = (savedLng === 'ua' ? 'uk' : (savedLng || 'ru'));
                     const flagEl = document.getElementById('currentFlag');
                     if (flagEl) flagEl.innerText = savedFlag;
                 }

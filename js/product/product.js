@@ -449,8 +449,33 @@ function openProductModal(item) {
         });
     }, 100);
 
-    if (window.pswpLightbox) {
+    if (typeof ensurePhotoSwipe === 'function') {
+        ensurePhotoSwipe().then(() => {
+            if (window.pswpLightbox) {
+                try { window.pswpLightbox.init(); } catch (e) {} 
+            }
+        });
+    } else if (window.pswpLightbox) {
         try { window.pswpLightbox.init(); } catch (e) {} 
+    }
+
+    if (wrapper && !wrapper._pswpClickBound) {
+        wrapper._pswpClickBound = true;
+        wrapper.addEventListener('click', async (e) => {
+            const slide = e.target.closest('a.slide');
+            if (!slide) return;
+            if (!window.pswpLightbox) {
+                e.preventDefault();
+                if (typeof ensurePhotoSwipe === 'function') {
+                    await ensurePhotoSwipe();
+                }
+                if (window.pswpLightbox) {
+                    const slides = Array.from(wrapper.querySelectorAll('a.slide'));
+                    const idx = slides.indexOf(slide);
+                    if (idx >= 0) window.pswpLightbox.loadAndOpen(idx);
+                }
+            }
+        });
     }
 
     // Рендер похожих товаров

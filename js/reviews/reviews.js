@@ -3,7 +3,10 @@
 // ==========================================
 
 // Глобальная функция для открытия 1 картинки в PhotoSwipe
-function openReviewImage(url) {
+async function openReviewImage(url) {
+    if (typeof ensurePhotoSwipe === 'function') {
+        await ensurePhotoSwipe();
+    }
     if (!window.PhotoSwipeLightbox) return;
     const lightbox = new window.PhotoSwipeLightbox({
         dataSource: [{ src: url, width: 1000, height: 1000 }],

@@ -708,8 +708,18 @@ async function loadAllItems() {
         return; 
     }
     
-    // Сравниваем изменения
-    const isChanged = (JSON.stringify(data) !== JSON.stringify(window.allItems)) || (data.length !== window.allItems.length);
+    // Сравниваем изменения без блокирующего JSON.stringify на всем каталоге
+    let isChanged = !Array.isArray(window.allItems) || (data.length !== window.allItems.length);
+    if (!isChanged) {
+        for (let i = 0; i < data.length; i++) {
+            const cur = window.allItems[i];
+            const next = data[i];
+            if (!cur || cur.id !== next.id || cur.price !== next.price || cur.status !== next.status || cur.is_top !== next.is_top || cur.name !== next.name) {
+                isChanged = true;
+                break;
+            }
+        }
+    }
     window.allItems = data; 
     localStorage.setItem('nisha_cached_db', JSON.stringify(data)); 
     
@@ -974,8 +984,10 @@ function applyFilters() {
             
             const minInput = document.getElementById('priceMin');
             const maxInput = document.getElementById('priceMax');
-            const minPrice = minInput ? parseInt(minInput.value) : 0;
-            const maxPrice = maxInput ? parseInt(maxInput.value) : 15000;
+            const rawMin = minInput ? parseInt(minInput.value, 10) : NaN;
+            const minPrice = (!isNaN(rawMin) && rawMin >= 0) ? rawMin : 0;
+            const rawMax = maxInput ? parseInt(maxInput.value, 10) : NaN;
+            const maxPrice = (!isNaN(rawMax) && rawMax > 0) ? rawMax : Infinity;
 
             const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
             const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);

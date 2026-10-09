@@ -184,6 +184,10 @@ function renderProposalPreviews() {
                 e.stopPropagation();
                 if (!item.url) return;
                 
+                if (typeof ensurePhotoSwipe === 'function') {
+                    await ensurePhotoSwipe();
+                }
+
                 if (window.PhotoSwipeLightbox) {
                     const photos = currentProposalFiles.filter(f => f.url);
                     const clickedIndex = photos.findIndex(f => f === item);

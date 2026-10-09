@@ -351,3 +351,39 @@ window.safeStorage = {
         }
     } catch (e) {}
 })();
+
+// --- ЛЕНИВАЯ ЗАГРУЗКА PHOTOSWIPE ПО ТРЕБОВАНИЮ (ON-DEMAND) ---
+let _photoSwipeInitPromise = null;
+async function ensurePhotoSwipe() {
+    if (window.PhotoSwipeLightbox) return window.PhotoSwipeLightbox;
+    if (_photoSwipeInitPromise) return _photoSwipeInitPromise;
+    _photoSwipeInitPromise = (async () => {
+        try {
+            if (typeof loadExternalStyle === 'function') {
+                loadExternalStyle('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css');
+            }
+            const mod = await import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js');
+            window.PhotoSwipeLightbox = mod.default || mod.PhotoSwipeLightbox;
+            if (!window.pswpLightbox && window.PhotoSwipeLightbox) {
+                window.pswpLightbox = new window.PhotoSwipeLightbox({
+                    gallery: '#sliderWrapper',
+                    children: 'a.slide',
+                    showHideAnimationType: 'fade',
+                    zoomAnimationDuration: 200,
+                    bgOpacity: 0.9,
+                    closeOnVerticalDrag: true,
+                    wheelToZoom: true,
+                    pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+                });
+                window.pswpLightbox.init();
+            }
+            return window.PhotoSwipeLightbox;
+        } catch (e) {
+            console.error('[PhotoSwipe] Lazy load failed:', e);
+            _photoSwipeInitPromise = null;
+            return null;
+        }
+    })();
+    return _photoSwipeInitPromise;
+}
+window.ensurePhotoSwipe = ensurePhotoSwipe;

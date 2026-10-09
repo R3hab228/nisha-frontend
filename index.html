@@ -33,12 +33,10 @@
 <link rel=icon type=image/png sizes=32x32 href="/icon.png?v=3">
 <link rel=manifest href="/manifest.json?v=3">
 <link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
-<link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
-<script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",showHideAnimationType:"fade",zoomAnimationDuration:200,bgOpacity:.9,closeOnVerticalDrag:!0,wheelToZoom:!0,pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
-<link rel=preload href="/style.css?v=157" as=style>
+<link rel=preload href="/style.css?v=158" as=style>
 <link rel=preload href=/locales.json as=fetch crossorigin=anonymous>
 <link rel=preload href=/cables.svg as=image type="image/svg+xml">
-<link rel=stylesheet href="style.css?v=157">
+<link rel=stylesheet href="style.css?v=158">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity -->
@@ -383,7 +381,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </div>
 </footer>
 </div>
-<script>function getFlagUrlByLang(e){return"ua"===e?"https://flagcdn.com/24x18/ua.png":"en"===e?"https://flagcdn.com/24x18/gb.png":"https://flagcdn.com/24x18/ru.png"}function setLang(e){localStorage.setItem("nisha_lang",e),localStorage.setItem("i18nextLng",e),changeLanguage(e);const t=getFlagUrlByLang(e);document.getElementById("currentFlagImg").src=t,document.getElementById("currentLangLabelFooter").querySelector("span").innerText="["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{let e=localStorage.getItem("nisha_lang");e||(e=(localStorage.getItem("i18nextLng")||"ru").substring(0,2).toLowerCase(),["ru","ua","en"].includes(e)||(e="ru"),localStorage.setItem("nisha_lang",e));const t=getFlagUrlByLang(e),n=document.getElementById("currentFlagImg"),a=document.getElementById("currentLangLabelFooter");n&&a&&(n.src=t,a.querySelector("span").innerText="["+e.toUpperCase()+"] ▼")}))</script>
+<script>function getFlagUrlByLang(e){return"ua"===e?"https://flagcdn.com/24x18/ua.png":"en"===e?"https://flagcdn.com/24x18/gb.png":"https://flagcdn.com/24x18/ru.png"}function setLang(e){localStorage.setItem("nisha_lang",e),localStorage.setItem("i18nextLng",e),document.documentElement.lang=(e==="ua"?"uk":e),changeLanguage(e);const t=getFlagUrlByLang(e);document.getElementById("currentFlagImg").src=t,document.getElementById("currentLangLabelFooter").querySelector("span").innerText="["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{let e=localStorage.getItem("nisha_lang");e||(e=(localStorage.getItem("i18nextLng")||"ru").substring(0,2).toLowerCase(),["ru","ua","en"].includes(e)||(e="ru"),localStorage.setItem("nisha_lang",e));document.documentElement.lang=(e==="ua"?"uk":e);const t=getFlagUrlByLang(e),n=document.getElementById("currentFlagImg"),a=document.getElementById("currentLangLabelFooter");n&&a&&(n.src=t,a.querySelector("span").innerText="["+e.toUpperCase()+"] ▼")}))</script>
 <div class=modal-overlay id=rulesModal style="background-color:rgba(0,0,0,.95);z-index:5000">
 <div class=modal-window style="max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;border-radius:10px 10px 0 0">
 <div class=modal-header style=background:#000;flex-shrink:0>
@@ -646,18 +644,18 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <script defer src=https://browser.sentry-cdn.com/7.105.0/bundle.min.js crossorigin=anonymous></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next@23.10.1/dist/umd/i18next.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js></script>
-<script defer src="config.js?v=157"></script>
-<script defer src="js/core/helpers.js?v=157"></script>
-<script defer src="js/ui/windows.js?v=157"></script>
-<script defer src="js/auth/auth.js?v=157"></script>
-<script defer src="js/drop/drop.js?v=157"></script>
-<script defer src="js/chat/chat.js?v=157"></script>
-<script defer src="js/reviews/reviews.js?v=157"></script>
-<script defer src="js/catalog/catalog.js?v=157"></script>
-<script defer src="js/cart/cart.js?v=157"></script>
-<script defer src="js/product/product.js?v=157"></script>
-<script defer src="js/profile/profile.js?v=157"></script>
-<script defer src="app.js?v=157"></script>
+<script defer src="config.js?v=158"></script>
+<script defer src="js/core/helpers.js?v=158"></script>
+<script defer src="js/ui/windows.js?v=158"></script>
+<script defer src="js/auth/auth.js?v=158"></script>
+<script defer src="js/drop/drop.js?v=158"></script>
+<script defer src="js/chat/chat.js?v=158"></script>
+<script defer src="js/reviews/reviews.js?v=158"></script>
+<script defer src="js/catalog/catalog.js?v=158"></script>
+<script defer src="js/cart/cart.js?v=158"></script>
+<script defer src="js/product/product.js?v=158"></script>
+<script defer src="js/profile/profile.js?v=158"></script>
+<script defer src="app.js?v=158"></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>

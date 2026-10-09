@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
     const title = escapeHTML('NISHA | ' + (item.brand || '') + ' ' + (item.name || ''));
     const description = escapeHTML('Цена: ' + item.price + ' грн.');
     
-    let imageUrl = 'https://i.ibb.co/3s6HhXz/icon.ico';
+    let imageUrl = 'https://www.nisha-store.shop/icon-512.png';
     let videoUrl = '';
     
     if (item.images && item.images.length > 0) {
@@ -56,7 +56,10 @@ module.exports = async function handler(req, res) {
 '<meta property="og:image" content="' + imageUrl + '">\n' +
 '<meta property="og:url" content="https://www.nisha-store.shop/share/' + id + '">\n' +
 videoTags + '\n' +
-'<meta name="twitter:card" content="summary">\n' +
+'<meta name="twitter:card" content="summary_large_image">\n' +
+'<meta name="twitter:title" content="' + title + '">\n' +
+'<meta name="twitter:description" content="' + description + '">\n' +
+'<meta name="twitter:image" content="' + imageUrl + '">\n' +
 '</head>\n' +
 '<body>\n' +
 '<script>window.location.replace("/?item=' + id + '");</script>\n' +
