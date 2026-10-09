@@ -1191,10 +1191,114 @@ window.changePage = function(step) {
     }, 300);
 };
 
+// Единое делегирование событий для всей сетки каталога (вместо сотен слушателей на карточках)
+let _gridDelegationInitialized = false;
+function initGridEventDelegation() {
+    const grid = document.getElementById('itemsGrid');
+    if (!grid || _gridDelegationInitialized) return;
+    _gridDelegationInitialized = true;
+
+    // 1. Тултип замеров и предзагрузка картинок на десктопе
+    let currentTooltipCard = null;
+
+    grid.addEventListener('mouseover', (e) => {
+        const card = e.target.closest('.item-card');
+        if (!card || card === currentTooltipCard) return;
+        currentTooltipCard = card;
+        const id = card.getAttribute('data-id');
+        if (!id) return;
+        if (typeof window.prefetchItemImages === 'function') window.prefetchItemImages(id);
+        const item = window.allItems && window.allItems.find(i => String(i.id) === String(id));
+        if (item && typeof window.showItemMeasurementsTooltip === 'function') {
+            window.showItemMeasurementsTooltip(item, e);
+        }
+    });
+
+    grid.addEventListener('mousemove', (e) => {
+        if (currentTooltipCard && typeof window.moveItemMeasurementsTooltip === 'function') {
+            window.moveItemMeasurementsTooltip(e);
+        }
+    });
+
+    grid.addEventListener('mouseout', (e) => {
+        if (!currentTooltipCard) return;
+        if (!e.relatedTarget || !currentTooltipCard.contains(e.relatedTarget)) {
+            currentTooltipCard = null;
+            if (typeof window.hideItemMeasurementsTooltip === 'function') {
+                window.hideItemMeasurementsTooltip();
+            }
+        }
+    });
+
+    grid.addEventListener('click', () => {
+        if (typeof window.hideItemMeasurementsTooltip === 'function') {
+            window.hideItemMeasurementsTooltip();
+        }
+    });
+
+    // 2. Свайп и дабл-тап лайк на слайдере карточки
+    let isDraggingSlider = false;
+    let startX = 0;
+    let startY = 0;
+    let clickTimer = null;
+    let lastClickedWrapper = null;
+
+    grid.addEventListener('touchstart', (e) => {
+        const wrapper = e.target.closest('.card-slider-wrapper');
+        if (!wrapper) return;
+        isDraggingSlider = false;
+        if (e.touches && e.touches[0]) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }
+    }, { passive: true });
+
+    grid.addEventListener('touchend', (e) => {
+        const wrapper = e.target.closest('.card-slider-wrapper');
+        if (!wrapper) return;
+        if (e.changedTouches && e.changedTouches[0]) {
+            const dx = Math.abs(e.changedTouches[0].clientX - startX);
+            const dy = Math.abs(e.changedTouches[0].clientY - startY);
+            if (dx > 10 || dy > 10) isDraggingSlider = true;
+        }
+    }, { passive: true });
+
+    grid.addEventListener('click', (e) => {
+        const wrapper = e.target.closest('.card-slider-wrapper');
+        if (!wrapper) return;
+        if (e.target.closest('.grid-slider-btn') || e.target.closest('.card-dots-container')) return;
+        if (isDraggingSlider) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
+        const card = wrapper.closest('.item-card');
+        const itemId = card ? card.getAttribute('data-id') : null;
+        if (!itemId) return;
+
+        if (clickTimer === null || lastClickedWrapper !== wrapper) {
+            if (clickTimer) clearTimeout(clickTimer);
+            lastClickedWrapper = wrapper;
+            clickTimer = setTimeout(() => {
+                clickTimer = null;
+                lastClickedWrapper = null;
+                if (typeof openProductModalById === 'function') openProductModalById(itemId);
+            }, 180);
+        } else {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            lastClickedWrapper = null;
+            handleDoubleTapLike(e, itemId, wrapper);
+        }
+    });
+}
+
 // Рендер следующей пачки товаров
 function renderNextBatch() {
     const grid = document.getElementById('itemsGrid');
     if (!grid) return;
+    initGridEventDelegation();
     
     const isMobile = window.innerWidth <= 900;
     
@@ -1298,21 +1402,6 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             card.className = `item-card ${item.status !== 'available' ? 'sold-out' : ''} ${pulseClass}`;
             card.setAttribute('data-id', item.id);
             
-            card.setAttribute('onmouseenter', `window.prefetchItemImages('${item.id}')`);
-
-            card.addEventListener('mouseenter', (e) => {
-                window.showItemMeasurementsTooltip(item, e);
-            });
-            card.addEventListener('mousemove', (e) => {
-                window.moveItemMeasurementsTooltip(e);
-            });
-            card.addEventListener('mouseleave', () => {
-                window.hideItemMeasurementsTooltip();
-            });
-            card.addEventListener('click', () => {
-                window.hideItemMeasurementsTooltip();
-            });
-            
             let priceHTML = '';
             if (item.is_sale && item.old_price) {
                 priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${item.old_price} ${curr}</span><span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
@@ -1323,8 +1412,8 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
             let controlsHTML = '';
             if (thumbsArray.length > 1) {
                 controlsHTML = `
-                    <div class="grid-slider-btn prev" onmouseenter="preloadGridSlide(event, '${item.id}', -1)" onclick="scrollGridSlider(event, '${item.id}', -1)">&#10094;</div>
-                    <div class="grid-slider-btn next" onmouseenter="preloadGridSlide(event, '${item.id}', 1)" onclick="scrollGridSlider(event, '${item.id}', 1)">&#10095;</div>
+                    <div class="grid-slider-btn prev" role="button" aria-label="Предыдущее фото" onmouseenter="preloadGridSlide(event, '${item.id}', -1)" onclick="scrollGridSlider(event, '${item.id}', -1)">&#10094;</div>
+                    <div class="grid-slider-btn next" role="button" aria-label="Следующее фото" onmouseenter="preloadGridSlide(event, '${item.id}', 1)" onclick="scrollGridSlider(event, '${item.id}', 1)">&#10095;</div>
                     <div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>
                 `;
             }
@@ -1334,7 +1423,7 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
 
             card.innerHTML = `
                 ${badgeHTML}
-                <div class="${starClass}" onclick="toggleFav(event, '${item.id}')">★</div>
+                <div class="${starClass}" role="button" aria-label="В избранное" onclick="toggleFav(event, '${item.id}')">★</div>
                 <div class="card-slider-wrapper">
                     <div class="card-slider-container" id="slider-${item.id}" onscroll="updateCardDots(this, '${item.id}')">
                         ${slidesStr}
@@ -1349,43 +1438,6 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentEle
                 </div>
                 <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${addToCartText}</button>
             `;
-
-            const sliderWrapper = card.querySelector('.card-slider-wrapper');
-            let isDraggingSlider = false;
-            let startX = 0; let startY = 0;
-            
-            sliderWrapper.addEventListener('touchstart', (e) => { 
-                isDraggingSlider = false; 
-                if (e.touches && e.touches[0]) {
-                    startX = e.touches[0].clientX;
-                    startY = e.touches[0].clientY;
-                }
-            }, {passive: true});
-            
-            sliderWrapper.addEventListener('touchend', (e) => { 
-                if (e.changedTouches && e.changedTouches[0]) {
-                    const dx = Math.abs(e.changedTouches[0].clientX - startX);
-                    const dy = Math.abs(e.changedTouches[0].clientY - startY);
-                    if (dx > 10 || dy > 10) isDraggingSlider = true;
-                }
-            }, {passive: true});
-            
-            let clickTimer = null;
-
-            sliderWrapper.addEventListener('click', (e) => {
-                if (isDraggingSlider) { e.preventDefault(); e.stopPropagation(); return; } 
-                
-                if (clickTimer === null) {
-                    clickTimer = setTimeout(() => {
-                        clickTimer = null;
-                        if (typeof openProductModalById === 'function') openProductModalById(item.id); 
-                    }, 180);
-                } else {
-                    clearTimeout(clickTimer);
-                    clickTimer = null;
-                    handleDoubleTapLike(e, item.id, sliderWrapper); 
-                }
-            });
 
             fragment.appendChild(card);
             const vids = card.querySelectorAll('.grid-lazy-video');

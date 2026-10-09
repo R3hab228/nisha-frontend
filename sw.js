@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v155';
+const CACHE_NAME = 'nisha-cache-v156';
 const IMAGE_CACHE = 'nisha-images-v1';
 const API_CACHE = 'nisha-api-v1';
 const STATIC_URLS = [
@@ -24,17 +24,21 @@ const STATIC_URLS = [
     '/js/profile/profile.js'
 ];
 
-// Функция лимитирования кэша
-function trimCache(cacheName, maxItems) {
-    caches.open(cacheName).then(cache => {
-        cache.keys().then(keys => {
-            if (keys.length > maxItems) {
-                cache.delete(keys[0]).then(() => {
-                    trimCache(cacheName, maxItems);
-                });
-            }
-        });
-    });
+// Оптимизированная пакетная очистка кэша без рекурсии с дебаунсом
+let _trimTimeout = null;
+function scheduleTrimCache(cacheName, maxItems = 150) {
+    if (_trimTimeout) return;
+    _trimTimeout = setTimeout(() => {
+        _trimTimeout = null;
+        caches.open(cacheName).then(cache => {
+            cache.keys().then(keys => {
+                if (keys && keys.length > maxItems) {
+                    const excess = keys.slice(0, keys.length - maxItems);
+                    Promise.all(excess.map(k => cache.delete(k))).catch(() => {});
+                }
+            }).catch(() => {});
+        }).catch(() => {});
+    }, 4000);
 }
 
 self.addEventListener('install', event => {
@@ -107,7 +111,7 @@ self.addEventListener('fetch', event => {
                         const responseToCache = networkResponse.clone();
                         caches.open(IMAGE_CACHE).then(cache => {
                             cache.put(event.request, responseToCache).then(() => {
-                                trimCache(IMAGE_CACHE, 500); // Лимитируем до 50 штук
+                                scheduleTrimCache(IMAGE_CACHE, 150);
                             });
                         });
                     }

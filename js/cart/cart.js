@@ -303,6 +303,7 @@ function renderCitySearchResults(data) {
                 
                 cachedBranches = []; 
                 loadNPBranches();
+                if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
             };
             dropdown.appendChild(div);
         });
@@ -449,6 +450,7 @@ function renderBranches(branches) {
             window.selectedBranchRef = selectedBranchRef;
             dropdown.style.display = 'none';
             calculateDeliveryCost(); 
+            if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
         };
         dropdown.appendChild(div);
     }
@@ -761,6 +763,67 @@ document.addEventListener('mousedown', (e) => {
 // 4. ОФОРМЛЕНИЕ ЗАКАЗА (CHECKOUT)
 // ==========================================
 
+// --- АВТОСОХРАНЕНИЕ И ВОССТАНОВЛЕНИЕ ЧЕРНОВИКА ЗАКАЗА (DRAFT) ---
+function saveCheckoutDraft() {
+    try {
+        const draft = {
+            name: document.getElementById('orderName')?.value || '',
+            phone: document.getElementById('orderPhone')?.value || '',
+            city: document.getElementById('orderCity')?.value || '',
+            branch: document.getElementById('orderBranch')?.value || '',
+            cityRef: window.selectedCityRef || selectedCityRef || '',
+            branchRef: window.selectedBranchRef || selectedBranchRef || '',
+            paymentMethod: document.getElementById('orderPaymentMethod')?.value || '',
+            paymentSelectedText: document.getElementById('paymentSelectedText')?.innerText || ''
+        };
+        sessionStorage.setItem('nisha_checkout_draft', JSON.stringify(draft));
+    } catch(e) {}
+}
+window.saveCheckoutDraft = saveCheckoutDraft;
+
+function restoreCheckoutDraft() {
+    try {
+        const raw = sessionStorage.getItem('nisha_checkout_draft');
+        if (!raw) return false;
+        const draft = JSON.parse(raw);
+        if (!draft || typeof draft !== 'object') return false;
+
+        let hasRestored = false;
+        const nameEl = document.getElementById('orderName');
+        const phoneEl = document.getElementById('orderPhone');
+        const cityEl = document.getElementById('orderCity');
+        const branchEl = document.getElementById('orderBranch');
+
+        if (nameEl && draft.name) { nameEl.value = draft.name; hasRestored = true; }
+        if (phoneEl && draft.phone) { phoneEl.value = draft.phone; hasRestored = true; }
+        if (cityEl && draft.city) { cityEl.value = draft.city; hasRestored = true; }
+        if (branchEl && draft.branch) { branchEl.value = draft.branch; hasRestored = true; }
+
+        if (draft.paymentMethod && document.getElementById('orderPaymentMethod')) {
+            document.getElementById('orderPaymentMethod').value = draft.paymentMethod;
+        }
+        if (draft.paymentSelectedText && document.getElementById('paymentSelectedText')) {
+            document.getElementById('paymentSelectedText').innerText = draft.paymentSelectedText;
+        }
+
+        if (draft.cityRef) {
+            selectedCityRef = draft.cityRef;
+            window.selectedCityRef = draft.cityRef;
+        }
+        if (draft.branchRef) {
+            selectedBranchRef = draft.branchRef;
+            window.selectedBranchRef = draft.branchRef;
+        }
+        return hasRestored;
+    } catch(e) { return false; }
+}
+window.restoreCheckoutDraft = restoreCheckoutDraft;
+
+function clearCheckoutDraft() {
+    try { sessionStorage.removeItem('nisha_checkout_draft'); } catch(e) {}
+}
+window.clearCheckoutDraft = clearCheckoutDraft;
+
 async function openCheckoutModal() { 
     if (isCheckoutOpening) return;
     const btn = document.querySelector('.cart-panel .cart-checkout-btn');
@@ -814,7 +877,7 @@ async function openCheckoutModal() {
         if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
         if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
         
-        // АВТО-ЗАПОЛНЕНИЕ ДАННЫХ КЛИЕНТА
+        // АВТО-ЗАПОЛНЕНИЕ И СОХРАНЕНИЕ ДАННЫХ КЛИЕНТА
         const orderNameEl = document.getElementById('orderName');
         if (orderNameEl && !orderNameEl._lettersOnlyBound) {
             orderNameEl._lettersOnlyBound = true;
@@ -823,29 +886,43 @@ async function openCheckoutModal() {
             });
         }
 
-        const savedDataRaw = localStorage.getItem('nisha_checkout_data');
-        if (savedDataRaw) {
-            try {
-                const saved = JSON.parse(savedDataRaw);
-                document.getElementById('orderName').value = saved.name || '';
-                document.getElementById('orderPhone').value = saved.phone || '';
-                document.getElementById('orderCity').value = saved.city || '';
-                document.getElementById('orderBranch').value = saved.branch || '';
-                
-                selectedCityRef = saved.cityRef || '';
-                window.selectedCityRef = selectedCityRef;
-                selectedBranchRef = saved.branchRef || '';
-                window.selectedBranchRef = selectedBranchRef;
-                
-                if (saved.phone && typeof checkPhoneAuth === 'function') checkPhoneAuth();
-                
-                if (selectedCityRef && selectedBranchRef && getActiveCart().length > 0) {
-                    calculateDeliveryCost();
-                }
-            } catch(e) { autoDetectCity(); }
-        } else {
-            if (typeof checkPhoneAuth === 'function') checkPhoneAuth();
-            autoDetectCity(); 
+        ['orderName', 'orderPhone', 'orderCity', 'orderBranch'].forEach(fieldId => {
+            const el = document.getElementById(fieldId);
+            if (el && !el._draftBound) {
+                el._draftBound = true;
+                el.addEventListener('input', saveCheckoutDraft);
+            }
+        });
+
+        // 1. Проверяем черновик текущей сессии
+        const draftRestored = restoreCheckoutDraft();
+        if (!draftRestored) {
+            // 2. Если черновика нет, подтягиваем последние сохраненные данные
+            const savedDataRaw = localStorage.getItem('nisha_checkout_data');
+            if (savedDataRaw) {
+                try {
+                    const saved = JSON.parse(savedDataRaw);
+                    if (document.getElementById('orderName')) document.getElementById('orderName').value = saved.name || '';
+                    if (document.getElementById('orderPhone')) document.getElementById('orderPhone').value = saved.phone || '';
+                    if (document.getElementById('orderCity')) document.getElementById('orderCity').value = saved.city || '';
+                    if (document.getElementById('orderBranch')) document.getElementById('orderBranch').value = saved.branch || '';
+                    
+                    selectedCityRef = saved.cityRef || '';
+                    window.selectedCityRef = selectedCityRef;
+                    selectedBranchRef = saved.branchRef || '';
+                    window.selectedBranchRef = selectedBranchRef;
+                } catch(e) { autoDetectCity(); }
+            } else {
+                autoDetectCity(); 
+            }
+        }
+
+        if (document.getElementById('orderPhone')?.value && typeof checkPhoneAuth === 'function') {
+            checkPhoneAuth();
+        }
+        
+        if (selectedCityRef && selectedBranchRef && getActiveCart().length > 0) {
+            calculateDeliveryCost();
         }
     } finally {
         setTimeout(() => { isCheckoutOpening = false; }, 400);
@@ -1042,6 +1119,7 @@ async function executeOrderFinal(emailToSave) {
         localStorage.setItem('nisha_last_order', Date.now());
 
         setActiveCart([]);
+        clearCheckoutDraft();
         await syncCartToServer();
         updateCartUI();
         

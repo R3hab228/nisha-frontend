@@ -9,7 +9,11 @@
 <meta property=og:type content=website>
 <meta property=og:title content="NISHA | Underground Store">
 <meta property=og:description content="Площадка для продажи винтажных, архивных и эксклюзивных вещей.">
-<meta property=og:image content=https://i.ibb.co/3s6HhXz/icon.ico>
+<meta property=og:image content="https://www.nisha-store.shop/icon-512.png">
+<meta property=og:image:width content="512">
+<meta property=og:image:height content="512">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.nisha-store.shop/icon-512.png">
 <meta name=theme-color content=#00ff00>
 <link rel=preconnect href=https://nmpuefxqtkhvtltdvllz.supabase.co crossorigin>
 <link rel=preconnect href=https://nisha-cdn.mtyagniryadno.workers.dev crossorigin>
@@ -31,10 +35,10 @@
 <link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
 <script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",showHideAnimationType:"fade",zoomAnimationDuration:200,bgOpacity:.9,closeOnVerticalDrag:!0,wheelToZoom:!0,pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
-<link rel=preload href="/style.css?v=155" as=style>
+<link rel=preload href="/style.css?v=156" as=style>
 <link rel=preload href=/locales.json as=fetch crossorigin=anonymous>
 <link rel=preload href=/cables.svg as=image type="image/svg+xml">
-<link rel=stylesheet href="style.css?v=155">
+<link rel=stylesheet href="style.css?v=156">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity -->
@@ -341,7 +345,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div id=cartDropdown class=cart-dropdown>
 <div class=cart-dropdown-header>
 <span data-i18n=cart.title>[ ВАШИ ПОКУПКИ ]</span>
-<button class=cart-close-mobile onclick=toggleCartDropdown(event)>&times;</button>
+<button class=cart-close-mobile onclick=toggleCartDropdown(event) aria-label="Закрыть корзину">&times;</button>
 </div>
 <div id=cartDropdownList class=cart-dropdown-list>
 </div>
@@ -429,15 +433,15 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" id=modalTypewriterTitle>ITEM_INFO.EXE</span>
-<button class=close-btn onclick='closeModal("productModal")'>X</button>
+<button class=close-btn onclick='closeModal("productModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=modal-content>
 <div class=modal-gallery>
 <div class=slider-container id=sliderContainer>
 <div id=photoCounter class=photo-counter>1/1</div>
 <div class=slider-wrapper id=sliderWrapper></div>
-<button class="slider-btn prev" onmouseenter="preloadSlide(-1)" onclick=moveSlide(-1)>&#10094;</button>
-<button class="slider-btn next" onmouseenter="preloadSlide(1)" onclick=moveSlide(1)>&#10095;</button>
+<button class="slider-btn prev" onmouseenter="preloadSlide(-1)" onclick=moveSlide(-1) aria-label="Предыдущее фото">&#10094;</button>
+<button class="slider-btn next" onmouseenter="preloadSlide(1)" onclick=moveSlide(1) aria-label="Следующее фото">&#10095;</button>
 </div>
 <div class=modal-thumbnails id=modalThumbnails></div>
 <div class="similar-items-section similar-desktop">
@@ -517,7 +521,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div class=modal-window style=max-width:550px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>SECURE_CHECKOUT.EXE</span>
-<button class=close-btn onclick='closeModal("checkoutModal")'>X</button>
+<button class=close-btn onclick='closeModal("checkoutModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=checkoutFormLayout>
 <p style=margin:0;font-size:13px;color:#aaa data-i18n=checkout.desc>Заполните данные для отправки. Бронь 2 часа.</p>
@@ -592,7 +596,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>MY_ORDERS.DB</span>
-<button class=close-btn onclick='closeModal("ordersModal")'>X</button>
+<button class=close-btn onclick='closeModal("ordersModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=ordersAuthSection style="border-bottom:1px dashed #333;padding-bottom:15px">
 <p id=guestOrderText style=margin:0;font-size:13px;color:#aaa data-i18n=orders_modal.desc>Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
@@ -617,14 +621,14 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <div class=modal-window style=max-width:600px>
 <div class=modal-header>
 <span class=modal-title style=animation:none;font-family:var(--font-mono);letter-spacing:1px>REVIEWS.TXT<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite"></span></span>
-<button class=close-btn onclick='closeModal("reviewsModal")'>X</button>
+<button class=close-btn onclick='closeModal("reviewsModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=orders-container style=position:relative;padding-bottom:40px>
 <p style=color:#aaa;margin-top:0;font-size:14px data-i18n=reviews_modal.desc>Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
 <div id=reviewsContainerList class=reviews-slider></div>
 <div class=reviews-nav>
-<button onclick=scrollReviews(-1)>&#10094;</button>
-<button onclick=scrollReviews(1)>&#10095;</button>
+<button onclick=scrollReviews(-1) aria-label="Предыдущие отзывы">&#10094;</button>
+<button onclick=scrollReviews(1) aria-label="Следующие отзывы">&#10095;</button>
 </div>
 </div>
 </div>
@@ -646,26 +650,26 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <script defer src=https://cdn.jsdelivr.net/npm/i18next@23.10.1/dist/umd/i18next.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js></script>
-<script src=config.js></script>
-<script defer src="js/core/helpers.js"></script>
-<script defer src="js/ui/windows.js"></script>
-<script defer src="js/auth/auth.js"></script>
-<script defer src="js/drop/drop.js"></script>
-<script defer src="js/chat/chat.js"></script>
-<script defer src="js/reviews/reviews.js?v=135"></script>
-<script defer src="js/catalog/catalog.js?v=154"></script>
-<script defer src="js/cart/cart.js?v=147"></script>
-<script defer src="js/product/product.js?v=154"></script>
-<script defer src="js/profile/profile.js"></script>
-<script defer src=app.js></script>
-<button class=fab-propose onclick=openProposeModal() title="Предложить вещь">
+<script defer src="config.js?v=156"></script>
+<script defer src="js/core/helpers.js?v=156"></script>
+<script defer src="js/ui/windows.js?v=156"></script>
+<script defer src="js/auth/auth.js?v=156"></script>
+<script defer src="js/drop/drop.js?v=156"></script>
+<script defer src="js/chat/chat.js?v=156"></script>
+<script defer src="js/reviews/reviews.js?v=156"></script>
+<script defer src="js/catalog/catalog.js?v=156"></script>
+<script defer src="js/cart/cart.js?v=156"></script>
+<script defer src="js/product/product.js?v=156"></script>
+<script defer src="js/profile/profile.js?v=156"></script>
+<script defer src="app.js?v=156"></script>
+<button class=fab-propose onclick=openProposeModal() title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>
 <div class=modal-overlay id=profileModal>
 <div class=modal-window style=max-width:450px>
 <div class=modal-header>
 <span class=modal-title style=animation:none;font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase>PROFILE/LOGIN.EXE<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite"></span></span>
-<button class=close-btn onclick='closeModal("profileModal")'>X</button>
+<button class=close-btn onclick='closeModal("profileModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=modalAuthBox style="padding:25px 20px">
 <div class=auth-fields id=modalLoginForm style=display:flex;flex-direction:column;gap:15px>
@@ -732,7 +736,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <div class=modal-window style=max-width:550px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none data-i18n=propose.title>DROP_ITEM.EXE</span>
-<button class=close-btn onclick='closeModal("proposeModal")'>X</button>
+<button class=close-btn onclick='closeModal("proposeModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout>
 <label data-i18n=propose.media_label>ФОТО / ВИДЕО (ДО 5 ШТУК):</label>
@@ -765,7 +769,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>NEW_REVIEW.EXE</span>
-<button class=close-btn onclick='closeModal("writeReviewModal")'>X</button>
+<button class=close-btn onclick='closeModal("writeReviewModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout>
 <textarea id=manualReviewInput class=form-input style=height:120px;resize:none;text-align:center placeholder="Напишите ваше мнение о покупке..."></textarea>
@@ -780,7 +784,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none;color:var(--accent-green)>DELIVERY_SUCCESS.LOG</span>
-<button class=close-btn onclick='closeModal("autoReviewModal")'>X</button>
+<button class=close-btn onclick='closeModal("autoReviewModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout style=align-items:center;text-align:center>
 <div id=autoReviewImg style="width:120px;height:120px;background-size:cover;background-position:center;border:2px inset #555;margin-bottom:10px"></div>
@@ -800,7 +804,7 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>SUPPORT_TICKET.EXE</span>
-<button class=close-btn onclick='closeModal("supportModal")'>X</button>
+<button class=close-btn onclick='closeModal("supportModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout>
 <p style=margin:0;color:#aaa;font-size:13px;font-family:var(--font-main)>Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.</p>
