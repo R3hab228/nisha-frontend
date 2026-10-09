@@ -1609,8 +1609,9 @@ function renderFilteredOrders() {
 
     ensureOrderImagesLoaded();
 
-    // Отрисовка штрихкодов JsBarcode
-    if (typeof JsBarcode !== 'undefined') {
+    // Отрисовка штрихкодов JsBarcode (с поддержкой Lazy Load)
+    const drawBarcodes = () => {
+        if (typeof JsBarcode === 'undefined') return;
         document.querySelectorAll('.barcode-svg').forEach(svg => {
             const ttn = svg.getAttribute('data-ttn');
             if (ttn) {
@@ -1619,6 +1620,12 @@ function renderFilteredOrders() {
                 } catch(e) {}
             }
         });
+    };
+
+    if (typeof JsBarcode !== 'undefined') {
+        drawBarcodes();
+    } else if (typeof loadExternalScript === 'function' && document.querySelector('.barcode-svg')) {
+        loadExternalScript('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js').then(drawBarcodes).catch(() => {});
     }
 }
 window.renderFilteredOrders = renderFilteredOrders;

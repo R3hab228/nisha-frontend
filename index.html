@@ -35,10 +35,10 @@
 <link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
 <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css>
 <script type=module>import PhotoSwipeLightbox from"https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js";window.PhotoSwipeLightbox=PhotoSwipeLightbox,document.addEventListener("DOMContentLoaded",(()=>{window.pswpLightbox=new PhotoSwipeLightbox({gallery:"#sliderWrapper",children:"a.slide",showHideAnimationType:"fade",zoomAnimationDuration:200,bgOpacity:.9,closeOnVerticalDrag:!0,wheelToZoom:!0,pswpModule:()=>import("https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js")}),window.pswpLightbox.init()}))</script>
-<link rel=preload href="/style.css?v=156" as=style>
+<link rel=preload href="/style.css?v=157" as=style>
 <link rel=preload href=/locales.json as=fetch crossorigin=anonymous>
 <link rel=preload href=/cables.svg as=image type="image/svg+xml">
-<link rel=stylesheet href="style.css?v=156">
+<link rel=stylesheet href="style.css?v=157">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity -->
@@ -123,6 +123,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <marquee scrollamount=6 data-i18n=marquee>NISHA ПЛОЩАДКА ДЛЯ ПРОДАЖИ ВИНТАЖНЫХ КРУТЫХ ВЕЩЕЙ И ДЛЯ КРЕЙТОРОВ. хороших покупок!</marquee>
 </div>
 </header>
+<div id="offlineStickyBanner" class="offline-sticky-banner" data-i18n="checkout.offline_banner">[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары. Оформление заказа возобновится при появлении сети.</div>
 <div class=search-section>
 <div class=search-wrapper>
 <form autocomplete=off onsubmit='event.preventDefault(),saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),closeSearch()' style=margin:0;padding:0;display:flex;width:100%>
@@ -547,15 +548,15 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div id=branchDropdown class=custom-dropdown></div>
 </div>
 
-<label style="margin-top:10px;">СПОСОБ ОПЛАТЫ:</label>
+<label style="margin-top:10px;" data-i18n="checkout.payment_method">СПОСОБ ОПЛАТЫ:</label>
 <div style="position:relative">
     <div id="paymentDisplay" class="form-input" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="document.getElementById('paymentDropdown').style.display = document.getElementById('paymentDropdown').style.display === 'block' ? 'none' : 'block'">
-        <span id="paymentSelectedText">Полная предоплата</span>
+        <span id="paymentSelectedText" data-i18n="checkout.payment_full">Полная предоплата</span>
         <span style="color:#666; font-size:10px;">▼</span>
     </div>
     <div id="paymentDropdown" class="custom-dropdown" style="display:none; position:absolute; width:100%; z-index:200; border-top:1px solid var(--accent-green); opacity:0; visibility:hidden; transform:translateY(-5px); transition:all 0.2s ease;">
-        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" onclick="document.getElementById('paymentSelectedText').innerText=this.innerText; document.getElementById('orderPaymentMethod').value=this.innerText; togglePaymentDropdown();">Полная предоплата</div>
-        <div style="padding:12px; cursor:pointer;" onclick="document.getElementById('paymentSelectedText').innerText=this.innerText; document.getElementById('orderPaymentMethod').value=this.innerText; togglePaymentDropdown();">Наложка (предоплата 200грн)</div>
+        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" data-i18n="checkout.payment_full" onclick="document.getElementById('paymentSelectedText').innerText=this.innerText; document.getElementById('orderPaymentMethod').value=this.innerText; togglePaymentDropdown();">Полная предоплата</div>
+        <div style="padding:12px; cursor:pointer;" data-i18n="checkout.payment_cod" onclick="document.getElementById('paymentSelectedText').innerText=this.innerText; document.getElementById('orderPaymentMethod').value=this.innerText; togglePaymentDropdown();">Наложка (предоплата 200грн)</div>
     </div>
     <input type="hidden" id="orderPaymentMethod" value="Полная предоплата">
 <script>
@@ -639,29 +640,24 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <script defer src=https://cdn.jsdelivr.net/npm/rough-notation@0.5.1/lib/rough-notation.iife.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js></script>
 <script type="module">import autoAnimate from 'https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.min.js'; window.autoAnimate = autoAnimate;</script>
-<script defer src=https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js></script>
 <script defer src=https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js></script>
-<script defer src=https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.33/dist/lenis.min.js></script>
-<link rel=stylesheet href=https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css>
-<script defer src=https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js></script>
 <script defer src=https://browser.sentry-cdn.com/7.105.0/bundle.min.js crossorigin=anonymous></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next@23.10.1/dist/umd/i18next.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js></script>
-<script defer src=https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js></script>
-<script defer src="config.js?v=156"></script>
-<script defer src="js/core/helpers.js?v=156"></script>
-<script defer src="js/ui/windows.js?v=156"></script>
-<script defer src="js/auth/auth.js?v=156"></script>
-<script defer src="js/drop/drop.js?v=156"></script>
-<script defer src="js/chat/chat.js?v=156"></script>
-<script defer src="js/reviews/reviews.js?v=156"></script>
-<script defer src="js/catalog/catalog.js?v=156"></script>
-<script defer src="js/cart/cart.js?v=156"></script>
-<script defer src="js/product/product.js?v=156"></script>
-<script defer src="js/profile/profile.js?v=156"></script>
-<script defer src="app.js?v=156"></script>
+<script defer src="config.js?v=157"></script>
+<script defer src="js/core/helpers.js?v=157"></script>
+<script defer src="js/ui/windows.js?v=157"></script>
+<script defer src="js/auth/auth.js?v=157"></script>
+<script defer src="js/drop/drop.js?v=157"></script>
+<script defer src="js/chat/chat.js?v=157"></script>
+<script defer src="js/reviews/reviews.js?v=157"></script>
+<script defer src="js/catalog/catalog.js?v=157"></script>
+<script defer src="js/cart/cart.js?v=157"></script>
+<script defer src="js/product/product.js?v=157"></script>
+<script defer src="js/profile/profile.js?v=157"></script>
+<script defer src="app.js?v=157"></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>
@@ -807,9 +803,9 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <button class=close-btn onclick='closeModal("supportModal")' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout>
-<p style=margin:0;color:#aaa;font-size:13px;font-family:var(--font-main)>Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.</p>
-<textarea id=supportInput class=form-input maxlength=100 style=height:120px;resize:none;text-align:left placeholder="Начни печатать..."></textarea>
-<button class="cart-checkout-btn btn-target" id=btnSubmitSupport onclick=submitSupportTicket() style=margin-top:10px;width:100%>ОТПРАВИТЬ СИГНАЛ</button>
+<p style=margin:0;color:#aaa;font-size:13px;font-family:var(--font-main) data-i18n="support.desc">Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.</p>
+<textarea id=supportInput class=form-input maxlength=100 style=height:120px;resize:none;text-align:left data-i18n="[placeholder]support.placeholder" placeholder="Начни печатать..."></textarea>
+<button class="cart-checkout-btn btn-target" id=btnSubmitSupport onclick=submitSupportTicket() style=margin-top:10px;width:100% data-i18n="support.submit">ОТПРАВИТЬ СИГНАЛ</button>
 </div>
 </div>
 </div>

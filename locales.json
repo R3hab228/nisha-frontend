@@ -145,7 +145,13 @@
         "promo_success": "Код активирован! Скидка",
         "promo_limit": "Лимит использования исчерпан!",
         "promo_invalid": "Неверный промокод",
-        "promo_error": "Ошибка проверки"
+        "promo_error": "Ошибка проверки",
+        "payment_method": "СПОСОБ ОПЛАТЫ:",
+        "payment_full": "Полная предоплата",
+        "payment_cod": "Наложка (предоплата 200грн)",
+        "otp_expired": "Время ожидания подтверждения истекло. Запросите код снова.",
+        "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары. Оформление заказа возобновится при появлении сети.",
+        "online_toast": "Сеть восстановлена!"
       },
       "orders_modal": {
         "access_granted": "Доступ разрешен",
@@ -254,6 +260,12 @@
         "p5_4": "Выплата продавцу переводится на карту в течение <b>24 часов</b> после того, как покупатель осмотрел и забрал посылку на почте.",
         "p5_5": "В случае отправки подделки (реплики) или сокрытия дефектов продавец обязан полностью оплатить доставку в обе стороны, иначе получает вечный бан (BANNED).",
         "btn_accept": "[ Я СОГЛАСЕН С ПРАВИЛАМИ ]"
+      },
+      "support": {
+        "title": "SUPPORT_TICKET.EXE",
+        "desc": "Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.",
+        "placeholder": "Начни печатать...",
+        "submit": "ОТПРАВИТЬ СИГНАЛ"
       }
     }
   },
@@ -330,7 +342,6 @@
         "install": "⬇ ВСТАНОВИТИ ДОДАТОК",
         "support_text": "Знайшли баг чи є ідея? Пишіть:",
         "copyright": "© 2026 NISHA. All rights reserved."
-        
       },
       "product": {
         "size": "РОЗМІР:",
@@ -404,7 +415,13 @@
         "promo_success": "Код активовано! Знижка",
         "promo_limit": "Ліміт використання вичерпано!",
         "promo_invalid": "Невірний промокод",
-        "promo_error": "Помилка перевірки"
+        "promo_error": "Помилка перевірки",
+        "payment_method": "СПОСІБ ОПЛАТИ:",
+        "payment_full": "Повна передоплата",
+        "payment_cod": "Накладений платіж (передплата 200грн)",
+        "otp_expired": "Час очікування підтвердження вичерпано. Запитайте код знову.",
+        "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Відображаються збережені товари. Оформлення замовлення відновиться при появі мережі.",
+        "online_toast": "Мережу відновлено!"
       },
       "orders_modal": {
         "access_granted": "Доступ дозволено",
@@ -513,6 +530,12 @@
         "p5_4": "Виплата продавцю переказується на картку протягом <b>24 годин</b> після того, як покупець оглянув та забрав посилку на пошті.",
         "p5_5": "У разі відправлення підробки (репліки) або приховування дефектів продавець зобов'язаний повністю сплатити доставку в обидва боки, інакше отримує вічний бан (BANNED).",
         "btn_accept": "[ Я ЗГОДЕН З ПРАВИЛАМИ ]"
+      },
+      "support": {
+        "title": "SUPPORT_TICKET.EXE",
+        "desc": "Опиши проблему, ідею чи баг. Повідомлення надійде безпосередньо розробнику.",
+        "placeholder": "Почни друкувати...",
+        "submit": "НАДІСЛАТИ СИГНАЛ"
       }
     }
   },
@@ -611,7 +634,7 @@
         "ask_ph": "Your question...",
         "ask_send": "SEND"
       },
-"badge_info": {
+      "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
         "secure_no_return_text": "NISHA acts as the deal escrow. You do not risk the full amount.<br><br>Try on the item at the post office: with COD you can decline the purchase right at the branch.<br><br>After taking the package home, returns or exchanges are not possible.",
         "secure_return_text": "NISHA guarantees the transaction. Your money is secure.<br><br>You can try on the item at the post office. Even if you take it home, this item has a <b style=\"color:var(--accent-green);\">14-day return and exchange guarantee</b>.<br><br><i>Mandatory condition for return: preserving the commercial appearance and no signs of wear.</i>",
@@ -662,7 +685,13 @@
         "promo_success": "Code activated! Discount",
         "promo_limit": "Usage limit reached!",
         "promo_invalid": "Invalid promo code",
-        "promo_error": "Verification error"
+        "promo_error": "Verification error",
+        "payment_method": "PAYMENT METHOD:",
+        "payment_full": "Full prepayment",
+        "payment_cod": "Cash on delivery (200 UAH prepay)",
+        "otp_expired": "Verification time expired. Please request the code again.",
+        "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online.",
+        "online_toast": "Network restored!"
       },
       "orders_modal": {
         "access_granted": "Access granted",
@@ -771,6 +800,12 @@
         "p5_4": "Payout to the seller is transferred to their card within <b>24 hours</b> after the buyer inspects and collects the parcel at the post office.",
         "p5_5": "In case of sending a counterfeit (replica) or concealing defects, the seller must fully pay for two-way shipping, otherwise receiving a permanent ban (BANNED).",
         "btn_accept": "[ I AGREE TO THE RULES ]"
+      },
+      "support": {
+        "title": "SUPPORT_TICKET.EXE",
+        "desc": "Describe the issue, idea, or bug. The message will go directly to the developer.",
+        "placeholder": "Start typing...",
+        "submit": "SEND SIGNAL"
       }
     }
   }

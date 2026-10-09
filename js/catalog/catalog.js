@@ -1759,8 +1759,17 @@ window.showBadgeInfo = function(type) {
 // Тур онбординга
 function startOnboardingTour() {
     if (!localStorage.getItem('nisha_rules_accepted') || 
-        localStorage.getItem('nisha_tour_done') || 
-        typeof window.driver === 'undefined') return;
+        localStorage.getItem('nisha_tour_done')) return;
+
+    if (typeof window.driver === 'undefined') {
+        if (typeof loadExternalStyle === 'function') loadExternalStyle('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css');
+        if (typeof loadExternalScript === 'function') {
+            loadExternalScript('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js').then(() => {
+                startOnboardingTour();
+            }).catch(() => {});
+        }
+        return;
+    }
 
     const checkAndRun = setInterval(() => {
         const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {

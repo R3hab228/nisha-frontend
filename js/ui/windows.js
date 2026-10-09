@@ -131,6 +131,10 @@ function executeCloseModal(id) {
             document.title = 'NISHA | Underground Store'; 
             if (typeof renderHistory === 'function') renderHistory(); 
         }
+        if (id === 'checkoutModal' && window.otpPollInterval) {
+            clearInterval(window.otpPollInterval);
+            window.otpPollInterval = null;
+        }
         if (typeof checkPendingBroadcast === 'function') checkPendingBroadcast();
     }, 300);
 }

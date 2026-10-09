@@ -13,6 +13,9 @@ let proposalSortable = null;
 function openProposeModal() {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+    if (typeof Sortable === 'undefined' && typeof loadExternalScript === 'function') {
+        loadExternalScript('https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js').catch(() => {});
+    }
     
     const modal = document.getElementById('proposeModal');
     if (modal) {
@@ -200,9 +203,11 @@ function renderProposalPreviews() {
         // Сортировка SortableJS
         if (proposalSortable) {
             proposalSortable.destroy();
+            proposalSortable = null;
         }
 
-        if (window.Sortable) {
+        const initSortable = () => {
+            if (!window.Sortable || !container || currentProposalFiles.length <= 1) return;
             const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
             proposalSortable = Sortable.create(container, {
@@ -241,6 +246,12 @@ function renderProposalPreviews() {
                     window.currentProposalFiles = currentProposalFiles;
                 }
             });
+        };
+
+        if (window.Sortable) {
+            initSortable();
+        } else if (typeof loadExternalScript === 'function' && currentProposalFiles.length > 1) {
+            loadExternalScript('https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js').then(initSortable).catch(() => {});
         }
     } else {
         if (placeholder) placeholder.style.display = 'block';

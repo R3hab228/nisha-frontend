@@ -230,12 +230,77 @@ function safeSetItem(key, value) {
 }
 window.safeSetItem = safeSetItem;
 
+// --- ВНЕШНИЙ ЛОАДЕР СКРИПТОВ И СТИЛЕЙ ПО ТРЕБОВАНИЮ (LAZY LOADER) ---
+const _loadedExternalScripts = {};
+function loadExternalScript(src) {
+    if (_loadedExternalScripts[src]) return _loadedExternalScripts[src];
+    _loadedExternalScripts[src] = new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+            resolve();
+            return;
+        }
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = (err) => {
+            delete _loadedExternalScripts[src];
+            reject(err);
+        };
+        document.head.appendChild(s);
+    });
+    return _loadedExternalScripts[src];
+}
+window.loadExternalScript = loadExternalScript;
+
+const _loadedExternalStyles = {};
+function loadExternalStyle(href) {
+    if (_loadedExternalStyles[href]) return _loadedExternalStyles[href];
+    _loadedExternalStyles[href] = new Promise((resolve) => {
+        const existing = document.querySelector(`link[href="${href}"]`);
+        if (existing) {
+            resolve();
+            return;
+        }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.onload = () => resolve();
+        link.onerror = () => resolve();
+        document.head.appendChild(link);
+    });
+    return _loadedExternalStyles[href];
+}
+window.loadExternalStyle = loadExternalStyle;
+
+// --- УНИВЕРСАЛЬНАЯ БЕЗОПАСНАЯ ОБЕРТКА SAFESTORAGE (Safari Incognito / Quota Guard) ---
+const _memStorageFallback = {};
+
+function safeSetItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+        return true;
+    } catch (e) {
+        try {
+            if (typeof cleanStorageLimits === 'function') cleanStorageLimits();
+            localStorage.setItem(key, value);
+            return true;
+        } catch (innerErr) {
+            _memStorageFallback[key] = String(value);
+            return false;
+        }
+    }
+}
+window.safeSetItem = safeSetItem;
+
 function safeGetItem(key, fallback = null) {
     try {
         const val = localStorage.getItem(key);
-        return val !== null ? val : fallback;
+        if (val !== null) return val;
+        return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : fallback;
     } catch (e) {
-        return fallback;
+        return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : fallback;
     }
 }
 window.safeGetItem = safeGetItem;
@@ -244,13 +309,20 @@ function safeRemoveItem(key) {
     try {
         localStorage.removeItem(key);
     } catch (e) {}
+    delete _memStorageFallback[key];
 }
 window.safeRemoveItem = safeRemoveItem;
 
-// Автоматическая защита всех прямых вызовов Storage.prototype.setItem (Safari Private / QuotaExceededError)
+window.safeStorage = {
+    setItem: safeSetItem,
+    getItem: safeGetItem,
+    removeItem: safeRemoveItem
+};
+
+// Автоматическая защита всех прямых вызовов Storage.prototype (Safari Private / QuotaExceededError)
 (function initStorageSafeGuard() {
     try {
-        if (typeof Storage !== 'undefined' && Storage.prototype && Storage.prototype.setItem) {
+        if (typeof Storage !== 'undefined' && Storage.prototype) {
             const originalSetItem = Storage.prototype.setItem;
             Storage.prototype.setItem = function(key, value) {
                 try {
@@ -262,8 +334,18 @@ window.safeRemoveItem = safeRemoveItem;
                         }
                         originalSetItem.call(this, key, value);
                     } catch (retryErr) {
-                        console.warn(`[STORAGE SAFEKEEPER] Запись "${key}" пропущена из-за лимита хранилища:`, retryErr);
+                        _memStorageFallback[key] = String(value);
                     }
+                }
+            };
+            const originalGetItem = Storage.prototype.getItem;
+            Storage.prototype.getItem = function(key) {
+                try {
+                    const res = originalGetItem.call(this, key);
+                    if (res !== null) return res;
+                    return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : null;
+                } catch (err) {
+                    return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : null;
                 }
             };
         }

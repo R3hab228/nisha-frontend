@@ -361,10 +361,33 @@ async function generateAndSendOTP() {
         statusEl.innerHTML = "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... " + getWin95HourglassHtml(14);
     }
     
-    // 6. Опрос базы данных каждые 2 секунды
+    // 6. Опрос базы данных каждые 2 секунды с таймаутом безопасности 2.5 минуты
     if (window.otpPollInterval) clearInterval(window.otpPollInterval);
 
+    let pollAttempts = 0;
+    const maxPollAttempts = 75; // 75 * 2с = 150 сек (2.5 минуты)
+
     window.otpPollInterval = setInterval(async () => {
+        pollAttempts++;
+        if (pollAttempts >= maxPollAttempts) {
+            clearInterval(window.otpPollInterval);
+            window.otpPollInterval = null;
+            if (otpInterval) {
+                clearInterval(otpInterval);
+                otpInterval = null;
+            }
+            if (btnOtp) {
+                btnOtp.disabled = false;
+                btnOtp.style.opacity = '1';
+                btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp') : 'Подтвердить';
+            }
+            if (statusEl) {
+                const expiredMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.otp_expired') : 'Время ожидания подтверждения истекло. Запросите код снова.';
+                statusEl.innerHTML = `<span style="color:var(--accent-red);">${expiredMsg}</span>`;
+            }
+            return;
+        }
+
         const { data: isVerified } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
         if (isVerified) {
             clearInterval(window.otpPollInterval);

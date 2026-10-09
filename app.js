@@ -110,10 +110,14 @@ let searchTypewriterInterval = null;
 let currentSearchLang = 'ru';
 
 function updateContentLanguage() {
-    // Переводим обычный текст
+    // Переводим обычный текст и placeholder'ы с префиксом [placeholder]
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        el.innerHTML = i18next.t(key);
+        if (key.startsWith('[placeholder]')) {
+            el.placeholder = i18next.t(key.replace('[placeholder]', ''));
+        } else {
+            el.innerHTML = i18next.t(key);
+        }
     });
     
     // Переводим Placeholder'ы инпутов
@@ -121,6 +125,17 @@ function updateContentLanguage() {
         const key = el.getAttribute('data-i18n-ph');
         el.placeholder = i18next.t(key);
     });
+
+    // Обновляем выбранный способ оплаты в чекауте
+    const paymentSelectedText = document.getElementById('paymentSelectedText');
+    const paymentMethodInput = document.getElementById('orderPaymentMethod');
+    if (paymentSelectedText && paymentMethodInput) {
+        if (paymentMethodInput.value && (paymentMethodInput.value.includes('200') || paymentMethodInput.value.includes('Налож') || paymentMethodInput.value.includes('Наклад') || paymentMethodInput.value.includes('delivery'))) {
+            paymentSelectedText.innerText = i18next.t('checkout.payment_cod');
+        } else {
+            paymentSelectedText.innerText = i18next.t('checkout.payment_full');
+        }
+    }
 
     // Запускаем печатную машинку поиска
     currentSearchLang = i18next.language || 'ru';
@@ -1285,52 +1300,73 @@ function createNetErrorElement() {
 
 function handleNetworkOffline() {
     const grid = document.getElementById('itemsGrid');
+    const offlineBanner = document.getElementById('offlineStickyBanner');
     let netError = document.getElementById('win95-net-error');
     const loader = document.getElementById('win95-loader');
     
     // Прячем лоадер БД, если он крутился
     if (loader) loader.style.display = 'none';
-    
-    // Плавно гасим ленту товаров
-    if (grid) {
-        grid.classList.add('fade-out');
-    }
-    
-    setTimeout(() => {
-        if (grid) {
-            grid.style.display = 'none';
-            grid.classList.remove('fade-out');
-            grid.classList.remove('feed-restore-anim');
-        }
-        
-        // Failsafe: если вдруг элемента нет в DOM, восстанавливаем его перед itemsGrid
-        if (!netError && grid && grid.parentElement) {
-            netError = createNetErrorElement();
-            grid.parentElement.insertBefore(netError, grid);
-        }
-        
-        if (netError) {
-            const msgEl = document.getElementById('win95-error-msg') || netError.querySelector('#win95-error-msg');
-            if (msgEl) {
-                msgEl.textContent = 'Соединение потеряно';
-                msgEl.style.color = '#000';
-                msgEl.style.fontFamily = "Tahoma, sans-serif";
-                msgEl.style.fontSize = '13px';
-                msgEl.style.fontWeight = 'normal';
+
+    const hasCards = grid && grid.querySelectorAll('.item-card').length > 0;
+
+    if (hasCards) {
+        // УМНЫЙ ОФЛАЙН-РЕЖИМ: товары уже загружены, НЕ прячем каталог
+        if (offlineBanner) {
+            if (typeof i18next !== 'undefined') {
+                offlineBanner.innerText = i18next.t('checkout.offline_banner');
             }
-            netError.classList.remove('fade-out');
-            netError.classList.add('fade-in');
-            netError.style.display = 'flex';
+            offlineBanner.classList.add('active');
         }
-        if (window.scrollY > 150) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof showToast === 'function') {
+            const msg = typeof i18next !== 'undefined' ? i18next.t('checkout.offline_banner') : '[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары.';
+            showToast(msg, 'error');
         }
-        if (typeof triggerHaptic === 'function') triggerHaptic('error');
-    }, 280);
+    } else {
+        // Если товаров вообще не было (первый вход сразу без сети) — классическое окно ошибки
+        if (grid) {
+            grid.classList.add('fade-out');
+        }
+        
+        setTimeout(() => {
+            if (grid) {
+                grid.style.display = 'none';
+                grid.classList.remove('fade-out');
+                grid.classList.remove('feed-restore-anim');
+            }
+            
+            if (!netError && grid && grid.parentElement) {
+                netError = createNetErrorElement();
+                grid.parentElement.insertBefore(netError, grid);
+            }
+            
+            if (netError) {
+                const msgEl = document.getElementById('win95-error-msg') || netError.querySelector('#win95-error-msg');
+                if (msgEl) {
+                    msgEl.textContent = 'Соединение потеряно';
+                    msgEl.style.color = '#000';
+                    msgEl.style.fontFamily = "Tahoma, sans-serif";
+                    msgEl.style.fontSize = '13px';
+                    msgEl.style.fontWeight = 'normal';
+                }
+                netError.classList.remove('fade-out');
+                netError.classList.add('fade-in');
+                netError.style.display = 'flex';
+            }
+            if (window.scrollY > 150) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }, 280);
+    }
+    if (typeof triggerHaptic === 'function') triggerHaptic('error');
 }
 window.handleNetworkOffline = handleNetworkOffline;
 
 function handleNetworkOnline() {
+    const offlineBanner = document.getElementById('offlineStickyBanner');
+    if (offlineBanner && offlineBanner.classList.contains('active')) {
+        offlineBanner.classList.remove('active');
+    }
+
     const netError = document.getElementById('win95-net-error');
     const msgEl = document.getElementById('win95-error-msg');
     const grid = document.getElementById('itemsGrid');
@@ -1343,6 +1379,11 @@ function handleNetworkOnline() {
         msgEl.style.fontWeight = 'normal';
     }
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
+
+    if (typeof showToast === 'function') {
+        const msg = typeof i18next !== 'undefined' ? i18next.t('checkout.online_toast') : 'Соединение восстановлено!';
+        showToast(msg, 'success');
+    }
     
     // Даем пользователю четко увидеть статус восстановления сети
     setTimeout(() => {
