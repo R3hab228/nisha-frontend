@@ -180,7 +180,7 @@ function renderProposalPreviews() {
             img.appendChild(delBtn);
 
             // Клик по превью — открывает на весь экран через PhotoSwipe
-            img.onclick = (e) => {
+            img.onclick = async (e) => {
                 e.stopPropagation();
                 if (!item.url) return;
                 
