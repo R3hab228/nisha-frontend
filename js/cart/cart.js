@@ -265,6 +265,7 @@ function debouncedNPCitySearch(query) {
     window.selectedCityRef = '';
     selectedBranchRef = '';
     window.selectedBranchRef = '';
+    window.selectedSettlementRef = '';
     cachedBranches = [];
     
     const dropdown = document.getElementById('cityDropdown');
@@ -294,6 +295,7 @@ function renderCitySearchResults(data) {
                 document.getElementById('orderCity').value = city.Present;
                 selectedCityRef = city.DeliveryCity || city.Ref; 
                 window.selectedCityRef = selectedCityRef;
+                window.selectedSettlementRef = city.Ref || '';
                 dropdown.style.display = 'none';
                 
                 const branchInput = document.getElementById('orderBranch');
@@ -362,99 +364,200 @@ function filterNPBranches(query) {
 }
 window.filterNPBranches = filterNPBranches;
 
-// Запрос отделений из базы Новой Почты (с памятью и sessionStorage)
+// Запрос к прокси Новой Почты (общий помощник)
+async function npProxyRequest(methodProperties, calledMethod) {
+    const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modelName: 'Address', calledMethod: calledMethod, methodProperties: methodProperties })
+    });
+    if (!res.ok) throw new Error("Сетевая ошибка HTTP " + res.status);
+    return res.json();
+}
+
+// Минимальный вид отделения для кэша (экономит память и sessionStorage)
+function slimBranches(list) {
+    return list.map(b => ({ Ref: b.Ref, Description: b.Description || '', TypeOfWarehouse: b.TypeOfWarehouse || '' }));
+}
+
+// Если город вписан руками (или восстановлен из черновика) и не выбран из списка —
+// находим его в базе НП сами, чтобы отделения всё равно загрузились
+async function ensureCityRef() {
+    const existing = window.selectedCityRef || selectedCityRef;
+    if (existing) return existing;
+
+    const cityInput = document.getElementById('orderCity');
+    const typed = cityInput ? cityInput.value.trim() : '';
+    if (typed.length < 2) return '';
+
+    try {
+        const data = await npProxyRequest({ CityName: typed, Limit: "10" }, 'searchSettlements');
+        const addrs = (data && data.success && data.data && data.data[0] && data.data[0].Addresses) || [];
+        if (addrs.length === 0) return '';
+
+        const norm = (str) => String(str || '').toLowerCase()
+            .replace(/[’`ʼ]/g, "'")
+            .replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село)\s*/i, '')
+            .split(',')[0].trim();
+        const wanted = norm(typed);
+        const pick = addrs.find(a => norm(a.Present) === wanted) || (addrs.length === 1 ? addrs[0] : null);
+
+        if (!pick) {
+            // Несколько одноимённых населённых пунктов — пусть клиент выберет сам
+            renderCitySearchResults(data);
+            return '';
+        }
+
+        selectedCityRef = pick.DeliveryCity || pick.Ref;
+        window.selectedCityRef = selectedCityRef;
+        window.selectedSettlementRef = pick.Ref || '';
+        if (cityInput) cityInput.value = pick.Present;
+        const branchInput = document.getElementById('orderBranch');
+        if (branchInput) branchInput.readOnly = false;
+        if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
+        return selectedCityRef;
+    } catch (e) {
+        console.error("Не удалось определить город НП:", e);
+        return '';
+    }
+}
+window.ensureCityRef = ensureCityRef;
+
+// Запрос ВСЕХ отделений и почтоматов города (постранично, с памятью и sessionStorage)
+let _branchLoadToken = 0;
 async function loadNPBranches(searchString = "") {
-    if (typeof searchString !== 'string') searchString = ""; 
-    const cityRef = window.selectedCityRef || selectedCityRef;
-    if (!cityRef) return;
-    
+    if (typeof searchString !== 'string') searchString = "";
+
     const input = document.getElementById('orderBranch');
     const dropdown = document.getElementById('branchDropdown');
+    if (!dropdown) return;
 
-    const cacheKey = cityRef + "_" + searchString.trim();
+    let cityRef = window.selectedCityRef || selectedCityRef;
+    if (!cityRef) {
+        cityRef = await ensureCityRef();
+        if (!cityRef) return;
+        if (input) input.readOnly = false;
+    }
+
+    const search = searchString.trim();
+    const cacheKey = cityRef + "_" + search;
+
     if (npBranchCache[cacheKey]) {
-        renderBranches(npBranchCache[cacheKey]); 
+        renderBranches(npBranchCache[cacheKey]);
         return;
     }
 
-    const sessionBranches = getNPStorage('branch_' + cacheKey);
+    const sessionBranches = getNPStorage('branchall_' + cacheKey);
     if (sessionBranches) {
         npBranchCache[cacheKey] = sessionBranches;
         renderBranches(sessionBranches);
         return;
     }
 
-    try {
-        const reqBody = {
-            modelName: 'Address', 
-            calledMethod: 'getWarehouses', 
-            methodProperties: { 
-                CityRef: cityRef, 
-                Limit: "50" 
-            } 
-        };
+    const myToken = ++_branchLoadToken;
+    dropdown.innerHTML = '<div style="color:#aaa; padding:12px; font-style: italic;">Завантаження відділень...</div>';
+    dropdown.style.display = 'block';
 
-        if (searchString.trim() !== "") {
-            reqBody.methodProperties.FindByString = searchString.trim();
+    try {
+        const PAGE_SIZE = 500;
+        const MAX_PAGES = 10;
+        let refProp = 'CityRef';
+        let refVal = cityRef;
+        let all = [];
+
+        for (let page = 1; page <= MAX_PAGES; page++) {
+            const buildProps = () => {
+                const p = { Limit: String(PAGE_SIZE), Page: String(page) };
+                p[refProp] = refVal;
+                if (search) p.FindByString = search;
+                return p;
+            };
+
+            let data = await npProxyRequest(buildProps(), 'getWarehouses');
+            if (myToken !== _branchLoadToken) return; // клиент уже сменил город/запрос
+
+            let chunk = (data && data.success && Array.isArray(data.data)) ? data.data : [];
+
+            // Запасной вариант для сёл: некоторые населённые пункты ищутся только по SettlementRef
+            if (page === 1 && chunk.length === 0 && !search && window.selectedSettlementRef && refProp === 'CityRef') {
+                refProp = 'SettlementRef';
+                refVal = window.selectedSettlementRef;
+                data = await npProxyRequest(buildProps(), 'getWarehouses');
+                if (myToken !== _branchLoadToken) return;
+                chunk = (data && data.success && Array.isArray(data.data)) ? data.data : [];
+            }
+
+            if (chunk.length === 0) break;
+
+            const prevLen = all.length;
+            all = all.concat(slimBranches(chunk));
+            renderBranches(all, prevLen); // первая страница показывается сразу, остальные дописываются
+
+            const total = data && data.info && data.info.totalCount;
+            if (chunk.length < PAGE_SIZE || (total && all.length >= total)) break;
         }
 
-        const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(reqBody)
-        });
+        if (myToken !== _branchLoadToken) return;
 
-        if (!res.ok) throw new Error("Сетевая ошибка HTTP " + res.status);
-
-        const data = await res.json();
-        
-        if(data.success && Array.isArray(data.data) && data.data.length > 0) {
-            npBranchCache[cacheKey] = data.data; 
-            setNPStorage('branch_' + cacheKey, data.data);
-            renderBranches(data.data);
+        if (all.length > 0) {
+            npBranchCache[cacheKey] = all;
+            if (all.length <= 1500) setNPStorage('branchall_' + cacheKey, all);
         } else {
             dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${typeof i18next !== 'undefined' ? i18next.t('np.branch_empty') : 'Отделения не найдены'}</div>`;
             dropdown.style.display = 'block';
         }
-    } catch(e) { 
-        console.error("Сбой загрузки отделений НП:", e); 
+    } catch(e) {
+        if (myToken !== _branchLoadToken) return;
+        console.error("Сбой загрузки отделений НП:", e);
         dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${typeof i18next !== 'undefined' ? i18next.t('np.branch_err') : 'Ошибка загрузки отделений'}</div>`;
         dropdown.style.display = 'block';
     }
 }
 window.loadNPBranches = loadNPBranches;
 
-// Отрисовка списка отделений
-function renderBranches(branches) {
+// Отрисовка списка отделений (startIndex > 0 — дописываем новые пункты, не сбрасывая прокрутку)
+function renderBranches(branches, startIndex = 0) {
     const dropdown = document.getElementById('branchDropdown');
-    dropdown.innerHTML = '';
-    
-    if(branches.length === 0) {
+    if (!dropdown) return;
+
+    if (startIndex === 0) dropdown.innerHTML = '';
+
+    if (branches.length === 0) {
         dropdown.style.display = 'none';
         return;
     }
 
     dropdown.setAttribute('data-lenis-prevent', 'true');
 
-    for (let i = 0; i < branches.length; i++) {
+    const fragment = document.createDocumentFragment();
+    for (let i = startIndex; i < branches.length; i++) {
         const branch = branches[i];
-        const isPostomat = branch.Description.includes("Поштомат") || branch.Description.includes("Почтомат");
+        const desc = String(branch.Description || '');
+        const isPostomat = desc.includes("Поштомат") || desc.includes("Почтомат") || branch.TypeOfWarehouse === 'f9316480-5f2d-425d-bc2c-ac7cd29decf0';
         const div = document.createElement('div');
-        
-        div.innerHTML = isPostomat ? `📦 <span style="color:#00aaff">${branch.Description}</span>` : branch.Description;
+
+        if (isPostomat) {
+            div.appendChild(document.createTextNode('📦 '));
+            const span = document.createElement('span');
+            span.style.color = '#00aaff';
+            span.textContent = desc;
+            div.appendChild(span);
+        } else {
+            div.textContent = desc;
+        }
 
         div.onmousedown = (e) => {
             e.preventDefault(); 
-            document.getElementById('orderBranch').value = branch.Description;
+            document.getElementById('orderBranch').value = desc;
             selectedBranchRef = branch.Ref;
             window.selectedBranchRef = selectedBranchRef;
             dropdown.style.display = 'none';
             calculateDeliveryCost(); 
             if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
         };
-        dropdown.appendChild(div);
+        fragment.appendChild(div);
     }
-    
+    dropdown.appendChild(fragment);
     dropdown.style.display = 'block';
 }
 window.renderBranches = renderBranches;
