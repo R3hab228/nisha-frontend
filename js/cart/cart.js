@@ -371,8 +371,26 @@ async function npProxyRequest(methodProperties, calledMethod) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ modelName: 'Address', calledMethod: calledMethod, methodProperties: methodProperties })
     });
-    if (!res.ok) throw new Error("Сетевая ошибка HTTP " + res.status);
+    if (!res.ok) {
+        const err = new Error("Сетевая ошибка HTTP " + res.status);
+        err.status = res.status;
+        throw err;
+    }
     return res.json();
+}
+
+// Страница отделений: при лимите запросов (429) или сбое сети — короткая пауза и повтор
+async function npFetchPage(props) {
+    let lastErr;
+    for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+            return await npProxyRequest(props, 'getWarehouses');
+        } catch (e) {
+            lastErr = e;
+            await new Promise(r => setTimeout(r, e && e.status === 429 ? 3000 : 1200));
+        }
+    }
+    throw lastErr;
 }
 
 // Минимальный вид отделения для кэша (экономит память и sessionStorage)
@@ -460,11 +478,13 @@ async function loadNPBranches(searchString = "") {
 
     try {
         const PAGE_SIZE = 500;
-        const MAX_PAGES = 10;
+        const MAX_PAGES = 20;
         let refProp = 'CityRef';
         let refVal = cityRef;
         let all = [];
 
+        let loopError = null;
+        try {
         for (let page = 1; page <= MAX_PAGES; page++) {
             const buildProps = () => {
                 const p = { Limit: String(PAGE_SIZE), Page: String(page) };
@@ -473,7 +493,7 @@ async function loadNPBranches(searchString = "") {
                 return p;
             };
 
-            let data = await npProxyRequest(buildProps(), 'getWarehouses');
+            let data = await npFetchPage(buildProps());
             if (myToken !== _branchLoadToken) return; // клиент уже сменил город/запрос
 
             let chunk = (data && data.success && Array.isArray(data.data)) ? data.data : [];
@@ -482,7 +502,7 @@ async function loadNPBranches(searchString = "") {
             if (page === 1 && chunk.length === 0 && !search && window.selectedSettlementRef && refProp === 'CityRef') {
                 refProp = 'SettlementRef';
                 refVal = window.selectedSettlementRef;
-                data = await npProxyRequest(buildProps(), 'getWarehouses');
+                data = await npFetchPage(buildProps());
                 if (myToken !== _branchLoadToken) return;
                 chunk = (data && data.success && Array.isArray(data.data)) ? data.data : [];
             }
@@ -496,12 +516,19 @@ async function loadNPBranches(searchString = "") {
             const total = data && data.info && data.info.totalCount;
             if (chunk.length < PAGE_SIZE || (total && all.length >= total)) break;
         }
+        } catch (err) {
+            if (myToken !== _branchLoadToken) return;
+            loopError = err;
+        }
+        if (loopError && all.length === 0) throw loopError;
 
         if (myToken !== _branchLoadToken) return;
 
         if (all.length > 0) {
-            npBranchCache[cacheKey] = all;
-            if (all.length <= 1500) setNPStorage('branchall_' + cacheKey, all);
+            if (!loopError) { // неполный список в кэш не кладём
+                npBranchCache[cacheKey] = all;
+                if (all.length <= 1500) setNPStorage('branchall_' + cacheKey, all);
+            }
         } else {
             dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${typeof i18next !== 'undefined' ? i18next.t('np.branch_empty') : 'Отделения не найдены'}</div>`;
             dropdown.style.display = 'block';
