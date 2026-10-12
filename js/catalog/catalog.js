@@ -695,13 +695,22 @@ async function loadAllItems() {
     if (cachedData && window.allItems.length === 0) {
         try {
             const parsed = JSON.parse(cachedData);
-            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].description === undefined) {
+            const isCorrupted = !Array.isArray(parsed) || parsed.length === 0 || 
+                parsed[0].description === undefined || 
+                ((!Array.isArray(parsed[0].images) || parsed[0].images.length === 0) &&
+                 (!Array.isArray(parsed[0].thumbnails) || parsed[0].thumbnails.length === 0));
+
+            if (isCorrupted) {
+                console.warn("[КЭШ КАТАЛОГА] Обнаружены поврежденные данные без фото/описания, очищаем локальный кэш...");
                 localStorage.removeItem('nisha_cached_db');
             } else {
                 window.allItems = parsed;
                 applyFilters();
             }
-        } catch(e) { console.error("Ошибка кэша"); }
+        } catch(e) { 
+            console.error("Ошибка кэша"); 
+            localStorage.removeItem('nisha_cached_db');
+        }
     }
 
     if (!sb) return;
@@ -735,8 +744,32 @@ async function loadAllItems() {
             }
         }
     }
-    window.allItems = data; 
-    localStorage.setItem('nisha_cached_db', JSON.stringify(data)); 
+
+    // Проверяем наличие валидных изображений в ответе
+    const hasValidImages = Array.isArray(data) && data.length > 0 && (
+        (Array.isArray(data[0].images) && data[0].images.length > 0) ||
+        (Array.isArray(data[0].thumbnails) && data[0].thumbnails.length > 0)
+    );
+
+    if (hasValidImages) {
+        window.allItems = data; 
+        localStorage.setItem('nisha_cached_db', JSON.stringify(data)); 
+    } else if (data && data.length > 0) {
+        console.warn("[КАТАЛОГ] Сервер или SW вернул ответ без фото, сохраняем существующие изображения...");
+        const oldMap = new Map((window.allItems || []).map(i => [i.id, i]));
+        data.forEach(item => {
+            const old = oldMap.get(item.id);
+            if (old) {
+                if (!item.images || item.images.length === 0) item.images = old.images;
+                if (!item.thumbnails || item.thumbnails.length === 0) item.thumbnails = old.thumbnails;
+                if (!item.description) item.description = old.description;
+            }
+        });
+        window.allItems = data;
+        if (data[0] && Array.isArray(data[0].images) && data[0].images.length > 0) {
+            localStorage.setItem('nisha_cached_db', JSON.stringify(data));
+        }
+    } 
     
     // 3. ИСТОРИЯ ПРОСМОТРОВ
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
@@ -895,7 +928,7 @@ async function syncCriticalStatuses() {
         const { data, error } = await sb.from('items')
             .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, views_count, created_at')
             .order('created_at', { ascending: false })
-            .limit(1000);
+            .limit(999);
 
         if (error || !data) return;
 
@@ -998,12 +1031,21 @@ async function syncCriticalStatuses() {
             }
         });
 
+        const canSafelySaveCache = window.allItems && window.allItems.length > 0 && (
+            (Array.isArray(window.allItems[0].images) && window.allItems[0].images.length > 0) ||
+            (Array.isArray(window.allItems[0].thumbnails) && window.allItems[0].thumbnails.length > 0)
+        );
+
         if (gridNeedsFullRefresh) {
-            localStorage.setItem('nisha_cached_db', JSON.stringify(window.allItems));
+            if (canSafelySaveCache) {
+                localStorage.setItem('nisha_cached_db', JSON.stringify(window.allItems));
+            }
             if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
             if (typeof applyFilters === 'function') applyFilters();
         } else if (anyCardUpdated) {
-            localStorage.setItem('nisha_cached_db', JSON.stringify(window.allItems));
+            if (canSafelySaveCache) {
+                localStorage.setItem('nisha_cached_db', JSON.stringify(window.allItems));
+            }
             if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
         }
     } catch (e) {

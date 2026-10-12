@@ -156,11 +156,20 @@ async function openProductModalById(itemId) {
                 return;
             }
             
-            // Если модалка открыта и мы догрузили описание - просто вставляем текст
+            // Если модалка открыта и мы догрузили описание/фото
             const active = window.currentOpenedItem || currentOpenedItem;
             if (fullItem && active && active.id === fullItem.id) {
+                const hadNoImages = (!active.images || active.images.length === 0) && (!active.thumbnails || active.thumbnails.length === 0);
+                const hasFullImages = (fullItem.images && fullItem.images.length > 0) || (fullItem.thumbnails && fullItem.thumbnails.length > 0);
+                
                 currentOpenedItem = fullItem;
                 window.currentOpenedItem = fullItem;
+
+                if (hadNoImages && hasFullImages) {
+                    openProductModal(fullItem);
+                    return;
+                }
+
                 if (fullItem.description) {
                     const descText = fullItem.description ? fullItem.description.replace(/\n/g, '<br>') : `<span style="color:#666;">[ Описание отсутствует ]</span>`;
                     const descContainer = document.querySelector('.modal-desc');
@@ -365,7 +374,11 @@ function openProductModal(item) {
     if (wrapper) wrapper.innerHTML = ''; 
     if (thumbs) thumbs.innerHTML = '';
     
-    const totalMedia = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails.length : (item.images ? item.images.length : 0);
+    const mediaList = (Array.isArray(item.images) && item.images.length > 0)
+        ? item.images
+        : ((Array.isArray(item.thumbnails) && item.thumbnails.length > 0) ? item.thumbnails : []);
+
+    const totalMedia = mediaList.length;
     const prevBtn = document.querySelector('.slider-btn.prev');
     const nextBtn = document.querySelector('.slider-btn.next');
     
@@ -379,11 +392,11 @@ function openProductModal(item) {
 
     // Поддержка ФОТО и ВИДЕО (.mp4)
     if (wrapper && thumbs) {
-        if (item.images && item.images.length > 0) {
-            item.images.forEach((url, index) => {
+        if (mediaList.length > 0) {
+            mediaList.forEach((url, index) => {
                 const toCDN = window.toCDN || ((u) => u);
                 const cdnUrl = toCDN(url);
-                const isVideo = cdnUrl.endsWith('.mp4');
+                const isVideo = typeof cdnUrl === 'string' && cdnUrl.endsWith('.mp4');
                 let currentThumb = (item.thumbnails && item.thumbnails[index]) ? toCDN(item.thumbnails[index]) : cdnUrl;
                 
                 if (isVideo && (!item.thumbnails || !item.thumbnails[index])) {
@@ -428,10 +441,10 @@ function openProductModal(item) {
     setSlide(0);
 
     // Мгновенная предзагрузка второй фотографии для моментального свайпа
-    if (item.images && item.images.length > 1) {
+    if (mediaList.length > 1) {
         const toCDN = window.toCDN || ((u) => u);
-        const nextImgUrl = toCDN(item.images[1]);
-        if (!nextImgUrl.endsWith('.mp4')) {
+        const nextImgUrl = toCDN(mediaList[1]);
+        if (typeof nextImgUrl === 'string' && !nextImgUrl.endsWith('.mp4')) {
             const preImg = new Image();
             preImg.src = nextImgUrl;
         }

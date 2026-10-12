@@ -1,6 +1,6 @@
-const CACHE_NAME = 'nisha-cache-v161';
-const IMAGE_CACHE = 'nisha-images-v1';
-const API_CACHE = 'nisha-api-v1';
+const CACHE_NAME = 'nisha-cache-v162';
+const IMAGE_CACHE = 'nisha-images-v2';
+const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
     '/',
     '/index.html',
@@ -81,8 +81,9 @@ self.addEventListener('fetch', event => {
         return; 
     }
 
-    // --- ПЕРЕХВАТ SUPABASE API ДЛЯ ОФЛАЙНА ---
-    if (url.hostname.includes('supabase.co') && url.pathname.includes('/rest/v1/items')) {
+    // --- ПЕРЕХВАТ SUPABASE API ДЛЯ ОФЛАЙНА (ТОЛЬКО ТОЧНЫЕ REST ЗАПРОСЫ) ---
+    const isSupabaseRestApi = (url.hostname.includes('supabase.co') || url.hostname.includes('workers.dev')) && url.pathname.includes('/rest/v1/');
+    if (isSupabaseRestApi) {
         event.respondWith(
             fetch(event.request).then(networkResponse => {
                 if (networkResponse && networkResponse.status === 200) {
@@ -91,15 +92,17 @@ self.addEventListener('fetch', event => {
                 }
                 return networkResponse;
             }).catch(() => {
-                // Если нет сети, отдаем из кэша (вчерашние товары)
+                // Если нет сети, отдаем из кэша (точный запрос с параметрами, без ignoreSearch)
                 return caches.match(event.request);
             })
         );
-        return;
+        return; 
     }
 
     // --- ИЗОБРАЖЕНИЯ (Cache-First + Лимит) ---
-    const isImage = url.hostname.includes('workers.dev') || url.hostname.includes('supabase.co/storage');
+    const isImage = (url.hostname.includes('workers.dev') || url.hostname.includes('supabase.co')) &&
+                    (url.pathname.includes('/storage/') || /\.(webp|jpg|jpeg|png|gif|svg|avif|ico)$/i.test(url.pathname)) &&
+                    !url.pathname.includes('/rest/v1/');
     
     if (isImage) {
         event.respondWith(
