@@ -1220,9 +1220,10 @@ async function executeOrderFinal(emailToSave) {
         const sb = getSupabaseClient();
         if (!sb) throw new Error('База данных недоступна');
 
-        const { data: orderId, error: orderError } = await sb.rpc('create_secure_order', {
+        // Передаем чистое имя и способ оплаты в отдельное поле p_payment_method
+        let rpcParams = {
             p_user_id: user ? user.id : null,
-            p_name: nameWithPayment,
+            p_name: name,
             p_phone: phone,
             p_email: emailToSave,
             p_tg: '',
@@ -1231,8 +1232,21 @@ async function executeOrderFinal(emailToSave) {
             p_city_ref: cityRef || '',
             p_branch_ref: branchRef || '',
             p_item_ids: orderItemIds,
-            p_promocode: window.appliedPromoCode || appliedPromoCode || null
-        });
+            p_promocode: window.appliedPromoCode || appliedPromoCode || null,
+            p_payment_method: paymentMethod || ''
+        };
+
+        let { data: orderId, error: orderError } = await sb.rpc('create_secure_order', rpcParams);
+
+        // Безопасный фоллбек: если SQL-функция в Supabase еще не обновлена до версии с p_payment_method
+        if (orderError && (orderError.message.includes('p_payment_method') || orderError.message.includes('create_secure_order') || orderError.code === 'PGRST202')) {
+            console.warn('[ЗАКАЗ] Используем обратную совместимость create_secure_order:', orderError.message);
+            delete rpcParams.p_payment_method;
+            rpcParams.p_name = nameWithPayment;
+            const fallbackRes = await sb.rpc('create_secure_order', rpcParams);
+            orderId = fallbackRes.data;
+            orderError = fallbackRes.error;
+        }
 
         if (orderError) throw orderError; 
 
