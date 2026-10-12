@@ -85,8 +85,12 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 
 /* --- РќРћР’РћР•: РџСЂСЏС‡РµРј РєРЅРѕРїРєСѓ РїСЂРѕС„РёР»СЏ РЅР° РџРљ --- */
 .mobile-profile-link { display: none !important; }
-
-.marquee-container { background-color: #000; color: var(--accent-yellow); padding: 5px 30px; font-family: var(--font-mono); border-bottom: 1px solid #444; font-size: 14px; }
+.marquee-container { background-color: #000; color: var(--accent-yellow); padding: 7px 0; font-family: var(--font-mono); border-bottom: 1px solid #444; font-size: 14px; overflow: hidden; position: relative; white-space: nowrap; user-select: none; }
+.marquee-track { display: flex; width: max-content; animation: marquee-scroll 28s linear infinite; will-change: transform; }
+.marquee-container:hover .marquee-track { animation-play-state: paused; }
+.marquee-content { display: inline-flex; align-items: center; padding-right: 5rem; flex-shrink: 0; }
+@keyframes marquee-scroll { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
 
 .search-section { background-color: #222; padding: 15px 30px; display: flex; gap: 10px; border-bottom: 2px solid #444; }
 .search-input { flex-grow: 1; background-color: #000; color: var(--accent-green); border: 2px inset var(--border-light); padding: 10px; font-family: var(--font-main); font-size: 16px; outline: none; transition: 0.2s;}

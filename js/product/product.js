@@ -346,13 +346,6 @@ function openProductModal(item) {
                         localStorage.setItem('nisha_added_views', JSON.stringify(viewedItems));
                     }
                 });
-            } else {
-                sb.from('items').select('views_count').eq('id', item.id).limit(1).then(({ data, error }) => {
-                    if (!error && data && data.length > 0) {
-                        viewCount.innerText = data[0].views_count || 0;
-                        item.views_count = data[0].views_count || 0;
-                    }
-                });
             }
         }
     }

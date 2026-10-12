@@ -51,10 +51,13 @@ module.exports = async function handler(req, res) {
 '<meta charset="UTF-8">\n' +
 '<title>' + title + '</title>\n' +
 '<meta property="og:type" content="website">\n' +
+'<meta property="og:site_name" content="NISHA">\n' +
 '<meta property="og:title" content="' + title + '">\n' +
 '<meta property="og:description" content="' + description + '">\n' +
 '<meta property="og:image" content="' + imageUrl + '">\n' +
 '<meta property="og:url" content="https://www.nisha-store.shop/share/' + id + '">\n' +
+'<meta property="product:price:amount" content="' + (item.price || 0) + '">\n' +
+'<meta property="product:price:currency" content="UAH">\n' +
 videoTags + '\n' +
 '<meta name="twitter:card" content="summary_large_image">\n' +
 '<meta name="twitter:title" content="' + title + '">\n' +

@@ -21,11 +21,19 @@
     },
     {
       "source": "/sitemap.xml",
-      "destination": "https://nisha-api.onrender.com/sitemap.xml"
+      "destination": "/api/sitemap"
     },
     {
       "source": "/share/:id",
       "destination": "/api/share"
+    },
+    {
+      "source": "/api/google-feed.xml",
+      "destination": "https://nisha-api.onrender.com/api/google-feed.xml"
+    },
+    {
+      "source": "/google-feed.xml",
+      "destination": "https://nisha-api.onrender.com/api/google-feed.xml"
     }
   ]
 }
