@@ -485,6 +485,8 @@ async function initApp() {
             const favNav = document.getElementById('favNav');
             if (favNav) favNav.style.color = '#fff';
             setTimeout(() => { if (typeof toggleFavFilter === 'function') toggleFavFilter(true); }, 150);
+        } else if (quickAction === 'reviews' || urlParams.get('open') === 'reviews') {
+            setTimeout(() => { if (typeof openReviewsModal === 'function') openReviewsModal(); }, 250);
         }
 
         // Восстанавливаем вкладку "Избранное"
@@ -762,6 +764,11 @@ async function initApp() {
                     }
                 })
                 .subscribe();
+
+            // --- РЕАЛТАЙМ ПУШ-УВЕДОМЛЕНИЯ О НОВЫХ ОТЗЫВАХ ---
+            if (typeof initReviewsRealtime === 'function') {
+                initReviewsRealtime(_supabase);
+            }
         
        // 🚀 СОВРЕМЕННЫЙ ИНТЕЛЛЕКТУАЛЬНЫЙ СКРОЛЛ (Как в Instagram)
         let isBatchLoading = false;

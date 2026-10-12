@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v166';
+const CACHE_NAME = 'nisha-cache-v167';
 const IMAGE_CACHE = 'nisha-images-v3';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
@@ -186,7 +186,18 @@ self.addEventListener('push', event => {
 // Клик по уведомлению
 self.addEventListener('notificationclick', event => {
     event.notification.close();
+    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
     event.waitUntil(
-        clients.openWindow(event.notification.data.url)
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            for (let client of windowClients) {
+                if (client.url && client.url.includes('nisha-store.shop') && 'focus' in client) {
+                    if (targetUrl.includes('action=reviews') && 'navigate' in client) {
+                        return client.navigate(targetUrl).then(c => c ? c.focus() : client.focus());
+                    }
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) return clients.openWindow(targetUrl);
+        })
     );
 });

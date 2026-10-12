@@ -258,6 +258,9 @@ window.updateCartUI = updateCartUI;
 
 function debouncedNPCitySearch(query) {
     if (citySearchTimeout) clearTimeout(citySearchTimeout);
+    if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
+    const bd = document.getElementById('branchDropdown');
+    if (bd) bd.style.display = 'none';
     
     document.getElementById('orderBranch').value = ''; 
     document.getElementById('orderBranch').readOnly = true;
@@ -349,6 +352,10 @@ window.searchNPCity = searchNPCity;
 
 // Умный поиск отделений
 function filterNPBranches(query) {
+    if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
+    const cd = document.getElementById('cityDropdown');
+    if (cd) cd.style.display = 'none';
+
     const dropdown = document.getElementById('branchDropdown');
     
     if (query.length > 0) {
@@ -444,6 +451,10 @@ window.ensureCityRef = ensureCityRef;
 // Запрос ВСЕХ отделений и почтоматов города (постранично, с памятью и sessionStorage)
 let _branchLoadToken = 0;
 async function loadNPBranches(searchString = "") {
+    if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
+    const cd = document.getElementById('cityDropdown');
+    if (cd) cd.style.display = 'none';
+
     if (typeof searchString !== 'string') searchString = "";
 
     const input = document.getElementById('orderBranch');
@@ -862,8 +873,8 @@ window.handleSwipeEnd = function(e) {
     cartSwipeCurrentX = 0;
 };
 
-// Единый обработчик кликов вне выпадающих меню (города, отделения, корзина, язык)
-document.addEventListener('mousedown', (e) => {
+// Единый обработчик кликов и тапов вне выпадающих меню (города, отделения, оплата, корзина, язык)
+function handleDropdownsOutsideClick(e) {
     if (!e.target.closest('#orderCity') && !e.target.closest('#cityDropdown')) {
         const cd = document.getElementById('cityDropdown');
         if (cd) cd.style.display = 'none';
@@ -871,6 +882,9 @@ document.addEventListener('mousedown', (e) => {
     if (!e.target.closest('#orderBranch') && !e.target.closest('#branchDropdown')) {
         const bd = document.getElementById('branchDropdown');
         if (bd) bd.style.display = 'none';
+    }
+    if (!e.target.closest('#paymentDisplay') && !e.target.closest('#paymentDropdown')) {
+        if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
     }
     if (!e.target.closest('#cartInfoWrapper')) {
         const cartDrop = document.getElementById('cartDropdown');
@@ -887,7 +901,9 @@ document.addEventListener('mousedown', (e) => {
         const langWrap = document.getElementById('footerLangWrapper');
         if (langWrap) langWrap.classList.remove('active');
     }
-});
+}
+document.addEventListener('mousedown', handleDropdownsOutsideClick);
+document.addEventListener('touchstart', handleDropdownsOutsideClick, { passive: true });
 
 // ==========================================
 // 4. ОФОРМЛЕНИЕ ЗАКАЗА (CHECKOUT)

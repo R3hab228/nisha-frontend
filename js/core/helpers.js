@@ -28,7 +28,7 @@ window.triggerHaptic = triggerHaptic;
 let lastToastMsg = '';
 let lastToastTime = 0;
 
-function showToast(message, type = 'success', imgUrl = null) {
+function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     const now = Date.now();
     if (message === lastToastMsg && (now - lastToastTime < 2500)) return;
     lastToastMsg = message;
@@ -39,6 +39,14 @@ function showToast(message, type = 'success', imgUrl = null) {
     
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
+    if (onClick && typeof onClick === 'function') {
+        toast.style.cursor = 'pointer';
+        toast.style.pointerEvents = 'auto';
+        toast.onclick = (e) => {
+            e.stopPropagation();
+            try { onClick(); } catch(err) { console.warn(err); }
+        };
+    }
     
     // Если передали картинку — добавляем её слева от текста
     let html = '';

@@ -218,6 +218,7 @@ async function submitAutoReview() {
     }]);
     
     if (!error) {
+        window._myLastReviewText = text;
         reviewsCache.data = null;
         reviewsCache.timestamp = 0;
         showToast('Отзыв опубликован! Спасибо.', 'success');
@@ -312,6 +313,7 @@ async function submitManualReview() {
     if (error) {
         showToast('Ошибка при отправке: ' + error.message, 'error');
     } else {
+        window._myLastReviewText = text;
         reviewsCache.data = null;
         reviewsCache.timestamp = 0;
         showToast('Отзыв успешно опубликован!', 'success');
@@ -324,3 +326,86 @@ async function submitManualReview() {
     }
 }
 window.submitManualReview = submitManualReview;
+
+// ==========================================
+// REALTIME ПУШ-УВЕДОМЛЕНИЯ О НОВЫХ ОТЗЫВАХ
+// ==========================================
+let _reviewsRealtimeChannel = null;
+
+function initReviewsRealtime(sb) {
+    if (!sb) sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    if (!sb) return;
+    if (_reviewsRealtimeChannel) return;
+
+    try {
+        _reviewsRealtimeChannel = sb.channel('public:reviews')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, (payload) => {
+                if (payload.eventType !== 'INSERT' && payload.eventType !== 'UPDATE') return;
+                const rev = payload.new;
+                if (!rev) return;
+
+                // Проверяем статус публикации: если явно false, не показываем
+                if (rev.is_published === false) return;
+                if (payload.eventType === 'UPDATE' && payload.old && payload.old.is_published === true) {
+                    return; // Не спамим при редактировании уже опубликованного отзыва
+                }
+
+                // Инвалидируем оперативный кэш
+                reviewsCache.data = null;
+                reviewsCache.timestamp = 0;
+
+                // Если модальное окно отзывов сейчас открыто — мгновенно обновляем список
+                const modal = document.getElementById('reviewsModal');
+                if (modal && window.getComputedStyle(modal).display === 'flex') {
+                    openReviewsModal();
+                }
+
+                // Защита от дублей уведомлений
+                window._notifiedReviewIds = window._notifiedReviewIds || new Set();
+                if (rev.id && window._notifiedReviewIds.has(rev.id)) return;
+                if (rev.id) window._notifiedReviewIds.add(rev.id);
+
+                // Если отзыв только что отправил текущий пользователь — он уже видел тост об успехе
+                if (window._myLastReviewText && rev.text && window._myLastReviewText.trim() === rev.text.trim()) {
+                    window._myLastReviewText = null;
+                    return;
+                }
+
+                // Форматируем имя и текст
+                const rawName = (rev.user_name || '').trim();
+                const author = rawName ? (rawName.startsWith('@') ? rawName : '@' + rawName) : 'Покупатель';
+                const cleanText = (rev.text || '').replace(/\s+/g, ' ').trim();
+                const snippet = cleanText.length > 55 ? cleanText.slice(0, 52) + '...' : cleanText;
+                const toastMsg = `⭐ Новый отзыв от ${author}: "${snippet}"`;
+
+                // 1. Интерактивный пуш-тост на сайте с кликом для открытия модалки
+                if (typeof showToast === 'function') {
+                    showToast(toastMsg, 'success', rev.item_image || null, () => {
+                        openReviewsModal();
+                    });
+                }
+
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('selection');
+                }
+
+                // 2. Системный Web Push / Notification через Service Worker (для фона/блокировки экрана)
+                if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification('NISHA STORE | Новый отзыв ⭐', {
+                            body: `${author}: "${snippet}"`,
+                            icon: rev.item_image || '/icon-192.png',
+                            badge: '/badge.png',
+                            tag: 'nisha-review-' + (rev.id || Date.now()),
+                            renotify: true,
+                            data: { url: 'https://www.nisha-store.shop/?action=reviews' }
+                        });
+                    }).catch(() => {});
+                }
+            })
+            .subscribe();
+    } catch(e) {
+        console.warn('Realtime reviews init error:', e);
+    }
+}
+window.initReviewsRealtime = initReviewsRealtime;
