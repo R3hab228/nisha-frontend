@@ -813,6 +813,8 @@ if (mainSearchInput) {
             saveRecentSearch(this.value.trim());
             applyFilters();
             closeSearch();
+        } else if (e.key === 'Escape') {
+            closeSearch();
         }
     });
     mainSearchInput.addEventListener('input', function() {
@@ -1490,6 +1492,36 @@ window.updateCharCount = updateCharCount;
 // ПЕРЕХОД К СЛЕДУЮЩЕМУ ПОЛЮ ПО НАЖАТИЮ ENTER (ДЛЯ ПК)
 // ==========================================
 document.addEventListener('keydown', function(e) {
+    // Горячая клавиша быстрого поиска (/ или Ctrl+K / Cmd+K)
+    const isCtrlK = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K');
+    const isSlash = e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey;
+
+    if (isCtrlK || isSlash) {
+        const activeEl = document.activeElement;
+        const tag = activeEl ? activeEl.tagName : '';
+        const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || (activeEl && activeEl.isContentEditable);
+
+        // Если пользователь уже печатает в поле ввода, обычный слэш (/) не перехватываем
+        if (!(isSlash && isEditing)) {
+            const hasOpenModal = document.querySelector('.modal-overlay[style*="display: flex"], .modal-overlay[style*="display: block"]');
+            if (!hasOpenModal || isCtrlK) {
+                const searchInput = document.getElementById('mainSearch');
+                if (searchInput && activeEl !== searchInput) {
+                    e.preventDefault();
+                    if (hasOpenModal && typeof closeModal === 'function') {
+                        if (hasOpenModal.id === 'productModal') closeModal('productModal');
+                    }
+                    searchInput.focus();
+                    searchInput.select();
+                    const rect = searchInput.getBoundingClientRect();
+                    if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                        searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        }
+    }
+
     if (e.key === 'Enter') {
         const activeEl = document.activeElement;
 

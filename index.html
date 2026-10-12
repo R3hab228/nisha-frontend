@@ -32,11 +32,10 @@
 <link rel=apple-touch-icon sizes=180x180 href="/icon-512.png?v=3">
 <link rel=icon type=image/png sizes=32x32 href="/icon.png?v=3">
 <link rel=manifest href="/manifest.json?v=3">
-<link href=https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@4/dark.css rel=stylesheet>
-<link rel=preload href="/style.css?v=159" as=style>
+<link rel=preload href="/style.css?v=160" as=style>
 <link rel=preload href=/locales.json as=fetch crossorigin=anonymous>
 <link rel=preload href=/cables.svg as=image type="image/svg+xml">
-<link rel=stylesheet href="style.css?v=159">
+<link rel=stylesheet href="style.css?v=160">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity -->
@@ -527,13 +526,13 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <input id=botTrap style=opacity:0;position:absolute;top:0;left:0;height:0;width:0;z-index:-1 tabindex=-1 autocomplete=off>
 <label data-i18n=checkout.name>ФИО Получателя:</label>
 <input id=orderName class=form-input placeholder="Іванов Іван Іванович" oninput="this.value=this.value.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g,'')">
-<div id=checkoutPhoneWrapper>
-<label data-i18n=checkout.phone>Телефон (ОБЯЗАТЕЛЬНО):</label>
+<div id=checkoutPhoneWrapper style="display:flex;flex-direction:column;gap:8px">
+<label data-i18n=checkout.phone style="margin-bottom:0">Телефон (ОБЯЗАТЕЛЬНО):</label>
 <div style=display:flex;gap:10px>
 <input type=tel id=orderPhone class=form-input placeholder=+380... inputmode=numeric>
 <button class="search-btn btn-target" id=btnGetOtp onclick=generateAndSendOTP() style="white-space:nowrap;padding:10px 15px;font-size:12px" data-i18n=checkout.btn_otp>Подтвердить</button>
 </div>
-<div id=otpStatus style=color:var(--accent-red);font-size:11px;font-family:var(--font-mono);margin-top:-5px data-i18n=checkout.otp_status>Сначала подтвердите номер для заказа!</div>
+<div id=otpStatus style="color:var(--accent-red);font-size:11px;font-family:var(--font-mono);line-height:1.4;margin-top:2px" data-i18n=checkout.otp_status>Сначала подтвердите номер для заказа!</div>
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div style=position:relative>
@@ -635,27 +634,24 @@ document.getElementById('paymentDisplay').onclick = togglePaymentDropdown;
 <script defer src=https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2></script>
 <script defer src=https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/fuse.js@7.0.0></script>
-<script defer src=https://cdn.jsdelivr.net/npm/rough-notation@0.5.1/lib/rough-notation.iife.js></script>
-<script defer src=https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js></script>
 <script type="module">import autoAnimate from 'https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.min.js'; window.autoAnimate = autoAnimate;</script>
-<script defer src=https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.33/dist/lenis.min.js></script>
 <script defer src=https://browser.sentry-cdn.com/7.105.0/bundle.min.js crossorigin=anonymous></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next@23.10.1/dist/umd/i18next.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js></script>
-<script defer src="config.js?v=159"></script>
-<script defer src="js/core/helpers.js?v=159"></script>
-<script defer src="js/ui/windows.js?v=159"></script>
-<script defer src="js/auth/auth.js?v=159"></script>
-<script defer src="js/drop/drop.js?v=159"></script>
-<script defer src="js/chat/chat.js?v=159"></script>
-<script defer src="js/reviews/reviews.js?v=159"></script>
-<script defer src="js/catalog/catalog.js?v=159"></script>
-<script defer src="js/cart/cart.js?v=159"></script>
-<script defer src="js/product/product.js?v=159"></script>
-<script defer src="js/profile/profile.js?v=159"></script>
-<script defer src="app.js?v=159"></script>
+<script defer src="config.js?v=160"></script>
+<script defer src="js/core/helpers.js?v=160"></script>
+<script defer src="js/ui/windows.js?v=160"></script>
+<script defer src="js/auth/auth.js?v=160"></script>
+<script defer src="js/drop/drop.js?v=160"></script>
+<script defer src="js/chat/chat.js?v=160"></script>
+<script defer src="js/reviews/reviews.js?v=160"></script>
+<script defer src="js/catalog/catalog.js?v=160"></script>
+<script defer src="js/cart/cart.js?v=160"></script>
+<script defer src="js/product/product.js?v=160"></script>
+<script defer src="js/profile/profile.js?v=160"></script>
+<script defer src="app.js?v=160"></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>

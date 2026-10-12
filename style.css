@@ -841,7 +841,8 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .card-slider-wrapper { position: relative; width: 100%; height: 210px; background-color: #151515; border-bottom: 1px solid var(--border-color); overflow: hidden; }
 .card-slider-container { display: flex; width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
 .card-slider-container::-webkit-scrollbar { display: none; }
-.card-slide { flex: 0 0 100%; height: 100%; scroll-snap-align: center; scroll-snap-stop: always; background-size: cover; background-position: center; position: relative; }
+.card-slide { flex: 0 0 100%; height: 100%; scroll-snap-align: center; scroll-snap-stop: always; background-size: cover; background-position: center; position: relative; overflow: hidden; }
+.card-slide-img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
 .card-dots-container { position: absolute; bottom: 8px; left: 0; width: 100%; display: flex; justify-content: center; gap: 5px; pointer-events: none; z-index: 10; }
 .card-dot { width: 5px; height: 5px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; transition: 0.2s; box-shadow: 0 0 2px rgba(0,0,0,0.8); }
 .card-dot.active { background: var(--accent-green); transform: scale(1.3); box-shadow: 0 0 5px var(--accent-green); }

@@ -48,37 +48,52 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
 }
 window.getOptimizedImageUrl = getOptimizedImageUrl;
 
-// ОПТИМИЗАЦИЯ PREFETCH: отложенная предзагрузка картинок (с задержкой 200мс, чтобы не тормозить при скролле)
+// ОПТИМИЗАЦИЯ PREFETCH: отложенная предзагрузка картинок (задержка 100мс на hover для мгновенного 0мс открытия товара)
 let _prefetchDebounceTimer = null;
+let _prefetchPendingId = null;
+
 window.prefetchItemImages = function(id) {
     if (!window._prefetchedItems) window._prefetchedItems = new Set();
     if (window._prefetchedItems.has(id)) return;
     
     clearTimeout(_prefetchDebounceTimer);
+    _prefetchPendingId = id;
     _prefetchDebounceTimer = setTimeout(() => {
         if (window._prefetchedItems.has(id)) return;
         window._prefetchedItems.add(id);
-        const item = window.allItems.find(i => i.id === id);
+        const catalog = typeof getCatalog === 'function' ? getCatalog() : (window.allItems || []);
+        const item = catalog.find(i => String(i.id) === String(id));
         if (item) {
             const toCDN = window.toCDN || ((u) => u);
             // Предзагрузка миниатюр карточки для мгновенного свайпа в сетке
             if (item.thumbnails && item.thumbnails.length > 1) {
                 item.thumbnails.slice(1, 4).forEach(url => {
-                    const img = new Image();
-                    img.decoding = 'async';
-                    img.src = toCDN(url);
+                    if (url && typeof url === 'string' && !url.endsWith('.mp4')) {
+                        const img = new Image();
+                        img.decoding = 'async';
+                        img.src = toCDN(url);
+                    }
                 });
             }
-            // Предзагрузка фото высокого качества для модалки
+            // Предзагрузка фото высокого качества для мгновенного открытия модалки (0 мс)
             if (item.images && item.images.length > 0) {
                 item.images.slice(0, 2).forEach(url => {
-                    const img = new Image();
-                    img.decoding = 'async';
-                    img.src = toCDN(url);
+                    if (url && typeof url === 'string' && !url.endsWith('.mp4')) {
+                        const img = new Image();
+                        img.decoding = 'async';
+                        img.src = toCDN(url);
+                    }
                 });
             }
         }
-    }, 200);
+    }, 100);
+};
+
+window.cancelPrefetchItemImages = function(id) {
+    if (_prefetchPendingId === id) {
+        clearTimeout(_prefetchDebounceTimer);
+        _prefetchPendingId = null;
+    }
 };
 
 // ==========================================
@@ -1235,6 +1250,10 @@ function initGridEventDelegation() {
     grid.addEventListener('mouseout', (e) => {
         if (!currentTooltipCard) return;
         if (!e.relatedTarget || !currentTooltipCard.contains(e.relatedTarget)) {
+            const leavingId = currentTooltipCard.getAttribute('data-id');
+            if (leavingId && typeof window.cancelPrefetchItemImages === 'function') {
+                window.cancelPrefetchItemImages(leavingId);
+            }
             currentTooltipCard = null;
             if (typeof window.hideItemMeasurementsTooltip === 'function') {
                 window.hideItemMeasurementsTooltip();
@@ -1397,10 +1416,10 @@ function renderNextBatch() {
                         </div>`;
                 } else {
                     slidesStr += `
-                        <div class="card-slide img-8bit-loading" style="background-image: none;">
-                           <img src="${cdnThumb}" ${loadAttr} decoding="async" style="position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;" 
-onload="this.parentElement.style.backgroundImage='url(\\''+this.src+'\\')'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
-onerror="this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
+                        <div class="card-slide img-8bit-loading">
+                           <img class="card-slide-img" src="${cdnThumb}" ${loadAttr} decoding="async" alt="" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
+onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
                 }
                 dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
