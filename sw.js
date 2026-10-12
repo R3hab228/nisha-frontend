@@ -1,5 +1,5 @@
-const CACHE_NAME = 'nisha-cache-v164';
-const IMAGE_CACHE = 'nisha-images-v2';
+const CACHE_NAME = 'nisha-cache-v165';
+const IMAGE_CACHE = 'nisha-images-v3';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
     '/',
@@ -118,6 +118,7 @@ self.addEventListener('fetch', event => {
                             });
                         });
                     }
+                    return networkResponse;
                 }).catch(() => {
                     const fallbackSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%"><rect width="400" height="400" fill="#111"/><rect x="12" y="12" width="376" height="376" fill="none" stroke="#262626" stroke-width="2" stroke-dasharray="6 4"/><path d="M160 170l40 40 40-40M160 230l40-40 40 40" stroke="#333" stroke-width="2" stroke-linecap="round"/><text x="200" y="270" fill="#666" font-family="Courier New, monospace" font-size="11" letter-spacing="2" text-anchor="middle">[ NISHA ARCHIVE ]</text><text x="200" y="290" fill="#ff0055" font-family="Courier New, monospace" font-size="10" letter-spacing="1.5" text-anchor="middle">OFFLINE // NO IMAGE</text></svg>';
                     return new Response(fallbackSvg, {
