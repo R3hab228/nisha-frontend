@@ -644,6 +644,7 @@ async function initApp() {
 
          _supabase.channel('public:items')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, payload => {
+                    const catalog = window.allItems || [];
                     // ЕСЛИ ДОБАВИЛИ НОВУЮ ВЕЩЬ ЧЕРЕЗ БОТА
                     if (payload.eventType === 'INSERT') {
                         if (!payload.new || !payload.new.id) return;
@@ -651,81 +652,64 @@ async function initApp() {
                         if (window._notifiedItemIds.has(payload.new.id)) return;
                         window._notifiedItemIds.add(payload.new.id);
 
-                        const currentItems = window.allItems || allItems || [];
-                        const alreadyExists = currentItems.some(i => i.id === payload.new.id);
+                        const alreadyExists = catalog.some(i => i.id === payload.new.id);
                         if (!alreadyExists) {
-                            currentItems.unshift(payload.new);
-                            window.allItems = currentItems;
+                            catalog.unshift(payload.new);
+                            window.allItems = catalog;
                             if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
-                            showToast(`🆕 Новая вещь на сайте: ${payload.new.name}`, 'success');
-                            applyFilters(); // Плавно перерисовываем сетку
+                            if (typeof showToast === 'function') {
+                                showToast(`🆕 Новая вещь на сайте: ${payload.new.name}`, 'success');
+                            }
+                            if (typeof applyFilters === 'function') applyFilters();
                         }
                     } 
                     // ЕСЛИ АДМИН УДАЛИЛ ВЕЩЬ
                     else if (payload.eventType === 'DELETE') {
-                        allItems = allItems.filter(i => i.id !== payload.old.id);
-                        if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
-                        applyFilters();
+                        if (payload.old && payload.old.id) {
+                            window.allItems = catalog.filter(i => i.id !== payload.old.id);
+                            const deadCard = document.querySelector(`.item-card[data-id="${payload.old.id}"]`);
+                            if (deadCard) deadCard.remove();
+                            if (typeof removeSoldItemFromCart === 'function') removeSoldItemFromCart(payload.old.id);
+                            if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+                        }
                     }
-                    // ЕСЛИ ВЕЩЬ КУПИЛИ ИЛИ ОБНОВИЛИ
+                    // ЕСЛИ ВЕЩЬ КУПИЛИ ИЛИ ОБНОВИЛИ СТАТУС / ЦЕНУ / БЕЙДЖИ
                     else if (payload.eventType === 'UPDATE') {
                         const updatedItem = payload.new;
-                        const index = allItems.findIndex(i => i.id === updatedItem.id);
-                        let needsGridUpdate = false;
+                        if (!updatedItem || !updatedItem.id) return;
+                        const index = catalog.findIndex(i => i.id === updatedItem.id);
                         if (index !== -1) {
-                            const oldItem = allItems[index];
-                            
-                            // Проверка: упала ли цена / появилась ли скидка
-                            const priceDropped = (!oldItem.is_sale && updatedItem.is_sale) || (oldItem.price > updatedItem.price);
+                            const oldItem = catalog[index];
+                            const oldStatus = oldItem.status;
+                            const oldPrice = oldItem.price;
+                            const oldIsSale = oldItem.is_sale;
                             const imgUrl = (updatedItem.thumbnails && updatedItem.thumbnails.length > 0) ? updatedItem.thumbnails[0] : ((updatedItem.images && updatedItem.images.length > 0) ? updatedItem.images[0] : null);
 
-                            needsGridUpdate = oldItem.is_top !== updatedItem.is_top || 
-                                              oldItem.top_until !== updatedItem.top_until || 
-                                              oldItem.status !== updatedItem.status;
-                            Object.assign(allItems[index], updatedItem);
+                            Object.assign(catalog[index], updatedItem);
                             if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
-                            
-                            if (priceDropped && updatedItem.status === 'available') {
-                                showToast('🔥 СКИДКА!!!', 'success', imgUrl);
+
+                            // Точечное мгновенное обновление карточки в DOM без перезагрузки
+                            if (typeof window.updateCardDOM === 'function') {
+                                window.updateCardDOM(catalog[index]);
                             }
 
-                            // Если товар был куплен другим покупателем, удаляем его из корзины
-                            if (updatedItem.status === 'sold') {
-                                const currentCart = (typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || cart || []);
-                                const cartIdx = currentCart.findIndex(c => c.id === updatedItem.id);
-                                if (cartIdx !== -1) {
-                                    currentCart.splice(cartIdx, 1);
-                                    if (typeof setActiveCart === 'function') {
-                                        setActiveCart(currentCart);
-                                    } else {
-                                        localStorage.setItem('nisha_cart', JSON.stringify(currentCart));
-                                        window.cart = currentCart;
+                            if (typeof showToast === 'function') {
+                                if ((!oldIsSale && updatedItem.is_sale) || (oldPrice > updatedItem.price)) {
+                                    if (updatedItem.status === 'available') {
+                                        showToast(`🔥 СКИДКА: ${updatedItem.name}`, 'success', imgUrl);
                                     }
-                                    if (typeof syncCartToServer === 'function') syncCartToServer();
-                                    if (typeof updateCartUI === 'function') updateCartUI();
-                                    showToast(`Товар ${updatedItem.name} уже купили, он удален из корзины.`, 'error');
                                 }
-                            } else if (oldItem && oldItem.status === 'reserved' && updatedItem.status === 'available') {
-                                showToast(`Бронь истекла: ${updatedItem.name} снова в наличии!`, 'info', imgUrl);
-                            }
-                            
-                            // СИНХРОННОЕ ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ КАРТОЧКИ БЕЗ ПЕРЕЗАГРУЗКИ ГРИДА
-                            if (typeof updateCardDOM === 'function') {
-                                updateCardDOM(allItems[index]);
-                            }
-                            
-                            const activeModalItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
-                            if (activeModalItem && activeModalItem.id === updatedItem.id) {
-                                const cartBtn = document.getElementById('modalCartBtn');
-                                const waitBtn = document.getElementById('modalWaitlistBtn');
                                 if (updatedItem.status === 'sold') {
-                                    if (cartBtn) cartBtn.style.display = 'none';
-                                    if (waitBtn) waitBtn.style.display = 'block';
-                                } else if (updatedItem.status === 'available') {
-                                    if (cartBtn) cartBtn.style.display = 'block';
-                                    if (waitBtn) waitBtn.style.display = 'none';
+                                    if (typeof removeSoldItemFromCart === 'function') {
+                                        removeSoldItemFromCart(updatedItem.id, updatedItem.name);
+                                    }
+                                } else if (oldStatus === 'reserved' && updatedItem.status === 'available') {
+                                    showToast(`Бронь истекла: ${updatedItem.name} снова в наличии!`, 'info', imgUrl);
                                 }
                             }
+                        } else {
+                            // Если товар не найден в локальном массиве, подтягиваем через syncCriticalStatuses
+                            if (typeof syncCriticalStatuses === 'function') syncCriticalStatuses();
                         }
                     }
                 })
@@ -1649,58 +1633,6 @@ document.addEventListener('click', (e) => {
         }).catch(() => {});
     }
 }, { passive: true });
-// ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ БЕЙДЖИКОВ НА КАРТОЧКЕ
-window.updateCardDOM = function(item) {
-    const cards = document.querySelectorAll(`.item-card[data-id="${item.id}"]`);
-    cards.forEach(card => {
-        // Очищаем старые бейджи статуса
-        const oldBadges = card.querySelectorAll('.sold-badge, .reserved-badge, .system-status-bar');
-        oldBadges.forEach(b => b.remove());
-        card.classList.remove('sold-out', 'reserved-item');
-
-        // Добавляем новые бейджи SOLD / RESERVED
-        if (item.status === 'sold') {
-            card.classList.add('sold-out');
-            card.insertAdjacentHTML('afterbegin', '<div class="sold-badge">SOLD</div>');
-        } else if (item.status === 'reserved') {
-            card.classList.add('reserved-item');
-            card.insertAdjacentHTML('afterbegin', '<div class="reserved-badge">RESERVED</div>');
-        } else {
-            // Для доступных товаров - генерируем систему SALE / HOT / TOP
-            const hasSale = item.is_sale;
-            const hasHot = (item.views_count || 0) >= 25;
-            const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > Date.now();
-
-            if (hasSale || hasHot || isTop) {
-                let badgeHTML = `<div class="system-status-bar">`;
-                if (isTop) {
-                    badgeHTML += `<span class="status-item status-top"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> TOP</span>`;
-                }
-                if (isTop && (hasSale || hasHot)) badgeHTML += `<div class="status-divider"></div>`;
-                if (hasSale) badgeHTML += `<span class="status-item status-sale">% SALE</span>`;
-                if (hasSale && hasHot) badgeHTML += `<div class="status-divider"></div>`;
-                if (hasHot) {
-                    const chartSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
-                    badgeHTML += `<span class="status-item status-hot">${chartSvg} HOT</span>`;
-                }
-                badgeHTML += `</div>`;
-                
-                card.insertAdjacentHTML('afterbegin', badgeHTML);
-            }
-        }
-        
-        // Обновляем цену динамически
-        const priceDiv = card.querySelector('.price-container');
-        if (priceDiv) {
-            const curr = getCurrency();
-            if (item.is_sale && item.old_price) {
-                priceDiv.innerHTML = `<span class="old-price">${item.old_price} ${curr}</span><span class="new-price">${item.price} ${curr}</span>`;
-            } else {
-                priceDiv.innerHTML = `${item.price} ${curr}`;
-            }
-        }
-    });
-};
 
 
 

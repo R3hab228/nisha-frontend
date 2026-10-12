@@ -773,63 +773,265 @@ async function loadAllItems() {
 }
 window.loadAllItems = loadAllItems;
 
-// СИНХРОНИЗАЦИЯ КРИТИЧЕСКИХ СТАТУСОВ (TOP, RESERVED, SOLD) в обход CDN
-async function syncCriticalStatuses() {
-    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
-    if (!sb) return;
-    try {
-        const { data } = await sb.from('items').select('id, is_top, top_until, status');
-        
-        if (data) {
-            let changed = false;
-            
-            // 1. Очистка от удаленных из БД товаров
-            const validIds = new Set(data.map(d => d.id));
-            const originalLength = window.allItems.length;
-            window.allItems = window.allItems.filter(i => validIds.has(i.id));
-            if (window.allItems.length !== originalLength) changed = true;
-            
-            // 2. Синхронизация статусов
-            const dataMap = new Map();
-            data.forEach(d => dataMap.set(d.id, d));
-            
-            window.allItems.forEach(old => {
-                const fresh = dataMap.get(old.id);
-                if (fresh) {
-                    if (old.is_top !== fresh.is_top || old.top_until !== fresh.top_until || old.status !== fresh.status) {
-                        old.is_top = fresh.is_top;
-                        old.top_until = fresh.top_until;
-                        old.status = fresh.status;
-                        changed = true;
-                    }
-                }
-            });
+// ==========================================
+// ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ КАРТОЧКИ В DOM (БЕЗ ПЕРЕРИСОВКИ ВСЕЙ СЕТКИ)
+// ==========================================
+function updateCardDOM(item) {
+    if (!item || !item.id) return;
+    const cards = document.querySelectorAll(`.item-card[data-id="${item.id}"]`);
+    const curr = (typeof getCurrency === 'function') ? getCurrency() : 'грн';
 
-            // 3. Подгрузка самых свежих товаров
-            const { data: latestItems } = await sb.from('items')
-                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop')
-                .order('created_at', { ascending: false })
-                .limit(5);
+    if (cards && cards.length > 0) {
+        cards.forEach(card => {
+            // 1. Очищаем старые бейджи статуса
+            const oldBadges = card.querySelectorAll('.sold-badge, .reserved-badge, .system-status-bar');
+            oldBadges.forEach(b => b.remove());
 
-            if (latestItems) {
-                let latestAdded = false;
-                latestItems.forEach(newItem => {
-                    if (!window.allItems.find(i => i.id === newItem.id)) {
-                        window.allItems.unshift(newItem);
-                        latestAdded = true;
-                        changed = true;
+            card.classList.remove('sold-out', 'reserved-item');
+
+            const cartBtn = card.querySelector('.grid-cart-btn');
+
+            // 2. Обрабатываем статус
+            if (item.status === 'sold') {
+                card.classList.add('sold-out');
+                card.insertAdjacentHTML('afterbegin', '<div class="sold-badge">SOLD</div>');
+                if (cartBtn) cartBtn.style.display = 'none';
+            } else if (item.status === 'reserved') {
+                card.classList.add('reserved-item');
+                card.insertAdjacentHTML('afterbegin', '<div class="reserved-badge">RESERVED</div>');
+                if (cartBtn) cartBtn.style.display = '';
+            } else {
+                // available
+                if (cartBtn) cartBtn.style.display = '';
+
+                const hasSale = !!item.is_sale;
+                const hasHot = (item.views_count || 0) >= 25;
+                const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > Date.now();
+
+                if (hasSale || hasHot || isTop) {
+                    let badgeHTML = `<div class="system-status-bar">`;
+                    const parts = [];
+                    if (isTop) {
+                        parts.push(`<span class="status-item status-top"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> TOP</span>`);
                     }
-                });
-                if (latestAdded) {
-                    window.allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    if (hasSale) {
+                        parts.push(`<span class="status-item status-sale">% SALE</span>`);
+                    }
+                    if (hasHot) {
+                        const chartSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
+                        parts.push(`<span class="status-item status-hot">${chartSvg} HOT</span>`);
+                    }
+                    badgeHTML += parts.join('<div class="status-divider"></div>') + `</div>`;
+                    card.insertAdjacentHTML('afterbegin', badgeHTML);
                 }
             }
-            
-            if (changed) applyFilters();
+
+            // 3. Обновляем цену в .item-price
+            const priceDiv = card.querySelector('.item-price');
+            if (priceDiv) {
+                if (item.is_sale && item.old_price) {
+                    priceDiv.innerHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${item.old_price} ${curr}</span><span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
+                } else {
+                    priceDiv.innerHTML = `<span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
+                }
+            }
+        });
+    }
+
+    // 4. Если этот товар открыт в детальной модалке (productModal)
+    const activeModal = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    if (activeModal && activeModal.id === item.id) {
+        Object.assign(activeModal, item);
+        const modalCartBtn = document.getElementById('modalCartBtn');
+        const modalPriceEl = document.getElementById('modalItemPrice');
+        if (modalCartBtn) {
+            if (item.status === 'sold') {
+                modalCartBtn.style.display = 'none';
+            } else {
+                modalCartBtn.style.display = 'block';
+                const userCart = (typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []);
+                const isInCart = userCart.some(i => i.id === item.id);
+                modalCartBtn.innerText = isInCart ? '[ В КОРЗИНЕ ]' : (typeof i18next !== 'undefined' ? i18next.t('product.add_to_cart') : 'В КОРЗИНУ');
+            }
         }
-    } catch(e) { console.error("Sync error:", e); }
+        if (modalPriceEl) {
+            const isHackedActive = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
+            const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
+            modalPriceEl.innerText = finalPrice + ' ' + curr;
+        }
+    }
+}
+window.updateCardDOM = updateCardDOM;
+
+function removeSoldItemFromCart(itemId, itemName) {
+    const currentCart = (typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []);
+    const cartIdx = currentCart.findIndex(c => c.id === itemId);
+    if (cartIdx !== -1) {
+        currentCart.splice(cartIdx, 1);
+        if (typeof setActiveCart === 'function') {
+            setActiveCart(currentCart);
+        } else {
+            localStorage.setItem('nisha_cart', JSON.stringify(currentCart));
+            window.cart = currentCart;
+        }
+        if (typeof syncCartToServer === 'function') syncCartToServer();
+        if (typeof updateCartUI === 'function') updateCartUI();
+        if (typeof showToast === 'function') {
+            showToast(`Товар ${itemName || ''} уже купили, он удален из корзины.`, 'error');
+        }
+    }
+}
+window.removeSoldItemFromCart = removeSoldItemFromCart;
+
+// СИНХРОНИЗАЦИЯ КАТАЛОГА В РЕАЛЬНОМ ВРЕМЕНИ (НОВЫЕ ТОВАРЫ, СТАТУСЫ, БЕЙДЖИ TOP/HOT/SALE)
+let _isSyncingItems = false;
+async function syncCriticalStatuses() {
+    if (_isSyncingItems) return;
+    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    if (!sb || !window.allItems || window.allItems.length === 0) return;
+
+    _isSyncingItems = true;
+    try {
+        const { data, error } = await sb.from('items')
+            .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, views_count, created_at')
+            .order('created_at', { ascending: false })
+            .limit(1000);
+
+        if (error || !data) return;
+
+        const freshIdSet = new Set(data.map(d => d.id));
+        const currentIdSet = new Set(window.allItems.map(i => i.id));
+        let gridNeedsFullRefresh = false;
+
+        // 1. Очистка от удаленных из БД товаров
+        const deletedIds = [];
+        window.allItems.forEach(i => {
+            if (!freshIdSet.has(i.id)) deletedIds.push(i.id);
+        });
+
+        if (deletedIds.length > 0) {
+            window.allItems = window.allItems.filter(i => freshIdSet.has(i.id));
+            deletedIds.forEach(delId => {
+                const card = document.querySelector(`.item-card[data-id="${delId}"]`);
+                if (card) card.remove();
+                removeSoldItemFromCart(delId);
+            });
+            gridNeedsFullRefresh = true;
+        }
+
+        // 2. Проверка новых товаров (которых еще нет в клиенте)
+        const newIds = data.filter(d => !currentIdSet.has(d.id)).map(d => d.id);
+        if (newIds.length > 0) {
+            const { data: fullNewItems } = await sb.from('items')
+                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop')
+                .in('id', newIds);
+
+            if (fullNewItems && fullNewItems.length > 0) {
+                window._notifiedItemIds = window._notifiedItemIds || new Set();
+                fullNewItems.forEach(newItem => {
+                    if (!window.allItems.some(i => i.id === newItem.id)) {
+                        window.allItems.unshift(newItem);
+                        if (!window._notifiedItemIds.has(newItem.id)) {
+                            window._notifiedItemIds.add(newItem.id);
+                            if (typeof showToast === 'function') {
+                                showToast(`🆕 Новая вещь на сайте: ${newItem.name}`, 'success');
+                            }
+                        }
+                    }
+                });
+                window.allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                gridNeedsFullRefresh = true;
+            }
+        }
+
+        // 3. Синхронизация статусов, бейджей и цен существующих товаров
+        const freshMap = new Map();
+        data.forEach(d => freshMap.set(d.id, d));
+        let anyCardUpdated = false;
+
+        window.allItems.forEach(item => {
+            const fresh = freshMap.get(item.id);
+            if (!fresh) return;
+
+            const wasTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > Date.now();
+            const nowTop = fresh.is_top === true && fresh.top_until && new Date(fresh.top_until).getTime() > Date.now();
+            const topChanged = wasTop !== nowTop || item.top_until !== fresh.top_until || item.is_top !== fresh.is_top;
+
+            const statusChanged = item.status !== fresh.status;
+            const saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
+            const priceChanged = item.price !== fresh.price;
+            const wasHot = (item.views_count || 0) >= 25;
+            const nowHot = (fresh.views_count || 0) >= 25;
+            const hotChanged = wasHot !== nowHot || item.views_count !== fresh.views_count;
+
+            if (topChanged || statusChanged || saleChanged || priceChanged || hotChanged) {
+                const oldStatus = item.status;
+                const oldPrice = item.price;
+                const oldIsSale = item.is_sale;
+
+                // Обновляем поля объекта
+                item.is_top = fresh.is_top;
+                item.top_until = fresh.top_until;
+                item.status = fresh.status;
+                item.is_sale = fresh.is_sale;
+                item.old_price = fresh.old_price;
+                item.price = fresh.price;
+                item.views_count = fresh.views_count;
+
+                // Мгновенно обновляем карточку в DOM без мерцания
+                updateCardDOM(item);
+                anyCardUpdated = true;
+
+                // Уведомления пользователю
+                if (typeof showToast === 'function') {
+                    if ((!oldIsSale && fresh.is_sale) || (oldPrice > fresh.price)) {
+                        if (fresh.status === 'available') {
+                            showToast(`🔥 СКИДКА: ${item.name}`, 'success');
+                        }
+                    }
+                    if (oldStatus !== 'sold' && fresh.status === 'sold') {
+                        removeSoldItemFromCart(item.id, item.name);
+                    } else if (oldStatus === 'reserved' && fresh.status === 'available') {
+                        showToast(`Бронь истекла: ${item.name} снова в наличии!`, 'info');
+                    }
+                }
+            }
+        });
+
+        if (gridNeedsFullRefresh) {
+            localStorage.setItem('nisha_cached_db', JSON.stringify(window.allItems));
+            if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+            if (typeof applyFilters === 'function') applyFilters();
+        } else if (anyCardUpdated) {
+            localStorage.setItem('nisha_cached_db', JSON.stringify(window.allItems));
+            if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+        }
+    } catch (e) {
+        console.warn("Sync error:", e);
+    } finally {
+        _isSyncingItems = false;
+    }
 }
 window.syncCriticalStatuses = syncCriticalStatuses;
+
+// Периодический фоновый опрос и синхронизация по возвращению на вкладку
+if (!window._catalogAutoSyncInitialized) {
+    window._catalogAutoSyncInitialized = true;
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            syncCriticalStatuses();
+        }
+    }, 15000);
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            syncCriticalStatuses();
+        }
+    });
+    window.addEventListener('focus', () => {
+        syncCriticalStatuses();
+    });
+}
 
 // Умное соответствие размеров (обувь и одежда)
 function itemMatchesSizeFilter(itemOrSize, filterVal) {
