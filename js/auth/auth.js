@@ -187,6 +187,11 @@ async function checkPhoneAuth() {
                 btnSubmit.style.pointerEvents = 'auto';
             }
             if (statusOtp) statusOtp.style.display = 'none';
+            const phoneEl = document.getElementById('orderPhone');
+            if (phoneEl) {
+                phoneEl.classList.add('input-valid');
+                phoneEl.classList.remove('input-invalid');
+            }
             return;
         }
     } 
@@ -227,6 +232,11 @@ async function checkPhoneAuth() {
                 btnSubmit.style.pointerEvents = 'auto';
             }
             if (statusOtp) statusOtp.style.display = 'none';
+            const phoneEl = document.getElementById('orderPhone');
+            if (phoneEl) {
+                phoneEl.classList.add('input-valid');
+                phoneEl.classList.remove('input-invalid');
+            }
             if (btnOtp) {
                 btnOtp.style.display = 'block';
                 btnOtp.disabled = true; 

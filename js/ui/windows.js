@@ -266,9 +266,34 @@ function initWindowOverlayListeners() {
     initMobileSwipe();
 }
 
-// 7. Закрытие окон по клавише Escape
+// 7. Универсальное закрытие окон и оверлеев по клавише Escape
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+        // 1. Закрытие терминальных окон подтверждения или алертов
+        const confirmBox = document.getElementById('confirmTerminalModal');
+        if (confirmBox && confirmBox.parentNode) {
+            confirmBox.remove();
+            return;
+        }
+        const termAlert = document.getElementById('customTerminalAlert');
+        if (termAlert && termAlert.parentNode) {
+            termAlert.remove();
+            return;
+        }
+
+        // 2. Оверлеи успеха или подсказки email
+        const orderSuccess = document.getElementById('orderSuccessOverlay');
+        if (orderSuccess && window.getComputedStyle(orderSuccess).display !== 'none') {
+            orderSuccess.style.display = 'none';
+            return;
+        }
+        const emailPrompt = document.getElementById('emailPromptOverlay');
+        if (emailPrompt && window.getComputedStyle(emailPrompt).display !== 'none') {
+            emailPrompt.style.display = 'none';
+            return;
+        }
+
+        // 3. Закрываем активное модальное окно (.modal-overlay)
         const activeModals = Array.from(document.querySelectorAll('.modal-overlay')).filter(m => {
             const style = window.getComputedStyle(m);
             return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
@@ -277,7 +302,16 @@ document.addEventListener('keydown', (e) => {
             const topModal = activeModals[activeModals.length - 1];
             if (topModal.id !== 'rulesModal') {
                 closeModal(topModal.id);
+                return;
             }
+        }
+
+        // 4. Закрытие выпадающего списка живого поиска
+        const dropdown = document.getElementById('liveSearchDropdown');
+        const searchInput = document.getElementById('mainSearch');
+        if (dropdown && dropdown.style.display === 'block') {
+            if (typeof closeSearch === 'function') closeSearch();
+            if (searchInput) searchInput.blur();
         }
     }
 });

@@ -97,15 +97,28 @@ if ('serviceWorker' in navigator) {
         }).catch(err => console.log('[PWA] Ошибка SW: ', err));
     });
 }
-if (typeof Sentry !== 'undefined') {
-    Sentry.init({
-        dsn: "https://13d63555c1c64605be8f9659af548581@o4511428929323008.ingest.de.sentry.io/4511428931682384", 
-        release: "nisha-store@1.0.0",
-        environment: "production",
-        tracesSampleRate: 1.0, 
-    });
-    console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
+function initSentryDeferred() {
+    if (typeof Sentry !== 'undefined' && !window._sentryActive) {
+        window._sentryActive = true;
+        try {
+            Sentry.init({
+                dsn: "https://13d63555c1c64605be8f9659af548581@o4511428929323008.ingest.de.sentry.io/4511428931682384", 
+                release: "nisha-store@1.0.0",
+                environment: "production",
+                tracesSampleRate: 1.0, 
+            });
+            console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
+        } catch(e) {}
+    }
 }
+if ('requestIdleCallback' in window) {
+    setTimeout(() => requestIdleCallback(initSentryDeferred, { timeout: 1000 }), 3000);
+} else {
+    setTimeout(initSentryDeferred, 3000);
+}
+['scroll', 'touchstart', 'pointerdown'].forEach(evt => {
+    window.addEventListener(evt, initSentryDeferred, { once: true, passive: true });
+});
 // Переменные для анимации поиска
 let searchTypewriterInterval = null;
 let currentSearchLang = 'ru';
@@ -564,7 +577,42 @@ async function initApp() {
         const searchPhoneInput = document.getElementById('ordersSearchPhone');
         if (phoneInput && typeof IMask !== 'undefined') {
             const phoneMask = IMask(phoneInput, { mask: '+{380} (00) 000-00-00' });
-            phoneMask.on('accept', () => checkPhoneAuth());
+            
+            function validatePhoneVisual() {
+                const unmasked = phoneMask.unmaskedValue || '';
+                const btnOtp = document.getElementById('btnGetOtp');
+                if (!unmasked || unmasked.length <= 3) {
+                    phoneInput.classList.remove('input-valid', 'input-invalid');
+                    if (btnOtp && !window.otpVerified) {
+                        btnOtp.style.opacity = '0.7';
+                        btnOtp.style.borderColor = '#555';
+                    }
+                    return;
+                }
+                // Полный украинский номер: 380 + 9 цифр = 12 цифр
+                if (unmasked.length === 12) {
+                    phoneInput.classList.add('input-valid');
+                    phoneInput.classList.remove('input-invalid');
+                    if (btnOtp && !window.otpVerified) {
+                        btnOtp.style.opacity = '1';
+                        btnOtp.style.borderColor = 'var(--accent-green)';
+                    }
+                } else {
+                    phoneInput.classList.remove('input-valid');
+                    phoneInput.classList.add('input-invalid');
+                    if (btnOtp && !window.otpVerified) {
+                        btnOtp.style.opacity = '0.6';
+                        btnOtp.style.borderColor = '#555';
+                    }
+                }
+            }
+
+            phoneMask.on('accept', () => {
+                validatePhoneVisual();
+                if (typeof checkPhoneAuth === 'function') checkPhoneAuth();
+            });
+            phoneInput.addEventListener('blur', validatePhoneVisual);
+            phoneInput.addEventListener('focus', validatePhoneVisual);
         }
         if (searchPhoneInput && typeof IMask !== 'undefined') {
             IMask(searchPhoneInput, { mask: '+{380} (00) 000-00-00' });
@@ -1533,16 +1581,12 @@ document.addEventListener('keydown', function(e) {
         }
     }
 
-    if (window.innerWidth > 900) {
-        const pModal = document.getElementById('productModal');
-        if (pModal && pModal.style.display === 'flex') {
-            if (e.key === 'Escape') {
-                closeModal('productModal');
-            } else if (e.key === 'ArrowLeft') {
-                if (typeof moveSlide === 'function') moveSlide(-1);
-            } else if (e.key === 'ArrowRight') {
-                if (typeof moveSlide === 'function') moveSlide(1);
-            }
+    const pModal = document.getElementById('productModal');
+    if (pModal && (pModal.style.display === 'flex' || pModal.style.display === 'block')) {
+        if (e.key === 'ArrowLeft') {
+            if (typeof moveSlide === 'function') moveSlide(-1);
+        } else if (e.key === 'ArrowRight') {
+            if (typeof moveSlide === 'function') moveSlide(1);
         }
     }
 });
