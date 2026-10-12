@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v163';
+const CACHE_NAME = 'nisha-cache-v164';
 const IMAGE_CACHE = 'nisha-images-v2';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [

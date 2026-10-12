@@ -224,8 +224,8 @@ let lenis;
 
 if (window.innerWidth > 900) {
     lenis = new Lenis({
-        lerp: 0.1, 
-        wheelMultiplier: 1, 
+        lerp: 0.14, 
+        wheelMultiplier: 1.25, 
         smoothWheel: true
     });
 
