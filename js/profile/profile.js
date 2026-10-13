@@ -1518,6 +1518,52 @@ window.switchOrderTab = function(tabName) {
     renderFilteredOrders();
 };
 
+window.copyTTN = function(ttn, el) {
+    if (!ttn) return;
+    const cleanTtn = String(ttn).trim();
+
+    const onCopied = () => {
+        if (typeof showToast === 'function') {
+            showToast('ТТН скопирован: ' + cleanTtn, 'success');
+        }
+        if (typeof triggerHaptic === 'function') triggerHaptic('success');
+        if (el) {
+            const icon = el.querySelector('.ttn-copy-icon');
+            if (icon) {
+                icon.style.transform = 'scale(1.25)';
+                icon.style.stroke = '#fff';
+                setTimeout(() => {
+                    icon.style.transform = 'scale(1)';
+                    icon.style.stroke = 'var(--accent-green)';
+                }, 250);
+            }
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cleanTtn).then(onCopied).catch(() => {
+            fallbackCopyText(cleanTtn);
+            onCopied();
+        });
+    } else {
+        fallbackCopyText(cleanTtn);
+        onCopied();
+    }
+};
+
+function fallbackCopyText(text) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    } catch(e) {}
+}
+
 function renderFilteredOrders() {
     const listArea = document.getElementById('ordersListArea');
     if (!listArea) return;
@@ -1559,8 +1605,18 @@ function renderFilteredOrders() {
         let ttnHtml = "";
         if ((order.status || '').toUpperCase() !== "ОТМЕНЕН") {
             ttnHtml = order.tracking_number
-                ? `<div class="order-ttn">ТТН: <span style="color:var(--accent-green); font-weight:bold;">${order.tracking_number}</span>
-                     <div style="background:#fff; text-align:center; padding: 10px; margin-top: 10px; border-radius:4px;">
+                ? `<div class="order-ttn" style="margin-top: 8px;">
+                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
+                         <span style="font-family: var(--font-mono); font-size: 13px; color: #aaa;">ТТН:</span>
+                         <div class="ttn-copy-btn" onclick="copyTTN('${order.tracking_number}', this)" title="Нажмите, чтобы скопировать номер ТТН" style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0, 255, 0, 0.05); border: 1px dashed rgba(0, 255, 0, 0.3); transition: all 0.2s ease;">
+                             <svg class="ttn-copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; vertical-align: middle; transition: transform 0.2s ease, stroke 0.2s ease;">
+                                 <rect x="2" y="2" width="13" height="13" rx="3.5"></rect>
+                                 <path d="M7.5 7.5h8.5a3.5 3.5 0 0 1 3.5 3.5v8.5a3.5 3.5 0 0 1-3.5 3.5H7.5a3.5 3.5 0 0 1-3.5-3.5"></path>
+                             </svg>
+                             <span style="color:var(--accent-green); font-weight:bold; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.5px; user-select: all;">${order.tracking_number}</span>
+                         </div>
+                     </div>
+                     <div style="background:#fff; text-align:center; padding: 10px; margin-top: 6px; border-radius:4px;">
                          <svg class="barcode-svg" data-ttn="${order.tracking_number}"></svg>
                      </div>
                    </div>`

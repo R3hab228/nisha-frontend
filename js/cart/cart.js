@@ -242,7 +242,9 @@ function updateCartUI() {
         
         const msg = document.getElementById('promoMessage');
         if (msg && promoCode) {
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${promoDiscount * 100}%<br><span style="font-size: 13px;">Вы сэкономили: <b>${savedMoney} ${getCurrency()}</b></span></span>`;
+            const fixedAmt = window.currentPromoFixed;
+            const discDisplay = fixedAmt ? `-${fixedAmt} ${getCurrency()}` : `${Math.round(promoDiscount * 100)}%`;
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${discDisplay}<br><span style="font-size: 13px;">Вы сэкономили: <b>${savedMoney} ${getCurrency()}</b></span></span>`;
         }
     }
     
@@ -1451,13 +1453,16 @@ async function applyPromoCode() {
             window.currentPromoDiscount = currentPromoDiscount;
             appliedPromoCode = input;
             window.appliedPromoCode = appliedPromoCode;
+            window.currentPromoFixed = data.is_fixed ? data.saved_money : null;
             
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${successText} ${data.discount_percent * 100}%<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} грн</b></span></span>`;
+            const discDisplay = data.is_fixed ? `-${data.saved_money} грн` : `${Math.round(data.discount_percent * 100)}%`;
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${successText} ${discDisplay}<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} грн</b></span></span>`;
         } else {
             currentPromoDiscount = 0;
             window.currentPromoDiscount = 0;
             appliedPromoCode = '';
             window.appliedPromoCode = '';
+            window.currentPromoFixed = null;
             
             let errorMsg = invalidErrorText;
             if (data.message && data.message.includes('Лимит')) {

@@ -78,19 +78,41 @@ if ('serviceWorker' in navigator) {
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
                         console.log('[PWA] Найдено обновление!');
-                        showTerminalModal(
-                            'SYSTEM_UPDATE.EXE', 
-                            'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.', 
-                            '[ ОБНОВИТЬ СЕЙЧАС ]', 
-                            () => {
-                                caches.keys().then(names => {
-                                    for (let name of names) caches.delete(name);
-// WEB PUSH ПОДПИСКА
-                                }).then(() => {
-                                    window.location.reload(true);
-                                });
-                            }
-                        );
+
+                        const triggerUpdateModal = () => {
+                            showTerminalModal(
+                                'SYSTEM_UPDATE.EXE', 
+                                'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.', 
+                                '[ ОБНОВИТЬ СЕЙЧАС ]', 
+                                () => {
+                                    caches.keys().then(names => {
+                                        for (let name of names) caches.delete(name);
+                                    }).then(() => {
+                                        window.location.reload(true);
+                                    });
+                                }
+                            );
+                        };
+
+                        // Проверяем, не занят ли пользователь оформлением заказа прямо сейчас
+                        const isUserBusyWithOrder = () => {
+                            const checkout = document.getElementById('checkoutModal');
+                            const isCheckoutOpen = checkout && (checkout.style.display === 'flex' || checkout.classList.contains('active'));
+                            const isSubmitting = window.isOrderSubmitting;
+                            return isCheckoutOpen || isSubmitting;
+                        };
+
+                        if (isUserBusyWithOrder()) {
+                            // Откладываем модалку обновления, пока пользователь не закончит покупку
+                            const checkInterval = setInterval(() => {
+                                if (!isUserBusyWithOrder()) {
+                                    clearInterval(checkInterval);
+                                    setTimeout(triggerUpdateModal, 2500);
+                                }
+                            }, 2000);
+                        } else {
+                            triggerUpdateModal();
+                        }
                     }
                 };
             };
