@@ -41,13 +41,34 @@ window.openModal = openModal;
 // 3. Закрытие модального окна по крестику (с защитой данных)
 function closeModal(id) { 
     if (id === 'proposeModal') {
-        const files = (window.currentProposalFiles && window.currentProposalFiles.length) || document.getElementById('propFiles')?.files?.length || 0;
+        const filesCount = (window.currentProposalFiles && window.currentProposalFiles.length) || document.getElementById('propFiles')?.files?.length || 0;
+        const name = document.getElementById('propName')?.value.trim() || '';
         const brand = document.getElementById('propBrand')?.value.trim() || '';
         const size = document.getElementById('propSize')?.value.trim() || '';
-        const contact = document.getElementById('propContact')?.value.trim() || '';
+        const desc = document.getElementById('propDesc')?.value.trim() || '';
+        const cond = document.getElementById('propCond')?.value.trim() || '';
+        const price = document.getElementById('propPrice')?.value.trim() || '';
         
-        // Если юзер ввел хоть что-то — вызываем терминал подтверждения
-        if (files > 0 || brand !== '' || size !== '' || contact !== '') {
+        // Проверяем контакты: если поле скрыто (автоподстановка для профиля) или значение совпадает с данными профиля — не считаем ручным вводом
+        const contactWrap = document.getElementById('propContactWrapper');
+        const isContactVisible = contactWrap ? (contactWrap.style.display !== 'none' && window.getComputedStyle(contactWrap).display !== 'none') : false;
+        const contactVal = document.getElementById('propContact')?.value.trim() || '';
+        
+        const autoTg = (typeof getUserTg === 'function' ? getUserTg() : '').trim();
+        const autoPhone = (typeof getUserPhone === 'function' ? getUserPhone() : '').trim();
+        const autoBoth = (autoTg && autoPhone) ? `${autoTg} | ${autoPhone}` : '';
+        
+        const isAutoContact = !isContactVisible || 
+                              contactVal === '' || 
+                              contactVal === autoBoth || 
+                              (autoTg && contactVal === autoTg) || 
+                              (autoPhone && contactVal === autoPhone);
+                              
+        const hasCustomContact = isContactVisible && !isAutoContact;
+        const hasUnsavedData = filesCount > 0 || name !== '' || brand !== '' || size !== '' || desc !== '' || cond !== '' || price !== '' || hasCustomContact;
+        
+        // Если юзер ввел реальные данные — вызываем терминал подтверждения
+        if (hasUnsavedData) {
             if (typeof showConfirmTerminalModal === 'function') {
                 showConfirmTerminalModal(
                     'WARNING_DATA_LOSS.SYS', 
