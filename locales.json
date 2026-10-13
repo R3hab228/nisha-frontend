@@ -166,6 +166,7 @@
       },
       "reviews_modal": {
         "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",
+        "loading": "ЗАГРУЗКА ОТЗЫВОВ",
         "empty_reviews": "В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ",
         "send": "ОТПРАВИТЬ",
         "later": "ПОЗЖЕ"
@@ -436,6 +437,7 @@
       },
       "reviews_modal": {
         "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",
+        "loading": "ЗАВАНТАЖЕННЯ ВІДГУКІВ",
         "empty_reviews": "НА ДАНИЙ МОМЕНТ ВІДГУКИ ВІДСУТНІ",
         "send": "ВІДПРАВИТИ",
         "later": "ПІЗНІШЕ"
@@ -706,6 +708,7 @@
       },
       "reviews_modal": {
         "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
+        "loading": "LOADING REVIEWS",
         "empty_reviews": "NO REVIEWS AT THE MOMENT",
         "send": "SEND",
         "later": "LATER"

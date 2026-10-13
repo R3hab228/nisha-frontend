@@ -37,13 +37,16 @@ async function openReviewsModal() {
     if (!container) return;
 
     const renderReviewsData = (data) => {
+        container.classList.remove('is-loading');
         if (!data || data.length === 0) {
+            container.classList.add('is-empty');
             const emptyMsg = (typeof i18next !== 'undefined') 
                 ? i18next.t('reviews_modal.empty_reviews', { defaultValue: 'В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ' }) 
                 : 'В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ';
-            container.innerHTML = `<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">[ ${emptyMsg} ]</div>`;
+            container.innerHTML = `<div class="reviews-empty-box">[ ${emptyMsg} ]</div>`;
             return;
         }
+        container.classList.remove('is-empty');
         
         let html = ''; 
         data.forEach(rev => {
@@ -79,11 +82,24 @@ async function openReviewsModal() {
         return;
     }
     
-    container.innerHTML = '<div style="text-align: center; color: var(--accent-green); font-family: var(--font-mono); padding: 40px 20px;">[ ЗАГРУЗКА ОТЗЫВОВ... ]</div>';
+    container.classList.add('is-loading');
+    container.classList.remove('is-empty');
+
+    const loadingText = (typeof i18next !== 'undefined') 
+        ? i18next.t('reviews_modal.loading', { defaultValue: 'ЗАГРУЗКА ОТЗЫВОВ' }) 
+        : 'ЗАГРУЗКА ОТЗЫВОВ';
+
+    container.innerHTML = `
+        <div class="reviews-loading-box">
+            [ <span class="reviews-loading-text">${loadingText}</span><span class="loading-dots-seq"><span class="dot d1">.</span><span class="dot d2">.</span><span class="dot d3">.</span></span> ]
+        </div>
+    `;
     
     const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
     if (!sb) {
-        container.innerHTML = '<div style="text-align: center; color: #555; font-family: var(--font-mono); padding: 40px 20px;">[ ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ ]</div>';
+        container.classList.remove('is-loading');
+        container.classList.add('is-empty');
+        container.innerHTML = '<div class="reviews-empty-box" style="color: var(--accent-red); border-color: rgba(255,0,0,0.3);">[ ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ ]</div>';
         return;
     }
 
