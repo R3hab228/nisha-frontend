@@ -1048,6 +1048,26 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .driver-popover-progress-text { color: #555 !important; }
 .driver-stage-no-animation { border-radius: 15px !important; border: 2px solid var(--accent-yellow) !important; z-index: 99999 !important; }
 
+/* Отключение затемнения сайта при онбординге Driver.js (весь сайт остается светлым) */
+.driver-overlay, 
+svg.driver-overlay, 
+.driver-overlay path {
+    opacity: 0 !important;
+    fill: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    pointer-events: none !important;
+}
+
+/* Красные индикаторы количества товаров в фильтрах */
+.filter-count-badge {
+    color: #ff3333 !important;
+    font-weight: bold !important;
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    margin-left: 4px;
+}
+
 .card-slider-wrapper { position: relative; width: 100%; height: 210px; background-color: #151515; border-bottom: 1px solid var(--border-color); overflow: hidden; contain: layout paint; }
 .card-slider-container { display: flex; width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; will-change: scroll-position; }
 .card-slider-container::-webkit-scrollbar { display: none; }

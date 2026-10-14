@@ -36,6 +36,12 @@ function isUserInProductFeed() {
             }
         }
 
+        // 3.1. Проверяем мобильные фильтры: не накладываем броадкаст поверх открытых фильтров
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar && sidebar.classList.contains('active-mobile')) {
+            return false;
+        }
+
         // 4. Проверяем блокировку скролла страницы (включается только при открытии любого модального окна)
         if (document.body && document.body.style && document.body.style.overflow === 'hidden') {
             return false;

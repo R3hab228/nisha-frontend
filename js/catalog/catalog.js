@@ -726,6 +726,7 @@ async function loadAllItems() {
             } else {
                 window.allItems = parsed;
                 applyFilters(true);
+                updateSidebarCounters();
             }
         } catch(e) { 
             console.error("Ошибка кэша"); 
@@ -782,6 +783,7 @@ async function loadAllItems() {
     if (hasValidImages) {
         window.allItems = data; 
         deferSave(); 
+        updateSidebarCounters();
     } else if (data && data.length > 0) {
         console.warn("[КАТАЛОГ] Сервер или SW вернул ответ без фото, сохраняем существующие изображения...");
         const oldMap = new Map((window.allItems || []).map(i => [i.id, i]));
@@ -794,6 +796,7 @@ async function loadAllItems() {
             }
         });
         window.allItems = data;
+        updateSidebarCounters();
         if (data[0] && Array.isArray(data[0].images) && data[0].images.length > 0) {
             deferSave();
         }
@@ -1193,10 +1196,18 @@ window.itemMatchesSizeFilter = itemMatchesSizeFilter;
 
 // Обновление красных счетчиков категорий и размеров в боковом меню
 function updateSidebarCounters() {
+    if (!window.allItems || window.allItems.length === 0) return;
     const curCat = window.currentCategory || '';
-    const availableItemsAll = window.allItems.filter(i => i.status === 'available');
+    const onlySale = document.getElementById('onlySaleCb') ? document.getElementById('onlySaleCb').checked : false;
+
+    // Считаем доступные товары (с учетом скидки, если чекбокс активен)
+    const availableItemsAll = window.allItems.filter(i => {
+        if (!i || i.status !== 'available') return false;
+        if (onlySale && !i.is_sale) return false;
+        return true;
+    });
+
     const catCounts = { 'Все вещи': availableItemsAll.length };
-    
     availableItemsAll.forEach(item => {
         if (!item) return;
         const c = item.category || 'Без категории';
@@ -1206,17 +1217,27 @@ function updateSidebarCounters() {
     // 1. Категории
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(link => {
         let baseText = link.innerHTML.split('<span')[0].trim();
-        let catName = '';
-        if (baseText.includes('Все вещи')) catName = 'Все вещи';
-        else if (baseText.includes('Верхняя одежда')) catName = 'Верхняя одежда';
-        else if (baseText.includes('Кофты и Свитера')) catName = 'Кофты и Свитера';
-        else if (baseText.includes('Штаны и Джинсы')) catName = 'Штаны и Джинсы';
-        else if (baseText.includes('Обувь')) catName = 'Обувь';
-        else if (baseText.includes('Аксессуары')) catName = 'Аксессуары';
+        const onclickAttr = link.getAttribute('onclick') || '';
+        
+        let catName = 'Все вещи';
+        const match = onclickAttr.match(/setCategoryFilter\s*\(\s*["']([^"']*)["']/);
+        if (match && match[1]) {
+            catName = match[1];
+        } else if (onclickAttr.includes('""') || onclickAttr.includes("''")) {
+            catName = 'Все вещи';
+        } else {
+            // Fallback по тексту
+            if (baseText.includes('Все') || baseText.includes('Всі') || baseText.includes('All')) catName = 'Все вещи';
+            else if (baseText.includes('Верхн')) catName = 'Верхняя одежда';
+            else if (baseText.includes('Кофт') || baseText.includes('Светр')) catName = 'Кофты и Свитера';
+            else if (baseText.includes('Штан') || baseText.includes('Джинс')) catName = 'Штаны и Джинсы';
+            else if (baseText.includes('Обув') || baseText.includes('Взутт') || baseText.includes('Shoes')) catName = 'Обувь';
+            else if (baseText.includes('Акс') || baseText.includes('Acc')) catName = 'Аксессуары';
+        }
 
         const count = catCounts[catName] || 0;
         if (count > 0) {
-            link.innerHTML = `${baseText} <span style="color:#ff3333; font-weight:bold; font-family:var(--font-mono); font-size:11px;">(${count})</span>`;
+            link.innerHTML = `${baseText} <span class="filter-count-badge">(${count})</span>`;
         } else {
             link.innerHTML = baseText;
         }
@@ -1230,20 +1251,20 @@ function updateSidebarCounters() {
     });
 
     // 2. Размеры (только для текущей категории)
-    const availableCategoryItems = window.allItems.filter(item => {
-        if (!item || item.status !== 'available') return false;
+    const availableCategoryItems = availableItemsAll.filter(item => {
         if (curCat !== '' && item.category !== curCat) return false;
         return true;
     });
 
     document.querySelectorAll('.size-cb').forEach(cb => {
         const labelSpan = cb.nextElementSibling;
+        if (!labelSpan) return;
         let baseText = labelSpan.innerHTML.split('<span')[0].trim();
         const sizeVal = cb.value;
         const count = availableCategoryItems.filter(item => itemMatchesSizeFilter(item, sizeVal)).length;
 
         if (count > 0) {
-            labelSpan.innerHTML = `${baseText} <span style="color:#ff3333; font-weight:bold; font-family:var(--font-mono); font-size:11px;">(${count})</span>`;
+            labelSpan.innerHTML = `${baseText} <span class="filter-count-badge">(${count})</span>`;
             cb.parentElement.style.opacity = '1';
             cb.disabled = false;
         } else {
@@ -2005,6 +2026,7 @@ function toggleMobileSidebar() {
             }
         };
         sidebar.addEventListener('transitionend', onOpenEnd);
+        if (typeof updateSidebarCounters === 'function') updateSidebarCounters();
     } else {
         // --- СКРЫВАЕМ ТАК ЖЕ ПЛАВНО ---
         btn.innerText = showText;
@@ -2031,6 +2053,9 @@ function toggleMobileSidebar() {
             }
         };
         sidebar.addEventListener('transitionend', onCloseEnd);
+        if (typeof checkPendingBroadcast === 'function') {
+            setTimeout(checkPendingBroadcast, 350);
+        }
     }
 }
 window.toggleMobileSidebar = toggleMobileSidebar;
@@ -2154,6 +2179,21 @@ function startOnboardingTour() {
     if (!localStorage.getItem('nisha_rules_accepted') || 
         localStorage.getItem('nisha_tour_done')) return;
 
+    // ПРОВЕРКА: Если пользователь уже пролистал страницу (не находится в верхнем углу):
+    const initScroll = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (initScroll > 30) {
+        localStorage.setItem('nisha_tour_done', 'true');
+        if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
+            setTimeout(() => {
+                tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
+                    localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
+                });
+                window.pendingBroadcastHtml = null;
+            }, 3000);
+        }
+        return;
+    }
+
     if (typeof window.driver === 'undefined') {
         if (typeof loadExternalStyle === 'function') loadExternalStyle('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css');
         if (typeof loadExternalScript === 'function') {
@@ -2173,6 +2213,22 @@ function startOnboardingTour() {
         const anyToastVisible = toastContainer && toastContainer.children.length > 0;
 
         if (anyModalOpen || anyToastVisible) return;
+
+        // Если во время ожидания пользователь начал листать — отменяем тур
+        const currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        if (currentScrollY > 30) {
+            clearInterval(checkAndRun);
+            localStorage.setItem('nisha_tour_done', 'true');
+            if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
+                setTimeout(() => {
+                    tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
+                        localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
+                    });
+                    window.pendingBroadcastHtml = null;
+                }, 3000);
+            }
+            return;
+        }
 
         clearInterval(checkAndRun);
         const isMobile = window.innerWidth <= 900;
@@ -2203,6 +2259,8 @@ function startOnboardingTour() {
 
         const driverObj = window.driver.js.driver({
             showProgress: true,
+            overlayColor: 'transparent',
+            overlayOpacity: 0,
             nextBtnText: typeof i18next !== 'undefined' ? i18next.t('tour.next') : 'Далее',
             prevBtnText: typeof i18next !== 'undefined' ? i18next.t('tour.prev') : 'Назад',
             doneBtnText: typeof i18next !== 'undefined' ? i18next.t('tour.done') : 'Готово',
@@ -2210,6 +2268,7 @@ function startOnboardingTour() {
             onDestroyStarted: () => {
                 localStorage.setItem('nisha_tour_done', 'true');
                 driverObj.destroy();
+                window._activeDriverTour = null;
                 
                 if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
                     setTimeout(() => {
@@ -2217,11 +2276,34 @@ function startOnboardingTour() {
                             localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
                         });
                         window.pendingBroadcastHtml = null;
-                    }, 600);
+                    }, 3000);
                 }
             }
         });
+        window._activeDriverTour = driverObj;
         driverObj.drive();
     }, 500);
 }
 window.startOnboardingTour = startOnboardingTour;
+
+// Защита: если юзер при входе сразу начинает скроллить страницу — не показываем подсказки онбординга
+window.addEventListener('scroll', function onEarlyTourScroll() {
+    const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (y > 30) {
+        if (!localStorage.getItem('nisha_tour_done')) {
+            localStorage.setItem('nisha_tour_done', 'true');
+            if (window._activeDriverTour) {
+                try { window._activeDriverTour.destroy(); } catch (e) {}
+                window._activeDriverTour = null;
+            }
+            if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
+                setTimeout(() => {
+                    tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
+                        localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
+                    });
+                    window.pendingBroadcastHtml = null;
+                }, 3000);
+            }
+        }
+    }
+}, { passive: true });

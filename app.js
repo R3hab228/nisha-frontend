@@ -191,6 +191,11 @@ function updateContentLanguage() {
     // Запускаем печатную машинку поиска
     currentSearchLang = i18next.language || 'ru';
     startSearchTypewriter();
+
+    // Немедленно восстанавливаем красные индикаторы количества товаров в фильтрах после перевода
+    if (typeof updateSidebarCounters === 'function') {
+        updateSidebarCounters();
+    }
 }
 window.updateContentLanguage = updateContentLanguage;
 
@@ -872,6 +877,7 @@ async function initApp() {
 
         renderHistory();
         initHitCounter();
+        if (typeof updateSidebarCounters === 'function') updateSidebarCounters();
         
         if (currentUser && currentUser.phone) {
             document.getElementById('ordersSearchPhone').value = currentUser.phone;
