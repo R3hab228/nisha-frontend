@@ -771,9 +771,17 @@ async function loadAllItems() {
         (Array.isArray(data[0].thumbnails) && data[0].thumbnails.length > 0)
     );
 
+    const deferSave = () => {
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => safelySaveCatalogToStorage(data), { timeout: 2500 });
+        } else {
+            setTimeout(() => safelySaveCatalogToStorage(data), 1500);
+        }
+    };
+
     if (hasValidImages) {
         window.allItems = data; 
-        safelySaveCatalogToStorage(data); 
+        deferSave(); 
     } else if (data && data.length > 0) {
         console.warn("[КАТАЛОГ] Сервер или SW вернул ответ без фото, сохраняем существующие изображения...");
         const oldMap = new Map((window.allItems || []).map(i => [i.id, i]));
@@ -787,7 +795,7 @@ async function loadAllItems() {
         });
         window.allItems = data;
         if (data[0] && Array.isArray(data[0].images) && data[0].images.length > 0) {
-            safelySaveCatalogToStorage(data);
+            deferSave();
         }
     } 
     
@@ -821,8 +829,8 @@ async function loadAllItems() {
         applyFilters(); 
     }
     
-    // 6. ФОНОВАЯ ПРОВЕРКА (Обход кеша CDN) - актуальные статусы TOP/SOLD
-    syncCriticalStatuses();
+    // 6. ФОНОВАЯ ПРОВЕРКА: откладываем на 15 секунд, чтобы не перегружать сеть и рендер на первых секундах
+    setTimeout(syncCriticalStatuses, 15000);
 }
 window.loadAllItems = loadAllItems;
 
@@ -1492,9 +1500,27 @@ function initGridEventDelegation() {
     // 1. Тултип замеров и предзагрузка картинок на десктопе
     let currentTooltipCard = null;
 
+    // Мгновенная активация скрытых слайдов карточки при первом взаимодействии (свайп/наведение)
+    function activateCardSlides(target) {
+        if (!target) return;
+        const wrapper = (target.classList && target.classList.contains('card-slider-wrapper')) ? target : target.querySelector('.card-slider-wrapper');
+        if (!wrapper || wrapper._slidesActivated) return;
+        wrapper._slidesActivated = true;
+        const lazyImgs = wrapper.querySelectorAll('img[data-src]');
+        lazyImgs.forEach(img => {
+            const src = img.getAttribute('data-src');
+            if (src) {
+                img.src = src;
+                img.removeAttribute('data-src');
+            }
+        });
+    }
+
     grid.addEventListener('mouseover', (e) => {
         const card = e.target.closest('.item-card');
-        if (!card || card === currentTooltipCard) return;
+        if (!card) return;
+        activateCardSlides(card);
+        if (card === currentTooltipCard) return;
         currentTooltipCard = card;
         const id = card.getAttribute('data-id');
         if (!id) return;
@@ -1541,6 +1567,7 @@ function initGridEventDelegation() {
     grid.addEventListener('touchstart', (e) => {
         const wrapper = e.target.closest('.card-slider-wrapper');
         if (!wrapper) return;
+        activateCardSlides(wrapper);
         isDraggingSlider = false;
         if (e.touches && e.touches[0]) {
             startX = e.touches[0].clientX;
@@ -1664,8 +1691,6 @@ function renderNextBatch() {
             let slidesStr = '';
             let dotsStr = '';
 
-            const loadAttr = (i < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
-
             thumbsArray.forEach((thumbUrl, idx) => {
                 const rawVidUrl = item.images && item.images[idx] ? item.images[idx] : '';
                 const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
@@ -1676,12 +1701,27 @@ function renderNextBatch() {
                 if (isVid) {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading" style="background: #0a0a0a;">
-                            <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;" oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"></video>
+                            <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;" oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"></video>
+                        </div>`;
+                } else if (idx === 0) {
+                    const firstLoadAttr = (i < 2) ? 'fetchpriority="high"' : 'loading="lazy"';
+                    slidesStr += `
+                        <div class="card-slide img-8bit-loading">
+                           <img class="card-slide-img" src="${cdnThumb}" ${firstLoadAttr} decoding="async" alt="" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
+onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
+                        </div>`;
+                } else if (idx === 1) {
+                    slidesStr += `
+                        <div class="card-slide img-8bit-loading">
+                           <img class="card-slide-img" src="${cdnThumb}" loading="lazy" decoding="async" alt="" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
+onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
                 } else {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading">
-                           <img class="card-slide-img" src="${cdnThumb}" ${loadAttr} decoding="async" alt="" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+                           <img class="card-slide-img" data-src="${cdnThumb}" loading="lazy" decoding="async" alt="" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
 onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
@@ -1949,17 +1989,28 @@ function toggleMobileSidebar() {
 window.toggleMobileSidebar = toggleMobileSidebar;
 
 // Логика слайдера фото в карточке товара на ПК/моб
+let _dotsRaf = null;
+const _lastDotIndices = {};
 window.updateCardDots = function(container, itemId) {
     if (!container) return;
-    const index = Math.round(container.scrollLeft / container.offsetWidth);
-    const dotsContainer = document.getElementById(`dots-${itemId}`);
-    if (dotsContainer) {
-        const dots = dotsContainer.querySelectorAll('.card-dot');
-        dots.forEach((dot, i) => {
-            if (i === index) dot.classList.add('active');
-            else dot.classList.remove('active');
-        });
-    }
+    if (_dotsRaf) return;
+    _dotsRaf = requestAnimationFrame(() => {
+        _dotsRaf = null;
+        const width = container.clientWidth;
+        if (!width) return;
+        const index = Math.round(container.scrollLeft / width);
+        if (_lastDotIndices[itemId] === index) return;
+        _lastDotIndices[itemId] = index;
+
+        const dotsContainer = document.getElementById(`dots-${itemId}`);
+        if (dotsContainer) {
+            const dots = dotsContainer.children;
+            for (let i = 0; i < dots.length; i++) {
+                if (i === index) dots[i].classList.add('active');
+                else dots[i].classList.remove('active');
+            }
+        }
+    });
 };
 
 window.scrollGridSlider = function(event, itemId, direction) {
