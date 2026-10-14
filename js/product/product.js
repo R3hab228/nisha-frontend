@@ -303,11 +303,13 @@ function openProductModal(item) {
             
             <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ (АККОРДЕОН) -->
             <div id="qaWrapper" class="qa-wrapper">
-                <h4 class="qa-title" onclick="document.getElementById('qaList').classList.toggle('collapsed'); this.querySelector('.qa-arrow').style.transform = document.getElementById('qaList').classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';">
+                <h4 class="qa-title" onclick="toggleQASection(this)">
                     <span data-i18n="product.qa_title">${typeof i18next !== 'undefined' ? i18next.t('product.qa_title', {defaultValue: 'Q&A: Вопросы покупателей'}) : 'Q&A: Вопросы покупателей'}</span>
-                    <span class="qa-arrow" style="transition: transform 0.2s; color: var(--accent-green); display: inline-block;">▼</span>
+                    <span class="qa-arrow" style="transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); color: var(--accent-green); display: inline-block;">▼</span>
                 </h4>
-                <div id="qaList" class="qa-content"></div>
+                <div id="qaCollapseWrapper" class="qa-collapse-wrapper">
+                    <div id="qaList" class="qa-content"></div>
+                </div>
             </div>
 
             <!-- КНОПКА ЗАДАТЬ ВОПРОС -->
@@ -1257,6 +1259,22 @@ function toggleAccordion(element) {
     }
 }
 window.toggleAccordion = toggleAccordion;
+
+function toggleQASection(btn) {
+    const wrap = document.getElementById('qaCollapseWrapper');
+    const list = document.getElementById('qaList');
+    let isCollapsed = false;
+    if (wrap) {
+        isCollapsed = wrap.classList.toggle('collapsed');
+    } else if (list) {
+        isCollapsed = list.classList.toggle('collapsed');
+    }
+    const arrow = btn ? btn.querySelector('.qa-arrow') : document.querySelector('#qaWrapper .qa-arrow');
+    if (arrow) {
+        arrow.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+    }
+}
+window.toggleQASection = toggleQASection;
 
 // Подписка на обновление вопросов в реальном времени
 function initProductQASubscription() {

@@ -1762,29 +1762,16 @@ document.addEventListener('click', (e) => {
 }, { passive: true });
 
 // ==========================================
-// УМНЫЙ РЕЖИМ ЭНЕРГОСБЕРЕЖЕНИЯ И ТУРБО-ПЛАВНОСТИ (LOW POWER ADAPTER)
+// УМНЫЙ РЕЖИМ ЭНЕРГОСБЕРЕЖЕНИЯ (BATTERY STATUS ADAPTER)
 // ==========================================
 (function initLowPowerAdapter() {
-    let isLowPower = false;
-
-    function setLowPowerMode(active) {
-        if (isLowPower === active) return;
-        isLowPower = active;
-        if (active) {
-            document.documentElement.classList.add('low-power-mode');
-        } else {
-            document.documentElement.classList.remove('low-power-mode');
-        }
-    }
-
-    // 1. Проверка Battery Status API (Chrome / Android)
     if (typeof navigator !== 'undefined' && typeof navigator.getBattery === 'function') {
         navigator.getBattery().then(battery => {
             const checkBattery = () => {
                 if (!battery.charging && battery.level <= 0.20) {
-                    setLowPowerMode(true);
+                    document.documentElement.classList.add('low-power-mode');
                 } else if (battery.charging || battery.level > 0.25) {
-                    setLowPowerMode(false);
+                    document.documentElement.classList.remove('low-power-mode');
                 }
             };
             checkBattery();
@@ -1792,58 +1779,6 @@ document.addEventListener('click', (e) => {
             battery.addEventListener('chargingchange', checkBattery);
         }).catch(() => {});
     }
-
-    // 2. Пауза бегущей строки, когда она вне зоны видимости (экономит GPU/CPU при скролле)
-    if ('IntersectionObserver' in window) {
-        const marqueeEl = document.querySelector('.marquee-container');
-        if (marqueeEl) {
-            const marqueeTrack = marqueeEl.querySelector('.marquee-track');
-            if (marqueeTrack) {
-                const marqueeObs = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (isLowPower) {
-                            marqueeTrack.style.animationPlayState = 'paused';
-                        } else {
-                            marqueeTrack.style.animationPlayState = entry.isIntersecting ? 'running' : 'paused';
-                        }
-                    });
-                }, { threshold: 0 });
-                marqueeObs.observe(marqueeEl);
-            }
-        }
-    }
-
-    // 3. Динамический детектор просадки частоты кадров при скролле (универсален для iOS Safari и Android)
-    let lastFrameTime = performance.now();
-    let slowFramesCount = 0;
-    let scrollActive = false;
-    let scrollStopTimer = null;
-
-    window.addEventListener('scroll', () => {
-        scrollActive = true;
-        clearTimeout(scrollStopTimer);
-        scrollStopTimer = setTimeout(() => {
-            scrollActive = false;
-        }, 1000);
-    }, { passive: true });
-
-    function monitorPerformance(now) {
-        if (scrollActive) {
-            const delta = now - lastFrameTime;
-            // Если кадр рендерился дольше 35мс (просадка ниже 28 FPS в энергосбережении)
-            if (delta > 35) {
-                slowFramesCount++;
-                if (slowFramesCount >= 3 && !isLowPower) {
-                    setLowPowerMode(true);
-                }
-            } else if (delta < 20 && slowFramesCount > 0) {
-                slowFramesCount = Math.max(0, slowFramesCount - 1);
-            }
-        }
-        lastFrameTime = now;
-        requestAnimationFrame(monitorPerformance);
-    }
-    requestAnimationFrame(monitorPerformance);
 })();
 
 
