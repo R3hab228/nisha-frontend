@@ -414,19 +414,21 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <p style=margin-top:15px;color:#444 data-i18n=footer.copyright>© 2026 NISHA. All rights reserved.</p>
 <div class=footer-lang-dropdown id=footerLangWrapper style="margin:20px auto 0 auto;display:inline-block">
 <span id=currentLangLabelFooter onclick='document.getElementById("footerLangWrapper").classList.toggle("active")' style="display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;margin:0 auto">
-<img id=currentFlagImg src=https://flagcdn.com/24x18/ru.png width=20 height=15 alt=RU style=border-radius:2px;pointer-events:none>
+<img id=currentFlagImg src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E" width=20 height=15 alt=RU style=border-radius:2px;pointer-events:none>
 <span>[RU] ▼</span>
 </span>
 <div class=footer-lang-menu>
-<a href=javascript:void(0) onclick='setLang("ua")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src=https://flagcdn.com/24x18/ua.png width=20 height=15 style=border-radius:2px> UA</a>
-<a href=javascript:void(0) onclick='setLang("ru")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src=https://flagcdn.com/24x18/ru.png width=20 height=15 style=border-radius:2px> RU</a>
-<a href=javascript:void(0) onclick='setLang("en")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src=https://flagcdn.com/24x18/gb.png width=20 height=15 style=border-radius:2px> EN</a>
+<a href=javascript:void(0) onclick='setLang("ua")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> UA</a>
+<a href=javascript:void(0) onclick='setLang("ru")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> RU</a>
+<a href=javascript:void(0) onclick='setLang("en")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3CclipPath id='s'%3E%3Cpath d='M0,0 v18 h24 v-18 z'/%3E%3C/clipPath%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23fff' stroke-width='3' clip-path='url(%23s)'/%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23C8102E' stroke-width='1.5' clip-path='url(%23s)'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23C8102E' stroke-width='3'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> EN</a>
 </div>
 </div>
 </div>
 </footer>
 </div>
-<script>function getFlagUrlByLang(e){return"ua"===e?"https://flagcdn.com/24x18/ua.png":"en"===e?"https://flagcdn.com/24x18/gb.png":"https://flagcdn.com/24x18/ru.png"}function setLang(e){localStorage.setItem("nisha_lang",e),localStorage.setItem("i18nextLng",e),document.documentElement.lang=(e==="ua"?"uk":e),changeLanguage(e);const t=getFlagUrlByLang(e);document.getElementById("currentFlagImg").src=t,document.getElementById("currentLangLabelFooter").querySelector("span").innerText="["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{let e=localStorage.getItem("nisha_lang");e||(e=(localStorage.getItem("i18nextLng")||"ru").substring(0,2).toLowerCase(),["ru","ua","en"].includes(e)||(e="ru"),localStorage.setItem("nisha_lang",e));document.documentElement.lang=(e==="ua"?"uk":e);const t=getFlagUrlByLang(e),n=document.getElementById("currentFlagImg"),a=document.getElementById("currentLangLabelFooter");n&&a&&(n.src=t,a.querySelector("span").innerText="["+e.toUpperCase()+"] ▼")}))</script>
+<script>
+const NISHA_FLAGS={ua:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E",ru:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E",en:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3CclipPath id='s'%3E%3Cpath d='M0,0 v18 h24 v-18 z'/%3E%3C/clipPath%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23fff' stroke-width='3' clip-path='url(%23s)'/%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23C8102E' stroke-width='1.5' clip-path='url(%23s)'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23C8102E' stroke-width='3'/%3E%3C/svg%3E"};
+function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setLang(e){localStorage.setItem("nisha_lang",e),localStorage.setItem("i18nextLng",e),document.documentElement.lang=(e==="ua"?"uk":e),changeLanguage(e);const t=getFlagUrlByLang(e);document.getElementById("currentFlagImg").src=t,document.getElementById("currentLangLabelFooter").querySelector("span").innerText="["+e.toUpperCase()+"] ▼",document.getElementById("footerLangWrapper").classList.remove("active")}document.addEventListener("DOMContentLoaded",(()=>{let e=localStorage.getItem("nisha_lang");e||(e=(localStorage.getItem("i18nextLng")||"ru").substring(0,2).toLowerCase(),["ru","ua","en"].includes(e)||(e="ru"),localStorage.setItem("nisha_lang",e));document.documentElement.lang=(e==="ua"?"uk":e);const t=getFlagUrlByLang(e),n=document.getElementById("currentFlagImg"),a=document.getElementById("currentLangLabelFooter");n&&a&&(n.src=t,a.querySelector("span").innerText="["+e.toUpperCase()+"] ▼")}))</script>
 <div class=modal-overlay id=rulesModal style="background-color:rgba(0,0,0,.95);z-index:5000">
 <div class=modal-window style="max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;border-radius:10px 10px 0 0">
 <div class=modal-header style=background:#000;flex-shrink:0>
@@ -705,21 +707,20 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <script type="module">import autoAnimate from 'https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.min.js'; window.autoAnimate = autoAnimate;</script>
 <script defer src=https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.33/dist/lenis.min.js></script>
-<script defer src=https://browser.sentry-cdn.com/7.105.0/bundle.min.js crossorigin=anonymous></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next@23.10.1/dist/umd/i18next.min.js></script>
 <script defer src=https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js></script>
 <script defer src="config.js?v=162"></script>
-<script defer src="js/core/helpers.js?v=167"></script>
+<script defer src="js/core/helpers.js?v=177"></script>
 <script defer src="js/ui/windows.js?v=172"></script>
 <script defer src="js/auth/auth.js?v=166"></script>
 <script defer src="js/drop/drop.js?v=162"></script>
 <script defer src="js/chat/chat.js?v=162"></script>
 <script defer src="js/reviews/reviews.js?v=170"></script>
 <script defer src="js/catalog/catalog.js?v=175"></script>
-<script defer src="js/cart/cart.js?v=168"></script>
+<script defer src="js/cart/cart.js?v=177"></script>
 <script defer src="js/product/product.js?v=175"></script>
 <script defer src="js/profile/profile.js?v=168"></script>
-<script defer src="app.js?v=175"></script>
+<script defer src="app.js?v=177"></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>

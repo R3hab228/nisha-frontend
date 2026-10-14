@@ -220,24 +220,6 @@ function cleanStorageLimits() {
 }
 window.cleanStorageLimits = cleanStorageLimits;
 
-// --- БЕЗОПАСНАЯ РАБОТА С ХРАНИЛИЩЕМ (SAFARI PRIVATE & QUOTA PROTECTION) ---
-function safeSetItem(key, value) {
-    try {
-        localStorage.setItem(key, value);
-        return true;
-    } catch (e) {
-        try {
-            cleanStorageLimits();
-            localStorage.setItem(key, value);
-            return true;
-        } catch (innerErr) {
-            console.warn(`[STORAGE] Не удалось записать ключ ${key}:`, innerErr);
-            return false;
-        }
-    }
-}
-window.safeSetItem = safeSetItem;
-
 // --- ВНЕШНИЙ ЛОАДЕР СКРИПТОВ И СТИЛЕЙ ПО ТРЕБОВАНИЮ (LAZY LOADER) ---
 const _loadedExternalScripts = {};
 function loadExternalScript(src) {

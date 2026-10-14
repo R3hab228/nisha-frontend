@@ -74,6 +74,26 @@ module.exports = async function handler(req, res) {
     const videoTags = videoUrl ? 
       '<meta property="og:video" content="' + videoUrl + '">\n<meta property="og:video:type" content="video/mp4">' : '';
 
+    const jsonLd = JSON.stringify({
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": fullItemTitle,
+      "image": [imageUrl],
+      "description": description,
+      "brand": {
+        "@type": "Brand",
+        "name": rawBrand || "NISHA"
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": "https://www.nisha-store.shop/?item=" + id,
+        "priceCurrency": "UAH",
+        "price": String(item.price || 0),
+        "itemCondition": "https://schema.org/UsedCondition",
+        "availability": isSold ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
+      }
+    });
+
     const html = '<!DOCTYPE html>\n' +
 '<html lang="ru">\n' +
 '<head>\n' +
@@ -95,6 +115,7 @@ videoTags + '\n' +
 '<meta name="twitter:title" content="' + title + '">\n' +
 '<meta name="twitter:description" content="' + description + '">\n' +
 '<meta name="twitter:image" content="' + imageUrl + '">\n' +
+'<script type="application/ld+json">' + jsonLd + '</script>\n' +
 '</head>\n' +
 '<body>\n' +
 '<script>window.location.replace("/?item=' + id + '");</script>\n' +

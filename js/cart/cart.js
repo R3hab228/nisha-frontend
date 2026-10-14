@@ -1130,6 +1130,13 @@ async function submitOrder() {
         return; 
     }
 
+    const phoneDigits = phone.replace(/[^\d]/g, '');
+    const isValidUAPhone = phoneDigits.length === 12 && phoneDigits.startsWith('380');
+    if (!isValidUAPhone) {
+        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.valid_phone', { defaultValue: 'Введите полный номер телефона (+380...)!' }) : 'Введите полный номер телефона (+380...)!', 'error');
+        return;
+    }
+
     const cityRef = window.selectedCityRef || selectedCityRef;
     const branchRef = window.selectedBranchRef || selectedBranchRef;
     if (!cityRef || !branchRef) {

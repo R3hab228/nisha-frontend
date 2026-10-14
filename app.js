@@ -88,7 +88,7 @@ if ('serviceWorker' in navigator) {
                                     caches.keys().then(names => {
                                         for (let name of names) caches.delete(name);
                                     }).then(() => {
-                                        window.location.reload(true);
+                                        window.location.reload();
                                     });
                                 }
                             );
@@ -120,17 +120,31 @@ if ('serviceWorker' in navigator) {
     });
 }
 function initSentryDeferred() {
-    if (typeof Sentry !== 'undefined' && !window._sentryActive) {
-        window._sentryActive = true;
-        try {
-            Sentry.init({
-                dsn: "https://13d63555c1c64605be8f9659af548581@o4511428929323008.ingest.de.sentry.io/4511428931682384", 
-                release: "nisha-store@1.0.0",
-                environment: "production",
-                tracesSampleRate: 1.0, 
-            });
-            console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
-        } catch(e) {}
+    if (window._sentryActive) return;
+    window._sentryActive = true;
+
+    const setupSentry = () => {
+        if (typeof Sentry !== 'undefined') {
+            try {
+                Sentry.init({
+                    dsn: "https://13d63555c1c64605be8f9659af548581@o4511428929323008.ingest.de.sentry.io/4511428931682384", 
+                    release: "nisha-store@1.0.0",
+                    environment: "production",
+                    tracesSampleRate: 1.0, 
+                });
+                console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
+            } catch(e) {}
+        }
+    };
+
+    if (typeof Sentry === 'undefined') {
+        if (typeof loadExternalScript === 'function') {
+            loadExternalScript('https://browser.sentry-cdn.com/7.105.0/bundle.min.js')
+                .then(setupSentry)
+                .catch(() => {});
+        }
+    } else {
+        setupSentry();
     }
 }
 if ('requestIdleCallback' in window) {
@@ -141,6 +155,7 @@ if ('requestIdleCallback' in window) {
 ['scroll', 'touchstart', 'pointerdown'].forEach(evt => {
     window.addEventListener(evt, initSentryDeferred, { once: true, passive: true });
 });
+window.addEventListener('error', () => initSentryDeferred(), { once: true });
 // Переменные для анимации поиска
 let searchTypewriterInterval = null;
 let currentSearchLang = 'ru';
@@ -202,6 +217,10 @@ function startSearchTypewriter() {
         if (!document.getElementById('mainSearch')) return;
         
         if (document.activeElement === searchInput || searchInput.value.length > 0) {
+            if (window.searchCursorBlinkInterval) {
+                clearInterval(window.searchCursorBlinkInterval);
+                window.searchCursorBlinkInterval = null;
+            }
             searchInput.placeholder = words[wordIndex];
             searchTypewriterInterval = setTimeout(typeLoop, 500);
             return;
@@ -230,6 +249,8 @@ function startSearchTypewriter() {
                 
                 window.searchCursorBlinkInterval = setInterval(() => {
                     if (document.activeElement === searchInput || searchInput.value.length > 0) {
+                        clearInterval(window.searchCursorBlinkInterval);
+                        window.searchCursorBlinkInterval = null;
                         searchInput.placeholder = currentWord;
                         return;
                     }
@@ -239,6 +260,7 @@ function startSearchTypewriter() {
                     
                     if (blinkCount >= maxBlinks) {
                         clearInterval(window.searchCursorBlinkInterval);
+                        window.searchCursorBlinkInterval = null;
                         showCursor = true;
                         searchTypewriterInterval = setTimeout(typeLoop, 50);
                     }
