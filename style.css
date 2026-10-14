@@ -1283,7 +1283,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         visibility: hidden; background: #0a0a0a; will-change: max-height, opacity;
     }
     .sidebar.active-mobile { 
-        max-height: 800px;
+        max-height: 900px;
         opacity: 1; visibility: visible; 
         padding-top: 15px; padding-bottom: 15px; 
         transition: max-height 0.42s cubic-bezier(0.33, 1, 0.68, 1), 

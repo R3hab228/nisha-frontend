@@ -1288,6 +1288,7 @@ function applyFilters() {
             const searchInput = document.getElementById('mainSearch');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
             const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => cb.value);
+            const onlySale = document.getElementById('onlySaleCb') ? document.getElementById('onlySaleCb').checked : false;
             const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
             
             const minInput = document.getElementById('priceMin');
@@ -1310,9 +1311,10 @@ function applyFilters() {
                 
                 const isFav = userFavs.includes(item.id);
                 const matchesAvailability = !hideUnavailable || item.status === 'available';
+                const matchesSale = !onlySale || !!item.is_sale;
                 
                 if (onlyFavs) {
-                    return isFav && matchesAvailability;
+                    return isFav && matchesAvailability && matchesSale;
                 }
 
                 const itemCategory = item.category || '';
@@ -1326,7 +1328,7 @@ function applyFilters() {
                 const itemFinalPrice = hacked ? Math.floor(getSafePrice(item.price) * 0.9) : getSafePrice(item.price);
                 const matchesPrice = itemFinalPrice >= minPrice && itemFinalPrice <= maxPrice;
                 
-                return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability;
+                return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability && matchesSale;
             });
 
             // 2. Умный поиск (Fuse.js или надежный fallback с поддержкой транслитерации RU/UA <-> EN)
@@ -1412,6 +1414,7 @@ function applyFilters() {
             const url = new URL(window.location);
             if (curCat) url.searchParams.set('cat', curCat); else url.searchParams.delete('cat');
             if (searchTerm) url.searchParams.set('q', searchTerm); else url.searchParams.delete('q');
+            if (onlySale) url.searchParams.set('sale', '1'); else url.searchParams.delete('sale');
             window.history.replaceState(null, '', url);
 
             // Подсветка активной категории

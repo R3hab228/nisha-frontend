@@ -573,6 +573,13 @@ async function initApp() {
             }
         }
 
+        // --- ВОССТАНОВЛЕНИЕ ФИЛЬТРА СО СКИДКОЙ (?sale=1) ---
+        const saleParam = urlParams.get('sale');
+        if (saleParam === '1' || saleParam === 'true') {
+            const saleCb = document.getElementById('onlySaleCb');
+            if (saleCb) saleCb.checked = true;
+        }
+
         // 2. МГНОВЕННЫЙ ЗАПУСК КАТАЛОГА (из кэша отображается за 10мс, параллельно запрашивается БД)
         const itemsPromise = (typeof loadAllItems === 'function') ? loadAllItems() : Promise.resolve();
 
@@ -1255,8 +1262,10 @@ function resetToMain() {
     const searchInput = document.getElementById('mainSearch');
     if (searchInput) searchInput.value = '';
     
-    // 4. Снимаем галочки с размеров
+    // 4. Снимаем галочки с размеров и скидок
     document.querySelectorAll('.size-cb').forEach(cb => cb.checked = false);
+    const saleCb = document.getElementById('onlySaleCb');
+    if (saleCb) saleCb.checked = false;
     
     // 5. Возвращаем кнопке "ИЗБРАННОЕ" желтый цвет (выключаем белый)
     const favNav = document.getElementById('favNav');

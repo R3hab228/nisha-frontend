@@ -38,10 +38,10 @@
 <link rel=apple-touch-icon sizes=180x180 href="/icon-512.png?v=3">
 <link rel=icon type=image/png sizes=32x32 href="/icon.png?v=3">
 <link rel=manifest href="/manifest.json?v=3">
-<link rel=preload href="/style.css?v=180" as=style>
+<link rel=preload href="/style.css?v=181" as=style>
 <link rel=preload href=/locales.json as=fetch crossorigin=anonymous>
 <link rel=preload href=/cables.svg as=image type="image/svg+xml">
-<link rel=stylesheet href="style.css?v=180">
+<link rel=stylesheet href="style.css?v=181">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity (Отложенная загрузка на 3 секунды без фризов) -->
@@ -210,7 +210,13 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </li>
 <li><label><input type=checkbox class=size-cb value="43-46" onchange=applyFilters()> <span data-i18n=sidebar.shoes_2>Обувь (43 - 46)</span></label></li>
 <li style="margin-top:15px;border-top:1px dashed #444;padding-top:15px">
-<label>
+<label style="cursor:pointer">
+<input type=checkbox id=onlySaleCb onchange=applyFilters()>
+<span data-i18n=sidebar.only_sale style="color:var(--accent-red);font-weight:bold">% Только со скидкой</span>
+</label>
+</li>
+<li style="margin-top:8px">
+<label style="cursor:pointer">
 <input type=checkbox id=hideUnavailableCb onchange=applyFilters()>
 <span data-i18n=sidebar.hide_unavailable>Скрыть проданное/бронь</span>
 </label>
@@ -716,11 +722,11 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <script defer src="js/drop/drop.js?v=162"></script>
 <script defer src="js/chat/chat.js?v=162"></script>
 <script defer src="js/reviews/reviews.js?v=170"></script>
-<script defer src="js/catalog/catalog.js?v=178"></script>
+<script defer src="js/catalog/catalog.js?v=181"></script>
 <script defer src="js/cart/cart.js?v=177"></script>
 <script defer src="js/product/product.js?v=180"></script>
 <script defer src="js/profile/profile.js?v=168"></script>
-<script defer src="app.js?v=180"></script>
+<script defer src="app.js?v=181"></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>
