@@ -685,6 +685,26 @@ window.addEventListener('scroll', () => {
     window.hideItemMeasurementsTooltip();
 }, { passive: true });
 
+// Безопасное сохранение каталога в localStorage с защитой от переполнения квоты (5MB на iOS/Android)
+function safelySaveCatalogToStorage(items) {
+    if (!items || !Array.isArray(items) || items.length === 0) return;
+    try {
+        localStorage.setItem('nisha_cached_db', JSON.stringify(items));
+    } catch (e) {
+        console.warn("[КАТАЛОГ] Лимит localStorage превышен, пробуем компактное сохранение:", e);
+        try {
+            // Компактная версия: обрезаем description до 200 символов (достаточно для замеров в тултипах)
+            const slim = items.map(item => {
+                if (!item.description || item.description.length <= 200) return item;
+                return { ...item, description: item.description.slice(0, 200) };
+            });
+            localStorage.setItem('nisha_cached_db', JSON.stringify(slim));
+        } catch (slimErr) {
+            console.warn("[КАТАЛОГ] Не удалось закэшировать каталог в localStorage:", slimErr);
+        }
+    }
+}
+
 // Загрузка всех товаров из БД и кэша
 async function loadAllItems() {
     const grid = document.getElementById('itemsGrid');
@@ -753,7 +773,7 @@ async function loadAllItems() {
 
     if (hasValidImages) {
         window.allItems = data; 
-        localStorage.setItem('nisha_cached_db', JSON.stringify(data)); 
+        safelySaveCatalogToStorage(data); 
     } else if (data && data.length > 0) {
         console.warn("[КАТАЛОГ] Сервер или SW вернул ответ без фото, сохраняем существующие изображения...");
         const oldMap = new Map((window.allItems || []).map(i => [i.id, i]));
@@ -767,7 +787,7 @@ async function loadAllItems() {
         });
         window.allItems = data;
         if (data[0] && Array.isArray(data[0].images) && data[0].images.length > 0) {
-            localStorage.setItem('nisha_cached_db', JSON.stringify(data));
+            safelySaveCatalogToStorage(data);
         }
     } 
     
@@ -1038,13 +1058,13 @@ async function syncCriticalStatuses() {
 
         if (gridNeedsFullRefresh) {
             if (canSafelySaveCache) {
-                localStorage.setItem('nisha_cached_db', JSON.stringify(window.allItems));
+                safelySaveCatalogToStorage(window.allItems);
             }
             if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
             if (typeof applyFilters === 'function') applyFilters();
         } else if (anyCardUpdated) {
             if (canSafelySaveCache) {
-                localStorage.setItem('nisha_cached_db', JSON.stringify(window.allItems));
+                safelySaveCatalogToStorage(window.allItems);
             }
             if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
         }

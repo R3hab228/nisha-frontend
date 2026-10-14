@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
     return res.redirect('/');
   }
 
-  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + id + '&select=name,price,brand,images,thumbnails';
+  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + id + '&select=name,price,brand,images,thumbnails,size,condition,description';
   
   try {
     const dbRes = await fetch(supabaseUrl, {
@@ -23,9 +23,18 @@ module.exports = async function handler(req, res) {
       return res.redirect('/?item=' + id);
     }
 
-    const escapeHTML = (str) => String(str).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const title = escapeHTML('NISHA | ' + (item.brand || '') + ' ' + (item.name || ''));
-    const description = escapeHTML('Цена: ' + item.price + ' грн.');
+    const escapeHTML = (str) => String(str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const rawBrand = item.brand ? item.brand.trim() : '';
+    const rawName = item.name ? item.name.trim() : '';
+    const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || 'Винтажная вещь';
+    const title = escapeHTML('NISHA | ' + fullItemTitle);
+
+    let descParts = [];
+    if (item.size) descParts.push('Размер: ' + item.size);
+    if (item.condition) descParts.push('Состояние: ' + item.condition);
+    if (item.price) descParts.push('Цена: ' + item.price + ' грн');
+    const description = escapeHTML(descParts.join(' | ') || (item.description ? item.description.slice(0, 150) : 'Винтажная одежда в магазине NISHA'));
+    const shareUrl = 'https://www.nisha-store.shop/share/' + id;
     
     let imageUrl = 'https://www.nisha-store.shop/icon-512.png';
     let videoUrl = '';
@@ -50,12 +59,14 @@ module.exports = async function handler(req, res) {
 '<head>\n' +
 '<meta charset="UTF-8">\n' +
 '<title>' + title + '</title>\n' +
-'<meta property="og:type" content="website">\n' +
+'<meta name="description" content="' + description + '">\n' +
+'<link rel="canonical" href="' + shareUrl + '">\n' +
+'<meta property="og:type" content="product">\n' +
 '<meta property="og:site_name" content="NISHA">\n' +
 '<meta property="og:title" content="' + title + '">\n' +
 '<meta property="og:description" content="' + description + '">\n' +
 '<meta property="og:image" content="' + imageUrl + '">\n' +
-'<meta property="og:url" content="https://www.nisha-store.shop/share/' + id + '">\n' +
+'<meta property="og:url" content="' + shareUrl + '">\n' +
 '<meta property="product:price:amount" content="' + (item.price || 0) + '">\n' +
 '<meta property="product:price:currency" content="UAH">\n' +
 videoTags + '\n' +
