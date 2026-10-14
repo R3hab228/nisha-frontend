@@ -1,5 +1,5 @@
-const CACHE_NAME = 'nisha-cache-v185';
-const IMAGE_CACHE = 'nisha-images-v3';
+const CACHE_NAME = 'nisha-cache-v186';
+const IMAGE_CACHE = 'nisha-images-v4';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
     '/',
