@@ -2,29 +2,82 @@
 // NISHA UI WINDOWS & MODALS (Оконная система Win95)
 // ==========================================
 
-// 1. Проверка: находится ли пользователь в обычной ленте товаров (без открытых окон)
+// 1. Проверка: находится ли пользователь СТРОГО в обычной ленте товаров (каталоге) без открытых окон и карточек
 function isUserInProductFeed() {
-    // 1. Проверяем, открыто ли хоть одно модальное окно на сайте
-    const overlays = document.querySelectorAll('.modal-overlay');
-    for (let m of overlays) {
-        if (m.style.display === 'flex' || m.style.display === 'block') {
+    try {
+        // 1. Проверяем URL: если открыта прямая ссылка на вещь (?item=...) или модальные действия (?action=...)
+        if (typeof window !== 'undefined' && window.location) {
+            const search = window.location.search;
+            if (search && (search.includes('item=') || search.includes('action=cart') || search.includes('action=reviews'))) {
+                return false;
+            }
+        }
+
+        // 2. СТРОГАЯ проверка карточки товара (productModal)
+        const pModal = document.getElementById('productModal');
+        if (pModal) {
+            if (pModal.style.display === 'flex' || pModal.style.display === 'block') return false;
+            const compP = window.getComputedStyle(pModal);
+            if (compP.display !== 'none' && compP.visibility !== 'hidden' && compP.opacity !== '0') return false;
+        }
+        if (window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' && currentOpenedItem)) {
             return false;
         }
-        const comp = window.getComputedStyle(m);
-        if (comp.display !== 'none' && comp.visibility !== 'hidden' && comp.opacity !== '0') {
+
+        // 3. Проверяем все модальные окна сайта (.modal-overlay)
+        const overlays = document.querySelectorAll('.modal-overlay');
+        for (let m of overlays) {
+            if (m.style.display === 'flex' || m.style.display === 'block') {
+                return false;
+            }
+            const comp = window.getComputedStyle(m);
+            if (comp.display !== 'none' && comp.visibility !== 'hidden' && comp.opacity !== '0') {
+                return false;
+            }
+        }
+
+        // 4. Проверяем блокировку скролла страницы (включается только при открытии любого модального окна)
+        if (document.body && document.body.style && document.body.style.overflow === 'hidden') {
             return false;
         }
-    }
-    // 2. Проверяем оверлей успешного заказа
-    const successOverlay = document.getElementById('orderSuccessOverlay');
-    if (successOverlay && window.getComputedStyle(successOverlay).display !== 'none') {
+
+        // 5. Проверяем терминальные окна (рассылки, алерты, confirm), чтобы не спамить поверх других окон
+        if (document.querySelector('.terminal-modal-overlay')) {
+            return false;
+        }
+
+        // 6. Проверяем полноэкранный зум фото (PhotoSwipe)
+        if (document.querySelector('.pswp--open') || document.querySelector('.pswp.pswp--visible')) {
+            return false;
+        }
+
+        // 7. Проверяем интерактивный онбординг-тур (Driver.js)
+        if (document.querySelector('.driver-popover') || (document.body && document.body.classList.contains('driver-active'))) {
+            return false;
+        }
+
+        // 8. Проверяем экран успешного заказа
+        const successOverlay = document.getElementById('orderSuccessOverlay');
+        if (successOverlay && window.getComputedStyle(successOverlay).display !== 'none') {
+            return false;
+        }
+
+        // 9. Проверяем SweetAlert
+        if (document.querySelector('.swal2-container')) {
+            return false;
+        }
+
+        // 10. Проверяем, что каталог товаров загружен и отображен на экране
+        const feed = document.getElementById('itemsGrid');
+        if (!feed || feed.children.length === 0) {
+            return false;
+        }
+
+        return true;
+    } catch (e) {
+        console.warn('[feed check error]', e);
         return false;
     }
-    // 3. Проверяем SweetAlert
-    if (document.querySelector('.swal2-container')) {
-        return false;
-    }
-    return true;
 }
 window.isUserInProductFeed = isUserInProductFeed;
 
@@ -93,6 +146,10 @@ function executeCloseModal(id) {
     if (id === 'checkoutModal' && window.otpPollInterval) clearInterval(window.otpPollInterval);
     const modal = document.getElementById(id);
     if (!modal) return;
+
+    // Если окно уже закрыто — не запускаем повторные таймеры и анимации
+    const isAlreadyClosed = (modal.style.display === 'none' || (!modal.style.display && window.getComputedStyle(modal).display === 'none'));
+    if (isAlreadyClosed && !modal.classList.contains('closing')) return;
     
     // Мгновенная пауза любых видео в закрывающемся окне
     const modalVideos = modal.querySelectorAll('video');
@@ -150,6 +207,15 @@ function executeCloseModal(id) {
         
         if (id === 'productModal') { 
             document.title = 'NISHA | Underground Store'; 
+            window.currentOpenedItem = null;
+            if (typeof currentOpenedItem !== 'undefined') currentOpenedItem = null;
+            try {
+                const u = new URL(window.location);
+                if (u.searchParams.has('item')) {
+                    u.searchParams.delete('item');
+                    window.history.replaceState(null, '', u.pathname + u.search);
+                }
+            } catch (e) {}
             if (typeof renderHistory === 'function') renderHistory(); 
         }
         if (id === 'checkoutModal' && window.otpPollInterval) {

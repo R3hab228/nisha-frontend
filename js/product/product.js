@@ -131,8 +131,10 @@ async function openProductModalById(itemId) {
         }
 
         if (typeof closeModal === 'function') {
-            closeModal('ordersModal'); 
-            closeModal('reviewsModal'); 
+            const om = document.getElementById('ordersModal');
+            if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal'); 
+            const rm = document.getElementById('reviewsModal');
+            if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal'); 
         }
         openProductModal(item); 
     }

@@ -375,11 +375,12 @@ window.clientFingerprint = clientFingerprint;
 let pendingBroadcastQueue = null;
 
 function tryShowBroadcast(title, htmlText, btnText, callback) {
-    if (isUserInProductFeed()) {
+    const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
+    if (inFeed) {
         showTerminalModal(title, htmlText, btnText, callback);
         pendingBroadcastQueue = null;
     } else {
-        // Если юзер в модалке (заказ, товар, профиль и т.д.) — ставим рассылку в очередь
+        // Если юзер в карточке товара, оформлении заказа, профиле и т.д. — ставим рассылку в очередь
         pendingBroadcastQueue = { title, htmlText, btnText, callback };
     }
 }
@@ -388,26 +389,29 @@ window.tryShowBroadcast = tryShowBroadcast;
 function checkPendingBroadcast() {
     if (!pendingBroadcastQueue) return;
     setTimeout(() => {
-        if (pendingBroadcastQueue && isUserInProductFeed()) {
+        const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
+        if (pendingBroadcastQueue && inFeed) {
             const { title, htmlText, btnText, callback } = pendingBroadcastQueue;
             pendingBroadcastQueue = null;
             showTerminalModal(title, htmlText, btnText, callback);
         }
-    }, 350);
+    }, 200);
 }
 window.checkPendingBroadcast = checkPendingBroadcast;
 
-// Фоновый таймер: как только юзер вернулся в ленту товаров — показываем отложенный броадкаст
+// Фоновый таймер: как только юзер вернулся СТРОГО в ленту товаров — показываем отложенный броадкаст
 setInterval(() => {
     if (document.hidden) return; // Энергосбережение: вкладка в фоне
-    if (pendingBroadcastQueue && isUserInProductFeed()) {
+    const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
+    if (pendingBroadcastQueue && inFeed) {
         checkPendingBroadcast();
     }
 }, 1500);
 
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && pendingBroadcastQueue && typeof isUserInProductFeed === 'function' && isUserInProductFeed()) {
-        checkPendingBroadcast();
+    if (!document.hidden && pendingBroadcastQueue) {
+        const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
+        if (inFeed) checkPendingBroadcast();
     }
 });
 
@@ -707,7 +711,7 @@ async function initApp() {
                         bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                     }
 
-                    // Сразу показываем рассылку поверх всего, даже если страница не обновлялась
+                    // Показываем рассылку только если юзер в ленте товаров, иначе откладываем в очередь
                     tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
                         localStorage.setItem('nisha_last_broadcast', bData.id);
                     });
