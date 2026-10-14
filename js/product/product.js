@@ -653,7 +653,18 @@ function openProductModal(item) {
     }
 
     const modal = document.getElementById('productModal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        modal.classList.remove('closing');
+        modal.style.pointerEvents = '';
+        const win = modal.querySelector('.modal-window');
+        if (win) {
+            win.style.transform = '';
+            win.style.opacity = '';
+            win.style.transition = '';
+            win.style.animation = '';
+        }
+        modal.style.display = 'flex';
+    }
     document.body.style.overflow = 'hidden';
 
     const tw = document.getElementById('modalTypewriterTitle');

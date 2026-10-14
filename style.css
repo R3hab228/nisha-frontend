@@ -380,6 +380,18 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 @keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(3px); } }
 @keyframes modalPopDesktop { from { opacity: 0; transform: scale(0.95) translateY(20px) translateZ(0); } to { opacity: 1; transform: scale(1) translateY(0) translateZ(0); } }
 @keyframes slideUpMobile { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeOutOverlay { from { opacity: 1; } to { opacity: 0; } }
+@keyframes modalPopOutDesktop { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.96) translateY(12px); } }
+@keyframes slideDownMobile { from { transform: translateY(0); } to { transform: translateY(100%); } }
+
+.modal-overlay.closing {
+    pointer-events: none !important;
+    animation: fadeOutOverlay 0.2s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+.modal-overlay.closing .modal-window {
+    pointer-events: none !important;
+    animation: modalPopOutDesktop 0.2s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
 
 .modal-header { background: #002244; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px inset var(--border-light); position: sticky; top: 0; z-index: 20;}
 .modal-title { color: #fff; font-weight: bold; font-family: var(--font-mono); font-size: 16px; letter-spacing: 1px;}
@@ -1365,6 +1377,9 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         animation: slideUpMobile 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         will-change: transform; overscroll-behavior-y: none;
         padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .modal-overlay.closing .modal-window {
+        animation: slideDownMobile 0.2s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
     }
     #ordersModal .modal-window { width: 100% !important; max-width: 100% !important; height: auto !important; min-height: 55vh !important; max-height: 85vh !important; overflow-y: auto !important; }
     #ordersModal #ordersListArea { max-height: 55vh !important; overflow-y: auto !important; padding: 15px !important; flex: none !important; }

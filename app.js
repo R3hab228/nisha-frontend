@@ -676,7 +676,14 @@ async function initApp() {
         }
 
         if (typeof autoAnimate === 'function') {
-            autoAnimate(document.getElementById('historyGrid'));
+            const hGrid = document.getElementById('historyGrid');
+            if (hGrid) {
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(() => autoAnimate(hGrid), { timeout: 2000 });
+                } else {
+                    setTimeout(() => autoAnimate(hGrid), 1000);
+                }
+            }
         }
 
         checkRules();
@@ -892,7 +899,6 @@ if (document.readyState === 'loading') {
 } else {
     initApp();
 }
-window.addEventListener('load', initApp);
 
 
 // closeModal и executeCloseModal вынесены в js/ui/windows.js

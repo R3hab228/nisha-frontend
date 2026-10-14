@@ -86,6 +86,15 @@ function openModal(id) {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     const modal = document.getElementById(id);
     if (!modal) return;
+    modal.classList.remove('closing');
+    modal.style.pointerEvents = '';
+    const win = modal.querySelector('.modal-window');
+    if (win) {
+        win.style.transform = '';
+        win.style.opacity = '';
+        win.style.transition = '';
+        win.style.animation = '';
+    }
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
@@ -147,83 +156,88 @@ function executeCloseModal(id) {
     const modal = document.getElementById(id);
     if (!modal) return;
 
-    // Если окно уже закрыто — не запускаем повторные таймеры и анимации
-    const isAlreadyClosed = (modal.style.display === 'none' || (!modal.style.display && window.getComputedStyle(modal).display === 'none'));
-    if (isAlreadyClosed && !modal.classList.contains('closing')) return;
-    
+    // Если окно уже в процессе закрытия или скрыто — выходим
+    if (modal.classList.contains('closing')) return;
+    if (modal.style.display === 'none' && !modal.style.opacity) return;
+
+    // Мгновенная разблокировка скролла и отключение кликов по закрывающемуся оверлею
+    modal.style.pointerEvents = 'none';
+    document.body.style.overflow = 'auto';
+    if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
+
     // Мгновенная пауза любых видео в закрывающемся окне
     const modalVideos = modal.querySelectorAll('video');
-    modalVideos.forEach(v => v.pause());
-    
+    modalVideos.forEach(v => {
+        try { v.pause(); } catch(e) {}
+    });
+
     if (id === 'rulesModal') {
-        if (modal.classList.contains('closing')) return;
         modal.classList.add('closing');
         setTimeout(() => {
             modal.style.display = 'none';
             modal.classList.remove('closing');
+            modal.style.pointerEvents = '';
             const win = modal.querySelector('.modal-window');
             if (win) {
                 win.style.transform = '';
                 win.style.opacity = '';
             }
-            document.body.style.overflow = 'auto';
-            if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
-        }, 400);
+        }, 350);
         return;
     }
-    
-    const win = modal.querySelector('.modal-window');
-    
-    if (win) {
-        win.style.animation = 'none';
-        win.offsetHeight; 
-        win.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease';
-        if (window.innerWidth > 900) { 
-            win.style.transform = 'scale(0.95) translateY(20px)'; 
-        } else { 
-            win.style.transform = 'translateY(100vh)'; 
-        }
-        win.style.opacity = '0';
+
+    if (id === 'productModal') {
+        document.title = 'NISHA | Underground Store';
+        window.currentOpenedItem = null;
+        if (typeof currentOpenedItem !== 'undefined') currentOpenedItem = null;
+        try {
+            const u = new URL(window.location);
+            if (u.searchParams.has('item')) {
+                u.searchParams.delete('item');
+                window.history.replaceState(null, '', u.pathname + u.search);
+            }
+        } catch (e) {}
     }
 
-    modal.style.transition = 'background-color 0.3s ease, opacity 0.3s ease';
-    modal.style.backgroundColor = 'transparent';
-    modal.style.opacity = '0';
-    
+    modal.classList.add('closing');
+
     setTimeout(() => {
         modal.style.display = 'none';
-        document.body.style.overflow = 'auto'; 
-        if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis(); 
-        
-        if (win) { 
-            win.style.transform = ''; 
-            win.style.opacity = ''; 
-            win.style.transition = ''; 
-            win.style.animation = ''; 
+        modal.classList.remove('closing');
+        modal.style.pointerEvents = '';
+
+        const win = modal.querySelector('.modal-window');
+        if (win) {
+            win.style.transform = '';
+            win.style.opacity = '';
+            win.style.transition = '';
+            win.style.animation = '';
         }
-        modal.style.opacity = ''; 
-        modal.style.transition = ''; 
+        modal.style.opacity = '';
+        modal.style.transition = '';
         modal.style.backgroundColor = '';
-        
-        if (id === 'productModal') { 
-            document.title = 'NISHA | Underground Store'; 
-            window.currentOpenedItem = null;
-            if (typeof currentOpenedItem !== 'undefined') currentOpenedItem = null;
-            try {
-                const u = new URL(window.location);
-                if (u.searchParams.has('item')) {
-                    u.searchParams.delete('item');
-                    window.history.replaceState(null, '', u.pathname + u.search);
-                }
-            } catch (e) {}
-            if (typeof renderHistory === 'function') renderHistory(); 
-        }
+
         if (id === 'checkoutModal' && window.otpPollInterval) {
             clearInterval(window.otpPollInterval);
             window.otpPollInterval = null;
         }
-        if (typeof checkPendingBroadcast === 'function') checkPendingBroadcast();
-    }, 300);
+
+        // Фоновые задачи (история и рассылки) запускаем безопасно в idle-потоке без фризов UI
+        const deferBackgroundTasks = () => {
+            if (id === 'productModal' && typeof renderHistory === 'function') {
+                renderHistory();
+            }
+            if (typeof checkPendingBroadcast === 'function') {
+                checkPendingBroadcast();
+            }
+        };
+
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(deferBackgroundTasks, { timeout: 1500 });
+        } else {
+            setTimeout(deferBackgroundTasks, 300);
+        }
+    }, 200);
 }
 window.executeCloseModal = executeCloseModal;
 

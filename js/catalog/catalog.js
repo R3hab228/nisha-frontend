@@ -725,7 +725,7 @@ async function loadAllItems() {
                 localStorage.removeItem('nisha_cached_db');
             } else {
                 window.allItems = parsed;
-                applyFilters();
+                applyFilters(true);
             }
         } catch(e) { 
             console.error("Ошибка кэша"); 
@@ -826,7 +826,7 @@ async function loadAllItems() {
 
     // 5. ПЕРЕРИСОВКА (Если данные реально обновились)
     if (!cachedData || isChanged) {
-        applyFilters(); 
+        applyFilters(!cachedData); 
     }
     
     // 6. ФОНОВАЯ ПРОВЕРКА: откладываем на 15 секунд, чтобы не перегружать сеть и рендер на первых секундах
@@ -1278,11 +1278,17 @@ window.invalidateFuseCache = function() {
 };
 
 // Основная функция фильтрации каталога
-function applyFilters() {
+function applyFilters(immediate = false) {
     const grid = document.getElementById('itemsGrid');
-    if (grid) grid.classList.add('fade-out');
+    const isInitialRender = !window.renderedCount || window.renderedCount === 0;
+
+    if (!immediate && !isInitialRender && grid) {
+        grid.classList.add('fade-out');
+    }
 
     clearTimeout(applyFiltersTimeout);
+    const delay = (immediate || isInitialRender) ? 0 : 160;
+
     applyFiltersTimeout = setTimeout(() => {
         try {
             const searchInput = document.getElementById('mainSearch');
@@ -1447,7 +1453,7 @@ function applyFilters() {
                 grid.classList.remove('fade-out');
             }
         }
-    }, 180); 
+    }, delay); 
 }
 window.applyFilters = applyFilters;
 
