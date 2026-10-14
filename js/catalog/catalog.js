@@ -1691,12 +1691,18 @@ function renderNextBatch() {
             let slidesStr = '';
             let dotsStr = '';
 
+            const safeBrand = (item.brand || '').trim();
+            const safeName = (item.name || '').trim();
+            const baseAlt = [safeBrand, safeName].filter(Boolean).join(' ') || 'Винтажная одежда NISHA';
+            const cleanAlt = baseAlt.replace(/"/g, '&quot;');
+
             thumbsArray.forEach((thumbUrl, idx) => {
                 const rawVidUrl = item.images && item.images[idx] ? item.images[idx] : '';
                 const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
                 
                 const cdnThumb = window.toCDN(thumbUrl);
                 const cdnVidUrl = window.toCDN(rawVidUrl);
+                const slideAlt = cleanAlt + (idx > 0 ? ` - фото ${idx + 1}` : '');
 
                 if (isVid) {
                     slidesStr += `
@@ -1707,21 +1713,21 @@ function renderNextBatch() {
                     const firstLoadAttr = (i < 2) ? 'fetchpriority="high"' : 'loading="lazy"';
                     slidesStr += `
                         <div class="card-slide img-8bit-loading">
-                           <img class="card-slide-img" src="${cdnThumb}" ${firstLoadAttr} decoding="async" alt="" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+                           <img class="card-slide-img" src="${cdnThumb}" ${firstLoadAttr} decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
 onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
                 } else if (idx === 1) {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading">
-                           <img class="card-slide-img" src="${cdnThumb}" loading="lazy" decoding="async" alt="" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+                           <img class="card-slide-img" src="${cdnThumb}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
 onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
                 } else {
                     slidesStr += `
                         <div class="card-slide img-8bit-loading">
-                           <img class="card-slide-img" data-src="${cdnThumb}" loading="lazy" decoding="async" alt="" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+                           <img class="card-slide-img" data-src="${cdnThumb}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
 onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;

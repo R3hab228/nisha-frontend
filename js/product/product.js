@@ -867,6 +867,24 @@ window.initSliderSwipe = initSliderSwipe;
 // 3. ПОДЕЛИТЬСЯ ТОВАРОМ (SHARE)
 // ==========================================
 
+function fallbackCopyText(text) {
+    try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '-9999px';
+        textarea.style.left = '-9999px';
+        textarea.setAttribute('readonly', '');
+        document.body.appendChild(textarea);
+        textarea.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return success;
+    } catch (e) {
+        return false;
+    }
+}
+
 function shareItem() {
     const active = window.currentOpenedItem || currentOpenedItem;
     if (!active) return;
@@ -874,6 +892,15 @@ function shareItem() {
     const shareUrl = `https://www.nisha-store.shop/share/${active.id}`;
     const shareTitle = `NISHA | ${active.brand} - ${active.name}`;
     const shareText = `Зацени: ${active.brand} (${active.size}).`;
+
+    const notifySuccess = () => {
+        const msg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'Ссылка скопирована!'}) : 'Ссылка скопирована!';
+        showToast(msg, 'success');
+    };
+    const notifyError = () => {
+        const msg = typeof i18next !== 'undefined' ? i18next.t('messages.copy_error', {defaultValue: 'Ошибка копирования'}) : 'Ошибка копирования';
+        showToast(msg, 'error');
+    };
 
     if (navigator.share) {
         navigator.share({
@@ -883,17 +910,21 @@ function shareItem() {
         }).catch(() => {
             console.log('Шеринг отменен пользователем');
         });
+    } else if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(shareUrl)
+            .then(notifySuccess)
+            .catch(() => {
+                if (fallbackCopyText(shareUrl)) {
+                    notifySuccess();
+                } else {
+                    notifyError();
+                }
+            });
     } else {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(shareUrl)
-                .then(() => {
-                    const msg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'Ссылка скопирована!'}) : 'Ссылка скопирована!';
-                    showToast(msg, 'success');
-                })
-                .catch(() => {
-                    const msg = typeof i18next !== 'undefined' ? i18next.t('messages.copy_error', {defaultValue: 'Ошибка копирования'}) : 'Ошибка копирования';
-                    showToast(msg, 'error');
-                });
+        if (fallbackCopyText(shareUrl)) {
+            notifySuccess();
+        } else {
+            notifyError();
         }
     }
 }

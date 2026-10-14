@@ -540,8 +540,8 @@ async function initApp() {
             if (firstLink) firstLink.classList.add('active-filter');
         }
 
-        // --- ВОССТАНОВЛЕНИЕ ПОИСКОВОГО ЗАПРОСА В UI ---
-        const savedQuery = urlParams.get('q');
+        // --- ВОССТАНОВЛЕНИЕ ПОИСКОВОГО ЗАПРОСА В UI (?q= или ?search=) ---
+        const savedQuery = urlParams.get('q') || urlParams.get('search');
         if (savedQuery) {
             const sInput = document.getElementById('mainSearch');
             if (sInput) {
@@ -693,6 +693,18 @@ async function initApp() {
                     }
                 } catch(e) { console.warn("Ошибка загрузки рассылки", e); }
             }, 3000);
+
+            // --- ТИХИЙ ФОНОВЫЙ ПРОГРЕВ БЭКЕНДА (Render Free Tier Wake-up) ---
+            const pingBackend = () => {
+                try {
+                    fetch('https://nisha-api.onrender.com/ping', { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+                } catch(e) {}
+            };
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => setTimeout(pingBackend, 2500));
+            } else {
+                setTimeout(pingBackend, 3500);
+            }
 
             const openItemId = urlParams.get('item');
             if (openItemId) {
