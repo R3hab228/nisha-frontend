@@ -571,7 +571,66 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
 .order-total { color: var(--accent-green); font-size: 18px; font-weight: bold;}
 .order-ttn { color: #fff; background: #222; padding: 5px 10px; border: 1px inset #555;}
 
+/* ==========================================
+   PHOTOSWIPE CUSTOM CONTROLS
+   ========================================== */
 .pswp__img { object-fit: contain; }
+
+/* Крестик закрытия — красный */
+.pswp__button--close {
+    --pswp-icon-color: var(--accent-red, #ff3333) !important;
+    --pswp-icon-stroke-color: rgba(0, 0, 0, 0.95) !important;
+    color: var(--accent-red, #ff3333) !important;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.pswp__button--close .pswp__icn,
+.pswp__button--close svg path:not(.pswp__icn-shadow),
+#pswp__icn-close {
+    fill: var(--accent-red, #ff3333) !important;
+}
+.pswp__button--close:hover {
+    opacity: 1 !important;
+    transform: scale(1.15);
+}
+.pswp__button--close:active {
+    transform: scale(0.95);
+}
+
+/* Лупа — зелёная, а крестик (+) внутри лупы — красный */
+.pswp__button--zoom {
+    --pswp-icon-color: var(--accent-green, #00ff00) !important;
+    --pswp-icon-color-secondary: var(--accent-red, #ff3333) !important;
+    --pswp-icon-stroke-color: rgba(0, 0, 0, 0.95) !important;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.pswp__button--zoom #pswp__icn-zoom,
+.pswp__button--zoom svg path#pswp__icn-zoom,
+#pswp__icn-zoom {
+    fill: var(--accent-green, #00ff00) !important;
+}
+.pswp__button--zoom .pswp__zoom-icn-bar-h,
+.pswp__button--zoom .pswp__zoom-icn-bar-v,
+.pswp__zoom-icn-bar-h,
+.pswp__zoom-icn-bar-v {
+    fill: var(--accent-red, #ff3333) !important;
+    color: var(--accent-red, #ff3333) !important;
+}
+.pswp__button--zoom:hover {
+    opacity: 1 !important;
+    transform: scale(1.15);
+}
+.pswp__button--zoom:active {
+    transform: scale(0.95);
+}
+
+/* Четкие контуры теней для идеальной читаемости на любом фоне */
+.pswp__button--close .pswp__icn-shadow,
+.pswp__button--zoom .pswp__icn-shadow,
+.pswp__icn-shadow {
+    stroke: rgba(0, 0, 0, 0.95) !important;
+    stroke-width: 2.5px !important;
+    fill: none !important;
+}
 
 #rulesModal {
     animation: fadeInRulesOverlay 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
