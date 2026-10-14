@@ -1359,6 +1359,9 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .cart-panel {
         padding: 12px calc(15px + env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) calc(15px + env(safe-area-inset-left, 0px));
         flex-direction: column; gap: 8px; text-align: center;
+        background: #000a1a !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
     .cart-info { font-size: 12px; font-weight: normal; color: #ccc; }
     .cart-info span, .cart-info b { font-size: 16px !important; font-weight: normal !important; margin-left: 5px; }
@@ -1674,4 +1677,40 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
 .measurements-text {
     font-family: var(--font-mono);
     color: #e0e0e0;
+}
+
+/* --- АВТОМАТИЧЕСКИЙ РЕЖИМ ЭНЕРГОСБЕРЕЖЕНИЯ И ТУРБО-ПЛАВНОСТИ (LOW POWER MODE) --- */
+@media (prefers-reduced-motion: reduce) {
+    .marquee-track { animation-play-state: paused !important; }
+    .cart-panel, .modal-overlay, .slider-btn, .photo-counter, .measurements-tooltip, .cart-dropdown, .terminal-modal-overlay, #orderSuccessOverlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    .pulsing-dot { animation: none !important; }
+    .item-card { transition: none !important; box-shadow: none !important; }
+}
+
+html.low-power-mode .marquee-track {
+    animation-play-state: paused !important;
+}
+
+html.low-power-mode .cart-panel,
+html.low-power-mode .modal-overlay,
+html.low-power-mode .slider-btn,
+html.low-power-mode .photo-counter,
+html.low-power-mode .measurements-tooltip,
+html.low-power-mode .cart-dropdown,
+html.low-power-mode .terminal-modal-overlay,
+html.low-power-mode #orderSuccessOverlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+html.low-power-mode .item-card {
+    transition: none !important;
+    box-shadow: none !important;
+}
+
+html.low-power-mode .pulsing-dot {
+    animation: none !important;
 }
