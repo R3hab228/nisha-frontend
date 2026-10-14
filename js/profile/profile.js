@@ -1608,12 +1608,18 @@ function renderFilteredOrders() {
                 ? `<div class="order-ttn" style="margin-top: 8px;">
                      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
                          <span style="font-family: var(--font-mono); font-size: 13px; color: #aaa;">ТТН:</span>
-                         <div class="ttn-copy-btn" onclick="copyTTN('${order.tracking_number}', this)" title="Нажмите, чтобы скопировать номер ТТН" style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0, 255, 0, 0.05); border: 1px dashed rgba(0, 255, 0, 0.3); transition: all 0.2s ease;">
-                             <svg class="ttn-copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; vertical-align: middle; transition: transform 0.2s ease, stroke 0.2s ease;">
-                                 <rect x="2" y="2" width="13" height="13" rx="3.5"></rect>
-                                 <path d="M7.5 7.5h8.5a3.5 3.5 0 0 1 3.5 3.5v8.5a3.5 3.5 0 0 1-3.5 3.5H7.5a3.5 3.5 0 0 1-3.5-3.5"></path>
-                             </svg>
-                             <span style="color:var(--accent-green); font-weight:bold; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.5px; user-select: all;">${order.tracking_number}</span>
+                         <div style="display: flex; align-items: center; gap: 8px;">
+                             <div class="ttn-copy-btn" onclick="copyTTN('${order.tracking_number}', this)" title="Нажмите, чтобы скопировать номер ТТН" style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0, 255, 0, 0.05); border: 1px dashed rgba(0, 255, 0, 0.3); transition: all 0.2s ease;">
+                                 <svg class="ttn-copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; vertical-align: middle; transition: transform 0.2s ease, stroke 0.2s ease;">
+                                     <rect x="2" y="2" width="13" height="13" rx="3.5"></rect>
+                                     <path d="M7.5 7.5h8.5a3.5 3.5 0 0 1 3.5 3.5v8.5a3.5 3.5 0 0 1-3.5 3.5H7.5a3.5 3.5 0 0 1-3.5-3.5"></path>
+                                 </svg>
+                                 <span style="color:var(--accent-green); font-weight:bold; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.5px; user-select: all;">${order.tracking_number}</span>
+                             </div>
+                             <a href="https://novaposhta.ua/tracking/?cargo_number=${order.tracking_number}" target="_blank" rel="noopener noreferrer" title="Отследить на Новой Почте" style="display: inline-flex; align-items: center; gap: 4px; color: var(--accent-green); text-decoration: none; font-size: 11px; font-family: var(--font-mono); padding: 3px 6px; border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 4px; background: rgba(0, 255, 0, 0.05); transition: 0.2s;">
+                                 <span>ТРЕК</span>
+                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                             </a>
                          </div>
                      </div>
                      <div style="background:#fff; text-align:center; padding: 10px; margin-top: 6px; border-radius:4px;">
