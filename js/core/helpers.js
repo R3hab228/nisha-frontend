@@ -220,6 +220,89 @@ function cleanStorageLimits() {
 }
 window.cleanStorageLimits = cleanStorageLimits;
 
+// --- УМНЫЙ ПОИСК С ТРАНСЛИТЕРАЦИЕЙ И МАППИНГОМ БРЕНДОВ (RU/UA <-> EN) ---
+const SEARCH_SYNONYMS = {
+    'найк': 'nike', 'найки': 'nike', 'адидас': 'adidas', 'адики': 'adidas',
+    'пума': 'puma', 'левис': 'levis', 'левайс': 'levis', 'кархарт': 'carhartt',
+    'кархартт': 'carhartt', 'каргарт': 'carhartt', 'стон': 'stone island',
+    'стоник': 'stone island', 'айленд': 'island', 'армани': 'armani',
+    'гесс': 'guess', 'гэсс': 'guess', 'рибок': 'reebok', 'ванс': 'vans',
+    'вэнс': 'vans', 'нью беланс': 'new balance', 'нью баланс': 'new balance',
+    'ньюбики': 'new balance', 'ральф': 'ralph lauren polo', 'поло': 'polo',
+    'саутпол': 'southpole', 'соутпол': 'southpole', 'рокавер': 'rocawear',
+    'эвис': 'evisu', 'эвису': 'evisu', 'норс фейс': 'the north face',
+    'тнф': 'the north face', 'патагония': 'patagonia', 'диккис': 'dickies',
+    'дикис': 'dickies', 'зилла': 'zilla', 'стэсси': 'stussy', 'стусси': 'stussy',
+    'суприм': 'supreme', 'худи': 'hoodie', 'худак': 'hoodie', 'толстовка': 'hoodie sweatshirt',
+    'зипка': 'zip hoodie', 'зип': 'zip', 'ветровка': 'jacket windbreaker',
+    'куртка': 'jacket', 'пуховик': 'down jacket puffer', 'свитшот': 'sweatshirt',
+    'кофта': 'sweater knitwear', 'свитер': 'sweater', 'футболка': 't-shirt tee',
+    'тишка': 't-shirt tee', 'майка': 'tank top', 'лонгслив': 'longsleeve',
+    'штаны': 'pants trousers', 'штани': 'pants', 'джинсы': 'jeans denim',
+    'джинси': 'jeans denim', 'шорты': 'shorts', 'шорти': 'shorts',
+    'кепка': 'cap hat', 'шапка': 'beanie hat', 'рюкзак': 'backpack',
+    'сумка': 'bag', 'кроссовки': 'sneakers shoes', 'кроссы': 'sneakers',
+    'кроси': 'sneakers', 'кеды': 'sneakers shoes vans'
+};
+
+const CYRILLIC_TO_LATIN = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'ґ': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k', 'л': 'l',
+    'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ы': 'y',
+    'э': 'e', 'ю': 'yu', 'я': 'ya', 'є': 'ye'
+};
+
+function transliterateCyrillic(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str.split('').map(char => {
+        const lower = char.toLowerCase();
+        return CYRILLIC_TO_LATIN[lower] !== undefined ? CYRILLIC_TO_LATIN[lower] : char;
+    }).join('');
+}
+
+function expandSearchQuery(query) {
+    if (!query || typeof query !== 'string') return [];
+    const clean = query.replace(/[#&]/g, '').trim().toLowerCase();
+    if (!clean) return [];
+
+    const variants = new Set();
+    variants.add(clean);
+
+    // 1. Прямой поиск по словарю синонимов
+    if (SEARCH_SYNONYMS[clean]) {
+        SEARCH_SYNONYMS[clean].split(' ').forEach(w => variants.add(w));
+    }
+
+    // 2. Пословный поиск по словарю синонимов
+    const words = clean.split(/\s+/);
+    if (words.length > 1) {
+        let hasWordSynonym = false;
+        const replacedWords = words.map(w => {
+            if (SEARCH_SYNONYMS[w]) {
+                hasWordSynonym = true;
+                return SEARCH_SYNONYMS[w].split(' ')[0];
+            }
+            return w;
+        });
+        if (hasWordSynonym) {
+            variants.add(replacedWords.join(' '));
+        }
+    }
+
+    // 3. Если есть кириллические символы — добавляем базовую транслитерацию
+    if (/[а-яёіїєґ]/i.test(clean)) {
+        const translit = transliterateCyrillic(clean);
+        if (translit && translit !== clean) {
+            variants.add(translit);
+        }
+    }
+
+    return Array.from(variants);
+}
+window.expandSearchQuery = expandSearchQuery;
+window.transliterateCyrillic = transliterateCyrillic;
+
 // --- ВНЕШНИЙ ЛОАДЕР СКРИПТОВ И СТИЛЕЙ ПО ТРЕБОВАНИЮ (LAZY LOADER) ---
 const _loadedExternalScripts = {};
 function loadExternalScript(src) {

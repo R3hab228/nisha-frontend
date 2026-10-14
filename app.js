@@ -1136,12 +1136,28 @@ function handleLiveSearch() {
     }
 
     searchDebounce = setTimeout(() => {
-        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ МЕМОИЗИРОВАННЫЙ КЭШ И FUSE.JS
+        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ МЕМОИЗИРОВАННЫЙ КЭШ И FUSE.JS С ТРАНСЛИТЕРАЦИЕЙ
         const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
         let results = liveSearchMemoCache.get(cleanSearchTerm);
         if (!results) {
             const fuse = getLiveSearchFuse();
-            results = fuse.search(cleanSearchTerm).slice(0, 8);
+            const queryVariants = (typeof expandSearchQuery === 'function') 
+                ? expandSearchQuery(cleanSearchTerm) 
+                : [cleanSearchTerm];
+            
+            const collected = [];
+            const seenIds = new Set();
+            for (const variant of queryVariants) {
+                const subResults = fuse.search(variant);
+                subResults.forEach(r => {
+                    if (!seenIds.has(r.item.id)) {
+                        seenIds.add(r.item.id);
+                        collected.push(r);
+                    }
+                });
+                if (collected.length >= 8) break;
+            }
+            results = collected.slice(0, 8);
             if (liveSearchMemoCache.size >= MAX_SEARCH_MEMO) {
                 const oldestKey = liveSearchMemoCache.keys().next().value;
                 liveSearchMemoCache.delete(oldestKey);

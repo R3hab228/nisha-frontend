@@ -205,6 +205,9 @@ function openProductModal(item) {
     currentOpenedItem = item;
     window.currentOpenedItem = item;
     
+    // Мгновенный прогрев PhotoSwipe в фоне для открытия зума за 0 мс
+    if (typeof ensurePhotoSwipe === 'function') ensurePhotoSwipe();
+
     if (typeof window.stopLenis === 'function') window.stopLenis();
     else if (typeof lenis !== 'undefined') lenis.stop();
     
@@ -435,14 +438,18 @@ function openProductModal(item) {
 
     setSlide(0);
 
-    // Мгновенная предзагрузка второй фотографии для моментального свайпа
-    if (mediaList.length > 1) {
+    // Мгновенная предзагрузка полноразмерных фото для открытия зума за 0 мс
+    if (mediaList.length > 0) {
         const toCDN = window.toCDN || ((u) => u);
-        const nextImgUrl = toCDN(mediaList[1]);
-        if (typeof nextImgUrl === 'string' && !nextImgUrl.endsWith('.mp4')) {
-            const preImg = new Image();
-            preImg.src = nextImgUrl;
-        }
+        mediaList.slice(0, 2).forEach(url => {
+            const cdnUrl = toCDN(url);
+            if (typeof cdnUrl === 'string' && !cdnUrl.endsWith('.mp4')) {
+                const preImg = new Image();
+                preImg.decoding = 'async';
+                preImg.fetchPriority = 'high';
+                preImg.src = cdnUrl;
+            }
+        });
     }
 
     setTimeout(() => {

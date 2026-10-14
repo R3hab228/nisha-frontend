@@ -1256,6 +1256,27 @@ function updateSidebarCounters() {
 }
 window.updateSidebarCounters = updateSidebarCounters;
 
+// Кэшированный инстанс Fuse.js для каталога (устраняет создание индекса на каждое нажатие клавиши)
+let _catalogFuseCache = null;
+let _catalogFuseItemsRef = null;
+
+function getCatalogFuse(items) {
+    if (!_catalogFuseCache || _catalogFuseItemsRef !== items) {
+        _catalogFuseItemsRef = items;
+        const fuseOptions = {
+            includeScore: true, threshold: 0.4, ignoreLocation: true, useExtendedSearch: true, 
+            keys: [{ name: 'tags', weight: 1.0 }, { name: 'brand', weight: 0.8 }, { name: 'name', weight: 0.8 }, { name: 'size', weight: 0.8 }, { name: 'category', weight: 0.2 }]
+        };
+        _catalogFuseCache = new Fuse(items, fuseOptions);
+    }
+    return _catalogFuseCache;
+}
+window.invalidateFuseCache = function() {
+    _catalogFuseCache = null;
+    _catalogFuseItemsRef = null;
+    if (typeof window.invalidateLiveSearchFuse === 'function') window.invalidateLiveSearchFuse();
+};
+
 // Основная функция фильтрации каталога
 function applyFilters() {
     const grid = document.getElementById('itemsGrid');
@@ -1308,24 +1329,35 @@ function applyFilters() {
                 return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability;
             });
 
-            // 2. Умный поиск (Fuse.js или надежный fallback, работает также внутри категории и в избранном)
+            // 2. Умный поиск (Fuse.js или надежный fallback с поддержкой транслитерации RU/UA <-> EN)
             if (searchTerm !== '') {
                 const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
                 if (cleanSearchTerm) {
+                    const queryVariants = (typeof expandSearchQuery === 'function')
+                        ? expandSearchQuery(cleanSearchTerm)
+                        : [cleanSearchTerm.toLowerCase()];
+
                     if (typeof Fuse !== 'undefined') {
-                        const fuseOptions = {
-                            includeScore: true, threshold: 0.4, ignoreLocation: true, useExtendedSearch: true, 
-                            keys: [{ name: 'tags', weight: 1.0 }, { name: 'brand', weight: 0.8 }, { name: 'name', weight: 0.8 }, { name: 'size', weight: 0.8 }, { name: 'category', weight: 0.2 }]
-                        };
-                        const fuse = new Fuse(window.filteredItems, fuseOptions);
-                        window.filteredItems = fuse.search(cleanSearchTerm).map(result => result.item);
+                        const fuse = getCatalogFuse(window.filteredItems);
+                        const matchedIds = new Set();
+                        const finalResults = [];
+
+                        for (const variant of queryVariants) {
+                            const found = fuse.search(variant);
+                            found.forEach(res => {
+                                if (!matchedIds.has(res.item.id)) {
+                                    matchedIds.add(res.item.id);
+                                    finalResults.push(res.item);
+                                }
+                            });
+                        }
+                        window.filteredItems = finalResults;
                     } else {
-                        const lowSearch = cleanSearchTerm.toLowerCase();
                         window.filteredItems = window.filteredItems.filter(item => {
                             const name = (item.name || '').toLowerCase();
                             const brand = (item.brand || '').toLowerCase();
                             const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : (item.tags || '').toLowerCase();
-                            return name.includes(lowSearch) || brand.includes(lowSearch) || tags.includes(lowSearch);
+                            return queryVariants.some(q => name.includes(q) || brand.includes(q) || tags.includes(q));
                         });
                     }
                 }
