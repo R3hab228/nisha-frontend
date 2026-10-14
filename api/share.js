@@ -6,30 +6,50 @@ module.exports = async function handler(req, res) {
     return res.redirect('/');
   }
 
-  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + id + '&select=name,price,brand,images,thumbnails,size,condition,description';
+  const headers = {
+    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcHVlZnhxdGtodnRsdGR2bGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MzQ2MzEsImV4cCI6MjA5NDUxMDYzMX0.SPspCdwRKd6Hu0Zx3Hhm-orTOpPdcigNWLiV1TTwLMo',
+    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcHVlZnhxdGtodnRsdGR2bGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MzQ2MzEsImV4cCI6MjA5NDUxMDYzMX0.SPspCdwRKd6Hu0Zx3Hhm-orTOpPdcigNWLiV1TTwLMo'
+  };
+
+  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + id + '&select=name,price,brand,images,thumbnails,size,condition,description,status';
   
   try {
-    const dbRes = await fetch(supabaseUrl, {
-      headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcHVlZnhxdGtodnRsdGR2bGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MzQ2MzEsImV4cCI6MjA5NDUxMDYzMX0.SPspCdwRKd6Hu0Zx3Hhm-orTOpPdcigNWLiV1TTwLMo',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcHVlZnhxdGtodnRsdGR2bGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MzQ2MzEsImV4cCI6MjA5NDUxMDYzMX0.SPspCdwRKd6Hu0Zx3Hhm-orTOpPdcigNWLiV1TTwLMo'
-      }
-    });
-    
-    const data = await dbRes.json();
-    const item = data[0];
+    const dbRes = await fetch(supabaseUrl, { headers });
+    let item = null;
+    if (dbRes.ok) {
+      const data = await dbRes.json();
+      item = data[0];
+    }
+
+    // Фоллбек на архивные товары, если вещь уже выкуплена и отправлена в архив
+    if (!item) {
+      const archiveUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/archived_items?id=eq.' + id + '&select=name,price,brand,images,thumbnails,size,condition,description,status';
+      try {
+        const archRes = await fetch(archiveUrl, { headers });
+        if (archRes.ok) {
+          const archData = await archRes.json();
+          if (archData && archData[0]) {
+            item = archData[0];
+            item.status = item.status || 'sold';
+          }
+        }
+      } catch (err) {}
+    }
 
     if (!item) {
       return res.redirect('/?item=' + id);
     }
 
+    const isSold = item.status === 'sold';
     const escapeHTML = (str) => String(str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const rawBrand = item.brand ? item.brand.trim() : '';
     const rawName = item.name ? item.name.trim() : '';
     const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || 'Винтажная вещь';
-    const title = escapeHTML('NISHA | ' + fullItemTitle);
+    const statusPrefix = isSold ? '[ПРОДАНО] ' : '';
+    const title = escapeHTML(statusPrefix + 'NISHA | ' + fullItemTitle);
 
     let descParts = [];
+    if (isSold) descParts.push('ПРОДАНО');
     if (item.size) descParts.push('Размер: ' + item.size);
     if (item.condition) descParts.push('Состояние: ' + item.condition);
     if (item.price) descParts.push('Цена: ' + item.price + ' грн');
@@ -67,6 +87,7 @@ module.exports = async function handler(req, res) {
 '<meta property="og:description" content="' + description + '">\n' +
 '<meta property="og:image" content="' + imageUrl + '">\n' +
 '<meta property="og:url" content="' + shareUrl + '">\n' +
+'<meta property="product:availability" content="' + (isSold ? 'out of stock' : 'in stock') + '">\n' +
 '<meta property="product:price:amount" content="' + (item.price || 0) + '">\n' +
 '<meta property="product:price:currency" content="UAH">\n' +
 videoTags + '\n' +

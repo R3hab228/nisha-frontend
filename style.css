@@ -1157,6 +1157,15 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     html { -webkit-text-size-adjust: 100%; } 
     h1 { font-size: 2em; max-width: 70%; }
     
+    /* Предотвращение принудительного авто-зума на iOS Safari (требуется font-size >= 16px) */
+    .form-input,
+    .auth-input,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+    
     .btn-target::before, .btn-target::after { display: none !important; content: none !important; }
     
     .toast-container { top: calc(15px + env(safe-area-inset-top, 0px)); right: calc(15px + env(safe-area-inset-right, 0px)); left: auto; align-items: flex-end; }

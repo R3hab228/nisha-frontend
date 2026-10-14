@@ -1,6 +1,6 @@
 module.exports = async function handler(req, res) {
   const SITE_URL = 'https://www.nisha-store.shop';
-  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?select=id,created_at&status=eq.available&order=created_at.desc';
+  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?select=id,created_at,status&order=created_at.desc&limit=1000';
 
   try {
     const dbRes = await fetch(supabaseUrl, {
@@ -24,7 +24,10 @@ module.exports = async function handler(req, res) {
         if (!item || !item.id) return;
         const date = item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : '';
         const lastModTag = date ? `\n    <lastmod>${date}</lastmod>` : '';
-        xml += `  <url>\n    <loc>${SITE_URL}/share/${item.id}</loc>${lastModTag}\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+        const isSold = item.status === 'sold';
+        const changeFreq = isSold ? 'monthly' : 'weekly';
+        const priority = isSold ? '0.4' : '0.8';
+        xml += `  <url>\n    <loc>${SITE_URL}/share/${item.id}</loc>${lastModTag}\n    <changefreq>${changeFreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>\n`;
       });
     }
 
