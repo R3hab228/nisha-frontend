@@ -19,6 +19,15 @@ function openProposeModal() {
     
     const modal = document.getElementById('proposeModal');
     if (modal) {
+        modal.classList.remove('closing');
+        modal.style.pointerEvents = '';
+        const win = modal.querySelector('.modal-window');
+        if (win) {
+            win.style.transform = '';
+            win.style.opacity = '';
+            win.style.transition = '';
+            win.style.animation = '';
+        }
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         if (typeof initTurnstileWidgets === 'function') {
