@@ -1315,22 +1315,136 @@ function openOrdersModal() {
 }
 window.openOrdersModal = openOrdersModal;
 
+// Обновление счетчиков на вкладках заказов и авто-выбор активной вкладки
+function updateOrderTabCounters() {
+    const acceptedCount = (globalOrdersData || []).filter(o => {
+        const s = (o.status || '').toLowerCase();
+        return s.includes('принят') || s.includes('оплачен') || s.includes('обработке') || s.includes('processing') || s.includes('новый');
+    }).length;
+    const shippedCount = (globalOrdersData || []).filter(o => {
+        const s = (o.status || '').toLowerCase();
+        return s.includes('отправлен') || s.includes('завершен');
+    }).length;
+    const cancelledCount = (globalOrdersData || []).filter(o => {
+        const s = (o.status || '').toLowerCase();
+        return s.includes('отменен') || s.includes('возврат');
+    }).length;
+
+    const tabYellow = document.querySelector('.order-tab.tab-yellow');
+    const tabBlue = document.querySelector('.order-tab.tab-blue');
+    const tabRed = document.querySelector('.order-tab.tab-red');
+
+    const txtAccepted = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_accepted', {defaultValue: 'АКТИВНЫЕ'}) : 'АКТИВНЫЕ';
+    const txtShipped = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_shipped', {defaultValue: 'ОТПРАВЛЕННЫЕ'}) : 'ОТПРАВЛЕННЫЕ';
+    const txtCancelled = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_cancelled', {defaultValue: 'ОТМЕНЕННЫЕ'}) : 'ОТМЕНЕННЫЕ';
+
+    if (tabYellow) tabYellow.innerText = `${txtAccepted} (${acceptedCount})`;
+    if (tabBlue) tabBlue.innerText = `${txtShipped} (${shippedCount})`;
+    if (tabRed) tabRed.innerText = `${txtCancelled} (${cancelledCount})`;
+
+    // Умный выбор: если активных 0, а завершенных/отправленных > 0 — автоматически переключаем на них!
+    if (acceptedCount === 0 && shippedCount > 0 && currentOrderTab === 'accepted') {
+        currentOrderTab = 'shipped';
+        document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
+        if (tabBlue) tabBlue.classList.add('active');
+    } else {
+        document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
+        if (currentOrderTab === 'accepted' && tabYellow) tabYellow.classList.add('active');
+        else if (currentOrderTab === 'shipped' && tabBlue) tabBlue.classList.add('active');
+        else if (currentOrderTab === 'cancelled' && tabRed) tabRed.classList.add('active');
+        else if (tabYellow) {
+            currentOrderTab = 'accepted';
+            tabYellow.classList.add('active');
+        }
+    }
+}
+window.updateOrderTabCounters = updateOrderTabCounters;
+
 async function fetchMyOrders() {
     const listArea = document.getElementById('ordersListArea');
     const tabsContainer = document.getElementById('ordersTabs');
     if (!listArea) return;
     
-    listArea.innerHTML = '<div style="text-align:center; color:#aaa; font-family: monospace;">[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]</div>';
-    if (tabsContainer) tabsContainer.style.display = 'none';
+    // 1. Мгновенно отображаем локально сохраненные заказы, если сетка пуста
+    if (!globalOrdersData || globalOrdersData.length === 0) {
+        try {
+            const cached = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
+            if (Array.isArray(cached) && cached.length > 0) {
+                globalOrdersData = cached;
+                if (tabsContainer) tabsContainer.style.display = 'flex';
+                updateOrderTabCounters();
+                renderFilteredOrders();
+            }
+        } catch (e) {}
+    }
+
+    if (!globalOrdersData || globalOrdersData.length === 0) {
+        listArea.innerHTML = '<div style="text-align:center; color:#aaa; font-family: monospace;">[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]</div>';
+        if (tabsContainer) tabsContainer.style.display = 'none';
+    }
 
     let fetchError = null;
     const sb = getSupabase();
     if (!sb) return;
 
     if (currentUser) {
-        const { data, error } = await sb.from('orders').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-        globalOrdersData = data || []; 
-        fetchError = error;
+        try {
+            // А. Заказы, привязанные к ID текущего аккаунта
+            const { data: userOrders, error: userOrdersErr } = await sb
+                .from('orders')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+
+            if (userOrdersErr) fetchError = userOrdersErr;
+
+            const orderMap = new Map();
+            (userOrders || []).forEach(o => {
+                if (o && o.id) orderMap.set(o.id, o);
+            });
+
+            // Б. Ищем заказы, оформленные по телефону (до входа или как гость)
+            const candidatePhones = new Set();
+            if (userProfile?.phone) candidatePhones.add(userProfile.phone);
+            if (currentUser?.phone) candidatePhones.add(currentUser.phone);
+            if (currentUser?.user_metadata?.phone) candidatePhones.add(currentUser.user_metadata.phone);
+            const lastPhone = localStorage.getItem('nisha_last_phone');
+            if (lastPhone) candidatePhones.add(lastPhone);
+            const pendingPhone = localStorage.getItem('nisha_pending_otp_phone');
+            if (pendingPhone) candidatePhones.add(pendingPhone);
+
+            for (const rawP of candidatePhones) {
+                const clean = String(rawP).replace(/[^\d]/g, '');
+                if (clean.length >= 9) {
+                    try {
+                        const { data: phoneOrders } = await sb.rpc('get_orders_by_phone', { search_phone: clean });
+                        if (Array.isArray(phoneOrders) && phoneOrders.length > 0) {
+                            for (const po of phoneOrders) {
+                                if (po && po.id && !orderMap.has(po.id)) {
+                                    orderMap.set(po.id, po);
+                                }
+                            }
+                        }
+                    } catch (rpcErr) {
+                        console.warn('[ORDERS] Ошибка поиска по телефону:', rpcErr);
+                    }
+
+                    // Фоновая привязка сиротских заказов к аккаунту через бэкенд
+                    fetch('https://nisha-api.onrender.com/api/link-orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id, phone: clean })
+                    }).catch(() => {});
+                }
+            }
+
+            globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            if (globalOrdersData.length > 0) {
+                try { localStorage.setItem('nisha_cached_orders', JSON.stringify(globalOrdersData)); } catch(e) {}
+            }
+        } catch (e) {
+            fetchError = e;
+        }
     } else {
         const phoneInput = document.getElementById('ordersSearchPhone');
         const phone = phoneInput ? phoneInput.value.replace(/[^\d+]/g, '') : '';
@@ -1348,12 +1462,17 @@ async function fetchMyOrders() {
             return; 
         }
 
-        const { data, error } = await sb.rpc('get_orders_by_phone', { search_phone: phone });
+        const cleanPhone = phone.replace(/[^\d]/g, '');
+        const { data, error } = await sb.rpc('get_orders_by_phone', { search_phone: cleanPhone });
         globalOrdersData = data || []; 
         fetchError = error;
+
+        if (globalOrdersData.length > 0) {
+            try { localStorage.setItem('nisha_cached_orders', JSON.stringify(globalOrdersData)); } catch(e) {}
+        }
     }
 
-    if (fetchError) { 
+    if (fetchError && (!globalOrdersData || globalOrdersData.length === 0)) { 
         listArea.innerHTML = `<div style="color:red; text-align:center;">[ ОШИБКА: ${fetchError.message} ]</div>`; 
         return; 
     }
@@ -1372,11 +1491,7 @@ async function fetchMyOrders() {
 
     if (tabsContainer) tabsContainer.style.display = 'flex';
     
-    currentOrderTab = 'accepted';
-    document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
-    const tabYellow = document.querySelector('.order-tab.tab-yellow');
-    if (tabYellow) tabYellow.classList.add('active');
-    
+    updateOrderTabCounters();
     ensureOrderImagesLoaded();
     renderFilteredOrders();
 }

@@ -1352,6 +1352,24 @@ async function executeOrderFinal(emailToSave) {
         localStorage.setItem('nisha_last_phone', phone);
         localStorage.setItem('nisha_last_order', Date.now());
 
+        try {
+            let cached = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
+            if (!Array.isArray(cached)) cached = [];
+            const newOrderObj = {
+                id: orderId,
+                name: name,
+                phone: phone,
+                city: city,
+                branch: branch,
+                status: 'В обработке',
+                total_sum: currentCart.reduce((sum, i) => sum + (i.price || 0), 0),
+                items: currentCart,
+                created_at: new Date().toISOString()
+            };
+            cached = [newOrderObj, ...cached.filter(c => c && c.id !== orderId)];
+            localStorage.setItem('nisha_cached_orders', JSON.stringify(cached));
+        } catch (e) {}
+
         setActiveCart([]);
         clearCheckoutDraft();
         await syncCartToServer();
