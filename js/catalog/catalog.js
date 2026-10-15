@@ -685,9 +685,25 @@ window.addEventListener('scroll', () => {
     window.hideItemMeasurementsTooltip();
 }, { passive: true });
 
-// Безопасное сохранение каталога в localStorage с защитой от переполнения квоты (5MB на iOS/Android)
-function safelySaveCatalogToStorage(items) {
+// Безопасное сохранение каталога в IndexedDB с защитой от переполнения квоты localStorage
+async function safelySaveCatalogToStorage(items) {
     if (!items || !Array.isArray(items) || items.length === 0) return;
+    
+    // 1. Первичное и надежное сохранение в IndexedDB (без лимитов размера и без блокировки главного потока)
+    if (typeof window.idbSet === 'function') {
+        try {
+            const saved = await window.idbSet('nisha_cached_db', items);
+            if (saved) {
+                // Очищаем тяжелый дубликат из localStorage, освобождая 4-5MB под корзину, профиль и заказы
+                try { localStorage.removeItem('nisha_cached_db'); } catch (e) {}
+                return;
+            }
+        } catch (idbErr) {
+            console.warn("[КАТАЛОГ] Ошибка сохранения в IndexedDB, используем localStorage:", idbErr);
+        }
+    }
+
+    // 2. Fallback для приватного режима или неподдерживающих браузеров
     try {
         localStorage.setItem('nisha_cached_db', JSON.stringify(items));
     } catch (e) {
@@ -710,27 +726,52 @@ async function loadAllItems() {
     const grid = document.getElementById('itemsGrid');
     const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
     
-    // 1. МГНОВЕННАЯ ЗАГРУЗКА (Из кэша)
-    const cachedData = localStorage.getItem('nisha_cached_db');
-    if (cachedData && window.allItems.length === 0) {
+    // 1. МГНОВЕННАЯ ЗАГРУЗКА (Из IndexedDB с миграцией из localStorage)
+    let cachedItems = null;
+    if (typeof window.idbGet === 'function') {
         try {
-            const parsed = JSON.parse(cachedData);
-            const isCorrupted = !Array.isArray(parsed) || parsed.length === 0 || 
-                parsed[0].description === undefined || 
-                ((!Array.isArray(parsed[0].images) || parsed[0].images.length === 0) &&
-                 (!Array.isArray(parsed[0].thumbnails) || parsed[0].thumbnails.length === 0));
+            cachedItems = await window.idbGet('nisha_cached_db');
+        } catch (e) {}
+    }
+
+    if (!cachedItems) {
+        const cachedData = localStorage.getItem('nisha_cached_db');
+        if (cachedData) {
+            try {
+                cachedItems = JSON.parse(cachedData);
+                // Мигрируем кэш в IndexedDB и освобождаем localStorage
+                if (typeof window.idbSet === 'function' && Array.isArray(cachedItems) && cachedItems.length > 0) {
+                    window.idbSet('nisha_cached_db', cachedItems).then(() => {
+                        try { localStorage.removeItem('nisha_cached_db'); } catch (e) {}
+                    });
+                }
+            } catch (e) {
+                console.error("Ошибка кэша localStorage");
+                try { localStorage.removeItem('nisha_cached_db'); } catch (delErr) {}
+            }
+        }
+    }
+
+    if (cachedItems && Array.isArray(cachedItems) && window.allItems.length === 0) {
+        try {
+            const isCorrupted = cachedItems.length === 0 || 
+                cachedItems[0].description === undefined || 
+                ((!Array.isArray(cachedItems[0].images) || cachedItems[0].images.length === 0) &&
+                 (!Array.isArray(cachedItems[0].thumbnails) || cachedItems[0].thumbnails.length === 0));
 
             if (isCorrupted) {
                 console.warn("[КЭШ КАТАЛОГА] Обнаружены поврежденные данные без фото/описания, очищаем локальный кэш...");
-                localStorage.removeItem('nisha_cached_db');
+                if (typeof window.idbDel === 'function') window.idbDel('nisha_cached_db');
+                try { localStorage.removeItem('nisha_cached_db'); } catch (e) {}
             } else {
-                window.allItems = parsed;
+                window.allItems = cachedItems;
                 applyFilters(true);
                 updateSidebarCounters();
             }
         } catch(e) { 
-            console.error("Ошибка кэша"); 
-            localStorage.removeItem('nisha_cached_db');
+            console.error("Ошибка парсинга кэша"); 
+            if (typeof window.idbDel === 'function') window.idbDel('nisha_cached_db');
+            try { localStorage.removeItem('nisha_cached_db'); } catch (err) {}
         }
     }
 

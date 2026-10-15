@@ -224,6 +224,69 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 }
 .item-card:hover { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
 
+/* RETRO WIN95 SKELETON LOADERS (0 CLS) */
+.item-card.skeleton-card {
+    pointer-events: none;
+    border: 1px solid #222;
+    background-color: var(--bg-card);
+    overflow: hidden;
+    position: relative;
+    box-shadow: none;
+    transform: none !important;
+}
+.skeleton-image {
+    width: 100%;
+    height: 260px;
+    background-color: #141414;
+    border-bottom: 1px solid #222;
+    position: relative;
+}
+.skeleton-info {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+.skeleton-line {
+    background-color: #1f1f1f;
+    border-radius: 1px;
+    margin-bottom: 8px;
+    position: relative;
+}
+.skeleton-title {
+    height: 14px;
+    width: 82%;
+}
+.skeleton-title-short {
+    height: 14px;
+    width: 50%;
+    margin-bottom: 12px;
+}
+.skeleton-price {
+    height: 20px;
+    width: 38%;
+    background-color: #162416;
+    margin-bottom: 14px;
+}
+.skeleton-badge {
+    height: 18px;
+    width: 60px;
+    background-color: #1c1c1c;
+    border: 1px solid #292929;
+}
+.skeleton-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 255, 65, 0.05) 50%, transparent 100%);
+    animation: skeletonScanline 1.6s infinite ease-in-out;
+    pointer-events: none;
+}
+@keyframes skeletonScanline {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
 .fav-star-modal { font-size: 28px; color: #444; cursor: pointer; text-shadow: 1px 1px 0px #000; transition: color 0.2s, text-shadow 0.2s; user-select: none; line-height: 1; flex-shrink: 0; -webkit-tap-highlight-color: transparent;}
 .fav-star-modal.active { color: var(--accent-red); text-shadow: 0 0 10px var(--accent-red); }
 

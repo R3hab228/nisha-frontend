@@ -571,3 +571,85 @@ async function ensurePhotoSwipe() {
     return _photoSwipeInitPromise;
 }
 window.ensurePhotoSwipe = ensurePhotoSwipe;
+
+// ==========================================
+// ULTRA-LIGHTWEIGHT INDEXEDDB KEY-VAL STORE
+// ==========================================
+(function() {
+    const DB_NAME = 'nisha_idb_v1';
+    const STORE_NAME = 'keyval';
+    let _dbPromise = null;
+
+    function getDB() {
+        if (!_dbPromise) {
+            _dbPromise = new Promise((resolve) => {
+                if (!window.indexedDB) return resolve(null);
+                try {
+                    const req = indexedDB.open(DB_NAME, 1);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME);
+                        }
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => {
+                        console.warn('[IDB] Failed to open IndexedDB:', req.error);
+                        resolve(null);
+                    };
+                } catch (e) {
+                    resolve(null);
+                }
+            });
+        }
+        return _dbPromise;
+    }
+
+    window.idbGet = async function(key) {
+        try {
+            const db = await getDB();
+            if (!db) return null;
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
+                req.onerror = () => resolve(null);
+            });
+        } catch (e) {
+            return null;
+        }
+    };
+
+    window.idbSet = async function(key, val) {
+        try {
+            const db = await getDB();
+            if (!db) return false;
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.put(val, key);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch (e) {
+            return false;
+        }
+    };
+
+    window.idbDel = async function(key) {
+        try {
+            const db = await getDB();
+            if (!db) return false;
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.delete(key);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch (e) {
+            return false;
+        }
+    };
+})();

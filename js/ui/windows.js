@@ -196,6 +196,7 @@ function executeCloseModal(id) {
         document.title = 'NISHA | Underground Store';
         window.currentOpenedItem = null;
         if (typeof currentOpenedItem !== 'undefined') currentOpenedItem = null;
+        if (typeof window.resetOpenGraphTags === 'function') window.resetOpenGraphTags();
         try {
             const u = new URL(window.location);
             if (u.searchParams.has('item')) {

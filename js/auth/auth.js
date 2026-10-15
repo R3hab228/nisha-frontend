@@ -328,21 +328,28 @@ async function generateAndSendOTP() {
         return; 
     }
 
-    // 3. Таймер ожидания (60 сек)
-    let timer = 60;
-    btnOtp.innerText = `Ждите ${timer}с`;
-    if (otpInterval) clearInterval(otpInterval);
-    
-    otpInterval = setInterval(() => {
-        timer--;
-        btnOtp.innerText = `Ждите ${timer}с`;
-        if (timer <= 0) {
-            clearInterval(otpInterval);
+    // 3. Таймер ожидания (60 сек) на основе временной метки (не замерзает при сворачивании)
+    const otpEndTime = Date.now() + 60 * 1000;
+    const updateOtpBtnText = () => {
+        const remaining = Math.max(0, Math.ceil((otpEndTime - Date.now()) / 1000));
+        if (remaining > 0) {
+            btnOtp.innerText = `Ждите ${remaining}с`;
+            return false;
+        } else {
+            if (otpInterval) {
+                clearInterval(otpInterval);
+                otpInterval = null;
+            }
             btnOtp.disabled = false;
-            btnOtp.innerText = 'Подтвердить';
+            btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
             btnOtp.style.opacity = '1';
+            return true;
         }
-    }, 1000);
+    };
+
+    updateOtpBtnText();
+    if (otpInterval) clearInterval(otpInterval);
+    otpInterval = setInterval(updateOtpBtnText, 1000);
 
     // 4. Генерация кода в базе
     const { error } = await sb.rpc('generate_secure_otp', { p_phone: cleanPhone });
@@ -350,7 +357,7 @@ async function generateAndSendOTP() {
         showToast('Ошибка сервера', 'error');
         clearInterval(otpInterval);
         btnOtp.disabled = false;
-        btnOtp.innerText = 'Подтвердить';
+        btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
         return;
     }
     
@@ -377,11 +384,30 @@ async function generateAndSendOTP() {
     let pollAttempts = 0;
     const maxPollAttempts = 75; // 75 * 2с = 150 сек (2.5 минуты)
 
+    const doOtpCheck = async () => {
+        if (!window.otpPollInterval && pollAttempts > 0) return;
+        const { data: isVerified } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
+        if (isVerified) {
+            if (window.otpPollInterval) {
+                clearInterval(window.otpPollInterval);
+                window.otpPollInterval = null;
+            }
+            if (otpInterval) {
+                clearInterval(otpInterval);
+                otpInterval = null;
+            }
+            window._checkActiveOtp = null;
+            checkPhoneAuth();
+        }
+    };
+    window._checkActiveOtp = doOtpCheck;
+
     window.otpPollInterval = setInterval(async () => {
         pollAttempts++;
         if (pollAttempts >= maxPollAttempts) {
             clearInterval(window.otpPollInterval);
             window.otpPollInterval = null;
+            window._checkActiveOtp = null;
             if (otpInterval) {
                 clearInterval(otpInterval);
                 otpInterval = null;
@@ -398,16 +424,22 @@ async function generateAndSendOTP() {
             return;
         }
 
-        const { data: isVerified } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
-        if (isVerified) {
-            clearInterval(window.otpPollInterval);
-            window.otpPollInterval = null;
-            if (otpInterval) {
-                clearInterval(otpInterval);
-                otpInterval = null;
-            }
-            checkPhoneAuth();
-        }
+        await doOtpCheck();
     }, 2000);
 }
 window.generateAndSendOTP = generateAndSendOTP;
+
+// Мгновенная проверка OTP и восстановление таймера при возврате пользователя во вкладку
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        if (typeof window._checkActiveOtp === 'function') {
+            window._checkActiveOtp();
+        }
+        if (typeof window.checkPendingPhoneVerification === 'function' && localStorage.getItem('nisha_pending_otp_phone')) {
+            window.checkPendingPhoneVerification();
+        }
+        if (typeof window.checkPendingTgVerification === 'function' && localStorage.getItem('nisha_pending_otp_tg')) {
+            window.checkPendingTgVerification();
+        }
+    }
+});

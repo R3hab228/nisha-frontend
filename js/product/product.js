@@ -729,20 +729,48 @@ function openProductModal(item) {
         }
         tag.setAttribute('content', content);
     };
+    window.setMetaTag = setMetaTag;
 
     let statusPrefix = item.status === 'sold' ? '🔴 SOLD | ' : (item.status === 'reserved' ? '🟡 RESERVED | ' : '🟢 ');
     let ogTitle = `${statusPrefix}NISHA: ${item.brand} - ${item.name}`;
-    let ogDesc = `Размер: ${item.size} | Цена: ${item.price} грн`;
-    let ogImage = (item.images && item.images.length > 0) ? item.images[0] : 'https://i.ibb.co/3s6HhXz/icon.ico';
+    let ogDesc = `Размер: ${item.size} | Цена: ${item.price} грн. ${item.description ? item.description.slice(0, 150) : ''}`;
+    let ogImage = (item.images && item.images.length > 0) ? item.images[0] : 'https://www.nisha-store.shop/icon-512.png';
+    let ogUrl = `https://www.nisha-store.shop/?item=${encodeURIComponent(item.id)}`;
 
     setMetaTag('og:title', ogTitle);
     setMetaTag('og:description', ogDesc);
     setMetaTag('og:image', ogImage);
+    setMetaTag('og:image:secure_url', ogImage);
+    setMetaTag('og:image:width', '800');
+    setMetaTag('og:image:height', '800');
+    setMetaTag('og:url', ogUrl);
+    setMetaTag('og:type', 'product');
     setMetaTag('twitter:title', ogTitle);
     setMetaTag('twitter:description', ogDesc);
     setMetaTag('twitter:image', ogImage);
+    setMetaTag('twitter:url', ogUrl);
+    setMetaTag('twitter:card', 'summary_large_image');
 }
 window.openProductModal = openProductModal;
+
+function resetOpenGraphTags() {
+    if (typeof window.setMetaTag !== 'function') return;
+    window.setMetaTag('og:title', 'NISHA | Underground Store');
+    window.setMetaTag('og:description', 'NISHA — винтажная одежда, обувь и аксессуары. Доставка Новой Почтой по всей Украине.');
+    window.setMetaTag('og:image', 'https://www.nisha-store.shop/icon-512.png');
+    window.setMetaTag('og:image:secure_url', 'https://www.nisha-store.shop/icon-512.png');
+    window.setMetaTag('og:image:width', '512');
+    window.setMetaTag('og:image:height', '512');
+    window.setMetaTag('og:url', 'https://www.nisha-store.shop/');
+    window.setMetaTag('og:type', 'website');
+    window.setMetaTag('twitter:title', 'NISHA | Underground Store');
+    window.setMetaTag('twitter:description', 'NISHA — винтажная одежда, обувь и аксессуары. Доставка Новой Почтой по всей Украине.');
+    window.setMetaTag('twitter:image', 'https://www.nisha-store.shop/icon-512.png');
+    window.setMetaTag('twitter:url', 'https://www.nisha-store.shop/');
+    const schemaScript = document.getElementById('seo-schema');
+    if (schemaScript) schemaScript.remove();
+}
+window.resetOpenGraphTags = resetOpenGraphTags;
 
 // ==========================================
 // 2. СЛАЙДЕР ФОТОГРАФИЙ И СВАЙП

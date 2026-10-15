@@ -27,6 +27,26 @@ let branchSearchTimeout = null;
 let cachedBranches = [];
 const npBranchCache = {};
 
+// Кэш отделений Новой Почты (In-Memory + IndexedDB + sessionStorage)
+const NP_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 часа актуальности отделений
+
+async function getNPStorageAsync(key) {
+    // 1. Проверяем IndexedDB (без лимита в 5MB)
+    if (typeof window.idbGet === 'function') {
+        try {
+            const entry = await window.idbGet('np_' + key);
+            if (entry && entry.ts && (Date.now() - entry.ts < NP_CACHE_TTL_MS) && Array.isArray(entry.data)) {
+                return entry.data;
+            }
+        } catch (e) {}
+    }
+    // 2. Fallback к sessionStorage
+    try {
+        const raw = sessionStorage.getItem('nisha_np_' + key);
+        return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+}
+
 function getNPStorage(key) {
     try {
         const raw = sessionStorage.getItem('nisha_np_' + key);
@@ -35,9 +55,17 @@ function getNPStorage(key) {
 }
 
 function setNPStorage(key, val) {
-    try {
-        sessionStorage.setItem('nisha_np_' + key, JSON.stringify(val));
-    } catch(e) {}
+    if (!val || !Array.isArray(val)) return;
+    // 1. Надежное сохранение в IndexedDB (поддерживает Киев и мегаполисы > 1500 отделений)
+    if (typeof window.idbSet === 'function') {
+        window.idbSet('np_' + key, { ts: Date.now(), data: val }).catch(() => {});
+    }
+    // 2. Сохранение в sessionStorage (если помещается)
+    if (val.length <= 1500) {
+        try {
+            sessionStorage.setItem('nisha_np_' + key, JSON.stringify(val));
+        } catch(e) {}
+    }
 }
 
 let cartSwipeStartX = 0;
@@ -478,10 +506,10 @@ async function loadNPBranches(searchString = "") {
         return;
     }
 
-    const sessionBranches = getNPStorage('branchall_' + cacheKey);
-    if (sessionBranches) {
-        npBranchCache[cacheKey] = sessionBranches;
-        renderBranches(sessionBranches);
+    const cachedBranches = await getNPStorageAsync('branchall_' + cacheKey);
+    if (cachedBranches && cachedBranches.length > 0) {
+        npBranchCache[cacheKey] = cachedBranches;
+        renderBranches(cachedBranches);
         return;
     }
 

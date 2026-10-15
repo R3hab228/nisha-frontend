@@ -23,8 +23,43 @@ document.addEventListener('click', (e) => {
     }
 });
 
-function changeLanguage(lng) {
+// Ленивая подгрузка языковых словарей (экономит 67% трафика)
+async function ensureLanguageLoaded(lng) {
+    if (typeof i18next === 'undefined') return;
+    if (i18next.hasResourceBundle && i18next.hasResourceBundle(lng, 'translation')) return;
+    
+    // 1. Загрузка отдельного легкого файла (~14-21 КБ)
+    try {
+        const res = await fetch(`/locales/${lng}.json`);
+        if (res.ok) {
+            const data = await res.json();
+            const translations = data.translation || data;
+            i18next.addResourceBundle(lng, 'translation', translations, true, true);
+            return;
+        }
+    } catch (e) {
+        console.warn(`[i18n] Failed to fetch /locales/${lng}.json:`, e);
+    }
+
+    // 2. Fallback к единому locales.json, если отдельный файл недоступен
+    try {
+        const fallbackRes = await fetch('/locales.json');
+        if (fallbackRes.ok) {
+            const fullData = await fallbackRes.json();
+            if (fullData[lng]) {
+                const translations = fullData[lng].translation || fullData[lng];
+                i18next.addResourceBundle(lng, 'translation', translations, true, true);
+            }
+        }
+    } catch (fbErr) {
+        console.error('[i18n] Fallback to /locales.json failed:', fbErr);
+    }
+}
+window.ensureLanguageLoaded = ensureLanguageLoaded;
+
+async function changeLanguage(lng) {
     if (typeof i18next !== 'undefined') {
+        await ensureLanguageLoaded(lng);
         i18next.changeLanguage(lng).then(() => {
             // ЖЕЛЕЗОБЕТОННОЕ сохранение:
             localStorage.setItem('nisha_lang', lng); 
@@ -669,11 +704,28 @@ async function initApp() {
                         i18next.use(i18nextBrowserLanguageDetector);
                     }
 
-                    const locRes = await fetch('/locales.json');
-                    const localesData = await locRes.json();
+                    let langResources = {};
+                    let loadSuccess = false;
+                    try {
+                        const locRes = await fetch(`/locales/${savedLng}.json`);
+                        if (locRes.ok) {
+                            const singleData = await locRes.json();
+                            langResources[savedLng] = singleData.translation ? singleData : { translation: singleData };
+                            loadSuccess = true;
+                        }
+                    } catch (e) {}
+
+                    if (!loadSuccess) {
+                        try {
+                            const fallbackRes = await fetch('/locales.json');
+                            langResources = await fallbackRes.json();
+                        } catch (fbErr) {
+                            console.error("[ ЯЗЫКИ ] Ошибка загрузки fallback словарей:", fbErr);
+                        }
+                    }
 
                     await i18next.init({
-                        resources: localesData,
+                        resources: langResources,
                         lng: savedLng, 
                         fallbackLng: 'ru',
                         debug: false
@@ -734,15 +786,25 @@ async function initApp() {
             IMask(searchPhoneInput, { mask: '+{380} (00) 000-00-00' });
         }
 
-        if (typeof autoAnimate === 'function') {
+        const initAutoAnimate = async () => {
             const hGrid = document.getElementById('historyGrid');
-            if (hGrid) {
-                if ('requestIdleCallback' in window) {
-                    requestIdleCallback(() => autoAnimate(hGrid), { timeout: 2000 });
-                } else {
-                    setTimeout(() => autoAnimate(hGrid), 1000);
-                }
+            if (!hGrid) return;
+            if (typeof autoAnimate === 'function') {
+                autoAnimate(hGrid);
+            } else {
+                try {
+                    const mod = await import('https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.min.js');
+                    if (mod && mod.default) {
+                        window.autoAnimate = mod.default;
+                        mod.default(hGrid);
+                    }
+                } catch (e) {}
             }
+        };
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(initAutoAnimate, { timeout: 3000 });
+        } else {
+            setTimeout(initAutoAnimate, 1500);
         }
 
         checkRules();
@@ -1513,7 +1575,7 @@ function handleNetworkOffline() {
     // Прячем лоадер БД, если он крутился
     if (loader) loader.style.display = 'none';
 
-    const hasCards = grid && grid.querySelectorAll('.item-card').length > 0;
+    const hasCards = grid && grid.querySelectorAll('.item-card:not(.skeleton-card)').length > 0;
 
     if (hasCards) {
         // УМНЫЙ ОФЛАЙН-РЕЖИМ: товары уже загружены, НЕ прячем каталог
@@ -1612,19 +1674,16 @@ function handleNetworkOnline() {
                 grid.classList.remove('fade-out');
                 grid.classList.add('feed-restore-anim');
                 
-                // Если товаров еще не было (открыли сайт сразу без сети) — загружаем
-                if (grid.querySelectorAll('.item-card').length === 0) {
-                    if (typeof loadAllItems === 'function') {
-                        await loadAllItems();
-                    }
+                // Синхронизируем актуальные данные каталога и сессии при восстановлении сети
+                if (typeof loadAllItems === 'function') {
+                    loadAllItems();
                 }
-                
                 setTimeout(() => {
                     grid.classList.remove('feed-restore-anim');
                 }, 700);
             }
-            
             if (typeof checkSession === 'function') checkSession();
+            if (typeof updateCartUI === 'function') updateCartUI();
         }, 280);
     }, 850);
 }
