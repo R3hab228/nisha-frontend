@@ -119,27 +119,70 @@ if ('serviceWorker' in navigator) {
         }).catch(err => console.log('[PWA] Ошибка SW: ', err));
     });
 }
+// ==========================================
+// SENTRY CLIENT-SIDE ERROR MONITORING (@sentry/browser)
+// ==========================================
+const earlySentryErrors = [];
+function recordEarlySentryError(evt) {
+    if (!window._sentryActive && earlySentryErrors.length < 20) {
+        earlySentryErrors.push(evt);
+        initSentryDeferred();
+    }
+}
+window.addEventListener('error', recordEarlySentryError);
+window.addEventListener('unhandledrejection', recordEarlySentryError);
+
 function initSentryDeferred() {
     if (window._sentryActive) return;
     window._sentryActive = true;
 
     const setupSentry = () => {
-        if (typeof Sentry !== 'undefined') {
+        if (typeof Sentry !== 'undefined' && Sentry.init) {
             try {
                 Sentry.init({
                     dsn: "https://13d63555c1c64605be8f9659af548581@o4511428929323008.ingest.de.sentry.io/4511428931682384", 
                     release: "nisha-store@1.0.0",
-                    environment: "production",
-                    tracesSampleRate: 1.0, 
+                    environment: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'development' : 'production',
+                    sampleRate: 1.0,
+                    tracesSampleRate: 0.1,
+                    ignoreErrors: [
+                        'ResizeObserver loop completed with undelivered notifications',
+                        'ResizeObserver loop limit exceeded',
+                        'Non-Error promise rejection captured',
+                        'Load failed',
+                        'Failed to fetch',
+                        'NetworkError when attempting to fetch resource',
+                        'The operation was aborted',
+                        'AbortError: The play() request was interrupted'
+                    ],
+                    denyUrls: [
+                        /extensions\//i,
+                        /^chrome-extension:\/\//i,
+                        /^moz-extension:\/\//i
+                    ]
                 });
                 console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
+
+                // Сбрасываем пойманные ранние ошибки
+                window.removeEventListener('error', recordEarlySentryError);
+                window.removeEventListener('unhandledrejection', recordEarlySentryError);
+                while (earlySentryErrors.length > 0) {
+                    const earlyEvt = earlySentryErrors.shift();
+                    if (earlyEvt && earlyEvt.error) {
+                        Sentry.captureException(earlyEvt.error);
+                    } else if (earlyEvt && earlyEvt.reason) {
+                        Sentry.captureException(earlyEvt.reason);
+                    } else if (earlyEvt && earlyEvt.message) {
+                        Sentry.captureMessage(earlyEvt.message);
+                    }
+                }
             } catch(e) {}
         }
     };
 
     if (typeof Sentry === 'undefined') {
         if (typeof loadExternalScript === 'function') {
-            loadExternalScript('https://browser.sentry-cdn.com/7.105.0/bundle.min.js')
+            loadExternalScript('https://browser.sentry-cdn.com/8.38.0/bundle.min.js')
                 .then(setupSentry)
                 .catch(() => {});
         }
@@ -147,15 +190,26 @@ function initSentryDeferred() {
         setupSentry();
     }
 }
+
+// Глобальный безопасный метод логирования ошибок для всех модулей
+window.captureError = function(err, context = {}) {
+    if (typeof Sentry !== 'undefined' && Sentry.captureException) {
+        try {
+            Sentry.captureException(err, { extra: context });
+        } catch(e) {}
+    } else {
+        console.warn('[ERROR CAPTURED]', err, context);
+    }
+};
+
 if ('requestIdleCallback' in window) {
-    setTimeout(() => requestIdleCallback(initSentryDeferred, { timeout: 1000 }), 3000);
+    setTimeout(() => requestIdleCallback(initSentryDeferred, { timeout: 1000 }), 2500);
 } else {
-    setTimeout(initSentryDeferred, 3000);
+    setTimeout(initSentryDeferred, 2500);
 }
 ['scroll', 'touchstart', 'pointerdown'].forEach(evt => {
     window.addEventListener(evt, initSentryDeferred, { once: true, passive: true });
 });
-window.addEventListener('error', () => initSentryDeferred(), { once: true });
 // Переменные для анимации поиска
 let searchTypewriterInterval = null;
 let currentSearchLang = 'ru';
