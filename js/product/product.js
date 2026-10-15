@@ -423,7 +423,8 @@ function openProductModal(item) {
                         </div>`;
                 } else {
                     const isFirst = (index === 0);
-                    const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"';
+                    const isSecond = (index === 1);
+                    const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
                     wrapper.innerHTML += `
                         <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide skeleton" style="background-image:none; display:flex; align-items:center; justify-content:center; border: 1px solid #222;">
                             <img src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.25s ease-in-out;" 
@@ -440,15 +441,15 @@ function openProductModal(item) {
 
     setSlide(0);
 
-    // Мгновенная предзагрузка полноразмерных фото для открытия зума за 0 мс
+    // Мгновенная предзагрузка первых слайдов для бесшовного свайпа и зума без задержек
     if (mediaList.length > 0) {
         const toCDN = window.toCDN || ((u) => u);
-        mediaList.slice(0, 2).forEach(url => {
+        mediaList.slice(0, 3).forEach((url, i) => {
             const cdnUrl = toCDN(url);
             if (typeof cdnUrl === 'string' && !cdnUrl.endsWith('.mp4')) {
                 const preImg = new Image();
                 preImg.decoding = 'async';
-                preImg.fetchPriority = 'high';
+                preImg.fetchPriority = (i === 0) ? 'high' : 'auto';
                 preImg.src = cdnUrl;
             }
         });

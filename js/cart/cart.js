@@ -1125,22 +1125,54 @@ async function submitOrder() {
     const phoneRaw = document.getElementById('orderPhone').value;
     const phone = normalizeOrderPhone(phoneRaw);
 
-    if(!name || name.length < 2 || !phone || !city || !branch) { 
-        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.req_fields') : 'Заполните обязательные поля!', 'error'); 
+    function highlightFieldError(inputEl) {
+        if (!inputEl) return;
+        inputEl.classList.add('input-field-error');
+        try {
+            inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch(e) {}
+        try {
+            inputEl.focus();
+        } catch(e) {}
+        const onClear = () => {
+            inputEl.classList.remove('input-field-error');
+            inputEl.removeEventListener('input', onClear);
+            inputEl.removeEventListener('change', onClear);
+        };
+        inputEl.addEventListener('input', onClear);
+        inputEl.addEventListener('change', onClear);
+    }
+
+    const nameInput = document.getElementById('orderName');
+    const phoneInput = document.getElementById('orderPhone');
+    const cityInput = document.getElementById('orderCity');
+    const branchInput = document.getElementById('orderBranch');
+
+    if (!name || name.length < 2) { 
+        highlightFieldError(nameInput);
+        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.req_fields') : 'Введите ваше имя (от 2 букв)!', 'error'); 
         return; 
     }
 
     const phoneDigits = phone.replace(/[^\d]/g, '');
     const isValidUAPhone = phoneDigits.length === 12 && phoneDigits.startsWith('380');
-    if (!isValidUAPhone) {
+    if (!phone || !isValidUAPhone) {
+        highlightFieldError(phoneInput);
         showToast(typeof i18next !== 'undefined' ? i18next.t('messages.valid_phone', { defaultValue: 'Введите полный номер телефона (+380...)!' }) : 'Введите полный номер телефона (+380...)!', 'error');
         return;
     }
 
     const cityRef = window.selectedCityRef || selectedCityRef;
+    if (!city || !cityRef) {
+        highlightFieldError(cityInput);
+        showToast('Выберите Город строго из выпадающего списка!', 'error');
+        return;
+    }
+
     const branchRef = window.selectedBranchRef || selectedBranchRef;
-    if (!cityRef || !branchRef) {
-        showToast('Выберите Город и Отделение строго из выпадающего списка!', 'error');
+    if (!branch || !branchRef) {
+        highlightFieldError(branchInput);
+        showToast('Выберите Отделение или Поштомат из выпадающего списка!', 'error');
         return;
     }
 

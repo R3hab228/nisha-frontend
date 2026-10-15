@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v188';
+const CACHE_NAME = 'nisha-cache-v189';
 const IMAGE_CACHE = 'nisha-images-v4';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
@@ -140,7 +140,16 @@ self.addEventListener('fetch', event => {
                 const networkResponse = await fetch(event.request, { signal: controller.signal });
                 clearTimeout(timeoutId);
 
-                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+                const isAllowedToCache = networkResponse && networkResponse.status === 200 && (
+                    networkResponse.type === 'basic' || 
+                    (networkResponse.type === 'cors' && (
+                        url.hostname.includes('cdn.jsdelivr.net') || 
+                        url.hostname.includes('cdnjs.cloudflare.com') ||
+                        url.hostname.includes('unpkg.com')
+                    ))
+                );
+
+                if (isAllowedToCache) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
                 }
