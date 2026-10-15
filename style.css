@@ -486,12 +486,23 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
     gap: 10px;
 }
 
-.similar-items-mobile-scroll {
+.similar-items-mobile-scroll,
+#similarItemsContainer {
     display: flex;
     gap: 10px;
     overflow-x: auto;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
+}
+
+.similar-items-mobile-scroll::-webkit-scrollbar,
+#similarItemsContainer::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 .similar-item-card {
