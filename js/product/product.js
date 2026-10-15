@@ -204,7 +204,6 @@ window.openProductModalById = openProductModalById;
 function openProductModal(item) {
     currentOpenedItem = item;
     window.currentOpenedItem = item;
-    if (window.NishaAnalytics) window.NishaAnalytics.trackItemOpen(item.id);
     
     // Мгновенный прогрев PhotoSwipe в фоне для открытия зума за 0 мс
     if (typeof ensurePhotoSwipe === 'function') ensurePhotoSwipe();
@@ -925,7 +924,6 @@ function shareItem() {
     };
 
     if (navigator.share) {
-        if (window.NishaAnalytics) window.NishaAnalytics.trackShare('native', active.id);
         navigator.share({
             title: shareTitle,
             text: shareText,
@@ -934,7 +932,6 @@ function shareItem() {
             console.log('Шеринг отменен пользователем');
         });
     } else if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        if (window.NishaAnalytics) window.NishaAnalytics.trackShare('copy_link', active.id);
         navigator.clipboard.writeText(shareUrl)
             .then(notifySuccess)
             .catch(() => {
@@ -945,7 +942,6 @@ function shareItem() {
                 }
             });
     } else {
-        if (window.NishaAnalytics) window.NishaAnalytics.trackShare('copy_link', active.id);
         if (fallbackCopyText(shareUrl)) {
             notifySuccess();
         } else {
