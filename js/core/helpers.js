@@ -65,6 +65,117 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
 }
 window.showToast = showToast;
 
+// --- ОЧЕРЕДЬ ТОСТОВ О НОВЫХ ТОВАРАХ (МАКСИМУМ 2 ОДНОВРЕМЕННО + ПЛАВНАЯ СМЕНА) ---
+const _newItemToastQueue = [];
+let _activeNewItemToastCount = 0;
+const MAX_CONCURRENT_NEW_ITEM_TOASTS = 2;
+
+function safeToastEscape(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function enqueueNewItemToast(item) {
+    if (!item || !item.id) return;
+    // Защита от дублей в очереди
+    if (_newItemToastQueue.some(q => q.id === item.id)) return;
+    _newItemToastQueue.push(item);
+    _drainNewItemToastQueue();
+}
+window.enqueueNewItemToast = enqueueNewItemToast;
+
+function _drainNewItemToastQueue() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    while (_activeNewItemToastCount < MAX_CONCURRENT_NEW_ITEM_TOASTS && _newItemToastQueue.length > 0) {
+        const item = _newItemToastQueue.shift();
+        _activeNewItemToastCount++;
+        _displayNewItemToast(item, container);
+    }
+}
+
+function _displayNewItemToast(item, container) {
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-new-item success';
+    
+    const imgUrl = (Array.isArray(item.thumbnails) && item.thumbnails[0]) 
+        || (Array.isArray(item.images) && item.images[0]) 
+        || null;
+
+    const brandPart = item.brand ? `${safeToastEscape(item.brand)} — ` : '';
+    const namePart = safeToastEscape(item.name || 'Новая вещь');
+    const pricePart = item.price ? `<span class="toast-item-price">${safeToastEscape(item.price)} ₴</span>` : '';
+
+    let html = '';
+    if (imgUrl) {
+        html += `<div class="toast-item-thumb" style="background-image: url('${safeToastEscape(imgUrl)}');"></div>`;
+    }
+    html += `
+        <div class="toast-item-content">
+            <div class="toast-item-tag">🆕 НОВАЯ ВЕЩЬ НА САЙТЕ</div>
+            <div class="toast-item-title">${brandPart}${namePart}</div>
+            ${pricePart}
+        </div>
+        <button type="button" class="toast-close-btn" aria-label="Закрыть">&times;</button>
+    `;
+    toast.innerHTML = html;
+
+    let isDismissed = false;
+    let timerId = null;
+
+    const dismiss = () => {
+        if (isDismissed) return;
+        isDismissed = true;
+        if (timerId) clearTimeout(timerId);
+
+        toast.classList.add('toast-leaving');
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+            _activeNewItemToastCount = Math.max(0, _activeNewItemToastCount - 1);
+            // Плавная задержка перед появлением следующего тоста для естественности анимации
+            setTimeout(_drainNewItemToastQueue, 150);
+        }, 320);
+    };
+
+    // Клик по тосту открывает карточку товара
+    toast.onclick = (e) => {
+        if (e.target.closest('.toast-close-btn')) {
+            e.stopPropagation();
+            dismiss();
+            return;
+        }
+        if (typeof openProductModalById === 'function') {
+            try {
+                openProductModalById(item.id);
+            } catch (err) {
+                console.warn('[TOAST] Error opening product modal:', err);
+            }
+        }
+        dismiss();
+    };
+
+    const closeBtn = toast.querySelector('.toast-close-btn');
+    if (closeBtn) {
+        closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            dismiss();
+        };
+    }
+
+    container.appendChild(toast);
+
+    // Тост отображается 3.5 сек, затем плавно улетает и освобождает место следующему
+    timerId = setTimeout(dismiss, 3500);
+}
+
 // --- ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ (ОДНОКНОПОЧНЫЕ) ---
 function showTerminalModal(title, htmlText, btnText, callback) {
     const overlay = document.createElement('div');

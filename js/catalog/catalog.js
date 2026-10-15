@@ -997,7 +997,9 @@ async function syncCriticalStatuses() {
                         window.allItems.unshift(newItem);
                         if (!window._notifiedItemIds.has(newItem.id)) {
                             window._notifiedItemIds.add(newItem.id);
-                            if (typeof showToast === 'function') {
+                            if (typeof enqueueNewItemToast === 'function') {
+                                enqueueNewItemToast(newItem);
+                            } else if (typeof showToast === 'function') {
                                 showToast(`🆕 Новая вещь на сайте: ${newItem.name}`, 'success');
                             }
                         }
