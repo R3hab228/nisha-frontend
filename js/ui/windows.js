@@ -159,6 +159,9 @@ window.closeModal = closeModal;
 // 4. Исполнение плавного закрытия окна с анимацией
 function executeCloseModal(id) {
     if (id === 'checkoutModal' && window.otpPollInterval) clearInterval(window.otpPollInterval);
+    if (id === 'productModal' && window.NishaAnalytics) {
+        window.NishaAnalytics.trackItemClose();
+    }
     const modal = document.getElementById(id);
     if (!modal) return;
 

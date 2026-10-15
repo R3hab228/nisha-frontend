@@ -94,6 +94,7 @@ async function addToCartById(itemId) {
     }
     currentCart.push(cartItem);
     setActiveCart(currentCart);
+    if (window.NishaAnalytics) window.NishaAnalytics.trackCartAdd(cartItem.id);
     
     if (window.ttq) {
         ttq.track('AddToCart', {
@@ -200,6 +201,7 @@ async function addToCartFromModal() {
     }
     currentCart.push(cartItem);
     setActiveCart(currentCart);
+    if (window.NishaAnalytics) window.NishaAnalytics.trackCartAdd(cartItem.id);
     await syncCartToServer();
     
     updateCartUI();

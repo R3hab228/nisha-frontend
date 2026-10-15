@@ -1391,6 +1391,9 @@ function applyFilters(immediate = false) {
                             return queryVariants.some(q => name.includes(q) || brand.includes(q) || tags.includes(q));
                         });
                     }
+                    if (window.NishaAnalytics) {
+                        window.NishaAnalytics.trackSearch(cleanSearchTerm, window.filteredItems.length);
+                    }
                 }
             }
 
