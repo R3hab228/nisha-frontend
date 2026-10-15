@@ -682,10 +682,11 @@ footer { text-align: center; padding: 30px 20px; background-color: #050505; bord
     font-size: 14px; 
     letter-spacing: 0.5px;
 }
-.status-Принят, .status-accepted { color: var(--accent-yellow); text-shadow: 0 0 8px rgba(255, 204, 0, 0.4); }
-.status-Оплачен, .status-Завершен, .status-paid, .status-completed { color: var(--accent-green); text-shadow: 0 0 8px rgba(0, 255, 0, 0.4); }
-.status-Отправлен, .status-shipped { color: #00aaff; text-shadow: 0 0 8px rgba(0, 170, 255, 0.4); }
-.status-Отменен, .status-cancelled { color: var(--accent-red); text-decoration: line-through; }
+.status-в-обработке, .status-processing, .status-pending { color: var(--accent-yellow); text-shadow: 0 0 8px rgba(255, 204, 0, 0.4); }
+.status-принят, .status-Принят, .status-accepted { color: #00e5ff; text-shadow: 0 0 8px rgba(0, 229, 255, 0.4); }
+.status-оплачен, .status-Оплачен, .status-завершен, .status-Завершен, .status-paid, .status-completed { color: var(--accent-green); text-shadow: 0 0 8px rgba(0, 255, 0, 0.4); }
+.status-отправлен, .status-Отправлен, .status-shipped { color: #00aaff; text-shadow: 0 0 8px rgba(0, 170, 255, 0.4); }
+.status-отменен, .status-Отменен, .status-cancelled { color: var(--accent-red); text-decoration: line-through; }
 
 .order-items-list { display: flex; flex-direction: column; gap: 10px; }
 .order-item-row { display: flex; gap: 15px; align-items: center; background: #111; padding: 10px; border: 1px solid #222; cursor: pointer; transition: 0.2s;}

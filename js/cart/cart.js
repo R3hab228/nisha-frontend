@@ -1335,6 +1335,11 @@ async function executeOrderFinal(emailToSave) {
 
         if (orderError) throw orderError; 
 
+        // Первоначальный статус нового заказа всегда "В обработке" (до личного подтверждения в боте)
+        try {
+            await sb.from('orders').update({ status: 'В обработке' }).eq('id', orderId);
+        } catch (stErr) {}
+
         if (window.ttq) {
             let totalValue = currentCart.reduce((sum, i) => sum + (i.price || 0), 0);
             ttq.track('CompletePayment', {

@@ -1571,7 +1571,7 @@ function renderFilteredOrders() {
 
     const filteredData = globalOrdersData.filter(order => {
         const s = (order.status || '').toLowerCase();
-        if (currentOrderTab === 'accepted') return s.includes('принят') || s.includes('оплачен');
+        if (currentOrderTab === 'accepted') return s.includes('принят') || s.includes('оплачен') || s.includes('обработке') || s.includes('processing') || s.includes('новый');
         if (currentOrderTab === 'shipped') return s.includes('отправлен') || s.includes('завершен');
         if (currentOrderTab === 'cancelled') return s.includes('отменен') || s.includes('возврат');
         return false;
@@ -1632,36 +1632,46 @@ function renderFilteredOrders() {
         // Кнопка отзыва для завершенных заказов
         let reviewBtnHtml = '';
         if ((order.status || '').toLowerCase() === 'завершен') {
-            let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
-            
-            if (!reviewedOrders.includes(order.id) && order.items && order.items.length > 0) {
+            let reviewedOrders = [];
+            try { reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+            if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
+
+            if (order.items && order.items.length > 0) {
                 const firstItem = order.items[0];
                 const firstItemImg = getOrderItemImage(firstItem);
-                const safeName = firstItem.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                const safeName = (firstItem.name || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 const msgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; position: relative; top: 2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
                 
-                reviewBtnHtml = `
-                    <div style="margin-top: 10px; cursor: pointer; color: var(--accent-green); font-size: 12px; font-family: var(--font-main); text-align: center; transition: 0.2s;" 
-                         onclick="if(typeof closeModal==='function') closeModal('ordersModal'); if(typeof promptOrderReview==='function') promptOrderReview('${order.id}', '${safeName}', '${firstItemImg}', '${firstItem.id}')" 
-                         onmouseover="this.style.textDecoration='underline'; this.style.color='#fff';" 
-                         onmouseout="this.style.textDecoration='none'; this.style.color='var(--accent-green)';">
-                        ${msgIcon} Оставить отзыв
-                    </div>
-                `;
-            } else if (reviewedOrders.includes(order.id)) {
-                reviewBtnHtml = `
-                    <div style="margin-top: 10px; color: #555; font-size: 12px; font-family: var(--font-mono); text-align: center; pointer-events: none;">
-                        [✔] ОТЗЫВ ОСТАВЛЕН
-                    </div>
-                `;
+                if (!reviewedOrders.includes(order.id)) {
+                    reviewBtnHtml = `
+                        <div style="margin-top: 10px; cursor: pointer; color: var(--accent-green); font-size: 12px; font-family: var(--font-main); text-align: center; transition: 0.2s;" 
+                             onclick="if(typeof closeModal==='function') closeModal('ordersModal'); if(typeof promptOrderReview==='function') promptOrderReview('${order.id}', '${safeName}', '${firstItemImg}', '${firstItem.id}')" 
+                             onmouseover="this.style.textDecoration='underline'; this.style.color='#fff';" 
+                             onmouseout="this.style.textDecoration='none'; this.style.color='var(--accent-green)';">
+                            ${msgIcon} Оставить отзыв
+                        </div>
+                    `;
+                } else {
+                    reviewBtnHtml = `
+                        <div style="margin-top: 10px; cursor: pointer; color: #777; font-size: 12px; font-family: var(--font-mono); text-align: center; transition: 0.2s;" 
+                             onclick="if(typeof closeModal==='function') closeModal('ordersModal'); if(typeof promptOrderReview==='function') promptOrderReview('${order.id}', '${safeName}', '${firstItemImg}', '${firstItem.id}')"
+                             title="Нажмите, чтобы изменить или оставить отзыв"
+                             onmouseover="this.style.color='var(--accent-green)';"
+                             onmouseout="this.style.color='#777';">
+                            [✔] ОТЗЫВ ОСТАВЛЕН
+                        </div>
+                    `;
+                }
             }
         }
+
+        const statusSlug = (order.status || '').toLowerCase().replace(/[\s_]+/g, '-');
 
         listArea.innerHTML += `
             <div class="order-card">
                 <div class="order-header">
                     <span class="order-id">ЗАКАЗ #${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
-                    <span class="order-status status-${order.status}">${(order.status || '').toUpperCase()}</span>
+                    <span class="order-status status-${statusSlug}">${(order.status || '').toUpperCase()}</span>
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>
                 ${reviewBtnHtml}
