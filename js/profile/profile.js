@@ -1942,10 +1942,18 @@ function renderFilteredOrders() {
         });
     };
 
-    if (typeof JsBarcode !== 'undefined') {
+    if (typeof JsBarcode !== 'undefined' || typeof window.JsBarcode !== 'undefined') {
         drawBarcodes();
-    } else if (typeof loadExternalScript === 'function' && document.querySelector('.barcode-svg')) {
-        loadExternalScript('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js').then(drawBarcodes).catch(() => {});
+    } else if (document.querySelector('.barcode-svg')) {
+        import('jsbarcode').then(mod => {
+            window.JsBarcode = mod.default || mod;
+            drawBarcodes();
+        }).catch(err => {
+            console.warn('[JsBarcode] Local load failed, falling back to CDN:', err);
+            if (typeof loadExternalScript === 'function') {
+                loadExternalScript('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js').then(drawBarcodes).catch(() => {});
+            }
+        });
     }
 }
 window.renderFilteredOrders = renderFilteredOrders;

@@ -827,12 +827,21 @@ async function initApp() {
                 autoAnimate(hGrid);
             } else {
                 try {
-                    const mod = await import('https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.min.js');
-                    if (mod && mod.default) {
-                        window.autoAnimate = mod.default;
-                        mod.default(hGrid);
+                    const mod = await import('@formkit/auto-animate');
+                    const fn = mod.default || mod.autoAnimate || mod;
+                    if (typeof fn === 'function') {
+                        window.autoAnimate = fn;
+                        fn(hGrid);
                     }
-                } catch (e) {}
+                } catch (e) {
+                    try {
+                        const fallbackMod = await import('https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.2/index.min.js');
+                        if (fallbackMod && fallbackMod.default) {
+                            window.autoAnimate = fallbackMod.default;
+                            fallbackMod.default(hGrid);
+                        }
+                    } catch (err) {}
+                }
             }
         };
         if ('requestIdleCallback' in window) {

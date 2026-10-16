@@ -2292,7 +2292,7 @@ function flushPendingBroadcast() {
 window.flushPendingBroadcast = flushPendingBroadcast;
 
 // Тур онбординга
-function startOnboardingTour() {
+async function startOnboardingTour() {
     if (!localStorage.getItem('nisha_rules_accepted') || 
         localStorage.getItem('nisha_tour_done')) return;
 
@@ -2305,11 +2305,22 @@ function startOnboardingTour() {
     }
 
     if (typeof window.driver === 'undefined') {
-        if (typeof loadExternalStyle === 'function') loadExternalStyle('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css');
-        if (typeof loadExternalScript === 'function') {
-            loadExternalScript('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js').then(() => {
-                startOnboardingTour();
-            }).catch(() => {});
+        try {
+            const [driverMod] = await Promise.all([
+                import('driver.js'),
+                import('driver.js/dist/driver.css')
+            ]);
+            const driverFn = driverMod.driver || driverMod.default || driverMod;
+            window.driver = { js: { driver: driverFn } };
+            startOnboardingTour();
+        } catch (err) {
+            console.warn('[Driver.js] Local load failed, falling back to CDN:', err);
+            if (typeof loadExternalStyle === 'function') loadExternalStyle('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css');
+            if (typeof loadExternalScript === 'function') {
+                loadExternalScript('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js').then(() => {
+                    startOnboardingTour();
+                }).catch(() => {});
+            }
         }
         return;
     }

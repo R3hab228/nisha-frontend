@@ -1037,6 +1037,7 @@ function renderHistory() {
     
     const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
     const fragment = document.createDocumentFragment();
+    const cardsForTilt = [];
     const toCDN = window.toCDN || ((u) => u);
 
     hist.forEach(h => {
@@ -1103,19 +1104,33 @@ function renderHistory() {
         fragment.appendChild(card);
 
         if (window.innerWidth > 900) {
-            if (typeof VanillaTilt !== 'undefined') {
-                VanillaTilt.init(card, { max: 15, speed: 300, scale: 1.05 });
-            } else if (typeof loadExternalScript === 'function') {
-                loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js').then(() => {
-                    if (typeof VanillaTilt !== 'undefined' && card) {
-                        VanillaTilt.init(card, { max: 15, speed: 300, scale: 1.05 });
-                    }
-                }).catch(() => {});
-            }
+            cardsForTilt.push(card);
         }
     });
 
     container.appendChild(fragment);
+
+    if (cardsForTilt.length > 0) {
+        if (typeof VanillaTilt !== 'undefined') {
+            VanillaTilt.init(cardsForTilt, { max: 15, speed: 300, scale: 1.05 });
+        } else {
+            import('vanilla-tilt').then((mod) => {
+                const Tilt = mod.default || mod;
+                if (Tilt && typeof Tilt.init === 'function') {
+                    window.VanillaTilt = Tilt;
+                    Tilt.init(cardsForTilt, { max: 15, speed: 300, scale: 1.05 });
+                }
+            }).catch(() => {
+                if (typeof loadExternalScript === 'function') {
+                    loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js').then(() => {
+                        if (typeof VanillaTilt !== 'undefined') {
+                            VanillaTilt.init(cardsForTilt, { max: 15, speed: 300, scale: 1.05 });
+                        }
+                    }).catch(() => {});
+                }
+            });
+        }
+    }
 
     const currentUser = getUser();
     const sb = getSupabase();

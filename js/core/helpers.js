@@ -548,11 +548,15 @@ async function ensurePhotoSwipe() {
     if (_photoSwipeInitPromise) return _photoSwipeInitPromise;
     _photoSwipeInitPromise = (async () => {
         try {
-            if (typeof loadExternalStyle === 'function') {
-                loadExternalStyle('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css');
-            }
-            const mod = await import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.min.js');
-            window.PhotoSwipeLightbox = mod.default || mod.PhotoSwipeLightbox;
+            const [lightboxMod, pswpMod] = await Promise.all([
+                import('photoswipe/lightbox'),
+                import('photoswipe'),
+                import('photoswipe/style.css')
+            ]);
+            const Lightbox = lightboxMod.default || lightboxMod.PhotoSwipeLightbox || lightboxMod;
+            const PhotoSwipe = pswpMod.default || pswpMod.PhotoSwipe || pswpMod;
+            window.PhotoSwipeLightbox = Lightbox;
+            window.PhotoSwipe = PhotoSwipe;
             if (!window.pswpLightbox && window.PhotoSwipeLightbox) {
                 window.pswpLightbox = new window.PhotoSwipeLightbox({
                     gallery: '#sliderWrapper',
@@ -562,15 +566,25 @@ async function ensurePhotoSwipe() {
                     bgOpacity: 0.9,
                     closeOnVerticalDrag: true,
                     wheelToZoom: true,
-                    pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+                    pswpModule: PhotoSwipe
                 });
                 window.pswpLightbox.init();
             }
             return window.PhotoSwipeLightbox;
         } catch (e) {
-            console.error('[PhotoSwipe] Lazy load failed:', e);
-            _photoSwipeInitPromise = null;
-            return null;
+            console.warn('[PhotoSwipe] Local module load failed, attempting CDN fallback:', e);
+            try {
+                if (typeof loadExternalStyle === 'function') {
+                    loadExternalStyle('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css');
+                }
+                const mod = await import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js');
+                window.PhotoSwipeLightbox = mod.default || mod.PhotoSwipeLightbox;
+                return window.PhotoSwipeLightbox;
+            } catch (cdnErr) {
+                console.error('[PhotoSwipe] All loaders failed:', cdnErr);
+                _photoSwipeInitPromise = null;
+                return null;
+            }
         }
     })();
     return _photoSwipeInitPromise;

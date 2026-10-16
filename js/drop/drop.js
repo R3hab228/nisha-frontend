@@ -13,8 +13,10 @@ let proposalSortable = null;
 function openProposeModal() {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
-    if (typeof Sortable === 'undefined' && typeof loadExternalScript === 'function') {
-        loadExternalScript('https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js').catch(() => {});
+    if (typeof Sortable === 'undefined' && typeof window.Sortable === 'undefined') {
+        import('sortablejs').then(mod => {
+            window.Sortable = mod.default || mod;
+        }).catch(() => {});
     }
     
     const modal = document.getElementById('proposeModal');
@@ -203,7 +205,7 @@ function renderProposalPreviews() {
                     
                     const pswp = new window.PhotoSwipeLightbox({
                         dataSource: photos.map(f => ({ src: f.url, width: 1000, height: 1000 })),
-                        pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+                        pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
                     });
                     pswp.init();
                     pswp.loadAndOpen(clickedIndex);
@@ -263,8 +265,16 @@ function renderProposalPreviews() {
 
         if (window.Sortable) {
             initSortable();
-        } else if (typeof loadExternalScript === 'function' && currentProposalFiles.length > 1) {
-            loadExternalScript('https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js').then(initSortable).catch(() => {});
+        } else if (currentProposalFiles.length > 1) {
+            import('sortablejs').then(mod => {
+                window.Sortable = mod.default || mod;
+                initSortable();
+            }).catch(err => {
+                console.warn('[Sortable] Local load failed, trying CDN:', err);
+                if (typeof loadExternalScript === 'function') {
+                    loadExternalScript('https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js').then(initSortable).catch(() => {});
+                }
+            });
         }
     } else {
         if (placeholder) placeholder.style.display = 'block';

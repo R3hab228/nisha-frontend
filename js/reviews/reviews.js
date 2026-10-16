@@ -11,7 +11,7 @@ async function openReviewImage(url) {
     const cdnUrl = (typeof window.toCDN === 'function') ? window.toCDN(url) : url;
     const lightbox = new window.PhotoSwipeLightbox({
         dataSource: [{ src: cdnUrl, width: 1000, height: 1000 }],
-        pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
+        pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
     });
     lightbox.init();
     lightbox.loadAndOpen(0);
