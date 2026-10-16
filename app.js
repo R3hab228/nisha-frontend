@@ -940,13 +940,35 @@ async function initApp() {
                             const oldStatus = oldItem.status;
                             const oldPrice = oldItem.price;
                             const oldIsSale = oldItem.is_sale;
+                            const wasHot = (oldItem.views_count || 0) >= 25;
+                            const nowHot = (updatedItem.views_count || 0) >= 25;
+                            const visualChanged = (
+                                oldStatus !== updatedItem.status ||
+                                oldPrice !== updatedItem.price ||
+                                !!oldIsSale !== !!updatedItem.is_sale ||
+                                oldItem.old_price !== updatedItem.old_price ||
+                                !!oldItem.is_top !== !!updatedItem.is_top ||
+                                oldItem.top_until !== updatedItem.top_until ||
+                                wasHot !== nowHot ||
+                                oldItem.name !== updatedItem.name ||
+                                oldItem.size !== updatedItem.size ||
+                                oldItem.brand !== updatedItem.brand
+                            );
+                            const searchChanged = (
+                                oldItem.name !== updatedItem.name ||
+                                oldItem.brand !== updatedItem.brand ||
+                                oldItem.size !== updatedItem.size ||
+                                oldItem.category !== updatedItem.category
+                            );
                             const imgUrl = (updatedItem.thumbnails && updatedItem.thumbnails.length > 0) ? updatedItem.thumbnails[0] : ((updatedItem.images && updatedItem.images.length > 0) ? updatedItem.images[0] : null);
 
                             Object.assign(catalog[index], updatedItem);
-                            if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+                            if (searchChanged && typeof window.invalidateFuseCache === 'function') {
+                                window.invalidateFuseCache();
+                            }
 
-                            // Точечное мгновенное обновление карточки в DOM без перезагрузки
-                            if (typeof window.updateCardDOM === 'function') {
+                            // Точечное мгновенное обновление карточки в DOM только при реальных визуальных изменениях
+                            if (visualChanged && typeof window.updateCardDOM === 'function') {
                                 window.updateCardDOM(catalog[index]);
                             }
 
@@ -956,7 +978,7 @@ async function initApp() {
                                         showToast(`🔥 СКИДКА: ${updatedItem.name}`, 'success', imgUrl);
                                     }
                                 }
-                                if (updatedItem.status === 'sold') {
+                                if (oldStatus !== 'sold' && updatedItem.status === 'sold') {
                                     if (typeof removeSoldItemFromCart === 'function') {
                                         removeSoldItemFromCart(updatedItem.id, updatedItem.name);
                                     }
@@ -982,23 +1004,16 @@ async function initApp() {
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting && !isBatchLoading) {
                 if (renderedCount < filteredItems.length && window.innerWidth <= 900) {
-                    const scrollTrigger = document.getElementById('loadingTrigger');
-                    if (scrollTrigger) {
-                        scrollTrigger.style.display = 'block';
-                        scrollTrigger.innerHTML = '<span style="animation: pulse 1s infinite; color: var(--accent-green);">[ ЗАГРУЗКА АРХИВА... ]</span>';
-                    }
                     isBatchLoading = true;
                     requestAnimationFrame(() => {
                         if (typeof renderNextBatch === 'function') {
                             renderNextBatch();
                         }
-                        setTimeout(() => {
-                            isBatchLoading = false;
-                        }, 200);
+                        isBatchLoading = false;
                     });
                 }
             }
-        }, { rootMargin: "400px", threshold: 0.1 }); 
+        }, { rootMargin: "700px", threshold: 0.01 }); 
         
         const scrollTrigger = document.getElementById('loadingTrigger');
         if (scrollTrigger) observer.observe(scrollTrigger);

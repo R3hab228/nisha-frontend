@@ -123,6 +123,9 @@ async function openProductModalById(itemId) {
         const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
 
+        if (window._seenItemsSet) {
+            window._seenItemsSet.add(String(itemId));
+        }
         let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
         if (!seenItemsIds.includes(itemId)) {
             seenItemsIds.push(itemId);

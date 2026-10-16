@@ -214,9 +214,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     display: flex; flex-direction: column; 
     cursor: pointer; position: relative; 
     transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; 
-    animation: itemCardFadeIn 0.3s ease-out;
-    content-visibility: auto;
-    contain-intrinsic-size: 320px;
+    animation: itemCardFadeIn 0.25s ease-out;
 }
 @keyframes itemCardFadeIn {
     from { opacity: 0; transform: translateY(8px); }
@@ -1244,7 +1242,7 @@ svg.driver-overlay,
 }
 
 .card-slider-wrapper { position: relative; width: 100%; height: 210px; background-color: #151515; border-bottom: 1px solid var(--border-color); overflow: hidden; contain: layout paint; }
-.card-slider-container { display: flex; width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; will-change: scroll-position; }
+.card-slider-container { display: flex; width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
 .card-slider-container::-webkit-scrollbar { display: none; }
 .card-slide { flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; background-size: cover; background-position: center; position: relative; overflow: hidden; contain: layout paint; }
 .card-slide-img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
@@ -1276,8 +1274,8 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 .eye-slash { transition: stroke-dashoffset 0.3s ease, opacity 0.3s ease; stroke-dasharray: 30; stroke-dashoffset: 0; opacity: 1; }
 .eye-icon.visible .eye-slash { stroke-dashoffset: 30; opacity: 0; }
 
-.item-card.unseen-pulse { animation: unseenPulseAnim 2s infinite alternate; }
-@keyframes unseenPulseAnim { 0% { border-color: var(--border-color); box-shadow: none; } 100% { border-color: rgba(220, 20, 60, 0.8); box-shadow: 0 0 15px rgba(220, 20, 60, 0.2); } }
+.item-card.unseen-pulse { animation: unseenPulseAnim 2.5s infinite alternate; }
+@keyframes unseenPulseAnim { 0% { border-color: var(--border-color); } 100% { border-color: rgba(220, 20, 60, 0.85); } }
 
 .search-history-title { padding: 10px 15px; color: #555; font-size: 11px; font-weight: bold; letter-spacing: 1px; border-bottom: 1px dashed #222; background: #050505; }
 .search-history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px dashed #222; cursor: pointer; color: #aaa; font-family: var(--font-mono); }

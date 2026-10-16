@@ -572,19 +572,27 @@ function extractItemMeasurements(item, customLang) {
     for (let l of sanitizedLines) {
         if (!unique.includes(l)) unique.push(l);
     }
-    return unique.slice(0, 8);
+    const finalResult = unique.slice(0, 8);
+    if (!item._measCache) item._measCache = {};
+    item._measCache[lang] = finalResult;
+    return finalResult;
 }
 window.extractItemMeasurements = extractItemMeasurements;
 
+let _tooltipEl = null;
+let _isTooltipVisible = false;
+let _tooltipHideTimer = null;
+
 function getMeasurementsTooltip() {
-    let tooltip = document.getElementById('measurementsTooltip');
-    if (!tooltip) {
-        tooltip = document.createElement('div');
-        tooltip.id = 'measurementsTooltip';
-        tooltip.className = 'measurements-tooltip';
-        document.body.appendChild(tooltip);
+    if (_tooltipEl && _tooltipEl.isConnected) return _tooltipEl;
+    _tooltipEl = document.getElementById('measurementsTooltip');
+    if (!_tooltipEl) {
+        _tooltipEl = document.createElement('div');
+        _tooltipEl.id = 'measurementsTooltip';
+        _tooltipEl.className = 'measurements-tooltip';
+        document.body.appendChild(_tooltipEl);
     }
-    return tooltip;
+    return _tooltipEl;
 }
 
 window.showItemMeasurementsTooltip = function(itemOrId, e) {
@@ -606,7 +614,7 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
     }
 
     const currentLang = getCurrentSiteLang();
-    const measures = extractItemMeasurements(item, currentLang);
+    const measures = (item._measCache && item._measCache[currentLang]) ? item._measCache[currentLang] : extractItemMeasurements(item, currentLang);
     if (!measures || measures.length === 0) return;
 
     const tooltip = getMeasurementsTooltip();
@@ -631,13 +639,18 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
         <ul class="measurements-tooltip-list">${itemsHTML}</ul>
     `;
 
+    if (_tooltipHideTimer) {
+        clearTimeout(_tooltipHideTimer);
+        _tooltipHideTimer = null;
+    }
     tooltip.style.display = 'block';
     tooltip.classList.add('visible');
+    _isTooltipVisible = true;
     window.moveItemMeasurementsTooltip(e);
 };
 
 window.moveItemMeasurementsTooltip = function(e) {
-    if (!e) return;
+    if (!e || !_isTooltipVisible) return;
     const tooltip = getMeasurementsTooltip();
     if (!tooltip || tooltip.style.display === 'none') return;
 
@@ -669,20 +682,24 @@ window.moveItemMeasurementsTooltip = function(e) {
 };
 
 window.hideItemMeasurementsTooltip = function() {
+    if (!_isTooltipVisible) return;
+    _isTooltipVisible = false;
     const tooltip = getMeasurementsTooltip();
     if (tooltip) {
         tooltip.classList.remove('visible');
-        setTimeout(() => {
-            if (!tooltip.classList.contains('visible')) {
+        if (_tooltipHideTimer) clearTimeout(_tooltipHideTimer);
+        _tooltipHideTimer = setTimeout(() => {
+            _tooltipHideTimer = null;
+            if (!_isTooltipVisible) {
                 tooltip.style.display = 'none';
             }
         }, 150);
     }
 };
 
-// Прячем тултип при скролле страницы
+// Прячем тултип при скролле страницы (без нагрузки на скролл, когда тултип закрыт)
 window.addEventListener('scroll', () => {
-    window.hideItemMeasurementsTooltip();
+    if (_isTooltipVisible) window.hideItemMeasurementsTooltip();
 }, { passive: true });
 
 // Безопасное сохранение каталога в IndexedDB с защитой от переполнения квоты localStorage
@@ -797,14 +814,20 @@ async function loadAllItems() {
     }
     
     // Сравниваем изменения без блокирующего JSON.stringify на всем каталоге
-    let isChanged = !Array.isArray(window.allItems) || (data.length !== window.allItems.length);
-    if (!isChanged) {
+    let isStructureChanged = !Array.isArray(window.allItems) || (data.length !== window.allItems.length);
+    const changedCardItems = [];
+    if (!isStructureChanged) {
         for (let i = 0; i < data.length; i++) {
             const cur = window.allItems[i];
             const next = data[i];
-            if (!cur || cur.id !== next.id || cur.price !== next.price || cur.status !== next.status || cur.is_top !== next.is_top || cur.name !== next.name) {
-                isChanged = true;
+            if (!cur || cur.id !== next.id || cur.name !== next.name || cur.category !== next.category || cur.size !== next.size || cur.brand !== next.brand || !!cur.is_top !== !!next.is_top) {
+                isStructureChanged = true;
                 break;
+            }
+            const wasHot = (cur.views_count || 0) >= 25;
+            const nowHot = (next.views_count || 0) >= 25;
+            if (cur.price !== next.price || cur.old_price !== next.old_price || cur.status !== next.status || !!cur.is_sale !== !!next.is_sale || wasHot !== nowHot) {
+                changedCardItems.push(next);
             }
         }
     }
@@ -825,7 +848,7 @@ async function loadAllItems() {
 
     if (hasValidImages) {
         window.allItems = data; 
-        deferSave(); 
+        if (isStructureChanged || changedCardItems.length > 0 || !cachedItems) deferSave(); 
         updateSidebarCounters();
     } else if (data && data.length > 0) {
         console.warn("[КАТАЛОГ] Сервер или SW вернул ответ без фото, сохраняем существующие изображения...");
@@ -870,13 +893,16 @@ async function loadAllItems() {
         if (typeof updateCartUI === 'function') updateCartUI();
     }
 
-    // 5. ПЕРЕРИСОВКА (Если данные реально обновились)
-    if (!cachedItems || isChanged) {
+    // 5. ПЕРЕРИСОВКА (Без сброса скролла, если изменились только точечные статусы/цены)
+    if (!cachedItems || isStructureChanged) {
         applyFilters(!cachedItems); 
+    } else if (changedCardItems.length > 0) {
+        const freshMap = new Map(window.allItems.map(i => [i.id, i]));
+        if (Array.isArray(window.filteredItems)) {
+            window.filteredItems = window.filteredItems.map(fi => freshMap.get(fi.id) || fi);
+        }
+        changedCardItems.forEach(item => updateCardDOM(item));
     }
-    
-    // 6. ФОНОВАЯ ПРОВЕРКА: откладываем на 15 секунд, чтобы не перегружать сеть и рендер на первых секундах
-    setTimeout(syncCriticalStatuses, 15000);
 }
 window.loadAllItems = loadAllItems;
 
@@ -1071,7 +1097,11 @@ async function syncCriticalStatuses() {
             const priceChanged = item.price !== fresh.price;
             const wasHot = (item.views_count || 0) >= 25;
             const nowHot = (fresh.views_count || 0) >= 25;
-            const hotChanged = wasHot !== nowHot || item.views_count !== fresh.views_count;
+            const hotChanged = wasHot !== nowHot;
+
+            if (item.views_count !== fresh.views_count) {
+                item.views_count = fresh.views_count;
+            }
 
             if (topChanged || statusChanged || saleChanged || priceChanged || hotChanged) {
                 const oldStatus = item.status;
@@ -1139,7 +1169,7 @@ if (!window._catalogAutoSyncInitialized) {
         if (document.visibilityState === 'visible') {
             syncCriticalStatuses();
         }
-    }, 15000);
+    }, 45000);
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
@@ -1597,6 +1627,29 @@ window.changePage = function(step) {
     }, 300);
 };
 
+// Мгновенная активация скрытых слайдов карточки при первом взаимодействии (свайп/наведение/стрелки)
+function activateCardSlides(target) {
+    if (!target) return;
+    const wrapper = (target.classList && target.classList.contains('card-slider-wrapper'))
+        ? target
+        : (target.closest && target.closest('.card-slider-wrapper')) || (target.querySelector && target.querySelector('.card-slider-wrapper'));
+    if (!wrapper || wrapper._slidesActivated) return;
+    wrapper._slidesActivated = true;
+    const lazyImgs = wrapper.querySelectorAll('img[data-src]');
+    for (let i = 0; i < lazyImgs.length; i++) {
+        const img = lazyImgs[i];
+        const src = img.getAttribute('data-src');
+        if (src) {
+            if (img.parentElement && !img.parentElement.classList.contains('img-8bit-loaded')) {
+                img.parentElement.classList.add('img-8bit-loading');
+            }
+            img.src = src;
+            img.removeAttribute('data-src');
+        }
+    }
+}
+window.activateCardSlides = activateCardSlides;
+
 // Единое делегирование событий для всей сетки каталога (вместо сотен слушателей на карточках)
 let _gridDelegationInitialized = false;
 function initGridEventDelegation() {
@@ -1606,22 +1659,6 @@ function initGridEventDelegation() {
 
     // 1. Тултип замеров и предзагрузка картинок на десктопе
     let currentTooltipCard = null;
-
-    // Мгновенная активация скрытых слайдов карточки при первом взаимодействии (свайп/наведение)
-    function activateCardSlides(target) {
-        if (!target) return;
-        const wrapper = (target.classList && target.classList.contains('card-slider-wrapper')) ? target : target.querySelector('.card-slider-wrapper');
-        if (!wrapper || wrapper._slidesActivated) return;
-        wrapper._slidesActivated = true;
-        const lazyImgs = wrapper.querySelectorAll('img[data-src]');
-        lazyImgs.forEach(img => {
-            const src = img.getAttribute('data-src');
-            if (src) {
-                img.src = src;
-                img.removeAttribute('data-src');
-            }
-        });
-    }
 
     grid.addEventListener('mouseover', (e) => {
         const card = e.target.closest('.item-card');
@@ -1751,14 +1788,22 @@ function renderNextBatch() {
     
     if (startIndex >= endIndex) return;
     
-    let seenItemsIds = [];
-    try {
-        seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items')) || [];
-        if (!Array.isArray(seenItemsIds)) seenItemsIds = [];
-    } catch(e) { seenItemsIds = []; }
+    if (!window._seenItemsSet) {
+        try {
+            const parsedSeen = JSON.parse(localStorage.getItem('nisha_seen_items')) || [];
+            window._seenItemsSet = new Set(Array.isArray(parsedSeen) ? parsedSeen.map(String) : []);
+        } catch (e) {
+            window._seenItemsSet = new Set();
+        }
+    }
+    const seenSet = window._seenItemsSet;
     
     const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
+    const favSet = new Set(Array.isArray(userFavs) ? userFavs.map(String) : []);
     const curr = (typeof getCurrency === 'function') ? getCurrency() : 'грн';
+    const sizePrefix = (typeof i18next !== 'undefined') ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
+    const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
+    const nowTs = Date.now();
 
     const fragment = document.createDocumentFragment();
     const newVideoElements = [];
@@ -1767,6 +1812,7 @@ function renderNextBatch() {
         try {
             const item = window.filteredItems[i];
             if (!item) continue;
+            const itemIdStr = String(item.id);
             
             let badgeHTML = '';
             if (item.status === 'sold') {
@@ -1776,7 +1822,7 @@ function renderNextBatch() {
             } else {
                 const hasSale = item.is_sale;
                 const hasHot = (item.views_count || 0) >= 25;
-                const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > Date.now();
+                const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > nowTs;
 
                 if (hasSale || hasHot || isTop) {
                     badgeHTML = `<div class="system-status-bar">`;
@@ -1813,7 +1859,7 @@ function renderNextBatch() {
 
                 if (isVid) {
                     slidesStr += `
-                        <div class="card-slide img-8bit-loading" style="background: #0a0a0a;">
+                        <div class="card-slide ${idx === 0 ? 'img-8bit-loading' : ''}" style="background: #0a0a0a;">
                             <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;" oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"></video>
                         </div>`;
                 } else if (idx === 0) {
@@ -1824,16 +1870,9 @@ function renderNextBatch() {
 onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
-                } else if (idx === 1) {
-                    slidesStr += `
-                        <div class="card-slide img-8bit-loading">
-                           <img class="card-slide-img" src="${cdnThumb}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
-onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
-onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
-                        </div>`;
                 } else {
                     slidesStr += `
-                        <div class="card-slide img-8bit-loading">
+                        <div class="card-slide">
                            <img class="card-slide-img" data-src="${cdnThumb}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
 onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
 onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
@@ -1842,8 +1881,8 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML
                 dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
             });
 
-            const starClass = userFavs.includes(item.id) ? 'fav-star active' : 'fav-star';
-            const isUnseen = !seenItemsIds.includes(item.id) && item.status === 'available';
+            const starClass = favSet.has(itemIdStr) ? 'fav-star active' : 'fav-star';
+            const isUnseen = !seenSet.has(itemIdStr) && item.status === 'available';
             const pulseClass = isUnseen ? 'unseen-pulse' : '';
 
             const card = document.createElement('div');
@@ -1865,9 +1904,6 @@ onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML
                     <div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>
                 `;
             }
-
-            const sizePrefix = (typeof i18next !== 'undefined') ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
-            const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
 
             card.innerHTML = `
                 ${badgeHTML}
@@ -2134,18 +2170,20 @@ window.scrollGridSlider = function(event, itemId, direction) {
     if (event) event.stopPropagation();
     const slider = document.getElementById(`slider-${itemId}`);
     if (!slider) return;
+    activateCardSlides(slider);
     const slideWidth = slider.offsetWidth;
     slider.scrollBy({ left: slideWidth * direction, behavior: 'smooth' });
 };
 
 window.preloadGridSlide = function(event, itemId, direction) {
     if (event) event.stopPropagation();
+    const slider = document.getElementById(`slider-${itemId}`);
+    if (slider) activateCardSlides(slider);
     const catalog = typeof getCatalog === 'function' ? getCatalog() : [];
     const item = catalog.find(i => i.id === itemId);
     if (!item) return;
     const mediaArray = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails : (item.images || []);
     if (mediaArray.length <= 1) return;
-    const slider = document.getElementById(`slider-${itemId}`);
     if (!slider) return;
     const slideWidth = slider.offsetWidth || 1;
     const currentIdx = Math.round(slider.scrollLeft / slideWidth);
@@ -2332,23 +2370,27 @@ function startOnboardingTour() {
 window.startOnboardingTour = startOnboardingTour;
 
 // Защита: если юзер при входе сразу начинает скроллить страницу — не показываем подсказки онбординга
-window.addEventListener('scroll', function onEarlyTourScroll() {
-    const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-    if (y > 30) {
-        if (!localStorage.getItem('nisha_tour_done')) {
-            localStorage.setItem('nisha_tour_done', 'true');
-            if (window._activeDriverTour) {
-                try { window._activeDriverTour.destroy(); } catch (e) {}
-                window._activeDriverTour = null;
-            }
-            if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
-                setTimeout(() => {
-                    tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
-                        localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
-                    });
-                    window.pendingBroadcastHtml = null;
-                }, 3000);
+if (!localStorage.getItem('nisha_tour_done')) {
+    const onEarlyTourScroll = function() {
+        const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        if (y > 30) {
+            window.removeEventListener('scroll', onEarlyTourScroll);
+            if (!localStorage.getItem('nisha_tour_done')) {
+                localStorage.setItem('nisha_tour_done', 'true');
+                if (window._activeDriverTour) {
+                    try { window._activeDriverTour.destroy(); } catch (e) {}
+                    window._activeDriverTour = null;
+                }
+                if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
+                    setTimeout(() => {
+                        tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
+                            localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
+                        });
+                        window.pendingBroadcastHtml = null;
+                    }, 3000);
+                }
             }
         }
-    }
-}, { passive: true });
+    };
+    window.addEventListener('scroll', onEarlyTourScroll, { passive: true });
+}
