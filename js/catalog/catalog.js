@@ -2257,6 +2257,24 @@ window.showBadgeInfo = function(type) {
     }
 };
 
+// Вспомогательная функция безопасного показа отложенного броадкаста
+function flushPendingBroadcast() {
+    if (!window.pendingBroadcastHtml || typeof tryShowBroadcast !== 'function') return;
+    const bHtml = window.pendingBroadcastHtml;
+    const bId = window.pendingBroadcastId;
+    window.pendingBroadcastHtml = null;
+    window.pendingBroadcastId = null;
+
+    if (!bHtml || bHtml === 'null' || (typeof bHtml === 'string' && !bHtml.trim())) return;
+
+    setTimeout(() => {
+        tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
+            if (bId) localStorage.setItem('nisha_last_broadcast', bId);
+        });
+    }, 3000);
+}
+window.flushPendingBroadcast = flushPendingBroadcast;
+
 // Тур онбординга
 function startOnboardingTour() {
     if (!localStorage.getItem('nisha_rules_accepted') || 
@@ -2266,14 +2284,7 @@ function startOnboardingTour() {
     const initScroll = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
     if (initScroll > 30) {
         localStorage.setItem('nisha_tour_done', 'true');
-        if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
-            setTimeout(() => {
-                tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
-                    localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
-                });
-                window.pendingBroadcastHtml = null;
-            }, 3000);
-        }
+        flushPendingBroadcast();
         return;
     }
 
@@ -2302,14 +2313,7 @@ function startOnboardingTour() {
         if (currentScrollY > 30) {
             clearInterval(checkAndRun);
             localStorage.setItem('nisha_tour_done', 'true');
-            if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
-                setTimeout(() => {
-                    tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
-                        localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
-                    });
-                    window.pendingBroadcastHtml = null;
-                }, 3000);
-            }
+            flushPendingBroadcast();
             return;
         }
 
@@ -2352,15 +2356,7 @@ function startOnboardingTour() {
                 localStorage.setItem('nisha_tour_done', 'true');
                 driverObj.destroy();
                 window._activeDriverTour = null;
-                
-                if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
-                    setTimeout(() => {
-                        tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
-                            localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
-                        });
-                        window.pendingBroadcastHtml = null;
-                    }, 3000);
-                }
+                flushPendingBroadcast();
             }
         });
         window._activeDriverTour = driverObj;
@@ -2381,14 +2377,7 @@ if (!localStorage.getItem('nisha_tour_done')) {
                     try { window._activeDriverTour.destroy(); } catch (e) {}
                     window._activeDriverTour = null;
                 }
-                if (window.pendingBroadcastHtml && typeof tryShowBroadcast === 'function') {
-                    setTimeout(() => {
-                        tryShowBroadcast('SYSTEM_BROADCAST.MSG', window.pendingBroadcastHtml, '[ ЗАКРЫТЬ ]', () => {
-                            localStorage.setItem('nisha_last_broadcast', window.pendingBroadcastId);
-                        });
-                        window.pendingBroadcastHtml = null;
-                    }, 3000);
-                }
+                flushPendingBroadcast();
             }
         }
     };

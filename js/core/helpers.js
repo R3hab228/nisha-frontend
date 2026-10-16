@@ -179,6 +179,10 @@ function _displayNewItemToast(item, container) {
 
 // --- ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ (ОДНОКНОПОЧНЫЕ) ---
 function showTerminalModal(title, htmlText, btnText, callback) {
+    if (!htmlText || htmlText === 'null' || (typeof htmlText === 'string' && !htmlText.trim())) {
+        if (callback) callback();
+        return;
+    }
     const overlay = document.createElement('div');
     overlay.className = 'terminal-modal-overlay';
     overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;";

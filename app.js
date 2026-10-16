@@ -503,6 +503,10 @@ window.clientFingerprint = clientFingerprint;
 let pendingBroadcastQueue = null;
 
 function tryShowBroadcast(title, htmlText, btnText, callback) {
+    if (!htmlText || htmlText === 'null' || (typeof htmlText === 'string' && !htmlText.trim())) {
+        if (callback) callback();
+        return;
+    }
     const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
     if (inFeed) {
         showTerminalModal(title, htmlText, btnText, callback);
@@ -521,7 +525,11 @@ function checkPendingBroadcast() {
         if (pendingBroadcastQueue && inFeed) {
             const { title, htmlText, btnText, callback } = pendingBroadcastQueue;
             pendingBroadcastQueue = null;
-            showTerminalModal(title, htmlText, btnText, callback);
+            if (htmlText && htmlText !== 'null' && (typeof htmlText !== 'string' || htmlText.trim())) {
+                showTerminalModal(title, htmlText, btnText, callback);
+            } else if (callback) {
+                callback();
+            }
         }
     }, 200);
 }
@@ -837,13 +845,8 @@ async function initApp() {
                         const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
 
                         if (!hasSeen) {
-                            let broadcastContent = ''; // Переименовали переменную для 100% безопасности
-                            if (bData.image_url) {
-                                broadcastContent += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
-                            }
-                            if (bData.message_text) {
-                                broadcastContent += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
-                            }
+                            const hasValidText = bData.message_text && typeof bData.message_text === 'string' && bData.message_text.trim() && bData.message_text.trim() !== 'null';
+                            const hasValidImg = bData.image_url && typeof bData.image_url === 'string' && bData.image_url.trim();
 
                             const markAsSeen = () => {
                                 localStorage.setItem('nisha_last_broadcast', bData.id);
@@ -851,6 +854,19 @@ async function initApp() {
                                     _supabase.from('profiles').update({ last_broadcast_id: bData.id }).eq('id', currentUser.id).then();
                                 }
                             };
+
+                            if (!hasValidText && !hasValidImg) {
+                                markAsSeen();
+                                return;
+                            }
+
+                            let broadcastContent = '';
+                            if (hasValidImg) {
+                                broadcastContent += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
+                            }
+                            if (hasValidText) {
+                                broadcastContent += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
+                            }
 
                             if (localStorage.getItem('nisha_tour_done')) {
                                 tryShowBroadcast('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
@@ -884,11 +900,16 @@ async function initApp() {
             _supabase.channel('public:site_broadcasts')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'site_broadcasts' }, payload => {
                     const bData = payload.new;
+                    if (!bData) return;
+                    const hasValidText = bData.message_text && typeof bData.message_text === 'string' && bData.message_text.trim() && bData.message_text.trim() !== 'null';
+                    const hasValidImg = bData.image_url && typeof bData.image_url === 'string' && bData.image_url.trim();
+                    if (!hasValidText && !hasValidImg) return;
+
                     let bHtml = '';
-                    if (bData.image_url) {
+                    if (hasValidImg) {
                         bHtml += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
                     }
-                    if (bData.message_text) {
+                    if (hasValidText) {
                         bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                     }
 
