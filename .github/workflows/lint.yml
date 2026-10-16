@@ -21,17 +21,23 @@ jobs:
         with:
           node-version: 20
 
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: ⚡ Verify Vite Build
+        run: npm run build
+
       - name: 🔍 Validate JavaScript Syntax (AST Check)
         run: |
           echo "Scanning and verifying all JavaScript files..."
-          find . -maxdepth 3 -name "*.js" -not -path "*/node_modules/*" -print -exec node --check {} \;
+          find . -maxdepth 3 -name "*.js" -not -path "*/node_modules/*" -not -path "*/dist/*" -not -path "*/public/*" -print -exec node --check {} \;
           echo "✅ All JavaScript files passed syntax verification!"
 
       - name: 🛡️ Validate JSON files (locales, manifest, vercel)
         run: |
           node -e "
             const fs = require('fs');
-            const files = ['locales.json', 'manifest.json', 'vercel.json', '.well-known/assetlinks.json'];
+            const files = ['package.json', 'locales.json', 'manifest.json', 'vercel.json', '.well-known/assetlinks.json'];
             files.forEach(file => {
               if (fs.existsSync(file)) {
                 JSON.parse(fs.readFileSync(file, 'utf8'));

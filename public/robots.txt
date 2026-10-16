@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /*?*action=*
+Disallow: /*?*fbclid=*
+Disallow: /*?*gclid=*
+
+Sitemap: https://www.nisha-store.shop/sitemap.xml

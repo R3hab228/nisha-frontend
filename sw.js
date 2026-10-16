@@ -1,30 +1,21 @@
-const CACHE_NAME = 'nisha-cache-v202';
+const CACHE_NAME = 'nisha-cache-v205';
 const IMAGE_CACHE = 'nisha-images-v4';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
     '/',
     '/index.html',
-    '/app.js',
-    '/config.js',
-    '/style.css',
+    '/manifest.json',
     '/locales.json',
     '/locales/ru.json',
     '/locales/ua.json',
     '/locales/en.json',
     '/404.html',
+    '/return-policy.html',
     '/badge.png',
     '/icon-192.png',
-    '/cables.svg',
-    '/js/core/helpers.js',
-    '/js/ui/windows.js',
-    '/js/auth/auth.js',
-    '/js/drop/drop.js',
-    '/js/chat/chat.js',
-    '/js/reviews/reviews.js',
-    '/js/catalog/catalog.js',
-    '/js/cart/cart.js',
-    '/js/product/product.js',
-    '/js/profile/profile.js'
+    '/icon-512.png',
+    '/icon.png',
+    '/cables.svg'
 ];
 
 // Оптимизированная пакетная очистка кэша без рекурсии с дебаунсом
@@ -47,7 +38,13 @@ function scheduleTrimCache(cacheName, maxItems = 150) {
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_URLS))
+        caches.open(CACHE_NAME).then(async cache => {
+            for (const url of STATIC_URLS) {
+                try {
+                    await cache.add(url);
+                } catch (e) {}
+            }
+        })
     );
 });
 
@@ -82,6 +79,23 @@ self.addEventListener('fetch', event => {
         url.hostname.includes('onrender.com')
     ) {
         return; 
+    }
+
+    // --- ХЭШИРОВАННЫЕ АССЕТЫ VITE (/assets/) (Cache-First) ---
+    if (url.pathname.startsWith('/assets/')) {
+        event.respondWith(
+            caches.match(event.request).then(cached => {
+                if (cached) return cached;
+                return fetch(event.request).then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+                    }
+                    return networkResponse;
+                });
+            })
+        );
+        return;
     }
 
     // --- ПЕРЕХВАТ SUPABASE API ДЛЯ ОФЛАЙНА (ТОЛЬКО ТОЧНЫЕ REST ЗАПРОСЫ) ---
