@@ -1332,34 +1332,41 @@ function handleLiveSearch() {
         return; 
     }
 
-    searchDebounce = setTimeout(() => {
-        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ МЕМОИЗИРОВАННЫЙ КЭШ И FUSE.JS С ТРАНСЛИТЕРАЦИЕЙ
+    searchDebounce = setTimeout(async () => {
+        // УЛУЧШЕННЫЙ ПОИСК ЧЕРЕЗ ФОНОВЫЙ WEB WORKER И МЕМОИЗИРОВАННЫЙ КЭШ
         const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
         let results = liveSearchMemoCache.get(cleanSearchTerm);
         if (!results) {
-            const fuse = getLiveSearchFuse();
-            const queryVariants = (typeof expandSearchQuery === 'function') 
-                ? expandSearchQuery(cleanSearchTerm) 
-                : [cleanSearchTerm];
-            
-            const collected = [];
-            const seenIds = new Set();
-            for (const variant of queryVariants) {
-                const subResults = fuse.search(variant);
-                subResults.forEach(r => {
-                    if (!seenIds.has(r.item.id)) {
-                        seenIds.add(r.item.id);
-                        collected.push(r);
-                    }
-                });
-                if (collected.length >= 8) break;
+            if (window.searchWorker && typeof window.searchWorker.searchLive === 'function') {
+                results = await window.searchWorker.searchLive(cleanSearchTerm, 8);
+            } else {
+                const fuse = getLiveSearchFuse();
+                const queryVariants = (typeof expandSearchQuery === 'function') 
+                    ? expandSearchQuery(cleanSearchTerm) 
+                    : [cleanSearchTerm];
+                
+                const collected = [];
+                const seenIds = new Set();
+                for (const variant of queryVariants) {
+                    const subResults = fuse.search(variant);
+                    subResults.forEach(r => {
+                        if (!seenIds.has(r.item.id)) {
+                            seenIds.add(r.item.id);
+                            collected.push(r);
+                        }
+                    });
+                    if (collected.length >= 8) break;
+                }
+                results = collected.slice(0, 8);
             }
-            results = collected.slice(0, 8);
-            if (liveSearchMemoCache.size >= MAX_SEARCH_MEMO) {
-                const oldestKey = liveSearchMemoCache.keys().next().value;
-                liveSearchMemoCache.delete(oldestKey);
+
+            if (results && results.length > 0) {
+                if (liveSearchMemoCache.size >= MAX_SEARCH_MEMO) {
+                    const oldestKey = liveSearchMemoCache.keys().next().value;
+                    liveSearchMemoCache.delete(oldestKey);
+                }
+                liveSearchMemoCache.set(cleanSearchTerm, results);
             }
-            liveSearchMemoCache.set(cleanSearchTerm, results);
         } 
 
         if (results.length > 0) {

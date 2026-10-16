@@ -783,6 +783,9 @@ async function loadAllItems() {
                 try { localStorage.removeItem('nisha_cached_db'); } catch (e) {}
             } else {
                 window.allItems = cachedItems;
+                if (window.searchWorker && typeof window.searchWorker.setItems === 'function') {
+                    window.searchWorker.setItems(cachedItems);
+                }
                 applyFilters(true);
                 updateSidebarCounters();
             }
@@ -848,6 +851,9 @@ async function loadAllItems() {
 
     if (hasValidImages) {
         window.allItems = data; 
+        if (window.searchWorker && typeof window.searchWorker.setItems === 'function') {
+            window.searchWorker.setItems(data);
+        }
         if (isStructureChanged || changedCardItems.length > 0 || !cachedItems) deferSave(); 
         updateSidebarCounters();
     } else if (data && data.length > 0) {
@@ -862,6 +868,9 @@ async function loadAllItems() {
             }
         });
         window.allItems = data;
+        if (window.searchWorker && typeof window.searchWorker.setItems === 'function') {
+            window.searchWorker.setItems(data);
+        }
         updateSidebarCounters();
         if (data[0] && Array.isArray(data[0].images) && data[0].images.length > 0) {
             deferSave();
@@ -1385,7 +1394,7 @@ function applyFilters(immediate = false) {
     clearTimeout(applyFiltersTimeout);
     const delay = (immediate || isInitialRender) ? 0 : 160;
 
-    applyFiltersTimeout = setTimeout(() => {
+    applyFiltersTimeout = setTimeout(async () => {
         try {
             const searchInput = document.getElementById('mainSearch');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -1433,36 +1442,43 @@ function applyFilters(immediate = false) {
                 return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability && matchesSale;
             });
 
-            // 2. Умный поиск (Fuse.js или надежный fallback с поддержкой транслитерации RU/UA <-> EN)
+            // 2. Умный поиск (Web Worker Fuse.js с поддержкой транслитерации и надежный fallback)
             if (searchTerm !== '') {
                 const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
                 if (cleanSearchTerm) {
-                    const queryVariants = (typeof expandSearchQuery === 'function')
-                        ? expandSearchQuery(cleanSearchTerm)
-                        : [cleanSearchTerm.toLowerCase()];
+                    if (window.searchWorker && window.searchWorker.isReady()) {
+                        const candidateIds = window.filteredItems.map(i => i.id);
+                        const matchedIds = await window.searchWorker.searchCatalog(cleanSearchTerm, candidateIds);
+                        const itemMap = new Map(window.filteredItems.map(i => [i.id, i]));
+                        window.filteredItems = matchedIds.map(id => itemMap.get(id)).filter(Boolean);
+                    } else {
+                        const queryVariants = (typeof expandSearchQuery === 'function')
+                            ? expandSearchQuery(cleanSearchTerm)
+                            : [cleanSearchTerm.toLowerCase()];
 
-                    if (typeof Fuse !== 'undefined') {
-                        const fuse = getCatalogFuse(window.filteredItems);
-                        const matchedIds = new Set();
-                        const finalResults = [];
+                        if (typeof Fuse !== 'undefined') {
+                            const fuse = getCatalogFuse(window.filteredItems);
+                            const matchedIds = new Set();
+                            const finalResults = [];
 
-                        for (const variant of queryVariants) {
-                            const found = fuse.search(variant);
-                            found.forEach(res => {
-                                if (!matchedIds.has(res.item.id)) {
-                                    matchedIds.add(res.item.id);
-                                    finalResults.push(res.item);
-                                }
+                            for (const variant of queryVariants) {
+                                const found = fuse.search(variant);
+                                found.forEach(res => {
+                                    if (!matchedIds.has(res.item.id)) {
+                                        matchedIds.add(res.item.id);
+                                        finalResults.push(res.item);
+                                    }
+                                });
+                            }
+                            window.filteredItems = finalResults;
+                        } else {
+                            window.filteredItems = window.filteredItems.filter(item => {
+                                const name = (item.name || '').toLowerCase();
+                                const brand = (item.brand || '').toLowerCase();
+                                const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : (item.tags || '').toLowerCase();
+                                return queryVariants.some(q => name.includes(q) || brand.includes(q) || tags.includes(q));
                             });
                         }
-                        window.filteredItems = finalResults;
-                    } else {
-                        window.filteredItems = window.filteredItems.filter(item => {
-                            const name = (item.name || '').toLowerCase();
-                            const brand = (item.brand || '').toLowerCase();
-                            const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : (item.tags || '').toLowerCase();
-                            return queryVariants.some(q => name.includes(q) || brand.includes(q) || tags.includes(q));
-                        });
                     }
                 }
             }

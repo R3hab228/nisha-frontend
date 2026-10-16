@@ -8,10 +8,13 @@ import './init-libs.js';
 // 2. Единое реактивное хранилище состояния (Reactive State Store)
 import '../js/core/store.js';
 
-// 3. Стили
+// 3. Фоновый поисковый воркер Fuse.js (Web Worker)
+import '../js/core/search-worker-client.js';
+
+// 4. Стили
 import '../style.css';
 
-// 4. Подключение конфигурации и модулей приложения в строгом порядке зависимостей
+// 5. Подключение конфигурации и модулей приложения в строгом порядке зависимостей
 import '../config.js';
 import '../js/core/helpers.js';
 import '../js/ui/windows.js';
