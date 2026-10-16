@@ -78,15 +78,26 @@ let isOrderSubmitting = false;
 
 // Вспомогательные безопасные геттеры
 function getActiveCart() {
+    if (window.store && typeof window.store.get === 'function') {
+        return window.store.get('cart') || [];
+    }
     return window.cart || cart || [];
 }
 
 function setActiveCart(newCart) {
     window.cart = newCart;
     cart = newCart;
-    localStorage.setItem('nisha_cart', JSON.stringify(newCart));
+    if (window.store && typeof window.store.set === 'function') {
+        window.store.set('cart', newCart);
+    } else {
+        localStorage.setItem('nisha_cart', JSON.stringify(newCart));
+    }
     if (!newCart || newCart.length === 0) {
-        localStorage.removeItem('nisha_cart_push_sent_time');
+        if (window.store && typeof window.store.set === 'function') {
+            window.store.set('cartPushSentTime', 0);
+        } else {
+            localStorage.removeItem('nisha_cart_push_sent_time');
+        }
     }
 }
 
