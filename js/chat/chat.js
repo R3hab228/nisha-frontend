@@ -95,7 +95,7 @@ function initSupportRepliesSystem() {
         if (!activeSb || !activeFp) return;
 
         activeSb.from('support_replies')
-            .select('*')
+            .select('id, answer_text')
             .eq('client_id', activeFp)
             .eq('is_read', false)
             .then(({ data: replies, error: replErr }) => {

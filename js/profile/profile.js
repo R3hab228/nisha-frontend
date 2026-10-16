@@ -70,7 +70,7 @@ async function checkSession() {
             currentUser = user;
             window.currentUser = currentUser;
 
-            const { data: profiles, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).limit(1);
+            const { data: profiles, error } = await sb.from('profiles').select('id, username, phone, tg, cart, language, last_broadcast_id').eq('id', currentUser.id).limit(1);
             if (!error && profiles && profiles.length > 0) { 
                 userProfile = profiles[0]; 
                 window.userProfile = userProfile;
@@ -1467,7 +1467,7 @@ async function fetchMyOrders() {
             // 1. Запрашиваем заказы, привязанные к ID текущего аккаунта (мгновенно из Supabase)
             const { data: userOrders, error: userOrdersErr } = await sb
                 .from('orders')
-                .select('*')
+                .select('id, phone, status, created_at, items, tracking_number, total_sum, user_id')
                 .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false });
 
@@ -1528,7 +1528,7 @@ async function fetchMyOrders() {
                 )).then(async (results) => {
                     const newlyLinked = results.some(r => r && r.count > 0);
                     if (newlyLinked && currentUser && currentUser.id === uid) {
-                        const { data: refreshed } = await sb.from('orders').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+                        const { data: refreshed } = await sb.from('orders').select('id, phone, status, created_at, items, tracking_number, total_sum, user_id').eq('user_id', uid).order('created_at', { ascending: false });
                         if (Array.isArray(refreshed) && refreshed.length > 0) {
                             let added = false;
                             refreshed.forEach(ro => {

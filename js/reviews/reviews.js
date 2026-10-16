@@ -106,7 +106,7 @@ async function openReviewsModal() {
         return;
     }
 
-    const { data, error } = await sb.from('reviews').select('*').eq('is_published', true).order('created_at', { ascending: false });
+    const { data, error } = await sb.from('reviews').select('created_at, text, user_name, item_image, item_id').eq('is_published', true).order('created_at', { ascending: false });
     
     if (error || !data) {
         renderReviewsData([]);

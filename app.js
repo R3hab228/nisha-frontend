@@ -859,7 +859,7 @@ async function initApp() {
          // --- ПРОВЕРКА РАССЫЛОК ОТ АДМИНА (УМНАЯ) ---
             setTimeout(async () => {
                 try {
-                    const { data: broadcasts } = await _supabase.from('site_broadcasts').select('*').order('created_at', { ascending: false }).limit(1);
+                    const { data: broadcasts } = await _supabase.from('site_broadcasts').select('id, message_text, image_url').order('created_at', { ascending: false }).limit(1);
                     
                     if (broadcasts && broadcasts.length > 0) {
                         const bData = broadcasts[0];
