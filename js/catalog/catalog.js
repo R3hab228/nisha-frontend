@@ -761,6 +761,7 @@ async function loadAllItems() {
 
             if (isCorrupted) {
                 console.warn("[КЭШ КАТАЛОГА] Обнаружены поврежденные данные без фото/описания, очищаем локальный кэш...");
+                cachedItems = null;
                 if (typeof window.idbDel === 'function') window.idbDel('nisha_cached_db');
                 try { localStorage.removeItem('nisha_cached_db'); } catch (e) {}
             } else {
@@ -770,6 +771,7 @@ async function loadAllItems() {
             }
         } catch(e) { 
             console.error("Ошибка парсинга кэша"); 
+            cachedItems = null;
             if (typeof window.idbDel === 'function') window.idbDel('nisha_cached_db');
             try { localStorage.removeItem('nisha_cached_db'); } catch (err) {}
         }
@@ -869,8 +871,8 @@ async function loadAllItems() {
     }
 
     // 5. ПЕРЕРИСОВКА (Если данные реально обновились)
-    if (!cachedData || isChanged) {
-        applyFilters(!cachedData); 
+    if (!cachedItems || isChanged) {
+        applyFilters(!cachedItems); 
     }
     
     // 6. ФОНОВАЯ ПРОВЕРКА: откладываем на 15 секунд, чтобы не перегружать сеть и рендер на первых секундах
