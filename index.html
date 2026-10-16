@@ -51,10 +51,10 @@
 <link rel=apple-touch-icon sizes=180x180 href="/icon-512.png?v=4">
 <link rel=icon type=image/png sizes=32x32 href="/icon.png?v=4">
 <link rel=manifest href="/manifest.json?v=5">
-<link rel=preload href="/style.css?v=191" as=style>
+<link rel=preload href="/style.css?v=198" as=style>
 <link rel=preload href=/locales/ru.json as=fetch crossorigin=anonymous>
 <link rel=preload href=/cables.svg as=image type="image/svg+xml">
-<link rel=stylesheet href="style.css?v=191">
+<link rel=stylesheet href="style.css?v=198">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity (Отложенная загрузка на 3 секунды без фризов) -->
@@ -565,8 +565,8 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
         <span style="color:#666; font-size:10px;">▼</span>
     </div>
     <div id="paymentDropdown" class="custom-dropdown" style="display:none; position:absolute; width:100%; z-index:200; border-top:1px solid var(--accent-green); opacity:0; visibility:hidden; transform:translateY(-5px); transition:all 0.2s ease;">
-        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" data-i18n="checkout.payment_full" onclick="selectPaymentMethod(this.innerText)">Полная предоплата</div>
-        <div style="padding:12px; cursor:pointer;" data-i18n="checkout.payment_cod" onclick="selectPaymentMethod(this.innerText)">Наложка (предоплата 200грн)</div>
+        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" data-i18n="checkout.payment_full" onclick="selectPaymentMethod('Полная предоплата', this.innerText)">Полная предоплата</div>
+        <div style="padding:12px; cursor:pointer;" data-i18n="checkout.payment_cod" onclick="selectPaymentMethod('Наложка (предоплата 200грн)', this.innerText)">Наложка (предоплата 200грн)</div>
     </div>
     <input type="hidden" id="orderPaymentMethod" value="Полная предоплата">
 <script>
@@ -581,11 +581,25 @@ function closePaymentDropdown() {
 }
 window.closePaymentDropdown = closePaymentDropdown;
 
-function selectPaymentMethod(val) {
+function normalizePaymentMethodRu(val) {
+    const s = String(val || '').toLowerCase();
+    if (s.includes('200') || s.includes('налож') || s.includes('наклад') || s.includes('delivery') || s.includes('cod')) {
+        return 'Наложка (предоплата 200грн)';
+    }
+    return 'Полная предоплата';
+}
+window.normalizePaymentMethodRu = normalizePaymentMethodRu;
+
+function selectPaymentMethod(dbVal, displayLabel) {
     const txt = document.getElementById('paymentSelectedText');
     const input = document.getElementById('orderPaymentMethod');
-    if (txt) txt.innerText = val;
-    if (input) input.value = val;
+    const ruVal = normalizePaymentMethodRu(dbVal);
+    if (txt) {
+        txt.setAttribute('data-i18n', ruVal.includes('200') ? 'checkout.payment_cod' : 'checkout.payment_full');
+        txt.innerText = displayLabel || dbVal;
+    }
+    if (input) input.value = ruVal;
+    if (typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
     closePaymentDropdown();
 }
 window.selectPaymentMethod = selectPaymentMethod;
@@ -639,9 +653,9 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 </div>
 </div>
 <div class=orders-tabs id=ordersTabs style=display:none>
-<button class="order-tab tab-yellow active" onclick='switchOrderTab("accepted")' data-i18n=orders_modal.tab_accepted>ПРИНЯТЫЕ</button>
-<button class="order-tab tab-blue" onclick='switchOrderTab("shipped")' data-i18n=orders_modal.tab_shipped>ОТПРАВЛЕНЫ</button>
-<button class="order-tab tab-red" onclick='switchOrderTab("cancelled")' data-i18n=orders_modal.tab_cancelled>ОТМЕНЕНЫ</button>
+<button class="order-tab tab-yellow active" onclick='switchOrderTab("accepted")'><span data-i18n=orders_modal.tab_accepted>ПРИНЯТЫЕ</span> <span id=orderTabCountAccepted>(0)</span></button>
+<button class="order-tab tab-blue" onclick='switchOrderTab("shipped")'><span data-i18n=orders_modal.tab_shipped>ОТПРАВЛЕНЫ</span> <span id=orderTabCountShipped>(0)</span></button>
+<button class="order-tab tab-red" onclick='switchOrderTab("cancelled")'><span data-i18n=orders_modal.tab_cancelled>ОТМЕНЕНЫ</span> <span id=orderTabCountCancelled>(0)</span></button>
 </div>
 <div class=orders-container id=ordersListArea>
 <div style=text-align:center;color:#555;font-family:var(--font-mono);padding:30px data-i18n=orders_modal.loading>
@@ -667,18 +681,18 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 </div>
 </div>
 <script defer src="https://cdn.jsdelivr.net/combine/npm/@supabase/supabase-js@2,npm/dompurify@3.0.6/dist/purify.min.js,npm/fuse.js@7.0.0,npm/imask@7.6.1/dist/imask.min.js,npm/@studio-freight/lenis@1.0.33/dist/lenis.min.js,npm/i18next@23.10.1/dist/umd/i18next.min.js,npm/i18next-browser-languagedetector@7.2.0/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
-<script defer src="config.js?v=162"></script>
-<script defer src="js/core/helpers.js?v=190"></script>
-<script defer src="js/ui/windows.js?v=187"></script>
-<script defer src="js/auth/auth.js?v=166"></script>
-<script defer src="js/drop/drop.js?v=184"></script>
-<script defer src="js/chat/chat.js?v=162"></script>
-<script defer src="js/reviews/reviews.js?v=170"></script>
-<script defer src="js/catalog/catalog.js?v=190"></script>
-<script defer src="js/cart/cart.js?v=189"></script>
-<script defer src="js/product/product.js?v=189"></script>
-<script defer src="js/profile/profile.js?v=188"></script>
-<script defer src="app.js?v=188"></script>
+<script defer src="config.js?v=198"></script>
+<script defer src="js/core/helpers.js?v=198"></script>
+<script defer src="js/ui/windows.js?v=198"></script>
+<script defer src="js/auth/auth.js?v=198"></script>
+<script defer src="js/drop/drop.js?v=198"></script>
+<script defer src="js/chat/chat.js?v=198"></script>
+<script defer src="js/reviews/reviews.js?v=198"></script>
+<script defer src="js/catalog/catalog.js?v=198"></script>
+<script defer src="js/cart/cart.js?v=198"></script>
+<script defer src="js/product/product.js?v=198"></script>
+<script defer src="js/profile/profile.js?v=198"></script>
+<script defer src="app.js?v=198"></script>
 <button class=fab-propose onclick=openProposeModal() title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>

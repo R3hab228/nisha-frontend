@@ -1297,11 +1297,13 @@ function openOrdersModal() {
         
         const grantedMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_granted', {defaultValue: 'Доступ разрешен'}) : 'Доступ разрешен';
         if (guestText) guestText.innerHTML = `${grantedMsg}: <span style="color:var(--accent-green); font-weight:bold;">@${dName}</span>`;
+        updateOrderTabCounters();
         fetchMyOrders();
     } else {
         if (guestInputGroup) guestInputGroup.style.display = 'flex';
         if (guestText) guestText.innerHTML = 'Введите номер телефона, указанный при заказе, чтобы отследить статус:';
         if (listArea) listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace; padding: 30px;">Введите номер телефона для поиска...</div>';
+        updateOrderTabCounters();
 
         const lastPhone = localStorage.getItem('nisha_last_phone');
         const phoneInput = document.getElementById('ordersSearchPhone');
@@ -1334,13 +1336,22 @@ function updateOrderTabCounters() {
     const tabBlue = document.querySelector('.order-tab.tab-blue');
     const tabRed = document.querySelector('.order-tab.tab-red');
 
-    const txtAccepted = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_accepted', {defaultValue: 'АКТИВНЫЕ'}) : 'АКТИВНЫЕ';
+    const txtAccepted = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_accepted', {defaultValue: 'ПРИНЯТЫЕ'}) : 'ПРИНЯТЫЕ';
     const txtShipped = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_shipped', {defaultValue: 'ОТПРАВЛЕННЫЕ'}) : 'ОТПРАВЛЕННЫЕ';
     const txtCancelled = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_cancelled', {defaultValue: 'ОТМЕНЕННЫЕ'}) : 'ОТМЕНЕННЫЕ';
 
-    if (tabYellow) tabYellow.innerText = `${txtAccepted} (${acceptedCount})`;
-    if (tabBlue) tabBlue.innerText = `${txtShipped} (${shippedCount})`;
-    if (tabRed) tabRed.innerText = `${txtCancelled} (${cancelledCount})`;
+    if (tabYellow) {
+        tabYellow.removeAttribute('data-i18n');
+        tabYellow.innerHTML = `<span data-i18n="orders_modal.tab_accepted">${txtAccepted}</span> <span id="orderTabCountAccepted">(${acceptedCount})</span>`;
+    }
+    if (tabBlue) {
+        tabBlue.removeAttribute('data-i18n');
+        tabBlue.innerHTML = `<span data-i18n="orders_modal.tab_shipped">${txtShipped}</span> <span id="orderTabCountShipped">(${shippedCount})</span>`;
+    }
+    if (tabRed) {
+        tabRed.removeAttribute('data-i18n');
+        tabRed.innerHTML = `<span data-i18n="orders_modal.tab_cancelled">${txtCancelled}</span> <span id="orderTabCountCancelled">(${cancelledCount})</span>`;
+    }
 
     // Умный выбор: если активных 0, а завершенных/отправленных > 0 — автоматически переключаем на них!
     if (acceptedCount === 0 && shippedCount > 0 && currentOrderTab === 'accepted') {

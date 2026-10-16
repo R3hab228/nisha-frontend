@@ -976,9 +976,15 @@ function restoreCheckoutDraft() {
         if (branchEl && draft.branch) { branchEl.value = draft.branch; hasRestored = true; }
 
         if (draft.paymentMethod && document.getElementById('orderPaymentMethod')) {
-            document.getElementById('orderPaymentMethod').value = draft.paymentMethod;
-        }
-        if (draft.paymentSelectedText && document.getElementById('paymentSelectedText')) {
+            const rawDraftPm = String(draft.paymentMethod).toLowerCase();
+            const isCod = rawDraftPm.includes('200') || rawDraftPm.includes('налож') || rawDraftPm.includes('наклад') || rawDraftPm.includes('delivery') || rawDraftPm.includes('cod');
+            document.getElementById('orderPaymentMethod').value = isCod ? 'Наложка (предоплата 200грн)' : 'Полная предоплата';
+            const txtEl = document.getElementById('paymentSelectedText');
+            if (txtEl) {
+                txtEl.setAttribute('data-i18n', isCod ? 'checkout.payment_cod' : 'checkout.payment_full');
+                txtEl.innerText = typeof i18next !== 'undefined' ? i18next.t(isCod ? 'checkout.payment_cod' : 'checkout.payment_full') : (draft.paymentSelectedText || document.getElementById('orderPaymentMethod').value);
+            }
+        } else if (draft.paymentSelectedText && document.getElementById('paymentSelectedText')) {
             document.getElementById('paymentSelectedText').innerText = draft.paymentSelectedText;
         }
 
@@ -1282,7 +1288,11 @@ async function executeOrderFinal(emailToSave) {
     const phone = normalizeOrderPhone(phoneRaw);
     const city = document.getElementById('orderCity').value.trim();
     const branch = document.getElementById('orderBranch').value.trim();
-    const paymentMethod = document.getElementById('orderPaymentMethod') ? document.getElementById('orderPaymentMethod').value : '';
+    const rawPaymentVal = document.getElementById('orderPaymentMethod') ? document.getElementById('orderPaymentMethod').value : '';
+    const lowerPmVal = String(rawPaymentVal || '').toLowerCase();
+    const paymentMethod = (lowerPmVal.includes('200') || lowerPmVal.includes('налож') || lowerPmVal.includes('наклад') || lowerPmVal.includes('delivery') || lowerPmVal.includes('cod'))
+        ? 'Наложка (предоплата 200грн)'
+        : 'Полная предоплата';
     const nameWithPayment = paymentMethod ? name + ' [' + paymentMethod + ']' : name;
 
     const currentCart = getActiveCart();
@@ -1305,7 +1315,7 @@ async function executeOrderFinal(emailToSave) {
         const sb = getSupabaseClient();
         if (!sb) throw new Error('База данных недоступна');
 
-        // Передаем чистое имя и способ оплаты в отдельное поле p_payment_method
+        // Передаем чистое имя и способ оплаты в отдельное поле p_payment_method (всегда на русском языке)
         let rpcParams = {
             p_user_id: user ? user.id : null,
             p_name: name,
@@ -1318,7 +1328,7 @@ async function executeOrderFinal(emailToSave) {
             p_branch_ref: branchRef || '',
             p_item_ids: orderItemIds,
             p_promocode: window.appliedPromoCode || appliedPromoCode || null,
-            p_payment_method: paymentMethod || ''
+            p_payment_method: paymentMethod
         };
 
         let { data: orderId, error: orderError } = await sb.rpc('create_secure_order', rpcParams);
@@ -1335,9 +1345,9 @@ async function executeOrderFinal(emailToSave) {
 
         if (orderError) throw orderError; 
 
-        // Первоначальный статус нового заказа всегда "В обработке" (до личного подтверждения в боте)
+        // Первоначальный статус нового заказа всегда "В обработке", а способ оплаты строго на русском
         try {
-            await sb.from('orders').update({ status: 'В обработке' }).eq('id', orderId);
+            await sb.from('orders').update({ status: 'В обработке', payment_method: paymentMethod }).eq('id', orderId);
         } catch (stErr) {}
 
         if (window.ttq) {

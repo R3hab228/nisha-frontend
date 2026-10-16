@@ -74,6 +74,10 @@ async function changeLanguage(lng) {
             if (typeof renderCartItems === 'function') renderCartItems();
             if (typeof updateCartUI === 'function') updateCartUI();
             if (typeof renderHistory === 'function') renderHistory();
+            if (typeof window.updateOrderTabCounters === 'function') window.updateOrderTabCounters();
+            if (typeof window.renderFilteredOrders === 'function' && document.getElementById('ordersModal')?.style.display === 'flex') {
+                window.renderFilteredOrders();
+            }
             
             const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
             showToast(msg, 'success');
@@ -266,13 +270,18 @@ function updateContentLanguage() {
         el.placeholder = i18next.t(key);
     });
 
-    // Обновляем выбранный способ оплаты в чекауте
+    // Обновляем выбранный способ оплаты в чекауте (текст на языке интерфейса, значение в БД всегда на русском)
     const paymentSelectedText = document.getElementById('paymentSelectedText');
     const paymentMethodInput = document.getElementById('orderPaymentMethod');
     if (paymentSelectedText && paymentMethodInput) {
-        if (paymentMethodInput.value && (paymentMethodInput.value.includes('200') || paymentMethodInput.value.includes('Налож') || paymentMethodInput.value.includes('Наклад') || paymentMethodInput.value.includes('delivery'))) {
+        const rawVal = String(paymentMethodInput.value || '').toLowerCase();
+        if (rawVal.includes('200') || rawVal.includes('налож') || rawVal.includes('наклад') || rawVal.includes('delivery') || rawVal.includes('cod')) {
+            paymentMethodInput.value = 'Наложка (предоплата 200грн)';
+            paymentSelectedText.setAttribute('data-i18n', 'checkout.payment_cod');
             paymentSelectedText.innerText = i18next.t('checkout.payment_cod');
         } else {
+            paymentMethodInput.value = 'Полная предоплата';
+            paymentSelectedText.setAttribute('data-i18n', 'checkout.payment_full');
             paymentSelectedText.innerText = i18next.t('checkout.payment_full');
         }
     }
@@ -281,9 +290,12 @@ function updateContentLanguage() {
     currentSearchLang = i18next.language || 'ru';
     startSearchTypewriter();
 
-    // Немедленно восстанавливаем красные индикаторы количества товаров в фильтрах после перевода
+    // Немедленно восстанавливаем красные индикаторы количества товаров в фильтрах и счетчики заказов после перевода
     if (typeof updateSidebarCounters === 'function') {
         updateSidebarCounters();
+    }
+    if (typeof window.updateOrderTabCounters === 'function') {
+        window.updateOrderTabCounters();
     }
 }
 window.updateContentLanguage = updateContentLanguage;
