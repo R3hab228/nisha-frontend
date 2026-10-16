@@ -1111,8 +1111,9 @@ function renderHistory() {
     container.appendChild(fragment);
 
     if (cardsForTilt.length > 0) {
-        if (typeof VanillaTilt !== 'undefined') {
-            VanillaTilt.init(cardsForTilt, { max: 15, speed: 300, scale: 1.05 });
+        const TiltLib = (typeof window !== 'undefined' && window.VanillaTilt) || (typeof VanillaTilt !== 'undefined' ? VanillaTilt : null);
+        if (TiltLib && typeof TiltLib.init === 'function') {
+            TiltLib.init(cardsForTilt, { max: 15, speed: 300, scale: 1.05 });
         } else {
             import('vanilla-tilt').then((mod) => {
                 const Tilt = mod.default || mod;

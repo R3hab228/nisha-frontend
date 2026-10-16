@@ -222,10 +222,11 @@ function renderProposalPreviews() {
         }
 
         const initSortable = () => {
-            if (!window.Sortable || !container || currentProposalFiles.length <= 1) return;
+            const SortableLib = window.Sortable || (typeof Sortable !== 'undefined' ? Sortable : null);
+            if (!SortableLib || !container || currentProposalFiles.length <= 1) return;
             const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
-            proposalSortable = Sortable.create(container, {
+            proposalSortable = SortableLib.create(container, {
                 animation: 150,
                 delay: isTouchDevice ? 150 : 0, 
                 delayOnTouchOnly: true,

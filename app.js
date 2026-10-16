@@ -823,8 +823,9 @@ async function initApp() {
         const initAutoAnimate = async () => {
             const hGrid = document.getElementById('historyGrid');
             if (!hGrid) return;
-            if (typeof autoAnimate === 'function') {
-                autoAnimate(hGrid);
+            const animFn = (typeof window !== 'undefined' && window.autoAnimate) || (typeof autoAnimate === 'function' ? autoAnimate : null);
+            if (animFn) {
+                animFn(hGrid);
             } else {
                 try {
                     const mod = await import('@formkit/auto-animate');

@@ -1931,18 +1931,19 @@ function renderFilteredOrders() {
 
     // Отрисовка штрихкодов JsBarcode (с поддержкой Lazy Load)
     const drawBarcodes = () => {
-        if (typeof JsBarcode === 'undefined') return;
+        const barcodeFn = (typeof window !== 'undefined' && window.JsBarcode) || (typeof JsBarcode !== 'undefined' ? JsBarcode : null);
+        if (!barcodeFn) return;
         document.querySelectorAll('.barcode-svg').forEach(svg => {
             const ttn = svg.getAttribute('data-ttn');
             if (ttn) {
                 try {
-                    JsBarcode(svg, ttn, { format: "CODE128", lineColor: "#000", background: "transparent", width: 1.5, height: 50, displayValue: false });
+                    barcodeFn(svg, ttn, { format: "CODE128", lineColor: "#000", background: "transparent", width: 1.5, height: 50, displayValue: false });
                 } catch(e) {}
             }
         });
     };
 
-    if (typeof JsBarcode !== 'undefined' || typeof window.JsBarcode !== 'undefined') {
+    if (typeof window.JsBarcode !== 'undefined' || typeof JsBarcode !== 'undefined') {
         drawBarcodes();
     } else if (document.querySelector('.barcode-svg')) {
         import('jsbarcode').then(mod => {
