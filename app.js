@@ -866,7 +866,7 @@ async function initApp() {
             // --- ТИХИЙ ФОНОВЫЙ ПРОГРЕВ БЭКЕНДА (Render Free Tier Wake-up) ---
             const pingBackend = () => {
                 try {
-                    fetch('https://nisha-api.onrender.com/ping', { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+                    fetch('https://nisha-api.onrender.com/ping', { cache: 'no-store' }).catch(() => {});
                 } catch(e) {}
             };
             if ('requestIdleCallback' in window) {
