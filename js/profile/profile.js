@@ -130,6 +130,16 @@ async function checkSession() {
 
             if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
 
+            // Автоматическая привязка прошлых гостевых заказов при входе в аккаунт
+            const phoneToLink = uPhone || localStorage.getItem('nisha_last_phone') || '';
+            if (phoneToLink && phoneToLink.replace(/[^\d]/g, '').length >= 9) {
+                fetch('https://nisha-api.onrender.com/api/link-orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, phone: phoneToLink })
+                }).catch(() => {});
+            }
+
             // Проверка ожидающих подтверждений (OTP)
             if (localStorage.getItem('nisha_pending_otp_phone') && typeof checkPendingPhoneVerification === 'function') {
                 checkPendingPhoneVerification();
@@ -166,6 +176,30 @@ async function checkSession() {
                     table: 'orders',
                     filter: `user_id=eq.${currentUser.id}` 
                 }, payload => {
+                    if (payload.new && payload.new.id) {
+                        if (Array.isArray(globalOrdersData)) {
+                            const idx = globalOrdersData.findIndex(o => o && o.id === payload.new.id);
+                            if (idx !== -1) {
+                                globalOrdersData[idx] = { ...globalOrdersData[idx], ...payload.new };
+                            }
+                        }
+                        try {
+                            let cached = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
+                            if (Array.isArray(cached)) {
+                                const cIdx = cached.findIndex(o => o && o.id === payload.new.id);
+                                if (cIdx !== -1) {
+                                    cached[cIdx] = { ...cached[cIdx], ...payload.new };
+                                    localStorage.setItem('nisha_cached_orders', JSON.stringify(cached));
+                                }
+                            }
+                        } catch (e) {}
+                        const ordModal = document.getElementById('ordersModal');
+                        if (ordModal && ordModal.style.display === 'flex') {
+                            updateOrderTabCounters();
+                            renderFilteredOrders();
+                        }
+                    }
+
                     const newStatus = payload.new.status;
                     if (newStatus !== payload.old.status) {
                         showToast(`Заказ #${payload.new.id.split('-')[0].toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
@@ -1400,7 +1434,40 @@ async function fetchMyOrders() {
 
     if (currentUser) {
         try {
-            // А. Заказы, привязанные к ID текущего аккаунта
+            const candidatePhones = new Set();
+            if (userProfile?.phone) candidatePhones.add(userProfile.phone);
+            if (currentUser?.phone) candidatePhones.add(currentUser.phone);
+            if (currentUser?.user_metadata?.phone) candidatePhones.add(currentUser.user_metadata.phone);
+            const lastPhone = localStorage.getItem('nisha_last_phone');
+            if (lastPhone) candidatePhones.add(lastPhone);
+            const pendingPhone = localStorage.getItem('nisha_pending_otp_phone');
+            if (pendingPhone) candidatePhones.add(pendingPhone);
+            try {
+                const chkData = JSON.parse(localStorage.getItem('nisha_checkout_data') || '{}');
+                if (chkData && chkData.phone) candidatePhones.add(chkData.phone);
+            } catch (e) {}
+            try {
+                const cachedLocal = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
+                if (Array.isArray(cachedLocal)) {
+                    cachedLocal.forEach(co => { if (co && co.phone) candidatePhones.add(co.phone); });
+                }
+            } catch (e) {}
+
+            // 1. Сначала привязываем возможные гостевые заказы к аккаунту на сервере
+            for (const rawP of candidatePhones) {
+                const clean = String(rawP).replace(/[^\d]/g, '');
+                if (clean.length >= 9) {
+                    try {
+                        await fetch('https://nisha-api.onrender.com/api/link-orders', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: currentUser.id, phone: clean })
+                        });
+                    } catch (e) {}
+                }
+            }
+
+            // 2. Запрашиваем заказы, привязанные к ID текущего аккаунта
             const { data: userOrders, error: userOrdersErr } = await sb
                 .from('orders')
                 .select('*')
@@ -1411,36 +1478,34 @@ async function fetchMyOrders() {
 
             const orderMap = new Map();
             (userOrders || []).forEach(o => {
-                if (o && o.id) orderMap.set(o.id, o);
+                if (o && o.id) {
+                    orderMap.set(o.id, o);
+                    if (o.phone) candidatePhones.add(o.phone);
+                }
             });
 
-            // Б. Ищем заказы, оформленные по телефону (до входа или как гость)
-            const candidatePhones = new Set();
-            if (userProfile?.phone) candidatePhones.add(userProfile.phone);
-            if (currentUser?.phone) candidatePhones.add(currentUser.phone);
-            if (currentUser?.user_metadata?.phone) candidatePhones.add(currentUser.user_metadata.phone);
-            const lastPhone = localStorage.getItem('nisha_last_phone');
-            if (lastPhone) candidatePhones.add(lastPhone);
-            const pendingPhone = localStorage.getItem('nisha_pending_otp_phone');
-            if (pendingPhone) candidatePhones.add(pendingPhone);
-
+            // 3. Дополнительно ищем заказы по всем номерам телефона клиента (в форматах 380... и 0...)
+            const queriedSearchPhones = new Set();
             for (const rawP of candidatePhones) {
                 const clean = String(rawP).replace(/[^\d]/g, '');
                 if (clean.length >= 9) {
-                    try {
-                        const { data: phoneOrders } = await sb.rpc('get_orders_by_phone', { search_phone: clean });
-                        if (Array.isArray(phoneOrders) && phoneOrders.length > 0) {
-                            for (const po of phoneOrders) {
-                                if (po && po.id && !orderMap.has(po.id)) {
-                                    orderMap.set(po.id, po);
+                    const last9 = clean.slice(-9);
+                    const variants = ['380' + last9, '0' + last9, clean];
+                    for (const v of variants) {
+                        if (queriedSearchPhones.has(v)) continue;
+                        queriedSearchPhones.add(v);
+                        try {
+                            const { data: phoneOrders } = await sb.rpc('get_orders_by_phone', { search_phone: v });
+                            if (Array.isArray(phoneOrders) && phoneOrders.length > 0) {
+                                for (const po of phoneOrders) {
+                                    if (po && po.id && !orderMap.has(po.id)) {
+                                        orderMap.set(po.id, po);
+                                    }
                                 }
                             }
-                        }
-                    } catch (rpcErr) {
-                        console.warn('[ORDERS] Ошибка поиска по телефону:', rpcErr);
+                        } catch (rpcErr) {}
                     }
 
-                    // Фоновая привязка сиротских заказов к аккаунту через бэкенд
                     fetch('https://nisha-api.onrender.com/api/link-orders', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },

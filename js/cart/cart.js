@@ -1362,6 +1362,21 @@ async function executeOrderFinal(emailToSave) {
         localStorage.setItem('nisha_last_phone', phone);
         localStorage.setItem('nisha_last_order', Date.now());
 
+        if (user && user.id && phone) {
+            fetch('https://nisha-api.onrender.com/api/link-orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id, phone: phone })
+            }).catch(() => {});
+
+            if (typeof window.userProfile === 'object' && window.userProfile && !window.userProfile.phone) {
+                window.userProfile.phone = phone;
+                sb.from('profiles').update({ phone: phone }).eq('id', user.id).then(() => {
+                    if (typeof window.renderProfilePhone === 'function') window.renderProfilePhone(phone);
+                }).catch(() => {});
+            }
+        }
+
         try {
             let cached = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
             if (!Array.isArray(cached)) cached = [];

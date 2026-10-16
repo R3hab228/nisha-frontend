@@ -227,6 +227,7 @@ async function checkPhoneAuth() {
             // Номер уже подтвержден
             otpVerified = true;
             window.otpVerified = true;
+            try { localStorage.setItem('nisha_last_phone', cleanPhone); } catch(e) {}
             if (btnSubmit) {
                 btnSubmit.style.opacity = '1';
                 btnSubmit.style.pointerEvents = 'auto';
