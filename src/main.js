@@ -2,26 +2,11 @@
 // NISHA STORE - MAIN VITE ENTRY POINT
 // ==========================================
 
-// 1. Стили
+// 1. Инициализация всех внешних библиотек (ДОЛЖНА выполняться строго первой)
+import './init-libs.js';
+
+// 2. Стили
 import '../style.css';
-
-// 2. Внешние библиотеки (упакованные через npm и привязанные к window для 100% обратной совместимости)
-import { createClient } from '@supabase/supabase-js';
-import DOMPurify from 'dompurify';
-import Fuse from 'fuse.js';
-import IMask from 'imask';
-import Lenis from 'lenis';
-import i18next from 'i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-
-window.supabase = { createClient };
-window.createClient = createClient;
-window.DOMPurify = DOMPurify;
-window.Fuse = Fuse;
-window.IMask = IMask;
-window.Lenis = Lenis;
-window.i18next = i18next;
-window.i18nextBrowserLanguageDetector = LanguageDetector;
 
 // 3. Подключение конфигурации и модулей приложения в строгом порядке зависимостей
 import '../config.js';

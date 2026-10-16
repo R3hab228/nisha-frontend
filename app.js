@@ -386,17 +386,20 @@ window.startSearchTypewriter = startSearchTypewriter;
 let lenis;
 
 if (window.innerWidth > 900) {
-    lenis = new Lenis({
-        lerp: 0.14, 
-        wheelMultiplier: 1.25, 
-        smoothWheel: true
-    });
+    const LenisClass = window.Lenis || (typeof Lenis !== 'undefined' ? Lenis : null);
+    if (LenisClass) {
+        lenis = new LenisClass({
+            lerp: 0.14, 
+            wheelMultiplier: 1.25, 
+            smoothWheel: true
+        });
 
-    function raf(time) {
-        lenis.raf(time);
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
         requestAnimationFrame(raf);
     }
-    requestAnimationFrame(raf);
 }
 
 // Железобетонные функции остановки и запуска
@@ -478,20 +481,31 @@ if (!SUPABASE_ANON_KEY) {
     console.error("ОШИБКА: Ключ Supabase пустой. База данных недоступна.");
     setTimeout(() => showToast('Критическая ошибка: Нет связи с БД', 'error'), 2000);
 } else {
-    const { createClient } = supabase;
-    _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        global: {
-            fetch: (url, options) => {
-                // Используем CDN ТОЛЬКО для главного списка товаров (limit=1000). Точечные запросы идут напрямую!
-                if (typeof url === 'string' && url.includes('/rest/v1/items') && url.includes('limit=1000') && !url.includes('id=eq.') && (!options || options.method === 'GET' || !options.method)) {
-                    url = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'nisha-cdn.mtyagniryadno.workers.dev');
+    const clientCreator = (typeof window.createClient === 'function')
+        ? window.createClient
+        : ((window.supabase && typeof window.supabase.createClient === 'function')
+            ? window.supabase.createClient
+            : ((typeof supabase !== 'undefined' && supabase && typeof supabase.createClient === 'function')
+                ? supabase.createClient
+                : (typeof createClient === 'function' ? createClient : null)));
+
+    if (!clientCreator) {
+        console.error("ОШИБКА: createClient не найден. База данных недоступна.");
+    } else {
+        _supabase = clientCreator(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            global: {
+                fetch: (url, options) => {
+                    // Используем CDN ТОЛЬКО для главного списка товаров (limit=1000). Точечные запросы идут напрямую!
+                    if (typeof url === 'string' && url.includes('/rest/v1/items') && url.includes('limit=1000') && !url.includes('id=eq.') && (!options || options.method === 'GET' || !options.method)) {
+                        url = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'nisha-cdn.mtyagniryadno.workers.dev');
+                    }
+                    return fetch(url, options);
                 }
-                return fetch(url, options);
             }
-        }
-    });
-    window._supabase = _supabase;
-    if (typeof window.initAuthListener === 'function') window.initAuthListener();
+        });
+        window._supabase = _supabase;
+        if (typeof window.initAuthListener === 'function') window.initAuthListener();
+    }
 }
 window.clientFingerprint = clientFingerprint;
 // onAuthStateChange and session refresh moved to js/profile/profile.js
