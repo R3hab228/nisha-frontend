@@ -801,7 +801,7 @@ async function loadAllItems() {
 
     // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров, включая description)
     const { data, error } = await sb.from('items')
-        .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop')
+        .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable')
         .limit(1000)
         .order('created_at', { ascending: false });
     
@@ -1065,7 +1065,7 @@ async function syncCriticalStatuses() {
         const newIds = data.filter(d => !currentIdSet.has(d.id)).map(d => d.id);
         if (newIds.length > 0) {
             const { data: fullNewItems } = await sb.from('items')
-                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop')
+                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable')
                 .in('id', newIds);
 
             if (fullNewItems && fullNewItems.length > 0) {
@@ -2371,7 +2371,10 @@ async function startOnboardingTour() {
             activeSteps.push({ element: '.fab-propose', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.prop_title') : 'ПРЕДЛОЖКА', description: typeof i18next !== 'undefined' ? i18next.t('tour.prop_desc') : 'Продать свою вещь' } });
         }
 
-        const driverObj = window.driver.js.driver({
+        const driverFn = (window.driver && window.driver.js && window.driver.js.driver) || (window.driver && window.driver.driver) || (typeof window.driver === 'function' ? window.driver : null);
+        if (!driverFn) return;
+
+        const driverObj = driverFn({
             showProgress: true,
             overlayColor: 'transparent',
             overlayOpacity: 0,

@@ -146,12 +146,12 @@ async function openProductModalById(itemId) {
     const sb = getSupabase();
     if (sb) {
         try {
-            let { data } = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop').eq('id', itemId).limit(1);
+            let { data } = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
             let fullItem = null;
             if (data && data.length > 0) {
                 fullItem = data[0];
             } else {
-                let { data: archData } = await sb.from('archived_items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop').eq('id', itemId).limit(1);
+                let { data: archData } = await sb.from('archived_items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
                 if (archData && archData.length > 0) fullItem = archData[0];
             }
             
