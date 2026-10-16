@@ -1605,6 +1605,31 @@ async function fetchMyOrders() {
     updateOrderTabCounters();
     ensureOrderImagesLoaded();
     renderFilteredOrders();
+
+    // Синхронизация статуса отзывов из БД: если отзыв уже был оставлен, он окончательно блокируется
+    if (Array.isArray(globalOrdersData) && globalOrdersData.length > 0 && sb) {
+        const completedIds = globalOrdersData.filter(o => (o.status || '').toLowerCase() === 'завершен').map(o => o.id);
+        if (completedIds.length > 0) {
+            sb.from('reviews').select('order_id').in('order_id', completedIds).then(({ data: revs }) => {
+                if (Array.isArray(revs) && revs.length > 0) {
+                    let rOrders = [];
+                    try { rOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+                    if (!Array.isArray(rOrders)) rOrders = [];
+                    let hasNew = false;
+                    revs.forEach(r => {
+                        if (r.order_id && !rOrders.includes(r.order_id)) {
+                            rOrders.push(r.order_id);
+                            hasNew = true;
+                        }
+                    });
+                    if (hasNew) {
+                        try { localStorage.setItem('nisha_reviewed_orders', JSON.stringify(rOrders)); } catch(e) {}
+                        renderFilteredOrders();
+                    }
+                }
+            }).catch(() => {});
+        }
+    }
 }
 window.fetchMyOrders = fetchMyOrders;
 
@@ -1880,11 +1905,7 @@ function renderFilteredOrders() {
                     `;
                 } else {
                     reviewBtnHtml = `
-                        <div style="margin-top: 10px; cursor: pointer; color: #777; font-size: 12px; font-family: var(--font-mono); text-align: center; transition: 0.2s;" 
-                             onclick="if(typeof closeModal==='function') closeModal('ordersModal'); if(typeof promptOrderReview==='function') promptOrderReview('${order.id}', '${safeName}', '${firstItemImg}', '${firstItem.id}')"
-                             title="Нажмите, чтобы изменить или оставить отзыв"
-                             onmouseover="this.style.color='var(--accent-green)';"
-                             onmouseout="this.style.color='#777';">
+                        <div style="margin-top: 10px; color: #666; font-size: 12px; font-family: var(--font-mono); text-align: center; user-select: none; cursor: default;">
                             [✔] ОТЗЫВ ОСТАВЛЕН
                         </div>
                     `;

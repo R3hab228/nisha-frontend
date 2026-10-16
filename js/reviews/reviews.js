@@ -171,6 +171,15 @@ window.addEventListener('resize', () => {
 
 // Умный сбор отзывов за полученные посылки
 function promptOrderReview(orderId, itemName, itemImage, itemId) {
+    if (orderId) {
+        let reviewedOrders = [];
+        try { reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+        if (Array.isArray(reviewedOrders) && reviewedOrders.includes(orderId)) {
+            showToast('Отзыв по этому заказу уже оставлен.', 'info');
+            return;
+        }
+    }
+
     const orderInput = document.getElementById('autoReviewOrderId');
     if (orderInput) orderInput.value = orderId;
 
@@ -212,6 +221,16 @@ async function submitAutoReview() {
     const itemImage = document.getElementById('autoReviewItemImage')?.value;
     const itemId = document.getElementById('autoReviewItemId')?.value;
 
+    if (orderId) {
+        let reviewedOrders = [];
+        try { reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+        if (Array.isArray(reviewedOrders) && reviewedOrders.includes(orderId)) {
+            showToast('Отзыв по этому заказу уже оставлен.', 'info');
+            closeModal('autoReviewModal');
+            return;
+        }
+    }
+
     if (text.length < 3) {
         showToast('Текст слишком короткий!', 'error');
         return;
@@ -244,10 +263,17 @@ async function submitAutoReview() {
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
             showToast('Отзыв опубликован! Спасибо.', 'success');
-            let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
-            reviewedOrders.push(orderId);
-            localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
+            let reviewedOrders = [];
+            try { reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+            if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
+            if (orderId && !reviewedOrders.includes(orderId)) {
+                reviewedOrders.push(orderId);
+            }
+            try { localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders)); } catch(e) {}
             closeModal('autoReviewModal');
+            if (typeof renderFilteredOrders === 'function') {
+                renderFilteredOrders();
+            }
         } else {
             showToast('Ошибка: ' + error.message, 'error');
         }
