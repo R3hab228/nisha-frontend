@@ -396,8 +396,10 @@ function openProductModal(item) {
     // Поддержка ФОТО и ВИДЕО (.mp4)
     if (wrapper && thumbs) {
         if (mediaList.length > 0) {
+            const toCDN = window.toCDN || ((u) => u);
+            let slidesHtml = '';
+            let thumbsHtml = '';
             mediaList.forEach((url, index) => {
-                const toCDN = window.toCDN || ((u) => u);
                 const cdnUrl = toCDN(url);
                 const isVideo = typeof cdnUrl === 'string' && cdnUrl.endsWith('.mp4');
                 let currentThumb = (item.thumbnails && item.thumbnails[index]) ? toCDN(item.thumbnails[index]) : cdnUrl;
@@ -407,7 +409,7 @@ function openProductModal(item) {
                 }
                 
                 if (isVideo) {
-                    wrapper.innerHTML += `
+                    slidesHtml += `
                         <div class="slide img-8bit-loading" style="background:#000; display:flex; justify-content:center; align-items:center;">
                             <video 
                                 class="modal-video-player"
@@ -421,22 +423,24 @@ function openProductModal(item) {
                                 style="width:100%; height:100%; max-height:400px; object-fit:contain; opacity:0;"
                                 oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading');"
                             >
-                                <source src="${url}#t=0.001" type="video/mp4">
+                                <source src="${cdnUrl}#t=0.001" type="video/mp4">
                             </video>
                         </div>`;
                 } else {
                     const isFirst = (index === 0);
                     const isSecond = (index === 1);
                     const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
-                    wrapper.innerHTML += `
+                    slidesHtml += `
                         <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide skeleton" style="background-image:none; display:flex; align-items:center; justify-content:center; border: 1px solid #222;">
                             <img src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.25s ease-in-out;" 
                             onload="this.style.opacity='1'; this.parentElement.setAttribute('data-pswp-width', this.naturalWidth); this.parentElement.setAttribute('data-pswp-height', this.naturalHeight); this.parentElement.classList.remove('skeleton'); this.parentElement.style.border='none';">
                         </a>`;
                 }
                 
-                thumbs.innerHTML += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" onclick="setSlide(${index})">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
+                thumbsHtml += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" onclick="setSlide(${index})">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
             });
+            wrapper.innerHTML = slidesHtml;
+            thumbs.innerHTML = thumbsHtml;
         } else {
             wrapper.innerHTML = `<a class="slide" style="background:#111; pointer-events:none;">НЕТ ФОТО</a>`;
         }
@@ -989,7 +993,7 @@ window.shareItem = shareItem;
 function addToHistory(item) {
     let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
     hist = hist.filter(i => i.id !== item.id);
-    const img = (item.images && item.images.length > 0) ? item.images[0] : '';
+    const img = getOptimizedImg(item, true) || ((item.images && item.images.length > 0) ? item.images[0] : '');
     
     hist.unshift({ 
         id: item.id, 
@@ -1032,6 +1036,8 @@ function renderHistory() {
     container.innerHTML = '';
     
     const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
+    const fragment = document.createDocumentFragment();
+    const toCDN = window.toCDN || ((u) => u);
 
     hist.forEach(h => {
         const realItem = catalog.find(i => i.id === h.id);
@@ -1039,7 +1045,7 @@ function renderHistory() {
 
         if (hideUnavailable && currentStatus !== 'available') return;
 
-        const optImg = h.img;
+        const optImg = realItem ? (getOptimizedImg(realItem, true) || toCDN(h.img)) : toCDN(h.img);
         const isVideo = optImg && optImg.endsWith('.mp4');
         
         let finalPriceHTML = '';
@@ -1094,7 +1100,7 @@ function renderHistory() {
                 <div class="history-price">${finalPriceHTML}</div>
             </div>`;
             
-        container.appendChild(card);
+        fragment.appendChild(card);
 
         if (window.innerWidth > 900) {
             if (typeof VanillaTilt !== 'undefined') {
@@ -1108,6 +1114,8 @@ function renderHistory() {
             }
         }
     });
+
+    container.appendChild(fragment);
 
     const currentUser = getUser();
     const sb = getSupabase();
@@ -1321,8 +1329,10 @@ window.toggleQASection = toggleQASection;
 
 // Подписка на обновление вопросов в реальном времени
 function initProductQASubscription() {
+    if (window._productQaSubInitialized) return;
     const sb = getSupabase();
     if (sb) {
+        window._productQaSubInitialized = true;
         sb.channel('public-qa-updates')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'item_questions' }, payload => {
                 const active = window.currentOpenedItem || currentOpenedItem;

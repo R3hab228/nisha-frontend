@@ -102,7 +102,10 @@ function initSupportRepliesSystem() {
                 if (replErr) return;
                 if (replies && replies.length > 0) {
                     console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
+                    window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
                     replies.forEach(r => {
+                        if (r.id && window._shownSupportReplyIds.has(r.id)) return;
+                        if (r.id) window._shownSupportReplyIds.add(r.id);
                         showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
                             activeSb.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
@@ -134,6 +137,10 @@ function initSupportRepliesSystem() {
             }, payload => {
                 console.log('[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение Online:', payload.new);
                 const r = payload.new;
+                if (!r) return;
+                window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
+                if (r.id && window._shownSupportReplyIds.has(r.id)) return;
+                if (r.id) window._shownSupportReplyIds.add(r.id);
                 showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
                     sb.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                 });

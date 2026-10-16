@@ -114,7 +114,8 @@ function _displayNewItemToast(item, container) {
 
     let html = '';
     if (imgUrl) {
-        html += `<div class="toast-item-thumb" style="background-image: url('${safeToastEscape(imgUrl)}');"></div>`;
+        const cdnImg = (typeof window.toCDN === 'function') ? window.toCDN(imgUrl) : imgUrl;
+        html += `<div class="toast-item-thumb" style="background-image: url('${safeToastEscape(cdnImg)}');"></div>`;
     }
     html += `
         <div class="toast-item-content">

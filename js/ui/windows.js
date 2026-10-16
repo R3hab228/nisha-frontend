@@ -166,10 +166,16 @@ function executeCloseModal(id) {
     if (modal.classList.contains('closing')) return;
     if (modal.style.display === 'none' && !modal.style.opacity) return;
 
-    // Мгновенная разблокировка скролла и отключение кликов по закрывающемуся оверлею
+    // Мгновенная разблокировка скролла (только если нет других открытых модальных окон) и отключение кликов по закрывающемуся оверлею
     modal.style.pointerEvents = 'none';
-    document.body.style.overflow = 'auto';
-    if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
+    const hasOtherOpenModal = () => Array.from(document.querySelectorAll('.modal-overlay')).some(m => {
+        if (m === modal || m.classList.contains('closing')) return false;
+        return m.style.display === 'flex' || m.style.display === 'block';
+    });
+    if (!hasOtherOpenModal()) {
+        document.body.style.overflow = 'auto';
+        if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
+    }
 
     // Мгновенная пауза любых видео в закрывающемся окне
     const modalVideos = modal.querySelectorAll('video');
@@ -227,6 +233,11 @@ function executeCloseModal(id) {
         if (id === 'checkoutModal' && window.otpPollInterval) {
             clearInterval(window.otpPollInterval);
             window.otpPollInterval = null;
+        }
+
+        if (!hasOtherOpenModal()) {
+            document.body.style.overflow = 'auto';
+            if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
         }
 
         // Фоновые задачи (история и рассылки) запускаем безопасно в idle-потоке без фризов UI
@@ -316,6 +327,7 @@ function initMobileSwipe() {
                 if (e.cancelable) e.preventDefault(); 
                 
                 requestAnimationFrame(() => {
+                    if (!isDragging) return;
                     modalWin.style.transform = `translateY(${diffY}px)`;
                     let opacity = 1 - (diffY / (window.innerHeight * 0.7));
                     overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0.15, opacity * 0.95)})`;
@@ -326,7 +338,7 @@ function initMobileSwipe() {
             }
         }, { passive: false });
 
-        modalWin.addEventListener('touchend', () => {
+        const handleTouchFinish = () => {
             if (window.innerWidth > 900) return;
             
             if (isDragging) {
@@ -345,7 +357,10 @@ function initMobileSwipe() {
                     overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
                 }
             }
-        }, { passive: true });
+        };
+
+        modalWin.addEventListener('touchend', handleTouchFinish, { passive: true });
+        modalWin.addEventListener('touchcancel', handleTouchFinish, { passive: true });
     });
 }
 window.initMobileSwipe = initMobileSwipe;
@@ -378,15 +393,13 @@ function initWindowOverlayListeners() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         // 1. Закрытие терминальных окон подтверждения или алертов
-        const confirmBox = document.getElementById('confirmTerminalModal');
-        if (confirmBox && confirmBox.parentNode) {
-            confirmBox.remove();
-            return;
-        }
-        const termAlert = document.getElementById('customTerminalAlert');
-        if (termAlert && termAlert.parentNode) {
-            termAlert.remove();
-            return;
+        const termOverlays = document.querySelectorAll('.confirm-modal-overlay, .terminal-modal-overlay, #confirmTerminalModal, #customTerminalAlert');
+        if (termOverlays.length > 0) {
+            const topTerm = termOverlays[termOverlays.length - 1];
+            if (topTerm && topTerm.parentNode) {
+                topTerm.remove();
+                return;
+            }
         }
 
         // 2. Оверлеи успеха или подсказки email

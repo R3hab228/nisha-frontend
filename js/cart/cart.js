@@ -35,7 +35,7 @@ async function getNPStorageAsync(key) {
     if (typeof window.idbGet === 'function') {
         try {
             const entry = await window.idbGet('np_' + key);
-            if (entry && entry.ts && (Date.now() - entry.ts < NP_CACHE_TTL_MS) && Array.isArray(entry.data)) {
+            if (entry && entry.ts && (Date.now() - entry.ts < NP_CACHE_TTL_MS) && entry.data) {
                 return entry.data;
             }
         } catch (e) {}
@@ -55,13 +55,13 @@ function getNPStorage(key) {
 }
 
 function setNPStorage(key, val) {
-    if (!val || !Array.isArray(val)) return;
-    // 1. Надежное сохранение в IndexedDB (поддерживает Киев и мегаполисы > 1500 отделений)
+    if (!val || typeof val !== 'object') return;
+    // 1. Надежное сохранение в IndexedDB (поддерживает Киев и мегаполисы > 1500 отделений, а также объекты поиска городов)
     if (typeof window.idbSet === 'function') {
         window.idbSet('np_' + key, { ts: Date.now(), data: val }).catch(() => {});
     }
     // 2. Сохранение в sessionStorage (если помещается)
-    if (val.length <= 1500) {
+    if (!Array.isArray(val) || val.length <= 1500) {
         try {
             sessionStorage.setItem('nisha_np_' + key, JSON.stringify(val));
         } catch(e) {}
@@ -1388,7 +1388,7 @@ async function executeOrderFinal(emailToSave) {
                 branch: branch,
                 status: 'В обработке',
                 total_sum: currentCart.reduce((sum, i) => sum + (i.price || 0), 0),
-                items: currentCart,
+                items: currentCart.map(i => ({ ...i, currentPrice: i.currentPrice !== undefined ? i.currentPrice : i.price })),
                 created_at: new Date().toISOString()
             };
             cached = [newOrderObj, ...cached.filter(c => c && c.id !== orderId)];

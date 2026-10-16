@@ -86,7 +86,14 @@ async function checkSession() {
                             i18next.changeLanguage(userProfile.language).then(() => {
                                 if (typeof updateContentLanguage === 'function') updateContentLanguage();
                                 const footLang = document.getElementById('currentLangLabelFooter');
-                                if (footLang) footLang.innerText = '[' + userProfile.language.toUpperCase() + '] ▼';
+                                if (footLang) {
+                                    const span = footLang.querySelector('span');
+                                    if (span) span.innerText = '[' + userProfile.language.toUpperCase() + '] ▼';
+                                    const flagImg = document.getElementById('currentFlagImg');
+                                    if (flagImg && typeof getFlagUrlByLang === 'function') {
+                                        flagImg.src = getFlagUrlByLang(userProfile.language);
+                                    }
+                                }
                             });
                         }
                     }
@@ -304,7 +311,6 @@ window.checkSession = checkSession;
 // ==========================================
 
 function toggleRegMode(isModal = false) {
-    isRegMode = !isRegMode;
     const p = isModal ? 'modal' : '';
     const a = isModal ? 'modalAuth' : 'auth';
 
@@ -314,7 +320,11 @@ function toggleRegMode(isModal = false) {
     const btnBackLogin = document.getElementById(p ? 'modalBtnBackLogin' : 'btnBackLogin');
     const authUsername = document.getElementById(a + 'Username');
 
-    if (isRegMode) {
+    const currentlyReg = btnRegister && btnRegister.style.display === 'block';
+    const nextRegMode = !currentlyReg;
+    isRegMode = nextRegMode;
+
+    if (nextRegMode) {
         if (btnLogin) btnLogin.style.display = 'none';
         if (btnShowReg) btnShowReg.style.display = 'none';
         if (btnRegister) btnRegister.style.display = 'block';
@@ -1446,28 +1456,15 @@ async function fetchMyOrders() {
                 const chkData = JSON.parse(localStorage.getItem('nisha_checkout_data') || '{}');
                 if (chkData && chkData.phone) candidatePhones.add(chkData.phone);
             } catch (e) {}
+            let cachedLocal = [];
             try {
-                const cachedLocal = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
+                cachedLocal = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
                 if (Array.isArray(cachedLocal)) {
                     cachedLocal.forEach(co => { if (co && co.phone) candidatePhones.add(co.phone); });
                 }
             } catch (e) {}
 
-            // 1. Сначала привязываем возможные гостевые заказы к аккаунту на сервере
-            for (const rawP of candidatePhones) {
-                const clean = String(rawP).replace(/[^\d]/g, '');
-                if (clean.length >= 9) {
-                    try {
-                        await fetch('https://nisha-api.onrender.com/api/link-orders', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ userId: currentUser.id, phone: clean })
-                        });
-                    } catch (e) {}
-                }
-            }
-
-            // 2. Запрашиваем заказы, привязанные к ID текущего аккаунта
+            // 1. Запрашиваем заказы, привязанные к ID текущего аккаунта (мгновенно из Supabase)
             const { data: userOrders, error: userOrdersErr } = await sb
                 .from('orders')
                 .select('*')
@@ -1484,11 +1481,13 @@ async function fetchMyOrders() {
                 }
             });
 
-            // 3. Дополнительно ищем заказы по всем номерам телефона клиента (в форматах 380... и 0...)
+            // 2. Дополнительно ищем заказы по всем номерам телефона клиента (в форматах 380... и 0...)
             const queriedSearchPhones = new Set();
+            const uniqueCleanPhones = new Set();
             for (const rawP of candidatePhones) {
                 const clean = String(rawP).replace(/[^\d]/g, '');
                 if (clean.length >= 9) {
+                    uniqueCleanPhones.add(clean);
                     const last9 = clean.slice(-9);
                     const variants = ['380' + last9, '0' + last9, clean];
                     for (const v of variants) {
@@ -1505,13 +1504,49 @@ async function fetchMyOrders() {
                             }
                         } catch (rpcErr) {}
                     }
+                }
+            }
 
+            // Сохраняем также локально закэшированные заказы с этого устройства, если они еще не попали в выборку
+            if (Array.isArray(cachedLocal)) {
+                cachedLocal.forEach(co => {
+                    if (co && co.id && !orderMap.has(co.id)) {
+                        orderMap.set(co.id, co);
+                    }
+                });
+            }
+
+            // 3. Неблокирующая фоновая привязка гостевых заказов к user_id на сервере (без зависания на холодном старте Render)
+            if (uniqueCleanPhones.size > 0) {
+                const uid = currentUser.id;
+                Promise.all(Array.from(uniqueCleanPhones).map(clean =>
                     fetch('https://nisha-api.onrender.com/api/link-orders', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: currentUser.id, phone: clean })
-                    }).catch(() => {});
-                }
+                        body: JSON.stringify({ userId: uid, phone: clean })
+                    }).then(r => r.ok ? r.json() : null).catch(() => null)
+                )).then(async (results) => {
+                    const newlyLinked = results.some(r => r && r.count > 0);
+                    if (newlyLinked && currentUser && currentUser.id === uid) {
+                        const { data: refreshed } = await sb.from('orders').select('*').eq('user_id', uid).order('created_at', { ascending: false });
+                        if (Array.isArray(refreshed) && refreshed.length > 0) {
+                            let added = false;
+                            refreshed.forEach(ro => {
+                                if (ro && ro.id && !orderMap.has(ro.id)) {
+                                    orderMap.set(ro.id, ro);
+                                    added = true;
+                                }
+                            });
+                            if (added) {
+                                globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                                try { localStorage.setItem('nisha_cached_orders', JSON.stringify(globalOrdersData)); } catch(e) {}
+                                updateOrderTabCounters();
+                                ensureOrderImagesLoaded();
+                                renderFilteredOrders();
+                            }
+                        }
+                    }
+                }).catch(() => {});
             }
 
             globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -1782,12 +1817,13 @@ function renderFilteredOrders() {
             order.items.forEach(item => {
                 const itemImg = getOrderItemImage(item);
                 const imgStyle = itemImg ? `background-image: url('${itemImg}');` : '';
+                const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);
                 itemsHtml += `
                     <div class="order-item-row" onclick="if(typeof openProductModalById==='function') openProductModalById('${item.id}')" title="Открыть карточку товара">
                         <div class="order-item-img" data-item-id="${item.id}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
                         <div class="order-item-details">
                             <div class="order-item-name">${item.name}</div>
-                            <div class="order-item-meta"><span>Размер: ${item.size}</span><span class="order-item-price">${item.currentPrice} грн</span></div>
+                            <div class="order-item-meta"><span>Размер: ${item.size || '—'}</span><span class="order-item-price">${itemPrice} грн</span></div>
                         </div>
                     </div>`;
             });

@@ -8,8 +8,9 @@ async function openReviewImage(url) {
         await ensurePhotoSwipe();
     }
     if (!window.PhotoSwipeLightbox) return;
+    const cdnUrl = (typeof window.toCDN === 'function') ? window.toCDN(url) : url;
     const lightbox = new window.PhotoSwipeLightbox({
-        dataSource: [{ src: url, width: 1000, height: 1000 }],
+        dataSource: [{ src: cdnUrl, width: 1000, height: 1000 }],
         pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.min.js')
     });
     lightbox.init();
@@ -48,14 +49,16 @@ async function openReviewsModal() {
         }
         container.classList.remove('is-empty');
         
+        const toCDN = window.toCDN || ((u) => u);
         let html = ''; 
         data.forEach(rev => {
             const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
             const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : (rev.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : (rev.user_name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             
-            const clickAction = rev.item_image ? `onclick="openReviewImage('${rev.item_image}')"` : '';
-            const imgHtml = rev.item_image ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${rev.item_image}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
+            const revImg = rev.item_image ? toCDN(rev.item_image) : '';
+            const clickAction = revImg ? `onclick="openReviewImage('${revImg}')"` : '';
+            const imgHtml = revImg ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${revImg}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
             
             const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
             const productLinkAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')" title="Открыть товар"` : '';
@@ -202,6 +205,7 @@ window.promptOrderReview = promptOrderReview;
 
 // Отправка авто-отзыва по заказу
 async function submitAutoReview() {
+    if (window._isSubmittingAutoReview) return;
     const inputEl = document.getElementById('autoReviewInput');
     const text = inputEl ? inputEl.value.trim() : '';
     const orderId = document.getElementById('autoReviewOrderId')?.value;
@@ -223,27 +227,32 @@ async function submitAutoReview() {
     const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
     if (!sb) return;
 
-    // Пишем в БД отзыв вместе с ID заказа, фоткой и ID ТОВАРА
-    const { error } = await sb.from('reviews').insert([{ 
-        user_name: uName, 
-        text: text, 
-        rating: 5,
-        order_id: orderId,
-        item_image: (itemImage && itemImage !== '') ? itemImage : null,
-        item_id: (itemId && itemId !== '') ? itemId : null
-    }]);
-    
-    if (!error) {
-        window._myLastReviewText = text;
-        reviewsCache.data = null;
-        reviewsCache.timestamp = 0;
-        showToast('Отзыв опубликован! Спасибо.', 'success');
-        let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
-        reviewedOrders.push(orderId);
-        localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
-        closeModal('autoReviewModal');
-    } else {
-        showToast('Ошибка: ' + error.message, 'error');
+    window._isSubmittingAutoReview = true;
+    try {
+        // Пишем в БД отзыв вместе с ID заказа, фоткой и ID ТОВАРА
+        const { error } = await sb.from('reviews').insert([{ 
+            user_name: uName, 
+            text: text, 
+            rating: 5,
+            order_id: orderId,
+            item_image: (itemImage && itemImage !== '') ? itemImage : null,
+            item_id: (itemId && itemId !== '') ? itemId : null
+        }]);
+        
+        if (!error) {
+            window._myLastReviewText = text;
+            reviewsCache.data = null;
+            reviewsCache.timestamp = 0;
+            showToast('Отзыв опубликован! Спасибо.', 'success');
+            let reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]');
+            reviewedOrders.push(orderId);
+            localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders));
+            closeModal('autoReviewModal');
+        } else {
+            showToast('Ошибка: ' + error.message, 'error');
+        }
+    } finally {
+        window._isSubmittingAutoReview = false;
     }
 }
 window.submitAutoReview = submitAutoReview;
@@ -396,13 +405,14 @@ function initReviewsRealtime(sb) {
 
                 // 1. Интерактивный пуш-тост на сайте с кликом для открытия модалки
                 if (typeof showToast === 'function') {
-                    showToast(toastMsg, 'success', rev.item_image || null, () => {
+                    const revImgCdn = (rev.item_image && typeof window.toCDN === 'function') ? window.toCDN(rev.item_image) : (rev.item_image || null);
+                    showToast(toastMsg, 'success', revImgCdn, () => {
                         openReviewsModal();
                     });
                 }
 
                 if (typeof triggerHaptic === 'function') {
-                    triggerHaptic('selection');
+                    triggerHaptic('light');
                 }
 
                 // 2. Системный Web Push / Notification через Service Worker (для фона/блокировки экрана)

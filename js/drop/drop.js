@@ -347,7 +347,8 @@ async function submitProposal() {
         if (propToken) formData.append('turnstileToken', propToken);
         
         compressedFiles.forEach((file, index) => {
-            formData.append('images', file, `prop_${index}.jpg`);
+            const ext = (file && file.type && file.type.startsWith('video/')) ? 'mp4' : 'jpg';
+            formData.append('images', file, `prop_${index}.${ext}`);
         });
         
         // Отправка на бэкенд

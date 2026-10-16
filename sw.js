@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v201';
+const CACHE_NAME = 'nisha-cache-v202';
 const IMAGE_CACHE = 'nisha-images-v4';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
@@ -96,7 +96,10 @@ self.addEventListener('fetch', event => {
                 return networkResponse;
             }).catch(() => {
                 // Если нет сети, отдаем из кэша (точный запрос с параметрами, без ignoreSearch)
-                return caches.match(event.request);
+                return caches.match(event.request).then(cached => cached || new Response('[]', {
+                    status: 503,
+                    headers: { 'Content-Type': 'application/json' }
+                }));
             })
         );
         return; 
