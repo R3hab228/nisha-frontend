@@ -1235,21 +1235,15 @@ async function submitQuestion(itemId) {
     }
 
     try {
-        const res = await fetch('https://nisha-api.onrender.com/api/question', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                userId: currentUser.id,
-                email: currentUser.email || 'Неизвестно',
-                itemId: itemId, 
-                itemName: itemName, 
-                questionText: text 
-            })
-        });
+        const data = await window.apiClient.post('/api/question', {
+            userId: currentUser.id,
+            email: currentUser.email || 'Неизвестно',
+            itemId: itemId,
+            itemName: itemName,
+            questionText: text
+        }, { timeout: 12000, retries: 1 });
 
-        const data = await res.json();
-        
-        if (data.success) {
+        if (data && data.success) {
             questionData.count += 1;
             localStorage.setItem('nisha_questions', JSON.stringify(questionData));
             input.value = '';

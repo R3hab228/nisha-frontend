@@ -140,11 +140,10 @@ async function checkSession() {
             // Автоматическая привязка прошлых гостевых заказов при входе в аккаунт
             const phoneToLink = uPhone || localStorage.getItem('nisha_last_phone') || '';
             if (phoneToLink && phoneToLink.replace(/[^\d]/g, '').length >= 9) {
-                fetch('https://nisha-api.onrender.com/api/link-orders', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id, phone: phoneToLink })
-                }).catch(() => {});
+                window.apiClient.post('/api/link-orders', {
+                    userId: currentUser.id,
+                    phone: phoneToLink
+                }, { timeout: 8000, dedupe: true }).catch(() => {});
             }
 
             // Проверка ожидающих подтверждений (OTP)
@@ -1524,11 +1523,10 @@ async function fetchMyOrders() {
             if (uniqueCleanPhones.size > 0) {
                 const uid = currentUser.id;
                 Promise.all(Array.from(uniqueCleanPhones).map(clean =>
-                    fetch('https://nisha-api.onrender.com/api/link-orders', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: uid, phone: clean })
-                    }).then(r => r.ok ? r.json() : null).catch(() => null)
+                    window.apiClient.post('/api/link-orders', {
+                        userId: uid,
+                        phone: clean
+                    }, { timeout: 8000, dedupe: true }).catch(() => null)
                 )).then(async (results) => {
                     const newlyLinked = results.some(r => r && r.count > 0);
                     if (newlyLinked && currentUser && currentUser.id === uid) {

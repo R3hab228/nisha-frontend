@@ -24,9 +24,11 @@ async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
     let lastError = null;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            const res = await fetch('https://nisha-api.onrender.com/api/propose-files', {
+            const res = await window.apiClient.fetchRaw('/api/propose-files', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                timeout: 45000,
+                retries: 0
             });
             if (res.ok) {
                 return true;

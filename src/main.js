@@ -16,6 +16,7 @@ import '../style.css';
 
 // 5. Подключение конфигурации и базовых модулей ядра
 import '../config.js';
+import '../js/core/apiClient.js';
 import '../js/core/helpers.js';
 import '../js/core/i18n.js';
 import '../js/core/pwa-network.js';

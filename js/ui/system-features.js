@@ -160,28 +160,12 @@ async function initHitCounter() {
 
         const isNewVisitToday = (lastVisitDate !== todayDate);
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4500);
-
         try {
-            const res = await fetch('https://nisha-api.onrender.com/api/hit', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json' 
-                },
-                body: JSON.stringify({ 
-                    date: todayDate,
-                    countAsNew: isNewVisitToday
-                }),
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            
-            const data = await res.json();
-            
+            const data = await window.apiClient.post('/api/hit', {
+                date: todayDate,
+                countAsNew: isNewVisitToday
+            }, { timeout: 5500, retries: 1, dedupe: true });
+
             if (data && data.success && data.count !== undefined) {
                 if (isNewVisitToday) {
                     if (typeof safeSetItem === 'function') {

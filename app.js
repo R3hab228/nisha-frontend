@@ -452,7 +452,7 @@ async function initApp() {
         // Тихий фоновый прогрев бэкенда
         const pingBackend = () => {
             try {
-                fetch('https://nisha-api.onrender.com/ping', { cache: 'no-store' }).catch(() => {});
+                if (window.apiClient) window.apiClient.ping();
             } catch(e) {}
         };
         if ('requestIdleCallback' in window) {

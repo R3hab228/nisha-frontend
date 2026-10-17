@@ -369,20 +369,16 @@ async function searchNPCity(query) {
     }
 
     try {
-        const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                modelName: 'Address', 
-                calledMethod: 'searchSettlements', 
-                methodProperties: { CityName: query, Limit: "10" } 
-            })
-        });
-        const data = await res.json();
-        if (data.success) {
+        const data = await window.apiClient.post('/api/np-proxy', {
+            modelName: 'Address',
+            calledMethod: 'searchSettlements',
+            methodProperties: { CityName: query, Limit: "10" }
+        }, { timeout: 10000, retries: 1, dedupe: true });
+
+        if (data && data.success) {
             setNPStorage(normKey, data);
         }
-        renderCitySearchResults(data);
+        renderCitySearchResults(data || { success: false });
     } catch(e) { 
         console.error("Ошибка поиска города НП", e); 
         document.getElementById('cityDropdown').style.display = 'none';
@@ -414,17 +410,11 @@ window.filterNPBranches = filterNPBranches;
 
 // Запрос к прокси Новой Почты (общий помощник)
 async function npProxyRequest(methodProperties, calledMethod) {
-    const res = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modelName: 'Address', calledMethod: calledMethod, methodProperties: methodProperties })
-    });
-    if (!res.ok) {
-        const err = new Error("Сетевая ошибка HTTP " + res.status);
-        err.status = res.status;
-        throw err;
-    }
-    return res.json();
+    return window.apiClient.post('/api/np-proxy', {
+        modelName: 'Address',
+        calledMethod: calledMethod,
+        methodProperties: methodProperties
+    }, { timeout: 10000, throwOnHttpError: true, dedupe: true });
 }
 
 // Страница отделений: при лимите запросов (429) или сбое сети — короткая пауза и повтор
@@ -654,14 +644,12 @@ async function calculateDeliveryCost() {
     const totalCost = currentCart.reduce((sum, item) => sum + getSafePrice(item.price), 0);
 
     try {
-        const res = await fetch('https://nisha-api.onrender.com/api/calc-delivery', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cityRef: cityRef, cartTotal: totalCost })
-        });
-        const data = await res.json();
-        
-        if(data.success) {
+        const data = await window.apiClient.post('/api/calc-delivery', {
+            cityRef: cityRef,
+            cartTotal: totalCost
+        }, { timeout: 10000, retries: 1, dedupe: true });
+
+        if (data && data.success) {
             document.getElementById('calcCostVal').innerText = data.cost + " грн";
         } else {
             document.getElementById('calcCostVal').innerText = "По тарифам НП";
@@ -1324,48 +1312,129 @@ async function executeOrderFinal(emailToSave) {
     try {
         const user = getCurrentUser();
         const sb = getSupabaseClient();
-        if (!sb) throw new Error('База данных недоступна');
+        const activePromo = window.appliedPromoCode || appliedPromoCode || null;
+        const idempotencyKey = window.apiClient.generateIdempotencyKey('order');
 
-        // Передаем чистое имя и способ оплаты в отдельное поле p_payment_method (всегда на русском языке)
-        let rpcParams = {
-            p_user_id: user ? user.id : null,
-            p_name: name,
-            p_phone: phone,
-            p_email: emailToSave,
-            p_tg: '',
-            p_city: city,
-            p_branch: branch,
-            p_city_ref: cityRef || '',
-            p_branch_ref: branchRef || '',
-            p_item_ids: orderItemIds,
-            p_promocode: window.appliedPromoCode || appliedPromoCode || null,
-            p_payment_method: paymentMethod
-        };
+        let orderId = null;
+        let finalTotalSum = currentCart.reduce((sum, i) => sum + (Number(i.price) || 0), 0);
+        let finalOrderItems = currentCart.map(i => ({ ...i, currentPrice: i.currentPrice !== undefined ? i.currentPrice : i.price }));
+        let createdAtIso = new Date().toISOString();
+        let handledViaAtomicServer = false;
 
-        let { data: orderId, error: orderError } = await sb.rpc('create_secure_order', rpcParams);
+        // 1. ОСНОВНОЙ ПУТЬ: Атомарное оформление через защищенный сервер (/api/create-order)
+        try {
+            const serverOrderRes = await window.apiClient.post('/api/create-order', {
+                userId: user ? user.id : null,
+                name: name,
+                phone: phone,
+                email: emailToSave,
+                tg: '',
+                city: city,
+                branch: branch,
+                cityRef: cityRef || '',
+                branchRef: branchRef || '',
+                itemIds: orderItemIds,
+                promocode: activePromo,
+                paymentMethod: paymentMethod
+            }, {
+                idempotencyKey: idempotencyKey,
+                timeout: 15000,
+                retries: 1
+            });
 
-        // Безопасный фоллбек: если SQL-функция в Supabase еще не обновлена до версии с p_payment_method
-        if (orderError && (orderError.message.includes('p_payment_method') || orderError.message.includes('create_secure_order') || orderError.code === 'PGRST202')) {
-            console.warn('[ЗАКАЗ] Используем обратную совместимость create_secure_order:', orderError.message);
-            delete rpcParams.p_payment_method;
-            rpcParams.p_name = nameWithPayment;
-            const fallbackRes = await sb.rpc('create_secure_order', rpcParams);
-            orderId = fallbackRes.data;
-            orderError = fallbackRes.error;
+            if (serverOrderRes && serverOrderRes.success && serverOrderRes.orderId) {
+                orderId = serverOrderRes.orderId;
+                if (serverOrderRes.totalSum) finalTotalSum = Number(serverOrderRes.totalSum);
+                if (Array.isArray(serverOrderRes.items) && serverOrderRes.items.length > 0) {
+                    finalOrderItems = serverOrderRes.items;
+                }
+                if (serverOrderRes.createdAt) createdAtIso = serverOrderRes.createdAt;
+                handledViaAtomicServer = true;
+            } else if (serverOrderRes && !serverOrderRes.success) {
+                // Если товар уже куплен или забронирован другим покупателем (409 ITEM_UNAVAILABLE)
+                if (serverOrderRes.code === 'ITEM_UNAVAILABLE') {
+                    const unavailIds = new Set((serverOrderRes.unavailableItems || []).map(u => String(u.id)));
+                    const updatedCart = unavailIds.size > 0
+                        ? currentCart.filter(ci => !unavailIds.has(String(ci.id)))
+                        : currentCart;
+                    setActiveCart(updatedCart);
+                    await syncCartToServer();
+                    updateCartUI();
+                    if (updatedCart.length === 0 && typeof closeModal === 'function') {
+                        closeModal('checkoutModal');
+                    }
+                    throw new Error(serverOrderRes.message || 'Один из товаров уже куплен другим покупателем!');
+                }
+                if (serverOrderRes._status && serverOrderRes._status >= 400 && serverOrderRes._status < 500 && serverOrderRes._status !== 404) {
+                    throw new Error(serverOrderRes.message || 'Ошибка проверки данных заказа');
+                }
+            }
+        } catch (serverErr) {
+            // Если это бизнес-ошибка (например, товар уже куплен или телефон в ЧС) — пробрасываем сразу
+            if (serverErr && serverErr.message && (
+                serverErr.message.includes('уже кто-то купил') ||
+                serverErr.message.includes('уже куплен') ||
+                serverErr.message.includes('оформляется другим') ||
+                serverErr.message.includes('Доступ запрещен')
+            )) {
+                throw serverErr;
+            }
+            console.warn('[ЗАКАЗ] Серверный /api/create-order недоступен, используем прямой RPC фоллбэк:', serverErr.message);
         }
 
-        if (orderError) throw orderError; 
+        // 2. РЕЗЕРВНЫЙ ПУТЬ (если сервер Render перезагружается): Прямой транзакционный RPC в Supabase
+        if (!handledViaAtomicServer) {
+            if (!sb) throw new Error('База данных недоступна');
 
-        // Первоначальный статус нового заказа всегда "В обработке", а способ оплаты строго на русском
-        try {
-            await sb.from('orders').update({ status: 'В обработке', payment_method: paymentMethod }).eq('id', orderId);
-        } catch (stErr) {}
+            let rpcParams = {
+                p_user_id: user ? user.id : null,
+                p_name: name,
+                p_phone: phone,
+                p_email: emailToSave,
+                p_tg: '',
+                p_city: city,
+                p_branch: branch,
+                p_city_ref: cityRef || '',
+                p_branch_ref: branchRef || '',
+                p_item_ids: orderItemIds,
+                p_promocode: activePromo,
+                p_payment_method: paymentMethod
+            };
+
+            // Сначала пробуем атомарную SQL-функцию create_atomic_order
+            const atomicRpc = await sb.rpc('create_atomic_order', rpcParams);
+            if (!atomicRpc.error && atomicRpc.data && atomicRpc.data.order_id) {
+                orderId = atomicRpc.data.order_id;
+                if (atomicRpc.data.total_sum) finalTotalSum = Number(atomicRpc.data.total_sum);
+                if (Array.isArray(atomicRpc.data.items) && atomicRpc.data.items.length > 0) {
+                    finalOrderItems = atomicRpc.data.items;
+                }
+            } else {
+                // Фоллбэк к классической create_secure_order
+                let { data: fbOrderId, error: orderError } = await sb.rpc('create_secure_order', rpcParams);
+
+                if (orderError && (orderError.message.includes('p_payment_method') || orderError.message.includes('create_secure_order') || orderError.code === 'PGRST202')) {
+                    console.warn('[ЗАКАЗ] Используем обратную совместимость create_secure_order:', orderError.message);
+                    delete rpcParams.p_payment_method;
+                    rpcParams.p_name = nameWithPayment;
+                    const fallbackRes = await sb.rpc('create_secure_order', rpcParams);
+                    fbOrderId = fallbackRes.data;
+                    orderError = fallbackRes.error;
+                }
+
+                if (orderError) throw orderError;
+                orderId = fbOrderId;
+
+                try {
+                    await sb.from('orders').update({ status: 'В обработке', payment_method: paymentMethod }).eq('id', orderId);
+                } catch (stErr) {}
+            }
+        }
 
         if (window.ttq) {
-            let totalValue = currentCart.reduce((sum, i) => sum + (i.price || 0), 0);
             ttq.track('CompletePayment', {
                 contents: currentCart.map(i => ({ content_id: i.id, content_name: i.name })),
-                value: totalValue,
+                value: finalTotalSum,
                 currency: 'UAH'
             });
         }
@@ -1374,13 +1443,11 @@ async function executeOrderFinal(emailToSave) {
         localStorage.setItem('nisha_last_order', Date.now());
 
         if (user && user.id && phone) {
-            fetch('https://nisha-api.onrender.com/api/link-orders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, phone: phone })
-            }).catch(() => {});
+            if (!handledViaAtomicServer) {
+                window.apiClient.post('/api/link-orders', { userId: user.id, phone: phone }, { timeout: 8000 }).catch(() => {});
+            }
 
-            if (typeof window.userProfile === 'object' && window.userProfile && !window.userProfile.phone) {
+            if (typeof window.userProfile === 'object' && window.userProfile && !window.userProfile.phone && sb) {
                 window.userProfile.phone = phone;
                 sb.from('profiles').update({ phone: phone }).eq('id', user.id).then(() => {
                     if (typeof window.renderProfilePhone === 'function') window.renderProfilePhone(phone);
@@ -1398,9 +1465,9 @@ async function executeOrderFinal(emailToSave) {
                 city: city,
                 branch: branch,
                 status: 'В обработке',
-                total_sum: currentCart.reduce((sum, i) => sum + (i.price || 0), 0),
-                items: currentCart.map(i => ({ ...i, currentPrice: i.currentPrice !== undefined ? i.currentPrice : i.price })),
-                created_at: new Date().toISOString()
+                total_sum: finalTotalSum,
+                items: finalOrderItems,
+                created_at: createdAtIso
             };
             cached = [newOrderObj, ...cached.filter(c => c && c.id !== orderId)];
             localStorage.setItem('nisha_cached_orders', JSON.stringify(cached));
@@ -1408,7 +1475,9 @@ async function executeOrderFinal(emailToSave) {
 
         setActiveCart([]);
         clearCheckoutDraft();
-        await syncCartToServer();
+        if (!handledViaAtomicServer) {
+            await syncCartToServer();
+        }
         updateCartUI();
         
         const bar = document.getElementById('btnProgressBar');
@@ -1495,17 +1564,13 @@ async function autoDetectCity() {
                 } catch(e) {}
             }
             
-            const npRes = await fetch('https://nisha-api.onrender.com/api/np-proxy', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    modelName: 'Address', calledMethod: 'searchSettlements', 
-                    methodProperties: { CityName: detectedCity, Limit: "1" } 
-                })
-            });
-            const npData = await npRes.json();
+            const npData = await window.apiClient.post('/api/np-proxy', {
+                modelName: 'Address',
+                calledMethod: 'searchSettlements',
+                methodProperties: { CityName: detectedCity, Limit: "1" }
+            }, { timeout: 8000, retries: 1, dedupe: true });
 
-            if(npData.success && npData.data[0] && npData.data[0].Addresses.length > 0) {
+            if (npData && npData.success && npData.data && npData.data[0] && npData.data[0].Addresses.length > 0) {
                 const cityObj = npData.data[0].Addresses[0];
                 cityInput.value = cityObj.Present; 
                 selectedCityRef = cityObj.DeliveryCity || cityObj.Ref; 
@@ -1548,20 +1613,10 @@ async function applyPromoCode() {
     const originalTotal = currentCart.reduce((sum, item) => sum + item.price, 0);
 
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-            controller.abort();
-        }, 10000);
-
-        const res = await fetch('https://nisha-api.onrender.com/api/check-promo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: input, cartTotal: originalTotal }),
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        
-        const data = await res.json();
+        const data = await window.apiClient.post('/api/check-promo', {
+            code: input,
+            cartTotal: originalTotal
+        }, { timeout: 10000, retries: 1 });
 
         const currentLang = localStorage.getItem('nisha_lang') || 'ru';
         if (typeof i18next !== 'undefined' && i18next.language !== currentLang) {
@@ -1572,9 +1627,8 @@ async function applyPromoCode() {
         const successText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_success') : 'Код активирован!';
         const limitErrorText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_limit') : 'Лимит использований исчерпан';
         const invalidErrorText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_invalid') : 'Неверный промокод';
-        const serverErrorText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error') : 'Ошибка промокода';
 
-        if (data.success) {
+        if (data && data.success) {
             currentPromoDiscount = data.discount_percent;
             window.currentPromoDiscount = currentPromoDiscount;
             appliedPromoCode = input;
@@ -1591,13 +1645,13 @@ async function applyPromoCode() {
             window.currentPromoFixed = null;
             
             let errorMsg = invalidErrorText;
-            if (data.message && data.message.includes('Лимит')) {
+            if (data && data.message && data.message.includes('Лимит')) {
                 errorMsg = limitErrorText;
             }
             msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${errorMsg}</span>`;
         }
     } catch (err) {
-        if (err && err.name === 'AbortError') {
+        if (err && (err.name === 'AbortError' || err.isTimeout)) {
             msg.innerHTML = `<span style="color: var(--accent-yellow);">[!] Сервер запускается, нажмите «Применить» ещё раз</span>`;
         } else {
             msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error') : 'Ошибка сервера'}</span>`;

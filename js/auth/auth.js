@@ -287,13 +287,8 @@ async function generateAndSendOTP() {
     // Верификация капчи на бэкенде
     if (turnToken) {
         try {
-            const vRes = await fetch('https://nisha-api.onrender.com/api/verify-turnstile', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: turnToken })
-            });
-            const vData = await vRes.json();
-            if (!vData.success) {
+            const vData = await window.apiClient.post('/api/verify-turnstile', { token: turnToken }, { timeout: 8000 });
+            if (!vData || !vData.success) {
                 showToast('Ошибка проверки безопасности Turnstile', 'error');
                 if (typeof turnstile !== 'undefined' && widgetId !== null && widgetId !== undefined) {
                     turnstile.reset(widgetId);

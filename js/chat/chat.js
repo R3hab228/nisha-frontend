@@ -44,16 +44,12 @@ async function submitSupportTicket() {
         ? clientFingerprint 
         : (window.clientFingerprint || 'guest_' + Date.now());
 
-    // Отправляем запрос на сервер в фоне
-    fetch('https://nisha-api.onrender.com/api/support', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            contact: userContact, 
-            message: safeText, 
-            clientId: activeFingerprint 
-        })
-    }).catch(e => console.log('Фоновая отправка в саппорт не удалась: ', e));
+    // Отправляем запрос на сервер в фоне с авто-повтором при сбое сети
+    window.apiClient.post('/api/support', {
+        contact: userContact,
+        message: safeText,
+        clientId: activeFingerprint
+    }, { timeout: 10000, retries: 2 }).catch(e => console.log('Фоновая отправка в саппорт не удалась: ', e));
 
     // Моментальный отклик интерфейса
     if (typeof triggerHaptic === 'function') triggerHaptic('success');

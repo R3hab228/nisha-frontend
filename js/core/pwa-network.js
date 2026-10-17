@@ -428,9 +428,9 @@ async function subscribeUserToPush(registration, silent = false) {
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') return;
             
-            const res = await fetch('https://nisha-api.onrender.com/api/vapid-key');
-            if (!res.ok) return;
-            const { publicKey } = await res.json();
+            const vapidData = await window.apiClient.get('/api/vapid-key', { timeout: 8000, retries: 1, dedupe: true });
+            if (!vapidData || !vapidData.publicKey) return;
+            const { publicKey } = vapidData;
             
             const padding = '='.repeat((4 - publicKey.length % 4) % 4);
             const base64 = (publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -453,11 +453,7 @@ async function subscribeUserToPush(registration, silent = false) {
                 subscription: targetSub,
                 userId: activeUser ? activeUser.id : fp
             };
-            await fetch('https://nisha-api.onrender.com/api/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            await window.apiClient.post('/api/subscribe', payload, { timeout: 10000, retries: 1 });
         }
     } catch(e) {
         console.error('Push error:', e);
