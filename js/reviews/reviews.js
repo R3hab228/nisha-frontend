@@ -287,9 +287,12 @@ window.submitAutoReview = submitAutoReview;
 function skipAutoReview() {
     const orderId = document.getElementById('autoReviewOrderId')?.value;
     if (orderId) {
-        let dismissedOrders = JSON.parse(localStorage.getItem('nisha_dismissed_reviews') || '[]');
-        dismissedOrders.push(orderId); 
-        localStorage.setItem('nisha_dismissed_reviews', JSON.stringify(dismissedOrders));
+        try {
+            let dismissedOrders = JSON.parse(localStorage.getItem('nisha_dismissed_reviews') || '[]');
+            if (!Array.isArray(dismissedOrders)) dismissedOrders = [];
+            if (!dismissedOrders.includes(orderId)) dismissedOrders.push(orderId);
+            localStorage.setItem('nisha_dismissed_reviews', JSON.stringify(dismissedOrders));
+        } catch(e) {}
     }
     closeModal('autoReviewModal');
 }

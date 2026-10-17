@@ -1217,7 +1217,10 @@ async function submitQuestion(itemId) {
     }
 
     const today = new Date().toLocaleDateString('en-CA');
-    let questionData = JSON.parse(localStorage.getItem('nisha_questions') || '{"date":"","count":0}');
+    let questionData = { date: '', count: 0 };
+    try {
+        questionData = JSON.parse(localStorage.getItem('nisha_questions') || '{"date":"","count":0}');
+    } catch(e) {}
     
     if (questionData.date !== today) questionData = { date: today, count: 0 };
     if (questionData.count >= 2) {
