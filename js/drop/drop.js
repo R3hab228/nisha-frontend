@@ -9,10 +9,66 @@ window.currentProposalFiles = currentProposalFiles;
 // Сортировщик Sortable
 let proposalSortable = null;
 
+// // Очередь фоновой отправки предложек с авто-повтором при сбоях сети
+let proposalUploadChain = Promise.resolve();
+let activeProposalUploads = 0;
+
+window.addEventListener('beforeunload', (e) => {
+    if (activeProposalUploads > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
+    let lastError = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const res = await fetch('https://nisha-api.onrender.com/api/propose-files', {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                return true;
+            }
+            const errText = await res.text().catch(() => '');
+            lastError = new Error(`HTTP ${res.status}: ${errText}`);
+            console.warn(`[PROPOSAL UPLOAD] Attempt ${attempt}/${maxAttempts} failed:`, lastError.message);
+        } catch (err) {
+            lastError = err;
+            console.warn(`[PROPOSAL UPLOAD] Network error on attempt ${attempt}/${maxAttempts}:`, err.message);
+        }
+        if (attempt < maxAttempts) {
+            await new Promise(r => setTimeout(r, 1500 * attempt));
+        }
+    }
+    throw lastError || new Error('Upload failed');
+}
+
+function enqueueProposalUpload(formData) {
+    activeProposalUploads++;
+    proposalUploadChain = proposalUploadChain
+        .then(() => sendProposalFormDataWithRetry(formData, 3))
+        .catch((err) => {
+            console.error('[PROPOSAL BACKGROUND UPLOAD FAILED]', err);
+            if (typeof showToast === 'function') {
+                showToast('Ошибка отправки вещи на сервер. Проверьте интернет и попробуйте еще раз.', 'error');
+            }
+        })
+        .finally(() => {
+            activeProposalUploads = Math.max(0, activeProposalUploads - 1);
+        });
+    return proposalUploadChain;
+}
+
 // 1. Открытие модального окна предложки
 function openProposeModal() {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+    const contactEl = document.getElementById('propContact');
+    if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
+        contactEl.value = window._lastProposalContact;
+    }
     if (typeof Sortable === 'undefined' && typeof window.Sortable === 'undefined') {
         import('sortablejs').then(mod => {
             window.Sortable = mod.default || mod;
@@ -21,6 +77,10 @@ function openProposeModal() {
     
     const modal = document.getElementById('proposeModal');
     if (modal) {
+        if (modal._closeTimer) {
+            clearTimeout(modal._closeTimer);
+            modal._closeTimer = null;
+        }
         modal.classList.remove('closing');
         modal.style.pointerEvents = '';
         const win = modal.querySelector('.modal-window');
@@ -39,49 +99,62 @@ function openProposeModal() {
 }
 window.openProposeModal = openProposeModal;
 
-// 2. Сжатие фото (легкое для памяти телефонов)
+// 2. Сжатие фото (легкое для памяти телефонов + защита от зависания)
 async function compressImage(file) {
-    // 1. Видео пропускаем без сжатия
-    if (file.type.startsWith('video/')) return file;
+    if (!file || (file.type && file.type.startsWith('video/'))) return file;
 
     return new Promise((resolve) => {
+        let settled = false;
         const objectUrl = URL.createObjectURL(file);
+        const finish = (resultFile) => {
+            if (settled) return;
+            settled = true;
+            try { URL.revokeObjectURL(objectUrl); } catch (e) {}
+            resolve(resultFile || file);
+        };
+
+        const timeoutId = setTimeout(() => finish(file), 8000);
         const img = new Image();
 
         img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            const MAX_SIZE = 1200; // Жмем до 1200px
+            try {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const MAX_SIZE = 1200; // Жмем до 1200px
 
-            // Пропорционально уменьшаем размеры
-            if (width > height && width > MAX_SIZE) {
-                height *= MAX_SIZE / width;
-                width = MAX_SIZE;
-            } else if (height > MAX_SIZE) {
-                width *= MAX_SIZE / height;
-                height = MAX_SIZE;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob((blob) => {
-                URL.revokeObjectURL(objectUrl);
-                if (blob) {
-                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                } else {
-                    resolve(file);
+                // Пропорционально уменьшаем размеры
+                if (width > height && width > MAX_SIZE) {
+                    height *= MAX_SIZE / width;
+                    width = MAX_SIZE;
+                } else if (height > MAX_SIZE) {
+                    width *= MAX_SIZE / height;
+                    height = MAX_SIZE;
                 }
-            }, 'image/jpeg', 0.7);
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    clearTimeout(timeoutId);
+                    if (blob) {
+                        finish(new File([blob], file.name || 'photo.jpg', { type: 'image/jpeg' }));
+                    } else {
+                        finish(file);
+                    }
+                }, 'image/jpeg', 0.7);
+            } catch (e) {
+                clearTimeout(timeoutId);
+                finish(file);
+            }
         };
 
         img.onerror = () => {
             // Фолбек для форматов типа HEIC
-            URL.revokeObjectURL(objectUrl);
-            resolve(file);
+            clearTimeout(timeoutId);
+            finish(file);
         };
 
         img.src = objectUrl;
@@ -114,6 +187,10 @@ function resetProposalForm() {
     
     renderProposalPreviews();
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+    const contactEl = document.getElementById('propContact');
+    if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
+        contactEl.value = window._lastProposalContact;
+    }
     
     const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
     if (typeof turnstile !== 'undefined' && propWidgetId !== null && propWidgetId !== undefined) {
@@ -127,8 +204,12 @@ window.resetProposalForm = resetProposalForm;
 function handleNewProposalFiles(newFiles) {
     if (!newFiles || newFiles.length === 0) return;
 
-    // Оставляем только фото и видео
-    const validFiles = newFiles.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+    // Оставляем только фото и видео (включая HEIC/MOV на iOS, где file.type может быть пустым)
+    const validFiles = newFiles.filter(f => {
+        if (f.type && (f.type.startsWith('image/') || f.type.startsWith('video/'))) return true;
+        const n = (f.name || '').toLowerCase();
+        return /\.(jpg|jpeg|png|webp|heic|heif|gif|mp4|mov|webm|m4v)$/.test(n);
+    });
 
     if (currentProposalFiles.length + validFiles.length > 5) {
         showToast('Максимум 5 фото/видео!', 'error');
@@ -136,9 +217,10 @@ function handleNewProposalFiles(newFiles) {
     }
 
     validFiles.forEach(file => {
+        const isVid = (file.type && file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(file.name || '');
         currentProposalFiles.push({
             file: file,
-            url: file.type.startsWith('video/') ? null : URL.createObjectURL(file)
+            url: isVid ? null : URL.createObjectURL(file)
         });
     });
     
@@ -286,9 +368,9 @@ window.renderProposalPreviews = renderProposalPreviews;
 // 6. Отправка заявки на сервер
 async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
-    if (!btn) return;
+    if (!btn || window._isSubmittingProposal) return;
     
-    const files = currentProposalFiles.map(obj => obj.file);
+    const files = currentProposalFiles.map(obj => obj.file).filter(Boolean);
     
     // Считываем значения полей
     const rawName = (document.getElementById('propName')?.value || '').trim();
@@ -303,6 +385,11 @@ async function submitProposal() {
         const uPhone = getUserPhone();
         const uTg = getUserTg();
         if (uPhone && uTg) rawContact = `${uTg} | ${uPhone}`;
+        else if (uTg) rawContact = uTg;
+        else if (uPhone) rawContact = uPhone;
+    }
+    if (!rawContact && window._lastProposalContact) {
+        rawContact = window._lastProposalContact;
     }
     
     // Очистка от вредоносного кода
@@ -324,10 +411,20 @@ async function submitProposal() {
         return;
     }
 
-    // Фоновый токен Turnstile
+    // Сохраняем контакт для мгновенной отправки следующей вещи без повторного ввода
+    window._lastProposalContact = contact;
+
+    // Фоновый токен Turnstile (защита от повторной отправки уже использованного токена)
     const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
     let propToken = window._turnstilePropToken || (typeof turnstile !== 'undefined' && propWidgetId !== null && propWidgetId !== undefined ? turnstile.getResponse(propWidgetId) : null);
+    if (propToken && propToken === window._lastUsedPropToken) {
+        propToken = null;
+    }
+    if (propToken) {
+        window._lastUsedPropToken = propToken;
+    }
 
+    window._isSubmittingProposal = true;
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
 
@@ -340,11 +437,9 @@ async function submitProposal() {
             compressedFiles.push(compressed);
         }
         
-        btn.innerText = '[ ПЕРЕДАЧА НА СЕРВЕР... ]';
-        
-        const activeClientId = (typeof currentUser !== 'undefined' && currentUser) 
-            ? currentUser.id 
-            : ((typeof clientFingerprint !== 'undefined' && clientFingerprint) ? clientFingerprint : 'guest_' + Date.now());
+        const activeUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || null);
+        const activeFp = (typeof clientFingerprint !== 'undefined' && clientFingerprint) ? clientFingerprint : (window.clientFingerprint || null);
+        const activeClientId = activeUser ? activeUser.id : (activeFp || 'guest_' + Date.now());
 
         const formData = new FormData();
         formData.append('name', nameItem);
@@ -358,19 +453,20 @@ async function submitProposal() {
         if (propToken) formData.append('turnstileToken', propToken);
         
         compressedFiles.forEach((file, index) => {
-            const ext = (file && file.type && file.type.startsWith('video/')) ? 'mp4' : 'jpg';
+            const isVid = (file && file.type && file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(file?.name || '');
+            const ext = isVid ? 'mp4' : 'jpg';
             formData.append('images', file, `prop_${index}.${ext}`);
         });
         
-        // Отправка на бэкенд
-        fetch('https://nisha-api.onrender.com/api/propose-files', {
-            method: 'POST',
-            body: formData
-        }).then(res => {
-            if (!res.ok) console.error('Server returned error', res.status);
-        }).catch(e => console.error('Background upload failed', e));
+        // Ставим в гарантированную очередь отправки на бэкенд (с авто-повтором при сбоях)
+        enqueueProposalUpload(formData);
         
+        // Мгновенно очищаем форму и разблокируем кнопку, чтобы можно было сразу закинуть вторую вещь без ожидания
         resetProposalForm();
+        btn.innerText = '[ ПРЕДЛОЖИТЬ ]';
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+        window._isSubmittingProposal = false;
         
         if (typeof executeCloseModal === 'function') {
             executeCloseModal('proposeModal');
@@ -380,9 +476,6 @@ async function submitProposal() {
         
         setTimeout(() => {
             showTerminalModal('SYSTEM_OK.LOG', 'Заявка успешно отправлена.', '[ ЗАКРЫТЬ ]', null);
-            btn.innerText = '[ ПРЕДЛОЖИТЬ ]';
-            btn.style.pointerEvents = 'auto';
-            btn.style.opacity = '1';
         }, 100);
 
     } catch (err) {
@@ -391,6 +484,7 @@ async function submitProposal() {
         btn.innerText = '[ ПОВТОРИТЬ ПОПЫТКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
+        window._isSubmittingProposal = false;
     }
 }
 window.submitProposal = submitProposal;

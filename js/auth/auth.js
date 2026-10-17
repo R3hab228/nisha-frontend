@@ -91,8 +91,8 @@ window.addEventListener('load', () => {
 function getUserPhone() {
     const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
-    if (activeUser) {
-        return (profile?.phone || '').trim();
+    if (activeUser && profile?.phone) {
+        return profile.phone.trim();
     }
     return (localStorage.getItem('nisha_last_phone') || '').trim();
 }
@@ -101,8 +101,8 @@ window.getUserPhone = getUserPhone;
 function getUserTg() {
     const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
-    if (activeUser) {
-        return (profile?.tg || '').trim();
+    if (activeUser && profile?.tg) {
+        return profile.tg.trim();
     }
     return (localStorage.getItem('nisha_last_tg') || '').trim();
 }

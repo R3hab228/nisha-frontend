@@ -1179,6 +1179,7 @@ async function initHitCounter() {
             localStorage.setItem('nisha_visitor_id', visitorId);
         }
         clientFingerprint = visitorId; // Для защиты просмотров в карточке товара
+        window.clientFingerprint = clientFingerprint;
 
         // 2. Узнаем сегодняшнюю дату
         const todayDate = new Date().toLocaleDateString('en-CA'); // Формат YYYY-MM-DD
@@ -1928,9 +1929,10 @@ async function subscribeUserToPush(registration, silent = false) {
         }
         
         if (targetSub) {
+            const activeUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || null);
             const payload = {
                 subscription: targetSub,
-                userId: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : clientFingerprint
+                userId: activeUser ? activeUser.id : clientFingerprint
             };
             await fetch('https://nisha-api.onrender.com/api/subscribe', {
                 method: 'POST',

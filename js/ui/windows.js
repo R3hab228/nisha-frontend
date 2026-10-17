@@ -92,6 +92,10 @@ function openModal(id) {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     const modal = document.getElementById(id);
     if (!modal) return;
+    if (modal._closeTimer) {
+        clearTimeout(modal._closeTimer);
+        modal._closeTimer = null;
+    }
     modal.classList.remove('closing');
     modal.style.pointerEvents = '';
     const win = modal.querySelector('.modal-window');
@@ -130,7 +134,8 @@ function closeModal(id) {
                               contactVal === '' || 
                               contactVal === autoBoth || 
                               (autoTg && contactVal === autoTg) || 
-                              (autoPhone && contactVal === autoPhone);
+                              (autoPhone && contactVal === autoPhone) ||
+                              (window._lastProposalContact && contactVal === window._lastProposalContact);
                               
         const hasCustomContact = isContactVisible && !isAutoContact;
         const hasUnsavedData = filesCount > 0 || name !== '' || brand !== '' || size !== '' || desc !== '' || cond !== '' || price !== '' || hasCustomContact;
@@ -185,7 +190,10 @@ function executeCloseModal(id) {
 
     if (id === 'rulesModal') {
         modal.classList.add('closing');
-        setTimeout(() => {
+        if (modal._closeTimer) clearTimeout(modal._closeTimer);
+        modal._closeTimer = setTimeout(() => {
+            modal._closeTimer = null;
+            if (!modal.classList.contains('closing')) return;
             modal.style.display = 'none';
             modal.classList.remove('closing');
             modal.style.pointerEvents = '';
@@ -213,8 +221,11 @@ function executeCloseModal(id) {
     }
 
     modal.classList.add('closing');
+    if (modal._closeTimer) clearTimeout(modal._closeTimer);
 
-    setTimeout(() => {
+    modal._closeTimer = setTimeout(() => {
+        modal._closeTimer = null;
+        if (!modal.classList.contains('closing')) return;
         modal.style.display = 'none';
         modal.classList.remove('closing');
         modal.style.pointerEvents = '';

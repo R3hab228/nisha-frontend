@@ -635,6 +635,7 @@ async function checkPendingPhoneVerification() {
 
                         if (!profErr && profData) {
                             if (!userProfile) userProfile = {};
+                            window.userProfile = userProfile;
                             const confirmedPhone = profData.phone || pendingPhone;
                             userProfile.phone = confirmedPhone;
                             localStorage.setItem('nisha_last_phone', confirmedPhone);
@@ -667,6 +668,7 @@ async function checkPendingPhoneVerification() {
                                 return;
                             }
                             if (!userProfile) userProfile = {};
+                            window.userProfile = userProfile;
                             userProfile.phone = pendingPhone;
                             localStorage.setItem('nisha_last_phone', pendingPhone);
                             renderProfilePhone(pendingPhone);
@@ -678,6 +680,7 @@ async function checkPendingPhoneVerification() {
 
                 if (!currentUser) {
                     if (!userProfile) userProfile = {};
+                    window.userProfile = userProfile;
                     userProfile.phone = pendingPhone;
                     localStorage.setItem('nisha_last_phone', pendingPhone);
                     renderProfilePhone(pendingPhone);
@@ -1037,6 +1040,7 @@ async function checkPendingTgVerification() {
                 }
 
                 if (!userProfile) userProfile = {};
+                window.userProfile = userProfile;
                 userProfile.tg = formattedTg;
                 localStorage.setItem('nisha_last_tg', formattedTg);
 
