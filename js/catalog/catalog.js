@@ -829,7 +829,9 @@ async function loadAllItems() {
             }
             const wasHot = (cur.views_count || 0) >= 25;
             const nowHot = (next.views_count || 0) >= 25;
-            if (cur.price !== next.price || cur.old_price !== next.old_price || cur.status !== next.status || !!cur.is_sale !== !!next.is_sale || wasHot !== nowHot) {
+            const curThumb0 = Array.isArray(cur.thumbnails) ? cur.thumbnails[0] : '';
+            const nextThumb0 = Array.isArray(next.thumbnails) ? next.thumbnails[0] : '';
+            if (cur.price !== next.price || cur.old_price !== next.old_price || cur.status !== next.status || !!cur.is_sale !== !!next.is_sale || wasHot !== nowHot || curThumb0 !== nextThumb0) {
                 changedCardItems.push(next);
             }
         }
@@ -1882,16 +1884,16 @@ function renderNextBatch() {
                     const firstLoadAttr = (i < 2) ? 'fetchpriority="high"' : 'loading="lazy"';
                     slidesStr += `
                         <div class="card-slide img-8bit-loading">
-                           <img class="card-slide-img" src="${cdnThumb}" ${firstLoadAttr} decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+                           <img class="card-slide-img" src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" ${firstLoadAttr} decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
 onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
-onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
+onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbackSrc !== this.src){this.dataset.fb='1';this.src=this.dataset.fallbackSrc;return;} this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
                 } else {
                     slidesStr += `
                         <div class="card-slide">
-                           <img class="card-slide-img" data-src="${cdnThumb}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
+                           <img class="card-slide-img" data-src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
 onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
-onerror="this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
+onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbackSrc !== this.src){this.dataset.fb='1';this.src=this.dataset.fallbackSrc;return;} this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
                         </div>`;
                 }
                 dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;

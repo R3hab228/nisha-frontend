@@ -464,3 +464,7 @@ function initReviewsRealtime(sb) {
     }
 }
 window.initReviewsRealtime = initReviewsRealtime;
+
+if (typeof window !== 'undefined' && window._supabase) {
+    initReviewsRealtime(window._supabase);
+}

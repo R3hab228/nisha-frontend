@@ -156,7 +156,11 @@ function initSupportRepliesSystem() {
 }
 window.initSupportRepliesSystem = initSupportRepliesSystem;
 
-// Автозапуск системы ответов через 3 секунды после старта
-window.addEventListener('load', () => {
-    setTimeout(initSupportRepliesSystem, 3000);
-});
+// Автозапуск системы ответов после старта (с поддержкой ленивой подгрузки модуля)
+if (document.readyState === 'complete') {
+    setTimeout(initSupportRepliesSystem, 1500);
+} else {
+    window.addEventListener('load', () => {
+        setTimeout(initSupportRepliesSystem, 3000);
+    });
+}
