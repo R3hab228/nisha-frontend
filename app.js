@@ -206,13 +206,19 @@ async function initApp() {
         const urlParams = new URLSearchParams(window.location.search);
         const quickAction = urlParams.get('action');
         if (quickAction === 'cart') {
-            setTimeout(() => { if (typeof openCart === 'function') openCart(); }, 150);
+            setTimeout(() => {
+                if (typeof openCart === 'function') openCart();
+                else if (typeof toggleCartDropdown === 'function') toggleCartDropdown();
+            }, 150);
         } else if (quickAction === 'fav') {
             window.showingOnlyFavs = true;
             sessionStorage.setItem('nisha_showing_favs', 'true');
             const favNav = document.getElementById('favNav');
             if (favNav) favNav.style.color = '#fff';
-            setTimeout(() => { if (typeof toggleFavFilter === 'function') toggleFavFilter(true); }, 150);
+            setTimeout(() => {
+                if (typeof toggleFavFilter === 'function') toggleFavFilter(true);
+                else if (typeof applyFilters === 'function') applyFilters();
+            }, 150);
         } else if (quickAction === 'reviews' || urlParams.get('open') === 'reviews') {
             setTimeout(() => { if (typeof openReviewsModal === 'function') openReviewsModal(); }, 250);
         }

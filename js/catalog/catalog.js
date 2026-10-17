@@ -1382,6 +1382,9 @@ window.invalidateFuseCache = function() {
     _catalogFuseCache = null;
     _catalogFuseItemsRef = null;
     if (typeof window.invalidateLiveSearchFuse === 'function') window.invalidateLiveSearchFuse();
+    if (window.searchWorker && typeof window.searchWorker.setItems === 'function' && Array.isArray(window.allItems)) {
+        window.searchWorker.setItems(window.allItems);
+    }
 };
 
 // Основная функция фильтрации каталога

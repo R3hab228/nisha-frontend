@@ -1662,3 +1662,10 @@ async function applyPromoCode() {
     updateCartUI();
 }
 window.applyPromoCode = applyPromoCode;
+window.openCart = function() {
+    const dropdown = document.getElementById('cartDropdown');
+    if (dropdown && !dropdown.classList.contains('active') && typeof toggleCartDropdown === 'function') {
+        toggleCartDropdown();
+    }
+};
+

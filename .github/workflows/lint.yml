@@ -27,6 +27,9 @@ jobs:
       - name: ⚡ Verify Vite Build
         run: npm run build
 
+      - name: 🧪 Run Automated Tests (Vitest)
+        run: npm test
+
       - name: 🔍 Validate JavaScript Syntax (AST Check)
         run: |
           echo "Scanning and verifying all JavaScript files..."

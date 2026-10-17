@@ -31,7 +31,7 @@ function getLiveSearchFuse() {
 const liveSearchMemoCache = new Map();
 const MAX_SEARCH_MEMO = 25;
 
-window.invalidateFuseCache = function() {
+window.invalidateLiveSearchFuse = function() {
     cachedFuseInstance = null;
     cachedFuseItemsRef = null;
     liveSearchMemoCache.clear();

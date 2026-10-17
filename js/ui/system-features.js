@@ -160,33 +160,28 @@ async function initHitCounter() {
 
         const isNewVisitToday = (lastVisitDate !== todayDate);
 
-        try {
-            const data = await window.apiClient.post('/api/hit', {
-                date: todayDate,
-                countAsNew: isNewVisitToday
-            }, { timeout: 5500, retries: 1, dedupe: true });
+        const data = await window.apiClient.post('/api/hit', {
+            date: todayDate,
+            countAsNew: isNewVisitToday
+        }, { timeout: 5500, retries: 1, dedupe: true });
 
-            if (data && data.success && data.count !== undefined) {
-                if (isNewVisitToday) {
-                    if (typeof safeSetItem === 'function') {
-                        safeSetItem('nisha_last_visit_date', todayDate);
-                    } else {
-                        localStorage.setItem('nisha_last_visit_date', todayDate);
-                    }
-                }
-                
+        if (data && data.success && data.count !== undefined) {
+            if (isNewVisitToday) {
                 if (typeof safeSetItem === 'function') {
-                    safeSetItem('nisha_last_hit_count', data.count);
+                    safeSetItem('nisha_last_visit_date', todayDate);
                 } else {
-                    localStorage.setItem('nisha_last_hit_count', data.count);
+                    localStorage.setItem('nisha_last_visit_date', todayDate);
                 }
-                
-                const strCount = data.count.toString().padStart(5, '0');
-                counterEl.innerText = strCount.split('').join(' ');
             }
-        } catch (fetchErr) {
-            clearTimeout(timeoutId);
-            throw fetchErr;
+            
+            if (typeof safeSetItem === 'function') {
+                safeSetItem('nisha_last_hit_count', data.count);
+            } else {
+                localStorage.setItem('nisha_last_hit_count', data.count);
+            }
+            
+            const strCount = data.count.toString().padStart(5, '0');
+            counterEl.innerText = strCount.split('').join(' ');
         }
     } catch (err) {
         console.warn("Счетчик работает в оффлайн-режиме (Сервер спит или нет сети):", err.message);
