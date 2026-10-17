@@ -191,6 +191,13 @@ function resetProposalForm() {
     if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
         contactEl.value = window._lastProposalContact;
     }
+    const descLabel = document.getElementById('descLabel');
+    if (descLabel) {
+        descLabel.innerText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+            ? i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' })
+            : 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):';
+        descLabel.style.color = '';
+    }
     
     const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
     if (typeof turnstile !== 'undefined' && propWidgetId !== null && propWidgetId !== undefined) {
@@ -463,7 +470,9 @@ async function submitProposal() {
         
         // Мгновенно очищаем форму и разблокируем кнопку, чтобы можно было сразу закинуть вторую вещь без ожидания
         resetProposalForm();
-        btn.innerText = '[ ПРЕДЛОЖИТЬ ]';
+        btn.innerText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+            ? i18next.t('propose.btn_submit', { defaultValue: '[ ОТПРАВИТЬ ЗАЯВКУ ]' })
+            : '[ ОТПРАВИТЬ ЗАЯВКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
         window._isSubmittingProposal = false;
