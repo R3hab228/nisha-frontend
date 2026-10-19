@@ -75,6 +75,39 @@ let cartSwipeCurrentX = 0;
 let lastCartActionTime = 0;
 let isCheckoutOpening = false;
 let isOrderSubmitting = false;
+// Флаг оформления заказа виден другим модулям (например, баннеру обновления Service Worker)
+try {
+    Object.defineProperty(window, 'isOrderSubmitting', { get: () => isOrderSubmitting, configurable: true });
+} catch (e) {}
+
+// Защита от двойного удаления одного и того же товара (двойной клик / свайп + крестик)
+const removingCartIds = new Set();
+
+function escCartHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function parseCartPrice(price) {
+    return parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
+}
+
+// Полный сброс примененного промокода (после заказа / при пустой корзине)
+function resetPromoState() {
+    currentPromoDiscount = 0;
+    window.currentPromoDiscount = 0;
+    appliedPromoCode = '';
+    window.appliedPromoCode = '';
+    window.currentPromoFixed = null;
+    const promoInput = document.getElementById('promoInput');
+    if (promoInput) promoInput.value = '';
+    const promoMsg = document.getElementById('promoMessage');
+    if (promoMsg) promoMsg.innerHTML = '';
+}
 
 // Вспомогательные безопасные геттеры
 function getActiveCart() {
@@ -135,9 +168,9 @@ async function addToCartById(itemId) {
         });
     }
     
-    await syncCartToServer();
     updateCartUI();
     showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success', getOptimizedImg(item));
+    await syncCartToServer();
 }
 window.addToCartById = addToCartById;
 
@@ -229,11 +262,10 @@ async function addToCartFromModal() {
     }
     currentCart.push(cartItem);
     setActiveCart(currentCart);
-    await syncCartToServer();
-    
     updateCartUI();
     if (typeof closeModal === 'function') closeModal('productModal');
     showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success');
+    await syncCartToServer();
 }
 window.addToCartFromModal = addToCartFromModal;
 
@@ -253,6 +285,9 @@ function updateCartUI() {
             fab.style.opacity = '1';
             fab.style.pointerEvents = 'auto';
         }
+        // Пустая корзина: сбрасываем промокод и перерисовываем список (иначе остаются "призраки" старых товаров)
+        if (window.currentPromoDiscount || window.appliedPromoCode) resetPromoState();
+        if (typeof renderCartItems === 'function') renderCartItems();
         return; 
     }
     
@@ -260,19 +295,22 @@ function updateCartUI() {
     if(fab) fab.classList.add('cart-active'); 
     
     document.getElementById('cartCount').innerText = currentCart.length;
-    let total = currentCart.reduce((sum, item) => sum + (parseInt(String(item.price).replace(/[^\d]/g, ''), 10) || 0), 0);
+    let total = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
     
     // Применяем скидку по промокоду, если она есть
     const promoDiscount = window.currentPromoDiscount || currentPromoDiscount || 0;
     const promoCode = window.appliedPromoCode || appliedPromoCode || '';
     if (promoDiscount > 0) {
-        const savedMoney = Math.floor(total * promoDiscount);
+        const fixedAmt = Number(window.currentPromoFixed) || 0;
+        // Фиксированная скидка не должна "плыть" при изменении состава корзины; итог не может быть <= 0
+        const savedMoney = fixedAmt > 0
+            ? Math.min(fixedAmt, Math.max(0, total - 1))
+            : Math.floor(total * promoDiscount);
         total = total - savedMoney;
         
         const msg = document.getElementById('promoMessage');
         if (msg && promoCode) {
-            const fixedAmt = window.currentPromoFixed;
-            const discDisplay = fixedAmt ? `-${fixedAmt} ${getCurrency()}` : `${Math.round(promoDiscount * 100)}%`;
+            const discDisplay = fixedAmt > 0 ? `-${fixedAmt} ${getCurrency()}` : `${Math.round(promoDiscount * 100)}%`;
             msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${discDisplay}<br><span style="font-size: 13px;">Вы сэкономили: <b>${savedMoney} ${getCurrency()}</b></span></span>`;
         }
     }
@@ -779,8 +817,8 @@ function renderCartItems() {
                  ontouchend="handleSwipeEnd(event)">
                 <div class="cart-item-img" style="background-image: url('${imgUrl}')"></div>
                 <div class="cart-item-info">
-                    <div class="cart-item-name" title="${item.name}">${item.name}</div>
-                    <div class="cart-item-size">${typeof i18next !== 'undefined' ? i18next.t('grid.size_prefix') : 'Размер: '}${item.size}</div>
+                    <div class="cart-item-name" title="${escCartHtml(item.name)}">${escCartHtml(item.name)}</div>
+                    <div class="cart-item-size">${typeof i18next !== 'undefined' ? i18next.t('grid.size_prefix') : 'Размер: '}${escCartHtml(item.size)}</div>
                     ${soldBadgeHtml}
                 </div>
                 <div class="cart-item-price-wrapper">
@@ -797,22 +835,36 @@ window.renderCartItems = renderCartItems;
 async function removeFromCart(index, event, rowElement) {
     if (event) event.stopPropagation(); 
     
-    let currentCart = getActiveCart();
-    const removedItem = currentCart[index];
+    const startCart = getActiveCart();
+    const removedItem = startCart[index];
     if (!removedItem) return;
+
+    const removedId = removedItem.id;
+    // Повторный клик/свайп по тому же товару, пока идет анимация удаления, игнорируем
+    if (removingCartIds.has(removedId)) return;
+    removingCartIds.add(removedId);
     
     const imgUrl = getOptimizedImg(removedItem);
 
     const executeRemoval = async () => {
-        currentCart.splice(index, 1);
-        setActiveCart(currentCart);
-        await syncCartToServer();
-        updateCartUI(); 
-        showToast(`${typeof i18next !== 'undefined' ? i18next.t('messages.cart_delete') : 'Удалено: '}${removedItem.name}`, 'error', imgUrl);
-        
-        if (currentCart.length === 0) {
-            const dropdown = document.getElementById('cartDropdown');
-            if (dropdown) dropdown.classList.remove('active');
+        try {
+            // Индексы могли сместиться — ищем товар по id в актуальной корзине
+            const liveCart = getActiveCart();
+            const liveIndex = liveCart.findIndex(i => i && i.id === removedId);
+            if (liveIndex === -1) return;
+
+            liveCart.splice(liveIndex, 1);
+            setActiveCart(liveCart);
+            updateCartUI(); 
+            showToast(`${typeof i18next !== 'undefined' ? i18next.t('messages.cart_delete') : 'Удалено: '}${removedItem.name}`, 'error', imgUrl);
+            
+            if (liveCart.length === 0) {
+                const dropdown = document.getElementById('cartDropdown');
+                if (dropdown) dropdown.classList.remove('active');
+            }
+            await syncCartToServer();
+        } finally {
+            removingCartIds.delete(removedId);
         }
     };
 
@@ -1465,6 +1517,7 @@ async function executeOrderFinal(emailToSave) {
 
         setActiveCart([]);
         clearCheckoutDraft();
+        resetPromoState();
         if (!handledViaAtomicServer) {
             await syncCartToServer();
         }
@@ -1600,7 +1653,7 @@ async function applyPromoCode() {
     btn.innerText = '...';
     
     const currentCart = getActiveCart();
-    const originalTotal = currentCart.reduce((sum, item) => sum + item.price, 0);
+    const originalTotal = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
 
     try {
         const data = await window.apiClient.post('/api/check-promo', {

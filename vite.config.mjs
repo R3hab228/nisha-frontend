@@ -1,8 +1,31 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+
+// Уникальный ID каждой сборки: гарантирует, что URL и содержимое Service Worker
+// меняются при КАЖДОМ деплое (Cloudflare/браузер не смогут отдать устаревшую версию).
+const BUILD_ID = (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 8) + Date.now().toString(36);
+
+// Подставляет BUILD_ID в готовый dist/sw.js
+function swBuildIdPlugin() {
+  return {
+    name: 'nisha-sw-build-id',
+    apply: 'build',
+    closeBundle() {
+      const swPath = resolve(import.meta.dirname, 'dist', 'sw.js');
+      if (!existsSync(swPath)) return;
+      const src = readFileSync(swPath, 'utf8');
+      writeFileSync(swPath, src.split('__BUILD_ID__').join(BUILD_ID));
+    },
+  };
+}
 
 export default defineConfig({
   publicDir: 'public',
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
+  },
+  plugins: [swBuildIdPlugin()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,

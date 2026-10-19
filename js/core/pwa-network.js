@@ -3,8 +3,10 @@
 // ==========================================
 
 // === 1. АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ САЙТА (SERVICE WORKER) ===
-const APP_SW_VERSION = 'nisha-cache-v206';
-const SW_SCRIPT_URL = '/sw.js?v=206';
+const APP_BUILD_ID = (typeof __BUILD_ID__ !== 'undefined') ? __BUILD_ID__ : 'dev';
+const APP_SW_VERSION = 'nisha-cache-' + APP_BUILD_ID;
+// Уникальный URL воркера на каждый деплой: CDN (Cloudflare) физически не может отдать устаревший sw.js
+const SW_SCRIPT_URL = '/sw.js?b=' + encodeURIComponent(APP_BUILD_ID);
 
 function queryServiceWorkerVersion(worker) {
     return new Promise(resolve => {
@@ -61,7 +63,7 @@ if ('serviceWorker' in navigator) {
 
                 installingWorker.onstatechange = async () => {
                     if (installingWorker.state === 'installed' && hadControllerAtBoot && navigator.serviceWorker.controller) {
-                        if (updateModalShownInPage) return;
+                        if (updateModalShownInPage || APP_BUILD_ID === 'dev') return;
 
                         // Если пользователь уже нажал "Обновить сейчас" в этой сессии или менее 10 минут назад — не показываем повторно
                         try {
