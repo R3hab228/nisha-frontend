@@ -184,23 +184,11 @@ async function initApp() {
     }
 
     try {
-        // Умный дожим корзины при возвращении на сайт
-        const activeCart = (typeof cart !== 'undefined' && Array.isArray(cart)) ? cart : (window.cart || []);
-        if (activeCart.length > 0) {
-            const lastTime = localStorage.getItem('nisha_cart_time');
-            if (lastTime && (Date.now() - parseInt(lastTime, 10)) > 3600000 && !localStorage.getItem('nisha_cart_reminded')) {
-                setTimeout(() => {
-                    if (typeof showTerminalModal === 'function') {
-                        showTerminalModal(
-                            'SYSTEM_ALERT.LOG',
-                            'Мы заметили, что вы не завершили заказ. Редкие вещи забирают быстро!<br><br><b style="color:var(--accent-yellow);">Используйте промокод COMEBACK5 для скидки 5%!</b>',
-                            '[ ПРОДОЛЖИТЬ ПОКУПКИ ]', null
-                        );
-                    }
-                    localStorage.setItem('nisha_cart_reminded', 'true');
-                }, 2000);
-            }
-        }
+        try {
+            localStorage.removeItem('nisha_cart_time');
+            localStorage.removeItem('nisha_cart_reminded');
+            localStorage.removeItem('nisha_cart_push_sent_time');
+        } catch (e) {}
 
         // 1. Восстанавливаем фильтры, категорию и поисковый запрос
         const urlParams = new URLSearchParams(window.location.search);

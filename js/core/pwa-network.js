@@ -3,31 +3,119 @@
 // ==========================================
 
 // === 1. АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ САЙТА (SERVICE WORKER) ===
+const APP_SW_VERSION = 'nisha-cache-v206';
+const SW_SCRIPT_URL = '/sw.js?v=206';
+
+function queryServiceWorkerVersion(worker) {
+    return new Promise(resolve => {
+        if (!worker || typeof MessageChannel === 'undefined') {
+            return resolve(null);
+        }
+        let settled = false;
+        const timer = setTimeout(() => {
+            if (!settled) {
+                settled = true;
+                resolve(null);
+            }
+        }, 1200);
+        try {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = event => {
+                if (!settled) {
+                    settled = true;
+                    clearTimeout(timer);
+                    resolve((event.data && event.data.version) ? event.data.version : null);
+                }
+            };
+            worker.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+        } catch (e) {
+            if (!settled) {
+                settled = true;
+                clearTimeout(timer);
+                resolve(null);
+            }
+        }
+    });
+}
+
 if ('serviceWorker' in navigator) {
+    // Фиксируем наличие контроллера ДО регистрации, чтобы в новом браузере (например, при переходе из Chrome в Safari)
+    // первая установка SW никогда не вызывала плашку "Обновить сейчас"
+    const hadControllerAtBoot = Boolean(navigator.serviceWorker.controller);
+    let updateModalShownInPage = false;
+
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
+        try {
+            localStorage.setItem('nisha_sw_current_bundle', APP_SW_VERSION);
+        } catch (e) {}
+
+        navigator.serviceWorker.register(SW_SCRIPT_URL, { updateViaCache: 'none' }).then(registration => {
             console.log('[PWA] SW зарегистрирован');
-            
-            // Принудительно проверяем обновления при каждом заходе
-            registration.update();
+
+            // Проверяем обновления без использования HTTP-кэша
+            registration.update().catch(() => {});
 
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        console.log('[PWA] Найдено обновление!');
+                if (!installingWorker) return;
+
+                installingWorker.onstatechange = async () => {
+                    if (installingWorker.state === 'installed' && hadControllerAtBoot && navigator.serviceWorker.controller) {
+                        if (updateModalShownInPage) return;
+
+                        // Если пользователь уже нажал "Обновить сейчас" в этой сессии или менее 10 минут назад — не показываем повторно
+                        try {
+                            if (sessionStorage.getItem('nisha_sw_update_reloaded') === '1') return;
+                            const lastUpdateTs = parseInt(localStorage.getItem('nisha_sw_updated_ts') || '0', 10);
+                            if (lastUpdateTs && (Date.now() - lastUpdateTs) < 10 * 60 * 1000) return;
+                        } catch (e) {}
+
+                        // Узнаем версию нового воркера: если страница УЖЕ загружена со свежим JS-бандлом этой же версии,
+                        // плашка не нужна (воркер тихо активируется в фоне)
+                        const workerVersion = await queryServiceWorkerVersion(installingWorker);
+                        if (!workerVersion || workerVersion === APP_SW_VERSION) {
+                            try {
+                                localStorage.setItem('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
+                            } catch (e) {}
+                            return;
+                        }
+
+                        try {
+                            if (localStorage.getItem('nisha_sw_ack_version') === workerVersion) return;
+                        } catch (e) {}
+
+                        updateModalShownInPage = true;
+                        console.log('[PWA] Найдено новое обновление:', workerVersion);
 
                         const triggerUpdateModal = () => {
                             showTerminalModal(
-                                'SYSTEM_UPDATE.EXE', 
-                                'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.', 
-                                '[ ОБНОВИТЬ СЕЙЧАС ]', 
-                                () => {
-                                    caches.keys().then(names => {
-                                        for (let name of names) caches.delete(name);
-                                    }).then(() => {
-                                        window.location.reload();
-                                    });
+                                'SYSTEM_UPDATE.EXE',
+                                'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.',
+                                '[ ОБНОВИТЬ СЕЙЧАС ]',
+                                async () => {
+                                    try {
+                                        sessionStorage.setItem('nisha_sw_update_reloaded', '1');
+                                        localStorage.setItem('nisha_sw_updated_ts', String(Date.now()));
+                                        localStorage.setItem('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
+                                    } catch (e) {}
+
+                                    try {
+                                        if (registration.waiting) {
+                                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                                        }
+                                        if (installingWorker) {
+                                            installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        }
+                                    } catch (e) {}
+
+                                    try {
+                                        if ('caches' in window) {
+                                            const names = await caches.keys();
+                                            await Promise.all(names.map(name => caches.delete(name)));
+                                        }
+                                    } catch (e) {}
+
+                                    window.location.reload();
                                 }
                             );
                         };
@@ -41,7 +129,6 @@ if ('serviceWorker' in navigator) {
                         };
 
                         if (isUserBusyWithOrder()) {
-                            // Откладываем модалку обновления, пока пользователь не закончит покупку
                             const checkInterval = setInterval(() => {
                                 if (!isUserBusyWithOrder()) {
                                     clearInterval(checkInterval);
@@ -169,64 +256,11 @@ if (installBtn) {
     });
 }
 
-// === 4. УМНАЯ ВКЛАДКА (ВОЗВРАТ КЛИЕНТА, ПУШ, СИНХРОНИЗАЦИЯ) ===
-let cartAbandonTimeout = null;
-const CART_PUSH_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-
+// === 4. УМНАЯ ВКЛАДКА (СИНХРОНИЗАЦИЯ СЕССИИ И ЗАГОЛОВКА) ===
 document.addEventListener("visibilitychange", async () => {
     if (document.hidden) {
-        let userCart = [];
-        try {
-            userCart = (typeof cart !== 'undefined' && Array.isArray(cart)) ? cart : (window.cart || JSON.parse(localStorage.getItem('nisha_cart') || '[]'));
-        } catch(e) {
-            userCart = [];
-        }
-
-        if (userCart && userCart.length > 0) {
-            document.title = `(${userCart.length}) 🛒 Ждем тебя | NISHA`;
-
-            const lastSent = parseInt(localStorage.getItem('nisha_cart_push_sent_time') || '0', 10);
-            if (Date.now() - lastSent < CART_PUSH_COOLDOWN_MS) {
-                return;
-            }
-
-            if (cartAbandonTimeout) clearTimeout(cartAbandonTimeout);
-            cartAbandonTimeout = setTimeout(() => {
-                if (!document.hidden) return;
-
-                let freshCart = [];
-                try {
-                    freshCart = JSON.parse(localStorage.getItem('nisha_cart') || '[]');
-                } catch(e) { freshCart = []; }
-                if (!freshCart || freshCart.length === 0) return;
-
-                const checkLastSent = parseInt(localStorage.getItem('nisha_cart_push_sent_time') || '0', 10);
-                if (Date.now() - checkLastSent < CART_PUSH_COOLDOWN_MS) return;
-
-                localStorage.setItem('nisha_cart_push_sent_time', Date.now().toString());
-
-                if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification("NISHA STORE", {
-                            body: "Твои товары все еще ждут в корзине! Оформи, пока их не забрали.",
-                            icon: '/icon-192.png',
-                            badge: '/badge.png',
-                            tag: 'nisha-cart-abandon',
-                            renotify: false,
-                            vibrate: [200, 100, 200],
-                            data: { url: '/' }
-                        });
-                    }).catch(err => console.error("SW notification error:", err));
-                }
-            }, 10 * 60 * 1000);
-        } else {
-            document.title = `Zzz... | NISHA`;
-        }
+        document.title = `Zzz... | NISHA`;
     } else {
-        if (cartAbandonTimeout) {
-            clearTimeout(cartAbandonTimeout);
-            cartAbandonTimeout = null;
-        }
         const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
         if (activeItem) {
             document.title = `NISHA | ${activeItem.brand} - ${activeItem.name}`;

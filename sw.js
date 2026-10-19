@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v205';
+const CACHE_NAME = 'nisha-cache-v206';
 const IMAGE_CACHE = 'nisha-images-v4';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
@@ -35,6 +35,15 @@ function scheduleTrimCache(cacheName, maxItems = 150) {
     }, 4000);
 }
 
+self.addEventListener('message', event => {
+    if (!event.data) return;
+    if (event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    } else if (event.data.type === 'GET_VERSION' && event.ports && event.ports[0]) {
+        event.ports[0].postMessage({ version: CACHE_NAME });
+    }
+});
+
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
@@ -58,9 +67,8 @@ self.addEventListener('activate', event => {
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim())
     );
-    self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
@@ -68,8 +76,10 @@ self.addEventListener('fetch', event => {
 
     const url = new URL(event.request.url);
 
-    // Исключения (видео, сторонние API)
+    // Исключения (сам Service Worker, видео, сторонние API)
     if (
+        url.pathname === '/sw.js' ||
+        url.pathname.endsWith('/sw.js') ||
         url.pathname.endsWith('.mp4') || 
         url.pathname.endsWith('.webm') || 
         event.request.headers.get('range') ||

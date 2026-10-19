@@ -92,13 +92,6 @@ function setActiveCart(newCart) {
     } else {
         localStorage.setItem('nisha_cart', JSON.stringify(newCart));
     }
-    if (!newCart || newCart.length === 0) {
-        if (window.store && typeof window.store.set === 'function') {
-            window.store.set('cartPushSentTime', 0);
-        } else {
-            localStorage.removeItem('nisha_cart_push_sent_time');
-        }
-    }
 }
 
 function getCurrentUser() {
@@ -143,9 +136,6 @@ async function addToCartById(itemId) {
     }
     
     await syncCartToServer();
-    
-    localStorage.setItem('nisha_cart_time', Date.now());
-    localStorage.removeItem('nisha_cart_reminded');
     updateCartUI();
     showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success', getOptimizedImg(item));
 }
