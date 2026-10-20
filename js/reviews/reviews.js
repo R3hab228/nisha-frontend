@@ -57,7 +57,6 @@ async function openReviewsModal() {
             const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : (rev.user_name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             
             const revImg = rev.item_image ? toCDN(rev.item_image) : '';
-            const jsRevImg = typeof window.escapeJsString === 'function' ? window.escapeJsString(revImg) : revImg.replace(/'/g, "\\'");
             const safeRevImg = typeof window.escapeHtml === 'function' ? window.escapeHtml(revImg) : revImg.replace(/"/g, '&quot;');
             const clickAction = revImg ? `data-action="open-review-image" data-img="${safeRevImg}"` : '';
             const imgHtml = revImg ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${safeRevImg}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';

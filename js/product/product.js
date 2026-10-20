@@ -157,7 +157,7 @@ async function openProductModalById(itemId) {
             
             // Если товара не было в кэше вообще (переход по прямой ссылке), открываем сейчас
             if (!item && fullItem) {
-                openProductModal(fullItem);
+                if (typeof closeModal === 'function') { const om = document.getElementById('ordersModal'); if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal'); const rm = document.getElementById('reviewsModal'); if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal'); } openProductModal(fullItem);
                 return;
             }
             
@@ -171,7 +171,7 @@ async function openProductModalById(itemId) {
                 window.currentOpenedItem = fullItem;
 
                 if (hadNoImages && hasFullImages) {
-                    openProductModal(fullItem);
+                    if (typeof closeModal === 'function') { const om = document.getElementById('ordersModal'); if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal'); const rm = document.getElementById('reviewsModal'); if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal'); } openProductModal(fullItem);
                     return;
                 }
 

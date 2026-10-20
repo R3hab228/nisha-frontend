@@ -230,6 +230,7 @@ if (mainSearchInput) {
 }
 
 document.addEventListener('click', (e) => {
+    if (!e.target || !e.target.isConnected) return;
     if (!e.target.closest('.search-wrapper')) {
         closeSearch();
     }

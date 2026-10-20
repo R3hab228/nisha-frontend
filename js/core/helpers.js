@@ -861,7 +861,7 @@ function initActionDelegation() {
     if (window._nishaActionDelegationBound) return;
     window._nishaActionDelegationBound = true;
 
-    document.addEventListener('click', handleDelegatedAction);
+    document.addEventListener('click', handleDelegatedAction, true);
 
     document.addEventListener('mouseover', (e) => {
         if (!e.target || typeof e.target.closest !== 'function') return;
