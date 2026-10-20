@@ -586,10 +586,10 @@ function openProductModal(item) {
 
                 cardsHTML += `
                     <div class="similar-item-card ${unseenClass}" 
-                         onmouseenter="if(typeof window.showItemMeasurementsTooltip === 'function') window.showItemMeasurementsTooltip('${s.id}', event)"
+                         onmouseenter="if(typeof window.showItemMeasurementsTooltip === 'function') window.showItemMeasurementsTooltip('${typeof window.escapeJsString==='function'?window.escapeJsString(s.id):s.id}', event)"
                          onmousemove="if(typeof window.moveItemMeasurementsTooltip === 'function') window.moveItemMeasurementsTooltip(event)"
                          onmouseleave="if(typeof window.hideItemMeasurementsTooltip === 'function') window.hideItemMeasurementsTooltip()"
-                         onclick="openProductModalById('${s.id}')">
+                         onclick="openProductModalById('${typeof window.escapeJsString==='function'?window.escapeJsString(s.id):s.id}')">
                         <div class="similar-card-img-wrap">
                             ${miniBadgeHTML}
                             ${statusOverlayHTML}
@@ -1094,10 +1094,10 @@ function renderHistory() {
                 ${mediaHTML}
                 ${miniBadgeHTML}
                 ${statusOverlayHTML}
-                <div class="history-item-remove" onclick="removeHistoryItem(event, '${h.id}')" title="Удалить" style="z-index: 20;">X</div>
+                <div class="history-item-remove" onclick="removeHistoryItem(event, '${typeof window.escapeJsString==='function'?window.escapeJsString(h.id):h.id}')" title="Удалить" style="z-index: 20;">X</div>
             </div>
             <div class="history-info">
-                <div class="history-name" title="${h.name}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${h.name}</div>
+                <div class="history-name" title="${typeof window.escapeAttr==='function'?window.escapeAttr(h.name):h.name}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(h.name):h.name}</div>
                 <div class="history-price">${finalPriceHTML}</div>
             </div>`;
             

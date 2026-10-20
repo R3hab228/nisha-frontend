@@ -433,7 +433,7 @@ function renderProfilePhone(phone) {
     const pWrap = document.getElementById('profilePhoneInputWrap');
     if (pPhone && pBtn) {
         if (hasPhone) {
-            pPhone.innerHTML = `<span style="word-break:break-all">${phone}</span>${delBtnHtml(false)}`;
+            pPhone.innerHTML = `<span style="word-break:break-all">${typeof window.escapeHtml==='function'?window.escapeHtml(phone):phone}</span>${delBtnHtml(false)}`;
             pPhone.style.display = 'flex';
             pPhone.style.alignItems = 'center';
             pPhone.style.justifyContent = 'space-between';
@@ -452,7 +452,7 @@ function renderProfilePhone(phone) {
     const mWrap = document.getElementById('modalProfilePhoneInputWrap');
     if (mPhone && mBtn) {
         if (hasPhone) {
-            mPhone.innerHTML = `<span style="word-break:break-all">${phone}</span>${delBtnHtml(true)}`;
+            mPhone.innerHTML = `<span style="word-break:break-all">${typeof window.escapeHtml==='function'?window.escapeHtml(phone):phone}</span>${delBtnHtml(true)}`;
             mPhone.style.display = 'flex';
             mPhone.style.alignItems = 'center';
             mPhone.style.justifyContent = 'space-between';
@@ -816,7 +816,7 @@ function renderProfileTg(tg) {
     const pWrap = document.getElementById('profileTgInputWrap');
     if (pTg && pBtn) {
         if (hasTg) {
-            pTg.innerHTML = `<span style="word-break:break-all">${formattedTg}</span>${delBtnHtml(false)}`;
+            pTg.innerHTML = `<span style="word-break:break-all">${typeof window.escapeHtml==='function'?window.escapeHtml(formattedTg):formattedTg}</span>${delBtnHtml(false)}`;
             pTg.style.display = 'flex';
             pTg.style.alignItems = 'center';
             pTg.style.justifyContent = 'space-between';
@@ -835,7 +835,7 @@ function renderProfileTg(tg) {
     const mWrap = document.getElementById('modalProfileTgInputWrap');
     if (mTg && mBtn) {
         if (hasTg) {
-            mTg.innerHTML = `<span style="word-break:break-all">${formattedTg}</span>${delBtnHtml(true)}`;
+            mTg.innerHTML = `<span style="word-break:break-all">${typeof window.escapeHtml==='function'?window.escapeHtml(formattedTg):formattedTg}</span>${delBtnHtml(true)}`;
             mTg.style.display = 'flex';
             mTg.style.alignItems = 'center';
             mTg.style.justifyContent = 'space-between';
@@ -1847,21 +1847,21 @@ function renderFilteredOrders() {
                      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
                          <span style="font-family: var(--font-mono); font-size: 13px; color: #aaa;">ТТН:</span>
                          <div style="display: flex; align-items: center; gap: 8px;">
-                             <div class="ttn-copy-btn" onclick="copyTTN('${order.tracking_number}', this)" title="Нажмите, чтобы скопировать номер ТТН" style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0, 255, 0, 0.05); border: 1px dashed rgba(0, 255, 0, 0.3); transition: all 0.2s ease;">
+                             <div class="ttn-copy-btn" onclick="copyTTN('${typeof window.escapeJsString==='function'?window.escapeJsString(order.tracking_number):order.tracking_number}', this)" title="Нажмите, чтобы скопировать номер ТТН" style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0, 255, 0, 0.05); border: 1px dashed rgba(0, 255, 0, 0.3); transition: all 0.2s ease;">
                                  <svg class="ttn-copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; vertical-align: middle; transition: transform 0.2s ease, stroke 0.2s ease;">
                                      <rect x="2" y="2" width="13" height="13" rx="3.5"></rect>
                                      <path d="M7.5 7.5h8.5a3.5 3.5 0 0 1 3.5 3.5v8.5a3.5 3.5 0 0 1-3.5 3.5H7.5a3.5 3.5 0 0 1-3.5-3.5"></path>
                                  </svg>
-                                 <span style="color:var(--accent-green); font-weight:bold; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.5px; user-select: all;">${order.tracking_number}</span>
+                                 <span style="color:var(--accent-green); font-weight:bold; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.5px; user-select: all;">${typeof window.escapeHtml==='function'?window.escapeHtml(order.tracking_number):order.tracking_number}</span>
                              </div>
-                             <a href="https://novaposhta.ua/tracking/?cargo_number=${order.tracking_number}" target="_blank" rel="noopener noreferrer" title="Отследить на Новой Почте" style="display: inline-flex; align-items: center; gap: 4px; color: var(--accent-green); text-decoration: none; font-size: 11px; font-family: var(--font-mono); padding: 3px 6px; border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 4px; background: rgba(0, 255, 0, 0.05); transition: 0.2s;">
+                             <a href="https://novaposhta.ua/tracking/?cargo_number=${encodeURIComponent(order.tracking_number)}" target="_blank" rel="noopener noreferrer" title="Отследить на Новой Почте" style="display: inline-flex; align-items: center; gap: 4px; color: var(--accent-green); text-decoration: none; font-size: 11px; font-family: var(--font-mono); padding: 3px 6px; border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 4px; background: rgba(0, 255, 0, 0.05); transition: 0.2s;">
                                  <span>ТРЕК</span>
                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                              </a>
                          </div>
                      </div>
                      <div style="background:#fff; text-align:center; padding: 10px; margin-top: 6px; border-radius:4px;">
-                         <svg class="barcode-svg" data-ttn="${order.tracking_number}"></svg>
+                         <svg class="barcode-svg" data-ttn="${typeof window.escapeAttr==='function'?window.escapeAttr(order.tracking_number):order.tracking_number}"></svg>
                      </div>
                    </div>`
                 : `<div class="order-ttn" style="color:#777;">ТТН: Ожидается генерация...</div>`;
@@ -1877,7 +1877,7 @@ function renderFilteredOrders() {
             if (order.items && order.items.length > 0) {
                 const firstItem = order.items[0];
                 const firstItemImg = getOrderItemImage(firstItem);
-                const safeName = (firstItem.name || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                const safeName = String(firstItem.name || '');
                 const msgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; position: relative; top: 2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
                 
                 if (!reviewedOrders.includes(order.id)) {
@@ -1905,7 +1905,7 @@ function renderFilteredOrders() {
             <div class="order-card">
                 <div class="order-header">
                     <span class="order-id">ЗАКАЗ #${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
-                    <span class="order-status status-${statusSlug}">${(order.status || '').toUpperCase()}</span>
+                    <span class="order-status status-${typeof window.escapeAttr==='function'?window.escapeAttr(statusSlug):statusSlug}">${typeof window.escapeHtml==='function'?window.escapeHtml((order.status || '').toUpperCase()):(order.status || '').toUpperCase()}</span>
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>
                 ${reviewBtnHtml}

@@ -65,11 +65,14 @@ function showSearchHistory() {
     } catch(e) { history = []; }
     if (history.length === 0) return;
 
+    const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const escJs = typeof window.escapeJsString === 'function' ? window.escapeJsString : (s) => escHtml(String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
     let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); closeSearch(); event.stopPropagation();">[ ОЧИСТИТЬ ]</span></div>`;
     history.forEach(term => {
-        const safeTerm = term.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        html += `<div class="search-history-item" onclick="document.getElementById('mainSearch').value='${safeTerm}'; handleLiveSearch();">
-                    <span>> ${safeTerm}</span>
+        const safeTermHtml = escHtml(term);
+        const safeTermJs = escJs(term);
+        html += `<div class="search-history-item" onclick="document.getElementById('mainSearch').value='${safeTermJs}'; handleLiveSearch();">
+                    <span>> ${safeTermHtml}</span>
                  </div>`;
     });
     dropdown.innerHTML = html;
@@ -137,34 +140,39 @@ function handleLiveSearch() {
             document.body.classList.add('search-lock');
             if (typeof window.stopLenis === 'function') window.stopLenis();
             
+            const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const escJs = typeof window.escapeJsString === 'function' ? window.escapeJsString : (s) => escHtml(String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
             let html = '';
             results.forEach(result => {
                 const item = result.item;
                 const rawImg = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : ((item.images && item.images[0]) ? item.images[0] : '');
                 const img = typeof window.toCDN === 'function' ? window.toCDN(rawImg) : rawImg;
+                const safeImg = escJs(img);
+                const safeId = escJs(item.id);
+                const rawItemName = String(item.name || '');
                 
-                let highlightedName = item.name;
+                let highlightedName = escHtml(rawItemName);
                 if (result.matches) {
                     const nameMatch = result.matches.find(m => m.key === 'name');
                     if (nameMatch) {
                         let tempName = '';
                         let lastIdx = 0;
                         nameMatch.indices.forEach(([start, end]) => {
-                            tempName += item.name.substring(lastIdx, start);
-                            tempName += `<span style="color: var(--accent-green); background: rgba(0,255,0,0.1);">${item.name.substring(start, end + 1)}</span>`;
+                            tempName += escHtml(rawItemName.substring(lastIdx, start));
+                            tempName += `<span style="color: var(--accent-green); background: rgba(0,255,0,0.1);">${escHtml(rawItemName.substring(start, end + 1))}</span>`;
                             lastIdx = end + 1;
                         });
-                        tempName += item.name.substring(lastIdx);
+                        tempName += escHtml(rawItemName.substring(lastIdx));
                         highlightedName = tempName;
                     }
                 }
 
                 html += `
-                    <div class="live-search-item" onclick="openProductModalById('${item.id}'); closeSearch();">
-                        <div class="live-search-img" style="background-image: url('${img}')"></div>
+                    <div class="live-search-item" onclick="openProductModalById('${safeId}'); closeSearch();">
+                        <div class="live-search-img" style="background-image: url('${safeImg}')"></div>
                         <div class="live-search-info">
                             <span class="live-search-title">${highlightedName}</span>
-                            <span class="live-search-price">${item.price} грн</span>
+                            <span class="live-search-price">${escHtml(item.price)} грн</span>
                         </div>
                     </div>`;
             });
