@@ -115,7 +115,7 @@ videoTags + '\n' +
 '<meta name="twitter:title" content="' + title + '">\n' +
 '<meta name="twitter:description" content="' + description + '">\n' +
 '<meta name="twitter:image" content="' + imageUrl + '">\n' +
-'<script type="application/ld+json">' + jsonLd + '</script>\n' +
+'<script type="application/ld+json">' + jsonLd.replace(/</g, '\\u003c') + '</script>\n' +
 '</head>\n' +
 '<body>\n' +
 '<script>window.location.replace("/?item=' + id + '");</script>\n' +

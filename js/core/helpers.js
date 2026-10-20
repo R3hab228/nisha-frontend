@@ -2,6 +2,36 @@
 // NISHA CORE HELPERS (Утилиты, тосты, вибрация)
 // ==========================================
 
+// --- SANITIZATION & ESCAPING UTILITIES (XSS SHIELD) ---
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+window.escapeHtml = escapeHtml;
+
+function escapeAttr(str) {
+    return escapeHtml(str);
+}
+window.escapeAttr = escapeAttr;
+
+function escapeJsString(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/</g, '\\x3c')
+        .replace(/>/g, '\\x3e')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+}
+window.escapeJsString = escapeJsString;
+
 // --- VIBRATION & HAPTIC FEEDBACK ---
 function triggerVibration(duration = 150) {
     if ('vibrate' in navigator) {

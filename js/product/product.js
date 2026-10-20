@@ -192,7 +192,7 @@ async function openProductModalById(itemId) {
                                 <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${brandTitle}</span></strong> 
                                 <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${fullItem.brand}</span>
                             </div>
-                            <div style="color: #aaa; font-size: 13px;">${descText}</div>
+                            <div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : (typeof window.escapeHtml === 'function' ? window.escapeHtml(descText) : descText)}</div>
                         ` + qaPart;
                     }
                 }
@@ -282,7 +282,7 @@ function openProductModal(item) {
     const tagsContainer = document.getElementById('modalItemTags');
     if (tagsContainer) {
         if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
-            tagsContainer.innerHTML = item.tags.slice(0, 3).map(t => `<span style="color: #fff; margin-right: 12px; letter-spacing: 0.5px;">#${t}</span>`).join('');
+            tagsContainer.innerHTML = item.tags.slice(0, 3).map(t => `<span style="color: #fff; margin-right: 12px; letter-spacing: 0.5px;">#${typeof window.escapeHtml === 'function' ? window.escapeHtml(t) : t}</span>`).join('');
             tagsContainer.style.display = 'block';
         } else {
             tagsContainer.style.display = 'none';

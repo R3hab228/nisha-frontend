@@ -1936,10 +1936,10 @@ onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbac
                     ${controlsHTML}
                 </div>
                 <div class="item-info" onclick="openProductModalById('${item.id}')">
-                    <h3 class="item-title">${item.name}</h3>
+                    <h3 class="item-title">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || '') : item.name}</h3>
                     <div class="item-price">${priceHTML}</div>
-                    <div class="item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${item.size}</div>
-                    <div class="item-footer"><span>${item.brand}</span><span>${item.condition}</span></div>
+                    <div class="item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '') : item.size}</div>
+                    <div class="item-footer"><span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.brand || '') : item.brand}</span><span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.condition || '') : item.condition}</span></div>
                 </div>
                 <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${addToCartText}</button>
             `;

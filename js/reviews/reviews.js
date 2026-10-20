@@ -57,11 +57,14 @@ async function openReviewsModal() {
             const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : (rev.user_name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             
             const revImg = rev.item_image ? toCDN(rev.item_image) : '';
-            const clickAction = revImg ? `onclick="openReviewImage('${revImg}')"` : '';
-            const imgHtml = revImg ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${revImg}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
+            const jsRevImg = typeof window.escapeJsString === 'function' ? window.escapeJsString(revImg) : revImg.replace(/'/g, "\\'");
+            const safeRevImg = typeof window.escapeHtml === 'function' ? window.escapeHtml(revImg) : revImg.replace(/"/g, '&quot;');
+            const clickAction = revImg ? `onclick="openReviewImage('${jsRevImg}')"` : '';
+            const imgHtml = revImg ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${safeRevImg}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
             
             const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
-            const productLinkAction = rev.item_id ? `onclick="openProductModalById('${rev.item_id}')" title="Открыть товар"` : '';
+            const safeItemId = typeof window.escapeJsString === 'function' ? window.escapeJsString(rev.item_id) : String(rev.item_id || '').replace(/'/g, "\\'");
+            const productLinkAction = rev.item_id ? `onclick="openProductModalById('${safeItemId}')" title="Открыть товар"` : '';
 
             html += `
             <div class="review-card-ui">

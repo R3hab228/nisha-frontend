@@ -103,6 +103,20 @@
         const headers = new Headers(options.headers || {});
         let finalBody = options.body;
 
+        // Автоматическая передача JWT токена текущей авторизованной сессии Supabase (защита от IDOR/BOLA)
+        if (!headers.has('Authorization') && typeof window !== 'undefined') {
+            try {
+                const sb = window._supabase || (typeof window.getSupabase === 'function' ? window.getSupabase() : null);
+                if (sb && sb.auth && typeof sb.auth.getSession === 'function') {
+                    const sess = await sb.auth.getSession();
+                    const tok = sess && sess.data && sess.data.session && sess.data.session.access_token;
+                    if (tok) {
+                        headers.set('Authorization', `Bearer ${tok}`);
+                    }
+                }
+            } catch (authErr) {}
+        }
+
         if (finalBody !== undefined && finalBody !== null && !isUpload) {
             if (typeof finalBody === 'object' && !(finalBody instanceof Blob) && !(finalBody instanceof URLSearchParams)) {
                 if (options.idempotencyKey && finalBody && typeof finalBody === 'object' && !Array.isArray(finalBody) && !finalBody.idempotencyKey) {

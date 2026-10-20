@@ -1826,14 +1826,15 @@ function renderFilteredOrders() {
         if (order.items && Array.isArray(order.items)) {
             order.items.forEach(item => {
                 const itemImg = getOrderItemImage(item);
-                const imgStyle = itemImg ? `background-image: url('${itemImg}');` : '';
+                const safeImgUrl = typeof window.escapeHtml === 'function' ? window.escapeHtml(itemImg) : (itemImg || '').replace(/"/g, '&quot;');
+                const imgStyle = itemImg ? `background-image: url('${safeImgUrl}');` : '';
                 const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);
                 itemsHtml += `
-                    <div class="order-item-row" onclick="if(typeof openProductModalById==='function') openProductModalById('${item.id}')" title="Открыть карточку товара">
-                        <div class="order-item-img" data-item-id="${item.id}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
+                    <div class="order-item-row" onclick="if(typeof openProductModalById==='function') openProductModalById('${typeof window.escapeJsString === 'function' ? window.escapeJsString(item.id) : item.id}')" title="Открыть карточку товара">
+                        <div class="order-item-img" data-item-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
                         <div class="order-item-details">
-                            <div class="order-item-name">${item.name}</div>
-                            <div class="order-item-meta"><span>Размер: ${item.size || '—'}</span><span class="order-item-price">${itemPrice} грн</span></div>
+                            <div class="order-item-name">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || 'Товар') : item.name}</div>
+                            <div class="order-item-meta"><span>Размер: ${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '—') : (item.size || '—')}</span><span class="order-item-price">${itemPrice} грн</span></div>
                         </div>
                     </div>`;
             });
@@ -1882,7 +1883,7 @@ function renderFilteredOrders() {
                 if (!reviewedOrders.includes(order.id)) {
                     reviewBtnHtml = `
                         <div style="margin-top: 10px; cursor: pointer; color: var(--accent-green); font-size: 12px; font-family: var(--font-main); text-align: center; transition: 0.2s;" 
-                             onclick="if(typeof closeModal==='function') closeModal('ordersModal'); if(typeof promptOrderReview==='function') promptOrderReview('${order.id}', '${safeName}', '${firstItemImg}', '${firstItem.id}')" 
+                             onclick="if(typeof closeModal==='function') closeModal('ordersModal'); if(typeof promptOrderReview==='function') promptOrderReview('${typeof window.escapeJsString==='function'?window.escapeJsString(order.id):order.id}', '${typeof window.escapeJsString==='function'?window.escapeJsString(safeName):safeName}', '${typeof window.escapeJsString==='function'?window.escapeJsString(firstItemImg):firstItemImg}', '${typeof window.escapeJsString==='function'?window.escapeJsString(firstItem.id):firstItem.id}')" 
                              onmouseover="this.style.textDecoration='underline'; this.style.color='#fff';" 
                              onmouseout="this.style.textDecoration='none'; this.style.color='var(--accent-green)';">
                             ${msgIcon} Оставить отзыв

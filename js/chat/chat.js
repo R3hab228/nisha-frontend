@@ -102,7 +102,8 @@ function initSupportRepliesSystem() {
                     replies.forEach(r => {
                         if (r.id && window._shownSupportReplyIds.has(r.id)) return;
                         if (r.id) window._shownSupportReplyIds.add(r.id);
-                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
+                        const safeAnswer = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(r.answer_text) : (typeof window.escapeHtml === 'function' ? window.escapeHtml(r.answer_text) : r.answer_text);
+                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${safeAnswer}`, '[ ПРОЧИТАНО ]', () => {
                             activeSb.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
                     });
@@ -137,7 +138,8 @@ function initSupportRepliesSystem() {
                 window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
                 if (r.id && window._shownSupportReplyIds.has(r.id)) return;
                 if (r.id) window._shownSupportReplyIds.add(r.id);
-                showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${r.answer_text}`, '[ ПРОЧИТАНО ]', () => {
+                const safeAnswer = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(r.answer_text) : (typeof window.escapeHtml === 'function' ? window.escapeHtml(r.answer_text) : r.answer_text);
+                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${safeAnswer}`, '[ ПРОЧИТАНО ]', () => {
                     sb.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                 });
             })
