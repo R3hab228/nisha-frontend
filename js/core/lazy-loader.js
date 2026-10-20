@@ -67,11 +67,22 @@ const loadChatModule = registerLazyModuleBridge(
     ]
 );
 
+const loadOrdersModule = registerLazyModuleBridge(
+    () => import('../orders/orders.js'),
+    [
+        'openOrdersModal',
+        'fetchMyOrders',
+        'switchOrderTab',
+        'copyTTN'
+    ]
+);
+
 // Фоновая предзагрузка вторичных чанков в простой браузера (не блокирует First Contentful Paint)
 const preloadSecondaryModules = () => {
     loadDropModule();
     loadReviewsModule();
     loadChatModule();
+    loadOrdersModule();
 };
 
 if ('requestIdleCallback' in window) {

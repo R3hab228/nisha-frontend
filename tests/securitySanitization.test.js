@@ -132,4 +132,77 @@ describe('Security Sanitization & XSS Shield', () => {
         handleDelegatedAction({ target: { closest: () => disabledPageBtn } });
         expect(window.changePage).not.toHaveBeenCalled();
     });
+
+    it('handleDelegatedMediaLoad, handleDelegatedMediaError, handleDelegatedMediaCanPlay and handleDelegatedScroll work cleanly', () => {
+        const {
+            handleDelegatedMediaLoad,
+            handleDelegatedMediaError,
+            handleDelegatedMediaCanPlay,
+            handleDelegatedScroll
+        } = window;
+
+        // 1. Card image load removes loading class and sets opacity=1
+        const parentSlide = {
+            classList: { remove: vi.fn(), add: vi.fn() }
+        };
+        const cardImg = {
+            classList: { contains: (c) => c === 'card-slide-img' },
+            style: { opacity: '0' },
+            parentElement: parentSlide
+        };
+        handleDelegatedMediaLoad({ target: cardImg });
+        expect(cardImg.style.opacity).toBe('1');
+        expect(parentSlide.classList.remove).toHaveBeenCalledWith('img-8bit-loading');
+        expect(parentSlide.classList.add).toHaveBeenCalledWith('img-8bit-loaded');
+
+        // 2. Card image error first retries fallbackSrc, then shows NO SIGNAL on second error
+        const errImg = {
+            classList: { contains: (c) => c === 'card-slide-img' },
+            dataset: { fallbackSrc: 'https://cdn/fallback.jpg' },
+            src: 'https://cdn/broken-thumb.webp',
+            outerHTML: '',
+            parentElement: { classList: { remove: vi.fn() } }
+        };
+        handleDelegatedMediaError({ target: errImg });
+        expect(errImg.dataset.fb).toBe('1');
+        expect(errImg.src).toBe('https://cdn/fallback.jpg');
+
+        // Second error after fallback already tried
+        handleDelegatedMediaError({ target: errImg });
+        expect(errImg.outerHTML).toContain('NO SIGNAL');
+
+        // 3. Video canplay reveals grid-lazy-video
+        const gridVideo = {
+            classList: { contains: (c) => c === 'grid-lazy-video' },
+            style: { opacity: '0' },
+            parentElement: { classList: { remove: vi.fn(), add: vi.fn() } }
+        };
+        handleDelegatedMediaCanPlay({ target: gridVideo });
+        expect(gridVideo.style.opacity).toBe('1');
+        expect(gridVideo.parentElement.classList.remove).toHaveBeenCalledWith('img-8bit-loading');
+
+        // 4. Delegated scroll calls updateCardDots
+        window.updateCardDots = vi.fn();
+        const sliderEl = {
+            classList: { contains: (c) => c === 'card-slider-container' },
+            getAttribute: (k) => (k === 'data-item-id' ? 'item-777' : null),
+            id: 'slider-item-777'
+        };
+        handleDelegatedScroll({ target: sliderEl });
+        expect(window.updateCardDots).toHaveBeenCalledWith(sliderEl, 'item-777');
+    });
+
+    it('orders.js lazy chunk initializes and resolves order images and tab counters accurately', () => {
+        const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+        eval(ordersCode);
+
+        expect(typeof window.openOrdersModal).toBe('function');
+        expect(typeof window.updateOrderTabCounters).toBe('function');
+        expect(typeof window.getOrderItemImage).toBe('function');
+        expect(typeof window.renderFilteredOrders).toBe('function');
+
+        window.toCDN = (u) => u;
+        const resolved = window.getOrderItemImage({ id: 'i1', image: 'https://cdn.nisha.Vintage/jacket.webp' });
+        expect(resolved).toBe('https://cdn.nisha.Vintage/jacket.webp');
+    });
 });

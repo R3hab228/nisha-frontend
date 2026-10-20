@@ -856,12 +856,99 @@ function handleDelegatedAction(e) {
 }
 window.handleDelegatedAction = handleDelegatedAction;
 
+function handleDelegatedMediaLoad(e) {
+    const target = e && e.target;
+    if (!target || !target.classList) return;
+
+    if (target.classList.contains('card-slide-img')) {
+        target.style.opacity = '1';
+        if (target.parentElement) {
+            target.parentElement.classList.remove('img-8bit-loading');
+            target.parentElement.classList.add('img-8bit-loaded');
+        }
+    } else if (target.classList.contains('modal-slide-img')) {
+        target.style.opacity = '1';
+        if (target.parentElement) {
+            if (target.naturalWidth) target.parentElement.setAttribute('data-pswp-width', target.naturalWidth);
+            if (target.naturalHeight) target.parentElement.setAttribute('data-pswp-height', target.naturalHeight);
+            target.parentElement.classList.remove('skeleton');
+            target.parentElement.style.border = 'none';
+        }
+    }
+}
+window.handleDelegatedMediaLoad = handleDelegatedMediaLoad;
+
+function handleDelegatedMediaError(e) {
+    const target = e && e.target;
+    if (!target || !target.classList) return;
+
+    if (target.classList.contains('card-slide-img')) {
+        const ds = target.dataset || {};
+        const fallbackSrc = ds.fallbackSrc || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fallback-src') : '');
+        const hasTriedFb = ds.fb || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fb') : '');
+        const currentSrc = target.src || (typeof target.getAttribute === 'function' ? target.getAttribute('src') : '');
+        if (!hasTriedFb && fallbackSrc && fallbackSrc !== currentSrc) {
+            if (target.dataset) target.dataset.fb = '1';
+            if (typeof target.setAttribute === 'function') target.setAttribute('data-fb', '1');
+            target.src = fallbackSrc;
+            return;
+        }
+        if (target.parentElement) {
+            target.parentElement.classList.remove('img-8bit-loading');
+        }
+        target.outerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;">NO SIGNAL</div>';
+    } else if (target.classList.contains('similar-slide-img')) {
+        target.style.display = 'none';
+        if (target.parentElement) {
+            target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;font-size:10px;font-family:var(--font-mono);">ERROR</div>';
+        }
+    }
+}
+window.handleDelegatedMediaError = handleDelegatedMediaError;
+
+function handleDelegatedMediaCanPlay(e) {
+    const target = e && e.target;
+    if (!target || !target.classList) return;
+
+    if (target.classList.contains('grid-lazy-video')) {
+        target.style.opacity = '1';
+        if (target.parentElement) {
+            target.parentElement.classList.remove('img-8bit-loading');
+            target.parentElement.classList.add('img-8bit-loaded');
+        }
+    } else if (target.classList.contains('modal-video-player')) {
+        target.style.opacity = '1';
+        if (target.parentElement) {
+            target.parentElement.classList.remove('img-8bit-loading');
+        }
+    }
+}
+window.handleDelegatedMediaCanPlay = handleDelegatedMediaCanPlay;
+
+function handleDelegatedScroll(e) {
+    const target = e && e.target;
+    if (!target || !target.classList) return;
+
+    if (target.classList.contains('card-slider-container')) {
+        const itemId = (typeof target.getAttribute === 'function' && target.getAttribute('data-item-id'))
+            || (target.id && target.id.startsWith('slider-') ? target.id.slice(7) : '');
+        if (itemId && typeof window.updateCardDots === 'function') {
+            window.updateCardDots(target, itemId);
+        }
+    }
+}
+window.handleDelegatedScroll = handleDelegatedScroll;
+
 function initActionDelegation() {
     if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return;
     if (window._nishaActionDelegationBound) return;
     window._nishaActionDelegationBound = true;
 
     document.addEventListener('click', handleDelegatedAction, true);
+    document.addEventListener('load', handleDelegatedMediaLoad, true);
+    document.addEventListener('error', handleDelegatedMediaError, true);
+    document.addEventListener('canplay', handleDelegatedMediaCanPlay, true);
+    document.addEventListener('scroll', handleDelegatedScroll, true);
 
     document.addEventListener('mouseover', (e) => {
         if (!e.target || typeof e.target.closest !== 'function') return;

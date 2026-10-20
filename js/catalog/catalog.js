@@ -1881,22 +1881,22 @@ function renderNextBatch() {
                 if (isVid) {
                     slidesStr += `
                         <div class="card-slide ${idx === 0 ? 'img-8bit-loading' : ''}" style="background: #0a0a0a;">
-                            <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;" oncanplay="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');"></video>
+                            <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;"></video>
                         </div>`;
                 } else if (idx === 0) {
                     const firstLoadAttr = (i < 2) ? 'fetchpriority="high"' : 'loading="lazy"';
                     slidesStr += `
                         <div class="card-slide img-8bit-loading">
                            <img class="card-slide-img" src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" ${firstLoadAttr} decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
-onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
-onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbackSrc !== this.src){this.dataset.fb='1';this.src=this.dataset.fallbackSrc;return;} this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
+
+>
                         </div>`;
                 } else {
                     slidesStr += `
                         <div class="card-slide">
                            <img class="card-slide-img" data-src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
-onload="this.style.opacity='1'; this.parentElement.classList.remove('img-8bit-loading'); this.parentElement.classList.add('img-8bit-loaded');" 
-onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbackSrc !== this.src){this.dataset.fb='1';this.src=this.dataset.fallbackSrc;return;} this.parentElement.classList.remove('img-8bit-loading'); this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:red;font-size:10px;font-family:monospace;\\'>NO SIGNAL</div>';">
+
+>
                         </div>`;
                 }
                 dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
@@ -1930,7 +1930,7 @@ onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbac
                 ${badgeHTML}
                 <div class="${starClass}" role="button" aria-label="В избранное" data-action="toggle-fav" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">★</div>
                 <div class="card-slider-wrapper">
-                    <div class="card-slider-container" id="slider-${item.id}" onscroll="updateCardDots(this, '${item.id}')">
+                    <div class="card-slider-container" id="slider-${item.id}" data-item-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">
                         ${slidesStr}
                     </div>
                     ${controlsHTML}
@@ -1952,6 +1952,15 @@ onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbac
     }
 
     grid.appendChild(fragment);
+    grid.querySelectorAll('img.card-slide-img').forEach(img => {
+        if (img.complete && img.naturalWidth > 0 && img.style.opacity !== '1') {
+            img.style.opacity = '1';
+            if (img.parentElement) {
+                img.parentElement.classList.remove('img-8bit-loading');
+                img.parentElement.classList.add('img-8bit-loaded');
+            }
+        }
+    });
     newVideoElements.forEach(v => gridVideoObserver.observe(v));
 
     if (isMobile) {
