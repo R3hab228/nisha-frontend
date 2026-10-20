@@ -1666,6 +1666,13 @@ function activateCardSlides(target) {
             }
             img.src = src;
             img.removeAttribute('data-src');
+            if (img.complete && img.naturalWidth > 0) {
+                img.style.opacity = '1';
+                if (img.parentElement) {
+                    img.parentElement.classList.remove('img-8bit-loading');
+                    img.parentElement.classList.add('img-8bit-loaded');
+                }
+            }
         }
     }
 }

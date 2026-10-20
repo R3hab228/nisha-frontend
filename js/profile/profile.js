@@ -395,6 +395,8 @@ async function logout() {
     showToast(msg, 'success');
     
     window.showingOnlyFavs = false;
+    window.globalOrdersData = [];
+    try { localStorage.removeItem('nisha_cached_orders'); } catch (e) {}
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
     
@@ -1316,6 +1318,8 @@ function initAuthListener() {
             window.currentUser = currentUser;
         } else if (event === 'SIGNED_OUT') {
             console.log('[AUTH] Выполнен выход из аккаунта.');
+            window.globalOrdersData = [];
+            try { localStorage.removeItem('nisha_cached_orders'); } catch (e) {}
             currentUser = null;
             window.currentUser = null;
             userProfile = null;

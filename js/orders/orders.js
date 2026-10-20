@@ -666,3 +666,7 @@ function renderFilteredOrders() {
 }
 window.renderFilteredOrders = renderFilteredOrders;
 if (typeof globalThis !== 'undefined') globalThis.renderFilteredOrders = renderFilteredOrders;
+
+if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
+    try { updateOrderTabCounters(); } catch (e) {}
+}
