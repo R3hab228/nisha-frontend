@@ -33,4 +33,5 @@ import '../js/catalog/live-search.js';
 import '../js/cart/cart.js';
 import '../js/product/product.js';
 import '../js/profile/profile.js';
+import '../js/auth/google-signin.js';
 import '../app.js';

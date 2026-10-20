@@ -403,25 +403,8 @@ async function logout() {
 }
 window.logout = logout;
 
-async function loginWithGoogle() {
-    const isInApp = /Instagram|FBAN|FBAV|TikTok/i.test(navigator.userAgent);
-    if (isInApp) {
-        alert("Для входа через Google открой сайт в обычном браузере (Safari или Chrome)");
-        return;
-    }
-    const sb = getSupabase();
-    if (!sb) return;
-
-    const { data, error } = await sb.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-            redirectTo: 'https://www.nisha-store.shop',
-            queryParams: { prompt: 'select_account', access_type: 'offline' }
-        }
-    });
-    if (error) showToast('Ошибка: ' + error.message, 'error');
-}
-window.loginWithGoogle = loginWithGoogle;
+// Вход через Google вынесен в js/auth/google-signin.js (Google Identity Services + ID Token,
+// с фоллбэком на OAuth-редирект). window.loginWithGoogle определяется там.
 
 window.togglePasswordVisibility = function(inputId, iconElement) {
     const input = document.getElementById(inputId);

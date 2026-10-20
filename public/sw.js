@@ -87,6 +87,7 @@ self.addEventListener('fetch', event => {
         url.pathname.startsWith('/api/') || 
         url.pathname.startsWith('/.well-known/') || 
         url.hostname.includes('novaposhta') ||
+        url.hostname === 'accounts.google.com' ||
         url.hostname.includes('onrender.com')
     ) {
         return; 

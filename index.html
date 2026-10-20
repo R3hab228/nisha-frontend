@@ -5,7 +5,7 @@
 <title>NISHA | Underground Store</title>
 <meta name="description" content="NISHA — винтажная одежда, обувь и аксессуары. Доставка Новой Почтой по всей Украине.">
 <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv=Content-Security-Policy content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: blob: data: 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob: data: https:; child-src 'self' blob: data: https:; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' data: blob: https://get.geojs.io https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms https://*.cloudflare.com https://*.workers.dev https://analytics.tiktok.com https://*.tiktokw.us; frame-src https://oauth.telegram.org https://www.google.com https://vercel.live/ https://challenges.cloudflare.com https://*.cloudflare.com;">
+<meta http-equiv=Content-Security-Policy content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: blob: data: 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob: data: https:; child-src 'self' blob: data: https:; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' data: blob: https://accounts.google.com https://get.geojs.io https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms https://*.cloudflare.com https://*.workers.dev https://analytics.tiktok.com https://*.tiktokw.us; frame-src https://oauth.telegram.org https://accounts.google.com https://www.google.com https://vercel.live/ https://challenges.cloudflare.com https://*.cloudflare.com;">
 <meta name=google-site-verification content=JeoGyai8Mik-tYQnacXcxAae-_8SnmN4HpOMr06dfRs>
 <meta name="google-site-verification" content="RBmdOx5kBNw4x4w5EVWfVZSUKfJCc6bHfpaJ_pEM_lk">
 <meta property="og:type" content="website">
@@ -248,7 +248,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </div>
 <button class="auth-btn btn-target" id=btnLogin onclick='handleAuth("login")' data-i18n=sidebar.login>ВОЙТИ</button>
 <button class="auth-btn btn-target" id=btnShowReg onclick=toggleRegMode() style=background:#333;color:#fff data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
-<button class="auth-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:8px>
+<button class="auth-btn btn-target" data-google-signin onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:8px>
 <img src=https://www.google.com/favicon.ico width=14> GOOGLE ID
 </button>
 <button class="auth-btn btn-target" id=btnRegister onclick='handleAuth("register")' style=display:none;background:var(--accent-green);color:#000 data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
@@ -704,7 +704,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div style=margin-top:10px;display:flex;flex-direction:column;gap:12px>
 <button class="cart-checkout-btn btn-target" id=modalBtnLogin onclick='handleAuth("login",!0)' style=width:100% data-i18n=sidebar.login>ВОЙТИ</button>
 <button class="cart-checkout-btn btn-target" id=modalBtnShowReg onclick=toggleRegMode(!0) style=background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
-<button class="cart-checkout-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:10px>
+<button class="cart-checkout-btn btn-target" data-google-signin onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:10px>
 <img src=https://www.google.com/favicon.ico width=18> ВОЙТИ ЧЕРЕЗ GOOGLE
 </button>
 <button class="cart-checkout-btn btn-target" id=modalBtnRegister onclick='handleAuth("register",!0)' style=display:none;background:var(--accent-green);color:#000;width:100% data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
