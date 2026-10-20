@@ -59,12 +59,12 @@ async function openReviewsModal() {
             const revImg = rev.item_image ? toCDN(rev.item_image) : '';
             const jsRevImg = typeof window.escapeJsString === 'function' ? window.escapeJsString(revImg) : revImg.replace(/'/g, "\\'");
             const safeRevImg = typeof window.escapeHtml === 'function' ? window.escapeHtml(revImg) : revImg.replace(/"/g, '&quot;');
-            const clickAction = revImg ? `onclick="openReviewImage('${jsRevImg}')"` : '';
+            const clickAction = revImg ? `data-action="open-review-image" data-img="${safeRevImg}"` : '';
             const imgHtml = revImg ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${safeRevImg}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
             
             const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
-            const safeItemId = typeof window.escapeJsString === 'function' ? window.escapeJsString(rev.item_id) : String(rev.item_id || '').replace(/'/g, "\\'");
-            const productLinkAction = rev.item_id ? `onclick="openProductModalById('${safeItemId}')" title="Открыть товар"` : '';
+            const safeItemIdAttr = typeof window.escapeAttr === 'function' ? window.escapeAttr(rev.item_id) : String(rev.item_id || '').replace(/"/g, '&quot;');
+            const productLinkAction = rev.item_id ? `data-action="open-product" data-id="${safeItemIdAttr}" title="Открыть товар"` : '';
 
             html += `
             <div class="review-card-ui">

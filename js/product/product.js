@@ -306,7 +306,7 @@ function openProductModal(item) {
             
             <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ (АККОРДЕОН) -->
             <div id="qaWrapper" class="qa-wrapper">
-                <h4 class="qa-title" onclick="toggleQASection(this)">
+                <h4 class="qa-title" data-action="toggle-qa-section">
                     <span data-i18n="product.qa_title">${typeof i18next !== 'undefined' ? i18next.t('product.qa_title', {defaultValue: 'Q&A: Вопросы покупателей'}) : 'Q&A: Вопросы покупателей'}</span>
                     <span class="qa-arrow" style="transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); color: var(--accent-green); display: inline-block;">▼</span>
                 </h4>
@@ -317,12 +317,12 @@ function openProductModal(item) {
 
             <!-- КНОПКА ЗАДАТЬ ВОПРОС -->
             <div style="margin-top: 15px; text-align: right;">
-                <button onclick="toggleQuestionForm()" class="ask-question-btn" data-i18n="product.ask_btn">${typeof i18next !== 'undefined' ? i18next.t('product.ask_btn', {defaultValue: 'Задать вопрос?'}) : 'Задать вопрос?'}</button>
+                <button data-action="toggle-question-form" class="ask-question-btn" data-i18n="product.ask_btn">${typeof i18next !== 'undefined' ? i18next.t('product.ask_btn', {defaultValue: 'Задать вопрос?'}) : 'Задать вопрос?'}</button>
             </div>
             <div id="questionFormContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 5px;">
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <input type="text" id="questionInput" class="form-input" maxlength="100" placeholder="Ваш вопрос..." data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
-                    <button class="search-btn btn-target" onclick="submitQuestion('${item.id}')" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${typeof i18next !== 'undefined' ? i18next.t('product.ask_send', {defaultValue: 'ОТПРАВИТЬ'}) : 'ОТПРАВИТЬ'}</button>
+                    <button class="search-btn btn-target" data-action="submit-question" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${typeof i18next !== 'undefined' ? i18next.t('product.ask_send', {defaultValue: 'ОТПРАВИТЬ'}) : 'ОТПРАВИТЬ'}</button>
                 </div>
             </div>
         `;
@@ -437,7 +437,7 @@ function openProductModal(item) {
                         </a>`;
                 }
                 
-                thumbsHtml += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" onclick="setSlide(${index})">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
+                thumbsHtml += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" data-action="set-slide" data-index="${index}">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
             });
             wrapper.innerHTML = slidesHtml;
             thumbs.innerHTML = thumbsHtml;
@@ -586,10 +586,10 @@ function openProductModal(item) {
 
                 cardsHTML += `
                     <div class="similar-item-card ${unseenClass}" 
-                         onmouseenter="if(typeof window.showItemMeasurementsTooltip === 'function') window.showItemMeasurementsTooltip('${typeof window.escapeJsString==='function'?window.escapeJsString(s.id):s.id}', event)"
-                         onmousemove="if(typeof window.moveItemMeasurementsTooltip === 'function') window.moveItemMeasurementsTooltip(event)"
-                         onmouseleave="if(typeof window.hideItemMeasurementsTooltip === 'function') window.hideItemMeasurementsTooltip()"
-                         onclick="openProductModalById('${typeof window.escapeJsString==='function'?window.escapeJsString(s.id):s.id}')">
+                         data-action="open-product" data-hover-action="similar-item-tooltip" data-id="${typeof window.escapeAttr==='function'?window.escapeAttr(s.id):s.id}"
+                         data-tooltip-move="1"
+                         data-tooltip-leave="1"
+                         role="button">
                         <div class="similar-card-img-wrap">
                             ${miniBadgeHTML}
                             ${statusOverlayHTML}
@@ -625,21 +625,21 @@ function openProductModal(item) {
         if (isDropItem) {
             const alertSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
             refundBadgeHTML = `
-                <div class="badge-item danger-badge" onclick="showBadgeInfo('drop')">
+                <div class="badge-item danger-badge" data-action="show-badge-info" data-badge="drop">
                     <span class="badge-icon">${alertSvg}</span> 
                     <span class="badge-text" data-i18n="product.badge_drop">${typeof i18next !== 'undefined' ? i18next.t('product.badge_drop') : 'DROP ITEM'}</span>
                 </div>`;
         } else if (isReturnable) {
             const returnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
             refundBadgeHTML = `
-                <div class="badge-item" onclick="showBadgeInfo('refund_yes')">
+                <div class="badge-item" data-action="show-badge-info" data-badge="refund_yes">
                     <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${returnSvg}</span> 
                     <span class="badge-text" data-i18n="product.badge_refund">${typeof i18next !== 'undefined' ? i18next.t('product.badge_refund') : 'ВОЗВРАТ 14 ДНЕЙ'}</span>
                 </div>`;
         } else {
             const noReturnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
             refundBadgeHTML = `
-                <div class="badge-item" onclick="showBadgeInfo('refund_no')">
+                <div class="badge-item" data-action="show-badge-info" data-badge="refund_no">
                     <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${noReturnSvg}</span> 
                     <span class="badge-text" data-i18n="product.badge_norefund">${typeof i18next !== 'undefined' ? i18next.t('product.badge_norefund') : 'БЕЗ ВОЗВРАТА'}</span>
                 </div>`;
@@ -648,11 +648,11 @@ function openProductModal(item) {
         const secureSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`;
 
         badgesContainer.innerHTML = `
-            <div class="badge-item" onclick="showBadgeInfo('secure')">
+            <div class="badge-item" data-action="show-badge-info" data-badge="secure">
                 <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${secureSvg}</span> 
                 <span class="badge-text" data-i18n="product.badge_orig">${typeof i18next !== 'undefined' ? i18next.t('product.badge_orig') : '100% ОРИГИНАЛ'}</span>
             </div>
-            <div class="badge-item" onclick="showBadgeInfo('fast')">
+            <div class="badge-item" data-action="show-badge-info" data-badge="fast">
                 <span class="badge-icon">24H</span> 
                 <span class="badge-text" data-i18n="product.badge_fast">${typeof i18next !== 'undefined' ? i18next.t('product.badge_fast') : 'БЫСТРАЯ ОТПРАВКА'}</span>
             </div>
@@ -1069,7 +1069,8 @@ function renderHistory() {
 
         const card = document.createElement('div');
         card.className = `history-card`;
-        card.onclick = () => openProductModalById(h.id);
+        card.setAttribute('data-action', 'open-product');
+        card.setAttribute('data-id', h.id);
         
         let mediaHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555;">NO FOTO</div>';
         
@@ -1094,7 +1095,7 @@ function renderHistory() {
                 ${mediaHTML}
                 ${miniBadgeHTML}
                 ${statusOverlayHTML}
-                <div class="history-item-remove" onclick="removeHistoryItem(event, '${typeof window.escapeJsString==='function'?window.escapeJsString(h.id):h.id}')" title="Удалить" style="z-index: 20;">X</div>
+                <div class="history-item-remove" data-action="remove-history-item" data-id="${typeof window.escapeAttr==='function'?window.escapeAttr(h.id):h.id}" title="Удалить" style="z-index: 20;">X</div>
             </div>
             <div class="history-info">
                 <div class="history-name" title="${typeof window.escapeAttr==='function'?window.escapeAttr(h.name):h.name}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(h.name):h.name}</div>

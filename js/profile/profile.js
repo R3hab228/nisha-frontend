@@ -425,7 +425,7 @@ window.togglePasswordVisibility = function(inputId, iconElement) {
 
 function renderProfilePhone(phone) {
     const hasPhone = Boolean(phone && phone.trim().length > 0);
-    const delBtnHtml = (isModal) => `<button onclick="removeProfilePhone(${isModal})" title="Удалить номер" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
+    const delBtnHtml = (isModal) => `<button data-action="remove-profile-phone" data-modal="${isModal ? '1' : '0'}" title="Удалить номер" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
     
     // 1. Сайдбар (ПК)
     const pPhone = document.getElementById('profilePhone');
@@ -808,7 +808,7 @@ window.savePhoneFromInput = async function(isModal = false) {
 function renderProfileTg(tg) {
     const hasTg = Boolean(tg && tg.trim().length > 0 && tg.trim() !== '@');
     const formattedTg = hasTg ? (tg.startsWith('@') ? tg : '@' + tg) : '';
-    const delBtnHtml = (isModal) => `<button onclick="removeProfileTg(${isModal})" title="Удалить Telegram" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
+    const delBtnHtml = (isModal) => `<button data-action="remove-profile-tg" data-modal="${isModal ? '1' : '0'}" title="Удалить Telegram" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
     
     // 1. Сайдбар (ПК)
     const pTg = document.getElementById('profileTg');
@@ -1554,7 +1554,7 @@ async function fetchMyOrders() {
         const otpCheck = vResult ? [{is_verified: true}] : [];
         if (!otpCheck || otpCheck.length === 0 || !otpCheck[0].is_verified) {
             listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.</div>
-            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" onclick="document.getElementById('orderPhone').value='${phone}'; if (typeof generateAndSendOTP==='function') generateAndSendOTP();">ПОДТВЕРДИТЬ НОМЕР В БОТЕ</button>`;
+            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" data-action="verify-orders-phone" data-phone="${typeof window.escapeAttr === 'function' ? window.escapeAttr(phone) : phone}">ПОДТВЕРДИТЬ НОМЕР В БОТЕ</button>`;
             return; 
         }
 
@@ -1830,7 +1830,7 @@ function renderFilteredOrders() {
                 const imgStyle = itemImg ? `background-image: url('${safeImgUrl}');` : '';
                 const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);
                 itemsHtml += `
-                    <div class="order-item-row" onclick="if(typeof openProductModalById==='function') openProductModalById('${typeof window.escapeJsString === 'function' ? window.escapeJsString(item.id) : item.id}')" title="Открыть карточку товара">
+                    <div class="order-item-row" data-action="open-product" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" title="Открыть карточку товара">
                         <div class="order-item-img" data-item-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
                         <div class="order-item-details">
                             <div class="order-item-name">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || 'Товар') : item.name}</div>
@@ -1847,7 +1847,7 @@ function renderFilteredOrders() {
                      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
                          <span style="font-family: var(--font-mono); font-size: 13px; color: #aaa;">ТТН:</span>
                          <div style="display: flex; align-items: center; gap: 8px;">
-                             <div class="ttn-copy-btn" onclick="copyTTN('${typeof window.escapeJsString==='function'?window.escapeJsString(order.tracking_number):order.tracking_number}', this)" title="Нажмите, чтобы скопировать номер ТТН" style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0, 255, 0, 0.05); border: 1px dashed rgba(0, 255, 0, 0.3); transition: all 0.2s ease;">
+                             <div class="ttn-copy-btn" data-action="copy-ttn" data-ttn="${typeof window.escapeAttr==='function'?window.escapeAttr(order.tracking_number):order.tracking_number}" title="Нажмите, чтобы скопировать номер ТТН" style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0, 255, 0, 0.05); border: 1px dashed rgba(0, 255, 0, 0.3); transition: all 0.2s ease;">
                                  <svg class="ttn-copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; vertical-align: middle; transition: transform 0.2s ease, stroke 0.2s ease;">
                                      <rect x="2" y="2" width="13" height="13" rx="3.5"></rect>
                                      <path d="M7.5 7.5h8.5a3.5 3.5 0 0 1 3.5 3.5v8.5a3.5 3.5 0 0 1-3.5 3.5H7.5a3.5 3.5 0 0 1-3.5-3.5"></path>
@@ -1883,9 +1883,9 @@ function renderFilteredOrders() {
                 if (!reviewedOrders.includes(order.id)) {
                     reviewBtnHtml = `
                         <div style="margin-top: 10px; cursor: pointer; color: var(--accent-green); font-size: 12px; font-family: var(--font-main); text-align: center; transition: 0.2s;" 
-                             onclick="if(typeof closeModal==='function') closeModal('ordersModal'); if(typeof promptOrderReview==='function') promptOrderReview('${typeof window.escapeJsString==='function'?window.escapeJsString(order.id):order.id}', '${typeof window.escapeJsString==='function'?window.escapeJsString(safeName):safeName}', '${typeof window.escapeJsString==='function'?window.escapeJsString(firstItemImg):firstItemImg}', '${typeof window.escapeJsString==='function'?window.escapeJsString(firstItem.id):firstItem.id}')" 
-                             onmouseover="this.style.textDecoration='underline'; this.style.color='#fff';" 
-                             onmouseout="this.style.textDecoration='none'; this.style.color='var(--accent-green)';">
+                             data-action="prompt-order-review" data-hover-action="review-link-hover" data-order-id="${typeof window.escapeAttr==='function'?window.escapeAttr(order.id):order.id}" data-item-name="${typeof window.escapeAttr==='function'?window.escapeAttr(safeName):safeName}" data-item-img="${typeof window.escapeAttr==='function'?window.escapeAttr(firstItemImg):firstItemImg}" data-item-id="${typeof window.escapeAttr==='function'?window.escapeAttr(firstItem.id):firstItem.id}"
+                             role="button"
+                             tabindex="0">
                             ${msgIcon} Оставить отзыв
                         </div>
                     `;

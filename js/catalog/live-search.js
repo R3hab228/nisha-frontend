@@ -66,12 +66,10 @@ function showSearchHistory() {
     if (history.length === 0) return;
 
     const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    const escJs = typeof window.escapeJsString === 'function' ? window.escapeJsString : (s) => escHtml(String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
-    let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" onclick="localStorage.removeItem('nisha_search_history'); closeSearch(); event.stopPropagation();">[ ОЧИСТИТЬ ]</span></div>`;
+    let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" data-action="clear-search-history">[ ОЧИСТИТЬ ]</span></div>`;
     history.forEach(term => {
         const safeTermHtml = escHtml(term);
-        const safeTermJs = escJs(term);
-        html += `<div class="search-history-item" onclick="document.getElementById('mainSearch').value='${safeTermJs}'; handleLiveSearch();">
+        html += `<div class="search-history-item" data-action="apply-search-history" data-term="${safeTermHtml}">
                     <span>> ${safeTermHtml}</span>
                  </div>`;
     });
@@ -168,7 +166,7 @@ function handleLiveSearch() {
                 }
 
                 html += `
-                    <div class="live-search-item" onclick="openProductModalById('${safeId}'); closeSearch();">
+                    <div class="live-search-item" data-action="select-live-search-item" data-id="${escHtml(item.id)}">
                         <div class="live-search-img" style="background-image: url('${safeImg}')"></div>
                         <div class="live-search-info">
                             <span class="live-search-title">${highlightedName}</span>

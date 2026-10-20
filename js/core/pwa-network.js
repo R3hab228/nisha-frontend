@@ -285,7 +285,7 @@ function createNetErrorElement() {
 <div style="background:#dfd8c1;border-top:2px solid #fff;border-left:2px solid #fff;border-right:2px solid #0a0a0a;border-bottom:2px solid #0a0a0a;padding:2px;width:100%;max-width:300px;box-shadow:4px 4px 0 rgba(0,0,0,.8)">
 <div style="background:navy;color:#fff;font-family:Tahoma,sans-serif;font-weight:700;font-size:12px;padding:3px 5px;display:flex;justify-content:space-between;align-items:center">
 <span>Error_NISHA.exe</span>
-<div onclick="dismissNetError()" style="background:silver;color:#000;border:1px solid #000;width:14px;height:14px;display:flex;justify-content:center;align-items:center;font-size:10px;cursor:pointer">X</div>
+<div data-action="dismiss-net-error" style="background:silver;color:#000;border:1px solid #000;width:14px;height:14px;display:flex;justify-content:center;align-items:center;font-size:10px;cursor:pointer">X</div>
 </div>
 <div style="padding:20px;text-align:center;background:#dfd8c1">
 <div style="height:60px;display:flex;align-items:center;justify-content:center;margin:0 auto">

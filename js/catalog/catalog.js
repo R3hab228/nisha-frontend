@@ -1920,28 +1920,28 @@ onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbac
             let controlsHTML = '';
             if (thumbsArray.length > 1) {
                 controlsHTML = `
-                    <div class="grid-slider-btn prev" role="button" aria-label="Предыдущее фото" onmouseenter="preloadGridSlide(event, '${item.id}', -1)" onclick="scrollGridSlider(event, '${item.id}', -1)">&#10094;</div>
-                    <div class="grid-slider-btn next" role="button" aria-label="Следующее фото" onmouseenter="preloadGridSlide(event, '${item.id}', 1)" onclick="scrollGridSlider(event, '${item.id}', 1)">&#10095;</div>
+                    <div class="grid-slider-btn prev" role="button" aria-label="Предыдущее фото" data-action="scroll-grid-slider" data-hover-action="preload-grid-slide" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" data-dir="-1">&#10094;</div>
+                    <div class="grid-slider-btn next" role="button" aria-label="Следующее фото" data-action="scroll-grid-slider" data-hover-action="preload-grid-slide" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" data-dir="1">&#10095;</div>
                     <div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>
                 `;
             }
 
             card.innerHTML = `
                 ${badgeHTML}
-                <div class="${starClass}" role="button" aria-label="В избранное" onclick="toggleFav(event, '${item.id}')">★</div>
+                <div class="${starClass}" role="button" aria-label="В избранное" data-action="toggle-fav" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">★</div>
                 <div class="card-slider-wrapper">
                     <div class="card-slider-container" id="slider-${item.id}" onscroll="updateCardDots(this, '${item.id}')">
                         ${slidesStr}
                     </div>
                     ${controlsHTML}
                 </div>
-                <div class="item-info" onclick="openProductModalById('${item.id}')">
+                <div class="item-info" data-action="open-product" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">
                     <h3 class="item-title">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || '') : item.name}</h3>
                     <div class="item-price">${priceHTML}</div>
                     <div class="item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '') : item.size}</div>
                     <div class="item-footer"><span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.brand || '') : item.brand}</span><span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.condition || '') : item.condition}</span></div>
                 </div>
-                <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" onclick="addToCartWithAnimation('${item.id}', this, event)">${addToCartText}</button>
+                <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" data-action="add-to-cart" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">${addToCartText}</button>
             `;
 
             fragment.appendChild(card);
@@ -1983,9 +1983,9 @@ onerror="if(!this.dataset.fb && this.dataset.fallbackSrc && this.dataset.fallbac
             const nextDisabled = window.currentPage === totalPages ? 'disabled' : '';
 
             paginationWrap.innerHTML = `
-                <button class="page-arrow" onclick="changePage(-1)" ${prevDisabled}>&#10094;</button>
+                <button class="page-arrow" data-action="change-page" data-dir="-1" ${prevDisabled}>&#10094;</button>
                 <div class="page-numbers">[ СТРАНИЦА <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> ИЗ ${totalPages} ]</div>
-                <button class="page-arrow" onclick="changePage(1)" ${nextDisabled}>&#10095;</button>
+                <button class="page-arrow" data-action="change-page" data-dir="1" ${nextDisabled}>&#10095;</button>
             `;
             
             grid.style.paddingBottom = '0px';

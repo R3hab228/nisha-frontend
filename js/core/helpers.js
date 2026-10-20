@@ -702,3 +702,209 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
         }
     };
 })();
+
+// ==========================================
+// GLOBAL EVENT DELEGATION (data-action / data-hover-action)
+// ==========================================
+function handleDelegatedAction(e) {
+    if (!e || !e.target || typeof e.target.closest !== 'function') return;
+    const actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+    if (actionEl.disabled || (typeof actionEl.hasAttribute === 'function' && actionEl.hasAttribute('disabled'))) return;
+
+    const action = actionEl.getAttribute('data-action');
+    switch (action) {
+        case 'open-product': {
+            const id = actionEl.getAttribute('data-id');
+            if (id && typeof window.openProductModalById === 'function') {
+                window.openProductModalById(id);
+            }
+            break;
+        }
+        case 'scroll-grid-slider': {
+            const id = actionEl.getAttribute('data-id');
+            const dir = parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
+            if (id && typeof window.scrollGridSlider === 'function') {
+                window.scrollGridSlider(e, id, dir);
+            }
+            break;
+        }
+        case 'toggle-fav': {
+            const id = actionEl.getAttribute('data-id');
+            if (id && typeof window.toggleFav === 'function') {
+                window.toggleFav(e, id);
+            }
+            break;
+        }
+        case 'add-to-cart': {
+            const id = actionEl.getAttribute('data-id');
+            if (id && typeof window.addToCartWithAnimation === 'function') {
+                window.addToCartWithAnimation(id, actionEl, e);
+            }
+            break;
+        }
+        case 'change-page': {
+            const dir = parseInt(actionEl.getAttribute('data-dir'), 10);
+            if (!Number.isNaN(dir) && typeof window.changePage === 'function') {
+                window.changePage(dir);
+            }
+            break;
+        }
+        case 'remove-from-cart': {
+            const idx = parseInt(actionEl.getAttribute('data-index'), 10);
+            if (!Number.isNaN(idx) && typeof window.removeFromCart === 'function') {
+                const rowEl = typeof actionEl.closest === 'function' ? actionEl.closest('.cart-item-row') : null;
+                window.removeFromCart(idx, e, rowEl);
+            }
+            break;
+        }
+        case 'clear-search-history': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            try { localStorage.removeItem('nisha_search_history'); } catch (err) {}
+            if (typeof window.closeSearch === 'function') window.closeSearch();
+            break;
+        }
+        case 'apply-search-history': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            const term = actionEl.getAttribute('data-term') || '';
+            const input = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
+            if (input) input.value = term;
+            if (typeof window.handleLiveSearch === 'function') window.handleLiveSearch();
+            break;
+        }
+        case 'select-live-search-item': {
+            const id = actionEl.getAttribute('data-id');
+            if (id && typeof window.openProductModalById === 'function') {
+                window.openProductModalById(id);
+            }
+            if (typeof window.closeSearch === 'function') window.closeSearch();
+            break;
+        }
+        case 'dismiss-net-error': {
+            if (typeof window.dismissNetError === 'function') window.dismissNetError();
+            break;
+        }
+        case 'toggle-qa-section': {
+            if (typeof window.toggleQASection === 'function') window.toggleQASection(actionEl);
+            break;
+        }
+        case 'toggle-question-form': {
+            if (typeof window.toggleQuestionForm === 'function') window.toggleQuestionForm();
+            break;
+        }
+        case 'submit-question': {
+            const id = actionEl.getAttribute('data-id');
+            if (id && typeof window.submitQuestion === 'function') window.submitQuestion(id);
+            break;
+        }
+        case 'set-slide': {
+            const idx = parseInt(actionEl.getAttribute('data-index'), 10);
+            if (!Number.isNaN(idx) && typeof window.setSlide === 'function') window.setSlide(idx);
+            break;
+        }
+        case 'show-badge-info': {
+            const badge = actionEl.getAttribute('data-badge');
+            if (badge && typeof window.showBadgeInfo === 'function') window.showBadgeInfo(badge);
+            break;
+        }
+        case 'remove-history-item': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            const id = actionEl.getAttribute('data-id');
+            if (id && typeof window.removeHistoryItem === 'function') window.removeHistoryItem(e, id);
+            break;
+        }
+        case 'remove-profile-phone': {
+            const isModal = actionEl.getAttribute('data-modal') === '1';
+            if (typeof window.removeProfilePhone === 'function') window.removeProfilePhone(isModal);
+            break;
+        }
+        case 'remove-profile-tg': {
+            const isModal = actionEl.getAttribute('data-modal') === '1';
+            if (typeof window.removeProfileTg === 'function') window.removeProfileTg(isModal);
+            break;
+        }
+        case 'verify-orders-phone': {
+            const phone = actionEl.getAttribute('data-phone') || '';
+            const orderPhoneEl = typeof document !== 'undefined' ? document.getElementById('orderPhone') : null;
+            if (orderPhoneEl) orderPhoneEl.value = phone;
+            if (typeof window.generateAndSendOTP === 'function') window.generateAndSendOTP();
+            break;
+        }
+        case 'copy-ttn': {
+            const ttn = actionEl.getAttribute('data-ttn');
+            if (ttn && typeof window.copyTTN === 'function') window.copyTTN(ttn, actionEl);
+            break;
+        }
+        case 'prompt-order-review': {
+            if (typeof window.closeModal === 'function') window.closeModal('ordersModal');
+            if (typeof window.promptOrderReview === 'function') {
+                window.promptOrderReview(
+                    actionEl.getAttribute('data-order-id') || '',
+                    actionEl.getAttribute('data-item-name') || '',
+                    actionEl.getAttribute('data-item-img') || '',
+                    actionEl.getAttribute('data-item-id') || ''
+                );
+            }
+            break;
+        }
+        case 'open-review-image': {
+            const img = actionEl.getAttribute('data-img');
+            if (img && typeof window.openReviewImage === 'function') window.openReviewImage(img);
+            break;
+        }
+    }
+}
+window.handleDelegatedAction = handleDelegatedAction;
+
+function initActionDelegation() {
+    if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return;
+    if (window._nishaActionDelegationBound) return;
+    window._nishaActionDelegationBound = true;
+
+    document.addEventListener('click', handleDelegatedAction);
+
+    document.addEventListener('mouseover', (e) => {
+        if (!e.target || typeof e.target.closest !== 'function') return;
+        const hoverEl = e.target.closest('[data-hover-action]');
+        if (!hoverEl) return;
+        if (e.relatedTarget && typeof hoverEl.contains === 'function' && hoverEl.contains(e.relatedTarget)) return;
+
+        const hoverAction = hoverEl.getAttribute('data-hover-action');
+        if (hoverAction === 'preload-grid-slide') {
+            const id = hoverEl.getAttribute('data-id');
+            const dir = parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
+            if (id && typeof window.preloadGridSlide === 'function') window.preloadGridSlide(e, id, dir);
+        } else if (hoverAction === 'similar-item-tooltip') {
+            const id = hoverEl.getAttribute('data-id');
+            if (id && typeof window.showItemMeasurementsTooltip === 'function') window.showItemMeasurementsTooltip(id, e);
+        } else if (hoverAction === 'review-link-hover') {
+            hoverEl.style.textDecoration = 'underline';
+            hoverEl.style.color = '#fff';
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!e.target || typeof e.target.closest !== 'function') return;
+        const hoverEl = e.target.closest('[data-hover-action="similar-item-tooltip"]');
+        if (hoverEl && typeof window.moveItemMeasurementsTooltip === 'function') {
+            window.moveItemMeasurementsTooltip(e);
+        }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+        if (!e.target || typeof e.target.closest !== 'function') return;
+        const hoverEl = e.target.closest('[data-hover-action]');
+        if (!hoverEl) return;
+        if (e.relatedTarget && typeof hoverEl.contains === 'function' && hoverEl.contains(e.relatedTarget)) return;
+
+        const hoverAction = hoverEl.getAttribute('data-hover-action');
+        if (hoverAction === 'similar-item-tooltip') {
+            if (typeof window.hideItemMeasurementsTooltip === 'function') window.hideItemMeasurementsTooltip();
+        } else if (hoverAction === 'review-link-hover') {
+            hoverEl.style.textDecoration = 'none';
+            hoverEl.style.color = 'var(--accent-green)';
+        }
+    });
+}
+window.initActionDelegation = initActionDelegation;
+initActionDelegation();

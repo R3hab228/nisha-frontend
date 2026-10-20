@@ -823,7 +823,7 @@ function renderCartItems() {
                 </div>
                 <div class="cart-item-price-wrapper">
                     <div class="cart-item-price">${item.price} ${getCurrency()}</div>
-                    <div class="cart-item-remove hide-on-mobile" onclick="removeFromCart(${index}, event, this.closest('.cart-item-row'))">×</div>
+                    <div class="cart-item-remove hide-on-mobile" data-action="remove-from-cart" data-index="${index}">×</div>
                 </div>
             </div>
         `;
