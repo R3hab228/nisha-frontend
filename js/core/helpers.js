@@ -986,6 +986,16 @@ function handleDelegatedAction(e) {
             if (typeof window.submitSupportTicket === 'function') window.submitSupportTicket();
             break;
         }
+        case 'open-measure-scheme': {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (typeof window.showMeasurementSchemeModal === 'function') {
+                window.showMeasurementSchemeModal();
+            }
+            break;
+        }
     }
 }
 window.handleDelegatedAction = handleDelegatedAction;

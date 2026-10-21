@@ -390,4 +390,119 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(catalogCode).toContain('sold-badge');
         expect(catalogCode).toContain('reserved-badge');
     });
+
+    it('measurement scheme modal: renders retro cyber silhouette, extracts item parameters and handles actions', () => {
+        // 1. Verify index.html contains the clickable link in the measurement accordion
+        const htmlContent = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+        expect(htmlContent).toContain('measure-scheme-link');
+        expect(htmlContent).toContain('data-action="open-measure-scheme"');
+        expect(htmlContent).toContain('data-i18n="product.measure_scheme_link"');
+
+        // 2. Verify locales.json & public/locales.json
+        const locales = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf8'));
+        expect(locales.ru.translation.product.measure_scheme_link).toBe('схема замеров');
+        expect(locales.ua.translation.product.measure_scheme_link).toBe('схема замірів');
+        expect(locales.en.translation.product.measure_scheme_link).toBe('measurements guide');
+
+        // 3. Verify CSS styling
+        const cssContent = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        expect(cssContent).toContain('.measure-scheme-link');
+        expect(cssContent).toContain('.measure-scheme-link:hover');
+
+        // 4. Verify helpers.js delegation
+        const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        expect(helpersCode).toContain("case 'open-measure-scheme':");
+        expect(helpersCode).toContain('window.showMeasurementSchemeModal');
+
+        // 5. Verify product.js measurement parser and modal logic
+        const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        expect(productCode).toContain('function detectItemClothingType');
+        expect(productCode).toContain('function parseItemMeasurementParams');
+        expect(productCode).toContain('function generateMeasurementSchemeSvg');
+        expect(productCode).toContain('function showMeasurementSchemeModal');
+
+        // Mock window functions and test directly
+        let capturedModal = null;
+        global.window.showTerminalModal = vi.fn((title, html, btnText) => {
+            capturedModal = { title, html, btnText };
+        });
+
+        // Test parsing & detection logic
+        const testTopItem = {
+            id: 'top-1',
+            name: 'Cyber Hoodie',
+            category: 'Кофты и Свитера',
+            size: 'L',
+            description: 'Замеры:\n- плечи: 52 см\n- подмышки (ПОГ): 58 см\n- длина по спине: 71 см\n- рукав от плеча: 65 см'
+        };
+
+        const testBottomItem = {
+            id: 'bottom-1',
+            name: 'Cargo Pants',
+            category: 'Штаны и Джинсы',
+            size: '32',
+            description: 'Заміри:\nпояс 42 см\nдовжина 104 см\nкроковий шов 78 см\nвихід 22 см'
+        };
+
+        const testShoesItem = {
+            id: 'shoes-1',
+            name: 'Air Sneakers',
+            category: 'Обувь',
+            size: '43',
+            description: 'Оригінал. Устілка 28 см'
+        };
+
+        // Execute parsing functions in context
+        const mockDoc = {
+            readyState: 'complete',
+            addEventListener: vi.fn(),
+            getElementById: vi.fn(() => null),
+            querySelector: vi.fn(() => null),
+            querySelectorAll: vi.fn(() => [])
+        };
+        global.document = mockDoc;
+        const contextFuncs = new Function('document', `
+            ${productCode}
+            return { detectItemClothingType, parseItemMeasurementParams, generateMeasurementSchemeSvg, showMeasurementSchemeModal };
+        `);
+        const { detectItemClothingType, parseItemMeasurementParams, generateMeasurementSchemeSvg, showMeasurementSchemeModal } = contextFuncs(mockDoc);
+
+        // Check clothing type detection
+        expect(detectItemClothingType(testTopItem)).toBe('top');
+        expect(detectItemClothingType(testBottomItem)).toBe('bottom');
+        expect(detectItemClothingType(testShoesItem)).toBe('shoes');
+
+        // Check measurement parameter extraction
+        const topParams = parseItemMeasurementParams(testTopItem);
+        expect(topParams.shoulders).toBe(52);
+        expect(topParams.chest).toBe(58);
+        expect(topParams.length).toBe(71);
+        expect(topParams.sleeve).toBe(65);
+
+        const bottomParams = parseItemMeasurementParams(testBottomItem);
+        expect(bottomParams.waist).toBe(42);
+        expect(bottomParams.pantsLength).toBe(104);
+        expect(bottomParams.inseam).toBe(78);
+        expect(bottomParams.legOpening).toBe(22);
+
+        const shoesParams = parseItemMeasurementParams(testShoesItem);
+        expect(shoesParams.insole).toBe(28);
+
+        // Check SVG generator produces dashed neon green SVG with markers
+        const topSvg = generateMeasurementSchemeSvg('top', topParams, 'ru');
+        expect(topSvg).toContain('<svg');
+        expect(topSvg).toContain('stroke="#00ff66"');
+        expect(topSvg).toContain('stroke-dasharray');
+        expect(topSvg).toContain('52 см');
+        expect(topSvg).toContain('58 см');
+
+        // Check showMeasurementSchemeModal triggers showTerminalModal
+        showMeasurementSchemeModal(testTopItem);
+        expect(global.window.showTerminalModal).toHaveBeenCalled();
+        expect(capturedModal).not.toBeNull();
+        expect(capturedModal.title).toContain('СХЕМА ЗАМЕРОВ');
+        expect(capturedModal.btnText).toContain('ПОНЯТНО');
+        expect(capturedModal.html).toContain('Cyber Hoodie');
+        expect(capturedModal.html).toContain('52 см');
+    });
 });
