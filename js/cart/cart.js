@@ -106,7 +106,10 @@ function resetPromoState() {
     const promoInput = document.getElementById('promoInput');
     if (promoInput) promoInput.value = '';
     const promoMsg = document.getElementById('promoMessage');
-    if (promoMsg) promoMsg.innerHTML = '';
+    if (promoMsg) {
+        if (typeof promoMsg.replaceChildren === 'function') promoMsg.replaceChildren();
+        else promoMsg.innerHTML = '';
+    }
 }
 
 // Вспомогательные безопасные геттеры
@@ -357,7 +360,9 @@ window.debouncedNPCitySearch = debouncedNPCitySearch;
 
 function renderCitySearchResults(data) {
     const dropdown = document.getElementById('cityDropdown');
-    dropdown.innerHTML = '';
+    if (!dropdown) return;
+    if (typeof dropdown.replaceChildren === 'function') dropdown.replaceChildren();
+    else dropdown.innerHTML = '';
     
     if(data.success && data.data[0] && data.data[0].Addresses.length > 0) {
         data.data[0].Addresses.forEach(city => {
@@ -619,7 +624,10 @@ function renderBranches(branches, startIndex = 0) {
     const dropdown = document.getElementById('branchDropdown');
     if (!dropdown) return;
 
-    if (startIndex === 0) dropdown.innerHTML = '';
+    if (startIndex === 0) {
+        if (typeof dropdown.replaceChildren === 'function') dropdown.replaceChildren();
+        else dropdown.innerHTML = '';
+    }
 
     if (branches.length === 0) {
         dropdown.style.display = 'none';
@@ -773,7 +781,8 @@ window.closeCartDropdown = closeCartDropdown;
 function renderCartItems() {
     const list = document.getElementById('cartDropdownList');
     if (!list) return;
-    list.innerHTML = '';
+    if (typeof list.replaceChildren === 'function') list.replaceChildren();
+    else list.innerHTML = '';
     
     const currentCart = getActiveCart();
     if (currentCart.length === 0) {
@@ -1214,13 +1223,18 @@ async function submitOrder() {
         try {
             inputEl.focus();
         } catch(e) {}
+        if (inputEl._clearErrorCtrl) {
+            try { inputEl._clearErrorCtrl.abort(); } catch(e) {}
+        }
+        const clearCtrl = new AbortController();
+        inputEl._clearErrorCtrl = clearCtrl;
         const onClear = () => {
             inputEl.classList.remove('input-field-error');
-            inputEl.removeEventListener('input', onClear);
-            inputEl.removeEventListener('change', onClear);
+            clearCtrl.abort();
+            inputEl._clearErrorCtrl = null;
         };
-        inputEl.addEventListener('input', onClear);
-        inputEl.addEventListener('change', onClear);
+        inputEl.addEventListener('input', onClear, { signal: clearCtrl.signal });
+        inputEl.addEventListener('change', onClear, { signal: clearCtrl.signal });
     }
 
     const nameInput = document.getElementById('orderName');

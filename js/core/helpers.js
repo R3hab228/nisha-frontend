@@ -234,7 +234,9 @@ function showTerminalModal(title, htmlText, btnText, callback) {
     document.body.appendChild(overlay);
     
     const btn = overlay.querySelector('button');
+    const modalCtrl = new AbortController();
     const closeOverlay = () => {
+        modalCtrl.abort();
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
             document.activeElement.blur();
         }
@@ -242,10 +244,13 @@ function showTerminalModal(title, htmlText, btnText, callback) {
         if (callback) callback();
     };
 
-    btn.addEventListener('click', closeOverlay);
+    btn.addEventListener('click', closeOverlay, { signal: modalCtrl.signal });
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeOverlay();
-    });
+    }, { signal: modalCtrl.signal });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeOverlay();
+    }, { signal: modalCtrl.signal });
 }
 window.showTerminalModal = showTerminalModal;
 
@@ -268,11 +273,31 @@ function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancelBtnText
     `;
     document.body.appendChild(overlay);
     
-    overlay.querySelector('.confirm-yes').addEventListener('click', () => { overlay.remove(); if (onConfirm) onConfirm(); });
-    overlay.querySelector('.confirm-no').addEventListener('click', () => { overlay.remove(); });
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const confirmCtrl = new AbortController();
+    const closeOverlay = (confirmed = false) => {
+        confirmCtrl.abort();
+        overlay.remove();
+        if (confirmed && onConfirm) onConfirm();
+    };
+
+    overlay.querySelector('.confirm-yes').addEventListener('click', () => closeOverlay(true), { signal: confirmCtrl.signal });
+    overlay.querySelector('.confirm-no').addEventListener('click', () => closeOverlay(false), { signal: confirmCtrl.signal });
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(false); }, { signal: confirmCtrl.signal });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOverlay(false); }, { signal: confirmCtrl.signal });
 }
 window.showConfirmTerminalModal = showConfirmTerminalModal;
+
+// --- БЕЗОПАСНАЯ И БЫСТРАЯ ОЧИСТКА DOM-ЭЛЕМЕНТА ЧЕРЕЗ REPLACECHILDREN ---
+function clearElement(el) {
+    if (!el) return;
+    if (typeof el.replaceChildren === 'function') {
+        el.replaceChildren();
+    } else {
+        el.innerHTML = '';
+    }
+}
+window.clearElement = clearElement;
+if (typeof globalThis !== 'undefined') globalThis.clearElement = clearElement;
 
 // --- ВАЛЮТА И ФОРМАТИРОВАНИЕ ---
 function getCurrency() {

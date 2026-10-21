@@ -168,7 +168,8 @@
 
         const googleWidth = Math.max(200, Math.min(400, Math.round(w)));
         if (state.renderedWidth !== googleWidth) {
-            state.host.innerHTML = '';
+            if (typeof state.host.replaceChildren === 'function') state.host.replaceChildren();
+            else state.host.innerHTML = '';
             window.google.accounts.id.renderButton(state.host, {
                 type: 'standard',
                 theme: 'outline',

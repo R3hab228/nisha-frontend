@@ -149,14 +149,15 @@ if ('serviceWorker' in navigator) {
 
 // === 2. SENTRY CLIENT-SIDE ERROR MONITORING ===
 const earlySentryErrors = [];
+const earlySentryCtrl = new AbortController();
 function recordEarlySentryError(evt) {
     if (!window._sentryActive && earlySentryErrors.length < 20) {
         earlySentryErrors.push(evt);
         initSentryDeferred();
     }
 }
-window.addEventListener('error', recordEarlySentryError);
-window.addEventListener('unhandledrejection', recordEarlySentryError);
+window.addEventListener('error', recordEarlySentryError, { signal: earlySentryCtrl.signal });
+window.addEventListener('unhandledrejection', recordEarlySentryError, { signal: earlySentryCtrl.signal });
 
 function initSentryDeferred() {
     if (window._sentryActive) return;
@@ -189,8 +190,7 @@ function initSentryDeferred() {
                 });
                 console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
 
-                window.removeEventListener('error', recordEarlySentryError);
-                window.removeEventListener('unhandledrejection', recordEarlySentryError);
+                earlySentryCtrl.abort();
                 while (earlySentryErrors.length > 0) {
                     const earlyEvt = earlySentryErrors.shift();
                     if (earlyEvt && earlyEvt.error) {

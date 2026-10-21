@@ -517,7 +517,8 @@ function renderProfileContact(type, rawVal) {
                 valEl.style.justifyContent = 'space-between';
                 btnEl.style.display = 'none';
             } else {
-                valEl.innerHTML = '';
+                if (typeof valEl.replaceChildren === 'function') valEl.replaceChildren();
+                else valEl.innerHTML = '';
                 valEl.style.display = 'none';
                 btnEl.style.display = 'inline-block';
             }

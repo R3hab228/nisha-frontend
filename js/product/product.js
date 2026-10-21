@@ -293,7 +293,8 @@ function openProductModal(item) {
             tagsContainer.style.display = 'block';
         } else {
             tagsContainer.style.display = 'none';
-            tagsContainer.innerHTML = '';
+            if (typeof tagsContainer.replaceChildren === 'function') tagsContainer.replaceChildren();
+            else tagsContainer.innerHTML = '';
         }
     }
 
@@ -394,8 +395,14 @@ function openProductModal(item) {
 
     const wrapper = document.getElementById('sliderWrapper');
     const thumbs = document.getElementById('modalThumbnails');
-    if (wrapper) wrapper.innerHTML = ''; 
-    if (thumbs) thumbs.innerHTML = '';
+    if (wrapper) {
+        if (typeof wrapper.replaceChildren === 'function') wrapper.replaceChildren();
+        else wrapper.innerHTML = '';
+    }
+    if (thumbs) {
+        if (typeof thumbs.replaceChildren === 'function') thumbs.replaceChildren();
+        else thumbs.innerHTML = '';
+    }
     
     const mediaList = (Array.isArray(item.images) && item.images.length > 0)
         ? item.images
@@ -538,8 +545,14 @@ function openProductModal(item) {
     const simCont = document.getElementById('similarItemsContainer');
     const simContDesktop = document.getElementById('similarItemsContainerDesktop');
     if (simCont || simContDesktop) {
-        if (simCont) simCont.innerHTML = '';
-        if (simContDesktop) simContDesktop.innerHTML = '';
+        if (simCont) {
+            if (typeof simCont.replaceChildren === 'function') simCont.replaceChildren();
+            else simCont.innerHTML = '';
+        }
+        if (simContDesktop) {
+            if (typeof simContDesktop.replaceChildren === 'function') simContDesktop.replaceChildren();
+            else simContDesktop.innerHTML = '';
+        }
 
         const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
         const catalog = getCatalog();
@@ -1032,7 +1045,8 @@ function renderHistory() {
     }
     
     section.style.display = 'block';
-    container.innerHTML = '';
+    if (typeof container.replaceChildren === 'function') container.replaceChildren();
+    else container.innerHTML = '';
     
     const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
     const fragment = document.createDocumentFragment();
@@ -1280,20 +1294,23 @@ async function loadItemQuestions(itemId) {
     
     if (data && data.length > 0 && wrapper && list) {
         wrapper.style.display = 'block';
-        list.innerHTML = '';
+        if (typeof list.replaceChildren === 'function') list.replaceChildren();
+        else list.innerHTML = '';
+        let listHtml = '';
         data.forEach(q => {
             const safeQ = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.question) : q.question.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeA = q.answer ? (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.answer) : q.answer.replace(/</g, '&lt;').replace(/>/g, '&gt;')) : null;
             const safeU = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.user_name) : q.user_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
             let answerHtml = safeA ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">↳ NISHA: ${safeA}</div>` : '';
-            list.innerHTML += `
+            listHtml += `
                 <div style="border-left: 2px solid #333; padding-left: 10px; margin-bottom: 12px; font-family: var(--font-main);">
                     <span style="color:#888; font-size:11px; font-family:var(--font-mono);">@${safeU}:</span>
                     <div style="color:#ddd; font-size:13px; margin-top:2px;">${safeQ}</div>
                     ${answerHtml}
                 </div>`;
         });
+        list.innerHTML = listHtml;
     } else if (wrapper) {
         wrapper.style.display = 'none';
     }

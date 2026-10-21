@@ -80,20 +80,23 @@
             controller.abort();
         };
 
+        const cleanupCtrl = externalSignal ? new AbortController() : null;
+
         if (externalSignal) {
             if (externalSignal.aborted) {
                 if (timerId) clearTimeout(timerId);
                 controller.abort();
             } else {
-                externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+                externalSignal.addEventListener('abort', onExternalAbort, {
+                    once: true,
+                    signal: cleanupCtrl.signal
+                });
             }
         }
 
         const cleanup = () => {
             if (timerId) clearTimeout(timerId);
-            if (externalSignal) {
-                externalSignal.removeEventListener('abort', onExternalAbort);
-            }
+            if (cleanupCtrl) cleanupCtrl.abort();
         };
 
         return {

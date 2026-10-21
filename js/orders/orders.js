@@ -499,7 +499,8 @@ if (typeof globalThis !== 'undefined') globalThis.copyTTN = copyTTN;
 function renderFilteredOrders() {
     const listArea = document.getElementById('ordersListArea');
     if (!listArea) return;
-    listArea.innerHTML = '';
+    if (typeof listArea.replaceChildren === 'function') listArea.replaceChildren();
+    else listArea.innerHTML = '';
 
     const ordersList = Array.isArray(window.globalOrdersData) ? window.globalOrdersData : [];
     const activeTab = window.currentOrderTab || 'accepted';

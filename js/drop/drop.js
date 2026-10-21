@@ -244,7 +244,8 @@ function renderProposalPreviews() {
     const placeholder = document.getElementById('propPlaceholder');
     if (!container) return;
 
-    container.innerHTML = '';
+    if (typeof container.replaceChildren === 'function') container.replaceChildren();
+    else container.innerHTML = '';
 
     if (currentProposalFiles.length > 0) {
         if (placeholder) placeholder.style.display = 'none';
