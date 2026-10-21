@@ -500,7 +500,7 @@ describe('Security Sanitization & XSS Shield', () => {
         showMeasurementSchemeModal(testTopItem);
         expect(global.window.showTerminalModal).toHaveBeenCalled();
         expect(capturedModal).not.toBeNull();
-        expect(capturedModal.title).toContain('СХЕМА ЗАМЕРОВ');
+        expect(capturedModal.title).toBe('MEASURE_SYSTEM.SYS');
         expect(capturedModal.btnText).toContain('ПОНЯТНО');
         expect(capturedModal.html).toContain('Cyber Hoodie');
         expect(capturedModal.html).toContain('52 см');

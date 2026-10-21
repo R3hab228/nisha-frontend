@@ -1445,25 +1445,35 @@ function generateMeasurementSchemeSvg(type, params, lang) {
     const isUa = lang === 'ua' || lang === 'uk';
     const isEn = lang === 'en';
 
+    // Ретро-кибер разметка углов и прицел HUD в стиле системного броадкаста
+    const hudDecor = `
+        <path d="M 12 22 L 12 12 L 22 12 M 298 12 L 308 12 L 308 22 M 12 288 L 12 298 L 22 298 M 298 298 L 308 298 L 308 288" 
+              fill="none" stroke="rgba(0, 255, 102, 0.35)" stroke-width="1.2"/>
+        <circle cx="295" cy="24" r="3" fill="none" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+        <line x1="295" y1="18" x2="295" y2="30" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+        <line x1="289" y1="24" x2="301" y2="24" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+    `;
+
     if (type === 'shoes') {
         const lblInsole = isEn ? 'INSOLE' : (isUa ? 'УСТІЛКА' : 'СТЕЛЬКА');
         return `
-        <svg viewBox="0 0 320 180" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 10px rgba(0,255,102,0.15));" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 320 185" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 8px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
                 </marker>
             </defs>
+            ${hudDecor}
             <path d="M 45 130 C 50 115 65 95 90 95 C 105 95 115 105 125 110 L 170 85 C 185 75 205 95 215 105 L 245 108 C 265 110 275 125 275 135 L 270 142 L 45 142 Z" 
-                  fill="rgba(0, 255, 102, 0.04)" stroke="#00ff66" stroke-width="1.6" stroke-dasharray="4 3"/>
-            <path d="M 40 142 L 275 142 L 272 152 L 42 152 Z" fill="#000" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 2"/>
-            <path d="M 130 110 L 175 88" stroke="#00ff66" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.6"/>
-            <line x1="45" y1="164" x2="272" y2="164" stroke="#00ff41" stroke-width="1.8" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="45" y1="145" x2="45" y2="170" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
-            <line x1="272" y1="145" x2="272" y2="170" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+                  fill="rgba(0, 255, 102, 0.04)" stroke="#00ff66" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <path d="M 40 142 L 275 142 L 272 152 L 42 152 Z" fill="#000" stroke="#00ff66" stroke-width="1.3" stroke-dasharray="3 2"/>
+            <path d="M 130 110 L 175 88" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+            <line x1="45" y1="164" x2="272" y2="164" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="45" y1="145" x2="45" y2="170" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <line x1="272" y1="145" x2="272" y2="170" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
             <g transform="translate(160, 164)">
-                <rect x="-65" y="-10" width="130" height="20" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
-                <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="11" font-weight="bold" text-anchor="middle">
+                <rect x="-62" y="-10" width="124" height="20" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
+                <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
                     [A] ${lblInsole}: ${pInsole}
                 </text>
             </g>
@@ -1477,51 +1487,65 @@ function generateMeasurementSchemeSvg(type, params, lang) {
         const lblExit = isEn ? 'CUFF' : (isUa ? 'ВИХІД' : 'ВЫХОД');
 
         return `
-        <svg viewBox="0 0 320 300" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 10px rgba(0,255,102,0.15));" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 320 315" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 8px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
                 </marker>
             </defs>
-            <path d="M 112 45 L 208 45 L 214 90 C 212 140 206 200 200 260 L 168 260 L 160 115 L 152 260 L 120 260 C 114 200 108 140 106 90 Z" 
-                  fill="rgba(0, 255, 102, 0.04)" stroke="#00ff66" stroke-width="1.6" stroke-dasharray="4 3"/>
-            <line x1="112" y1="55" x2="208" y2="55" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
-            <line x1="160" y1="55" x2="160" y2="105" stroke="#00ff66" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.6"/>
+            ${hudDecor}
 
-            <line x1="112" y1="35" x2="208" y2="35" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="112" y1="28" x2="112" y2="48" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="208" y1="28" x2="208" y2="48" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(160, 35)">
-                <rect x="-56" y="-9" width="112" height="18" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
+            <!-- Human Silhouette Wireframe (Context) -->
+            <ellipse cx="160" cy="28" rx="12" ry="15" fill="none" stroke="rgba(0,255,102,0.25)" stroke-width="1" stroke-dasharray="2 3"/>
+            <line x1="154" y1="28" x2="166" y2="28" stroke="rgba(0,255,102,0.3)" stroke-width="0.8"/>
+            <path d="M 155 43 L 155 52 L 112 65 L 94 135 M 165 43 L 165 52 L 208 65 L 226 135" 
+                  fill="none" stroke="rgba(0,255,102,0.25)" stroke-width="1" stroke-dasharray="2 3"/>
+            <line x1="160" y1="52" x2="160" y2="105" stroke="rgba(0,255,102,0.15)" stroke-dasharray="2 3"/>
+
+            <!-- Highlighted Pants / Bottoms on Silhouette -->
+            <path d="M 116 105 L 204 105 L 208 140 C 206 185 200 230 196 280 L 168 280 L 160 162 L 152 280 L 124 280 C 120 230 114 185 112 140 Z" 
+                  fill="rgba(0, 255, 102, 0.06)" stroke="#00ff66" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <line x1="116" y1="115" x2="204" y2="115" stroke="#00ff66" stroke-width="0.9" stroke-dasharray="2 2" opacity="0.5"/>
+            <line x1="160" y1="115" x2="160" y2="152" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+
+            <!-- [A] Waist Dimension Arrow -->
+            <line x1="116" y1="92" x2="204" y2="92" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="116" y1="86" x2="116" y2="108" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <line x1="204" y1="86" x2="204" y2="108" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <g transform="translate(160, 92)">
+                <rect x="-48" y="-9" width="96" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
                 <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
                     [A] ${lblWaist}: ${pWaist}
                 </text>
             </g>
 
-            <line x1="92" y1="45" x2="92" y2="260" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="85" y1="45" x2="108" y2="45" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="85" y1="260" x2="116" y2="260" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(50, 150)">
-                <rect x="-46" y="-10" width="92" height="20" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
+            <!-- [B] Outseam Length Arrow -->
+            <line x1="94" y1="105" x2="94" y2="280" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="88" y1="105" x2="114" y2="105" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <line x1="88" y1="280" x2="120" y2="280" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <g transform="translate(50, 192)">
+                <rect x="-44" y="-9" width="88" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
                 <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
                     [B] ${lblLen}: ${pPantsLen}
                 </text>
             </g>
 
-            <line x1="160" y1="125" x2="160" y2="260" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="154" y1="260" x2="166" y2="260" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(160, 180)">
-                <rect x="-56" y="-9" width="112" height="18" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
+            <!-- [C] Inseam Arrow -->
+            <line x1="160" y1="170" x2="160" y2="280" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="154" y1="280" x2="166" y2="280" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <g transform="translate(214, 218)">
+                <rect x="-50" y="-9" width="100" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
                 <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
                     [C] ${lblInseam}: ${pInseam}
                 </text>
             </g>
 
-            <line x1="120" y1="275" x2="152" y2="275" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="120" y1="262" x2="120" y2="282" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="152" y1="262" x2="152" y2="282" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(136, 290)">
-                <rect x="-50" y="-8" width="100" height="16" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
+            <!-- [D] Leg Opening (Cuff) Arrow -->
+            <line x1="124" y1="294" x2="152" y2="294" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="124" y1="282" x2="124" y2="300" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <line x1="152" y1="282" x2="152" y2="300" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <g transform="translate(138, 305)">
+                <rect x="-42" y="-8" width="84" height="16" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
                 <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [D] ${lblExit}: ${pLegOpen}
                 </text>
@@ -1536,30 +1560,31 @@ function generateMeasurementSchemeSvg(type, params, lang) {
     const lblSl = isEn ? 'SLEEVE' : (isUa ? 'РУКАВ' : 'РУКАВ');
 
     return `
-    <svg viewBox="0 0 320 300" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 10px rgba(0,255,102,0.15));" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 320 310" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 8px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
             </marker>
         </defs>
+        ${hudDecor}
 
         <!-- Cyber Human Figure Outline -->
-        <ellipse cx="160" cy="34" rx="14" ry="17" fill="rgba(0, 255, 102, 0.04)" stroke="#00ff66" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <line x1="152" y1="34" x2="168" y2="34" stroke="#00ff66" stroke-width="1.2" opacity="0.6"/>
+        <ellipse cx="160" cy="34" rx="14" ry="17" fill="rgba(0, 255, 102, 0.03)" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 3"/>
+        <line x1="152" y1="34" x2="168" y2="34" stroke="#00ff66" stroke-width="1" opacity="0.6"/>
 
         <path d="M 154 50 L 154 58 L 105 74 L 78 185 L 96 190 L 118 128 L 124 215 L 196 215 L 202 128 L 224 190 L 242 185 L 215 74 L 166 58 L 166 50 Z" 
-              fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.6" stroke-dasharray="4 3"/>
+              fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.5" stroke-dasharray="3 3"/>
 
         <path d="M 124 215 L 126 270 M 196 215 L 194 270 M 160 232 L 148 270 M 160 232 L 172 270" 
-              stroke="#00ff66" stroke-width="1" stroke-dasharray="2 3" opacity="0.3"/>
+              stroke="#00ff66" stroke-width="1" stroke-dasharray="2 3" opacity="0.25"/>
         <line x1="160" y1="58" x2="160" y2="215" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 3" opacity="0.2"/>
 
         <!-- [A] Shoulders Dimension Arrow -->
         <line x1="105" y1="62" x2="215" y2="62" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="105" y1="56" x2="105" y2="76" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="215" y1="56" x2="215" y2="76" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="105" y1="56" x2="105" y2="76" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="215" y1="56" x2="215" y2="76" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
         <g transform="translate(160, 62)">
-            <rect x="-56" y="-9" width="112" height="18" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
+            <rect x="-48" y="-9" width="96" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
             <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
                 [A] ${lblSh}: ${pShoulders}
             </text>
@@ -1567,10 +1592,10 @@ function generateMeasurementSchemeSvg(type, params, lang) {
 
         <!-- [B] Chest / Pit-to-Pit Dimension Arrow -->
         <line x1="118" y1="128" x2="202" y2="128" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="118" y1="120" x2="118" y2="136" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="202" y1="120" x2="202" y2="136" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="118" y1="120" x2="118" y2="136" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="202" y1="120" x2="202" y2="136" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
         <g transform="translate(160, 128)">
-            <rect x="-48" y="-9" width="96" height="18" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
+            <rect x="-44" y="-9" width="88" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
             <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
                 [B] ${lblCh}: ${pChest}
             </text>
@@ -1578,10 +1603,10 @@ function generateMeasurementSchemeSvg(type, params, lang) {
 
         <!-- [C] Length Dimension Arrow -->
         <line x1="218" y1="58" x2="218" y2="215" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="212" y1="58" x2="226" y2="58" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="212" y1="215" x2="226" y2="215" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="212" y1="58" x2="226" y2="58" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="212" y1="215" x2="226" y2="215" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
         <g transform="translate(268, 140)">
-            <rect x="-48" y="-9" width="96" height="18" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
+            <rect x="-44" y="-9" width="88" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
             <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
                 [C] ${lblLen}: ${pLength}
             </text>
@@ -1589,8 +1614,8 @@ function generateMeasurementSchemeSvg(type, params, lang) {
 
         <!-- [D] Sleeve Dimension Arrow -->
         <line x1="98" y1="78" x2="72" y2="185" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <g transform="translate(52, 140)">
-            <rect x="-48" y="-9" width="96" height="18" fill="#050505" stroke="#00ff66" stroke-width="1" rx="3"/>
+        <g transform="translate(50, 136)">
+            <rect x="-44" y="-9" width="88" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
             <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
                 [D] ${lblSl}: ${pSleeve}
             </text>
@@ -1609,7 +1634,8 @@ function showMeasurementSchemeModal(targetItem) {
     const type = detectItemClothingType(item);
     const params = parseItemMeasurementParams(item);
 
-    const title = isEn ? '// MEASUREMENT GUIDE' : (isUa ? '// СХЕМА ЗАМІРІВ' : '// СХЕМА ЗАМЕРОВ');
+    // Заголовок в точности по стилистике системного броадкаста на английском
+    const title = 'MEASURE_SYSTEM.SYS';
     const btnText = isEn ? '[ UNDERSTOOD ]' : (isUa ? '[ ЗРОЗУМІЛО ]' : '[ ПОНЯТНО ]');
 
     const itemTitle = item ? `${item.brand || ''} ${item.name || ''}`.trim() : '';
@@ -1619,77 +1645,77 @@ function showMeasurementSchemeModal(targetItem) {
 
     let rows = [];
     if (type === 'shoes') {
-        const lblA = isEn ? 'Insole length' : (isUa ? 'Довжина устілки' : 'Длина стельки');
+        const lblA = isEn ? 'Insole' : (isUa ? 'Устілка' : 'Стелька');
         const descA = isEn ? 'heel to toe' : (isUa ? 'від п\'яти до носка' : 'от пятки до носка');
         rows.push({ code: 'A', label: lblA, desc: descA, val: params.insole });
     } else if (type === 'bottom') {
         rows.push({
             code: 'A',
             label: isEn ? 'Waist' : (isUa ? 'Пояс' : 'Пояс'),
-            desc: isEn ? 'flat waistband width' : (isUa ? 'напівобхват пояса' : 'полуобхват пояса'),
+            desc: isEn ? 'flat' : (isUa ? 'напівобхват' : 'полуобхват'),
             val: params.waist
         });
         rows.push({
             code: 'B',
-            label: isEn ? 'Outseam length' : (isUa ? 'Довжина' : 'Длина'),
-            desc: isEn ? 'outer side seam' : (isUa ? 'по зовнішньому боковому шву' : 'по внешнему боковому шву'),
+            label: isEn ? 'Length' : (isUa ? 'Довжина' : 'Длина'),
+            desc: isEn ? 'outer seam' : (isUa ? 'зовнішній шов' : 'внешний шов'),
             val: params.pantsLength
         });
         rows.push({
             code: 'C',
-            label: isEn ? 'Inseam' : (isUa ? 'Кроковий шов' : 'Шаговый шов'),
-            desc: isEn ? 'crotch to hem seam' : (isUa ? 'по внутрішньому шву' : 'по внутреннему шву от паха'),
+            label: isEn ? 'Inseam' : (isUa ? 'Кроковий' : 'Шаговый'),
+            desc: isEn ? 'inner seam' : (isUa ? 'внутрішній шов' : 'внутренний шов'),
             val: params.inseam
         });
         rows.push({
             code: 'D',
             label: isEn ? 'Leg opening' : (isUa ? 'Вихід' : 'Выход'),
-            desc: isEn ? 'cuff width (flat)' : (isUa ? 'ширина штанини внизу' : 'ширина штанины внизу'),
+            desc: isEn ? 'cuff width' : (isUa ? 'ширина внизу' : 'ширина внизу'),
             val: params.legOpening
         });
     } else {
         rows.push({
             code: 'A',
             label: isEn ? 'Shoulders' : (isUa ? 'Плечі' : 'Плечи'),
-            desc: isEn ? 'shoulder seam to seam' : (isUa ? 'від шва до шва' : 'от шва до шва'),
+            desc: isEn ? 'seam to seam' : (isUa ? 'від шва до шва' : 'от шва до шва'),
             val: params.shoulders
         });
         rows.push({
             code: 'B',
-            label: isEn ? 'Pit-to-pit (Chest)' : (isUa ? 'ПОГ (Груди)' : 'ПОГ (Грудь)'),
-            desc: isEn ? 'half-width between underarms' : (isUa ? 'напівобхват між пахвами' : 'полуобхват подмышками'),
+            label: isEn ? 'Pit-to-pit' : 'ПОГ',
+            desc: isEn ? 'underarms' : (isUa ? 'між пахвами' : 'подмышками'),
             val: params.chest
         });
         rows.push({
             code: 'C',
-            label: isEn ? 'Back length' : (isUa ? 'Довжина' : 'Длина'),
-            desc: isEn ? 'from collar to hem' : (isUa ? 'по спині від коміра' : 'по спине от воротника'),
+            label: isEn ? 'Length' : (isUa ? 'Довжина' : 'Длина'),
+            desc: isEn ? 'back' : (isUa ? 'по спині' : 'по спине'),
             val: params.length
         });
         rows.push({
             code: 'D',
-            label: isEn ? 'Sleeve length' : (isUa ? 'Рукав' : 'Рукав'),
-            desc: isEn ? 'shoulder seam to cuff' : (isUa ? 'від шва плеча до манжета' : 'от шва плеча до манжета'),
+            label: isEn ? 'Sleeve' : (isUa ? 'Рукав' : 'Рукав'),
+            desc: isEn ? 'from shoulder' : (isUa ? 'від плеча' : 'от плеча'),
             val: params.sleeve
         });
     }
 
     const note = isEn
-        ? '* All measurements are taken flat without stretching the fabric.'
+        ? '* All measurements taken flat without stretching.'
         : (isUa
-            ? '* Всі виміри зняті у розкладеному вигляді без розтягування тканини.'
-            : '* Все замеры сняты в разложенном виде без растяжения ткани.');
+            ? '* Всі виміри зняті на рівній поверхні без розтягування.'
+            : '* Все замеры сняты на ровной поверхности без натяжения ткани.');
 
     const notSpecifiedText = isEn ? 'n/a' : (isUa ? 'не вказано' : 'не указано');
 
     const rowsHtml = rows.map(r => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #222;font-size:11px;">
-            <div style="text-align:left;">
-                <span style="color:#00ff66;font-weight:bold;margin-right:4px;">[${r.code}]</span>
-                <span style="color:#ddd;font-weight:600;">${r.label}</span>
-                <span style="color:#666;font-size:10px;margin-left:4px;">(${r.desc})</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed #1a1a1a;font-size:12px;">
+            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px;text-align:left;">
+                <span style="color:var(--accent-green);font-weight:bold;margin-right:6px;">[${r.code}]</span>
+                <span style="color:#eee;font-weight:600;">${r.label}:</span>
+                <span style="color:#666;font-size:11px;margin-left:4px;">(${r.desc})</span>
             </div>
-            <div style="font-family:var(--font-mono, monospace);font-weight:bold;color:${r.val ? '#00ff66' : '#555'};white-space:nowrap;margin-left:8px;">
+            <div style="font-weight:bold;color:${r.val ? 'var(--accent-green)' : '#555'};white-space:nowrap;flex-shrink:0;letter-spacing:0.5px;">
                 ${r.val ? `${r.val} см` : `[ ${notSpecifiedText} ]`}
             </div>
         </div>
@@ -1698,25 +1724,25 @@ function showMeasurementSchemeModal(targetItem) {
     let headerHtml = '';
     if (itemTitle) {
         headerHtml = `
-            <div style="margin-bottom:12px;padding:6px 10px;background:#0d0d0d;border:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-family:var(--font-mono, monospace);">
-                <div style="color:#00ff66;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">
-                    > ${typeof window.escapeHtml === 'function' ? window.escapeHtml(itemTitle) : itemTitle}
+            <div style="margin-bottom:12px;padding:8px 12px;background:#000;border:1px dashed #333;display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+                <div style="color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px;">
+                    <span style="color:var(--accent-green);font-weight:bold;margin-right:4px;">&gt;</span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(itemTitle) : itemTitle}
                 </div>
-                ${itemSize ? `<span style="background:rgba(0,255,102,0.12);color:#00ff66;padding:2px 6px;border:1px solid #00ff66;font-size:10px;font-weight:bold;">${typeof window.escapeHtml === 'function' ? window.escapeHtml(itemSize) : itemSize}</span>` : ''}
+                ${itemSize ? `<span style="color:var(--accent-green);border:1px solid #333;padding:2px 8px;font-size:11px;font-weight:bold;flex-shrink:0;background:#050505;margin-left:8px;">[ ${typeof window.escapeHtml === 'function' ? window.escapeHtml(itemSize) : itemSize} ]</span>` : ''}
             </div>
         `;
     }
 
     const htmlContent = `
-        <div class="measurement-scheme-modal-content" style="max-width:100%;box-sizing:border-box;">
+        <div class="measurement-scheme-modal-content" style="max-width:100%;box-sizing:border-box;font-family:var(--font-mono, monospace);">
             ${headerHtml}
-            <div style="background:#050505;border:1px solid #1e1e1e;border-radius:4px;padding:8px;margin-bottom:12px;position:relative;">
+            <div style="background:#000;border:1px solid #222;border-radius:2px;padding:10px 4px;margin-bottom:12px;position:relative;box-shadow:inset 0 0 25px rgba(0,255,102,0.03);">
                 ${svgHtml}
             </div>
-            <div style="background:#080808;border:1px solid #1e1e1e;padding:6px 10px;border-radius:4px;">
+            <div style="background:#000;border:1px solid #222;border-radius:2px;padding:8px 12px;margin-bottom:12px;">
                 ${rowsHtml}
             </div>
-            <div style="margin-top:10px;color:#777;font-size:10px;font-family:var(--font-mono, monospace);text-align:center;">
+            <div style="margin-bottom:6px;color:#666;font-size:11px;text-align:center;line-height:1.4;">
                 ${note}
             </div>
         </div>

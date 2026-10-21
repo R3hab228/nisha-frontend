@@ -81,6 +81,7 @@
       "delivery_text": "Shipped via Nova Poshta. Full prepayment or cash on delivery available.",
       "measure": "How we take measurements?",
       "measure_text": "All measurements are taken on a flat surface.",
+      "measure_scheme_link": "measurements guide",
       "add_to_cart": "ADD TO CART",
       "notify": "NOTIFY WHEN AVAILABLE",
       "badge_orig": "SECURE TRANSACTION",

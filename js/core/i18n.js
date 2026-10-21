@@ -104,9 +104,14 @@ function updateContentLanguage() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (key.startsWith('[placeholder]')) {
-            el.placeholder = i18next.t(key.replace('[placeholder]', ''));
+            const rawKey = key.replace('[placeholder]', '');
+            const trans = i18next.t(rawKey);
+            if (trans && trans !== rawKey) el.placeholder = trans;
         } else {
-            el.innerHTML = i18next.t(key);
+            const trans = i18next.t(key);
+            if (trans && trans !== key) {
+                el.innerHTML = trans;
+            }
         }
     });
     
