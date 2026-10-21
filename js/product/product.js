@@ -207,6 +207,11 @@ window.openProductModalById = openProductModalById;
 function openProductModal(item) {
     currentOpenedItem = item;
     window.currentOpenedItem = item;
+
+    if (item && item.id) {
+        document.querySelectorAll(`.item-card[data-id="${item.id}"]`).forEach(c => c.classList.remove('unseen-pulse'));
+        if (window._seenItemsSet) window._seenItemsSet.add(String(item.id));
+    }
     
     // Мгновенный прогрев PhotoSwipe в фоне для открытия зума за 0 мс
     if (typeof ensurePhotoSwipe === 'function') ensurePhotoSwipe();
@@ -337,7 +342,9 @@ function openProductModal(item) {
         viewCount.innerText = item.views_count || 0;
         
         if (sb) {
-            let viewedItems = JSON.parse(localStorage.getItem('nisha_added_views') || '[]');
+            let viewedItems = (window.storage && typeof window.storage.getJSON === 'function')
+                ? window.storage.getJSON('nisha_added_views', [])
+                : JSON.parse(localStorage.getItem('nisha_added_views') || '[]');
             
             if (!viewedItems.includes(item.id)) {
                 let visitorId = getFingerprint();
@@ -354,8 +361,19 @@ function openProductModal(item) {
                     if (!error && data !== null) {
                         viewCount.innerText = data; 
                         item.views_count = data; 
+                        if (Array.isArray(window.allItems)) {
+                            const catItem = window.allItems.find(i => i && String(i.id) === String(item.id));
+                            if (catItem) catItem.views_count = data;
+                        }
+                        if (typeof window.updateCardDOM === 'function') {
+                            window.updateCardDOM(item);
+                        }
                         viewedItems.push(item.id);
-                        localStorage.setItem('nisha_added_views', JSON.stringify(viewedItems));
+                        if (window.storage && typeof window.storage.setJSON === 'function') {
+                            window.storage.setJSON('nisha_added_views', viewedItems);
+                        } else {
+                            localStorage.setItem('nisha_added_views', JSON.stringify(viewedItems));
+                        }
                     }
                 });
             }
@@ -1029,13 +1047,19 @@ function renderHistory() {
 
         const optImg = realItem ? (getOptimizedImg(realItem, true) || toCDN(h.img)) : toCDN(h.img);
         const isVideo = optImg && optImg.endsWith('.mp4');
+        const livePrice = realItem ? realItem.price : h.price;
+        const liveOldPrice = realItem ? realItem.old_price : h.old_price;
+        const liveIsSale = realItem ? !!realItem.is_sale : !!h.is_sale;
+        const liveName = realItem && realItem.name ? realItem.name : h.name;
+        const liveIsTop = !!(realItem && realItem.is_top === true && realItem.top_until && new Date(realItem.top_until).getTime() > Date.now());
+        const liveIsHot = !!(realItem && (realItem.views_count || 0) >= 25);
         
         let finalPriceHTML = '';
         const curr = typeof getCurrency === 'function' ? getCurrency() : 'грн';
-        if (h.is_sale && h.old_price) {
-            finalPriceHTML = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${h.old_price}</span>${h.price} ${curr}`;
+        if (liveIsSale && liveOldPrice) {
+            finalPriceHTML = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${liveOldPrice}</span>${livePrice} ${curr}`;
         } else {
-            finalPriceHTML = `${h.price} ${curr}`;
+            finalPriceHTML = `${livePrice} ${curr}`;
         }
 
         let statusOverlayHTML = '';
@@ -1046,6 +1070,7 @@ function renderHistory() {
             imageFilter = 'filter: grayscale(80%) brightness(0.5);'; 
         } else if (currentStatus === 'reserved') {
             statusOverlayHTML = `<div class="reserved-badge" style="font-size: 14px !important; letter-spacing: 1px !important; padding: 2px 5px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">RESERVED</div>`;
+            imageFilter = 'filter: brightness(0.6);';
         }
 
         const card = document.createElement('div');
@@ -1067,8 +1092,12 @@ function renderHistory() {
         }
         
         let miniBadgeHTML = '';
-        if (h.is_sale && currentStatus === 'available') {
-            miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none; color: #cc0000;">% SALE</div>`;
+        if ((liveIsTop || liveIsSale || liveIsHot) && currentStatus === 'available') {
+            const parts = [];
+            if (liveIsTop) parts.push(`<span style="color: #cc00ff;">★ TOP</span>`);
+            if (liveIsSale) parts.push(`<span style="color: #cc0000;">% SALE</span>`);
+            if (liveIsHot) parts.push(`<span style="color: #0044cc;">HOT</span>`);
+            miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 4px; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none;">${parts.join('<div style="width:1px;height:8px;background:#888;"></div>')}</div>`;
         }
 
         card.innerHTML = `
@@ -1079,7 +1108,7 @@ function renderHistory() {
                 <div class="history-item-remove" data-action="remove-history-item" data-id="${typeof window.escapeAttr==='function'?window.escapeAttr(h.id):h.id}" title="Удалить" style="z-index: 20;">X</div>
             </div>
             <div class="history-info">
-                <div class="history-name" title="${typeof window.escapeAttr==='function'?window.escapeAttr(h.name):h.name}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(h.name):h.name}</div>
+                <div class="history-name" title="${typeof window.escapeAttr==='function'?window.escapeAttr(liveName):liveName}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(liveName):liveName}</div>
                 <div class="history-price">${finalPriceHTML}</div>
             </div>`;
             

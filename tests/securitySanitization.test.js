@@ -368,4 +368,26 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(bottomModalsHtml).toContain('data-action=submit-auto-review');
         expect(bottomModalsHtml).toContain('data-action=submit-support-ticket');
     });
+
+    it('isolates Driver.js onboarding popover header and footer from global site header/footer CSS rules', () => {
+        const cssContent = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        expect(cssContent).toContain('header:not(.driver-popover-title)');
+        expect(cssContent).toContain('footer:not(.driver-popover-footer)');
+        expect(cssContent).toContain('header.driver-popover-title');
+        expect(cssContent).toContain('footer.driver-popover-footer');
+    });
+
+    it('catalog.js wires Supabase Realtime postgres_changes on items and updates badges (TOP, HOT, SALE, SOLD, RESERVED) without reload', () => {
+        const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        expect(catalogCode).toContain("sb.channel('public-items-live-feed')");
+        expect(catalogCode).toContain("table: 'items'");
+        expect(catalogCode).toContain('function handleRealtimeCatalogEvent');
+        expect(catalogCode).toContain('function initCatalogRealtimeSubscription');
+        expect(catalogCode).toContain("new BroadcastChannel('nisha_catalog_sync')");
+        expect(catalogCode).toContain('status-top');
+        expect(catalogCode).toContain('status-sale');
+        expect(catalogCode).toContain('status-hot');
+        expect(catalogCode).toContain('sold-badge');
+        expect(catalogCode).toContain('reserved-badge');
+    });
 });

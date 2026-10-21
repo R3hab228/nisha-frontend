@@ -1527,6 +1527,18 @@ async function executeOrderFinal(emailToSave) {
             localStorage.setItem('nisha_cached_orders', JSON.stringify(cached));
         } catch (e) {}
 
+        if (Array.isArray(window.allItems) && Array.isArray(finalOrderItems)) {
+            finalOrderItems.forEach(ordered => {
+                const catItem = window.allItems.find(i => i && String(i.id) === String(ordered.id));
+                if (catItem) {
+                    catItem.status = 'reserved';
+                    if (typeof window.updateCardDOM === 'function') window.updateCardDOM(catItem);
+                }
+            });
+            if (typeof window.updateSidebarCounters === 'function') window.updateSidebarCounters();
+            if (typeof renderHistory === 'function') renderHistory();
+        }
+
         setActiveCart([]);
         clearCheckoutDraft();
         resetPromoState();

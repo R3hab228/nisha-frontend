@@ -798,6 +798,7 @@ async function loadAllItems() {
     }
 
     if (!sb) return;
+    if (typeof initCatalogRealtimeSubscription === 'function') initCatalogRealtimeSubscription();
 
     // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров, включая description)
     const { data, error } = await sb.from('items')
@@ -922,8 +923,17 @@ window.loadAllItems = loadAllItems;
 // ==========================================
 function updateCardDOM(item) {
     if (!item || !item.id) return;
+
+    if (Array.isArray(window.filteredItems)) {
+        const fIdx = window.filteredItems.findIndex(fi => fi && String(fi.id) === String(item.id));
+        if (fIdx !== -1 && window.filteredItems[fIdx] !== item) {
+            Object.assign(window.filteredItems[fIdx], item);
+        }
+    }
+
     const cards = document.querySelectorAll(`.item-card[data-id="${item.id}"]`);
     const curr = (typeof getCurrency === 'function') ? getCurrency() : 'грн';
+    const sizePrefix = (typeof i18next !== 'undefined') ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
 
     if (cards && cards.length > 0) {
         cards.forEach(card => {
@@ -935,13 +945,15 @@ function updateCardDOM(item) {
 
             const cartBtn = card.querySelector('.grid-cart-btn');
 
-            // 2. Обрабатываем статус
+            // 2. Обрабатываем статус и бейджи (SOLD / RESERVED / TOP / SALE / HOT)
             if (item.status === 'sold') {
                 card.classList.add('sold-out');
+                card.classList.remove('unseen-pulse');
                 card.insertAdjacentHTML('afterbegin', '<div class="sold-badge">SOLD</div>');
                 if (cartBtn) cartBtn.style.display = 'none';
             } else if (item.status === 'reserved') {
                 card.classList.add('reserved-item');
+                card.classList.remove('unseen-pulse');
                 card.insertAdjacentHTML('afterbegin', '<div class="reserved-badge">RESERVED</div>');
                 if (cartBtn) cartBtn.style.display = '';
             } else {
@@ -970,7 +982,7 @@ function updateCardDOM(item) {
                 }
             }
 
-            // 3. Обновляем цену в .item-price
+            // 3. Обновляем цену, название, размер, бренд и состояние в карточке
             const priceDiv = card.querySelector('.item-price');
             if (priceDiv) {
                 if (item.is_sale && item.old_price) {
@@ -979,22 +991,42 @@ function updateCardDOM(item) {
                     priceDiv.innerHTML = `<span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
                 }
             }
+
+            const titleEl = card.querySelector('.item-title');
+            if (titleEl && item.name) {
+                titleEl.textContent = item.name;
+            }
+            const sizeEl = card.querySelector('.item-size');
+            if (sizeEl && item.size !== undefined) {
+                const safeSize = typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '') : (item.size || '');
+                sizeEl.innerHTML = `<span data-i18n="grid.size_prefix">${sizePrefix}</span>${safeSize}`;
+            }
+            const footerEl = card.querySelector('.item-footer');
+            if (footerEl && (item.brand !== undefined || item.condition !== undefined)) {
+                const safeBrand = typeof window.escapeHtml === 'function' ? window.escapeHtml(item.brand || '') : (item.brand || '');
+                const safeCond = typeof window.escapeHtml === 'function' ? window.escapeHtml(item.condition || '') : (item.condition || '');
+                footerEl.innerHTML = `<span>${safeBrand}</span><span>${safeCond}</span>`;
+            }
         });
     }
 
     // 4. Если этот товар открыт в детальной модалке (productModal)
     const activeModal = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
-    if (activeModal && activeModal.id === item.id) {
+    if (activeModal && String(activeModal.id) === String(item.id)) {
         Object.assign(activeModal, item);
         const modalCartBtn = document.getElementById('modalCartBtn');
         const modalPriceEl = document.getElementById('modalItemPrice');
+        const modalTitleEl = document.getElementById('modalItemTitle');
+        const modalViewsEl = document.getElementById('modalItemViews');
+        if (modalTitleEl && item.name) modalTitleEl.textContent = item.name;
+        if (modalViewsEl && item.views_count !== undefined) modalViewsEl.textContent = item.views_count || 0;
         if (modalCartBtn) {
             if (item.status === 'sold') {
                 modalCartBtn.style.display = 'none';
             } else {
                 modalCartBtn.style.display = 'block';
                 const userCart = (typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []);
-                const isInCart = userCart.some(i => i.id === item.id);
+                const isInCart = userCart.some(i => String(i.id) === String(item.id));
                 modalCartBtn.innerText = isInCart ? '[ В КОРЗИНЕ ]' : (typeof i18next !== 'undefined' ? i18next.t('product.add_to_cart') : 'В КОРЗИНУ');
             }
         }
@@ -1009,13 +1041,17 @@ window.updateCardDOM = updateCardDOM;
 
 function removeSoldItemFromCart(itemId, itemName) {
     const currentCart = (typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []);
-    const cartIdx = currentCart.findIndex(c => c.id === itemId);
+    const cartIdx = currentCart.findIndex(c => String(c.id) === String(itemId));
     if (cartIdx !== -1) {
         currentCart.splice(cartIdx, 1);
         if (typeof setActiveCart === 'function') {
             setActiveCart(currentCart);
         } else {
-            localStorage.setItem('nisha_cart', JSON.stringify(currentCart));
+            if (window.storage && typeof window.storage.setJSON === 'function') {
+                window.storage.setJSON('nisha_cart', currentCart);
+            } else {
+                localStorage.setItem('nisha_cart', JSON.stringify(currentCart));
+            }
             window.cart = currentCart;
         }
         if (typeof syncCartToServer === 'function') syncCartToServer();
@@ -1027,17 +1063,203 @@ function removeSoldItemFromCart(itemId, itemName) {
 }
 window.removeSoldItemFromCart = removeSoldItemFromCart;
 
+// КРОСС-ВКЛАДОЧНЫЙ BROADCAST CHANNEL (МГНОВЕННАЯ СИНХРОНИЗАЦИЯ МЕЖДУ ВКЛАДКАМИ БРАУЗЕРА)
+let _catalogBroadcastChannel = null;
+if (typeof BroadcastChannel !== 'undefined' && !window._nishaCatalogBcInit) {
+    window._nishaCatalogBcInit = true;
+    try {
+        _catalogBroadcastChannel = new BroadcastChannel('nisha_catalog_sync');
+        _catalogBroadcastChannel.onmessage = (event) => {
+            const msg = event && event.data;
+            if (!msg || !msg.type) return;
+            if (msg.type === 'ITEM_UPSERT' && msg.item) {
+                handleRealtimeCatalogEvent({ eventType: 'UPDATE', new: msg.item }, true);
+            } else if (msg.type === 'ITEM_DELETE' && msg.id) {
+                handleRealtimeCatalogEvent({ eventType: 'DELETE', old: { id: msg.id } }, true);
+            }
+        };
+    } catch (e) {
+        _catalogBroadcastChannel = null;
+    }
+}
+
+// ОБРАБОТЧИК REALTIME СОБЫТИЙ SUPABASE (INSERT / UPDATE / DELETE БЕЗ ПЕРЕЗАГРУЗКИ СТРАНИЦЫ)
+function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
+    if (!payload) return;
+    const eventType = payload.eventType || payload.type;
+    if (!Array.isArray(window.allItems)) window.allItems = [];
+
+    if (eventType === 'DELETE') {
+        const delId = payload.old && payload.old.id;
+        if (!delId) return;
+        const existed = window.allItems.some(i => String(i.id) === String(delId));
+        if (!existed) return;
+
+        window.allItems = window.allItems.filter(i => String(i.id) !== String(delId));
+        if (Array.isArray(window.filteredItems)) {
+            window.filteredItems = window.filteredItems.filter(i => String(i.id) !== String(delId));
+        }
+
+        document.querySelectorAll(`.item-card[data-id="${delId}"]`).forEach(card => card.remove());
+        removeSoldItemFromCart(delId);
+
+        const countEl = document.getElementById('itemCount');
+        if (countEl && Array.isArray(window.filteredItems)) {
+            countEl.innerText = window.filteredItems.length;
+        }
+
+        const activeModal = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        if (activeModal && String(activeModal.id) === String(delId) && typeof closeModal === 'function') {
+            closeModal('productModal');
+        }
+
+        updateSidebarCounters();
+        if (typeof renderHistory === 'function') renderHistory();
+        if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+        safelySaveCatalogToStorage(window.allItems);
+        applyFilters(true, true);
+
+        if (!fromBroadcast && _catalogBroadcastChannel) {
+            try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_DELETE', id: delId }); } catch (e) {}
+        }
+        return;
+    }
+
+    const fresh = payload.new;
+    if (!fresh || !fresh.id) return;
+
+    const existingIdx = window.allItems.findIndex(i => i && String(i.id) === String(fresh.id));
+
+    if (eventType === 'INSERT' || existingIdx === -1) {
+        window._notifiedItemIds = window._notifiedItemIds || new Set();
+        window.allItems.unshift(fresh);
+        window.allItems.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+        if (!fromBroadcast && !window._notifiedItemIds.has(fresh.id)) {
+            window._notifiedItemIds.add(fresh.id);
+            if (typeof enqueueNewItemToast === 'function') {
+                enqueueNewItemToast(fresh);
+            } else if (typeof showToast === 'function') {
+                showToast(`🆕 Новая вещь на сайте: ${fresh.name || ''}`, 'success');
+            }
+        }
+
+        updateSidebarCounters();
+        if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+        safelySaveCatalogToStorage(window.allItems);
+        applyFilters(true, true);
+
+        if (!fromBroadcast && _catalogBroadcastChannel) {
+            try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_UPSERT', item: fresh }); } catch (e) {}
+        }
+        return;
+    }
+
+    // UPDATE существующего товара
+    const item = window.allItems[existingIdx];
+    const nowTs = Date.now();
+    const wasTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > nowTs;
+    const nowTop = fresh.is_top === true && fresh.top_until && new Date(fresh.top_until).getTime() > nowTs;
+    const topChanged = wasTop !== nowTop || item.top_until !== fresh.top_until || !!item.is_top !== !!fresh.is_top;
+
+    const oldStatus = item.status;
+    const oldPrice = item.price;
+    const oldIsSale = item.is_sale;
+
+    const statusChanged = item.status !== fresh.status;
+    const saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
+    const priceChanged = item.price !== fresh.price;
+    const wasHot = (item.views_count || 0) >= 25;
+    const nowHot = (fresh.views_count !== undefined ? fresh.views_count : (item.views_count || 0)) >= 25;
+    const hotChanged = wasHot !== nowHot;
+    const categoryChanged = fresh.category !== undefined && item.category !== fresh.category;
+    const sizeChanged = fresh.size !== undefined && item.size !== fresh.size;
+    const metaChanged = (fresh.name !== undefined && item.name !== fresh.name) ||
+                        (fresh.brand !== undefined && item.brand !== fresh.brand) ||
+                        (fresh.condition !== undefined && item.condition !== fresh.condition) ||
+                        categoryChanged || sizeChanged;
+
+    // Бережно мержим поля (сохраняя массив фото и описание, если в сжатом payload их нет)
+    const preservedImages = (Array.isArray(fresh.images) && fresh.images.length > 0) ? fresh.images : item.images;
+    const preservedThumbs = (Array.isArray(fresh.thumbnails) && fresh.thumbnails.length > 0) ? fresh.thumbnails : item.thumbnails;
+    const preservedDesc = (fresh.description !== undefined && fresh.description !== null) ? fresh.description : item.description;
+
+    Object.assign(item, fresh, {
+        images: preservedImages,
+        thumbnails: preservedThumbs,
+        description: preservedDesc
+    });
+
+    updateCardDOM(item);
+
+    if (!fromBroadcast && typeof showToast === 'function') {
+        if ((!oldIsSale && item.is_sale) || (oldPrice > item.price)) {
+            if (item.status === 'available') {
+                showToast(`🔥 СКИДКА: ${item.name}`, 'success');
+            }
+        }
+        if (oldStatus !== 'sold' && item.status === 'sold') {
+            removeSoldItemFromCart(item.id, item.name);
+        } else if (oldStatus === 'reserved' && item.status === 'available') {
+            showToast(`Бронь истекла: ${item.name} снова в наличии!`, 'info');
+        }
+    }
+
+    updateSidebarCounters();
+    if (typeof renderHistory === 'function') renderHistory();
+    if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+    safelySaveCatalogToStorage(window.allItems);
+
+    const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
+    const onlySale = document.getElementById('onlySaleCb')?.checked || false;
+    const needsGridResortOrRefilter = topChanged || categoryChanged || sizeChanged ||
+                                      (hideUnavailable && statusChanged) ||
+                                      (onlySale && saleChanged);
+
+    if (needsGridResortOrRefilter) {
+        applyFilters(true, true);
+    }
+
+    if (!fromBroadcast && _catalogBroadcastChannel) {
+        try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_UPSERT', item }); } catch (e) {}
+    }
+}
+window.handleRealtimeCatalogEvent = handleRealtimeCatalogEvent;
+
+let _catalogRealtimeChannel = null;
+function initCatalogRealtimeSubscription() {
+    if (_catalogRealtimeChannel) return;
+    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    if (!sb || typeof sb.channel !== 'function') return;
+
+    try {
+        _catalogRealtimeChannel = sb.channel('public-items-live-feed')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (payload) => {
+                handleRealtimeCatalogEvent(payload, false);
+            })
+            .subscribe((status) => {
+                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    _catalogRealtimeChannel = null;
+                }
+            });
+    } catch (e) {
+        _catalogRealtimeChannel = null;
+    }
+}
+window.initCatalogRealtimeSubscription = initCatalogRealtimeSubscription;
+
 // СИНХРОНИЗАЦИЯ КАТАЛОГА В РЕАЛЬНОМ ВРЕМЕНИ (НОВЫЕ ТОВАРЫ, СТАТУСЫ, БЕЙДЖИ TOP/HOT/SALE)
 let _isSyncingItems = false;
 async function syncCriticalStatuses() {
     if (_isSyncingItems) return;
     const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
     if (!sb || !window.allItems || window.allItems.length === 0) return;
+    initCatalogRealtimeSubscription();
 
     _isSyncingItems = true;
     try {
         const { data, error } = await sb.from('items')
-            .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, views_count, created_at')
+            .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, views_count, created_at, category, size, condition')
             .order('created_at', { ascending: false })
             .limit(999);
 
@@ -1055,9 +1277,11 @@ async function syncCriticalStatuses() {
 
         if (deletedIds.length > 0) {
             window.allItems = window.allItems.filter(i => freshIdSet.has(i.id));
+            if (Array.isArray(window.filteredItems)) {
+                window.filteredItems = window.filteredItems.filter(i => freshIdSet.has(i.id));
+            }
             deletedIds.forEach(delId => {
-                const card = document.querySelector(`.item-card[data-id="${delId}"]`);
-                if (card) card.remove();
+                document.querySelectorAll(`.item-card[data-id="${delId}"]`).forEach(card => card.remove());
                 removeSoldItemFromCart(delId);
             });
             gridNeedsFullRefresh = true;
@@ -1090,18 +1314,24 @@ async function syncCriticalStatuses() {
             }
         }
 
-        // 3. Синхронизация статусов, бейджей и цен существующих товаров
+        // 3. Синхронизация статусов, бейджей (TOP/HOT/SALE/SOLD/RESERVED) и цен существующих товаров
         const freshMap = new Map();
         data.forEach(d => freshMap.set(d.id, d));
         let anyCardUpdated = false;
+        const nowTs = Date.now();
+        const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
+        const onlySale = document.getElementById('onlySaleCb')?.checked || false;
 
         window.allItems.forEach(item => {
             const fresh = freshMap.get(item.id);
             if (!fresh) return;
 
-            const wasTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > Date.now();
-            const nowTop = fresh.is_top === true && fresh.top_until && new Date(fresh.top_until).getTime() > Date.now();
-            const topChanged = wasTop !== nowTop || item.top_until !== fresh.top_until || item.is_top !== fresh.is_top;
+            const wasTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > nowTs;
+            const nowTop = fresh.is_top === true && fresh.top_until && new Date(fresh.top_until).getTime() > nowTs;
+            const domCard = document.querySelector(`.item-card[data-id="${item.id}"]`);
+            const domHasTopBadge = !!(domCard && domCard.querySelector('.status-top'));
+            const topExpiredInDom = domHasTopBadge && !nowTop;
+            const topChanged = wasTop !== nowTop || item.top_until !== fresh.top_until || !!item.is_top !== !!fresh.is_top || topExpiredInDom;
 
             const statusChanged = item.status !== fresh.status;
             const saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
@@ -1109,12 +1339,17 @@ async function syncCriticalStatuses() {
             const wasHot = (item.views_count || 0) >= 25;
             const nowHot = (fresh.views_count || 0) >= 25;
             const hotChanged = wasHot !== nowHot;
+            const metaChanged = (fresh.name && item.name !== fresh.name) ||
+                                (fresh.brand && item.brand !== fresh.brand) ||
+                                (fresh.size !== undefined && item.size !== fresh.size) ||
+                                (fresh.category !== undefined && item.category !== fresh.category) ||
+                                (fresh.condition !== undefined && item.condition !== fresh.condition);
 
             if (item.views_count !== fresh.views_count) {
                 item.views_count = fresh.views_count;
             }
 
-            if (topChanged || statusChanged || saleChanged || priceChanged || hotChanged) {
+            if (topChanged || statusChanged || saleChanged || priceChanged || hotChanged || metaChanged) {
                 const oldStatus = item.status;
                 const oldPrice = item.price;
                 const oldIsSale = item.is_sale;
@@ -1127,10 +1362,19 @@ async function syncCriticalStatuses() {
                 item.old_price = fresh.old_price;
                 item.price = fresh.price;
                 item.views_count = fresh.views_count;
+                if (fresh.name) item.name = fresh.name;
+                if (fresh.brand) item.brand = fresh.brand;
+                if (fresh.size !== undefined) item.size = fresh.size;
+                if (fresh.category !== undefined) item.category = fresh.category;
+                if (fresh.condition !== undefined) item.condition = fresh.condition;
 
                 // Мгновенно обновляем карточку в DOM без мерцания
                 updateCardDOM(item);
                 anyCardUpdated = true;
+
+                if (topChanged || (hideUnavailable && statusChanged) || (onlySale && saleChanged)) {
+                    gridNeedsFullRefresh = true;
+                }
 
                 // Уведомления пользователю
                 if (typeof showToast === 'function') {
@@ -1157,12 +1401,16 @@ async function syncCriticalStatuses() {
             if (canSafelySaveCache) {
                 safelySaveCatalogToStorage(window.allItems);
             }
+            updateSidebarCounters();
+            if (typeof renderHistory === 'function') renderHistory();
             if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
-            if (typeof applyFilters === 'function') applyFilters();
+            if (typeof applyFilters === 'function') applyFilters(true, true);
         } else if (anyCardUpdated) {
             if (canSafelySaveCache) {
                 safelySaveCatalogToStorage(window.allItems);
             }
+            updateSidebarCounters();
+            if (typeof renderHistory === 'function') renderHistory();
             if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
         }
     } catch (e) {
@@ -1180,7 +1428,7 @@ if (!window._catalogAutoSyncInitialized) {
         if (document.visibilityState === 'visible') {
             syncCriticalStatuses();
         }
-    }, 45000);
+    }, 12000);
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
@@ -1188,6 +1436,9 @@ if (!window._catalogAutoSyncInitialized) {
         }
     });
     window.addEventListener('focus', () => {
+        syncCriticalStatuses();
+    });
+    window.addEventListener('online', () => {
         syncCriticalStatuses();
     });
 }
@@ -1388,16 +1639,16 @@ window.invalidateFuseCache = function() {
 };
 
 // Основная функция фильтрации каталога
-function applyFilters(immediate = false) {
+function applyFilters(immediate = false, preserveViewport = false) {
     const grid = document.getElementById('itemsGrid');
     const isInitialRender = !window.renderedCount || window.renderedCount === 0;
 
-    if (!immediate && !isInitialRender && grid) {
+    if (!immediate && !preserveViewport && !isInitialRender && grid) {
         grid.classList.add('fade-out');
     }
 
     clearTimeout(applyFiltersTimeout);
-    const delay = (immediate || isInitialRender) ? 0 : 160;
+    const delay = (immediate || preserveViewport || isInitialRender) ? 0 : 160;
 
     applyFiltersTimeout = setTimeout(async () => {
         try {
@@ -1511,10 +1762,15 @@ function applyFilters(immediate = false) {
                 });
             }
             
-            // СБРОС И РЕНДЕР
+            // СБРОС И РЕНДЕР (при preserveViewport сохраняем текущую страницу на ПК и число карточек на моб)
+            const prevRenderedCount = window.renderedCount || 0;
+            const prevPage = window.currentPage || 1;
+            const batchSizeNow = window.innerWidth <= 900 ? 12 : 15;
+            const maxPageNow = Math.max(1, Math.ceil(window.filteredItems.length / batchSizeNow));
+
             if (grid) grid.innerHTML = ''; 
             window.renderedCount = 0; 
-            window.currentPage = 1; 
+            window.currentPage = preserveViewport ? Math.min(prevPage, maxPageNow) : 1; 
             
             const scrollTrigger = document.getElementById('loadingTrigger');
             if (scrollTrigger && window.innerWidth <= 900) {
@@ -1530,7 +1786,8 @@ function applyFilters(immediate = false) {
             if (window.filteredItems.length === 0) {
                 if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ ТОВАРОВ НЕ НАЙДЕНО ]</div>`;
             } else {
-                renderNextBatch(); 
+                const targetMobileCount = preserveViewport ? Math.max(prevRenderedCount, batchSizeNow) : 0;
+                renderNextBatch(targetMobileCount); 
             }
 
             // Обновляем URL параметры
@@ -1789,7 +2046,7 @@ function initGridEventDelegation() {
 }
 
 // Рендер следующей пачки товаров
-function renderNextBatch() {
+function renderNextBatch(targetMobileCount = 0) {
     const grid = document.getElementById('itemsGrid');
     if (!grid) return;
     initGridEventDelegation();
@@ -1807,7 +2064,8 @@ function renderNextBatch() {
     if (isMobile) {
         if (window.renderedCount === 0) grid.innerHTML = ''; 
         startIndex = window.renderedCount;
-        endIndex = Math.min(startIndex + BATCH_SIZE, window.filteredItems.length); 
+        const batchLen = (startIndex === 0 && targetMobileCount > BATCH_SIZE) ? targetMobileCount : BATCH_SIZE;
+        endIndex = Math.min(startIndex + batchLen, window.filteredItems.length); 
     } else {
         grid.innerHTML = ''; 
         startIndex = (window.currentPage - 1) * BATCH_SIZE; 
@@ -1818,7 +2076,9 @@ function renderNextBatch() {
     
     if (!window._seenItemsSet) {
         try {
-            const parsedSeen = JSON.parse(localStorage.getItem('nisha_seen_items')) || [];
+            const parsedSeen = (window.storage && typeof window.storage.getJSON === 'function')
+                ? window.storage.getJSON('nisha_seen_items', [])
+                : (JSON.parse(localStorage.getItem('nisha_seen_items')) || []);
             window._seenItemsSet = new Set(Array.isArray(parsedSeen) ? parsedSeen.map(String) : []);
         } catch (e) {
             window._seenItemsSet = new Set();
@@ -1912,9 +2172,10 @@ function renderNextBatch() {
             const starClass = favSet.has(itemIdStr) ? 'fav-star active' : 'fav-star';
             const isUnseen = !seenSet.has(itemIdStr) && item.status === 'available';
             const pulseClass = isUnseen ? 'unseen-pulse' : '';
+            const statusClass = item.status === 'sold' ? 'sold-out' : (item.status === 'reserved' ? 'reserved-item' : '');
 
             const card = document.createElement('div');
-            card.className = `item-card ${item.status !== 'available' ? 'sold-out' : ''} ${pulseClass}`;
+            card.className = ['item-card', statusClass, pulseClass].filter(Boolean).join(' ');
             card.setAttribute('data-id', item.id);
             
             let priceHTML = '';
