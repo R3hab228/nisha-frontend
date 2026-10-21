@@ -227,16 +227,94 @@ function handleNewProposalFiles(newFiles) {
 
     validFiles.forEach(file => {
         const isVid = (file.type && file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(file.name || '');
-        currentProposalFiles.push({
+        const itemObj = {
             file: file,
-            url: isVid ? null : URL.createObjectURL(file)
-        });
+            url: isVid ? null : URL.createObjectURL(file),
+            width: 1200,
+            height: 1200
+        };
+        if (!isVid && itemObj.url) {
+            const probe = new Image();
+            probe.onload = () => {
+                if (probe.naturalWidth && probe.naturalHeight) {
+                    itemObj.width = probe.naturalWidth;
+                    itemObj.height = probe.naturalHeight;
+                }
+            };
+            probe.src = itemObj.url;
+        }
+        currentProposalFiles.push(itemObj);
     });
     
     window.currentProposalFiles = currentProposalFiles;
     renderProposalPreviews();
 }
 window.handleNewProposalFiles = handleNewProposalFiles;
+
+// Функция открытия фото в полный экран через PhotoSwipe
+async function openProposalPhotoByIndex(index, element = null) {
+    let targetIndex = index;
+    if (element) {
+        const previewEl = element.closest('.preview-img');
+        if (previewEl && previewEl.parentElement) {
+            const allPreviews = Array.from(previewEl.parentElement.querySelectorAll('.preview-img'));
+            const domIndex = allPreviews.indexOf(previewEl);
+            if (domIndex !== -1) targetIndex = domIndex;
+        }
+    }
+    const files = Array.isArray(window.currentProposalFiles) ? window.currentProposalFiles : currentProposalFiles;
+    if (typeof targetIndex !== 'number' || targetIndex < 0 || targetIndex >= files.length) return;
+    const item = files[targetIndex];
+    if (!item || !item.url) return;
+
+    if (typeof ensurePhotoSwipe === 'function') {
+        await ensurePhotoSwipe();
+    }
+
+    if (window.PhotoSwipeLightbox) {
+        const photos = files.filter(f => f && f.url);
+        const clickedIndex = photos.findIndex(f => f === item);
+        if (clickedIndex < 0) return;
+
+        const pswp = new window.PhotoSwipeLightbox({
+            dataSource: photos.map(f => ({
+                src: f.url,
+                width: f.width || 1200,
+                height: f.height || 1200
+            })),
+            pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
+        });
+        pswp.init();
+        pswp.loadAndOpen(clickedIndex);
+    }
+}
+window.openProposalPhotoByIndex = openProposalPhotoByIndex;
+if (typeof globalThis !== 'undefined') globalThis.openProposalPhotoByIndex = openProposalPhotoByIndex;
+
+// Функция удаления файла из предложки с освобождением памяти
+function removeProposalFile(index, element = null) {
+    let targetIndex = index;
+    if (element && typeof element.closest === 'function') {
+        const previewEl = element.closest('.preview-img');
+        if (previewEl && previewEl.parentElement) {
+            const allPreviews = Array.from(previewEl.parentElement.querySelectorAll('.preview-img'));
+            const domIndex = allPreviews.indexOf(previewEl);
+            if (domIndex !== -1) targetIndex = domIndex;
+        }
+    }
+    const files = Array.isArray(window.currentProposalFiles) ? window.currentProposalFiles : currentProposalFiles;
+    if (typeof targetIndex !== 'number' || targetIndex < 0 || targetIndex >= files.length) return;
+    const removed = files.splice(targetIndex, 1);
+    if (removed && removed.length > 0 && removed[0].url) {
+        try { URL.revokeObjectURL(removed[0].url); } catch (e) {}
+    }
+    currentProposalFiles = files;
+    window.currentProposalFiles = files;
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+    renderProposalPreviews();
+}
+window.removeProposalFile = removeProposalFile;
+if (typeof globalThis !== 'undefined') globalThis.removeProposalFile = removeProposalFile;
 
 // 5. Отрисовка превью с сортировкой и зумом
 function renderProposalPreviews() {
@@ -254,6 +332,8 @@ function renderProposalPreviews() {
             const img = document.createElement('div');
             img.className = 'preview-img';
             img.setAttribute('data-index', index);
+            img.setAttribute('data-action', 'preview-proposal-photo');
+            img.setAttribute('title', 'Нажмите, чтобы просмотреть');
 
             const dragIcon = '<div style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); padding:2px; border-radius:2px; pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>';
 
@@ -267,41 +347,30 @@ function renderProposalPreviews() {
 
             const delBtn = document.createElement('div');
             delBtn.innerHTML = '✖';
-            delBtn.style.cssText = 'position:absolute; top:-6px; left:-6px; background:var(--accent-red); color:#fff; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; cursor:pointer; z-index:10; font-family:var(--font-mono); border: 1px solid #000;';
+            delBtn.className = 'preview-del-btn';
+            delBtn.setAttribute('data-action', 'delete-proposal-photo');
+            delBtn.setAttribute('data-index', index);
+            delBtn.setAttribute('title', 'Удалить');
             
             // Удаление фото с освобождением памяти Blob URL
             delBtn.onclick = (e) => {
-                e.stopPropagation(); 
-                const removed = currentProposalFiles.splice(index, 1);
-                if (removed && removed.length > 0 && removed[0].url) {
-                    try { URL.revokeObjectURL(removed[0].url); } catch(e) {}
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
                 }
-                window.currentProposalFiles = currentProposalFiles;
-                if (typeof triggerHaptic === 'function') triggerHaptic('light');
-                renderProposalPreviews(); 
+                removeProposalFile(index, delBtn);
             };
             img.appendChild(delBtn);
 
             // Клик по превью — открывает на весь экран через PhotoSwipe
             img.onclick = async (e) => {
-                e.stopPropagation();
-                if (!item.url) return;
-                
-                if (typeof ensurePhotoSwipe === 'function') {
-                    await ensurePhotoSwipe();
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
                 }
-
-                if (window.PhotoSwipeLightbox) {
-                    const photos = currentProposalFiles.filter(f => f.url);
-                    const clickedIndex = photos.findIndex(f => f === item);
-                    
-                    const pswp = new window.PhotoSwipeLightbox({
-                        dataSource: photos.map(f => ({ src: f.url, width: 1000, height: 1000 })),
-                        pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
-                    });
-                    pswp.init();
-                    pswp.loadAndOpen(clickedIndex);
-                }
+                openProposalPhotoByIndex(index, img);
             };
 
             container.appendChild(img);
@@ -327,6 +396,8 @@ function renderProposalPreviews() {
                 fallbackOnBody: false, 
                 ghostClass: 'sortable-ghost', 
                 dragClass: 'sortable-drag', 
+                filter: '.preview-del-btn',
+                preventOnFilter: false,
                 onStart: function () {
                     if (isTouchDevice) {
                         if (typeof triggerHaptic === 'function') triggerHaptic('medium'); 
@@ -352,6 +423,13 @@ function renderProposalPreviews() {
                     const movedItem = currentProposalFiles.splice(evt.oldIndex, 1)[0];
                     currentProposalFiles.splice(evt.newIndex, 0, movedItem);
                     window.currentProposalFiles = currentProposalFiles;
+
+                    // Обновляем data-index на элементах DOM после перемещения
+                    container.querySelectorAll('.preview-img').forEach((el, idx) => {
+                        el.setAttribute('data-index', idx);
+                        const btn = el.querySelector('.preview-del-btn');
+                        if (btn) btn.setAttribute('data-index', idx);
+                    });
                 }
             });
         };

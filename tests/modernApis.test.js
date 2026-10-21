@@ -54,6 +54,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
         eval(ordersCode);
+
+        const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+        eval(dropCode);
     });
 
     beforeEach(() => {
@@ -184,6 +187,115 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cart).toHaveLength(1);
             expect(cart[0].price).toBe(1500);
             expect(cart[0].attributes.color).toBe('Olive');
+        });
+    });
+
+    describe('4. Proposal photos: preview & delete without triggering file explorer', () => {
+        let mockFilesInput;
+
+        beforeEach(() => {
+            mockFilesInput = { click: vi.fn(), value: '' };
+            globalThis.currentProposalFiles = [
+                { file: { name: 'front.jpg', type: 'image/jpeg' }, url: 'blob:front' },
+                { file: { name: 'back.jpg', type: 'image/jpeg' }, url: 'blob:back' }
+            ];
+            globalThis.window.currentProposalFiles = globalThis.currentProposalFiles;
+
+            globalThis.document.getElementById = vi.fn(id => {
+                if (id === 'propFiles') return mockFilesInput;
+                if (id === 'propPreviewContainer') return { replaceChildren: vi.fn(), appendChild: vi.fn(), querySelectorAll: vi.fn(() => []) };
+                if (id === 'propPlaceholder') return { style: {} };
+                return null;
+            });
+        });
+
+        it('clicking delete-proposal-photo removes file and does NOT trigger propFiles.click', () => {
+            const delTarget = {
+                getAttribute: (attr) => attr === 'data-action' ? 'delete-proposal-photo' : (attr === 'data-index' ? '0' : null),
+                closest: vi.fn(selector => {
+                    if (selector === '[data-action]') return delTarget;
+                    return null;
+                })
+            };
+
+            const mockEvent = {
+                target: delTarget,
+                stopPropagation: vi.fn(),
+                stopImmediatePropagation: vi.fn(),
+                preventDefault: vi.fn()
+            };
+
+            window.handleDelegatedAction(mockEvent);
+
+            expect(mockFilesInput.click).not.toHaveBeenCalled();
+            expect(globalThis.window.currentProposalFiles).toHaveLength(1);
+            expect(globalThis.window.currentProposalFiles[0].url).toBe('blob:back');
+        });
+
+        it('clicking preview-proposal-photo calls openProposalPhotoByIndex and does NOT trigger propFiles.click', () => {
+            window.openProposalPhotoByIndex = vi.fn();
+
+            const imgTarget = {
+                getAttribute: (attr) => attr === 'data-action' ? 'preview-proposal-photo' : (attr === 'data-index' ? '1' : null),
+                closest: vi.fn(selector => {
+                    if (selector === '[data-action]') return imgTarget;
+                    return null;
+                })
+            };
+
+            const mockEvent = {
+                target: imgTarget,
+                stopPropagation: vi.fn(),
+                stopImmediatePropagation: vi.fn(),
+                preventDefault: vi.fn()
+            };
+
+            window.handleDelegatedAction(mockEvent);
+
+            expect(mockFilesInput.click).not.toHaveBeenCalled();
+            expect(window.openProposalPhotoByIndex).toHaveBeenCalledWith(1, imgTarget);
+        });
+
+        it('clicking trigger-prop-files directly on dropzone triggers propFiles.click when < 5 files', () => {
+            const dropzoneTarget = {
+                getAttribute: (attr) => attr === 'data-action' ? 'trigger-prop-files' : null,
+                closest: vi.fn(selector => {
+                    if (selector === '[data-action]') return dropzoneTarget;
+                    return null;
+                })
+            };
+
+            const mockEvent = {
+                target: dropzoneTarget,
+                stopPropagation: vi.fn(),
+                stopImmediatePropagation: vi.fn(),
+                preventDefault: vi.fn()
+            };
+
+            window.handleDelegatedAction(mockEvent);
+
+            expect(mockFilesInput.click).toHaveBeenCalledTimes(1);
+        });
+
+        it('trigger-prop-files is ignored if target is inside preview-img or preview-del-btn', () => {
+            const childInsidePreview = {
+                closest: vi.fn(selector => {
+                    if (selector === '.preview-img') return {};
+                    if (selector === '[data-action]') return { getAttribute: () => 'trigger-prop-files' };
+                    return null;
+                })
+            };
+
+            const mockEvent = {
+                target: childInsidePreview,
+                stopPropagation: vi.fn(),
+                stopImmediatePropagation: vi.fn(),
+                preventDefault: vi.fn()
+            };
+
+            window.handleDelegatedAction(mockEvent);
+
+            expect(mockFilesInput.click).not.toHaveBeenCalled();
         });
     });
 });

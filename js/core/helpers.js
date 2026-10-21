@@ -1039,7 +1039,40 @@ function handleDelegatedAction(e) {
             if (modalId && typeof window.closeModal === 'function') window.closeModal(modalId);
             break;
         }
+        case 'delete-proposal-photo': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            const idx = parseInt(actionEl.getAttribute('data-index'), 10);
+            if (!Number.isNaN(idx) && typeof window.removeProposalFile === 'function') {
+                window.removeProposalFile(idx, actionEl);
+            }
+            break;
+        }
+        case 'preview-proposal-photo': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            const idx = parseInt(actionEl.getAttribute('data-index'), 10);
+            if (!Number.isNaN(idx) && typeof window.openProposalPhotoByIndex === 'function') {
+                window.openProposalPhotoByIndex(idx, actionEl);
+            }
+            break;
+        }
         case 'trigger-prop-files': {
+            // Защита: если клик пришелся на фото-превью или кнопку удаления — проводник НЕ открывать
+            if (e.target && typeof e.target.closest === 'function') {
+                if (e.target.closest('.preview-img') || e.target.closest('.preview-del-btn') || e.target.closest('[data-action="delete-proposal-photo"]') || e.target.closest('[data-action="preview-proposal-photo"]')) {
+                    break;
+                }
+            }
+            const filesCount = (window.currentProposalFiles && window.currentProposalFiles.length) || 0;
+            if (filesCount >= 5) {
+                if (typeof showToast === 'function') {
+                    showToast(typeof i18next !== 'undefined' ? i18next.t('messages.prop_max_files', { defaultValue: 'Максимум 5 фото/видео!' }) : 'Максимум 5 фото/видео!', 'error');
+                }
+                break;
+            }
             const filesEl = typeof document !== 'undefined' ? document.getElementById('propFiles') : null;
             if (filesEl && typeof filesEl.click === 'function') filesEl.click();
             break;
