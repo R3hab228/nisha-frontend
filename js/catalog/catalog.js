@@ -1539,11 +1539,18 @@ function updateSidebarCounters() {
     });
 
     const catCounts = { 'Все вещи': availableItemsAll.length };
-    availableItemsAll.forEach(item => {
-        if (!item) return;
-        const c = item.category || 'Без категории';
-        catCounts[c] = (catCounts[c] || 0) + 1;
-    });
+    if (typeof Object.groupBy === 'function') {
+        const groups = Object.groupBy(availableItemsAll, item => item?.category || 'Без категории');
+        for (const cat in groups) {
+            catCounts[cat] = groups[cat] ? groups[cat].length : 0;
+        }
+    } else {
+        availableItemsAll.forEach(item => {
+            if (!item) return;
+            const c = item.category || 'Без категории';
+            catCounts[c] = (catCounts[c] || 0) + 1;
+        });
+    }
 
     // 1. Категории
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(link => {

@@ -153,7 +153,9 @@ async function addToCartById(itemId) {
         return; 
     }
 
-    let cartItem = { ...item };
+    let cartItem = (typeof deepClone === 'function')
+        ? deepClone(item)
+        : ((typeof structuredClone === 'function') ? structuredClone(item) : { ...item });
     const hacked = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
     if (hacked) {
         cartItem.price = Math.floor(cartItem.price * 0.9);
@@ -258,7 +260,9 @@ async function addToCartFromModal() {
         return; 
     }
     
-    let cartItem = { ...activeItem };
+    let cartItem = (typeof deepClone === 'function')
+        ? deepClone(activeItem)
+        : ((typeof structuredClone === 'function') ? structuredClone(activeItem) : { ...activeItem });
     const hacked = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
     if (hacked) {
         cartItem.price = Math.floor(cartItem.price * 0.9);
@@ -1380,7 +1384,13 @@ async function executeOrderFinal(emailToSave) {
 
         let orderId = null;
         let finalTotalSum = currentCart.reduce((sum, i) => sum + (Number(i.price) || 0), 0);
-        let finalOrderItems = currentCart.map(i => ({ ...i, currentPrice: i.currentPrice !== undefined ? i.currentPrice : i.price }));
+        let finalOrderItems = currentCart.map(i => {
+            const clone = (typeof deepClone === 'function')
+                ? deepClone(i)
+                : ((typeof structuredClone === 'function') ? structuredClone(i) : { ...i });
+            clone.currentPrice = clone.currentPrice !== undefined ? clone.currentPrice : clone.price;
+            return clone;
+        });
         let createdAtIso = new Date().toISOString();
         let handledViaAtomicServer = false;
 

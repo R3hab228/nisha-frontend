@@ -53,21 +53,36 @@ function openOrdersModal() {
 window.openOrdersModal = openOrdersModal;
 if (typeof globalThis !== 'undefined') globalThis.openOrdersModal = openOrdersModal;
 
+// Вспомогательная группировка заказов по статусам для вкладок (через Object.groupBy)
+function getOrderTabBucket(order) {
+    const s = (order?.status || '').toLowerCase();
+    if (s.includes('принят') || s.includes('оплачен') || s.includes('обработке') || s.includes('processing') || s.includes('новый')) {
+        return 'accepted';
+    }
+    if (s.includes('отправлен') || s.includes('завершен')) {
+        return 'shipped';
+    }
+    if (s.includes('отменен') || s.includes('возврат')) {
+        return 'cancelled';
+    }
+    return 'other';
+}
+window.getOrderTabBucket = getOrderTabBucket;
+
 // Обновление счетчиков на вкладках заказов и авто-выбор активной вкладки
 function updateOrderTabCounters() {
     const ordersList = Array.isArray(window.globalOrdersData) ? window.globalOrdersData : [];
-    const acceptedCount = ordersList.filter(o => {
-        const s = (o.status || '').toLowerCase();
-        return s.includes('принят') || s.includes('оплачен') || s.includes('обработке') || s.includes('processing') || s.includes('новый');
-    }).length;
-    const shippedCount = ordersList.filter(o => {
-        const s = (o.status || '').toLowerCase();
-        return s.includes('отправлен') || s.includes('завершен');
-    }).length;
-    const cancelledCount = ordersList.filter(o => {
-        const s = (o.status || '').toLowerCase();
-        return s.includes('отменен') || s.includes('возврат');
-    }).length;
+    const grouped = (typeof Object.groupBy === 'function')
+        ? Object.groupBy(ordersList, getOrderTabBucket)
+        : ordersList.reduce((acc, o) => {
+            const b = getOrderTabBucket(o);
+            (acc[b] = acc[b] || []).push(o);
+            return acc;
+        }, {});
+
+    const acceptedCount = grouped.accepted ? grouped.accepted.length : 0;
+    const shippedCount = grouped.shipped ? grouped.shipped.length : 0;
+    const cancelledCount = grouped.cancelled ? grouped.cancelled.length : 0;
 
     const tabYellow = document.querySelector('.order-tab.tab-yellow');
     const tabBlue = document.querySelector('.order-tab.tab-blue');
@@ -507,13 +522,15 @@ function renderFilteredOrders() {
     const ordersList = Array.isArray(window.globalOrdersData) ? window.globalOrdersData : [];
     const activeTab = window.currentOrderTab || 'accepted';
 
-    const filteredData = ordersList.filter(order => {
-        const s = (order.status || '').toLowerCase();
-        if (activeTab === 'accepted') return s.includes('принят') || s.includes('оплачен') || s.includes('обработке') || s.includes('processing') || s.includes('новый');
-        if (activeTab === 'shipped') return s.includes('отправлен') || s.includes('завершен');
-        if (activeTab === 'cancelled') return s.includes('отменен') || s.includes('возврат');
-        return false;
-    });
+    const grouped = (typeof Object.groupBy === 'function')
+        ? Object.groupBy(ordersList, getOrderTabBucket)
+        : ordersList.reduce((acc, o) => {
+            const b = getOrderTabBucket(o);
+            (acc[b] = acc[b] || []).push(o);
+            return acc;
+        }, {});
+
+    const filteredData = grouped[activeTab] || [];
 
     if (filteredData.length === 0) {
         let emptyMsg = activeTab === 'accepted' ? 'Нет активных заказов.' : 

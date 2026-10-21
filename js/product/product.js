@@ -1446,7 +1446,9 @@ window.parseItemMeasurementParams = parseItemMeasurementParams;
 
 function generateMeasurementSchemeSvg(type, params, lang) {
     params = params || {};
-    const markerId = 'arrowG_' + Math.random().toString(36).substring(2, 8);
+    const markerId = 'arrowG_' + (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID().replace(/-/g, '').slice(0, 6)
+        : (typeof window !== 'undefined' && typeof window.generateShortId === 'function' ? window.generateShortId(6) : Date.now().toString(36).slice(-6)));
     const pShoulders = params.shoulders ? `${params.shoulders} см` : '—';
     const pChest = params.chest ? `${params.chest} см` : '—';
     const pLength = params.length ? `${params.length} см` : '—';

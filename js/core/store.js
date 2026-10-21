@@ -307,7 +307,10 @@
             if (!item || !item.id) return false;
             const currentCart = Array.isArray(this._state.cart) ? this._state.cart : [];
             if (!currentCart.some(c => c.id === item.id)) {
-                const newCart = [...currentCart, item];
+                const clonedItem = (typeof deepClone === 'function')
+                    ? deepClone(item)
+                    : ((typeof structuredClone === 'function') ? structuredClone(item) : { ...item });
+                const newCart = [...currentCart, clonedItem];
                 this.batch(() => {
                     this.set('cart', newCart);
                     this.set('cartTime', Date.now());

@@ -321,6 +321,28 @@ function generateShortId(length = 9) {
 window.generateShortId = generateShortId;
 if (typeof globalThis !== 'undefined') globalThis.generateShortId = generateShortId;
 
+// --- ГЛУБОКОЕ КЛОНИРОВАНИЕ НА БАЗЕ STRUCTUREDCLONE С SAFE FALLBACK ---
+function deepClone(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (typeof structuredClone === 'function') {
+        try {
+            return structuredClone(obj);
+        } catch (e) {
+            // Safe fallback для объектов, которые structuredClone не может клонировать (DOM-элементы, функции, сигналы)
+        }
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(item => deepClone(item));
+    }
+    const copy = {};
+    for (const key of Object.keys(obj)) {
+        copy[key] = deepClone(obj[key]);
+    }
+    return copy;
+}
+window.deepClone = deepClone;
+if (typeof globalThis !== 'undefined') globalThis.deepClone = deepClone;
+
 // --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА (ЕДИНЫЙ НАТИВНЫЙ CLIPBOARD API С ЗАЩИТОЙ ДЛЯ IN-APP WEBVIEW) ---
 function _copyViaSelectionFallback(str) {
     try {

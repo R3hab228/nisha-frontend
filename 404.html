@@ -143,8 +143,8 @@
 
     <script>
         // Генерация фейкового ID сессии для серьезности
-        document.getElementById('session-id').innerText = 
-            Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now();
+        const fakeId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase() : Math.random().toString(36).substring(2, 10).toUpperCase();
+        document.getElementById('session-id').innerText = fakeId + '-' + Date.now();
         
         // Автоматический редирект через 15 секунд, если юзер уснул
         setTimeout(() => {
