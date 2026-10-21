@@ -205,4 +205,66 @@ describe('Security Sanitization & XSS Shield', () => {
         const resolved = window.getOrderItemImage({ id: 'i1', image: 'https://cdn.nisha.Vintage/jacket.webp' });
         expect(resolved).toBe('https://cdn.nisha.Vintage/jacket.webp');
     });
+
+    it('storage.getJSON and storage.setJSON safely serialize, parse and handle corrupted localStorage entries', () => {
+        const mem = {};
+        window.localStorage = {
+            getItem: (k) => (k in mem ? mem[k] : null),
+            setItem: (k, v) => { mem[k] = String(v); },
+            removeItem: (k) => { delete mem[k]; }
+        };
+
+        const { storage } = window;
+        expect(storage).toBeDefined();
+        expect(typeof storage.getJSON).toBe('function');
+        expect(typeof storage.setJSON).toBe('function');
+
+        storage.setJSON('nisha_test_key', { a: 1, items: ['x', 'y'] });
+        expect(storage.getJSON('nisha_test_key', {})).toEqual({ a: 1, items: ['x', 'y'] });
+
+        window.localStorage.setItem('nisha_corrupted_key', '{not-valid-json');
+        expect(storage.getJSON('nisha_corrupted_key', ['fallback'])).toEqual(['fallback']);
+
+        storage.remove('nisha_test_key');
+        storage.remove('nisha_corrupted_key');
+        expect(storage.getJSON('nisha_test_key', null)).toBeNull();
+    });
+
+    it('unified profile contacts render Phone and Telegram badges and action buttons accurately', () => {
+        const els = {};
+        const prevDoc = global.document;
+        global.document = {
+            readyState: 'complete',
+            addEventListener: vi.fn(),
+            getElementById: (id) => {
+                if (!els[id]) {
+                    els[id] = { innerHTML: '', style: { display: '' }, value: '' };
+                }
+                return els[id];
+            },
+            querySelectorAll: () => []
+        };
+        window.addEventListener = window.addEventListener || vi.fn();
+
+        try {
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            eval(profileCode);
+
+            window.renderProfilePhone('+380991112233');
+            expect(els['profilePhone'].innerHTML).toContain('+380991112233');
+            expect(els['profilePhone'].innerHTML).toContain('data-action="remove-profile-phone"');
+            expect(els['profileAddPhoneBtn'].style.display).toBe('none');
+
+            window.renderProfileTg('nisha_vintage');
+            expect(els['profileTg'].innerHTML).toContain('@nisha_vintage');
+            expect(els['profileTg'].innerHTML).toContain('data-action="remove-profile-tg"');
+            expect(els['profileAddTgBtn'].style.display).toBe('none');
+
+            window.renderProfileTg('');
+            expect(els['profileTg'].style.display).toBe('none');
+            expect(els['profileAddTgBtn'].style.display).toBe('inline-block');
+        } finally {
+            global.document = prevDoc;
+        }
+    });
 });

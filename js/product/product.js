@@ -126,7 +126,7 @@ async function openProductModalById(itemId) {
         if (window._seenItemsSet) {
             window._seenItemsSet.add(String(itemId));
         }
-        let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
+        let seenItemsIds = window.storage ? window.storage.getJSON('nisha_seen_items', []) : JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
         if (!seenItemsIds.includes(itemId)) {
             seenItemsIds.push(itemId);
             if (seenItemsIds.length > 200) seenItemsIds = seenItemsIds.slice(-200); 
@@ -539,7 +539,7 @@ function openProductModal(item) {
         scoredCandidates.sort((a, b) => b.score - a.score);
 
         const similar = scoredCandidates.slice(0, 6).map(c => c.item);
-        let seenItemsIds = JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
+        let seenItemsIds = window.storage ? window.storage.getJSON('nisha_seen_items', []) : JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
             
         if (similar.length > 0) {
             let cardsHTML = '';
@@ -1002,7 +1002,7 @@ window.shareItem = shareItem;
 // ==========================================
 
 function addToHistory(item) {
-    let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
+    let hist = window.storage ? window.storage.getJSON('nisha_history', []) : JSON.parse(localStorage.getItem('nisha_history') || '[]');
     hist = hist.filter(i => i.id !== item.id);
     const img = getOptimizedImg(item, true) || ((item.images && item.images.length > 0) ? item.images[0] : '');
     
@@ -1017,13 +1017,13 @@ function addToHistory(item) {
     
     if (hist.length > 30) hist = hist.slice(0, 30); 
     
-    localStorage.setItem('nisha_history', JSON.stringify(hist));
+    if (window.storage) window.storage.setJSON('nisha_history', hist); else localStorage.setItem('nisha_history', JSON.stringify(hist));
     renderHistory();
 }
 window.addToHistory = addToHistory;
 
 function renderHistory() {
-    let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
+    let hist = window.storage ? window.storage.getJSON('nisha_history', []) : JSON.parse(localStorage.getItem('nisha_history') || '[]');
     const container = document.getElementById('historyGrid');
     const section = document.getElementById('historySection');
     
@@ -1034,7 +1034,7 @@ function renderHistory() {
         const validHist = hist.filter(h => catalog.some(dbItem => dbItem.id === h.id));
         if (validHist.length !== hist.length) {
             hist = validHist;
-            localStorage.setItem('nisha_history', JSON.stringify(hist));
+            if (window.storage) window.storage.setJSON('nisha_history', hist); else localStorage.setItem('nisha_history', JSON.stringify(hist));
         }
     }
     
@@ -1173,9 +1173,9 @@ window.toggleHistory = toggleHistory;
 function removeHistoryItem(event, itemId) {
     if (event) event.stopPropagation(); 
     
-    let hist = JSON.parse(localStorage.getItem('nisha_history') || '[]');
+    let hist = window.storage ? window.storage.getJSON('nisha_history', []) : JSON.parse(localStorage.getItem('nisha_history') || '[]');
     hist = hist.filter(item => item.id !== itemId);
-    localStorage.setItem('nisha_history', JSON.stringify(hist));
+    if (window.storage) window.storage.setJSON('nisha_history', hist); else localStorage.setItem('nisha_history', JSON.stringify(hist));
     
     const currentUser = getUser();
     const sb = getSupabase();

@@ -330,36 +330,113 @@ function getOptimizedImg(item, thumb = true) {
 }
 window.getOptimizedImg = getOptimizedImg;
 
+// --- ЕДИНЫЙ БЕЗОПАСНЫЙ ХЕЛПЕР LOCALSTORAGE (storage.getJSON / storage.setJSON) ---
+function getLocalStore() {
+    try {
+        if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+            return window.localStorage;
+        }
+        if (typeof localStorage !== 'undefined' && localStorage && typeof localStorage.getItem === 'function') {
+            return localStorage;
+        }
+    } catch (e) {}
+    return null;
+}
+
+const storage = {
+    getJSON(key, defaultValue = null) {
+        try {
+            const store = getLocalStore();
+            if (!store) return defaultValue;
+            const raw = store.getItem(key);
+            if (raw === null || raw === undefined || raw === '') return defaultValue;
+            const parsed = JSON.parse(raw);
+            return parsed !== null && parsed !== undefined ? parsed : defaultValue;
+        } catch (e) {
+            return defaultValue;
+        }
+    },
+
+    setJSON(key, value) {
+        const store = getLocalStore();
+        if (!store) return false;
+        try {
+            store.setItem(key, JSON.stringify(value));
+            return true;
+        } catch (e) {
+            try {
+                if (typeof cleanStorageLimits === 'function') cleanStorageLimits();
+                store.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (retryErr) {
+                return false;
+            }
+        }
+    },
+
+    get(key, defaultValue = null) {
+        try {
+            const store = getLocalStore();
+            if (!store) return defaultValue;
+            const val = store.getItem(key);
+            return val !== null ? val : defaultValue;
+        } catch (e) {
+            return defaultValue;
+        }
+    },
+
+    set(key, value) {
+        try {
+            const store = getLocalStore();
+            if (!store) return false;
+            store.setItem(key, String(value));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    },
+
+    remove(key) {
+        try {
+            const store = getLocalStore();
+            if (!store) return false;
+            store.removeItem(key);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+};
+window.storage = storage;
+window.getStorageJSON = (key, defaultValue = null) => storage.getJSON(key, defaultValue);
+window.setStorageJSON = (key, value) => storage.setJSON(key, value);
+if (typeof globalThis !== 'undefined') {
+    globalThis.storage = storage;
+    globalThis.getStorageJSON = window.getStorageJSON;
+    globalThis.setStorageJSON = window.setStorageJSON;
+}
+
 // --- САМООЧИСТКА И ЛИМИТЫ ПАМЯТИ (LOCALSTORAGE GARBAGE COLLECTOR) ---
 function cleanStorageLimits() {
     try {
         // 1. Ограничение истории просмотров (до 30 товаров)
-        const histRaw = localStorage.getItem('nisha_history');
-        if (histRaw) {
-            const hist = JSON.parse(histRaw);
-            if (Array.isArray(hist) && hist.length > 30) {
-                localStorage.setItem('nisha_history', JSON.stringify(hist.slice(0, 30)));
-            }
+        const hist = storage.getJSON('nisha_history', null);
+        if (Array.isArray(hist) && hist.length > 30) {
+            localStorage.setItem('nisha_history', JSON.stringify(hist.slice(0, 30)));
         }
 
         // 2. Ограничение просмотренных ID вещей (до 200 штук)
-        const seenRaw = localStorage.getItem('nisha_seen_items');
-        if (seenRaw) {
-            const seen = JSON.parse(seenRaw);
-            if (Array.isArray(seen) && seen.length > 200) {
-                localStorage.setItem('nisha_seen_items', JSON.stringify(seen.slice(-200)));
-            }
+        const seen = storage.getJSON('nisha_seen_items', null);
+        if (Array.isArray(seen) && seen.length > 200) {
+            localStorage.setItem('nisha_seen_items', JSON.stringify(seen.slice(-200)));
         }
 
         // 3. Ограничение истории поиска (до 15 запросов)
-        const searchRaw = localStorage.getItem('nisha_search_history') || localStorage.getItem('nisha_recent_searches');
-        if (searchRaw) {
-            const searches = JSON.parse(searchRaw);
-            if (Array.isArray(searches) && searches.length > 15) {
-                localStorage.setItem('nisha_search_history', JSON.stringify(searches.slice(0, 15)));
-            }
+        const searches = storage.getJSON('nisha_search_history', null) || storage.getJSON('nisha_recent_searches', null);
+        if (Array.isArray(searches) && searches.length > 15) {
+            localStorage.setItem('nisha_search_history', JSON.stringify(searches.slice(0, 15)));
         }
-        localStorage.removeItem('nisha_recent_searches');
+        storage.remove('nisha_recent_searches');
     } catch(e) {
         console.warn('Storage cleanup notice:', e);
     }

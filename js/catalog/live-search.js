@@ -40,18 +40,16 @@ window.invalidateLiveSearchFuse = function() {
 // Функция сохранения истории поиска (с защитой от квоты localStorage)
 function saveRecentSearch(term) {
     if (!term || term.length < 2) return;
-    let history = [];
-    try {
-        history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
-    } catch(e) { history = []; }
+    let history = window.storage ? window.storage.getJSON('nisha_search_history', []) : [];
+    if (!Array.isArray(history)) history = [];
     history = history.filter(t => t.toLowerCase() !== term.toLowerCase());
     history.unshift(term);
     if (history.length > 5) history.pop();
     
     if (typeof safeSetItem === 'function') {
         safeSetItem('nisha_search_history', JSON.stringify(history));
-    } else {
-        try { localStorage.setItem('nisha_search_history', JSON.stringify(history)); } catch(e){}
+    } else if (window.storage) {
+        window.storage.setJSON('nisha_search_history', history);
     }
 }
 
@@ -59,11 +57,8 @@ function saveRecentSearch(term) {
 function showSearchHistory() {
     const dropdown = document.getElementById('liveSearchDropdown');
     if (!dropdown) return;
-    let history = [];
-    try {
-        history = JSON.parse(localStorage.getItem('nisha_search_history') || '[]');
-    } catch(e) { history = []; }
-    if (history.length === 0) return;
+    const history = window.storage ? window.storage.getJSON('nisha_search_history', []) : [];
+    if (!Array.isArray(history) || history.length === 0) return;
 
     const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" data-action="clear-search-history">[ ОЧИСТИТЬ ]</span></div>`;

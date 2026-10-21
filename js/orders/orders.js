@@ -115,15 +115,13 @@ async function fetchMyOrders() {
     
     // 1. Мгновенно отображаем локально сохраненные заказы, если сетка пуста
     if (!window.globalOrdersData || window.globalOrdersData.length === 0) {
-        try {
-            const cached = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
-            if (Array.isArray(cached) && cached.length > 0) {
-                window.globalOrdersData = cached;
-                if (tabsContainer) tabsContainer.style.display = 'flex';
-                updateOrderTabCounters();
-                renderFilteredOrders();
-            }
-        } catch (e) {}
+        const cached = window.storage ? window.storage.getJSON('nisha_cached_orders', []) : [];
+        if (Array.isArray(cached) && cached.length > 0) {
+            window.globalOrdersData = cached;
+            if (tabsContainer) tabsContainer.style.display = 'flex';
+            updateOrderTabCounters();
+            renderFilteredOrders();
+        }
     }
 
     if (!window.globalOrdersData || window.globalOrdersData.length === 0) {
@@ -148,17 +146,12 @@ async function fetchMyOrders() {
             if (lastPhone) candidatePhones.add(lastPhone);
             const pendingPhone = localStorage.getItem('nisha_pending_otp_phone');
             if (pendingPhone) candidatePhones.add(pendingPhone);
-            try {
-                const chkData = JSON.parse(localStorage.getItem('nisha_checkout_data') || '{}');
-                if (chkData && chkData.phone) candidatePhones.add(chkData.phone);
-            } catch (e) {}
-            let cachedLocal = [];
-            try {
-                cachedLocal = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
-                if (Array.isArray(cachedLocal)) {
-                    cachedLocal.forEach(co => { if (co && co.phone) candidatePhones.add(co.phone); });
-                }
-            } catch (e) {}
+            const chkData = window.storage ? window.storage.getJSON('nisha_checkout_data', {}) : {};
+            if (chkData && chkData.phone) candidatePhones.add(chkData.phone);
+            const cachedLocal = window.storage ? window.storage.getJSON('nisha_cached_orders', []) : [];
+            if (Array.isArray(cachedLocal)) {
+                cachedLocal.forEach(co => { if (co && co.phone) candidatePhones.add(co.phone); });
+            }
 
             // 1. Запрашиваем заказы, привязанные к ID текущего аккаунта (мгновенно из Supabase)
             const { data: userOrders, error: userOrdersErr } = await sb
@@ -235,7 +228,7 @@ async function fetchMyOrders() {
                             });
                             if (added) {
                                 window.globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                                try { localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
+                                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); else localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
                                 updateOrderTabCounters();
                                 ensureOrderImagesLoaded();
                                 renderFilteredOrders();
@@ -247,7 +240,7 @@ async function fetchMyOrders() {
 
             window.globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             if (window.globalOrdersData.length > 0) {
-                try { localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
+                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); else localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
             }
         } catch (e) {
             fetchError = e;
@@ -275,7 +268,7 @@ async function fetchMyOrders() {
         fetchError = error;
 
         if (window.globalOrdersData.length > 0) {
-            try { localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
+            try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); else localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
         }
     }
 
@@ -308,8 +301,7 @@ async function fetchMyOrders() {
         if (completedIds.length > 0) {
             sb.from('reviews').select('order_id').in('order_id', completedIds).then(({ data: revs }) => {
                 if (Array.isArray(revs) && revs.length > 0) {
-                    let rOrders = [];
-                    try { rOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+                    let rOrders = window.storage ? window.storage.getJSON('nisha_reviewed_orders', []) : [];
                     if (!Array.isArray(rOrders)) rOrders = [];
                     let hasNew = false;
                     revs.forEach(r => {
@@ -319,7 +311,7 @@ async function fetchMyOrders() {
                         }
                     });
                     if (hasNew) {
-                        try { localStorage.setItem('nisha_reviewed_orders', JSON.stringify(rOrders)); } catch(e) {}
+                        if (window.storage) window.storage.setJSON('nisha_reviewed_orders', rOrders);
                         renderFilteredOrders();
                     }
                 }
@@ -591,8 +583,7 @@ function renderFilteredOrders() {
         // Кнопка отзыва для завершенных заказов
         let reviewBtnHtml = '';
         if ((order.status || '').toLowerCase() === 'завершен') {
-            let reviewedOrders = [];
-            try { reviewedOrders = JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+            let reviewedOrders = window.storage ? window.storage.getJSON('nisha_reviewed_orders', []) : [];
             if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
 
             if (order.items && order.items.length > 0) {
