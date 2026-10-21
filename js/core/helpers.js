@@ -211,13 +211,20 @@ function showTerminalModal(title, htmlText, btnText, callback) {
         if (callback) callback();
         return;
     }
+    // Удаляем любые зависшие оверлеи перед созданием нового, чтобы исключить наслоение и скачки
+    document.querySelectorAll('.terminal-modal-overlay').forEach(el => el.remove());
+
+    const isMeasureModal = title && title.includes('MEASURE_SYSTEM');
+    const titleClass = isMeasureModal ? 'success-title measure-sys-title' : 'success-title typewriter';
+    const boxExtraClass = isMeasureModal ? 'measure-terminal-box' : '';
+
     const overlay = document.createElement('div');
     overlay.className = 'terminal-modal-overlay';
     overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;";
     
     overlay.innerHTML = `
-        <div class="success-terminal-box">
-            <div class="success-title typewriter">${title}</div>
+        <div class="success-terminal-box ${boxExtraClass}">
+            <div class="${titleClass}">${title}</div>
             <div class="success-divider"></div>
             <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${htmlText}</div>
             <button class="cart-checkout-btn btn-target" style="width: 100%; padding: 15px;">${btnText}</button>
@@ -227,16 +234,17 @@ function showTerminalModal(title, htmlText, btnText, callback) {
     document.body.appendChild(overlay);
     
     const btn = overlay.querySelector('button');
-    btn.addEventListener('click', () => {
+    const closeOverlay = () => {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
         overlay.remove();
         if (callback) callback();
-    });
+    };
 
+    btn.addEventListener('click', closeOverlay);
     overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            overlay.remove();
-            if (callback) callback();
-        }
+        if (e.target === overlay) closeOverlay();
     });
 }
 window.showTerminalModal = showTerminalModal;

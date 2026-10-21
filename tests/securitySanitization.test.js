@@ -392,22 +392,23 @@ describe('Security Sanitization & XSS Shield', () => {
     });
 
     it('measurement scheme modal: renders retro cyber silhouette, extracts item parameters and handles actions', () => {
-        // 1. Verify index.html contains the clickable link in the measurement accordion
+        // 1. Verify index.html contains the clickable button in the measurement accordion
         const htmlContent = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-        expect(htmlContent).toContain('measure-scheme-link');
+        expect(htmlContent).toContain('measure-scheme-btn');
         expect(htmlContent).toContain('data-action="open-measure-scheme"');
-        expect(htmlContent).toContain('data-i18n="product.measure_scheme_link"');
+        expect(htmlContent).toContain('data-i18n="product.measure_scheme_btn"');
+        expect(htmlContent).toContain('[СХЕМА]');
 
         // 2. Verify locales.json & public/locales.json
         const locales = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf8'));
-        expect(locales.ru.translation.product.measure_scheme_link).toBe('схема замеров');
-        expect(locales.ua.translation.product.measure_scheme_link).toBe('схема замірів');
-        expect(locales.en.translation.product.measure_scheme_link).toBe('measurements guide');
+        expect(locales.ru.translation.product.measure_scheme_btn).toBe('[СХЕМА]');
+        expect(locales.ua.translation.product.measure_scheme_btn).toBe('[СХЕМА]');
+        expect(locales.en.translation.product.measure_scheme_btn).toBe('[SCHEME]');
 
         // 3. Verify CSS styling
         const cssContent = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
-        expect(cssContent).toContain('.measure-scheme-link');
-        expect(cssContent).toContain('.measure-scheme-link:hover');
+        expect(cssContent).toContain('.measure-scheme-btn');
+        expect(cssContent).toContain('.measure-scheme-btn:hover');
 
         // 4. Verify helpers.js delegation
         const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');

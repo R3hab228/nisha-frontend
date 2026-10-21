@@ -1447,33 +1447,32 @@ function generateMeasurementSchemeSvg(type, params, lang) {
 
     // Ретро-кибер разметка углов и прицел HUD в стиле системного броадкаста
     const hudDecor = `
-        <path d="M 12 22 L 12 12 L 22 12 M 298 12 L 308 12 L 308 22 M 12 288 L 12 298 L 22 298 M 298 298 L 308 298 L 308 288" 
+        <path d="M 8 18 L 8 8 L 18 8 M 302 8 L 312 8 L 312 18 M 8 167 L 8 177 L 18 177 M 302 177 L 312 177 L 312 167" 
               fill="none" stroke="rgba(0, 255, 102, 0.35)" stroke-width="1.2"/>
-        <circle cx="295" cy="24" r="3" fill="none" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
-        <line x1="295" y1="18" x2="295" y2="30" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
-        <line x1="289" y1="24" x2="301" y2="24" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+        <circle cx="298" cy="18" r="3" fill="none" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+        <line x1="298" y1="12" x2="298" y2="24" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+        <line x1="292" y1="18" x2="304" y2="18" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
     `;
 
     if (type === 'shoes') {
         const lblInsole = isEn ? 'INSOLE' : (isUa ? 'УСТІЛКА' : 'СТЕЛЬКА');
         return `
-        <svg viewBox="0 0 320 185" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 8px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 320 145" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
                 </marker>
             </defs>
-            ${hudDecor}
-            <path d="M 45 130 C 50 115 65 95 90 95 C 105 95 115 105 125 110 L 170 85 C 185 75 205 95 215 105 L 245 108 C 265 110 275 125 275 135 L 270 142 L 45 142 Z" 
-                  fill="rgba(0, 255, 102, 0.04)" stroke="#00ff66" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <path d="M 40 142 L 275 142 L 272 152 L 42 152 Z" fill="#000" stroke="#00ff66" stroke-width="1.3" stroke-dasharray="3 2"/>
-            <path d="M 130 110 L 175 88" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
-            <line x1="45" y1="164" x2="272" y2="164" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="45" y1="145" x2="45" y2="170" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="272" y1="145" x2="272" y2="170" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(160, 164)">
-                <rect x="-62" y="-10" width="124" height="20" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-                <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
+            <path d="M 8 18 L 8 8 L 18 8 M 302 8 L 312 8 L 312 18 M 8 127 L 8 137 L 18 137 M 302 137 L 312 137 L 312 127" 
+                  fill="none" stroke="rgba(0, 255, 102, 0.35)" stroke-width="1.2"/>
+            <path d="M 45 95 C 50 82 65 65 90 65 C 105 65 115 75 125 80 L 170 58 C 185 48 205 68 215 78 L 245 80 C 265 82 275 95 275 105 L 270 112 L 45 112 Z" 
+                  fill="rgba(0, 255, 102, 0.04)" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 3"/>
+            <path d="M 40 112 L 275 112 L 272 120 L 42 120 Z" fill="#000" stroke="#00ff66" stroke-width="1.2" stroke-dasharray="3 2"/>
+            <path d="M 130 80 L 175 60" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+            <line x1="45" y1="130" x2="272" y2="130" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <g transform="translate(160, 130)">
+                <rect x="-56" y="-8" width="112" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+                <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [A] ${lblInsole}: ${pInsole}
                 </text>
             </g>
@@ -1487,7 +1486,7 @@ function generateMeasurementSchemeSvg(type, params, lang) {
         const lblExit = isEn ? 'CUFF' : (isUa ? 'ВИХІД' : 'ВЫХОД');
 
         return `
-        <svg viewBox="0 0 320 315" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 8px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 320 185" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
@@ -1496,71 +1495,68 @@ function generateMeasurementSchemeSvg(type, params, lang) {
             ${hudDecor}
 
             <!-- Human Silhouette Wireframe (Context) -->
-            <ellipse cx="160" cy="28" rx="12" ry="15" fill="none" stroke="rgba(0,255,102,0.25)" stroke-width="1" stroke-dasharray="2 3"/>
-            <line x1="154" y1="28" x2="166" y2="28" stroke="rgba(0,255,102,0.3)" stroke-width="0.8"/>
-            <path d="M 155 43 L 155 52 L 112 65 L 94 135 M 165 43 L 165 52 L 208 65 L 226 135" 
-                  fill="none" stroke="rgba(0,255,102,0.25)" stroke-width="1" stroke-dasharray="2 3"/>
-            <line x1="160" y1="52" x2="160" y2="105" stroke="rgba(0,255,102,0.15)" stroke-dasharray="2 3"/>
+            <ellipse cx="160" cy="14" rx="7" ry="9" fill="none" stroke="rgba(0,255,102,0.2)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <line x1="154" y1="14" x2="166" y2="14" stroke="rgba(0,255,102,0.25)" stroke-width="0.8"/>
+            <path d="M 156 23 L 128 32 L 118 50 M 164 23 L 192 32 L 202 50" 
+                  fill="none" stroke="rgba(0,255,102,0.2)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <line x1="160" y1="23" x2="160" y2="50" stroke="rgba(0,255,102,0.15)" stroke-dasharray="2 2"/>
 
-            <!-- Highlighted Pants / Bottoms on Silhouette -->
-            <path d="M 116 105 L 204 105 L 208 140 C 206 185 200 230 196 280 L 168 280 L 160 162 L 152 280 L 124 280 C 120 230 114 185 112 140 Z" 
-                  fill="rgba(0, 255, 102, 0.06)" stroke="#00ff66" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <line x1="116" y1="115" x2="204" y2="115" stroke="#00ff66" stroke-width="0.9" stroke-dasharray="2 2" opacity="0.5"/>
-            <line x1="160" y1="115" x2="160" y2="152" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+            <!-- Compact Highlighted Pants on Silhouette -->
+            <path d="M 122 50 L 198 50 L 202 75 C 200 110 196 135 192 165 L 168 165 L 160 85 L 152 165 L 128 165 C 124 135 120 110 118 75 Z" 
+                  fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 3"/>
+            <line x1="122" y1="56" x2="198" y2="56" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.5"/>
+            <line x1="160" y1="56" x2="160" y2="80" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
 
             <!-- [A] Waist Dimension Arrow -->
-            <line x1="116" y1="92" x2="204" y2="92" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="116" y1="86" x2="116" y2="108" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="204" y1="86" x2="204" y2="108" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(160, 92)">
-                <rect x="-48" y="-9" width="96" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-                <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
+            <line x1="122" y1="40" x2="198" y2="40" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="122" y1="34" x2="122" y2="50" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <line x1="198" y1="34" x2="198" y2="50" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <g transform="translate(160, 40)">
+                <rect x="-44" y="-8" width="88" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+                <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [A] ${lblWaist}: ${pWaist}
                 </text>
             </g>
 
             <!-- [B] Outseam Length Arrow -->
-            <line x1="94" y1="105" x2="94" y2="280" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="88" y1="105" x2="114" y2="105" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="88" y1="280" x2="120" y2="280" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(50, 192)">
-                <rect x="-44" y="-9" width="88" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-                <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
+            <line x1="98" y1="50" x2="98" y2="165" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="92" y1="50" x2="104" y2="50" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <line x1="92" y1="165" x2="104" y2="165" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+            <g transform="translate(52, 105)">
+                <rect x="-42" y="-8" width="84" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+                <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [B] ${lblLen}: ${pPantsLen}
                 </text>
             </g>
 
             <!-- [C] Inseam Arrow -->
-            <line x1="160" y1="170" x2="160" y2="280" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="154" y1="280" x2="166" y2="280" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(214, 218)">
-                <rect x="-50" y="-9" width="100" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-                <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
+            <line x1="160" y1="92" x2="160" y2="165" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <g transform="translate(214, 115)">
+                <rect x="-46" y="-8" width="92" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+                <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [C] ${lblInseam}: ${pInseam}
                 </text>
             </g>
 
             <!-- [D] Leg Opening (Cuff) Arrow -->
-            <line x1="124" y1="294" x2="152" y2="294" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="124" y1="282" x2="124" y2="300" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="152" y1="282" x2="152" y2="300" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(138, 305)">
-                <rect x="-42" y="-8" width="84" height="16" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-                <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
+            <line x1="128" y1="174" x2="152" y2="174" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <g transform="translate(140, 174)">
+                <rect x="-38" y="-7" width="76" height="14" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+                <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="8.5" font-weight="bold" text-anchor="middle">
                     [D] ${lblExit}: ${pLegOpen}
                 </text>
             </g>
         </svg>`;
     }
 
-    // Default: Tops / Upper body cyber silhouette
+    // Default: Tops / Upper body compact cyber silhouette
     const lblSh = isEn ? 'SHOULDERS' : (isUa ? 'ПЛЕЧІ' : 'ПЛЕЧИ');
     const lblCh = isEn ? 'PIT-TO-PIT' : 'ПОГ';
     const lblLen = isEn ? 'LENGTH' : (isUa ? 'ДОВЖИНА' : 'ДЛИНА');
     const lblSl = isEn ? 'SLEEVE' : (isUa ? 'РУКАВ' : 'РУКАВ');
 
     return `
-    <svg viewBox="0 0 320 310" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 8px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 320 185" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
@@ -1568,55 +1564,56 @@ function generateMeasurementSchemeSvg(type, params, lang) {
         </defs>
         ${hudDecor}
 
-        <!-- Cyber Human Figure Outline -->
-        <ellipse cx="160" cy="34" rx="14" ry="17" fill="rgba(0, 255, 102, 0.03)" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 3"/>
-        <line x1="152" y1="34" x2="168" y2="34" stroke="#00ff66" stroke-width="1" opacity="0.6"/>
+        <!-- Compact Cyber Human Figure -->
+        <ellipse cx="160" cy="18" rx="9" ry="11" fill="rgba(0, 255, 102, 0.03)" stroke="#00ff66" stroke-width="1.2" stroke-dasharray="3 2"/>
+        <line x1="154" y1="18" x2="166" y2="18" stroke="#00ff66" stroke-width="0.8" opacity="0.6"/>
 
-        <path d="M 154 50 L 154 58 L 105 74 L 78 185 L 96 190 L 118 128 L 124 215 L 196 215 L 202 128 L 224 190 L 242 185 L 215 74 L 166 58 L 166 50 Z" 
-              fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <path d="M 155 29 L 155 35 L 112 44 L 88 125 L 102 128 L 124 82 L 126 142 L 194 142 L 196 82 L 218 128 L 232 125 L 208 44 L 165 35 L 165 29 Z" 
+              fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 3"/>
 
-        <path d="M 124 215 L 126 270 M 196 215 L 194 270 M 160 232 L 148 270 M 160 232 L 172 270" 
-              stroke="#00ff66" stroke-width="1" stroke-dasharray="2 3" opacity="0.25"/>
-        <line x1="160" y1="58" x2="160" y2="215" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 3" opacity="0.2"/>
+        <!-- Lower Body Guidelines -->
+        <path d="M 126 142 L 128 172 M 194 142 L 192 172 M 160 152 L 150 172 M 160 152 L 170 172" 
+              stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.2"/>
+        <line x1="160" y1="35" x2="160" y2="142" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.2"/>
 
         <!-- [A] Shoulders Dimension Arrow -->
-        <line x1="105" y1="62" x2="215" y2="62" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="105" y1="56" x2="105" y2="76" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="215" y1="56" x2="215" y2="76" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <g transform="translate(160, 62)">
-            <rect x="-48" y="-9" width="96" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-            <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
+        <line x1="112" y1="34" x2="208" y2="34" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+        <line x1="112" y1="28" x2="112" y2="44" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="208" y1="28" x2="208" y2="44" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <g transform="translate(160, 34)">
+            <rect x="-44" y="-8" width="88" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                 [A] ${lblSh}: ${pShoulders}
             </text>
         </g>
 
         <!-- [B] Chest / Pit-to-Pit Dimension Arrow -->
-        <line x1="118" y1="128" x2="202" y2="128" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="118" y1="120" x2="118" y2="136" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="202" y1="120" x2="202" y2="136" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <g transform="translate(160, 128)">
-            <rect x="-44" y="-9" width="88" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-            <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
+        <line x1="124" y1="82" x2="196" y2="82" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+        <line x1="124" y1="76" x2="124" y2="88" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="196" y1="76" x2="196" y2="88" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <g transform="translate(160, 82)">
+            <rect x="-40" y="-8" width="80" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                 [B] ${lblCh}: ${pChest}
             </text>
         </g>
 
         <!-- [C] Length Dimension Arrow -->
-        <line x1="218" y1="58" x2="218" y2="215" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="212" y1="58" x2="226" y2="58" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="212" y1="215" x2="226" y2="215" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <g transform="translate(268, 140)">
-            <rect x="-44" y="-9" width="88" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-            <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
+        <line x1="214" y1="34" x2="214" y2="142" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+        <line x1="208" y1="34" x2="220" y2="34" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="208" y1="142" x2="220" y2="142" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <g transform="translate(262, 88)">
+            <rect x="-40" y="-8" width="80" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                 [C] ${lblLen}: ${pLength}
             </text>
         </g>
 
         <!-- [D] Sleeve Dimension Arrow -->
-        <line x1="98" y1="78" x2="72" y2="185" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <g transform="translate(50, 136)">
-            <rect x="-44" y="-9" width="88" height="18" fill="#000" stroke="#00ff66" stroke-width="1" rx="2"/>
-            <text x="0" y="4" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="10" font-weight="bold" text-anchor="middle">
+        <line x1="108" y1="44" x2="84" y2="125" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+        <g transform="translate(48, 82)">
+            <rect x="-40" y="-8" width="80" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                 [D] ${lblSl}: ${pSleeve}
             </text>
         </g>
@@ -1709,13 +1706,13 @@ function showMeasurementSchemeModal(targetItem) {
     const notSpecifiedText = isEn ? 'n/a' : (isUa ? 'не вказано' : 'не указано');
 
     const rowsHtml = rows.map(r => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed #1a1a1a;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #1a1a1a;font-size:11px;">
             <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px;text-align:left;">
                 <span style="color:var(--accent-green);font-weight:bold;margin-right:6px;">[${r.code}]</span>
                 <span style="color:#eee;font-weight:600;">${r.label}:</span>
-                <span style="color:#666;font-size:11px;margin-left:4px;">(${r.desc})</span>
+                <span style="color:#666;font-size:10px;margin-left:4px;">(${r.desc})</span>
             </div>
-            <div style="font-weight:bold;color:${r.val ? 'var(--accent-green)' : '#555'};white-space:nowrap;flex-shrink:0;letter-spacing:0.5px;">
+            <div style="font-weight:bold;color:${r.val ? 'var(--accent-green)' : '#555'};white-space:nowrap;flex-shrink:0;letter-spacing:0.5px;font-size:11px;">
                 ${r.val ? `${r.val} см` : `[ ${notSpecifiedText} ]`}
             </div>
         </div>
@@ -1724,11 +1721,11 @@ function showMeasurementSchemeModal(targetItem) {
     let headerHtml = '';
     if (itemTitle) {
         headerHtml = `
-            <div style="margin-bottom:12px;padding:8px 12px;background:#000;border:1px dashed #333;display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <div style="margin-bottom:8px;padding:6px 10px;background:#000;border:1px dashed #333;display:flex;justify-content:space-between;align-items:center;font-size:11px;">
                 <div style="color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px;">
                     <span style="color:var(--accent-green);font-weight:bold;margin-right:4px;">&gt;</span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(itemTitle) : itemTitle}
                 </div>
-                ${itemSize ? `<span style="color:var(--accent-green);border:1px solid #333;padding:2px 8px;font-size:11px;font-weight:bold;flex-shrink:0;background:#050505;margin-left:8px;">[ ${typeof window.escapeHtml === 'function' ? window.escapeHtml(itemSize) : itemSize} ]</span>` : ''}
+                ${itemSize ? `<span style="color:var(--accent-green);border:1px solid #333;padding:1px 6px;font-size:10px;font-weight:bold;flex-shrink:0;background:#050505;margin-left:8px;">[ ${typeof window.escapeHtml === 'function' ? window.escapeHtml(itemSize) : itemSize} ]</span>` : ''}
             </div>
         `;
     }
@@ -1736,13 +1733,13 @@ function showMeasurementSchemeModal(targetItem) {
     const htmlContent = `
         <div class="measurement-scheme-modal-content" style="max-width:100%;box-sizing:border-box;font-family:var(--font-mono, monospace);">
             ${headerHtml}
-            <div style="background:#000;border:1px solid #222;border-radius:2px;padding:10px 4px;margin-bottom:12px;position:relative;box-shadow:inset 0 0 25px rgba(0,255,102,0.03);">
+            <div style="background:#000;border:1px solid #222;border-radius:2px;padding:6px 2px;margin-bottom:8px;position:relative;box-shadow:inset 0 0 20px rgba(0,255,102,0.02);">
                 ${svgHtml}
             </div>
-            <div style="background:#000;border:1px solid #222;border-radius:2px;padding:8px 12px;margin-bottom:12px;">
+            <div style="background:#000;border:1px solid #222;border-radius:2px;padding:6px 10px;margin-bottom:8px;">
                 ${rowsHtml}
             </div>
-            <div style="margin-bottom:6px;color:#666;font-size:11px;text-align:center;line-height:1.4;">
+            <div style="margin-bottom:4px;color:#666;font-size:10px;text-align:center;line-height:1.4;">
                 ${note}
             </div>
         </div>
