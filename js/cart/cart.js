@@ -160,7 +160,9 @@ async function addToCartById(itemId) {
     currentCart.push(cartItem);
     setActiveCart(currentCart);
     
-    if (window.ttq) {
+    if (window.analytics && typeof window.analytics.trackAddToCart === 'function') {
+        window.analytics.trackAddToCart(cartItem);
+    } else if (window.ttq) {
         ttq.track('AddToCart', {
             contents: [{ content_id: cartItem.id, content_name: cartItem.name }],
             value: cartItem.price,
@@ -1097,6 +1099,9 @@ async function openCheckoutModal() {
         
         document.getElementById('checkoutModal').style.display = 'flex'; 
         document.body.style.overflow = 'hidden';
+        if (window.analytics && typeof window.analytics.trackCheckoutStart === 'function') {
+            window.analytics.trackCheckoutStart(currentCart);
+        }
         if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
         if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
         
@@ -1473,7 +1478,14 @@ async function executeOrderFinal(emailToSave) {
             }
         }
 
-        if (window.ttq) {
+        if (window.analytics && typeof window.analytics.trackPurchase === 'function') {
+            window.analytics.trackPurchase({
+                orderId,
+                items: currentCart,
+                value: finalTotalSum,
+                paymentMethod
+            });
+        } else if (window.ttq) {
             ttq.track('CompletePayment', {
                 contents: currentCart.map(i => ({ content_id: i.id, content_name: i.name })),
                 value: finalTotalSum,

@@ -469,6 +469,13 @@ async function submitProposal() {
         
         // Ставим в гарантированную очередь отправки на бэкенд (с авто-повтором при сбоях)
         enqueueProposalUpload(formData);
+        if (window.analytics && typeof window.analytics.trackProposalSubmitted === 'function') {
+            window.analytics.trackProposalSubmitted({
+                brand,
+                price,
+                filesCount: compressedFiles.length
+            });
+        }
         
         // Мгновенно очищаем форму и разблокируем кнопку, чтобы можно было сразу закинуть вторую вещь без ожидания
         resetProposalForm();

@@ -318,4 +318,42 @@ describe('Security Sanitization & XSS Shield', () => {
             global.document = prevDoc;
         }
     });
+
+    it('privacy-first analytics service (Plausible / PostHog / TikTok facade) tracks funnel events cleanly', () => {
+        const analyticsCode = readFileSync(resolve(__dirname, '../js/core/analytics.js'), 'utf8');
+        eval(analyticsCode);
+
+        const plausibleSpy = vi.fn();
+        const posthogSpy = { capture: vi.fn() };
+        const ttqSpy = { track: vi.fn() };
+
+        window.plausible = plausibleSpy;
+        window.posthog = posthogSpy;
+        window.ttq = ttqSpy;
+
+        const testItem = { id: 'item-42', brand: 'Stone Island', name: 'Jacket', price: 4500, category: 'jackets', size: 'L' };
+
+        window.analytics.trackProductView(testItem);
+        expect(plausibleSpy).toHaveBeenCalledWith('Product Viewed', {
+            props: expect.objectContaining({ item_id: 'item-42', brand: 'Stone Island', price: 4500 })
+        });
+        expect(posthogSpy.capture).toHaveBeenCalledWith('Product Viewed', expect.objectContaining({ item_id: 'item-42' }));
+        expect(ttqSpy.track).toHaveBeenCalledWith('ViewContent', expect.objectContaining({ content_id: 'item-42', value: 4500 }));
+
+        window.analytics.trackAddToCart(testItem);
+        expect(plausibleSpy).toHaveBeenCalledWith('Add to Cart', {
+            props: expect.objectContaining({ item_id: 'item-42', price: 4500 })
+        });
+
+        window.analytics.trackCheckoutStart([testItem]);
+        expect(plausibleSpy).toHaveBeenCalledWith('Checkout Started', {
+            props: expect.objectContaining({ items_count: 1, cart_value: 4500 })
+        });
+
+        window.analytics.trackPurchase({ orderId: 'ord-99', items: [testItem], value: 4500, paymentMethod: 'Полная предоплата' });
+        expect(plausibleSpy).toHaveBeenCalledWith('Order Completed', {
+            props: expect.objectContaining({ order_id: 'ord-99', revenue: 4500 })
+        });
+        expect(ttqSpy.track).toHaveBeenCalledWith('CompletePayment', expect.objectContaining({ value: 4500 }));
+    });
 });

@@ -138,10 +138,13 @@ function triggerEasterEgg() {
 }
 window.triggerEasterEgg = triggerEasterEgg;
 
-// === СЧЕТЧИК ПОСЕТИТЕЛЕЙ ===
+// === ПРИВАТНАЯ АНАЛИТИКА (PLAUSIBLE / POSTHOG) И ВИЗУАЛЬНЫЙ РЕТРО-СЧЕТЧИК WIN95 ===
 async function initHitCounter() {
+    if (window.analytics && typeof window.analytics.init === 'function') {
+        window.analytics.init();
+    }
+
     const counterEl = document.getElementById('hitCounterValue');
-    if (!counterEl) return;
 
     try {
         let visitorId = localStorage.getItem('nisha_visitor_id');
@@ -154,11 +157,16 @@ async function initHitCounter() {
 
         const todayDate = new Date().toLocaleDateString('en-CA');
         const lastVisitDate = localStorage.getItem('nisha_last_visit_date');
+        const isNewVisitToday = (lastVisitDate !== todayDate);
+
+        if (isNewVisitToday && window.analytics && typeof window.analytics.track === 'function') {
+            window.analytics.track('Daily Unique Visit', { date: todayDate });
+        }
+
+        if (!counterEl) return;
 
         const cachedCount = localStorage.getItem('nisha_last_hit_count') || '0';
         counterEl.innerText = String(cachedCount).padStart(5, '0').split('').join(' ');
-
-        const isNewVisitToday = (lastVisitDate !== todayDate);
 
         const data = await window.apiClient.post('/api/hit', {
             date: todayDate,

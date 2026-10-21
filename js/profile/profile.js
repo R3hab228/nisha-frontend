@@ -973,6 +973,9 @@ async function toggleFav(event, itemId) {
         favorites.push(itemId);
     }
     window.favorites = favorites;
+    if (window.analytics && typeof window.analytics.trackFavorite === 'function') {
+        window.analytics.trackFavorite(itemId, !isFav);
+    }
 
     // Звезда в сетке товаров
     const gridStar = document.querySelector(`.item-card[data-id="${itemId}"] .fav-star`);

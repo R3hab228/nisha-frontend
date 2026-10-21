@@ -219,7 +219,9 @@ function openProductModal(item) {
     const titleEl = document.getElementById('modalItemTitle');
     if (titleEl) titleEl.innerText = item.name;
     
-    if (window.ttq) {
+    if (window.analytics && typeof window.analytics.trackProductView === 'function') {
+        window.analytics.trackProductView(item);
+    } else if (window.ttq) {
         ttq.track('ViewContent', {
             content_id: item.id,
             content_name: item.name,
