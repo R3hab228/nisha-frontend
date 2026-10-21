@@ -496,6 +496,20 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(topSvg).toContain('stroke-dasharray');
         expect(topSvg).toContain('52 см');
         expect(topSvg).toContain('58 см');
+        expect(topSvg).toContain('TECH.SPEC // TOP');
+
+        const bottomSvg = generateMeasurementSchemeSvg('bottom', bottomParams, 'ru');
+        expect(bottomSvg).toContain('<svg');
+        expect(bottomSvg).toContain('stroke="#00ff66"');
+        expect(bottomSvg).toContain('42 см');
+        expect(bottomSvg).toContain('104 см');
+        expect(bottomSvg).toContain('TECH.SPEC // BOTTOM');
+
+        const shoesSvg = generateMeasurementSchemeSvg('shoes', shoesParams, 'ru');
+        expect(shoesSvg).toContain('<svg');
+        expect(shoesSvg).toContain('stroke="#00ff66"');
+        expect(shoesSvg).toContain('28 см');
+        expect(shoesSvg).toContain('TECH.SPEC // FOOTWEAR');
 
         // Check showMeasurementSchemeModal triggers showTerminalModal
         showMeasurementSchemeModal(testTopItem);

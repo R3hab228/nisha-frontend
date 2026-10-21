@@ -1445,33 +1445,113 @@ function generateMeasurementSchemeSvg(type, params, lang) {
     const isUa = lang === 'ua' || lang === 'uk';
     const isEn = lang === 'en';
 
-    // Ретро-кибер разметка углов и прицел HUD в стиле системного броадкаста
-    const hudDecor = `
-        <path d="M 8 18 L 8 8 L 18 8 M 302 8 L 312 8 L 312 18 M 8 167 L 8 177 L 18 177 M 302 177 L 312 177 L 312 167" 
+    function getHudDecor(w, h, specTitle) {
+        const rightX = w - 8;
+        const cornerX = rightX - 10;
+        const bottomY = h - 8;
+        const cornerY = bottomY - 10;
+        return `
+        <!-- Cyber HUD Frame -->
+        <path d="M 8 18 L 8 8 L 18 8 M ${cornerX} 8 L ${rightX} 8 L ${rightX} 18 M 8 ${cornerY} L 8 ${bottomY} L 18 ${bottomY} M ${cornerX} ${bottomY} L ${rightX} ${bottomY} L ${rightX} ${cornerY}" 
               fill="none" stroke="rgba(0, 255, 102, 0.35)" stroke-width="1.2"/>
-        <circle cx="298" cy="18" r="3" fill="none" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
-        <line x1="298" y1="12" x2="298" y2="24" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
-        <line x1="292" y1="18" x2="304" y2="18" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
-    `;
+        <circle cx="${rightX - 14}" cy="18" r="3" fill="none" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+        <line x1="${rightX - 14}" y1="12" x2="${rightX - 14}" y2="24" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+        <line x1="${rightX - 20}" y1="18" x2="${rightX - 8}" y2="18" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8"/>
+        <text x="14" y="15" fill="rgba(0, 255, 102, 0.45)" font-family="'JetBrains Mono', Courier, monospace" font-size="6" letter-spacing="1">${specTitle}</text>
+        `;
+    }
 
     if (type === 'shoes') {
         const lblInsole = isEn ? 'INSOLE' : (isUa ? 'УСТІЛКА' : 'СТЕЛЬКА');
         return `
-        <svg viewBox="0 0 320 145" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 340 160" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
                 </marker>
             </defs>
-            <path d="M 8 18 L 8 8 L 18 8 M 302 8 L 312 8 L 312 18 M 8 127 L 8 137 L 18 137 M 302 137 L 312 137 L 312 127" 
-                  fill="none" stroke="rgba(0, 255, 102, 0.35)" stroke-width="1.2"/>
-            <path d="M 45 95 C 50 82 65 65 90 65 C 105 65 115 75 125 80 L 170 58 C 185 48 205 68 215 78 L 245 80 C 265 82 275 95 275 105 L 270 112 L 45 112 Z" 
-                  fill="rgba(0, 255, 102, 0.04)" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 3"/>
-            <path d="M 40 112 L 275 112 L 272 120 L 42 120 Z" fill="#000" stroke="#00ff66" stroke-width="1.2" stroke-dasharray="3 2"/>
-            <path d="M 130 80 L 175 60" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
-            <line x1="45" y1="130" x2="272" y2="130" stroke="#00ff41" stroke-width="1.6" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <g transform="translate(160, 130)">
-                <rect x="-56" y="-8" width="112" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            ${getHudDecor(340, 160, 'TECH.SPEC // FOOTWEAR')}
+
+            <!-- Sneaker Outsole & Midsole -->
+            <path d="M 52 124 C 48 122 50 119 54 118 L 285 114 C 291 116 295 119 292 123 L 282 126 L 64 126 Z" 
+                  fill="#000" stroke="#00ff66" stroke-width="1.2"/>
+            <!-- Outsole Lug Grips -->
+            <path d="M 68 126 L 68 129 M 86 126 L 86 129 M 106 126 L 106 129 M 128 126 L 128 129 M 152 126 L 152 129 M 178 126 L 178 129 M 206 126 L 206 129 M 234 126 L 234 129 M 260 126 L 260 128 M 276 126 L 276 128" 
+                  stroke="#00ff66" stroke-width="1.3"/>
+            <!-- Sculpted Midsole Tooling -->
+            <path d="M 46 116 C 90 118 215 118 296 110 L 292 123 L 52 124 Z" 
+                  fill="rgba(0, 255, 102, 0.08)" stroke="#00ff66" stroke-width="1.3"/>
+            <!-- Visible Heel Cushion Air Chamber -->
+            <rect x="66" y="117" width="38" height="6" rx="2" fill="#050505" stroke="#00ff66" stroke-width="0.9"/>
+            <line x1="78" y1="117" x2="78" y2="123" stroke="rgba(0,255,102,0.6)" stroke-width="0.8"/>
+            <line x1="91" y1="117" x2="91" y2="123" stroke="rgba(0,255,102,0.6)" stroke-width="0.8"/>
+            <line x1="240" y1="116" x2="242" y2="122" stroke="rgba(0,255,102,0.5)" stroke-width="0.8"/>
+
+            <!-- Upper Base Contour (Iconic Streetwear Profile) -->
+            <path d="M 46 116 C 50 92 72 70 98 56 C 104 62 114 70 128 70 C 142 70 154 66 166 58 L 178 40 C 182 39 188 40 190 44 L 202 56 C 218 64 234 72 250 80 C 268 85 284 94 296 110 Z" 
+                  fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.3"/>
+
+            <!-- Mudguard / Toe Cap -->
+            <path d="M 296 110 C 298 98 284 90 264 88 C 252 94 246 104 242 116" 
+                  fill="none" stroke="#00ff66" stroke-width="1.2"/>
+            <path d="M 294 108 C 296 98 284 90 264 90" 
+                  fill="none" stroke="rgba(0, 255, 102, 0.5)" stroke-width="0.8" stroke-dasharray="2 1.5"/>
+
+            <!-- Toe Vamp Perforations (Realistic Mesh/Leather Micro-dots) -->
+            <circle cx="258" cy="94" r="0.8" fill="#00ff66" opacity="0.6"/>
+            <circle cx="266" cy="96" r="0.8" fill="#00ff66" opacity="0.6"/>
+            <circle cx="274" cy="98" r="0.8" fill="#00ff66" opacity="0.6"/>
+            <circle cx="252" cy="99" r="0.8" fill="#00ff66" opacity="0.6"/>
+            <circle cx="260" cy="101" r="0.8" fill="#00ff66" opacity="0.6"/>
+            <circle cx="268" cy="103" r="0.8" fill="#00ff66" opacity="0.6"/>
+            <circle cx="276" cy="105" r="0.8" fill="#00ff66" opacity="0.6"/>
+
+            <!-- Eyestay Reinforcement Panel -->
+            <path d="M 248 80 C 234 74 218 66 200 56 L 196 60 C 216 70 230 78 244 84 Z" 
+                  fill="rgba(0, 255, 102, 0.1)" stroke="#00ff66" stroke-width="0.9"/>
+
+            <!-- Metallic Eyelets -->
+            <circle cx="242" cy="80" r="1.5" fill="#050505" stroke="#00ff66" stroke-width="0.9"/>
+            <circle cx="230" cy="74" r="1.5" fill="#050505" stroke="#00ff66" stroke-width="0.9"/>
+            <circle cx="218" cy="68" r="1.5" fill="#050505" stroke="#00ff66" stroke-width="0.9"/>
+            <circle cx="206" cy="62" r="1.5" fill="#050505" stroke="#00ff66" stroke-width="0.9"/>
+            <circle cx="196" cy="56" r="1.5" fill="#050505" stroke="#00ff66" stroke-width="0.9"/>
+
+            <!-- Tongue & Woven Patch -->
+            <rect x="178" y="42" width="10" height="7" rx="1" fill="#050505" stroke="#00ff66" stroke-width="0.8"/>
+            <line x1="181" y1="45" x2="185" y2="45" stroke="#00ff66" stroke-width="0.8"/>
+
+            <!-- Dynamic Criss-Cross Laces -->
+            <path d="M 242 80 L 236 76 L 230 74 L 224 70 L 218 68 L 212 64 L 206 62 L 200 58 L 196 56" 
+                  fill="none" stroke="#00ff41" stroke-width="1.5"/>
+
+            <!-- Ankle Collar & Padding -->
+            <path d="M 100 59 C 118 71 134 72 164 61" 
+                  fill="rgba(0, 255, 102, 0.06)" stroke="rgba(0, 255, 102, 0.5)" stroke-width="0.9"/>
+            <!-- Achilles Pull Loop -->
+            <path d="M 98 56 L 92 49 L 94 58 Z" fill="rgba(0, 255, 102, 0.15)" stroke="#00ff66" stroke-width="1"/>
+
+            <!-- Heel Counter & Double-Stitch Overlay -->
+            <path d="M 46 116 C 50 92 72 70 98 56" fill="none" stroke="#00ff66" stroke-width="1.2"/>
+            <path d="M 52 114 C 56 94 76 76 94 60" fill="none" stroke="rgba(0, 255, 102, 0.5)" stroke-width="0.8" stroke-dasharray="2 1.5"/>
+
+            <!-- Side Quarter Streetwear Overlays -->
+            <path d="M 128 70 L 155 94 L 195 94 L 174 66" fill="none" stroke="rgba(0, 255, 102, 0.6)" stroke-width="1"/>
+            <path d="M 155 94 L 165 117 M 195 94 L 210 117" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+
+            <!-- Insole Footbed Guideline -->
+            <path d="M 58 111 C 90 113 220 113 284 107" fill="none" stroke="#00ff41" stroke-width="1.2" stroke-dasharray="3 2"/>
+            <circle cx="58" cy="111" r="1.5" fill="#00ff66"/>
+            <circle cx="284" cy="107" r="1.5" fill="#00ff66"/>
+
+            <!-- Dimension Projection Lines -->
+            <line x1="58" y1="111" x2="58" y2="144" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <line x1="284" y1="107" x2="284" y2="144" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+
+            <!-- [A] Insole Dimension Arrow -->
+            <line x1="58" y1="140" x2="284" y2="140" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <g transform="translate(171, 140)">
+                <rect x="-58" y="-8" width="116" height="16" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
                 <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [A] ${lblInsole}: ${pInsole}
                 </text>
@@ -1486,62 +1566,101 @@ function generateMeasurementSchemeSvg(type, params, lang) {
         const lblExit = isEn ? 'CUFF' : (isUa ? 'ВИХІД' : 'ВЫХОД');
 
         return `
-        <svg viewBox="0 0 320 185" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 340 190" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
                 </marker>
             </defs>
-            ${hudDecor}
+            ${getHudDecor(340, 190, 'TECH.SPEC // BOTTOM')}
 
-            <!-- Human Silhouette Wireframe (Context) -->
-            <ellipse cx="160" cy="14" rx="7" ry="9" fill="none" stroke="rgba(0,255,102,0.2)" stroke-width="0.8" stroke-dasharray="2 2"/>
-            <line x1="154" y1="14" x2="166" y2="14" stroke="rgba(0,255,102,0.25)" stroke-width="0.8"/>
-            <path d="M 156 23 L 128 32 L 118 50 M 164 23 L 192 32 L 202 50" 
-                  fill="none" stroke="rgba(0,255,102,0.2)" stroke-width="0.8" stroke-dasharray="2 2"/>
-            <line x1="160" y1="23" x2="160" y2="50" stroke="rgba(0,255,102,0.15)" stroke-dasharray="2 2"/>
+            <!-- Anatomical Context: Flanks & Wireframe Sneakers -->
+            <path d="M 146 24 C 149 31 149 35 140 38 M 194 24 C 191 31 191 35 200 38" 
+                  fill="none" stroke="rgba(0, 255, 102, 0.22)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <circle cx="170" cy="30" r="1.3" fill="none" stroke="rgba(0, 255, 102, 0.25)" stroke-width="0.8"/>
+            <path d="M 140 173 C 138 177 141 180 150 180 L 162 180 C 164 180 166 177 164 173 M 176 173 C 174 177 176 180 178 180 L 190 180 C 198 180 200 177 198 173" 
+                  fill="none" stroke="rgba(0, 255, 102, 0.16)" stroke-width="0.8" stroke-dasharray="2 2"/>
 
-            <!-- Compact Highlighted Pants on Silhouette -->
-            <path d="M 122 50 L 198 50 L 202 75 C 200 110 196 135 192 165 L 168 165 L 160 85 L 152 165 L 128 165 C 124 135 120 110 118 75 Z" 
-                  fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 3"/>
-            <line x1="122" y1="56" x2="198" y2="56" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.5"/>
-            <line x1="160" y1="56" x2="160" y2="80" stroke="#00ff66" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+            <!-- Main Pants Contour (Denim / Streetwear Flat) -->
+            <path d="M 140 46 C 137 62 138 90 140 120 L 142 168 L 162 168 L 170 72 L 178 168 L 198 168 L 200 120 C 202 90 203 62 200 46 Z" 
+                  fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.3"/>
+
+            <!-- Contoured Waistband -->
+            <path d="M 140 38 Q 170 41 200 38 L 200 46 Q 170 49 140 46 Z" 
+                  fill="rgba(0, 255, 102, 0.08)" stroke="#00ff66" stroke-width="1.1"/>
+            <!-- 5 Belt Loops -->
+            <line x1="144" y1="37" x2="144" y2="47" stroke="#00ff66" stroke-width="1.1"/>
+            <line x1="157" y1="39" x2="157" y2="48" stroke="#00ff66" stroke-width="1.1"/>
+            <line x1="170" y1="40" x2="170" y2="49" stroke="#00ff66" stroke-width="1.1"/>
+            <line x1="183" y1="39" x2="183" y2="48" stroke="#00ff66" stroke-width="1.1"/>
+            <line x1="196" y1="37" x2="196" y2="47" stroke="#00ff66" stroke-width="1.1"/>
+            <!-- Central Rivet Button -->
+            <circle cx="170" cy="44" r="1.8" fill="#050505" stroke="#00ff66" stroke-width="0.9"/>
+            <circle cx="170" cy="44" r="0.6" fill="#00ff66"/>
+
+            <!-- Denim 5-Pocket Scoop Arcs & Coin Pocket -->
+            <path d="M 140 46 C 146 46 153 52 153 60" fill="none" stroke="#00ff66" stroke-width="1"/>
+            <circle cx="153" cy="60" r="0.9" fill="#00ff66"/>
+            <path d="M 200 46 C 194 46 187 52 187 60" fill="none" stroke="#00ff66" stroke-width="1"/>
+            <circle cx="187" cy="60" r="0.9" fill="#00ff66"/>
+            <rect x="188" y="50" width="8" height="4" fill="none" stroke="rgba(0, 255, 102, 0.6)" stroke-width="0.8" stroke-dasharray="2 1.5"/>
+
+            <!-- Fly J-Stitch & Center Rise -->
+            <path d="M 170 46 L 170 60 C 170 63 167 65 164 65" fill="none" stroke="rgba(0, 255, 102, 0.85)" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+            <line x1="170" y1="46" x2="170" y2="72" stroke="rgba(0, 255, 102, 0.35)" stroke-width="0.8"/>
+
+            <!-- Realistic Inseam Double-Needle Stitch -->
+            <line x1="171" y1="74" x2="163.5" y2="168" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <line x1="169" y1="74" x2="176.5" y2="168" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+
+            <!-- Knee Creases & Whisker Folds -->
+            <path d="M 141 118 Q 150 116 161 119 M 179 119 Q 190 116 199 118" 
+                  fill="none" stroke="rgba(0, 255, 102, 0.3)" stroke-width="0.8" stroke-dasharray="2 2"/>
+
+            <!-- Cuffs / Hem Bands -->
+            <rect x="142" y="168" width="20" height="4" fill="#000" stroke="#00ff66" stroke-width="1.1"/>
+            <line x1="142" y1="170" x2="162" y2="170" stroke="rgba(0, 255, 102, 0.6)" stroke-width="0.8" stroke-dasharray="2 1.5"/>
+            <rect x="178" y="168" width="20" height="4" fill="#000" stroke="#00ff66" stroke-width="1.1"/>
+            <line x1="178" y1="170" x2="198" y2="170" stroke="rgba(0, 255, 102, 0.6)" stroke-width="0.8" stroke-dasharray="2 1.5"/>
 
             <!-- [A] Waist Dimension Arrow -->
-            <line x1="122" y1="40" x2="198" y2="40" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="122" y1="34" x2="122" y2="50" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="198" y1="34" x2="198" y2="50" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(160, 40)">
-                <rect x="-44" y="-8" width="88" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            <line x1="140" y1="24" x2="200" y2="24" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="140" y1="20" x2="140" y2="38" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <line x1="200" y1="20" x2="200" y2="38" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <g transform="translate(170, 24)">
+                <rect x="-44" y="-8" width="88" height="16" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
                 <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [A] ${lblWaist}: ${pWaist}
                 </text>
             </g>
 
             <!-- [B] Outseam Length Arrow -->
-            <line x1="98" y1="50" x2="98" y2="165" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <line x1="92" y1="50" x2="104" y2="50" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <line x1="92" y1="165" x2="104" y2="165" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-            <g transform="translate(52, 105)">
-                <rect x="-42" y="-8" width="84" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            <line x1="114" y1="38" x2="114" y2="172" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="108" y1="38" x2="140" y2="38" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <line x1="108" y1="172" x2="142" y2="172" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <g transform="translate(60, 105)">
+                <rect x="-42" y="-8" width="84" height="16" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
                 <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [B] ${lblLen}: ${pPantsLen}
                 </text>
             </g>
 
             <!-- [C] Inseam Arrow -->
-            <line x1="160" y1="92" x2="160" y2="165" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <g transform="translate(214, 115)">
-                <rect x="-46" y="-8" width="92" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            <line x1="170" y1="74" x2="178" y2="168" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="174" y1="116" x2="186" y2="116" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <g transform="translate(234, 116)">
+                <rect x="-48" y="-8" width="96" height="16" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
                 <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                     [C] ${lblInseam}: ${pInseam}
                 </text>
             </g>
 
             <!-- [D] Leg Opening (Cuff) Arrow -->
-            <line x1="128" y1="174" x2="152" y2="174" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-            <g transform="translate(140, 174)">
-                <rect x="-38" y="-7" width="76" height="14" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+            <line x1="142" y1="180" x2="162" y2="180" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+            <line x1="142" y1="172" x2="142" y2="182" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <line x1="162" y1="172" x2="162" y2="182" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <g transform="translate(152, 180)">
+                <rect x="-38" y="-7" width="76" height="14" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
                 <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="8.5" font-weight="bold" text-anchor="middle">
                     [D] ${lblExit}: ${pLegOpen}
                 </text>
@@ -1549,70 +1668,106 @@ function generateMeasurementSchemeSvg(type, params, lang) {
         </svg>`;
     }
 
-    // Default: Tops / Upper body compact cyber silhouette
+    // Default: Tops / Outerwear / Hoodie / Tee
     const lblSh = isEn ? 'SHOULDERS' : (isUa ? 'ПЛЕЧІ' : 'ПЛЕЧИ');
     const lblCh = isEn ? 'PIT-TO-PIT' : 'ПОГ';
     const lblLen = isEn ? 'LENGTH' : (isUa ? 'ДОВЖИНА' : 'ДЛИНА');
     const lblSl = isEn ? 'SLEEVE' : (isUa ? 'РУКАВ' : 'РУКАВ');
 
     return `
-    <svg viewBox="0 0 320 185" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 340 190" width="100%" height="auto" style="display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,255,102,0.12));" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <marker id="${markerId}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#00ff66"/>
             </marker>
         </defs>
-        ${hudDecor}
+        ${getHudDecor(340, 190, 'TECH.SPEC // TOP')}
 
-        <!-- Compact Cyber Human Figure -->
-        <ellipse cx="160" cy="18" rx="9" ry="11" fill="rgba(0, 255, 102, 0.03)" stroke="#00ff66" stroke-width="1.2" stroke-dasharray="3 2"/>
-        <line x1="154" y1="18" x2="166" y2="18" stroke="#00ff66" stroke-width="0.8" opacity="0.6"/>
+        <!-- Anatomical Context: Head, Neck, Lower Body Wireframe -->
+        <ellipse cx="170" cy="13" rx="7" ry="8.5" fill="rgba(0, 255, 102, 0.02)" stroke="rgba(0, 255, 102, 0.22)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <line x1="166" y1="13" x2="174" y2="13" stroke="rgba(0, 255, 102, 0.2)" stroke-width="0.7"/>
+        <path d="M 166 21.5 L 166 27 M 174 21.5 L 174 27" stroke="rgba(0, 255, 102, 0.2)" stroke-width="0.8"/>
+        <path d="M 142 150 L 144 178 M 198 150 L 196 178 M 170 158 L 162 178 M 170 158 L 178 178" 
+              stroke="rgba(0, 255, 102, 0.16)" stroke-width="0.8" stroke-dasharray="2 3"/>
 
-        <path d="M 155 29 L 155 35 L 112 44 L 88 125 L 102 128 L 124 82 L 126 142 L 194 142 L 196 82 L 218 128 L 232 125 L 208 44 L 165 35 L 165 29 Z" 
-              fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.4" stroke-dasharray="3 3"/>
+        <!-- Main Garment Silhouette (Hoodie / Sweatshirt Flat) -->
+        <path d="M 158 27 L 116 42 L 90 128 L 106 133 L 132 80 L 134 142 L 206 142 L 208 80 L 234 133 L 250 128 L 224 42 L 182 27 Z" 
+              fill="rgba(0, 255, 102, 0.05)" stroke="#00ff66" stroke-width="1.3"/>
 
-        <!-- Lower Body Guidelines -->
-        <path d="M 126 142 L 128 172 M 194 142 L 192 172 M 160 152 L 150 172 M 160 152 L 170 172" 
-              stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.2"/>
-        <line x1="160" y1="35" x2="160" y2="142" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.2"/>
+        <!-- Realistic Ribbed Neckline / Collar -->
+        <path d="M 158 27 C 163 34 177 34 182 27" fill="none" stroke="#00ff66" stroke-width="1.1"/>
+        <path d="M 159 30 C 164 36 176 36 181 30" fill="none" stroke="#00ff66" stroke-width="0.9"/>
+        <!-- Collar Ribbing Ticks -->
+        <line x1="164" y1="28" x2="164" y2="32" stroke="rgba(0,255,102,0.6)" stroke-width="0.7"/>
+        <line x1="168" y1="29" x2="168" y2="34" stroke="rgba(0,255,102,0.6)" stroke-width="0.7"/>
+        <line x1="172" y1="29" x2="172" y2="34" stroke="rgba(0,255,102,0.6)" stroke-width="0.7"/>
+        <line x1="176" y1="28" x2="176" y2="32" stroke="rgba(0,255,102,0.6)" stroke-width="0.7"/>
+        <!-- Inner Tag -->
+        <rect x="167" y="25" width="6" height="4" fill="none" stroke="rgba(0,255,102,0.4)" stroke-width="0.6"/>
 
-        <!-- [A] Shoulders Dimension Arrow -->
-        <line x1="112" y1="34" x2="208" y2="34" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="112" y1="28" x2="112" y2="44" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="208" y1="28" x2="208" y2="44" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <g transform="translate(160, 34)">
-            <rect x="-44" y="-8" width="88" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+        <!-- Shoulder Seams & Armholes -->
+        <line x1="158" y1="27" x2="116" y2="42" stroke="rgba(0,255,102,0.6)" stroke-width="0.8" stroke-dasharray="2 1.5"/>
+        <line x1="182" y1="27" x2="224" y2="42" stroke="rgba(0,255,102,0.6)" stroke-width="0.8" stroke-dasharray="2 1.5"/>
+        <path d="M 116 42 C 124 54 128 66 132 80" fill="none" stroke="rgba(0,255,102,0.5)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <path d="M 224 42 C 216 54 212 66 208 80" fill="none" stroke="rgba(0,255,102,0.5)" stroke-width="0.8" stroke-dasharray="2 2"/>
+
+        <!-- Sleeve Cuffs with Ribbing Detail -->
+        <polygon points="90,128 106,133 104,138 88,133" fill="#000" stroke="#00ff66" stroke-width="1"/>
+        <line x1="97" y1="130" x2="95" y2="135" stroke="rgba(0,255,102,0.6)" stroke-width="0.8"/>
+        <polygon points="250,128 234,133 236,138 252,133" fill="#000" stroke="#00ff66" stroke-width="1"/>
+        <line x1="243" y1="130" x2="245" y2="135" stroke="rgba(0,255,102,0.6)" stroke-width="0.8"/>
+
+        <!-- Bottom Hem Ribbing Band -->
+        <rect x="134" y="142" width="72" height="8" fill="#000" stroke="#00ff66" stroke-width="1.1"/>
+        <line x1="146" y1="142" x2="146" y2="150" stroke="rgba(0,255,102,0.5)" stroke-width="0.7"/>
+        <line x1="158" y1="142" x2="158" y2="150" stroke="rgba(0,255,102,0.5)" stroke-width="0.7"/>
+        <line x1="170" y1="142" x2="170" y2="150" stroke="rgba(0,255,102,0.5)" stroke-width="0.7"/>
+        <line x1="182" y1="142" x2="182" y2="150" stroke="rgba(0,255,102,0.5)" stroke-width="0.7"/>
+        <line x1="194" y1="142" x2="194" y2="150" stroke="rgba(0,255,102,0.5)" stroke-width="0.7"/>
+
+        <!-- Natural Fabric Drape & Tension Creases -->
+        <path d="M 132 80 C 137 86 144 88 150 87 M 208 80 C 203 86 196 88 190 87" 
+              fill="none" stroke="rgba(0, 255, 102, 0.35)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <line x1="170" y1="58" x2="170" y2="120" stroke="rgba(0, 255, 102, 0.2)" stroke-width="0.8" stroke-dasharray="3 3"/>
+        <path d="M 158 100 Q 170 104 182 100" fill="none" stroke="rgba(0, 255, 102, 0.2)" stroke-width="0.7" stroke-dasharray="2 2"/>
+
+        <!-- [A] Shoulders Dimension Arrow (Seam-to-Seam) -->
+        <line x1="116" y1="42" x2="224" y2="42" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+        <g transform="translate(170, 42)">
+            <rect x="-44" y="-8" width="88" height="16" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
             <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                 [A] ${lblSh}: ${pShoulders}
             </text>
         </g>
 
         <!-- [B] Chest / Pit-to-Pit Dimension Arrow -->
-        <line x1="124" y1="82" x2="196" y2="82" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="124" y1="76" x2="124" y2="88" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="196" y1="76" x2="196" y2="88" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <g transform="translate(160, 82)">
-            <rect x="-40" y="-8" width="80" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+        <line x1="132" y1="80" x2="208" y2="80" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+        <line x1="132" y1="75" x2="132" y2="85" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <line x1="208" y1="75" x2="208" y2="85" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <g transform="translate(170, 80)">
+            <rect x="-40" y="-8" width="80" height="16" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
             <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                 [B] ${lblCh}: ${pChest}
             </text>
         </g>
 
         <!-- [C] Length Dimension Arrow -->
-        <line x1="214" y1="34" x2="214" y2="142" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <line x1="208" y1="34" x2="220" y2="34" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <line x1="208" y1="142" x2="220" y2="142" stroke="#00ff66" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.4"/>
-        <g transform="translate(262, 88)">
-            <rect x="-40" y="-8" width="80" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+        <line x1="232" y1="27" x2="232" y2="150" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+        <line x1="182" y1="27" x2="238" y2="27" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <line x1="206" y1="150" x2="238" y2="150" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <g transform="translate(284, 88)">
+            <rect x="-42" y="-8" width="84" height="16" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
             <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                 [C] ${lblLen}: ${pLength}
             </text>
         </g>
 
         <!-- [D] Sleeve Dimension Arrow -->
-        <line x1="108" y1="44" x2="84" y2="125" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
-        <g transform="translate(48, 82)">
-            <rect x="-40" y="-8" width="80" height="16" fill="#000" stroke="#00ff66" stroke-width="0.9" rx="2"/>
+        <line x1="108" y1="38" x2="82" y2="124" stroke="#00ff41" stroke-width="1.5" marker-start="url(#${markerId})" marker-end="url(#${markerId})"/>
+        <line x1="108" y1="38" x2="116" y2="42" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <line x1="82" y1="124" x2="90" y2="128" stroke="rgba(0, 255, 102, 0.4)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <g transform="translate(54, 80)">
+            <rect x="-40" y="-8" width="80" height="16" fill="#050505" stroke="#00ff66" stroke-width="0.9" rx="2"/>
             <text x="0" y="3.5" fill="#00ff66" font-family="'JetBrains Mono', Courier, monospace" font-size="9" font-weight="bold" text-anchor="middle">
                 [D] ${lblSl}: ${pSleeve}
             </text>
