@@ -465,11 +465,9 @@ if (typeof globalThis !== 'undefined') globalThis.switchOrderTab = switchOrderTa
 function copyTTN(ttn, el) {
     if (!ttn) return;
     const cleanTtn = String(ttn).trim();
+    const successMsg = 'ТТН скопирован: ' + cleanTtn;
 
-    const onCopied = () => {
-        if (typeof showToast === 'function') {
-            showToast('ТТН скопирован: ' + cleanTtn, 'success');
-        }
+    const animateCopiedIcon = () => {
         if (typeof triggerHaptic === 'function') triggerHaptic('success');
         if (el) {
             const icon = el.querySelector('.ttn-copy-icon');
@@ -484,31 +482,19 @@ function copyTTN(ttn, el) {
         }
     };
 
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(cleanTtn).then(onCopied).catch(() => {
-            fallbackCopyText(cleanTtn);
-            onCopied();
+    if (typeof window.copyToClipboard === 'function') {
+        window.copyToClipboard(cleanTtn, successMsg).then(ok => {
+            if (ok) animateCopiedIcon();
         });
-    } else {
-        fallbackCopyText(cleanTtn);
-        onCopied();
+    } else if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(cleanTtn).then(() => {
+            if (typeof showToast === 'function') showToast(successMsg, 'success');
+            animateCopiedIcon();
+        }).catch(() => {});
     }
 }
 window.copyTTN = copyTTN;
 if (typeof globalThis !== 'undefined') globalThis.copyTTN = copyTTN;
-
-function fallbackCopyText(text) {
-    try {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-    } catch(e) {}
-}
 
 function renderFilteredOrders() {
     const listArea = document.getElementById('ordersListArea');

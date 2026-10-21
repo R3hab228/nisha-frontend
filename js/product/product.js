@@ -340,7 +340,7 @@ function openProductModal(item) {
             if (!viewedItems.includes(item.id)) {
                 let visitorId = getFingerprint();
                 if (!visitorId || visitorId.startsWith('guest_')) {
-                    visitorId = localStorage.getItem('nisha_visitor_id') || 'user_' + Math.random().toString(36).substr(2, 9);
+                    visitorId = localStorage.getItem('nisha_visitor_id') || ('user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replace(/-/g, '').slice(0, 9) : Date.now().toString(36))));
                 }
                 const currentUser = getUser();
                 const viewerId = currentUser ? currentUser.id : visitorId;
@@ -874,7 +874,7 @@ function initSliderSwipe() {
         touchEndX = touchStartX;
         touchEndY = touchStartY;
 
-        const currentTime = new Date().getTime();
+        const currentTime = Date.now();
         const tapLength = currentTime - lastTapTime;
         if (tapLength < 300 && tapLength > 0) {
             const slides = document.querySelectorAll('.slide');
@@ -934,24 +934,6 @@ window.initSliderSwipe = initSliderSwipe;
 // 3. ПОДЕЛИТЬСЯ ТОВАРОМ (SHARE)
 // ==========================================
 
-function fallbackCopyText(text) {
-    try {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.top = '-9999px';
-        textarea.style.left = '-9999px';
-        textarea.setAttribute('readonly', '');
-        document.body.appendChild(textarea);
-        textarea.select();
-        const success = document.execCommand('copy');
-        document.body.removeChild(textarea);
-        return success;
-    } catch (e) {
-        return false;
-    }
-}
-
 function shareItem() {
     const active = window.currentOpenedItem || currentOpenedItem;
     if (!active) return;
@@ -960,14 +942,8 @@ function shareItem() {
     const shareTitle = `NISHA | ${active.brand} - ${active.name}`;
     const shareText = `Зацени: ${active.brand} (${active.size}).`;
 
-    const notifySuccess = () => {
-        const msg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'Ссылка скопирована!'}) : 'Ссылка скопирована!';
-        showToast(msg, 'success');
-    };
-    const notifyError = () => {
-        const msg = typeof i18next !== 'undefined' ? i18next.t('messages.copy_error', {defaultValue: 'Ошибка копирования'}) : 'Ошибка копирования';
-        showToast(msg, 'error');
-    };
+    const successMsg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'Ссылка скопирована!'}) : 'Ссылка скопирована!';
+    const errorMsg = typeof i18next !== 'undefined' ? i18next.t('messages.copy_error', {defaultValue: 'Ошибка копирования'}) : 'Ошибка копирования';
 
     if (navigator.share) {
         navigator.share({
@@ -977,22 +953,14 @@ function shareItem() {
         }).catch(() => {
             console.log('Шеринг отменен пользователем');
         });
+    } else if (typeof window.copyToClipboard === 'function') {
+        window.copyToClipboard(shareUrl, successMsg, errorMsg);
     } else if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         navigator.clipboard.writeText(shareUrl)
-            .then(notifySuccess)
-            .catch(() => {
-                if (fallbackCopyText(shareUrl)) {
-                    notifySuccess();
-                } else {
-                    notifyError();
-                }
-            });
+            .then(() => showToast(successMsg, 'success'))
+            .catch(() => showToast(errorMsg, 'error'));
     } else {
-        if (fallbackCopyText(shareUrl)) {
-            notifySuccess();
-        } else {
-            notifyError();
-        }
+        showToast(errorMsg, 'error');
     }
 }
 window.shareItem = shareItem;

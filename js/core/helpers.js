@@ -90,7 +90,7 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     
     // 2500 миллисекунд (2.5 секунды) + 500мс на саму анимацию затухания
     setTimeout(() => { 
-        if(container.contains(toast)) container.removeChild(toast); 
+        toast.remove();
     }, 3000);
 }
 window.showToast = showToast;
@@ -167,9 +167,7 @@ function _displayNewItemToast(item, container) {
 
         toast.classList.add('toast-leaving');
         setTimeout(() => {
-            if (container.contains(toast)) {
-                container.removeChild(toast);
-            }
+            toast.remove();
             _activeNewItemToastCount = Math.max(0, _activeNewItemToastCount - 1);
             // Плавная задержка перед появлением следующего тоста для естественности анимации
             setTimeout(_drainNewItemToastQueue, 150);
@@ -275,38 +273,40 @@ function getCurrency() {
 }
 window.getCurrency = getCurrency;
 
-// --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА ---
+// --- ГЕНЕРАЦИЯ БЕЗОПАСНЫХ КОРОТКИХ ID НА БАЗЕ CRYPTO.RANDOMUUID ---
+function generateShortId(length = 9) {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID().replace(/-/g, '').slice(0, length);
+    }
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(length);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes, b => (b % 36).toString(36)).join('').slice(0, length);
+    }
+    return Date.now().toString(36).slice(-length);
+}
+window.generateShortId = generateShortId;
+if (typeof globalThis !== 'undefined') globalThis.generateShortId = generateShortId;
+
+// --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА (ЕДИНЫЙ НАТИВНЫЙ CLIPBOARD API) ---
 function copyToClipboard(text, successMsg = 'Скопировано в буфер!', errorMsg = 'Ошибка копирования') {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        return navigator.clipboard.writeText(text)
+    const str = String(text ?? '');
+    if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        return navigator.clipboard.writeText(str)
             .then(() => {
-                showToast(successMsg, 'success');
+                if (successMsg) showToast(successMsg, 'success');
                 return true;
             })
             .catch(() => {
-                showToast(errorMsg, 'error');
+                if (errorMsg) showToast(errorMsg, 'error');
                 return false;
             });
-    } else {
-        try {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            showToast(successMsg, 'success');
-            return Promise.resolve(true);
-        } catch(e) {
-            showToast(errorMsg, 'error');
-            return Promise.resolve(false);
-        }
     }
+    if (errorMsg) showToast(errorMsg, 'error');
+    return Promise.resolve(false);
 }
 window.copyToClipboard = copyToClipboard;
+if (typeof globalThis !== 'undefined') globalThis.copyToClipboard = copyToClipboard;
 
 // --- БЕЗОПАСНЫЕ ГЕТТЕРЫ ДАННЫХ И КЛИЕНТОВ ---
 function getSupabase() {

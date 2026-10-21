@@ -146,7 +146,7 @@ async function initHitCounter() {
     try {
         let visitorId = localStorage.getItem('nisha_visitor_id');
         if (!visitorId) {
-            visitorId = 'user_' + Math.random().toString(36).substr(2, 9);
+            visitorId = 'user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replace(/-/g, '').slice(0, 9) : Date.now().toString(36)));
             localStorage.setItem('nisha_visitor_id', visitorId);
         }
         window.clientFingerprint = visitorId;

@@ -1570,7 +1570,7 @@ async function autoDetectCity() {
     cityInput.placeholder = "Поиск спутников..."; 
 
     try {
-        const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+        const res = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(4000) : undefined });
         const data = await res.json();
 
         if (data.country_code === 'UA' && data.city) {
@@ -1599,7 +1599,7 @@ async function autoDetectCity() {
             let detectedCity = enToUaCities[data.city] || data.city;
             if (detectedCity === data.city && data.latitude && data.longitude) {
                 try {
-                    const nomRes = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + data.latitude + '&lon=' + data.longitude + '&format=json&accept-language=uk');
+                    const nomRes = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + data.latitude + '&lon=' + data.longitude + '&format=json&accept-language=uk', { signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(4000) : undefined });
                     const nomData = await nomRes.json();
                     if (nomData && nomData.address) {
                         detectedCity = nomData.address.city || nomData.address.town || nomData.address.village || detectedCity;

@@ -31,7 +31,11 @@
     }
 
     function generateIdempotencyKey(prefix = 'req') {
-        const rand = Math.random().toString(36).substring(2, 10);
+        const rand = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+            ? crypto.randomUUID().replace(/-/g, '').slice(0, 10)
+            : (typeof window !== 'undefined' && typeof window.generateShortId === 'function'
+                ? window.generateShortId(8)
+                : Date.now().toString(36));
         return `${prefix}_${Date.now()}_${rand}`;
     }
 
@@ -44,6 +48,21 @@
     }
 
     function createTimeoutSignal(timeoutMs, externalSignal) {
+        if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+            const timeoutSig = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : null;
+            let signal = timeoutSig || externalSignal || undefined;
+            if (timeoutSig && externalSignal) {
+                signal = typeof AbortSignal.any === 'function'
+                    ? AbortSignal.any([externalSignal, timeoutSig])
+                    : timeoutSig;
+            }
+            return {
+                signal,
+                isTimedOut: () => Boolean(timeoutSig && timeoutSig.aborted),
+                cleanup: () => {}
+            };
+        }
+
         const controller = new AbortController();
         let timedOut = false;
 

@@ -345,7 +345,7 @@ function handleNetworkOffline() {
             
             if (!netError && grid && grid.parentElement) {
                 netError = createNetErrorElement();
-                grid.parentElement.insertBefore(netError, grid);
+                grid.before(netError);
             }
             
             if (netError) {

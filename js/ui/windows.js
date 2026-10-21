@@ -2,6 +2,26 @@
 // NISHA UI WINDOWS & MODALS (Оконная система Win95)
 // ==========================================
 
+// Быстрая проверка видимости DOM-элемента через inline-стили и нативный Element.checkVisibility()
+function isElementVisible(el) {
+    if (!el) return false;
+    if (el.style) {
+        if (el.style.display === 'none' || el.style.visibility === 'hidden' || el.style.opacity === '0') {
+            return false;
+        }
+        if (el.style.display === 'flex' || el.style.display === 'block') {
+            return true;
+        }
+    }
+    if (typeof el.checkVisibility === 'function') {
+        return el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+    }
+    const comp = window.getComputedStyle(el);
+    return comp.display !== 'none' && comp.visibility !== 'hidden' && comp.opacity !== '0';
+}
+window.isElementVisible = isElementVisible;
+if (typeof globalThis !== 'undefined') globalThis.isElementVisible = isElementVisible;
+
 // 1. Проверка: находится ли пользователь СТРОГО в обычной ленте товаров (каталоге) без открытых окон и карточек
 function isUserInProductFeed() {
     try {
@@ -15,23 +35,15 @@ function isUserInProductFeed() {
 
         // 2. СТРОГАЯ проверка карточки товара (productModal)
         const pModal = document.getElementById('productModal');
-        if (pModal) {
-            if (pModal.style.display === 'flex' || pModal.style.display === 'block') return false;
-            const compP = window.getComputedStyle(pModal);
-            if (compP.display !== 'none' && compP.visibility !== 'hidden' && compP.opacity !== '0') return false;
-        }
+        if (isElementVisible(pModal)) return false;
         if (window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' && currentOpenedItem)) {
             return false;
         }
 
         // 3. Проверяем все модальные окна сайта (.modal-overlay)
         const overlays = document.querySelectorAll('.modal-overlay');
-        for (let m of overlays) {
-            if (m.style.display === 'flex' || m.style.display === 'block') {
-                return false;
-            }
-            const comp = window.getComputedStyle(m);
-            if (comp.display !== 'none' && comp.visibility !== 'hidden' && comp.opacity !== '0') {
+        for (const m of overlays) {
+            if (isElementVisible(m)) {
                 return false;
             }
         }
@@ -64,7 +76,7 @@ function isUserInProductFeed() {
 
         // 8. Проверяем экран успешного заказа
         const successOverlay = document.getElementById('orderSuccessOverlay');
-        if (successOverlay && window.getComputedStyle(successOverlay).display !== 'none') {
+        if (isElementVisible(successOverlay)) {
             return false;
         }
 
@@ -123,7 +135,7 @@ function closeModal(id) {
         
         // Проверяем контакты: если поле скрыто (автоподстановка для профиля) или значение совпадает с данными профиля — не считаем ручным вводом
         const contactWrap = document.getElementById('propContactWrapper');
-        const isContactVisible = contactWrap ? (contactWrap.style.display !== 'none' && window.getComputedStyle(contactWrap).display !== 'none') : false;
+        const isContactVisible = isElementVisible(contactWrap);
         const contactVal = document.getElementById('propContact')?.value.trim() || '';
         
         const autoTg = (typeof getUserTg === 'function' ? getUserTg() : '').trim();
@@ -404,10 +416,10 @@ function initWindowOverlayListeners() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         // 1. Закрытие терминальных окон подтверждения или алертов
-        const termOverlays = document.querySelectorAll('.confirm-modal-overlay, .terminal-modal-overlay, #confirmTerminalModal, #customTerminalAlert');
+        const termOverlays = Array.from(document.querySelectorAll('.confirm-modal-overlay, .terminal-modal-overlay, #confirmTerminalModal, #customTerminalAlert'));
         if (termOverlays.length > 0) {
-            const topTerm = termOverlays[termOverlays.length - 1];
-            if (topTerm && topTerm.parentNode) {
+            const topTerm = termOverlays.at(-1);
+            if (topTerm) {
                 topTerm.remove();
                 return;
             }
@@ -415,23 +427,20 @@ document.addEventListener('keydown', (e) => {
 
         // 2. Оверлеи успеха или подсказки email
         const orderSuccess = document.getElementById('orderSuccessOverlay');
-        if (orderSuccess && window.getComputedStyle(orderSuccess).display !== 'none') {
+        if (isElementVisible(orderSuccess)) {
             orderSuccess.style.display = 'none';
             return;
         }
         const emailPrompt = document.getElementById('emailPromptOverlay');
-        if (emailPrompt && window.getComputedStyle(emailPrompt).display !== 'none') {
+        if (isElementVisible(emailPrompt)) {
             emailPrompt.style.display = 'none';
             return;
         }
 
         // 3. Закрываем активное модальное окно (.modal-overlay)
-        const activeModals = Array.from(document.querySelectorAll('.modal-overlay')).filter(m => {
-            const style = window.getComputedStyle(m);
-            return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
-        });
+        const activeModals = Array.from(document.querySelectorAll('.modal-overlay')).filter(isElementVisible);
         if (activeModals.length > 0) {
-            const topModal = activeModals[activeModals.length - 1];
+            const topModal = activeModals.at(-1);
             if (topModal.id !== 'rulesModal') {
                 closeModal(topModal.id);
                 return;

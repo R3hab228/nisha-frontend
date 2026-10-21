@@ -2318,7 +2318,7 @@ async function startOnboardingTour() {
         localStorage.getItem('nisha_tour_done')) return;
 
     // ПРОВЕРКА: Если пользователь уже пролистал страницу (не находится в верхнем углу):
-    const initScroll = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    const initScroll = window.scrollY || document.documentElement.scrollTop || 0;
     if (initScroll > 30) {
         localStorage.setItem('nisha_tour_done', 'true');
         flushPendingBroadcast();
@@ -2348,7 +2348,9 @@ async function startOnboardingTour() {
 
     const checkAndRun = setInterval(() => {
         const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
-            return window.getComputedStyle(el).display === 'flex';
+            return typeof window.isElementVisible === 'function'
+                ? window.isElementVisible(el)
+                : window.getComputedStyle(el).display === 'flex';
         });
         
         const toastContainer = document.getElementById('toastContainer');
@@ -2357,7 +2359,7 @@ async function startOnboardingTour() {
         if (anyModalOpen || anyToastVisible) return;
 
         // Если во время ожидания пользователь начал листать — отменяем тур
-        const currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         if (currentScrollY > 30) {
             clearInterval(checkAndRun);
             localStorage.setItem('nisha_tour_done', 'true');
@@ -2419,7 +2421,7 @@ window.startOnboardingTour = startOnboardingTour;
 // Защита: если юзер при входе сразу начинает скроллить страницу — не показываем подсказки онбординга
 if (!localStorage.getItem('nisha_tour_done')) {
     const onEarlyTourScroll = function() {
-        const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        const y = window.scrollY || document.documentElement.scrollTop || 0;
         if (y > 30) {
             window.removeEventListener('scroll', onEarlyTourScroll);
             if (!localStorage.getItem('nisha_tour_done')) {

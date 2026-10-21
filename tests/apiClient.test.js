@@ -104,4 +104,23 @@ describe('Protected API Client (js/core/apiClient.js) — Retries, Deduplication
         expect(res.success).toBe(false);
         expect(res._nonJson).toBe(true);
     });
+
+    it('aborts timed-out requests via native AbortSignal.timeout and marks error with isTimeout', async () => {
+        globalThis.fetch = vi.fn().mockImplementation((_url, opts) => {
+            return new Promise((_resolve, reject) => {
+                if (opts.signal) {
+                    opts.signal.addEventListener('abort', () => {
+                        reject(opts.signal.reason || new Error('Aborted'));
+                    });
+                }
+            });
+        });
+
+        await expect(
+            apiClient.get('/api/slow-endpoint', { timeout: 25, retries: 0 })
+        ).rejects.toMatchObject({
+            name: 'AbortError',
+            isTimeout: true
+        });
+    });
 });

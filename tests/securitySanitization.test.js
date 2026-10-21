@@ -267,4 +267,55 @@ describe('Security Sanitization & XSS Shield', () => {
             global.document = prevDoc;
         }
     });
+
+    it('generateShortId and copyToClipboard use modern Web Crypto and Clipboard APIs', async () => {
+        const id1 = window.generateShortId(9);
+        const id2 = window.generateShortId(9);
+        expect(typeof id1).toBe('string');
+        expect(id1.length).toBe(9);
+        expect(id1).not.toBe(id2);
+
+        const writeTextMock = vi.fn().mockResolvedValue(undefined);
+        const prevClipboard = globalThis.navigator?.clipboard;
+        Object.defineProperty(globalThis.navigator, 'clipboard', {
+            value: { writeText: writeTextMock },
+            configurable: true,
+            writable: true
+        });
+        try {
+            const ok = await window.copyToClipboard('20450999887766', null);
+            expect(ok).toBe(true);
+            expect(writeTextMock).toHaveBeenCalledWith('20450999887766');
+        } finally {
+            Object.defineProperty(globalThis.navigator, 'clipboard', {
+                value: prevClipboard,
+                configurable: true,
+                writable: true
+            });
+        }
+    });
+
+    it('isElementVisible uses inline styles and Element.checkVisibility without unnecessary getComputedStyle', () => {
+        const prevDoc = global.document;
+        global.document = {
+            readyState: 'complete',
+            addEventListener: vi.fn(),
+            querySelectorAll: () => [],
+            getElementById: () => null
+        };
+        try {
+            const winCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            eval(winCode);
+
+            expect(window.isElementVisible(null)).toBe(false);
+            expect(window.isElementVisible({ style: { display: 'none' } })).toBe(false);
+            expect(window.isElementVisible({ style: { display: 'flex' } })).toBe(true);
+
+            const checkVisSpy = vi.fn().mockReturnValue(true);
+            expect(window.isElementVisible({ style: { display: '' }, checkVisibility: checkVisSpy })).toBe(true);
+            expect(checkVisSpy).toHaveBeenCalledWith({ checkOpacity: true, checkVisibilityCSS: true });
+        } finally {
+            global.document = prevDoc;
+        }
+    });
 });

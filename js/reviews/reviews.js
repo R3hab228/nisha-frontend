@@ -166,7 +166,7 @@ window.equalizeReviewCardHeights = equalizeReviewCardHeights;
 
 window.addEventListener('resize', () => {
     const modal = document.getElementById('reviewsModal');
-    if (modal && window.getComputedStyle(modal).display === 'flex') {
+    if (modal && (typeof window.isElementVisible === 'function' ? window.isElementVisible(modal) : window.getComputedStyle(modal).display === 'flex')) {
         equalizeReviewCardHeights();
     }
 });
@@ -412,7 +412,7 @@ function initReviewsRealtime(sb) {
 
                 // Если модальное окно отзывов сейчас открыто — мгновенно обновляем список
                 const modal = document.getElementById('reviewsModal');
-                if (modal && window.getComputedStyle(modal).display === 'flex') {
+                if (modal && (typeof window.isElementVisible === 'function' ? window.isElementVisible(modal) : window.getComputedStyle(modal).display === 'flex')) {
                     openReviewsModal();
                 }
 
