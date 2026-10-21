@@ -1582,10 +1582,21 @@ async function autoDetectCity() {
     cityInput.placeholder = "Поиск спутников..."; 
 
     try {
-        const res = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(4000) : undefined });
-        const data = await res.json();
+        let data = null;
+        if (window.apiClient && typeof window.apiClient.get === 'function') {
+            try {
+                const edgeGeo = await window.apiClient.get('/api/geo', { timeout: 2500, retries: 0, dedupe: true });
+                if (edgeGeo && edgeGeo.success && edgeGeo.city) {
+                    data = edgeGeo;
+                }
+            } catch (edgeErr) {}
+        }
+        if (!data) {
+            const res = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(4000) : undefined });
+            data = await res.json();
+        }
 
-        if (data.country_code === 'UA' && data.city) {
+        if (data && data.country_code === 'UA' && data.city) {
             const enToUaCities = {
                 'Kyiv': 'Київ', 'Kiev': 'Київ', 'Kharkiv': 'Харків', 'Kharkov': 'Харків',
                 'Odesa': 'Одеса', 'Odessa': 'Одеса', 'Dnipro': 'Дніпро', 'Dnipropetrovsk': 'Дніпро',

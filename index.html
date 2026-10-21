@@ -751,12 +751,12 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window style=max-width:550px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none data-i18n=propose.title>DROP_ITEM.EXE</span>
-<button class=close-btn onclick='closeModal("proposeModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=proposeModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout>
 <label data-i18n=propose.media_label>ФОТО / ВИДЕО (ДО 5 ШТУК):</label>
 <input type=file id=propFiles class=form-input accept=image/*,video/* multiple style=display:none>
-<div id=propDropzone class=upload-dropzone onclick='document.getElementById("propFiles").click()'>
+<div id=propDropzone class=upload-dropzone data-action=trigger-prop-files>
 <div id=propPlaceholder style=color:#666;font-family:var(--font-mono);font-size:13px data-i18n=propose.media_click>📸 Нажмите, чтобы выбрать файлы</div>
 <div id=propPreviewContainer class=preview-container></div>
 </div>
@@ -776,7 +776,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <label data-i18n=propose.contact_label>СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):</label>
 <input id=propContact class=form-input placeholder="@твои_ник или +380..." data-i18n-ph=propose.contact_place>
 </div>
-<button class="cart-checkout-btn btn-target" id=btnSubmitProp onclick=submitProposal() style=margin-top:15px;width:100% data-i18n=propose.btn_submit>[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
+<button class="cart-checkout-btn btn-target" id=btnSubmitProp data-action=submit-proposal style=margin-top:15px;width:100% data-i18n=propose.btn_submit>[ ОТПРАВИТЬ ЗАЯВКУ ]</button>
 </div>
 </div>
 </div>
@@ -784,13 +784,13 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>NEW_REVIEW.EXE</span>
-<button class=close-btn onclick='closeModal("writeReviewModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=writeReviewModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout>
 <textarea id=manualReviewInput class=form-input style=height:120px;resize:none;text-align:center placeholder="Напишите ваше мнение о покупке..."></textarea>
 <div style=display:flex;gap:10px;margin-top:10px>
-<button class="cart-checkout-btn btn-target" onclick=submitManualReview() style=flex:1>ОТПРАВИТЬ</button>
-<button class="cart-checkout-btn btn-target" onclick='closeModal("writeReviewModal")' style=flex:1;background:#333;color:#fff;border-color:#555>ОТМЕНА</button>
+<button class="cart-checkout-btn btn-target" data-action=submit-manual-review style=flex:1>ОТПРАВИТЬ</button>
+<button class="cart-checkout-btn btn-target" data-action=close-modal data-modal-id=writeReviewModal style=flex:1;background:#333;color:#fff;border-color:#555>ОТМЕНА</button>
 </div>
 </div>
 </div>
@@ -799,7 +799,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none;color:var(--accent-green)>DELIVERY_SUCCESS.LOG</span>
-<button class=close-btn onclick='closeModal("autoReviewModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=autoReviewModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout style=align-items:center;text-align:center>
 <div id=autoReviewImg style="width:120px;height:120px;background-size:cover;background-position:center;border:2px inset #555;margin-bottom:10px"></div>
@@ -809,8 +809,8 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <input type=hidden id=autoReviewItemId>
 <textarea id=autoReviewInput class=form-input style=width:100%;height:90px;resize:none;text-align:center placeholder="Пару слов о покупке..."></textarea>
 <div style=display:flex;gap:10px;width:100%;margin-top:10px>
-<button class="cart-checkout-btn btn-target" onclick=skipAutoReview() style=flex:1;background:#333;color:#fff;border-color:#555 data-i18n=reviews_modal.later>ПОЗЖЕ</button>
-<button class="cart-checkout-btn btn-target" onclick=submitAutoReview() style=flex:1 data-i18n=reviews_modal.send>ОТПРАВИТЬ</button>
+<button class="cart-checkout-btn btn-target" data-action=skip-auto-review style=flex:1;background:#333;color:#fff;border-color:#555 data-i18n=reviews_modal.later>ПОЗЖЕ</button>
+<button class="cart-checkout-btn btn-target" data-action=submit-auto-review style=flex:1 data-i18n=reviews_modal.send>ОТПРАВИТЬ</button>
 </div>
 </div>
 </div>
@@ -819,12 +819,12 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>SUPPORT_TICKET.EXE</span>
-<button class=close-btn onclick='closeModal("supportModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=supportModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout>
 <p style=margin:0;color:#aaa;font-size:13px;font-family:var(--font-main) data-i18n="support.desc">Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.</p>
 <textarea id=supportInput class=form-input maxlength=100 style=height:120px;resize:none;text-align:left data-i18n="[placeholder]support.placeholder" placeholder="Начни печатать..."></textarea>
-<button class="cart-checkout-btn btn-target" id=btnSubmitSupport onclick=submitSupportTicket() style=margin-top:10px;width:100% data-i18n="support.submit">ОТПРАВИТЬ СИГНАЛ</button>
+<button class="cart-checkout-btn btn-target" id=btnSubmitSupport data-action=submit-support-ticket style=margin-top:10px;width:100% data-i18n="support.submit">ОТПРАВИТЬ СИГНАЛ</button>
 </div>
 </div>
 </div>

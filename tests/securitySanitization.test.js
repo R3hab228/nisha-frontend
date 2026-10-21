@@ -356,4 +356,16 @@ describe('Security Sanitization & XSS Shield', () => {
         });
         expect(ttqSpy.track).toHaveBeenCalledWith('CompletePayment', expect.objectContaining({ value: 4500 }));
     });
+
+    it('bottom modals in index.html have zero inline onclick handlers and use data-action delegation', () => {
+        const htmlContent = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+        const bottomModalsHtml = htmlContent.slice(htmlContent.indexOf('id=proposeModal'));
+        expect(bottomModalsHtml.length).toBeGreaterThan(100);
+        expect(bottomModalsHtml).not.toMatch(/\bonclick\s*=/i);
+        expect(bottomModalsHtml).toContain('data-action=close-modal');
+        expect(bottomModalsHtml).toContain('data-action=submit-proposal');
+        expect(bottomModalsHtml).toContain('data-action=submit-manual-review');
+        expect(bottomModalsHtml).toContain('data-action=submit-auto-review');
+        expect(bottomModalsHtml).toContain('data-action=submit-support-ticket');
+    });
 });

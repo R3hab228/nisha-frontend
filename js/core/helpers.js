@@ -956,6 +956,36 @@ function handleDelegatedAction(e) {
             if (img && typeof window.openReviewImage === 'function') window.openReviewImage(img);
             break;
         }
+        case 'close-modal': {
+            const modalId = actionEl.getAttribute('data-modal-id');
+            if (modalId && typeof window.closeModal === 'function') window.closeModal(modalId);
+            break;
+        }
+        case 'trigger-prop-files': {
+            const filesEl = typeof document !== 'undefined' ? document.getElementById('propFiles') : null;
+            if (filesEl && typeof filesEl.click === 'function') filesEl.click();
+            break;
+        }
+        case 'submit-proposal': {
+            if (typeof window.submitProposal === 'function') window.submitProposal();
+            break;
+        }
+        case 'submit-manual-review': {
+            if (typeof window.submitManualReview === 'function') window.submitManualReview();
+            break;
+        }
+        case 'skip-auto-review': {
+            if (typeof window.skipAutoReview === 'function') window.skipAutoReview();
+            break;
+        }
+        case 'submit-auto-review': {
+            if (typeof window.submitAutoReview === 'function') window.submitAutoReview();
+            break;
+        }
+        case 'submit-support-ticket': {
+            if (typeof window.submitSupportTicket === 'function') window.submitSupportTicket();
+            break;
+        }
     }
 }
 window.handleDelegatedAction = handleDelegatedAction;
