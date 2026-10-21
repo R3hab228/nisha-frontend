@@ -288,7 +288,26 @@ function generateShortId(length = 9) {
 window.generateShortId = generateShortId;
 if (typeof globalThis !== 'undefined') globalThis.generateShortId = generateShortId;
 
-// --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА (ЕДИНЫЙ НАТИВНЫЙ CLIPBOARD API) ---
+// --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА (ЕДИНЫЙ НАТИВНЫЙ CLIPBOARD API С ЗАЩИТОЙ ДЛЯ IN-APP WEBVIEW) ---
+function _copyViaSelectionFallback(str) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = str;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-9999px';
+        ta.style.left = '-9999px';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = typeof document.execCommand === 'function' ? document.execCommand('copy') : false;
+        ta.remove();
+        return Boolean(ok);
+    } catch (e) {
+        return false;
+    }
+}
+
 function copyToClipboard(text, successMsg = 'Скопировано в буфер!', errorMsg = 'Ошибка копирования') {
     const str = String(text ?? '');
     if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -298,9 +317,17 @@ function copyToClipboard(text, successMsg = 'Скопировано в буфе�
                 return true;
             })
             .catch(() => {
+                if (_copyViaSelectionFallback(str)) {
+                    if (successMsg) showToast(successMsg, 'success');
+                    return true;
+                }
                 if (errorMsg) showToast(errorMsg, 'error');
                 return false;
             });
+    }
+    if (_copyViaSelectionFallback(str)) {
+        if (successMsg) showToast(successMsg, 'success');
+        return Promise.resolve(true);
     }
     if (errorMsg) showToast(errorMsg, 'error');
     return Promise.resolve(false);

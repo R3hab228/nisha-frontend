@@ -537,10 +537,11 @@ window.renderProfileTg = renderProfileTg;
 async function removeProfileContact(type) {
     const cfg = CONTACT_CONFIG[type];
     const sb = getSupabase();
-    if (!cfg || !currentUser || !sb) return;
+    const activeUser = currentUser || window.currentUser;
+    if (!cfg || !activeUser || !sb) return;
 
     try {
-        await sb.from('profiles').update({ [type]: null }).eq('id', currentUser.id);
+        await sb.from('profiles').update({ [type]: null }).eq('id', activeUser.id);
         try { await sb.auth.updateUser({ data: { [type]: null } }); } catch(e) {}
     } catch(err) {
         console.error(`Ошибка удаления ${type}:`, err);
@@ -659,13 +660,15 @@ async function checkPendingContactVerification(type) {
     if (isPhone) isCheckingPhoneOtp = true;
     else isCheckingTgOtp = true;
 
+    const activeUser = currentUser || window.currentUser;
+    if (activeUser) currentUser = activeUser;
     try {
-        if (currentUser) {
+        if (activeUser) {
             try {
                 const { data: isAvail } = await sb.rpc('check_contact_available', {
                     p_type: type,
                     p_val: cleanVal,
-                    p_user_id: currentUser.id
+                    p_user_id: activeUser.id
                 });
                 if (isAvail === false) {
                     clearPendingContactState(type);
@@ -774,10 +777,12 @@ async function checkPendingTgVerification() { return checkPendingContactVerifica
 window.checkPendingTgVerification = checkPendingTgVerification;
 
 async function saveContactFromInput(type, isModal = false) {
-    if (!currentUser) {
+    const activeUser = currentUser || window.currentUser;
+    if (!activeUser) {
         showToast('Сначала авторизуйтесь!', 'error');
         return;
     }
+    currentUser = activeUser;
 
     const sb = getSupabase();
     if (!sb) return;

@@ -48,13 +48,15 @@
     }
 
     function createTimeoutSignal(timeoutMs, externalSignal) {
-        if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+        if (
+            typeof AbortSignal !== 'undefined' &&
+            typeof AbortSignal.timeout === 'function' &&
+            (!externalSignal || typeof AbortSignal.any === 'function')
+        ) {
             const timeoutSig = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : null;
             let signal = timeoutSig || externalSignal || undefined;
             if (timeoutSig && externalSignal) {
-                signal = typeof AbortSignal.any === 'function'
-                    ? AbortSignal.any([externalSignal, timeoutSig])
-                    : timeoutSig;
+                signal = AbortSignal.any([externalSignal, timeoutSig]);
             }
             return {
                 signal,
