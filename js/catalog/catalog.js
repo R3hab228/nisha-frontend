@@ -101,7 +101,8 @@ window.cancelPrefetchItemImages = function(id) {
 // ==========================================
 
 function getCurrentSiteLang() {
-    let l = localStorage.getItem('nisha_lang') || localStorage.getItem('i18nextLng') || 'ru';
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let l = store ? (store.get('nisha_lang') || store.get('i18nextLng') || 'ru') : 'ru';
     l = l.substring(0, 2).toLowerCase();
     if (l === 'uk') l = 'ua';
     if (!['ru', 'ua', 'en'].includes(l)) l = 'ru';
@@ -711,29 +712,29 @@ async function safelySaveCatalogToStorage(items) {
         try {
             const saved = await window.idbSet('nisha_cached_db', items);
             if (saved) {
-                // Очищаем тяжелый дубликат из localStorage, освобождая 4-5MB под корзину, профиль и заказы
-                try { localStorage.removeItem('nisha_cached_db'); } catch (e) {}
+                // Очищаем тяжелый дубликат из storage, освобождая 4-5MB под корзину, профиль и заказы
+                if (window.storage) window.storage.remove('nisha_cached_db');
                 return;
             }
         } catch (idbErr) {
-            console.warn("[КАТАЛОГ] Ошибка сохранения в IndexedDB, используем localStorage:", idbErr);
+            console.warn("[КАТАЛОГ] Ошибка сохранения в IndexedDB, используем storage:", idbErr);
         }
     }
 
     // 2. Fallback для приватного режима или неподдерживающих браузеров
     try {
-        localStorage.setItem('nisha_cached_db', JSON.stringify(items));
+        if (window.storage) window.storage.setJSON('nisha_cached_db', items);
     } catch (e) {
-        console.warn("[КАТАЛОГ] Лимит localStorage превышен, пробуем компактное сохранение:", e);
+        console.warn("[КАТАЛОГ] Лимит storage превышен, пробуем компактное сохранение:", e);
         try {
             // Компактная версия: обрезаем description до 200 символов (достаточно для замеров в тултипах)
             const slim = items.map(item => {
                 if (!item.description || item.description.length <= 200) return item;
                 return { ...item, description: item.description.slice(0, 200) };
             });
-            localStorage.setItem('nisha_cached_db', JSON.stringify(slim));
+            if (window.storage) window.storage.setJSON('nisha_cached_db', slim);
         } catch (slimErr) {
-            console.warn("[КАТАЛОГ] Не удалось закэшировать каталог в localStorage:", slimErr);
+            console.warn("[КАТАЛОГ] Не удалось закэшировать каталог в storage:", slimErr);
         }
     }
 }
@@ -752,19 +753,14 @@ async function loadAllItems() {
     }
 
     if (!cachedItems) {
-        const cachedData = localStorage.getItem('nisha_cached_db');
-        if (cachedData) {
-            try {
-                cachedItems = JSON.parse(cachedData);
-                // Мигрируем кэш в IndexedDB и освобождаем localStorage
-                if (typeof window.idbSet === 'function' && Array.isArray(cachedItems) && cachedItems.length > 0) {
-                    window.idbSet('nisha_cached_db', cachedItems).then(() => {
-                        try { localStorage.removeItem('nisha_cached_db'); } catch (e) {}
-                    });
-                }
-            } catch (e) {
-                console.error("Ошибка кэша localStorage");
-                try { localStorage.removeItem('nisha_cached_db'); } catch (delErr) {}
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        cachedItems = store ? store.getJSON('nisha_cached_db', null) : null;
+        if (cachedItems) {
+            // Мигрируем кэш в IndexedDB и освобождаем storage
+            if (typeof window.idbSet === 'function' && Array.isArray(cachedItems) && cachedItems.length > 0) {
+                window.idbSet('nisha_cached_db', cachedItems).then(() => {
+                    if (window.storage) window.storage.remove('nisha_cached_db');
+                });
             }
         }
     }
@@ -780,7 +776,7 @@ async function loadAllItems() {
                 console.warn("[КЭШ КАТАЛОГА] Обнаружены поврежденные данные без фото/описания, очищаем локальный кэш...");
                 cachedItems = null;
                 if (typeof window.idbDel === 'function') window.idbDel('nisha_cached_db');
-                try { localStorage.removeItem('nisha_cached_db'); } catch (e) {}
+                if (window.storage) window.storage.remove('nisha_cached_db');
             } else {
                 window.allItems = cachedItems;
                 if (window.searchWorker && typeof window.searchWorker.setItems === 'function') {
@@ -793,7 +789,7 @@ async function loadAllItems() {
             console.error("Ошибка парсинга кэша"); 
             cachedItems = null;
             if (typeof window.idbDel === 'function') window.idbDel('nisha_cached_db');
-            try { localStorage.removeItem('nisha_cached_db'); } catch (err) {}
+            if (window.storage) window.storage.remove('nisha_cached_db');
         }
     }
 
@@ -891,17 +887,18 @@ async function loadAllItems() {
                 dbHistory.push({ id: histItem.id, name: histItem.name, price: histItem.price, img: img });
             }
         });
-        localStorage.setItem('nisha_history', JSON.stringify(dbHistory));
+        if (window.storage) window.storage.setJSON('nisha_history', dbHistory);
         if (typeof renderHistory === 'function') renderHistory();
     }
 
     // 4. СИНХРОНИЗАЦИЯ КОРЗИНЫ
-    let userCart = (typeof cart !== 'undefined') ? cart : (window.cart || JSON.parse(localStorage.getItem('nisha_cart') || '[]'));
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let userCart = (typeof cart !== 'undefined') ? cart : (window.cart || (store ? store.getJSON('nisha_cart', []) : []));
     const validCart = userCart.filter(cItem => window.allItems.some(dbItem => dbItem.id === cItem.id));
     if (validCart.length !== userCart.length) {
         if (typeof cart !== 'undefined') cart = validCart;
         window.cart = validCart;
-        localStorage.setItem('nisha_cart', JSON.stringify(validCart));
+        if (store) store.setJSON('nisha_cart', validCart);
         if (typeof updateCartUI === 'function') updateCartUI();
     }
 
@@ -1047,11 +1044,8 @@ function removeSoldItemFromCart(itemId, itemName) {
         if (typeof setActiveCart === 'function') {
             setActiveCart(currentCart);
         } else {
-            if (window.storage && typeof window.storage.setJSON === 'function') {
-                window.storage.setJSON('nisha_cart', currentCart);
-            } else {
-                localStorage.setItem('nisha_cart', JSON.stringify(currentCart));
-            }
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            if (store) store.setJSON('nisha_cart', currentCart);
             window.cart = currentCart;
         }
         if (typeof syncCartToServer === 'function') syncCartToServer();
@@ -2084,9 +2078,8 @@ function renderNextBatch(targetMobileCount = 0) {
     
     if (!window._seenItemsSet) {
         try {
-            const parsedSeen = (window.storage && typeof window.storage.getJSON === 'function')
-                ? window.storage.getJSON('nisha_seen_items', [])
-                : (JSON.parse(localStorage.getItem('nisha_seen_items')) || []);
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const parsedSeen = store ? store.getJSON('nisha_seen_items', []) : [];
             window._seenItemsSet = new Set(Array.isArray(parsedSeen) ? parsedSeen.map(String) : []);
         } catch (e) {
             window._seenItemsSet = new Set();
@@ -2589,8 +2582,8 @@ function flushPendingBroadcast() {
     if (!bHtml || bHtml === 'null' || (typeof bHtml === 'string' && !bHtml.trim())) return;
 
     setTimeout(() => {
-        tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
-            if (bId) localStorage.setItem('nisha_last_broadcast', bId);
+        tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЙТЬ ]', () => {
+            if (bId && window.storage) window.storage.set('nisha_last_broadcast', bId);
         });
     }, 3000);
 }
@@ -2598,13 +2591,13 @@ window.flushPendingBroadcast = flushPendingBroadcast;
 
 // Тур онбординга
 async function startOnboardingTour() {
-    if (!localStorage.getItem('nisha_rules_accepted') || 
-        localStorage.getItem('nisha_tour_done')) return;
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (!store || !store.get('nisha_rules_accepted') || store.get('nisha_tour_done')) return;
 
     // ПРОВЕРКА: Если пользователь уже пролистал страницу (не находится в верхнем углу):
     const initScroll = window.scrollY || document.documentElement.scrollTop || 0;
     if (initScroll > 30) {
-        localStorage.setItem('nisha_tour_done', 'true');
+        if (store) store.set('nisha_tour_done', 'true');
         flushPendingBroadcast();
         return;
     }
@@ -2646,7 +2639,7 @@ async function startOnboardingTour() {
         const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         if (currentScrollY > 30) {
             clearInterval(checkAndRun);
-            localStorage.setItem('nisha_tour_done', 'true');
+            if (store) store.set('nisha_tour_done', 'true');
             flushPendingBroadcast();
             return;
         }
@@ -2690,7 +2683,7 @@ async function startOnboardingTour() {
             doneBtnText: typeof i18next !== 'undefined' ? i18next.t('tour.done') : 'Готово',
             steps: activeSteps,
             onDestroyStarted: () => {
-                localStorage.setItem('nisha_tour_done', 'true');
+                if (store) store.set('nisha_tour_done', 'true');
                 driverObj.destroy();
                 window._activeDriverTour = null;
                 flushPendingBroadcast();
@@ -2703,14 +2696,16 @@ async function startOnboardingTour() {
 window.startOnboardingTour = startOnboardingTour;
 
 // Защита: если юзер при входе сразу начинает скроллить страницу — не показываем подсказки онбординга
-if (!localStorage.getItem('nisha_tour_done')) {
+const _tourStore = window.storage || (typeof storage !== 'undefined' ? storage : null);
+if (!_tourStore || !_tourStore.get('nisha_tour_done')) {
     const tourScrollCtrl = new AbortController();
     const onEarlyTourScroll = function() {
         const y = window.scrollY || document.documentElement.scrollTop || 0;
         if (y > 30) {
             tourScrollCtrl.abort();
-            if (!localStorage.getItem('nisha_tour_done')) {
-                localStorage.setItem('nisha_tour_done', 'true');
+            const s = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            if (s && !s.get('nisha_tour_done')) {
+                s.set('nisha_tour_done', 'true');
                 if (window._activeDriverTour) {
                     try { window._activeDriverTour.destroy(); } catch (e) {}
                     window._activeDriverTour = null;

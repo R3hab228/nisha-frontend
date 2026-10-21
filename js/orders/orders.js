@@ -39,7 +39,8 @@ function openOrdersModal() {
         if (listArea) listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace; padding: 30px;">Введите номер телефона для поиска...</div>';
         updateOrderTabCounters();
 
-        const lastPhone = localStorage.getItem('nisha_last_phone');
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const lastPhone = store ? store.get('nisha_last_phone') : null;
         const phoneInput = document.getElementById('ordersSearchPhone');
         if (lastPhone && phoneInput && !phoneInput.value) {
             phoneInput.value = lastPhone;
@@ -142,13 +143,14 @@ async function fetchMyOrders() {
             if (activeProfile?.phone) candidatePhones.add(activeProfile.phone);
             if (activeUser?.phone) candidatePhones.add(activeUser.phone);
             if (activeUser?.user_metadata?.phone) candidatePhones.add(activeUser.user_metadata.phone);
-            const lastPhone = localStorage.getItem('nisha_last_phone');
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const lastPhone = store ? store.get('nisha_last_phone') : null;
             if (lastPhone) candidatePhones.add(lastPhone);
-            const pendingPhone = localStorage.getItem('nisha_pending_otp_phone');
+            const pendingPhone = store ? store.get('nisha_pending_otp_phone') : null;
             if (pendingPhone) candidatePhones.add(pendingPhone);
-            const chkData = window.storage ? window.storage.getJSON('nisha_checkout_data', {}) : {};
+            const chkData = store ? store.getJSON('nisha_checkout_data', {}) : {};
             if (chkData && chkData.phone) candidatePhones.add(chkData.phone);
-            const cachedLocal = window.storage ? window.storage.getJSON('nisha_cached_orders', []) : [];
+            const cachedLocal = store ? store.getJSON('nisha_cached_orders', []) : [];
             if (Array.isArray(cachedLocal)) {
                 cachedLocal.forEach(co => { if (co && co.phone) candidatePhones.add(co.phone); });
             }
@@ -228,7 +230,7 @@ async function fetchMyOrders() {
                             });
                             if (added) {
                                 window.globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); else localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
+                                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
                                 updateOrderTabCounters();
                                 ensureOrderImagesLoaded();
                                 renderFilteredOrders();
@@ -240,7 +242,7 @@ async function fetchMyOrders() {
 
             window.globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             if (window.globalOrdersData.length > 0) {
-                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); else localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
+                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
             }
         } catch (e) {
             fetchError = e;
@@ -268,7 +270,7 @@ async function fetchMyOrders() {
         fetchError = error;
 
         if (window.globalOrdersData.length > 0) {
-            try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); else localStorage.setItem('nisha_cached_orders', JSON.stringify(window.globalOrdersData)); } catch(e) {}
+            try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
         }
     }
 

@@ -174,8 +174,8 @@ window.addEventListener('resize', () => {
 // Умный сбор отзывов за полученные посылки
 function promptOrderReview(orderId, itemName, itemImage, itemId) {
     if (orderId) {
-        let reviewedOrders = [];
-        try { reviewedOrders = window.storage ? window.storage.getJSON('nisha_reviewed_orders', []) : JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
         if (Array.isArray(reviewedOrders) && reviewedOrders.includes(orderId)) {
             showToast('Отзыв по этому заказу уже оставлен.', 'info');
             return;
@@ -224,8 +224,8 @@ async function submitAutoReview() {
     const itemId = document.getElementById('autoReviewItemId')?.value;
 
     if (orderId) {
-        let reviewedOrders = [];
-        try { reviewedOrders = window.storage ? window.storage.getJSON('nisha_reviewed_orders', []) : JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
         if (Array.isArray(reviewedOrders) && reviewedOrders.includes(orderId)) {
             showToast('Отзыв по этому заказу уже оставлен.', 'info');
             closeModal('autoReviewModal');
@@ -265,13 +265,13 @@ async function submitAutoReview() {
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
             showToast('Отзыв опубликован! Спасибо.', 'success');
-            let reviewedOrders = [];
-            try { reviewedOrders = window.storage ? window.storage.getJSON('nisha_reviewed_orders', []) : JSON.parse(localStorage.getItem('nisha_reviewed_orders') || '[]'); } catch(e) {}
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            let reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
             if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
             if (orderId && !reviewedOrders.includes(orderId)) {
                 reviewedOrders.push(orderId);
             }
-            try { if (window.storage) window.storage.setJSON('nisha_reviewed_orders', reviewedOrders); else localStorage.setItem('nisha_reviewed_orders', JSON.stringify(reviewedOrders)); } catch(e) {}
+            if (store) store.setJSON('nisha_reviewed_orders', reviewedOrders);
             closeModal('autoReviewModal');
             if (typeof renderFilteredOrders === 'function') {
                 renderFilteredOrders();
@@ -290,10 +290,11 @@ function skipAutoReview() {
     const orderId = document.getElementById('autoReviewOrderId')?.value;
     if (orderId) {
         try {
-            let dismissedOrders = JSON.parse(localStorage.getItem('nisha_dismissed_reviews') || '[]');
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            let dismissedOrders = store ? store.getJSON('nisha_dismissed_reviews', []) : [];
             if (!Array.isArray(dismissedOrders)) dismissedOrders = [];
             if (!dismissedOrders.includes(orderId)) dismissedOrders.push(orderId);
-            localStorage.setItem('nisha_dismissed_reviews', JSON.stringify(dismissedOrders));
+            if (store) store.setJSON('nisha_dismissed_reviews', dismissedOrders);
         } catch(e) {}
     }
     closeModal('autoReviewModal');

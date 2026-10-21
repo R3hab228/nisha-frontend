@@ -48,23 +48,53 @@
     }
 
     function createTimeoutSignal(timeoutMs, externalSignal) {
-        if (
-            typeof AbortSignal !== 'undefined' &&
-            typeof AbortSignal.timeout === 'function' &&
-            (!externalSignal || typeof AbortSignal.any === 'function')
-        ) {
-            const timeoutSig = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : null;
-            let signal = timeoutSig || externalSignal || undefined;
-            if (timeoutSig && externalSignal) {
-                signal = AbortSignal.any([externalSignal, timeoutSig]);
-            }
+        if (!timeoutMs && !externalSignal) {
             return {
-                signal,
-                isTimedOut: () => Boolean(timeoutSig && timeoutSig.aborted),
+                signal: undefined,
+                isTimedOut: () => false,
                 cleanup: () => {}
             };
         }
 
+        // Современный нативный AbortSignal.timeout(ms) без ручного setTimeout + controller.abort()
+        if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+            const timeoutSig = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : null;
+            if (!externalSignal) {
+                return {
+                    signal: timeoutSig || undefined,
+                    isTimedOut: () => Boolean(timeoutSig && timeoutSig.aborted),
+                    cleanup: () => {}
+                };
+            }
+            if (typeof AbortSignal.any === 'function') {
+                return {
+                    signal: timeoutSig ? AbortSignal.any([externalSignal, timeoutSig]) : externalSignal,
+                    isTimedOut: () => Boolean(timeoutSig && timeoutSig.aborted),
+                    cleanup: () => {}
+                };
+            }
+            const combinedCtrl = new AbortController();
+            const cleanupCtrl = new AbortController();
+            const onAbort = () => {
+                cleanupCtrl.abort();
+                combinedCtrl.abort();
+            };
+            if (externalSignal.aborted || (timeoutSig && timeoutSig.aborted)) {
+                combinedCtrl.abort();
+            } else {
+                externalSignal.addEventListener('abort', onAbort, { once: true, signal: cleanupCtrl.signal });
+                if (timeoutSig) {
+                    timeoutSig.addEventListener('abort', onAbort, { once: true, signal: cleanupCtrl.signal });
+                }
+            }
+            return {
+                signal: combinedCtrl.signal,
+                isTimedOut: () => Boolean(timeoutSig && timeoutSig.aborted),
+                cleanup: () => cleanupCtrl.abort()
+            };
+        }
+
+        // Запасной fallback для устаревших окружений без AbortSignal.timeout
         const controller = new AbortController();
         let timedOut = false;
 

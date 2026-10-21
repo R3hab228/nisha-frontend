@@ -94,7 +94,8 @@ function getUserPhone() {
     if (activeUser && profile?.phone) {
         return profile.phone.trim();
     }
-    return (localStorage.getItem('nisha_last_phone') || '').trim();
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    return (store ? store.get('nisha_last_phone', '') : '').trim();
 }
 window.getUserPhone = getUserPhone;
 
@@ -104,7 +105,8 @@ function getUserTg() {
     if (activeUser && profile?.tg) {
         return profile.tg.trim();
     }
-    return (localStorage.getItem('nisha_last_tg') || '').trim();
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    return (store ? store.get('nisha_last_tg', '') : '').trim();
 }
 window.getUserTg = getUserTg;
 
@@ -227,7 +229,7 @@ async function checkPhoneAuth() {
             // Номер уже подтвержден
             otpVerified = true;
             window.otpVerified = true;
-            try { localStorage.setItem('nisha_last_phone', cleanPhone); } catch(e) {}
+            if (window.storage) window.storage.set('nisha_last_phone', cleanPhone);
             if (btnSubmit) {
                 btnSubmit.style.opacity = '1';
                 btnSubmit.style.pointerEvents = 'auto';
@@ -431,10 +433,11 @@ document.addEventListener('visibilitychange', () => {
         if (typeof window._checkActiveOtp === 'function') {
             window._checkActiveOtp();
         }
-        if (typeof window.checkPendingPhoneVerification === 'function' && localStorage.getItem('nisha_pending_otp_phone')) {
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (typeof window.checkPendingPhoneVerification === 'function' && store && store.get('nisha_pending_otp_phone')) {
             window.checkPendingPhoneVerification();
         }
-        if (typeof window.checkPendingTgVerification === 'function' && localStorage.getItem('nisha_pending_otp_tg')) {
+        if (typeof window.checkPendingTgVerification === 'function' && store && store.get('nisha_pending_otp_tg')) {
             window.checkPendingTgVerification();
         }
     }

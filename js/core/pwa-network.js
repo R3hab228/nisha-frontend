@@ -47,9 +47,8 @@ if ('serviceWorker' in navigator) {
     let updateModalShownInPage = false;
 
     window.addEventListener('load', () => {
-        try {
-            localStorage.setItem('nisha_sw_current_bundle', APP_SW_VERSION);
-        } catch (e) {}
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store) store.set('nisha_sw_current_bundle', APP_SW_VERSION);
 
         navigator.serviceWorker.register(SW_SCRIPT_URL, { updateViaCache: 'none' }).then(registration => {
             console.log('[PWA] SW зарегистрирован');
@@ -68,7 +67,7 @@ if ('serviceWorker' in navigator) {
                         // Если пользователь уже нажал "Обновить сейчас" в этой сессии или менее 10 минут назад — не показываем повторно
                         try {
                             if (sessionStorage.getItem('nisha_sw_update_reloaded') === '1') return;
-                            const lastUpdateTs = parseInt(localStorage.getItem('nisha_sw_updated_ts') || '0', 10);
+                            const lastUpdateTs = parseInt(store ? store.get('nisha_sw_updated_ts', '0') : '0', 10);
                             if (lastUpdateTs && (Date.now() - lastUpdateTs) < 10 * 60 * 1000) return;
                         } catch (e) {}
 
@@ -76,15 +75,11 @@ if ('serviceWorker' in navigator) {
                         // плашка не нужна (воркер тихо активируется в фоне)
                         const workerVersion = await queryServiceWorkerVersion(installingWorker);
                         if (!workerVersion || workerVersion === APP_SW_VERSION) {
-                            try {
-                                localStorage.setItem('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
-                            } catch (e) {}
+                            if (store) store.set('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
                             return;
                         }
 
-                        try {
-                            if (localStorage.getItem('nisha_sw_ack_version') === workerVersion) return;
-                        } catch (e) {}
+                        if (store && store.get('nisha_sw_ack_version') === workerVersion) return;
 
                         updateModalShownInPage = true;
                         console.log('[PWA] Найдено новое обновление:', workerVersion);
@@ -97,8 +92,10 @@ if ('serviceWorker' in navigator) {
                                 async () => {
                                     try {
                                         sessionStorage.setItem('nisha_sw_update_reloaded', '1');
-                                        localStorage.setItem('nisha_sw_updated_ts', String(Date.now()));
-                                        localStorage.setItem('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
+                                        if (store) {
+                                            store.set('nisha_sw_updated_ts', String(Date.now()));
+                                            store.set('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
+                                        }
                                     } catch (e) {}
 
                                     try {

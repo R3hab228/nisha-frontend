@@ -4,11 +4,8 @@
 
 // Глобальное состояние корзины
 if (!window.cart) {
-    try {
-        window.cart = JSON.parse(localStorage.getItem('nisha_cart') || '[]');
-    } catch (e) {
-        window.cart = [];
-    }
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    window.cart = store ? store.getJSON('nisha_cart', []) : [];
 }
 var cart = window.cart;
 
@@ -126,7 +123,8 @@ function setActiveCart(newCart) {
     if (window.store && typeof window.store.set === 'function') {
         window.store.set('cart', newCart);
     } else {
-        localStorage.setItem('nisha_cart', JSON.stringify(newCart));
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store) store.setJSON('nisha_cart', newCart);
     }
 }
 
@@ -1135,10 +1133,10 @@ async function openCheckoutModal() {
         const draftRestored = restoreCheckoutDraft();
         if (!draftRestored) {
             // 2. Если черновика нет, подтягиваем последние сохраненные данные
-            const savedDataRaw = localStorage.getItem('nisha_checkout_data');
-            if (savedDataRaw) {
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const saved = store ? store.getJSON('nisha_checkout_data', null) : null;
+            if (saved && typeof saved === 'object') {
                 try {
-                    const saved = JSON.parse(savedDataRaw);
                     if (document.getElementById('orderName')) document.getElementById('orderName').value = saved.name || '';
                     if (document.getElementById('orderPhone')) document.getElementById('orderPhone').value = saved.phone || '';
                     if (document.getElementById('orderCity')) document.getElementById('orderCity').value = saved.city || '';
@@ -1270,7 +1268,8 @@ async function submitOrder() {
         return;
     }
 
-    const savedEmailPreference = localStorage.getItem('nisha_email_preference');
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    const savedEmailPreference = store ? store.get('nisha_email_preference') : null;
     
     if (savedEmailPreference === 'skipped') {
         return await executeOrderFinal('');
@@ -1281,7 +1280,7 @@ async function submitOrder() {
 
     const user = getCurrentUser();
     if (user && user.email) {
-        localStorage.setItem('nisha_email_preference', user.email);
+        if (store) store.set('nisha_email_preference', user.email);
         return await executeOrderFinal(user.email);
     }
 
@@ -1300,6 +1299,7 @@ async function confirmEmailPrompt(wantsEmail) {
     if (isOrderSubmitting) return;
     const prompt = document.getElementById('emailPromptOverlay');
     const emailInput = document.getElementById('promptEmailInput');
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     let finalEmail = '';
 
     if (wantsEmail) {
@@ -1309,9 +1309,9 @@ async function confirmEmailPrompt(wantsEmail) {
             showToast('Введите корректный E-mail!', 'error');
             return; 
         }
-        localStorage.setItem('nisha_email_preference', finalEmail);
+        if (store) store.set('nisha_email_preference', finalEmail);
     } else {
-        localStorage.setItem('nisha_email_preference', 'skipped');
+        if (store) store.set('nisha_email_preference', 'skipped');
     }
 
     if (prompt) prompt.style.display = 'none'; 
@@ -1368,7 +1368,9 @@ async function executeOrderFinal(emailToSave) {
         cityRef: cityRef,
         branchRef: branchRef
     };
-    localStorage.setItem('nisha_checkout_data', JSON.stringify(checkoutData));
+    if (window.storage && typeof window.storage.setJSON === 'function') {
+        window.storage.setJSON('nisha_checkout_data', checkoutData);
+    }
 
     try {
         const user = getCurrentUser();
@@ -1507,8 +1509,11 @@ async function executeOrderFinal(emailToSave) {
             });
         }
 
-        localStorage.setItem('nisha_last_phone', phone);
-        localStorage.setItem('nisha_last_order', Date.now());
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store) {
+            store.set('nisha_last_phone', phone);
+            store.set('nisha_last_order', Date.now());
+        }
 
         if (user && user.id && phone) {
             if (!handledViaAtomicServer) {
@@ -1524,7 +1529,7 @@ async function executeOrderFinal(emailToSave) {
         }
 
         try {
-            let cached = JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
+            let cached = store ? store.getJSON('nisha_cached_orders', []) : [];
             if (!Array.isArray(cached)) cached = [];
             const newOrderObj = {
                 id: orderId,
@@ -1538,7 +1543,7 @@ async function executeOrderFinal(emailToSave) {
                 created_at: createdAtIso
             };
             cached = [newOrderObj, ...cached.filter(c => c && c.id !== orderId)];
-            localStorage.setItem('nisha_cached_orders', JSON.stringify(cached));
+            if (store) store.setJSON('nisha_cached_orders', cached);
         } catch (e) {}
 
         if (Array.isArray(window.allItems) && Array.isArray(finalOrderItems)) {
@@ -1710,7 +1715,8 @@ async function applyPromoCode() {
             cartTotal: originalTotal
         }, { timeout: 10000, retries: 1 });
 
-        const currentLang = localStorage.getItem('nisha_lang') || 'ru';
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const currentLang = store ? store.get('nisha_lang', 'ru') : 'ru';
         if (typeof i18next !== 'undefined' && i18next.language !== currentLang) {
             await i18next.changeLanguage(currentLang);
         }

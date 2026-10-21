@@ -126,11 +126,12 @@ async function openProductModalById(itemId) {
         if (window._seenItemsSet) {
             window._seenItemsSet.add(String(itemId));
         }
-        let seenItemsIds = window.storage ? window.storage.getJSON('nisha_seen_items', []) : JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        let seenItemsIds = store ? store.getJSON('nisha_seen_items', []) : [];
         if (!seenItemsIds.includes(itemId)) {
             seenItemsIds.push(itemId);
             if (seenItemsIds.length > 200) seenItemsIds = seenItemsIds.slice(-200); 
-            localStorage.setItem('nisha_seen_items', JSON.stringify(seenItemsIds));
+            if (store) store.setJSON('nisha_seen_items', seenItemsIds);
         }
 
         if (typeof closeModal === 'function') {
@@ -343,14 +344,13 @@ function openProductModal(item) {
         viewCount.innerText = item.views_count || 0;
         
         if (sb) {
-            let viewedItems = (window.storage && typeof window.storage.getJSON === 'function')
-                ? window.storage.getJSON('nisha_added_views', [])
-                : JSON.parse(localStorage.getItem('nisha_added_views') || '[]');
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            let viewedItems = store ? store.getJSON('nisha_added_views', []) : [];
             
             if (!viewedItems.includes(item.id)) {
                 let visitorId = getFingerprint();
                 if (!visitorId || visitorId.startsWith('guest_')) {
-                    visitorId = localStorage.getItem('nisha_visitor_id') || ('user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replace(/-/g, '').slice(0, 9) : Date.now().toString(36))));
+                    visitorId = (store ? store.get('nisha_visitor_id') : null) || ('user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replace(/-/g, '').slice(0, 9) : Date.now().toString(36))));
                 }
                 const currentUser = getUser();
                 const viewerId = currentUser ? currentUser.id : visitorId;
@@ -370,11 +370,7 @@ function openProductModal(item) {
                             window.updateCardDOM(item);
                         }
                         viewedItems.push(item.id);
-                        if (window.storage && typeof window.storage.setJSON === 'function') {
-                            window.storage.setJSON('nisha_added_views', viewedItems);
-                        } else {
-                            localStorage.setItem('nisha_added_views', JSON.stringify(viewedItems));
-                        }
+                        if (store) store.setJSON('nisha_added_views', viewedItems);
                     }
                 });
             }
@@ -572,7 +568,8 @@ function openProductModal(item) {
         scoredCandidates.sort((a, b) => b.score - a.score);
 
         const similar = scoredCandidates.slice(0, 6).map(c => c.item);
-        let seenItemsIds = window.storage ? window.storage.getJSON('nisha_seen_items', []) : JSON.parse(localStorage.getItem('nisha_seen_items') || '[]');
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        let seenItemsIds = store ? store.getJSON('nisha_seen_items', []) : [];
             
         if (similar.length > 0) {
             let cardsHTML = '';
@@ -1003,7 +1000,8 @@ window.shareItem = shareItem;
 // ==========================================
 
 function addToHistory(item) {
-    let hist = window.storage ? window.storage.getJSON('nisha_history', []) : JSON.parse(localStorage.getItem('nisha_history') || '[]');
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let hist = store ? store.getJSON('nisha_history', []) : [];
     hist = hist.filter(i => i.id !== item.id);
     const img = getOptimizedImg(item, true) || ((item.images && item.images.length > 0) ? item.images[0] : '');
     
@@ -1018,13 +1016,14 @@ function addToHistory(item) {
     
     if (hist.length > 30) hist = hist.slice(0, 30); 
     
-    if (window.storage) window.storage.setJSON('nisha_history', hist); else localStorage.setItem('nisha_history', JSON.stringify(hist));
+    if (store) store.setJSON('nisha_history', hist);
     renderHistory();
 }
 window.addToHistory = addToHistory;
 
 function renderHistory() {
-    let hist = window.storage ? window.storage.getJSON('nisha_history', []) : JSON.parse(localStorage.getItem('nisha_history') || '[]');
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let hist = store ? store.getJSON('nisha_history', []) : [];
     const container = document.getElementById('historyGrid');
     const section = document.getElementById('historySection');
     
@@ -1035,7 +1034,7 @@ function renderHistory() {
         const validHist = hist.filter(h => catalog.some(dbItem => dbItem.id === h.id));
         if (validHist.length !== hist.length) {
             hist = validHist;
-            if (window.storage) window.storage.setJSON('nisha_history', hist); else localStorage.setItem('nisha_history', JSON.stringify(hist));
+            if (store) store.setJSON('nisha_history', hist);
         }
     }
     
@@ -1186,9 +1185,10 @@ window.toggleHistory = toggleHistory;
 function removeHistoryItem(event, itemId) {
     if (event) event.stopPropagation(); 
     
-    let hist = window.storage ? window.storage.getJSON('nisha_history', []) : JSON.parse(localStorage.getItem('nisha_history') || '[]');
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let hist = store ? store.getJSON('nisha_history', []) : [];
     hist = hist.filter(item => item.id !== itemId);
-    if (window.storage) window.storage.setJSON('nisha_history', hist); else localStorage.setItem('nisha_history', JSON.stringify(hist));
+    if (store) store.setJSON('nisha_history', hist);
     
     const currentUser = getUser();
     const sb = getSupabase();
@@ -1242,10 +1242,8 @@ async function submitQuestion(itemId) {
     }
 
     const today = new Date().toLocaleDateString('en-CA');
-    let questionData = { date: '', count: 0 };
-    try {
-        questionData = JSON.parse(localStorage.getItem('nisha_questions') || '{"date":"","count":0}');
-    } catch(e) {}
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let questionData = store ? store.getJSON('nisha_questions', { date: '', count: 0 }) : { date: '', count: 0 };
     
     if (questionData.date !== today) questionData = { date: today, count: 0 };
     if (questionData.count >= 2) {
@@ -1270,7 +1268,7 @@ async function submitQuestion(itemId) {
 
         if (data && data.success) {
             questionData.count += 1;
-            localStorage.setItem('nisha_questions', JSON.stringify(questionData));
+            if (store) store.setJSON('nisha_questions', questionData);
             input.value = '';
             toggleQuestionForm(); 
             showToast('Вопрос отправлен!', 'success');
@@ -1795,7 +1793,8 @@ window.generateMeasurementSchemeSvg = generateMeasurementSchemeSvg;
 
 function showMeasurementSchemeModal(targetItem) {
     const item = targetItem || window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
-    const storedLang = typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_lang') : 'ru';
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    const storedLang = store ? store.get('nisha_lang', 'ru') : 'ru';
     const lang = (typeof getCurrentSiteLang === 'function' ? getCurrentSiteLang() : (storedLang || 'ru')).toLowerCase();
     const isUa = lang === 'ua' || lang === 'uk';
     const isEn = lang === 'en';

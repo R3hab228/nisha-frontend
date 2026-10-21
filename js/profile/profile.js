@@ -81,11 +81,12 @@ async function checkSession() {
                 
                 // Синхронизация языка из БД в браузер
                 if (userProfile.language) {
-                    const currentLang = localStorage.getItem('nisha_lang') || 'ru';
+                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                    const currentLang = store ? store.get('nisha_lang', 'ru') : 'ru';
                     if (userProfile.language !== currentLang) {
-                        localStorage.setItem('nisha_lang', userProfile.language);
+                        if (store) store.set('nisha_lang', userProfile.language);
                         const newFlag = userProfile.language === 'ru' ? '🇷🇺' : (userProfile.language === 'en' ? '🇬🇧' : '🇺🇦');
-                        localStorage.setItem('nisha_flag', newFlag);
+                        if (store) store.set('nisha_flag', newFlag);
                         if (typeof i18next !== 'undefined') {
                             i18next.changeLanguage(userProfile.language).then(() => {
                                 if (typeof updateContentLanguage === 'function') updateContentLanguage();
@@ -142,7 +143,8 @@ async function checkSession() {
             if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
 
             // Автоматическая привязка прошлых гостевых заказов при входе в аккаунт
-            const phoneToLink = uPhone || localStorage.getItem('nisha_last_phone') || '';
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const phoneToLink = uPhone || (store ? store.get('nisha_last_phone') : null) || '';
             if (phoneToLink && phoneToLink.replace(/[^\d]/g, '').length >= 9) {
                 window.apiClient.post('/api/link-orders', {
                     userId: currentUser.id,
@@ -151,17 +153,17 @@ async function checkSession() {
             }
 
             // Проверка ожидающих подтверждений (OTP)
-            if (localStorage.getItem('nisha_pending_otp_phone') && typeof checkPendingPhoneVerification === 'function') {
+            if (store && store.get('nisha_pending_otp_phone') && typeof checkPendingPhoneVerification === 'function') {
                 checkPendingPhoneVerification();
-                if (localStorage.getItem('nisha_pending_otp_phone') && !window.profileOtpPollInterval) {
+                if (store.get('nisha_pending_otp_phone') && !window.profileOtpPollInterval) {
                     window.profileOtpPollInterval = setInterval(() => {
                         checkPendingPhoneVerification();
                     }, 2000);
                 }
             }
-            if (localStorage.getItem('nisha_pending_otp_tg') && typeof checkPendingTgVerification === 'function') {
+            if (store && store.get('nisha_pending_otp_tg') && typeof checkPendingTgVerification === 'function') {
                 checkPendingTgVerification();
-                if (localStorage.getItem('nisha_pending_otp_tg') && !window.profileTgPollInterval) {
+                if (store.get('nisha_pending_otp_tg') && !window.profileTgPollInterval) {
                     window.profileTgPollInterval = setInterval(() => {
                         checkPendingTgVerification();
                     }, 2000);
@@ -194,12 +196,13 @@ async function checkSession() {
                             }
                         }
                         try {
-                            let cached = window.storage ? window.storage.getJSON('nisha_cached_orders', []) : JSON.parse(localStorage.getItem('nisha_cached_orders') || '[]');
+                            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                            let cached = store ? store.getJSON('nisha_cached_orders', []) : [];
                             if (Array.isArray(cached)) {
                                 const cIdx = cached.findIndex(o => o && o.id === payload.new.id);
                                 if (cIdx !== -1) {
                                     cached[cIdx] = { ...cached[cIdx], ...payload.new };
-                                    if (window.storage) window.storage.setJSON('nisha_cached_orders', cached); else localStorage.setItem('nisha_cached_orders', JSON.stringify(cached));
+                                    if (store) store.setJSON('nisha_cached_orders', cached);
                                 }
                             }
                         } catch (e) {}
@@ -271,7 +274,8 @@ async function checkSession() {
                     if (addedCount > 0) showToast('Корзины синхронизированы', 'success');
                 }
                 
-                if (window.storage) window.storage.setJSON('nisha_cart', localCart); else localStorage.setItem('nisha_cart', JSON.stringify(localCart));
+                const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                if (store) store.setJSON('nisha_cart', localCart);
                 if (typeof syncCartToServer === 'function') await syncCartToServer();
             } else {
                 if (localCart.length > 0 && typeof syncCartToServer === 'function') {
@@ -400,7 +404,8 @@ async function logout() {
     
     window.showingOnlyFavs = false;
     window.globalOrdersData = [];
-    try { localStorage.removeItem('nisha_cached_orders'); } catch (e) {}
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store) store.remove('nisha_cached_orders');
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
     
@@ -478,8 +483,11 @@ function clearPendingContactState(type) {
         window[cfg.pollVar] = null;
     }
     window[cfg.pendingVar] = null;
-    localStorage.removeItem(cfg.storagePending);
-    localStorage.removeItem(cfg.storageTime);
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store) {
+        store.remove(cfg.storagePending);
+        store.remove(cfg.storageTime);
+    }
 }
 
 function openTelegramBotDeepLink(tgLink) {
@@ -549,7 +557,8 @@ async function removeProfileContact(type) {
     }
 
     if (userProfile) userProfile[type] = null;
-    localStorage.removeItem(cfg.storageLast);
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store) store.remove(cfg.storageLast);
     clearPendingContactState(type);
 
     renderProfileContact(type, '');
@@ -568,8 +577,9 @@ function showContactInput(type, isModal = false) {
     const wrap = document.getElementById(`${prefix}${cfg.cap}InputWrap`);
     const input = document.getElementById(`${prefix}${cfg.cap}Input`);
     const saveBtn = document.querySelector(`#${prefix}${cfg.cap}InputWrap .win95-save-btn`);
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
 
-    if (saveBtn && localStorage.getItem(cfg.storagePending)) {
+    if (saveBtn && store && store.get(cfg.storagePending)) {
         saveBtn.disabled = true;
         saveBtn.innerHTML = getHourglass(14);
     } else if (saveBtn) {
@@ -641,10 +651,11 @@ async function checkPendingContactVerification(type) {
     if (isPhone ? (isCheckingPhoneOtp || isPhoneOtpCompleted) : (isCheckingTgOtp || isTgOtpCompleted)) return;
 
     const cfg = CONTACT_CONFIG[type];
-    const pendingVal = window[cfg.pendingVar] || localStorage.getItem(cfg.storagePending);
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    const pendingVal = window[cfg.pendingVar] || (store ? store.get(cfg.storagePending) : null);
     if (!pendingVal) return;
 
-    const startTime = parseInt(localStorage.getItem(cfg.storageTime) || '0', 10);
+    const startTime = parseInt((store ? store.get(cfg.storageTime, '0') : '0'), 10);
     if (startTime && (Date.now() - startTime > 120000)) {
         clearPendingContactState(type);
         resetContactSaveButtons(type);
@@ -698,12 +709,12 @@ async function checkPendingContactVerification(type) {
                         window.userProfile = userProfile;
                         const confirmedPhone = profData.phone || pendingVal;
                         userProfile.phone = confirmedPhone;
-                        localStorage.setItem('nisha_last_phone', confirmedPhone);
+                        if (store) store.set('nisha_last_phone', confirmedPhone);
                         renderProfilePhone(confirmedPhone);
 
                         if (profData.tg) {
                             userProfile.tg = profData.tg;
-                            localStorage.setItem('nisha_last_tg', profData.tg);
+                            if (store) store.set('nisha_last_tg', profData.tg);
                             renderProfileTg(profData.tg);
                             hasLinkedTg = true;
                             clearPendingContactState('tg');
@@ -721,7 +732,7 @@ async function checkPendingContactVerification(type) {
                         if (!userProfile) userProfile = {};
                         window.userProfile = userProfile;
                         userProfile.phone = pendingVal;
-                        localStorage.setItem('nisha_last_phone', pendingVal);
+                        if (store) store.set('nisha_last_phone', pendingVal);
                         renderProfilePhone(pendingVal);
                     }
                     window._hasLinkedTgOnPhoneVerify = hasLinkedTg;
@@ -731,7 +742,7 @@ async function checkPendingContactVerification(type) {
                 if (!userProfile) userProfile = {};
                 window.userProfile = userProfile;
                 userProfile.phone = pendingVal;
-                localStorage.setItem('nisha_last_phone', pendingVal);
+                if (store) store.set('nisha_last_phone', pendingVal);
                 renderProfilePhone(pendingVal);
             }
 
@@ -756,7 +767,7 @@ async function checkPendingContactVerification(type) {
             if (!userProfile) userProfile = {};
             window.userProfile = userProfile;
             userProfile.tg = formattedTg;
-            localStorage.setItem('nisha_last_tg', formattedTg);
+            if (store) store.set('nisha_last_tg', formattedTg);
             renderProfileTg(formattedTg);
             const msg = typeof i18next !== 'undefined' ? i18next.t('messages.tg_verified', { defaultValue: 'Telegram подтвержден!' }) : 'Telegram подтвержден!';
             showToast(msg, 'success');
@@ -896,8 +907,11 @@ async function saveContactFromInput(type, isModal = false) {
     }
 
     window[cfg.pendingVar] = clean;
-    localStorage.setItem(cfg.storagePending, clean);
-    localStorage.setItem(cfg.storageTime, Date.now().toString());
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store) {
+        store.set(cfg.storagePending, clean);
+        store.set(cfg.storageTime, Date.now().toString());
+    }
 
     openTelegramBotDeepLink(tgLink);
     showToast(
@@ -918,10 +932,11 @@ window.saveTgFromInput = (isModal = false) => saveContactFromInput('tg', isModal
 
 // Проверка ожидающих OTP при смене вкладки и фокусе
 function triggerPendingContactChecks() {
-    if (window.pendingOtpPhone || localStorage.getItem('nisha_pending_otp_phone')) {
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (window.pendingOtpPhone || (store && store.get('nisha_pending_otp_phone'))) {
         checkPendingPhoneVerification();
     }
-    if (window.pendingOtpTg || localStorage.getItem('nisha_pending_otp_tg')) {
+    if (window.pendingOtpTg || (store && store.get('nisha_pending_otp_tg'))) {
         checkPendingTgVerification();
     }
 }
@@ -1084,7 +1099,8 @@ function initAuthListener() {
         } else if (event === 'SIGNED_OUT') {
             console.log('[AUTH] Выполнен выход из аккаунта.');
             window.globalOrdersData = [];
-            try { localStorage.removeItem('nisha_cached_orders'); } catch (e) {}
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            if (store) store.remove('nisha_cached_orders');
             currentUser = null;
             window.currentUser = null;
             userProfile = null;

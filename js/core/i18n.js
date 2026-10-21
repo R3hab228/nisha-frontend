@@ -57,10 +57,12 @@ async function changeLanguage(lng) {
     if (typeof i18next !== 'undefined') {
         await ensureLanguageLoaded(lng);
         i18next.changeLanguage(lng).then(() => {
-            // ЖЕЛЕЗОБЕТОННОЕ сохранение:
-            localStorage.setItem('nisha_lang', lng); 
-            // Сохраняем языковой флаг для плагина i18next
-            localStorage.setItem('i18nextLng', lng); 
+            // ЖЕЛЕЗОБЕТОННОЕ сохранение через единый storage:
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            if (store) {
+                store.set('nisha_lang', lng); 
+                store.set('i18nextLng', lng); 
+            } 
             document.documentElement.lang = (lng === 'ua' ? 'uk' : (lng || 'ru'));
             
             updateContentLanguage();

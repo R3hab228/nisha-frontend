@@ -301,7 +301,7 @@ if (typeof globalThis !== 'undefined') globalThis.clearElement = clearElement;
 
 // --- ВАЛЮТА И ФОРМАТИРОВАНИЕ ---
 function getCurrency() {
-    const lang = localStorage.getItem('nisha_lang') || 'ru';
+    const lang = storage.get('nisha_lang', 'ru');
     return lang === 'en' ? 'UAH' : 'грн';
 }
 window.getCurrency = getCurrency;
@@ -391,6 +391,8 @@ function getOptimizedImg(item, thumb = true) {
 window.getOptimizedImg = getOptimizedImg;
 
 // --- ЕДИНЫЙ БЕЗОПАСНЫЙ ХЕЛПЕР LOCALSTORAGE (storage.getJSON / storage.setJSON) ---
+const _memStorageFallback = {};
+
 function getLocalStore() {
     try {
         if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
@@ -407,9 +409,10 @@ const storage = {
     getJSON(key, defaultValue = null) {
         try {
             const store = getLocalStore();
-            if (!store) return defaultValue;
-            const raw = store.getItem(key);
-            if (raw === null || raw === undefined || raw === '') return defaultValue;
+            const raw = store ? store.getItem(key) : _memStorageFallback[key];
+            if (raw === null || raw === undefined || raw === '') {
+                return _memStorageFallback[key] !== undefined ? JSON.parse(_memStorageFallback[key]) : defaultValue;
+            }
             const parsed = JSON.parse(raw);
             return parsed !== null && parsed !== undefined ? parsed : defaultValue;
         } catch (e) {
@@ -418,17 +421,24 @@ const storage = {
     },
 
     setJSON(key, value) {
+        const jsonStr = JSON.stringify(value);
         const store = getLocalStore();
-        if (!store) return false;
+        if (!store) {
+            _memStorageFallback[key] = jsonStr;
+            return true;
+        }
         try {
-            store.setItem(key, JSON.stringify(value));
+            store.setItem(key, jsonStr);
+            delete _memStorageFallback[key];
             return true;
         } catch (e) {
             try {
                 if (typeof cleanStorageLimits === 'function') cleanStorageLimits();
-                store.setItem(key, JSON.stringify(value));
+                store.setItem(key, jsonStr);
+                delete _memStorageFallback[key];
                 return true;
             } catch (retryErr) {
+                _memStorageFallback[key] = jsonStr;
                 return false;
             }
         }
@@ -437,30 +447,66 @@ const storage = {
     get(key, defaultValue = null) {
         try {
             const store = getLocalStore();
-            if (!store) return defaultValue;
-            const val = store.getItem(key);
-            return val !== null ? val : defaultValue;
+            if (store) {
+                const val = store.getItem(key);
+                if (val !== null && val !== undefined) return val;
+            }
+            return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : defaultValue;
         } catch (e) {
-            return defaultValue;
+            return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : defaultValue;
         }
     },
 
     set(key, value) {
+        const valStr = String(value);
+        const store = getLocalStore();
+        if (!store) {
+            _memStorageFallback[key] = valStr;
+            return true;
+        }
+        try {
+            store.setItem(key, valStr);
+            delete _memStorageFallback[key];
+            return true;
+        } catch (e) {
+            try {
+                if (typeof cleanStorageLimits === 'function') cleanStorageLimits();
+                store.setItem(key, valStr);
+                delete _memStorageFallback[key];
+                return true;
+            } catch (retryErr) {
+                _memStorageFallback[key] = valStr;
+                return false;
+            }
+        }
+    },
+
+    remove(key) {
+        delete _memStorageFallback[key];
         try {
             const store = getLocalStore();
-            if (!store) return false;
-            store.setItem(key, String(value));
+            if (store) store.removeItem(key);
             return true;
         } catch (e) {
             return false;
         }
     },
 
-    remove(key) {
+    has(key) {
         try {
             const store = getLocalStore();
-            if (!store) return false;
-            store.removeItem(key);
+            if (store && store.getItem(key) !== null) return true;
+            return _memStorageFallback[key] !== undefined;
+        } catch (e) {
+            return _memStorageFallback[key] !== undefined;
+        }
+    },
+
+    clear() {
+        for (const k in _memStorageFallback) delete _memStorageFallback[k];
+        try {
+            const store = getLocalStore();
+            if (store) store.clear();
             return true;
         } catch (e) {
             return false;
@@ -482,19 +528,19 @@ function cleanStorageLimits() {
         // 1. Ограничение истории просмотров (до 30 товаров)
         const hist = storage.getJSON('nisha_history', null);
         if (Array.isArray(hist) && hist.length > 30) {
-            localStorage.setItem('nisha_history', JSON.stringify(hist.slice(0, 30)));
+            storage.setJSON('nisha_history', hist.slice(0, 30));
         }
 
         // 2. Ограничение просмотренных ID вещей (до 200 штук)
         const seen = storage.getJSON('nisha_seen_items', null);
         if (Array.isArray(seen) && seen.length > 200) {
-            localStorage.setItem('nisha_seen_items', JSON.stringify(seen.slice(-200)));
+            storage.setJSON('nisha_seen_items', seen.slice(-200));
         }
 
         // 3. Ограничение истории поиска (до 15 запросов)
         const searches = storage.getJSON('nisha_search_history', null) || storage.getJSON('nisha_recent_searches', null);
         if (Array.isArray(searches) && searches.length > 15) {
-            localStorage.setItem('nisha_search_history', JSON.stringify(searches.slice(0, 15)));
+            storage.setJSON('nisha_search_history', searches.slice(0, 15));
         }
         storage.remove('nisha_recent_searches');
     } catch(e) {
@@ -631,41 +677,18 @@ function loadExternalStyle(href) {
 window.loadExternalStyle = loadExternalStyle;
 
 // --- УНИВЕРСАЛЬНАЯ БЕЗОПАСНАЯ ОБЕРТКА SAFESTORAGE (Safari Incognito / Quota Guard) ---
-const _memStorageFallback = {};
-
 function safeSetItem(key, value) {
-    try {
-        localStorage.setItem(key, value);
-        return true;
-    } catch (e) {
-        try {
-            if (typeof cleanStorageLimits === 'function') cleanStorageLimits();
-            localStorage.setItem(key, value);
-            return true;
-        } catch (innerErr) {
-            _memStorageFallback[key] = String(value);
-            return false;
-        }
-    }
+    return storage.set(key, value);
 }
 window.safeSetItem = safeSetItem;
 
 function safeGetItem(key, fallback = null) {
-    try {
-        const val = localStorage.getItem(key);
-        if (val !== null) return val;
-        return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : fallback;
-    } catch (e) {
-        return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : fallback;
-    }
+    return storage.get(key, fallback);
 }
 window.safeGetItem = safeGetItem;
 
 function safeRemoveItem(key) {
-    try {
-        localStorage.removeItem(key);
-    } catch (e) {}
-    delete _memStorageFallback[key];
+    return storage.remove(key);
 }
 window.safeRemoveItem = safeRemoveItem;
 
@@ -897,7 +920,7 @@ function handleDelegatedAction(e) {
         }
         case 'clear-search-history': {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
-            try { localStorage.removeItem('nisha_search_history'); } catch (err) {}
+            storage.remove('nisha_search_history');
             if (typeof window.closeSearch === 'function') window.closeSearch();
             break;
         }

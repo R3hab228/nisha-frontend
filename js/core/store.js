@@ -115,10 +115,14 @@
     function safeStorageSet(storageKey, stringVal) {
         try {
             isInternalStorageSync = true;
-            localStorage.setItem(storageKey, stringVal);
+            if (typeof window !== 'undefined' && window.storage && typeof window.storage.set === 'function') {
+                window.storage.set(storageKey, stringVal);
+            } else if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(storageKey, stringVal);
+            }
         } catch (err) {
             console.warn(`[Store] Не удалось записать ${storageKey} в localStorage:`, err);
-            if (typeof window.cleanStorageLimits === 'function') {
+            if (typeof window !== 'undefined' && typeof window.cleanStorageLimits === 'function') {
                 try { window.cleanStorageLimits(); } catch (e) {}
             }
         } finally {
@@ -129,7 +133,11 @@
     function safeStorageRemove(storageKey) {
         try {
             isInternalStorageSync = true;
-            localStorage.removeItem(storageKey);
+            if (typeof window !== 'undefined' && window.storage && typeof window.storage.remove === 'function') {
+                window.storage.remove(storageKey);
+            } else if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(storageKey);
+            }
         } catch (err) {
             console.warn(`[Store] Не удалось удалить ${storageKey} из localStorage:`, err);
         } finally {
@@ -147,13 +155,17 @@
             this._initFromStorage();
         }
 
-        // Инициализация начального состояния из localStorage
+        // Инициализация начального состояния из хранилища
         _initFromStorage() {
             Object.entries(SCHEMAS).forEach(([key, schema]) => {
                 if (schema.storageKey) {
                     let raw = null;
                     try {
-                        raw = localStorage.getItem(schema.storageKey);
+                        if (typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function') {
+                            raw = window.storage.get(schema.storageKey);
+                        } else if (typeof localStorage !== 'undefined') {
+                            raw = localStorage.getItem(schema.storageKey);
+                        }
                     } catch (e) {}
                     this._state[key] = deserializeValue(raw, schema);
                 } else {

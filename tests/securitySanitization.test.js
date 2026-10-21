@@ -221,13 +221,20 @@ describe('Security Sanitization & XSS Shield', () => {
 
         storage.setJSON('nisha_test_key', { a: 1, items: ['x', 'y'] });
         expect(storage.getJSON('nisha_test_key', {})).toEqual({ a: 1, items: ['x', 'y'] });
+        expect(storage.has('nisha_test_key')).toBe(true);
+
+        storage.set('nisha_str_key', 'hello_world');
+        expect(storage.get('nisha_str_key')).toBe('hello_world');
+        expect(storage.has('nisha_non_existent')).toBe(false);
 
         window.localStorage.setItem('nisha_corrupted_key', '{not-valid-json');
         expect(storage.getJSON('nisha_corrupted_key', ['fallback'])).toEqual(['fallback']);
 
         storage.remove('nisha_test_key');
+        storage.remove('nisha_str_key');
         storage.remove('nisha_corrupted_key');
         expect(storage.getJSON('nisha_test_key', null)).toBeNull();
+        expect(storage.has('nisha_test_key')).toBe(false);
     });
 
     it('unified profile contacts render Phone and Telegram badges and action buttons accurately', () => {

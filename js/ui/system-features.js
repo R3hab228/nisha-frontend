@@ -53,9 +53,11 @@ document.addEventListener('visibilitychange', () => {
 
 // === RULES MODAL ===
 function checkRules() {
-    if (!localStorage.getItem('nisha_rules_accepted')) {
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (!store || !store.get('nisha_rules_accepted')) {
         setTimeout(() => {
-            if (!localStorage.getItem('nisha_rules_accepted')) {
+            const s = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            if (!s || !s.get('nisha_rules_accepted')) {
                 showRulesModal();
             }
         }, 550);
@@ -80,7 +82,8 @@ function showRulesModal() {
 window.showRulesModal = showRulesModal;
 
 function acceptRules() {
-    localStorage.setItem('nisha_rules_accepted', 'true');
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store) store.set('nisha_rules_accepted', 'true');
     const modal = document.getElementById('rulesModal');
     if (modal) {
         if (modal.classList.contains('closing')) return;
@@ -132,7 +135,8 @@ function triggerEasterEgg() {
     activeCart.forEach(item => { 
         item.price = Math.floor(item.price * 0.9); 
     });
-    localStorage.setItem('nisha_cart', JSON.stringify(activeCart));
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store) store.setJSON('nisha_cart', activeCart);
     if (typeof syncCartToServer === 'function') syncCartToServer();
     if (typeof updateCartUI === 'function') updateCartUI();
 }
@@ -147,16 +151,17 @@ async function initHitCounter() {
     const counterEl = document.getElementById('hitCounterValue');
 
     try {
-        let visitorId = localStorage.getItem('nisha_visitor_id');
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        let visitorId = store ? store.get('nisha_visitor_id') : null;
         if (!visitorId) {
             visitorId = 'user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replace(/-/g, '').slice(0, 9) : Date.now().toString(36)));
-            localStorage.setItem('nisha_visitor_id', visitorId);
+            if (store) store.set('nisha_visitor_id', visitorId);
         }
         window.clientFingerprint = visitorId;
         if (typeof globalThis !== 'undefined') globalThis.clientFingerprint = visitorId;
 
         const todayDate = new Date().toLocaleDateString('en-CA');
-        const lastVisitDate = localStorage.getItem('nisha_last_visit_date');
+        const lastVisitDate = store ? store.get('nisha_last_visit_date') : null;
         const isNewVisitToday = (lastVisitDate !== todayDate);
 
         if (isNewVisitToday && window.analytics && typeof window.analytics.track === 'function') {
@@ -165,7 +170,7 @@ async function initHitCounter() {
 
         if (!counterEl) return;
 
-        const cachedCount = localStorage.getItem('nisha_last_hit_count') || '0';
+        const cachedCount = (store ? store.get('nisha_last_hit_count', '0') : '0') || '0';
         counterEl.innerText = String(cachedCount).padStart(5, '0').split('').join(' ');
 
         const data = await window.apiClient.post('/api/hit', {
@@ -174,18 +179,12 @@ async function initHitCounter() {
         }, { timeout: 5500, retries: 1, dedupe: true });
 
         if (data && data.success && data.count !== undefined) {
-            if (isNewVisitToday) {
-                if (typeof safeSetItem === 'function') {
-                    safeSetItem('nisha_last_visit_date', todayDate);
-                } else {
-                    localStorage.setItem('nisha_last_visit_date', todayDate);
-                }
+            if (isNewVisitToday && store) {
+                store.set('nisha_last_visit_date', todayDate);
             }
             
-            if (typeof safeSetItem === 'function') {
-                safeSetItem('nisha_last_hit_count', data.count);
-            } else {
-                localStorage.setItem('nisha_last_hit_count', data.count);
+            if (store) {
+                store.set('nisha_last_hit_count', data.count);
             }
             
             const strCount = data.count.toString().padStart(5, '0');

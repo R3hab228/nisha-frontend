@@ -40,16 +40,15 @@ window.invalidateLiveSearchFuse = function() {
 // Функция сохранения истории поиска (с защитой от квоты localStorage)
 function saveRecentSearch(term) {
     if (!term || term.length < 2) return;
-    let history = window.storage ? window.storage.getJSON('nisha_search_history', []) : [];
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let history = store ? store.getJSON('nisha_search_history', []) : [];
     if (!Array.isArray(history)) history = [];
     history = history.filter(t => t.toLowerCase() !== term.toLowerCase());
     history.unshift(term);
     if (history.length > 5) history.pop();
     
-    if (typeof safeSetItem === 'function') {
-        safeSetItem('nisha_search_history', JSON.stringify(history));
-    } else if (window.storage) {
-        window.storage.setJSON('nisha_search_history', history);
+    if (store) {
+        store.setJSON('nisha_search_history', history);
     }
 }
 
@@ -57,7 +56,8 @@ function saveRecentSearch(term) {
 function showSearchHistory() {
     const dropdown = document.getElementById('liveSearchDropdown');
     if (!dropdown) return;
-    const history = window.storage ? window.storage.getJSON('nisha_search_history', []) : [];
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    const history = store ? store.getJSON('nisha_search_history', []) : [];
     if (!Array.isArray(history) || history.length === 0) return;
 
     const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');

@@ -92,7 +92,10 @@ window.addEventListener('scroll', () => {
 // ==========================================
 window.isHacked = false;
 let _supabase = null;
-let clientFingerprint = localStorage.getItem('nisha_visitor_id') || ("guest_" + Date.now());
+let clientFingerprint = (window.storage && typeof window.storage.get === 'function') ? window.storage.get('nisha_visitor_id') : null;
+if (!clientFingerprint) {
+    clientFingerprint = "guest_" + Date.now();
+}
 window.clientFingerprint = clientFingerprint;
 if (typeof globalThis !== 'undefined') {
     globalThis.isHacked = false;
@@ -185,9 +188,12 @@ async function initApp() {
 
     try {
         try {
-            localStorage.removeItem('nisha_cart_time');
-            localStorage.removeItem('nisha_cart_reminded');
-            localStorage.removeItem('nisha_cart_push_sent_time');
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            if (store) {
+                store.remove('nisha_cart_time');
+                store.remove('nisha_cart_reminded');
+                store.remove('nisha_cart_push_sent_time');
+            }
         } catch (e) {}
 
         // 1. Восстанавливаем фильтры, категорию и поисковый запрос
@@ -257,8 +263,9 @@ async function initApp() {
         const langPromise = (async () => {
             try {
                 if (typeof i18next !== 'undefined') {
-                    let savedLng = localStorage.getItem('nisha_lang');
-                    let savedFlag = localStorage.getItem('nisha_flag');
+                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                    let savedLng = store ? store.get('nisha_lang') : null;
+                    let savedFlag = store ? store.get('nisha_flag') : null;
                     
                     if (!savedLng) {
                         const browserLang = navigator.language || navigator.userLanguage || '';
@@ -269,8 +276,10 @@ async function initApp() {
                         } else {
                             savedLng = 'ua'; savedFlag = '🇺🇦';
                         }
-                        localStorage.setItem('nisha_lang', savedLng);
-                        localStorage.setItem('nisha_flag', savedFlag);
+                        if (store) {
+                            store.set('nisha_lang', savedLng);
+                            store.set('nisha_flag', savedFlag);
+                        }
                     }
                     
                     if (typeof i18nextBrowserLanguageDetector !== 'undefined') {
@@ -402,7 +411,8 @@ async function initApp() {
                 
                 if (broadcasts && broadcasts.length > 0) {
                     const bData = broadcasts[0];
-                    const localSeenId = localStorage.getItem('nisha_last_broadcast');
+                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                    const localSeenId = store ? store.get('nisha_last_broadcast') : null;
                     const profile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
                     const dbSeenId = profile ? profile.last_broadcast_id : null;
                     const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
@@ -412,7 +422,7 @@ async function initApp() {
                         const hasValidImg = bData.image_url && typeof bData.image_url === 'string' && bData.image_url.trim();
 
                         const markAsSeen = () => {
-                            localStorage.setItem('nisha_last_broadcast', bData.id);
+                            if (store) store.set('nisha_last_broadcast', bData.id);
                             const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
                             if (activeUser && _supabase) {
                                 _supabase.from('profiles').update({ last_broadcast_id: bData.id }).eq('id', activeUser.id).then();
@@ -432,7 +442,7 @@ async function initApp() {
                             broadcastContent += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
                         }
 
-                        if (localStorage.getItem('nisha_tour_done') && typeof tryShowBroadcast === 'function') {
+                        if (store && store.get('nisha_tour_done') && typeof tryShowBroadcast === 'function') {
                             tryShowBroadcast('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
                         } else {
                             window.pendingBroadcastHtml = broadcastContent;
@@ -479,7 +489,8 @@ async function initApp() {
 
                     if (typeof tryShowBroadcast === 'function') {
                         tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
-                            localStorage.setItem('nisha_last_broadcast', bData.id);
+                            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                            if (store) store.set('nisha_last_broadcast', bData.id);
                         });
                     }
                 })
@@ -607,7 +618,8 @@ async function initApp() {
             if (ordSearchEl) ordSearchEl.value = activeUser.phone;
         }
 
-        if (localStorage.getItem('nisha_rules_accepted') && typeof startOnboardingTour === 'function') {
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store && store.get('nisha_rules_accepted') && typeof startOnboardingTour === 'function') {
             startOnboardingTour();
         }
     } catch (err) {
