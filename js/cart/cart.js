@@ -7,7 +7,7 @@ if (!window.cart) {
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     window.cart = store ? store.getJSON('nisha_cart', []) : [];
 }
-var cart = window.cart;
+let cart = window.cart;
 
 window.currentPromoDiscount = 0;
 window.appliedPromoCode = '';
@@ -317,12 +317,13 @@ function updateCartUI() {
         
         const msg = document.getElementById('promoMessage');
         if (msg && promoCode) {
-            const discDisplay = fixedAmt > 0 ? `-${fixedAmt} ${getCurrency()}` : `${Math.round(promoDiscount * 100)}%`;
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${discDisplay}<br><span style="font-size: 13px;">Вы сэкономили: <b>${savedMoney} ${getCurrency()}</b></span></span>`;
+            const formattedSaved = (typeof formatPrice === 'function') ? formatPrice(savedMoney) : `${savedMoney} ${getCurrency()}`;
+            const discDisplay = fixedAmt > 0 ? (typeof formatPrice === 'function' ? `-${formatPrice(fixedAmt)}` : `-${fixedAmt} ${getCurrency()}`) : `${Math.round(promoDiscount * 100)}%`;
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${discDisplay}<br><span style="font-size: 13px;">Вы сэкономили: <b>${formattedSaved}</b></span></span>`;
         }
     }
     
-    document.getElementById('cartTotal').innerText = total + ' ' + getCurrency();
+    document.getElementById('cartTotal').innerText = (typeof formatPrice === 'function') ? formatPrice(total) : (total + ' ' + getCurrency());
     
     if (typeof renderCartItems === 'function') renderCartItems();
 }
@@ -835,7 +836,7 @@ function renderCartItems() {
                     ${soldBadgeHtml}
                 </div>
                 <div class="cart-item-price-wrapper">
-                    <div class="cart-item-price">${item.price} ${getCurrency()}</div>
+                    <div class="cart-item-price">${typeof formatPrice === 'function' ? formatPrice(item.price) : `${item.price} ${getCurrency()}`}</div>
                     <div class="cart-item-remove hide-on-mobile" data-action="remove-from-cart" data-index="${index}">×</div>
                 </div>
             </div>

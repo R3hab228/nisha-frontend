@@ -299,12 +299,34 @@ function clearElement(el) {
 window.clearElement = clearElement;
 if (typeof globalThis !== 'undefined') globalThis.clearElement = clearElement;
 
-// --- ВАЛЮТА И ФОРМАТИРОВАНИЕ ---
+// --- ВАЛЮТА И ФОРМАТИРОВАНИЕ (INTL.NUMBERFORMAT) ---
 function getCurrency() {
-    const lang = storage.get('nisha_lang', 'ru');
+    const lang = (window.storage && typeof window.storage.get === 'function')
+        ? window.storage.get('nisha_lang', 'ru')
+        : (typeof storage !== 'undefined' && storage ? storage.get('nisha_lang', 'ru') : 'ru');
     return lang === 'en' ? 'UAH' : 'грн';
 }
 window.getCurrency = getCurrency;
+if (typeof globalThis !== 'undefined') globalThis.getCurrency = getCurrency;
+
+function formatPrice(amount, options = {}) {
+    const num = Number(amount) || 0;
+    const lang = (window.storage && typeof window.storage.get === 'function')
+        ? window.storage.get('nisha_lang', 'ru')
+        : (typeof storage !== 'undefined' && storage ? storage.get('nisha_lang', 'ru') : 'ru');
+    const currency = lang === 'en' ? 'UAH' : 'грн';
+    
+    // Форматирование чисел через Intl с неразрывным пробелом (\u00A0)
+    const formattedNum = num.toLocaleString(lang === 'en' ? 'en-US' : 'ru-RU', {
+        maximumFractionDigits: 0
+    });
+    
+    if (options.currencyOnly) return currency;
+    if (options.numberOnly) return formattedNum;
+    return `${formattedNum}\u00A0${currency}`;
+}
+window.formatPrice = formatPrice;
+if (typeof globalThis !== 'undefined') globalThis.formatPrice = formatPrice;
 
 // --- ГЕНЕРАЦИЯ БЕЗОПАСНЫХ КОРОТКИХ ID НА БАЗЕ CRYPTO.RANDOMUUID ---
 function generateShortId(length = 9) {
@@ -342,6 +364,33 @@ function deepClone(obj) {
 }
 window.deepClone = deepClone;
 if (typeof globalThis !== 'undefined') globalThis.deepClone = deepClone;
+
+// --- ИММУТАБЕЛЬНАЯ СОРТИРОВКА МАССИВОВ (TOSORTED С SAFE FALLBACK) ---
+function toSorted(array, compareFn) {
+    if (!Array.isArray(array)) return [];
+    if (typeof array.toSorted === 'function') {
+        return array.toSorted(compareFn);
+    }
+    return [...array].sort(compareFn);
+}
+window.toSorted = toSorted;
+if (typeof globalThis !== 'undefined') globalThis.toSorted = toSorted;
+
+// --- ОПЕРАЦИИ НАД МНОЖЕСТВАМИ (SET.PROTOTYPE.DIFFERENCE / INTERSECTION) ---
+function setDifference(setA, setB) {
+    if (!setA) return new Set();
+    if (!setB) return new Set(setA);
+    if (typeof setA.difference === 'function') {
+        return setA.difference(setB);
+    }
+    const diff = new Set();
+    for (const elem of setA) {
+        if (!setB.has(elem)) diff.add(elem);
+    }
+    return diff;
+}
+window.setDifference = setDifference;
+if (typeof globalThis !== 'undefined') globalThis.setDifference = setDifference;
 
 // --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА (ЕДИНЫЙ НАТИВНЫЙ CLIPBOARD API С ЗАЩИТОЙ ДЛЯ IN-APP WEBVIEW) ---
 function _copyViaSelectionFallback(str) {

@@ -225,14 +225,23 @@ async function fetchMyOrders() {
             // 3. Неблокирующая фоновая привязка гостевых заказов к user_id на сервере (без зависания на холодном старте Render)
             if (uniqueCleanPhones.size > 0 && window.apiClient) {
                 const uid = activeUser.id;
-                Promise.all(Array.from(uniqueCleanPhones).map(clean =>
+                const linkTasks = Array.from(uniqueCleanPhones).map(clean =>
                     window.apiClient.post('/api/link-orders', {
                         userId: uid,
                         phone: clean
-                    }, { timeout: 8000, dedupe: true }).catch(() => null)
-                )).then(async (results) => {
+                    }, { timeout: 8000, dedupe: true })
+                );
+
+                const settleHandler = typeof Promise.allSettled === 'function'
+                    ? Promise.allSettled(linkTasks)
+                    : Promise.all(linkTasks.map(p => p.catch(() => null)));
+
+                settleHandler.then(async (results) => {
                     const currentActiveUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
-                    const newlyLinked = results.some(r => r && r.count > 0);
+                    const newlyLinked = results.some(r => {
+                        const val = r && r.status ? (r.status === 'fulfilled' ? r.value : null) : r;
+                        return val && val.count > 0;
+                    });
                     if (newlyLinked && currentActiveUser && currentActiveUser.id === uid) {
                         const { data: refreshed } = await sb.from('orders').select('id, phone, status, created_at, items, tracking_number, total_sum, user_id').eq('user_id', uid).order('created_at', { ascending: false });
                         if (Array.isArray(refreshed) && refreshed.length > 0) {
@@ -244,7 +253,12 @@ async function fetchMyOrders() {
                                 }
                             });
                             if (added) {
-                                window.globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                                const orderValues = Array.from(orderMap.values());
+                                window.globalOrdersData = (typeof window.toSorted === 'function')
+                                    ? window.toSorted(orderValues, (a, b) => new Date(b.created_at) - new Date(a.created_at))
+                                    : (typeof orderValues.toSorted === 'function'
+                                        ? orderValues.toSorted((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                                        : [...orderValues].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
                                 try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
                                 updateOrderTabCounters();
                                 ensureOrderImagesLoaded();
@@ -255,7 +269,12 @@ async function fetchMyOrders() {
                 }).catch(() => {});
             }
 
-            window.globalOrdersData = Array.from(orderMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const initialOrderValues = Array.from(orderMap.values());
+            window.globalOrdersData = (typeof window.toSorted === 'function')
+                ? window.toSorted(initialOrderValues, (a, b) => new Date(b.created_at) - new Date(a.created_at))
+                : (typeof initialOrderValues.toSorted === 'function'
+                    ? initialOrderValues.toSorted((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    : [...initialOrderValues].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
             if (window.globalOrdersData.length > 0) {
                 try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
             }
@@ -553,7 +572,7 @@ function renderFilteredOrders() {
                         <div class="order-item-img" data-item-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
                         <div class="order-item-details">
                             <div class="order-item-name">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || 'Товар') : item.name}</div>
-                            <div class="order-item-meta"><span>Размер: ${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '—') : (item.size || '—')}</span><span class="order-item-price">${itemPrice} грн</span></div>
+                            <div class="order-item-meta"><span>Размер: ${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '—') : (item.size || '—')}</span><span class="order-item-price">${typeof window.formatPrice === 'function' ? window.formatPrice(itemPrice) : (itemPrice + ' грн')}</span></div>
                         </div>
                     </div>`;
             });

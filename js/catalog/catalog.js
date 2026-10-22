@@ -1127,7 +1127,10 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
     if (eventType === 'INSERT' || existingIdx === -1) {
         window._notifiedItemIds = window._notifiedItemIds || new Set();
         window.allItems.unshift(fresh);
-        window.allItems.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        const sortDateDesc = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        window.allItems = (typeof window.toSorted === 'function')
+            ? window.toSorted(window.allItems, sortDateDesc)
+            : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
 
         if (!fromBroadcast && !window._notifiedItemIds.has(fresh.id)) {
             window._notifiedItemIds.add(fresh.id);
@@ -1263,11 +1266,12 @@ async function syncCriticalStatuses() {
         const currentIdSet = new Set(window.allItems.map(i => i.id));
         let gridNeedsFullRefresh = false;
 
-        // 1. Очистка от удаленных из БД товаров
-        const deletedIds = [];
-        window.allItems.forEach(i => {
-            if (!freshIdSet.has(i.id)) deletedIds.push(i.id);
-        });
+        // 1. Очистка от удаленных из БД товаров (Set.prototype.difference)
+        const deletedIds = (typeof currentIdSet.difference === 'function')
+            ? Array.from(currentIdSet.difference(freshIdSet))
+            : ((typeof window.setDifference === 'function')
+                ? Array.from(window.setDifference(currentIdSet, freshIdSet))
+                : window.allItems.filter(i => i && !freshIdSet.has(i.id)).map(i => i.id));
 
         if (deletedIds.length > 0) {
             window.allItems = window.allItems.filter(i => freshIdSet.has(i.id));
@@ -1281,8 +1285,12 @@ async function syncCriticalStatuses() {
             gridNeedsFullRefresh = true;
         }
 
-        // 2. Проверка новых товаров (которых еще нет в клиенте)
-        const newIds = data.filter(d => !currentIdSet.has(d.id)).map(d => d.id);
+        // 2. Проверка новых товаров (которых еще нет в клиенте через Set.prototype.difference)
+        const newIds = (typeof freshIdSet.difference === 'function')
+            ? Array.from(freshIdSet.difference(currentIdSet))
+            : ((typeof window.setDifference === 'function')
+                ? Array.from(window.setDifference(freshIdSet, currentIdSet))
+                : data.filter(d => d && !currentIdSet.has(d.id)).map(d => d.id));
         if (newIds.length > 0) {
             const { data: fullNewItems } = await sb.from('items')
                 .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable')
@@ -1303,7 +1311,10 @@ async function syncCriticalStatuses() {
                         }
                     }
                 });
-                window.allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                const sortDateDesc = (a, b) => new Date(b.created_at) - new Date(a.created_at);
+                window.allItems = (typeof window.toSorted === 'function')
+                    ? window.toSorted(window.allItems, sortDateDesc)
+                    : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
                 gridNeedsFullRefresh = true;
             }
         }
@@ -1746,21 +1757,27 @@ function applyFilters(immediate = false, preserveViewport = false) {
             const sortCheap = document.getElementById('sort-cheap');
 
             if (sortCheap && sortCheap.classList.contains('active-sort')) {
-                window.filteredItems.sort((a, b) => {
+                const sortCheapFn = (a, b) => {
                     const topA = isItemTop(a);
                     const topB = isItemTop(b);
                     if (topA && !topB) return -1;
                     if (!topA && topB) return 1;
                     return getSafePrice(a.price) - getSafePrice(b.price);
-                });
+                };
+                window.filteredItems = (typeof window.toSorted === 'function')
+                    ? window.toSorted(window.filteredItems, sortCheapFn)
+                    : (window.filteredItems.toSorted ? window.filteredItems.toSorted(sortCheapFn) : [...window.filteredItems].sort(sortCheapFn));
             } else {
-                window.filteredItems.sort((a, b) => {
+                const sortDateFn = (a, b) => {
                     const topA = isItemTop(a);
                     const topB = isItemTop(b);
                     if (topA && !topB) return -1;
                     if (!topA && topB) return 1;
                     return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-                });
+                };
+                window.filteredItems = (typeof window.toSorted === 'function')
+                    ? window.toSorted(window.filteredItems, sortDateFn)
+                    : (window.filteredItems.toSorted ? window.filteredItems.toSorted(sortDateFn) : [...window.filteredItems].sort(sortDateFn));
             }
             
             // СБРОС И РЕНДЕР (при preserveViewport сохраняем текущую страницу на ПК и число карточек на моб)
@@ -2187,10 +2204,12 @@ function renderNextBatch(targetMobileCount = 0) {
             card.setAttribute('data-id', item.id);
             
             let priceHTML = '';
+            const formattedPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
             if (item.is_sale && item.old_price) {
-                priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${item.old_price} ${curr}</span><span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
+                const formattedOldPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.old_price) : `${item.old_price} ${curr}`;
+                priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${formattedOldPrice}</span><span style="color: var(--accent-green);">${formattedPrice}</span>`;
             } else {
-                priceHTML = `<span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
+                priceHTML = `<span style="color: var(--accent-green);">${formattedPrice}</span>`;
             }
 
             let controlsHTML = '';

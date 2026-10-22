@@ -8,9 +8,9 @@ if (typeof window.userProfile === 'undefined') window.userProfile = null;
 if (typeof window.favorites === 'undefined') window.favorites = [];
 if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCache = {};
 
-var currentUser = window.currentUser;
-var userProfile = window.userProfile;
-var favorites = window.favorites;
+let currentUser = window.currentUser;
+let userProfile = window.userProfile;
+let favorites = window.favorites;
 
 let isRegMode = false;
 if (typeof window.globalOrdersData === 'undefined') window.globalOrdersData = [];
@@ -19,8 +19,8 @@ let isTogglingFav = false; // Защита от двойного клика
 
 if (typeof window.orderStatusChannel === 'undefined') window.orderStatusChannel = null;
 if (typeof window.qaUpdatesChannel === 'undefined') window.qaUpdatesChannel = null;
-var orderStatusChannel = window.orderStatusChannel;
-var qaUpdatesChannel = window.qaUpdatesChannel;
+let orderStatusChannel = window.orderStatusChannel;
+let qaUpdatesChannel = window.qaUpdatesChannel;
 
 let isCheckingPhoneOtp = false;
 let isPhoneOtpCompleted = false;

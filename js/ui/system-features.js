@@ -160,7 +160,7 @@ async function initHitCounter() {
         window.clientFingerprint = visitorId;
         if (typeof globalThis !== 'undefined') globalThis.clientFingerprint = visitorId;
 
-        const todayDate = new Date().toLocaleDateString('en-CA');
+        const todayDate = new Date().toISOString().slice(0, 10);
         const lastVisitDate = store ? store.get('nisha_last_visit_date') : null;
         const isNewVisitToday = (lastVisitDate !== todayDate);
 

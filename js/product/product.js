@@ -4,7 +4,7 @@
 
 // Глобальное состояние открытого товара и слайдера
 if (typeof window.currentOpenedItem === 'undefined') window.currentOpenedItem = null;
-var currentOpenedItem = window.currentOpenedItem;
+let currentOpenedItem = window.currentOpenedItem;
 
 let currentSlide = 0;
 let totalSlides = 0;
@@ -182,7 +182,10 @@ async function openProductModalById(itemId) {
                     if (descContainer) {
                         const sizeTitle = typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР';
                         const brandTitle = typeof i18next !== 'undefined' ? i18next.t('product.brand') : 'БРЕНД';
-                        const qaIndex = descContainer.innerHTML.indexOf('<!-- Блок Вопросов и Ответов (Q&A) -->') !== -1 ? descContainer.innerHTML.indexOf('<!-- Блок Вопросов и Ответов (Q&A) -->') : descContainer.innerHTML.indexOf('<div id="qaWrapper"');
+                        const qaMarker = '<!-- Блок Вопросов и Ответов (Q&A) -->';
+                        const qaIndex = descContainer.innerHTML.includes(qaMarker) 
+                            ? descContainer.innerHTML.indexOf(qaMarker) 
+                            : descContainer.innerHTML.indexOf('<div id="qaWrapper"');
                         const qaPart = qaIndex !== -1 ? descContainer.innerHTML.substring(qaIndex) : '';
                         descContainer.innerHTML = `
                             <div style="margin-bottom: 5px;">
@@ -250,7 +253,7 @@ function openProductModal(item) {
     const isHackedActive = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
     let finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
     const priceEl = document.getElementById('modalItemPrice');
-    if (priceEl) priceEl.innerText = finalPrice + ' ' + (typeof getCurrency === 'function' ? getCurrency() : 'грн');
+    if (priceEl) priceEl.innerText = (typeof formatPrice === 'function') ? formatPrice(finalPrice) : (finalPrice + ' ' + (typeof getCurrency === 'function' ? getCurrency() : 'грн'));
     
     const sizeDescEl = document.getElementById('modalItemSizeDesc');
     if (sizeDescEl) sizeDescEl.innerText = item.size;
@@ -565,9 +568,12 @@ function openProductModal(item) {
             score: computeItemSimilarity(item, c)
         }));
 
-        scoredCandidates.sort((a, b) => b.score - a.score);
+        const sortScoreFn = (a, b) => b.score - a.score;
+        const sortedCandidates = (typeof window.toSorted === 'function')
+            ? window.toSorted(scoredCandidates, sortScoreFn)
+            : (scoredCandidates.toSorted ? scoredCandidates.toSorted(sortScoreFn) : [...scoredCandidates].sort(sortScoreFn));
 
-        const similar = scoredCandidates.slice(0, 6).map(c => c.item);
+        const similar = sortedCandidates.slice(0, 6).map(c => c.item);
         const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
         let seenItemsIds = store ? store.getJSON('nisha_seen_items', []) : [];
             
@@ -595,9 +601,11 @@ function openProductModal(item) {
                 }
 
                 const curr = typeof getCurrency === 'function' ? getCurrency() : 'грн';
-                let miniPriceHTML = `${s.price} ${curr}`;
+                const formattedSimilarPrice = (typeof formatPrice === 'function') ? formatPrice(s.price) : `${s.price} ${curr}`;
+                let miniPriceHTML = formattedSimilarPrice;
                 if (s.is_sale && s.old_price) {
-                    miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${s.old_price}</span><span style="color: var(--accent-green);">${s.price} ${curr}</span>`;
+                    const formattedOld = (typeof formatPrice === 'function') ? formatPrice(s.old_price, { numberOnly: true }) : s.old_price;
+                    miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${formattedOld}</span><span style="color: var(--accent-green);">${formattedSimilarPrice}</span>`;
                 }
 
                 const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
@@ -1241,7 +1249,7 @@ async function submitQuestion(itemId) {
         text = text.slice(0, 100);
     }
 
-    const today = new Date().toLocaleDateString('en-CA');
+    const today = new Date().toISOString().slice(0, 10);
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     let questionData = store ? store.getJSON('nisha_questions', { date: '', count: 0 }) : { date: '', count: 0 };
     

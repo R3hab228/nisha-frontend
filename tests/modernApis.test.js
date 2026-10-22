@@ -298,4 +298,48 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(mockFilesInput.click).not.toHaveBeenCalled();
         });
     });
+
+    describe('5. toSorted() immutability & setDifference() operations', () => {
+        it('toSorted returns a new sorted array and leaves the original untouched', () => {
+            const original = [30, 10, 50, 20];
+            const sorted = window.toSorted(original, (a, b) => a - b);
+
+            expect(sorted).toEqual([10, 20, 30, 50]);
+            expect(original).toEqual([30, 10, 50, 20]);
+            expect(sorted).not.toBe(original);
+        });
+
+        it('setDifference computes difference between sets accurately', () => {
+            const setA = new Set(['1', '2', '3', '4']);
+            const setB = new Set(['2', '4', '6']);
+
+            const diff = window.setDifference(setA, setB);
+            expect(Array.from(diff)).toEqual(['1', '3']);
+        });
+    });
+
+    describe('6. formatPrice() with Intl.NumberFormat and non-breaking space', () => {
+        it('formats amounts with non-breaking spaces and proper currency symbol', () => {
+            const formatted = window.formatPrice(1500);
+            expect(formatted).toContain('1');
+            expect(formatted).toContain('500');
+            expect(formatted).toContain('\u00A0');
+            expect(formatted).toContain('грн');
+
+            const numberOnly = window.formatPrice(25000, { numberOnly: true });
+            expect(numberOnly).not.toContain('грн');
+            expect(numberOnly).toContain('25');
+        });
+    });
+
+    describe('7. Absence of legacy var declarations in js/ source files', () => {
+        it('contains no residual var declarations across primary js files', () => {
+            const files = ['cart/cart.js', 'product/product.js', 'profile/profile.js', 'catalog/catalog.js', 'core/helpers.js'];
+            for (const relPath of files) {
+                const code = readFileSync(resolve(__dirname, '../js', relPath), 'utf8');
+                const varMatch = code.match(/^\s*var\s+[a-zA-Z0-9_$]+/gm);
+                expect(varMatch).toBeNull();
+            }
+        });
+    });
 });
