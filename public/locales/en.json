@@ -197,7 +197,8 @@
       "delivery_fill_warn": "Please fill full name or delivery address!",
       "delivery_city": "CITY (NOVA POSHTA):",
       "delivery_branch": "BRANCH OR POSTOMAT:",
-      "delivery_saved_btn": "[ SAVED ✓ ]"
+      "delivery_saved_btn": "[ SAVED ✓ ]",
+      "delivery_edit": "[ EDIT ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

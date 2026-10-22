@@ -964,6 +964,64 @@ function initProfileDeliveryEvents() {
 }
 window.initProfileDeliveryEvents = initProfileDeliveryEvents;
 
+function setProfileDeliveryLockState(locked) {
+    if (typeof document === 'undefined') return;
+    [false, true].forEach(modalFlag => {
+        const prefix = modalFlag ? 'modalProfile' : 'profile';
+        const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
+        const cityEl = document.getElementById(`${prefix}DeliveryCity`);
+        const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
+        const btn = document.getElementById(`${prefix}DeliverySaveBtn`);
+
+        [fnEl, cityEl, branchEl].forEach(input => {
+            if (input) {
+                input.readOnly = Boolean(locked);
+                if (input.classList) {
+                    if (typeof input.classList.toggle === 'function') {
+                        input.classList.toggle('is-locked', Boolean(locked));
+                    } else if (locked && typeof input.classList.add === 'function') {
+                        input.classList.add('is-locked');
+                    } else if (!locked && typeof input.classList.remove === 'function') {
+                        input.classList.remove('is-locked');
+                    }
+                }
+                if (locked) {
+                    if (typeof input.setAttribute === 'function') input.setAttribute('tabindex', '-1');
+                } else {
+                    if (typeof input.removeAttribute === 'function') input.removeAttribute('tabindex');
+                }
+            }
+        });
+
+        if (btn) {
+            if (typeof btn.setAttribute === 'function') {
+                btn.setAttribute('data-mode', locked ? 'edit' : 'save');
+            }
+            const saveText = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_save', { defaultValue: '[ СОХРАНИТЬ ]' }) : '[ СОХРАНИТЬ ]';
+            const editText = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_edit', { defaultValue: '[ ИЗМЕНИТЬ ]' }) : '[ ИЗМЕНИТЬ ]';
+            btn.innerText = locked ? editText : saveText;
+            if (btn.classList) {
+                if (typeof btn.classList.toggle === 'function') {
+                    btn.classList.toggle('is-edit-mode', Boolean(locked));
+                } else if (locked && typeof btn.classList.add === 'function') {
+                    btn.classList.add('is-edit-mode');
+                } else if (!locked && typeof btn.classList.remove === 'function') {
+                    btn.classList.remove('is-edit-mode');
+                }
+                if (typeof btn.classList.remove === 'function') btn.classList.remove('is-saved');
+            }
+        }
+
+        if (locked) {
+            const cityDropdown = document.getElementById(`${prefix}DeliveryCityDropdown`);
+            const branchDropdown = document.getElementById(`${prefix}DeliveryBranchDropdown`);
+            if (cityDropdown) cityDropdown.style.display = 'none';
+            if (branchDropdown) branchDropdown.style.display = 'none';
+        }
+    });
+}
+window.setProfileDeliveryLockState = setProfileDeliveryLockState;
+
 function renderProfileDelivery(fullName, address) {
     const fn = (fullName || '').trim();
     const addr = (address || '').trim();
@@ -991,6 +1049,14 @@ function renderProfileDelivery(fullName, address) {
     });
 
     initProfileDeliveryEvents();
+
+    if (!window._isSavingProfileDelivery) {
+        if (fn || addr) {
+            setProfileDeliveryLockState(true);
+        } else {
+            setProfileDeliveryLockState(false);
+        }
+    }
 
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     if (store) {
@@ -1047,6 +1113,21 @@ window.toggleProfileDeliveryAccordion = toggleProfileDeliveryAccordion;
 
 async function saveProfileDeliveryFromForm(isModal, btn) {
     const prefix = isModal ? 'modalProfile' : 'profile';
+    const activeBtn = btn || document.getElementById(`${prefix}DeliverySaveBtn`);
+    const mode = (activeBtn && typeof activeBtn.getAttribute === 'function')
+        ? activeBtn.getAttribute('data-mode')
+        : 'save';
+
+    if (mode === 'edit') {
+        // Пользователь нажал [ ИЗМЕНИТЬ ]: разблокируем поля для ввода
+        setProfileDeliveryLockState(false);
+        const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
+        if (fnEl && typeof fnEl.focus === 'function') {
+            fnEl.focus();
+        }
+        return;
+    }
+
     const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
     const cityEl = document.getElementById(`${prefix}DeliveryCity`);
     const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
@@ -1083,26 +1164,28 @@ async function saveProfileDeliveryFromForm(isModal, btn) {
         b.style.opacity = '0.7';
     });
 
+    window._isSavingProfileDelivery = true;
     try {
         await saveDeliveryToProfile(fullName, address);
         const successMsg = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_saved_toast', { defaultValue: 'Данные доставки сохранены!' }) : 'Данные доставки сохранены!';
         showToast(successMsg, 'success');
 
         const savedText = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_saved_btn', { defaultValue: '[ СОХРАНЕНО ✓ ]' }) : '[ СОХРАНЕНО ✓ ]';
-        const defaultText = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_save', { defaultValue: '[ СОХРАНИТЬ ]' }) : '[ СОХРАНИТЬ ]';
 
         saveBtns.forEach(b => {
             b.innerText = savedText;
-            b.classList.add('is-saved');
-            if (b._savedTimer) clearTimeout(b._savedTimer);
-            b._savedTimer = setTimeout(() => {
-                b.innerText = defaultText;
-                b.classList.remove('is-saved');
-            }, 3000);
+            if (b.classList && typeof b.classList.add === 'function') b.classList.add('is-saved');
         });
+
+        // После краткой демонстрации [ СОХРАНЕНО ✓ ] переводим поля в режим просмотра [ ИЗМЕНИТЬ ]
+        if (window._deliveryLockTimer) clearTimeout(window._deliveryLockTimer);
+        window._deliveryLockTimer = setTimeout(() => {
+            setProfileDeliveryLockState(true);
+        }, 800);
     } catch (e) {
         showToast('Ошибка сохранения данных: ' + (e.message || 'Сбой сети'), 'error');
     } finally {
+        window._isSavingProfileDelivery = false;
         saveBtns.forEach(b => {
             b.disabled = false;
             b.style.opacity = '1';

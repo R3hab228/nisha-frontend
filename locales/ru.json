@@ -197,7 +197,8 @@
       "delivery_address_lbl": "МЕСТО ДОСТАВКИ (НП):",
       "delivery_city": "ГОРОД (НОВАЯ ПОЧТА):",
       "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:",
-      "delivery_saved_btn": "[ СОХРАНЕНО ✓ ]"
+      "delivery_saved_btn": "[ СОХРАНЕНО ✓ ]",
+      "delivery_edit": "[ ИЗМЕНИТЬ ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

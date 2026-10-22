@@ -198,7 +198,8 @@
         "delivery_fill_warn": "Заполните ФИО или место доставки!",
         "delivery_city": "ГОРОД (НОВАЯ ПОЧТА):",
         "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:",
-        "delivery_saved_btn": "[ СОХРАНЕНО ✓ ]"
+        "delivery_saved_btn": "[ СОХРАНЕНО ✓ ]",
+        "delivery_edit": "[ ИЗМЕНИТЬ ]"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -487,7 +488,8 @@
         "delivery_fill_warn": "Заповніть ПІБ або місце доставки!",
         "delivery_city": "МІСТО (НОВА ПОШТА):",
         "delivery_branch": "ВІДДІЛЕННЯ АБО ПОШТОМАТ:",
-        "delivery_saved_btn": "[ ЗБЕРЕЖЕНО ✓ ]"
+        "delivery_saved_btn": "[ ЗБЕРЕЖЕНО ✓ ]",
+        "delivery_edit": "[ ЗМІНИТИ ]"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -776,7 +778,8 @@
         "delivery_fill_warn": "Please fill full name or delivery address!",
         "delivery_city": "CITY (NOVA POSHTA):",
         "delivery_branch": "BRANCH OR POSTOMAT:",
-        "delivery_saved_btn": "[ SAVED ✓ ]"
+        "delivery_saved_btn": "[ SAVED ✓ ]",
+        "delivery_edit": "[ EDIT ]"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",

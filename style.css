@@ -2260,3 +2260,27 @@ html.low-power-mode .pulsing-dot {
     color: #fff !important;
     box-shadow: 0 0 10px rgba(0, 255, 102, 0.4) !important;
 }
+/* Заблокированные поля доставки в режиме просмотра */
+.profile-delivery-input.is-locked {
+    background: #080808 !important;
+    color: #66aa66 !important;
+    border-color: #2b2b2b !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    user-select: text !important;
+}
+
+/* Кнопка [ ИЗМЕНИТЬ ] */
+.profile-delivery-save-btn.is-edit-mode {
+    background: #141414 !important;
+    color: #ffd700 !important;
+    border-color: #555 !important;
+    box-shadow: 1px 1px 0 #000;
+}
+.profile-delivery-save-btn.is-edit-mode:hover {
+    background: #202020 !important;
+    color: #fff !important;
+    border-color: #ffd700 !important;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.35) !important;
+}

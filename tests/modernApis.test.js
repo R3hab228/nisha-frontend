@@ -1141,5 +1141,104 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toContain('.win95-cb:checked');
             expect(css).toContain('%2300ff00');
         });
+
+        it('locks delivery fields into read-only state and toggles [ ИЗМЕНИТЬ ] / [ СОХРАНИТЬ ]', async () => {
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            eval(profileCode);
+
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('.profile-delivery-input.is-locked');
+            expect(css).toContain('pointer-events: none !important');
+            expect(css).toContain('.profile-delivery-save-btn.is-edit-mode');
+
+            const makeMockInput = (val = '') => ({
+                value: val,
+                readOnly: false,
+                attributes: {},
+                classList: {
+                    _classes: new Set(),
+                    add(c) { this._classes.add(c); },
+                    remove(c) { this._classes.delete(c); },
+                    toggle(c, force) {
+                        if (force === undefined) {
+                            if (this._classes.has(c)) this._classes.delete(c);
+                            else this._classes.add(c);
+                        } else if (force) {
+                            this._classes.add(c);
+                        } else {
+                            this._classes.delete(c);
+                        }
+                    },
+                    contains(c) { return this._classes.has(c); }
+                },
+                setAttribute(k, v) { this.attributes[k] = v; },
+                removeAttribute(k) { delete this.attributes[k]; },
+                focus: vi.fn()
+            });
+
+            const fnEl = makeMockInput('Франко Іван');
+            const cityEl = makeMockInput('Львів');
+            const branchEl = makeMockInput('Відділення №5');
+            const saveBtn = {
+                innerText: '[ СОХРАНИТЬ ]',
+                attributes: { 'data-mode': 'save' },
+                classList: {
+                    _classes: new Set(),
+                    add(c) { this._classes.add(c); },
+                    remove(c) { this._classes.delete(c); },
+                    toggle(c, force) {
+                        if (force === undefined) {
+                            if (this._classes.has(c)) this._classes.delete(c);
+                            else this._classes.add(c);
+                        } else if (force) {
+                            this._classes.add(c);
+                        } else {
+                            this._classes.delete(c);
+                        }
+                    },
+                    contains(c) { return this._classes.has(c); }
+                },
+                setAttribute(k, v) { this.attributes[k] = v; },
+                getAttribute(k) { return this.attributes[k]; },
+                removeAttribute(k) { delete this.attributes[k]; },
+                disabled: false,
+                style: {}
+            };
+
+            const mockElements = {
+                profileDeliveryFullName: fnEl,
+                profileDeliveryCity: cityEl,
+                profileDeliveryBranch: branchEl,
+                profileDeliverySaveBtn: saveBtn
+            };
+
+            const origGetElementById = globalThis.document.getElementById;
+            globalThis.document.getElementById = vi.fn((id) => mockElements[id] || null);
+
+            // 1. Lock the form:
+            window.setProfileDeliveryLockState(true);
+            expect(fnEl.readOnly).toBe(true);
+            expect(cityEl.readOnly).toBe(true);
+            expect(branchEl.readOnly).toBe(true);
+            expect(fnEl.classList.contains('is-locked')).toBe(true);
+            expect(fnEl.attributes['tabindex']).toBe('-1');
+            expect(saveBtn.innerText).toBe('[ ИЗМЕНИТЬ ]');
+            expect(saveBtn.attributes['data-mode']).toBe('edit');
+            expect(saveBtn.classList.contains('is-edit-mode')).toBe(true);
+
+            // 2. Click button when data-mode is 'edit': it must unlock fields and focus full name
+            await window.saveProfileDeliveryFromForm(false, saveBtn);
+            expect(fnEl.readOnly).toBe(false);
+            expect(cityEl.readOnly).toBe(false);
+            expect(branchEl.readOnly).toBe(false);
+            expect(fnEl.classList.contains('is-locked')).toBe(false);
+            expect(fnEl.attributes['tabindex']).toBeUndefined();
+            expect(saveBtn.innerText).toBe('[ СОХРАНИТЬ ]');
+            expect(saveBtn.attributes['data-mode']).toBe('save');
+            expect(saveBtn.classList.contains('is-edit-mode')).toBe(false);
+            expect(fnEl.focus).toHaveBeenCalled();
+
+            globalThis.document.getElementById = origGetElementById;
+        });
     });
 });
