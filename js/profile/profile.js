@@ -157,6 +157,7 @@ async function checkSession() {
                 checkPendingPhoneVerification();
                 if (store.get('nisha_pending_otp_phone') && !window.profileOtpPollInterval) {
                     window.profileOtpPollInterval = setInterval(() => {
+                        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
                         checkPendingPhoneVerification();
                     }, 2000);
                 }
@@ -165,6 +166,7 @@ async function checkSession() {
                 checkPendingTgVerification();
                 if (store.get('nisha_pending_otp_tg') && !window.profileTgPollInterval) {
                     window.profileTgPollInterval = setInterval(() => {
+                        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
                         checkPendingTgVerification();
                     }, 2000);
                 }
@@ -921,6 +923,7 @@ async function saveContactFromInput(type, isModal = false) {
 
     if (window[cfg.pollVar]) clearInterval(window[cfg.pollVar]);
     window[cfg.pollVar] = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
         checkPendingContactVerification(type);
     }, 2000);
 }

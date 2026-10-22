@@ -513,7 +513,7 @@ function copyTTN(ttn, el) {
         window.copyToClipboard(cleanTtn, successMsg).then(ok => {
             if (ok) animateCopiedIcon();
         });
-    } else if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         navigator.clipboard.writeText(cleanTtn).then(() => {
             if (typeof showToast === 'function') showToast(successMsg, 'success');
             animateCopiedIcon();

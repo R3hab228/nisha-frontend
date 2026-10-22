@@ -976,24 +976,16 @@ function shareItem() {
     const shareText = `Зацени: ${active.brand} (${active.size}).`;
 
     const successMsg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'Ссылка скопирована!'}) : 'Ссылка скопирована!';
-    const errorMsg = typeof i18next !== 'undefined' ? i18next.t('messages.copy_error', {defaultValue: 'Ошибка копирования'}) : 'Ошибка копирования';
 
-    if (navigator.share) {
-        navigator.share({
+    if (typeof window.shareContent === 'function') {
+        window.shareContent({
             title: shareTitle,
             text: shareText,
-            url: shareUrl
-        }).catch(() => {
-            console.log('Шеринг отменен пользователем');
+            url: shareUrl,
+            fallbackMsg: successMsg
         });
     } else if (typeof window.copyToClipboard === 'function') {
-        window.copyToClipboard(shareUrl, successMsg, errorMsg);
-    } else if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        navigator.clipboard.writeText(shareUrl)
-            .then(() => showToast(successMsg, 'success'))
-            .catch(() => showToast(errorMsg, 'error'));
-    } else {
-        showToast(errorMsg, 'error');
+        window.copyToClipboard(shareUrl, successMsg);
     }
 }
 window.shareItem = shareItem;

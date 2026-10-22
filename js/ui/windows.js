@@ -417,13 +417,10 @@ function initWindowOverlayListeners() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         // 1. Закрытие терминальных окон подтверждения или алертов
-        const termOverlays = Array.from(document.querySelectorAll('.confirm-modal-overlay, .terminal-modal-overlay, #confirmTerminalModal, #customTerminalAlert'));
-        if (termOverlays.length > 0) {
-            const topTerm = termOverlays.at(-1);
-            if (topTerm) {
-                topTerm.remove();
-                return;
-            }
+        const topTerm = Array.from(document.querySelectorAll('.confirm-modal-overlay, .terminal-modal-overlay, #confirmTerminalModal, #customTerminalAlert')).findLast(isElementVisible);
+        if (topTerm) {
+            topTerm.remove();
+            return;
         }
 
         // 2. Оверлеи успеха или подсказки email
@@ -439,13 +436,10 @@ document.addEventListener('keydown', (e) => {
         }
 
         // 3. Закрываем активное модальное окно (.modal-overlay)
-        const activeModals = Array.from(document.querySelectorAll('.modal-overlay')).filter(isElementVisible);
-        if (activeModals.length > 0) {
-            const topModal = activeModals.at(-1);
-            if (topModal.id !== 'rulesModal') {
-                closeModal(topModal.id);
-                return;
-            }
+        const topModal = Array.from(document.querySelectorAll('.modal-overlay')).findLast(isElementVisible);
+        if (topModal && topModal.id !== 'rulesModal') {
+            closeModal(topModal.id);
+            return;
         }
 
         // 4. Закрытие выпадающего списка живого поиска

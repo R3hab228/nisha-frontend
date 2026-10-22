@@ -41,7 +41,27 @@ function triggerVibration(duration = 150) {
 window.triggerVibration = triggerVibration;
 
 function triggerHaptic(type = 'light') {
-    if (window.innerWidth > 900 || !navigator.vibrate) return;
+    // 1. Telegram WebApp HapticFeedback (нативный Taptic Engine на iOS и Android)
+    try {
+        const tgHaptic = (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp)
+            ? window.Telegram.WebApp.HapticFeedback
+            : null;
+        if (tgHaptic) {
+            if (type === 'success' || type === 'error') {
+                if (typeof tgHaptic.notificationOccurred === 'function') {
+                    tgHaptic.notificationOccurred(type);
+                    return;
+                }
+            } else if (typeof tgHaptic.impactOccurred === 'function') {
+                const style = type === 'heavy' ? 'heavy' : (type === 'medium' ? 'medium' : 'light');
+                tgHaptic.impactOccurred(style);
+                return;
+            }
+        }
+    } catch (e) {}
+
+    // 2. Стандартный Web Vibration API для мобильных браузеров
+    if (typeof window === 'undefined' || window.innerWidth > 900 || typeof navigator === 'undefined' || !navigator.vibrate) return;
     try {
         switch(type) {
             case 'light': navigator.vibrate(25); break;
@@ -53,6 +73,7 @@ function triggerHaptic(type = 'light') {
     } catch(e) {}
 }
 window.triggerHaptic = triggerHaptic;
+if (typeof globalThis !== 'undefined') globalThis.triggerHaptic = triggerHaptic;
 
 // --- ТОСТЫ (ВСПЛЫВАЮЩИЕ УВЕДОМЛЕНИЯ) ---
 let lastToastMsg = '';
@@ -438,6 +459,30 @@ function copyToClipboard(text, successMsg = 'Скопировано в буфе�
 }
 window.copyToClipboard = copyToClipboard;
 if (typeof globalThis !== 'undefined') globalThis.copyToClipboard = copyToClipboard;
+
+async function shareContent({ title = '', text = '', url = '', fallbackMsg = '' } = {}) {
+    const targetUrl = url || (typeof window !== 'undefined' && window.location ? window.location.href : '');
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        try {
+            await navigator.share({
+                title,
+                text,
+                url: targetUrl
+            });
+            return true;
+        } catch (err) {
+            if (err && err.name === 'AbortError') {
+                return false; // Пользователь сам закрыл системный диалог
+            }
+        }
+    }
+    const defaultSuccess = typeof i18next !== 'undefined'
+        ? i18next.t('messages.link_copied', { defaultValue: 'Ссылка скопирована!' })
+        : 'Ссылка скопирована!';
+    return copyToClipboard(targetUrl, fallbackMsg || defaultSuccess);
+}
+window.shareContent = shareContent;
+if (typeof globalThis !== 'undefined') globalThis.shareContent = shareContent;
 
 // --- БЕЗОПАСНЫЕ ГЕТТЕРЫ ДАННЫХ И КЛИЕНТОВ ---
 function getSupabase() {

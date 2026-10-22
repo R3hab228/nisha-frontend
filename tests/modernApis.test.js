@@ -470,4 +470,94 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             }
         });
     });
+
+    describe('13. triggerHaptic with Telegram WebApp HapticFeedback integration', () => {
+        it('prefers Telegram HapticFeedback impact and notification when available in WebApp', () => {
+            const mockImpact = vi.fn();
+            const mockNotification = vi.fn();
+            globalThis.window.Telegram = {
+                WebApp: {
+                    HapticFeedback: {
+                        impactOccurred: mockImpact,
+                        notificationOccurred: mockNotification
+                    }
+                }
+            };
+
+            window.triggerHaptic('light');
+            expect(mockImpact).toHaveBeenCalledWith('light');
+
+            window.triggerHaptic('heavy');
+            expect(mockImpact).toHaveBeenCalledWith('heavy');
+
+            window.triggerHaptic('success');
+            expect(mockNotification).toHaveBeenCalledWith('success');
+
+            window.triggerHaptic('error');
+            expect(mockNotification).toHaveBeenCalledWith('error');
+
+            // Cleanup mock
+            delete globalThis.window.Telegram;
+        });
+
+        it('falls back to navigator.vibrate on mobile browsers outside Telegram', () => {
+            const mockVibrate = vi.fn();
+            globalThis.navigator.vibrate = mockVibrate;
+            globalThis.window.innerWidth = 400; // Mobile screen
+
+            window.triggerHaptic('light');
+            expect(mockVibrate).toHaveBeenCalledWith(25);
+
+            window.triggerHaptic('medium');
+            expect(mockVibrate).toHaveBeenCalledWith(40);
+        });
+    });
+
+    describe('14. shareContent helper (Web Share API + Clipboard fallback)', () => {
+        it('invokes navigator.share when supported by user agent', async () => {
+            const mockShare = vi.fn().mockResolvedValue(undefined);
+            globalThis.navigator.share = mockShare;
+
+            const res = await window.shareContent({
+                title: 'NISHA Store',
+                text: 'Vintage drop',
+                url: 'https://www.nisha-store.shop/share/123'
+            });
+
+            expect(mockShare).toHaveBeenCalledWith({
+                title: 'NISHA Store',
+                text: 'Vintage drop',
+                url: 'https://www.nisha-store.shop/share/123'
+            });
+            expect(res).toBe(true);
+        });
+
+        it('gracefully falls back to clipboard copy when navigator.share is unavailable', async () => {
+            delete globalThis.navigator.share;
+            const mockWrite = vi.fn().mockResolvedValue(undefined);
+            globalThis.navigator.clipboard = { writeText: mockWrite };
+
+            const res = await window.shareContent({
+                url: 'https://www.nisha-store.shop/share/456'
+            });
+
+            expect(mockWrite).toHaveBeenCalledWith('https://www.nisha-store.shop/share/456');
+            expect(res).toBe(true);
+        });
+    });
+
+    describe('15. Array.prototype.findLast for top-most z-stack modals', () => {
+        it('finds the last matching visible element efficiently from the end', () => {
+            const modals = [
+                { id: 'modal-1', isVisible: false },
+                { id: 'modal-2', isVisible: true },
+                { id: 'modal-3', isVisible: true },
+                { id: 'modal-4', isVisible: false }
+            ];
+
+            const top = modals.findLast(m => m.isVisible);
+            expect(top).toBeDefined();
+            expect(top.id).toBe('modal-3');
+        });
+    });
 });

@@ -401,6 +401,9 @@ async function generateAndSendOTP() {
     window._checkActiveOtp = doOtpCheck;
 
     window.otpPollInterval = setInterval(async () => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+            return; // Пропускаем опрос при скрытой вкладке для экономии ресурсов
+        }
         pollAttempts++;
         if (pollAttempts >= maxPollAttempts) {
             clearInterval(window.otpPollInterval);
