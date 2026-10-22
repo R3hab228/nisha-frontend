@@ -560,4 +560,23 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(top.id).toBe('modal-3');
         });
     });
+
+    describe('16. sanitizeText universal XSS prevention helper', () => {
+        it('safely escapes special HTML characters using robust native fallback', () => {
+            const dirty = '<script>alert("xss")</script> & \'evil\'';
+            const clean = window.sanitizeText(dirty);
+
+            expect(clean).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt; &amp; &#39;evil&#39;');
+            expect(clean).not.toContain('<script>');
+            expect(clean).not.toContain('</script>');
+            expect(clean).not.toContain('"');
+            expect(clean).not.toContain("'");
+        });
+
+        it('handles null, undefined and numbers safely', () => {
+            expect(window.sanitizeText(null)).toBe('');
+            expect(window.sanitizeText(undefined)).toBe('');
+            expect(window.sanitizeText(12345)).toBe('12345');
+        });
+    });
 });

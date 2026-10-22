@@ -484,6 +484,22 @@ async function shareContent({ title = '', text = '', url = '', fallbackMsg = '' 
 window.shareContent = shareContent;
 if (typeof globalThis !== 'undefined') globalThis.shareContent = shareContent;
 
+function sanitizeText(value) {
+    if (value == null) return '';
+    const str = String(value);
+    if (typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
+        return DOMPurify.sanitize(str);
+    }
+    return str
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+window.sanitizeText = sanitizeText;
+if (typeof globalThis !== 'undefined') globalThis.sanitizeText = sanitizeText;
+
 // --- БЕЗОПАСНЫЕ ГЕТТЕРЫ ДАННЫХ И КЛИЕНТОВ ---
 function getSupabase() {
     return window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);

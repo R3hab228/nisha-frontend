@@ -1291,9 +1291,10 @@ async function loadItemQuestions(itemId) {
         else list.innerHTML = '';
         let listHtml = '';
         data.forEach(q => {
-            const safeQ = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.question) : q.question.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-            const safeA = q.answer ? (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.answer) : q.answer.replaceAll('<', '&lt;').replaceAll('>', '&gt;')) : null;
-            const safeU = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.user_name) : q.user_name.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const sanitize = (typeof window.sanitizeText === 'function') ? window.sanitizeText : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const safeQ = sanitize(q.question);
+            const safeA = q.answer ? sanitize(q.answer) : null;
+            const safeU = sanitize(q.user_name);
 
             let answerHtml = safeA ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">↳ NISHA: ${safeA}</div>` : '';
             listHtml += `

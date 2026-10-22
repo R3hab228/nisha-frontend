@@ -105,12 +105,16 @@ function openModal(id) {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     const modal = document.getElementById(id);
     if (!modal) return;
+    if (typeof document !== 'undefined' && document.activeElement) {
+        modal._returnFocusElement = document.activeElement;
+    }
     if (modal._closeTimer) {
         clearTimeout(modal._closeTimer);
         modal._closeTimer = null;
     }
     modal.classList.remove('closing');
     modal.style.pointerEvents = '';
+    modal.setAttribute('aria-hidden', 'false');
     const win = modal.querySelector('.modal-window');
     if (win) {
         win.style.transform = '';
@@ -203,6 +207,7 @@ function executeCloseModal(id) {
 
     if (id === 'rulesModal') {
         modal.classList.add('closing');
+        modal.setAttribute('aria-hidden', 'true');
         if (modal._closeTimer) clearTimeout(modal._closeTimer);
         modal._closeTimer = setTimeout(() => {
             modal._closeTimer = null;
@@ -214,6 +219,10 @@ function executeCloseModal(id) {
             if (win) {
                 win.style.transform = '';
                 win.style.opacity = '';
+            }
+            if (modal._returnFocusElement && typeof modal._returnFocusElement.focus === 'function') {
+                try { modal._returnFocusElement.focus(); } catch (e) {}
+                modal._returnFocusElement = null;
             }
         }, 350);
         return;
@@ -234,6 +243,7 @@ function executeCloseModal(id) {
     }
 
     modal.classList.add('closing');
+    modal.setAttribute('aria-hidden', 'true');
     if (modal._closeTimer) clearTimeout(modal._closeTimer);
 
     modal._closeTimer = setTimeout(() => {
@@ -253,6 +263,11 @@ function executeCloseModal(id) {
         modal.style.opacity = '';
         modal.style.transition = '';
         modal.style.backgroundColor = '';
+
+        if (modal._returnFocusElement && typeof modal._returnFocusElement.focus === 'function') {
+            try { modal._returnFocusElement.focus(); } catch (e) {}
+            modal._returnFocusElement = null;
+        }
 
         if (id === 'checkoutModal' && window.otpPollInterval) {
             clearInterval(window.otpPollInterval);

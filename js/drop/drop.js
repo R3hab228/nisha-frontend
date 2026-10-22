@@ -481,11 +481,12 @@ async function submitProposal() {
     }
     
     // Очистка от вредоносного кода
-    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName.replaceAll('<', '&lt;').replaceAll('>', '&gt;'); 
-    const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const sanitize = (typeof window.sanitizeText === 'function') ? window.sanitizeText : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const nameItem = sanitize(rawName); 
+    const brand = sanitize(rawBrand);
+    const size = sanitize(rawSize);
+    const desc = sanitize(rawDesc);
+    const contact = sanitize(rawContact);
 
     // Валидация
     if (!files.length || !nameItem || !brand || !size || !desc || Number.isNaN(cond) || price <= 0 || !contact) {

@@ -1853,11 +1853,14 @@ function applyFilters(immediate = false, preserveViewport = false) {
 }
 window.applyFilters = applyFilters;
 
-// Умный плеер для видео в сетке (IntersectionObserver)
+// Умный плеер для видео в сетке (IntersectionObserver с поддержкой Network Information API)
 const gridVideoObserver = new IntersectionObserver((entries) => {
+    const conn = (typeof navigator !== 'undefined') ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
+    const isSaveData = Boolean(conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g'));
+
     entries.forEach(entry => {
         const video = entry.target;
-        if (entry.isIntersecting && !document.hidden) {
+        if (entry.isIntersecting && !document.hidden && !isSaveData) {
             video.play().catch(() => {}); 
         } else {
             video.pause(); 
@@ -2085,6 +2088,7 @@ function renderNextBatch(targetMobileCount = 0) {
 
     if (isMobile) {
         if (window.renderedCount === 0) {
+            if (gridVideoObserver) gridVideoObserver.disconnect();
             if (typeof grid.replaceChildren === 'function') grid.replaceChildren();
             else grid.innerHTML = '';
         }
@@ -2092,6 +2096,7 @@ function renderNextBatch(targetMobileCount = 0) {
         const batchLen = (startIndex === 0 && targetMobileCount > BATCH_SIZE) ? targetMobileCount : BATCH_SIZE;
         endIndex = Math.min(startIndex + batchLen, window.filteredItems.length); 
     } else {
+        if (gridVideoObserver) gridVideoObserver.disconnect();
         if (typeof grid.replaceChildren === 'function') grid.replaceChildren();
         else grid.innerHTML = '';
         startIndex = (window.currentPage - 1) * BATCH_SIZE; 

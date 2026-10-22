@@ -55,8 +55,8 @@ async function openReviewsModal() {
         data.forEach(rev => {
             const revDate = new Date(rev.created_at);
             const date = !Number.isNaN(revDate.getTime()) ? reviewDateFormatter.format(revDate) : '';
-            const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : (rev.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-            const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : (rev.user_name || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const safeText = (typeof window.sanitizeText === 'function') ? window.sanitizeText(rev.text) : (rev.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const safeName = (typeof window.sanitizeText === 'function') ? window.sanitizeText(rev.user_name) : (rev.user_name || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
             
             const revImg = rev.item_image ? toCDN(rev.item_image) : '';
             const safeRevImg = typeof window.escapeHtml === 'function' ? window.escapeHtml(revImg) : revImg.replaceAll('"', '&quot;');

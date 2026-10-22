@@ -1210,9 +1210,10 @@ async function submitOrder() {
     const rawCity = document.getElementById('orderCity').value.trim();
     const rawBranch = document.getElementById('orderBranch').value.trim();
     
-    const name = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(cleanLettersName) : cleanLettersName.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    const city = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawCity) : rawCity.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    const branch = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawBranch) : rawBranch.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const sanitize = (typeof window.sanitizeText === 'function') ? window.sanitizeText : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const name = sanitize(cleanLettersName);
+    const city = sanitize(rawCity);
+    const branch = sanitize(rawBranch);
 
     const phoneRaw = document.getElementById('orderPhone').value;
     const phone = normalizeOrderPhone(phoneRaw);
