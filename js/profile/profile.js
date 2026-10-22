@@ -63,6 +63,10 @@ function openProfileModal() {
         document.body.style.overflow = 'hidden';
     }
 
+    if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
+        window.NishaGoogleAuth.syncAll();
+    }
+
     // Повторная синхронизация контактов и данных доставки в модалке при каждом открытии
     const activeUser = currentUser || window.currentUser;
     if (activeUser) {
@@ -384,6 +388,10 @@ async function checkSession() {
             if (mProf) mProf.style.display = 'none';
             
             updateFavBadge();
+
+            if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
+                window.NishaGoogleAuth.syncAll();
+            }
         }
     } catch (err) {
         console.error("Ошибка в checkSession:", err);
@@ -421,6 +429,10 @@ function toggleRegMode(isModal = false) {
         if (btnRegister) btnRegister.style.display = 'none';
         if (btnBackLogin) btnBackLogin.style.display = 'none';
         if (authUsername) authUsername.style.display = 'none';
+    }
+
+    if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
+        window.NishaGoogleAuth.syncAll();
     }
 }
 window.toggleRegMode = toggleRegMode;
@@ -477,6 +489,12 @@ async function logout() {
     if (sb) {
         await sb.auth.signOut();
     }
+    if (typeof window !== 'undefined' && window.google?.accounts?.id?.disableAutoSelect) {
+        try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
+    }
+    if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.resetSession === 'function') {
+        try { await window.NishaGoogleAuth.resetSession(); } catch (e) {}
+    }
     const msg = typeof i18next !== 'undefined' ? i18next.t('messages.logout') : 'Вы вышли из системы';
     showToast(msg, 'success');
     
@@ -488,6 +506,9 @@ async function logout() {
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
     
     await checkSession();
+    if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
+        window.NishaGoogleAuth.syncAll();
+    }
     if (typeof applyFilters === 'function') applyFilters();
 }
 window.logout = logout;

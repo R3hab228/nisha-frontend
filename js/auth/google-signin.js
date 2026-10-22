@@ -142,15 +142,23 @@
 
     // --- Невидимая официальная кнопка Google поверх нашей кнопки (дизайн сайта не меняется) ---
     function layoutOverlay(btn, state) {
+        if (!btn || !state || !state.overlay) return;
         const w = btn.offsetWidth;
         const h = btn.offsetHeight;
         const style = state.overlay.style;
         if (!w || !h) {
-            style.display = 'none'; // кнопка скрыта (закрытая модалка) — пересчитаем, когда появится
+            style.display = 'none'; // кнопка скрыта (закрытая модалка или неактивный блок) — пересчитаем, когда появится
             return;
         }
 
         const parent = btn.parentElement;
+        const parentPos = (parent && typeof window.getComputedStyle === 'function')
+            ? window.getComputedStyle(parent).position
+            : (parent && parent.style && parent.style.position ? parent.style.position : 'static');
+        if (parent && parentPos === 'static') {
+            parent.style.position = 'relative';
+        }
+
         let left = btn.offsetLeft;
         let top = btn.offsetTop;
         if (parent && btn.offsetParent !== parent) {
@@ -167,29 +175,37 @@
         style.height = h + 'px';
 
         const googleWidth = Math.max(200, Math.min(400, Math.round(w)));
-        if (state.renderedWidth !== googleWidth) {
+        const hasIframe = Boolean(state.host && state.host.querySelector && state.host.querySelector('iframe'));
+        if (state.renderedWidth !== googleWidth || !hasIframe) {
             if (typeof state.host.replaceChildren === 'function') state.host.replaceChildren();
             else state.host.innerHTML = '';
-            window.google.accounts.id.renderButton(state.host, {
-                type: 'standard',
-                theme: 'outline',
-                size: 'large',
-                text: 'signin_with',
-                shape: 'rectangular',
-                logo_alignment: 'left',
-                width: googleWidth
-            });
-            state.renderedWidth = googleWidth;
+            if (window.google && window.google.accounts && window.google.accounts.id) {
+                window.google.accounts.id.renderButton(state.host, {
+                    type: 'standard',
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with',
+                    shape: 'rectangular',
+                    logo_alignment: 'left',
+                    width: googleWidth
+                });
+                state.renderedWidth = googleWidth;
+            }
         }
-        state.host.style.width = googleWidth + 'px';
-        state.host.style.height = GOOGLE_BTN_HEIGHT + 'px';
-        state.host.style.transform = 'scale(' + (w / googleWidth) + ',' + (h / GOOGLE_BTN_HEIGHT) + ')';
+        if (state.host) {
+            state.host.style.width = googleWidth + 'px';
+            state.host.style.height = GOOGLE_BTN_HEIGHT + 'px';
+            state.host.style.transform = 'scale(' + (w / googleWidth) + ',' + (h / GOOGLE_BTN_HEIGHT) + ')';
+        }
     }
 
     function mountButton(btn) {
         if (mounted.has(btn) || !btn.parentElement) return;
         const parent = btn.parentElement;
-        if (window.getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+        const curPos = (parent && typeof window.getComputedStyle === 'function')
+            ? window.getComputedStyle(parent).position
+            : (parent && parent.style && parent.style.position ? parent.style.position : 'static');
+        if (parent && curPos === 'static') parent.style.position = 'relative';
 
         const overlay = document.createElement('div');
         overlay.className = 'g-signin-overlay';
@@ -211,12 +227,76 @@
             ro.observe(btn);
             ro.observe(parent);
         }
-        window.addEventListener('resize', sync, { passive: true });
+        if (typeof window.addEventListener === 'function') {
+            window.addEventListener('resize', sync, { passive: true });
+        }
         sync();
     }
 
     function mountAll() {
         document.querySelectorAll(BTN_SELECTOR).forEach(mountButton);
+    }
+
+    function syncAll() {
+        const doSync = () => {
+            if (!mounted.size) {
+                mountAll();
+                return;
+            }
+            mounted.forEach((state, btn) => {
+                try {
+                    layoutOverlay(btn, state);
+                } catch (e) {
+                    if (state && state.overlay) state.overlay.style.display = 'none';
+                }
+            });
+            mountAll();
+        };
+
+        doSync();
+        if (typeof window !== 'undefined') {
+            if (typeof window.requestAnimationFrame === 'function') {
+                window.requestAnimationFrame(() => {
+                    doSync();
+                    setTimeout(doSync, 100);
+                });
+            } else {
+                setTimeout(doSync, 50);
+                setTimeout(doSync, 150);
+            }
+        }
+    }
+
+    async function resetSession() {
+        isSigningIn = false;
+        try {
+            const nonce = await createNonce();
+            rawNonce = nonce.raw;
+            if (gsiReady && window.google && window.google.accounts && window.google.accounts.id) {
+                const config = {
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleCredential,
+                    auto_select: false,
+                    cancel_on_tap_outside: true,
+                    itp_support: true,
+                    ux_mode: 'popup',
+                    context: 'signin'
+                };
+                if (nonce.hashed) config.nonce = nonce.hashed;
+                window.google.accounts.id.initialize(config);
+            }
+        } catch (e) {
+            console.warn('[GOOGLE] Ошибка сброса сессии GIS при выходе:', e);
+        }
+
+        mounted.forEach(state => {
+            state.renderedWidth = 0;
+            if (state.host) {
+                if (typeof state.host.replaceChildren === 'function') state.host.replaceChildren();
+                else state.host.innerHTML = '';
+            }
+        });
+        syncAll();
     }
 
     // --- Запасной путь: прежний OAuth-редирект через Supabase ---
@@ -233,30 +313,15 @@
         if (error) toast('Ошибка: ' + error.message, 'error');
     }
 
-    // Вызывается, когда клик дошёл до нашей кнопки (клавиатура или GIS не готов)
+    // Вызывается, когда клик дошёл до нашей кнопки (клавиатура, оверлей не успел смонтироваться или GIS заблокирован)
     async function loginWithGoogle() {
         if (isInAppBrowser()) {
             alert('Для входа через Google открой сайт в обычном браузере (Safari или Chrome)');
             return;
         }
 
-        if (gsiReady && window.google && window.google.accounts && window.google.accounts.id) {
-            let fellBack = false;
-            try {
-                window.google.accounts.id.prompt(notification => {
-                    const notShown = notification && (
-                        (notification.isNotDisplayed && notification.isNotDisplayed()) ||
-                        (notification.isSkippedMoment && notification.isSkippedMoment())
-                    );
-                    if (notShown && !fellBack) {
-                        fellBack = true;
-                        redirectToGoogle();
-                    }
-                });
-                return;
-            } catch (e) { /* падаем в редирект */ }
-        }
-
+        // Если клик попал прямо на саму кнопку (оверлей был перекрыт, скрыт или GIS недоступен) —
+        // мгновенно запускаем надежный OAuth через Supabase без зависаний One Tap
         await redirectToGoogle();
     }
     window.loginWithGoogle = loginWithGoogle;
@@ -267,7 +332,15 @@
         ensureReady().then(ok => { if (ok) mountAll(); });
     }
 
-    window.NishaGoogleAuth = { start, ensureReady, handleCredential, createNonce };
+    window.NishaGoogleAuth = {
+        start,
+        ensureReady,
+        handleCredential,
+        createNonce,
+        syncAll,
+        resetSession,
+        mountAll
+    };
 
     const schedule = () => {
         if ('requestIdleCallback' in window) {

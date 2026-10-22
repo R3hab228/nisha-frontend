@@ -11,8 +11,12 @@ function setupBrowserEnv({ hostname = 'localhost', withGoogle = true, sbMock } =
         querySelectorAll: () => [],
         getElementById: () => null,
         createElement: () => ({ style: {}, remove() {}, appendChild() {} }),
-        head: { appendChild() {} }
+        head: { appendChild() {} },
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
     };
+    g.addEventListener = vi.fn();
+    g.removeEventListener = vi.fn();
     g.showToast = vi.fn();
     g.checkSession = vi.fn().mockResolvedValue();
     g.closeModal = vi.fn();
@@ -118,5 +122,98 @@ describe('Google Sign-In (GIS ID Token)', () => {
             if (original) Object.defineProperty(globalThis, 'navigator', original);
             else delete globalThis.navigator;
         }
+    });
+
+    it('resetSession() generates a fresh nonce, re-initializes GIS, and clears cached rendered widths', async () => {
+        const sb = { auth: { signInWithIdToken: vi.fn().mockResolvedValue({ error: null }), signInWithOAuth: vi.fn() } };
+        setupBrowserEnv({ sbMock: sb });
+        const api = await loadModule();
+        await api.ensureReady();
+
+        const initialNonce = globalThis.google.accounts.id.initialize.mock.calls[0][0].nonce;
+        expect(initialNonce).toBeTruthy();
+
+        // Simulate reset on logout:
+        await api.resetSession();
+
+        expect(globalThis.google.accounts.id.initialize).toHaveBeenCalledTimes(2);
+        const secondNonce = globalThis.google.accounts.id.initialize.mock.calls[1][0].nonce;
+        expect(secondNonce).toBeTruthy();
+        expect(secondNonce).not.toBe(initialNonce);
+    });
+
+    it('loginWithGoogle() directly invokes OAuth redirect even if GIS is ready, preventing unclickable button deadlocks', async () => {
+        const sb = { auth: { signInWithIdToken: vi.fn(), signInWithOAuth: vi.fn().mockResolvedValue({ error: null }) } };
+        setupBrowserEnv({ sbMock: sb, withGoogle: true });
+        await loadModule();
+        await globalThis.NishaGoogleAuth.ensureReady();
+
+        // GIS is ready, but user clicked the underlying HTML button (overlay was loading or obscured)
+        await globalThis.loginWithGoogle();
+
+        expect(sb.auth.signInWithOAuth).toHaveBeenCalledTimes(1);
+        expect(globalThis.google.accounts.id.prompt).not.toHaveBeenCalled();
+    });
+
+    it('syncAll() re-lays out mounted Google buttons and positions the overlay', async () => {
+        const sb = { auth: { signInWithIdToken: vi.fn(), signInWithOAuth: vi.fn() } };
+        setupBrowserEnv({ sbMock: sb, withGoogle: true });
+
+        const mockOverlay = { style: {} };
+        const mockHost = { style: {}, querySelector: vi.fn().mockReturnValue(null), replaceChildren: vi.fn() };
+        const mockBtn = {
+            offsetWidth: 250,
+            offsetHeight: 40,
+            offsetLeft: 10,
+            offsetTop: 20,
+            parentElement: { style: {} },
+            offsetParent: null,
+            getBoundingClientRect: () => ({ left: 50, top: 100 }),
+            insertAdjacentElement: vi.fn()
+        };
+        mockBtn.offsetParent = mockBtn.parentElement;
+
+        globalThis.document.querySelectorAll = vi.fn().mockReturnValue([mockBtn]);
+        globalThis.document.createElement = vi.fn((tag) => {
+            if (tag === 'div') return { style: {}, appendChild: vi.fn(), setAttribute: vi.fn() };
+            return { style: {} };
+        });
+
+        const api = await loadModule();
+        await api.ensureReady();
+
+        api.syncAll();
+        // syncAll runs immediately and schedules frame/timeouts
+        vi.advanceTimersByTime(200);
+
+        expect(globalThis.google.accounts.id.renderButton).toHaveBeenCalled();
+    });
+
+    it('logout() calls disableAutoSelect, resets GIS session, and synchronizes Google button overlays', async () => {
+        const { readFileSync } = await import('node:fs');
+        const { resolve } = await import('node:path');
+        const sb = {
+            auth: {
+                signOut: vi.fn().mockResolvedValue({ error: null }),
+                getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null })
+            }
+        };
+        setupBrowserEnv({ sbMock: sb, withGoogle: true });
+        globalThis.google.accounts.id.disableAutoSelect = vi.fn();
+        const api = await loadModule();
+        await api.ensureReady();
+
+        const resetSpy = vi.spyOn(api, 'resetSession');
+        const syncSpy = vi.spyOn(api, 'syncAll');
+
+        const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+        eval(profileCode);
+
+        await globalThis.logout();
+
+        expect(sb.auth.signOut).toHaveBeenCalledTimes(1);
+        expect(globalThis.google.accounts.id.disableAutoSelect).toHaveBeenCalledTimes(1);
+        expect(resetSpy).toHaveBeenCalledTimes(1);
+        expect(syncSpy).toHaveBeenCalled();
     });
 });
