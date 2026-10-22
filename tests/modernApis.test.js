@@ -342,4 +342,132 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             }
         });
     });
+
+    describe('8. classList.toggle(name, condition)', () => {
+        it('correctly toggles classes based on boolean flag', () => {
+            const classSet = new Set();
+            const mockEl = {
+                classList: {
+                    toggle(token, force) {
+                        const shouldAdd = typeof force === 'boolean' ? force : !classSet.has(token);
+                        if (shouldAdd) classSet.add(token);
+                        else classSet.delete(token);
+                        return classSet.has(token);
+                    },
+                    contains(token) { return classSet.has(token); }
+                }
+            };
+
+            mockEl.classList.toggle('active', true);
+            expect(mockEl.classList.contains('active')).toBe(true);
+
+            mockEl.classList.toggle('active', false);
+            expect(mockEl.classList.contains('active')).toBe(false);
+
+            mockEl.classList.toggle('active-thumb', 2 === 2);
+            expect(mockEl.classList.contains('active-thumb')).toBe(true);
+
+            mockEl.classList.toggle('active-thumb', 1 === 2);
+            expect(mockEl.classList.contains('active-thumb')).toBe(false);
+        });
+    });
+
+    describe('9. String.prototype.replaceAll() in HTML sanitization & string cleaners', () => {
+        it('replaces all occurrences without regex overhead', () => {
+            const raw = 'Hello <world> & "friends" & \'all\'';
+            const escaped = raw
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+
+            expect(escaped).toBe('Hello &lt;world&gt; &amp; &quot;friends&quot; &amp; &#39;all&#39;');
+            expect(escaped).not.toContain('<');
+            expect(escaped).not.toContain('>');
+
+            const searchWithHashtags = '###vintage #hoodie #oversized###';
+            expect(searchWithHashtags.replaceAll('#', '').trim()).toBe('vintage hoodie oversized');
+
+            const uuidLike = '123e4567-e89b-12d3-a456-426614174000';
+            expect(uuidLike.replaceAll('-', '')).toBe('123e4567e89b12d3a456426614174000');
+        });
+    });
+
+    describe('10. Number.isFinite() and Number.isNaN() strictness', () => {
+        it('Number.isFinite rejects invalid inputs that legacy isNaN/isFinite loosely coerced', () => {
+            expect(Number.isFinite(1500)).toBe(true);
+            expect(Number.isFinite(0)).toBe(true);
+            expect(Number.isFinite(-5)).toBe(true);
+
+            // In contrast to global isFinite, Number.isFinite does NOT coerce
+            expect(Number.isFinite('1500')).toBe(false);
+            expect(Number.isFinite('')).toBe(false);
+            expect(Number.isFinite(null)).toBe(false);
+            expect(Number.isFinite(undefined)).toBe(false);
+            expect(Number.isFinite(NaN)).toBe(false);
+            expect(Number.isFinite(Infinity)).toBe(false);
+        });
+
+        it('Number.isNaN only returns true for actual NaN without coercion', () => {
+            expect(Number.isNaN(NaN)).toBe(true);
+            expect(Number.isNaN(Number('not_a_number'))).toBe(true);
+
+            // In contrast to global isNaN('foo') === true:
+            expect(Number.isNaN('foo')).toBe(false);
+            expect(Number.isNaN(undefined)).toBe(false);
+            expect(Number.isNaN({})).toBe(false);
+        });
+    });
+
+    describe('11. URLSearchParams query parsing precision', () => {
+        it('correctly inspects parameters without false positives on substrings', () => {
+            const urlWithSubstr = 'https://www.nisha-store.shop/?order_item=123&action=catalog';
+            const params = new URLSearchParams(new URL(urlWithSubstr).search);
+
+            // Substring search on search.includes('item=') would be true (false positive for order_item!)
+            expect(urlWithSubstr.includes('item=')).toBe(true);
+            // URLSearchParams gives exact answer:
+            expect(params.has('item')).toBe(false);
+            expect(params.get('action')).toBe('catalog');
+
+            const urlWithDirectItem = 'https://www.nisha-store.shop/?item=prod_456&action=cart';
+            const paramsDirect = new URLSearchParams(new URL(urlWithDirectItem).search);
+            expect(paramsDirect.has('item')).toBe(true);
+            expect(paramsDirect.get('action')).toBe('cart');
+        });
+
+        it('constructs encoded query string cleanly for Nominatim geocoding', () => {
+            const query = new URLSearchParams({
+                lat: '50.4501',
+                lon: '30.5234',
+                format: 'json',
+                'accept-language': 'uk'
+            }).toString();
+
+            expect(query).toBe('lat=50.4501&lon=30.5234&format=json&accept-language=uk');
+        });
+    });
+
+    describe('12. Cleanliness check: Zero legacy global isNaN across frontend js source', () => {
+        it('ensures no global isNaN calls remain in js source files', () => {
+            const files = [
+                'catalog/catalog.js',
+                'catalog/live-search.js',
+                'cart/cart.js',
+                'core/store.js',
+                'drop/drop.js',
+                'orders/orders.js',
+                'product/product.js',
+                'profile/profile.js',
+                'reviews/reviews.js'
+            ];
+            for (const relPath of files) {
+                const code = readFileSync(resolve(__dirname, '../js', relPath), 'utf8');
+                // Match isNaN( not preceded by a dot
+                const legacyIsNaNMatch = code.match(/(?<!\.)\bisNaN\s*\(/g);
+                expect(legacyIsNaNMatch).toBeNull();
+            }
+        });
+    });
 });

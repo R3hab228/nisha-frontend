@@ -82,7 +82,7 @@
                 }
             case 'number': {
                 const num = Number(raw);
-                return isNaN(num) ? (typeof schema.default === 'function' ? schema.default() : schema.default) : num;
+                return Number.isNaN(num) ? (typeof schema.default === 'function' ? schema.default() : schema.default) : num;
             }
             case 'boolean':
                 return raw === 'true' || raw === '1' || raw === true;

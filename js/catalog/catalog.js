@@ -620,7 +620,7 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
 
     const tooltip = getMeasurementsTooltip();
     
-    const escape = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escape = (str) => String(str).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
     const itemsHTML = measures.map(m => `
         <li class="measurements-tooltip-item">
             <span class="measurements-dot"></span>
@@ -1673,9 +1673,9 @@ function applyFilters(immediate = false, preserveViewport = false) {
             const minInput = document.getElementById('priceMin');
             const maxInput = document.getElementById('priceMax');
             const rawMin = minInput ? parseInt(minInput.value, 10) : NaN;
-            const minPrice = (!isNaN(rawMin) && rawMin >= 0) ? rawMin : 0;
+            const minPrice = (Number.isFinite(rawMin) && rawMin >= 0) ? rawMin : 0;
             const rawMax = maxInput ? parseInt(maxInput.value, 10) : NaN;
-            const maxPrice = (!isNaN(rawMax) && rawMax > 0) ? rawMax : Infinity;
+            const maxPrice = (Number.isFinite(rawMax) && rawMax > 0) ? rawMax : Infinity;
 
             const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
             const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
@@ -1712,7 +1712,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
 
             // 2. Умный поиск (Web Worker Fuse.js с поддержкой транслитерации и надежный fallback)
             if (searchTerm !== '') {
-                const cleanSearchTerm = searchTerm.replace(/#/g, '').trim();
+                const cleanSearchTerm = searchTerm.replaceAll('#', '').trim();
                 if (cleanSearchTerm) {
                     if (window.searchWorker && window.searchWorker.isReady()) {
                         const candidateIds = window.filteredItems.map(i => i.id);
@@ -2160,7 +2160,7 @@ function renderNextBatch(targetMobileCount = 0) {
             const safeBrand = (item.brand || '').trim();
             const safeName = (item.name || '').trim();
             const baseAlt = [safeBrand, safeName].filter(Boolean).join(' ') || 'Винтажная одежда NISHA';
-            const cleanAlt = baseAlt.replace(/"/g, '&quot;');
+            const cleanAlt = baseAlt.replaceAll('"', '&quot;');
 
             thumbsArray.forEach((thumbUrl, idx) => {
                 const rawVidUrl = item.images && item.images[idx] ? item.images[idx] : '';
@@ -2499,8 +2499,7 @@ window.updateCardDots = function(container, itemId) {
         if (dotsContainer) {
             const dots = dotsContainer.children;
             for (let i = 0; i < dots.length; i++) {
-                if (i === index) dots[i].classList.add('active');
-                else dots[i].classList.remove('active');
+                dots[i].classList.toggle('active', i === index);
             }
         }
     });

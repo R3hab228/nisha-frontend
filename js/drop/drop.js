@@ -481,14 +481,14 @@ async function submitProposal() {
     }
     
     // Очистка от вредоносного кода
-    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName.replace(/</g, '&lt;').replace(/>/g, '&gt;'); 
-    const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const nameItem = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawName) : rawName.replaceAll('<', '&lt;').replaceAll('>', '&gt;'); 
+    const brand = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawBrand) : rawBrand.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const size = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawSize) : rawSize.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const desc = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawDesc) : rawDesc.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const contact = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rawContact) : rawContact.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
     // Валидация
-    if (!files.length || !nameItem || !brand || !size || !desc || isNaN(cond) || price <= 0 || !contact) {
+    if (!files.length || !nameItem || !brand || !size || !desc || Number.isNaN(cond) || price <= 0 || !contact) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         showToast('Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!', 'error');
         return;

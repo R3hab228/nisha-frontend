@@ -177,7 +177,7 @@ async function openProductModalById(itemId) {
                 }
 
                 if (fullItem.description) {
-                    const descText = fullItem.description ? fullItem.description.replace(/\n/g, '<br>') : `<span style="color:#666;">[ Описание отсутствует ]</span>`;
+                    const descText = fullItem.description ? fullItem.description.replaceAll('\n', '<br>') : `<span style="color:#666;">[ Описание отсутствует ]</span>`;
                     const descContainer = document.querySelector('.modal-desc');
                     if (descContainer) {
                         const sizeTitle = typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР';
@@ -243,11 +243,7 @@ function openProductModal(item) {
     const modalStar = document.getElementById('modalFavStar');
     const favs = getFavs();
     if (modalStar) {
-        if (favs.includes(item.id)) {
-            modalStar.classList.add('active');
-        } else {
-            modalStar.classList.remove('active');
-        }
+        modalStar.classList.toggle('active', favs.includes(item.id));
     }
 
     const isHackedActive = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
@@ -353,7 +349,7 @@ function openProductModal(item) {
             if (!viewedItems.includes(item.id)) {
                 let visitorId = getFingerprint();
                 if (!visitorId || visitorId.startsWith('guest_')) {
-                    visitorId = (store ? store.get('nisha_visitor_id') : null) || ('user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replace(/-/g, '').slice(0, 9) : Date.now().toString(36))));
+                    visitorId = (store ? store.get('nisha_visitor_id') : null) || ('user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '').slice(0, 9) : Date.now().toString(36))));
                 }
                 const currentUser = getUser();
                 const viewerId = currentUser ? currentUser.id : visitorId;
@@ -874,8 +870,7 @@ function updateSlider() {
 
     const thumbs = document.querySelectorAll('.thumb');
     thumbs.forEach((t, i) => { 
-        if(i === currentSlide) t.classList.add('active-thumb'); 
-        else t.classList.remove('active-thumb'); 
+        t.classList.toggle('active-thumb', i === currentSlide); 
     });
 
     // Умная пауза скрытых видео: воспроизводим только активный слайд
@@ -1304,9 +1299,9 @@ async function loadItemQuestions(itemId) {
         else list.innerHTML = '';
         let listHtml = '';
         data.forEach(q => {
-            const safeQ = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.question) : q.question.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const safeA = q.answer ? (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.answer) : q.answer.replace(/</g, '&lt;').replace(/>/g, '&gt;')) : null;
-            const safeU = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.user_name) : q.user_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeQ = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.question) : q.question.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const safeA = q.answer ? (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.answer) : q.answer.replaceAll('<', '&lt;').replaceAll('>', '&gt;')) : null;
+            const safeU = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(q.user_name) : q.user_name.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
             let answerHtml = safeA ? `<div style="color: var(--accent-green); font-size: 12px; font-weight: bold; margin-top: 4px;">↳ NISHA: ${safeA}</div>` : '';
             listHtml += `
@@ -1455,7 +1450,7 @@ window.parseItemMeasurementParams = parseItemMeasurementParams;
 function generateMeasurementSchemeSvg(type, params, lang) {
     params = params || {};
     const markerId = 'arrowG_' + (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID().replace(/-/g, '').slice(0, 6)
+        ? crypto.randomUUID().replaceAll('-', '').slice(0, 6)
         : (typeof window !== 'undefined' && typeof window.generateShortId === 'function' ? window.generateShortId(6) : Date.now().toString(36).slice(-6)));
     const pShoulders = params.shoulders ? `${params.shoulders} см` : '—';
     const pChest = params.chest ? `${params.chest} см` : '—';

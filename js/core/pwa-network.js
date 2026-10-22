@@ -466,7 +466,7 @@ async function subscribeUserToPush(registration, silent = false) {
             const { publicKey } = vapidData;
             
             const padding = '='.repeat((4 - publicKey.length % 4) % 4);
-            const base64 = (publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const base64 = (publicKey + padding).replaceAll('-', '+').replaceAll('_', '/');
             const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
             for (let i = 0; i < rawData.length; ++i) {

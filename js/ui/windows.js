@@ -27,8 +27,9 @@ function isUserInProductFeed() {
     try {
         // 1. Проверяем URL: если открыта прямая ссылка на вещь (?item=...) или модальные действия (?action=...)
         if (typeof window !== 'undefined' && window.location) {
-            const search = window.location.search;
-            if (search && (search.includes('item=') || search.includes('action=cart') || search.includes('action=reviews'))) {
+            const params = new URLSearchParams(window.location.search);
+            const action = params.get('action');
+            if (params.has('item') || action === 'cart' || action === 'reviews') {
                 return false;
             }
         }

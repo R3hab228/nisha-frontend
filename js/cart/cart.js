@@ -82,11 +82,11 @@ const removingCartIds = new Set();
 
 function escCartHtml(value) {
     return String(value == null ? '' : value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 }
 
 function parseCartPrice(price) {
@@ -590,7 +590,7 @@ async function loadNPBranches(searchString = "") {
             if (chunk.length === 0) break;
 
             const prevLen = all.length;
-            all = all.concat(slimBranches(chunk));
+            all.push(...slimBranches(chunk));
             renderBranches(all, prevLen); // первая страница показывается сразу, остальные дописываются
 
             const total = data && data.info && data.info.totalCount;
@@ -1210,9 +1210,9 @@ async function submitOrder() {
     const rawCity = document.getElementById('orderCity').value.trim();
     const rawBranch = document.getElementById('orderBranch').value.trim();
     
-    const name = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(cleanLettersName) : cleanLettersName.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const city = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawCity) : rawCity.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const branch = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawBranch) : rawBranch.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const name = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(cleanLettersName) : cleanLettersName.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const city = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawCity) : rawCity.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const branch = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(rawBranch) : rawBranch.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
     const phoneRaw = document.getElementById('orderPhone').value;
     const phone = normalizeOrderPhone(phoneRaw);
@@ -1664,7 +1664,14 @@ async function autoDetectCity() {
             let detectedCity = enToUaCities[data.city] || data.city;
             if (detectedCity === data.city && data.latitude && data.longitude) {
                 try {
-                    const nomRes = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + data.latitude + '&lon=' + data.longitude + '&format=json&accept-language=uk', { signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(4000) : undefined });
+                    const nomUrl = new URL('https://nominatim.openstreetmap.org/reverse');
+                    nomUrl.search = new URLSearchParams({
+                        lat: String(data.latitude),
+                        lon: String(data.longitude),
+                        format: 'json',
+                        'accept-language': 'uk'
+                    }).toString();
+                    const nomRes = await fetch(nomUrl.toString(), { signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(4000) : undefined });
                     const nomData = await nomRes.json();
                     if (nomData && nomData.address) {
                         detectedCity = nomData.address.city || nomData.address.town || nomData.address.village || detectedCity;

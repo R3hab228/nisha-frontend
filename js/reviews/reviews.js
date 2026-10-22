@@ -24,6 +24,7 @@ let reviewsCache = {
     timestamp: 0
 };
 const REVIEWS_CACHE_TTL = 3 * 60 * 1000;
+const reviewDateFormatter = new Intl.DateTimeFormat('ru-RU');
 
 // Открытие модального окна со списком отзывов
 async function openReviewsModal() { 
@@ -52,17 +53,18 @@ async function openReviewsModal() {
         const toCDN = window.toCDN || ((u) => u);
         let html = ''; 
         data.forEach(rev => {
-            const date = new Date(rev.created_at).toLocaleDateString('ru-RU');
-            const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : (rev.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : (rev.user_name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const revDate = new Date(rev.created_at);
+            const date = !Number.isNaN(revDate.getTime()) ? reviewDateFormatter.format(revDate) : '';
+            const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.text) : (rev.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const safeName = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(rev.user_name) : (rev.user_name || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
             
             const revImg = rev.item_image ? toCDN(rev.item_image) : '';
-            const safeRevImg = typeof window.escapeHtml === 'function' ? window.escapeHtml(revImg) : revImg.replace(/"/g, '&quot;');
+            const safeRevImg = typeof window.escapeHtml === 'function' ? window.escapeHtml(revImg) : revImg.replaceAll('"', '&quot;');
             const clickAction = revImg ? `data-action="open-review-image" data-img="${safeRevImg}"` : '';
             const imgHtml = revImg ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${safeRevImg}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
             
             const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
-            const safeItemIdAttr = typeof window.escapeAttr === 'function' ? window.escapeAttr(rev.item_id) : String(rev.item_id || '').replace(/"/g, '&quot;');
+            const safeItemIdAttr = typeof window.escapeAttr === 'function' ? window.escapeAttr(rev.item_id) : String(rev.item_id || '').replaceAll('"', '&quot;');
             const productLinkAction = rev.item_id ? `data-action="open-product" data-id="${safeItemIdAttr}" title="Открыть товар"` : '';
 
             html += `

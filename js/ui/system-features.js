@@ -154,7 +154,7 @@ async function initHitCounter() {
         const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
         let visitorId = store ? store.get('nisha_visitor_id') : null;
         if (!visitorId) {
-            visitorId = 'user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replace(/-/g, '').slice(0, 9) : Date.now().toString(36)));
+            visitorId = 'user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '').slice(0, 9) : Date.now().toString(36)));
             if (store) store.set('nisha_visitor_id', visitorId);
         }
         window.clientFingerprint = visitorId;

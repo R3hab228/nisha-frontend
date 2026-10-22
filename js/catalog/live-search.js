@@ -60,7 +60,7 @@ function showSearchHistory() {
     const history = store ? store.getJSON('nisha_search_history', []) : [];
     if (!Array.isArray(history) || history.length === 0) return;
 
-    const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
     let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" data-action="clear-search-history">[ ОЧИСТИТЬ ]</span></div>`;
     history.forEach(term => {
         const safeTermHtml = escHtml(term);
@@ -94,7 +94,7 @@ function handleLiveSearch() {
     }
 
     searchDebounce = setTimeout(async () => {
-        const cleanSearchTerm = searchTerm.replace(/#/g, '').trim().toLowerCase();
+        const cleanSearchTerm = searchTerm.replaceAll('#', '').trim().toLowerCase();
         let results = liveSearchMemoCache.get(cleanSearchTerm);
         if (!results) {
             if (window.searchWorker && typeof window.searchWorker.searchLive === 'function') {
@@ -133,7 +133,7 @@ function handleLiveSearch() {
             document.body.classList.add('search-lock');
             if (typeof window.stopLenis === 'function') window.stopLenis();
             
-            const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
             const escJs = typeof window.escapeJsString === 'function' ? window.escapeJsString : (s) => escHtml(String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
             let html = '';
             results.forEach(result => {

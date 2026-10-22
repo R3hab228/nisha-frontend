@@ -421,12 +421,10 @@ window.togglePasswordVisibility = function(inputId, iconElement) {
     const input = document.getElementById(inputId);
     if (!input) return;
 
-    if (input.type === 'password') {
-        input.type = 'text';
-        iconElement.classList.add('visible');
-    } else {
-        input.type = 'password';
-        iconElement.classList.remove('visible');
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    if (iconElement) {
+        iconElement.classList.toggle('visible', isPassword);
     }
 };
 
@@ -612,7 +610,7 @@ function showContactInput(type, isModal = false) {
 
         input.oninput = () => {
             let val = input.value.replace(/^(https?:\/\/)?(www\.)?t\.me\//i, '@').replace(/[^a-zA-Z0-9_@]/g, '');
-            val = '@' + val.replace(/@/g, '');
+            val = '@' + val.replaceAll('@', '');
             input.value = val;
         };
         input.onkeydown = (e) => {
@@ -1001,13 +999,8 @@ async function toggleFav(event, itemId) {
     // Звезда в сетке товаров
     const gridStar = document.querySelector(`.item-card[data-id="${itemId}"] .fav-star`);
     if (gridStar) {
-        if (isFav) {
-            gridStar.classList.remove('active');
-            gridStar.style.color = '#444';
-        } else {
-            gridStar.classList.add('active');
-            gridStar.style.color = 'var(--accent-red)';
-        }
+        gridStar.classList.toggle('active', !isFav);
+        gridStar.style.color = !isFav ? 'var(--accent-red)' : '#444';
     }
 
     // Звезда в открытой модалке товара
@@ -1015,13 +1008,8 @@ async function toggleFav(event, itemId) {
     if (opened && opened.id === itemId) {
         const modalStar = document.getElementById('modalFavStar');
         if (modalStar) {
-            if (isFav) {
-                modalStar.classList.remove('active');
-                modalStar.style.color = '#444';
-            } else {
-                modalStar.classList.add('active');
-                modalStar.style.color = 'var(--accent-red)';
-            }
+            modalStar.classList.toggle('active', !isFav);
+            modalStar.style.color = !isFav ? 'var(--accent-red)' : '#444';
         }
     }
 

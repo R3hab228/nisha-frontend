@@ -6,6 +6,8 @@ if (typeof window.globalOrdersData === 'undefined') window.globalOrdersData = []
 if (typeof window.currentOrderTab === 'undefined') window.currentOrderTab = 'accepted'; // accepted, shipped, cancelled
 if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCache = {};
 
+const orderDateFormatter = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
+
 function openOrdersModal() {
     const modal = document.getElementById('ordersModal');
     if (modal) modal.style.display = 'flex';
@@ -108,18 +110,14 @@ function updateOrderTabCounters() {
     // Умный выбор: если активных 0, а завершенных/отправленных > 0 — автоматически переключаем на них!
     if (acceptedCount === 0 && shippedCount > 0 && window.currentOrderTab === 'accepted') {
         window.currentOrderTab = 'shipped';
-        document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
-        if (tabBlue) tabBlue.classList.add('active');
-    } else {
-        document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
-        if (window.currentOrderTab === 'accepted' && tabYellow) tabYellow.classList.add('active');
-        else if (window.currentOrderTab === 'shipped' && tabBlue) tabBlue.classList.add('active');
-        else if (window.currentOrderTab === 'cancelled' && tabRed) tabRed.classList.add('active');
-        else if (tabYellow) {
-            window.currentOrderTab = 'accepted';
-            tabYellow.classList.add('active');
-        }
+    } else if (!window.currentOrderTab || (window.currentOrderTab !== 'shipped' && window.currentOrderTab !== 'cancelled')) {
+        window.currentOrderTab = 'accepted';
     }
+
+    const currentTab = window.currentOrderTab;
+    if (tabYellow) tabYellow.classList.toggle('active', currentTab === 'accepted');
+    if (tabBlue) tabBlue.classList.toggle('active', currentTab === 'shipped');
+    if (tabRed) tabRed.classList.toggle('active', currentTab === 'cancelled');
 }
 window.updateOrderTabCounters = updateOrderTabCounters;
 if (typeof globalThis !== 'undefined') globalThis.updateOrderTabCounters = updateOrderTabCounters;
@@ -479,19 +477,12 @@ function switchOrderTab(tabName) {
     if (window.currentOrderTab === tabName) return;
     window.currentOrderTab = tabName;
     
-    document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
-    if (tabName === 'accepted') {
-        const tab = document.querySelector('.order-tab.tab-yellow');
-        if (tab) tab.classList.add('active');
-    }
-    if (tabName === 'shipped') {
-        const tab = document.querySelector('.order-tab.tab-blue');
-        if (tab) tab.classList.add('active');
-    }
-    if (tabName === 'cancelled') {
-        const tab = document.querySelector('.order-tab.tab-red');
-        if (tab) tab.classList.add('active');
-    }
+    const tabYellow = document.querySelector('.order-tab.tab-yellow');
+    const tabBlue = document.querySelector('.order-tab.tab-blue');
+    const tabRed = document.querySelector('.order-tab.tab-red');
+    if (tabYellow) tabYellow.classList.toggle('active', tabName === 'accepted');
+    if (tabBlue) tabBlue.classList.toggle('active', tabName === 'shipped');
+    if (tabRed) tabRed.classList.toggle('active', tabName === 'cancelled');
     
     renderFilteredOrders();
 }
@@ -559,12 +550,13 @@ function renderFilteredOrders() {
     }
 
     filteredData.forEach(order => {
-        const date = new Date(order.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
+        const orderDate = new Date(order.created_at);
+        const date = !Number.isNaN(orderDate.getTime()) ? orderDateFormatter.format(orderDate) : '';
         let itemsHtml = '';
         if (order.items && Array.isArray(order.items)) {
             order.items.forEach(item => {
                 const itemImg = getOrderItemImage(item);
-                const safeImgUrl = typeof window.escapeHtml === 'function' ? window.escapeHtml(itemImg) : (itemImg || '').replace(/"/g, '&quot;');
+                const safeImgUrl = typeof window.escapeHtml === 'function' ? window.escapeHtml(itemImg) : (itemImg || '').replaceAll('"', '&quot;');
                 const imgStyle = itemImg ? `background-image: url('${safeImgUrl}');` : '';
                 const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);
                 itemsHtml += `
