@@ -194,7 +194,9 @@
       "delivery_saved_toast": "Delivery data saved!",
       "delivery_fill_warn": "Please fill full name or delivery address!",
       "delivery_fullname_lbl": "RECIPIENT FULL NAME:",
-      "delivery_address_lbl": "DELIVERY ADDRESS (NP):"
+      "delivery_address_lbl": "DELIVERY ADDRESS (NP):",
+      "delivery_city": "CITY (NOVA POSHTA):",
+      "delivery_branch": "BRANCH OR POSTOMAT:"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

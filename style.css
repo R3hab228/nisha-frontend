@@ -2187,3 +2187,68 @@ html.low-power-mode .pulsing-dot {
 .profile-delivery-save-btn:active {
     border-style: inset;
 }
+
+/* Выпадающий список Новой Почты в профиле (Win95 Retro-Cyber) */
+.profile-np-wrap {
+    position: relative;
+    width: 100%;
+}
+.profile-np-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    width: 100%;
+    background: #0d0d0d !important;
+    border: 1px solid var(--accent-green) !important;
+    border-top: none !important;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.95);
+    overscroll-behavior: contain;
+}
+.profile-np-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+.profile-np-dropdown::-webkit-scrollbar-track {
+    background: #000;
+}
+.profile-np-dropdown::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 0;
+}
+.profile-np-dropdown::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-green);
+}
+.profile-np-dropdown div {
+    padding: 7px 9px;
+    cursor: pointer;
+    border-bottom: 1px solid #1a1a1a;
+    color: #ccc;
+    line-height: 1.35;
+    transition: background 0.15s ease, color 0.15s ease;
+    word-break: break-word;
+    font-size: 11px;
+    font-family: var(--font-mono);
+}
+.profile-np-dropdown div:hover {
+    background: #181818;
+    color: var(--accent-green);
+}
+.profile-np-dropdown div:last-child {
+    border-bottom: none;
+}
+.profile-np-item-postomat {
+    color: #00d4ff !important;
+}
+.profile-np-item-postomat:hover {
+    background: rgba(0, 212, 255, 0.12) !important;
+    color: #fff !important;
+}
+.profile-delivery-collapse:not(.collapsed),
+.profile-delivery-collapse:not(.collapsed) > div {
+    overflow: visible;
+}

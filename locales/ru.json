@@ -194,7 +194,9 @@
       "delivery_saved_toast": "Данные доставки сохранены!",
       "delivery_fill_warn": "Заполните ФИО или место доставки!",
       "delivery_fullname_lbl": "ФИО ПОЛУЧАТЕЛЯ:",
-      "delivery_address_lbl": "МЕСТО ДОСТАВКИ (НП):"
+      "delivery_address_lbl": "МЕСТО ДОСТАВКИ (НП):",
+      "delivery_city": "ГОРОД (НОВАЯ ПОЧТА):",
+      "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

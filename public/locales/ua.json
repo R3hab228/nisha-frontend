@@ -194,7 +194,9 @@
       "delivery_address_ph": "Київ, Відділення №45...",
       "delivery_save": "[ ЗБЕРЕГТИ ]",
       "delivery_saved_toast": "Дані доставки збережено!",
-      "delivery_fill_warn": "Заповніть ПІБ або місце доставки!"
+      "delivery_fill_warn": "Заповніть ПІБ або місце доставки!",
+      "delivery_city": "МІСТО (НОВА ПОШТА):",
+      "delivery_branch": "ВІДДІЛЕННЯ АБО ПОШТОМАТ:"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

@@ -965,8 +965,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('renders and saves delivery data to userProfile and storage across desktop and modal', async () => {
             const elements = {
                 profileDeliveryFullName: { value: '' },
+                profileDeliveryCity: { value: '' },
+                profileDeliveryBranch: { value: '' },
                 profileDeliveryAddress: { value: '' },
                 modalProfileDeliveryFullName: { value: '' },
+                modalProfileDeliveryCity: { value: '' },
+                modalProfileDeliveryBranch: { value: '' },
                 modalProfileDeliveryAddress: { value: '' }
             };
 
@@ -985,8 +989,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(window.userProfile.delivery_address).toBe('Київ, Відділення №25');
 
             expect(elements.profileDeliveryFullName.value).toBe('Іванов Петро Олексійович');
+            expect(elements.profileDeliveryCity.value).toBe('Київ');
+            expect(elements.profileDeliveryBranch.value).toBe('Відділення №25');
             expect(elements.profileDeliveryAddress.value).toBe('Київ, Відділення №25');
             expect(elements.modalProfileDeliveryFullName.value).toBe('Іванов Петро Олексійович');
+            expect(elements.modalProfileDeliveryCity.value).toBe('Київ');
+            expect(elements.modalProfileDeliveryBranch.value).toBe('Відділення №25');
             expect(elements.modalProfileDeliveryAddress.value).toBe('Київ, Відділення №25');
 
             const cached = window.storage.getJSON('nisha_profile_delivery');
@@ -994,6 +1002,71 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 full_name: 'Іванов Петро Олексійович',
                 delivery_address: 'Київ, Відділення №25'
             });
+
+            globalThis.document.getElementById = origGetElementById;
+        });
+
+
+        it('renders Nova Poshta cities and branches with icons and two-way address synchronization', async () => {
+            const elements = {
+                profileDeliveryCity: { value: 'Київ' },
+                profileDeliveryBranch: { value: '' },
+                profileDeliveryAddress: { value: '' },
+                profileDeliveryCityDropdown: { innerHTML: '', style: { display: 'none' }, appendChild: vi.fn() },
+                profileDeliveryBranchDropdown: { innerHTML: '', style: { display: 'none' }, appendChild: vi.fn() }
+            };
+
+            const origGetElementById = globalThis.document.getElementById;
+            globalThis.document.getElementById = vi.fn((id) => elements[id] || null);
+
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            eval(helpersCode);
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            eval(profileCode);
+
+            // Mock apiClient for NP proxy
+            window.apiClient = {
+                post: vi.fn(async (url, body) => {
+                    if (body.calledMethod === 'searchSettlements') {
+                        return {
+                            success: true,
+                            data: [{
+                                Addresses: [
+                                    { Present: 'м. Київ', DeliveryCity: '8d5a980d-391c-11dd-90d9-001a92567626', Ref: 'ref-kyiv' }
+                                ]
+                            }]
+                        };
+                    }
+                    if (body.calledMethod === 'getWarehouses') {
+                        return {
+                            success: true,
+                            data: [
+                                { Ref: 'b-1', Description: 'Відділення №45 (до 30 кг)', TypeOfWarehouse: 'regular' },
+                                { Ref: 'b-2', Description: 'Поштомат №1200', TypeOfWarehouse: 'f9316480-5f2d-425d-bc2c-ac7cd29decf0' }
+                            ]
+                        };
+                    }
+                    return { success: false };
+                })
+            };
+
+            // Test searching cities
+            await window.searchProfileNPCity(false, 'Київ');
+            expect(window.apiClient.post).toHaveBeenCalledWith(
+                '/api/np-proxy',
+                expect.objectContaining({ calledMethod: 'searchSettlements' }),
+                expect.any(Object)
+            );
+            expect(elements.profileDeliveryCityDropdown.style.display).toBe('block');
+
+            // Test loading branches
+            await window.loadProfileBranches(false, '45');
+            expect(window.apiClient.post).toHaveBeenCalledWith(
+                '/api/np-proxy',
+                expect.objectContaining({ calledMethod: 'getWarehouses' }),
+                expect.any(Object)
+            );
+            expect(elements.profileDeliveryBranchDropdown.style.display).toBe('block');
 
             globalThis.document.getElementById = origGetElementById;
         });

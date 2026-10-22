@@ -291,9 +291,20 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <input id=profileDeliveryFullName class=profile-delivery-input placeholder="Іванов Іван Іванович" autocomplete=name>
 </div>
 <div>
-<div class=profile-delivery-label data-i18n=profile.delivery_address>МЕСТО ДОСТАВКИ (НП):</div>
-<input id=profileDeliveryAddress class=profile-delivery-input placeholder="Київ, Відділення №45..." autocomplete=street-address>
+<div class=profile-delivery-label data-i18n=profile.delivery_city>ГОРОД (НОВАЯ ПОЧТА):</div>
+<div class=profile-np-wrap>
+<input id=profileDeliveryCity class=profile-delivery-input placeholder="Київ..." autocomplete=off data-modal=0>
+<div id=profileDeliveryCityDropdown class="custom-dropdown profile-np-dropdown"></div>
 </div>
+</div>
+<div>
+<div class=profile-delivery-label data-i18n=profile.delivery_branch>ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:</div>
+<div class=profile-np-wrap>
+<input id=profileDeliveryBranch class=profile-delivery-input placeholder="Відділення або поштомат..." autocomplete=off data-modal=0>
+<div id=profileDeliveryBranchDropdown class="custom-dropdown profile-np-dropdown"></div>
+</div>
+</div>
+<input type=hidden id=profileDeliveryAddress>
 <button type=button class="profile-delivery-save-btn btn-target" id=profileDeliverySaveBtn data-action=save-profile-delivery data-modal=0 data-i18n=profile.delivery_save>[ СОХРАНИТЬ ]</button>
 </div>
 </div>
@@ -777,9 +788,20 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <input id=modalProfileDeliveryFullName class=profile-delivery-input placeholder="Іванов Іван Іванович" autocomplete=name>
 </div>
 <div>
-<div class=profile-delivery-label data-i18n=profile.delivery_address>МЕСТО ДОСТАВКИ (НП):</div>
-<input id=modalProfileDeliveryAddress class=profile-delivery-input placeholder="Київ, Відділення №45..." autocomplete=street-address>
+<div class=profile-delivery-label data-i18n=profile.delivery_city>ГОРОД (НОВАЯ ПОЧТА):</div>
+<div class=profile-np-wrap>
+<input id=modalProfileDeliveryCity class=profile-delivery-input placeholder="Київ..." autocomplete=off data-modal=1>
+<div id=modalProfileDeliveryCityDropdown class="custom-dropdown profile-np-dropdown"></div>
 </div>
+</div>
+<div>
+<div class=profile-delivery-label data-i18n=profile.delivery_branch>ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:</div>
+<div class=profile-np-wrap>
+<input id=modalProfileDeliveryBranch class=profile-delivery-input placeholder="Відділення або поштомат..." autocomplete=off data-modal=1>
+<div id=modalProfileDeliveryBranchDropdown class="custom-dropdown profile-np-dropdown"></div>
+</div>
+</div>
+<input type=hidden id=modalProfileDeliveryAddress>
 <button type=button class="profile-delivery-save-btn btn-target" id=modalProfileDeliverySaveBtn data-action=save-profile-delivery data-modal=1 data-i18n=profile.delivery_save>[ СОХРАНИТЬ ]</button>
 </div>
 </div>

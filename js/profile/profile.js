@@ -646,20 +646,346 @@ window.removeProfilePhone = (isModal = false) => removeProfileContact('phone', i
 window.removeProfileTg = (isModal = false) => removeProfileContact('tg', isModal);
 
 // ==========================================
-// ДАННЫЕ ДОСТАВКИ В ПРОФИЛЕ (WIN95 АККОРДЕОН)
+// ДАННЫЕ ДОСТАВКИ В ПРОФИЛЕ (WIN95 АККОРДЕОН С АВТОКОМПЛИТОМ НОВОЙ ПОЧТЫ)
 // ==========================================
+
+let profileNpCityTimeout = null;
+let profileNpBranchTimeout = null;
+const profileSelectedCityRef = { desktop: '', modal: '' };
+
+function getProfileScopeKey(isModal) {
+    return isModal ? 'modal' : 'desktop';
+}
+
+function syncProfileCombinedAddress(isModal) {
+    const prefix = isModal ? 'modalProfile' : 'profile';
+    const cityEl = document.getElementById(`${prefix}DeliveryCity`);
+    const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
+    const legacyEl = document.getElementById(`${prefix}DeliveryAddress`);
+    if (legacyEl && cityEl && branchEl) {
+        const c = cityEl.value.trim();
+        const b = branchEl.value.trim();
+        legacyEl.value = (c && b) ? `${c}, ${b}` : (c || b);
+    }
+}
+window.syncProfileCombinedAddress = syncProfileCombinedAddress;
+
+async function searchProfileNPCity(isModal, query) {
+    const prefix = isModal ? 'modalProfile' : 'profile';
+    const dropdown = document.getElementById(`${prefix}DeliveryCityDropdown`);
+    if (!dropdown) return;
+
+    const trimmed = (query || '').trim();
+    if (trimmed.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    dropdown.innerHTML = '<div style="color:#888;padding:8px;font-style:italic">[ Поиск города в базе НП... ]</div>';
+    dropdown.style.display = 'block';
+
+    const normKey = 'city_' + trimmed.toLowerCase();
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let cached = null;
+    if (store && store.session) {
+        cached = store.session.getJSON('nisha_np_' + normKey, null);
+    }
+
+    let data = cached;
+    if (!data) {
+        try {
+            data = await window.apiClient.post('/api/np-proxy', {
+                modelName: 'Address',
+                calledMethod: 'searchSettlements',
+                methodProperties: { CityName: trimmed, Limit: '10' }
+            }, { timeout: 10000, retries: 1, dedupe: true });
+
+            if (data && data.success && store && store.session) {
+                store.session.setJSON('nisha_np_' + normKey, data);
+            }
+        } catch (e) {
+            console.error('Ошибка поиска города НП в профиле:', e);
+            dropdown.style.display = 'none';
+            return;
+        }
+    }
+
+    renderProfileCityDropdown(isModal, data);
+}
+window.searchProfileNPCity = searchProfileNPCity;
+
+function renderProfileCityDropdown(isModal, data) {
+    const prefix = isModal ? 'modalProfile' : 'profile';
+    const scopeKey = getProfileScopeKey(isModal);
+    const dropdown = document.getElementById(`${prefix}DeliveryCityDropdown`);
+    const cityInput = document.getElementById(`${prefix}DeliveryCity`);
+    const branchInput = document.getElementById(`${prefix}DeliveryBranch`);
+    if (!dropdown || !cityInput) return;
+
+    dropdown.innerHTML = '';
+    const addrs = (data && data.success && data.data && data.data[0] && Array.isArray(data.data[0].Addresses))
+        ? data.data[0].Addresses
+        : [];
+
+    if (addrs.length === 0) {
+        dropdown.innerHTML = '<div style="color:#666;padding:8px;font-style:italic">[ Населенный пункт не найден ]</div>';
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    const fragment = (typeof document.createDocumentFragment === 'function')
+        ? document.createDocumentFragment()
+        : dropdown;
+
+    addrs.forEach(city => {
+        const div = document.createElement('div');
+        div.textContent = city.Present;
+        const selectCity = (e) => {
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            cityInput.value = city.Present;
+            profileSelectedCityRef[scopeKey] = city.DeliveryCity || city.Ref || '';
+            dropdown.style.display = 'none';
+
+            if (branchInput) {
+                branchInput.value = '';
+                if (typeof branchInput.focus === 'function') branchInput.focus();
+                loadProfileBranches(isModal, '');
+            }
+            syncProfileCombinedAddress(isModal);
+        };
+        div.onmousedown = selectCity;
+        div.onclick = selectCity;
+        fragment.appendChild(div);
+    });
+
+    if (fragment !== dropdown && typeof dropdown.appendChild === 'function') {
+        dropdown.appendChild(fragment);
+    }
+    dropdown.style.display = 'block';
+}
+
+async function resolveProfileCityRef(isModal) {
+    const prefix = isModal ? 'modalProfile' : 'profile';
+    const scopeKey = getProfileScopeKey(isModal);
+    if (profileSelectedCityRef[scopeKey]) {
+        return profileSelectedCityRef[scopeKey];
+    }
+
+    const cityInput = document.getElementById(`${prefix}DeliveryCity`);
+    const typed = cityInput ? cityInput.value.trim() : '';
+    if (typed.length < 2) return '';
+
+    try {
+        const data = await window.apiClient.post('/api/np-proxy', {
+            modelName: 'Address',
+            calledMethod: 'searchSettlements',
+            methodProperties: { CityName: typed, Limit: '10' }
+        }, { timeout: 10000, dedupe: true });
+
+        const addrs = (data && data.success && data.data && data.data[0] && data.data[0].Addresses) || [];
+        if (addrs.length > 0) {
+            const ref = addrs[0].DeliveryCity || addrs[0].Ref || '';
+            profileSelectedCityRef[scopeKey] = ref;
+            return ref;
+        }
+    } catch (e) {
+        console.error('Ошибка определения города в профиле:', e);
+    }
+    return '';
+}
+
+async function loadProfileBranches(isModal, searchString = '') {
+    const prefix = isModal ? 'modalProfile' : 'profile';
+    const dropdown = document.getElementById(`${prefix}DeliveryBranchDropdown`);
+    const cityInput = document.getElementById(`${prefix}DeliveryCity`);
+    if (!dropdown) return;
+
+    if (!cityInput || !cityInput.value.trim()) {
+        dropdown.innerHTML = '<div style="color:#aaa;padding:8px;font-style:italic">Сначала укажите город ☝️</div>';
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    dropdown.innerHTML = '<div style="color:#888;padding:8px;font-style:italic">[ Загрузка отделений... ]</div>';
+    dropdown.style.display = 'block';
+
+    const cityRef = await resolveProfileCityRef(isModal);
+    if (!cityRef) {
+        dropdown.innerHTML = '<div style="color:#888;padding:8px;font-style:italic">[ Выберите город из списка выше ]</div>';
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    const cacheKey = `branches_${cityRef}_${(searchString || '').trim().toLowerCase()}`;
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let cached = null;
+    if (store && store.session) {
+        cached = store.session.getJSON('nisha_np_' + cacheKey, null);
+    }
+
+    let list = cached;
+    if (!list) {
+        try {
+            const props = { CityRef: cityRef, Limit: '50' };
+            if (searchString && searchString.trim()) {
+                props.FindByString = searchString.trim();
+            }
+            const data = await window.apiClient.post('/api/np-proxy', {
+                modelName: 'Address',
+                calledMethod: 'getWarehouses',
+                methodProperties: props
+            }, { timeout: 10000, dedupe: true });
+
+            if (data && data.success && Array.isArray(data.data)) {
+                list = data.data.map(b => ({
+                    Ref: b.Ref,
+                    Description: b.Description || '',
+                    TypeOfWarehouse: b.TypeOfWarehouse || ''
+                }));
+                if (store && store.session) {
+                    store.session.setJSON('nisha_np_' + cacheKey, list);
+                }
+            } else {
+                list = [];
+            }
+        } catch (e) {
+            console.error('Ошибка загрузки отделений в профиле:', e);
+            dropdown.innerHTML = '<div style="color:#ff6666;padding:8px">[ Сбой загрузки отделений ]</div>';
+            return;
+        }
+    }
+
+    renderProfileBranchDropdown(isModal, list);
+}
+window.loadProfileBranches = loadProfileBranches;
+
+function renderProfileBranchDropdown(isModal, list) {
+    const prefix = isModal ? 'modalProfile' : 'profile';
+    const dropdown = document.getElementById(`${prefix}DeliveryBranchDropdown`);
+    const branchInput = document.getElementById(`${prefix}DeliveryBranch`);
+    if (!dropdown || !branchInput) return;
+
+    dropdown.innerHTML = '';
+    if (!list || list.length === 0) {
+        dropdown.innerHTML = '<div style="color:#666;padding:8px;font-style:italic">[ Отделений не найдено ]</div>';
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    const fragment = (typeof document.createDocumentFragment === 'function')
+        ? document.createDocumentFragment()
+        : dropdown;
+
+    list.forEach(b => {
+        const desc = b.Description;
+        const isPostomat = desc.includes('Поштомат') || desc.includes('Почтомат') || b.TypeOfWarehouse === 'f9316480-5f2d-425d-bc2c-ac7cd29decf0';
+
+        const div = document.createElement('div');
+        if (isPostomat) {
+            div.className = 'profile-np-item-postomat';
+            div.textContent = `📦 ${desc}`;
+        } else {
+            div.textContent = `🏬 ${desc}`;
+        }
+
+        const selectBranch = (e) => {
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            branchInput.value = desc;
+            dropdown.style.display = 'none';
+            syncProfileCombinedAddress(isModal);
+        };
+        div.onmousedown = selectBranch;
+        div.onclick = selectBranch;
+        fragment.appendChild(div);
+    });
+
+    if (fragment !== dropdown && typeof dropdown.appendChild === 'function') {
+        dropdown.appendChild(fragment);
+    }
+    dropdown.style.display = 'block';
+}
+
+function initProfileDeliveryEvents() {
+    if (typeof document === 'undefined') return;
+    [false, true].forEach(isModal => {
+        const prefix = isModal ? 'modalProfile' : 'profile';
+        const cityEl = document.getElementById(`${prefix}DeliveryCity`);
+        const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
+
+        if (cityEl) {
+            const isBound = cityEl.dataset ? Boolean(cityEl.dataset.npBound) : Boolean(cityEl._npBound);
+            if (!isBound) {
+                if (cityEl.dataset) cityEl.dataset.npBound = '1';
+                else cityEl._npBound = true;
+
+                if (typeof cityEl.addEventListener === 'function') {
+                    cityEl.addEventListener('input', (e) => {
+                        if (profileNpCityTimeout) clearTimeout(profileNpCityTimeout);
+                        profileNpCityTimeout = setTimeout(() => {
+                            searchProfileNPCity(isModal, e.target.value);
+                        }, 300);
+                        syncProfileCombinedAddress(isModal);
+                    });
+                    cityEl.addEventListener('focus', () => {
+                        if (cityEl.value && cityEl.value.trim().length >= 2) {
+                            searchProfileNPCity(isModal, cityEl.value);
+                        }
+                    });
+                }
+            }
+        }
+
+        if (branchEl) {
+            const isBound = branchEl.dataset ? Boolean(branchEl.dataset.npBound) : Boolean(branchEl._npBound);
+            if (!isBound) {
+                if (branchEl.dataset) branchEl.dataset.npBound = '1';
+                else branchEl._npBound = true;
+
+                if (typeof branchEl.addEventListener === 'function') {
+                    branchEl.addEventListener('input', (e) => {
+                        if (profileNpBranchTimeout) clearTimeout(profileNpBranchTimeout);
+                        profileNpBranchTimeout = setTimeout(() => {
+                            loadProfileBranches(isModal, e.target.value);
+                        }, 300);
+                        syncProfileCombinedAddress(isModal);
+                    });
+                    branchEl.addEventListener('focus', () => {
+                        loadProfileBranches(isModal, branchEl.value);
+                    });
+                }
+            }
+        }
+    });
+}
+window.initProfileDeliveryEvents = initProfileDeliveryEvents;
 
 function renderProfileDelivery(fullName, address) {
     const fn = (fullName || '').trim();
     const addr = (address || '').trim();
 
+    let cityPart = '';
+    let branchPart = '';
+    if (addr.includes(',')) {
+        const parts = addr.split(',');
+        cityPart = parts[0] ? parts[0].trim() : '';
+        branchPart = parts.slice(1).join(',').trim();
+    } else {
+        cityPart = addr;
+    }
+
     [false, true].forEach(isModal => {
         const prefix = isModal ? 'modalProfile' : 'profile';
         const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
+        const cityEl = document.getElementById(`${prefix}DeliveryCity`);
+        const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
         const addrEl = document.getElementById(`${prefix}DeliveryAddress`);
         if (fnEl) fnEl.value = fn;
+        if (cityEl) cityEl.value = cityPart;
+        if (branchEl) branchEl.value = branchPart;
         if (addrEl) addrEl.value = addr;
     });
+
+    initProfileDeliveryEvents();
 
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     if (store) {
@@ -679,6 +1005,12 @@ function toggleProfileDeliveryAccordion(isModal, btn) {
     if (!collapseEl) return;
 
     const isCollapsed = collapseEl.classList.toggle('collapsed');
+    if (isCollapsed) {
+        document.querySelectorAll('.profile-np-dropdown').forEach(d => d.style.display = 'none');
+    } else {
+        initProfileDeliveryEvents();
+    }
+
     if (toggleBtn) {
         toggleBtn.classList.toggle('is-open', !isCollapsed);
         const textSpan = toggleBtn.querySelector('.profile-delivery-btn-text');
@@ -696,9 +1028,23 @@ window.toggleProfileDeliveryAccordion = toggleProfileDeliveryAccordion;
 async function saveProfileDeliveryFromForm(isModal, btn) {
     const prefix = isModal ? 'modalProfile' : 'profile';
     const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
+    const cityEl = document.getElementById(`${prefix}DeliveryCity`);
+    const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
     const addrEl = document.getElementById(`${prefix}DeliveryAddress`);
     const fullName = (fnEl ? fnEl.value : '').trim();
-    const address = (addrEl ? addrEl.value : '').trim();
+    const city = (cityEl ? cityEl.value : '').trim();
+    const branch = (branchEl ? branchEl.value : '').trim();
+
+    let address = '';
+    if (city && branch) {
+        address = `${city}, ${branch}`;
+    } else if (city) {
+        address = city;
+    } else if (branch) {
+        address = branch;
+    } else if (addrEl && addrEl.value.trim()) {
+        address = addrEl.value.trim();
+    }
 
     if (!fullName && !address) {
         const warnMsg = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_fill_warn', { defaultValue: 'Заполните ФИО или место доставки!' }) : 'Заполните ФИО или место доставки!';
@@ -1314,3 +1660,11 @@ if (document.readyState === 'loading') {
 } else {
     initAuthListener();
 }
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.profile-np-wrap')) {
+        document.querySelectorAll('.profile-np-dropdown').forEach(d => {
+            d.style.display = 'none';
+        });
+    }
+});
