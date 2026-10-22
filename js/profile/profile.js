@@ -80,7 +80,7 @@ async function checkSession() {
             currentUser = user;
             window.currentUser = currentUser;
 
-            const { data: profiles, error } = await sb.from('profiles').select('id, username, phone, tg, cart, language, last_broadcast_id').eq('id', currentUser.id).limit(1);
+            const { data: profiles, error } = await sb.from('profiles').select('id, username, phone, tg, cart, language, last_broadcast_id, full_name, delivery_address').eq('id', currentUser.id).limit(1);
             if (!error && profiles && profiles.length > 0) { 
                 userProfile = profiles[0]; 
                 window.userProfile = userProfile;
@@ -145,6 +145,11 @@ async function checkSession() {
             renderProfilePhone(uPhone);
             const uTg = (userProfile?.tg || '').trim();
             renderProfileTg(uTg);
+
+            // Сохраненные данные доставки (ФИО и адрес отделения/почтомата)
+            const uFullName = (userProfile?.full_name || '').trim();
+            const uDeliveryAddress = (userProfile?.delivery_address || '').trim();
+            renderProfileDelivery(uFullName, uDeliveryAddress);
 
             if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
 
@@ -301,6 +306,7 @@ async function checkSession() {
             window.favorites = [];
             renderProfilePhone('');
             renderProfileTg('');
+            renderProfileDelivery('', '');
             if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
             
             const loginForm = document.getElementById('loginForm');
@@ -574,6 +580,117 @@ async function removeProfileContact(type) {
 
 window.removeProfilePhone = (isModal = false) => removeProfileContact('phone', isModal);
 window.removeProfileTg = (isModal = false) => removeProfileContact('tg', isModal);
+
+// ==========================================
+// ДАННЫЕ ДОСТАВКИ В ПРОФИЛЕ (WIN95 АККОРДЕОН)
+// ==========================================
+
+function renderProfileDelivery(fullName, address) {
+    const fn = (fullName || '').trim();
+    const addr = (address || '').trim();
+
+    [false, true].forEach(isModal => {
+        const prefix = isModal ? 'modalProfile' : 'profile';
+        const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
+        const addrEl = document.getElementById(`${prefix}DeliveryAddress`);
+        if (fnEl) fnEl.value = fn;
+        if (addrEl) addrEl.value = addr;
+    });
+
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store) {
+        if (fn || addr) {
+            store.setJSON('nisha_profile_delivery', { full_name: fn, delivery_address: addr });
+        } else {
+            store.remove('nisha_profile_delivery');
+        }
+    }
+}
+window.renderProfileDelivery = renderProfileDelivery;
+
+function toggleProfileDeliveryAccordion(isModal, btn) {
+    const prefix = isModal ? 'modalProfile' : 'profile';
+    const collapseEl = document.getElementById(`${prefix}DeliveryCollapse`);
+    const toggleBtn = btn || document.getElementById(`${prefix}DeliveryToggleBtn`);
+    if (!collapseEl) return;
+
+    const isCollapsed = collapseEl.classList.toggle('collapsed');
+    if (toggleBtn) {
+        toggleBtn.classList.toggle('is-open', !isCollapsed);
+        const textSpan = toggleBtn.querySelector('.profile-delivery-btn-text');
+        const openText = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_btn_open', { defaultValue: '[ ДАННЫЕ ДОСТАВКИ ▲ ]' }) : '[ ДАННЫЕ ДОСТАВКИ ▲ ]';
+        const closedText = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_btn', { defaultValue: '[ ДАННЫЕ ДОСТАВКИ ▼ ]' }) : '[ ДАННЫЕ ДОСТАВКИ ▼ ]';
+        if (textSpan) {
+            textSpan.innerText = isCollapsed ? closedText : openText;
+        } else {
+            toggleBtn.innerText = isCollapsed ? closedText : openText;
+        }
+    }
+}
+window.toggleProfileDeliveryAccordion = toggleProfileDeliveryAccordion;
+
+async function saveProfileDeliveryFromForm(isModal, btn) {
+    const prefix = isModal ? 'modalProfile' : 'profile';
+    const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
+    const addrEl = document.getElementById(`${prefix}DeliveryAddress`);
+    const fullName = (fnEl ? fnEl.value : '').trim();
+    const address = (addrEl ? addrEl.value : '').trim();
+
+    if (!fullName && !address) {
+        const warnMsg = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_fill_warn', { defaultValue: 'Заполните ФИО или место доставки!' }) : 'Заполните ФИО или место доставки!';
+        showToast(warnMsg, 'warning');
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+    }
+
+    try {
+        await saveDeliveryToProfile(fullName, address);
+        const successMsg = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_saved_toast', { defaultValue: 'Данные доставки сохранены!' }) : 'Данные доставки сохранены!';
+        showToast(successMsg, 'success');
+    } catch (e) {
+        showToast('Ошибка сохранения данных: ' + (e.message || 'Сбой сети'), 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    }
+}
+window.saveProfileDeliveryFromForm = saveProfileDeliveryFromForm;
+
+async function saveDeliveryToProfile(fullName, address) {
+    const fn = (fullName || '').trim();
+    const addr = (address || '').trim();
+
+    if (userProfile) {
+        userProfile.full_name = fn;
+        userProfile.delivery_address = addr;
+    }
+    if (window.userProfile) {
+        window.userProfile.full_name = fn;
+        window.userProfile.delivery_address = addr;
+    }
+
+    renderProfileDelivery(fn, addr);
+
+    const activeUser = currentUser || window.currentUser;
+    const sb = getSupabase();
+    if (activeUser && sb) {
+        try {
+            await sb.from('profiles').update({
+                full_name: fn,
+                delivery_address: addr
+            }).eq('id', activeUser.id);
+        } catch (err) {
+            console.error('Ошибка сохранения доставки в профиле Supabase:', err);
+        }
+    }
+}
+window.saveDeliveryToProfile = saveDeliveryToProfile;
 
 function showContactInput(type, isModal = false) {
     const cfg = CONTACT_CONFIG[type];
@@ -1108,6 +1225,7 @@ function initAuthListener() {
             window.favorites = [];
             renderProfilePhone('');
             renderProfileTg('');
+            renderProfileDelivery('', '');
             if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
             updateFavBadge();
 

@@ -1205,6 +1205,42 @@ async function openCheckoutModal() {
             }
         }
 
+        // 3. Подтягиваем сохраненные в профиле данные доставки (ФИО и Адрес)
+        const activeProfile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
+        const deliveryStore = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const cachedDelivery = deliveryStore ? deliveryStore.getJSON('nisha_profile_delivery', null) : null;
+        const profileFullName = activeProfile?.full_name || cachedDelivery?.full_name || '';
+        const profileAddress = activeProfile?.delivery_address || cachedDelivery?.delivery_address || '';
+
+        const nameInput = document.getElementById('orderName');
+        if (nameInput && !nameInput.value.trim() && profileFullName) {
+            nameInput.value = profileFullName;
+        }
+
+        const cityInput = document.getElementById('orderCity');
+        const branchInput = document.getElementById('orderBranch');
+        if (cityInput && !cityInput.value.trim() && profileAddress) {
+            if (profileAddress.includes(',')) {
+                const parts = profileAddress.split(',');
+                const pCity = parts[0] ? parts[0].trim() : '';
+                const pBranch = parts.slice(1).join(',').trim();
+                cityInput.value = pCity;
+                if (branchInput && !branchInput.value.trim() && pBranch) {
+                    branchInput.value = pBranch;
+                    branchInput.readOnly = false;
+                }
+            } else {
+                cityInput.value = profileAddress;
+            }
+        }
+
+        // Показываем чекбокс "Запомнить этот адрес в профиле" только для авторизованных
+        const saveWrap = document.getElementById('saveDeliveryToProfileWrap');
+        const isAuth = !!(window.currentUser || (typeof currentUser !== 'undefined' && currentUser));
+        if (saveWrap) {
+            saveWrap.style.display = isAuth ? 'flex' : 'none';
+        }
+
         if (document.getElementById('orderPhone')?.value && typeof checkPhoneAuth === 'function') {
             checkPhoneAuth();
         }
@@ -1443,6 +1479,8 @@ async function executeOrderFinal(emailToSave) {
         });
         let createdAtIso = new Date().toISOString();
         let handledViaAtomicServer = false;
+        const saveDeliveryCheckbox = document.getElementById('saveDeliveryToProfileCheckbox');
+        const shouldSaveToProfile = !!(user && (!saveDeliveryCheckbox || saveDeliveryCheckbox.checked));
 
         // 1. ОСНОВНОЙ ПУТЬ: Атомарное оформление через защищенный сервер (/api/create-order)
         try {
@@ -1458,7 +1496,8 @@ async function executeOrderFinal(emailToSave) {
                 branchRef: branchRef || '',
                 itemIds: orderItemIds,
                 promocode: activePromo,
-                paymentMethod: paymentMethod
+                paymentMethod: paymentMethod,
+                saveToProfile: shouldSaveToProfile
             }, {
                 idempotencyKey: idempotencyKey,
                 timeout: 15000,
@@ -1585,6 +1624,13 @@ async function executeOrderFinal(emailToSave) {
                 sb.from('profiles').update({ phone: phone }).eq('id', user.id).then(() => {
                     if (typeof window.renderProfilePhone === 'function') window.renderProfilePhone(phone);
                 }).catch(() => {});
+            }
+
+            if (shouldSaveToProfile) {
+                const combinedAddress = city && branch ? `${city}, ${branch}` : (city || branch);
+                if (typeof window.saveDeliveryToProfile === 'function') {
+                    window.saveDeliveryToProfile(name, combinedAddress);
+                }
             }
         }
 

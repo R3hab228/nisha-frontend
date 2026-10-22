@@ -1301,6 +1301,22 @@ function handleDelegatedAction(e) {
             if (typeof window.removeProfileTg === 'function') window.removeProfileTg(isModal);
             break;
         }
+        case 'toggle-profile-delivery': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            const isModal = actionEl.getAttribute('data-modal') === '1';
+            if (typeof window.toggleProfileDeliveryAccordion === 'function') {
+                window.toggleProfileDeliveryAccordion(isModal, actionEl);
+            }
+            break;
+        }
+        case 'save-profile-delivery': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            const isModal = actionEl.getAttribute('data-modal') === '1';
+            if (typeof window.saveProfileDeliveryFromForm === 'function') {
+                window.saveProfileDeliveryFromForm(isModal, actionEl);
+            }
+            break;
+        }
         case 'verify-orders-phone': {
             const phone = actionEl.getAttribute('data-phone') || '';
             const orderPhoneEl = typeof document !== 'undefined' ? document.getElementById('orderPhone') : null;

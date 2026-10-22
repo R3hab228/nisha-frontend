@@ -886,4 +886,116 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             globalThis.sessionStorage = origSessionStorage;
         });
     });
+
+    describe('23. Profile Delivery Accordion & Two-Way Cart Synchronization', () => {
+        it('validates presence of delivery accordion and checkout save-checkbox in index.html', () => {
+            const htmlContent = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(htmlContent).toContain('id=profileDeliveryToggleBtn');
+            expect(htmlContent).toContain('id=profileDeliveryCollapse');
+            expect(htmlContent).toContain('id=profileDeliveryFullName');
+            expect(htmlContent).toContain('id=profileDeliveryAddress');
+
+            expect(htmlContent).toContain('id=modalProfileDeliveryToggleBtn');
+            expect(htmlContent).toContain('id=modalProfileDeliveryCollapse');
+            expect(htmlContent).toContain('id=modalProfileDeliveryFullName');
+            expect(htmlContent).toContain('id=modalProfileDeliveryAddress');
+
+            expect(htmlContent).toContain('id=saveDeliveryToProfileCheckbox');
+        });
+
+        it('toggles delivery accordion collapsed state and updates button text', () => {
+            let isCollapsed = true;
+            let isOpen = false;
+            let text = '[ ДАННЫЕ ДОСТАВКИ ▼ ]';
+
+            const mockCollapse = {
+                classList: {
+                    toggle: vi.fn((cls) => {
+                        if (cls === 'collapsed') {
+                            isCollapsed = !isCollapsed;
+                            return isCollapsed;
+                        }
+                        return false;
+                    })
+                }
+            };
+            const mockTextSpan = {
+                set innerText(val) { text = val; },
+                get innerText() { return text; }
+            };
+            const mockBtn = {
+                classList: {
+                    toggle: vi.fn((cls, val) => {
+                        if (cls === 'is-open') isOpen = Boolean(val);
+                    })
+                },
+                querySelector: vi.fn((sel) => {
+                    if (sel === '.profile-delivery-btn-text') return mockTextSpan;
+                    return null;
+                })
+            };
+
+            const origGetElementById = globalThis.document.getElementById;
+            globalThis.document.getElementById = vi.fn((id) => {
+                if (id === 'profileDeliveryCollapse') return mockCollapse;
+                if (id === 'profileDeliveryToggleBtn') return mockBtn;
+                return null;
+            });
+
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            eval(helpersCode);
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            eval(profileCode);
+
+            // 1. Open
+            window.toggleProfileDeliveryAccordion(false, mockBtn);
+            expect(isCollapsed).toBe(false);
+            expect(isOpen).toBe(true);
+            expect(text).toContain('▲');
+
+            // 2. Close
+            window.toggleProfileDeliveryAccordion(false, mockBtn);
+            expect(isCollapsed).toBe(true);
+            expect(isOpen).toBe(false);
+            expect(text).toContain('▼');
+
+            globalThis.document.getElementById = origGetElementById;
+        });
+
+        it('renders and saves delivery data to userProfile and storage across desktop and modal', async () => {
+            const elements = {
+                profileDeliveryFullName: { value: '' },
+                profileDeliveryAddress: { value: '' },
+                modalProfileDeliveryFullName: { value: '' },
+                modalProfileDeliveryAddress: { value: '' }
+            };
+
+            const origGetElementById = globalThis.document.getElementById;
+            globalThis.document.getElementById = vi.fn((id) => elements[id] || null);
+
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            eval(helpersCode);
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            eval(profileCode);
+
+            window.userProfile = { full_name: '', delivery_address: '' };
+            await window.saveDeliveryToProfile('Іванов Петро Олексійович', 'Київ, Відділення №25');
+
+            expect(window.userProfile.full_name).toBe('Іванов Петро Олексійович');
+            expect(window.userProfile.delivery_address).toBe('Київ, Відділення №25');
+
+            expect(elements.profileDeliveryFullName.value).toBe('Іванов Петро Олексійович');
+            expect(elements.profileDeliveryAddress.value).toBe('Київ, Відділення №25');
+            expect(elements.modalProfileDeliveryFullName.value).toBe('Іванов Петро Олексійович');
+            expect(elements.modalProfileDeliveryAddress.value).toBe('Київ, Відділення №25');
+
+            const cached = window.storage.getJSON('nisha_profile_delivery');
+            expect(cached).toEqual({
+                full_name: 'Іванов Петро Олексійович',
+                delivery_address: 'Київ, Відділення №25'
+            });
+
+            globalThis.document.getElementById = origGetElementById;
+        });
+    });
 });

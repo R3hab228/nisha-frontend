@@ -151,6 +151,7 @@
       "payment_method": "PAYMENT METHOD:",
       "payment_full": "Full prepayment",
       "payment_cod": "Cash on delivery (200 UAH prepay)",
+      "save_to_profile": "[x] Save this address to profile",
       "otp_expired": "Verification time expired. Please request the code again.",
       "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online.",
       "online_toast": "Network restored!"
@@ -182,7 +183,16 @@
       "no_phone": "Not specified",
       "add_phone": "Add phone +",
       "tg": "TELEGRAM:",
-      "add_tg": "Add Telegram +"
+      "add_tg": "Add Telegram +",
+      "delivery_btn": "[ DELIVERY DATA ▼ ]",
+      "delivery_btn_open": "[ DELIVERY DATA ▲ ]",
+      "delivery_fullname": "RECIPIENT FULL NAME:",
+      "delivery_fullname_ph": "Ivanov Ivan Ivanovych",
+      "delivery_address": "DELIVERY ADDRESS (NP):",
+      "delivery_address_ph": "Kyiv, Branch #45...",
+      "delivery_save": "[ SAVE ]",
+      "delivery_saved_toast": "Delivery data saved!",
+      "delivery_fill_warn": "Please fill full name or delivery address!"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",
