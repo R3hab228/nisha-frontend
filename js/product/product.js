@@ -262,7 +262,7 @@ function openProductModal(item) {
     const condMatch = condStr.match(/(\d+)/);
     
     let condNum = 9;
-    if (condMatch && condMatch[1]) condNum = parseInt(condMatch[1]);
+    if (condMatch && condMatch[1]) condNum = Number.parseInt(condMatch[1], 10);
     
     const condFill = document.getElementById('modalCondFill');
     if (condFill) condFill.style.width = (condNum * 10) + '%';
@@ -1406,7 +1406,7 @@ function parseItemMeasurementParams(item) {
 
     const extract = (regex) => {
         const m = text.match(regex);
-        return m ? parseFloat(m[1]) : null;
+        return m ? Number.parseFloat(m[1]) : null;
     };
 
     // Shoulders (плечи, плечі, ширина плеч)

@@ -351,6 +351,15 @@ function formatPrice(amount, options = {}) {
 window.formatPrice = formatPrice;
 if (typeof globalThis !== 'undefined') globalThis.formatPrice = formatPrice;
 
+// --- RANGE CLAMP UTILITY ---
+function clamp(val, min, max) {
+    const lo = Math.min(min, max);
+    const hi = Math.max(min, max);
+    return Math.min(Math.max(val, lo), hi);
+}
+window.clamp = clamp;
+if (typeof globalThis !== 'undefined') globalThis.clamp = clamp;
+
 // --- ГЕНЕРАЦИЯ БЕЗОПАСНЫХ КОРОТКИХ ID НА БАЗЕ CRYPTO.RANDOMUUID ---
 function generateShortId(length = 9) {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -1017,7 +1026,7 @@ function handleDelegatedAction(e) {
         }
         case 'scroll-grid-slider': {
             const id = actionEl.getAttribute('data-id');
-            const dir = parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
+            const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
             if (id && typeof window.scrollGridSlider === 'function') {
                 window.scrollGridSlider(e, id, dir);
             }
@@ -1038,14 +1047,14 @@ function handleDelegatedAction(e) {
             break;
         }
         case 'change-page': {
-            const dir = parseInt(actionEl.getAttribute('data-dir'), 10);
+            const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10);
             if (!Number.isNaN(dir) && typeof window.changePage === 'function') {
                 window.changePage(dir);
             }
             break;
         }
         case 'remove-from-cart': {
-            const idx = parseInt(actionEl.getAttribute('data-index'), 10);
+            const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
             if (!Number.isNaN(idx) && typeof window.removeFromCart === 'function') {
                 const rowEl = typeof actionEl.closest === 'function' ? actionEl.closest('.cart-item-row') : null;
                 window.removeFromCart(idx, e, rowEl);
@@ -1092,7 +1101,7 @@ function handleDelegatedAction(e) {
             break;
         }
         case 'set-slide': {
-            const idx = parseInt(actionEl.getAttribute('data-index'), 10);
+            const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
             if (!Number.isNaN(idx) && typeof window.setSlide === 'function') window.setSlide(idx);
             break;
         }
@@ -1155,7 +1164,7 @@ function handleDelegatedAction(e) {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             if (typeof e.preventDefault === 'function') e.preventDefault();
-            const idx = parseInt(actionEl.getAttribute('data-index'), 10);
+            const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
             if (!Number.isNaN(idx) && typeof window.removeProposalFile === 'function') {
                 window.removeProposalFile(idx, actionEl);
             }
@@ -1165,7 +1174,7 @@ function handleDelegatedAction(e) {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             if (typeof e.preventDefault === 'function') e.preventDefault();
-            const idx = parseInt(actionEl.getAttribute('data-index'), 10);
+            const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
             if (!Number.isNaN(idx) && typeof window.openProposalPhotoByIndex === 'function') {
                 window.openProposalPhotoByIndex(idx, actionEl);
             }
@@ -1326,7 +1335,7 @@ function initActionDelegation() {
         const hoverAction = hoverEl.getAttribute('data-hover-action');
         if (hoverAction === 'preload-grid-slide') {
             const id = hoverEl.getAttribute('data-id');
-            const dir = parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
+            const dir = Number.parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
             if (id && typeof window.preloadGridSlide === 'function') window.preloadGridSlide(e, id, dir);
         } else if (hoverAction === 'similar-item-tooltip') {
             const id = hoverEl.getAttribute('data-id');

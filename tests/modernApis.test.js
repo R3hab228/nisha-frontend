@@ -691,4 +691,54 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(mockModal._returnFocusElement).toBe(mockReturnFocus);
         });
     });
+
+    describe('Numeric Utilities & Code Quality (clamp, Number.parseInt/parseFloat)', () => {
+        it('clamp restricts values to min and max boundaries', () => {
+            expect(typeof window.clamp).toBe('function');
+            expect(window.clamp(5, 0, 10)).toBe(5);
+            expect(window.clamp(-5, 0, 10)).toBe(0);
+            expect(window.clamp(15, 0, 10)).toBe(10);
+            expect(window.clamp(0, 0, 10)).toBe(0);
+            expect(window.clamp(10, 0, 10)).toBe(10);
+            // Inverted boundary guard
+            expect(window.clamp(5, 10, 0)).toBe(5);
+        });
+
+        it('guarantees no loose parseInt/parseFloat exists in frontend js codebase', () => {
+            const { readdirSync, statSync, readFileSync } = require('fs');
+            const { join } = require('path');
+
+            const jsDir = resolve(__dirname, '../js');
+            const getFiles = (dir) => {
+                let results = [];
+                const list = readdirSync(dir);
+                list.forEach((file) => {
+                    const fullPath = join(dir, file);
+                    const stat = statSync(fullPath);
+                    if (stat && stat.isDirectory()) {
+                        results = results.concat(getFiles(fullPath));
+                    } else if (file.endsWith('.js')) {
+                        results.push(fullPath);
+                    }
+                });
+                return results;
+            };
+
+            const files = getFiles(jsDir);
+            const loosePattern = /(?<!Number\.)(parseInt|parseFloat)\s*\(/g;
+            const violations = [];
+
+            for (const file of files) {
+                const content = readFileSync(file, 'utf8');
+                const lines = content.split('\n');
+                lines.forEach((line, idx) => {
+                    if (loosePattern.test(line)) {
+                        violations.push(`${file}:${idx + 1}: ${line.trim()}`);
+                    }
+                });
+            }
+
+            expect(violations).toEqual([]);
+        });
+    });
 });

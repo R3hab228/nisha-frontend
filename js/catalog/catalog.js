@@ -1474,7 +1474,7 @@ function itemMatchesSizeFilter(itemOrSize, filterVal) {
             if (upperSize.includes('40 - 42') || upperSize.includes('40-42')) return true;
             const numMatch = upperSize.match(/(\d+(?:[.,]\d+)?)/);
             if (numMatch) {
-                const n = parseFloat(numMatch[1].replaceAll(',', '.'));
+                const n = Number.parseFloat(numMatch[1].replaceAll(',', '.'));
                 if (n >= 35 && n <= 42.5) return true;
             }
             return false;
@@ -1484,7 +1484,7 @@ function itemMatchesSizeFilter(itemOrSize, filterVal) {
             if (upperSize.includes('43 - 46') || upperSize.includes('43-46')) return true;
             const numMatch = upperSize.match(/(\d+(?:[.,]\d+)?)/);
             if (numMatch) {
-                const n = parseFloat(numMatch[1].replaceAll(',', '.'));
+                const n = Number.parseFloat(numMatch[1].replaceAll(',', '.'));
                 if (n >= 42.8 && n <= 50) return true;
             }
             return false;
@@ -1672,13 +1672,14 @@ function applyFilters(immediate = false, preserveViewport = false) {
             
             const minInput = document.getElementById('priceMin');
             const maxInput = document.getElementById('priceMax');
-            const rawMin = minInput ? parseInt(minInput.value, 10) : NaN;
+            const rawMin = minInput ? Number.parseInt(minInput.value, 10) : NaN;
             const minPrice = (Number.isFinite(rawMin) && rawMin >= 0) ? rawMin : 0;
-            const rawMax = maxInput ? parseInt(maxInput.value, 10) : NaN;
+            const rawMax = maxInput ? Number.parseInt(maxInput.value, 10) : NaN;
             const maxPrice = (Number.isFinite(rawMax) && rawMax > 0) ? rawMax : Infinity;
 
-            const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
+            const getSafePrice = (price) => Number.parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
             const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
+            const favsSet = new Set(userFavs);
             const hacked = (typeof isHacked !== 'undefined') ? isHacked : (window.isHacked || false);
             const curCat = window.currentCategory || '';
             const curBrand = window.currentBrand || '';
@@ -1688,7 +1689,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
             window.filteredItems = window.allItems.filter(item => {
                 if (!item) return false;
                 
-                const isFav = userFavs.includes(item.id);
+                const isFav = favsSet.has(item.id);
                 const matchesAvailability = !hideUnavailable || item.status === 'available';
                 const matchesSale = !onlySale || !!item.is_sale;
                 
@@ -2365,15 +2366,17 @@ function clearSearchInput() {
 window.clearSearchInput = clearSearchInput;
 
 // UI ценового диапазона
-function updatePriceUI() {
+function updatePriceUI(e) {
     let minInput = document.getElementById('priceMin');
     let maxInput = document.getElementById('priceMax');
     if (!minInput || !maxInput) return;
-    let minVal = parseInt(minInput.value);
-    let maxVal = parseInt(maxInput.value);
+    let minVal = Number.parseInt(minInput.value, 10);
+    let maxVal = Number.parseInt(maxInput.value, 10);
 
     if (minVal >= maxVal) {
-        if (window.event && window.event.target && window.event.target.id === 'priceMin') { 
+        const activeTargetId = (e && e.target && e.target.id) 
+            || (typeof window !== 'undefined' && window.event && window.event.target && window.event.target.id);
+        if (activeTargetId === 'priceMin') { 
             minInput.value = maxVal - 100; 
             minVal = maxVal - 100; 
         } else { 
@@ -2531,7 +2534,9 @@ window.preloadGridSlide = function(event, itemId, direction) {
     if (!slider) return;
     const slideWidth = slider.offsetWidth || 1;
     const currentIdx = Math.round(slider.scrollLeft / slideWidth);
-    const targetIdx = Math.max(0, Math.min(mediaArray.length - 1, currentIdx + direction));
+    const targetIdx = typeof clamp === 'function' 
+        ? clamp(currentIdx + direction, 0, mediaArray.length - 1)
+        : Math.max(0, Math.min(mediaArray.length - 1, currentIdx + direction));
     const url = toCDN(mediaArray[targetIdx]);
     if (url && !url.endsWith('.mp4')) {
         const img = new Image();

@@ -655,7 +655,7 @@ async function checkPendingContactVerification(type) {
     const pendingVal = window[cfg.pendingVar] || (store ? store.get(cfg.storagePending) : null);
     if (!pendingVal) return;
 
-    const startTime = parseInt((store ? store.get(cfg.storageTime, '0') : '0'), 10);
+    const startTime = Number.parseInt((store ? store.get(cfg.storageTime, '0') : '0'), 10);
     if (startTime && (Date.now() - startTime > 120000)) {
         clearPendingContactState(type);
         resetContactSaveButtons(type);

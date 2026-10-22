@@ -67,7 +67,7 @@ if ('serviceWorker' in navigator) {
                         // Если пользователь уже нажал "Обновить сейчас" в этой сессии или менее 10 минут назад — не показываем повторно
                         try {
                             if (sessionStorage.getItem('nisha_sw_update_reloaded') === '1') return;
-                            const lastUpdateTs = parseInt(store ? store.get('nisha_sw_updated_ts', '0') : '0', 10);
+                            const lastUpdateTs = Number.parseInt(store ? store.get('nisha_sw_updated_ts', '0') : '0', 10);
                             if (lastUpdateTs && (Date.now() - lastUpdateTs) < 10 * 60 * 1000) return;
                         } catch (e) {}
 

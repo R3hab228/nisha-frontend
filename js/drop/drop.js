@@ -465,8 +465,8 @@ async function submitProposal() {
     const rawBrand = (document.getElementById('propBrand')?.value || '').trim();
     const rawSize = (document.getElementById('propSize')?.value || '').trim();
     const rawDesc = (document.getElementById('propDesc')?.value || '').trim();
-    const cond = parseInt(document.getElementById('propCond')?.value);
-    const price = parseInt(document.getElementById('propPrice')?.value) || 0; 
+    const cond = Number.parseInt(document.getElementById('propCond')?.value, 10);
+    const price = Number.parseInt(document.getElementById('propPrice')?.value, 10) || 0; 
     let rawContact = (document.getElementById('propContact')?.value || '').trim();
     
     if (!rawContact && typeof getUserPhone === 'function' && typeof getUserTg === 'function') {

@@ -929,7 +929,7 @@ window.handleSwipeEnd = function(e) {
     let diff = cartSwipeStartX - cartSwipeCurrentX;
     const rowSurface = e.currentTarget;
     const parentRow = rowSurface.closest('.cart-item-row');
-    const itemIndex = parseInt(rowSurface.getAttribute('data-index'));
+    const itemIndex = Number.parseInt(rowSurface.getAttribute('data-index'), 10);
     
     rowSurface.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
     
