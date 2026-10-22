@@ -153,7 +153,8 @@
       "payment_cod": "Накладений платіж (передплата 200грн)",
       "otp_expired": "Час очікування підтвердження вичерпано. Запитайте код знову.",
       "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Відображаються збережені товари. Оформлення замовлення відновиться при появі мережі.",
-      "online_toast": "Мережу відновлено!"
+      "online_toast": "Мережу відновлено!",
+      "save_to_profile": "Запам'ятати цю адресу в профілі"
     },
     "orders_modal": {
       "access_granted": "Доступ дозволено",
@@ -182,7 +183,18 @@
       "no_phone": "Не вказано",
       "add_phone": "Додати номер +",
       "tg": "ТГ ЮЗ:",
-      "add_tg": "Додати Telegram +"
+      "add_tg": "Додати Telegram +",
+      "delivery_btn": "[ ДАНІ ДОСТАВКИ ▼ ]",
+      "delivery_btn_open": "[ ДАНІ ДОСТАВКИ ▲ ]",
+      "delivery_fullname": "ПІБ ОДЕРЖУВАЧА:",
+      "delivery_fullname_lbl": "ПІБ ОДЕРЖУВАЧА:",
+      "delivery_fullname_ph": "Іванов Іван Іванович",
+      "delivery_address": "МІСЦЕ ДОСТАВКИ (НП):",
+      "delivery_address_lbl": "МІСЦЕ ДОСТАВКИ (НП):",
+      "delivery_address_ph": "Київ, Відділення №45...",
+      "delivery_save": "[ ЗБЕРЕГТИ ]",
+      "delivery_saved_toast": "Дані доставки збережено!",
+      "delivery_fill_warn": "Заповніть ПІБ або місце доставки!"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

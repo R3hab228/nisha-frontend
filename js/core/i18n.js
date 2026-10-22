@@ -120,7 +120,12 @@ function updateContentLanguage() {
     // Переводим Placeholder'ы инпутов
     document.querySelectorAll('[data-i18n-ph]').forEach(el => {
         const key = el.getAttribute('data-i18n-ph');
-        el.placeholder = i18next.t(key);
+        if (key && typeof i18next !== 'undefined') {
+            const trans = i18next.t(key);
+            if (trans && trans !== key) {
+                el.placeholder = trans;
+            }
+        }
     });
 
     // Обновляем выбранный способ оплаты в чекауте (текст на языке интерфейса, значение в БД всегда на русском)

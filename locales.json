@@ -154,7 +154,8 @@
         "payment_cod": "Наложка (предоплата 200грн)",
         "otp_expired": "Время ожидания подтверждения истекло. Запросите код снова.",
         "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары. Оформление заказа возобновится при появлении сети.",
-        "online_toast": "Сеть восстановлена!"
+        "online_toast": "Сеть восстановлена!",
+        "save_to_profile": "Запомнить этот адрес в профиле"
       },
       "orders_modal": {
         "access_granted": "Доступ разрешен",
@@ -183,7 +184,18 @@
         "no_phone": "Не указан",
         "add_phone": "Добавить номер +",
         "tg": "ТГ ЮЗ:",
-        "add_tg": "Добавить Telegram +"
+        "add_tg": "Добавить Telegram +",
+        "delivery_btn": "[ ДАННЫЕ ДОСТАВКИ ▼ ]",
+        "delivery_btn_open": "[ ДАННЫЕ ДОСТАВКИ ▲ ]",
+        "delivery_fullname": "ФИО ПОЛУЧАТЕЛЯ:",
+        "delivery_fullname_lbl": "ФИО ПОЛУЧАТЕЛЯ:",
+        "delivery_fullname_ph": "Іванов Іван Іванович",
+        "delivery_address": "МЕСТО ДОСТАВКИ (НП):",
+        "delivery_address_lbl": "МЕСТО ДОСТАВКИ (НП):",
+        "delivery_address_ph": "Київ, Відділення №45...",
+        "delivery_save": "[ СОХРАНИТЬ ]",
+        "delivery_saved_toast": "Данные доставки сохранены!",
+        "delivery_fill_warn": "Заполните ФИО или место доставки!"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -428,7 +440,8 @@
         "payment_cod": "Накладений платіж (передплата 200грн)",
         "otp_expired": "Час очікування підтвердження вичерпано. Запитайте код знову.",
         "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Відображаються збережені товари. Оформлення замовлення відновиться при появі мережі.",
-        "online_toast": "Мережу відновлено!"
+        "online_toast": "Мережу відновлено!",
+        "save_to_profile": "Запам'ятати цю адресу в профілі"
       },
       "orders_modal": {
         "access_granted": "Доступ дозволено",
@@ -457,7 +470,18 @@
         "no_phone": "Не вказано",
         "add_phone": "Додати номер +",
         "tg": "ТГ ЮЗ:",
-        "add_tg": "Додати Telegram +"
+        "add_tg": "Додати Telegram +",
+        "delivery_btn": "[ ДАНІ ДОСТАВКИ ▼ ]",
+        "delivery_btn_open": "[ ДАНІ ДОСТАВКИ ▲ ]",
+        "delivery_fullname": "ПІБ ОДЕРЖУВАЧА:",
+        "delivery_fullname_lbl": "ПІБ ОДЕРЖУВАЧА:",
+        "delivery_fullname_ph": "Іванов Іван Іванович",
+        "delivery_address": "МІСЦЕ ДОСТАВКИ (НП):",
+        "delivery_address_lbl": "МІСЦЕ ДОСТАВКИ (НП):",
+        "delivery_address_ph": "Київ, Відділення №45...",
+        "delivery_save": "[ ЗБЕРЕГТИ ]",
+        "delivery_saved_toast": "Дані доставки збережено!",
+        "delivery_fill_warn": "Заповніть ПІБ або місце доставки!"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -702,7 +726,8 @@
         "payment_cod": "Cash on delivery (200 UAH prepay)",
         "otp_expired": "Verification time expired. Please request the code again.",
         "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online.",
-        "online_toast": "Network restored!"
+        "online_toast": "Network restored!",
+        "save_to_profile": "Save this address to profile"
       },
       "orders_modal": {
         "access_granted": "Access granted",
@@ -731,7 +756,18 @@
         "no_phone": "Not specified",
         "add_phone": "Add phone +",
         "tg": "TELEGRAM:",
-        "add_tg": "Add Telegram +"
+        "add_tg": "Add Telegram +",
+        "delivery_btn": "[ DELIVERY DATA ▼ ]",
+        "delivery_btn_open": "[ DELIVERY DATA ▲ ]",
+        "delivery_fullname": "RECIPIENT FULL NAME:",
+        "delivery_fullname_lbl": "RECIPIENT FULL NAME:",
+        "delivery_fullname_ph": "Ivanov Ivan Ivanovych",
+        "delivery_address": "DELIVERY ADDRESS (NP):",
+        "delivery_address_lbl": "DELIVERY ADDRESS (NP):",
+        "delivery_address_ph": "Kyiv, Branch #45...",
+        "delivery_save": "[ SAVE ]",
+        "delivery_saved_toast": "Delivery data saved!",
+        "delivery_fill_warn": "Please fill full name or delivery address!"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",

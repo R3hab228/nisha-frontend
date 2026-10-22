@@ -151,7 +151,7 @@
       "payment_method": "PAYMENT METHOD:",
       "payment_full": "Full prepayment",
       "payment_cod": "Cash on delivery (200 UAH prepay)",
-      "save_to_profile": "[x] Save this address to profile",
+      "save_to_profile": "Save this address to profile",
       "otp_expired": "Verification time expired. Please request the code again.",
       "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online.",
       "online_toast": "Network restored!"
@@ -192,7 +192,9 @@
       "delivery_address_ph": "Kyiv, Branch #45...",
       "delivery_save": "[ SAVE ]",
       "delivery_saved_toast": "Delivery data saved!",
-      "delivery_fill_warn": "Please fill full name or delivery address!"
+      "delivery_fill_warn": "Please fill full name or delivery address!",
+      "delivery_fullname_lbl": "RECIPIENT FULL NAME:",
+      "delivery_address_lbl": "DELIVERY ADDRESS (NP):"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

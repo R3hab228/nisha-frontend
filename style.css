@@ -161,6 +161,60 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     outline: 1px dashed var(--accent-green);
     outline-offset: 2px;
 }
+/* Универсальный ретро-чекбокс в стиле Windows 95 (скобки с зеленой точкой) */
+.win95-custom-checkbox {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: #aaa;
+    transition: color 0.15s ease;
+}
+.win95-custom-checkbox:hover {
+    color: #fff;
+}
+.win95-cb {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 20px;
+    height: 16px;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 20px 16px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16'%3E%3Cpath d='M5 1.5 L2 1.5 L2 14.5 L5 14.5' fill='none' stroke='%23777777' stroke-width='1.8' stroke-linecap='square' stroke-linejoin='miter'/%3E%3Cpath d='M15 1.5 L18 1.5 L18 14.5 L15 14.5' fill='none' stroke='%23777777' stroke-width='1.8' stroke-linecap='square' stroke-linejoin='miter'/%3E%3C/svg%3E");
+    transition: filter 0.15s ease, opacity 0.15s ease;
+    vertical-align: middle;
+}
+.win95-custom-checkbox:hover .win95-cb:not(:checked),
+label:hover .win95-cb:not(:checked) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16'%3E%3Cpath d='M5 1.5 L2 1.5 L2 14.5 L5 14.5' fill='none' stroke='%23aaaaaa' stroke-width='1.8' stroke-linecap='square' stroke-linejoin='miter'/%3E%3Cpath d='M15 1.5 L18 1.5 L18 14.5 L15 14.5' fill='none' stroke='%23aaaaaa' stroke-width='1.8' stroke-linecap='square' stroke-linejoin='miter'/%3E%3C/svg%3E");
+}
+.win95-cb:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16'%3E%3Cpath d='M5 1.5 L2 1.5 L2 14.5 L5 14.5' fill='none' stroke='%23888888' stroke-width='1.8' stroke-linecap='square' stroke-linejoin='miter'/%3E%3Cpath d='M15 1.5 L18 1.5 L18 14.5 L15 14.5' fill='none' stroke='%23888888' stroke-width='1.8' stroke-linecap='square' stroke-linejoin='miter'/%3E%3Crect x='7' y='5' width='6' height='6' fill='%2300ff00' shape-rendering='crispEdges'/%3E%3C/svg%3E");
+}
+.win95-custom-checkbox:hover .win95-cb:checked,
+label:hover .win95-cb:checked {
+    filter: drop-shadow(0 0 3px rgba(0, 255, 0, 0.7));
+}
+.win95-cb:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.win95-cb:focus-visible {
+    outline: 1px dashed var(--accent-green);
+    outline-offset: 2px;
+}
 
 .auth-fields { display: flex; flex-direction: column; gap: 10px; }
 .auth-input { background-color: #000; color: var(--accent-green); border: 2px inset var(--border-light); padding: 8px; font-family: var(--font-main); outline: none; font-size: 13px; }
@@ -2030,19 +2084,25 @@ html.low-power-mode .pulsing-dot {
     border: 1px outset #444;
     font-family: var(--font-mono);
     font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    padding: 7px 10px;
+    font-size: 10px;
+    letter-spacing: 0;
+    padding: 6px 4px;
     cursor: pointer;
     text-transform: uppercase;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 6px;
+    white-space: nowrap !important;
+    box-sizing: border-box;
     box-shadow: 1px 1px 0 #000;
     transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+}
+.profile-delivery-btn-text {
+    white-space: nowrap !important;
+    display: inline-block;
+    letter-spacing: 0;
 }
 .profile-delivery-btn:hover {
     background: #141414;

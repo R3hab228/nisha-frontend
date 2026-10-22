@@ -997,5 +997,30 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             globalThis.document.getElementById = origGetElementById;
         });
+
+        it('verifies Win95 retro-checkbox, clean labels without [x], and white-space nowrap on delivery button', () => {
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const ruJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ru.json'), 'utf8'));
+            const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
+            const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
+
+            // 1. Checkbox uses win95-cb class and win95-custom-checkbox wrapper
+            expect(html).toContain('class="win95-cb"');
+            expect(html).toContain('class="win95-custom-checkbox"');
+
+            // 2. No [x] in labels or translations
+            expect(html).not.toContain('[x] Запомнить');
+            expect(ruJson.translation.checkout.save_to_profile).not.toMatch(/^\[x\]/i);
+            expect(uaJson.translation.checkout.save_to_profile).not.toMatch(/^\[x\]/i);
+            expect(enJson.translation.checkout.save_to_profile).not.toMatch(/^\[x\]/i);
+
+            // 3. Delivery button has white-space nowrap to prevent bracket wrap
+            expect(css).toMatch(/\.profile-delivery-btn[\s\S]*?white-space:\s*nowrap\s*!important/);
+
+            // 4. Win95 checkbox styles render retro brackets and green square
+            expect(css).toContain('.win95-cb:checked');
+            expect(css).toContain('%2300ff00');
+        });
     });
 });

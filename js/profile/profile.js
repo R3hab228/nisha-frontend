@@ -62,6 +62,23 @@ function openProfileModal() {
         }
         document.body.style.overflow = 'hidden';
     }
+
+    // Повторная синхронизация контактов и данных доставки в модалке при каждом открытии
+    const activeUser = currentUser || window.currentUser;
+    if (activeUser) {
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const storedPhone = store ? (store.get('nisha_last_phone') || '') : '';
+        const storedTg = store ? (store.get('nisha_last_tg') || '') : '';
+        const uPhone = (window.userProfile?.phone || activeUser.user_metadata?.phone || storedPhone || '').trim();
+        const uTg = (window.userProfile?.tg || activeUser.user_metadata?.tg || storedTg || '').trim();
+        if (uPhone) renderProfilePhone(uPhone);
+        if (uTg) renderProfileTg(uTg);
+
+        const cachedDelivery = (store ? store.getJSON('nisha_profile_delivery') : null) || {};
+        const uFullName = (window.userProfile?.full_name || cachedDelivery.full_name || '').trim();
+        const uDeliveryAddress = (window.userProfile?.delivery_address || cachedDelivery.delivery_address || '').trim();
+        renderProfileDelivery(uFullName, uDeliveryAddress);
+    }
 }
 window.openProfileModal = openProfileModal;
 
@@ -80,9 +97,29 @@ async function checkSession() {
             currentUser = user;
             window.currentUser = currentUser;
 
-            const { data: profiles, error } = await sb.from('profiles').select('id, username, phone, tg, cart, language, last_broadcast_id, full_name, delivery_address').eq('id', currentUser.id).limit(1);
-            if (!error && profiles && profiles.length > 0) { 
-                userProfile = profiles[0]; 
+            let profiles = null;
+            let profileErr = null;
+            try {
+                const res = await sb.from('profiles').select('id, username, phone, tg, cart, language, last_broadcast_id, full_name, delivery_address').eq('id', currentUser.id).limit(1);
+                if (res.error) {
+                    console.warn('[profile] Query with delivery fields failed, falling back to legacy profile schema:', res.error);
+                    const fallbackRes = await sb.from('profiles').select('id, username, phone, tg, cart, language, last_broadcast_id').eq('id', currentUser.id).limit(1);
+                    profiles = fallbackRes.data;
+                    profileErr = fallbackRes.error;
+                } else {
+                    profiles = res.data;
+                }
+            } catch (qErr) {
+                console.error('[profile] Exception in profiles query:', qErr);
+                try {
+                    const fallbackRes = await sb.from('profiles').select('id, username, phone, tg, cart, language, last_broadcast_id').eq('id', currentUser.id).limit(1);
+                    profiles = fallbackRes.data;
+                    profileErr = fallbackRes.error;
+                } catch (e) {}
+            }
+
+            if (!profileErr && profiles && profiles.length > 0) {
+                userProfile = profiles[0];
                 window.userProfile = userProfile;
                 
                 // Синхронизация языка из БД в браузер
@@ -140,21 +177,48 @@ async function checkSession() {
             if (mProfNameEl) mProfNameEl.innerText = uName;
             if (mProfEmailEl) mProfEmailEl.innerText = uEmail;
 
-            // Контакты
-            const uPhone = (userProfile?.phone || '').trim();
-            renderProfilePhone(uPhone);
-            const uTg = (userProfile?.tg || '').trim();
-            renderProfileTg(uTg);
+            // Контакты (железобетонная сохранность: БД -> user_metadata -> локальное хранилище)
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const storedPhone = store ? (store.get('nisha_last_phone') || '') : '';
+            const storedTg = store ? (store.get('nisha_last_tg') || '') : '';
+            const metaPhone = currentUser.user_metadata?.phone || '';
+            const metaTg = currentUser.user_metadata?.tg || '';
+
+            const uPhone = (userProfile?.phone || metaPhone || storedPhone || '').trim();
+            const uTg = (userProfile?.tg || metaTg || storedTg || '').trim();
+
+            if (userProfile) {
+                if (!userProfile.phone && uPhone) userProfile.phone = uPhone;
+                if (!userProfile.tg && uTg) userProfile.tg = uTg;
+            }
+
+            if (uPhone) {
+                if (store && !store.get('nisha_last_phone')) store.set('nisha_last_phone', uPhone);
+                renderProfilePhone(uPhone);
+            } else {
+                renderProfilePhone('');
+            }
+
+            if (uTg) {
+                if (store && !store.get('nisha_last_tg')) store.set('nisha_last_tg', uTg);
+                renderProfileTg(uTg);
+            } else {
+                renderProfileTg('');
+            }
 
             // Сохраненные данные доставки (ФИО и адрес отделения/почтомата)
-            const uFullName = (userProfile?.full_name || '').trim();
-            const uDeliveryAddress = (userProfile?.delivery_address || '').trim();
+            const cachedDelivery = (store ? store.getJSON('nisha_profile_delivery') : null) || {};
+            const uFullName = (userProfile?.full_name || cachedDelivery.full_name || '').trim();
+            const uDeliveryAddress = (userProfile?.delivery_address || cachedDelivery.delivery_address || '').trim();
+            if (userProfile) {
+                if (!userProfile.full_name && uFullName) userProfile.full_name = uFullName;
+                if (!userProfile.delivery_address && uDeliveryAddress) userProfile.delivery_address = uDeliveryAddress;
+            }
             renderProfileDelivery(uFullName, uDeliveryAddress);
 
             if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
 
             // Автоматическая привязка прошлых гостевых заказов при входе в аккаунт
-            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
             const phoneToLink = uPhone || (store ? store.get('nisha_last_phone') : null) || '';
             if (phoneToLink && phoneToLink.replace(/[^\d]/g, '').length >= 9) {
                 window.apiClient.post('/api/link-orders', {
