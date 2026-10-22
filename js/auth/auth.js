@@ -25,17 +25,8 @@ let turnstilePropWidgetId = null;
 window._turnstileOtpToken = null;
 window._turnstilePropToken = null;
 
-function initTurnstileWidgets() {
-    if (typeof turnstile === 'undefined') {
-        if (!window._turnstileRetryCount) window._turnstileRetryCount = 0;
-        if (window._turnstileRetryCount < 6) {
-            window._turnstileRetryCount++;
-            setTimeout(initTurnstileWidgets, 500);
-        }
-        return;
-    }
-
-    // 1. Фоновый невидимый виджет для подтверждения номера телефона (OTP)
+function initTurnstileOtpWidget() {
+    if (typeof turnstile === 'undefined') return;
     const otpContainer = document.getElementById('turnstile-otp-container');
     if (otpContainer && turnstileOtpWidgetId === null) {
         try {
@@ -57,8 +48,11 @@ function initTurnstileWidgets() {
             console.warn('[TURNSTILE OTP ERROR]', e);
         }
     }
+}
+window.initTurnstileOtpWidget = initTurnstileOtpWidget;
 
-    // 2. Фоновый невидимый виджет для формы "Предложить вещь"
+function initTurnstilePropWidget() {
+    if (typeof turnstile === 'undefined') return;
     const propContainer = document.getElementById('turnstile-prop-container');
     if (propContainer && turnstilePropWidgetId === null) {
         try {
@@ -81,11 +75,21 @@ function initTurnstileWidgets() {
         }
     }
 }
-window.initTurnstileWidgets = initTurnstileWidgets;
+window.initTurnstilePropWidget = initTurnstilePropWidget;
 
-window.addEventListener('load', () => {
-    setTimeout(initTurnstileWidgets, 800);
-});
+function initTurnstileWidgets() {
+    if (typeof turnstile === 'undefined') {
+        if (!window._turnstileRetryCount) window._turnstileRetryCount = 0;
+        if (window._turnstileRetryCount < 6) {
+            window._turnstileRetryCount++;
+            setTimeout(initTurnstileWidgets, 500);
+        }
+        return;
+    }
+    initTurnstileOtpWidget();
+    initTurnstilePropWidget();
+}
+window.initTurnstileWidgets = initTurnstileWidgets;
 
 // --- КОНТАКТНЫЕ ДАННЫЕ ЮЗЕРА ---
 function getUserPhone() {

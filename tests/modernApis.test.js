@@ -29,6 +29,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             globalThis.window.addEventListener = vi.fn();
         }
         globalThis.document = {
+            body: { style: { overflow: '' } },
             getElementById: vi.fn(() => null),
             querySelector: vi.fn(() => null),
             querySelectorAll: vi.fn(() => []),
@@ -627,6 +628,67 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(arr instanceof Uint8Array).toBe(true);
             expect(arr.length).toBe(6);
             expect(Array.from(arr)).toEqual([1, 2, 3, 4, 5, 6]);
+        });
+    });
+
+    describe('20. WAI-ARIA focus management & inert attribute on modals', () => {
+        it('blurs active descendant element inside modal before applying aria-hidden to satisfy W3C specification', () => {
+            const mockCloseBtn = {
+                blur: vi.fn(),
+                focus: vi.fn()
+            };
+            const mockModal = {
+                id: 'testModal',
+                style: { display: 'flex', pointerEvents: '' },
+                classList: {
+                    contains: vi.fn(() => false),
+                    add: vi.fn(),
+                    remove: vi.fn()
+                },
+                setAttribute: vi.fn(),
+                removeAttribute: vi.fn(),
+                querySelector: vi.fn(() => null),
+                querySelectorAll: vi.fn(() => []),
+                contains: vi.fn(el => el === mockCloseBtn),
+                inert: false
+            };
+
+            globalThis.document.activeElement = mockCloseBtn;
+            globalThis.document.getElementById = vi.fn(id => (id === 'testModal' ? mockModal : null));
+
+            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            eval(windowsCode);
+
+            window.executeCloseModal('testModal');
+
+            expect(mockCloseBtn.blur).toHaveBeenCalled();
+            expect(mockModal.inert).toBe(true);
+            expect(mockModal.setAttribute).toHaveBeenCalledWith('aria-hidden', 'true');
+        });
+
+        it('clears inert and restores focus element when opening a modal', () => {
+            const mockReturnFocus = { focus: vi.fn() };
+            const mockModal = {
+                id: 'openTestModal',
+                style: { display: 'none', pointerEvents: '' },
+                classList: {
+                    remove: vi.fn()
+                },
+                setAttribute: vi.fn(),
+                removeAttribute: vi.fn(),
+                querySelector: vi.fn(() => null),
+                inert: true
+            };
+
+            globalThis.document.activeElement = mockReturnFocus;
+            globalThis.document.getElementById = vi.fn(id => (id === 'openTestModal' ? mockModal : null));
+
+            window.openModal('openTestModal');
+
+            expect(mockModal.inert).toBe(false);
+            expect(mockModal.removeAttribute).toHaveBeenCalledWith('inert');
+            expect(mockModal.setAttribute).toHaveBeenCalledWith('aria-hidden', 'false');
+            expect(mockModal._returnFocusElement).toBe(mockReturnFocus);
         });
     });
 });

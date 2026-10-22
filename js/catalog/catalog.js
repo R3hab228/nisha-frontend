@@ -28,6 +28,7 @@ window.toCDN = window.toCDN || function(url) {
     }
     return url || '';
 };
+const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
 
 // Оптимизированный URL картинки (превью / оригинал)
 function getOptimizedImageUrl(item, wantsThumb = false) {
@@ -64,7 +65,6 @@ window.prefetchItemImages = function(id) {
         const catalog = typeof getCatalog === 'function' ? getCatalog() : (window.allItems || []);
         const item = catalog.find(i => String(i.id) === String(id));
         if (item) {
-            const toCDN = window.toCDN || ((u) => u);
             // Предзагрузка миниатюр карточки для мгновенного свайпа в сетке
             if (item.thumbnails && item.thumbnails.length > 1) {
                 item.thumbnails.slice(1, 4).forEach(url => {
@@ -2532,7 +2532,6 @@ window.preloadGridSlide = function(event, itemId, direction) {
     const slideWidth = slider.offsetWidth || 1;
     const currentIdx = Math.round(slider.scrollLeft / slideWidth);
     const targetIdx = Math.max(0, Math.min(mediaArray.length - 1, currentIdx + direction));
-    const toCDN = window.toCDN || ((u) => u);
     const url = toCDN(mediaArray[targetIdx]);
     if (url && !url.endsWith('.mp4')) {
         const img = new Image();

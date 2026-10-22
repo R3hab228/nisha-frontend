@@ -90,7 +90,7 @@ function escCartHtml(value) {
 }
 
 function parseCartPrice(price) {
-    return parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
+    return Number.parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
 }
 
 // Полный сброс примененного промокода (после заказа / при пустой корзине)
@@ -490,7 +490,7 @@ async function ensureCityRef() {
         if (addrs.length === 0) return '';
 
         const norm = (str) => String(str || '').toLowerCase()
-            .replace(/[’`ʼ]/g, "'")
+            .replaceAll(/[’`ʼ]/g, "'")
             .replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село)\s*/i, '')
             .split(',')[0].trim();
         const wanted = norm(typed);
@@ -681,8 +681,7 @@ async function calculateDeliveryCost() {
     document.getElementById('deliveryCostInfo').style.display = 'block';
     document.getElementById('calcCostVal').innerText = "Рассчитываем...";
     
-    const getSafePrice = (price) => parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
-    const totalCost = currentCart.reduce((sum, item) => sum + getSafePrice(item.price), 0);
+    const totalCost = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
 
     try {
         const data = await window.apiClient.post('/api/calc-delivery', {

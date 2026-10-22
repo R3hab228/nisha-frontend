@@ -2,13 +2,15 @@
 // NISHA REVIEWS MODULE (REVIEWS.TXT / EXE)
 // ==========================================
 
+const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
+
 // Глобальная функция для открытия 1 картинки в PhotoSwipe
 async function openReviewImage(url) {
     if (typeof ensurePhotoSwipe === 'function') {
         await ensurePhotoSwipe();
     }
     if (!window.PhotoSwipeLightbox) return;
-    const cdnUrl = (typeof window.toCDN === 'function') ? window.toCDN(url) : url;
+    const cdnUrl = toCDN(url);
     const lightbox = new window.PhotoSwipeLightbox({
         dataSource: [{ src: cdnUrl, width: 1000, height: 1000 }],
         pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
@@ -50,7 +52,6 @@ async function openReviewsModal() {
         }
         container.classList.remove('is-empty');
         
-        const toCDN = window.toCDN || ((u) => u);
         let html = ''; 
         data.forEach(rev => {
             const revDate = new Date(rev.created_at);

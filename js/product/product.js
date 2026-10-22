@@ -9,6 +9,8 @@ let currentOpenedItem = window.currentOpenedItem;
 let currentSlide = 0;
 let totalSlides = 0;
 
+const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
+
 // Безопасные геттеры зависимостей
 function getFavs() {
     return window.favorites || (typeof favorites !== 'undefined' ? favorites : []);
@@ -100,7 +102,6 @@ function preloadSlide(step) {
     const active = window.currentOpenedItem;
     if (!active || !active.images || active.images.length <= 1) return;
     const targetIndex = (currentSlide + step + active.images.length) % active.images.length;
-    const toCDN = window.toCDN || ((u) => u);
     const url = toCDN(active.images[targetIndex]);
     if (url && !url.endsWith('.mp4')) {
         const img = new Image();
@@ -418,7 +419,6 @@ function openProductModal(item) {
     // Поддержка ФОТО и ВИДЕО (.mp4)
     if (wrapper && thumbs) {
         if (mediaList.length > 0) {
-            const toCDN = window.toCDN || ((u) => u);
             let slidesHtml = '';
             let thumbsHtml = '';
             mediaList.forEach((url, index) => {
@@ -483,7 +483,6 @@ function openProductModal(item) {
 
     // Мгновенная предзагрузка первых слайдов для бесшовного свайпа и зума без задержек
     if (mediaList.length > 0) {
-        const toCDN = window.toCDN || ((u) => u);
         mediaList.slice(0, 3).forEach((url, i) => {
             const cdnUrl = toCDN(url);
             if (typeof cdnUrl === 'string' && !cdnUrl.endsWith('.mp4')) {
@@ -845,7 +844,6 @@ function setSlide(index) {
     // Предзагружаем следующее фото для непрерывного мгновенного свайпа
     const active = window.currentOpenedItem;
     if (active && active.images && active.images[index + 1]) {
-        const toCDN = window.toCDN || ((u) => u);
         const nextUrl = toCDN(active.images[index + 1]);
         if (!nextUrl.endsWith('.mp4')) {
             const preImg = new Image();
@@ -1045,7 +1043,6 @@ function renderHistory() {
     const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
     const fragment = document.createDocumentFragment();
     const cardsForTilt = [];
-    const toCDN = window.toCDN || ((u) => u);
 
     hist.forEach(h => {
         const realItem = catalog.find(i => i.id === h.id);

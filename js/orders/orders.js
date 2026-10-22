@@ -6,6 +6,7 @@ if (typeof window.globalOrdersData === 'undefined') window.globalOrdersData = []
 if (typeof window.currentOrderTab === 'undefined') window.currentOrderTab = 'accepted'; // accepted, shipped, cancelled
 if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCache = {};
 
+const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
 const orderDateFormatter = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
 
 function openOrdersModal() {
@@ -359,8 +360,6 @@ if (typeof globalThis !== 'undefined') globalThis.fetchMyOrders = fetchMyOrders;
 function getOrderItemImage(item) {
     if (!item) return '';
 
-    const toCDN = window.toCDN || ((u) => u);
-
     // 1. Прямые свойства item
     if (item.image && typeof item.image === 'string' && item.image.trim().length > 5) {
         return toCDN(item.image);
@@ -433,7 +432,6 @@ async function ensureOrderImagesLoaded() {
     if (!sb) return;
 
     try {
-        const toCDN = window.toCDN || ((u) => u);
         const { data } = await sb.from('items').select('id, thumbnails, images').in('id', missingIds);
         if (data && data.length > 0) {
             data.forEach(di => {

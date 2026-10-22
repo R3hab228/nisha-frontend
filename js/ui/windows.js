@@ -112,6 +112,8 @@ function openModal(id) {
         clearTimeout(modal._closeTimer);
         modal._closeTimer = null;
     }
+    modal.inert = false;
+    modal.removeAttribute('inert');
     modal.classList.remove('closing');
     modal.style.pointerEvents = '';
     modal.setAttribute('aria-hidden', 'false');
@@ -205,29 +207,6 @@ function executeCloseModal(id) {
         try { v.pause(); } catch(e) {}
     });
 
-    if (id === 'rulesModal') {
-        modal.classList.add('closing');
-        modal.setAttribute('aria-hidden', 'true');
-        if (modal._closeTimer) clearTimeout(modal._closeTimer);
-        modal._closeTimer = setTimeout(() => {
-            modal._closeTimer = null;
-            if (!modal.classList.contains('closing')) return;
-            modal.style.display = 'none';
-            modal.classList.remove('closing');
-            modal.style.pointerEvents = '';
-            const win = modal.querySelector('.modal-window');
-            if (win) {
-                win.style.transform = '';
-                win.style.opacity = '';
-            }
-            if (modal._returnFocusElement && typeof modal._returnFocusElement.focus === 'function') {
-                try { modal._returnFocusElement.focus(); } catch (e) {}
-                modal._returnFocusElement = null;
-            }
-        }, 350);
-        return;
-    }
-
     if (id === 'productModal') {
         document.title = 'NISHA | Underground Store';
         window.currentOpenedItem = null;
@@ -242,6 +221,12 @@ function executeCloseModal(id) {
         } catch (e) {}
     }
 
+    // Снимаем фокус с дочерних элементов закрывающегося окна перед aria-hidden=true (WAI-ARIA compliance)
+    if (typeof document !== 'undefined' && document.activeElement && modal.contains(document.activeElement)) {
+        try { document.activeElement.blur(); } catch (e) {}
+    }
+
+    modal.inert = true;
     modal.classList.add('closing');
     modal.setAttribute('aria-hidden', 'true');
     if (modal._closeTimer) clearTimeout(modal._closeTimer);
@@ -252,6 +237,7 @@ function executeCloseModal(id) {
         modal.style.display = 'none';
         modal.classList.remove('closing');
         modal.style.pointerEvents = '';
+        modal.inert = true;
 
         const win = modal.querySelector('.modal-window');
         if (win) {
