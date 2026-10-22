@@ -1167,11 +1167,15 @@ async function openCheckoutModal() {
         
         // АВТО-ЗАПОЛНЕНИЕ И СОХРАНЕНИЕ ДАННЫХ КЛИЕНТА
         const orderNameEl = document.getElementById('orderName');
-        if (orderNameEl && !orderNameEl._lettersOnlyBound) {
-            orderNameEl._lettersOnlyBound = true;
-            orderNameEl.addEventListener('input', function() {
-                this.value = this.value.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '');
-            });
+        if (orderNameEl) {
+            if (typeof window.attachFullNameAutoCapitalize === 'function') {
+                window.attachFullNameAutoCapitalize(orderNameEl);
+            } else if (!orderNameEl._lettersOnlyBound) {
+                orderNameEl._lettersOnlyBound = true;
+                orderNameEl.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '');
+                });
+            }
         }
 
         ['orderName', 'orderPhone', 'orderCity', 'orderBranch'].forEach(fieldId => {

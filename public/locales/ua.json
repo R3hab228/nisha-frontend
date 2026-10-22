@@ -196,7 +196,8 @@
       "delivery_saved_toast": "Дані доставки збережено!",
       "delivery_fill_warn": "Заповніть ПІБ або місце доставки!",
       "delivery_city": "МІСТО (НОВА ПОШТА):",
-      "delivery_branch": "ВІДДІЛЕННЯ АБО ПОШТОМАТ:"
+      "delivery_branch": "ВІДДІЛЕННЯ АБО ПОШТОМАТ:",
+      "delivery_saved_btn": "[ ЗБЕРЕЖЕНО ✓ ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

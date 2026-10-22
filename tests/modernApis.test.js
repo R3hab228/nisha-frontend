@@ -1071,6 +1071,52 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             globalThis.document.getElementById = origGetElementById;
         });
 
+
+        it('auto-capitalizes full name words, normalizes all-caps on blur, and shows [ СОХРАНЕНО ✓ ] on save', async () => {
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            eval(helpersCode);
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            eval(profileCode);
+
+            // 1. Auto-capitalize full name words
+            expect(window.formatFullNameWords('шевченко тарас григорович')).toBe('Шевченко Тарас Григорович');
+            expect(window.formatFullNameWords('немирович-данченко')).toBe('Немирович-Данченко');
+            expect(window.formatFullNameWords("в'ячеслав")).toBe("В'ячеслав");
+            expect(window.formatFullNameWords('123іван45')).toBe('Іван');
+
+            // 2. Normalize all-caps on blur
+            expect(window.normalizeFullNameOnBlur('ИВАНОВ ИВАН ИВАНОВИЧ')).toBe('Иванов Иван Иванович');
+            expect(window.normalizeFullNameOnBlur('  петренко   олександр  ')).toBe('Петренко Олександр');
+
+            // 3. Save button visual feedback
+            const mockBtn = {
+                innerText: '[ СОХРАНИТЬ ]',
+                classList: {
+                    add: vi.fn(),
+                    remove: vi.fn()
+                },
+                disabled: false,
+                style: {}
+            };
+            const elements = {
+                profileDeliveryFullName: { value: 'Шевченко Тарас' },
+                profileDeliveryCity: { value: 'Київ' },
+                profileDeliveryBranch: { value: 'Відділення №1' },
+                profileDeliveryAddress: { value: 'Київ, Відділення №1' },
+                profileDeliverySaveBtn: mockBtn
+            };
+            const origGetElementById = globalThis.document.getElementById;
+            globalThis.document.getElementById = vi.fn((id) => elements[id] || null);
+
+            window.userProfile = {};
+            await window.saveProfileDeliveryFromForm(false, mockBtn);
+
+            expect(mockBtn.innerText).toBe('[ СОХРАНЕНО ✓ ]');
+            expect(mockBtn.classList.add).toHaveBeenCalledWith('is-saved');
+
+            globalThis.document.getElementById = origGetElementById;
+        });
+
         it('verifies Win95 retro-checkbox, clean labels without [x], and white-space nowrap on delivery button', () => {
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');

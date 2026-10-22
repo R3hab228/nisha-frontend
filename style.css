@@ -2130,7 +2130,12 @@ html.low-power-mode .pulsing-dot {
     opacity: 0;
 }
 .profile-delivery-collapse > div {
+    min-height: 0;
     overflow: hidden;
+}
+.profile-delivery-collapse.is-expanded,
+.profile-delivery-collapse.is-expanded > div {
+    overflow: visible;
 }
 .profile-delivery-body {
     padding-top: 10px;
@@ -2248,7 +2253,10 @@ html.low-power-mode .pulsing-dot {
     background: rgba(0, 212, 255, 0.12) !important;
     color: #fff !important;
 }
-.profile-delivery-collapse:not(.collapsed),
-.profile-delivery-collapse:not(.collapsed) > div {
-    overflow: visible;
+
+.profile-delivery-save-btn.is-saved {
+    background: rgba(0, 255, 102, 0.15) !important;
+    border-color: var(--accent-green) !important;
+    color: #fff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.4) !important;
 }

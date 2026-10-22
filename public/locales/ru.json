@@ -196,7 +196,8 @@
       "delivery_saved_toast": "Данные доставки сохранены!",
       "delivery_fill_warn": "Заполните ФИО или место доставки!",
       "delivery_city": "ГОРОД (НОВАЯ ПОЧТА):",
-      "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:"
+      "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:",
+      "delivery_saved_btn": "[ СОХРАНЕНО ✓ ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

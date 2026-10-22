@@ -196,7 +196,8 @@
       "delivery_fullname_lbl": "RECIPIENT FULL NAME:",
       "delivery_address_lbl": "DELIVERY ADDRESS (NP):",
       "delivery_city": "CITY (NOVA POSHTA):",
-      "delivery_branch": "BRANCH OR POSTOMAT:"
+      "delivery_branch": "BRANCH OR POSTOMAT:",
+      "delivery_saved_btn": "[ SAVED ✓ ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

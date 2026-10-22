@@ -1565,3 +1565,61 @@ function initActionDelegation() {
 }
 window.initActionDelegation = initActionDelegation;
 initActionDelegation();
+
+// ==========================================
+// FULL NAME AUTO-CAPITALIZATION (ФИО / ПІБ)
+// ==========================================
+function formatFullNameWords(val) {
+    if (!val || typeof val !== 'string') return '';
+    const cleaned = val.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '');
+    return cleaned.replace(/(^|[\s\-])([a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ])/g, (match, sep, char) => {
+        return sep + char.toUpperCase();
+    });
+}
+window.formatFullNameWords = formatFullNameWords;
+
+function normalizeFullNameOnBlur(val) {
+    if (!val || typeof val !== 'string') return '';
+    return val
+        .replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '')
+        .split(' ')
+        .filter(Boolean)
+        .map(word => {
+            return word.split('-').map(part => {
+                if (!part) return '';
+                if (part === part.toUpperCase() || part === part.toLowerCase()) {
+                    return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+                }
+                return part;
+            }).join('-');
+        })
+        .join(' ');
+}
+window.normalizeFullNameOnBlur = normalizeFullNameOnBlur;
+
+function attachFullNameAutoCapitalize(input) {
+    if (!input || input._nameCapBound) return;
+    input._nameCapBound = true;
+
+    if (typeof input.addEventListener === 'function') {
+        input.addEventListener('input', () => {
+            const orig = input.value;
+            const formatted = formatFullNameWords(orig);
+            if (orig !== formatted) {
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                input.value = formatted;
+                if (typeof input.setSelectionRange === 'function' && start !== null && end !== null) {
+                    input.setSelectionRange(start, end);
+                }
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            if (input.value) {
+                input.value = normalizeFullNameOnBlur(input.value);
+            }
+        });
+    }
+}
+window.attachFullNameAutoCapitalize = attachFullNameAutoCapitalize;

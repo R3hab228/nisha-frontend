@@ -196,7 +196,8 @@
       "delivery_fullname_lbl": "ФИО ПОЛУЧАТЕЛЯ:",
       "delivery_address_lbl": "МЕСТО ДОСТАВКИ (НП):",
       "delivery_city": "ГОРОД (НОВАЯ ПОЧТА):",
-      "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:"
+      "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:",
+      "delivery_saved_btn": "[ СОХРАНЕНО ✓ ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

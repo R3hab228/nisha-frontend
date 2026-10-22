@@ -196,7 +196,8 @@
       "delivery_fullname_lbl": "ПІБ ОДЕРЖУВАЧА:",
       "delivery_address_lbl": "МІСЦЕ ДОСТАВКИ (НП):",
       "delivery_city": "МІСТО (НОВА ПОШТА):",
-      "delivery_branch": "ВІДДІЛЕННЯ АБО ПОШТОМАТ:"
+      "delivery_branch": "ВІДДІЛЕННЯ АБО ПОШТОМАТ:",
+      "delivery_saved_btn": "[ ЗБЕРЕЖЕНО ✓ ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

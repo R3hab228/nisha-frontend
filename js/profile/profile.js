@@ -909,8 +909,13 @@ function initProfileDeliveryEvents() {
     if (typeof document === 'undefined') return;
     [false, true].forEach(isModal => {
         const prefix = isModal ? 'modalProfile' : 'profile';
+        const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
         const cityEl = document.getElementById(`${prefix}DeliveryCity`);
         const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
+
+        if (fnEl && typeof window.attachFullNameAutoCapitalize === 'function') {
+            window.attachFullNameAutoCapitalize(fnEl);
+        }
 
         if (cityEl) {
             const isBound = cityEl.dataset ? Boolean(cityEl.dataset.npBound) : Boolean(cityEl._npBound);
@@ -1005,10 +1010,25 @@ function toggleProfileDeliveryAccordion(isModal, btn) {
     if (!collapseEl) return;
 
     const isCollapsed = collapseEl.classList.toggle('collapsed');
-    if (isCollapsed) {
-        document.querySelectorAll('.profile-np-dropdown').forEach(d => d.style.display = 'none');
-    } else {
+
+    if (!isCollapsed) {
+        // OPENING: smoothly expands 0fr -> 1fr with overflow: hidden, then allows overflow for dropdown
+        if (typeof collapseEl.classList.remove === 'function') collapseEl.classList.remove('is-expanded');
+        if (collapseEl._expandTimer) clearTimeout(collapseEl._expandTimer);
+        collapseEl._expandTimer = setTimeout(() => {
+            const stillOpen = typeof collapseEl.classList.contains === 'function'
+                ? !collapseEl.classList.contains('collapsed')
+                : true;
+            if (stillOpen && typeof collapseEl.classList.add === 'function') {
+                collapseEl.classList.add('is-expanded');
+            }
+        }, 360);
         initProfileDeliveryEvents();
+    } else {
+        // CLOSING: immediately hides overflow and collapses 1fr -> 0fr
+        if (collapseEl._expandTimer) clearTimeout(collapseEl._expandTimer);
+        if (typeof collapseEl.classList.remove === 'function') collapseEl.classList.remove('is-expanded');
+        document.querySelectorAll('.profile-np-dropdown').forEach(d => d.style.display = 'none');
     }
 
     if (toggleBtn) {
@@ -1052,22 +1072,41 @@ async function saveProfileDeliveryFromForm(isModal, btn) {
         return;
     }
 
-    if (btn) {
-        btn.disabled = true;
-        btn.style.opacity = '0.6';
-    }
+    const saveBtns = [
+        btn,
+        document.getElementById('profileDeliverySaveBtn'),
+        document.getElementById('modalProfileDeliverySaveBtn')
+    ].filter(Boolean);
+
+    saveBtns.forEach(b => {
+        b.disabled = true;
+        b.style.opacity = '0.7';
+    });
 
     try {
         await saveDeliveryToProfile(fullName, address);
         const successMsg = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_saved_toast', { defaultValue: 'Данные доставки сохранены!' }) : 'Данные доставки сохранены!';
         showToast(successMsg, 'success');
+
+        const savedText = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_saved_btn', { defaultValue: '[ СОХРАНЕНО ✓ ]' }) : '[ СОХРАНЕНО ✓ ]';
+        const defaultText = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_save', { defaultValue: '[ СОХРАНИТЬ ]' }) : '[ СОХРАНИТЬ ]';
+
+        saveBtns.forEach(b => {
+            b.innerText = savedText;
+            b.classList.add('is-saved');
+            if (b._savedTimer) clearTimeout(b._savedTimer);
+            b._savedTimer = setTimeout(() => {
+                b.innerText = defaultText;
+                b.classList.remove('is-saved');
+            }, 3000);
+        });
     } catch (e) {
         showToast('Ошибка сохранения данных: ' + (e.message || 'Сбой сети'), 'error');
     } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-        }
+        saveBtns.forEach(b => {
+            b.disabled = false;
+            b.style.opacity = '1';
+        });
     }
 }
 window.saveProfileDeliveryFromForm = saveProfileDeliveryFromForm;
