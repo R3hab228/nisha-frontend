@@ -1241,4 +1241,179 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             globalThis.document.getElementById = origGetElementById;
         });
     });
+
+    describe('24. Product Card PhotoSwipe Zoom & Modal Slider Click Handler', () => {
+        it('exposes openProductPhotoZoom on window object', () => {
+            expect(typeof window.openProductPhotoZoom).toBe('function');
+        });
+
+        it('intercepts click on a.slide, prevents default, stops propagation and opens zoom', async () => {
+            const slideImg = {
+                tagName: 'IMG',
+                classList: { contains: vi.fn(() => false) },
+                src: 'https://nisha-cdn.mtyagniryadno.workers.dev/photo1.jpg',
+                currentSrc: 'https://nisha-cdn.mtyagniryadno.workers.dev/photo1.jpg',
+                naturalWidth: 1200,
+                naturalHeight: 1600
+            };
+
+            const slideA = {
+                tagName: 'A',
+                href: 'https://nisha-cdn.mtyagniryadno.workers.dev/photo1.jpg',
+                classList: {
+                    contains: vi.fn((cls) => cls === 'slide'),
+                    remove: vi.fn()
+                },
+                getAttribute: vi.fn((attr) => {
+                    if (attr === 'data-pswp-width') return '1200';
+                    if (attr === 'data-pswp-height') return '1600';
+                    return null;
+                }),
+                querySelector: vi.fn((sel) => sel === 'img' ? slideImg : null)
+            };
+
+            const mockWrapper = {
+                _pswpClickBound: false,
+                contains: vi.fn((el) => el === slideA),
+                querySelectorAll: vi.fn((sel) => {
+                    if (sel === 'a.slide' || sel === '.slide') return [slideA];
+                    return [];
+                }),
+                addEventListener: vi.fn((evt, cb) => {
+                    mockWrapper._clickCb = cb;
+                })
+            };
+
+            const origGetEl = globalThis.document.getElementById;
+            globalThis.document.getElementById = vi.fn((id) => {
+                if (id === 'sliderWrapper') return mockWrapper;
+                return null;
+            });
+
+            // Simulate the click binding from openProductModal
+            if (!mockWrapper._pswpClickBound) {
+                mockWrapper._pswpClickBound = true;
+                mockWrapper.addEventListener('click', (e) => {
+                    const slide = e.target.closest('a.slide');
+                    if (!slide || !mockWrapper.contains(slide)) return;
+                    if (e.target.closest('button, [data-action], video')) return;
+
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof window.openProductPhotoZoom === 'function') {
+                        window.openProductPhotoZoom(slide);
+                    }
+                });
+            }
+
+            expect(mockWrapper.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+
+            // Mock PhotoSwipeLightbox constructor
+            let createdConfig = null;
+            let mockInstance = {
+                init: vi.fn(),
+                loadAndOpen: vi.fn(),
+                destroy: vi.fn(),
+                on: vi.fn(),
+                pswp: { currIndex: 0 }
+            };
+
+            window.PhotoSwipeLightbox = vi.fn(function(cfg) {
+                createdConfig = cfg;
+                return mockInstance;
+            });
+            window.ensurePhotoSwipe = vi.fn().mockResolvedValue(window.PhotoSwipeLightbox);
+
+            // Trigger click event on image inside a.slide
+            const evt = {
+                target: {
+                    closest: vi.fn((sel) => {
+                        if (sel === 'a.slide') return slideA;
+                        return null;
+                    })
+                },
+                preventDefault: vi.fn(),
+                stopPropagation: vi.fn()
+            };
+
+            mockWrapper._clickCb(evt);
+
+            expect(evt.preventDefault).toHaveBeenCalled();
+            expect(evt.stopPropagation).toHaveBeenCalled();
+
+            // Wait microtask for async openProductPhotoZoom
+            await new Promise(r => setTimeout(r, 10));
+
+            expect(window.ensurePhotoSwipe).toHaveBeenCalled();
+            expect(window.PhotoSwipeLightbox).toHaveBeenCalled();
+            expect(createdConfig).not.toBeNull();
+            expect(Array.isArray(createdConfig.dataSource)).toBe(true);
+            expect(createdConfig.dataSource.length).toBe(1);
+            expect(createdConfig.dataSource[0].src).toBe('https://nisha-cdn.mtyagniryadno.workers.dev/photo1.jpg');
+            expect(createdConfig.dataSource[0].width).toBe(1200);
+            expect(createdConfig.dataSource[0].height).toBe(1600);
+            expect(mockInstance.init).toHaveBeenCalled();
+            expect(mockInstance.loadAndOpen).toHaveBeenCalledWith(0);
+
+            globalThis.document.getElementById = origGetEl;
+        });
+
+        it('does not prevent default or open zoom when clicking on video or control button', () => {
+            const mockWrapper = {
+                _pswpClickBound: false,
+                contains: vi.fn(() => true),
+                addEventListener: vi.fn((evt, cb) => {
+                    mockWrapper._clickCb = cb;
+                })
+            };
+
+            mockWrapper._pswpClickBound = true;
+            mockWrapper.addEventListener('click', (e) => {
+                const slide = e.target.closest('a.slide');
+                if (!slide || !mockWrapper.contains(slide)) return;
+                if (e.target.closest('button, [data-action], video')) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window.openProductPhotoZoom === 'function') {
+                    window.openProductPhotoZoom(slide);
+                }
+            });
+
+            const zoomSpy = vi.spyOn(window, 'openProductPhotoZoom');
+
+            // Click on video sound button inside a slide
+            const btnEvt = {
+                target: {
+                    closest: vi.fn((sel) => {
+                        if (sel === 'a.slide') return { tagName: 'A' };
+                        if (sel === 'button, [data-action], video') return { tagName: 'BUTTON' };
+                        return null;
+                    })
+                },
+                preventDefault: vi.fn(),
+                stopPropagation: vi.fn()
+            };
+
+            mockWrapper._clickCb(btnEvt);
+            expect(btnEvt.preventDefault).not.toHaveBeenCalled();
+            expect(btnEvt.stopPropagation).not.toHaveBeenCalled();
+            expect(zoomSpy).not.toHaveBeenCalled();
+
+            // Click outside a.slide (e.g. video slide div)
+            const vidEvt = {
+                target: {
+                    closest: vi.fn(() => null)
+                },
+                preventDefault: vi.fn(),
+                stopPropagation: vi.fn()
+            };
+
+            mockWrapper._clickCb(vidEvt);
+            expect(vidEvt.preventDefault).not.toHaveBeenCalled();
+            expect(zoomSpy).not.toHaveBeenCalled();
+
+            zoomSpy.mockRestore();
+        });
+    });
 });

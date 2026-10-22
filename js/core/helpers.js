@@ -1040,19 +1040,6 @@ async function ensurePhotoSwipe() {
             const PhotoSwipe = pswpMod.default || pswpMod.PhotoSwipe || pswpMod;
             window.PhotoSwipeLightbox = Lightbox;
             window.PhotoSwipe = PhotoSwipe;
-            if (!window.pswpLightbox && window.PhotoSwipeLightbox) {
-                window.pswpLightbox = new window.PhotoSwipeLightbox({
-                    gallery: '#sliderWrapper',
-                    children: 'a.slide',
-                    showHideAnimationType: 'fade',
-                    zoomAnimationDuration: 200,
-                    bgOpacity: 0.9,
-                    closeOnVerticalDrag: true,
-                    wheelToZoom: true,
-                    pswpModule: PhotoSwipe
-                });
-                window.pswpLightbox.init();
-            }
             return window.PhotoSwipeLightbox;
         } catch (e) {
             console.warn('[PhotoSwipe] Local module load failed, attempting CDN fallback:', e);
@@ -1060,8 +1047,12 @@ async function ensurePhotoSwipe() {
                 if (typeof loadExternalStyle === 'function') {
                     loadExternalStyle('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css');
                 }
-                const mod = await import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js');
-                window.PhotoSwipeLightbox = mod.default || mod.PhotoSwipeLightbox;
+                const [mod, pswpMod] = await Promise.all([
+                    import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js'),
+                    import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.min.js')
+                ]);
+                window.PhotoSwipeLightbox = mod.default || mod.PhotoSwipeLightbox || mod;
+                window.PhotoSwipe = pswpMod.default || pswpMod.PhotoSwipe || pswpMod;
                 return window.PhotoSwipeLightbox;
             } catch (cdnErr) {
                 console.error('[PhotoSwipe] All loaders failed:', cdnErr);

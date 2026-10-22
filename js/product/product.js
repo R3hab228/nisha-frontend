@@ -507,30 +507,21 @@ function openProductModal(item) {
     }, 100);
 
     if (typeof ensurePhotoSwipe === 'function') {
-        ensurePhotoSwipe().then(() => {
-            if (window.pswpLightbox) {
-                try { window.pswpLightbox.init(); } catch (e) {} 
-            }
-        });
-    } else if (window.pswpLightbox) {
-        try { window.pswpLightbox.init(); } catch (e) {} 
+        ensurePhotoSwipe().catch(() => {});
     }
 
     if (wrapper && !wrapper._pswpClickBound) {
         wrapper._pswpClickBound = true;
-        wrapper.addEventListener('click', async (e) => {
+        wrapper.addEventListener('click', (e) => {
             const slide = e.target.closest('a.slide');
-            if (!slide) return;
-            if (!window.pswpLightbox) {
-                e.preventDefault();
-                if (typeof ensurePhotoSwipe === 'function') {
-                    await ensurePhotoSwipe();
-                }
-                if (window.pswpLightbox) {
-                    const slides = Array.from(wrapper.querySelectorAll('a.slide'));
-                    const idx = slides.indexOf(slide);
-                    if (idx >= 0) window.pswpLightbox.loadAndOpen(idx);
-                }
+            if (!slide || !wrapper.contains(slide)) return;
+            // Не перехватываем клики по кнопкам управления (звук видео и т.д.)
+            if (e.target.closest('button, [data-action], video')) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof openProductPhotoZoom === 'function') {
+                openProductPhotoZoom(slide);
             }
         });
     }
@@ -892,6 +883,91 @@ function updateSlider() {
     });
 }
 window.updateSlider = updateSlider;
+
+// ==========================================
+// 2.1. ПОЛНОЭКРАННЫЙ ЗУМ ФОТО ТОВАРА (PHOTOSWIPE)
+// ==========================================
+
+async function openProductPhotoZoom(targetSlideOrIndex) {
+    if (typeof ensurePhotoSwipe === 'function') {
+        await ensurePhotoSwipe();
+    }
+    if (!window.PhotoSwipeLightbox) return;
+
+    const wrapper = document.getElementById('sliderWrapper');
+    if (!wrapper) return;
+
+    // Ищем только фото-слайды (ссылки), исключая видео-слайды
+    const imageSlides = Array.from(wrapper.querySelectorAll('a.slide'));
+    if (imageSlides.length === 0) return;
+
+    let targetIndex = 0;
+    if (typeof targetSlideOrIndex === 'number') {
+        targetIndex = Math.max(0, Math.min(targetSlideOrIndex, imageSlides.length - 1));
+    } else if (targetSlideOrIndex && typeof targetSlideOrIndex.closest === 'function') {
+        const slideEl = targetSlideOrIndex.closest('a.slide');
+        const foundIdx = imageSlides.indexOf(slideEl);
+        if (foundIdx >= 0) targetIndex = foundIdx;
+    } else {
+        const allSlides = Array.from(wrapper.querySelectorAll('.slide'));
+        const activeSlide = allSlides[window.currentSlide || 0];
+        const foundIdx = imageSlides.indexOf(activeSlide);
+        if (foundIdx >= 0) targetIndex = foundIdx;
+    }
+
+    // Собираем динамический dataSource с актуальными naturalWidth/Height и msrc
+    const items = imageSlides.map(slide => {
+        const img = slide.querySelector('img');
+        const parsedW = Number.parseInt(slide.getAttribute('data-pswp-width') || (img && img.naturalWidth) || 0, 10);
+        const parsedH = Number.parseInt(slide.getAttribute('data-pswp-height') || (img && img.naturalHeight) || 0, 10);
+        const src = slide.href || slide.getAttribute('data-pswp-src') || (img && img.src);
+        const msrc = (img && (img.currentSrc || img.src)) || src;
+        return {
+            src,
+            msrc,
+            width: parsedW > 0 ? parsedW : 1200,
+            height: parsedH > 0 ? parsedH : 1200,
+            element: slide
+        };
+    });
+
+    // Сбрасываем CSS-зум со слайдов перед открытием модального просмотрщика
+    imageSlides.forEach(s => s.classList.remove('zoomed-in'));
+
+    if (window.pswpLightbox) {
+        try { window.pswpLightbox.destroy(); } catch (err) {}
+        window.pswpLightbox = null;
+    }
+
+    const lightbox = new window.PhotoSwipeLightbox({
+        dataSource: items,
+        showHideAnimationType: 'fade',
+        zoomAnimationDuration: 200,
+        bgOpacity: 0.9,
+        closeOnVerticalDrag: true,
+        wheelToZoom: true,
+        pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
+    });
+
+    const syncSliderIndex = () => {
+        const currPswpIndex = lightbox.pswp && lightbox.pswp.currIndex;
+        if (typeof currPswpIndex === 'number' && items[currPswpIndex] && items[currPswpIndex].element) {
+            const allSlides = Array.from(wrapper.querySelectorAll('.slide'));
+            const fullSliderIdx = allSlides.indexOf(items[currPswpIndex].element);
+            if (fullSliderIdx >= 0 && typeof window.setSlide === 'function' && window.currentSlide !== fullSliderIdx) {
+                window.setSlide(fullSliderIdx);
+            }
+        }
+    };
+
+    lightbox.on('change', syncSliderIndex);
+    lightbox.on('close', syncSliderIndex);
+
+    window.pswpLightbox = lightbox;
+    lightbox.init();
+    lightbox.loadAndOpen(targetIndex);
+}
+window.openProductPhotoZoom = openProductPhotoZoom;
 
 function initSliderSwipe() {
     const sliderContainer = document.getElementById('sliderContainer');
