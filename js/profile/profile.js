@@ -1071,7 +1071,9 @@ function filterFavorites() {
     }
     const currentFavState = window.showingOnlyFavs || false;
     window.showingOnlyFavs = !currentFavState;
-    sessionStorage.setItem('nisha_showing_favs', window.showingOnlyFavs);
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store && store.session) store.session.set('nisha_showing_favs', window.showingOnlyFavs);
+    else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_showing_favs', window.showingOnlyFavs); } catch (e) {} }
     
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = window.showingOnlyFavs ? '#fff' : 'var(--accent-yellow)'; 

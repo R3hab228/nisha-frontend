@@ -66,17 +66,24 @@ function checkRules() {
 window.checkRules = checkRules;
 
 function showRulesModal() { 
-    const modal = document.getElementById('rulesModal');
-    if (modal) {
-        modal.classList.remove('closing');
-        const win = modal.querySelector('.modal-window');
-        if (win) {
-            win.style.transform = '';
-            win.style.opacity = '';
+    if (typeof openModal === 'function') {
+        openModal('rulesModal');
+    } else {
+        const modal = document.getElementById('rulesModal');
+        if (modal) {
+            modal.inert = false;
+            modal.removeAttribute('inert');
+            modal.setAttribute('aria-hidden', 'false');
+            modal.classList.remove('closing');
+            const win = modal.querySelector('.modal-window');
+            if (win) {
+                win.style.transform = '';
+                win.style.opacity = '';
+            }
+            if (typeof window.stopLenis === 'function') window.stopLenis();
+            document.body.style.overflow = 'hidden';
+            modal.style.display = 'flex'; 
         }
-        if (typeof window.stopLenis === 'function') window.stopLenis();
-        document.body.style.overflow = 'hidden';
-        modal.style.display = 'flex'; 
     }
 }
 window.showRulesModal = showRulesModal;
@@ -84,24 +91,31 @@ window.showRulesModal = showRulesModal;
 function acceptRules() {
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     if (store) store.set('nisha_rules_accepted', 'true');
-    const modal = document.getElementById('rulesModal');
-    if (modal) {
-        if (modal.classList.contains('closing')) return;
-        modal.classList.add('closing');
-        setTimeout(() => {
-            modal.style.display = 'none';
-            modal.classList.remove('closing');
-            const win = modal.querySelector('.modal-window');
-            if (win) {
-                win.style.transform = '';
-                win.style.opacity = '';
-            }
+    if (typeof executeCloseModal === 'function') {
+        executeCloseModal('rulesModal');
+    } else {
+        const modal = document.getElementById('rulesModal');
+        if (modal) {
+            if (modal.classList.contains('closing')) return;
+            modal.classList.add('closing');
+            modal.setAttribute('aria-hidden', 'true');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.classList.remove('closing');
+                modal.inert = true;
+                modal.setAttribute('inert', '');
+                const win = modal.querySelector('.modal-window');
+                if (win) {
+                    win.style.transform = '';
+                    win.style.opacity = '';
+                }
+                document.body.style.overflow = 'auto';
+                if (typeof window.startLenis === 'function') window.startLenis(); 
+            }, 300);
+        } else {
             document.body.style.overflow = 'auto';
             if (typeof window.startLenis === 'function') window.startLenis(); 
-        }, 400);
-    } else {
-        document.body.style.overflow = 'auto';
-        if (typeof window.startLenis === 'function') window.startLenis(); 
+        }
     }
     if (typeof showToast === 'function' && typeof i18next !== 'undefined') {
         showToast(i18next.t('messages.rules_accepted'), 'success');

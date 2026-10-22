@@ -66,7 +66,10 @@ if ('serviceWorker' in navigator) {
 
                         // Если пользователь уже нажал "Обновить сейчас" в этой сессии или менее 10 минут назад — не показываем повторно
                         try {
-                            if (sessionStorage.getItem('nisha_sw_update_reloaded') === '1') return;
+                            const isReloaded = (store && store.session)
+                                ? (store.session.get('nisha_sw_update_reloaded') === '1')
+                                : (typeof sessionStorage !== 'undefined' ? (sessionStorage.getItem('nisha_sw_update_reloaded') === '1') : false);
+                            if (isReloaded) return;
                             const lastUpdateTs = Number.parseInt(store ? store.get('nisha_sw_updated_ts', '0') : '0', 10);
                             if (lastUpdateTs && (Date.now() - lastUpdateTs) < 10 * 60 * 1000) return;
                         } catch (e) {}
@@ -91,7 +94,8 @@ if ('serviceWorker' in navigator) {
                                 '[ ОБНОВИТЬ СЕЙЧАС ]',
                                 async () => {
                                     try {
-                                        sessionStorage.setItem('nisha_sw_update_reloaded', '1');
+                                        if (store && store.session) store.session.set('nisha_sw_update_reloaded', '1');
+                                        else if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_sw_update_reloaded', '1');
                                         if (store) {
                                             store.set('nisha_sw_updated_ts', String(Date.now()));
                                             store.set('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);

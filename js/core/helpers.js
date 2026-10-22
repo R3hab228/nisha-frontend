@@ -533,8 +533,9 @@ function getOptimizedImg(item, thumb = true) {
 }
 window.getOptimizedImg = getOptimizedImg;
 
-// --- ЕДИНЫЙ БЕЗОПАСНЫЙ ХЕЛПЕР LOCALSTORAGE (storage.getJSON / storage.setJSON) ---
+// --- ЕДИНЫЙ БЕЗОПАСНЫЙ ХЕЛПЕР LOCALSTORAGE & SESSIONSTORAGE (storage.getJSON / storage.setJSON) ---
 const _memStorageFallback = {};
+const _memSessionFallback = {};
 
 function getLocalStore() {
     try {
@@ -548,13 +549,33 @@ function getLocalStore() {
     return null;
 }
 
+function getSessionStore() {
+    try {
+        if (typeof window !== 'undefined' && window.sessionStorage && typeof window.sessionStorage.getItem === 'function') {
+            return window.sessionStorage;
+        }
+        if (typeof sessionStorage !== 'undefined' && sessionStorage && typeof sessionStorage.getItem === 'function') {
+            return sessionStorage;
+        }
+    } catch (e) {}
+    return null;
+}
+
 const storage = {
     getJSON(key, defaultValue = null) {
         try {
             const store = getLocalStore();
-            const raw = store ? store.getItem(key) : _memStorageFallback[key];
+            let raw = null;
+            try {
+                raw = store ? store.getItem(key) : null;
+            } catch (readErr) {
+                raw = null;
+            }
             if (raw === null || raw === undefined || raw === '') {
-                return _memStorageFallback[key] !== undefined ? JSON.parse(_memStorageFallback[key]) : defaultValue;
+                raw = _memStorageFallback[key];
+            }
+            if (raw === null || raw === undefined || raw === '') {
+                return defaultValue;
             }
             const parsed = JSON.parse(raw);
             return parsed !== null && parsed !== undefined ? parsed : defaultValue;
@@ -590,10 +611,13 @@ const storage = {
     get(key, defaultValue = null) {
         try {
             const store = getLocalStore();
-            if (store) {
-                const val = store.getItem(key);
-                if (val !== null && val !== undefined) return val;
+            let val = null;
+            try {
+                val = store ? store.getItem(key) : null;
+            } catch (readErr) {
+                val = null;
             }
+            if (val !== null && val !== undefined) return val;
             return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : defaultValue;
         } catch (e) {
             return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : defaultValue;
@@ -638,7 +662,13 @@ const storage = {
     has(key) {
         try {
             const store = getLocalStore();
-            if (store && store.getItem(key) !== null) return true;
+            let hasInStore = false;
+            try {
+                hasInStore = !!(store && store.getItem(key) !== null);
+            } catch (readErr) {
+                hasInStore = false;
+            }
+            if (hasInStore) return true;
             return _memStorageFallback[key] !== undefined;
         } catch (e) {
             return _memStorageFallback[key] !== undefined;
@@ -653,6 +683,126 @@ const storage = {
             return true;
         } catch (e) {
             return false;
+        }
+    },
+
+    session: {
+        getJSON(key, defaultValue = null) {
+            try {
+                const store = getSessionStore();
+                let raw = null;
+                try {
+                    raw = store ? store.getItem(key) : null;
+                } catch (readErr) {
+                    raw = null;
+                }
+                if (raw === null || raw === undefined || raw === '') {
+                    raw = _memSessionFallback[key];
+                }
+                if (raw === null || raw === undefined || raw === '') {
+                    return defaultValue;
+                }
+                const parsed = JSON.parse(raw);
+                return parsed !== null && parsed !== undefined ? parsed : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        },
+
+        setJSON(key, value) {
+            try {
+                const jsonStr = JSON.stringify(value);
+                const store = getSessionStore();
+                if (!store) {
+                    _memSessionFallback[key] = jsonStr;
+                    return true;
+                }
+                try {
+                    store.setItem(key, jsonStr);
+                    delete _memSessionFallback[key];
+                    return true;
+                } catch (e) {
+                    _memSessionFallback[key] = jsonStr;
+                    return false;
+                }
+            } catch (err) {
+                return false;
+            }
+        },
+
+        get(key, defaultValue = null) {
+            try {
+                const store = getSessionStore();
+                let val = null;
+                try {
+                    val = store ? store.getItem(key) : null;
+                } catch (readErr) {
+                    val = null;
+                }
+                if (val !== null && val !== undefined) return val;
+                return _memSessionFallback[key] !== undefined ? _memSessionFallback[key] : defaultValue;
+            } catch (e) {
+                return _memSessionFallback[key] !== undefined ? _memSessionFallback[key] : defaultValue;
+            }
+        },
+
+        set(key, value) {
+            try {
+                const valStr = String(value);
+                const store = getSessionStore();
+                if (!store) {
+                    _memSessionFallback[key] = valStr;
+                    return true;
+                }
+                try {
+                    store.setItem(key, valStr);
+                    delete _memSessionFallback[key];
+                    return true;
+                } catch (e) {
+                    _memSessionFallback[key] = valStr;
+                    return false;
+                }
+            } catch (err) {
+                return false;
+            }
+        },
+
+        remove(key) {
+            delete _memSessionFallback[key];
+            try {
+                const store = getSessionStore();
+                if (store) store.removeItem(key);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
+
+        has(key) {
+            try {
+                const store = getSessionStore();
+                let hasInStore = false;
+                try {
+                    hasInStore = !!(store && store.getItem(key) !== null);
+                } catch (readErr) {
+                    hasInStore = false;
+                }
+                if (hasInStore) return true;
+                return _memSessionFallback[key] !== undefined;
+            } catch (e) {
+                return _memSessionFallback[key] !== undefined;
+            }
+        },
+
+        clear() {
+            for (const k in _memSessionFallback) delete _memSessionFallback[k];
+            try {
+                const store = getSessionStore();
+                if (store) store.clear();
+                return true;
+            } catch (e) {
+                return false;
+            }
         }
     }
 };
@@ -1024,9 +1174,14 @@ function handleDelegatedAction(e) {
             const disp = m.style ? (m.style.display || '') : '';
             return disp === 'flex' || disp === 'block';
         });
-        if (hasActiveModal) {
+        const successOverlay = typeof document.getElementById === 'function' ? document.getElementById('orderSuccessOverlay') : null;
+        const isSuccessActive = successOverlay && (successOverlay.style ? (successOverlay.style.display === 'flex' || successOverlay.style.display === 'block') : false);
+        const emailPrompt = typeof document.getElementById === 'function' ? document.getElementById('emailPromptOverlay') : null;
+        const isEmailPromptActive = emailPrompt && (emailPrompt.style ? (emailPrompt.style.display === 'flex' || emailPrompt.style.display === 'block') : false);
+        const isShieldActive = isSuccessActive || isEmailPromptActive;
+        if (hasActiveModal || isShieldActive) {
             const parentModal = actionEl.closest('.modal-overlay');
-            if (!parentModal || (parentModal.classList && typeof parentModal.classList.contains === 'function' && parentModal.classList.contains('closing'))) {
+            if (!parentModal || (parentModal.classList && typeof parentModal.classList.contains === 'function' && parentModal.classList.contains('closing')) || isShieldActive) {
                 if (typeof e.preventDefault === 'function') e.preventDefault();
                 if (typeof e.stopPropagation === 'function') e.stopPropagation();
                 if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();

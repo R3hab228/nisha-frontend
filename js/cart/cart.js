@@ -37,18 +37,22 @@ async function getNPStorageAsync(key) {
             }
         } catch (e) {}
     }
-    // 2. Fallback к sessionStorage
-    try {
-        const raw = sessionStorage.getItem('nisha_np_' + key);
-        return raw ? JSON.parse(raw) : null;
-    } catch(e) { return null; }
+    // 2. Fallback к safe session storage
+    return getNPStorage(key);
 }
 
 function getNPStorage(key) {
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store && store.session) {
+        return store.session.getJSON('nisha_np_' + key, null);
+    }
     try {
-        const raw = sessionStorage.getItem('nisha_np_' + key);
-        return raw ? JSON.parse(raw) : null;
-    } catch(e) { return null; }
+        if (typeof sessionStorage !== 'undefined') {
+            const raw = sessionStorage.getItem('nisha_np_' + key);
+            return raw ? JSON.parse(raw) : null;
+        }
+    } catch(e) {}
+    return null;
 }
 
 function setNPStorage(key, val) {
@@ -57,10 +61,17 @@ function setNPStorage(key, val) {
     if (typeof window.idbSet === 'function') {
         window.idbSet('np_' + key, { ts: Date.now(), data: val }).catch(() => {});
     }
-    // 2. Сохранение в sessionStorage (если помещается)
+    // 2. Сохранение в safe session storage (если помещается)
     if (!Array.isArray(val) || val.length <= 1500) {
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store && store.session) {
+            store.session.setJSON('nisha_np_' + key, val);
+            return;
+        }
         try {
-            sessionStorage.setItem('nisha_np_' + key, JSON.stringify(val));
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.setItem('nisha_np_' + key, JSON.stringify(val));
+            }
         } catch(e) {}
     }
 }
@@ -1006,16 +1017,36 @@ function saveCheckoutDraft() {
             paymentMethod: document.getElementById('orderPaymentMethod')?.value || '',
             paymentSelectedText: document.getElementById('paymentSelectedText')?.innerText || ''
         };
-        sessionStorage.setItem('nisha_checkout_draft', JSON.stringify(draft));
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store && store.session) {
+            store.session.setJSON('nisha_checkout_draft', draft);
+        } else {
+            try {
+                if (typeof sessionStorage !== 'undefined') {
+                    sessionStorage.setItem('nisha_checkout_draft', JSON.stringify(draft));
+                }
+            } catch (e) {}
+        }
     } catch(e) {}
 }
 window.saveCheckoutDraft = saveCheckoutDraft;
 
 function restoreCheckoutDraft() {
     try {
-        const raw = sessionStorage.getItem('nisha_checkout_draft');
-        if (!raw) return false;
-        const draft = JSON.parse(raw);
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        let draft = null;
+        if (store && store.session) {
+            draft = store.session.getJSON('nisha_checkout_draft', null);
+        } else {
+            try {
+                if (typeof sessionStorage !== 'undefined') {
+                    const raw = sessionStorage.getItem('nisha_checkout_draft');
+                    draft = raw ? JSON.parse(raw) : null;
+                }
+            } catch (e) {
+                draft = null;
+            }
+        }
         if (!draft || typeof draft !== 'object') return false;
 
         let hasRestored = false;
@@ -1056,7 +1087,15 @@ function restoreCheckoutDraft() {
 window.restoreCheckoutDraft = restoreCheckoutDraft;
 
 function clearCheckoutDraft() {
-    try { sessionStorage.removeItem('nisha_checkout_draft'); } catch(e) {}
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store && store.session) {
+        store.session.remove('nisha_checkout_draft');
+    }
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem('nisha_checkout_draft');
+        }
+    } catch(e) {}
 }
 window.clearCheckoutDraft = clearCheckoutDraft;
 

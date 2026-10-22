@@ -829,4 +829,61 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             globalThis.document.querySelectorAll = origQuerySelectorAll;
         });
     });
+
+    describe('22. Safe Session Storage Facade (storage.session) with In-Memory Fallback', () => {
+        it('supports get, set, getJSON, setJSON, remove, has and clear', () => {
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            eval(helpersCode);
+
+            expect(window.storage).toBeDefined();
+            expect(window.storage.session).toBeDefined();
+
+            // Set string and read back
+            window.storage.session.set('test_key', 'hello_world');
+            expect(window.storage.session.get('test_key')).toBe('hello_world');
+            expect(window.storage.session.has('test_key')).toBe(true);
+
+            // Set JSON and read back
+            window.storage.session.setJSON('test_json', { draft: true, amount: 42 });
+            expect(window.storage.session.getJSON('test_json')).toEqual({ draft: true, amount: 42 });
+
+            // Remove
+            window.storage.session.remove('test_key');
+            expect(window.storage.session.has('test_key')).toBe(false);
+            expect(window.storage.session.get('test_key', 'default_val')).toBe('default_val');
+
+            // Clear
+            window.storage.session.clear();
+            expect(window.storage.session.has('test_json')).toBe(false);
+        });
+
+        it('gracefully falls back to in-memory map when sessionStorage throws QuotaExceededError', () => {
+            const throwingStore = {
+                getItem: () => { throw new Error('QuotaExceededError'); },
+                setItem: () => { throw new Error('QuotaExceededError'); },
+                removeItem: () => { throw new Error('QuotaExceededError'); },
+                clear: () => { throw new Error('QuotaExceededError'); }
+            };
+
+            const origSessionStorage = globalThis.sessionStorage;
+            globalThis.sessionStorage = throwingStore;
+
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            eval(helpersCode);
+
+            // Must not throw even when storage throws
+            expect(() => {
+                window.storage.session.set('safari_key', 'value_in_memory');
+            }).not.toThrow();
+
+            expect(window.storage.session.get('safari_key')).toBe('value_in_memory');
+
+            expect(() => {
+                window.storage.session.setJSON('safari_json', { ok: true });
+            }).not.toThrow();
+            expect(window.storage.session.getJSON('safari_json')).toEqual({ ok: true });
+
+            globalThis.sessionStorage = origSessionStorage;
+        });
+    });
 });

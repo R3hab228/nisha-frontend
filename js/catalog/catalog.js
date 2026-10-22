@@ -2346,7 +2346,9 @@ function setCategoryFilter(cat, element) {
         element.classList.add('active-filter');
     }
     window.currentCategory = cat; 
-    sessionStorage.setItem('nisha_last_category', cat);
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store && store.session) store.session.set('nisha_last_category', cat);
+    else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_last_category', cat); } catch (e) {} }
     applyFilters(); 
 }
 window.setCategoryFilter = setCategoryFilter;
