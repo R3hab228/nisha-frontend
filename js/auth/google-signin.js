@@ -211,7 +211,7 @@
             ro.observe(btn);
             ro.observe(parent);
         }
-        window.addEventListener('resize', sync);
+        window.addEventListener('resize', sync, { passive: true });
         sync();
     }
 

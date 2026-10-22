@@ -32,7 +32,7 @@
 
     function generateIdempotencyKey(prefix = 'req') {
         const rand = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
-            ? crypto.randomUUID().replace(/-/g, '').slice(0, 10)
+            ? crypto.randomUUID().replaceAll('-', '').slice(0, 10)
             : (typeof window !== 'undefined' && typeof window.generateShortId === 'function'
                 ? window.generateShortId(8)
                 : Date.now().toString(36));

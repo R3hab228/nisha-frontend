@@ -164,7 +164,7 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             const fuse = getFallbackFuse(items);
             if (!fuse || !query || !query.trim()) return [];
 
-            const cleanTerm = query.replace(/#/g, '').trim().toLowerCase();
+            const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
             const queryVariants = (typeof window.expandSearchQuery === 'function')
                 ? window.expandSearchQuery(cleanTerm)
                 : [cleanTerm];
@@ -196,7 +196,7 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             const fuse = getFallbackFuse(items);
             if (!fuse || !query || !query.trim()) return candidateIds || [];
 
-            const cleanTerm = query.replace(/#/g, '').trim().toLowerCase();
+            const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
             const queryVariants = (typeof window.expandSearchQuery === 'function')
                 ? window.expandSearchQuery(cleanTerm)
                 : [cleanTerm];

@@ -439,7 +439,7 @@ async function initApp() {
                             broadcastContent += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
                         }
                         if (hasValidText) {
-                            broadcastContent += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
+                            broadcastContent += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replaceAll('\n', '<br>')}</div>`;
                         }
 
                         if (store && store.get('nisha_tour_done') && typeof tryShowBroadcast === 'function') {
@@ -484,7 +484,7 @@ async function initApp() {
                         bHtml += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
                     }
                     if (hasValidText) {
-                        bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replace(/\n/g, '<br>')}</div>`;
+                        bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replaceAll('\n', '<br>')}</div>`;
                     }
 
                     if (typeof tryShowBroadcast === 'function') {

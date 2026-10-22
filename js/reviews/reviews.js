@@ -166,12 +166,17 @@ function equalizeReviewCardHeights() {
 }
 window.equalizeReviewCardHeights = equalizeReviewCardHeights;
 
+let resizeReviewCardRaf = null;
 window.addEventListener('resize', () => {
-    const modal = document.getElementById('reviewsModal');
-    if (modal && (typeof window.isElementVisible === 'function' ? window.isElementVisible(modal) : window.getComputedStyle(modal).display === 'flex')) {
-        equalizeReviewCardHeights();
-    }
-});
+    if (resizeReviewCardRaf) return;
+    resizeReviewCardRaf = window.requestAnimationFrame(() => {
+        resizeReviewCardRaf = null;
+        const modal = document.getElementById('reviewsModal');
+        if (modal && (typeof window.isElementVisible === 'function' ? window.isElementVisible(modal) : window.getComputedStyle(modal).display === 'flex')) {
+            equalizeReviewCardHeights();
+        }
+    });
+}, { passive: true });
 
 // Умный сбор отзывов за полученные посылки
 function promptOrderReview(orderId, itemName, itemImage, itemId) {

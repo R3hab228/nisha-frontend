@@ -2,15 +2,23 @@
 // NISHA CORE HELPERS (Утилиты, тосты, вибрация)
 // ==========================================
 
+// --- UNIFIED CDN URL REWRITER ---
+function toCDN(url) {
+    if (!url || typeof url !== 'string') return '';
+    return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+}
+window.toCDN = window.toCDN || toCDN;
+if (typeof globalThis !== 'undefined') globalThis.toCDN = globalThis.toCDN || toCDN;
+
 // --- SANITIZATION & ESCAPING UTILITIES (XSS SHIELD) ---
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 }
 window.escapeHtml = escapeHtml;
 
@@ -22,13 +30,13 @@ window.escapeAttr = escapeAttr;
 function escapeJsString(str) {
     if (str === null || str === undefined) return '';
     return String(str)
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '\\"')
-        .replace(/</g, '\\x3c')
-        .replace(/>/g, '\\x3e')
-        .replace(/\n/g, '\\n')
-        .replace(/\r/g, '\\r');
+        .replaceAll('\\', '\\\\')
+        .replaceAll("'", "\\'")
+        .replaceAll('"', '\\"')
+        .replaceAll('<', '\\x3c')
+        .replaceAll('>', '\\x3e')
+        .replaceAll('\n', '\\n')
+        .replaceAll('\r', '\\r');
 }
 window.escapeJsString = escapeJsString;
 
@@ -122,13 +130,7 @@ let _activeNewItemToastCount = 0;
 const MAX_CONCURRENT_NEW_ITEM_TOASTS = 2;
 
 function safeToastEscape(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    return escapeHtml(str);
 }
 
 function enqueueNewItemToast(item) {
@@ -352,7 +354,7 @@ if (typeof globalThis !== 'undefined') globalThis.formatPrice = formatPrice;
 // --- ГЕНЕРАЦИЯ БЕЗОПАСНЫХ КОРОТКИХ ID НА БАЗЕ CRYPTO.RANDOMUUID ---
 function generateShortId(length = 9) {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID().replace(/-/g, '').slice(0, length);
+        return crypto.randomUUID().replaceAll('-', '').slice(0, length);
     }
     if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
         const bytes = new Uint8Array(length);
@@ -1313,7 +1315,7 @@ function initActionDelegation() {
     document.addEventListener('load', handleDelegatedMediaLoad, true);
     document.addEventListener('error', handleDelegatedMediaError, true);
     document.addEventListener('canplay', handleDelegatedMediaCanPlay, true);
-    document.addEventListener('scroll', handleDelegatedScroll, true);
+    document.addEventListener('scroll', handleDelegatedScroll, { capture: true, passive: true });
 
     document.addEventListener('mouseover', (e) => {
         if (!e.target || typeof e.target.closest !== 'function') return;

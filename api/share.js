@@ -41,7 +41,11 @@ module.exports = async function handler(req, res) {
     }
 
     const isSold = item.status === 'sold';
-    const escapeHTML = (str) => String(str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escapeHTML = (str) => String(str || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
     const rawBrand = item.brand ? item.brand.trim() : '';
     const rawName = item.name ? item.name.trim() : '';
     const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || 'Винтажная вещь';
@@ -115,7 +119,7 @@ videoTags + '\n' +
 '<meta name="twitter:title" content="' + title + '">\n' +
 '<meta name="twitter:description" content="' + description + '">\n' +
 '<meta name="twitter:image" content="' + imageUrl + '">\n' +
-'<script type="application/ld+json">' + jsonLd.replace(/</g, '\\u003c') + '</script>\n' +
+'<script type="application/ld+json">' + jsonLd.replaceAll('<', '\\u003c') + '</script>\n' +
 '</head>\n' +
 '<body>\n' +
 '<script>window.location.replace("/?item=' + id + '");</script>\n' +

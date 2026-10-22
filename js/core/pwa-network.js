@@ -467,11 +467,7 @@ async function subscribeUserToPush(registration, silent = false) {
             
             const padding = '='.repeat((4 - publicKey.length % 4) % 4);
             const base64 = (publicKey + padding).replaceAll('-', '+').replaceAll('_', '/');
-            const rawData = window.atob(base64);
-            const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-            }
+            const outputArray = Uint8Array.from(window.atob(base64), c => c.charCodeAt(0));
 
             targetSub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,

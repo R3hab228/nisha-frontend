@@ -22,7 +22,7 @@ if ('scrollRestoration' in history) {
 }
 
 // Глобальный перехватчик URL для CDN
-window.toCDN = function(url) {
+window.toCDN = window.toCDN || function(url) {
     if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
         return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
     }
@@ -1474,7 +1474,7 @@ function itemMatchesSizeFilter(itemOrSize, filterVal) {
             if (upperSize.includes('40 - 42') || upperSize.includes('40-42')) return true;
             const numMatch = upperSize.match(/(\d+(?:[.,]\d+)?)/);
             if (numMatch) {
-                const n = parseFloat(numMatch[1].replace(',', '.'));
+                const n = parseFloat(numMatch[1].replaceAll(',', '.'));
                 if (n >= 35 && n <= 42.5) return true;
             }
             return false;
@@ -1484,7 +1484,7 @@ function itemMatchesSizeFilter(itemOrSize, filterVal) {
             if (upperSize.includes('43 - 46') || upperSize.includes('43-46')) return true;
             const numMatch = upperSize.match(/(\d+(?:[.,]\d+)?)/);
             if (numMatch) {
-                const n = parseFloat(numMatch[1].replace(',', '.'));
+                const n = parseFloat(numMatch[1].replaceAll(',', '.'));
                 if (n >= 42.8 && n <= 50) return true;
             }
             return false;

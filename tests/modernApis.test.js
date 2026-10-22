@@ -579,4 +579,54 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(window.sanitizeText(12345)).toBe('12345');
         });
     });
+
+    describe('17. window.toCDN baseline rewriter in core helpers', () => {
+        it('rewrites Supabase storage origin to Cloudflare Worker CDN domain', () => {
+            const rawUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items/photo.webp';
+            const cdnUrl = window.toCDN(rawUrl);
+
+            expect(cdnUrl).toBe('https://nisha-cdn.mtyagniryadno.workers.dev/storage/v1/object/public/items/photo.webp');
+        });
+
+        it('passes through external and already-proxied URLs without modification', () => {
+            expect(window.toCDN('https://example.com/image.jpg')).toBe('https://example.com/image.jpg');
+            expect(window.toCDN(null)).toBe('');
+            expect(window.toCDN('')).toBe('');
+        });
+    });
+
+    describe('18. String.prototype.replaceAll escaping utilities (escapeHtml & escapeJsString)', () => {
+        it('replaces ALL multiple occurrences of HTML special characters without regex overhead', () => {
+            const multiXss = '<<< "hello" & "world" & <test> >>> \'quote\' & \'quote\'';
+            const escaped = window.escapeHtml(multiXss);
+
+            expect(escaped).toBe('&lt;&lt;&lt; &quot;hello&quot; &amp; &quot;world&quot; &amp; &lt;test&gt; &gt;&gt;&gt; &#39;quote&#39; &amp; &#39;quote&#39;');
+            expect(escaped.includes('<')).toBe(false);
+            expect(escaped.includes('>')).toBe(false);
+            expect(escaped.includes('"')).toBe(false);
+            expect(escaped.includes("'")).toBe(false);
+        });
+
+        it('replaces ALL slashes, quotes and line breaks in escapeJsString', () => {
+            const jsDirty = "path\\to\\dir 'string' \n and \r\n next";
+            const escaped = window.escapeJsString(jsDirty);
+
+            expect(escaped).toContain('\\\\');
+            expect(escaped).toContain("\\'");
+            expect(escaped).toContain('\\n');
+            expect(escaped).toContain('\\r');
+        });
+    });
+
+    describe('19. Uint8Array.from functional conversion for VAPID base64', () => {
+        it('converts base64 decoded string directly to Uint8Array without manual index loops', () => {
+            const base64 = 'AQIDBAUG';
+            const binary = globalThis.atob ? globalThis.atob(base64) : Buffer.from(base64, 'base64').toString('binary');
+            const arr = Uint8Array.from(binary, c => c.charCodeAt(0));
+
+            expect(arr instanceof Uint8Array).toBe(true);
+            expect(arr.length).toBe(6);
+            expect(Array.from(arr)).toEqual([1, 2, 3, 4, 5, 6]);
+        });
+    });
 });

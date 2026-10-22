@@ -154,7 +154,7 @@ self.onmessage = function(e) {
                 return;
             }
 
-            const cleanTerm = query.replace(/#/g, '').trim().toLowerCase();
+            const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
             const queryVariants = expandSearchQuery(cleanTerm);
             const collected = [];
             const seenIds = new Set();
@@ -195,7 +195,7 @@ self.onmessage = function(e) {
                 return;
             }
 
-            const cleanTerm = query.replace(/#/g, '').trim().toLowerCase();
+            const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
             const queryVariants = expandSearchQuery(cleanTerm);
             const candidateSet = candidateIds ? new Set(candidateIds) : null;
             const matchedIds = [];

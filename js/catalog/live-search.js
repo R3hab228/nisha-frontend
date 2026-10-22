@@ -3,6 +3,7 @@
 // ==========================================
 
 let searchDebounce;
+let currentLiveSearchSeq = 0;
 let cachedFuseInstance = null;
 let cachedFuseItemsRef = null;
 
@@ -35,6 +36,7 @@ window.invalidateLiveSearchFuse = function() {
     cachedFuseInstance = null;
     cachedFuseItemsRef = null;
     liveSearchMemoCache.clear();
+    currentLiveSearchSeq++;
 };
 
 // Функция сохранения истории поиска (с защитой от квоты localStorage)
@@ -93,6 +95,7 @@ function handleLiveSearch() {
         return; 
     }
 
+    const seq = ++currentLiveSearchSeq;
     searchDebounce = setTimeout(async () => {
         const cleanSearchTerm = searchTerm.replaceAll('#', '').trim().toLowerCase();
         let results = liveSearchMemoCache.get(cleanSearchTerm);
@@ -129,12 +132,16 @@ function handleLiveSearch() {
             }
         } 
 
-        if (results.length > 0) {
+        // Исключаем Race Condition: если за время асинхронного поиска запрос устарел или поле изменилось — не рендерим
+        if (seq !== currentLiveSearchSeq) return;
+        if (searchInput.value.trim() !== searchTerm) return;
+
+        if (results && results.length > 0) {
             document.body.classList.add('search-lock');
             if (typeof window.stopLenis === 'function') window.stopLenis();
             
             const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
-            const escJs = typeof window.escapeJsString === 'function' ? window.escapeJsString : (s) => escHtml(String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+            const escJs = typeof window.escapeJsString === 'function' ? window.escapeJsString : (s) => escHtml(String(s || '').replaceAll('\\', '\\\\').replaceAll("'", "\\'"));
             let html = '';
             results.forEach(result => {
                 const item = result.item;
