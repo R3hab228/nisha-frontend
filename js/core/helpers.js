@@ -1015,6 +1015,26 @@ function handleDelegatedAction(e) {
     if (!actionEl) return;
     if (actionEl.disabled || (typeof actionEl.hasAttribute === 'function' && actionEl.hasAttribute('disabled'))) return;
 
+    // ЗАЩИТА ОТ КЛИК-СКВОЗЬ (GHOST CLICKS / CLICK BLEED-THROUGH):
+    // Если на странице открыто или анимирует закрытие модальное окно, блокируем клики по фоновым элементам
+    if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+        const hasActiveModal = Array.from(document.querySelectorAll('.modal-overlay')).some(m => {
+            if (!m) return false;
+            if (m.classList && typeof m.classList.contains === 'function' && m.classList.contains('closing')) return true;
+            const disp = m.style ? (m.style.display || '') : '';
+            return disp === 'flex' || disp === 'block';
+        });
+        if (hasActiveModal) {
+            const parentModal = actionEl.closest('.modal-overlay');
+            if (!parentModal || (parentModal.classList && typeof parentModal.classList.contains === 'function' && parentModal.classList.contains('closing'))) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                return;
+            }
+        }
+    }
+
     const action = actionEl.getAttribute('data-action');
     switch (action) {
         case 'open-product': {
@@ -1156,8 +1176,11 @@ function handleDelegatedAction(e) {
             break;
         }
         case 'close-modal': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            if (typeof e.preventDefault === 'function') e.preventDefault();
             const modalId = actionEl.getAttribute('data-modal-id');
-            if (modalId && typeof window.closeModal === 'function') window.closeModal(modalId);
+            if (modalId && typeof window.closeModal === 'function') window.closeModal(modalId, e);
             break;
         }
         case 'delete-proposal-photo': {

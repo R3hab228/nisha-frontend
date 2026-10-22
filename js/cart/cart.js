@@ -1108,8 +1108,18 @@ async function openCheckoutModal() {
         if (typeof window.stopLenis === 'function') window.stopLenis();
         else if (typeof lenis !== 'undefined') lenis.stop();
         
-        document.getElementById('checkoutModal').style.display = 'flex'; 
-        document.body.style.overflow = 'hidden';
+        if (typeof openModal === 'function') {
+            openModal('checkoutModal');
+        } else {
+            const checkoutModal = document.getElementById('checkoutModal');
+            if (checkoutModal) {
+                checkoutModal.inert = false;
+                checkoutModal.removeAttribute('inert');
+                checkoutModal.setAttribute('aria-hidden', 'false');
+                checkoutModal.style.display = 'flex';
+            }
+            document.body.style.overflow = 'hidden';
+        }
         if (window.analytics && typeof window.analytics.trackCheckoutStart === 'function') {
             window.analytics.trackCheckoutStart(currentCart);
         }

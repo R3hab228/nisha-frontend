@@ -10,9 +10,18 @@ const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u 
 const orderDateFormatter = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
 
 function openOrdersModal() {
-    const modal = document.getElementById('ordersModal');
-    if (modal) modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    if (typeof openModal === 'function') {
+        openModal('ordersModal');
+    } else {
+        const modal = document.getElementById('ordersModal');
+        if (modal) {
+            modal.inert = false;
+            modal.removeAttribute('inert');
+            modal.setAttribute('aria-hidden', 'false');
+            modal.style.display = 'flex';
+        }
+        document.body.style.overflow = 'hidden';
+    }
 
     if (typeof window.stopLenis === 'function') window.stopLenis();
     else if (typeof lenis !== 'undefined') lenis.stop();

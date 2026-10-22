@@ -441,7 +441,7 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 <div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" id=modalTypewriterTitle>ITEM_INFO.EXE</span>
-<button class=close-btn onclick='closeModal("productModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=productModal onclick='closeModal("productModal", event)' aria-label="Закрыть окно">X</button>
 </div>
 <div class=modal-content>
 <div class=modal-gallery>
@@ -534,7 +534,7 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 <div class=modal-window style=max-width:550px>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>SECURE_CHECKOUT.EXE</span>
-<button class=close-btn onclick='closeModal("checkoutModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=checkoutModal onclick='closeModal("checkoutModal", event)' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=checkoutFormLayout>
 <p style=margin:0;font-size:13px;color:#aaa data-i18n=checkout.desc>Заполните данные для отправки. Бронь 2 часа.</p>
@@ -645,7 +645,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" style=animation:none>MY_ORDERS.DB</span>
-<button class=close-btn onclick='closeModal("ordersModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=ordersModal onclick='closeModal("ordersModal", event)' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=ordersAuthSection style="border-bottom:1px dashed #333;padding-bottom:15px">
 <p id=guestOrderText style=margin:0;font-size:13px;color:#aaa data-i18n=orders_modal.desc>Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
@@ -670,7 +670,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window style=max-width:600px>
 <div class=modal-header>
 <span class=modal-title style=animation:none;font-family:var(--font-mono);letter-spacing:1px>REVIEWS.TXT<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite"></span></span>
-<button class=close-btn onclick='closeModal("reviewsModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=reviewsModal onclick='closeModal("reviewsModal", event)' aria-label="Закрыть окно">X</button>
 </div>
 <div class=orders-container style=position:relative;padding-bottom:40px>
 <p style=color:#aaa;margin-top:0;font-size:14px data-i18n=reviews_modal.desc>Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
@@ -689,7 +689,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window style=max-width:450px>
 <div class=modal-header>
 <span class=modal-title style=animation:none;font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase>PROFILE/LOGIN.EXE<span style="display:inline-block;width:10px;height:14px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite"></span></span>
-<button class=close-btn onclick='closeModal("profileModal")' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=profileModal onclick='closeModal("profileModal", event)' aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=modalAuthBox style="padding:25px 20px">
 <div class=auth-fields id=modalLoginForm style=display:flex;flex-direction:column;gap:15px>

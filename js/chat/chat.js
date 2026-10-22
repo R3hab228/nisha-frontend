@@ -8,10 +8,17 @@ function openSupportModalWindow() {
     const input = document.getElementById('supportInput');
     if (input) input.value = ''; // Очищаем поле при открытии
     
-    const modal = document.getElementById('supportModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+    if (typeof openModal === 'function') {
+        openModal('supportModal');
+    } else {
+        const modal = document.getElementById('supportModal');
+        if (modal) {
+            modal.inert = false;
+            modal.removeAttribute('inert');
+            modal.setAttribute('aria-hidden', 'false');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
     }
 }
 window.openSupportModalWindow = openSupportModalWindow;

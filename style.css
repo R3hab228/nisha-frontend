@@ -448,12 +448,14 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
 @keyframes slideDownMobile { from { transform: translateY(0); } to { transform: translateY(100%); } }
 
 .modal-overlay.closing {
-    pointer-events: none !important;
+    pointer-events: auto !important;
     animation: fadeOutOverlay 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
 }
 .modal-overlay.closing .modal-window {
-    pointer-events: none !important;
     animation: modalPopOutDesktop 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
+}
+.modal-overlay.closing * {
+    pointer-events: none !important;
 }
 
 .modal-header { background: #002244; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px inset var(--border-light); position: sticky; top: 0; z-index: 20;}

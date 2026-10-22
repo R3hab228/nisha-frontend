@@ -637,13 +637,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 blur: vi.fn(),
                 focus: vi.fn()
             };
+            const modalClasses = new Set();
             const mockModal = {
                 id: 'testModal',
                 style: { display: 'flex', pointerEvents: '' },
                 classList: {
-                    contains: vi.fn(() => false),
-                    add: vi.fn(),
-                    remove: vi.fn()
+                    contains: vi.fn(c => modalClasses.has(c)),
+                    add: vi.fn(c => modalClasses.add(c)),
+                    remove: vi.fn(c => modalClasses.delete(c))
                 },
                 setAttribute: vi.fn(),
                 removeAttribute: vi.fn(),
@@ -659,11 +660,17 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
             eval(windowsCode);
 
-            window.executeCloseModal('testModal');
+            vi.useFakeTimers();
+            try {
+                window.executeCloseModal('testModal');
+                expect(mockCloseBtn.blur).toHaveBeenCalled();
+                expect(mockModal.setAttribute).toHaveBeenCalledWith('aria-hidden', 'true');
 
-            expect(mockCloseBtn.blur).toHaveBeenCalled();
-            expect(mockModal.inert).toBe(true);
-            expect(mockModal.setAttribute).toHaveBeenCalledWith('aria-hidden', 'true');
+                vi.advanceTimersByTime(350);
+                expect(mockModal.inert).toBe(true);
+            } finally {
+                vi.useRealTimers();
+            }
         });
 
         it('clears inert and restores focus element when opening a modal', () => {
@@ -739,6 +746,87 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             }
 
             expect(violations).toEqual([]);
+        });
+    });
+
+    describe('21. Click Bleed-Through & Ghost Click Prevention (Modal Overlay Shields)', () => {
+        it('blocks delegated background actions like add-to-cart when a modal is active or closing', () => {
+            const mockBgBtn = {
+                disabled: false,
+                hasAttribute: () => false,
+                getAttribute: (attr) => (attr === 'data-action' ? 'add-to-cart' : 'item-123'),
+                closest: vi.fn((sel) => {
+                    if (sel === '[data-action]') return mockBgBtn;
+                    if (sel === '.modal-overlay') return null; // Outside modal!
+                    return null;
+                })
+            };
+
+            const mockActiveModal = {
+                classList: { contains: () => false },
+                style: { display: 'flex' },
+                addEventListener: vi.fn(),
+                querySelector: vi.fn(() => null)
+            };
+
+            const origQuerySelectorAll = globalThis.document.querySelectorAll;
+            globalThis.document.querySelectorAll = vi.fn((sel) => {
+                if (sel === '.modal-overlay') return [mockActiveModal];
+                return [];
+            });
+
+            window.addToCartWithAnimation = vi.fn();
+            const mockEvent = {
+                target: mockBgBtn,
+                preventDefault: vi.fn(),
+                stopPropagation: vi.fn(),
+                stopImmediatePropagation: vi.fn()
+            };
+
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            eval(helpersCode);
+
+            window.handleDelegatedAction(mockEvent);
+
+            // Must be blocked!
+            expect(window.addToCartWithAnimation).not.toHaveBeenCalled();
+            expect(mockEvent.stopPropagation).toHaveBeenCalled();
+            expect(mockEvent.preventDefault).toHaveBeenCalled();
+
+            globalThis.document.querySelectorAll = origQuerySelectorAll;
+        });
+
+        it('stops propagation when closeModal is invoked with an event', () => {
+            const mockEvt = {
+                preventDefault: vi.fn(),
+                stopPropagation: vi.fn(),
+                stopImmediatePropagation: vi.fn()
+            };
+            const mockModal = {
+                classList: { contains: () => false, add: vi.fn(), remove: vi.fn() },
+                style: { display: 'flex' },
+                contains: () => false,
+                setAttribute: vi.fn(),
+                querySelectorAll: () => [],
+                querySelector: vi.fn(() => null),
+                addEventListener: vi.fn()
+            };
+            const origGetElementById = globalThis.document.getElementById;
+            const origQuerySelectorAll = globalThis.document.querySelectorAll;
+            globalThis.document.getElementById = vi.fn(() => mockModal);
+            globalThis.document.querySelectorAll = vi.fn(() => []);
+
+            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            eval(windowsCode);
+
+            window.closeModal('productModal', mockEvt);
+
+            expect(mockEvt.preventDefault).toHaveBeenCalled();
+            expect(mockEvt.stopPropagation).toHaveBeenCalled();
+            expect(mockEvt.stopImmediatePropagation).toHaveBeenCalled();
+
+            globalThis.document.getElementById = origGetElementById;
+            globalThis.document.querySelectorAll = origQuerySelectorAll;
         });
     });
 });

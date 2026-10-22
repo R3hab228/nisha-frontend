@@ -50,12 +50,18 @@ function getHourglass(height = 14) {
 // ==========================================
 
 function openProfileModal() {
-    if (typeof window.stopLenis === 'function') window.stopLenis();
-    else if (typeof lenis !== 'undefined') lenis.stop();
-    
-    const modal = document.getElementById('profileModal');
-    if (modal) modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    if (typeof openModal === 'function') {
+        openModal('profileModal');
+    } else {
+        const modal = document.getElementById('profileModal');
+        if (modal) {
+            modal.inert = false;
+            modal.removeAttribute('inert');
+            modal.setAttribute('aria-hidden', 'false');
+            modal.style.display = 'flex';
+        }
+        document.body.style.overflow = 'hidden';
+    }
 }
 window.openProfileModal = openProfileModal;
 

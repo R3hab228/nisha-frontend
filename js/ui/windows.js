@@ -130,7 +130,13 @@ function openModal(id) {
 window.openModal = openModal;
 
 // 3. Закрытие модального окна по крестику (с защитой данных)
-function closeModal(id) { 
+function closeModal(id, e) { 
+    const evt = e || (typeof window !== 'undefined' && window.event);
+    if (evt) {
+        if (typeof evt.preventDefault === 'function') evt.preventDefault();
+        if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        if (typeof evt.stopImmediatePropagation === 'function') evt.stopImmediatePropagation();
+    }
     if (id === 'proposeModal') {
         const filesCount = (window.currentProposalFiles && window.currentProposalFiles.length) || document.getElementById('propFiles')?.files?.length || 0;
         const name = document.getElementById('propName')?.value.trim() || '';
@@ -169,19 +175,25 @@ function closeModal(id) {
                     '[ ОТМЕНА ]', 
                     () => { 
                         if (typeof resetProposalForm === 'function') resetProposalForm(); 
-                        executeCloseModal(id); 
+                        executeCloseModal(id, evt); 
                     }
                 );
                 return;
             }
         }
     }
-    executeCloseModal(id); // Если защищать не нужно — просто закрываем
+    executeCloseModal(id, evt); // Если защищать не нужно — просто закрываем
 }
 window.closeModal = closeModal;
 
 // 4. Исполнение плавного закрытия окна с анимацией
-function executeCloseModal(id) {
+function executeCloseModal(id, e) {
+    const evt = e || (typeof window !== 'undefined' && window.event);
+    if (evt) {
+        if (typeof evt.preventDefault === 'function') evt.preventDefault();
+        if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        if (typeof evt.stopImmediatePropagation === 'function') evt.stopImmediatePropagation();
+    }
     if (id === 'checkoutModal' && window.otpPollInterval) clearInterval(window.otpPollInterval);
     const modal = document.getElementById(id);
     if (!modal) return;
@@ -190,8 +202,7 @@ function executeCloseModal(id) {
     if (modal.classList.contains('closing')) return;
     if (modal.style.display === 'none' && !modal.style.opacity) return;
 
-    // Мгновенная разблокировка скролла (только если нет других открытых модальных окон) и отключение кликов по закрывающемуся оверлею
-    modal.style.pointerEvents = 'none';
+    // Мгновенная разблокировка скролла (только если нет других открытых модальных окон)
     const hasOtherOpenModal = () => Array.from(document.querySelectorAll('.modal-overlay')).some(m => {
         if (m === modal || m.classList.contains('closing')) return false;
         return m.style.display === 'flex' || m.style.display === 'block';
@@ -226,7 +237,6 @@ function executeCloseModal(id) {
         try { document.activeElement.blur(); } catch (e) {}
     }
 
-    modal.inert = true;
     modal.classList.add('closing');
     modal.setAttribute('aria-hidden', 'true');
     if (modal._closeTimer) clearTimeout(modal._closeTimer);
@@ -238,6 +248,7 @@ function executeCloseModal(id) {
         modal.classList.remove('closing');
         modal.style.pointerEvents = '';
         modal.inert = true;
+        modal.setAttribute('inert', '');
 
         const win = modal.querySelector('.modal-window');
         if (win) {
@@ -307,6 +318,8 @@ function initMobileSwipe() {
             if (document.body.classList.contains('sort-lock') || 
                 e.target.closest('.preview-container') || 
                 e.target.closest('.pswp') || 
+                e.target.closest('.close-btn') || 
+                e.target.closest('button') || 
                 e.target.tagName === 'INPUT' || 
                 e.target.tagName === 'TEXTAREA' || 
                 e.target.closest('.rules-content') || 
@@ -397,9 +410,14 @@ function initWindowOverlayListeners() {
         if (!overlay._overlayBound) {
             overlay._overlayBound = true;
             overlay.addEventListener('click', function(e) {
+                if (this.classList.contains('closing')) {
+                    if (typeof e.preventDefault === 'function') e.preventDefault();
+                    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                    return;
+                }
                 if (this.id === 'rulesModal') return; 
                 if (e.target === this) { 
-                    closeModal(this.id); 
+                    closeModal(this.id, e); 
                 }
             });
         }

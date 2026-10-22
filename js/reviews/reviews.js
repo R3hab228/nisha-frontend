@@ -30,11 +30,17 @@ const reviewDateFormatter = new Intl.DateTimeFormat('ru-RU');
 
 // Открытие модального окна со списком отзывов
 async function openReviewsModal() { 
-    const modal = document.getElementById('reviewsModal');
-    if (modal) modal.style.display = 'flex'; 
-    document.body.style.overflow = 'hidden'; 
-    if (typeof lenis !== 'undefined' && typeof window.stopLenis === 'function') {
-        window.stopLenis(); 
+    if (typeof openModal === 'function') {
+        openModal('reviewsModal');
+    } else {
+        const modal = document.getElementById('reviewsModal');
+        if (modal) {
+            modal.inert = false;
+            modal.removeAttribute('inert');
+            modal.setAttribute('aria-hidden', 'false');
+            modal.style.display = 'flex'; 
+        }
+        document.body.style.overflow = 'hidden'; 
     }
     
     const container = document.getElementById('reviewsContainerList');
@@ -213,12 +219,18 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
     const inputEl = document.getElementById('autoReviewInput');
     if (inputEl) inputEl.value = ''; 
 
-    if (typeof lenis !== 'undefined' && typeof window.stopLenis === 'function') {
-        window.stopLenis();
+    if (typeof openModal === 'function') {
+        openModal('autoReviewModal');
+    } else {
+        const autoModal = document.getElementById('autoReviewModal');
+        if (autoModal) {
+            autoModal.inert = false;
+            autoModal.removeAttribute('inert');
+            autoModal.setAttribute('aria-hidden', 'false');
+            autoModal.style.display = 'flex';
+        }
+        document.body.style.overflow = 'hidden';
     }
-    const autoModal = document.getElementById('autoReviewModal');
-    if (autoModal) autoModal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
 }
 window.promptOrderReview = promptOrderReview;
 
@@ -329,12 +341,18 @@ function writeReviewOnSite() {
     closeModal('reviewsModal');
     
     setTimeout(() => {
-        if (typeof lenis !== 'undefined' && typeof window.stopLenis === 'function') {
-            window.stopLenis();
+        if (typeof openModal === 'function') {
+            openModal('writeReviewModal');
+        } else {
+            const writeModal = document.getElementById('writeReviewModal');
+            if (writeModal) {
+                writeModal.inert = false;
+                writeModal.removeAttribute('inert');
+                writeModal.setAttribute('aria-hidden', 'false');
+                writeModal.style.display = 'flex';
+            }
+            document.body.style.overflow = 'hidden';
         }
-        const writeModal = document.getElementById('writeReviewModal');
-        if (writeModal) writeModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
     }, 300);
 }
 window.writeReviewOnSite = writeReviewOnSite;
