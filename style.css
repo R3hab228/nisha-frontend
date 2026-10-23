@@ -1671,7 +1671,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 
     .buy-share-row { 
         position: sticky; 
-        bottom: calc(-8px + env(safe-area-inset-bottom, 0px)); 
+        bottom: calc(-3px + env(safe-area-inset-bottom, 0px)); 
         z-index: 100; 
         margin-top: 15px; 
         background: transparent; 
@@ -2292,7 +2292,7 @@ html.low-power-mode .pulsing-dot {
         padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
     }
     .buy-share-row {
-        bottom: calc(-8px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(-3px + env(safe-area-inset-bottom, 0px)) !important;
         margin-bottom: 0 !important;
     }
     .cart-panel {
@@ -2307,7 +2307,7 @@ html.pwa-standalone .modal-content {
     padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
 }
 html.pwa-standalone .buy-share-row {
-    bottom: calc(-8px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(-3px + env(safe-area-inset-bottom, 0px)) !important;
     margin-bottom: 0 !important;
 }
 html.pwa-standalone .cart-panel {

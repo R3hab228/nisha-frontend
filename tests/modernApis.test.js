@@ -1610,9 +1610,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
             expect(css).not.toContain('bottom: calc(-20px');
             expect(css).toContain('.buy-share-row');
-            expect(css).toContain('bottom: calc(-8px + env(safe-area-inset-bottom, 0px))');
+            expect(css).toContain('bottom: calc(-3px + env(safe-area-inset-bottom, 0px))');
             expect(css).toContain('html.pwa-standalone .buy-share-row');
-            expect(css).toContain('bottom: calc(-8px + env(safe-area-inset-bottom, 0px)) !important');
+            expect(css).toContain('bottom: calc(-3px + env(safe-area-inset-bottom, 0px)) !important');
         });
 
         it('isPwaStandalone automatically adds pwa-standalone class to documentElement', () => {
