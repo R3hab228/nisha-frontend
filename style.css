@@ -931,21 +931,22 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
 /* СТИЛИ ОЧЕРЕДИ ТОСТОВ О НОВЫХ ТОВАРАХ */
 .toast.toast-new-item {
     animation: slideInRight 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-    padding: 10px 14px;
-    max-width: 350px;
-    width: 350px;
-    border-radius: 4px;
+    padding: 6px 12px;
+    max-width: 240px;
+    width: auto;
+    gap: 8px;
+    border-radius: 3px;
     background: rgba(10, 10, 10, 0.96);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 255, 0, 0.15);
     border: 1px solid var(--accent-green);
-    border-left: 4px solid var(--accent-green);
+    border-left: 3px solid var(--accent-green);
     cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     pointer-events: auto;
 }
 .toast.toast-new-item:hover {
-    transform: translateX(-4px);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 255, 0, 0.3);
+    transform: translateX(-3px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 255, 0, 0.25);
 }
 .toast.toast-new-item::before {
     display: none !important;
@@ -963,68 +964,62 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
 }
 
 .toast-item-thumb {
-    width: 44px;
-    height: 44px;
+    width: 32px;
+    height: 32px;
     background-size: cover;
     background-position: center;
-    border-radius: 4px;
+    border-radius: 2px;
     border: 1px solid #333;
     flex-shrink: 0;
 }
 .toast-item-content {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     min-width: 0;
     flex: 1;
 }
 .toast-item-tag {
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 700;
     color: var(--accent-green);
     letter-spacing: 0.5px;
     text-transform: uppercase;
+    line-height: 1.2;
 }
 .toast-item-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    color: #eee;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 210px;
+    max-width: 160px;
+    line-height: 1.2;
 }
 .toast-item-price {
-    font-size: 12px;
+    font-size: 11px;
     color: #aaa;
     font-family: var(--font-mono);
-}
-.toast-close-btn {
-    background: transparent;
-    border: none;
-    color: #777;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 4px 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.15s ease, transform 0.15s ease;
-    flex-shrink: 0;
-}
-.toast-close-btn:hover {
-    color: var(--accent-red);
-    transform: scale(1.2);
 }
 
 @media (max-width: 480px) {
     .toast.toast-new-item {
-        max-width: calc(100vw - 30px);
-        width: calc(100vw - 30px);
+        max-width: 200px;
+        width: auto;
+        padding: 5px 10px;
+        gap: 6px;
+    }
+    .toast-item-thumb {
+        width: 28px;
+        height: 28px;
     }
     .toast-item-title {
-        max-width: 170px;
+        max-width: 130px;
+        font-size: 10.5px;
+    }
+    .toast-item-tag {
+        font-size: 9px;
     }
 }
 

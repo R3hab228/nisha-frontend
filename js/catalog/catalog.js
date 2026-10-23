@@ -1137,7 +1137,7 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
             if (typeof enqueueNewItemToast === 'function') {
                 enqueueNewItemToast(fresh);
             } else if (typeof showToast === 'function') {
-                showToast(`🆕 Новая вещь на сайте: ${fresh.name || ''}`, 'success');
+                showToast('Новые Вещи!!!', 'success');
             }
         }
 
@@ -1306,7 +1306,7 @@ async function syncCriticalStatuses() {
                             if (typeof enqueueNewItemToast === 'function') {
                                 enqueueNewItemToast(newItem);
                             } else if (typeof showToast === 'function') {
-                                showToast(`🆕 Новая вещь на сайте: ${newItem.name}`, 'success');
+                                showToast('Новые Вещи!!!', 'success');
                             }
                         }
                     }

@@ -172,11 +172,9 @@ function _displayNewItemToast(item, container) {
     }
     html += `
         <div class="toast-item-content">
-            <div class="toast-item-tag">🆕 НОВАЯ ВЕЩЬ НА САЙТЕ</div>
+            <div class="toast-item-tag">Новые Вещи!!!</div>
             <div class="toast-item-title">${brandPart}${namePart}</div>
-            ${pricePart}
         </div>
-        <button type="button" class="toast-close-btn" aria-label="Закрыть">&times;</button>
     `;
     toast.innerHTML = html;
 
@@ -198,12 +196,7 @@ function _displayNewItemToast(item, container) {
     };
 
     // Клик по тосту открывает карточку товара
-    toast.onclick = (e) => {
-        if (e.target.closest('.toast-close-btn')) {
-            e.stopPropagation();
-            dismiss();
-            return;
-        }
+    toast.onclick = () => {
         if (typeof openProductModalById === 'function') {
             try {
                 openProductModalById(item.id);
@@ -213,14 +206,6 @@ function _displayNewItemToast(item, container) {
         }
         dismiss();
     };
-
-    const closeBtn = toast.querySelector('.toast-close-btn');
-    if (closeBtn) {
-        closeBtn.onclick = (e) => {
-            e.stopPropagation();
-            dismiss();
-        };
-    }
 
     container.appendChild(toast);
 
