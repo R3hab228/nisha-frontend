@@ -875,6 +875,13 @@ async function loadAllItems() {
             deferSave();
         }
     } 
+
+    // Инициализируем множество уже известных товаров, чтобы не спамить тостом на вещи первой загрузки
+    if (!window._notifiedItemIds) {
+        window._notifiedItemIds = new Set(Array.isArray(window.allItems) ? window.allItems.map(i => i.id) : []);
+    } else if (Array.isArray(window.allItems)) {
+        window.allItems.forEach(i => window._notifiedItemIds.add(i.id));
+    } 
     
     // 3. ИСТОРИЯ ПРОСМОТРОВ
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
@@ -1126,14 +1133,22 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
     if (eventType === 'INSERT' || existingIdx === -1) {
         window._notifiedItemIds = window._notifiedItemIds || new Set();
-        window.allItems.unshift(fresh);
+        const isNewUnseen = !window._notifiedItemIds.has(fresh.id);
+        if (isNewUnseen) {
+            window._notifiedItemIds.add(fresh.id);
+        }
+
+        if (existingIdx !== -1) {
+            window.allItems[existingIdx] = fresh;
+        } else {
+            window.allItems.unshift(fresh);
+        }
         const sortDateDesc = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0);
         window.allItems = (typeof window.toSorted === 'function')
             ? window.toSorted(window.allItems, sortDateDesc)
             : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
 
-        if (!fromBroadcast && !window._notifiedItemIds.has(fresh.id)) {
-            window._notifiedItemIds.add(fresh.id);
+        if (!fromBroadcast && isNewUnseen) {
             if (typeof enqueueNewItemToast === 'function') {
                 enqueueNewItemToast(fresh);
             } else if (typeof showToast === 'function') {
@@ -1141,10 +1156,16 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
             }
         }
 
+        // Плавно добавляем карточку на витрину без дергания экрана
+        if (typeof insertNewItemCardSmoothly === 'function') {
+            insertNewItemCardSmoothly(fresh);
+        } else {
+            applyFilters(true, true);
+        }
+
         updateSidebarCounters();
         if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
         safelySaveCatalogToStorage(window.allItems);
-        applyFilters(true, true);
 
         if (!fromBroadcast && _catalogBroadcastChannel) {
             try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_UPSERT', item: fresh }); } catch (e) {}
@@ -1225,9 +1246,15 @@ window.handleRealtimeCatalogEvent = handleRealtimeCatalogEvent;
 
 let _catalogRealtimeChannel = null;
 function initCatalogRealtimeSubscription() {
-    if (_catalogRealtimeChannel) return;
     const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
     if (!sb || typeof sb.channel !== 'function') return;
+
+    if (_catalogRealtimeChannel) {
+        const state = _catalogRealtimeChannel.state;
+        if (state === 'joined' || state === 'joining') return;
+        try { sb.removeChannel(_catalogRealtimeChannel); } catch (e) {}
+        _catalogRealtimeChannel = null;
+    }
 
     try {
         _catalogRealtimeChannel = sb.channel('public-items-live-feed')
@@ -1235,7 +1262,7 @@ function initCatalogRealtimeSubscription() {
                 handleRealtimeCatalogEvent(payload, false);
             })
             .subscribe((status) => {
-                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
                     _catalogRealtimeChannel = null;
                 }
             });
@@ -1298,24 +1325,37 @@ async function syncCriticalStatuses() {
 
             if (fullNewItems && fullNewItems.length > 0) {
                 window._notifiedItemIds = window._notifiedItemIds || new Set();
+                const freshNewArrivals = [];
                 fullNewItems.forEach(newItem => {
                     if (!window.allItems.some(i => i.id === newItem.id)) {
                         window.allItems.unshift(newItem);
-                        if (!window._notifiedItemIds.has(newItem.id)) {
-                            window._notifiedItemIds.add(newItem.id);
-                            if (typeof enqueueNewItemToast === 'function') {
-                                enqueueNewItemToast(newItem);
-                            } else if (typeof showToast === 'function') {
-                                showToast('Новые Вещи!!!', 'success');
-                            }
-                        }
+                    }
+                    if (!window._notifiedItemIds.has(newItem.id)) {
+                        window._notifiedItemIds.add(newItem.id);
+                        freshNewArrivals.push(newItem);
                     }
                 });
-                const sortDateDesc = (a, b) => new Date(b.created_at) - new Date(a.created_at);
+
+                const sortDateDesc = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0);
                 window.allItems = (typeof window.toSorted === 'function')
                     ? window.toSorted(window.allItems, sortDateDesc)
                     : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
-                gridNeedsFullRefresh = true;
+
+                // Плавно вставляем каждую новую карточку сверху без дергания сетки
+                if (typeof insertNewItemCardSmoothly === 'function') {
+                    freshNewArrivals.forEach(item => insertNewItemCardSmoothly(item));
+                } else {
+                    gridNeedsFullRefresh = true;
+                }
+
+                // Единый тост на всю пачку новинок (ровно 1 раз!)
+                if (freshNewArrivals.length > 0) {
+                    if (typeof enqueueNewItemToast === 'function') {
+                        enqueueNewItemToast(freshNewArrivals);
+                    } else if (typeof showToast === 'function') {
+                        showToast('Новые Вещи!!!', 'success');
+                    }
+                }
             }
         }
 
@@ -1426,24 +1466,27 @@ async function syncCriticalStatuses() {
 }
 window.syncCriticalStatuses = syncCriticalStatuses;
 
-// Периодический фоновый опрос и синхронизация по возвращению на вкладку
+// Периодический фоновый опрос и мгновенная синхронизация при возвращении в PWA / вкладку
 if (!window._catalogAutoSyncInitialized) {
     window._catalogAutoSyncInitialized = true;
     setInterval(() => {
         if (document.visibilityState === 'visible') {
             syncCriticalStatuses();
         }
-    }, 12000);
+    }, 7000); // Быстрый и легкий фоновый опрос каждые 7 секунд (гарантия авто-появления вещей в PWA)
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
+            initCatalogRealtimeSubscription();
             syncCriticalStatuses();
         }
     });
     window.addEventListener('focus', () => {
+        initCatalogRealtimeSubscription();
         syncCriticalStatuses();
     });
     window.addEventListener('online', () => {
+        initCatalogRealtimeSubscription();
         syncCriticalStatuses();
     });
 }
@@ -2071,6 +2114,211 @@ function initGridEventDelegation() {
     });
 }
 
+// Построение DOM-элемента карточки товара
+function buildCardDOM(item, idx = 0) {
+    if (!item || !item.id) return null;
+    const itemIdStr = String(item.id);
+    const nowTs = Date.now();
+    const curr = (typeof getCurrency === 'function') ? getCurrency() : 'грн';
+    const sizePrefix = (typeof i18next !== 'undefined') ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
+    const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
+
+    if (!window._seenItemsSet) {
+        try {
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const parsedSeen = store ? store.getJSON('nisha_seen_items', []) : [];
+            window._seenItemsSet = new Set(Array.isArray(parsedSeen) ? parsedSeen.map(String) : []);
+        } catch (e) {
+            window._seenItemsSet = new Set();
+        }
+    }
+    const seenSet = window._seenItemsSet;
+    const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
+    const favSet = new Set(Array.isArray(userFavs) ? userFavs.map(String) : []);
+
+    let badgeHTML = '';
+    if (item.status === 'sold') {
+        badgeHTML = '<div class="sold-badge">SOLD</div>';
+    } else if (item.status === 'reserved') {
+        badgeHTML = '<div class="reserved-badge">RESERVED</div>';
+    } else {
+        const hasSale = item.is_sale;
+        const hasHot = (item.views_count || 0) >= 25;
+        const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > nowTs;
+
+        if (hasSale || hasHot || isTop) {
+            badgeHTML = `<div class="system-status-bar">`;
+            if (isTop) {
+                badgeHTML += `<span class="status-item status-top"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> TOP</span>`;
+            }
+            if (isTop && (hasSale || hasHot)) badgeHTML += `<div class="status-divider"></div>`;
+            if (hasSale) badgeHTML += `<span class="status-item status-sale">% SALE</span>`;
+            if (hasSale && hasHot) badgeHTML += `<div class="status-divider"></div>`;
+            if (hasHot) {
+                const chartSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
+                badgeHTML += `<span class="status-item status-hot">${chartSvg} HOT</span>`;
+            }
+            badgeHTML += `</div>`;
+        }
+    }
+
+    const thumbsArray = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails : (item.images && item.images.length > 0 ? item.images : []);
+    let slidesStr = '';
+    let dotsStr = '';
+
+    const safeBrand = (item.brand || '').trim();
+    const safeName = (item.name || '').trim();
+    const baseAlt = [safeBrand, safeName].filter(Boolean).join(' ') || 'Винтажная одежда NISHA';
+    const cleanAlt = baseAlt.replaceAll('"', '&quot;');
+
+    thumbsArray.forEach((thumbUrl, thumbIdx) => {
+        const rawVidUrl = item.images && item.images[thumbIdx] ? item.images[thumbIdx] : '';
+        const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
+        const cdnThumb = (typeof window.toCDN === 'function') ? window.toCDN(thumbUrl) : thumbUrl;
+        const cdnVidUrl = (typeof window.toCDN === 'function') ? window.toCDN(rawVidUrl) : rawVidUrl;
+        const slideAlt = cleanAlt + (thumbIdx > 0 ? ` - фото ${thumbIdx + 1}` : '');
+
+        if (isVid) {
+            slidesStr += `
+                <div class="card-slide ${thumbIdx === 0 ? 'img-8bit-loading' : ''}" style="background: #0a0a0a;">
+                    <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;"></video>
+                </div>`;
+        } else if (thumbIdx === 0) {
+            const firstLoadAttr = (idx < 2) ? 'fetchpriority="high"' : 'loading="lazy"';
+            slidesStr += `
+                <div class="card-slide img-8bit-loading">
+                   <img class="card-slide-img" src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" ${firstLoadAttr} decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;">
+                </div>`;
+        } else {
+            slidesStr += `
+                <div class="card-slide">
+                   <img class="card-slide-img" data-src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;">
+                </div>`;
+        }
+        dotsStr += `<div class="card-dot ${thumbIdx === 0 ? 'active' : ''}"></div>`;
+    });
+
+    const starClass = favSet.has(itemIdStr) ? 'fav-star active' : 'fav-star';
+    const isUnseen = !seenSet.has(itemIdStr) && item.status === 'available';
+    const pulseClass = isUnseen ? 'unseen-pulse' : '';
+    const statusClass = item.status === 'sold' ? 'sold-out' : (item.status === 'reserved' ? 'reserved-item' : '');
+
+    const card = document.createElement('div');
+    card.className = ['item-card', statusClass, pulseClass].filter(Boolean).join(' ');
+    card.setAttribute('data-id', item.id);
+
+    let priceHTML = '';
+    const formattedPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
+    if (item.is_sale && item.old_price) {
+        const formattedOldPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.old_price) : `${item.old_price} ${curr}`;
+        priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${formattedOldPrice}</span><span style="color: var(--accent-green);">${formattedPrice}</span>`;
+    } else {
+        priceHTML = `<span style="color: var(--accent-green);">${formattedPrice}</span>`;
+    }
+
+    let controlsHTML = '';
+    if (thumbsArray.length > 1) {
+        controlsHTML = `
+            <div class="grid-slider-btn prev" role="button" aria-label="Предыдущее фото" data-action="scroll-grid-slider" data-hover-action="preload-grid-slide" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" data-dir="-1">&#10094;</div>
+            <div class="grid-slider-btn next" role="button" aria-label="Следующее фото" data-action="scroll-grid-slider" data-hover-action="preload-grid-slide" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" data-dir="1">&#10095;</div>
+            <div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>
+        `;
+    }
+
+    card.innerHTML = `
+        ${badgeHTML}
+        <div class="${starClass}" role="button" aria-label="В избранное" data-action="toggle-fav" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">★</div>
+        <div class="card-slider-wrapper">
+            <div class="card-slider-container" id="slider-${item.id}" data-item-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">
+                ${slidesStr}
+            </div>
+            ${controlsHTML}
+        </div>
+        <div class="item-info" data-action="open-product" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">
+            <h3 class="item-title">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || '') : item.name}</h3>
+            <div class="item-price">${priceHTML}</div>
+            <div class="item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '') : item.size}</div>
+            <div class="item-footer"><span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.brand || '') : item.brand}</span><span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.condition || '') : item.condition}</span></div>
+        </div>
+        <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" data-action="add-to-cart" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">${addToCartText}</button>
+    `;
+
+    return card;
+}
+window.buildCardDOM = buildCardDOM;
+
+// Плавное добавление новой карточки сверху в витрину
+function insertNewItemCardSmoothly(item) {
+    if (!item || !item.id) return;
+    const grid = document.getElementById('itemsGrid');
+    if (!grid) return;
+
+    if (grid.querySelector(`.item-card[data-id="${item.id}"]`)) return;
+
+    const curCat = window.currentCategory || '';
+    const curBrand = window.currentBrand || '';
+    const searchInput = document.getElementById('mainSearch');
+    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const onlySale = document.getElementById('onlySaleCb')?.checked || false;
+    const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
+
+    if (curCat && item.category !== curCat) return;
+    if (curBrand && (!item.brand || !item.brand.toLowerCase().includes(curBrand.toLowerCase()))) return;
+    if (onlySale && !item.is_sale) return;
+    if (hideUnavailable && item.status !== 'available') return;
+    if (searchTerm) {
+        const nameMatch = item.name && item.name.toLowerCase().includes(searchTerm);
+        const brandMatch = item.brand && item.brand.toLowerCase().includes(searchTerm);
+        if (!nameMatch && !brandMatch) return;
+    }
+
+    const emptyPlaceholder = grid.querySelector('div[style*="grid-column: 1/-1"]');
+    if (emptyPlaceholder) emptyPlaceholder.remove();
+
+    if (Array.isArray(window.filteredItems) && !window.filteredItems.some(i => i.id === item.id)) {
+        window.filteredItems.unshift(item);
+    }
+
+    const card = buildCardDOM(item, 0);
+    if (card) {
+        card.classList.add('item-card-new-arrival');
+        grid.prepend(card);
+        window.renderedCount = (window.renderedCount || 0) + 1;
+
+        const vids = card.querySelectorAll('.grid-lazy-video');
+        vids.forEach(v => {
+            if (typeof gridVideoObserver !== 'undefined' && gridVideoObserver) {
+                gridVideoObserver.observe(v);
+            }
+        });
+
+        const img = card.querySelector('img.card-slide-img');
+        if (img) {
+            if (img.complete && img.naturalWidth > 0) {
+                img.style.opacity = '1';
+                if (img.parentElement) {
+                    img.parentElement.classList.remove('img-8bit-loading');
+                    img.parentElement.classList.add('img-8bit-loaded');
+                }
+            } else {
+                img.onload = () => {
+                    img.style.opacity = '1';
+                    if (img.parentElement) {
+                        img.parentElement.classList.remove('img-8bit-loading');
+                        img.parentElement.classList.add('img-8bit-loaded');
+                    }
+                };
+            }
+        }
+    }
+
+    const countEl = document.getElementById('itemCount');
+    if (countEl && Array.isArray(window.filteredItems)) {
+        countEl.innerText = window.filteredItems.length;
+    }
+}
+window.insertNewItemCardSmoothly = insertNewItemCardSmoothly;
+
 // Рендер следующей пачки товаров
 function renderNextBatch(targetMobileCount = 0) {
     const grid = document.getElementById('itemsGrid');
@@ -2131,124 +2379,12 @@ function renderNextBatch(targetMobileCount = 0) {
         try {
             const item = window.filteredItems[i];
             if (!item) continue;
-            const itemIdStr = String(item.id);
-            
-            let badgeHTML = '';
-            if (item.status === 'sold') {
-                badgeHTML = '<div class="sold-badge">SOLD</div>';
-            } else if (item.status === 'reserved') {
-                badgeHTML = '<div class="reserved-badge">RESERVED</div>';
-            } else {
-                const hasSale = item.is_sale;
-                const hasHot = (item.views_count || 0) >= 25;
-                const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > nowTs;
-
-                if (hasSale || hasHot || isTop) {
-                    badgeHTML = `<div class="system-status-bar">`;
-                    if (isTop) {
-                        badgeHTML += `<span class="status-item status-top"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> TOP</span>`;
-                    }
-                    if (isTop && (hasSale || hasHot)) badgeHTML += `<div class="status-divider"></div>`;
-                    if (hasSale) badgeHTML += `<span class="status-item status-sale">% SALE</span>`;
-                    if (hasSale && hasHot) badgeHTML += `<div class="status-divider"></div>`;
-                    if (hasHot) {
-                        const chartSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
-                        badgeHTML += `<span class="status-item status-hot">${chartSvg} HOT</span>`;
-                    }
-                    badgeHTML += `</div>`;
-                }
+            const card = buildCardDOM(item, i - startIndex);
+            if (card) {
+                fragment.appendChild(card);
+                const vids = card.querySelectorAll('.grid-lazy-video');
+                vids.forEach(v => newVideoElements.push(v));
             }
-
-            const thumbsArray = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails : (item.images && item.images.length > 0 ? item.images : []);
-            let slidesStr = '';
-            let dotsStr = '';
-
-            const safeBrand = (item.brand || '').trim();
-            const safeName = (item.name || '').trim();
-            const baseAlt = [safeBrand, safeName].filter(Boolean).join(' ') || 'Винтажная одежда NISHA';
-            const cleanAlt = baseAlt.replaceAll('"', '&quot;');
-
-            thumbsArray.forEach((thumbUrl, idx) => {
-                const rawVidUrl = item.images && item.images[idx] ? item.images[idx] : '';
-                const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
-                
-                const cdnThumb = window.toCDN(thumbUrl);
-                const cdnVidUrl = window.toCDN(rawVidUrl);
-                const slideAlt = cleanAlt + (idx > 0 ? ` - фото ${idx + 1}` : '');
-
-                if (isVid) {
-                    slidesStr += `
-                        <div class="card-slide ${idx === 0 ? 'img-8bit-loading' : ''}" style="background: #0a0a0a;">
-                            <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;"></video>
-                        </div>`;
-                } else if (idx === 0) {
-                    const firstLoadAttr = (i < 2) ? 'fetchpriority="high"' : 'loading="lazy"';
-                    slidesStr += `
-                        <div class="card-slide img-8bit-loading">
-                           <img class="card-slide-img" src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" ${firstLoadAttr} decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
-
->
-                        </div>`;
-                } else {
-                    slidesStr += `
-                        <div class="card-slide">
-                           <img class="card-slide-img" data-src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;" 
-
->
-                        </div>`;
-                }
-                dotsStr += `<div class="card-dot ${idx === 0 ? 'active' : ''}"></div>`;
-            });
-
-            const starClass = favSet.has(itemIdStr) ? 'fav-star active' : 'fav-star';
-            const isUnseen = !seenSet.has(itemIdStr) && item.status === 'available';
-            const pulseClass = isUnseen ? 'unseen-pulse' : '';
-            const statusClass = item.status === 'sold' ? 'sold-out' : (item.status === 'reserved' ? 'reserved-item' : '');
-
-            const card = document.createElement('div');
-            card.className = ['item-card', statusClass, pulseClass].filter(Boolean).join(' ');
-            card.setAttribute('data-id', item.id);
-            
-            let priceHTML = '';
-            const formattedPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
-            if (item.is_sale && item.old_price) {
-                const formattedOldPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.old_price) : `${item.old_price} ${curr}`;
-                priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${formattedOldPrice}</span><span style="color: var(--accent-green);">${formattedPrice}</span>`;
-            } else {
-                priceHTML = `<span style="color: var(--accent-green);">${formattedPrice}</span>`;
-            }
-
-            let controlsHTML = '';
-            if (thumbsArray.length > 1) {
-                controlsHTML = `
-                    <div class="grid-slider-btn prev" role="button" aria-label="Предыдущее фото" data-action="scroll-grid-slider" data-hover-action="preload-grid-slide" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" data-dir="-1">&#10094;</div>
-                    <div class="grid-slider-btn next" role="button" aria-label="Следующее фото" data-action="scroll-grid-slider" data-hover-action="preload-grid-slide" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" data-dir="1">&#10095;</div>
-                    <div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>
-                `;
-            }
-
-            card.innerHTML = `
-                ${badgeHTML}
-                <div class="${starClass}" role="button" aria-label="В избранное" data-action="toggle-fav" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">★</div>
-                <div class="card-slider-wrapper">
-                    <div class="card-slider-container" id="slider-${item.id}" data-item-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">
-                        ${slidesStr}
-                    </div>
-                    ${controlsHTML}
-                </div>
-                <div class="item-info" data-action="open-product" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">
-                    <h3 class="item-title">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || '') : item.name}</h3>
-                    <div class="item-price">${priceHTML}</div>
-                    <div class="item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '') : item.size}</div>
-                    <div class="item-footer"><span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.brand || '') : item.brand}</span><span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.condition || '') : item.condition}</span></div>
-                </div>
-                <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" data-action="add-to-cart" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">${addToCartText}</button>
-            `;
-
-            fragment.appendChild(card);
-            const vids = card.querySelectorAll('.grid-lazy-video');
-            vids.forEach(v => newVideoElements.push(v));
-
         } catch (err) { console.error(err); }
     }
 

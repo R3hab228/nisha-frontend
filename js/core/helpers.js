@@ -125,45 +125,59 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
 window.showToast = showToast;
 
 // --- ОЧЕРЕДЬ ТОСТОВ О НОВЫХ ТОВАРАХ (МАКСИМУМ 2 ОДНОВРЕМЕННО + ПЛАВНАЯ СМЕНА) ---
-const _newItemToastQueue = [];
-let _activeNewItemToastCount = 0;
-const MAX_CONCURRENT_NEW_ITEM_TOASTS = 2;
+let _batchedNewItemsList = [];
+let _batchToastTimer = null;
+let _activeUnifiedToast = null;
 
 function safeToastEscape(str) {
     return escapeHtml(str);
 }
 
-function enqueueNewItemToast(item) {
-    if (!item || !item.id) return;
-    // Защита от дублей в очереди
-    if (_newItemToastQueue.some(q => q.id === item.id)) return;
-    _newItemToastQueue.push(item);
-    _drainNewItemToastQueue();
+function enqueueNewItemToast(itemOrItems) {
+    if (!itemOrItems) return;
+    const items = Array.isArray(itemOrItems) ? itemOrItems : [itemOrItems];
+    items.forEach(item => {
+        if (item && item.id && !_batchedNewItemsList.some(b => String(b.id) === String(item.id))) {
+            _batchedNewItemsList.push(item);
+        }
+    });
+
+    if (_batchToastTimer) clearTimeout(_batchToastTimer);
+    _batchToastTimer = setTimeout(() => {
+        if (_batchedNewItemsList.length === 0) return;
+        const batch = [..._batchedNewItemsList];
+        _batchedNewItemsList = [];
+        _displayUnifiedNewItemToast(batch);
+    }, 350);
 }
 window.enqueueNewItemToast = enqueueNewItemToast;
 
-function _drainNewItemToastQueue() {
+function _displayUnifiedNewItemToast(items) {
     const container = document.getElementById('toastContainer');
-    if (!container) return;
+    if (!container || !items || items.length === 0) return;
 
-    while (_activeNewItemToastCount < MAX_CONCURRENT_NEW_ITEM_TOASTS && _newItemToastQueue.length > 0) {
-        const item = _newItemToastQueue.shift();
-        _activeNewItemToastCount++;
-        _displayNewItemToast(item, container);
+    if (_activeUnifiedToast && typeof _activeUnifiedToast.dismiss === 'function') {
+        _activeUnifiedToast.dismiss(true);
     }
-}
-
-function _displayNewItemToast(item, container) {
     const toast = document.createElement('div');
     toast.className = 'toast toast-new-item success';
     
-    const imgUrl = (Array.isArray(item.thumbnails) && item.thumbnails[0]) 
-        || (Array.isArray(item.images) && item.images[0]) 
+    const firstItem = items[0];
+    const isMulti = items.length > 1;
+
+    const imgUrl = (Array.isArray(firstItem.thumbnails) && firstItem.thumbnails[0]) 
+        || (Array.isArray(firstItem.images) && firstItem.images[0]) 
         || null;
 
-    const brandPart = item.brand ? `${safeToastEscape(item.brand)} — ` : '';
-    const namePart = safeToastEscape(item.name || 'Новая вещь');
-    const pricePart = item.price ? `<span class="toast-item-price">${safeToastEscape(item.price)} ₴</span>` : '';
+    let titleText = '';
+    if (isMulti) {
+        titleText = `+${items.length} новых вещей в каталоге`;
+    } else {
+        const brandPart = firstItem.brand ? `${safeToastEscape(firstItem.brand)} — ` : '';
+        const namePart = safeToastEscape(firstItem.name || 'Новая вещь');
+        titleText = `${brandPart}${namePart}`;
+    }
+
 
     let html = '';
     if (imgUrl) {
@@ -173,7 +187,7 @@ function _displayNewItemToast(item, container) {
     html += `
         <div class="toast-item-content">
             <div class="toast-item-tag">Новые Вещи!!!</div>
-            <div class="toast-item-title">${brandPart}${namePart}</div>
+            <div class="toast-item-title">${titleText}</div>
         </div>
     `;
     toast.innerHTML = html;
@@ -181,25 +195,29 @@ function _displayNewItemToast(item, container) {
     let isDismissed = false;
     let timerId = null;
 
-    const dismiss = () => {
+    const dismiss = (immediate = false) => {
         if (isDismissed) return;
         isDismissed = true;
         if (timerId) clearTimeout(timerId);
+        _activeUnifiedToast = null;
 
-        toast.classList.add('toast-leaving');
-        setTimeout(() => {
+        if (immediate) {
             toast.remove();
-            _activeNewItemToastCount = Math.max(0, _activeNewItemToastCount - 1);
-            // Плавная задержка перед появлением следующего тоста для естественности анимации
-            setTimeout(_drainNewItemToastQueue, 150);
-        }, 320);
+        } else {
+            toast.classList.add('toast-leaving');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
     };
 
-    // Клик по тосту открывает карточку товара
+    // Клик по тосту: если 1 вещь — открывает ее модалку, если несколько — плавно скроллит вверх к новинкам
     toast.onclick = () => {
-        if (typeof openProductModalById === 'function') {
+        if (isMulti) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (firstItem && typeof openProductModalById === 'function') {
             try {
-                openProductModalById(item.id);
+                openProductModalById(firstItem.id);
             } catch (err) {
                 console.warn('[TOAST] Error opening product modal:', err);
             }
@@ -208,9 +226,8 @@ function _displayNewItemToast(item, container) {
     };
 
     container.appendChild(toast);
-
-    // Тост отображается 3.5 сек, затем плавно улетает и освобождает место следующему
-    timerId = setTimeout(dismiss, 3500);
+    timerId = setTimeout(() => dismiss(false), 3800);
+    _activeUnifiedToast = { toast, dismiss };
 }
 
 // --- ТЕРМИНАЛЬНЫЕ ОКНА ДЛЯ УВЕДОМЛЕНИЙ (ОДНОКНОПОЧНЫЕ) ---

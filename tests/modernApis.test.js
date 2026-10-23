@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -1803,6 +1803,131 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
             expect(pwaCode).toContain('https://browser.sentry-cdn.com/8.38.0/bundle.min.js');
             expect(pwaCode).toContain('https://cdn.jsdelivr.net/npm/@sentry/browser@8.38.0/bundle.min.js');
+        });
+    });
+
+    describe('30. Realtime New Item Live Insertion & Unified Debounced Toast', () => {
+        let origGetElementById;
+        let origCreateElement;
+        let createdToasts;
+        let mockToastContainer;
+
+        beforeEach(() => {
+            vi.useFakeTimers();
+            origGetElementById = globalThis.document.getElementById;
+            origCreateElement = globalThis.document.createElement;
+
+            createdToasts = [];
+            mockToastContainer = {
+                id: 'toastContainer',
+                children: createdToasts,
+                appendChild: vi.fn((el) => {
+                    createdToasts.push(el);
+                    return el;
+                }),
+                querySelectorAll: vi.fn((sel) => {
+                    if (sel.includes('.toast.toast-new-item') || sel.includes('toast')) {
+                        return createdToasts;
+                    }
+                    return [];
+                })
+            };
+
+            globalThis.document.getElementById = vi.fn((id) => {
+                if (id === 'toastContainer') return mockToastContainer;
+                return null;
+            });
+
+            globalThis.document.createElement = vi.fn((tag) => {
+                const el = {
+                    tagName: tag.toUpperCase(),
+                    className: '',
+                    innerHTML: '',
+                    style: {},
+                    classList: {
+                        add: vi.fn((c) => { el.className = `${el.className} ${c}`.trim(); }),
+                        remove: vi.fn((c) => { el.className = el.className.replace(c, '').trim(); }),
+                        contains: vi.fn((c) => el.className.split(/\s+/).includes(c))
+                    },
+                    remove: vi.fn(() => {
+                        const idx = createdToasts.indexOf(el);
+                        if (idx !== -1) createdToasts.splice(idx, 1);
+                    }),
+                    querySelector: vi.fn((sel) => {
+                        if (sel === '.toast-item-tag') {
+                            const match = el.innerHTML.match(/<div class="toast-item-tag">([^<]+)<\/div>/);
+                            return match ? { textContent: match[1] } : null;
+                        }
+                        if (sel === '.toast-item-title') {
+                            const match = el.innerHTML.match(/<div class="toast-item-title">([^<]+)<\/div>/);
+                            return match ? { textContent: match[1] } : null;
+                        }
+                        return null;
+                    })
+                };
+                return el;
+            });
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+            globalThis.document.getElementById = origGetElementById;
+            globalThis.document.createElement = origCreateElement;
+        });
+
+        it('displays exactly 1 unified toast for single new item with "Новые Вещи!!!" tag', () => {
+            const item = { id: 'it-1', brand: 'Stone Island', name: 'Nylon Metal Overshirt', price: 4500 };
+            window.enqueueNewItemToast(item);
+
+            // Wait for 350ms debounce
+            vi.advanceTimersByTime(400);
+
+            const container = document.getElementById('toastContainer');
+            const toasts = container.querySelectorAll('.toast.toast-new-item');
+            expect(toasts.length).toBe(1);
+
+            const tag = toasts[0].querySelector('.toast-item-tag');
+            const title = toasts[0].querySelector('.toast-item-title');
+            expect(tag.textContent).toBe('Новые Вещи!!!');
+            expect(title.textContent).toContain('Stone Island — Nylon Metal Overshirt');
+        });
+
+        it('batches multiple concurrent items into exactly 1 unified toast without spamming', () => {
+            const items = [
+                { id: 'it-1', brand: 'Arc\'teryx', name: 'Beta LT Jacket', price: 9000 },
+                { id: 'it-2', brand: 'Salomon', name: 'XT-6 ADV', price: 6200 },
+                { id: 'it-3', brand: 'Oakley', name: 'Software Fleece', price: 3400 }
+            ];
+
+            // Enqueue all items concurrently or in rapid succession
+            window.enqueueNewItemToast(items[0]);
+            window.enqueueNewItemToast(items[1]);
+            window.enqueueNewItemToast(items[2]);
+
+            vi.advanceTimersByTime(400);
+
+            const container = document.getElementById('toastContainer');
+            const toasts = container.querySelectorAll('.toast.toast-new-item');
+            expect(toasts.length).toBe(1);
+
+            const tag = toasts[0].querySelector('.toast-item-tag');
+            const title = toasts[0].querySelector('.toast-item-title');
+            expect(tag.textContent).toBe('Новые Вещи!!!');
+            expect(title.textContent).toBe('+3 новых вещей в каталоге');
+        });
+
+        it('verifies smooth new arrival animation in style.css and live insertion logic in catalog.js', () => {
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('@keyframes itemCardNewArrival');
+            expect(css).toContain('.item-card.item-card-new-arrival');
+            expect(css).toContain('cubic-bezier');
+
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('function insertNewItemCardSmoothly');
+            expect(catalogCode).toContain('card.classList.add(\'item-card-new-arrival\')');
+            expect(catalogCode).toContain('window.insertNewItemCardSmoothly = insertNewItemCardSmoothly');
+            expect(catalogCode).toContain('enqueueNewItemToast(freshNewArrivals)');
+            expect(catalogCode).toContain('window._notifiedItemIds');
         });
     });
 });

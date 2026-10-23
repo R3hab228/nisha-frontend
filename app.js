@@ -496,93 +496,10 @@ async function initApp() {
                 })
                 .subscribe();
 
-            _supabase.channel('public:items')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, payload => {
-                    const catalog = window.allItems || [];
-                    if (payload.eventType === 'INSERT') {
-                        if (!payload.new || !payload.new.id) return;
-                        window._notifiedItemIds = window._notifiedItemIds || new Set();
-                        if (window._notifiedItemIds.has(payload.new.id)) return;
-                        window._notifiedItemIds.add(payload.new.id);
-
-                        const alreadyExists = catalog.some(i => i.id === payload.new.id);
-                        if (!alreadyExists) {
-                            catalog.unshift(payload.new);
-                            window.allItems = catalog;
-                            if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
-                            if (typeof showToast === 'function') {
-                                showToast(`🆕 Новая вещь на сайте: ${payload.new.name}`, 'success');
-                            }
-                            if (typeof applyFilters === 'function') applyFilters();
-                        }
-                    } else if (payload.eventType === 'DELETE') {
-                        if (payload.old && payload.old.id) {
-                            window.allItems = catalog.filter(i => i.id !== payload.old.id);
-                            const deadCard = document.querySelector(`.item-card[data-id="${payload.old.id}"]`);
-                            if (deadCard) deadCard.remove();
-                            if (typeof removeSoldItemFromCart === 'function') removeSoldItemFromCart(payload.old.id);
-                            if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
-                        }
-                    } else if (payload.eventType === 'UPDATE') {
-                        const updatedItem = payload.new;
-                        if (!updatedItem || !updatedItem.id) return;
-                        const index = catalog.findIndex(i => i.id === updatedItem.id);
-                        if (index !== -1) {
-                            const oldItem = catalog[index];
-                            const oldStatus = oldItem.status;
-                            const oldPrice = oldItem.price;
-                            const oldIsSale = oldItem.is_sale;
-                            const wasHot = (oldItem.views_count || 0) >= 25;
-                            const nowHot = (updatedItem.views_count || 0) >= 25;
-                            const visualChanged = (
-                                oldStatus !== updatedItem.status ||
-                                oldPrice !== updatedItem.price ||
-                                !!oldIsSale !== !!updatedItem.is_sale ||
-                                oldItem.old_price !== updatedItem.old_price ||
-                                !!oldItem.is_top !== !!updatedItem.is_top ||
-                                oldItem.top_until !== updatedItem.top_until ||
-                                wasHot !== nowHot ||
-                                oldItem.name !== updatedItem.name ||
-                                oldItem.size !== updatedItem.size ||
-                                oldItem.brand !== updatedItem.brand
-                            );
-                            const searchChanged = (
-                                oldItem.name !== updatedItem.name ||
-                                oldItem.brand !== updatedItem.brand ||
-                                oldItem.size !== updatedItem.size ||
-                                oldItem.category !== updatedItem.category
-                            );
-                            const imgUrl = (updatedItem.thumbnails && updatedItem.thumbnails.length > 0) ? updatedItem.thumbnails[0] : ((updatedItem.images && updatedItem.images.length > 0) ? updatedItem.images[0] : null);
-
-                            Object.assign(catalog[index], updatedItem);
-                            if (searchChanged && typeof window.invalidateFuseCache === 'function') {
-                                window.invalidateFuseCache();
-                            }
-
-                            if (visualChanged && typeof window.updateCardDOM === 'function') {
-                                window.updateCardDOM(catalog[index]);
-                            }
-
-                            if (typeof showToast === 'function') {
-                                if ((!oldIsSale && updatedItem.is_sale) || (oldPrice > updatedItem.price)) {
-                                    if (updatedItem.status === 'available') {
-                                        showToast(`🔥 СКИДКА: ${updatedItem.name}`, 'success', imgUrl);
-                                    }
-                                }
-                                if (oldStatus !== 'sold' && updatedItem.status === 'sold') {
-                                    if (typeof removeSoldItemFromCart === 'function') {
-                                        removeSoldItemFromCart(updatedItem.id, updatedItem.name);
-                                    }
-                                } else if (oldStatus === 'reserved' && updatedItem.status === 'available') {
-                                    showToast(`Бронь истекла: ${updatedItem.name} снова в наличии!`, 'info', imgUrl);
-                                }
-                            }
-                        } else {
-                            if (typeof syncCriticalStatuses === 'function') syncCriticalStatuses();
-                        }
-                    }
-                })
-                .subscribe();
+            // Единая подписка на обновления каталога в реальном времени из catalog.js
+            if (typeof window.initCatalogRealtimeSubscription === 'function') {
+                window.initCatalogRealtimeSubscription();
+            }
 
             if (typeof window.initReviewsRealtime === 'function') {
                 window.initReviewsRealtime(_supabase);
