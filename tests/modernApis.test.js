@@ -1930,4 +1930,29 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('window._notifiedItemIds');
         });
     });
+
+    describe('31. Strict Nova Poshta Branch & City Validation and Mobile Touch Selection', () => {
+        it('binds both onmousedown and onclick for touchscreen mobile branch selection in cart.js', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('div.onmousedown = selectBranchItem;');
+            expect(cartCode).toContain('div.onclick = selectBranchItem;');
+            expect(cartCode).toContain('div.onmousedown = selectCityItem;');
+            expect(cartCode).toContain('div.onclick = selectCityItem;');
+        });
+
+        it('strictly blocks order submission in executeOrderFinal and confirmEmailPrompt if city or branch is missing', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('if (!city || !cityRef)');
+            expect(cartCode).toContain('if (!branch || !branchRef)');
+            expect(cartCode).toContain('isOrderSubmitting = false;');
+            expect(cartCode).toContain('resetSubmitButton();');
+        });
+
+        it('prevents fallback to direct Supabase RPC when server returns 400 validation error', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('errMsg.includes(\'отделение\')');
+            expect(cartCode).toContain('errMsg.includes(\'город\')');
+            expect(cartCode).toContain('errMsg.includes(\'проверки данных\')');
+        });
+    });
 });

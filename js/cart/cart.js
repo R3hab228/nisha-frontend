@@ -385,8 +385,8 @@ function renderCitySearchResults(data) {
             const div = document.createElement('div');
             div.innerText = city.Present;
             
-            div.onmousedown = (e) => {
-                e.preventDefault();
+            const selectCityItem = (e) => {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
                 document.getElementById('orderCity').value = city.Present;
                 selectedCityRef = city.DeliveryCity || city.Ref; 
                 window.selectedCityRef = selectedCityRef;
@@ -394,14 +394,18 @@ function renderCitySearchResults(data) {
                 dropdown.style.display = 'none';
                 
                 const branchInput = document.getElementById('orderBranch');
-                branchInput.readOnly = false;
-                branchInput.value = '';
-                branchInput.placeholder = "Загрузка отделений...";
+                if (branchInput) {
+                    branchInput.readOnly = false;
+                    branchInput.value = '';
+                    branchInput.placeholder = "Загрузка отделений...";
+                }
                 
                 cachedBranches = []; 
                 loadNPBranches();
                 if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
             };
+            div.onmousedown = selectCityItem;
+            div.onclick = selectCityItem;
             dropdown.appendChild(div);
         });
         dropdown.style.display = 'block';
@@ -669,15 +673,21 @@ function renderBranches(branches, startIndex = 0) {
             div.textContent = desc;
         }
 
-        div.onmousedown = (e) => {
-            e.preventDefault(); 
-            document.getElementById('orderBranch').value = desc;
+        const selectBranchItem = (e) => {
+            if (e && typeof e.preventDefault === 'function') e.preventDefault(); 
+            const branchEl = document.getElementById('orderBranch');
+            if (branchEl) {
+                branchEl.value = desc;
+                branchEl.classList.remove('input-field-error');
+            }
             selectedBranchRef = branch.Ref;
             window.selectedBranchRef = selectedBranchRef;
             dropdown.style.display = 'none';
             calculateDeliveryCost(); 
             if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
         };
+        div.onmousedown = selectBranchItem;
+        div.onclick = selectBranchItem;
         fragment.appendChild(div);
     }
     dropdown.appendChild(fragment);
@@ -1394,6 +1404,30 @@ window.submitOrder = submitOrder;
 
 async function confirmEmailPrompt(wantsEmail) {
     if (isOrderSubmitting) return;
+
+    const branch = document.getElementById('orderBranch')?.value.trim();
+    const branchRef = window.selectedBranchRef || selectedBranchRef;
+    const city = document.getElementById('orderCity')?.value.trim();
+    const cityRef = window.selectedCityRef || selectedCityRef;
+
+    if (!city || !cityRef) {
+        const prompt = document.getElementById('emailPromptOverlay');
+        if (prompt) prompt.style.display = 'none';
+        const cityInput = document.getElementById('orderCity');
+        if (typeof highlightFieldError === 'function') highlightFieldError(cityInput);
+        showToast('Выберите Город строго из выпадающего списка!', 'error');
+        return;
+    }
+
+    if (!branch || !branchRef) {
+        const prompt = document.getElementById('emailPromptOverlay');
+        if (prompt) prompt.style.display = 'none';
+        const branchInput = document.getElementById('orderBranch');
+        if (typeof highlightFieldError === 'function') highlightFieldError(branchInput);
+        showToast('Выберите Отделение или Поштомат из выпадающего списка!', 'error');
+        return;
+    }
+
     const prompt = document.getElementById('emailPromptOverlay');
     const emailInput = document.getElementById('promptEmailInput');
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
@@ -1423,6 +1457,15 @@ async function executeOrderFinal(emailToSave) {
     if (!btnSubmit) {
         isOrderSubmitting = false;
         return;
+    }
+
+    function resetSubmitButton() {
+        if (!btnSubmit) return;
+        btnSubmit.style.pointerEvents = "auto";
+        btnSubmit.style.position = "";
+        btnSubmit.style.overflow = "";
+        btnSubmit.style.color = "";
+        btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit', { defaultValue: 'ПОДТВЕРДИТЬ ЗАКАЗ' }) : 'ПОДТВЕРДИТЬ ЗАКАЗ';
     }
     
     btnSubmit.style.pointerEvents = "none";
@@ -1456,6 +1499,24 @@ async function executeOrderFinal(emailToSave) {
     const orderItemIds = currentCart.map(i => i.id);
     const cityRef = window.selectedCityRef || selectedCityRef;
     const branchRef = window.selectedBranchRef || selectedBranchRef;
+
+    // СТРОГАЯ ЗАЩИТА: заказ не может быть оформлен без города или отделения Новой Почты
+    if (!city || !cityRef) {
+        isOrderSubmitting = false;
+        resetSubmitButton();
+        const cityInput = document.getElementById('orderCity');
+        if (typeof highlightFieldError === 'function') highlightFieldError(cityInput);
+        showToast('Выберите Город строго из выпадающего списка!', 'error');
+        return;
+    }
+    if (!branch || !branchRef) {
+        isOrderSubmitting = false;
+        resetSubmitButton();
+        const branchInput = document.getElementById('orderBranch');
+        if (typeof highlightFieldError === 'function') highlightFieldError(branchInput);
+        showToast('Выберите Отделение или Поштомат из выпадающего списка!', 'error');
+        return;
+    }
 
     const checkoutData = {
         name: name,
@@ -1539,14 +1600,24 @@ async function executeOrderFinal(emailToSave) {
                 }
             }
         } catch (serverErr) {
-            // Если это бизнес-ошибка (например, товар уже куплен или телефон в ЧС) — пробрасываем сразу
-            if (serverErr && serverErr.message && (
-                serverErr.message.includes('уже кто-то купил') ||
-                serverErr.message.includes('уже куплен') ||
-                serverErr.message.includes('оформляется другим') ||
-                serverErr.message.includes('Доступ запрещен')
-            )) {
-                throw serverErr;
+            // Если это бизнес-ошибка (например, ошибка валидации полей, товар уже куплен или телефон в ЧС) — показываем ошибку и НЕ делаем слепой RPC-фоллбэк!
+            const errMsg = serverErr && serverErr.message ? String(serverErr.message) : '';
+            if (
+                errMsg.includes('уже кто-то купил') ||
+                errMsg.includes('уже куплен') ||
+                errMsg.includes('оформляется другим') ||
+                errMsg.includes('Доступ запрещен') ||
+                errMsg.includes('отделение') ||
+                errMsg.includes('город') ||
+                errMsg.includes('имя') ||
+                errMsg.includes('телефон') ||
+                errMsg.includes('проверки данных') ||
+                errMsg.includes('Validation')
+            ) {
+                isOrderSubmitting = false;
+                resetSubmitButton();
+                showToast(errMsg, 'error');
+                return;
             }
             console.warn('[ЗАКАЗ] Серверный /api/create-order недоступен, используем прямой RPC фоллбэк:', serverErr.message);
         }
@@ -1554,6 +1625,13 @@ async function executeOrderFinal(emailToSave) {
         // 2. РЕЗЕРВНЫЙ ПУТЬ (если сервер Render перезагружается): Прямой транзакционный RPC в Supabase
         if (!handledViaAtomicServer) {
             if (!sb) throw new Error('База данных недоступна');
+
+            if (!city || !branch || !cityRef || !branchRef) {
+                isOrderSubmitting = false;
+                resetSubmitButton();
+                showToast('Выберите Город и Отделение строго из выпадающего списка!', 'error');
+                return;
+            }
 
             let rpcParams = {
                 p_user_id: user ? user.id : null,
