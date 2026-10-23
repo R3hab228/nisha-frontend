@@ -1047,15 +1047,11 @@ function renderProfileDelivery(fullName, address) {
     const fn = (fullName || '').trim();
     const addr = (address || '').trim();
 
-    let cityPart = '';
-    let branchPart = '';
-    if (addr.includes(',')) {
-        const parts = addr.split(',');
-        cityPart = parts[0] ? parts[0].trim() : '';
-        branchPart = parts.slice(1).join(',').trim();
-    } else {
-        cityPart = addr;
-    }
+    const parsed = (typeof parseDeliveryAddress === 'function')
+        ? parseDeliveryAddress(addr)
+        : ((window.parseDeliveryAddress) ? window.parseDeliveryAddress(addr) : null);
+    const cityPart = parsed ? parsed.city : (addr.split(',')[0] || '').trim();
+    const branchPart = parsed ? parsed.branch : (addr.split(',').slice(1).join(', ') || '').trim();
 
     [false, true].forEach(isModal => {
         const prefix = isModal ? 'modalProfile' : 'profile';
@@ -1229,6 +1225,14 @@ async function saveDeliveryToProfile(fullName, address) {
     }
 
     renderProfileDelivery(fn, addr);
+
+    if (typeof window.clearCheckoutDraft === 'function') {
+        window.clearCheckoutDraft();
+    }
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store) {
+        store.remove('nisha_checkout_data');
+    }
 
     const activeUser = currentUser || window.currentUser;
     const sb = getSupabase();

@@ -1087,12 +1087,22 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
                             db.createObjectStore(STORE_NAME);
                         }
                     };
-                    req.onsuccess = () => resolve(req.result);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        db.onclose = () => { _dbPromise = null; };
+                        db.onversionchange = () => {
+                            try { db.close(); } catch (e) {}
+                            _dbPromise = null;
+                        };
+                        resolve(db);
+                    };
                     req.onerror = () => {
                         console.warn('[IDB] Failed to open IndexedDB:', req.error);
+                        _dbPromise = null;
                         resolve(null);
                     };
                 } catch (e) {
+                    _dbPromise = null;
                     resolve(null);
                 }
             });
@@ -1105,13 +1115,21 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
             const db = await getDB();
             if (!db) return null;
             return new Promise((resolve) => {
-                const tx = db.transaction(STORE_NAME, 'readonly');
-                const store = tx.objectStore(STORE_NAME);
-                const req = store.get(key);
-                req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
-                req.onerror = () => resolve(null);
+                try {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    tx.onerror = () => resolve(null);
+                    tx.onabort = () => resolve(null);
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.get(key);
+                    req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
+                    req.onerror = () => resolve(null);
+                } catch (txErr) {
+                    _dbPromise = null;
+                    resolve(null);
+                }
             });
         } catch (e) {
+            _dbPromise = null;
             return null;
         }
     };
@@ -1121,13 +1139,20 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
             const db = await getDB();
             if (!db) return false;
             return new Promise((resolve) => {
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                const store = tx.objectStore(STORE_NAME);
-                store.put(val, key);
-                tx.oncomplete = () => resolve(true);
-                tx.onerror = () => resolve(false);
+                try {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => resolve(false);
+                    tx.onabort = () => resolve(false);
+                    const store = tx.objectStore(STORE_NAME);
+                    store.put(val, key);
+                } catch (txErr) {
+                    _dbPromise = null;
+                    resolve(false);
+                }
             });
         } catch (e) {
+            _dbPromise = null;
             return false;
         }
     };
@@ -1137,17 +1162,59 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
             const db = await getDB();
             if (!db) return false;
             return new Promise((resolve) => {
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                const store = tx.objectStore(STORE_NAME);
-                store.delete(key);
-                tx.oncomplete = () => resolve(true);
-                tx.onerror = () => resolve(false);
+                try {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => resolve(false);
+                    tx.onabort = () => resolve(false);
+                    const store = tx.objectStore(STORE_NAME);
+                    store.delete(key);
+                } catch (txErr) {
+                    _dbPromise = null;
+                    resolve(false);
+                }
             });
         } catch (e) {
+            _dbPromise = null;
             return false;
         }
     };
 })();
+
+// Парсинг адреса доставки (город и отделение/поштомат) без разрыва названий по запятым
+function parseDeliveryAddress(addr) {
+    if (!addr || typeof addr !== 'string') return { city: '', branch: '' };
+    const str = addr.trim();
+    if (!str) return { city: '', branch: '' };
+
+    // 1. Ищем маркеры отделения/почтомата
+    const markerMatch = str.match(/,\s*(відділення|поштомат|пункт|склад|отделение|почтомат)\b/i);
+    if (markerMatch && markerMatch.index !== undefined) {
+        const cityPart = str.slice(0, markerMatch.index).trim();
+        const branchPart = str.slice(markerMatch.index).replace(/^,\s*/, '').trim();
+        return { city: cityPart, branch: branchPart };
+    }
+
+    // 2. Если маркеров нет, делим по запятым с учетом области/района
+    const parts = str.split(',').map(p => p.trim()).filter(Boolean);
+    if (parts.length <= 1) {
+        return { city: str, branch: '' };
+    }
+    if (parts.length === 2) {
+        return { city: parts[0], branch: parts[1] };
+    }
+    // Если 3 или более частей, проверяем, является ли 2-я часть областью/районом
+    if (/обл|район|р-н/i.test(parts[1])) {
+        const cityPart = `${parts[0]}, ${parts[1]}`;
+        const branchPart = parts.slice(2).join(', ');
+        return { city: cityPart, branch: branchPart };
+    }
+    return {
+        city: parts[0],
+        branch: parts.slice(1).join(', ')
+    };
+}
+window.parseDeliveryAddress = parseDeliveryAddress;
 
 // ==========================================
 // GLOBAL EVENT DELEGATION (data-action / data-hover-action)

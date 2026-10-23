@@ -1272,77 +1272,121 @@ async function openCheckoutModal() {
             }
         });
 
-        // 1. Проверяем черновик текущей сессии
-        const draftRestored = restoreCheckoutDraft();
-        if (!draftRestored) {
-            // 2. Если черновика нет, подтягиваем последние сохраненные данные
+// Сопоставление и установка Ref отделения по названию (для автоподстановки из профиля)
+function matchAndSetBranchRef(branchText) {
+    if (!branchText) return;
+    const cityRef = window.selectedCityRef || selectedCityRef;
+    const branches = (cityRef && npBranchCache[cityRef + "_"]) || cachedBranches || [];
+    if (!branches || branches.length === 0) return;
+
+    const norm = (str) => String(str || '').toLowerCase().replace(/[^a-zа-яёіїєґ0-9]/gi, '');
+    const wanted = norm(branchText);
+    const numMatch = branchText.match(/\d+/);
+    const wantedNum = numMatch ? numMatch[0] : null;
+    const isPostomat = /поштомат|postomat/i.test(branchText);
+
+    let match = branches.find(b => norm(b.Description) === wanted);
+    if (!match && wantedNum) {
+        match = branches.find(b => {
+            const bDesc = b.Description || '';
+            const bNum = (bDesc.match(/\d+/) || [])[0];
+            const bIsPost = /поштомат|postomat/i.test(bDesc);
+            return bNum === wantedNum && (isPostomat === bIsPost);
+        });
+    }
+    if (match) {
+        selectedBranchRef = match.Ref;
+        window.selectedBranchRef = match.Ref;
+        if (typeof calculateDeliveryCost === 'function') calculateDeliveryCost();
+    }
+}
+window.matchAndSetBranchRef = matchAndSetBranchRef;
+
+        // 1. ПРИОРИТЕТ №1: Данные доставки из профиля пользователя (если пользователь залогинен или данные сохранены в профиле)
+        const activeProfile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
+        const deliveryStore = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const cachedDelivery = deliveryStore ? deliveryStore.getJSON('nisha_profile_delivery', null) : null;
+        const profileFullName = (activeProfile?.full_name || cachedDelivery?.full_name || '').trim();
+        const profileAddress = (activeProfile?.delivery_address || cachedDelivery?.delivery_address || '').trim();
+        const userPhone = (activeProfile?.phone || window.currentUser?.phone || '').trim();
+
+        const nameInput = document.getElementById('orderName');
+        const phoneInput = document.getElementById('orderPhone');
+        const cityInput = document.getElementById('orderCity');
+        const branchInput = document.getElementById('orderBranch');
+
+        if (phoneInput && !phoneInput.value.trim() && userPhone) {
+            phoneInput.value = userPhone;
+        }
+
+        let addressSourceFound = false;
+
+        // Если в профиле сохранен адрес — он ВСЕГДА подставляется в заказ в первую очередь
+        if (profileAddress) {
+            const parsed = (typeof parseDeliveryAddress === 'function')
+                ? parseDeliveryAddress(profileAddress)
+                : ((window.parseDeliveryAddress) ? window.parseDeliveryAddress(profileAddress) : null);
+            const pCity = parsed ? parsed.city : profileAddress;
+            const pBranch = parsed ? parsed.branch : '';
+
+            if (pCity) {
+                if (cityInput) cityInput.value = pCity;
+                if (branchInput) {
+                    branchInput.readOnly = false;
+                    branchInput.value = pBranch || '';
+                    branchInput.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.branch_placeholder', { defaultValue: 'Выберите отделение...' }) : 'Выберите отделение...';
+                }
+                addressSourceFound = true;
+                ensureCityRef().then(ref => {
+                    if (ref) {
+                        loadNPBranches("", false).then(() => {
+                            if (pBranch) matchAndSetBranchRef(pBranch);
+                        }).catch(() => {});
+                    }
+                }).catch(() => {});
+            }
+            if (nameInput && profileFullName) {
+                nameInput.value = profileFullName;
+            }
+        }
+
+        // 2. Если в профиле адреса нет — проверяем черновик текущей сессии
+        if (!addressSourceFound) {
+            const draftRestored = restoreCheckoutDraft();
+            if (draftRestored) {
+                addressSourceFound = true;
+            }
+        }
+
+        // 3. Если черновика нет — проверяем сохраненные данные предыдущего заказа
+        if (!addressSourceFound) {
             const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
             const saved = store ? store.getJSON('nisha_checkout_data', null) : null;
-            if (saved && typeof saved === 'object') {
+            if (saved && typeof saved === 'object' && saved.city) {
                 try {
-                    if (document.getElementById('orderName')) document.getElementById('orderName').value = saved.name || '';
-                    if (document.getElementById('orderPhone')) document.getElementById('orderPhone').value = saved.phone || '';
-                    if (document.getElementById('orderCity')) document.getElementById('orderCity').value = saved.city || '';
-                    if (document.getElementById('orderBranch')) {
-                        document.getElementById('orderBranch').value = saved.branch || '';
-                        if (saved.city) {
-                            document.getElementById('orderBranch').readOnly = false;
-                        }
+                    if (nameInput && !nameInput.value.trim()) nameInput.value = saved.name || '';
+                    if (phoneInput && !phoneInput.value.trim()) phoneInput.value = saved.phone || '';
+                    if (cityInput && !cityInput.value.trim()) cityInput.value = saved.city || '';
+                    if (branchInput && !branchInput.value.trim()) {
+                        branchInput.value = saved.branch || '';
+                        branchInput.readOnly = false;
                     }
-                    
                     selectedCityRef = saved.cityRef || '';
                     window.selectedCityRef = selectedCityRef;
                     selectedBranchRef = saved.branchRef || '';
                     window.selectedBranchRef = selectedBranchRef;
+                    addressSourceFound = true;
 
-                    if (saved.city && !selectedCityRef) {
+                    if (!selectedCityRef) {
                         ensureCityRef().catch(() => {});
                     }
                 } catch(e) { autoDetectCity(); }
-            } else {
-                autoDetectCity(); 
             }
         }
 
-        // 3. Подтягиваем сохраненные в профиле данные доставки (ФИО и Адрес)
-        const activeProfile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
-        const deliveryStore = window.storage || (typeof storage !== 'undefined' ? storage : null);
-        const cachedDelivery = deliveryStore ? deliveryStore.getJSON('nisha_profile_delivery', null) : null;
-        const profileFullName = activeProfile?.full_name || cachedDelivery?.full_name || '';
-        const profileAddress = activeProfile?.delivery_address || cachedDelivery?.delivery_address || '';
-
-        const nameInput = document.getElementById('orderName');
-        if (nameInput && !nameInput.value.trim() && profileFullName) {
-            nameInput.value = profileFullName;
-        }
-
-        const cityInput = document.getElementById('orderCity');
-        const branchInput = document.getElementById('orderBranch');
-        if (cityInput && !cityInput.value.trim() && profileAddress) {
-            let pCity = '';
-            let pBranch = '';
-            if (profileAddress.includes(',')) {
-                const parts = profileAddress.split(',');
-                pCity = parts[0] ? parts[0].trim() : '';
-                pBranch = parts.slice(1).join(',').trim();
-            } else {
-                pCity = profileAddress.trim();
-            }
-
-            if (pCity) {
-                cityInput.value = pCity;
-                if (branchInput) {
-                    branchInput.readOnly = false;
-                    if (pBranch && !branchInput.value.trim()) {
-                        branchInput.value = pBranch;
-                    }
-                }
-                ensureCityRef().then(ref => {
-                    if (ref && branchInput && !branchInput.value.trim()) {
-                        loadNPBranches("", false);
-                    }
-                }).catch(() => {});
-            }
+        // 4. Если вообще ничего нет — запускаем быстрое GeoIP определение города
+        if (!addressSourceFound) {
+            autoDetectCity();
         }
 
         if (branchInput && !branchInput._unlockBound) {

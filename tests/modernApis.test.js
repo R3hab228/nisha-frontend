@@ -2004,5 +2004,42 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('Math.min(branches.length, MAX_RENDERED_BRANCHES)');
             expect(cartCode).toContain('npBranchCache[cityRef + "_"]');
         });
+
+        it('parses complex addresses with region commas and branch markers using parseDeliveryAddress', () => {
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain('function parseDeliveryAddress');
+            expect(helpersCode).toContain('markerMatch');
+
+            // Evaluate parseDeliveryAddress logic directly
+            const fn = new Function(`${helpersCode}; return parseDeliveryAddress;`)();
+            const res1 = fn('м. Кривий Ріг, Дніпропетровська обл., Відділення №25');
+            expect(res1.city).toBe('м. Кривий Ріг, Дніпропетровська обл.');
+            expect(res1.branch).toBe('Відділення №25');
+
+            const res2 = fn('м. Кривий Ріг, Дніпропетровська обл., Поштомат 5040');
+            expect(res2.city).toBe('м. Кривий Ріг, Дніпропетровська обл.');
+            expect(res2.branch).toBe('Поштомат 5040');
+
+            const res3 = fn('Київ, Відділення 12');
+            expect(res3.city).toBe('Київ');
+            expect(res3.branch).toBe('Відділення 12');
+        });
+
+        it('gives user profile delivery address top priority over old cached checkout data in initCheckoutState', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('// 1. ПРИОРИТЕТ №1: Данные доставки из профиля пользователя');
+            expect(cartCode).toContain('matchAndSetBranchRef');
+            expect(cartCode).toContain('if (profileAddress)');
+        });
+
+        it('guards IDBDatabase operations against closing connections and ignores connection closure in telemetry', () => {
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain('db.onclose = () => { _dbPromise = null; };');
+            expect(helpersCode).toContain('db.onversionchange');
+
+            const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+            expect(pwaCode).toContain('/database connection is closing/i');
+            expect(pwaCode).toContain('/IDBDatabase/i');
+        });
     });
 });

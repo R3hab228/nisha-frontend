@@ -170,7 +170,9 @@ const IGNORED_ERROR_PATTERNS = [
     /extensions\//i,
     /challenges\.cloudflare\.com/i,
     /clarity\.ms/i,
-    /tiktok/i
+    /tiktok/i,
+    /database connection is closing/i,
+    /IDBDatabase/i
 ];
 
 function sanitizeContext(context) {
