@@ -435,20 +435,21 @@ label:hover .win95-cb:checked {
 
 .offline-sticky-banner {
     position: sticky;
-    top: 65px;
+    top: 0;
     left: 0;
     width: 100%;
-    z-index: 9998;
+    z-index: 2001;
     background: #0f0f0f;
-    border-top: 1px solid var(--accent-yellow);
+    border-top: none;
     border-bottom: 2px solid var(--accent-yellow);
     color: var(--accent-yellow);
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1.35;
     font-weight: bold;
-    padding: 10px 15px;
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 15px 7px 15px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.85);
     display: none;
     box-sizing: border-box;
     transition: opacity 0.3s ease, transform 0.3s ease;

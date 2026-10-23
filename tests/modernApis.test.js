@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 class MockStorage {
@@ -1414,6 +1414,67 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(zoomSpy).not.toHaveBeenCalled();
 
             zoomSpy.mockRestore();
+        });
+    });
+
+    describe('25. Offline Sticky Banner Positioning & Social Sharing Open Graph (1200x630)', () => {
+        it('places offlineStickyBanner before header at the very top of wrapper in index.html', () => {
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            const bannerIdx = html.indexOf('id="offlineStickyBanner"');
+            const headerIdx = html.indexOf('<header>');
+            expect(bannerIdx).toBeGreaterThan(-1);
+            expect(headerIdx).toBeGreaterThan(-1);
+            expect(bannerIdx).toBeLessThan(headerIdx);
+        });
+
+        it('configures .offline-sticky-banner CSS with top: 0 and sticky positioning', () => {
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const bannerCssMatch = css.match(/\.offline-sticky-banner\s*\{([^}]+)\}/);
+            expect(bannerCssMatch).not.toBeNull();
+            const rules = bannerCssMatch[1];
+            expect(rules).toMatch(/position:\s*sticky;/);
+            expect(rules).toMatch(/top:\s*0;/);
+            expect(rules).not.toMatch(/top:\s*65px;/);
+        });
+
+        it('configures 1200x630 og-image and summary_large_image in index.html for social sharing', () => {
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(html).toContain('content="https://www.nisha-store.shop/og-image.png"');
+            expect(html).toContain('property="og:image:width" content="1200"');
+            expect(html).toContain('property="og:image:height" content="630"');
+            expect(html).toContain('name="twitter:image" content="https://www.nisha-store.shop/og-image.png"');
+            expect(html).toContain('name="twitter:card" content="summary_large_image"');
+        });
+
+        it('verifies og-image.png exists in public directory with valid dimensions', () => {
+            const ogPath = resolve(__dirname, '../public/og-image.png');
+            const exists = existsSync(ogPath);
+            expect(exists).toBe(true);
+            const buf = readFileSync(ogPath);
+            // PNG signature
+            expect(buf[0]).toBe(0x89);
+            expect(buf[1]).toBe(0x50);
+            expect(buf[2]).toBe(0x4E);
+            expect(buf[3]).toBe(0x47);
+            // IHDR width and height
+            const width = buf.readUInt32BE(16);
+            const height = buf.readUInt32BE(20);
+            expect(width).toBe(1200);
+            expect(height).toBe(630);
+        });
+
+        it('resetOpenGraphTags restores default 1200x630 og-image and twitter meta tags', () => {
+            const setMetaCalls = [];
+            window.setMetaTag = vi.fn((key, val) => {
+                setMetaCalls.push({ key, val });
+            });
+
+            window.resetOpenGraphTags();
+
+            expect(window.setMetaTag).toHaveBeenCalledWith('og:image', 'https://www.nisha-store.shop/og-image.png');
+            expect(window.setMetaTag).toHaveBeenCalledWith('og:image:width', '1200');
+            expect(window.setMetaTag).toHaveBeenCalledWith('og:image:height', '630');
+            expect(window.setMetaTag).toHaveBeenCalledWith('twitter:image', 'https://www.nisha-store.shop/og-image.png');
         });
     });
 });

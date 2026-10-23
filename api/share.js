@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
     const description = escapeHTML(descParts.join(' | ') || (item.description ? item.description.slice(0, 150) : 'Винтажная одежда в магазине NISHA'));
     const shareUrl = 'https://www.nisha-store.shop/share/' + id;
     
-    let imageUrl = 'https://www.nisha-store.shop/icon-512.png';
+    let imageUrl = 'https://www.nisha-store.shop/og-image.png';
     let videoUrl = '';
     
     if (item.images && item.images.length > 0) {
