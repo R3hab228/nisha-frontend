@@ -156,6 +156,7 @@ let telemetrySentCount = 0;
 const MAX_SESSION_TELEMETRY = 5;
 
 const IGNORED_ERROR_PATTERNS = [
+    /^Script error\.?$/i,
     /ResizeObserver loop/i,
     /Non-Error promise rejection/i,
     /Load failed/i,
@@ -190,7 +191,67 @@ function sanitizeContext(context) {
 
 function isIgnoredError(msg, stack, source) {
     const text = String(msg || '') + ' ' + String(stack || '') + ' ' + String(source || '');
+    if (/^Script error\.?$/i.test(String(msg || '').trim())) return true;
     return IGNORED_ERROR_PATTERNS.some(pattern => pattern.test(text));
+}
+
+function formatCleanLocation(rawPath, context = {}) {
+    const raw = (context && context.filename) || rawPath || '';
+    if (!raw) return 'index.html';
+    try {
+        const withoutHash = String(raw).split('#')[0].split('?')[0];
+        if (withoutHash.startsWith('http://') || withoutHash.startsWith('https://')) {
+            const url = new URL(withoutHash);
+            return url.pathname || '/';
+        }
+        return withoutHash.slice(-60) || '/';
+    } catch (e) {
+        return String(raw).split('#')[0].split('?')[0].slice(-60) || '/';
+    }
+}
+
+function getReadableDevice() {
+    if (typeof navigator === 'undefined') return 'Неизвестно';
+    const ua = navigator.userAgent || '';
+    let os = 'Устройство';
+    if (/iphone|ipad|ipod/i.test(ua)) os = '🍏 iOS';
+    else if (/android/i.test(ua)) {
+        const m = ua.match(/Android\s([0-9.]+)/i);
+        os = m ? `🤖 Android ${m[1]}` : '🤖 Android';
+    } else if (/windows/i.test(ua)) os = '💻 Windows';
+    else if (/macintosh|mac os x/i.test(ua)) os = '🍏 macOS';
+    else if (/linux/i.test(ua)) os = '🐧 Linux';
+
+    let browser = '';
+    if (/chrome|crios/i.test(ua) && !/edg|opr|opera/i.test(ua)) browser = 'Chrome';
+    else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
+    else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
+    else if (/edg/i.test(ua)) browser = 'Edge';
+    else if (/opera|opr/i.test(ua)) browser = 'Opera';
+
+    return `${os}${browser ? ' • ' + browser : ''}`;
+}
+
+function getAppMode() {
+    if (typeof window === 'undefined') return '🌐 Веб-браузер';
+    if (typeof window.isPwaStandalone === 'function' && window.isPwaStandalone()) return '📱 PWA Standalone';
+    if (window.Telegram?.WebApp?.initData || (typeof window.location !== 'undefined' && window.location.hash && window.location.hash.includes('tgWebAppData'))) {
+        return '✈️ Telegram WebApp';
+    }
+    return '🌐 Web Browser';
+}
+
+function formatCleanContext(ctx) {
+    if (!ctx || typeof ctx !== 'object') return '';
+    const clean = {};
+    for (const [k, v] of Object.entries(ctx)) {
+        if (['_forceSend', 'source', 'filename', 'lineno', 'colno'].includes(k)) continue;
+        if (v !== undefined && v !== null && v !== '') {
+            clean[k] = v;
+        }
+    }
+    if (Object.keys(clean).length === 0) return '';
+    return Object.entries(clean).map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`).join(', ');
 }
 
 function sendTelegramErrorAlert(errorObj, context = {}) {
@@ -214,18 +275,28 @@ function sendTelegramErrorAlert(errorObj, context = {}) {
         return;
     }
 
-    const isPwa = typeof window !== 'undefined' && typeof window.isPwaStandalone === 'function' ? window.isPwaStandalone() : false;
     const cleanCtx = sanitizeContext(context);
+    const loc = formatCleanLocation(file, context) + (context && context.lineno && context.lineno > 0 ? `:${context.lineno}` : '');
+    const cleanDetails = formatCleanContext(cleanCtx);
+    let cleanPage = '/';
+    if (typeof window !== 'undefined' && window.location) {
+        try {
+            cleanPage = window.location.pathname || '/';
+            if (window.location.search && window.location.search.length < 40) {
+                cleanPage += window.location.search;
+            }
+        } catch (e) {}
+    }
 
     const alertMessage = 
         `⚠️ [NISHA CLIENT ERROR ALERT]\n` +
-        `• Error: ${msg.slice(0, 160)}\n` +
-        `• Location: ${file.split('?')[0].slice(-50)}\n` +
-        (cleanCtx && Object.keys(cleanCtx).length ? `• Context: ${JSON.stringify(cleanCtx).slice(0, 150)}\n` : '') +
-        `• App Mode: ${isPwa ? '📱 PWA Standalone' : '🌐 Web Browser'}\n` +
-        `• UA: ${(typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown').slice(0, 90)}\n` +
-        `• Page: ${typeof window !== 'undefined' && window.location ? window.location.pathname + window.location.search : '/'}\n` +
-        (stack ? `• Stack: ${stack.slice(0, 220)}` : '');
+        `• Ошибка: ${msg.slice(0, 160)}\n` +
+        `• Файл / Локация: ${loc}\n` +
+        `• Страница: ${cleanPage}\n` +
+        `• Устройство: ${getReadableDevice()}\n` +
+        `• Режим: ${getAppMode()}` +
+        (cleanDetails ? `\n• Детали: ${cleanDetails.slice(0, 150)}` : '') +
+        (stack && !stack.includes(msg) ? `\n• Стек: ${stack.slice(0, 220)}` : '');
 
     const payload = {
         contact: '🚨 SYSTEM_TELEMETRY',
@@ -354,7 +425,10 @@ window.__telemetry = {
     sendTelegramErrorAlert,
     sanitizeContext,
     isIgnoredError,
-    reportedErrorHashes
+    reportedErrorHashes,
+    formatCleanLocation,
+    getReadableDevice,
+    getAppMode
 };
 
 if ('requestIdleCallback' in window) {

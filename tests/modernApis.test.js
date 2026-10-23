@@ -1758,13 +1758,26 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(clean.action).toBe('checkout');
         });
 
-        it('correctly filters out noisy browser errors like ResizeObserver, extensions, and network disconnects', () => {
+        it('correctly filters out noisy browser errors like ResizeObserver, extensions, Script error, and network disconnects', () => {
             const telemetry = window.__telemetry;
             expect(telemetry.isIgnoredError('ResizeObserver loop completed with undelivered notifications')).toBe(true);
             expect(telemetry.isIgnoredError('Failed to fetch')).toBe(true);
             expect(telemetry.isIgnoredError('AbortError: The operation was aborted')).toBe(true);
+            expect(telemetry.isIgnoredError('Script error.')).toBe(true);
+            expect(telemetry.isIgnoredError('Script error')).toBe(true);
             expect(telemetry.isIgnoredError('Error in extension', '', 'chrome-extension://abc123xyz')).toBe(true);
             expect(telemetry.isIgnoredError('TypeError: Cannot read properties of undefined (reading "id")', 'at renderGrid (catalog.js:2100)')).toBe(false);
+        });
+
+        it('cleans URL hash fragments (e.g. Telegram WebApp theme params) from location string', () => {
+            const telemetry = window.__telemetry;
+            const tgUrl = 'https://nisha-store.shop/#tgWebAppData=query_id%3DAAH&tgWebAppThemeParams=%7B%22bottom_bar_bg_color%22%3A%22%23000000%22%7D';
+            const cleanLoc = telemetry.formatCleanLocation(tgUrl);
+            expect(cleanLoc).toBe('/');
+            expect(cleanLoc).not.toContain('bottom_bar_bg_color');
+
+            const scriptUrl = 'https://nisha-store.shop/js/cart/cart.js?v=1.2#debug';
+            expect(telemetry.formatCleanLocation(scriptUrl)).toBe('/js/cart/cart.js');
         });
 
         it('deduplicates identical errors and prevents flooding backend telemetry endpoint', () => {
