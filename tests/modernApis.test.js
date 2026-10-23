@@ -1954,5 +1954,28 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('errMsg.includes(\'город\')');
             expect(cartCode).toContain('errMsg.includes(\'проверки данных\')');
         });
+
+        it('normalizes city prefixes including г./гор./город and matches MainDescription in ensureCityRef', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('г\\.|гор\\.|город');
+            expect(cartCode).toContain('norm(a.MainDescription) === wanted');
+            expect(cartCode).toContain('cleanTyped');
+        });
+
+        it('exposes window.getActiveCart and window.setActiveCart for cross-module reliability', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('window.getActiveCart = getActiveCart;');
+            expect(cartCode).toContain('window.setActiveCart = setActiveCart;');
+
+            const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+            expect(productCode).toContain('window.getActiveCart');
+            expect(productCode).toContain('String(i.id) === String(item.id)');
+        });
+
+        it('auto-unlocks branch input and pre-caches branches upon city detection or saved draft', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('window.selectedSettlementRef = cityObj.Ref || \'\'');
+            expect(cartCode).toContain('branchInput._unlockBound');
+        });
     });
 });

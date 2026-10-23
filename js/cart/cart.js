@@ -127,6 +127,7 @@ function getActiveCart() {
     }
     return window.cart || cart || [];
 }
+window.getActiveCart = getActiveCart;
 
 function setActiveCart(newCart) {
     window.cart = newCart;
@@ -138,6 +139,7 @@ function setActiveCart(newCart) {
         if (store) store.setJSON('nisha_cart', newCart);
     }
 }
+window.setActiveCart = setActiveCart;
 
 function getCurrentUser() {
     return window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
@@ -352,8 +354,11 @@ function debouncedNPCitySearch(query) {
     const bd = document.getElementById('branchDropdown');
     if (bd) bd.style.display = 'none';
     
-    document.getElementById('orderBranch').value = ''; 
-    document.getElementById('orderBranch').readOnly = true;
+    const branchEl = document.getElementById('orderBranch');
+    if (branchEl) {
+        branchEl.value = ''; 
+        branchEl.readOnly = true;
+    }
     selectedCityRef = '';
     window.selectedCityRef = '';
     selectedBranchRef = '';
@@ -363,8 +368,8 @@ function debouncedNPCitySearch(query) {
     
     const dropdown = document.getElementById('cityDropdown');
 
-    if(query.length < 2) { 
-        dropdown.style.display = 'none'; 
+    if (query.length < 2) { 
+        if (dropdown) dropdown.style.display = 'none'; 
         return; 
     }
     
@@ -448,6 +453,10 @@ function filterNPBranches(query) {
     const cd = document.getElementById('cityDropdown');
     if (cd) cd.style.display = 'none';
 
+    // Инвалидируем выбранный ранее ref, если пользователь начал вводить новое значение
+    selectedBranchRef = '';
+    window.selectedBranchRef = '';
+
     const dropdown = document.getElementById('branchDropdown');
     
     if (query.length > 0) {
@@ -502,16 +511,17 @@ async function ensureCityRef() {
     if (typed.length < 2) return '';
 
     try {
-        const data = await npProxyRequest({ CityName: typed, Limit: "10" }, 'searchSettlements');
+        const cleanTyped = typed.replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село|г\.|гор\.|город)\s*/i, '').split(',')[0].trim();
+        const data = await npProxyRequest({ CityName: cleanTyped || typed, Limit: "10" }, 'searchSettlements');
         const addrs = (data && data.success && data.data && data.data[0] && data.data[0].Addresses) || [];
         if (addrs.length === 0) return '';
 
         const norm = (str) => String(str || '').toLowerCase()
             .replaceAll(/[’`ʼ]/g, "'")
-            .replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село)\s*/i, '')
+            .replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село|г\.|гор\.|город)\s*/i, '')
             .split(',')[0].trim();
         const wanted = norm(typed);
-        const pick = addrs.find(a => norm(a.Present) === wanted) || (addrs.length === 1 ? addrs[0] : null);
+        const pick = addrs.find(a => norm(a.Present) === wanted || norm(a.MainDescription) === wanted) || (addrs.length === 1 ? addrs[0] : null);
 
         if (!pick) {
             // Несколько одноимённых населённых пунктов — пусть клиент выберет сам
@@ -550,7 +560,13 @@ async function loadNPBranches(searchString = "") {
     let cityRef = window.selectedCityRef || selectedCityRef;
     if (!cityRef) {
         cityRef = await ensureCityRef();
-        if (!cityRef) return;
+        if (!cityRef) {
+            const cityInput = document.getElementById('orderCity');
+            if (input && (!cityInput || !cityInput.value.trim())) {
+                input.placeholder = "Сначала выберите город";
+            }
+            return;
+        }
         if (input) input.readOnly = false;
     }
 
@@ -622,17 +638,20 @@ async function loadNPBranches(searchString = "") {
         if (myToken !== _branchLoadToken) return;
 
         if (all.length > 0) {
+            if (input && !input.value) input.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.branch_placeholder', { defaultValue: 'Выберите отделение...' }) : 'Выберите отделение...';
             if (!loopError) { // неполный список в кэш не кладём
                 npBranchCache[cacheKey] = all;
                 if (all.length <= 1500) setNPStorage('branchall_' + cacheKey, all);
             }
         } else {
+            if (input && !input.value) input.placeholder = typeof i18next !== 'undefined' ? i18next.t('np.branch_empty', { defaultValue: 'Отделения не найдены' }) : 'Отделения не найдены';
             dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${typeof i18next !== 'undefined' ? i18next.t('np.branch_empty') : 'Отделения не найдены'}</div>`;
             dropdown.style.display = 'block';
         }
     } catch(e) {
         if (myToken !== _branchLoadToken) return;
         console.error("Сбой загрузки отделений НП:", e);
+        if (input && !input.value) input.placeholder = typeof i18next !== 'undefined' ? i18next.t('np.branch_err', { defaultValue: 'Ошибка загрузки отделений' }) : 'Ошибка загрузки отделений';
         dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${typeof i18next !== 'undefined' ? i18next.t('np.branch_err') : 'Ошибка загрузки отделений'}</div>`;
         dropdown.style.display = 'block';
     }
@@ -1210,12 +1229,21 @@ async function openCheckoutModal() {
                     if (document.getElementById('orderName')) document.getElementById('orderName').value = saved.name || '';
                     if (document.getElementById('orderPhone')) document.getElementById('orderPhone').value = saved.phone || '';
                     if (document.getElementById('orderCity')) document.getElementById('orderCity').value = saved.city || '';
-                    if (document.getElementById('orderBranch')) document.getElementById('orderBranch').value = saved.branch || '';
+                    if (document.getElementById('orderBranch')) {
+                        document.getElementById('orderBranch').value = saved.branch || '';
+                        if (saved.city) {
+                            document.getElementById('orderBranch').readOnly = false;
+                        }
+                    }
                     
                     selectedCityRef = saved.cityRef || '';
                     window.selectedCityRef = selectedCityRef;
                     selectedBranchRef = saved.branchRef || '';
                     window.selectedBranchRef = selectedBranchRef;
+
+                    if (saved.city && !selectedCityRef) {
+                        ensureCityRef().catch(() => {});
+                    }
                 } catch(e) { autoDetectCity(); }
             } else {
                 autoDetectCity(); 
@@ -1237,18 +1265,43 @@ async function openCheckoutModal() {
         const cityInput = document.getElementById('orderCity');
         const branchInput = document.getElementById('orderBranch');
         if (cityInput && !cityInput.value.trim() && profileAddress) {
+            let pCity = '';
+            let pBranch = '';
             if (profileAddress.includes(',')) {
                 const parts = profileAddress.split(',');
-                const pCity = parts[0] ? parts[0].trim() : '';
-                const pBranch = parts.slice(1).join(',').trim();
-                cityInput.value = pCity;
-                if (branchInput && !branchInput.value.trim() && pBranch) {
-                    branchInput.value = pBranch;
-                    branchInput.readOnly = false;
-                }
+                pCity = parts[0] ? parts[0].trim() : '';
+                pBranch = parts.slice(1).join(',').trim();
             } else {
-                cityInput.value = profileAddress;
+                pCity = profileAddress.trim();
             }
+
+            if (pCity) {
+                cityInput.value = pCity;
+                if (branchInput) {
+                    branchInput.readOnly = false;
+                    if (pBranch && !branchInput.value.trim()) {
+                        branchInput.value = pBranch;
+                    }
+                }
+                ensureCityRef().then(ref => {
+                    if (ref && branchInput && !branchInput.value.trim()) {
+                        loadNPBranches();
+                    }
+                }).catch(() => {});
+            }
+        }
+
+        if (branchInput && !branchInput._unlockBound) {
+            branchInput._unlockBound = true;
+            const unlockAndLoad = () => {
+                const cVal = document.getElementById('orderCity')?.value.trim();
+                if (cVal && cVal.length >= 2) {
+                    branchInput.readOnly = false;
+                    loadNPBranches();
+                }
+            };
+            branchInput.addEventListener('click', unlockAndLoad);
+            branchInput.addEventListener('touchstart', unlockAndLoad, { passive: true });
         }
 
         // Показываем чекбокс "Запомнить этот адрес в профиле" только для авторизованных
@@ -1873,11 +1926,13 @@ async function autoDetectCity() {
                 cityInput.value = cityObj.Present; 
                 selectedCityRef = cityObj.DeliveryCity || cityObj.Ref; 
                 window.selectedCityRef = selectedCityRef;
+                window.selectedSettlementRef = cityObj.Ref || '';
                 
                 if (branchInput) {
                     branchInput.readOnly = false;
                     branchInput.placeholder = "Выберите отделение...";
                 }
+                loadNPBranches();
                 
                 showToast(`[GEO] Локация: ${cityObj.MainDescription}`, 'success');
             } else {

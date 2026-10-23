@@ -1044,11 +1044,15 @@ function updateCardDOM(item) {
 window.updateCardDOM = updateCardDOM;
 
 function removeSoldItemFromCart(itemId, itemName) {
-    const currentCart = (typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []);
-    const cartIdx = currentCart.findIndex(c => String(c.id) === String(itemId));
+    const currentCart = (typeof window.getActiveCart === 'function')
+        ? window.getActiveCart()
+        : ((typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []));
+    const cartIdx = currentCart.findIndex(c => c && String(c.id) === String(itemId));
     if (cartIdx !== -1) {
         currentCart.splice(cartIdx, 1);
-        if (typeof setActiveCart === 'function') {
+        if (typeof window.setActiveCart === 'function') {
+            window.setActiveCart(currentCart);
+        } else if (typeof setActiveCart === 'function') {
             setActiveCart(currentCart);
         } else {
             const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
@@ -1211,7 +1215,9 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
     updateCardDOM(item);
 
     if (!fromBroadcast && typeof showToast === 'function') {
-        if ((!oldIsSale && item.is_sale) || (oldPrice > item.price)) {
+        const numOldPrice = Number(oldPrice) || 0;
+        const numNewPrice = Number(item.price) || 0;
+        if ((!oldIsSale && item.is_sale) || (numOldPrice > 0 && numNewPrice > 0 && numOldPrice > numNewPrice)) {
             if (item.status === 'available') {
                 showToast(`🔥 СКИДКА: ${item.name}`, 'success');
             }

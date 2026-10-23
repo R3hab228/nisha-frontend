@@ -383,8 +383,14 @@ function openProductModal(item) {
             cartBtn.style.display = 'none';
         } else {
             cartBtn.style.display = 'block';
-            const userCart = window.cart || [];
-            const isInCart = userCart.some(i => i.id === item.id);
+            const userCart = (typeof window.getActiveCart === 'function')
+                ? window.getActiveCart()
+                : ((typeof getActiveCart === 'function')
+                    ? getActiveCart()
+                    : ((window.store && typeof window.store.get === 'function')
+                        ? (window.store.get('cart') || [])
+                        : (window.cart || [])));
+            const isInCart = userCart.some(i => i && String(i.id) === String(item.id));
             cartBtn.innerText = isInCart ? '[ В КОРЗИНЕ ]' : (typeof i18next !== 'undefined' ? i18next.t('product.add_to_cart') : 'В КОРЗИНУ');
         }
     }
