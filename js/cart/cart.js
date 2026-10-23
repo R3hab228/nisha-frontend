@@ -1700,6 +1700,9 @@ async function executeOrderFinal(emailToSave) {
 
     } catch (err) {
         isOrderSubmitting = false;
+        if (typeof window.captureError === 'function') {
+            window.captureError(err, { action: 'checkout_order_failed', city: city });
+        }
         showToast('Ошибка при оформлении: ' + err.message, 'error');
         btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
         btnSubmit.style.pointerEvents = "auto";

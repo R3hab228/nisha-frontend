@@ -1726,4 +1726,70 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(hapticSpy).toHaveBeenCalledWith('success');
         });
     });
+
+    describe('29. Client Error Telemetry (Sentry + Telegram Logger & Anti-Flood)', () => {
+        it('exposes window.captureError and window.reportError interfaces', () => {
+            expect(typeof window.captureError).toBe('function');
+            expect(typeof window.reportError).toBe('function');
+            expect(window.reportError).toBe(window.captureError);
+        });
+
+        it('sanitizes and redacts sensitive credentials from telemetry context', () => {
+            const telemetry = window.__telemetry;
+            expect(telemetry).toBeDefined();
+
+            const dirty = {
+                action: 'checkout',
+                password: 'superSecretPassword123',
+                token: 'jwt_token_abc',
+                nested: {
+                    cardNumber: '4111222233334444',
+                    cvv: '123',
+                    city: 'Kyiv'
+                }
+            };
+
+            const clean = telemetry.sanitizeContext(dirty);
+            expect(clean.password).toBe('[REDACTED]');
+            expect(clean.token).toBe('[REDACTED]');
+            expect(clean.nested.cardNumber).toBe('[REDACTED]');
+            expect(clean.nested.cvv).toBe('[REDACTED]');
+            expect(clean.nested.city).toBe('Kyiv');
+            expect(clean.action).toBe('checkout');
+        });
+
+        it('correctly filters out noisy browser errors like ResizeObserver, extensions, and network disconnects', () => {
+            const telemetry = window.__telemetry;
+            expect(telemetry.isIgnoredError('ResizeObserver loop completed with undelivered notifications')).toBe(true);
+            expect(telemetry.isIgnoredError('Failed to fetch')).toBe(true);
+            expect(telemetry.isIgnoredError('AbortError: The operation was aborted')).toBe(true);
+            expect(telemetry.isIgnoredError('Error in extension', '', 'chrome-extension://abc123xyz')).toBe(true);
+            expect(telemetry.isIgnoredError('TypeError: Cannot read properties of undefined (reading "id")', 'at renderGrid (catalog.js:2100)')).toBe(false);
+        });
+
+        it('deduplicates identical errors and prevents flooding backend telemetry endpoint', () => {
+            const telemetry = window.__telemetry;
+            const postSpy = vi.fn().mockResolvedValue({});
+            window.apiClient = { post: postSpy };
+
+            telemetry.reportedErrorHashes.clear();
+
+            const err = new Error('Test fatal crash in payment gateway');
+            telemetry.sendTelegramErrorAlert(err, { _forceSend: true, orderId: 999 });
+            expect(postSpy).toHaveBeenCalledTimes(1);
+            expect(postSpy.mock.calls[0][0]).toBe('/api/support');
+            expect(postSpy.mock.calls[0][1].contact).toBe('🚨 SYSTEM_TELEMETRY');
+            expect(postSpy.mock.calls[0][1].message).toContain('Test fatal crash in payment gateway');
+
+            // Second call with same error must be suppressed by deduplication
+            telemetry.sendTelegramErrorAlert(err, { _forceSend: true, orderId: 999 });
+            expect(postSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('includes Sentry fallback CDN in pwa-network.js for adblock resilience', () => {
+            const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+            expect(pwaCode).toContain('https://browser.sentry-cdn.com/8.38.0/bundle.min.js');
+            expect(pwaCode).toContain('https://cdn.jsdelivr.net/npm/@sentry/browser@8.38.0/bundle.min.js');
+        });
+    });
 });

@@ -148,14 +148,113 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// === 2. SENTRY CLIENT-SIDE ERROR MONITORING ===
+// === 2. HYBRID CLIENT-SIDE ERROR TELEMETRY (SENTRY + TELEGRAM ERROR LOGGER) ===
 const earlySentryErrors = [];
 const earlySentryCtrl = new AbortController();
+const reportedErrorHashes = new Set();
+let telemetrySentCount = 0;
+const MAX_SESSION_TELEMETRY = 5;
+
+const IGNORED_ERROR_PATTERNS = [
+    /ResizeObserver loop/i,
+    /Non-Error promise rejection/i,
+    /Load failed/i,
+    /Failed to fetch/i,
+    /NetworkError/i,
+    /The operation was aborted/i,
+    /AbortError/i,
+    /chrome-extension:\/\//i,
+    /moz-extension:\/\//i,
+    /safari-extension:\/\//i,
+    /extensions\//i,
+    /challenges\.cloudflare\.com/i,
+    /clarity\.ms/i,
+    /tiktok/i
+];
+
+function sanitizeContext(context) {
+    if (!context || typeof context !== 'object') return {};
+    const clean = {};
+    const SENSITIVE_KEYS = /password|token|secret|pin|card|cvv|auth/i;
+    for (const [k, v] of Object.entries(context)) {
+        if (SENSITIVE_KEYS.test(k)) {
+            clean[k] = '[REDACTED]';
+        } else if (v && typeof v === 'object' && !Array.isArray(v)) {
+            clean[k] = sanitizeContext(v);
+        } else {
+            clean[k] = v;
+        }
+    }
+    return clean;
+}
+
+function isIgnoredError(msg, stack, source) {
+    const text = String(msg || '') + ' ' + String(stack || '') + ' ' + String(source || '');
+    return IGNORED_ERROR_PATTERNS.some(pattern => pattern.test(text));
+}
+
+function sendTelegramErrorAlert(errorObj, context = {}) {
+    if (telemetrySentCount >= MAX_SESSION_TELEMETRY) return;
+
+    const msg = String(errorObj && (errorObj.message || errorObj.reason || errorObj) || 'Unknown error');
+    const stack = String(errorObj && errorObj.stack || '');
+    const file = String(errorObj && (errorObj.filename || errorObj.source) || (typeof window !== 'undefined' && window.location ? window.location.href : ''));
+
+    if (isIgnoredError(msg, stack, file)) return;
+
+    // Хэш для дедупликации (не спамить одинаковыми ошибками)
+    const hash = `${msg.slice(0, 60)}_${file.slice(0, 40)}`;
+    if (reportedErrorHashes.has(hash)) return;
+    reportedErrorHashes.add(hash);
+    telemetrySentCount++;
+
+    const isLocal = typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (isLocal && !context._forceSend) {
+        console.warn('[TELEMETRY LOCAL DEV] Error intercepted:', msg, context);
+        return;
+    }
+
+    const isPwa = typeof window !== 'undefined' && typeof window.isPwaStandalone === 'function' ? window.isPwaStandalone() : false;
+    const cleanCtx = sanitizeContext(context);
+
+    const alertMessage = 
+        `⚠️ [NISHA CLIENT ERROR ALERT]\n` +
+        `• Error: ${msg.slice(0, 160)}\n` +
+        `• Location: ${file.split('?')[0].slice(-50)}\n` +
+        (cleanCtx && Object.keys(cleanCtx).length ? `• Context: ${JSON.stringify(cleanCtx).slice(0, 150)}\n` : '') +
+        `• App Mode: ${isPwa ? '📱 PWA Standalone' : '🌐 Web Browser'}\n` +
+        `• UA: ${(typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown').slice(0, 90)}\n` +
+        `• Page: ${typeof window !== 'undefined' && window.location ? window.location.pathname + window.location.search : '/'}\n` +
+        (stack ? `• Stack: ${stack.slice(0, 220)}` : '');
+
+    const payload = {
+        contact: '🚨 SYSTEM_TELEMETRY',
+        message: alertMessage,
+        clientId: 'telemetry_' + (typeof window !== 'undefined' && window.clientFingerprint ? window.clientFingerprint : (typeof Date !== 'undefined' ? Date.now() : ''))
+    };
+
+    try {
+        if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.post === 'function') {
+            window.apiClient.post('/api/support', payload, { timeout: 8000, retries: 1 }).catch(() => {});
+        } else if (typeof fetch === 'function') {
+            fetch('https://nisha-api.onrender.com/api/support', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
+        }
+    } catch (e) {
+        // Silent discard to avoid recursive crash
+    }
+}
+
 function recordEarlySentryError(evt) {
     if (!window._sentryActive && earlySentryErrors.length < 20) {
         earlySentryErrors.push(evt);
         initSentryDeferred();
     }
+    const err = evt.error || evt.reason || evt;
+    sendTelegramErrorAlert(err, { source: 'uncaught_window_error' });
 }
 window.addEventListener('error', recordEarlySentryError, { signal: earlySentryCtrl.signal });
 window.addEventListener('unhandledrejection', recordEarlySentryError, { signal: earlySentryCtrl.signal });
@@ -170,7 +269,7 @@ function initSentryDeferred() {
                 Sentry.init({
                     dsn: "https://13d63555c1c64605be8f9659af548581@o4511428929323008.ingest.de.sentry.io/4511428931682384", 
                     release: "nisha-store@1.0.0",
-                    environment: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'development' : 'production',
+                    environment: (typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) ? 'development' : 'production',
                     sampleRate: 1.0,
                     tracesSampleRate: 0.1,
                     ignoreErrors: [
@@ -210,21 +309,44 @@ function initSentryDeferred() {
         if (typeof loadExternalScript === 'function') {
             loadExternalScript('https://browser.sentry-cdn.com/8.38.0/bundle.min.js')
                 .then(setupSentry)
-                .catch(() => {});
+                .catch(() => {
+                    // Fallback на jsdelivr CDN, если sentry-cdn заблокирован адблоком
+                    loadExternalScript('https://cdn.jsdelivr.net/npm/@sentry/browser@8.38.0/bundle.min.js')
+                        .then(setupSentry)
+                        .catch(() => {});
+                });
         }
     } else {
         setupSentry();
     }
 }
 
-window.captureError = function(err, context = {}) {
+function captureError(err, context = {}) {
+    if (!err) return;
+
+    // 1. Логирование в Sentry
     if (typeof Sentry !== 'undefined' && Sentry.captureException) {
         try {
-            Sentry.captureException(err, { extra: context });
+            Sentry.captureException(err, { extra: sanitizeContext(context) });
         } catch(e) {}
     } else {
         console.warn('[ERROR CAPTURED]', err, context);
     }
+
+    // 2. Отправка алерта в Telegram через бэкенд
+    try {
+        sendTelegramErrorAlert(err, context);
+    } catch(e) {}
+}
+
+window.captureError = captureError;
+window.reportError = captureError;
+
+window.__telemetry = {
+    sendTelegramErrorAlert,
+    sanitizeContext,
+    isIgnoredError,
+    reportedErrorHashes
 };
 
 if ('requestIdleCallback' in window) {
