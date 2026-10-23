@@ -205,8 +205,9 @@ function addToCartWithAnimation(itemId, btnElement, event) {
     // ВАЖНО: Добавляем в корзину (доступно гостям и авторизованным)
     addToCartById(itemId);
     
-    // БЕЗОПАСНАЯ ВИБРАЦИЯ
+    // БЕЗОПАСНАЯ ВИБРАЦИЯ И ПРОГРЕВ СЕРВЕРА
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
+    if (typeof window.warmupBackendServer === 'function') window.warmupBackendServer();
     
     const cartIcon = document.getElementById('cartInfoWrapper');
     if (!cartIcon) return; 
@@ -283,6 +284,7 @@ async function addToCartFromModal() {
     updateCartUI();
     if (typeof closeModal === 'function') closeModal('productModal');
     showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success');
+    if (typeof window.warmupBackendServer === 'function') window.warmupBackendServer();
     await syncCartToServer();
 }
 window.addToCartFromModal = addToCartFromModal;
@@ -1162,6 +1164,7 @@ async function openCheckoutModal() {
         if (window.analytics && typeof window.analytics.trackCheckoutStart === 'function') {
             window.analytics.trackCheckoutStart(currentCart);
         }
+        if (typeof window.warmupBackendServer === 'function') window.warmupBackendServer(true);
         if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
         if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
         

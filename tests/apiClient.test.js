@@ -123,4 +123,38 @@ describe('Protected API Client (js/core/apiClient.js) — Retries, Deduplication
             isTimeout: true
         });
     });
+
+    it('pings /ping endpoint to pre-warm backend and returns response or null on error', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(
+            new Response('Server is awake', { status: 200 })
+        );
+        globalThis.fetch = fetchMock;
+
+        const res = await apiClient.ping();
+        expect(res).toBeDefined();
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(fetchMock.mock.calls[0][0]).toBe('https://api.nisha-test.shop/ping');
+        expect(fetchMock.mock.calls[0][1].method).toBe('GET');
+
+        // Graceful error fallback
+        globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+        const errRes = await apiClient.ping();
+        expect(errRes).toBeNull();
+    });
+
+    it('warmupBackendServer deduplicates pings and allows force bypass on checkout', async () => {
+        const pingSpy = vi.spyOn(apiClient, 'ping').mockResolvedValue(null);
+
+        // First warmup call triggers ping
+        globalThis.warmupBackendServer(true);
+        expect(pingSpy).toHaveBeenCalledTimes(1);
+
+        // Immediate subsequent call without force should be throttled by cooldown
+        globalThis.warmupBackendServer(false);
+        expect(pingSpy).toHaveBeenCalledTimes(1);
+
+        // Force call (e.g. entering checkout) should bypass cooldown
+        globalThis.warmupBackendServer(true);
+        expect(pingSpy).toHaveBeenCalledTimes(2);
+    });
 });

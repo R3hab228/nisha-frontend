@@ -352,6 +352,19 @@
         }).catch(() => null);
     }
 
+    let lastPingTime = 0;
+    const PING_COOLDOWN_MS = 4 * 60 * 1000; // 4 минуты кулдаун между пингами
+
+    function warmupBackendServer(force = false) {
+        const now = Date.now();
+        if (!force && (now - lastPingTime < PING_COOLDOWN_MS)) return null;
+        lastPingTime = now;
+        if (typeof apiClient !== 'undefined' && typeof apiClient.ping === 'function') {
+            return apiClient.ping();
+        }
+        return ping();
+    }
+
     const apiClient = {
         getBaseUrl,
         resolveUrl,
@@ -361,13 +374,25 @@
         get,
         post,
         postForm,
-        ping
+        ping,
+        warmup: warmupBackendServer
     };
 
     window.apiClient = apiClient;
     window.apiRequest = request;
+    window.warmupBackendServer = warmupBackendServer;
     if (typeof globalThis !== 'undefined') {
         globalThis.apiClient = apiClient;
         globalThis.apiRequest = request;
+        globalThis.warmupBackendServer = warmupBackendServer;
+    }
+
+    // Фоновый прогрев при входе на сайт (в моменты простоя браузера, не тормозит загрузку каталога)
+    if (typeof window !== 'undefined') {
+        if ('requestIdleCallback' in window) {
+            setTimeout(() => requestIdleCallback(() => warmupBackendServer(), { timeout: 3000 }), 1200);
+        } else {
+            setTimeout(() => warmupBackendServer(), 2000);
+        }
     }
 })();
