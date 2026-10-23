@@ -49,6 +49,12 @@
         lastVisitDate: { storageKey: 'nisha_last_visit_date', default: '', type: 'string' },
         lastHitCount: { storageKey: 'nisha_last_hit_count', default: 0, type: 'number' },
 
+        // Web Push и PWA уведомления
+        notificationPermission: { storageKey: 'nisha_notification_permission', default: 'default', type: 'string' },
+        notificationPermissionTime: { storageKey: 'nisha_notification_permission_time', default: 0, type: 'number' },
+        isPwaInstalled: { storageKey: 'nisha_pwa_installed', default: false, type: 'boolean' },
+        pushSubEndpoint: { storageKey: 'nisha_push_sub_endpoint', default: '', type: 'string' },
+
         // Оперативное состояние в памяти (runtime only, без localStorage)
         currentUser: { default: null, type: 'raw' },
         userProfile: { default: null, type: 'raw' },

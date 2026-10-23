@@ -39,21 +39,43 @@
       "short_name": "Корзина",
       "description": "Корзина товаров NISHA",
       "url": "/?action=cart",
-      "icons": [{ "src": "/icon-192.png?v=4", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png?v=4",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Избранное",
       "short_name": "Избранное",
       "description": "Сохраненные вещи",
       "url": "/?action=fav",
-      "icons": [{ "src": "/icon-192.png?v=4", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png?v=4",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Каталог",
       "short_name": "Каталог",
       "description": "Весь архив товаров",
       "url": "/",
-      "icons": [{ "src": "/icon-192.png?v=4", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png?v=4",
+          "sizes": "192x192"
+        }
+      ]
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/manifest.json"
+    }
+  ],
+  "prefer_related_applications": false
 }

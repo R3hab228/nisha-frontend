@@ -474,7 +474,11 @@ function initReviewsRealtime(sb) {
                 }
 
                 // 2. Системный Web Push / Notification через Service Worker (для фона/блокировки экрана)
-                if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+                const isPwa = typeof window.isPwaStandalone === 'function' ? window.isPwaStandalone() : false;
+                const pwaInstalled = isPwa || (typeof window.checkIsPwaInstalled === 'function' ? window.checkIsPwaInstalled() : false);
+                const canShowSysNotification = isPwa || !pwaInstalled;
+
+                if (canShowSysNotification && 'serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
                     navigator.serviceWorker.ready.then(reg => {
                         reg.showNotification('NISHA STORE | Новый отзыв ⭐', {
                             body: `${author}: "${snippet}"`,

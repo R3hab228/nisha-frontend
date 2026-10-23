@@ -30,11 +30,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         }
         globalThis.document = {
             body: { style: { overflow: '' } },
+            documentElement: { classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() } },
             getElementById: vi.fn(() => null),
             querySelector: vi.fn(() => null),
             querySelectorAll: vi.fn(() => []),
             addEventListener: vi.fn(),
             removeEventListener: vi.fn(),
+            cookie: '',
             createElement: vi.fn(() => ({
                 style: {},
                 classList: { add: vi.fn(), remove: vi.fn(), contains: vi.fn() },
@@ -43,6 +45,25 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 remove: vi.fn()
             }))
         };
+        globalThis.Notification = { permission: 'default', requestPermission: vi.fn(() => Promise.resolve('granted')) };
+        globalThis.window.matchMedia = vi.fn((q) => ({ matches: false }));
+        Object.defineProperty(globalThis.navigator, 'serviceWorker', {
+            value: {
+                ready: Promise.resolve({
+                    pushManager: {
+                        getSubscription: vi.fn(() => Promise.resolve(null)),
+                        subscribe: vi.fn(() => Promise.resolve({ endpoint: 'https://test.fcm.endpoint' }))
+                    }
+                })
+            },
+            configurable: true,
+            writable: true
+        });
+        Object.defineProperty(globalThis.navigator, 'standalone', {
+            value: false,
+            configurable: true,
+            writable: true
+        });
 
         // Evaluate helpers, store, product, orders in window context
         const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
@@ -58,6 +79,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
         eval(dropCode);
+
+        const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+        eval(pwaCode);
     });
 
     beforeEach(() => {
@@ -77,16 +101,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(id1).not.toBe(id2);
         });
 
-        it('generateMeasurementSchemeSvg uses crypto.randomUUID for unique SVG marker IDs', () => {
-            const svg1 = window.generateMeasurementSchemeSvg('tshirt', { shoulders: 50, chest: 55, length: 70 }, 'ru');
-            const svg2 = window.generateMeasurementSchemeSvg('tshirt', { shoulders: 50, chest: 55, length: 70 }, 'ru');
-            
-            const match1 = svg1.match(/id="(arrowG_[a-zA-Z0-9]+)"/);
-            const match2 = svg2.match(/id="(arrowG_[a-zA-Z0-9]+)"/);
-            
-            expect(match1).not.toBeNull();
-            expect(match2).not.toBeNull();
-            expect(match1[1]).not.toBe(match2[1]);
+        it('cleanly excised measurement scheme logic from product and helpers', () => {
+            expect(window.generateMeasurementSchemeSvg).toBeUndefined();
+            expect(window.showMeasurementSchemeModal).toBeUndefined();
         });
     });
 
@@ -1475,6 +1492,116 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(window.setMetaTag).toHaveBeenCalledWith('og:image:width', '1200');
             expect(window.setMetaTag).toHaveBeenCalledWith('og:image:height', '630');
             expect(window.setMetaTag).toHaveBeenCalledWith('twitter:image', 'https://www.nisha-store.shop/og-image.png');
+        });
+    });
+
+    describe('26. Web Push & PWA Notification Deduplication & Storage Persistence', () => {
+        it('isPwaStandalone detects standalone display mode or navigator.standalone', () => {
+            window.matchMedia = vi.fn((q) => ({ matches: q.includes('standalone') }));
+            expect(window.isPwaStandalone()).toBe(true);
+
+            window.matchMedia = vi.fn(() => ({ matches: false }));
+            globalThis.navigator.standalone = false;
+            expect(window.isPwaStandalone()).toBe(false);
+
+            globalThis.navigator.standalone = true;
+            expect(window.isPwaStandalone()).toBe(true);
+            globalThis.navigator.standalone = false;
+        });
+
+        it('checkIsPwaInstalled detects installed PWA via store, localStorage, or cookie', () => {
+            window.matchMedia = vi.fn(() => ({ matches: false }));
+            globalThis.store.set('isPwaInstalled', false);
+            globalThis.localStorage.removeItem('nisha_pwa_installed');
+            document.cookie = '';
+
+            expect(window.checkIsPwaInstalled()).toBe(false);
+
+            globalThis.store.set('isPwaInstalled', true);
+            expect(window.checkIsPwaInstalled()).toBe(true);
+
+            globalThis.store.set('isPwaInstalled', false);
+            globalThis.localStorage.setItem('nisha_pwa_installed', 'true');
+            expect(window.checkIsPwaInstalled()).toBe(true);
+
+            globalThis.localStorage.removeItem('nisha_pwa_installed');
+            document.cookie = 'nisha_pwa_installed=true';
+            expect(window.checkIsPwaInstalled()).toBe(true);
+            document.cookie = '';
+        });
+
+        it('syncNotificationPermission persists permission in store and localStorage', () => {
+            globalThis.Notification = { permission: 'granted' };
+            const perm = window.syncNotificationPermission();
+            expect(perm).toBe('granted');
+            expect(globalThis.store.get('notificationPermission')).toBe('granted');
+            expect(globalThis.localStorage.getItem('nisha_notification_permission')).toBe('granted');
+        });
+
+        it('subscribeUserToPush unsubscribes browser and suppresses web subscription when PWA is installed', async () => {
+            window.matchMedia = vi.fn(() => ({ matches: false }));
+            globalThis.store.set('isPwaInstalled', true);
+
+            const mockUnsubscribe = vi.fn(() => Promise.resolve(true));
+            const mockExistingSub = { endpoint: 'https://browser.push.sub', unsubscribe: mockUnsubscribe };
+            const mockSubscribe = vi.fn();
+            const mockRegistration = {
+                pushManager: {
+                    getSubscription: vi.fn(() => Promise.resolve(mockExistingSub)),
+                    subscribe: mockSubscribe
+                }
+            };
+
+            const postSpy = vi.fn(() => Promise.resolve({ success: true }));
+            window.apiClient = { post: postSpy, get: vi.fn() };
+
+            await window.subscribeUserToPush(mockRegistration);
+
+            // Existing browser subscription must be unsubscribed so notifications only go to PWA
+            expect(mockUnsubscribe).toHaveBeenCalled();
+            expect(postSpy).toHaveBeenCalledWith('/api/unsubscribe', { endpoint: 'https://browser.push.sub' });
+            // Should NOT attempt to subscribe the browser
+            expect(mockSubscribe).not.toHaveBeenCalled();
+        });
+
+        it('subscribeUserToPush registers standalone PWA with clientType pwa and marks installation in store', async () => {
+            window.matchMedia = vi.fn((q) => ({ matches: q.includes('standalone') }));
+            globalThis.Notification = {
+                permission: 'granted',
+                requestPermission: vi.fn(() => Promise.resolve('granted'))
+            };
+
+            const mockSub = { endpoint: 'https://pwa.push.sub' };
+            const mockSubscribe = vi.fn(() => Promise.resolve(mockSub));
+            const mockRegistration = {
+                pushManager: {
+                    getSubscription: vi.fn(() => Promise.resolve(null)),
+                    subscribe: mockSubscribe
+                }
+            };
+
+            const postSpy = vi.fn(() => Promise.resolve({ success: true }));
+            window.apiClient = {
+                get: vi.fn(() => Promise.resolve({ publicKey: 'BKag93TestKeyVapid1234567890' })),
+                post: postSpy
+            };
+
+            await window.subscribeUserToPush(mockRegistration);
+
+            expect(mockSubscribe).toHaveBeenCalled();
+            expect(globalThis.store.get('isPwaInstalled')).toBe(true);
+            expect(postSpy).toHaveBeenCalledWith('/api/subscribe', expect.objectContaining({
+                subscription: mockSub,
+                clientType: 'pwa',
+                isPwa: true
+            }), expect.any(Object));
+        });
+
+        it('manifests specify related_applications for PWA discovery', () => {
+            const manifest = JSON.parse(readFileSync(resolve(__dirname, '../manifest.json'), 'utf8'));
+            expect(manifest.related_applications).toBeDefined();
+            expect(manifest.related_applications[0].platform).toBe('webapp');
+            expect(manifest.related_applications[0].url).toBe('/manifest.json');
         });
     });
 });

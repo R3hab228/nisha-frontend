@@ -452,17 +452,163 @@ window.dismissNetError = function() {
 window.addEventListener('offline', handleNetworkOffline);
 window.addEventListener('online', handleNetworkOnline);
 
-// === 6. WEB PUSH ПОДПИСКА ===
+// === 6. WEB PUSH ПОДПИСКА И ДЕДУПЛИКАЦИЯ УВЕДОМЛЕНИЙ (PWA vs САЙТ) ===
 let pushPrompted = false;
+
+// 1. Определение запуска в режиме standalone PWA (автономное установленное приложение)
+function isPwaStandalone() {
+    if (typeof window === 'undefined') return false;
+    const isStandaloneDisplay = (typeof window.matchMedia === 'function') && window.matchMedia('(display-mode: standalone)').matches;
+    const isFullscreenDisplay = (typeof window.matchMedia === 'function') && window.matchMedia('(display-mode: fullscreen)').matches;
+    const isMinimalUi = (typeof window.matchMedia === 'function') && window.matchMedia('(display-mode: minimal-ui)').matches;
+    const isNavStandalone = typeof navigator !== 'undefined' && navigator.standalone === true;
+    const isAndroidApp = typeof document !== 'undefined' && document.referrer && document.referrer.includes('android-app://');
+    return Boolean(isStandaloneDisplay || isFullscreenDisplay || isMinimalUi || isNavStandalone || isAndroidApp);
+}
+window.isPwaStandalone = isPwaStandalone;
+
+// 2. Проверка, установлено ли PWA на данном устройстве (хранилище + cookies + DOM)
+function checkIsPwaInstalled() {
+    if (isPwaStandalone()) return true;
+    const storeInstalled = window.store ? Boolean(window.store.get('isPwaInstalled')) : false;
+    const localInstalled = typeof localStorage !== 'undefined' && (localStorage.getItem('nisha_pwa_installed') === 'true' || localStorage.getItem('nisha_pwa_installed') === '1');
+    const cookieInstalled = typeof document !== 'undefined' && document.cookie && document.cookie.includes('nisha_pwa_installed=true');
+    return Boolean(storeInstalled || localInstalled || cookieInstalled);
+}
+window.checkIsPwaInstalled = checkIsPwaInstalled;
+
+// 3. Синхронизация статуса разрешений на уведомления с постоянным хранилищем (store / localStorage)
+function syncNotificationPermission() {
+    if (typeof Notification === 'undefined') return 'unsupported';
+    const perm = Notification.permission;
+    if (window.store) {
+        const stored = window.store.get('notificationPermission');
+        if (stored !== perm) {
+            window.store.set('notificationPermission', perm);
+            window.store.set('notificationPermissionTime', Date.now());
+        }
+    } else if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('nisha_notification_permission', perm);
+    }
+    return perm;
+}
+window.syncNotificationPermission = syncNotificationPermission;
+
+// Первичная синхронизация разрешений
+syncNotificationPermission();
+
+// Если сайт открыт внутри PWA — сразу помечаем PWA как установленное на этом устройстве
+if (isPwaStandalone()) {
+    if (window.store) window.store.set('isPwaInstalled', true);
+    try {
+        localStorage.setItem('nisha_pwa_installed', 'true');
+        document.cookie = 'nisha_pwa_installed=true; path=/; max-age=31536000; SameSite=Lax';
+    } catch (_) {}
+}
+
+// Отслеживание успешной установки PWA из браузера
+window.addEventListener('appinstalled', async () => {
+    if (window.store) window.store.set('isPwaInstalled', true);
+    try {
+        localStorage.setItem('nisha_pwa_installed', 'true');
+        document.cookie = 'nisha_pwa_installed=true; path=/; max-age=31536000; SameSite=Lax';
+    } catch (_) {}
+
+    // Раз PWA установлено, уведомления теперь должны приходить ТОЛЬКО от PWA!
+    // Отписываем обычный браузер от Web Push
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(async reg => {
+            if (reg && reg.pushManager) {
+                const sub = await reg.pushManager.getSubscription();
+                if (sub) {
+                    try {
+                        if (window.apiClient) {
+                            await window.apiClient.post('/api/unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
+                        }
+                    } catch (_) {}
+                    await sub.unsubscribe().catch(() => {});
+                    if (window.store) window.store.set('pushSubEndpoint', '');
+                }
+            }
+        }).catch(() => {});
+    }
+});
+
+// Асинхронная проверка через getInstalledRelatedApps (современный Chromium)
+if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) {
+    navigator.getInstalledRelatedApps().then(apps => {
+        if (Array.isArray(apps) && apps.length > 0) {
+            if (window.store) window.store.set('isPwaInstalled', true);
+            try {
+                localStorage.setItem('nisha_pwa_installed', 'true');
+                document.cookie = 'nisha_pwa_installed=true; path=/; max-age=31536000; SameSite=Lax';
+            } catch (_) {}
+
+            // Если открыт обычный браузер, но PWA уже установлено — отписываем браузер от push
+            if (!isPwaStandalone() && 'serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(async reg => {
+                    if (reg && reg.pushManager) {
+                        const sub = await reg.pushManager.getSubscription();
+                        if (sub) {
+                            try {
+                                if (window.apiClient) {
+                                    await window.apiClient.post('/api/unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
+                                }
+                            } catch (_) {}
+                            await sub.unsubscribe().catch(() => {});
+                            if (window.store) window.store.set('pushSubEndpoint', '');
+                        }
+                    }
+                }).catch(() => {});
+            }
+        }
+    }).catch(() => {});
+}
+
+// 4. Основная функция подписки на Web Push с фильтрацией PWA / Браузер
 async function subscribeUserToPush(registration, silent = false) {
     try {
-        if (Notification.permission === 'denied') return;
+        syncNotificationPermission();
+        const isPwa = isPwaStandalone();
+        const pwaInstalled = isPwa || checkIsPwaInstalled();
+
+        // [ПРАВИЛО]: Если открыт обычный сайт в браузере, а на устройстве УЖЕ установлено PWA —
+        // уведомления должны приходить ТОЛЬКО от PWA! Сайт в браузере отписываем и не подписываем заново.
+        if (!isPwa && pwaInstalled) {
+            if (registration && registration.pushManager) {
+                const existingSub = await registration.pushManager.getSubscription();
+                if (existingSub) {
+                    try {
+                        if (window.apiClient) {
+                            await window.apiClient.post('/api/unsubscribe', { endpoint: existingSub.endpoint }).catch(() => {});
+                        }
+                    } catch (_) {}
+                    await existingSub.unsubscribe().catch(() => {});
+                    if (window.store) window.store.set('pushSubEndpoint', '');
+                }
+            }
+            return;
+        }
+
+        // Если это PWA — подтверждаем статус установки
+        if (isPwa) {
+            if (window.store) window.store.set('isPwaInstalled', true);
+            try {
+                localStorage.setItem('nisha_pwa_installed', 'true');
+                document.cookie = 'nisha_pwa_installed=true; path=/; max-age=31536000; SameSite=Lax';
+            } catch (_) {}
+        }
+
+        if (typeof Notification === 'undefined' || Notification.permission === 'denied') {
+            return;
+        }
         
         let targetSub = await registration.pushManager.getSubscription();
         
         if (!targetSub) {
             if (silent) return;
             const permission = await Notification.requestPermission();
+            syncNotificationPermission();
             if (permission !== 'granted') return;
             
             const vapidData = await window.apiClient.get('/api/vapid-key', { timeout: 8000, retries: 1, dedupe: true });
@@ -480,11 +626,17 @@ async function subscribeUserToPush(registration, silent = false) {
         }
         
         if (targetSub) {
+            if (window.store) {
+                window.store.set('pushSubEndpoint', targetSub.endpoint);
+                syncNotificationPermission();
+            }
             const activeUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || null);
             const fp = window.clientFingerprint || 'guest_' + Date.now();
             const payload = {
                 subscription: targetSub,
-                userId: activeUser ? activeUser.id : fp
+                userId: activeUser ? activeUser.id : fp,
+                clientType: isPwa ? 'pwa' : 'web',
+                isPwa: isPwa
             };
             await window.apiClient.post('/api/subscribe', payload, { timeout: 10000, retries: 1 });
         }
@@ -500,6 +652,15 @@ if (typeof Notification !== 'undefined' && Notification.permission !== 'default'
 
 document.addEventListener('click', (e) => {
     if (pushPrompted) return;
+
+    // Если сайт в обычном браузере, а PWA уже установлено — не запрашиваем в браузере
+    const isPwa = isPwaStandalone();
+    const pwaInstalled = isPwa || checkIsPwaInstalled();
+    if (!isPwa && pwaInstalled) {
+        pushPrompted = true;
+        return;
+    }
+
     if (typeof Notification !== 'undefined' && Notification.permission !== 'default') {
         pushPrompted = true;
         return;

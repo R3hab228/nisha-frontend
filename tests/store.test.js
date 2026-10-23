@@ -129,4 +129,21 @@ describe('ReactiveStore (js/core/store.js) — State, Cart, Favorites & Persiste
         expect(store.cart).toEqual(externalCart);
         expect(store.cartTotal).toBe(950);
     });
+
+    it('persists notification permission and PWA installation state in store and localStorage', () => {
+        expect(store.get('notificationPermission')).toBe('default');
+        expect(store.get('isPwaInstalled')).toBe(false);
+
+        store.set('notificationPermission', 'granted');
+        store.set('isPwaInstalled', true);
+        store.set('pushSubEndpoint', 'https://fcm.googleapis.com/fcm/send/test_sub');
+
+        expect(store.get('notificationPermission')).toBe('granted');
+        expect(store.get('isPwaInstalled')).toBe(true);
+        expect(store.get('pushSubEndpoint')).toBe('https://fcm.googleapis.com/fcm/send/test_sub');
+
+        expect(globalThis.localStorage.getItem('nisha_notification_permission')).toBe('granted');
+        expect(globalThis.localStorage.getItem('nisha_pwa_installed')).toBe('true');
+        expect(globalThis.localStorage.getItem('nisha_push_sub_endpoint')).toBe('https://fcm.googleapis.com/fcm/send/test_sub');
+    });
 });

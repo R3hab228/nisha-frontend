@@ -231,8 +231,8 @@ self.addEventListener('notificationclick', event => {
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
             for (let client of windowClients) {
-                if (client.url && client.url.includes('nisha-store.shop') && 'focus' in client) {
-                    if (targetUrl.includes('action=reviews') && 'navigate' in client) {
+                if (client.url && (client.url.includes('nisha-store.shop') || client.url.includes(self.location.origin)) && 'focus' in client) {
+                    if (targetUrl !== '/' && 'navigate' in client && !client.url.includes(targetUrl)) {
                         return client.navigate(targetUrl).then(c => c ? c.focus() : client.focus());
                     }
                     return client.focus();
