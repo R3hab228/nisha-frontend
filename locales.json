@@ -152,7 +152,6 @@
         "payment_cod": "Наложка (предоплата 200грн)",
         "otp_expired": "Время ожидания подтверждения истекло. Запросите код снова.",
         "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары. Оформление заказа возобновится при появлении сети.",
-        "online_toast": "Сеть восстановлена!",
         "save_to_profile": "Запомнить этот адрес в профиле"
       },
       "orders_modal": {
@@ -440,7 +439,6 @@
         "payment_cod": "Накладений платіж (передплата 200грн)",
         "otp_expired": "Час очікування підтвердження вичерпано. Запитайте код знову.",
         "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Відображаються збережені товари. Оформлення замовлення відновиться при появі мережі.",
-        "online_toast": "Мережу відновлено!",
         "save_to_profile": "Запам'ятати цю адресу в профілі"
       },
       "orders_modal": {
@@ -728,7 +726,6 @@
         "payment_cod": "Cash on delivery (200 UAH prepay)",
         "otp_expired": "Verification time expired. Please request the code again.",
         "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online.",
-        "online_toast": "Network restored!",
         "save_to_profile": "Save this address to profile"
       },
       "orders_modal": {

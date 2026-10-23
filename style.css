@@ -1655,14 +1655,14 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         overflow-y: auto !important; -webkit-overflow-scrolling: touch !important;
         animation: slideUpMobile 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         will-change: transform; overscroll-behavior-y: none;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     }
     .modal-overlay.closing .modal-window {
         animation: slideDownMobile 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
     }
     #ordersModal .modal-window { width: 100% !important; max-width: 100% !important; height: auto !important; min-height: 55vh !important; max-height: 85vh !important; overflow-y: auto !important; }
     #ordersModal #ordersListArea { max-height: 55vh !important; overflow-y: auto !important; padding: 15px !important; flex: none !important; }
-    .modal-content { padding: 15px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); flex-direction: column; gap: 15px; }
+    .modal-content { padding: 15px; padding-bottom: calc(25px + env(safe-area-inset-bottom, 0px)); flex-direction: column; gap: 15px; }
     .form-layout { padding: 15px; padding-bottom: calc(25px + env(safe-area-inset-bottom, 0px)); }
     .modal-gallery, .modal-info { width: 100%; }
     .slider-container { height: 75vw; max-height: 400px; border-radius: 8px; } 
@@ -1671,9 +1671,10 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 
     .buy-share-row { 
         position: sticky; 
-        bottom: calc(-20px + env(safe-area-inset-bottom, 0px)); 
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px)); 
         z-index: 100; 
         margin-top: 15px; 
+        margin-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
         background: transparent; 
         border: none; 
         padding: 0;
@@ -2281,4 +2282,35 @@ html.low-power-mode .pulsing-dot {
     color: #fff !important;
     border-color: #ffd700 !important;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.35) !important;
+}
+
+/* --- PWA STANDALONE SAFE-AREA & BOTTOM BAR ADAPTATION --- */
+@media all and (display-mode: standalone), (display-mode: fullscreen) {
+    .modal-window {
+        padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .modal-content {
+        padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .buy-share-row {
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+        margin-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .cart-panel {
+        padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+}
+
+html.pwa-standalone .modal-window {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+}
+html.pwa-standalone .modal-content {
+    padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px)) !important;
+}
+html.pwa-standalone .buy-share-row {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+}
+html.pwa-standalone .cart-panel {
+    padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px)) !important;
 }

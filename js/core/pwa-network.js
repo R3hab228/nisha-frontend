@@ -328,10 +328,6 @@ function handleNetworkOffline() {
             }
             offlineBanner.classList.add('active');
         }
-        if (typeof showToast === 'function') {
-            const msg = typeof i18next !== 'undefined' ? i18next.t('checkout.offline_banner') : '[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары.';
-            showToast(msg, 'error');
-        }
     } else {
         if (grid) {
             grid.classList.add('fade-out');
@@ -389,11 +385,6 @@ function handleNetworkOnline() {
         msgEl.style.fontWeight = 'normal';
     }
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
-
-    if (typeof showToast === 'function') {
-        const msg = typeof i18next !== 'undefined' ? i18next.t('checkout.online_toast') : 'Соединение восстановлено!';
-        showToast(msg, 'success');
-    }
     
     setTimeout(() => {
         if (netError && netError.style.display !== 'none') {
@@ -463,7 +454,17 @@ function isPwaStandalone() {
     const isMinimalUi = (typeof window.matchMedia === 'function') && window.matchMedia('(display-mode: minimal-ui)').matches;
     const isNavStandalone = typeof navigator !== 'undefined' && navigator.standalone === true;
     const isAndroidApp = typeof document !== 'undefined' && document.referrer && document.referrer.includes('android-app://');
-    return Boolean(isStandaloneDisplay || isFullscreenDisplay || isMinimalUi || isNavStandalone || isAndroidApp);
+    const standalone = Boolean(isStandaloneDisplay || isFullscreenDisplay || isMinimalUi || isNavStandalone || isAndroidApp);
+    if (standalone && typeof document !== 'undefined' && document.documentElement && document.documentElement.classList) {
+        if (typeof document.documentElement.classList.contains === 'function') {
+            if (!document.documentElement.classList.contains('pwa-standalone')) {
+                document.documentElement.classList.add('pwa-standalone');
+            }
+        } else if (typeof document.documentElement.classList.add === 'function') {
+            document.documentElement.classList.add('pwa-standalone');
+        }
+    }
+    return standalone;
 }
 window.isPwaStandalone = isPwaStandalone;
 

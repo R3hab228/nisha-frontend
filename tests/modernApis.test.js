@@ -30,7 +30,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         }
         globalThis.document = {
             body: { style: { overflow: '' } },
-            documentElement: { classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn() } },
+            documentElement: { classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn(), contains: vi.fn(() => false) } },
             getElementById: vi.fn(() => null),
             querySelector: vi.fn(() => null),
             querySelectorAll: vi.fn(() => []),
@@ -1602,6 +1602,51 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(manifest.related_applications).toBeDefined();
             expect(manifest.related_applications[0].platform).toBe('webapp');
             expect(manifest.related_applications[0].url).toBe('/manifest.json');
+        });
+    });
+
+    describe('27. PWA Standalone Bottom Bezel Safe Area & Silent Offline Sticky Banner', () => {
+        it('buy-share-row never uses negative bottom offset and provides positive safe-area clearance', () => {
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).not.toContain('bottom: calc(-20px');
+            expect(css).toContain('.buy-share-row');
+            expect(css).toContain('bottom: calc(10px + env(safe-area-inset-bottom, 0px))');
+            expect(css).toContain('html.pwa-standalone .buy-share-row');
+            expect(css).toContain('bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important');
+        });
+
+        it('isPwaStandalone automatically adds pwa-standalone class to documentElement', () => {
+            const mockHtml = { classList: { add: vi.fn(), contains: vi.fn(() => false) } };
+            const origDocEl = globalThis.document.documentElement;
+            globalThis.document.documentElement = mockHtml;
+
+            window.matchMedia = vi.fn((q) => ({ matches: q.includes('standalone') }));
+            expect(window.isPwaStandalone()).toBe(true);
+            expect(mockHtml.classList.add).toHaveBeenCalledWith('pwa-standalone');
+
+            globalThis.document.documentElement = origDocEl;
+        });
+
+        it('handleNetworkOffline and handleNetworkOnline never trigger showToast popups', () => {
+            const toastSpy = vi.fn();
+            window.showToast = toastSpy;
+
+            const bannerEl = { classList: { add: vi.fn(), remove: vi.fn(), contains: vi.fn(() => true) }, innerText: '' };
+            const gridEl = { querySelectorAll: vi.fn(() => [{ classList: { contains: () => false } }]), classList: { add: vi.fn(), remove: vi.fn() } };
+
+            document.getElementById = vi.fn((id) => {
+                if (id === 'offlineStickyBanner') return bannerEl;
+                if (id === 'itemsGrid') return gridEl;
+                return null;
+            });
+
+            window.handleNetworkOffline();
+            expect(toastSpy).not.toHaveBeenCalled();
+            expect(bannerEl.classList.add).toHaveBeenCalledWith('active');
+
+            window.handleNetworkOnline();
+            expect(toastSpy).not.toHaveBeenCalled();
+            expect(bannerEl.classList.remove).toHaveBeenCalledWith('active');
         });
     });
 });

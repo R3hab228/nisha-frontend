@@ -151,8 +151,7 @@
       "payment_cod": "Cash on delivery (200 UAH prepay)",
       "save_to_profile": "Save this address to profile",
       "otp_expired": "Verification time expired. Please request the code again.",
-      "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online.",
-      "online_toast": "Network restored!"
+      "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online."
     },
     "orders_modal": {
       "access_granted": "Access granted",
