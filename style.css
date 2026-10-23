@@ -2334,7 +2334,11 @@ html.pwa-standalone .pwa-pull-refresh {
     display: flex;
 }
 
-@media all and (display-mode: standalone), (display-mode: fullscreen) {
+@media all and (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+    html,
+    body {
+        overscroll-behavior-y: none !important;
+    }
     .pwa-pull-refresh {
         display: flex;
     }
@@ -2342,7 +2346,7 @@ html.pwa-standalone .pwa-pull-refresh {
 
 html.pwa-standalone,
 html.pwa-standalone body {
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none !important;
 }
 
 .pwa-pull-capsule {

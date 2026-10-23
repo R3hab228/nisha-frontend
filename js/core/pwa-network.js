@@ -763,7 +763,11 @@ function initPwaPullToRefresh() {
         if (typeof window.isPwaStandalone === 'function') {
             if (!window.isPwaStandalone()) return false;
         } else if (!document.documentElement.classList.contains('pwa-standalone')) {
-            const isMediaStandalone = (typeof window.matchMedia === 'function') && window.matchMedia('(display-mode: standalone)').matches;
+            const isMediaStandalone = (typeof window.matchMedia === 'function') && (
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.matchMedia('(display-mode: fullscreen)').matches ||
+                window.matchMedia('(display-mode: minimal-ui)').matches
+            );
             if (!isMediaStandalone && (!navigator || !navigator.standalone)) return false;
         }
 
@@ -857,7 +861,7 @@ function initPwaPullToRefresh() {
         }
 
         const target = e.target;
-        if (target && target.closest && target.closest('input, textarea, select, button, .card-slider, .stories-container, .modal, .modal-window, .pswp, .no-pull')) {
+        if (target && target.closest && target.closest('input, textarea, select, .card-slider, .stories-container, .modal, .modal-window, .pswp, .no-pull')) {
             touchActive = false;
             return;
         }

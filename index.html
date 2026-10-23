@@ -34,6 +34,14 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NISHA">
+<script>
+(function(){
+  try {
+    var s = (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: minimal-ui)').matches)) || (typeof navigator !== 'undefined' && navigator.standalone === true) || (document.referrer && document.referrer.indexOf('android-app://') !== -1);
+    if (s && document.documentElement) document.documentElement.classList.add('pwa-standalone');
+  } catch(e){}
+})();
+</script>
 <link rel=preconnect href=https://nmpuefxqtkhvtltdvllz.supabase.co crossorigin>
 <link rel=preconnect href=https://nisha-cdn.mtyagniryadno.workers.dev crossorigin>
 <link rel=preconnect href=https://nisha-api.onrender.com crossorigin>
