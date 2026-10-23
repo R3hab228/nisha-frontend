@@ -599,12 +599,12 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div style="position:relative; z-index:35;">
-<input id=orderCity class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off>
+<input id=orderCity class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off enterkeyhint="next">
 <div id=cityDropdown class=custom-dropdown></div>
 </div>
 <label data-i18n=checkout.branch>Отделение или Почтомат:</label>
 <div style="position:relative; z-index:30;">
-<input id=orderBranch class=form-input placeholder=Відділення... onfocus=loadNPBranches() oninput=filterNPBranches(this.value) autocomplete=off>
+<input id=orderBranch class=form-input placeholder=Відділення... onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off enterkeyhint="done">
 <div id=branchDropdown class=custom-dropdown></div>
 </div>
 

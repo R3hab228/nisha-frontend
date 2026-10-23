@@ -1977,5 +1977,32 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('window.selectedSettlementRef = cityObj.Ref || \'\'');
             expect(cartCode).toContain('branchInput._unlockBound');
         });
+
+        it('defaults showDropdown to false in loadNPBranches to prevent auto-opening dropdown on checkout load', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('async function loadNPBranches(searchString = "", showDropdown = false)');
+            expect(cartCode).toContain('loadNPBranches("", false)');
+
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(html).toContain('onfocus="loadNPBranches(\'\', true)"');
+            expect(html).toContain('enterkeyhint="done"');
+            expect(html).toContain('enterkeyhint="next"');
+        });
+
+        it('binds keydown Enter handler on branch and city inputs to dismiss dropdown and blur mobile keyboard', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('branchInput._enterBound');
+            expect(cartCode).toContain('cityInput._enterBound');
+            expect(cartCode).toContain('e.key === \'Enter\'');
+            expect(cartCode).toContain('branchInput.blur()');
+            expect(cartCode).toContain('cityInput.blur()');
+        });
+
+        it('optimizes dropdown DOM rendering with MAX_RENDERED_BRANCHES limit and instant in-memory filtering', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('const MAX_RENDERED_BRANCHES = 50;');
+            expect(cartCode).toContain('Math.min(branches.length, MAX_RENDERED_BRANCHES)');
+            expect(cartCode).toContain('npBranchCache[cityRef + "_"]');
+        });
     });
 });
