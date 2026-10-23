@@ -1653,8 +1653,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('validates presence of #pwaPullRefresh capsule and circular SVG arrow in index.html', () => {
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             expect(html).toContain('id="pwaPullRefresh"');
-            expect(html).toContain('class="pwa-pull-capsule"');
+            expect(html).toContain('class="pwa-pull-capsule pwa-pull-terminal-box"');
             expect(html).toContain('class="pwa-pull-arrow"');
+            expect(html).toContain('class="pwa-pull-bracket"');
+            expect(html).toContain('class="pwa-pull-cursor"');
             expect(html).toContain('id="pwaPullLabel"');
             expect(html).toContain('data-i18n="pwa.refresh"');
             expect(html).toContain('ОБНОВИТЬ');
@@ -1667,7 +1669,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toContain('.pwa-pull-capsule');
             expect(css).toContain('.pwa-pull-arrow');
             expect(css).toContain('@keyframes pwaSpin');
-            expect(css).toContain('overscroll-behavior-y: contain');
+            expect(css).toContain('overscroll-behavior-y: none !important');
         });
 
         it('isEligibleForPull returns false on standard web and true in standalone PWA at scroll top', () => {
