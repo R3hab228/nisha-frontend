@@ -1648,4 +1648,80 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(bannerEl.classList.remove).toHaveBeenCalledWith('active');
         });
     });
+
+    describe('28. PWA Standalone Pull-to-Refresh with Rotating Circular Arrow and i18n Label', () => {
+        it('validates presence of #pwaPullRefresh capsule and circular SVG arrow in index.html', () => {
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(html).toContain('id="pwaPullRefresh"');
+            expect(html).toContain('class="pwa-pull-capsule"');
+            expect(html).toContain('class="pwa-pull-arrow"');
+            expect(html).toContain('id="pwaPullLabel"');
+            expect(html).toContain('data-i18n="pwa.refresh"');
+            expect(html).toContain('ОБНОВИТЬ');
+        });
+
+        it('validates CSS scoping to standalone PWA and keyframe spin animation in style.css', () => {
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('.pwa-pull-refresh');
+            expect(css).toContain('html.pwa-standalone .pwa-pull-refresh');
+            expect(css).toContain('.pwa-pull-capsule');
+            expect(css).toContain('.pwa-pull-arrow');
+            expect(css).toContain('@keyframes pwaSpin');
+            expect(css).toContain('overscroll-behavior-y: contain');
+        });
+
+        it('isEligibleForPull returns false on standard web and true in standalone PWA at scroll top', () => {
+            const pullApi = window.__pwaPullRefresh;
+            expect(pullApi).toBeDefined();
+
+            // When NOT in standalone mode
+            window.isPwaStandalone = vi.fn(() => false);
+            expect(pullApi.isEligibleForPull()).toBe(false);
+
+            // When in standalone mode and scroll at top
+            window.isPwaStandalone = vi.fn(() => true);
+            window.scrollY = 0;
+            globalThis.document.documentElement.scrollTop = 0;
+            expect(pullApi.isEligibleForPull()).toBe(true);
+
+            // When user scrolled down
+            window.scrollY = 100;
+            expect(pullApi.isEligibleForPull()).toBe(false);
+            window.scrollY = 0;
+        });
+
+        it('getPwaText localizes refresh and refreshing labels across RU, UA, and EN', () => {
+            const pullApi = window.__pwaPullRefresh;
+            expect(pullApi).toBeDefined();
+
+            window.storage = { get: vi.fn(() => 'ru') };
+            expect(pullApi.getPwaText('refresh')).toBe('ОБНОВИТЬ');
+            expect(pullApi.getPwaText('refreshing')).toBe('ОБНОВЛЕНИЕ...');
+
+            window.storage = { get: vi.fn(() => 'ua') };
+            expect(pullApi.getPwaText('refresh')).toBe('ОНОВИТИ');
+            expect(pullApi.getPwaText('refreshing')).toBe('ОНОВЛЕННЯ...');
+
+            window.storage = { get: vi.fn(() => 'en') };
+            expect(pullApi.getPwaText('refresh')).toBe('REFRESH');
+            expect(pullApi.getPwaText('refreshing')).toBe('REFRESHING...');
+        });
+
+        it('triggerRefresh executes window.loadAllItems and triggers success haptic', async () => {
+            const pullApi = window.__pwaPullRefresh;
+            expect(pullApi).toBeDefined();
+
+            const loadMock = vi.fn().mockResolvedValue([]);
+            window.loadAllItems = loadMock;
+
+            const hapticSpy = vi.fn();
+            window.triggerHaptic = hapticSpy;
+
+            const refreshPromise = pullApi.triggerRefresh();
+            await refreshPromise;
+
+            expect(loadMock).toHaveBeenCalled();
+            expect(hapticSpy).toHaveBeenCalledWith('success');
+        });
+    });
 });

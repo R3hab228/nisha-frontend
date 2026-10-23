@@ -282,6 +282,10 @@
       "desc": "Describe the issue, idea, or bug. The message will go directly to the developer.",
       "placeholder": "Start typing...",
       "submit": "SEND SIGNAL"
+    },
+    "pwa": {
+      "refresh": "REFRESH",
+      "refreshing": "REFRESHING..."
     }
   }
 }

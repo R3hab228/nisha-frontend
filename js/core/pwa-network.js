@@ -697,3 +697,266 @@ document.addEventListener('click', (e) => {
         }).catch(() => {});
     }
 })();
+
+// === 8. PWA STANDALONE PULL-TO-REFRESH (ЖЕСТ ОБНОВЛЕНИЯ С КРУГЛОЙ СТРЕЛКОЙ) ===
+function initPwaPullToRefresh() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    let container = document.getElementById('pwaPullRefresh');
+    let arrowIcon = container ? container.querySelector('.pwa-pull-arrow') : null;
+    let label = document.getElementById('pwaPullLabel') || (container ? container.querySelector('.pwa-pull-text') : null);
+
+    if (!container && document.body) {
+        container = document.createElement('div');
+        container.id = 'pwaPullRefresh';
+        container.className = 'pwa-pull-refresh';
+        container.setAttribute('aria-hidden', 'true');
+        container.innerHTML = `
+            <div class="pwa-pull-capsule">
+                <svg class="pwa-pull-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.9 1 6.5 2.6L21 8"/>
+                    <polyline points="21 3 21 8 16 8"/>
+                </svg>
+                <span id="pwaPullLabel" class="pwa-pull-text" data-i18n="pwa.refresh">ОБНОВИТЬ</span>
+            </div>
+        `;
+        if (typeof document.body.prepend === 'function') {
+            document.body.prepend(container);
+        } else if (typeof document.body.insertBefore === 'function') {
+            document.body.insertBefore(container, document.body.firstChild);
+        } else if (typeof document.body.appendChild === 'function') {
+            document.body.appendChild(container);
+        }
+        arrowIcon = typeof container.querySelector === 'function' ? container.querySelector('.pwa-pull-arrow') : null;
+        label = document.getElementById('pwaPullLabel');
+    }
+
+    if (!container) return;
+
+    function getPwaText(key) {
+        if (typeof i18next !== 'undefined' && typeof i18next.t === 'function') {
+            const val = i18next.t('pwa.' + key);
+            if (val && val !== 'pwa.' + key) return val;
+        }
+        const currentLang = (window.storage ? window.storage.get('nisha_lang') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_lang') : 'ru')) || 'ru';
+        if (key === 'refreshing') {
+            if (currentLang === 'ua') return 'ОНОВЛЕННЯ...';
+            if (currentLang === 'en') return 'REFRESHING...';
+            return 'ОБНОВЛЕНИЕ...';
+        }
+        if (currentLang === 'ua') return 'ОНОВИТИ';
+        if (currentLang === 'en') return 'REFRESH';
+        return 'ОБНОВИТЬ';
+    }
+
+    let startY = 0;
+    let startX = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+    let hapticDone = false;
+    let touchActive = false;
+    let currentPullDistance = 0;
+    const THRESHOLD = 60;
+    const MAX_PULL = 85;
+
+    function isEligibleForPull() {
+        if (typeof window.isPwaStandalone === 'function') {
+            if (!window.isPwaStandalone()) return false;
+        } else if (!document.documentElement.classList.contains('pwa-standalone')) {
+            const isMediaStandalone = (typeof window.matchMedia === 'function') && window.matchMedia('(display-mode: standalone)').matches;
+            if (!isMediaStandalone && (!navigator || !navigator.standalone)) return false;
+        }
+
+        if (isRefreshing) return false;
+
+        // Не активировать при открытых модалках, зуме или корзине
+        const hasOpenOverlay = Boolean(
+            document.querySelector('.modal.active, .modal-overlay.active, .pswp--open, .lightbox-overlay.active, #orderSuccessOverlay[style*="display: block"], #orderSuccessOverlay[style*="display: flex"]')
+        );
+        if (hasOpenOverlay) return false;
+
+        // Только на самом верху страницы
+        const top = window.scrollY || document.documentElement.scrollTop || (document.body ? document.body.scrollTop : 0) || 0;
+        return top <= 2;
+    }
+
+    function resetPull() {
+        if (!container) return;
+        container.classList.remove('is-ready', 'is-pulling');
+        container.style.transition = 'transform 0.22s ease-out, opacity 0.2s ease-out';
+        container.style.transform = 'translateY(-80px)';
+        container.style.opacity = '0';
+        if (arrowIcon) {
+            arrowIcon.style.transition = 'transform 0.22s ease-out';
+            arrowIcon.style.transform = 'rotate(0deg)';
+        }
+        currentPullDistance = 0;
+        hapticDone = false;
+        setTimeout(() => {
+            if (!isRefreshing && container) {
+                container.style.transition = '';
+                if (arrowIcon) arrowIcon.style.transition = '';
+            }
+        }, 240);
+    }
+
+    async function triggerRefresh() {
+        if (isRefreshing || !container) return;
+        isRefreshing = true;
+
+        container.classList.remove('is-ready', 'is-pulling');
+        container.classList.add('is-refreshing', 'pwa-pull-spinning');
+        container.style.transition = 'transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.2s ease';
+        container.style.transform = 'translateY(0px)';
+        container.style.opacity = '1';
+
+        if (label) label.textContent = getPwaText('refreshing');
+        if (arrowIcon) {
+            arrowIcon.style.transition = '';
+            arrowIcon.style.transform = '';
+        }
+
+        const minDelay = new Promise(resolve => setTimeout(resolve, 550));
+        const refreshAction = (async () => {
+            try {
+                if (typeof window.loadAllItems === 'function') {
+                    await window.loadAllItems();
+                }
+            } catch (err) {
+                console.warn('[PWA] Ошибка обновления каталога:', err);
+            }
+        })();
+
+        await Promise.all([refreshAction, minDelay]);
+
+        if (typeof triggerHaptic === 'function') triggerHaptic('success');
+        else if (navigator.vibrate) navigator.vibrate(16);
+
+        container.style.transition = 'transform 0.26s ease-in, opacity 0.22s ease-in';
+        container.style.transform = 'translateY(-80px)';
+        container.style.opacity = '0';
+
+        setTimeout(() => {
+            if (!container) return;
+            container.classList.remove('is-refreshing', 'pwa-pull-spinning');
+            if (label) label.textContent = getPwaText('refresh');
+            isRefreshing = false;
+            currentPullDistance = 0;
+            container.style.transition = '';
+            if (arrowIcon) {
+                arrowIcon.style.transition = '';
+                arrowIcon.style.transform = 'rotate(0deg)';
+            }
+        }, 280);
+    }
+
+    window.addEventListener('touchstart', (e) => {
+        if (!isEligibleForPull()) {
+            touchActive = false;
+            return;
+        }
+
+        const target = e.target;
+        if (target && target.closest && target.closest('input, textarea, select, button, .card-slider, .stories-container, .modal, .modal-window, .pswp, .no-pull')) {
+            touchActive = false;
+            return;
+        }
+
+        const touch = e.touches && e.touches[0];
+        if (!touch) return;
+
+        startY = touch.clientY;
+        startX = touch.clientX;
+        touchActive = true;
+        isPulling = false;
+        hapticDone = false;
+        currentPullDistance = 0;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!touchActive || isRefreshing || !container) return;
+        const touch = e.touches && e.touches[0];
+        if (!touch) return;
+
+        const diffY = touch.clientY - startY;
+        const diffX = touch.clientX - startX;
+
+        // Если свайп скорее горизонтальный (например, переключение слайдов/фильтров) — отменяем
+        if (!isPulling && Math.abs(diffX) > Math.abs(diffY)) {
+            touchActive = false;
+            return;
+        }
+
+        // Проверяем скролл
+        const top = window.scrollY || document.documentElement.scrollTop || (document.body ? document.body.scrollTop : 0) || 0;
+        if (top > 2 && !isPulling) {
+            touchActive = false;
+            return;
+        }
+
+        if (diffY > 6) {
+            isPulling = true;
+            if (e.cancelable) e.preventDefault();
+
+            currentPullDistance = Math.min(MAX_PULL, (diffY - 6) * 0.45);
+            const progress = Math.min(1, currentPullDistance / THRESHOLD);
+            const y = -80 + (progress * 80);
+
+            container.classList.add('is-pulling');
+            container.style.transition = 'none';
+            container.style.transform = `translateY(${y}px)`;
+            container.style.opacity = String(Math.min(1, progress * 1.35));
+
+            const deg = progress * 360;
+            if (arrowIcon) {
+                arrowIcon.style.transition = 'none';
+                arrowIcon.style.transform = `rotate(${deg}deg)`;
+            }
+
+            const isReady = currentPullDistance >= THRESHOLD;
+            if (isReady && !hapticDone) {
+                container.classList.add('is-ready');
+                if (typeof triggerHaptic === 'function') triggerHaptic('light');
+                else if (navigator.vibrate) navigator.vibrate(12);
+                hapticDone = true;
+            } else if (!isReady && hapticDone) {
+                container.classList.remove('is-ready');
+                hapticDone = false;
+            }
+        }
+    }, { passive: false });
+
+    const handleTouchEnd = () => {
+        if (!touchActive) return;
+        touchActive = false;
+        if (isPulling) {
+            isPulling = false;
+            if (currentPullDistance >= THRESHOLD && !isRefreshing) {
+                triggerRefresh();
+            } else {
+                resetPull();
+            }
+        }
+    };
+
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+    // Экспорт для тестирования
+    window.__pwaPullRefresh = {
+        triggerRefresh,
+        resetPull,
+        isEligibleForPull,
+        getPwaText
+    };
+}
+window.initPwaPullToRefresh = initPwaPullToRefresh;
+
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPwaPullToRefresh);
+    } else {
+        initPwaPullToRefresh();
+    }
+}
+
