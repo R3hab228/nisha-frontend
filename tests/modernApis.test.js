@@ -1606,11 +1606,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     });
 
     describe('27. PWA Standalone Bottom Bezel Safe Area & Silent Offline Sticky Banner', () => {
-        it('buy-share-row balances snug bottom placement without getting cut off by system navigation bar', () => {
+        it('buy-share-row balances lower bottom placement on web while elevating for PWA standalone', () => {
             const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
-            expect(css).not.toContain('bottom: calc(-20px');
             expect(css).toContain('.buy-share-row');
-            expect(css).toContain('bottom: calc(-3px + env(safe-area-inset-bottom, 0px))');
+            expect(css).toContain('bottom: calc(-20px + env(safe-area-inset-bottom, 0px))');
             expect(css).toContain('html.pwa-standalone .buy-share-row');
             expect(css).toContain('bottom: calc(-3px + env(safe-area-inset-bottom, 0px)) !important');
         });
