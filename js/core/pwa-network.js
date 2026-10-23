@@ -253,11 +253,19 @@ function recordEarlySentryError(evt) {
         earlySentryErrors.push(evt);
         initSentryDeferred();
     }
-    const err = evt.error || evt.reason || evt;
-    sendTelegramErrorAlert(err, { source: 'uncaught_window_error' });
 }
 window.addEventListener('error', recordEarlySentryError, { signal: earlySentryCtrl.signal });
 window.addEventListener('unhandledrejection', recordEarlySentryError, { signal: earlySentryCtrl.signal });
+
+// Постоянный перехват необработанных критических сбоев для Telegram-телеметрии
+window.addEventListener('error', (evt) => {
+    const err = evt.error || evt.message || evt;
+    sendTelegramErrorAlert(err, { source: 'uncaught_window_error', filename: evt.filename, lineno: evt.lineno });
+});
+window.addEventListener('unhandledrejection', (evt) => {
+    const err = evt.reason || evt;
+    sendTelegramErrorAlert(err, { source: 'unhandled_promise_rejection' });
+});
 
 function initSentryDeferred() {
     if (window._sentryActive) return;
@@ -881,6 +889,8 @@ function initPwaPullToRefresh() {
     let hapticDone = false;
     let touchActive = false;
     let currentPullDistance = 0;
+    let resetTimeoutId = null;
+    let refreshTimeoutId = null;
     const THRESHOLD = 60;
     const MAX_PULL = 85;
 
@@ -913,7 +923,7 @@ function initPwaPullToRefresh() {
         if (!container) return;
         container.classList.remove('is-ready', 'is-pulling');
         container.style.transition = 'transform 0.22s ease-out, opacity 0.2s ease-out';
-        container.style.transform = 'translateY(-80px)';
+        container.style.transform = 'translateY(-100%)';
         container.style.opacity = '0';
         if (arrowIcon) {
             arrowIcon.style.transition = 'transform 0.22s ease-out';
@@ -921,7 +931,8 @@ function initPwaPullToRefresh() {
         }
         currentPullDistance = 0;
         hapticDone = false;
-        setTimeout(() => {
+        if (resetTimeoutId) clearTimeout(resetTimeoutId);
+        resetTimeoutId = setTimeout(() => {
             if (!isRefreshing && container) {
                 container.style.transition = '';
                 if (arrowIcon) arrowIcon.style.transition = '';
@@ -936,10 +947,13 @@ function initPwaPullToRefresh() {
         container.classList.remove('is-ready', 'is-pulling');
         container.classList.add('is-refreshing', 'pwa-pull-spinning');
         container.style.transition = 'transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.2s ease';
-        container.style.transform = 'translateY(0px)';
+        container.style.transform = 'translateY(0%)';
         container.style.opacity = '1';
 
-        if (label) label.textContent = getPwaText('refreshing');
+        if (label) {
+            label.textContent = getPwaText('refreshing');
+            label.setAttribute('data-i18n', 'pwa.refreshing');
+        }
         if (arrowIcon) {
             arrowIcon.style.transition = '';
             arrowIcon.style.transform = '';
@@ -962,13 +976,17 @@ function initPwaPullToRefresh() {
         else if (navigator.vibrate) navigator.vibrate(16);
 
         container.style.transition = 'transform 0.26s ease-in, opacity 0.22s ease-in';
-        container.style.transform = 'translateY(-80px)';
+        container.style.transform = 'translateY(-100%)';
         container.style.opacity = '0';
 
-        setTimeout(() => {
+        if (refreshTimeoutId) clearTimeout(refreshTimeoutId);
+        refreshTimeoutId = setTimeout(() => {
             if (!container) return;
             container.classList.remove('is-refreshing', 'pwa-pull-spinning');
-            if (label) label.textContent = getPwaText('refresh');
+            if (label) {
+                label.textContent = getPwaText('refresh');
+                label.setAttribute('data-i18n', 'pwa.refresh');
+            }
             isRefreshing = false;
             currentPullDistance = 0;
             container.style.transition = '';
@@ -993,6 +1011,11 @@ function initPwaPullToRefresh() {
 
         const touch = e.touches && e.touches[0];
         if (!touch) return;
+
+        if (resetTimeoutId) {
+            clearTimeout(resetTimeoutId);
+            resetTimeoutId = null;
+        }
 
         startY = touch.clientY;
         startX = touch.clientX;
@@ -1029,11 +1052,11 @@ function initPwaPullToRefresh() {
 
             currentPullDistance = Math.min(MAX_PULL, (diffY - 6) * 0.45);
             const progress = Math.min(1, currentPullDistance / THRESHOLD);
-            const y = -80 + (progress * 80);
+            const yPercent = -100 + (progress * 100);
 
             container.classList.add('is-pulling');
             container.style.transition = 'none';
-            container.style.transform = `translateY(${y}px)`;
+            container.style.transform = `translateY(${yPercent}%)`;
             container.style.opacity = String(Math.min(1, progress * 1.35));
 
             const deg = progress * 360;

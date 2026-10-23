@@ -2317,7 +2317,7 @@ html.pwa-standalone .cart-panel {
 /* --- PWA STANDALONE PULL-TO-REFRESH (UNDERGROUND RETRO TERMINAL STYLE) --- */
 .pwa-pull-refresh {
     position: fixed;
-    top: calc(8px + env(safe-area-inset-top, 0px));
+    top: 0;
     left: 0;
     right: 0;
     display: none;
@@ -2325,7 +2325,8 @@ html.pwa-standalone .cart-panel {
     align-items: center;
     pointer-events: none;
     z-index: 10005;
-    transform: translateY(-80px);
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    transform: translateY(-100%);
     opacity: 0;
     will-change: transform, opacity;
 }
