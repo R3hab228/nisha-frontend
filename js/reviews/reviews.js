@@ -110,16 +110,39 @@ async function openReviewsModal() {
     `;
     
     const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
-    if (!sb) {
-        container.classList.remove('is-loading');
-        container.classList.add('is-empty');
-        container.innerHTML = '<div class="reviews-empty-box" style="color: var(--accent-red); border-color: rgba(255,0,0,0.3);">[ ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ ]</div>';
-        return;
+    let data = null;
+    let error = null;
+
+    if (sb) {
+        try {
+            const sbRes = await sb.from('reviews').select('created_at, text, user_name, item_image, item_id').eq('is_published', true).order('created_at', { ascending: false });
+            data = sbRes.data;
+            error = sbRes.error;
+        } catch (e) {
+            error = e;
+        }
     }
 
-    const { data, error } = await sb.from('reviews').select('created_at, text, user_name, item_image, item_id').eq('is_published', true).order('created_at', { ascending: false });
-    
+    // Если прямого Supabase нет или запрос вернул ошибку, фолбэчим на бэкенд
+    if ((error || !data) && window.apiClient && typeof window.apiClient.get === 'function') {
+        try {
+            const apiRes = await window.apiClient.get('/api/reviews', { timeout: 8000 });
+            if (apiRes && apiRes.success && Array.isArray(apiRes.reviews)) {
+                data = apiRes.reviews;
+                error = null;
+            }
+        } catch (apiErr) {
+            console.warn('[REVIEWS] Backend reviews fallback error:', apiErr.message);
+        }
+    }
+
     if (error || !data) {
+        if (!sb && (!window.apiClient || typeof window.apiClient.get !== 'function')) {
+            container.classList.remove('is-loading');
+            container.classList.add('is-empty');
+            container.innerHTML = '<div class="reviews-empty-box" style="color: var(--accent-red); border-color: rgba(255,0,0,0.3);">[ ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ ]</div>';
+            return;
+        }
         renderReviewsData([]);
         return;
     }
@@ -234,6 +257,61 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
 }
 window.promptOrderReview = promptOrderReview;
 
+// Защищенная отправка отзыва (сначала бэкенд API с service_role и обходом RLS, затем фолбэк на Supabase)
+async function sendReviewPayload(payload) {
+    // 1. Приоритетный защищенный канал через бэкенд API (service_role, обход RLS, валидация, Telegram-уведомление)
+    if (window.apiClient && typeof window.apiClient.post === 'function') {
+        try {
+            const apiRes = await window.apiClient.post('/api/reviews', payload, { timeout: 12000, retries: 1 });
+            if (apiRes && apiRes.success) {
+                return { success: true, data: apiRes.data };
+            }
+            if (apiRes && apiRes.message) {
+                return { success: false, error: new Error(apiRes.message) };
+            }
+        } catch (apiErr) {
+            console.warn('[REVIEWS] Backend API error, attempting direct Supabase fallback:', apiErr.message);
+            // Если клиент получил явную ошибку валидации от бэкенда (400), возвращаем ее
+            if (apiErr.status === 400 || (apiErr.message && apiErr.message.includes('короткий'))) {
+                return { success: false, error: apiErr };
+            }
+        }
+    }
+
+    // 2. Фолбэк на прямой Supabase инсерт
+    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    if (!sb) {
+        return { success: false, error: new Error('База данных временно недоступна') };
+    }
+
+    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const directPayload = {
+        user_name: payload.user_name || payload.userName || 'User',
+        text: payload.text,
+        rating: payload.rating || 5,
+        is_published: true
+    };
+    if (payload.order_id || payload.orderId) directPayload.order_id = payload.order_id || payload.orderId;
+    if (payload.item_id || payload.itemId) directPayload.item_id = payload.item_id || payload.itemId;
+    if (payload.item_image || payload.itemImage) directPayload.item_image = payload.item_image || payload.itemImage;
+    if (activeUser && activeUser.id) directPayload.user_id = activeUser.id;
+
+    let res = await sb.from('reviews').insert([directPayload]).select();
+    if (res.error) {
+        // Если ошибка отсутствия колонки user_id в схеме, повторяем без нее
+        if (directPayload.user_id && res.error.message && res.error.message.includes('column')) {
+            delete directPayload.user_id;
+            res = await sb.from('reviews').insert([directPayload]).select();
+        }
+    }
+
+    if (res.error) {
+        return { success: false, error: res.error };
+    }
+    return { success: true, data: res.data };
+}
+window.sendReviewPayload = sendReviewPayload;
+
 // Отправка авто-отзыва по заказу
 async function submitAutoReview() {
     if (window._isSubmittingAutoReview) return;
@@ -264,23 +342,22 @@ async function submitAutoReview() {
     if (!uName || uName === 'User') {
         uName = activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')[0] || 'User';
     }
-    
-    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
-    if (!sb) return;
 
     window._isSubmittingAutoReview = true;
     try {
-        // Пишем в БД отзыв вместе с ID заказа, фоткой и ID ТОВАРА
-        const { error } = await sb.from('reviews').insert([{ 
-            user_name: uName, 
-            text: text, 
+        const payload = {
+            user_name: uName,
+            text: text,
             rating: 5,
-            order_id: orderId,
+            order_id: orderId || null,
             item_image: (itemImage && itemImage !== '') ? itemImage : null,
-            item_id: (itemId && itemId !== '') ? itemId : null
-        }]);
-        
-        if (!error) {
+            item_id: (itemId && itemId !== '') ? itemId : null,
+            user_id: activeUser?.id || null
+        };
+
+        const result = await sendReviewPayload(payload);
+
+        if (result.success) {
             window._myLastReviewText = text;
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
@@ -297,7 +374,8 @@ async function submitAutoReview() {
                 renderFilteredOrders();
             }
         } else {
-            showToast('Ошибка: ' + error.message, 'error');
+            const errDetail = result.error ? (result.error.message || String(result.error)) : 'Не удалось сохранить отзыв';
+            showToast('Ошибка при отправке: ' + errDetail, 'error');
         }
     } finally {
         window._isSubmittingAutoReview = false;
@@ -376,36 +454,37 @@ async function submitManualReview() {
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
     const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
     const uName = profile?.username || activeUser?.email?.split('@')[0] || 'User';
-    
-    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
-    if (!sb) {
+
+    try {
+        const payload = {
+            user_name: uName,
+            text: text,
+            rating: 5,
+            user_id: activeUser?.id || null
+        };
+
+        const result = await sendReviewPayload(payload);
+
+        if (result.success) {
+            window._myLastReviewText = text;
+            reviewsCache.data = null;
+            reviewsCache.timestamp = 0;
+            showToast('Отзыв успешно опубликован!', 'success');
+            closeModal('writeReviewModal');
+            
+            // Переоткрываем список отзывов, чтобы отобразился свежий отзыв
+            setTimeout(() => {
+                openReviewsModal();
+            }, 400);
+        } else {
+            const errDetail = result.error ? (result.error.message || String(result.error)) : 'Не удалось сохранить отзыв';
+            showToast('Ошибка при отправке: ' + errDetail, 'error');
+        }
+    } finally {
         if (btn) {
             btn.style.pointerEvents = 'auto';
             btn.innerText = 'ОТПРАВИТЬ';
         }
-        return;
-    }
-
-    const { error } = await sb.from('reviews').insert([{ user_name: uName, text: text, rating: 5 }]);
-
-    if (btn) {
-        btn.style.pointerEvents = 'auto';
-        btn.innerText = 'ОТПРАВИТЬ';
-    }
-
-    if (error) {
-        showToast('Ошибка при отправке: ' + error.message, 'error');
-    } else {
-        window._myLastReviewText = text;
-        reviewsCache.data = null;
-        reviewsCache.timestamp = 0;
-        showToast('Отзыв успешно опубликован!', 'success');
-        closeModal('writeReviewModal');
-        
-        // Переоткрываем список отзывов, чтобы отобразился свежий отзыв
-        setTimeout(() => {
-            openReviewsModal();
-        }, 400);
     }
 }
 window.submitManualReview = submitManualReview;

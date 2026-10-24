@@ -2065,5 +2065,15 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(pwaCode).toContain('/database connection is closing/i');
             expect(pwaCode).toContain('/IDBDatabase/i');
         });
+
+        it('routes review submissions via apiClient.post(/api/reviews) to bypass RLS with service_role and provides Supabase fallback', () => {
+            const reviewsCode = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
+            expect(reviewsCode).toContain("window.apiClient.post('/api/reviews', payload");
+            expect(reviewsCode).toContain("window.sendReviewPayload = sendReviewPayload;");
+            expect(reviewsCode).toContain("sendReviewPayload(payload)");
+            expect(reviewsCode).toContain("window.apiClient.get('/api/reviews'");
+            expect(reviewsCode).toContain("sb.from('reviews').insert");
+            expect(reviewsCode).toContain("is_published: true");
+        });
     });
 });
