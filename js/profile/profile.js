@@ -1233,6 +1233,10 @@ async function saveDeliveryToProfile(fullName, address) {
     if (store) {
         store.remove('nisha_checkout_data');
     }
+    // Адрес в профиле изменился — форма заказа при следующем открытии подставит его заново
+    if (typeof window.resetCheckoutAddressState === 'function') {
+        window.resetCheckoutAddressState();
+    }
 
     const activeUser = currentUser || window.currentUser;
     const sb = getSupabase();

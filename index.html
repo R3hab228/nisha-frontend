@@ -588,7 +588,7 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 <p style=margin:0;font-size:13px;color:#aaa data-i18n=checkout.desc>Заполните данные для отправки. Бронь 2 часа.</p>
 <input id=botTrap style=opacity:0;position:absolute;top:0;left:0;height:0;width:0;z-index:-1 tabindex=-1 autocomplete=off>
 <label data-i18n=checkout.name>ФИО Получателя:</label>
-<input id=orderName class=form-input placeholder="Іванов Іван Іванович" autocomplete=name>
+<input id=orderName name=fullname class=form-input placeholder="Іванов Іван Іванович" autocomplete=name>
 <div id=checkoutPhoneWrapper style="display:flex;flex-direction:column;gap:8px">
 <label data-i18n=checkout.phone style="margin-bottom:0">Телефон (ОБЯЗАТЕЛЬНО):</label>
 <div style=display:flex;gap:10px>
@@ -599,12 +599,12 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div style="position:relative; z-index:35;">
-<input id=orderCity class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off enterkeyhint="next">
+<input id=orderCity name=np_city class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next">
 <div id=cityDropdown class=custom-dropdown></div>
 </div>
 <label data-i18n=checkout.branch>Отделение или Почтомат:</label>
 <div style="position:relative; z-index:30;">
-<input id=orderBranch class=form-input placeholder=Відділення... onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off enterkeyhint="done">
+<input id=orderBranch name=np_branch class=form-input placeholder=Відділення... onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done">
 <div id=branchDropdown class=custom-dropdown></div>
 </div>
 
@@ -678,7 +678,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 </div>
 <label style=margin-top:10px data-i18n=checkout.promo>Промокод (если есть):</label>
 <div class=promo-wrapper>
-<input id=promoInput class=form-input placeholder="Введите код...">
+<input id=promoInput name=promo_code class=form-input placeholder="Введите код..." autocomplete=off autocapitalize=characters autocorrect=off spellcheck=false data-lpignore=true data-form-type=other>
 <button class="search-btn btn-target" onclick=applyPromoCode() style=padding:10px data-i18n=checkout.apply>ПРИМЕНИТЬ</button>
 </div>
 <div id=promoMessage class=promo-msg></div>

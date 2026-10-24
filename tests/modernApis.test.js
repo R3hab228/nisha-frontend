@@ -1958,7 +1958,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('normalizes city prefixes including г./гор./город and matches MainDescription in ensureCityRef', () => {
             const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
             expect(cartCode).toContain('г\\.|гор\\.|город');
-            expect(cartCode).toContain('norm(a.MainDescription) === wanted');
+            expect(cartCode).toContain('_npStripPrefix(a.MainDescription) === wantedName');
             expect(cartCode).toContain('cleanTyped');
         });
 
@@ -2025,11 +2025,35 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(res3.branch).toBe('Відділення 12');
         });
 
-        it('gives user profile delivery address top priority over old cached checkout data in initCheckoutState', () => {
+        it('applies profile delivery address in checkout without ever auto-opening city/branch lists', () => {
             const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
-            expect(cartCode).toContain('// 1. ПРИОРИТЕТ №1: Данные доставки из профиля пользователя');
-            expect(cartCode).toContain('matchAndSetBranchRef');
-            expect(cartCode).toContain('if (profileAddress)');
+            expect(cartCode).toContain('Адрес из профиля пользователя');
+            expect(cartCode).toContain('function matchAndSetBranchRef');
+            expect(cartCode).toContain('function hideNPDropdowns');
+            expect(cartCode).toContain('async function ensureCityRef(opts = {})');
+            expect(cartCode).toContain('const interactive = !!(opts && opts.interactive)');
+            expect(cartCode).toContain('if (interactive) renderCitySearchResults(data)');
+            expect(cartCode).toContain('ensureCityRef({ interactive: showDropdown })');
+            expect(cartCode).toContain('const alreadyFilled');
+        });
+
+        it('does not let GeoIP overwrite the city and never opens the city list from autoDetectCity', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('GeoIP не должен перетирать выбор');
+            expect(cartCode).toContain('ensureCityRef().then(() => hideNPDropdowns())');
+            expect(cartCode).not.toContain('searchNPCity(detectedCity)');
+        });
+
+        it('protects promo field from browser autofill of the full name', () => {
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(html).toMatch(/id=promoInput[^>]*autocomplete=off/);
+            expect(html).toMatch(/id=promoInput[^>]*name=promo_code/);
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('function sanitizePromoField');
+            expect(cartCode).toContain('setTimeout(sanitizePromoField, 1500)');
+
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            expect(profileCode).toContain('window.resetCheckoutAddressState');
         });
 
         it('guards IDBDatabase operations against closing connections and ignores connection closure in telemetry', () => {
