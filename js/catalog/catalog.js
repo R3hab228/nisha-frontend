@@ -1903,6 +1903,35 @@ function applyFilters(immediate = false, preserveViewport = false) {
 }
 window.applyFilters = applyFilters;
 
+// Автоматическая перерисовка каталога при смене режима экрана (ПК ↔ мобильный, брейкпоинт 900px).
+// Без этого, если окно в момент первой отрисовки было "узким" (например, при открытии/закрытии F12 или
+// очистке кэша), на ПК оставалось 12 карточек без пагинации до ручной перезагрузки.
+(function initCatalogBreakpointWatcher() {
+    let resizeTimer = null;
+    const checkBreakpoint = () => {
+        const nowMobile = window.innerWidth <= 900;
+        if (window._catalogRenderedAsMobile === undefined || window._catalogRenderedAsMobile === nowMobile) return;
+        if (!Array.isArray(window.filteredItems) || window.filteredItems.length === 0) return;
+
+        const trigger = document.getElementById('loadingTrigger');
+        if (trigger) trigger.style.display = nowMobile ? 'block' : 'none';
+        applyFilters(true, false);
+    };
+    const scheduleCheck = () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(checkBreakpoint, 150);
+    };
+    window.addEventListener('resize', scheduleCheck, { passive: true });
+    window.addEventListener('orientationchange', scheduleCheck, { passive: true });
+    if (typeof window.matchMedia === 'function') {
+        try {
+            const mq = window.matchMedia('(max-width: 900px)');
+            if (typeof mq.addEventListener === 'function') mq.addEventListener('change', scheduleCheck);
+            else if (typeof mq.addListener === 'function') mq.addListener(scheduleCheck);
+        } catch (e) {}
+    }
+})();
+
 // Умный плеер для видео в сетке (IntersectionObserver с поддержкой Network Information API)
 const gridVideoObserver = new IntersectionObserver((entries) => {
     const conn = (typeof navigator !== 'undefined') ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
@@ -2253,7 +2282,25 @@ function buildCardDOM(item, idx = 0) {
 }
 window.buildCardDOM = buildCardDOM;
 
-// Плавное добавление новой карточки сверху в витрину
+// Единый компаратор витрины (TOP-закрепленные всегда выше, далее активная сортировка: дата или цена)
+function getCatalogItemComparator() {
+    const nowTs = Date.now();
+    const isTopNow = (it) => !!(it && it.is_top === true && it.top_until && new Date(it.top_until).getTime() > nowTs);
+    const sortCheapEl = document.getElementById('sort-cheap');
+    const byCheap = !!(sortCheapEl && sortCheapEl.classList.contains('active-sort'));
+    const safePrice = (p) => Number.parseInt(String(p).replace(/[^\d]/g, ''), 10) || 0;
+    return (a, b) => {
+        const topA = isTopNow(a);
+        const topB = isTopNow(b);
+        if (topA && !topB) return -1;
+        if (!topA && topB) return 1;
+        if (byCheap) return safePrice(a.price) - safePrice(b.price);
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    };
+}
+window.getCatalogItemComparator = getCatalogItemComparator;
+
+// Плавное добавление новой карточки в витрину (на правильное место с учетом закрепленных TOP-товаров)
 function insertNewItemCardSmoothly(item) {
     if (!item || !item.id) return;
     const grid = document.getElementById('itemsGrid');
@@ -2281,14 +2328,55 @@ function insertNewItemCardSmoothly(item) {
     const emptyPlaceholder = grid.querySelector('div[style*="grid-column: 1/-1"]');
     if (emptyPlaceholder) emptyPlaceholder.remove();
 
-    if (Array.isArray(window.filteredItems) && !window.filteredItems.some(i => i.id === item.id)) {
-        window.filteredItems.unshift(item);
+    if (!Array.isArray(window.filteredItems)) window.filteredItems = [];
+    const list = window.filteredItems;
+    if (list.some(i => i && String(i.id) === String(item.id))) return;
+
+    // Находим ПРАВИЛЬНУЮ позицию новинки по той же сортировке, что и в applyFilters:
+    // закрепленные (TOP) товары всегда остаются выше обычных, новинка встает сразу под ними.
+    const cmp = getCatalogItemComparator();
+    let insertIdx = list.findIndex(existing => cmp(item, existing) < 0);
+    if (insertIdx === -1) insertIdx = list.length;
+    const prevLen = list.length;
+    list.splice(insertIdx, 0, item);
+
+    const isMobileView = window.innerWidth <= 900;
+
+    // ПК (постраничная навигация): перерисовываем текущую страницу только если новинка влияет на нее или на число страниц
+    if (!isMobileView) {
+        const pageSize = 15;
+        const pageEnd = (window.currentPage || 1) * pageSize;
+        const totalBefore = Math.max(1, Math.ceil(prevLen / pageSize));
+        const totalAfter = Math.max(1, Math.ceil(list.length / pageSize));
+        if (insertIdx < pageEnd || totalBefore !== totalAfter) {
+            renderNextBatch();
+            const renderedNew = grid.querySelector(`.item-card[data-id="${item.id}"]`);
+            if (renderedNew) renderedNew.classList.add('item-card-new-arrival');
+        }
+        const countElDesktop = document.getElementById('itemCount');
+        if (countElDesktop) countElDesktop.innerText = list.length;
+        return;
+    }
+
+    // Моб. (бесконечная лента): если карточка попадает в уже отрисованную часть — вставляем ее на нужное место,
+    // иначе она сама подгрузится при прокрутке
+    const alreadyRenderedAll = (window.renderedCount || 0) >= prevLen;
+    if (!(insertIdx < (window.renderedCount || 0) || alreadyRenderedAll)) {
+        const countElMobile = document.getElementById('itemCount');
+        if (countElMobile) countElMobile.innerText = list.length;
+        return;
     }
 
     const card = buildCardDOM(item, 0);
     if (card) {
         card.classList.add('item-card-new-arrival');
-        grid.prepend(card);
+        const renderedCards = grid.querySelectorAll(':scope > .item-card');
+        const refCard = renderedCards[insertIdx];
+        if (refCard) {
+            grid.insertBefore(card, refCard);
+        } else {
+            grid.appendChild(card);
+        }
         window.renderedCount = (window.renderedCount || 0) + 1;
 
         const vids = card.querySelectorAll('.grid-lazy-video');
@@ -2332,6 +2420,7 @@ function renderNextBatch(targetMobileCount = 0) {
     initGridEventDelegation();
     
     const isMobile = window.innerWidth <= 900;
+    window._catalogRenderedAsMobile = isMobile;
     
     let oldPagination = document.getElementById('mainPagination');
     if (oldPagination) oldPagination.remove();
@@ -2340,6 +2429,13 @@ function renderNextBatch(targetMobileCount = 0) {
     let endIndex = 0;
     const BATCH_SIZE = isMobile ? 12 : 15;
     itemsPageSize = BATCH_SIZE;
+
+    // Защита от выхода за границы страниц на ПК (например, после удаления товаров или смены режима экрана)
+    if (!isMobile) {
+        const totalPagesGuard = Math.max(1, Math.ceil(window.filteredItems.length / BATCH_SIZE));
+        if (!window.currentPage || window.currentPage < 1) window.currentPage = 1;
+        if (window.currentPage > totalPagesGuard) window.currentPage = totalPagesGuard;
+    }
 
     if (isMobile) {
         if (window.renderedCount === 0) {

@@ -2075,5 +2075,35 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(reviewsCode).toContain("sb.from('reviews').insert");
             expect(reviewsCode).toContain("is_published: true");
         });
+
+        it('inserts new realtime items below pinned TOP items using the same comparator as applyFilters', () => {
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('function getCatalogItemComparator');
+            expect(catalogCode).toContain('window.getCatalogItemComparator = getCatalogItemComparator');
+            expect(catalogCode).toContain('list.findIndex(existing => cmp(item, existing) < 0)');
+            expect(catalogCode).toContain('list.splice(insertIdx, 0, item)');
+            // Больше нет слепой вставки новинки в самый верх сетки
+            expect(catalogCode).not.toContain('grid.prepend(card)');
+            expect(catalogCode).not.toContain('window.filteredItems.unshift(item)');
+        });
+
+        it('re-renders the catalog when crossing the 900px breakpoint so desktop never stays stuck on 12 items without pagination', () => {
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('initCatalogBreakpointWatcher');
+            expect(catalogCode).toContain('window._catalogRenderedAsMobile = isMobile');
+            expect(catalogCode).toContain("window.addEventListener('resize', scheduleCheck");
+            expect(catalogCode).toContain("matchMedia('(max-width: 900px)')");
+            expect(catalogCode).toContain('totalPagesGuard');
+        });
+
+        it('protects the proposal item-name field from browser autofill of the buyer full name', () => {
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(html).toMatch(/id=propName[^>]*name=prop_item_title/);
+            expect(html).toMatch(/id=propName[^>]*autocomplete=off/);
+            const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            expect(dropCode).toContain('function sanitizeProposalNameField');
+            expect(dropCode).toContain('[0, 150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms))');
+            expect(dropCode).toContain("dataset.userTyped = '1'");
+        });
     });
 });

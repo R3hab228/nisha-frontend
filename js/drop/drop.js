@@ -63,10 +63,56 @@ function enqueueProposalUpload(formData) {
     return proposalUploadChain;
 }
 
+// Защита поля «Название вещи» от автозаполнения браузером ФИО покупателя (Chrome Autofill принимает поле за «имя»)
+function sanitizeProposalNameField() {
+    const el = document.getElementById('propName');
+    if (!el || el.dataset.userTyped === '1') return;
+    const val = (el.value || '').trim();
+    if (!val) return;
+
+    const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let cachedDelivery = null;
+    try { cachedDelivery = store ? store.getJSON('nisha_profile_delivery', null) : null; } catch (e) {}
+    const prof = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
+
+    const knownNames = [
+        prof?.full_name,
+        prof?.username,
+        cachedDelivery?.full_name,
+        document.getElementById('orderName')?.value,
+        document.getElementById('profileDeliveryFullName')?.value,
+        document.getElementById('modalProfileDeliveryFullName')?.value
+    ].map(norm).filter(Boolean);
+
+    if (knownNames.includes(norm(val))) {
+        el.value = '';
+    }
+}
+window.sanitizeProposalNameField = sanitizeProposalNameField;
+
+// Любой реальный ввод пользователя в поле названия отключает авто-очистку (чтобы не стереть то, что он написал сам)
+['keydown', 'paste', 'compositionstart'].forEach(evtName => {
+    document.addEventListener(evtName, (e) => {
+        if (e.target && e.target.id === 'propName') e.target.dataset.userTyped = '1';
+    }, true);
+});
+['input', 'change', 'focusin'].forEach(evtName => {
+    document.addEventListener(evtName, (e) => {
+        if (e.target && e.target.id === 'propName') sanitizeProposalNameField();
+    }, true);
+});
+
 // 1. Открытие модального окна предложки
 function openProposeModal() {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+    const propNameEl = document.getElementById('propName');
+    if (propNameEl) {
+        delete propNameEl.dataset.userTyped;
+        // Автозаполнение браузера может прилететь с задержкой — проверяем несколько раз после открытия окна
+        [0, 150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms));
+    }
     const contactEl = document.getElementById('propContact');
     if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
         contactEl.value = window._lastProposalContact;
@@ -179,7 +225,10 @@ function resetProposalForm() {
     const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc'];
     fields.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.value = '';
+        if (el) {
+            el.value = '';
+            if (id === 'propName') delete el.dataset.userTyped;
+        }
     });
     
     const filesInput = document.getElementById('propFiles');

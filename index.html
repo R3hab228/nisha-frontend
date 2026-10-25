@@ -849,11 +849,11 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div id=propPreviewContainer class=preview-container></div>
 </div>
 <label data-i18n=propose.name_label>НАЗВАНИЕ ВЕЩИ:</label>
-<input id=propName class=form-input placeholder="Например: Худи на зипке..." data-i18n-ph=propose.name_place>
+<input id=propName name=prop_item_title class=form-input placeholder="Например: Худи на зипке..." autocomplete=off autocorrect=off spellcheck=false data-lpignore=true data-form-type=other data-i18n-ph=propose.name_place>
 <label data-i18n=propose.brand_label>БРЕНД (Если есть):</label>
-<input id=propBrand class=form-input placeholder="Например: Nike, Carhartt..." data-i18n-ph=propose.brand_place>
+<input id=propBrand name=prop_item_brand class=form-input placeholder="Например: Nike, Carhartt..." autocomplete=off data-lpignore=true data-form-type=other data-i18n-ph=propose.brand_place>
 <label data-i18n=propose.size_label>РАЗМЕР:</label>
-<input id=propSize class=form-input placeholder="Например: M или 42" data-i18n-ph=propose.size_place>
+<input id=propSize name=prop_item_size class=form-input placeholder="Например: M или 42" autocomplete=off data-lpignore=true data-form-type=other data-i18n-ph=propose.size_place>
 <label id=descLabel data-i18n=propose.desc_label>ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
 <textarea id=propDesc class=form-input maxlength=250 style=height:80px;resize:none placeholder="Опиши состояние, нюансы..." data-i18n-ph=propose.desc_place oninput=updateCharCount(this)></textarea>
 <label data-i18n=propose.cond_label>ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
