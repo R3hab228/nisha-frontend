@@ -559,10 +559,18 @@ function initReviewsRealtime(sb) {
 
                 if (canShowSysNotification && 'serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
                     navigator.serviceWorker.ready.then(reg => {
+                        const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
+                            ? window.location.origin
+                            : 'https://www.nisha-store.shop';
+                        const notifBadge = `${origin}/badge.png`;
+                        const notifIcon = (rev.item_image && rev.item_image.trim())
+                            ? ((typeof window.toCDN === 'function') ? window.toCDN(rev.item_image) : rev.item_image)
+                            : `${origin}/icon-192.png`;
+
                         reg.showNotification('NISHA STORE | Новый отзыв ⭐', {
                             body: `${author}: "${snippet}"`,
-                            icon: rev.item_image || '/icon-192.png',
-                            badge: '/badge.png',
+                            icon: notifIcon,
+                            badge: notifBadge,
                             tag: 'nisha-review-' + (rev.id || Date.now()),
                             renotify: true,
                             data: { url: 'https://www.nisha-store.shop/?action=reviews' }
