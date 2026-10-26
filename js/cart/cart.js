@@ -1023,7 +1023,7 @@ function renderCartItems() {
         row.className = 'cart-item-row';
         const isSold = !!item._isSold;
         const soldBadgeHtml = isSold
-            ? `<div class="cart-sold-badge" style="color: #ff4444; font-size: 11px; font-weight: bold; margin-top: 3px; font-family: var(--font-mono); display: flex; align-items: center; gap: 4px;">⚠️ <span>${typeof i18next !== 'undefined' ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' }) : 'Товар уже куплен'}</span></div>`
+            ? `<div class="cart-sold-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>${typeof i18next !== 'undefined' ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' }) : 'Товар уже куплен'}</span></div>`
             : '';
         const rowStyle = isSold ? 'opacity: 0.8; border-left: 3px solid #ff4444;' : '';
         
