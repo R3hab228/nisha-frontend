@@ -118,6 +118,10 @@ describe('Google OAuth & Authentication Recovery (Supabase)', () => {
         expect(ruSidebar.google_id).toBe('GOOGLE ID');
         expect(uaSidebar.google_id).toBe('GOOGLE ID');
         expect(enSidebar.google_id).toBe('GOOGLE ID');
+
+        expect(ruSidebar.google_login).toBe('ВОЙТИ ЧЕРЕЗ GOOGLE');
+        expect(uaSidebar.google_login).toBe('УВІЙТИ ЧЕРЕЗ GOOGLE');
+        expect(enSidebar.google_login).toBe('SIGN IN WITH GOOGLE');
     });
 
     it('handleForgotPassword triggers resetPasswordForEmail with origin redirect', async () => {

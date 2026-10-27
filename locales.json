@@ -176,6 +176,7 @@
         "later": "ПОЗЖЕ"
       },
       "profile": {
+        "google_login": "ВОЙТИ ЧЕРЕЗ GOOGLE",
         "saved": "СОХРАНЕНО:",
         "logout": "[ ВЫЙТИ ИЗ СИСТЕМЫ ]",
         "nickname": "НИКНЕЙМ:",
@@ -470,6 +471,7 @@
         "later": "ПІЗНІШЕ"
       },
       "profile": {
+        "google_login": "УВІЙТИ ЧЕРЕЗ GOOGLE",
         "saved": "ЗБЕРЕЖЕНО:",
         "logout": "[ ВИЙТИ З СИСТЕМИ ]",
         "nickname": "НІКНЕЙМ:",
@@ -764,6 +766,7 @@
         "later": "LATER"
       },
       "profile": {
+        "google_login": "SIGN IN WITH GOOGLE",
         "saved": "SAVED:",
         "logout": "[ LOGOUT ]",
         "nickname": "NICKNAME:",

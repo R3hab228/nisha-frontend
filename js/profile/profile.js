@@ -50,6 +50,10 @@ function getHourglass(height = 14) {
 // ==========================================
 
 function openProfileModal() {
+    if (typeof updateContentLanguage === 'function') {
+        try { updateContentLanguage(); } catch (e) {}
+    }
+
     if (typeof openModal === 'function') {
         openModal('profileModal');
     } else {
@@ -61,10 +65,6 @@ function openProfileModal() {
             modal.style.display = 'flex';
         }
         document.body.style.overflow = 'hidden';
-    }
-
-    if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
-        window.NishaGoogleAuth.syncAll();
     }
 
     // Повторная синхронизация контактов и данных доставки в модалке при каждом открытии
@@ -388,10 +388,6 @@ async function checkSession() {
             if (mProf) mProf.style.display = 'none';
             
             updateFavBadge();
-
-            if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
-                window.NishaGoogleAuth.syncAll();
-            }
         }
     } catch (err) {
         console.error("Ошибка в checkSession:", err);

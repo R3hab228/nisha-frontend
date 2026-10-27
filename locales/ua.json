@@ -175,6 +175,7 @@
       "later": "ПІЗНІШЕ"
     },
     "profile": {
+      "google_login": "УВІЙТИ ЧЕРЕЗ GOOGLE",
       "saved": "ЗБЕРЕЖЕНО:",
       "logout": "[ ВИЙТИ З СИСТЕМИ ]",
       "nickname": "НІКНЕЙМ:",

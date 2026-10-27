@@ -175,6 +175,7 @@
       "later": "LATER"
     },
     "profile": {
+      "google_login": "SIGN IN WITH GOOGLE",
       "saved": "SAVED:",
       "logout": "[ LOGOUT ]",
       "nickname": "NICKNAME:",
