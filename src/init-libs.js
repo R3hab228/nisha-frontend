@@ -4,9 +4,7 @@
 // ==========================================
 import { createClient } from '@supabase/supabase-js';
 import DOMPurify from 'dompurify';
-import Fuse from 'fuse.js';
 import IMask from 'imask';
-import Lenis from 'lenis';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
@@ -14,9 +12,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 window.supabase = { createClient };
 window.createClient = createClient;
 window.DOMPurify = DOMPurify;
-window.Fuse = Fuse;
 window.IMask = IMask;
-window.Lenis = Lenis;
 window.i18next = i18next;
 window.i18nextBrowserLanguageDetector = LanguageDetector;
 
@@ -25,9 +21,7 @@ if (typeof globalThis !== 'undefined') {
     globalThis.supabase = window.supabase;
     globalThis.createClient = createClient;
     globalThis.DOMPurify = DOMPurify;
-    globalThis.Fuse = Fuse;
     globalThis.IMask = IMask;
-    globalThis.Lenis = Lenis;
     globalThis.i18next = i18next;
     globalThis.i18nextBrowserLanguageDetector = LanguageDetector;
 }

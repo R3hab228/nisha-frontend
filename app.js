@@ -10,25 +10,37 @@ console.log(`
 `);
 
 // ==========================================
-// 1. БЕЗОПАСНЫЙ ПЛАВНЫЙ СКРОЛЛ (ТОЛЬКО ДЛЯ ПК)
+// 1. БЕЗОПАСНЫЙ ПЛАВНЫЙ СКРОЛЛ (ТОЛЬКО ДЛЯ ПК — ЛЕНИВАЯ ЗАГРУЗКА LENIS)
 // ==========================================
 let lenis;
+
+function initDesktopLenis(LenisClass) {
+    if (!LenisClass || lenis || window.innerWidth <= 900) return;
+    lenis = new LenisClass({
+        lerp: 0.14, 
+        wheelMultiplier: 1.25, 
+        smoothWheel: true
+    });
+    window.lenis = lenis;
+
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+}
 
 if (window.innerWidth > 900) {
     const LenisClass = window.Lenis || (typeof Lenis !== 'undefined' ? Lenis : null);
     if (LenisClass) {
-        lenis = new LenisClass({
-            lerp: 0.14, 
-            wheelMultiplier: 1.25, 
-            smoothWheel: true
-        });
-        window.lenis = lenis;
-
-        function raf(time) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
-        }
-        requestAnimationFrame(raf);
+        initDesktopLenis(LenisClass);
+    } else {
+        import('lenis').then((mod) => {
+            const LoadedLenis = mod.default || mod.Lenis || mod;
+            window.Lenis = LoadedLenis;
+            if (typeof globalThis !== 'undefined') globalThis.Lenis = LoadedLenis;
+            initDesktopLenis(LoadedLenis);
+        }).catch(() => {});
     }
 }
 

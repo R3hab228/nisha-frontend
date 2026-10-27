@@ -49,20 +49,41 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             worker.onerror = function(err) {
                 console.warn('[SearchWorker] Worker error, falling back to main-thread Fuse:', err);
                 isWorkerReady = false;
+                ensureFallbackFuseLoaded();
             };
+        } else {
+            ensureFallbackFuseLoaded();
         }
     } catch (e) {
         console.warn('[SearchWorker] Web Worker initialization failed, using main-thread Fuse:', e);
         worker = null;
         isWorkerReady = false;
+        ensureFallbackFuseLoaded();
     }
 
-    // Вспомогательный синхронный fallback в основном потоке на случай сбоя Worker
+    // Вспомогательный синхронный/ленивый fallback в основном потоке на случай сбоя Worker
     let _fallbackFuse = null;
     let _fallbackItemsRef = null;
+    let _fuseLoadPromise = null;
+
+    function ensureFallbackFuseLoaded() {
+        if (typeof window.Fuse !== 'undefined') return Promise.resolve(window.Fuse);
+        if (!_fuseLoadPromise) {
+            _fuseLoadPromise = import('fuse.js').then((mod) => {
+                const FuseClass = mod.default || mod.Fuse || mod;
+                window.Fuse = FuseClass;
+                if (typeof globalThis !== 'undefined') globalThis.Fuse = FuseClass;
+                return FuseClass;
+            }).catch(() => null);
+        }
+        return _fuseLoadPromise;
+    }
 
     function getFallbackFuse(items) {
-        if (typeof window.Fuse === 'undefined') return null;
+        if (typeof window.Fuse === 'undefined') {
+            ensureFallbackFuseLoaded();
+            return null;
+        }
         if (!_fallbackFuse || _fallbackItemsRef !== items) {
             _fallbackItemsRef = items;
             _fallbackFuse = new window.Fuse(items, {

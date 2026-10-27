@@ -8,6 +8,8 @@ let cachedFuseInstance = null;
 let cachedFuseItemsRef = null;
 
 function getLiveSearchFuse() {
+    const FuseClass = window.Fuse || (typeof Fuse !== 'undefined' ? Fuse : null);
+    if (!FuseClass) return null;
     const items = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
     if (!cachedFuseInstance || cachedFuseItemsRef !== items) {
         cachedFuseItemsRef = items;
@@ -24,7 +26,7 @@ function getLiveSearchFuse() {
                 { name: 'size', weight: 0.8 }
             ]
         };
-        cachedFuseInstance = new Fuse(items, fuseOptions);
+        cachedFuseInstance = new FuseClass(items, fuseOptions);
     }
     return cachedFuseInstance;
 }
@@ -104,6 +106,7 @@ function handleLiveSearch() {
                 results = await window.searchWorker.searchLive(cleanSearchTerm, 8);
             } else {
                 const fuse = getLiveSearchFuse();
+                if (!fuse) return;
                 const queryVariants = (typeof expandSearchQuery === 'function') 
                     ? expandSearchQuery(cleanSearchTerm) 
                     : [cleanSearchTerm];

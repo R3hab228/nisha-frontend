@@ -85,8 +85,28 @@ export default defineConfig({
             if (id.includes('jsbarcode')) return 'feature-jsbarcode';
             if (id.includes('auto-animate')) return 'feature-autoanimate';
             if (id.includes('vanilla-tilt')) return 'feature-tilt';
-            if (id.includes('lenis') || id.includes('dompurify') || id.includes('fuse.js') || id.includes('imask')) return 'vendor-libs';
+            if (id.includes('lenis')) return 'feature-lenis';
+            if (id.includes('fuse.js')) return 'feature-fuse';
+            if (id.includes('dompurify') || id.includes('imask')) return 'vendor-libs';
             return 'vendor';
+          }
+          if (id.includes('/js/core/') || id.includes('\\js\\core\\')) {
+            return 'app-core';
+          }
+          if (id.includes('/js/catalog/') || id.includes('\\js\\catalog\\')) {
+            return 'app-catalog';
+          }
+          if (id.includes('/js/cart/') || id.includes('\\js\\cart\\')) {
+            return 'app-cart';
+          }
+          if (id.includes('/js/product/') || id.includes('\\js\\product\\')) {
+            return 'app-product';
+          }
+          if (id.includes('/js/profile/') || id.includes('\\js\\profile\\') || id.includes('/js/auth/') || id.includes('\\js\\auth\\')) {
+            return 'app-profile';
+          }
+          if (id.includes('/js/ui/') || id.includes('\\js\\ui\\')) {
+            return 'app-ui';
           }
         },
       },
