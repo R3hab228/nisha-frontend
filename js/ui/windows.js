@@ -126,10 +126,6 @@ function openModal(id) {
     }
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-
-    if (id === 'profileModal' && typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
-        window.NishaGoogleAuth.syncAll();
-    }
 }
 window.openModal = openModal;
 

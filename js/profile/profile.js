@@ -412,6 +412,7 @@ function toggleRegMode(isModal = false) {
     const btnRegister = document.getElementById(p ? 'modalBtnRegister' : 'btnRegister');
     const btnBackLogin = document.getElementById(p ? 'modalBtnBackLogin' : 'btnBackLogin');
     const authUsername = document.getElementById(a + 'Username');
+    const forgotPassWrap = document.getElementById(p ? 'modalAuthForgotPassWrap' : 'authForgotPassWrap');
 
     const currentlyReg = btnRegister && btnRegister.style.display === 'block';
     const nextRegMode = !currentlyReg;
@@ -423,16 +424,14 @@ function toggleRegMode(isModal = false) {
         if (btnRegister) btnRegister.style.display = 'block';
         if (btnBackLogin) btnBackLogin.style.display = 'block';
         if (authUsername) authUsername.style.display = 'block';
+        if (forgotPassWrap) forgotPassWrap.style.display = 'none';
     } else {
         if (btnLogin) btnLogin.style.display = 'block';
         if (btnShowReg) btnShowReg.style.display = 'block';
         if (btnRegister) btnRegister.style.display = 'none';
         if (btnBackLogin) btnBackLogin.style.display = 'none';
         if (authUsername) authUsername.style.display = 'none';
-    }
-
-    if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
-        window.NishaGoogleAuth.syncAll();
+        if (forgotPassWrap) forgotPassWrap.style.display = 'flex';
     }
 }
 window.toggleRegMode = toggleRegMode;
@@ -476,7 +475,16 @@ async function handleAuth(action, isModal = false) {
     }
 
     if (result.error) {
-        showToast(result.error.message, 'error');
+        let msg = result.error.message;
+        const errLower = (msg || '').toLowerCase();
+        if (errLower.includes('invalid login credentials')) {
+            msg = 'Неверный email или пароль. Если вы входили через Google — нажмите «Войти через Google» ниже.';
+        } else if (errLower.includes('email not confirmed')) {
+            msg = 'Подтвердите email по ссылке из письма или войдите через Google.';
+        } else if (errLower.includes('user already registered')) {
+            msg = 'Этот email уже зарегистрирован. Попробуйте войти или сбросить пароль.';
+        }
+        showToast(msg, 'error');
     } else {
         await checkSession();
         if (isModal && typeof closeModal === 'function') closeModal('profileModal');
@@ -484,16 +492,44 @@ async function handleAuth(action, isModal = false) {
 }
 window.handleAuth = handleAuth;
 
+async function handleForgotPassword(isModal = false) {
+    const sb = getSupabase();
+    if (!sb) return;
+
+    const p = isModal ? 'modalAuth' : 'auth';
+    const emailInput = document.getElementById(p + 'Email');
+    let email = emailInput ? emailInput.value.trim() : '';
+
+    if (!email) {
+        email = prompt('Введите ваш Email для восстановления доступа к аккаунту:');
+        if (email) email = email.trim();
+    }
+
+    if (!email) {
+        showToast('Укажите Email для восстановления пароля', 'error');
+        return;
+    }
+
+    try {
+        const redirectUrl = window.location.origin || 'https://www.nisha-store.shop';
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+            redirectTo: redirectUrl
+        });
+        if (error) {
+            showToast('Ошибка восстановления: ' + error.message, 'error');
+        } else {
+            showToast('Письмо для сброса пароля отправлено на ' + email + '! Проверьте входящие и Спам.', 'success');
+        }
+    } catch (e) {
+        showToast('Не удалось отправить письмо для сброса пароля', 'error');
+    }
+}
+window.handleForgotPassword = handleForgotPassword;
+
 async function logout() {
     const sb = getSupabase();
     if (sb) {
         await sb.auth.signOut();
-    }
-    if (typeof window !== 'undefined' && window.google?.accounts?.id?.disableAutoSelect) {
-        try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
-    }
-    if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.resetSession === 'function') {
-        try { await window.NishaGoogleAuth.resetSession(); } catch (e) {}
     }
     const msg = typeof i18next !== 'undefined' ? i18next.t('messages.logout') : 'Вы вышли из системы';
     showToast(msg, 'success');
@@ -506,15 +542,31 @@ async function logout() {
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
     
     await checkSession();
-    if (typeof window !== 'undefined' && window.NishaGoogleAuth && typeof window.NishaGoogleAuth.syncAll === 'function') {
-        window.NishaGoogleAuth.syncAll();
-    }
     if (typeof applyFilters === 'function') applyFilters();
 }
 window.logout = logout;
 
-// Вход через Google вынесен в js/auth/google-signin.js (Google Identity Services + ID Token,
-// с фоллбэком на OAuth-редирект). window.loginWithGoogle определяется там.
+// Прямой, надежный вход через Google OAuth (Supabase Auth redirect)
+async function loginWithGoogle() {
+    const isInApp = /Instagram|FBAN|FBAV|TikTok/i.test(navigator.userAgent || '');
+    if (isInApp) {
+        alert("Для входа через Google открой сайт в обычном браузере (Safari или Chrome)");
+        return;
+    }
+    const sb = getSupabase();
+    if (!sb) return;
+
+    const redirectUrl = window.location.origin || 'https://www.nisha-store.shop';
+    const { data, error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: redirectUrl,
+            queryParams: { prompt: 'select_account', access_type: 'offline' }
+        }
+    });
+    if (error) showToast('Ошибка: ' + error.message, 'error');
+}
+window.loginWithGoogle = loginWithGoogle;
 
 window.togglePasswordVisibility = function(inputId, iconElement) {
     const input = document.getElementById(inputId);

@@ -1,219 +1,129 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createHash } from 'node:crypto';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
-// Модуль — обычный браузерный скрипт (IIFE): подставляем минимальное окружение браузера
-function setupBrowserEnv({ hostname = 'localhost', withGoogle = true, sbMock } = {}) {
-    const g = globalThis;
-    g.window = g;
-    g.location = { hostname };
-    g.document = {
-        readyState: 'complete',
-        querySelectorAll: () => [],
-        getElementById: () => null,
-        createElement: () => ({ style: {}, remove() {}, appendChild() {} }),
-        head: { appendChild() {} },
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn()
-    };
-    g.addEventListener = vi.fn();
-    g.removeEventListener = vi.fn();
-    g.showToast = vi.fn();
-    g.checkSession = vi.fn().mockResolvedValue();
-    g.closeModal = vi.fn();
-    g.getSupabase = () => sbMock;
-    g.alert = vi.fn();
-    if (withGoogle) {
-        g.google = { accounts: { id: { initialize: vi.fn(), renderButton: vi.fn(), prompt: vi.fn() } } };
-    } else {
-        delete g.google;
-    }
-}
+describe('Google OAuth & Authentication Recovery (Supabase)', () => {
+    let mockSupabase;
+    let mockToast;
+    let mockAlert;
+    let mockCheckSession;
 
-async function loadModule() {
-    vi.resetModules();
-    await import('../js/auth/google-signin.js');
-    return globalThis.NishaGoogleAuth;
-}
+    beforeEach(async () => {
+        mockToast = vi.fn();
+        mockAlert = vi.fn();
+        mockCheckSession = vi.fn().mockResolvedValue();
 
-describe('Google Sign-In (GIS ID Token)', () => {
-    beforeEach(() => { vi.useFakeTimers(); });
-    afterEach(() => {
-        vi.useRealTimers();
-        delete globalThis.NishaGoogleAuth;
-        delete globalThis.loginWithGoogle;
-    });
-
-    it('initializes GIS with the correct client id and a hashed nonce, then signs into Supabase with the RAW nonce', async () => {
-        const sb = { auth: { signInWithIdToken: vi.fn().mockResolvedValue({ error: null }), signInWithOAuth: vi.fn() } };
-        setupBrowserEnv({ sbMock: sb });
-        const api = await loadModule();
-
-        expect(await api.ensureReady()).toBe(true);
-        const cfg = globalThis.google.accounts.id.initialize.mock.calls[0][0];
-        expect(cfg.client_id).toBe('150814094251-mjd3ol7383v54h7preolcnb19lbujhd8.apps.googleusercontent.com');
-        expect(cfg.nonce).toMatch(/^[0-9a-f]{64}$/);
-
-        await api.handleCredential({ credential: 'google.id.token' });
-
-        expect(sb.auth.signInWithIdToken).toHaveBeenCalledTimes(1);
-        const payload = sb.auth.signInWithIdToken.mock.calls[0][0];
-        expect(payload.provider).toBe('google');
-        expect(payload.token).toBe('google.id.token');
-        // Google получает sha256(raw) в hex, Supabase — исходную строку
-        expect(createHash('sha256').update(payload.nonce).digest('hex')).toBe(cfg.nonce);
-        expect(globalThis.checkSession).toHaveBeenCalledTimes(1);
-        expect(globalThis.showToast).toHaveBeenCalledWith(expect.any(String), 'success');
-    });
-
-    it('shows an error toast and does not refresh the session when Supabase rejects the token', async () => {
-        const sb = { auth: { signInWithIdToken: vi.fn().mockResolvedValue({ error: { message: 'Unacceptable audience' } }), signInWithOAuth: vi.fn() } };
-        setupBrowserEnv({ sbMock: sb });
-        const api = await loadModule();
-        await api.ensureReady();
-
-        await api.handleCredential({ credential: 'bad.token' });
-
-        expect(globalThis.checkSession).not.toHaveBeenCalled();
-        expect(globalThis.showToast).toHaveBeenCalledWith(expect.stringContaining('Unacceptable audience'), 'error');
-    });
-
-    it('ignores empty credentials and prevents double sign-in', async () => {
-        let resolveSignIn;
-        const sb = { auth: { signInWithIdToken: vi.fn(() => new Promise(r => { resolveSignIn = r; })), signInWithOAuth: vi.fn() } };
-        setupBrowserEnv({ sbMock: sb });
-        const api = await loadModule();
-        await api.ensureReady();
-
-        await api.handleCredential({});
-        await api.handleCredential(null);
-        expect(sb.auth.signInWithIdToken).not.toHaveBeenCalled();
-
-        const first = api.handleCredential({ credential: 't1' });
-        await api.handleCredential({ credential: 't2' }); // игнорируется, пока идет первый вход
-        resolveSignIn({ error: null });
-        await first;
-        expect(sb.auth.signInWithIdToken).toHaveBeenCalledTimes(1);
-    });
-
-    it('falls back to the old OAuth redirect when GIS is unavailable (adblock / offline)', async () => {
-        const sb = { auth: { signInWithIdToken: vi.fn(), signInWithOAuth: vi.fn().mockResolvedValue({ error: null }) } };
-        setupBrowserEnv({ sbMock: sb, withGoogle: false });
-        await loadModule();
-
-        await globalThis.loginWithGoogle();
-
-        expect(sb.auth.signInWithOAuth).toHaveBeenCalledTimes(1);
-        const arg = sb.auth.signInWithOAuth.mock.calls[0][0];
-        expect(arg.provider).toBe('google');
-        expect(arg.options.redirectTo).toBe('https://www.nisha-store.shop');
-    });
-
-    it('blocks Google login inside Instagram/TikTok in-app browsers with a hint', async () => {
-        const sb = { auth: { signInWithIdToken: vi.fn(), signInWithOAuth: vi.fn() } };
-        setupBrowserEnv({ sbMock: sb });
-        const original = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
-        Object.defineProperty(globalThis, 'navigator', { value: { userAgent: 'Mozilla/5.0 Instagram 300.0' }, configurable: true });
-        try {
-            await loadModule();
-            await globalThis.loginWithGoogle();
-            expect(globalThis.alert).toHaveBeenCalled();
-            expect(sb.auth.signInWithOAuth).not.toHaveBeenCalled();
-        } finally {
-            if (original) Object.defineProperty(globalThis, 'navigator', original);
-            else delete globalThis.navigator;
-        }
-    });
-
-    it('resetSession() generates a fresh nonce, re-initializes GIS, and clears cached rendered widths', async () => {
-        const sb = { auth: { signInWithIdToken: vi.fn().mockResolvedValue({ error: null }), signInWithOAuth: vi.fn() } };
-        setupBrowserEnv({ sbMock: sb });
-        const api = await loadModule();
-        await api.ensureReady();
-
-        const initialNonce = globalThis.google.accounts.id.initialize.mock.calls[0][0].nonce;
-        expect(initialNonce).toBeTruthy();
-
-        // Simulate reset on logout:
-        await api.resetSession();
-
-        expect(globalThis.google.accounts.id.initialize).toHaveBeenCalledTimes(2);
-        const secondNonce = globalThis.google.accounts.id.initialize.mock.calls[1][0].nonce;
-        expect(secondNonce).toBeTruthy();
-        expect(secondNonce).not.toBe(initialNonce);
-    });
-
-    it('loginWithGoogle() directly invokes OAuth redirect even if GIS is ready, preventing unclickable button deadlocks', async () => {
-        const sb = { auth: { signInWithIdToken: vi.fn(), signInWithOAuth: vi.fn().mockResolvedValue({ error: null }) } };
-        setupBrowserEnv({ sbMock: sb, withGoogle: true });
-        await loadModule();
-        await globalThis.NishaGoogleAuth.ensureReady();
-
-        // GIS is ready, but user clicked the underlying HTML button (overlay was loading or obscured)
-        await globalThis.loginWithGoogle();
-
-        expect(sb.auth.signInWithOAuth).toHaveBeenCalledTimes(1);
-        expect(globalThis.google.accounts.id.prompt).not.toHaveBeenCalled();
-    });
-
-    it('syncAll() re-lays out mounted Google buttons and positions the overlay', async () => {
-        const sb = { auth: { signInWithIdToken: vi.fn(), signInWithOAuth: vi.fn() } };
-        setupBrowserEnv({ sbMock: sb, withGoogle: true });
-
-        const mockOverlay = { style: {} };
-        const mockHost = { style: {}, querySelector: vi.fn().mockReturnValue(null), replaceChildren: vi.fn() };
-        const mockBtn = {
-            offsetWidth: 250,
-            offsetHeight: 40,
-            offsetLeft: 10,
-            offsetTop: 20,
-            parentElement: { style: {} },
-            offsetParent: null,
-            getBoundingClientRect: () => ({ left: 50, top: 100 }),
-            insertAdjacentElement: vi.fn()
+        mockSupabase = {
+            auth: {
+                signInWithOAuth: vi.fn().mockResolvedValue({ data: { url: 'https://placeholder.supabase.co/auth/v1/authorize' }, error: null }),
+                signInWithPassword: vi.fn(),
+                signUp: vi.fn(),
+                signOut: vi.fn().mockResolvedValue({ error: null }),
+                resetPasswordForEmail: vi.fn().mockResolvedValue({ data: {}, error: null }),
+                onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+                getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null })
+            },
+            from: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                    eq: vi.fn().mockReturnValue({
+                        limit: vi.fn().mockResolvedValue({ data: [], error: null })
+                    })
+                })
+            })
         };
-        mockBtn.offsetParent = mockBtn.parentElement;
 
-        globalThis.document.querySelectorAll = vi.fn().mockReturnValue([mockBtn]);
-        globalThis.document.createElement = vi.fn((tag) => {
-            if (tag === 'div') return { style: {}, appendChild: vi.fn(), setAttribute: vi.fn() };
-            return { style: {} };
+        globalThis.window = globalThis;
+        globalThis.location = { origin: 'https://www.nisha-store.shop' };
+        globalThis.getSupabase = () => mockSupabase;
+        globalThis.showToast = mockToast;
+        globalThis.alert = mockAlert;
+        globalThis.checkSession = mockCheckSession;
+        globalThis.closeModal = vi.fn();
+        globalThis.document = {
+            readyState: 'complete',
+            getElementById: vi.fn().mockReturnValue(null),
+            querySelectorAll: vi.fn().mockReturnValue([]),
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            body: { style: {} }
+        };
+        globalThis.addEventListener = vi.fn();
+        globalThis.removeEventListener = vi.fn();
+
+        vi.resetModules();
+        await import('../js/profile/profile.js');
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('loginWithGoogle triggers Supabase signInWithOAuth with provider=google and select_account query param', async () => {
+        expect(typeof globalThis.loginWithGoogle).toBe('function');
+        await globalThis.loginWithGoogle();
+
+        expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledTimes(1);
+        const callArgs = mockSupabase.auth.signInWithOAuth.mock.calls[0][0];
+        expect(callArgs.provider).toBe('google');
+        expect(callArgs.options.redirectTo).toBe('https://www.nisha-store.shop');
+        expect(callArgs.options.queryParams.prompt).toBe('select_account');
+        expect(callArgs.options.queryParams.access_type).toBe('offline');
+    });
+
+    it('loginWithGoogle warns in-app browsers (Instagram, TikTok) before OAuth', async () => {
+        Object.defineProperty(globalThis.navigator, 'userAgent', {
+            value: 'Mozilla/5.0 Instagram 123.0.0 Android',
+            configurable: true
         });
 
-        const api = await loadModule();
-        await api.ensureReady();
-
-        api.syncAll();
-        // syncAll runs immediately and schedules frame/timeouts
-        vi.advanceTimersByTime(200);
-
-        expect(globalThis.google.accounts.id.renderButton).toHaveBeenCalled();
+        await globalThis.loginWithGoogle();
+        expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining('Safari или Chrome'));
+        expect(mockSupabase.auth.signInWithOAuth).not.toHaveBeenCalled();
     });
 
-    it('logout() calls disableAutoSelect, resets GIS session, and synchronizes Google button overlays', async () => {
-        const { readFileSync } = await import('node:fs');
-        const { resolve } = await import('node:path');
-        const sb = {
-            auth: {
-                signOut: vi.fn().mockResolvedValue({ error: null }),
-                getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null })
-            }
-        };
-        setupBrowserEnv({ sbMock: sb, withGoogle: true });
-        globalThis.google.accounts.id.disableAutoSelect = vi.fn();
-        const api = await loadModule();
-        await api.ensureReady();
+    it('handleAuth translates "Invalid login credentials" to helpful localized text pointing to Google login', async () => {
+        mockSupabase.auth.signInWithPassword.mockResolvedValue({
+            data: null,
+            error: { message: 'Invalid login credentials' }
+        });
 
-        const resetSpy = vi.spyOn(api, 'resetSession');
-        const syncSpy = vi.spyOn(api, 'syncAll');
+        globalThis.document.getElementById = vi.fn((id) => {
+            if (id === 'authEmail') return { value: 'neos11221@gmail.com' };
+            if (id === 'authPass') return { value: 'secretpass' };
+            return null;
+        });
 
-        const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-        eval(profileCode);
+        await globalThis.handleAuth('login', false);
 
-        await globalThis.logout();
+        expect(mockToast).toHaveBeenCalledTimes(1);
+        const toastMsg = mockToast.mock.calls[0][0];
+        expect(toastMsg).toContain('Неверный email или пароль');
+        expect(toastMsg).toContain('Войти через Google');
+        expect(mockToast.mock.calls[0][1]).toBe('error');
+    });
 
-        expect(sb.auth.signOut).toHaveBeenCalledTimes(1);
-        expect(globalThis.google.accounts.id.disableAutoSelect).toHaveBeenCalledTimes(1);
-        expect(resetSpy).toHaveBeenCalledTimes(1);
-        expect(syncSpy).toHaveBeenCalled();
+    it('handleForgotPassword triggers resetPasswordForEmail with origin redirect', async () => {
+        globalThis.document.getElementById = vi.fn((id) => {
+            if (id === 'authEmail') return { value: 'user@example.com' };
+            return null;
+        });
+
+        await globalThis.handleForgotPassword(false);
+
+        expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
+            'user@example.com',
+            expect.objectContaining({ redirectTo: 'https://www.nisha-store.shop' })
+        );
+        expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('Письмо для сброса пароля отправлено'), 'success');
+    });
+
+    it('index.html contains no invisible overlay elements or data-google-signin blocks on Google buttons', () => {
+        const indexPath = resolve(process.cwd(), 'index.html');
+        const indexHtml = readFileSync(indexPath, 'utf8');
+
+        expect(indexHtml).not.toContain('data-google-signin');
+        expect(indexHtml).not.toContain('g-signin-overlay');
+        expect(indexHtml).toContain('onclick=loginWithGoogle()');
+        expect(indexHtml).toContain('handleForgotPassword');
     });
 });
