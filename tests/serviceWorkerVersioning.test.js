@@ -62,4 +62,13 @@ describe('Service Worker & PWA Cache Automation', () => {
         expect(content).not.toContain('AbortController');
         expect(content).not.toContain('throw err;');
     });
+
+    it('sw.js ensures push notifications use square v5 icons and redirect away from vercel preview domains', () => {
+        const content = readFileSync(publicSwPath, 'utf8');
+
+        expect(content).toContain('/icon-192.png?v=5');
+        expect(content).toContain('/badge.png?v=5');
+        expect(content).toContain("parsed.hostname.includes('vercel.app')");
+        expect(content).toContain("parsed.hostname = 'www.nisha-store.shop'");
+    });
 });

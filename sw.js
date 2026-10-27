@@ -268,12 +268,12 @@ self.addEventListener('push', event => {
         const origin = 'https://www.nisha-store.shop';
         const options = {
             body: data.body,
-            icon: data.icon || (origin + '/icon-192.png'),
-            badge: data.badge || (origin + '/badge.png'),
+            icon: (data.icon && !data.icon.includes('vercel.app')) ? data.icon : (origin + '/icon-192.png?v=5'),
+            badge: (data.badge && !data.badge.includes('vercel.app')) ? data.badge : (origin + '/badge.png?v=5'),
             vibrate: [200, 100, 200],
             tag: data.tag || (data.itemId ? 'nisha-item-' + data.itemId : (data.id ? 'nisha-item-' + data.id : (data.title ? 'nisha-' + encodeURIComponent(data.title) : 'nisha-push'))),
             renotify: false,
-            data: { url: data.url || '/' }
+            data: { url: data.url || (origin + '/') }
         };
         event.waitUntil(
             self.registration.showNotification(data.title || 'NISHA STORE', options)
@@ -284,12 +284,32 @@ self.addEventListener('push', event => {
 // Клик по уведомлению
 self.addEventListener('notificationclick', event => {
     event.notification.close();
-    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+    const PROD_ORIGIN = 'https://www.nisha-store.shop';
+    const rawTarget = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+    
+    // Всегда направляем пользователя на официальный домен www.nisha-store.shop, а не на технический Vercel превью
+    let targetUrl = rawTarget;
+    if (targetUrl.startsWith('/')) {
+        targetUrl = PROD_ORIGIN + (targetUrl === '/' ? '/' : targetUrl);
+    } else {
+        try {
+            const parsed = new URL(targetUrl);
+            if (parsed.hostname.includes('vercel.app')) {
+                parsed.protocol = 'https:';
+                parsed.hostname = 'www.nisha-store.shop';
+                parsed.port = '';
+                targetUrl = parsed.toString();
+            }
+        } catch(e) {
+            targetUrl = PROD_ORIGIN + '/';
+        }
+    }
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
             for (let client of windowClients) {
-                if (client.url && (client.url.includes('nisha-store.shop') || client.url.includes(self.location.origin)) && 'focus' in client) {
-                    if (targetUrl !== '/' && 'navigate' in client && !client.url.includes(targetUrl)) {
+                if (client.url && client.url.includes('nisha-store.shop') && 'focus' in client) {
+                    if (targetUrl !== (PROD_ORIGIN + '/') && 'navigate' in client && !client.url.includes(targetUrl)) {
                         return client.navigate(targetUrl).then(c => c ? c.focus() : client.focus());
                     }
                     return client.focus();
