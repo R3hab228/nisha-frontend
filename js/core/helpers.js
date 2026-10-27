@@ -431,49 +431,35 @@ function setDifference(setA, setB) {
 window.setDifference = setDifference;
 if (typeof globalThis !== 'undefined') globalThis.setDifference = setDifference;
 
-// --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА (ЕДИНЫЙ НАТИВНЫЙ CLIPBOARD API С ЗАЩИТОЙ ДЛЯ IN-APP WEBVIEW) ---
-function _copyViaSelectionFallback(str) {
-    try {
-        const ta = document.createElement('textarea');
-        ta.value = str;
-        ta.setAttribute('readonly', '');
-        ta.style.position = 'fixed';
-        ta.style.top = '-9999px';
-        ta.style.left = '-9999px';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        const ok = typeof document.execCommand === 'function' ? document.execCommand('copy') : false;
-        ta.remove();
-        return Boolean(ok);
-    } catch (e) {
-        return false;
-    }
-}
-
-function copyToClipboard(text, successMsg = 'Скопировано в буфер!', errorMsg = 'Ошибка копирования') {
+// --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА (ЕДИНЫЙ НАТИВНЫЙ ASYNC CLIPBOARD API) ---
+async function copyToClipboard(text, successMsg = 'Скопировано в буфер!', errorMsg = 'Ошибка копирования') {
     const str = String(text ?? '');
-    if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        return navigator.clipboard.writeText(str)
-            .then(() => {
+    try {
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+            if (typeof navigator.clipboard.writeText === 'function') {
+                await navigator.clipboard.writeText(str);
                 if (successMsg) showToast(successMsg, 'success');
                 return true;
-            })
-            .catch(() => {
-                if (_copyViaSelectionFallback(str)) {
-                    if (successMsg) showToast(successMsg, 'success');
-                    return true;
-                }
-                if (errorMsg) showToast(errorMsg, 'error');
-                return false;
-            });
-    }
-    if (_copyViaSelectionFallback(str)) {
-        if (successMsg) showToast(successMsg, 'success');
-        return Promise.resolve(true);
+            }
+            if (typeof navigator.clipboard.write === 'function' && typeof ClipboardItem === 'function' && typeof Blob === 'function') {
+                const item = new ClipboardItem({ 'text/plain': new Blob([str], { type: 'text/plain' }) });
+                await navigator.clipboard.write([item]);
+                if (successMsg) showToast(successMsg, 'success');
+                return true;
+            }
+        }
+    } catch (e) {
+        try {
+            if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.write === 'function' && typeof ClipboardItem === 'function' && typeof Blob === 'function') {
+                const item = new ClipboardItem({ 'text/plain': new Blob([str], { type: 'text/plain' }) });
+                await navigator.clipboard.write([item]);
+                if (successMsg) showToast(successMsg, 'success');
+                return true;
+            }
+        } catch (err) {}
     }
     if (errorMsg) showToast(errorMsg, 'error');
-    return Promise.resolve(false);
+    return false;
 }
 window.copyToClipboard = copyToClipboard;
 if (typeof globalThis !== 'undefined') globalThis.copyToClipboard = copyToClipboard;

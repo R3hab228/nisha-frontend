@@ -1522,7 +1522,7 @@ async function openCheckoutModal() {
         if (branchInput && !branchInput._enterBound) {
             branchInput._enterBound = true;
             branchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.keyCode === 13) {
+                if (e.key === 'Enter') {
                     e.preventDefault();
                     const bd = document.getElementById('branchDropdown');
                     if (bd) {
@@ -1544,7 +1544,7 @@ async function openCheckoutModal() {
         if (cityInput && !cityInput._enterBound) {
             cityInput._enterBound = true;
             cityInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.keyCode === 13) {
+                if (e.key === 'Enter') {
                     e.preventDefault();
                     const cd = document.getElementById('cityDropdown');
                     if (cd) {

@@ -1927,7 +1927,6 @@ window.applyFilters = applyFilters;
         try {
             const mq = window.matchMedia('(max-width: 900px)');
             if (typeof mq.addEventListener === 'function') mq.addEventListener('change', scheduleCheck);
-            else if (typeof mq.addListener === 'function') mq.addListener(scheduleCheck);
         } catch (e) {}
     }
 })();
