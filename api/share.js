@@ -57,10 +57,12 @@ module.exports = async function handler(req, res) {
     if (item.size) descParts.push('Размер: ' + item.size);
     if (item.condition) descParts.push('Состояние: ' + item.condition);
     if (item.price) descParts.push('Цена: ' + item.price + ' грн');
-    const description = escapeHTML(descParts.join(' | ') || (item.description ? item.description.slice(0, 150) : 'Винтажная одежда в магазине NISHA'));
+    const rawDescription = descParts.join(' | ') || (item.description ? item.description.slice(0, 150) : 'Винтажная одежда в магазине NISHA');
+    const description = escapeHTML(rawDescription);
     const shareUrl = 'https://www.nisha-store.shop/share/' + id;
     
-    let imageUrl = 'https://www.nisha-store.shop/og-image.png';
+    let rawImageUrl = 'https://www.nisha-store.shop/og-image.png';
+    let imageUrl = rawImageUrl;
     let videoUrl = '';
     
     if (item.images && item.images.length > 0) {
@@ -68,22 +70,26 @@ module.exports = async function handler(req, res) {
       if (photo.endsWith('.mp4')) {
           videoUrl = escapeHTML(photo);
           if (item.thumbnails && item.thumbnails.length > 0 && item.thumbnails[0]) {
-              imageUrl = escapeHTML(item.thumbnails[0]);
+              rawImageUrl = String(item.thumbnails[0]);
+              imageUrl = escapeHTML(rawImageUrl);
           }
       } else {
-          imageUrl = escapeHTML(photo);
+          rawImageUrl = String(photo);
+          imageUrl = escapeHTML(rawImageUrl);
       }
     }
 
     const videoTags = videoUrl ? 
       '<meta property="og:video" content="' + videoUrl + '">\n<meta property="og:video:type" content="video/mp4">' : '';
 
+    const safePriceStr = escapeHTML(item.price || 0);
+
     const jsonLd = JSON.stringify({
       "@context": "https://schema.org/",
       "@type": "Product",
       "name": fullItemTitle,
-      "image": [imageUrl],
-      "description": description,
+      "image": [rawImageUrl],
+      "description": rawDescription,
       "brand": {
         "@type": "Brand",
         "name": rawBrand || "NISHA"
@@ -112,7 +118,7 @@ module.exports = async function handler(req, res) {
 '<meta property="og:image" content="' + imageUrl + '">\n' +
 '<meta property="og:url" content="' + shareUrl + '">\n' +
 '<meta property="product:availability" content="' + (isSold ? 'out of stock' : 'in stock') + '">\n' +
-'<meta property="product:price:amount" content="' + (item.price || 0) + '">\n' +
+'<meta property="product:price:amount" content="' + safePriceStr + '">\n' +
 '<meta property="product:price:currency" content="UAH">\n' +
 videoTags + '\n' +
 '<meta name="twitter:card" content="summary_large_image">\n' +

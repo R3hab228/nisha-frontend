@@ -22,12 +22,19 @@ module.exports = async function handler(req, res) {
     if (Array.isArray(items)) {
       items.forEach(item => {
         if (!item || !item.id) return;
-        const date = item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : '';
+        let date = '';
+        if (item.created_at) {
+          const parsedTs = Date.parse(item.created_at);
+          if (Number.isFinite(parsedTs)) {
+            date = new Date(parsedTs).toISOString().split('T')[0];
+          }
+        }
         const lastModTag = date ? `\n    <lastmod>${date}</lastmod>` : '';
         const isSold = item.status === 'sold';
         const changeFreq = isSold ? 'monthly' : 'weekly';
         const priority = isSold ? '0.4' : '0.8';
-        xml += `  <url>\n    <loc>${SITE_URL}/share/${item.id}</loc>${lastModTag}\n    <changefreq>${changeFreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>\n`;
+        const safeId = encodeURIComponent(String(item.id));
+        xml += `  <url>\n    <loc>${SITE_URL}/share/${safeId}</loc>${lastModTag}\n    <changefreq>${changeFreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>\n`;
       });
     }
 

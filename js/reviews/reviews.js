@@ -533,12 +533,13 @@ function initReviewsRealtime(sb) {
                     return;
                 }
 
-                // Форматируем имя и текст
+                // Форматируем имя и текст (с экранированием от XSS для DOM-тоста)
                 const rawName = (rev.user_name || '').trim();
                 const author = rawName ? (rawName.startsWith('@') ? rawName : '@' + rawName) : 'Покупатель';
                 const cleanText = (rev.text || '').replace(/\s+/g, ' ').trim();
                 const snippet = cleanText.length > 55 ? cleanText.slice(0, 52) + '...' : cleanText;
-                const toastMsg = `⭐ Новый отзыв от ${author}: "${snippet}"`;
+                const esc = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'));
+                const toastMsg = `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"`;
 
                 // 1. Интерактивный пуш-тост на сайте с кликом для открытия модалки
                 if (typeof showToast === 'function') {

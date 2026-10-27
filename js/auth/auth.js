@@ -118,21 +118,28 @@ window.getUserTg = getUserTg;
 function updateProposeAndCheckoutFields() {
     const phone = getUserPhone();
     const tg = getUserTg();
+    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+    const hasVerifiedProfilePhone = Boolean(activeUser && profile && profile.phone && profile.phone.trim());
+    const hasVerifiedProfileTg = Boolean(activeUser && profile && profile.tg && profile.tg.trim());
 
-    // 1. Предложка: если заполнены и телефон, и tg — поле связи пропадает
+    // 1. Предложка: если заполнены и телефон, и tg в профиле — поле связи скрывается, иначе остается редактируемым
     const propContactWrap = document.getElementById('propContactWrapper');
     const propContactInput = document.getElementById('propContact');
-    if (phone && tg) {
+    if (hasVerifiedProfilePhone && hasVerifiedProfileTg) {
         if (propContactWrap) propContactWrap.style.display = 'none';
         if (propContactInput) propContactInput.value = `${tg} | ${phone}`;
     } else {
         if (propContactWrap) propContactWrap.style.display = 'block';
+        if (propContactInput && !propContactInput.value && (phone || tg)) {
+            propContactInput.value = [tg, phone].filter(Boolean).join(' | ');
+        }
     }
 
-    // 2. Оформление заказа: если номер есть в профиле — поле телефон скрывается
+    // 2. Оформление заказа: если номер подтвержден в профиле — поле телефон скрывается; для гостей — подставляется, но остается видимым
     const checkoutPhoneWrap = document.getElementById('checkoutPhoneWrapper');
     const orderPhoneInput = document.getElementById('orderPhone');
-    if (phone) {
+    if (hasVerifiedProfilePhone) {
         if (checkoutPhoneWrap) checkoutPhoneWrap.style.display = 'none';
         if (orderPhoneInput) orderPhoneInput.value = phone;
         window.otpVerified = true;
@@ -143,6 +150,17 @@ function updateProposeAndCheckoutFields() {
         }
     } else {
         if (checkoutPhoneWrap) checkoutPhoneWrap.style.display = 'block';
+        if (orderPhoneInput && !orderPhoneInput.value && phone) {
+            orderPhoneInput.value = phone;
+        }
+        if (phone) {
+            window.otpVerified = true;
+            const btnSubmit = document.getElementById('btnSubmitOrder');
+            if (btnSubmit) {
+                btnSubmit.style.opacity = '1';
+                btnSubmit.style.pointerEvents = 'auto';
+            }
+        }
     }
 }
 window.updateProposeAndCheckoutFields = updateProposeAndCheckoutFields;

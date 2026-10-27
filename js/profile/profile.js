@@ -514,7 +514,7 @@ async function handleForgotPassword(isModal = false) {
         return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
         showToast(t('messages.invalid_email', 'Некорректный формат Email'), 'error');
         return;
     }
@@ -528,7 +528,8 @@ async function handleForgotPassword(isModal = false) {
             showToast(t('messages.forgot_error', 'Ошибка восстановления: ') + error.message, 'error');
         } else {
             const template = t('messages.forgot_sent', 'Письмо для сброса пароля отправлено на {{email}}! Проверьте входящие и Спам.');
-            const successMsg = template.replace('{{email}}', email);
+            const safeEmail = typeof window.escapeHtml === 'function' ? window.escapeHtml(email) : email;
+            const successMsg = template.replace('{{email}}', safeEmail);
             showToast(successMsg, 'success');
         }
     } catch (e) {
@@ -547,8 +548,23 @@ async function logout() {
     
     window.showingOnlyFavs = false;
     window.globalOrdersData = [];
+    window.otpVerified = false;
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    if (store) store.remove('nisha_cached_orders');
+    const keysToClear = [
+        'nisha_cached_orders',
+        'nisha_last_phone',
+        'nisha_last_tg',
+        'nisha_profile_delivery',
+        'nisha_checkout_data',
+        'nisha_email_preference'
+    ];
+    keysToClear.forEach(k => {
+        if (store && typeof store.remove === 'function') store.remove(k);
+        try { localStorage.removeItem(k); } catch (e) {}
+    });
+    if (typeof caches !== 'undefined' && typeof caches.delete === 'function') {
+        caches.delete('nisha-api-v2').catch(() => {});
+    }
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
     

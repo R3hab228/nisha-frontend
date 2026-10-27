@@ -427,4 +427,27 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(productCode).not.toContain('function generateMeasurementSchemeSvg');
         expect(productCode).not.toContain('function showMeasurementSchemeModal');
     });
+
+    it('showToast sanitizes XSS payloads in message and imgUrl', () => {
+        const appended = [];
+        const prevDoc = global.document;
+        global.document = {
+            getElementById: (id) => (id === 'toastContainer' ? { appendChild: (el) => appended.push(el) } : null),
+            createElement: () => ({ className: '', style: {}, innerHTML: '', remove: vi.fn() })
+        };
+        try {
+            window.showToast(
+                'Hello <script>alert(1)</script><img src=x onerror="alert(2)">',
+                'success',
+                "https://evil.com/a.jpg'); background:red; ('"
+            );
+            expect(appended.length).toBe(1);
+            const html = appended[0].innerHTML;
+            expect(html).not.toContain('<script>');
+            expect(html).not.toContain('onerror=');
+            expect(html).not.toContain("a.jpg')");
+        } finally {
+            global.document = prevDoc;
+        }
+    });
 });

@@ -188,16 +188,17 @@ async function openProductModalById(itemId) {
                             ? descContainer.innerHTML.indexOf(qaMarker) 
                             : descContainer.innerHTML.indexOf('<div id="qaWrapper"');
                         const qaPart = qaIndex !== -1 ? descContainer.innerHTML.substring(qaIndex) : '';
+                        const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
                         descContainer.innerHTML = `
                             <div style="margin-bottom: 5px;">
                                 <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">${sizeTitle}</span></strong> 
-                                <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${fullItem.size}</span>
+                                <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${escHtml(fullItem.size)}</span>
                             </div>
                             <div style="margin-bottom: 15px;">
                                 <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${brandTitle}</span></strong> 
-                                <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${fullItem.brand}</span>
+                                <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${escHtml(fullItem.brand)}</span>
                             </div>
-                            <div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : (typeof window.escapeHtml === 'function' ? window.escapeHtml(descText) : descText)}</div>
+                            <div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : escHtml(descText)}</div>
                         ` + qaPart;
                     }
                 }
@@ -300,18 +301,20 @@ function openProductModal(item) {
     }
 
     const descText = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
+    const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
+    const safeDescHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : escHtml(descText);
     const descBlock = document.querySelector('.modal-desc');
     if (descBlock) {
         descBlock.innerHTML = `
             <div style="margin-bottom: 5px;">
                 <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">${typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР'}</span></strong> 
-                <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${item.size}</span>
+                <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${escHtml(item.size)}</span>
             </div>
             <div style="margin-bottom: 15px;">
                 <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${typeof i18next !== 'undefined' ? i18next.t('product.brand') : 'БРЕНД'}</span></strong> 
-                <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${item.brand}</span>
+                <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${escHtml(item.brand)}</span>
             </div>
-            <div style="color: #aaa; font-size: 13px;">${descText}</div>
+            <div style="color: #aaa; font-size: 13px;">${safeDescHtml}</div>
             
             <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ (АККОРДЕОН) -->
             <div id="qaWrapper" class="qa-wrapper">

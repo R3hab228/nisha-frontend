@@ -1597,17 +1597,47 @@ function normalizeOrderPhone(raw) {
 }
 window.normalizeOrderPhone = normalizeOrderPhone;
 
+function highlightFieldError(inputEl) {
+    if (!inputEl) return;
+    inputEl.classList.add('input-field-error');
+    try {
+        inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch(e) {}
+    try {
+        inputEl.focus();
+    } catch(e) {}
+    if (inputEl._clearErrorCtrl) {
+        try { inputEl._clearErrorCtrl.abort(); } catch(e) {}
+    }
+    const clearCtrl = new AbortController();
+    inputEl._clearErrorCtrl = clearCtrl;
+    const onClear = () => {
+        inputEl.classList.remove('input-field-error');
+        clearCtrl.abort();
+        inputEl._clearErrorCtrl = null;
+    };
+    inputEl.addEventListener('input', onClear, { signal: clearCtrl.signal });
+    inputEl.addEventListener('change', onClear, { signal: clearCtrl.signal });
+}
+window.highlightFieldError = highlightFieldError;
+
 async function submitOrder() {
     if (isOrderSubmitting) return;
     if (typeof window.triggerVibration === 'function') window.triggerVibration(150);
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== "") return;
     
-    if (typeof getUserPhone === 'function') {
+    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const activeProfile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+    if (activeUser && activeProfile && activeProfile.phone && activeProfile.phone.trim()) {
+        const ordPhone = document.getElementById('orderPhone');
+        if (ordPhone) ordPhone.value = activeProfile.phone.trim();
+        window.otpVerified = true;
+    } else if (typeof getUserPhone === 'function') {
         const uPhone = getUserPhone();
         if (uPhone) {
             const ordPhone = document.getElementById('orderPhone');
-            if (ordPhone) ordPhone.value = uPhone;
+            if (ordPhone && !ordPhone.value.trim()) ordPhone.value = uPhone;
             window.otpVerified = true;
         }
     }
@@ -1630,29 +1660,6 @@ async function submitOrder() {
 
     const phoneRaw = document.getElementById('orderPhone').value;
     const phone = normalizeOrderPhone(phoneRaw);
-
-    function highlightFieldError(inputEl) {
-        if (!inputEl) return;
-        inputEl.classList.add('input-field-error');
-        try {
-            inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } catch(e) {}
-        try {
-            inputEl.focus();
-        } catch(e) {}
-        if (inputEl._clearErrorCtrl) {
-            try { inputEl._clearErrorCtrl.abort(); } catch(e) {}
-        }
-        const clearCtrl = new AbortController();
-        inputEl._clearErrorCtrl = clearCtrl;
-        const onClear = () => {
-            inputEl.classList.remove('input-field-error');
-            clearCtrl.abort();
-            inputEl._clearErrorCtrl = null;
-        };
-        inputEl.addEventListener('input', onClear, { signal: clearCtrl.signal });
-        inputEl.addEventListener('change', onClear, { signal: clearCtrl.signal });
-    }
 
     const nameInput = document.getElementById('orderName');
     const phoneInput = document.getElementById('orderPhone');

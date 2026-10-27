@@ -107,12 +107,17 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
         };
     }
     
-    // Если передали картинку — добавляем её слева от текста
+    // Если передали картинку — добавляем её слева от текста (с защитой от CSS/HTML инъекции)
     let html = '';
-    if (imgUrl) {
-        html += `<div style="width: 35px; height: 35px; background-image: url('${imgUrl}'); background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #444; flex-shrink: 0;"></div>`;
+    if (imgUrl && typeof imgUrl === 'string' && !/^\s*javascript:/i.test(imgUrl)) {
+        const safeImgUrl = escapeAttr(imgUrl).replaceAll('(', '%28').replaceAll(')', '%29');
+        html += `<div style="width: 35px; height: 35px; background-image: url('${safeImgUrl}'); background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #444; flex-shrink: 0;"></div>`;
     }
-    html += `<div>${message}</div>`;
+    const rawMsgStr = String(message ?? '');
+    const safeMsgHtml = (typeof window !== 'undefined' && window.DOMPurify && typeof window.DOMPurify.sanitize === 'function')
+        ? window.DOMPurify.sanitize(rawMsgStr)
+        : rawMsgStr.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/\son\w+\s*=/gi, ' data-blocked=');
+    html += `<div>${safeMsgHtml}</div>`;
     
     toast.innerHTML = html;
     container.appendChild(toast);
@@ -997,31 +1002,53 @@ window.safeStorage = {
 (function initStorageSafeGuard() {
     try {
         if (typeof Storage !== 'undefined' && Storage.prototype) {
+            const getFallbackMap = (storageInstance) => {
+                try {
+                    if (typeof sessionStorage !== 'undefined' && storageInstance === sessionStorage) {
+                        return _memSessionFallback;
+                    }
+                } catch (e) {}
+                return _memStorageFallback;
+            };
             const originalSetItem = Storage.prototype.setItem;
             Storage.prototype.setItem = function(key, value) {
+                const fbMap = getFallbackMap(this);
                 try {
                     originalSetItem.call(this, key, value);
+                    if (fbMap[key] !== undefined) delete fbMap[key];
                 } catch (err) {
                     try {
-                        if (this === localStorage && typeof cleanStorageLimits === 'function') {
+                        if (typeof localStorage !== 'undefined' && this === localStorage && typeof cleanStorageLimits === 'function') {
                             cleanStorageLimits();
                         }
                         originalSetItem.call(this, key, value);
+                        if (fbMap[key] !== undefined) delete fbMap[key];
                     } catch (retryErr) {
-                        _memStorageFallback[key] = String(value);
+                        fbMap[key] = String(value);
                     }
                 }
             };
             const originalGetItem = Storage.prototype.getItem;
             Storage.prototype.getItem = function(key) {
+                const fbMap = getFallbackMap(this);
                 try {
                     const res = originalGetItem.call(this, key);
                     if (res !== null) return res;
-                    return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : null;
+                    return fbMap[key] !== undefined ? fbMap[key] : null;
                 } catch (err) {
-                    return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : null;
+                    return fbMap[key] !== undefined ? fbMap[key] : null;
                 }
             };
+            const originalRemoveItem = Storage.prototype.removeItem;
+            if (typeof originalRemoveItem === 'function') {
+                Storage.prototype.removeItem = function(key) {
+                    const fbMap = getFallbackMap(this);
+                    delete fbMap[key];
+                    try {
+                        originalRemoveItem.call(this, key);
+                    } catch (err) {}
+                };
+            }
         }
     } catch (e) {}
 })();

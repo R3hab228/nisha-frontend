@@ -42,7 +42,8 @@ function openOrdersModal() {
         }
         
         const grantedMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_granted', {defaultValue: 'Доступ разрешен'}) : 'Доступ разрешен';
-        if (guestText) guestText.innerHTML = `${grantedMsg}: <span style="color:var(--accent-green); font-weight:bold;">@${dName}</span>`;
+        const safeDName = typeof window.escapeHtml === 'function' ? window.escapeHtml(dName) : String(dName || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+        if (guestText) guestText.innerHTML = `${grantedMsg}: <span style="color:var(--accent-green); font-weight:bold;">@${safeDName}</span>`;
         updateOrderTabCounters();
         fetchMyOrders();
     } else {

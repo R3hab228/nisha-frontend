@@ -129,8 +129,9 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // --- ПЕРЕХВАТ SUPABASE API ДЛЯ ОФЛАЙНА (ТОЛЬКО ТОЧНЫЕ REST ЗАПРОСЫ) ---
-    const isSupabaseRestApi = (url.hostname.includes('supabase.co') || url.hostname.includes('workers.dev')) && url.pathname.includes('/rest/v1/');
+    // --- ПЕРЕХВАТ SUPABASE API ДЛЯ ОФЛАЙНА (ТОЛЬКО ПУБЛИЧНЫЙ КАТАЛОГ, БЕЗ ПРОФИЛЕЙ И ЗАКАЗОВ) ---
+    const isSupabaseRestApi = (url.hostname.includes('supabase.co') || url.hostname.includes('workers.dev')) &&
+        (url.pathname.includes('/rest/v1/items') || url.pathname.includes('/rest/v1/reviews') || url.pathname.includes('/rest/v1/site_broadcasts') || url.pathname.includes('/rest/v1/item_questions'));
     if (isSupabaseRestApi) {
         event.respondWith(
             fetch(event.request).then(networkResponse => {
@@ -294,7 +295,7 @@ self.addEventListener('notificationclick', event => {
     } else {
         try {
             const parsed = new URL(targetUrl);
-            if (parsed.hostname.includes('vercel.app')) {
+            if (parsed.hostname.includes('vercel.app') || (parsed.hostname !== 'www.nisha-store.shop' && parsed.hostname !== 'nisha-store.shop')) {
                 parsed.protocol = 'https:';
                 parsed.hostname = 'www.nisha-store.shop';
                 parsed.port = '';
