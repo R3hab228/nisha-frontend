@@ -268,12 +268,12 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </div>
 <button class="auth-btn btn-target" id=btnLogin onclick='handleAuth("login")' data-i18n=sidebar.login>ВОЙТИ</button>
 <button class="auth-btn btn-target" id=btnShowReg onclick=toggleRegMode() style=background:#333;color:#fff data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
-<div id=authForgotPassWrap style="display:flex;justify-content:center;margin:6px 0 2px 0;font-size:11px;font-family:var(--font-mono)">
-<a href="javascript:void(0)" onclick="handleForgotPassword(false)" style="color:#888;text-decoration:underline;cursor:pointer" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
-</div>
 <button class="auth-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap>
 <img src=https://www.google.com/favicon.ico width=14> <span data-i18n=sidebar.google_id>GOOGLE ID</span>
 </button>
+<div id=authForgotPassWrap style="display:flex;justify-content:flex-end;margin:4px 2px 0 0;font-size:11px;font-family:var(--font-mono)">
+<a href="javascript:void(0)" onclick="handleForgotPassword(false)" style="color:#888;text-decoration:underline;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
+</div>
 <button class="auth-btn btn-target" id=btnRegister onclick='handleAuth("register")' style=display:none;background:var(--accent-green);color:#000 data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
 <button class="auth-btn btn-target" id=btnBackLogin onclick=toggleRegMode() style=display:none;background:#333;color:#fff>НАЗАД</button>
 </div>
@@ -766,12 +766,12 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div style=margin-top:10px;display:flex;flex-direction:column;gap:12px>
 <button class="cart-checkout-btn btn-target" id=modalBtnLogin onclick='handleAuth("login",!0)' style=width:100% data-i18n=sidebar.login>ВОЙТИ</button>
 <button class="cart-checkout-btn btn-target" id=modalBtnShowReg onclick=toggleRegMode(!0) style=background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
-<div id=modalAuthForgotPassWrap style="display:flex;justify-content:center;margin:4px 0;font-size:12px;font-family:var(--font-mono)">
-<a href="javascript:void(0)" onclick="handleForgotPassword(true)" style="color:#888;text-decoration:underline;cursor:pointer" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
-</div>
 <button class="cart-checkout-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;width:100%;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:10px;white-space:nowrap>
 <img src=https://www.google.com/favicon.ico width=18> <span data-i18n=sidebar.google_login>ВОЙТИ ЧЕРЕЗ GOOGLE</span>
 </button>
+<div id=modalAuthForgotPassWrap style="display:flex;justify-content:flex-end;margin:2px 2px 0 0;font-size:11px;font-family:var(--font-mono)">
+<a href="javascript:void(0)" onclick="handleForgotPassword(true)" style="color:#888;text-decoration:underline;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
+</div>
 <button class="cart-checkout-btn btn-target" id=modalBtnRegister onclick='handleAuth("register",!0)' style=display:none;background:var(--accent-green);color:#000;width:100% data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
 <button class="cart-checkout-btn btn-target" id=modalBtnBackLogin onclick=toggleRegMode(!0) style=display:none;background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.back>НАЗАД</button>
 </div>
