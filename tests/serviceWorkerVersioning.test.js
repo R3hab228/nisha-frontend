@@ -52,4 +52,14 @@ describe('Service Worker & PWA Cache Automation', () => {
         expect(pwaContent).toContain("const APP_SW_VERSION = 'nisha-cache-' + APP_BUILD_ID");
         expect(pwaContent).toContain("const SW_SCRIPT_URL = '/sw.js?b=' + encodeURIComponent(APP_BUILD_ID)");
     });
+
+    it('sw.js bypasses external trackers (clarity, tiktok) and avoids AbortError controller aborts', () => {
+        const content = readFileSync(publicSwPath, 'utf8');
+
+        // Проверяем, что сторонние домены не перехватываются
+        expect(content).toContain('!isSameOrigin && !isAllowedCdn && !isAllowedBackend');
+        // Проверяем отсутствие AbortController и опасного re-throw в respondWith
+        expect(content).not.toContain('AbortController');
+        expect(content).not.toContain('throw err;');
+    });
 });

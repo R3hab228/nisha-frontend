@@ -93,6 +93,25 @@ self.addEventListener('fetch', event => {
         return; 
     }
 
+    // Проверяем происхождение запроса
+    const isSameOrigin = url.origin === self.location.origin;
+    const isAllowedCdn = (
+        url.hostname.includes('cdn.jsdelivr.net') || 
+        url.hostname.includes('cdnjs.cloudflare.com') ||
+        url.hostname.includes('unpkg.com') ||
+        url.hostname.includes('fonts.googleapis.com') ||
+        url.hostname.includes('fonts.gstatic.com')
+    );
+    const isAllowedBackend = (
+        url.hostname.includes('supabase.co') || 
+        url.hostname.includes('workers.dev')
+    );
+
+    // Сторонние сервисы (аналитика Clarity, TikTok Pixel, GeoJS, Turnstile и сторонние трекеры) НЕ перехватываем в SW!
+    if (!isSameOrigin && !isAllowedCdn && !isAllowedBackend) {
+        return;
+    }
+
     // --- ХЭШИРОВАННЫЕ АССЕТЫ VITE (/assets/) (Cache-First) ---
     if (url.pathname.startsWith('/assets/')) {
         event.respondWith(
@@ -166,11 +185,35 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         (async () => {
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2500);
+                // Пытаемся получить свежую версию из сети
+                const networkPromise = fetch(event.request);
                 
-                const networkResponse = await fetch(event.request, { signal: controller.signal });
-                clearTimeout(timeoutId);
+                // Проверяем наличие в кэше на случай медленной сети / офлайна
+                const cachedResponse = await caches.match(event.request, { ignoreSearch: true });
+
+                let networkResponse;
+                if (cachedResponse) {
+                    // Если копия уже есть в кэше — даем сети до 3.5 сек, иначе плавно отдаем кэш без принудительного разрыва соединения
+                    let timeoutId;
+                    const timeoutPromise = new Promise(resolve => {
+                        timeoutId = setTimeout(() => resolve(null), 3500);
+                    });
+                    
+                    networkResponse = await Promise.race([
+                        networkPromise.then(res => {
+                            clearTimeout(timeoutId);
+                            return res;
+                        }).catch(() => null),
+                        timeoutPromise
+                    ]);
+
+                    if (!networkResponse) {
+                        return cachedResponse;
+                    }
+                } else {
+                    // Если в кэше еще ничего нет — ждем ответа от сети (не убиваем на медленном соединении)
+                    networkResponse = await networkPromise.catch(() => null);
+                }
 
                 const isAllowedToCache = networkResponse && networkResponse.status === 200 && (
                     networkResponse.type === 'basic' || 
@@ -183,18 +226,31 @@ self.addEventListener('fetch', event => {
 
                 if (isAllowedToCache) {
                     const responseToCache = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache)).catch(() => {});
                 }
-                return networkResponse;
-            } catch (err) {
-                const cachedResponse = await caches.match(event.request, { ignoreSearch: true });
+
+                if (networkResponse && networkResponse.status === 200) {
+                    return networkResponse;
+                }
+
+                // Если сеть вернула ошибку или недоступна — отдаем кэш или страницу 404/shell
                 if (cachedResponse) return cachedResponse;
 
                 if (event.request.mode === 'navigate') {
                     const fallback = await caches.match('/', { ignoreSearch: true });
-                    return fallback || caches.match('/404.html');
+                    return fallback || (await caches.match('/404.html')) || Response.error();
                 }
-                throw err;
+
+                return Response.error();
+            } catch (err) {
+                // Безопасный перехват любых сетевых отмен (AbortError) и офлайна без unhandled rejection
+                const cached = await caches.match(event.request, { ignoreSearch: true });
+                if (cached) return cached;
+                if (event.request.mode === 'navigate') {
+                    const fallback = await caches.match('/', { ignoreSearch: true });
+                    return fallback || (await caches.match('/404.html')) || Response.error();
+                }
+                return Response.error();
             }
         })()
     );
