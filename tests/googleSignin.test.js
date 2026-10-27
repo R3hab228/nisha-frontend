@@ -139,6 +139,29 @@ describe('Google OAuth & Authentication Recovery (Supabase)', () => {
         expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('Письмо для сброса пароля отправлено'), 'success');
     });
 
+    it('handleForgotPassword exits cleanly without toast when prompt is cancelled', async () => {
+        globalThis.document.getElementById = vi.fn().mockReturnValue(null);
+        globalThis.prompt = vi.fn().mockReturnValue(null);
+
+        await globalThis.handleForgotPassword(false);
+
+        expect(globalThis.prompt).toHaveBeenCalledTimes(1);
+        expect(mockSupabase.auth.resetPasswordForEmail).not.toHaveBeenCalled();
+        expect(mockToast).not.toHaveBeenCalled();
+    });
+
+    it('handleForgotPassword validates email format before calling Supabase', async () => {
+        globalThis.document.getElementById = vi.fn((id) => {
+            if (id === 'authEmail') return { value: 'not-an-email' };
+            return null;
+        });
+
+        await globalThis.handleForgotPassword(false);
+
+        expect(mockSupabase.auth.resetPasswordForEmail).not.toHaveBeenCalled();
+        expect(mockToast).toHaveBeenCalledWith('Некорректный формат Email', 'error');
+    });
+
     it('index.html contains no invisible overlay elements or data-google-signin blocks on Google buttons', () => {
         const indexPath = resolve(process.cwd(), 'index.html');
         const indexHtml = readFileSync(indexPath, 'utf8');
@@ -147,5 +170,6 @@ describe('Google OAuth & Authentication Recovery (Supabase)', () => {
         expect(indexHtml).not.toContain('g-signin-overlay');
         expect(indexHtml).toContain('onclick=loginWithGoogle()');
         expect(indexHtml).toContain('handleForgotPassword');
+        expect(indexHtml).toMatch(/id=btnBackLogin[^>]*data-i18n=sidebar\.back/);
     });
 });

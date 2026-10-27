@@ -502,12 +502,20 @@ async function handleForgotPassword(isModal = false) {
 
     if (!email) {
         const promptText = t('messages.forgot_prompt', 'Введите ваш Email для восстановления доступа к аккаунту:');
-        email = prompt(promptText);
-        if (email) email = email.trim();
+        const userPrompt = prompt(promptText);
+        if (userPrompt === null) {
+            return;
+        }
+        email = userPrompt.trim();
     }
 
     if (!email) {
         showToast(t('messages.forgot_specify_email', 'Укажите Email для восстановления пароля'), 'error');
+        return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast(t('messages.invalid_email', 'Некорректный формат Email'), 'error');
         return;
     }
 
