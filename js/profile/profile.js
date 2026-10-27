@@ -477,12 +477,14 @@ async function handleAuth(action, isModal = false) {
     if (result.error) {
         let msg = result.error.message;
         const errLower = (msg || '').toLowerCase();
+        const t = (k, fb) => (typeof window.i18next !== 'undefined' ? window.i18next.t(k, { defaultValue: fb }) : fb);
+
         if (errLower.includes('invalid login credentials')) {
-            msg = 'Неверный email или пароль. Если вы входили через Google — нажмите «Войти через Google» ниже.';
+            msg = t('messages.invalid_credentials', 'Неверный email или пароль. Если вы входили через Google — нажмите «GOOGLE ID» ниже.');
         } else if (errLower.includes('email not confirmed')) {
-            msg = 'Подтвердите email по ссылке из письма или войдите через Google.';
+            msg = t('messages.email_not_confirmed', 'Подтвердите email по ссылке из письма или войдите через Google.');
         } else if (errLower.includes('user already registered')) {
-            msg = 'Этот email уже зарегистрирован. Попробуйте войти или сбросить пароль.';
+            msg = t('messages.user_already_registered', 'Этот email уже зарегистрирован. Попробуйте войти или сбросить пароль.');
         }
         showToast(msg, 'error');
     } else {
@@ -500,13 +502,16 @@ async function handleForgotPassword(isModal = false) {
     const emailInput = document.getElementById(p + 'Email');
     let email = emailInput ? emailInput.value.trim() : '';
 
+    const t = (k, fb) => (typeof window.i18next !== 'undefined' ? window.i18next.t(k, { defaultValue: fb }) : fb);
+
     if (!email) {
-        email = prompt('Введите ваш Email для восстановления доступа к аккаунту:');
+        const promptText = t('messages.forgot_prompt', 'Введите ваш Email для восстановления доступа к аккаунту:');
+        email = prompt(promptText);
         if (email) email = email.trim();
     }
 
     if (!email) {
-        showToast('Укажите Email для восстановления пароля', 'error');
+        showToast(t('messages.forgot_specify_email', 'Укажите Email для восстановления пароля'), 'error');
         return;
     }
 
@@ -516,12 +521,14 @@ async function handleForgotPassword(isModal = false) {
             redirectTo: redirectUrl
         });
         if (error) {
-            showToast('Ошибка восстановления: ' + error.message, 'error');
+            showToast(t('messages.forgot_error', 'Ошибка восстановления: ') + error.message, 'error');
         } else {
-            showToast('Письмо для сброса пароля отправлено на ' + email + '! Проверьте входящие и Спам.', 'success');
+            const template = t('messages.forgot_sent', 'Письмо для сброса пароля отправлено на {{email}}! Проверьте входящие и Спам.');
+            const successMsg = template.replace('{{email}}', email);
+            showToast(successMsg, 'success');
         }
     } catch (e) {
-        showToast('Не удалось отправить письмо для сброса пароля', 'error');
+        showToast(t('messages.forgot_failed', 'Не удалось отправить письмо для сброса пароля'), 'error');
     }
 }
 window.handleForgotPassword = handleForgotPassword;

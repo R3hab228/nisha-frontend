@@ -36,6 +36,9 @@
       "auth_req": "АВТОРИЗАЦІЯ В СИСТЕМІ",
       "login": "УВІЙТИ",
       "reg": "РЕЄСТРАЦІЯ",
+      "forgot_password": "Забули пароль?",
+      "google_id": "GOOGLE ID",
+      "google_login": "УВІЙТИ ЧЕРЕЗ GOOGLE",
       "create": "СТВОРИТИ АКАУНТ",
       "back": "НАЗАД",
       "logout": "ВИЙТИ"

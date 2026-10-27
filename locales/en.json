@@ -36,6 +36,9 @@
       "auth_req": "SYSTEM AUTHORIZATION",
       "login": "LOGIN",
       "reg": "REGISTER",
+      "forgot_password": "Forgot password?",
+      "google_id": "GOOGLE ID",
+      "google_login": "SIGN IN WITH GOOGLE",
       "create": "CREATE ACCOUNT",
       "back": "BACK",
       "logout": "LOGOUT"

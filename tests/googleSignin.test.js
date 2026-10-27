@@ -98,8 +98,26 @@ describe('Google OAuth & Authentication Recovery (Supabase)', () => {
         expect(mockToast).toHaveBeenCalledTimes(1);
         const toastMsg = mockToast.mock.calls[0][0];
         expect(toastMsg).toContain('Неверный email или пароль');
-        expect(toastMsg).toContain('Войти через Google');
+        expect(toastMsg).toContain('GOOGLE ID');
         expect(mockToast.mock.calls[0][1]).toBe('error');
+    });
+
+    it('sidebar.forgot_password and sidebar.google_id are translated across RU, UA, and EN dictionaries', () => {
+        const ru = JSON.parse(readFileSync(resolve(process.cwd(), 'locales/ru.json'), 'utf8'));
+        const ua = JSON.parse(readFileSync(resolve(process.cwd(), 'locales/ua.json'), 'utf8'));
+        const en = JSON.parse(readFileSync(resolve(process.cwd(), 'locales/en.json'), 'utf8'));
+
+        const ruSidebar = (ru.translation || ru).sidebar;
+        const uaSidebar = (ua.translation || ua).sidebar;
+        const enSidebar = (en.translation || en).sidebar;
+
+        expect(ruSidebar.forgot_password).toBe('Забыли пароль?');
+        expect(uaSidebar.forgot_password).toBe('Забули пароль?');
+        expect(enSidebar.forgot_password).toBe('Forgot password?');
+
+        expect(ruSidebar.google_id).toBe('GOOGLE ID');
+        expect(uaSidebar.google_id).toBe('GOOGLE ID');
+        expect(enSidebar.google_id).toBe('GOOGLE ID');
     });
 
     it('handleForgotPassword triggers resetPasswordForEmail with origin redirect', async () => {
