@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nisha-cache-v207';
+const CACHE_NAME = 'nisha-cache-v208';
 const IMAGE_CACHE = 'nisha-images-v4';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
@@ -207,11 +207,11 @@ self.addEventListener('push', event => {
         } catch(e) {
             data = { title: 'NISHA STORE', body: event.data.text() };
         }
-        const origin = self.location.origin || 'https://www.nisha-store.shop';
+        const origin = 'https://www.nisha-store.shop';
         const options = {
             body: data.body,
             icon: data.icon || (origin + '/icon-192.png'),
-            badge: origin + '/badge.png',
+            badge: data.badge || (origin + '/badge.png'),
             vibrate: [200, 100, 200],
             tag: data.tag || (data.itemId ? 'nisha-item-' + data.itemId : (data.id ? 'nisha-item-' + data.id : (data.title ? 'nisha-' + encodeURIComponent(data.title) : 'nisha-push'))),
             renotify: false,

@@ -775,6 +775,25 @@ if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) 
 // 4. Основная функция подписки на Web Push с фильтрацией PWA / Браузер
 async function subscribeUserToPush(registration, silent = false) {
     try {
+        const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : '';
+        const isOfficialHost = hostname === 'nisha-store.shop' || hostname === 'www.nisha-store.shop' || hostname === 'localhost' || hostname === '127.0.0.1';
+        if (!isOfficialHost && hostname.includes('.vercel.app')) {
+            if (registration && registration.pushManager) {
+                registration.pushManager.getSubscription().then(existingSub => {
+                    if (existingSub) {
+                        try {
+                            if (window.apiClient) {
+                                window.apiClient.post('/api/unsubscribe', { endpoint: existingSub.endpoint }).catch(() => {});
+                            }
+                        } catch (_) {}
+                        existingSub.unsubscribe().catch(() => {});
+                        if (window.store) window.store.set('pushSubEndpoint', '');
+                    }
+                }).catch(() => {});
+            }
+            return;
+        }
+
         syncNotificationPermission();
         const isPwa = isPwaStandalone();
         const pwaInstalled = isPwa || checkIsPwaInstalled();
