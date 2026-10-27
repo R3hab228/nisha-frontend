@@ -1,4 +1,5 @@
-const CACHE_NAME = 'nisha-cache-v208';
+const BUILD_ID = '__BUILD_ID__'; // подставляется при сборке (vite.config.mjs), уникален для каждого деплоя
+const CACHE_NAME = 'nisha-cache-' + BUILD_ID;
 const IMAGE_CACHE = 'nisha-images-v4';
 const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
@@ -86,6 +87,7 @@ self.addEventListener('fetch', event => {
         url.pathname.startsWith('/api/') || 
         url.pathname.startsWith('/.well-known/') || 
         url.hostname.includes('novaposhta') ||
+        url.hostname === 'accounts.google.com' ||
         url.hostname.includes('onrender.com')
     ) {
         return; 

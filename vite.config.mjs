@@ -1,21 +1,59 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { execSync } from 'child_process';
 
-// Уникальный ID каждой сборки: гарантирует, что URL и содержимое Service Worker
-// меняются при КАЖДОМ деплое (Cloudflare/браузер не смогут отдать устаревшую версию).
-const BUILD_ID = (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 8) + Date.now().toString(36);
+function resolveCommitHash() {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) {
+    return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 8);
+  }
+  if (process.env.GITHUB_SHA) {
+    return process.env.GITHUB_SHA.slice(0, 8);
+  }
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim().slice(0, 8);
+  } catch {
+    return 'build';
+  }
+}
 
-// Подставляет BUILD_ID в готовый dist/sw.js
+// Уникальный ID каждой сборки: сочетает git-хеш коммита и таймстемп сборки.
+// Гарантирует, что URL и имя кэша Service Worker обновляются автоматически при каждом деплое
+// и всегда прослеживаются до конкретного коммита.
+const COMMIT_HASH = resolveCommitHash() || 'build';
+const BUILD_ID = `${COMMIT_HASH}-${Date.now().toString(36)}`;
+
+// Подставляет BUILD_ID в готовый dist/sw.js и синхронизирует корневой sw.js
 function swBuildIdPlugin() {
   return {
     name: 'nisha-sw-build-id',
-    apply: 'build',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const cleanUrl = (req.url || '').split('?')[0];
+        if (cleanUrl === '/sw.js') {
+          const swPath = resolve(import.meta.dirname, 'public', 'sw.js');
+          if (existsSync(swPath)) {
+            const src = readFileSync(swPath, 'utf8');
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            return res.end(src.split('__BUILD_ID__').join(BUILD_ID));
+          }
+        }
+        next();
+      });
+    },
     closeBundle() {
-      const swPath = resolve(import.meta.dirname, 'dist', 'sw.js');
-      if (!existsSync(swPath)) return;
-      const src = readFileSync(swPath, 'utf8');
-      writeFileSync(swPath, src.split('__BUILD_ID__').join(BUILD_ID));
+      const swDistPath = resolve(import.meta.dirname, 'dist', 'sw.js');
+      if (existsSync(swDistPath)) {
+        const src = readFileSync(swDistPath, 'utf8');
+        writeFileSync(swDistPath, src.split('__BUILD_ID__').join(BUILD_ID));
+      }
+      const swRootPath = resolve(import.meta.dirname, 'sw.js');
+      const swPublicPath = resolve(import.meta.dirname, 'public', 'sw.js');
+      if (existsSync(swPublicPath)) {
+        const publicSrc = readFileSync(swPublicPath, 'utf8');
+        writeFileSync(swRootPath, publicSrc);
+      }
     },
   };
 }
