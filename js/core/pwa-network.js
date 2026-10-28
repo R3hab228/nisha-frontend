@@ -167,10 +167,17 @@ const IGNORED_ERROR_PATTERNS = [
     /chrome-extension:\/\//i,
     /moz-extension:\/\//i,
     /safari-extension:\/\//i,
+    /safari-web-extension:\/\//i,
     /extensions\//i,
     /challenges\.cloudflare\.com/i,
     /clarity\.ms/i,
     /tiktok/i,
+    /_META/i,
+    /IABInnerFrame/i,
+    /IAB/i,
+    /__gCrWeb/i,
+    /__firefox__/i,
+    /fb_xd_fragment/i,
     /database connection is closing/i,
     /IDBDatabase/i
 ];
@@ -361,7 +368,10 @@ function initSentryDeferred() {
                         'Failed to fetch',
                         'NetworkError when attempting to fetch resource',
                         'The operation was aborted',
-                        'AbortError: The play() request was interrupted'
+                        'AbortError: The play() request was interrupted',
+                        "undefined is not an object (evaluating 'window._META.IABInnerFrame')",
+                        '_META',
+                        'IABInnerFrame'
                     ],
                     denyUrls: [
                         /extensions\//i,

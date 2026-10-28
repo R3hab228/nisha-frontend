@@ -38,6 +38,11 @@
 <script>
 (function(){
   try {
+    if (typeof window !== 'undefined' && !window._META) {
+      window._META = typeof Proxy === 'function' ? new Proxy({}, { get: function(o, p){ return o[p]; } }) : {};
+    }
+  } catch(e){}
+  try {
     var s = (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: minimal-ui)').matches)) || (typeof navigator !== 'undefined' && navigator.standalone === true) || (document.referrer && document.referrer.indexOf('android-app://') !== -1);
     if (s && document.documentElement) document.documentElement.classList.add('pwa-standalone');
   } catch(e){}

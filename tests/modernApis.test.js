@@ -1821,6 +1821,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(telemetry.isIgnoredError('Script error.')).toBe(true);
             expect(telemetry.isIgnoredError('Script error')).toBe(true);
             expect(telemetry.isIgnoredError('Error in extension', '', 'chrome-extension://abc123xyz')).toBe(true);
+            expect(telemetry.isIgnoredError("undefined is not an object (evaluating 'window._META.IABInnerFrame')")).toBe(true);
             expect(telemetry.isIgnoredError('TypeError: Cannot read properties of undefined (reading "id")', 'at renderGrid (catalog.js:2100)')).toBe(false);
         });
 
