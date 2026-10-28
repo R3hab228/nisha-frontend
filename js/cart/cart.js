@@ -1745,6 +1745,9 @@ async function openCheckoutModal() {
         btn.innerText = originalText;
         btn.style.pointerEvents = "auto";
 
+        if (typeof closeCartDropdown === 'function') closeCartDropdown();
+        if (typeof hideNPDropdowns === 'function') hideNPDropdowns();
+
         if (typeof window.stopLenis === 'function') window.stopLenis();
         else if (typeof lenis !== 'undefined') lenis.stop();
         

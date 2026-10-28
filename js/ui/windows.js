@@ -119,6 +119,7 @@ function openModal(id) {
     modal.setAttribute('aria-hidden', 'false');
     const win = modal.querySelector('.modal-window');
     if (win) {
+        win.scrollTop = 0;
         win.style.transform = '';
         win.style.opacity = '';
         win.style.transition = '';
@@ -239,6 +240,15 @@ function executeCloseModal(id, e) {
 
     modal.classList.add('closing');
     modal.setAttribute('aria-hidden', 'true');
+    const winClosing = modal.querySelector('.modal-window');
+    if (winClosing) {
+        winClosing.style.transform = '';
+        winClosing.style.transition = '';
+    }
+    if (id === 'checkoutModal') {
+        if (typeof window.hideNPDropdowns === 'function') window.hideNPDropdowns();
+        if (typeof window.closePaymentDropdown === 'function') window.closePaymentDropdown();
+    }
     if (modal._closeTimer) clearTimeout(modal._closeTimer);
 
     modal._closeTimer = setTimeout(() => {

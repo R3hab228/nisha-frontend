@@ -532,7 +532,7 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
     pointer-events: none !important;
 }
 
-.modal-header { background: #002244; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px inset var(--border-light); position: sticky; top: 0; z-index: 100; flex-shrink: 0 !important; min-height: 48px; box-sizing: border-box; }
+.modal-header { background: #002244; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px inset var(--border-light); position: sticky; top: 0; z-index: 200 !important; flex-shrink: 0 !important; min-height: 48px; box-sizing: border-box; }
 .modal-title { color: #fff; font-weight: bold; font-family: var(--font-mono); font-size: 16px; letter-spacing: 1px;}
 .close-btn { background: var(--text-main); border: 2px outset #eee; color: #000; cursor: pointer; font-weight: bold; padding: 4px 10px; font-family: var(--font-main); font-size: 14px;}
 .close-btn:active { border-style: inset; }
@@ -1782,7 +1782,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         background: #002244 !important;
         position: sticky !important;
         top: 0 !important;
-        z-index: 120 !important;
+        z-index: 200 !important;
         box-sizing: border-box !important;
     }
     .modal-overlay.closing .modal-window {
