@@ -1773,6 +1773,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         will-change: transform; overscroll-behavior-y: none;
         padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
         box-sizing: border-box;
+        transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
     }
     .modal-header {
         border-radius: 18px 18px 0 0 !important;

@@ -291,6 +291,15 @@
       "pwa": {
         "refresh": "ОБНОВИТЬ",
         "refreshing": "ОБНОВЛЕНИЕ..."
+      },
+      "np": {
+        "branch_empty": "Не найдено",
+        "brauch_empty": "Не найдено",
+        "not_found": "Не найдено",
+        "city_err": "Ошибка поиска города",
+        "branch_err": "Ошибка загрузки отделений",
+        "branch_placeholder": "Выберите отделение или почтомат...",
+        "searching": "Ищем отделение в базе Новой Почты..."
       }
     }
   },
@@ -586,6 +595,15 @@
       "pwa": {
         "refresh": "ОНОВИТИ",
         "refreshing": "ОНОВЛЕННЯ..."
+      },
+      "np": {
+        "branch_empty": "Не знайдено",
+        "brauch_empty": "Не знайдено",
+        "not_found": "Не знайдено",
+        "city_err": "Помилка пошуку міста",
+        "branch_err": "Помилка завантаження відділень",
+        "branch_placeholder": "Оберіть відділення або поштомат...",
+        "searching": "Шукаємо відділення в базі Нової Пошти..."
       }
     }
   },
@@ -881,6 +899,15 @@
       "pwa": {
         "refresh": "REFRESH",
         "refreshing": "REFRESHING..."
+      },
+      "np": {
+        "branch_empty": "Not found",
+        "brauch_empty": "Not found",
+        "not_found": "Not found",
+        "city_err": "City search error",
+        "branch_err": "Branch loading error",
+        "branch_placeholder": "Select branch or postomat...",
+        "searching": "Searching branches in Nova Poshta..."
       }
     }
   }

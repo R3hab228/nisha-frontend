@@ -290,6 +290,15 @@
     "pwa": {
       "refresh": "REFRESH",
       "refreshing": "REFRESHING..."
+    },
+    "np": {
+      "branch_empty": "Not found",
+      "brauch_empty": "Not found",
+      "not_found": "Not found",
+      "city_err": "City search error",
+      "branch_err": "Branch loading error",
+      "branch_placeholder": "Select branch or postomat...",
+      "searching": "Searching branches in Nova Poshta..."
     }
   }
 }

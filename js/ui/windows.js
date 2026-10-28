@@ -444,7 +444,7 @@ function initMobileKeyboardViewport() {
         const kbDelta = refHeight - currentH;
         const activeEl = document.activeElement;
         const isInputFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
-        const isKeyboardOpen = isInputFocused && kbDelta > 90;
+        const isKeyboardOpen = kbDelta > 90 || (isInputFocused && kbDelta > 40);
 
         if (root && root.style && typeof root.style.setProperty === 'function') {
             root.style.setProperty('--vv-height', `${Math.round(currentH)}px`);
@@ -478,18 +478,18 @@ function initMobileKeyboardViewport() {
         });
         document.addEventListener('focusout', () => {
             if (window.innerWidth > 900) return;
+            setTimeout(updateViewportMetrics, 60);
+            setTimeout(updateViewportMetrics, 200);
+            setTimeout(updateViewportMetrics, 350);
             setTimeout(() => {
                 const activeEl = document.activeElement;
                 const stillFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
-                if (!stillFocused) {
-                    if (root && root.classList) root.classList.remove('keyboard-open');
-                    if (document.querySelectorAll) {
-                        document.querySelectorAll('.modal-window.np-field-active').forEach(mw => {
-                            if (mw.classList) mw.classList.remove('np-field-active');
-                        });
-                    }
+                if (!stillFocused && document.querySelectorAll) {
+                    document.querySelectorAll('.modal-window.np-field-active').forEach(mw => {
+                        if (mw.classList) mw.classList.remove('np-field-active');
+                    });
                 }
-            }, 120);
+            }, 300);
         });
     }
 }

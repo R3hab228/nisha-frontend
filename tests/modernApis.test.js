@@ -2233,5 +2233,46 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(indexHtml).toContain('name=nisha_order_branch');
             expect(indexHtml).toContain('data-lpignore="true"');
         });
+
+        it('30. NP empty branch localization (ru, ua, en) and smooth keyboard scroll dismissal', () => {
+            const ruJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ru.json'), 'utf8'));
+            const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
+            const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
+            const publicRu = JSON.parse(readFileSync(resolve(__dirname, '../public/locales/ru.json'), 'utf8'));
+            const publicUa = JSON.parse(readFileSync(resolve(__dirname, '../public/locales/ua.json'), 'utf8'));
+            const publicEn = JSON.parse(readFileSync(resolve(__dirname, '../public/locales/en.json'), 'utf8'));
+
+            const getNP = (json) => (json.translation && json.translation.np) || json.np;
+
+            expect(getNP(ruJson).branch_empty).toBe('Не найдено');
+            expect(getNP(ruJson).brauch_empty).toBe('Не найдено');
+            expect(getNP(ruJson).not_found).toBe('Не найдено');
+            expect(getNP(publicRu).branch_empty).toBe('Не найдено');
+
+            expect(getNP(uaJson).branch_empty).toBe('Не знайдено');
+            expect(getNP(uaJson).brauch_empty).toBe('Не знайдено');
+            expect(getNP(uaJson).not_found).toBe('Не знайдено');
+            expect(getNP(publicUa).branch_empty).toBe('Не знайдено');
+
+            expect(getNP(enJson).branch_empty).toBe('Not found');
+            expect(getNP(enJson).brauch_empty).toBe('Not found');
+            expect(getNP(enJson).not_found).toBe('Not found');
+            expect(getNP(publicEn).branch_empty).toBe('Not found');
+
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain("i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })");
+            expect(cartCode).toContain("i18next.t('np.searching'");
+            expect(cartCode).toContain('bindDropdownScrollDismissKeyboard');
+            expect(cartCode).toContain('diffY > 24 && diffY > diffX');
+
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            expect(profileCode).toContain("i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })");
+
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);');
+
+            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            expect(windowsCode).toContain('const isKeyboardOpen = kbDelta > 90 || (isInputFocused && kbDelta > 40);');
+        });
     });
 });

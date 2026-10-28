@@ -823,12 +823,18 @@ function renderProfileCityDropdown(isModal, data) {
     if (!dropdown || !cityInput) return;
 
     dropdown.innerHTML = '';
+    if (typeof window.bindDropdownScrollDismissKeyboard === 'function') {
+        window.bindDropdownScrollDismissKeyboard(dropdown, `${prefix}DeliveryCity`);
+    }
     const addrs = (data && data.success && data.data && data.data[0] && Array.isArray(data.data[0].Addresses))
         ? data.data[0].Addresses
         : [];
 
     if (addrs.length === 0) {
-        dropdown.innerHTML = '<div style="color:#666;padding:8px;font-style:italic">[ Населенный пункт не найден ]</div>';
+        const notFoundLabel = typeof i18next !== 'undefined'
+            ? i18next.t('np.not_found', { defaultValue: 'Не найдено' })
+            : 'Не найдено';
+        dropdown.innerHTML = `<div style="color:#666;padding:8px;font-style:italic">[ ${notFoundLabel} ]</div>`;
         dropdown.style.display = 'block';
         return;
     }
@@ -1005,8 +1011,14 @@ function renderProfileBranchDropdown(isModal, list) {
     if (!dropdown || !branchInput) return;
 
     dropdown.innerHTML = '';
+    if (typeof window.bindDropdownScrollDismissKeyboard === 'function') {
+        window.bindDropdownScrollDismissKeyboard(dropdown, `${prefix}DeliveryBranch`);
+    }
     if (!list || list.length === 0) {
-        dropdown.innerHTML = '<div style="color:#666;padding:8px;font-style:italic">[ Отделений не найдено ]</div>';
+        const emptyLabel = typeof i18next !== 'undefined'
+            ? i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })
+            : 'Не найдено';
+        dropdown.innerHTML = `<div style="color:#666;padding:8px;font-style:italic">[ ${emptyLabel} ]</div>`;
         dropdown.style.display = 'block';
         return;
     }

@@ -477,27 +477,46 @@ function bindTouchTapSelect(el, handler) {
 }
 window.bindTouchTapSelect = bindTouchTapSelect;
 
-// Автоматическое скрытие мобильной клавиатуры при осознанной прокрутке выпадающего списка пальцем
+// Автоматическое плавное скрытие мобильной клавиатуры при осознанной прокрутке выпадающего списка пальцем
 function bindDropdownScrollDismissKeyboard(dropdown, inputId) {
     if (!dropdown || dropdown._scrollDismissBound || typeof dropdown.addEventListener !== 'function') return;
     dropdown._scrollDismissBound = true;
     let startY = 0;
+    let startX = 0;
+    let isDismissing = false;
     dropdown.addEventListener('touchstart', (e) => {
         const t = e.touches && e.touches[0];
-        if (t) startY = t.clientY;
+        if (t) {
+            startY = t.clientY;
+            startX = t.clientX;
+            isDismissing = false;
+        }
     }, { passive: true });
     dropdown.addEventListener('touchmove', (e) => {
+        if (isDismissing) return;
         const t = e.touches && e.touches[0];
         if (!t) return;
-        // Порог 28px защищает обычный тап пальцем от ложного закрытия клавиатуры
-        if (Math.abs(t.clientY - startY) > 28) {
+        const diffY = Math.abs(t.clientY - startY);
+        const diffX = Math.abs(t.clientX - startX);
+        // Осознанный вертикальный скролл списка (> 24px и вертикаль преобладает над горизонталью)
+        if (diffY > 24 && diffY > diffX) {
             const inp = document.getElementById(inputId);
             if (inp && document.activeElement === inp && typeof inp.blur === 'function') {
-                inp.blur();
+                isDismissing = true;
+                requestAnimationFrame(() => {
+                    inp.blur();
+                });
             }
         }
     }, { passive: true });
+    dropdown.addEventListener('touchend', () => {
+        isDismissing = false;
+    }, { passive: true });
+    dropdown.addEventListener('touchcancel', () => {
+        isDismissing = false;
+    }, { passive: true });
 }
+window.bindDropdownScrollDismissKeyboard = bindDropdownScrollDismissKeyboard;
 
 // Безопасная центровка активного поля ввода (Город / Отделение) в видимую зону модалки
 function scrollNPFieldIntoModalView(inputEl) {
@@ -806,7 +825,10 @@ function filterNPBranches(query) {
     // Если в локальном кэше еще нет нужного почтомата/отделения (например в Киеве > 8000 точек) —
     // запрашиваем напрямую у Новой Почты по номеру/строке
     if (!baseList || baseList.length === 0 || dropdown.children.length === 0 || dropdown.style.display === 'none') {
-        dropdown.innerHTML = '<div style="color:#aaa; padding:12px; font-style: italic;">Шукаємо відділення в базі НП...</div>';
+        const searchingLabel = typeof i18next !== 'undefined'
+            ? i18next.t('np.searching', { defaultValue: 'Ищем отделение в базе Новой Почты...' })
+            : 'Ищем отделение в базе Новой Почты...';
+        dropdown.innerHTML = `<div style="color:#aaa; padding:12px; font-style: italic;">${searchingLabel}</div>`;
         dropdown.style.display = 'block';
     }
 
@@ -1186,18 +1208,24 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
                 renderBranches(finalBranches);
             }
         } else {
-            if (input && !input.value) input.placeholder = typeof i18next !== 'undefined' ? i18next.t('np.branch_empty', { defaultValue: 'Отделения не найдены' }) : 'Отделения не найдены';
+            const emptyLabel = typeof i18next !== 'undefined'
+                ? i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })
+                : 'Не найдено';
+            if (input && !input.value) input.placeholder = emptyLabel;
             if (showDropdown) {
-                dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${typeof i18next !== 'undefined' ? i18next.t('np.branch_empty') : 'Отделения не найдены'}</div>`;
+                dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">[ ${emptyLabel} ]</div>`;
                 dropdown.style.display = 'block';
             }
         }
     } catch(e) {
         if (myToken !== _branchLoadToken) return;
         console.error("Сбой загрузки отделений НП:", e);
-        if (input && !input.value) input.placeholder = typeof i18next !== 'undefined' ? i18next.t('np.branch_err', { defaultValue: 'Ошибка загрузки отделений' }) : 'Ошибка загрузки отделений';
+        const errLabel = typeof i18next !== 'undefined'
+            ? i18next.t('np.branch_err', { defaultValue: 'Ошибка загрузки отделений' })
+            : 'Ошибка загрузки отделений';
+        if (input && !input.value) input.placeholder = errLabel;
         if (showDropdown) {
-            dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">${typeof i18next !== 'undefined' ? i18next.t('np.branch_err') : 'Ошибка загрузки отделений'}</div>`;
+            dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">[ ${errLabel} ]</div>`;
             dropdown.style.display = 'block';
         }
     }
