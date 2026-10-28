@@ -201,7 +201,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <input class=search-input id=mainSearch autocomplete=off autocorrect=off spellcheck=false placeholder="Поиск вещи..." oninput=handleLiveSearch() style=width:100%;padding-right:40px>
 </form>
 <span id=clearSearchBtn class=clear-search-btn onclick=clearSearchInput()>✖</span>
-<div id=liveSearchDropdown class=live-search-dropdown data-lenis-prevent></div>
+<div id=liveSearchDropdown class="live-search-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
 <button class="search-btn btn-target" onclick='saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),closeSearch()' data-i18n=search.btn>Искать</button>
 </div>

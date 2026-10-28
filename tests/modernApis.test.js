@@ -29,7 +29,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             globalThis.window.addEventListener = vi.fn();
         }
         globalThis.document = {
-            body: { style: { overflow: '' } },
+            body: { style: { overflow: '' }, classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn(), contains: vi.fn(() => false) } },
             documentElement: { classList: { add: vi.fn(), remove: vi.fn(), toggle: vi.fn(), contains: vi.fn(() => false) } },
             getElementById: vi.fn(() => null),
             querySelector: vi.fn(() => null),
@@ -1721,9 +1721,64 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             const refreshPromise = pullApi.triggerRefresh();
             await refreshPromise;
+            await new Promise((r) => setTimeout(r, 400));
 
             expect(loadMock).toHaveBeenCalled();
             expect(hapticSpy).toHaveBeenCalledWith('success');
+        });
+
+        it('isRestrictedOrScrollableTarget blocks pull-to-refresh on search dropdown, items, inputs and scrollable boxes', () => {
+            const pullApi = window.__pwaPullRefresh;
+            expect(pullApi).toBeDefined();
+            expect(typeof pullApi.isRestrictedOrScrollableTarget).toBe('function');
+
+            // 1. Elements inside live search dropdown
+            const mockSearchItem = {
+                closest: vi.fn((sel) => sel.includes('.live-search-item') || sel.includes('#liveSearchDropdown'))
+            };
+            expect(pullApi.isRestrictedOrScrollableTarget(mockSearchItem)).toBe(true);
+
+            // 2. Elements with data-no-pull or no-pull
+            const mockNoPullEl = {
+                closest: vi.fn((sel) => sel.includes('.no-pull') || sel.includes('[data-no-pull]'))
+            };
+            expect(pullApi.isRestrictedOrScrollableTarget(mockNoPullEl)).toBe(true);
+
+            // 3. Normal element in main feed
+            const mockFeedEl = {
+                closest: vi.fn(() => null),
+                hasAttribute: vi.fn(() => false),
+                parentElement: null
+            };
+            expect(pullApi.isRestrictedOrScrollableTarget(mockFeedEl)).toBe(false);
+        });
+
+        it('isEligibleForPull returns false when search dropdown is open or search is active', () => {
+            const pullApi = window.__pwaPullRefresh;
+            expect(pullApi).toBeDefined();
+
+            window.isPwaStandalone = vi.fn(() => true);
+            window.scrollY = 0;
+            globalThis.document.documentElement.scrollTop = 0;
+
+            // When search-lock is on body
+            globalThis.document.body.classList.contains = vi.fn((cls) => cls === 'search-lock');
+            expect(pullApi.isEligibleForPull()).toBe(false);
+
+            // When search-lock is off
+            globalThis.document.body.classList.contains = vi.fn(() => false);
+            expect(pullApi.isEligibleForPull()).toBe(true);
+
+            // When liveSearchDropdown is visible
+            const origGetEl = globalThis.document.getElementById;
+            globalThis.document.getElementById = vi.fn((id) => {
+                if (id === 'liveSearchDropdown') return { style: { display: 'block' } };
+                return null;
+            });
+            expect(pullApi.isEligibleForPull()).toBe(false);
+
+            // Restore
+            globalThis.document.getElementById = origGetEl;
         });
     });
 

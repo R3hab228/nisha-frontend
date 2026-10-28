@@ -989,10 +989,49 @@ function initPwaPullToRefresh() {
     const THRESHOLD = 60;
     const MAX_PULL = 85;
 
+    function isRestrictedOrScrollableTarget(target) {
+        if (!target) return false;
+
+        // 1. Быстрый селектор защищенных элементов, модалок, поиска и дропдаунов
+        if (target.closest && target.closest([
+            'input', 'textarea', 'select', 'button',
+            '.card-slider', '.stories-container',
+            '.modal', '.modal-window', '.modal-overlay',
+            '.pswp', '.lightbox-overlay',
+            '.no-pull', '[data-no-pull]',
+            '#liveSearchDropdown', '.live-search-dropdown', '.search-wrapper',
+            '.live-search-item', '.search-history-item',
+            '.profile-np-dropdown', '.cart-np-dropdown', '.np-dropdown',
+            '[data-lenis-prevent]'
+        ].join(', '))) {
+            return true;
+        }
+
+        // 2. Проверка любого родительского контейнера со своей прокруткой (overflow-y: auto / scroll)
+        let node = target;
+        while (node && node !== document.body && node !== document.documentElement) {
+            if (node.hasAttribute && (node.hasAttribute('data-lenis-prevent') || node.hasAttribute('data-no-pull') || (node.classList && node.classList.contains && node.classList.contains('no-pull')))) {
+                return true;
+            }
+            try {
+                if (window.getComputedStyle) {
+                    const style = window.getComputedStyle(node);
+                    const oy = style ? style.overflowY : '';
+                    if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight + 2) {
+                        return true;
+                    }
+                }
+            } catch (e) {}
+            node = node.parentElement;
+        }
+
+        return false;
+    }
+
     function isEligibleForPull() {
         if (typeof window.isPwaStandalone === 'function') {
             if (!window.isPwaStandalone()) return false;
-        } else if (!document.documentElement.classList.contains('pwa-standalone')) {
+        } else if (document.documentElement && document.documentElement.classList && !document.documentElement.classList.contains('pwa-standalone')) {
             const isMediaStandalone = (typeof window.matchMedia === 'function') && (
                 window.matchMedia('(display-mode: standalone)').matches ||
                 window.matchMedia('(display-mode: fullscreen)').matches ||
@@ -1005,12 +1044,39 @@ function initPwaPullToRefresh() {
 
         // Не активировать при открытых модалках, зуме или корзине
         const hasOpenOverlay = Boolean(
-            document.querySelector('.modal.active, .modal-overlay.active, .pswp--open, .lightbox-overlay.active, #orderSuccessOverlay[style*="display: block"], #orderSuccessOverlay[style*="display: flex"]')
+            document.querySelector && document.querySelector('.modal.active, .modal-overlay.active, .pswp--open, .lightbox-overlay.active, #orderSuccessOverlay[style*="display: block"], #orderSuccessOverlay[style*="display: flex"]')
         );
         if (hasOpenOverlay) return false;
 
+        // Не активировать при открытом поиске, выпадающем списке результатов или фокусе на строке ввода
+        const liveSearchDropdown = document.getElementById ? document.getElementById('liveSearchDropdown') : null;
+        const isLiveSearchOpen = Boolean(
+            (document.body && document.body.classList && document.body.classList.contains && document.body.classList.contains('search-lock')) ||
+            (liveSearchDropdown && (
+                (liveSearchDropdown.style && liveSearchDropdown.style.display === 'block') ||
+                (window.getComputedStyle && typeof window.getComputedStyle === 'function' && window.getComputedStyle(liveSearchDropdown) && window.getComputedStyle(liveSearchDropdown).display === 'block')
+            ))
+        );
+        if (isLiveSearchOpen) return false;
+
+        const activeEl = document.activeElement;
+        if (activeEl && (
+            activeEl.tagName === 'INPUT' ||
+            activeEl.tagName === 'TEXTAREA' ||
+            activeEl.tagName === 'SELECT' ||
+            activeEl.isContentEditable
+        )) {
+            return false;
+        }
+
+        // Не активировать при открытых выпадающих списках Новой Почты
+        const hasOpenDropdown = Boolean(
+            document.querySelector && document.querySelector('.profile-np-dropdown[style*="display: block"], .cart-np-dropdown[style*="display: block"]')
+        );
+        if (hasOpenDropdown) return false;
+
         // Только на самом верху страницы
-        const top = window.scrollY || document.documentElement.scrollTop || (document.body ? document.body.scrollTop : 0) || 0;
+        const top = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || (document.body ? document.body.scrollTop : 0) || 0;
         return top <= 2;
     }
 
@@ -1099,7 +1165,7 @@ function initPwaPullToRefresh() {
         }
 
         const target = e.target;
-        if (target && target.closest && target.closest('input, textarea, select, .card-slider, .stories-container, .modal, .modal-window, .pswp, .no-pull')) {
+        if (isRestrictedOrScrollableTarget(target)) {
             touchActive = false;
             return;
         }
@@ -1122,6 +1188,14 @@ function initPwaPullToRefresh() {
 
     window.addEventListener('touchmove', (e) => {
         if (!touchActive || isRefreshing || !container) return;
+
+        const target = e.target;
+        if (isRestrictedOrScrollableTarget(target)) {
+            touchActive = false;
+            if (isPulling) resetPull();
+            return;
+        }
+
         const touch = e.touches && e.touches[0];
         if (!touch) return;
 
@@ -1194,6 +1268,7 @@ function initPwaPullToRefresh() {
         triggerRefresh,
         resetPull,
         isEligibleForPull,
+        isRestrictedOrScrollableTarget,
         getPwaText
     };
 }
