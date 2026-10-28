@@ -840,8 +840,13 @@ function renderProfileCityDropdown(isModal, data) {
     addrs.forEach(city => {
         const div = document.createElement('div');
         div.textContent = city.Present;
+        let selectedOnce = false;
         const selectCity = (e) => {
             if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            if (selectedOnce) return;
+            selectedOnce = true;
+            setTimeout(() => { selectedOnce = false; }, 300);
+
             cityInput.value = city.Present;
             profileSelectedCityRef[scopeKey] = city.DeliveryCity || city.Ref || '';
             dropdown.style.display = 'none';
@@ -850,11 +855,16 @@ function renderProfileCityDropdown(isModal, data) {
                 branchInput.value = '';
                 if (typeof branchInput.focus === 'function') branchInput.focus();
                 loadProfileBranches(isModal, '');
+            } else if (typeof cityInput.blur === 'function') {
+                cityInput.blur();
             }
             syncProfileCombinedAddress(isModal);
         };
         div.onmousedown = selectCity;
         div.onclick = selectCity;
+        if (typeof window.bindTouchTapSelect === 'function') {
+            window.bindTouchTapSelect(div, selectCity);
+        }
         fragment.appendChild(div);
     });
 
@@ -862,6 +872,9 @@ function renderProfileCityDropdown(isModal, data) {
         dropdown.appendChild(fragment);
     }
     dropdown.style.display = 'block';
+    if (isModal && typeof window.scrollNPFieldIntoModalView === 'function') {
+        window.scrollNPFieldIntoModalView(cityInput);
+    }
 }
 
 async function resolveProfileCityRef(isModal) {
@@ -898,12 +911,17 @@ async function loadProfileBranches(isModal, searchString = '') {
     const prefix = isModal ? 'modalProfile' : 'profile';
     const dropdown = document.getElementById(`${prefix}DeliveryBranchDropdown`);
     const cityInput = document.getElementById(`${prefix}DeliveryCity`);
+    const branchInput = document.getElementById(`${prefix}DeliveryBranch`);
     if (!dropdown) return;
 
     if (!cityInput || !cityInput.value.trim()) {
         dropdown.innerHTML = '<div style="color:#aaa;padding:8px;font-style:italic">Сначала укажите город ☝️</div>';
         dropdown.style.display = 'block';
         return;
+    }
+
+    if (isModal && branchInput && typeof window.scrollNPFieldIntoModalView === 'function') {
+        window.scrollNPFieldIntoModalView(branchInput);
     }
 
     dropdown.innerHTML = '<div style="color:#888;padding:8px;font-style:italic">[ Загрузка отделений... ]</div>';
@@ -916,7 +934,8 @@ async function loadProfileBranches(isModal, searchString = '') {
         return;
     }
 
-    const cacheKey = `branches_${cityRef}_${(searchString || '').trim().toLowerCase()}`;
+    const rawTrimmed = (searchString || '').trim();
+    const cacheKey = `branches_${cityRef}_${rawTrimmed.toLowerCase()}`;
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     let cached = null;
     if (store && store.session) {
@@ -926,22 +945,40 @@ async function loadProfileBranches(isModal, searchString = '') {
     let list = cached;
     if (!list) {
         try {
-            const props = { CityRef: cityRef, Limit: '50' };
-            if (searchString && searchString.trim()) {
-                props.FindByString = searchString.trim();
+            const props = { CityRef: cityRef, Limit: '100' };
+            if (rawTrimmed) {
+                const parsed = (typeof window.parseNPBranchQuery === 'function')
+                    ? window.parseNPBranchQuery(rawTrimmed)
+                    : null;
+                props.FindByString = (parsed && parsed.apiSearch)
+                    ? parsed.apiSearch
+                    : (/^[№#]?\s*\d+$/.test(rawTrimmed) ? '№' + rawTrimmed.replace(/^[№#]\s*/, '') : rawTrimmed);
             }
-            const data = await window.apiClient.post('/api/np-proxy', {
+            let data = await window.apiClient.post('/api/np-proxy', {
                 modelName: 'Address',
                 calledMethod: 'getWarehouses',
                 methodProperties: props
             }, { timeout: 10000, dedupe: true });
 
+            if (rawTrimmed && (!data || !Array.isArray(data.data) || data.data.length === 0) && props.FindByString !== rawTrimmed) {
+                props.FindByString = rawTrimmed;
+                data = await window.apiClient.post('/api/np-proxy', {
+                    modelName: 'Address',
+                    calledMethod: 'getWarehouses',
+                    methodProperties: props
+                }, { timeout: 10000, dedupe: true });
+            }
+
             if (data && data.success && Array.isArray(data.data)) {
                 list = data.data.map(b => ({
                     Ref: b.Ref,
                     Description: b.Description || '',
-                    TypeOfWarehouse: b.TypeOfWarehouse || ''
+                    TypeOfWarehouse: b.TypeOfWarehouse || '',
+                    Number: b.Number ? String(b.Number) : ''
                 }));
+                if (rawTrimmed && typeof window.filterAndSortBranches === 'function') {
+                    list = window.filterAndSortBranches(list, rawTrimmed);
+                }
                 if (store && store.session) {
                     store.session.setJSON('nisha_np_' + cacheKey, list);
                 }
@@ -953,6 +990,8 @@ async function loadProfileBranches(isModal, searchString = '') {
             dropdown.innerHTML = '<div style="color:#ff6666;padding:8px">[ Сбой загрузки отделений ]</div>';
             return;
         }
+    } else if (rawTrimmed && typeof window.filterAndSortBranches === 'function') {
+        list = window.filterAndSortBranches(list, rawTrimmed);
     }
 
     renderProfileBranchDropdown(isModal, list);
@@ -972,6 +1011,10 @@ function renderProfileBranchDropdown(isModal, list) {
         return;
     }
 
+    if (typeof dropdown.setAttribute === 'function') {
+        dropdown.setAttribute('data-lenis-prevent', 'true');
+    }
+
     const fragment = (typeof document.createDocumentFragment === 'function')
         ? document.createDocumentFragment()
         : dropdown;
@@ -988,14 +1031,23 @@ function renderProfileBranchDropdown(isModal, list) {
             div.textContent = `🏬 ${desc}`;
         }
 
+        let selectedOnce = false;
         const selectBranch = (e) => {
             if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            if (selectedOnce) return;
+            selectedOnce = true;
+            setTimeout(() => { selectedOnce = false; }, 300);
+
             branchInput.value = desc;
             dropdown.style.display = 'none';
+            if (typeof branchInput.blur === 'function') branchInput.blur();
             syncProfileCombinedAddress(isModal);
         };
         div.onmousedown = selectBranch;
         div.onclick = selectBranch;
+        if (typeof window.bindTouchTapSelect === 'function') {
+            window.bindTouchTapSelect(div, selectBranch);
+        }
         fragment.appendChild(div);
     });
 

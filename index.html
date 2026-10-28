@@ -4,7 +4,7 @@
 <meta charset=UTF-8>
 <title>NISHA | Underground Store</title>
 <meta name="description" content="NISHA — винтажная одежда, обувь и аксессуары. Доставка Новой Почтой по всей Украине.">
-<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta http-equiv=Content-Security-Policy content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: blob: data: 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob: data: https:; child-src 'self' blob: data: https:; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' data: blob: https://accounts.google.com https://get.geojs.io https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms https://*.cloudflare.com https://*.workers.dev https://analytics.tiktok.com https://*.tiktokw.us https://plausible.io https://*.posthog.com; frame-src https://oauth.telegram.org https://accounts.google.com https://www.google.com https://vercel.live/ https://challenges.cloudflare.com https://*.cloudflare.com;">
 <meta name=google-site-verification content=JeoGyai8Mik-tYQnacXcxAae-_8SnmN4HpOMr06dfRs>
 <meta name="google-site-verification" content="RBmdOx5kBNw4x4w5EVWfVZSUKfJCc6bHfpaJ_pEM_lk">
@@ -602,14 +602,16 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 <div id=otpStatus style="color:var(--accent-red);font-size:11px;font-family:var(--font-mono);line-height:1.4;margin-top:2px" data-i18n=checkout.otp_status>Сначала подтвердите номер для заказа!</div>
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
-<div style="position:relative; z-index:35;">
-<input id=orderCity name=np_city class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next">
-<div id=cityDropdown class=custom-dropdown></div>
+<div class=np-input-wrap style="position:relative; z-index:35;">
+<input id=orderCity name=np_city class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next" style="padding-right:38px;">
+<button type=button id=clearOrderCityBtn class=np-clear-btn onclick=clearNPCityInput(event) aria-label="Очистить город" tabindex=-1>✕</button>
+<div id=cityDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
 <label data-i18n=checkout.branch>Отделение или Почтомат:</label>
-<div style="position:relative; z-index:30;">
-<input id=orderBranch name=np_branch class=form-input placeholder=Відділення... onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done">
-<div id=branchDropdown class=custom-dropdown></div>
+<div class=np-input-wrap style="position:relative; z-index:30;">
+<input id=orderBranch name=np_branch class=form-input placeholder=Відділення... onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done" style="padding-right:38px;">
+<button type=button id=clearOrderBranchBtn class=np-clear-btn onclick=clearNPBranchInput(event) aria-label="Очистить отделение" tabindex=-1>✕</button>
+<div id=branchDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
 
 <label style="margin-top:10px;" data-i18n="checkout.payment_method">СПОСОБ ОПЛАТЫ:</label>

@@ -23,6 +23,7 @@ let citySearchTimeout = null;
 let branchSearchTimeout = null;
 let cachedBranches = [];
 const npBranchCache = {};
+const npBranchCacheComplete = {};
 
 // Кэш отделений Новой Почты (In-Memory + IndexedDB + sessionStorage)
 const NP_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 часа актуальности отделений
@@ -348,6 +349,148 @@ window.updateCartUI = updateCartUI;
 // 2. ИНТЕГРАЦИЯ НОВОЙ ПОЧТЫ (NOVA POSHTA)
 // ==========================================
 
+// Обновление видимости кнопок очистки (✕) для полей города и отделения
+function updateNPClearButtons() {
+    const cityEl = document.getElementById('orderCity');
+    const branchEl = document.getElementById('orderBranch');
+    const clearCityBtn = document.getElementById('clearOrderCityBtn');
+    const clearBranchBtn = document.getElementById('clearOrderBranchBtn');
+    if (clearCityBtn && cityEl) {
+        clearCityBtn.style.display = (cityEl.value && cityEl.value.trim().length > 0) ? 'flex' : 'none';
+    }
+    if (clearBranchBtn && branchEl) {
+        clearBranchBtn.style.display = (branchEl.value && branchEl.value.trim().length > 0) ? 'flex' : 'none';
+    }
+}
+window.updateNPClearButtons = updateNPClearButtons;
+
+function clearNPCityInput(e) {
+    if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const cityEl = document.getElementById('orderCity');
+    const branchEl = document.getElementById('orderBranch');
+    const cd = document.getElementById('cityDropdown');
+    const bd = document.getElementById('branchDropdown');
+    if (cityEl) {
+        cityEl.value = '';
+        if (typeof cityEl.focus === 'function') cityEl.focus();
+    }
+    if (branchEl) {
+        branchEl.value = '';
+        branchEl.readOnly = true;
+    }
+    if (cd) cd.style.display = 'none';
+    if (bd) bd.style.display = 'none';
+    selectedCityRef = '';
+    window.selectedCityRef = '';
+    selectedBranchRef = '';
+    window.selectedBranchRef = '';
+    window.selectedSettlementRef = '';
+    cachedBranches = [];
+    updateNPClearButtons();
+    if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
+}
+window.clearNPCityInput = clearNPCityInput;
+
+function clearNPBranchInput(e) {
+    if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    ++_branchLoadToken;
+    if (branchSearchTimeout) clearTimeout(branchSearchTimeout);
+    const branchEl = document.getElementById('orderBranch');
+    selectedBranchRef = '';
+    window.selectedBranchRef = '';
+    if (branchEl) {
+        branchEl.value = '';
+        branchEl.readOnly = false;
+        if (typeof branchEl.focus === 'function') branchEl.focus();
+    }
+    updateNPClearButtons();
+    loadNPBranches("", true);
+    if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
+}
+window.clearNPBranchInput = clearNPBranchInput;
+
+// Надежный выбор элемента из выпадающего списка на мобильных тачскринах (0 мс задержки, без конфликта со скроллом)
+function bindTouchTapSelect(el, handler) {
+    if (!el || typeof el.addEventListener !== 'function') return;
+    let tStartX = 0;
+    let tStartY = 0;
+    let tMoved = false;
+    el.addEventListener('touchstart', (ev) => {
+        const t = ev.touches && ev.touches[0];
+        if (t) {
+            tStartX = t.clientX;
+            tStartY = t.clientY;
+            tMoved = false;
+        }
+    }, { passive: true });
+    el.addEventListener('touchmove', (ev) => {
+        const t = ev.touches && ev.touches[0];
+        if (t && (Math.abs(t.clientX - tStartX) > 10 || Math.abs(t.clientY - tStartY) > 10)) {
+            tMoved = true;
+        }
+    }, { passive: true });
+    el.addEventListener('touchend', (ev) => {
+        if (!tMoved) {
+            if (ev.cancelable && typeof ev.preventDefault === 'function') ev.preventDefault();
+            if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
+            handler(ev);
+        }
+    }, { passive: false });
+}
+window.bindTouchTapSelect = bindTouchTapSelect;
+
+// Автоматическое скрытие мобильной клавиатуры при прокрутке выпадающего списка пальцем
+function bindDropdownScrollDismissKeyboard(dropdown, inputId) {
+    if (!dropdown || dropdown._scrollDismissBound || typeof dropdown.addEventListener !== 'function') return;
+    dropdown._scrollDismissBound = true;
+    let startY = 0;
+    dropdown.addEventListener('touchstart', (e) => {
+        const t = e.touches && e.touches[0];
+        if (t) startY = t.clientY;
+    }, { passive: true });
+    dropdown.addEventListener('touchmove', (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        if (Math.abs(t.clientY - startY) > 14) {
+            const inp = document.getElementById(inputId);
+            if (inp && document.activeElement === inp && typeof inp.blur === 'function') {
+                inp.blur();
+            }
+        }
+    }, { passive: true });
+}
+
+// Плавная прокрутка активного поля (Город / Отделение) к верху модального окна,
+// чтобы мобильная клавиатура не перекрывала выпадающий список
+function scrollNPFieldIntoModalView(inputEl) {
+    if (!inputEl || typeof window === 'undefined' || window.innerWidth > 900) return;
+    const modalWin = inputEl.closest ? inputEl.closest('.modal-window') : null;
+    if (!modalWin) return;
+    if (modalWin.classList) modalWin.classList.add('np-field-active');
+    const doScroll = () => {
+        try {
+            const headerEl = modalWin.querySelector ? modalWin.querySelector('.modal-header') : null;
+            const headerH = (headerEl && headerEl.offsetHeight) ? headerEl.offsetHeight : 46;
+            const inputRect = inputEl.getBoundingClientRect();
+            const modalRect = modalWin.getBoundingClientRect();
+            const targetDelta = (inputRect.top - modalRect.top) - (headerH + 26);
+            if (Math.abs(targetDelta) > 6) {
+                modalWin.scrollTop = Math.max(0, modalWin.scrollTop + targetDelta);
+            }
+        } catch (e) {}
+    };
+    doScroll();
+    setTimeout(doScroll, 120);
+    setTimeout(doScroll, 320);
+}
+window.scrollNPFieldIntoModalView = scrollNPFieldIntoModalView;
+
 function debouncedNPCitySearch(query) {
     if (citySearchTimeout) clearTimeout(citySearchTimeout);
     if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
@@ -365,6 +508,7 @@ function debouncedNPCitySearch(query) {
     window.selectedBranchRef = '';
     window.selectedSettlementRef = '';
     cachedBranches = [];
+    updateNPClearButtons();
     
     const dropdown = document.getElementById('cityDropdown');
 
@@ -375,7 +519,7 @@ function debouncedNPCitySearch(query) {
     
     citySearchTimeout = setTimeout(() => { 
         searchNPCity(query); 
-    }, 500);
+    }, 300);
 }
 window.debouncedNPCitySearch = debouncedNPCitySearch;
 
@@ -384,6 +528,9 @@ function renderCitySearchResults(data) {
     if (!dropdown) return;
     if (typeof dropdown.replaceChildren === 'function') dropdown.replaceChildren();
     else dropdown.innerHTML = '';
+
+    dropdown.setAttribute('data-lenis-prevent', 'true');
+    bindDropdownScrollDismissKeyboard(dropdown, 'orderCity');
     
     if (data.success && data.data[0] && data.data[0].Addresses.length > 0) {
         data.data[0].Addresses.forEach(city => {
@@ -391,12 +538,24 @@ function renderCitySearchResults(data) {
             div.className = 'city-item';
             div.innerText = city.Present;
             
+            let selectedOnce = false;
             const selectCityItem = (e) => {
                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                document.getElementById('orderCity').value = city.Present;
+                if (selectedOnce) return;
+                selectedOnce = true;
+                setTimeout(() => { selectedOnce = false; }, 300);
+
+                const cityEl = document.getElementById('orderCity');
+                if (cityEl) {
+                    cityEl.value = city.Present;
+                    cityEl.classList.remove('input-field-error');
+                    if (typeof cityEl.blur === 'function') cityEl.blur();
+                }
                 selectedCityRef = city.DeliveryCity || city.Ref; 
                 window.selectedCityRef = selectedCityRef;
                 window.selectedSettlementRef = city.Ref || '';
+                selectedBranchRef = '';
+                window.selectedBranchRef = '';
                 dropdown.style.display = 'none';
                 
                 const branchInput = document.getElementById('orderBranch');
@@ -407,15 +566,19 @@ function renderCitySearchResults(data) {
                 }
                 
                 cachedBranches = []; 
+                updateNPClearButtons();
                 loadNPBranches("", false);
                 if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
             };
             div.onmousedown = selectCityItem;
             div.onclick = selectCityItem;
             div._selectItem = selectCityItem;
+            bindTouchTapSelect(div, selectCityItem);
             dropdown.appendChild(div);
         });
         dropdown.style.display = 'block';
+        const cityEl = document.getElementById('orderCity');
+        if (cityEl && document.activeElement === cityEl) scrollNPFieldIntoModalView(cityEl);
     } else {
         dropdown.style.display = 'none';
     }
@@ -449,52 +612,188 @@ async function searchNPCity(query) {
 }
 window.searchNPCity = searchNPCity;
 
-// Умный поиск отделений
+// Извлекает реальный номер отделения или почтомата (после №), игнорируя вес "(до 30 кг)" и номер дома
+function extractBranchNumber(branch) {
+    if (!branch) return '';
+    if (branch.Number) return String(branch.Number).trim().toLowerCase();
+    const desc = String(branch.Description || '');
+    const m = desc.match(/№\s*(\d+[а-яa-zіїєґ]?)/i);
+    if (m) return m[1].toLowerCase();
+    const head = desc.split(':')[0].replace(/\([^)]*\)/g, '');
+    const hm = head.match(/\b(\d+)\b/);
+    return hm ? hm[1].toLowerCase() : '';
+}
+window.extractBranchNumber = extractBranchNumber;
+
+function isPostomatBranch(branch) {
+    if (!branch) return false;
+    const desc = String(branch.Description || '');
+    return desc.includes('Поштомат') || desc.includes('Почтомат') || branch.TypeOfWarehouse === 'f9316480-5f2d-425d-bc2c-ac7cd29decf0';
+}
+
+// Разбор пользовательского запроса для поиска отделения/почтомата по цифре или улице
+function parseNPBranchQuery(rawQuery) {
+    const raw = String(rawQuery || '').trim();
+    const lower = raw.toLowerCase().replaceAll(/[’`ʼ]/g, "'");
+    if (!lower) {
+        return { raw: '', lower: '', stripped: '', number: '', isPureNumber: false, wantsPostomat: false, wantsBranch: false, apiSearch: '' };
+    }
+
+    const wantsPostomat = /поштомат|почтомат|postomat/i.test(lower);
+    const wantsBranch = /відділення|отделение|відд\.?(?:\s|$)|отд\.?(?:\s|$)|склад|пункт/i.test(lower);
+
+    const stripped = lower
+        .replace(/^(відділення|отделение|відд\.?|отд\.?|поштомат|почтомат|postomat|нова\s*пошта|новая\s*почта|склад|пункт)\s*/gi, '')
+        .replace(/^[№#]\s*/, '')
+        .trim();
+
+    const pureNumMatch = stripped.match(/^(\d+[а-яa-zіїєґ]?)$/i);
+    const anyNumMatch = lower.match(/(?:№|#|\b)(\d+)\b/);
+    const number = pureNumMatch ? pureNumMatch[1].toLowerCase() : (anyNumMatch ? anyNumMatch[1].toLowerCase() : '');
+    const isPureNumber = Boolean(pureNumMatch);
+
+    // Для цифровых запросов ("6745", "25", "почтомат 6745", "отд 25") передаем в НП "№6745" / "№25",
+    // чтобы API Новой Почты искал именно номер отделения/почтомата, а не номер дома!
+    let apiSearch = raw;
+    if (isPureNumber && number) {
+        apiSearch = '№' + number;
+    } else if (wantsPostomat && !stripped) {
+        apiSearch = 'Поштомат';
+    } else if (wantsBranch && !stripped) {
+        apiSearch = 'Відділення';
+    } else {
+        apiSearch = raw
+            .replace(/почтомат/gi, 'Поштомат')
+            .replace(/отделение|отд\.?/gi, 'Відділення')
+            .replace(/ул\./gi, 'вул.');
+    }
+
+    return { raw, lower, stripped, number, isPureNumber, wantsPostomat, wantsBranch, apiSearch };
+}
+window.parseNPBranchQuery = parseNPBranchQuery;
+
+// Умная фильтрация и ранжирование: точное совпадение по номеру (отделение и почтомат) всегда на 1-м месте
+function filterAndSortBranches(list, rawQuery) {
+    if (!Array.isArray(list) || list.length === 0) return [];
+    const parsed = parseNPBranchQuery(rawQuery);
+    if (!parsed.lower) return list;
+
+    const scored = [];
+    for (let i = 0; i < list.length; i++) {
+        const b = list[i];
+        const desc = String(b.Description || '');
+        const descLower = desc.toLowerCase().replaceAll(/[’`ʼ]/g, "'");
+        const isPost = isPostomatBranch(b);
+
+        if (parsed.wantsPostomat && !parsed.wantsBranch && !isPost) continue;
+        if (parsed.wantsBranch && !parsed.wantsPostomat && isPost) continue;
+
+        const bNum = extractBranchNumber(b);
+        let score = 0;
+
+        if (parsed.isPureNumber && parsed.number) {
+            const wanted = parsed.number;
+            if (bNum === wanted) {
+                score = 1000;
+            } else if (bNum && bNum.startsWith(wanted)) {
+                score = 700 - Math.min(200, (bNum.length - wanted.length) * 20);
+            } else if (bNum && bNum.includes(wanted)) {
+                score = 400;
+            } else {
+                const addrPart = (descLower.split(':')[1] || '').replace(/\([^)]*\)/g, '');
+                if (addrPart.includes(wanted)) {
+                    score = 100;
+                }
+            }
+        } else {
+            const searchTarget = parsed.stripped || parsed.lower;
+            if (!searchTarget) {
+                score = 500;
+            } else if (parsed.number && bNum === parsed.number && descLower.includes(searchTarget)) {
+                score = 1000;
+            } else if (descLower.includes(searchTarget)) {
+                score = (parsed.number && bNum === parsed.number) ? 950 : 600;
+            } else {
+                const words = searchTarget.split(/\s+/).filter(Boolean);
+                if (words.length > 1 && words.every(w => descLower.includes(w))) {
+                    score = 550;
+                }
+            }
+        }
+
+        if (score > 0) {
+            scored.push({ branch: b, score, numVal: Number.parseInt(bNum, 10) || 999999, idx: i });
+        }
+    }
+
+    scored.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (a.numVal !== b.numVal) return a.numVal - b.numVal;
+        return a.idx - b.idx;
+    });
+
+    return scored.map(s => s.branch);
+}
+window.filterAndSortBranches = filterAndSortBranches;
+
+// Умный поиск отделений и почтоматов
 function filterNPBranches(query) {
     if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
     const cd = document.getElementById('cityDropdown');
     if (cd) cd.style.display = 'none';
 
+    // Немедленно отменяем любые старые фоновые запросы, чтобы они не перезаписали ввод пользователя
+    ++_branchLoadToken;
+    if (branchSearchTimeout) clearTimeout(branchSearchTimeout);
+
     // Инвалидируем выбранный ранее ref, если пользователь начал вводить новое значение
     selectedBranchRef = '';
     window.selectedBranchRef = '';
+    updateNPClearButtons();
 
     const dropdown = document.getElementById('branchDropdown');
     if (!dropdown) return;
 
     const cityRef = window.selectedCityRef || selectedCityRef;
-    const q = (query || '').trim().toLowerCase();
+    const q = (query || '').trim();
 
     // Мгновенный поиск из кэша памяти (0 мс задержки без лагов)
     const baseList = (cityRef && npBranchCache[cityRef + "_"]) || cachedBranches || [];
-    if (baseList && baseList.length > 0) {
-        if (branchSearchTimeout) clearTimeout(branchSearchTimeout);
-        if (!q) {
+    const isComplete = Boolean(cityRef && npBranchCacheComplete[cityRef]);
+
+    if (!q) {
+        if (baseList && baseList.length > 0) {
             renderBranches(baseList);
-        } else {
-            const numMatch = q.match(/\d+/);
-            const num = numMatch ? numMatch[0] : null;
-            const matches = baseList.filter(b => {
-                const desc = (b.Description || '').toLowerCase();
-                if (num && desc.includes(num)) return true;
-                return desc.includes(q);
-            });
-            renderBranches(matches);
+            dropdown.style.display = 'block';
+            return;
         }
-        dropdown.style.display = 'block';
+        loadNPBranches("", true);
         return;
     }
 
-    if (query.length > 0) {
+    if (baseList && baseList.length > 0) {
+        const matches = filterAndSortBranches(baseList, q);
+        if (matches.length > 0) {
+            renderBranches(matches);
+            dropdown.style.display = 'block';
+            // Если база города загружена полностью (все отделения и почтоматы в памяти) — сетевой запрос не нужен
+            const hasExactNumberMatch = matches.some(b => extractBranchNumber(b) === parseNPBranchQuery(q).number);
+            if (isComplete || (hasExactNumberMatch && matches.length >= 2)) {
+                return;
+            }
+        }
+    }
+
+    // Если в локальном кэше еще нет нужного почтомата/отделения (например в Киеве > 8000 точек) —
+    // запрашиваем напрямую у Новой Почты по номеру/строке
+    if (!baseList || baseList.length === 0 || dropdown.children.length === 0 || dropdown.style.display === 'none') {
         dropdown.innerHTML = '<div style="color:#aaa; padding:12px; font-style: italic;">Шукаємо відділення в базі НП...</div>';
         dropdown.style.display = 'block';
     }
 
-    if (branchSearchTimeout) clearTimeout(branchSearchTimeout);
-    
     branchSearchTimeout = setTimeout(() => {
-        loadNPBranches(query, true);
-    }, 300);
+        loadNPBranches(q, true);
+    }, 180);
 }
 window.filterNPBranches = filterNPBranches;
 
@@ -510,12 +809,12 @@ async function npProxyRequest(methodProperties, calledMethod) {
 // Страница отделений: при лимите запросов (429) или сбое сети — короткая пауза и повтор
 async function npFetchPage(props) {
     let lastErr;
-    for (let attempt = 0; attempt < 4; attempt++) {
+    for (let attempt = 0; attempt < 3; attempt++) {
         try {
             return await npProxyRequest(props, 'getWarehouses');
         } catch (e) {
             lastErr = e;
-            await new Promise(r => setTimeout(r, e && e.status === 429 ? 3000 : 1200));
+            await new Promise(r => setTimeout(r, e && e.status === 429 ? 1500 : 800));
         }
     }
     throw lastErr;
@@ -523,7 +822,12 @@ async function npFetchPage(props) {
 
 // Минимальный вид отделения для кэша (экономит память и sessionStorage)
 function slimBranches(list) {
-    return list.map(b => ({ Ref: b.Ref, Description: b.Description || '', TypeOfWarehouse: b.TypeOfWarehouse || '' }));
+    return list.map(b => ({
+        Ref: b.Ref,
+        Description: b.Description || '',
+        TypeOfWarehouse: b.TypeOfWarehouse || '',
+        Number: b.Number ? String(b.Number) : ''
+    }));
 }
 
 // Если город вписан руками (или восстановлен из черновика) и не выбран из списка —
@@ -545,7 +849,7 @@ function matchAndSetBranchRef(branchText) {
     if (!match && wantedNum) {
         match = branches.find(b => {
             const bDesc = b.Description || '';
-            const bNum = (bDesc.match(/\d+/) || [])[0];
+            const bNum = extractBranchNumber(b) || (bDesc.match(/\d+/) || [])[0];
             const bIsPost = /поштомат|почтомат|postomat/i.test(bDesc);
             return bNum === wantedNum && (isPostomat === bIsPost);
         });
@@ -558,6 +862,7 @@ function matchAndSetBranchRef(branchText) {
     if (branchEl) branchEl.value = match.Description;
     selectedBranchRef = match.Ref;
     window.selectedBranchRef = match.Ref;
+    updateNPClearButtons();
     if (typeof calculateDeliveryCost === 'function') calculateDeliveryCost();
     if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
     return true;
@@ -592,6 +897,7 @@ function resetCheckoutAddressState() {
     const branchEl = document.getElementById('orderBranch');
     if (cityEl) cityEl.value = '';
     if (branchEl) branchEl.value = '';
+    updateNPClearButtons();
     hideNPDropdowns();
 }
 window.resetCheckoutAddressState = resetCheckoutAddressState;
@@ -668,6 +974,7 @@ async function ensureCityRef(opts = {}) {
             if (cityInput) cityInput.value = pick.Present;
             const branchInput = document.getElementById('orderBranch');
             if (branchInput) branchInput.readOnly = false;
+            updateNPClearButtons();
             if (!interactive) hideNPDropdowns();
             if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
             return selectedCityRef;
@@ -686,7 +993,7 @@ async function ensureCityRef(opts = {}) {
 }
 window.ensureCityRef = ensureCityRef;
 
-// Запрос ВСЕХ отделений и почтоматов города (постранично, с памятью и sessionStorage)
+// Запрос отделений и почтоматов города (с умным поиском по номеру/улице и защитой от гонок)
 let _branchLoadToken = 0;
 async function loadNPBranches(searchString = "", showDropdown = false) {
     if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
@@ -698,6 +1005,16 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
     const input = document.getElementById('orderBranch');
     const dropdown = document.getElementById('branchDropdown');
     if (!dropdown) return;
+
+    // Если пользователь уже ввел цифру/текст (и еще не выбрал конкретное отделение из списка),
+    // то при фокусе/клике по полю не сбрасываем его ввод на пустой запрос ""!
+    if (showDropdown && !searchString.trim() && input && input.value && input.value.trim() && !(window.selectedBranchRef || selectedBranchRef)) {
+        searchString = input.value.trim();
+    }
+
+    if (showDropdown && input && document.activeElement === input) {
+        scrollNPFieldIntoModalView(input);
+    }
 
     let cityRef = window.selectedCityRef || selectedCityRef;
     if (!cityRef) {
@@ -713,20 +1030,23 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
     }
 
     const search = searchString.trim();
-    const cacheKey = cityRef + "_" + search;
+    const parsedQuery = parseNPBranchQuery(search);
+    const cacheKey = cityRef + "_" + search.toLowerCase();
 
-    if (npBranchCache[cacheKey]) {
+    if (npBranchCache[cacheKey] && npBranchCache[cacheKey].length > 0) {
         if (showDropdown) {
-            renderBranches(npBranchCache[cacheKey]);
+            const listToRender = search ? filterAndSortBranches(npBranchCache[cacheKey], search) : npBranchCache[cacheKey];
+            renderBranches(listToRender);
         }
         return;
     }
 
-    const cachedBranches = await getNPStorageAsync('branchall_' + cacheKey);
-    if (cachedBranches && cachedBranches.length > 0) {
-        npBranchCache[cacheKey] = cachedBranches;
+    const storedBranches = await getNPStorageAsync('branchall_' + cacheKey);
+    if (storedBranches && storedBranches.length > 0) {
+        npBranchCache[cacheKey] = storedBranches;
         if (showDropdown) {
-            renderBranches(cachedBranches);
+            const listToRender = search ? filterAndSortBranches(storedBranches, search) : storedBranches;
+            renderBranches(listToRender);
         }
         return;
     }
@@ -738,45 +1058,72 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
     }
 
     try {
-        const PAGE_SIZE = 500;
-        const MAX_PAGES = 20;
+        const PAGE_SIZE = search ? 150 : 500;
+        // Для поискового запроса достаточно 1 страницы (150 точных совпадений);
+        // для базовой подгрузки города берем до 3 страниц (1500 точек), чтобы не спамить 17 запросами по Киеву
+        const MAX_PAGES = search ? 1 : 3;
         let refProp = 'CityRef';
         let refVal = cityRef;
         let all = [];
 
         let loopError = null;
+        let isCityFullyLoaded = false;
         try {
             for (let page = 1; page <= MAX_PAGES; page++) {
-                const buildProps = () => {
+                const buildProps = (findStr) => {
                     const p = { Limit: String(PAGE_SIZE), Page: String(page) };
                     p[refProp] = refVal;
-                    if (search) p.FindByString = search;
+                    if (findStr) p.FindByString = findStr;
                     return p;
                 };
 
-                let data = await npFetchPage(buildProps());
-                if (myToken !== _branchLoadToken) return; // клиент уже сменил город/запрос
+                const findTarget = search ? (parsedQuery.apiSearch || search) : '';
+                let data = await npFetchPage(buildProps(findTarget));
+                if (myToken !== _branchLoadToken) return;
 
                 let chunk = (data && data.success && Array.isArray(data.data)) ? data.data : [];
 
-                // Запасной вариант для сёл: некоторые населённые пункты ищутся только по SettlementRef
-                if (page === 1 && chunk.length === 0 && !search && window.selectedSettlementRef && refProp === 'CityRef') {
-                    refProp = 'SettlementRef';
-                    refVal = window.selectedSettlementRef;
-                    data = await npFetchPage(buildProps());
+                // Если искали по "№6745", но в редком селе точка записана без символа "№" — пробуем чистый запрос
+                if (page === 1 && chunk.length === 0 && search && findTarget !== search) {
+                    data = await npFetchPage(buildProps(search));
                     if (myToken !== _branchLoadToken) return;
                     chunk = (data && data.success && Array.isArray(data.data)) ? data.data : [];
                 }
 
-                if (chunk.length === 0) break;
+                // Запасной вариант для сёл: некоторые населённые пункты ищутся только по SettlementRef
+                if (page === 1 && chunk.length === 0 && window.selectedSettlementRef && refProp === 'CityRef') {
+                    refProp = 'SettlementRef';
+                    refVal = window.selectedSettlementRef;
+                    data = await npFetchPage(buildProps(findTarget));
+                    if (myToken !== _branchLoadToken) return;
+                    chunk = (data && data.success && Array.isArray(data.data)) ? data.data : [];
+                }
+
+                if (chunk.length === 0) {
+                    if (page > 1) isCityFullyLoaded = true;
+                    break;
+                }
 
                 all.push(...slimBranches(chunk));
-                if (showDropdown && (page === 1 || all.length <= 50)) {
-                    renderBranches(all);
+
+                // Сразу сохраняем первую страницу базового списка в память, чтобы мгновенный фильтр уже работал
+                if (!search) {
+                    npBranchCache[cityRef + "_"] = all.slice();
+                    cachedBranches = all.slice();
                 }
 
                 const total = data && data.info && data.info.totalCount;
-                if (chunk.length < PAGE_SIZE || (total && all.length >= total)) break;
+                if (chunk.length < PAGE_SIZE || (total && all.length >= total)) {
+                    if (!search) isCityFullyLoaded = true;
+                    break;
+                }
+
+                // В мегаполисах (Киев > 8000 точек) не качаем все 17 страниц подряд в фоне —
+                // 1-й страницы (500 отделений) достаточно для старта, а поиск по цифре/улице идет мгновенным целевым запросом
+                if (!search && total && total > 1500) {
+                    isCityFullyLoaded = false;
+                    break;
+                }
             }
         } catch (err) {
             if (myToken !== _branchLoadToken) return;
@@ -786,14 +1133,38 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
 
         if (myToken !== _branchLoadToken) return;
 
-        if (all.length > 0) {
+        // Если это был поисковый запрос, объединяем результаты сервера с локальной базой города (на случай частичных совпадений)
+        let finalBranches = all;
+        if (search) {
+            const baseList = npBranchCache[cityRef + "_"] || [];
+            if (baseList.length > 0) {
+                const seenRefs = new Set(all.map(b => b.Ref));
+                const combined = [...all];
+                for (let i = 0; i < baseList.length; i++) {
+                    if (!seenRefs.has(baseList[i].Ref)) {
+                        combined.push(baseList[i]);
+                    }
+                }
+                finalBranches = filterAndSortBranches(combined, search);
+            } else {
+                finalBranches = filterAndSortBranches(all, search);
+            }
+        } else if (input && input.value && input.value.trim() && !(window.selectedBranchRef || selectedBranchRef)) {
+            // Защита: если пока шла базовая подгрузка, пользователь уже ввел цифры в поле
+            finalBranches = filterAndSortBranches(all, input.value.trim());
+        }
+
+        if (finalBranches.length > 0) {
             if (input && !input.value) input.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.branch_placeholder', { defaultValue: 'Выберите отделение...' }) : 'Выберите отделение...';
-            if (!loopError) { // неполный список в кэш не кладём
-                npBranchCache[cacheKey] = all;
-                if (all.length <= 1500) setNPStorage('branchall_' + cacheKey, all);
+            if (!loopError) {
+                npBranchCache[cacheKey] = finalBranches;
+                if (!search) {
+                    npBranchCacheComplete[cityRef] = isCityFullyLoaded;
+                }
+                if (finalBranches.length <= 1500) setNPStorage('branchall_' + cacheKey, finalBranches);
             }
             if (showDropdown) {
-                renderBranches(all);
+                renderBranches(finalBranches);
             }
         } else {
             if (input && !input.value) input.placeholder = typeof i18next !== 'undefined' ? i18next.t('np.branch_empty', { defaultValue: 'Отделения не найдены' }) : 'Отделения не найдены';
@@ -829,6 +1200,7 @@ function renderBranches(branches) {
     }
 
     dropdown.setAttribute('data-lenis-prevent', 'true');
+    bindDropdownScrollDismissKeyboard(dropdown, 'orderBranch');
 
     const fragment = document.createDocumentFragment();
     const count = Math.min(branches.length, MAX_RENDERED_BRANCHES);
@@ -852,22 +1224,30 @@ function renderBranches(branches) {
             div.textContent = desc;
         }
 
+        let selectedOnce = false;
         const selectBranchItem = (e) => {
             if (e && typeof e.preventDefault === 'function') e.preventDefault(); 
+            if (selectedOnce) return;
+            selectedOnce = true;
+            setTimeout(() => { selectedOnce = false; }, 300);
+
             const branchEl = document.getElementById('orderBranch');
             if (branchEl) {
                 branchEl.value = desc;
                 branchEl.classList.remove('input-field-error');
+                if (typeof branchEl.blur === 'function') branchEl.blur();
             }
             selectedBranchRef = branch.Ref;
             window.selectedBranchRef = selectedBranchRef;
             dropdown.style.display = 'none';
+            updateNPClearButtons();
             calculateDeliveryCost(); 
             if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
         };
         div.onmousedown = selectBranchItem;
         div.onclick = selectBranchItem;
         div._selectItem = selectBranchItem;
+        bindTouchTapSelect(div, selectBranchItem);
         fragment.appendChild(div);
     }
 
@@ -1502,21 +1882,40 @@ async function openCheckoutModal() {
 
         // Автозаполнение браузера срабатывает уже после отрисовки — чистим промокод с задержкой
         sanitizePromoField();
+        updateNPClearButtons();
         setTimeout(sanitizePromoField, 400);
+        setTimeout(updateNPClearButtons, 400);
         setTimeout(sanitizePromoField, 1500);
         setTimeout(hideNPDropdowns, 600);
 
         if (branchInput && !branchInput._unlockBound) {
             branchInput._unlockBound = true;
+            const unlockOnly = () => {
+                const cVal = document.getElementById('orderCity')?.value.trim();
+                if (cVal && cVal.length >= 2) {
+                    branchInput.readOnly = false;
+                }
+            };
             const unlockAndLoad = (e) => {
                 const cVal = document.getElementById('orderCity')?.value.trim();
                 if (cVal && cVal.length >= 2) {
                     branchInput.readOnly = false;
-                    loadNPBranches("", true);
+                    scrollNPFieldIntoModalView(branchInput);
+                    const bd = document.getElementById('branchDropdown');
+                    if (!bd || bd.style.display !== 'block') {
+                        loadNPBranches("", true);
+                    }
                 }
             };
             branchInput.addEventListener('click', unlockAndLoad);
-            branchInput.addEventListener('touchstart', unlockAndLoad, { passive: true });
+            branchInput.addEventListener('touchstart', unlockOnly, { passive: true });
+        }
+
+        if (cityInput && !cityInput._scrollBound) {
+            cityInput._scrollBound = true;
+            cityInput.addEventListener('focus', () => {
+                scrollNPFieldIntoModalView(cityInput);
+            });
         }
 
         if (branchInput && !branchInput._enterBound) {

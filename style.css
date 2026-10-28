@@ -701,6 +701,38 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
 .form-input.input-invalid { border-color: var(--accent-red) !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.35) !important; }
 .np-loader { font-size: 11px; color: var(--accent-yellow); font-family: var(--font-mono); display: none; margin-top: -10px; }
 
+.np-input-wrap {
+    position: relative;
+    width: 100%;
+}
+.np-clear-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 14px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    z-index: 5;
+    padding: 0;
+    line-height: 1;
+    border-radius: 4px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+.np-clear-btn:hover,
+.np-clear-btn:active {
+    color: var(--accent-green);
+    background: rgba(255, 255, 255, 0.06);
+}
+
 .custom-dropdown {
     position: absolute;
     top: 100%;
@@ -712,6 +744,7 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
     max-height: 220px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     z-index: 100;
     display: none;
     font-family: var(--font-main);
@@ -721,11 +754,13 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
     contain: content;
 }
 .custom-dropdown div {
-    padding: 10px 14px;
+    padding: 12px 14px;
     cursor: pointer;
     border-bottom: 1px solid #222;
     transition: background 0.12s ease;
     user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
     line-height: 1.35;
 }
 .custom-dropdown div:last-child {
@@ -1745,6 +1780,23 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     #ordersModal #ordersListArea { max-height: 55vh !important; overflow-y: auto !important; padding: 15px !important; flex: none !important; }
     .modal-content { padding: 15px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); flex-direction: column; gap: 15px; }
     .form-layout { padding: 15px; padding-bottom: calc(25px + env(safe-area-inset-bottom, 0px)); }
+    .modal-window.np-field-active .form-layout,
+    .modal-window.np-field-active .modal-content {
+        padding-bottom: 240px !important;
+    }
+    html.keyboard-open .modal-overlay {
+        height: var(--vv-height, 100dvh) !important;
+        top: var(--vv-top, 0px) !important;
+        padding-top: 4px !important;
+        align-items: flex-end !important;
+    }
+    html.keyboard-open .modal-window {
+        max-height: calc(var(--vv-height, 100dvh) - 4px) !important;
+        min-height: 0 !important;
+    }
+    html.keyboard-open .custom-dropdown {
+        max-height: 185px !important;
+    }
     .modal-gallery, .modal-info { width: 100%; }
     .slider-container { height: 75vw; max-height: 400px; border-radius: 8px; } 
 

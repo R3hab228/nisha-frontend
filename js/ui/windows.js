@@ -314,14 +314,23 @@ function initMobileSwipe() {
             if (window.innerWidth > 900) return;
             if (e.touches.length > 1) return;
             
-            // ЗАЩИТА: Отключаем свайп окна при зуме в PhotoSwipe, вводе текста или специальных областях
+            // ЗАЩИТА: Отключаем свайп окна при зуме в PhotoSwipe, вводе текста, открытых выпадающих списках НП или открытой клавиатуре
             if (document.body.classList.contains('sort-lock') || 
+                (document.documentElement && document.documentElement.classList && document.documentElement.classList.contains('keyboard-open')) ||
                 e.target.closest('.preview-container') || 
                 e.target.closest('.pswp') || 
                 e.target.closest('.close-btn') || 
                 e.target.closest('button') || 
                 e.target.tagName === 'INPUT' || 
                 e.target.tagName === 'TEXTAREA' || 
+                e.target.closest('.custom-dropdown') || 
+                e.target.closest('#branchDropdown') || 
+                e.target.closest('#cityDropdown') || 
+                e.target.closest('#paymentDropdown') || 
+                e.target.closest('.profile-np-dropdown') || 
+                e.target.closest('.branch-item') || 
+                e.target.closest('.city-item') || 
+                e.target.closest('.np-clear-btn') || 
                 e.target.closest('.rules-content') || 
                 e.target.closest('.orders-container') || 
                 e.target.closest('#reviewsContainerList')) {
@@ -403,6 +412,93 @@ function initMobileSwipe() {
 }
 window.initMobileSwipe = initMobileSwipe;
 
+// 5b. Адаптация модальных окон и выпадающих списков под мобильную клавиатуру (VisualViewport API)
+function initMobileKeyboardViewport() {
+    if (typeof window === 'undefined' || typeof document === 'undefined' || window._mobileKbBound) return;
+    window._mobileKbBound = true;
+
+    const root = document.documentElement;
+    let baselineHeight = window.innerHeight || 0;
+
+    const updateViewportMetrics = () => {
+        if (window.innerWidth > 900) {
+            if (root && root.classList) root.classList.remove('keyboard-open');
+            return;
+        }
+        const vv = window.visualViewport;
+        const currentH = vv ? vv.height : window.innerHeight;
+        const offsetTop = vv ? vv.offsetTop : 0;
+
+        if (currentH > baselineHeight) baselineHeight = currentH;
+        const refHeight = Math.max(baselineHeight, window.innerHeight || 0);
+        const kbDelta = refHeight - currentH;
+        const activeEl = document.activeElement;
+        const isInputFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
+        const isKeyboardOpen = isInputFocused && kbDelta > 90;
+
+        if (root && root.style && typeof root.style.setProperty === 'function') {
+            root.style.setProperty('--vv-height', `${Math.round(currentH)}px`);
+            root.style.setProperty('--vv-top', `${Math.round(offsetTop)}px`);
+        }
+        if (root && root.classList) {
+            root.classList.toggle('keyboard-open', isKeyboardOpen);
+        }
+
+        if (isKeyboardOpen && activeEl) {
+            const npIds = ['orderCity', 'orderBranch', 'profileDeliveryCity', 'profileDeliveryBranch', 'modalProfileDeliveryCity', 'modalProfileDeliveryBranch'];
+            if (npIds.includes(activeEl.id) && typeof window.scrollNPFieldIntoModalView === 'function') {
+                window.scrollNPFieldIntoModalView(activeEl);
+            } else {
+                const modalWin = activeEl.closest ? activeEl.closest('.modal-window') : null;
+                if (modalWin) {
+                    try {
+                        const headerEl = modalWin.querySelector ? modalWin.querySelector('.modal-header') : null;
+                        const headerH = (headerEl && headerEl.offsetHeight) ? headerEl.offsetHeight : 46;
+                        const rect = activeEl.getBoundingClientRect();
+                        const modalRect = modalWin.getBoundingClientRect();
+                        if (rect.bottom > modalRect.bottom - 16 || rect.top < modalRect.top + headerH) {
+                            const delta = (rect.top - modalRect.top) - (headerH + 32);
+                            modalWin.scrollTop = Math.max(0, modalWin.scrollTop + delta);
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+    };
+
+    if (window.visualViewport && typeof window.visualViewport.addEventListener === 'function') {
+        window.visualViewport.addEventListener('resize', updateViewportMetrics);
+        window.visualViewport.addEventListener('scroll', updateViewportMetrics);
+    }
+    window.addEventListener('resize', updateViewportMetrics);
+
+    if (typeof document.addEventListener === 'function') {
+        document.addEventListener('focusin', (e) => {
+            if (window.innerWidth > 900) return;
+            const t = e && e.target;
+            if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA')) return;
+            setTimeout(updateViewportMetrics, 60);
+            setTimeout(updateViewportMetrics, 260);
+        });
+        document.addEventListener('focusout', () => {
+            if (window.innerWidth > 900) return;
+            setTimeout(() => {
+                const activeEl = document.activeElement;
+                const stillFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
+                if (!stillFocused) {
+                    if (root && root.classList) root.classList.remove('keyboard-open');
+                    if (document.querySelectorAll) {
+                        document.querySelectorAll('.modal-window.np-field-active').forEach(mw => {
+                            if (mw.classList) mw.classList.remove('np-field-active');
+                        });
+                    }
+                }
+            }, 120);
+        });
+    }
+}
+window.initMobileKeyboardViewport = initMobileKeyboardViewport;
+
 // 6. Инициализация клика по фону и защиты скролла
 function initWindowOverlayListeners() {
     // Закрытие по клику на темный фон оверлея
@@ -428,8 +524,9 @@ function initWindowOverlayListeners() {
         el.setAttribute('data-lenis-prevent', 'true');
     });
 
-    // Подключение мобильного свайпа
+    // Подключение мобильного свайпа и адаптации под клавиатуру
     initMobileSwipe();
+    initMobileKeyboardViewport();
 }
 
 // 7. Универсальное закрытие окон и оверлеев по клавише Escape

@@ -2160,5 +2160,66 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(dropCode).toContain('[0, 150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms))');
             expect(dropCode).toContain("dataset.userTyped = '1'");
         });
+
+        it('matches and ranks branches and postomats by number without false positives on weight limits', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            eval(cartCode);
+
+            expect(typeof window.parseNPBranchQuery).toBe('function');
+            expect(typeof window.filterAndSortBranches).toBe('function');
+            expect(typeof window.extractBranchNumber).toBe('function');
+
+            // 1. Query parsing for numbers & postomats
+            const q6745 = window.parseNPBranchQuery('6745');
+            expect(q6745.isPureNumber).toBe(true);
+            expect(q6745.number).toBe('6745');
+            expect(q6745.apiSearch).toBe('№6745');
+
+            const qPost = window.parseNPBranchQuery('почтомат 6745');
+            expect(qPost.isPureNumber).toBe(true);
+            expect(qPost.wantsPostomat).toBe(true);
+            expect(qPost.apiSearch).toBe('№6745');
+
+            // 2. Filtering and ranking: ignores "(до 30 кг)" when searching "30" and puts exact № first
+            const sampleBranches = [
+                { Ref: '1', Description: 'Відділення №1: вул. Пирогівський шлях, 135', TypeOfWarehouse: 'regular' },
+                { Ref: '3', Description: 'Відділення №3 (до 30 кг на одне місце): вул. Слобожанська, 13', TypeOfWarehouse: 'regular' },
+                { Ref: '250', Description: 'Відділення №250 (до 10 кг): вул. Чикаленка, 45', TypeOfWarehouse: 'regular' },
+                { Ref: '25-street', Description: 'Відділення №19: вул. Райдужна, 25Б', TypeOfWarehouse: 'regular' },
+                { Ref: '25-exact', Description: "Відділення №25 (до 30 кг): вул. Левка Лук'яненка, 9", TypeOfWarehouse: 'regular' },
+                { Ref: '30-exact', Description: 'Відділення №30 (до 30 кг): просп. Берестейський, 20', TypeOfWarehouse: 'regular' },
+                { Ref: '6745-post', Description: 'Поштомат "Нова Пошта" №6745: вул. Євгена Сверстюка, 2а', TypeOfWarehouse: 'f9316480-5f2d-425d-bc2c-ac7cd29decf0' }
+            ];
+
+            const res6745 = window.filterAndSortBranches(sampleBranches, '6745');
+            expect(res6745.length).toBe(1);
+            expect(res6745[0].Ref).toBe('6745-post');
+
+            const res30 = window.filterAndSortBranches(sampleBranches, '30');
+            expect(res30.length).toBe(1);
+            expect(res30[0].Ref).toBe('30-exact');
+
+            const res25 = window.filterAndSortBranches(sampleBranches, '25');
+            expect(res25[0].Ref).toBe('25-exact');
+            expect(res25[1].Ref).toBe('250');
+            expect(res25[2].Ref).toBe('25-street');
+        });
+
+        it('provides touch tap selection, keyboard viewport adaptation, and clear buttons for NP fields', () => {
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('function bindTouchTapSelect');
+            expect(cartCode).toContain('function scrollNPFieldIntoModalView');
+            expect(cartCode).toContain('function clearNPBranchInput');
+            expect(cartCode).toContain('function clearNPCityInput');
+
+            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            expect(windowsCode).toContain('function initMobileKeyboardViewport');
+            expect(windowsCode).toContain("e.target.closest('.custom-dropdown')");
+            expect(windowsCode).toContain("e.target.closest('#branchDropdown')");
+
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('html.keyboard-open .modal-overlay');
+            expect(css).toContain('.np-clear-btn');
+        });
     });
 });
