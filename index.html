@@ -603,13 +603,13 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div class=np-input-wrap style="position:relative; z-index:35;">
-<input id=orderCity name=np_city class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next" style="padding-right:38px;">
+<input id=orderCity name=nisha_order_city class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
 <button type=button id=clearOrderCityBtn class=np-clear-btn onclick=clearNPCityInput(event) aria-label="Очистить город" tabindex=-1>✕</button>
 <div id=cityDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
 <label data-i18n=checkout.branch>Отделение или Почтомат:</label>
 <div class=np-input-wrap style="position:relative; z-index:30;">
-<input id=orderBranch name=np_branch class=form-input placeholder=Відділення... onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done" style="padding-right:38px;">
+<input id=orderBranch name=nisha_order_branch class=form-input placeholder=Відділення... onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
 <button type=button id=clearOrderBranchBtn class=np-clear-btn onclick=clearNPBranchInput(event) aria-label="Очистить отделение" tabindex=-1>✕</button>
 <div id=branchDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>

@@ -2224,6 +2224,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toContain('.np-clear-btn');
             expect(css).toContain('flex-shrink: 0 !important');
             expect(css).toContain('min-height: 48px');
+
+            expect(cartCode).toContain('_autofillShieldBound');
+            expect(cartCode).toContain('_lastExplicitValue');
+
+            const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(indexHtml).toContain('name=nisha_order_city');
+            expect(indexHtml).toContain('name=nisha_order_branch');
+            expect(indexHtml).toContain('data-lpignore="true"');
         });
     });
 });

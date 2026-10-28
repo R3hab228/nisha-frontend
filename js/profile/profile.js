@@ -1068,6 +1068,19 @@ function initProfileDeliveryEvents() {
         if (fnEl && typeof window.attachFullNameAutoCapitalize === 'function') {
             window.attachFullNameAutoCapitalize(fnEl);
         }
+        if (fnEl && typeof fnEl.addEventListener === 'function' && !fnEl._autofillShieldBound) {
+            fnEl._autofillShieldBound = true;
+            if (fnEl.value && typeof fnEl.value.trim === 'function' && fnEl.value.trim()) {
+                fnEl._lastExplicitValue = fnEl.value.trim();
+            }
+            fnEl.addEventListener('input', () => {
+                if (document.activeElement === fnEl) {
+                    fnEl._lastExplicitValue = fnEl.value;
+                } else if (fnEl._lastExplicitValue && fnEl.value !== fnEl._lastExplicitValue) {
+                    fnEl.value = fnEl._lastExplicitValue;
+                }
+            });
+        }
 
         if (cityEl) {
             const isBound = cityEl.dataset ? Boolean(cityEl.dataset.npBound) : Boolean(cityEl._npBound);

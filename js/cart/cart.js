@@ -1781,6 +1781,25 @@ async function openCheckoutModal() {
                     this.value = this.value.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '');
                 });
             }
+
+            // Защита ФИО от случайного перезаписывания автоподстановкой браузера/клавиатуры при вводе города/отделения
+            if (typeof orderNameEl.addEventListener === 'function' && !orderNameEl._autofillShieldBound) {
+                orderNameEl._autofillShieldBound = true;
+                if (orderNameEl.value && typeof orderNameEl.value.trim === 'function' && orderNameEl.value.trim()) {
+                    orderNameEl._lastExplicitValue = orderNameEl.value.trim();
+                }
+                orderNameEl.addEventListener('input', () => {
+                    if (document.activeElement === orderNameEl) {
+                        orderNameEl.dataset.userTyped = '1';
+                        orderNameEl._lastExplicitValue = orderNameEl.value;
+                    } else if (orderNameEl._lastExplicitValue && orderNameEl.value !== orderNameEl._lastExplicitValue) {
+                        // Фокус сейчас не в поле ФИО (например, пользователь изменяет город/почтомат)
+                        // и браузерная клавиатура попыталась перезаписать ФИО фоновым автозаполнением
+                        orderNameEl.value = orderNameEl._lastExplicitValue;
+                        if (typeof saveCheckoutDraft === 'function') saveCheckoutDraft();
+                    }
+                });
+            }
         }
 
         ['orderName', 'orderPhone', 'orderCity', 'orderBranch'].forEach(fieldId => {
@@ -1900,6 +1919,9 @@ async function openCheckoutModal() {
             // ФИО: из профиля, если поле ещё пустое
             if (nameInput && !nameInput.value.trim() && profileFullName) {
                 nameInput.value = profileFullName;
+            }
+            if (nameInput && nameInput.value.trim()) {
+                nameInput._lastExplicitValue = nameInput.value.trim();
             }
         }
 
