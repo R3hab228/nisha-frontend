@@ -2273,6 +2273,11 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
             expect(windowsCode).toContain('const isKeyboardOpen = kbDelta > 90 || (isInputFocused && kbDelta > 40);');
+
+            const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(indexHtml).toContain('id=authUsername class=auth-input');
+            expect(indexHtml).toContain('id=authEmail class=auth-input');
+            expect(indexHtml).toContain('id=authPass class=auth-input');
         });
     });
 });

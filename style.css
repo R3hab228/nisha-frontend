@@ -217,7 +217,7 @@ label:hover .win95-cb:checked {
 }
 
 .auth-fields { display: flex; flex-direction: column; gap: 10px; }
-.auth-input { background-color: #000; color: var(--accent-green); border: 2px inset var(--border-light); padding: 8px; font-family: var(--font-main); outline: none; font-size: 13px; }
+.auth-input { background-color: #000; color: var(--accent-green); border: 2px inset var(--border-light); padding: 8px; font-family: var(--font-main); outline: none; font-size: 13px; width: 100%; box-sizing: border-box; }
 .auth-input:focus { border-color: var(--accent-green); }
 .auth-btn { background-color: var(--text-main); color: #000; border: 2px outset #eee; padding: 8px; font-weight: bold; cursor: pointer; font-family: var(--font-main); font-size: 13px; margin-top: 5px; transition: 0.1s;}
 .auth-btn:active { border-style: inset; }
