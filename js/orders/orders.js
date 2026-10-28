@@ -196,30 +196,38 @@ async function fetchMyOrders() {
                 }
             });
 
-            // 2. Дополнительно ищем заказы по всем номерам телефона клиента (в форматах 380... и 0...)
-            const queriedSearchPhones = new Set();
+            // 2. Дополнительно ищем заказы по всем уникальным номерам телефона клиента параллельно (дедупликация по последним 9 цифрам)
+            const queriedLast9 = new Set();
             const uniqueCleanPhones = new Set();
+            const phoneRpcTasks = [];
+
             for (const rawP of candidatePhones) {
                 const clean = String(rawP).replace(/[^\d]/g, '');
                 if (clean.length >= 9) {
-                    uniqueCleanPhones.add(clean);
                     const last9 = clean.slice(-9);
-                    const variants = ['380' + last9, '0' + last9, clean];
-                    for (const v of variants) {
-                        if (queriedSearchPhones.has(v)) continue;
-                        queriedSearchPhones.add(v);
-                        try {
-                            const { data: phoneOrders } = await sb.rpc('get_orders_by_phone', { search_phone: v });
-                            if (Array.isArray(phoneOrders) && phoneOrders.length > 0) {
-                                for (const po of phoneOrders) {
-                                    if (po && po.id && !orderMap.has(po.id)) {
-                                        orderMap.set(po.id, po);
+                    const canonicalPhone = '380' + last9;
+                    uniqueCleanPhones.add(canonicalPhone);
+                    if (queriedLast9.has(last9)) continue;
+                    queriedLast9.add(last9);
+
+                    phoneRpcTasks.push(
+                        sb.rpc('get_orders_by_phone', { search_phone: canonicalPhone })
+                            .then(({ data: phoneOrders }) => {
+                                if (Array.isArray(phoneOrders) && phoneOrders.length > 0) {
+                                    for (const po of phoneOrders) {
+                                        if (po && po.id && !orderMap.has(po.id)) {
+                                            orderMap.set(po.id, po);
+                                        }
                                     }
                                 }
-                            }
-                        } catch (rpcErr) {}
-                    }
+                            })
+                            .catch(() => {})
+                    );
                 }
+            }
+
+            if (phoneRpcTasks.length > 0) {
+                await Promise.all(phoneRpcTasks);
             }
 
             // Сохраняем также локально закэшированные заказы с этого устройства, если они еще не попали в выборку
