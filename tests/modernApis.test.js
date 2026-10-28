@@ -2299,12 +2299,16 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(marqueeMatches.length).toBeGreaterThanOrEqual(8);
         });
 
-        it('32. Search input and text fields custom cursor on PC desktop', () => {
+        it('32. Search input custom I-beam cursor and search results dropdown custom pointer on PC desktop', () => {
             const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
             expect(css).toContain('.search-input');
             expect(css).toContain('caret-color: var(--accent-green)');
-            // Ensure .search-input and input fields are explicitly assigned the custom red arrow cursor
-            expect(css).toMatch(/\.search-input[^}]*cursor:\s*url\(/);
+            // Ensure .search-input has the custom I-beam cursor with hotspot 12 12, text
+            expect(css).toContain('12 12, text !important');
+            // Ensure .live-search-item and search results dropdown have the custom red arrow pointer cursor
+            expect(css).toContain('.live-search-item');
+            expect(css).toContain('.live-search-dropdown');
+            expect(css).toMatch(/\.live-search-item[^}]*cursor:\s*url\(/);
         });
     });
 });
