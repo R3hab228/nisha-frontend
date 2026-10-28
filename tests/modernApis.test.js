@@ -2298,5 +2298,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const marqueeMatches = indexHtml.match(/class="?marquee-content"?/g) || [];
             expect(marqueeMatches.length).toBeGreaterThanOrEqual(8);
         });
+
+        it('32. Search input and text fields custom cursor on PC desktop', () => {
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('.search-input');
+            expect(css).toContain('caret-color: var(--accent-green)');
+            // Ensure .search-input and input fields are explicitly assigned the custom red arrow cursor
+            expect(css).toMatch(/\.search-input[^}]*cursor:\s*url\(/);
+        });
     });
 });
