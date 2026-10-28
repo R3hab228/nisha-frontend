@@ -438,30 +438,16 @@ function initMobileKeyboardViewport() {
 
         if (root && root.style && typeof root.style.setProperty === 'function') {
             root.style.setProperty('--vv-height', `${Math.round(currentH)}px`);
-            root.style.setProperty('--vv-top', `${Math.round(offsetTop)}px`);
         }
         if (root && root.classList) {
             root.classList.toggle('keyboard-open', isKeyboardOpen);
         }
 
         if (isKeyboardOpen && activeEl) {
-            const npIds = ['orderCity', 'orderBranch', 'profileDeliveryCity', 'profileDeliveryBranch', 'modalProfileDeliveryCity', 'modalProfileDeliveryBranch'];
-            if (npIds.includes(activeEl.id) && typeof window.scrollNPFieldIntoModalView === 'function') {
+            if (typeof window.scrollNPFieldIntoModalView === 'function') {
                 window.scrollNPFieldIntoModalView(activeEl);
-            } else {
-                const modalWin = activeEl.closest ? activeEl.closest('.modal-window') : null;
-                if (modalWin) {
-                    try {
-                        const headerEl = modalWin.querySelector ? modalWin.querySelector('.modal-header') : null;
-                        const headerH = (headerEl && headerEl.offsetHeight) ? headerEl.offsetHeight : 46;
-                        const rect = activeEl.getBoundingClientRect();
-                        const modalRect = modalWin.getBoundingClientRect();
-                        if (rect.bottom > modalRect.bottom - 16 || rect.top < modalRect.top + headerH) {
-                            const delta = (rect.top - modalRect.top) - (headerH + 32);
-                            modalWin.scrollTop = Math.max(0, modalWin.scrollTop + delta);
-                        }
-                    } catch (e) {}
-                }
+            } else if (typeof activeEl.scrollIntoView === 'function') {
+                try { activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
             }
         }
     };

@@ -2211,6 +2211,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('function scrollNPFieldIntoModalView');
             expect(cartCode).toContain('function clearNPBranchInput');
             expect(cartCode).toContain('function clearNPCityInput');
+            expect(cartCode).toContain('scrollIntoView');
+            expect(cartCode).toContain('PointerEvent');
 
             const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
             expect(windowsCode).toContain('function initMobileKeyboardViewport');
@@ -2220,6 +2222,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
             expect(css).toContain('html.keyboard-open .modal-overlay');
             expect(css).toContain('.np-clear-btn');
+            expect(css).toContain('flex-shrink: 0 !important');
+            expect(css).toContain('min-height: 48px');
         });
     });
 });

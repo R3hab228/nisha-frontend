@@ -415,37 +415,69 @@ function clearNPBranchInput(e) {
 }
 window.clearNPBranchInput = clearNPBranchInput;
 
-// Надежный выбор элемента из выпадающего списка на мобильных тачскринах (0 мс задержки, без конфликта со скроллом)
+// Надежный выбор элемента из выпадающего списка на любых мобильных и тач-устройствах (0 мс задержки)
 function bindTouchTapSelect(el, handler) {
     if (!el || typeof el.addEventListener !== 'function') return;
-    let tStartX = 0;
-    let tStartY = 0;
-    let tMoved = false;
-    el.addEventListener('touchstart', (ev) => {
-        const t = ev.touches && ev.touches[0];
-        if (t) {
-            tStartX = t.clientX;
-            tStartY = t.clientY;
-            tMoved = false;
+    let startX = 0;
+    let startY = 0;
+    let moved = false;
+    let startTime = 0;
+
+    const onStart = (cx, cy) => {
+        startX = cx;
+        startY = cy;
+        moved = false;
+        startTime = Date.now();
+    };
+
+    const onMove = (cx, cy) => {
+        if (Math.hypot(cx - startX, cy - startY) > 24) {
+            moved = true;
         }
-    }, { passive: true });
-    el.addEventListener('touchmove', (ev) => {
-        const t = ev.touches && ev.touches[0];
-        if (t && (Math.abs(t.clientX - tStartX) > 10 || Math.abs(t.clientY - tStartY) > 10)) {
-            tMoved = true;
-        }
-    }, { passive: true });
-    el.addEventListener('touchend', (ev) => {
-        if (!tMoved) {
+    };
+
+    const onEnd = (ev) => {
+        const duration = Date.now() - startTime;
+        if (!moved && duration < 800) {
             if (ev.cancelable && typeof ev.preventDefault === 'function') ev.preventDefault();
             if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
             handler(ev);
         }
-    }, { passive: false });
+    };
+
+    if (typeof window !== 'undefined' && 'PointerEvent' in window) {
+        el.addEventListener('pointerdown', (ev) => {
+            if (ev.pointerType === 'touch' || ev.pointerType === 'pen') {
+                onStart(ev.clientX, ev.clientY);
+            }
+        }, { passive: true });
+        el.addEventListener('pointermove', (ev) => {
+            if (ev.pointerType === 'touch' || ev.pointerType === 'pen') {
+                onMove(ev.clientX, ev.clientY);
+            }
+        }, { passive: true });
+        el.addEventListener('pointerup', (ev) => {
+            if (ev.pointerType === 'touch' || ev.pointerType === 'pen') {
+                onEnd(ev);
+            }
+        }, { passive: false });
+    } else {
+        el.addEventListener('touchstart', (ev) => {
+            const t = ev.touches && ev.touches[0];
+            if (t) onStart(t.clientX, t.clientY);
+        }, { passive: true });
+        el.addEventListener('touchmove', (ev) => {
+            const t = ev.touches && ev.touches[0];
+            if (t) onMove(t.clientX, t.clientY);
+        }, { passive: true });
+        el.addEventListener('touchend', (ev) => {
+            onEnd(ev);
+        }, { passive: false });
+    }
 }
 window.bindTouchTapSelect = bindTouchTapSelect;
 
-// Автоматическое скрытие мобильной клавиатуры при прокрутке выпадающего списка пальцем
+// Автоматическое скрытие мобильной клавиатуры при осознанной прокрутке выпадающего списка пальцем
 function bindDropdownScrollDismissKeyboard(dropdown, inputId) {
     if (!dropdown || dropdown._scrollDismissBound || typeof dropdown.addEventListener !== 'function') return;
     dropdown._scrollDismissBound = true;
@@ -457,7 +489,8 @@ function bindDropdownScrollDismissKeyboard(dropdown, inputId) {
     dropdown.addEventListener('touchmove', (e) => {
         const t = e.touches && e.touches[0];
         if (!t) return;
-        if (Math.abs(t.clientY - startY) > 14) {
+        // Порог 28px защищает обычный тап пальцем от ложного закрытия клавиатуры
+        if (Math.abs(t.clientY - startY) > 28) {
             const inp = document.getElementById(inputId);
             if (inp && document.activeElement === inp && typeof inp.blur === 'function') {
                 inp.blur();
@@ -466,28 +499,14 @@ function bindDropdownScrollDismissKeyboard(dropdown, inputId) {
     }, { passive: true });
 }
 
-// Плавная прокрутка активного поля (Город / Отделение) к верху модального окна,
-// чтобы мобильная клавиатура не перекрывала выпадающий список
+// Безопасная центровка активного поля ввода (Город / Отделение) в видимую зону модалки
 function scrollNPFieldIntoModalView(inputEl) {
     if (!inputEl || typeof window === 'undefined' || window.innerWidth > 900) return;
-    const modalWin = inputEl.closest ? inputEl.closest('.modal-window') : null;
-    if (!modalWin) return;
-    if (modalWin.classList) modalWin.classList.add('np-field-active');
-    const doScroll = () => {
-        try {
-            const headerEl = modalWin.querySelector ? modalWin.querySelector('.modal-header') : null;
-            const headerH = (headerEl && headerEl.offsetHeight) ? headerEl.offsetHeight : 46;
-            const inputRect = inputEl.getBoundingClientRect();
-            const modalRect = modalWin.getBoundingClientRect();
-            const targetDelta = (inputRect.top - modalRect.top) - (headerH + 26);
-            if (Math.abs(targetDelta) > 6) {
-                modalWin.scrollTop = Math.max(0, modalWin.scrollTop + targetDelta);
-            }
-        } catch (e) {}
-    };
-    doScroll();
-    setTimeout(doScroll, 120);
-    setTimeout(doScroll, 320);
+    try {
+        if (typeof inputEl.scrollIntoView === 'function') {
+            inputEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    } catch (e) {}
 }
 window.scrollNPFieldIntoModalView = scrollNPFieldIntoModalView;
 
@@ -1551,11 +1570,11 @@ window.handleSwipeEnd = function(e) {
 
 // Единый обработчик кликов и тапов вне выпадающих меню (города, отделения, оплата, корзина, язык)
 function handleDropdownsOutsideClick(e) {
-    if (!e.target.closest('#orderCity') && !e.target.closest('#cityDropdown')) {
+    if (!e.target.closest('#orderCity') && !e.target.closest('#cityDropdown') && !e.target.closest('#clearOrderCityBtn')) {
         const cd = document.getElementById('cityDropdown');
         if (cd) cd.style.display = 'none';
     }
-    if (!e.target.closest('#orderBranch') && !e.target.closest('#branchDropdown')) {
+    if (!e.target.closest('#orderBranch') && !e.target.closest('#branchDropdown') && !e.target.closest('#clearOrderBranchBtn')) {
         const bd = document.getElementById('branchDropdown');
         if (bd) bd.style.display = 'none';
     }
@@ -1578,6 +1597,7 @@ function handleDropdownsOutsideClick(e) {
         if (langWrap) langWrap.classList.remove('active');
     }
 }
+document.addEventListener('pointerdown', handleDropdownsOutsideClick, { passive: true });
 document.addEventListener('mousedown', handleDropdownsOutsideClick);
 document.addEventListener('touchstart', handleDropdownsOutsideClick, { passive: true });
 
