@@ -1191,10 +1191,12 @@ function renderHistory() {
         let miniBadgeHTML = '';
         if ((liveIsTop || liveIsSale || liveIsHot) && currentStatus === 'available') {
             const parts = [];
-            if (liveIsTop) parts.push(`<span style="color: #cc00ff;">★ TOP</span>`);
-            if (liveIsSale) parts.push(`<span style="color: #cc0000;">% SALE</span>`);
-            if (liveIsHot) parts.push(`<span style="color: #0044cc;">HOT</span>`);
-            miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 4px; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none;">${parts.join('<div style="width:1px;height:8px;background:#888;"></div>')}</div>`;
+            const starSvg = `<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-top:-1px; flex-shrink:0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+            const chartSvg = `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-top:-1px; flex-shrink:0;"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`;
+            if (liveIsTop) parts.push(`<span style="color: #cc00ff; display: inline-flex; align-items: center; gap: 2px;">${starSvg} TOP</span>`);
+            if (liveIsSale) parts.push(`<span style="color: #cc0000; display: inline-flex; align-items: center;">% SALE</span>`);
+            if (liveIsHot) parts.push(`<span style="color: #0044cc; display: inline-flex; align-items: center; gap: 2px;">${chartSvg} HOT</span>`);
+            miniBadgeHTML = `<div class="system-status-bar history-status-bar" style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 4px; padding: 1.5px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none; line-height: 1; transform: translateZ(25px);">${parts.join('<div style="width:1px;height:8px;background:#888;flex-shrink:0;"></div>')}</div>`;
         }
 
         card.innerHTML = `

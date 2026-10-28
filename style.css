@@ -86,7 +86,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 /* --- РќРћР’РћР•: РџСЂСЏС‡РµРј РєРЅРѕРїРєСѓ РїСЂРѕС„РёР»СЏ РЅР° РџРљ --- */
 .mobile-profile-link { display: none !important; }
 .marquee-container { background-color: #000; color: var(--accent-yellow); padding: 7px 0; font-family: var(--font-mono); border-bottom: 1px solid #444; font-size: 14px; overflow: hidden; position: relative; white-space: nowrap; user-select: none; }
-.marquee-track { display: flex; width: max-content; animation: marquee-scroll 14s linear infinite; will-change: transform; }
+.marquee-track { display: flex; width: max-content; animation: marquee-scroll 45s linear infinite; will-change: transform; }
 .marquee-container:hover .marquee-track { animation-play-state: paused; }
 .marquee-content { display: inline-flex; align-items: center; padding-right: 5rem; flex-shrink: 0; }
 @keyframes marquee-scroll { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
@@ -376,6 +376,14 @@ label:hover .win95-cb:checked {
     border-top: 2px solid #fff; border-left: 2px solid #fff; border-bottom: 2px solid #555; border-right: 2px solid #555;
     box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 8px; padding: 2px 6px;
     font-family: 'Tahoma', sans-serif; font-size: 10px; font-weight: bold; pointer-events: none; transform: translateZ(30px);
+}
+.history-status-bar {
+    top: 4px !important; left: 4px !important; z-index: 10 !important;
+    gap: 4px !important; padding: 1.5px 4px !important;
+    font-size: 8px !important; line-height: 1 !important;
+    border-top: 1px solid #fff !important; border-left: 1px solid #fff !important;
+    border-bottom: 1px solid #555 !important; border-right: 1px solid #555 !important;
+    transform: translateZ(25px) !important;
 }
 .status-item { display: flex; align-items: center; gap: 4px; }
 .status-sale { color: #cc0000; }

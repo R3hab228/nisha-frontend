@@ -2279,5 +2279,24 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(indexHtml).toContain('id=authEmail class=auth-input');
             expect(indexHtml).toContain('id=authPass class=auth-input');
         });
+
+        it('31. History items HOT badge arrow SVG and desktop PC seamless marquee banner', () => {
+            const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+            // History badge must contain the HOT trending arrow SVG matching the feed
+            expect(productCode).toContain('polyline points="23 6 13.5 15.5 8.5 10.5 1 18"');
+            expect(productCode).toContain('polyline points="17 6 23 6 23 12"');
+            expect(productCode).toContain('history-status-bar');
+            expect(productCode).toContain('${chartSvg} HOT');
+
+            // CSS must provide custom sizing for history-status-bar
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('.history-status-bar');
+            expect(css).toContain('animation: marquee-scroll 45s linear infinite;');
+
+            // HTML must contain sufficient marquee copies for seamless full-width PC monitors
+            const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            const marqueeMatches = indexHtml.match(/class="?marquee-content"?/g) || [];
+            expect(marqueeMatches.length).toBeGreaterThanOrEqual(8);
+        });
     });
 });
