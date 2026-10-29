@@ -316,6 +316,12 @@ function updateCartUI() {
     
     p.classList.add('show'); 
     if(fab) fab.classList.add('cart-active'); 
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.setAttribute('content', '#000a1a');
+    if (window.Telegram && window.Telegram.WebApp) {
+        if (typeof window.Telegram.WebApp.setBackgroundColor === 'function') window.Telegram.WebApp.setBackgroundColor('#000a1a');
+        if (typeof window.Telegram.WebApp.setBottomBarColor === 'function') window.Telegram.WebApp.setBottomBarColor('#000a1a');
+    } 
     
     document.getElementById('cartCount').innerText = currentCart.length;
     let total = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
