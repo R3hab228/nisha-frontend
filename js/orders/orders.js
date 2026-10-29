@@ -335,7 +335,8 @@ async function fetchMyOrders() {
     }
 
     if (fetchError && (!window.globalOrdersData || window.globalOrdersData.length === 0)) { 
-        listArea.innerHTML = `<div style="color:red; text-align:center;">[ ОШИБКА: ${fetchError.message} ]</div>`; 
+        const safeFetchErr = typeof window.escapeHtml === 'function' ? window.escapeHtml(fetchError.message) : fetchError.message;
+        listArea.innerHTML = `<div style="color:red; text-align:center;">[ ОШИБКА: ${safeFetchErr} ]</div>`; 
         return; 
     }
 

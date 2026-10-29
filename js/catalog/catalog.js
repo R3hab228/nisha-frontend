@@ -807,7 +807,8 @@ async function loadAllItems() {
             if (typeof handleNetworkOffline === 'function') {
                 handleNetworkOffline();
             } else if (grid) {
-                grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${error.message} ]</div>`;
+                const safeErrMsg = typeof window.escapeHtml === 'function' ? window.escapeHtml(error.message) : error.message;
+                grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${safeErrMsg} ]</div>`;
             }
         }
         return; 
@@ -1907,7 +1908,8 @@ function applyFilters(immediate = false, preserveViewport = false) {
         } catch (err) {
             console.error("ОШИБКА ФИЛЬТРАЦИИ:", err);
             if (grid) {
-                grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${err.message} ]</div>`;
+                const safeRenderErr = typeof window.escapeHtml === 'function' ? window.escapeHtml(err.message) : err.message;
+                grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${safeRenderErr} ]</div>`;
                 grid.classList.remove('fade-out');
             }
         }
