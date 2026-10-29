@@ -2426,5 +2426,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('data-i18n="pagination.page"');
             expect(catalogCode).toContain('data-i18n="pagination.of"');
         });
+
+        it('38. Proposal photos preview: cleanly removed 6-dot drag icon overlay from thumbnails', () => {
+            const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+
+            // Must not contain the 6 dots drag icon
+            expect(dropCode).not.toContain('dragIcon');
+            expect(dropCode).not.toContain('<circle cx="9" cy="12"');
+            expect(dropCode).not.toContain('<circle cx="15" cy="19"');
+        });
     });
 });

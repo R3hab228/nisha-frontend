@@ -394,14 +394,11 @@ function renderProposalPreviews() {
             img.setAttribute('data-action', 'preview-proposal-photo');
             img.setAttribute('title', 'Нажмите, чтобы просмотреть');
 
-            const dragIcon = '<div style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); padding:2px; border-radius:2px; pointer-events:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></div>';
-
             if (!item.url) { 
                 img.style.backgroundColor = '#111';
-                img.innerHTML = `<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">▶ VID</span>${dragIcon}`;
+                img.innerHTML = '<span style="color:var(--accent-green); font-family:var(--font-mono); font-size:10px; display:flex; align-items:center; justify-content:center; height:100%; text-shadow:0 0 5px #000;">▶ VID</span>';
             } else {
                 img.style.backgroundImage = `url('${item.url}')`;
-                img.innerHTML = dragIcon;
             }
 
             const delBtn = document.createElement('div');
