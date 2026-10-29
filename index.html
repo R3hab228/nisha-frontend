@@ -213,7 +213,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div class=search-section>
 <div class=search-wrapper>
 <form autocomplete=off onsubmit='event.preventDefault(),saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),closeSearch()' style=margin:0;padding:0;display:flex;width:100%>
-<input class=search-input id=mainSearch autocomplete=off autocorrect=off spellcheck=false placeholder="Поиск вещи..." oninput=handleLiveSearch() style=width:100%;padding-right:40px>
+<input class=search-input id=mainSearch autocomplete=off autocorrect=off spellcheck=false placeholder="Поиск вещи..." data-i18n-ph="search.placeholder" oninput=handleLiveSearch() style=width:100%;padding-right:40px>
 </form>
 <span id=clearSearchBtn class=clear-search-btn onclick=clearSearchInput()>✖</span>
 <div id=liveSearchDropdown class="live-search-dropdown no-pull" data-lenis-prevent data-no-pull></div>
@@ -271,9 +271,9 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div class=filter-title style="border-bottom:1px dashed #444;padding-bottom:10px;margin-bottom:15px"><span style=font-family:var(--font-mono);color:#fff;font-size:16px;font-weight:700;letter-spacing:1px>PROFILE/LOGIN.EXE<span style="display:inline-block;width:10px;height:16px;background-color:var(--accent-green);vertical-align:text-bottom;margin-left:6px;animation:pulse 1.2s infinite"></span></span></div>
 <div class=auth-fields id=loginForm>
 <input type=email id=authEmail class=auth-input placeholder=Email>
-<input type=text id=authUsername class=auth-input placeholder=Никнейм style=display:none>
+<input type=text id=authUsername class=auth-input placeholder=Никнейм data-i18n-ph="profile.nickname" style=display:none>
 <div class=password-wrapper>
-<input type=password id=authPass class=auth-input placeholder=Пароль>
+<input type=password id=authPass class=auth-input placeholder=Пароль data-i18n-ph="common.password">
 <div class=eye-icon onclick='togglePasswordVisibility("authPass",this)'>
 <svg viewBox="0 0 24 24" fill=none stroke-width=2 stroke-linecap=round stroke-linejoin=round>
 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -295,7 +295,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </div>
 <div class=auth-fields id=profileForm style=display:none;flex-direction:column>
 <div style="background:#0a0a0a;border:1px solid #333;padding:15px;text-align:left;font-family:var(--font-mono);box-shadow:inset 0 0 10px rgba(0,0,0,.5)">
-<div style=color:var(--accent-green);font-size:11px;margin-bottom:5px>НИКНЕЙМ:</div>
+<div style=color:var(--accent-green);font-size:11px;margin-bottom:5px data-i18n=profile.nickname>НИКНЕЙМ:</div>
 <div style=color:#fff;font-size:14px;font-family:var(--font-main);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:15px id=profileName>Loading...</div>
 <div style=color:#666;font-size:11px;margin-bottom:5px>E-MAIL:</div>
 <div style="color:#aaa;font-size:12px;margin-bottom:12px;overflow:hidden;text-overflow:ellipsis" id=profileEmail>Loading...</div>
@@ -305,8 +305,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <a href=javascript:void(0) onclick="showPhoneInput(false)" id=profileAddPhoneBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
 <div id=profilePhoneInputWrap style="display:none;align-items:center;gap:6px;margin-top:4px">
 <input type=tel id=profilePhoneInput placeholder="+380..." style="background:#000;color:var(--accent-green);border:2px inset #555;padding:4px 8px;font-family:var(--font-mono);font-size:12px;width:145px;outline:none">
-<button onclick="savePhoneFromInput(false)" title="Сохранить" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
-<button onclick="hidePhoneInput(false)" title="Отмена" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+<button onclick="savePhoneFromInput(false)" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button onclick="hidePhoneInput(false)" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.tg>ТГ ЮЗ:</div>
@@ -315,8 +315,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <a href=javascript:void(0) onclick="showTgInput(false)" id=profileAddTgBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
 <div id=profileTgInputWrap style="display:none;align-items:center;gap:6px;margin-top:4px">
 <input type=text id=profileTgInput placeholder="@username" style="background:#000;color:var(--accent-green);border:2px inset #555;padding:4px 8px;font-family:var(--font-mono);font-size:12px;width:145px;outline:none" autocomplete=off autocapitalize=none>
-<button onclick="saveTgFromInput(false)" title="Сохранить" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
-<button onclick="hideTgInput(false)" title="Отмена" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+<button onclick="saveTgFromInput(false)" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button onclick="hideTgInput(false)" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div class=profile-delivery-section>
@@ -327,19 +327,19 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div class=profile-delivery-body>
 <div>
 <div class=profile-delivery-label data-i18n=profile.delivery_fullname>ФИО ПОЛУЧАТЕЛЯ:</div>
-<input id=profileDeliveryFullName class=profile-delivery-input placeholder="Іванов Іван Іванович" autocomplete=name>
+<input id=profileDeliveryFullName class=profile-delivery-input placeholder="Іванов Іван Іванович" data-i18n-ph="checkout.name_ph" autocomplete=name>
 </div>
 <div>
 <div class=profile-delivery-label data-i18n=profile.delivery_city>ГОРОД (НОВАЯ ПОЧТА):</div>
 <div class=profile-np-wrap>
-<input id=profileDeliveryCity class=profile-delivery-input placeholder="Київ..." autocomplete=off data-modal=0>
+<input id=profileDeliveryCity class=profile-delivery-input placeholder="Київ..." data-i18n-ph="checkout.city_ph" autocomplete=off data-modal=0>
 <div id=profileDeliveryCityDropdown class="custom-dropdown profile-np-dropdown"></div>
 </div>
 </div>
 <div>
 <div class=profile-delivery-label data-i18n=profile.delivery_branch>ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:</div>
 <div class=profile-np-wrap>
-<input id=profileDeliveryBranch class=profile-delivery-input placeholder="Відділення або поштомат..." autocomplete=off data-modal=0>
+<input id=profileDeliveryBranch class=profile-delivery-input placeholder="Відділення або поштомат..." data-i18n-ph="checkout.branch_ph" autocomplete=off data-modal=0>
 <div id=profileDeliveryBranchDropdown class="custom-dropdown profile-np-dropdown"></div>
 </div>
 </div>
@@ -389,7 +389,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   <path fill="#1c5e96" d="M29,22h1v1h-1z" />
 </svg>
 </div>
-<p id="win95-error-msg" style="color:#000;margin-top:15px;margin-bottom:0;font-family:Tahoma,sans-serif;font-size:13px;font-weight:normal">Соединение потеряно</p>
+<p id="win95-error-msg" data-i18n="pwa.offline_msg" style="color:#000;margin-top:15px;margin-bottom:0;font-family:Tahoma,sans-serif;font-size:13px;font-weight:normal">Соединение потеряно</p>
 </div>
 </div>
 </div>
@@ -528,7 +528,7 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 <div class=modal-info>
 <div style=display:flex;justify-content:space-between;align-items:center;margin-bottom:10px>
 <h2 id=modalItemTitle style=margin:0;color:#fff;font-size:22px;padding-right:15px;line-height:1.2>Название товара</h2>
-<div id=modalFavStar class=fav-star-modal onclick=toggleFavFromModal(event) title=Избранное>★</div>
+<div id=modalFavStar class=fav-star-modal onclick=toggleFavFromModal(event) title=Избранное data-i18n-title=product.fav>★</div>
 </div>
 <div class=price-views-row>
 <div class=modal-price id=modalItemPrice>0 грн</div>
@@ -548,8 +548,8 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 </div>
 <div id=modalItemTags style=margin-bottom:15px;font-family:var(--font-mono);font-size:13px;font-weight:700;display:none></div>
 <div class=modal-desc>
-<strong style=color:var(--accent-green)>РАЗМЕР: <span id=modalItemSizeDesc>L</span></strong><br>
-<strong>БРЕНД:</strong> <span id=modalItemBrand>Brand</span><br><br>
+<strong style=color:var(--accent-green)><span data-i18n=product.size>РАЗМЕР:</span> <span id=modalItemSizeDesc>L</span></strong><br>
+<strong><span data-i18n=product.brand>БРЕНД:</span></strong> <span id=modalItemBrand>Brand</span><br><br>
 Описание товара.
 </div>
 <div class=info-accordions>
@@ -570,10 +570,10 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 </div>
 </div>
 </div>
-<div style="margin-bottom: 15px; text-align: left; color: #888; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Служба поддержки: <a href="https://t.me/NISHA_ADMIN01" target="_blank" style="color: var(--accent-green); text-decoration: underline;">@NISHA_ADMIN01</a></div>
+<div style="margin-bottom: 15px; text-align: left; color: #888; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;"><span data-i18n=product.support_service>Служба поддержки:</span> <a href="https://t.me/NISHA_ADMIN01" target="_blank" style="color: var(--accent-green); text-decoration: underline;">@NISHA_ADMIN01</a></div>
 <div class=buy-share-row id=actionButtonsRow>
 <button class="buy-tg-btn cart-add btn-target" id=modalCartBtn onclick=addToCartFromModal() data-i18n=product.add_to_cart>В КОРЗИНУ</button>
-<button class=share-btn onclick=shareItem() title="Поделиться" aria-label="Поделиться"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="miter"><path d="M3 21.5C3.5 12 7 7 13 7V2.5L22 10.5L13 18.5V14C8 14 5 16.5 3 21.5Z"/></svg></button>
+<button class=share-btn onclick=shareItem() title="Поделиться" data-i18n-title=product.share aria-label="Поделиться" data-i18n-aria=product.share><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="miter"><path d="M3 21.5C3.5 12 7 7 13 7V2.5L22 10.5L13 18.5V14C8 14 5 16.5 3 21.5Z"/></svg></button>
 </div>
 <div class=trust-badges>
 <div class=badge-item onclick='showBadgeInfo("secure")'>
@@ -607,7 +607,7 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 <p style=margin:0;font-size:13px;color:#aaa data-i18n=checkout.desc>Заполните данные для отправки. Бронь 2 часа.</p>
 <input id=botTrap style=opacity:0;position:absolute;top:0;left:0;height:0;width:0;z-index:-1 tabindex=-1 autocomplete=off>
 <label data-i18n=checkout.name>ФИО Получателя:</label>
-<input id=orderName name=fullname class=form-input placeholder="Іванов Іван Іванович" autocomplete=name>
+<input id=orderName name=fullname class=form-input placeholder="Іванов Іван Іванович" data-i18n-ph="checkout.name_ph" autocomplete=name>
 <div id=checkoutPhoneWrapper style="display:flex;flex-direction:column;gap:8px">
 <label data-i18n=checkout.phone style="margin-bottom:0">Телефон (ОБЯЗАТЕЛЬНО):</label>
 <div style=display:flex;gap:10px>
@@ -618,13 +618,13 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div class=np-input-wrap style="position:relative; z-index:35;">
-<input id=orderCity name=nisha_order_city class=form-input placeholder=Київ... oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+<input id=orderCity name=nisha_order_city class=form-input placeholder=Київ... data-i18n-ph="checkout.city_ph" oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
 <button type=button id=clearOrderCityBtn class=np-clear-btn onclick=clearNPCityInput(event) aria-label="Очистить город" tabindex=-1>✕</button>
 <div id=cityDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
 <label data-i18n=checkout.branch>Отделение или Почтомат:</label>
 <div class=np-input-wrap style="position:relative; z-index:30;">
-<input id=orderBranch name=nisha_order_branch class=form-input placeholder=Відділення... onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+<input id=orderBranch name=nisha_order_branch class=form-input placeholder=Відділення... data-i18n-ph="checkout.branch_ph" onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
 <button type=button id=clearOrderBranchBtn class=np-clear-btn onclick=clearNPBranchInput(event) aria-label="Очистить отделение" tabindex=-1>✕</button>
 <div id=branchDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
@@ -716,7 +716,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 </div>
 <label style=margin-top:10px data-i18n=checkout.promo>Промокод (если есть):</label>
 <div class=promo-wrapper>
-<input id=promoInput name=promo_code class=form-input placeholder="Введите код..." autocomplete=off autocapitalize=characters autocorrect=off spellcheck=false data-lpignore=true data-form-type=other onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode();}">
+<input id=promoInput name=promo_code class=form-input placeholder="Введите код..." data-i18n-ph="checkout.promo_ph" autocomplete=off autocapitalize=characters autocorrect=off spellcheck=false data-lpignore=true data-form-type=other onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode();}">
 <button class="search-btn btn-target" onclick=applyPromoCode() style=padding:10px data-i18n=checkout.apply>ПРИМЕНИТЬ</button>
 </div>
 <div id=promoMessage class=promo-msg></div>
@@ -823,8 +823,8 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <a href=javascript:void(0) onclick="showPhoneInput(true)" id=modalProfileAddPhoneBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
 <div id=modalProfilePhoneInputWrap style="display:none;align-items:center;gap:8px;margin-top:6px">
 <input type=tel id=modalProfilePhoneInput placeholder="+380..." style="background:#000;color:var(--accent-green);border:2px inset #555;padding:6px 10px;font-family:var(--font-mono);font-size:13px;flex:1;max-width:175px;outline:none">
-<button onclick="savePhoneFromInput(true)" title="Сохранить" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
-<button onclick="hidePhoneInput(true)" title="Отмена" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+<button onclick="savePhoneFromInput(true)" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button onclick="hidePhoneInput(true)" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.tg>ТГ ЮЗ:</div>
@@ -833,8 +833,8 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <a href=javascript:void(0) onclick="showTgInput(true)" id=modalProfileAddTgBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
 <div id=modalProfileTgInputWrap style="display:none;align-items:center;gap:8px;margin-top:6px">
 <input type=text id=modalProfileTgInput placeholder="@username" style="background:#000;color:var(--accent-green);border:2px inset #555;padding:6px 10px;font-family:var(--font-mono);font-size:13px;flex:1;max-width:175px;outline:none" autocomplete=off autocapitalize=none>
-<button onclick="saveTgFromInput(true)" title="Сохранить" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
-<button onclick="hideTgInput(true)" title="Отмена" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+<button onclick="saveTgFromInput(true)" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button onclick="hideTgInput(true)" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div class=profile-delivery-section>
@@ -845,19 +845,19 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=profile-delivery-body>
 <div>
 <div class=profile-delivery-label data-i18n=profile.delivery_fullname>ФИО ПОЛУЧАТЕЛЯ:</div>
-<input id=modalProfileDeliveryFullName class=profile-delivery-input placeholder="Іванов Іван Іванович" autocomplete=name>
+<input id=modalProfileDeliveryFullName class=profile-delivery-input placeholder="Іванов Іван Іванович" data-i18n-ph="checkout.name_ph" autocomplete=name>
 </div>
 <div>
 <div class=profile-delivery-label data-i18n=profile.delivery_city>ГОРОД (НОВАЯ ПОЧТА):</div>
 <div class=profile-np-wrap>
-<input id=modalProfileDeliveryCity class=profile-delivery-input placeholder="Київ..." autocomplete=off data-modal=1>
+<input id=modalProfileDeliveryCity class=profile-delivery-input placeholder="Київ..." data-i18n-ph="checkout.city_ph" autocomplete=off data-modal=1>
 <div id=modalProfileDeliveryCityDropdown class="custom-dropdown profile-np-dropdown"></div>
 </div>
 </div>
 <div>
 <div class=profile-delivery-label data-i18n=profile.delivery_branch>ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:</div>
 <div class=profile-np-wrap>
-<input id=modalProfileDeliveryBranch class=profile-delivery-input placeholder="Відділення або поштомат..." autocomplete=off data-modal=1>
+<input id=modalProfileDeliveryBranch class=profile-delivery-input placeholder="Відділення або поштомат..." data-i18n-ph="checkout.branch_ph" autocomplete=off data-modal=1>
 <div id=modalProfileDeliveryBranchDropdown class="custom-dropdown profile-np-dropdown"></div>
 </div>
 </div>
@@ -916,10 +916,10 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <button class=close-btn data-action=close-modal data-modal-id=writeReviewModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout>
-<textarea id=manualReviewInput class=form-input style=height:120px;resize:none;text-align:center placeholder="Напишите ваше мнение о покупке..."></textarea>
+<textarea id=manualReviewInput class=form-input style=height:120px;resize:none;text-align:center placeholder="Напишите ваше мнение о покупке..." data-i18n-ph="reviews_modal.placeholder"></textarea>
 <div style=display:flex;gap:10px;margin-top:10px>
-<button class="cart-checkout-btn btn-target" data-action=submit-manual-review style=flex:1>ОТПРАВИТЬ</button>
-<button class="cart-checkout-btn btn-target" data-action=close-modal data-modal-id=writeReviewModal style=flex:1;background:#333;color:#fff;border-color:#555>ОТМЕНА</button>
+<button class="cart-checkout-btn btn-target" data-action=submit-manual-review style=flex:1 data-i18n="reviews_modal.send">ОТПРАВИТЬ</button>
+<button class="cart-checkout-btn btn-target" data-action=close-modal data-modal-id=writeReviewModal style=flex:1;background:#333;color:#fff;border-color:#555 data-i18n="reviews_modal.cancel">ОТМЕНА</button>
 </div>
 </div>
 </div>
@@ -936,7 +936,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <input type=hidden id=autoReviewOrderId>
 <input type=hidden id=autoReviewItemImage>
 <input type=hidden id=autoReviewItemId>
-<textarea id=autoReviewInput class=form-input style=width:100%;height:90px;resize:none;text-align:center placeholder="Пару слов о покупке..."></textarea>
+<textarea id=autoReviewInput class=form-input style=width:100%;height:90px;resize:none;text-align:center placeholder="Пару слов о покупке..." data-i18n-ph="reviews_modal.auto_placeholder"></textarea>
 <div style=display:flex;gap:10px;width:100%;margin-top:10px>
 <button class="cart-checkout-btn btn-target" data-action=skip-auto-review style=flex:1;background:#333;color:#fff;border-color:#555 data-i18n=reviews_modal.later>ПОЗЖЕ</button>
 <button class="cart-checkout-btn btn-target" data-action=submit-auto-review style=flex:1 data-i18n=reviews_modal.send>ОТПРАВИТЬ</button>

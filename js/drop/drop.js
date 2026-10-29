@@ -54,7 +54,8 @@ function enqueueProposalUpload(formData) {
         .catch((err) => {
             console.error('[PROPOSAL BACKGROUND UPLOAD FAILED]', err);
             if (typeof showToast === 'function') {
-                showToast('Ошибка отправки вещи на сервер. Проверьте интернет и попробуйте еще раз.', 'error');
+                const errMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Ошибка отправки вещи на сервер. Проверьте интернет и попробуйте еще раз.';
+                showToast(errMsg, 'error');
             }
         })
         .finally(() => {
@@ -280,7 +281,8 @@ function handleNewProposalFiles(newFiles) {
     });
 
     if (currentProposalFiles.length + validFiles.length > 5) {
-        showToast('Максимум 5 фото/видео!', 'error');
+        const maxFilesMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_max_files')) || 'Максимум 5 фото/видео!';
+        showToast(maxFilesMsg, 'error');
         return;
     }
 
@@ -547,12 +549,14 @@ async function submitProposal() {
     // Валидация
     if (!files.length || !nameItem || !brand || !size || !desc || Number.isNaN(cond) || price <= 0 || !contact) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        showToast('Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!', 'error');
+        const fillAllMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_fill_all')) || 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!';
+        showToast(fillAllMsg, 'error');
         return;
     }
 
     if (cond < 1 || cond > 10) {
-        showToast('Оценка состояния от 1 до 10!', 'error');
+        const condMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_cond_range')) || 'Оценка состояния от 1 до 10!';
+        showToast(condMsg, 'error');
         return;
     }
 
@@ -577,7 +581,8 @@ async function submitProposal() {
         // Сжатие фотографий
         let compressedFiles = [];
         for (let i = 0; i < files.length; i++) {
-            btn.innerText = `[ СЖАТИЕ ФОТО: ${i + 1}/${files.length} ]`;
+            const compressText = typeof i18next !== 'undefined' ? i18next.t('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' }) : 'СЖАТИЕ ФОТО';
+                btn.innerText = `[ ${compressText}: ${i + 1}/${files.length} ]`;
             const compressed = await compressImage(files[i]);
             compressedFiles.push(compressed);
         }
@@ -629,13 +634,17 @@ async function submitProposal() {
         }
         
         setTimeout(() => {
-            showTerminalModal('SYSTEM_OK.LOG', 'Заявка успешно отправлена.', '[ ЗАКРЫТЬ ]', null);
+            const okTitle = (typeof i18next !== 'undefined' && i18next.t('propose.success_title', { defaultValue: 'SYSTEM_OK.LOG' })) || 'SYSTEM_OK.LOG';
+            const okText = (typeof i18next !== 'undefined' && i18next.t('propose.success_text', { defaultValue: 'Заявка успешно отправлена.' })) || 'Заявка успешно отправлена.';
+            const okBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' })) || '[ ЗАКРЫТЬ ]';
+            showTerminalModal(okTitle, okText, okBtn, null);
         }, 100);
 
     } catch (err) {
         console.error(err);
-        showToast('Сбой сервера: ' + err.message, 'error');
-        btn.innerText = '[ ПОВТОРИТЬ ПОПЫТКУ ]';
+        const serverErrPref = typeof i18next !== 'undefined' ? i18next.t('propose.err_server', { defaultValue: 'Сбой сервера: ' }) : 'Сбой сервера: ';
+        showToast(serverErrPref + err.message, 'error');
+        btn.innerText = typeof i18next !== 'undefined' ? i18next.t('propose.btn_retry', { defaultValue: '[ ПОВТОРИТЬ ПОПЫТКУ ]' }) : '[ ПОВТОРИТЬ ПОПЫТКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
         window._isSubmittingProposal = false;

@@ -140,7 +140,8 @@ async function openReviewsModal() {
         if (!sb && (!window.apiClient || typeof window.apiClient.get !== 'function')) {
             container.classList.remove('is-loading');
             container.classList.add('is-empty');
-            container.innerHTML = '<div class="reviews-empty-box" style="color: var(--accent-red); border-color: rgba(255,0,0,0.3);">[ ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ ]</div>';
+            const dbErr = typeof i18next !== 'undefined' ? i18next.t('reviews_modal.db_error', { defaultValue: 'ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ' }) : 'ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ';
+            container.innerHTML = `<div class="reviews-empty-box" style="color: var(--accent-red); border-color: rgba(255,0,0,0.3);">[ ${dbErr} ]</div>`;
             return;
         }
         renderReviewsData([]);
@@ -214,7 +215,7 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
         const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
         const reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
         if (Array.isArray(reviewedOrders) && reviewedOrders.includes(orderId)) {
-            showToast('Отзыв по этому заказу уже оставлен.', 'info');
+            showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.already_left')) || 'Отзыв по этому заказу уже оставлен.', 'info');
             return;
         }
     }
@@ -325,14 +326,14 @@ async function submitAutoReview() {
         const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
         const reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
         if (Array.isArray(reviewedOrders) && reviewedOrders.includes(orderId)) {
-            showToast('Отзыв по этому заказу уже оставлен.', 'info');
+            showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.already_left')) || 'Отзыв по этому заказу уже оставлен.', 'info');
             closeModal('autoReviewModal');
             return;
         }
     }
 
     if (text.length < 3) {
-        showToast('Текст слишком короткий!', 'error');
+        showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.text_short')) || 'Текст слишком короткий!', 'error');
         return;
     }
 
@@ -361,7 +362,7 @@ async function submitAutoReview() {
             window._myLastReviewText = text;
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
-            showToast('Отзыв опубликован! Спасибо.', 'success');
+            showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв опубликован! Спасибо.', 'success');
             const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
             let reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
             if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
@@ -375,7 +376,8 @@ async function submitAutoReview() {
             }
         } else {
             const errDetail = result.error ? (result.error.message || String(result.error)) : 'Не удалось сохранить отзыв';
-            showToast('Ошибка при отправке: ' + errDetail, 'error');
+            const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.err_send')) || 'Ошибка при отправке: ';
+            showToast(sendErrMsg + errDetail, 'error');
         }
     } finally {
         window._isSubmittingAutoReview = false;
@@ -441,7 +443,7 @@ async function submitManualReview() {
     const text = inputEl ? inputEl.value.trim() : '';
     
     if (text.length < 3) {
-        showToast('Текст слишком короткий!', 'error');
+        showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.text_short')) || 'Текст слишком короткий!', 'error');
         return;
     }
 
@@ -469,7 +471,7 @@ async function submitManualReview() {
             window._myLastReviewText = text;
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
-            showToast('Отзыв успешно опубликован!', 'success');
+            showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв успешно опубликован!', 'success');
             closeModal('writeReviewModal');
             
             // Переоткрываем список отзывов, чтобы отобразился свежий отзыв
@@ -478,12 +480,13 @@ async function submitManualReview() {
             }, 400);
         } else {
             const errDetail = result.error ? (result.error.message || String(result.error)) : 'Не удалось сохранить отзыв';
-            showToast('Ошибка при отправке: ' + errDetail, 'error');
+            const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.err_send')) || 'Ошибка при отправке: ';
+            showToast(sendErrMsg + errDetail, 'error');
         }
     } finally {
         if (btn) {
             btn.style.pointerEvents = 'auto';
-            btn.innerText = 'ОТПРАВИТЬ';
+            btn.innerText = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.send')) || 'ОТПРАВИТЬ';
         }
     }
 }
@@ -535,11 +538,14 @@ function initReviewsRealtime(sb) {
 
                 // Форматируем имя и текст (с экранированием от XSS для DOM-тоста)
                 const rawName = (rev.user_name || '').trim();
-                const author = rawName ? (rawName.startsWith('@') ? rawName : '@' + rawName) : 'Покупатель';
+                const fallbackAuthor = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.author_fallback')) || 'Покупатель';
+                const author = rawName ? (rawName.startsWith('@') ? rawName : '@' + rawName) : fallbackAuthor;
                 const cleanText = (rev.text || '').replace(/\s+/g, ' ').trim();
                 const snippet = cleanText.length > 55 ? cleanText.slice(0, 52) + '...' : cleanText;
                 const esc = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'));
-                const toastMsg = `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"`;
+                const toastMsg = (typeof i18next !== 'undefined')
+                    ? i18next.t('reviews_modal.new_review_from', { author: esc(author), snippet: esc(snippet), defaultValue: `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"` })
+                    : `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"`;
 
                 // 1. Интерактивный пуш-тост на сайте с кликом для открытия модалки
                 if (typeof showToast === 'function') {

@@ -2473,5 +2473,80 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 5. style.css .cart-dropdown on PC has 100% width matching cart-info so it ends at the last letter 'н' of 'грн'
             expect(cssCode).toContain('.cart-dropdown { position: absolute; bottom: calc(100% + 15px); left: 0; width: 100%; min-width: 100%; box-sizing: border-box;');
         });
+
+        it('40. Customer support and site-wide UI strings localized across RU, UA, EN with dynamic i18n placeholders and toasts', () => {
+            const ruJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ru.json'), 'utf8'));
+            const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
+            const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            const reviewsCode = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
+            const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const i18nCode = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
+
+            // 1. Customer support ("Служба поддержки") localized in RU, UA, EN
+            expect(ruJson.translation.product.support_service).toBe('Служба поддержки:');
+            expect(uaJson.translation.product.support_service).toBe('Служба підтримки:');
+            expect(enJson.translation.product.support_service).toBe('Customer support:');
+            expect(html).toContain('data-i18n=product.support_service');
+
+            // 2. Support reply and ticket messages in RU, UA, EN
+            expect(ruJson.translation.support.reply_title).toBe('Ответ от Поддержки:');
+            expect(uaJson.translation.support.reply_title).toBe('Відповідь від Підтримки:');
+            expect(enJson.translation.support.reply_title).toBe('Support Reply:');
+
+            expect(ruJson.translation.support.reply_btn_read).toBe('[ ПРОЧИТАНО ]');
+            expect(uaJson.translation.support.reply_btn_read).toBe('[ ПРОЧИТАНО ]');
+            expect(enJson.translation.support.reply_btn_read).toBe('[ READ ]');
+
+            // 3. Reviews modal localized
+            expect(ruJson.translation.reviews_modal.already_left).toBe('Отзыв по этому заказу уже оставлен.');
+            expect(uaJson.translation.reviews_modal.already_left).toBe('Відгук по цьому замовленню вже залишено.');
+            expect(enJson.translation.reviews_modal.already_left).toBe('A review for this order has already been left.');
+            expect(reviewsCode).toContain("reviews_modal.already_left");
+            expect(reviewsCode).toContain("reviews_modal.success");
+
+            // 4. Orders modal localized
+            expect(ruJson.translation.orders_modal.err_phone).toBe('Введите корректный номер телефона!');
+            expect(uaJson.translation.orders_modal.err_phone).toBe('Введіть коректний номер телефону!');
+            expect(enJson.translation.orders_modal.err_phone).toBe('Please enter a valid phone number!');
+            expect(ordersCode).toContain("orders_modal.guest_desc");
+            expect(ordersCode).toContain("orders_modal.leave_review");
+
+            // 5. Profile auth & delivery localized
+            expect(ruJson.translation.messages.enter_email_pass).toBe('Введите Email и пароль!');
+            expect(uaJson.translation.messages.enter_email_pass).toBe('Введіть Email та пароль!');
+            expect(enJson.translation.messages.enter_email_pass).toBe('Enter Email and password!');
+            expect(profileCode).toContain("messages.enter_email_pass");
+            expect(profileCode).toContain("messages.need_nickname");
+
+            // 6. Realtime catalog notifications
+            expect(ruJson.translation.messages.new_items_toast).toBe('Новые Вещи!!!');
+            expect(uaJson.translation.messages.new_items_toast).toBe('Нові Речі!!!');
+            expect(enJson.translation.messages.new_items_toast).toBe('New Items!!!');
+            expect(catalogCode).toContain("messages.new_items_toast");
+            expect(catalogCode).toContain("messages.sale_prefix");
+
+            // 7. Checkout localized
+            expect(ruJson.translation.checkout.choose_city_first).toBe('Сначала выберите город');
+            expect(uaJson.translation.checkout.choose_city_first).toBe('Спочатку оберіть місто');
+            expect(enJson.translation.checkout.choose_city_first).toBe('Choose a city first');
+            expect(cartCode).toContain("checkout.choose_city_first");
+            expect(cartCode).toContain("checkout.calc_pending");
+
+            // 8. HTML placeholder dynamic attributes & i18n title/aria support
+            expect(html).toContain('data-i18n-ph="search.placeholder"');
+            expect(html).toContain('data-i18n-ph="profile.nickname"');
+            expect(html).toContain('data-i18n-ph="common.password"');
+            expect(html).toContain('data-i18n-ph="checkout.name_ph"');
+            expect(html).toContain('data-i18n-ph="checkout.city_ph"');
+            expect(html).toContain('data-i18n-ph="checkout.branch_ph"');
+            expect(html).toContain('data-i18n-title="common.save"');
+            expect(html).toContain('data-i18n-title="common.cancel"');
+            expect(i18nCode).toContain('data-i18n-title');
+            expect(i18nCode).toContain('data-i18n-aria');
+        });
     });
 });

@@ -128,6 +128,28 @@ function updateContentLanguage() {
         }
     });
 
+    // Переводим всплывающие подсказки title
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (key && typeof i18next !== 'undefined') {
+            const trans = i18next.t(key);
+            if (trans && trans !== key) {
+                el.title = trans;
+            }
+        }
+    });
+
+    // Переводим aria-label
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria');
+        if (key && typeof i18next !== 'undefined') {
+            const trans = i18next.t(key);
+            if (trans && trans !== key) {
+                el.setAttribute('aria-label', trans);
+            }
+        }
+    });
+
     // Обновляем выбранный способ оплаты в чекауте (текст на языке интерфейса, значение в БД всегда на русском)
     const paymentSelectedText = document.getElementById('paymentSelectedText');
     const paymentMethodInput = document.getElementById('orderPaymentMethod');

@@ -195,14 +195,16 @@ function handleLiveSearch() {
                     dropdown.innerHTML = html;
                     dropdown.style.display = 'block';
                 } else {
-                    dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
+                    const noMatchesText = typeof i18next !== 'undefined' ? i18next.t('search.no_matches', { defaultValue: 'СОВПАДЕНИЙ НЕТ' }) : 'СОВПАДЕНИЙ НЕТ';
+        dropdown.innerHTML = `<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ ${noMatchesText} ]</div>`;
                     dropdown.style.display = 'block';
                     document.body.classList.remove('search-lock');
                     if (typeof window.startLenis === 'function') window.startLenis();
                 }
             }
         } else if (dropdown) {
-            dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
+            const noMatchesText = typeof i18next !== 'undefined' ? i18next.t('search.no_matches', { defaultValue: 'СОВПАДЕНИЙ НЕТ' }) : 'СОВПАДЕНИЙ НЕТ';
+        dropdown.innerHTML = `<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ ${noMatchesText} ]</div>`;
             dropdown.style.display = 'block';
             document.body.classList.remove('search-lock');
             if (typeof window.startLenis === 'function') window.startLenis();

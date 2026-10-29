@@ -3,7 +3,9 @@
     "translation": {
       "search": {
         "placeholder": "Поиск вещи...",
-        "btn": "Искать"
+        "btn": "Искать",
+        "no_matches": "СОВПАДЕНИЙ НЕТ",
+        "no_items": "ТОВАРОВ НЕ НАЙДЕНО"
       },
       "nav": {
         "home": "ГЛАВНАЯ",
@@ -101,7 +103,17 @@
         "qa_title": "Q&A: Вопросы покупателей",
         "ask_btn": "Задать вопрос?",
         "ask_ph": "Ваш вопрос...",
-        "ask_send": "ОТПРАВИТЬ"
+        "ask_send": "ОТПРАВИТЬ",
+        "support_service": "Служба поддержки:",
+        "qa_err_auth": "Для отправки вопроса нужно войти в аккаунт!",
+        "qa_err_short": "Вопрос слишком короткий!",
+        "qa_err_limit": "Лимит: 2 вопроса в день.",
+        "qa_success": "Вопрос отправлен!",
+        "qa_err_send": "Ошибка при отправке вопроса.",
+        "err_not_found": "Товар не найден",
+        "fav": "Избранное",
+        "share": "Поделиться",
+        "no_photo": "НЕТ ФОТО"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -115,7 +127,8 @@
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>",
         "drop_title": "WARNING: DROP_ITEM",
         "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ВНИМАНИЕ ]</span><br><span style=\"color:#fff;\">Вещь от стороннего продавца. NISHA — гарант сделки.</span><br><br>Осмотр и примерка — строго на «Новой Почте» (при наложке остаток оплачивается после проверки).<br><br>После забора посылки возврат невозможен: сделка считается закрытой, а деньги сразу переводятся владельцу.",
-        "btn_understood": "[ ПОНЯТНО ]"
+        "btn_understood": "[ ПОНЯТНО ]",
+        "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ВНИМАНИЕ ]</span><br><span style=\"color:#fff;\">Вещь от стороннего продавца. NISHA — гарант сделки.</span><br><br>Осмотр и примерка — строго на «Новой Почте» (при наложке остаток оплачивается после проверки).<br><br>После забора посылки возврат невозможен: сделка считается закрытой, а деньги сразу переводятся владельцу."
       },
       "grid": {
         "size_prefix": "Размер: "
@@ -136,7 +149,21 @@
         "link_copied": "Ссылка скопирована!",
         "copy_error": "Ошибка копирования",
         "phone_verified": "Номер подтвержден!",
-        "tg_verified": "Telegram подтвержден!"
+        "tg_verified": "Telegram подтвержден!",
+        "enter_email_pass": "Введите Email и пароль!",
+        "need_nickname": "Для регистрации нужен никнейм!",
+        "reg_success": "Регистрация успешна! Проверьте почту.",
+        "new_items_toast": "Новые Вещи!!!",
+        "sale_prefix": "🔥 СКИДКА: ",
+        "reservation_expired": "Бронь истекла: ",
+        "back_in_stock": " снова в наличии!",
+        "new_items_count": "+{{count}} новых вещей в каталоге",
+        "new_item_fallback": "Новая вещь",
+        "cart_restored": "Корзина восстановлена",
+        "cart_synced": "Корзины синхронизированы",
+        "auth_required": "Сначала авторизуйтесь!",
+        "item_sold_removed": "Товар \"{{name}}\" уже купили, он удален из корзины.",
+        "secret_discount_applied": "Секретная скидка -10% активирована"
       },
       "checkout": {
         "desc": "Заполните данные для отправки. Бронь 2 часа.",
@@ -160,7 +187,27 @@
         "payment_cod": "Наложка (предоплата 200грн)",
         "otp_expired": "Время ожидания подтверждения истекло. Запросите код снова.",
         "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары. Оформление заказа возобновится при появлении сети.",
-        "save_to_profile": "Запомнить этот адрес в профиле"
+        "save_to_profile": "Запомнить этот адрес в профиле",
+        "name_ph": "Іванов Іван Іванович",
+        "city_ph": "Київ...",
+        "branch_ph": "Відділення або поштомат...",
+        "promo_ph": "Введите код...",
+        "branch_placeholder": "Выберите отделение...",
+        "choose_city_first": "Сначала выберите город",
+        "loading_branches": "Завантаження відділень...",
+        "calc_pending": "Рассчитываем...",
+        "np_rates": "По тарифам НП",
+        "checking_stock": "[ ПРОВЕРКА НАЛИЧИЯ... ]",
+        "item_bought_toast": "Товар \"{{name}}\" уже кто-то купил! 😢",
+        "verify_phone_first": "Подтвердите номер телефона!",
+        "choose_city_from_dropdown": "Выберите Город строго из выпадающего списка!",
+        "choose_branch_from_dropdown": "Выберите Отделение или Поштомат из выпадающего списка!",
+        "choose_city_branch_from_dropdown": "Выберите Город и Отделение строго из выпадающего списка!",
+        "enter_valid_email": "Введите корректный E-mail!",
+        "order_submit_err": "Ошибка при оформлении: ",
+        "geo_searching": "Поиск спутников...",
+        "promo_warming": "Сервер запускается, нажмите «Применить» ещё раз",
+        "location_prefix": "Локация: "
       },
       "orders_modal": {
         "access_granted": "Доступ разрешен",
@@ -171,14 +218,40 @@
         "tab_cancelled": "ОТМЕНЕНЫ",
         "loading": "Ожидание данных...",
         "empty_title": "ЗАКАЗОВ НЕТ",
-        "empty_desc": "Вы еще ничего не заказывали."
+        "empty_desc": "Вы еще ничего не заказывали.",
+        "err_phone": "Введите корректный номер телефона!",
+        "guest_desc": "Введите номер телефона, указанный при заказе, чтобы отследить статус:",
+        "search_placeholder": "Введите номер телефона для поиска...",
+        "loading_db": "[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]",
+        "err_no_phone": "[ НОМЕР НЕ ВВЕДЕН ]",
+        "access_denied_otp": "[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.",
+        "verify_bot_btn": "ПОДТВЕРДИТЬ НОМЕР В БОТЕ",
+        "ttn_copied": "ТТН скопирован: ",
+        "empty_accepted": "Нет активных заказов.",
+        "empty_shipped": "Нет отправленных посылок.",
+        "empty_cancelled": "Нет отмененных заказов.",
+        "ttn_pending": "ТТН: Ожидается генерация...",
+        "leave_review": "Оставить отзыв",
+        "review_left": "[✔] ОТЗЫВ ОСТАВЛЕН",
+        "order_prefix": "ЗАКАЗ #",
+        "total_prefix": "ИТОГО:"
       },
       "reviews_modal": {
         "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",
         "loading": "ЗАГРУЗКА ОТЗЫВОВ",
         "empty_reviews": "В ДАННЫЙ МОМЕНТ ОТЗЫВЫ ОТСУТСТВУЮТ",
         "send": "ОТПРАВИТЬ",
-        "later": "ПОЗЖЕ"
+        "later": "ПОЗЖЕ",
+        "cancel": "ОТМЕНА",
+        "placeholder": "Напишите ваше мнение о покупке...",
+        "auto_placeholder": "Пару слов о покупке...",
+        "already_left": "Отзыв по этому заказу уже оставлен.",
+        "text_short": "Текст слишком короткий!",
+        "success": "Отзыв успешно опубликован!",
+        "err_send": "Ошибка при отправке: ",
+        "db_error": "ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ",
+        "new_review_from": "⭐ Новый отзыв от {{author}}: \"{{snippet}}\"",
+        "author_fallback": "Покупатель"
       },
       "profile": {
         "google_login": "ВОЙТИ ЧЕРЕЗ GOOGLE",
@@ -205,7 +278,34 @@
         "delivery_city": "ГОРОД (НОВАЯ ПОЧТА):",
         "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:",
         "delivery_saved_btn": "[ СОХРАНЕНО ✓ ]",
-        "delivery_edit": "[ ИЗМЕНИТЬ ]"
+        "delivery_edit": "[ ИЗМЕНИТЬ ]",
+        "order_status_title": "ВНИМАНИЕ! Статус вашего заказа изменился.",
+        "order_status_order": "Заказ:",
+        "order_status_new": "Новый статус:",
+        "order_status_view": "[ ПОСМОТРЕТЬ ]",
+        "google_webview_warn": "Для входа через Google открой сайт в обычном браузере (Safari или Chrome)",
+        "err_prefix": "Ошибка: ",
+        "search_city_np": "[ Поиск города в базе НП... ]",
+        "indicate_city_first": "Сначала укажите город ☝️",
+        "loading_branches": "[ Загрузка отделений... ]",
+        "choose_city_from_list": "[ Выберите город из списка выше ]",
+        "branches_load_error": "[ Сбой загрузки отделений ]",
+        "delivery_save_error": "Ошибка сохранения данных: ",
+        "phone_already_verified": "Этот номер уже подтвержден на другом аккаунте!",
+        "cooldown_wait": "Подождите {{sec}} сек перед повторной отправкой!",
+        "phone_min_digits": "Введите корректный номер (минимум 10 цифр)!",
+        "security_blocked": "[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН",
+        "tg_invalid": "Введите корректный Telegram username!",
+        "otp_server_err": "Ошибка сервера при генерации кода",
+        "go_to_bot_phone": "Перейдите в бота и нажмите СТАРТ для подтверждения номера...",
+        "go_to_bot_tg": "Перейдите в бота и нажмите СТАРТ для подтверждения Telegram...",
+        "remove_title_phone": "Удалить номер",
+        "removed_toast_phone": "Номер телефона удален!",
+        "timeout_toast_phone": "Время ожидания подтверждения номера истекло",
+        "remove_title_tg": "Удалить Telegram",
+        "removed_toast_tg": "Telegram удален!",
+        "timeout_toast_tg": "Время ожидания подтверждения Telegram истекло",
+        "both_verified": "Номер и Telegram подтверждены!"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -234,7 +334,16 @@
         "warning_loss_text": "У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.",
         "btn_close": "[ ЗАКРЫТЬ ]",
         "btn_cancel": "[ ОТМЕНА ]",
-        "btn_submit": "[ ОТПРАВИТЬ ЗАЯВКУ ]"
+        "btn_submit": "[ ОТПРАВИТЬ ЗАЯВКУ ]",
+        "success_title": "SYSTEM_OK.LOG",
+        "success_text": "Заявка успешно отправлена.",
+        "err_fill_all": "Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!",
+        "err_max_files": "Максимум 5 фото/видео!",
+        "err_cond_range": "Оценка состояния от 1 до 10!",
+        "err_network": "Ошибка отправки вещи на сервер. Проверьте интернет и попробуйте еще раз.",
+        "compressing": "СЖАТИЕ ФОТО",
+        "err_server": "Сбой сервера: ",
+        "btn_retry": "[ ПОВТОРИТЬ ПОПЫТКУ ]"
       },
       "email_prompt": {
         "desc": "Отправлять вам чеки и статусы доставки (ТТН) на E-mail?",
@@ -295,11 +404,21 @@
         "title": "SUPPORT_TICKET.EXE",
         "desc": "Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.",
         "placeholder": "Начни печатать...",
-        "submit": "ОТПРАВИТЬ СИГНАЛ"
+        "submit": "ОТПРАВИТЬ СИГНАЛ",
+        "min_len": "Опиши проблему подробнее (минимум 5 символов)",
+        "sending": "[ ОТПРАВКА... ]",
+        "success_sent": "Сообщение успешно доставлено админу!",
+        "reply_title": "Ответ от Поддержки:",
+        "reply_btn_read": "[ ПРОЧИТАНО ]"
       },
       "pwa": {
         "refresh": "ОБНОВИТЬ",
-        "refreshing": "ОБНОВЛЕНИЕ..."
+        "refreshing": "ОБНОВЛЕНИЕ...",
+        "offline_msg": "Соединение потеряно",
+        "online_msg": "Соединение восстановлено!!!",
+        "update_title": "SYSTEM_UPDATE.EXE",
+        "update_text": "Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.",
+        "btn_update": "[ ОБНОВИТЬ СЕЙЧАС ]"
       },
       "np": {
         "branch_empty": "Не найдено",
@@ -309,6 +428,19 @@
         "branch_err": "Ошибка загрузки отделений",
         "branch_placeholder": "Выберите отделение или почтомат...",
         "searching": "Ищем отделение в базе Новой Почты..."
+      },
+      "common": {
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        "close": "Закрыть",
+        "to_home": "На главную",
+        "password": "Пароль"
+      },
+      "auth": {
+        "turnstile_err": "Ошибка проверки безопасности Turnstile",
+        "access_denied": "Доступ запрещен",
+        "wait_sec": "Ждите {{sec}}с",
+        "db_connecting": "Связь с БД..."
       }
     }
   },
@@ -316,7 +448,9 @@
     "translation": {
       "search": {
         "placeholder": "Пошук речі...",
-        "btn": "Шукати"
+        "btn": "Шукати",
+        "no_matches": "ЗБІГІВ НЕМАЄ",
+        "no_items": "ТОВАРІВ НЕ ЗНАЙДЕНО"
       },
       "nav": {
         "home": "ГОЛОВНА",
@@ -414,7 +548,17 @@
         "qa_title": "Q&A: Питання покупців",
         "ask_btn": "Поставити запитання?",
         "ask_ph": "Ваше запитання...",
-        "ask_send": "ВІДПРАВИТИ"
+        "ask_send": "ВІДПРАВИТИ",
+        "support_service": "Служба підтримки:",
+        "qa_err_auth": "Для відправки запитання потрібно увійти в акаунт!",
+        "qa_err_short": "Запитання занадто коротке!",
+        "qa_err_limit": "Ліміт: 2 запитання на день.",
+        "qa_success": "Запитання надіслано!",
+        "qa_err_send": "Помилка при надсиланні запитання.",
+        "err_not_found": "Товар не знайдено",
+        "fav": "Обране",
+        "share": "Поділитися",
+        "no_photo": "НЕМАЄ ФОТО"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -428,7 +572,8 @@
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ ДОСТУПНЕ ПОВЕРНЕННЯ ]</span><br><br>Даний товар підлягає поверненню та обміну протягом <b>14 днів</b> з моменту покупки, згідно із законодавством України.<br><br><i>Умова повернення: збереження товарного вигляду, всіх бірок та відсутність слідів носіння.</i>",
         "drop_title": "WARNING: DROP_ITEM",
         "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ УВАГА ]</span><br><span style=\"color:#fff;\">Річ від стороннього продавця. NISHA — гарант угоди.</span><br><br>Огляд і примірка — суворо на «Новій Пошті» (при післяплаті залишок сплачується після перевірки).<br><br>Після забору посилки повернення неможливе: угода вважається закритою, а гроші одразу переказуються власнику.",
-        "btn_understood": "[ ЗРОЗУМІЛО ]"
+        "btn_understood": "[ ЗРОЗУМІЛО ]",
+        "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ УВАГА ]</span><br><span style=\"color:#fff;\">Річ від стороннього продавця. NISHA — гарант угоди.</span><br><br>Огляд та примірка — суворо на «Новій Пошті» (при післяплаті залишок сплачується після перевірки).<br><br>Після отримання посилки повернення неможливе: угода вважається закритою, а кошти одразу переказуються власнику."
       },
       "grid": {
         "size_prefix": "Розмір: "
@@ -449,7 +594,21 @@
         "link_copied": "Посилання скопійовано!",
         "copy_error": "Помилка копіювання",
         "phone_verified": "Номер підтверджено!",
-        "tg_verified": "Telegram підтверджено!"
+        "tg_verified": "Telegram підтверджено!",
+        "enter_email_pass": "Введіть Email та пароль!",
+        "need_nickname": "Для реєстрації потрібен нікнейм!",
+        "reg_success": "Реєстрація успішна! Перевірте пошту.",
+        "new_items_toast": "Нові Речі!!!",
+        "sale_prefix": "🔥 ЗНИЖКА: ",
+        "reservation_expired": "Бронь закінчилась: ",
+        "back_in_stock": " знову в наявності!",
+        "new_items_count": "+{{count}} нових речей у каталозі",
+        "new_item_fallback": "Нова річ",
+        "cart_restored": "Кошик відновлено",
+        "cart_synced": "Кошики синхронізовано",
+        "auth_required": "Спочатку авторизуйтесь!",
+        "item_sold_removed": "Товар \"{{name}}\" вже придбали, його видалено з кошика.",
+        "secret_discount_applied": "Секретна знижка -10% активована"
       },
       "checkout": {
         "desc": "Заповніть дані для відправки. Бронь 2 години.",
@@ -473,7 +632,27 @@
         "payment_cod": "Накладений платіж (передплата 200грн)",
         "otp_expired": "Час очікування підтвердження вичерпано. Запитайте код знову.",
         "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Відображаються збережені товари. Оформлення замовлення відновиться при появі мережі.",
-        "save_to_profile": "Запам'ятати цю адресу в профілі"
+        "save_to_profile": "Запам'ятати цю адресу в профілі",
+        "name_ph": "Іванов Іван Іванович",
+        "city_ph": "Київ...",
+        "branch_ph": "Відділення або поштомат...",
+        "promo_ph": "Введіть код...",
+        "branch_placeholder": "Оберіть відділення...",
+        "choose_city_first": "Спочатку оберіть місто",
+        "loading_branches": "Завантаження відділень...",
+        "calc_pending": "Розраховуємо...",
+        "np_rates": "За тарифами НП",
+        "checking_stock": "[ ПЕРЕВІРКА НАЯВНОСТІ... ]",
+        "item_bought_toast": "Товар \"{{name}}\" вже хтось придбав! 😢",
+        "verify_phone_first": "Підтвердіть номер телефону!",
+        "choose_city_from_dropdown": "Оберіть Місто строго зі списку!",
+        "choose_branch_from_dropdown": "Оберіть Відділення або Поштомат зі списку!",
+        "choose_city_branch_from_dropdown": "Оберіть Місто та Відділення строго зі списку!",
+        "enter_valid_email": "Введіть коректний E-mail!",
+        "order_submit_err": "Помилка при оформленні: ",
+        "geo_searching": "Пошук супутників...",
+        "promo_warming": "Сервер запускається, натисніть «Застосувати» ще раз",
+        "location_prefix": "Локація: "
       },
       "orders_modal": {
         "access_granted": "Доступ дозволено",
@@ -484,14 +663,40 @@
         "tab_cancelled": "СКАСОВАНІ",
         "loading": "Очікування даних...",
         "empty_title": "ЗАМОВЛЕНЬ НЕМАЄ",
-        "empty_desc": "Ви ще нічого не замовляли."
+        "empty_desc": "Ви ще нічого не замовляли.",
+        "err_phone": "Введіть коректний номер телефону!",
+        "guest_desc": "Введіть номер телефону, вказаний при замовленні, щоб відстежити статус:",
+        "search_placeholder": "Введіть номер телефону для пошуку...",
+        "loading_db": "[ ЗАВАНТАЖЕННЯ БАЗИ ДАНИХ... ]",
+        "err_no_phone": "[ НОМЕР НЕ ВВЕДЕНО ]",
+        "access_denied_otp": "[ ДОСТУП ЗАБОРОНЕНО ]<br><br>Спочатку підтвердіть, що це ваш номер.",
+        "verify_bot_btn": "ПІДТВЕРДИТИ НОМЕР У БОТІ",
+        "ttn_copied": "ТТН скопійовано: ",
+        "empty_accepted": "Немає активних замовлень.",
+        "empty_shipped": "Немає відправлених посилок.",
+        "empty_cancelled": "Немає скасованих замовлень.",
+        "ttn_pending": "ТТН: Очікується генерація...",
+        "leave_review": "Залишити відгук",
+        "review_left": "[✔] ВІДГУК ЗАЛИШЕНО",
+        "order_prefix": "ЗАМОВЛЕННЯ #",
+        "total_prefix": "РАЗОМ:"
       },
       "reviews_modal": {
         "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",
         "loading": "ЗАВАНТАЖЕННЯ ВІДГУКІВ",
         "empty_reviews": "НА ДАНИЙ МОМЕНТ ВІДГУКИ ВІДСУТНІ",
         "send": "ВІДПРАВИТИ",
-        "later": "ПІЗНІШЕ"
+        "later": "ПІЗНІШЕ",
+        "cancel": "СКАСУВАТИ",
+        "placeholder": "Напишіть вашу думку про покупку...",
+        "auto_placeholder": "Пару слів про покупку...",
+        "already_left": "Відгук по цьому замовленню вже залишено.",
+        "text_short": "Текст занадто короткий!",
+        "success": "Відгук успішно опубліковано!",
+        "err_send": "Помилка при надсиланні: ",
+        "db_error": "ПОМИЛКА ПІДКЛЮЧЕННЯ ДО БАЗИ",
+        "new_review_from": "⭐ Новий відгук від {{author}}: \"{{snippet}}\"",
+        "author_fallback": "Покупець"
       },
       "profile": {
         "google_login": "УВІЙТИ ЧЕРЕЗ GOOGLE",
@@ -518,7 +723,34 @@
         "delivery_city": "МІСТО (НОВА ПОШТА):",
         "delivery_branch": "ВІДДІЛЕННЯ АБО ПОШТОМАТ:",
         "delivery_saved_btn": "[ ЗБЕРЕЖЕНО ✓ ]",
-        "delivery_edit": "[ ЗМІНИТИ ]"
+        "delivery_edit": "[ ЗМІНИТИ ]",
+        "order_status_title": "УВАГА! Статус вашого замовлення змінився.",
+        "order_status_order": "Замовлення:",
+        "order_status_new": "Новий статус:",
+        "order_status_view": "[ ПЕРЕГЛЯНУТИ ]",
+        "google_webview_warn": "Для входу через Google відкрийте сайт у звичайному браузері (Safari або Chrome)",
+        "err_prefix": "Помилка: ",
+        "search_city_np": "[ Пошук міста в базі НП... ]",
+        "indicate_city_first": "Спочатку вкажіть місто ☝️",
+        "loading_branches": "[ Завантаження відділень... ]",
+        "choose_city_from_list": "[ Оберіть місто зі списку вище ]",
+        "branches_load_error": "[ Збій завантаження відділень ]",
+        "delivery_save_error": "Помилка збереження даних: ",
+        "phone_already_verified": "Цей номер вже підтверджено на іншому акаунті!",
+        "cooldown_wait": "Зачекайте {{sec}} сек перед повторним надсиланням!",
+        "phone_min_digits": "Введіть коректний номер (мінімум 10 цифр)!",
+        "security_blocked": "[!] ПОМИЛКА БЕЗПЕКИ: ВАШ НОМЕР ЗАБЛОКОВАНО",
+        "tg_invalid": "Введіть коректний Telegram username!",
+        "otp_server_err": "Помилка сервера під час генерації коду",
+        "go_to_bot_phone": "Перейдіть у бот і натисніть СТАРТ для підтвердження номера...",
+        "go_to_bot_tg": "Перейдіть у бот і натисніть СТАРТ для підтвердження Telegram...",
+        "remove_title_phone": "Видалити номер",
+        "removed_toast_phone": "Номер телефону видалено!",
+        "timeout_toast_phone": "Час очікування підтвердження номера минув",
+        "remove_title_tg": "Видалити Telegram",
+        "removed_toast_tg": "Telegram видалено!",
+        "timeout_toast_tg": "Час очікування підтвердження Telegram минув",
+        "both_verified": "Номер та Telegram підтверджені!"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -547,7 +779,16 @@
         "warning_loss_text": "У вас є незбережені дані. Якщо ви закриєте вікно, форма повністю очиститься.",
         "btn_close": "[ ЗАКРИТИ ]",
         "btn_cancel": "[ СКАСУВАТИ ]",
-        "btn_submit": "[ ВІДПРАВИТИ ЗАЯВКУ ]"
+        "btn_submit": "[ ВІДПРАВИТИ ЗАЯВКУ ]",
+        "success_title": "SYSTEM_OK.LOG",
+        "success_text": "Заявку успішно надіслано.",
+        "err_fill_all": "Будь ласка, заповніть АБСОЛЮТНО ВСІ поля!",
+        "err_max_files": "Максимум 5 фото/відео!",
+        "err_cond_range": "Оцінка стану від 1 до 10!",
+        "err_network": "Помилка надсилання речі на сервер. Перевірте інтернет та спробуйте ще раз.",
+        "compressing": "СТИСНЕННЯ ФОТО",
+        "err_server": "Збій сервера: ",
+        "btn_retry": "[ ПОВТОРИТИ СПРОБУ ]"
       },
       "email_prompt": {
         "desc": "Відправляти вам чеки та статуси доставки (ТТН) на E-mail?",
@@ -608,11 +849,21 @@
         "title": "SUPPORT_TICKET.EXE",
         "desc": "Опиши проблему, ідею чи баг. Повідомлення надійде безпосередньо розробнику.",
         "placeholder": "Почни друкувати...",
-        "submit": "НАДІСЛАТИ СИГНАЛ"
+        "submit": "НАДІСЛАТИ СИГНАЛ",
+        "min_len": "Опиши проблему детальніше (мінімум 5 символів)",
+        "sending": "[ НАДСИЛАННЯ... ]",
+        "success_sent": "Повідомлення успішно доставлено адміну!",
+        "reply_title": "Відповідь від Підтримки:",
+        "reply_btn_read": "[ ПРОЧИТАНО ]"
       },
       "pwa": {
         "refresh": "ОНОВИТИ",
-        "refreshing": "ОНОВЛЕННЯ..."
+        "refreshing": "ОНОВЛЕННЯ...",
+        "offline_msg": "З'єднання втрачено",
+        "online_msg": "З'єднання відновлено!!!",
+        "update_title": "SYSTEM_UPDATE.EXE",
+        "update_text": "Випущена нова версія сайту (виправлення багів, нові фічі).<br><br>Рекомендуємо оновити сторінку.",
+        "btn_update": "[ ОНОВИТИ ЗАРАЗ ]"
       },
       "np": {
         "branch_empty": "Не знайдено",
@@ -622,6 +873,19 @@
         "branch_err": "Помилка завантаження відділень",
         "branch_placeholder": "Оберіть відділення або поштомат...",
         "searching": "Шукаємо відділення в базі Нової Пошти..."
+      },
+      "common": {
+        "save": "Зберегти",
+        "cancel": "Скасувати",
+        "close": "Закрити",
+        "to_home": "На головну",
+        "password": "Пароль"
+      },
+      "auth": {
+        "turnstile_err": "Помилка перевірки безпеки Turnstile",
+        "access_denied": "Доступ заборонено",
+        "wait_sec": "Зачекайте {{sec}}с",
+        "db_connecting": "Зв'язок з БД..."
       }
     }
   },
@@ -629,7 +893,9 @@
     "translation": {
       "search": {
         "placeholder": "Search items...",
-        "btn": "Search"
+        "btn": "Search",
+        "no_matches": "NO MATCHES FOUND",
+        "no_items": "NO ITEMS FOUND"
       },
       "nav": {
         "home": "HOME",
@@ -727,7 +993,17 @@
         "qa_title": "Q&A: Customer questions",
         "ask_btn": "Ask a question?",
         "ask_ph": "Your question...",
-        "ask_send": "SEND"
+        "ask_send": "SEND",
+        "support_service": "Customer support:",
+        "qa_err_auth": "Sign in to ask a question!",
+        "qa_err_short": "Question is too short!",
+        "qa_err_limit": "Limit: 2 questions per day.",
+        "qa_success": "Question submitted!",
+        "qa_err_send": "Error submitting question.",
+        "err_not_found": "Item not found",
+        "fav": "Favorites",
+        "share": "Share",
+        "no_photo": "NO PHOTO"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -741,7 +1017,8 @@
         "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ RETURN AVAILABLE ]</span><br><br>This item can be returned and exchanged within <b>14 days</b> of purchase, according to the legislation of Ukraine.<br><br><i>Condition for return: preserving the commercial appearance, all tags, and no signs of wear.</i>",
         "drop_title": "WARNING: DROP_ITEM",
         "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA acts as the deal escrow.</span><br><br>Inspection and try-on — strictly at Nova Poshta (with COD, the remainder is paid after inspection).<br><br>After picking up the package, returns are not possible: the deal is considered closed, and funds are immediately transferred to the owner.",
-        "btn_understood": "[ GOT IT ]"
+        "btn_understood": "[ GOT IT ]",
+        "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA is the deal escrow.</span><br><br>Inspection and try-on strictly at Nova Poshta (for COD, remaining balance is paid after check).<br><br>No returns after pickup: deal is finalized and funds are immediately transferred to seller."
       },
       "grid": {
         "size_prefix": "Size: "
@@ -762,7 +1039,21 @@
         "link_copied": "Link copied!",
         "copy_error": "Copy error",
         "phone_verified": "Phone verified!",
-        "tg_verified": "Telegram verified!"
+        "tg_verified": "Telegram verified!",
+        "enter_email_pass": "Enter Email and password!",
+        "need_nickname": "A nickname is required for registration!",
+        "reg_success": "Registration successful! Check your email.",
+        "new_items_toast": "New Items!!!",
+        "sale_prefix": "🔥 SALE: ",
+        "reservation_expired": "Reservation expired: ",
+        "back_in_stock": " back in stock!",
+        "new_items_count": "+{{count}} new items in catalog",
+        "new_item_fallback": "New item",
+        "cart_restored": "Cart restored",
+        "cart_synced": "Carts synchronized",
+        "auth_required": "Please sign in first!",
+        "item_sold_removed": "Item \"{{name}}\" has been sold and removed from cart.",
+        "secret_discount_applied": "Secret 10% discount activated"
       },
       "checkout": {
         "desc": "Fill in shipping details. Reserved for 2 hours.",
@@ -786,7 +1077,27 @@
         "payment_cod": "Cash on delivery (200 UAH prepay)",
         "otp_expired": "Verification time expired. Please request the code again.",
         "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online.",
-        "save_to_profile": "Save this address to profile"
+        "save_to_profile": "Save this address to profile",
+        "name_ph": "Ivanov Ivan",
+        "city_ph": "Kyiv...",
+        "branch_ph": "Branch or parcel locker...",
+        "promo_ph": "Enter promo code...",
+        "branch_placeholder": "Select branch...",
+        "choose_city_first": "Choose a city first",
+        "loading_branches": "Loading branches...",
+        "calc_pending": "Calculating...",
+        "np_rates": "At NP rates",
+        "checking_stock": "[ CHECKING STOCK... ]",
+        "item_bought_toast": "Item \"{{name}}\" was just purchased by someone else! 😢",
+        "verify_phone_first": "Please verify your phone number!",
+        "choose_city_from_dropdown": "Please select City strictly from the dropdown!",
+        "choose_branch_from_dropdown": "Please select Branch or Locker from the dropdown!",
+        "choose_city_branch_from_dropdown": "Please select City and Branch from the dropdown!",
+        "enter_valid_email": "Please enter a valid email!",
+        "order_submit_err": "Order submission error: ",
+        "geo_searching": "Detecting location...",
+        "promo_warming": "Server is warming up, please click \"Apply\" again",
+        "location_prefix": "Location: "
       },
       "orders_modal": {
         "access_granted": "Access granted",
@@ -797,14 +1108,40 @@
         "tab_cancelled": "CANCELLED",
         "loading": "Waiting for data...",
         "empty_title": "NO ORDERS",
-        "empty_desc": "You haven't ordered anything yet."
+        "empty_desc": "You haven't ordered anything yet.",
+        "err_phone": "Please enter a valid phone number!",
+        "guest_desc": "Enter the phone number used during checkout to track status:",
+        "search_placeholder": "Enter phone number to search...",
+        "loading_db": "[ LOADING DATABASE... ]",
+        "err_no_phone": "[ NO PHONE NUMBER ENTERED ]",
+        "access_denied_otp": "[ ACCESS DENIED ]<br><br>Please verify ownership of this phone number first.",
+        "verify_bot_btn": "VERIFY NUMBER IN TELEGRAM BOT",
+        "ttn_copied": "Tracking number copied: ",
+        "empty_accepted": "No active orders.",
+        "empty_shipped": "No shipped orders.",
+        "empty_cancelled": "No cancelled orders.",
+        "ttn_pending": "Tracking: Pending generation...",
+        "leave_review": "Leave review",
+        "review_left": "[✔] REVIEW SUBMITTED",
+        "order_prefix": "ORDER #",
+        "total_prefix": "TOTAL:"
       },
       "reviews_modal": {
         "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
         "loading": "LOADING REVIEWS",
         "empty_reviews": "NO REVIEWS AT THE MOMENT",
-        "send": "SEND",
-        "later": "LATER"
+        "send": "SUBMIT",
+        "later": "LATER",
+        "cancel": "CANCEL",
+        "placeholder": "Write your review about the purchase...",
+        "auto_placeholder": "A few words about the purchase...",
+        "already_left": "A review for this order has already been left.",
+        "text_short": "Text is too short!",
+        "success": "Review successfully published!",
+        "err_send": "Error submitting review: ",
+        "db_error": "DATABASE CONNECTION ERROR",
+        "new_review_from": "⭐ New review from {{author}}: \"{{snippet}}\"",
+        "author_fallback": "Customer"
       },
       "profile": {
         "google_login": "SIGN IN WITH GOOGLE",
@@ -831,7 +1168,34 @@
         "delivery_city": "CITY (NOVA POSHTA):",
         "delivery_branch": "BRANCH OR POSTOMAT:",
         "delivery_saved_btn": "[ SAVED ✓ ]",
-        "delivery_edit": "[ EDIT ]"
+        "delivery_edit": "[ EDIT ]",
+        "order_status_title": "ATTENTION! Your order status has updated.",
+        "order_status_order": "Order:",
+        "order_status_new": "New status:",
+        "order_status_view": "[ VIEW ]",
+        "google_webview_warn": "To sign in with Google, please open the site in a standard browser (Safari or Chrome)",
+        "err_prefix": "Error: ",
+        "search_city_np": "[ Searching city in Nova Poshta... ]",
+        "indicate_city_first": "Please specify city first ☝️",
+        "loading_branches": "[ Loading branches... ]",
+        "choose_city_from_list": "[ Select a city from the list above ]",
+        "branches_load_error": "[ Failed to load branches ]",
+        "delivery_save_error": "Failed to save delivery details: ",
+        "phone_already_verified": "This phone number is already verified on another account!",
+        "cooldown_wait": "Please wait {{sec}} sec before requesting again!",
+        "phone_min_digits": "Please enter a valid phone number (at least 10 digits)!",
+        "security_blocked": "[!] SECURITY ERROR: YOUR NUMBER IS BLOCKED",
+        "tg_invalid": "Please enter a valid Telegram username!",
+        "otp_server_err": "Server error generating verification code",
+        "go_to_bot_phone": "Open the Telegram bot and press START to verify phone number...",
+        "go_to_bot_tg": "Open the Telegram bot and press START to verify Telegram...",
+        "remove_title_phone": "Remove phone",
+        "removed_toast_phone": "Phone number removed!",
+        "timeout_toast_phone": "Phone verification timed out",
+        "remove_title_tg": "Remove Telegram",
+        "removed_toast_tg": "Telegram removed!",
+        "timeout_toast_tg": "Telegram verification timed out",
+        "both_verified": "Phone and Telegram verified!"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -860,7 +1224,16 @@
         "warning_loss_text": "You have unsaved changes. If you close the window, the form will be completely cleared.",
         "btn_close": "[ CLOSE ]",
         "btn_cancel": "[ CANCEL ]",
-        "btn_submit": "[ SUBMIT PROPOSAL ]"
+        "btn_submit": "[ SUBMIT PROPOSAL ]",
+        "success_title": "SYSTEM_OK.LOG",
+        "success_text": "Proposal successfully submitted.",
+        "err_fill_all": "Please fill in absolutely all fields!",
+        "err_max_files": "Maximum 5 photos/videos!",
+        "err_cond_range": "Condition rating must be from 1 to 10!",
+        "err_network": "Error submitting proposal to server. Check your connection and try again.",
+        "compressing": "COMPRESSING PHOTO",
+        "err_server": "Server failure: ",
+        "btn_retry": "[ RETRY ]"
       },
       "email_prompt": {
         "desc": "Send receipts and delivery statuses (Waybill) to your E-mail?",
@@ -921,11 +1294,21 @@
         "title": "SUPPORT_TICKET.EXE",
         "desc": "Describe the issue, idea, or bug. The message will go directly to the developer.",
         "placeholder": "Start typing...",
-        "submit": "SEND SIGNAL"
+        "submit": "SEND SIGNAL",
+        "min_len": "Describe the problem in more detail (at least 5 characters)",
+        "sending": "[ SENDING... ]",
+        "success_sent": "Message successfully delivered to admin!",
+        "reply_title": "Support Reply:",
+        "reply_btn_read": "[ READ ]"
       },
       "pwa": {
         "refresh": "REFRESH",
-        "refreshing": "REFRESHING..."
+        "refreshing": "REFRESHING...",
+        "offline_msg": "Connection lost",
+        "online_msg": "Connection restored!!!",
+        "update_title": "SYSTEM_UPDATE.EXE",
+        "update_text": "A new version of the site has been released (bug fixes, new features).<br><br>We recommend refreshing the page.",
+        "btn_update": "[ REFRESH NOW ]"
       },
       "np": {
         "branch_empty": "Not found",
@@ -935,6 +1318,19 @@
         "branch_err": "Branch loading error",
         "branch_placeholder": "Select branch or postomat...",
         "searching": "Searching branches in Nova Poshta..."
+      },
+      "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "close": "Close",
+        "to_home": "To homepage",
+        "password": "Password"
+      },
+      "auth": {
+        "turnstile_err": "Turnstile security check failed",
+        "access_denied": "Access denied",
+        "wait_sec": "Wait {{sec}}s",
+        "db_connecting": "Connecting to DB..."
       }
     }
   }

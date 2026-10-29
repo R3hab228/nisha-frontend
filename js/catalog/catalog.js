@@ -1064,7 +1064,8 @@ function removeSoldItemFromCart(itemId, itemName) {
         if (typeof syncCartToServer === 'function') syncCartToServer();
         if (typeof updateCartUI === 'function') updateCartUI();
         if (typeof showToast === 'function') {
-            showToast(`Товар ${itemName || ''} уже купили, он удален из корзины.`, 'error');
+            const itemSoldRemovedMsg = typeof i18next !== 'undefined' ? i18next.t('messages.item_sold_removed', { name: itemName || '', defaultValue: `Товар ${itemName || ''} уже купили, он удален из корзины.` }) : `Товар ${itemName || ''} уже купили, он удален из корзины.`;
+            showToast(itemSoldRemovedMsg, 'error');
         }
     }
 }
@@ -1158,7 +1159,7 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
             if (typeof enqueueNewItemToast === 'function') {
                 enqueueNewItemToast(fresh);
             } else if (typeof showToast === 'function') {
-                showToast('Новые Вещи!!!', 'success');
+                showToast((typeof i18next !== 'undefined' && i18next.t('messages.new_items_toast')) || 'Новые Вещи!!!', 'success');
             }
         }
 
@@ -1221,13 +1222,16 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
         const numNewPrice = Number(item.price) || 0;
         if ((!oldIsSale && item.is_sale) || (numOldPrice > 0 && numNewPrice > 0 && numOldPrice > numNewPrice)) {
             if (item.status === 'available') {
-                showToast(`🔥 СКИДКА: ${item.name}`, 'success');
+                const salePref = (typeof i18next !== 'undefined' && i18next.t('messages.sale_prefix')) || '🔥 СКИДКА: ';
+                showToast(`${salePref}${item.name}`, 'success');
             }
         }
         if (oldStatus !== 'sold' && item.status === 'sold') {
             removeSoldItemFromCart(item.id, item.name);
         } else if (oldStatus === 'reserved' && item.status === 'available') {
-            showToast(`Бронь истекла: ${item.name} снова в наличии!`, 'info');
+            const expPref = (typeof i18next !== 'undefined' && i18next.t('messages.reservation_expired')) || 'Бронь истекла: ';
+            const backInStock = (typeof i18next !== 'undefined' && i18next.t('messages.back_in_stock')) || ' снова в наличии!';
+            showToast(`${expPref}${item.name}${backInStock}`, 'info');
         }
     }
 
@@ -1361,7 +1365,7 @@ async function syncCriticalStatuses() {
                     if (typeof enqueueNewItemToast === 'function') {
                         enqueueNewItemToast(freshNewArrivals);
                     } else if (typeof showToast === 'function') {
-                        showToast('Новые Вещи!!!', 'success');
+                        showToast((typeof i18next !== 'undefined' && i18next.t('messages.new_items_toast')) || 'Новые Вещи!!!', 'success');
                     }
                 }
             }
@@ -1433,13 +1437,16 @@ async function syncCriticalStatuses() {
                 if (typeof showToast === 'function') {
                     if ((!oldIsSale && fresh.is_sale) || (oldPrice > fresh.price)) {
                         if (fresh.status === 'available') {
-                            showToast(`🔥 СКИДКА: ${item.name}`, 'success');
+                            const salePref = (typeof i18next !== 'undefined' && i18next.t('messages.sale_prefix')) || '🔥 СКИДКА: ';
+                showToast(`${salePref}${item.name}`, 'success');
                         }
                     }
                     if (oldStatus !== 'sold' && fresh.status === 'sold') {
                         removeSoldItemFromCart(item.id, item.name);
                     } else if (oldStatus === 'reserved' && fresh.status === 'available') {
-                        showToast(`Бронь истекла: ${item.name} снова в наличии!`, 'info');
+                        const expPref = (typeof i18next !== 'undefined' && i18next.t('messages.reservation_expired')) || 'Бронь истекла: ';
+            const backInStock = (typeof i18next !== 'undefined' && i18next.t('messages.back_in_stock')) || ' снова в наличии!';
+            showToast(`${expPref}${item.name}${backInStock}`, 'info');
                     }
                 }
             }
@@ -1860,7 +1867,8 @@ function applyFilters(immediate = false, preserveViewport = false) {
             }
 
             if (window.filteredItems.length === 0) {
-                if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ ТОВАРОВ НЕ НАЙДЕНО ]</div>`;
+                const noItemsMsg = typeof i18next !== 'undefined' ? i18next.t('search.no_items', { defaultValue: 'ТОВАРОВ НЕ НАЙДЕНО' }) : 'ТОВАРОВ НЕ НАЙДЕНО';
+    if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ ${noItemsMsg} ]</div>`;
             } else {
                 const targetMobileCount = preserveViewport ? Math.max(prevRenderedCount, batchSizeNow) : 0;
                 renderNextBatch(targetMobileCount); 
@@ -2841,7 +2849,7 @@ window.showBadgeInfo = function(type) {
     } else if (type === 'drop') {
         title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.drop_title', { defaultValue: 'WARNING: DROP_ITEM' }) : 'WARNING: DROP_ITEM';
         const defaultDropText = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Вещь от стороннего продавца. NISHA — гарант сделки.</span><br><br>Осмотр и примерка — строго на «Новой Почте» (при наложке остаток оплачивается после проверки).<br><br>После забора посылки возврат невозможен: сделка считается закрытой, а деньги сразу переводятся владельцу.';
-        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.drop_text', { defaultValue: defaultDropText }) : defaultDropText;
+        text = (typeof i18next !== 'undefined') ? (i18next.t('badge_info.drop_desc') || i18next.t('badge_info.drop_text') || defaultDropText) : defaultDropText;
     }
     
     const btnText = (typeof i18next !== 'undefined') ? i18next.t('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' }) : '[ ПОНЯТНО ]';
@@ -2861,7 +2869,8 @@ function flushPendingBroadcast() {
     if (!bHtml || bHtml === 'null' || (typeof bHtml === 'string' && !bHtml.trim())) return;
 
     setTimeout(() => {
-        tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЙТЬ ]', () => {
+        const closeBtnText = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close')) || '[ ЗАКРЫТЬ ]';
+        tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, closeBtnText, () => {
             if (bId && window.storage) window.storage.set('nisha_last_broadcast', bId);
         });
     }, 3000);

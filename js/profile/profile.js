@@ -296,15 +296,16 @@ async function checkSession() {
 
                     const newStatus = payload.new.status;
                     if (newStatus !== payload.old.status) {
-                        showToast(`Заказ #${payload.new.id.split('-')[0].toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
+                        const orderPref = typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', { defaultValue: 'ЗАКАЗ #' }) : 'ЗАКАЗ #';
+                        showToast(`${orderPref}${payload.new.id.split('-')[0].toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
                         
                         if (typeof showTerminalModal === 'function') {
                             showTerminalModal(
                                 'SYSTEM_NOTIFICATION.LOG',
-                                `ВНИМАНИЕ! Статус вашего заказа изменился.<br><br>` +
-                                `Заказ: #${payload.new.id.split('-')[0].toUpperCase()}<br>` +
-                                `Новый статус: <b style="color:var(--accent-green);">${newStatus.toUpperCase()}</b>`,
-                                '[ ПОСМОТРЕТЬ ]',
+                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_title', { defaultValue: 'ВНИМАНИЕ! Статус вашего заказа изменился.' }) : 'ВНИМАНИЕ! Статус вашего заказа изменился.'}<br><br>` +
+                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_order', { defaultValue: 'Заказ:' }) : 'Заказ:'} #${payload.new.id.split('-')[0].toUpperCase()}<br>` +
+                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_new', { defaultValue: 'Новый статус:' }) : 'Новый статус:'} <b style="color:var(--accent-green);">${newStatus.toUpperCase()}</b>`,
+                                (typeof i18next !== 'undefined' ? i18next.t('profile.order_status_view', { defaultValue: '[ ПОСМОТРЕТЬ ]' }) : '[ ПОСМОТРЕТЬ ]'),
                                 () => { if (typeof window.openOrdersModal === 'function') window.openOrdersModal(); }
                             );
                         }
@@ -338,7 +339,7 @@ async function checkSession() {
                 if (localCart.length === 0) {
                     localCart = dbCart;
                     window.cart = localCart;
-                    showToast('Корзина восстановлена', 'success');
+                    showToast((typeof i18next !== 'undefined' && i18next.t('messages.cart_restored')) || 'Корзина восстановлена', 'success');
                 } else {
                     let mergedCart = [...localCart];
                     let addedCount = 0;
@@ -352,7 +353,7 @@ async function checkSession() {
                     
                     localCart = mergedCart;
                     window.cart = localCart;
-                    if (addedCount > 0) showToast('Корзины синхронизированы', 'success');
+                    if (addedCount > 0) showToast((typeof i18next !== 'undefined' && i18next.t('messages.cart_synced')) || 'Корзины синхронизированы', 'success');
                 }
                 
                 const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
@@ -446,14 +447,14 @@ async function handleAuth(action, isModal = false) {
     const username = userInput ? userInput.value.trim() : '';
 
     if (!email || !password) {
-        showToast('Введите Email и пароль!', 'error');
+        showToast((typeof i18next !== 'undefined' && i18next.t('messages.enter_email_pass')) || 'Введите Email и пароль!', 'error');
         return;
     }
 
     let result;
     if (action === 'register') {
         if (!username) {
-            showToast('Для регистрации нужен никнейм!', 'error');
+            showToast((typeof i18next !== 'undefined' && i18next.t('messages.need_nickname')) || 'Для регистрации нужен никнейм!', 'error');
             return;
         }
         result = await sb.auth.signUp({
@@ -461,7 +462,7 @@ async function handleAuth(action, isModal = false) {
             password,
             options: { data: { username: username } }
         });
-        if (!result.error) showToast('Регистрация успешна! Проверьте почту.', 'success');
+        if (!result.error) showToast((typeof i18next !== 'undefined' && i18next.t('messages.reg_success')) || 'Регистрация успешна! Проверьте почту.', 'success');
     } else {
         result = await sb.auth.signInWithPassword({ email, password });
         if (!result.error) {
@@ -577,7 +578,7 @@ window.logout = logout;
 async function loginWithGoogle() {
     const isInApp = /Instagram|FBAN|FBAV|TikTok/i.test(navigator.userAgent || '');
     if (isInApp) {
-        alert("Для входа через Google открой сайт в обычном браузере (Safari или Chrome)");
+        alert((typeof i18next !== 'undefined' && i18next.t('profile.google_webview_warn')) || "Для входа через Google открой сайт в обычном браузере (Safari или Chrome)");
         return;
     }
     const sb = getSupabase();
@@ -591,7 +592,7 @@ async function loginWithGoogle() {
             queryParams: { prompt: 'select_account', access_type: 'offline' }
         }
     });
-    if (error) showToast('Ошибка: ' + error.message, 'error');
+    if (error) showToast(((typeof i18next !== 'undefined' && i18next.t('profile.err_prefix')) || 'Ошибка: ') + error.message, 'error');
 }
 window.loginWithGoogle = loginWithGoogle;
 
@@ -738,7 +739,8 @@ async function removeProfileContact(type) {
     clearPendingContactState(type);
 
     renderProfileContact(type, '');
-    showToast(cfg.removedToast, 'info');
+    const removedMsg = typeof i18next !== 'undefined' ? i18next.t('profile.removed_toast_' + type, { defaultValue: cfg.removedToast }) : cfg.removedToast;
+    showToast(removedMsg, 'info');
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
 }
 
@@ -781,7 +783,8 @@ async function searchProfileNPCity(isModal, query) {
         return;
     }
 
-    dropdown.innerHTML = '<div style="color:#888;padding:8px;font-style:italic">[ Поиск города в базе НП... ]</div>';
+    const searchingCityNp = typeof i18next !== 'undefined' ? i18next.t('profile.search_city_np', { defaultValue: '[ Поиск города в базе НП... ]' }) : '[ Поиск города в базе НП... ]';
+    dropdown.innerHTML = `<div style="color:#888;padding:8px;font-style:italic">${searchingCityNp}</div>`;
     dropdown.style.display = 'block';
 
     const normKey = 'city_' + trimmed.toLowerCase();
@@ -921,7 +924,8 @@ async function loadProfileBranches(isModal, searchString = '') {
     if (!dropdown) return;
 
     if (!cityInput || !cityInput.value.trim()) {
-        dropdown.innerHTML = '<div style="color:#aaa;padding:8px;font-style:italic">Сначала укажите город ☝️</div>';
+        const indicateCityFirst = typeof i18next !== 'undefined' ? i18next.t('profile.indicate_city_first', { defaultValue: 'Сначала укажите город ☝️' }) : 'Сначала укажите город ☝️';
+        dropdown.innerHTML = `<div style="color:#aaa;padding:8px;font-style:italic">${indicateCityFirst}</div>`;
         dropdown.style.display = 'block';
         return;
     }
@@ -930,12 +934,14 @@ async function loadProfileBranches(isModal, searchString = '') {
         window.scrollNPFieldIntoModalView(branchInput);
     }
 
-    dropdown.innerHTML = '<div style="color:#888;padding:8px;font-style:italic">[ Загрузка отделений... ]</div>';
+    const loadingBranchesMsg = typeof i18next !== 'undefined' ? i18next.t('profile.loading_branches', { defaultValue: '[ Загрузка отделений... ]' }) : '[ Загрузка отделений... ]';
+    dropdown.innerHTML = `<div style="color:#888;padding:8px;font-style:italic">${loadingBranchesMsg}</div>`;
     dropdown.style.display = 'block';
 
     const cityRef = await resolveProfileCityRef(isModal);
     if (!cityRef) {
-        dropdown.innerHTML = '<div style="color:#888;padding:8px;font-style:italic">[ Выберите город из списка выше ]</div>';
+        const chooseCityFromList = typeof i18next !== 'undefined' ? i18next.t('profile.choose_city_from_list', { defaultValue: '[ Выберите город из списка выше ]' }) : '[ Выберите город из списка выше ]';
+        dropdown.innerHTML = `<div style="color:#888;padding:8px;font-style:italic">${chooseCityFromList}</div>`;
         dropdown.style.display = 'block';
         return;
     }
@@ -993,7 +999,8 @@ async function loadProfileBranches(isModal, searchString = '') {
             }
         } catch (e) {
             console.error('Ошибка загрузки отделений в профиле:', e);
-            dropdown.innerHTML = '<div style="color:#ff6666;padding:8px">[ Сбой загрузки отделений ]</div>';
+            const branchesLoadErr = typeof i18next !== 'undefined' ? i18next.t('profile.branches_load_error', { defaultValue: '[ Сбой загрузки отделений ]' }) : '[ Сбой загрузки отделений ]';
+            dropdown.innerHTML = `<div style="color:#ff6666;padding:8px">${branchesLoadErr}</div>`;
             return;
         }
     } else if (rawTrimmed && typeof window.filterAndSortBranches === 'function') {
@@ -1356,7 +1363,8 @@ async function saveProfileDeliveryFromForm(isModal, btn) {
             setProfileDeliveryLockState(true);
         }, 800);
     } catch (e) {
-        showToast('Ошибка сохранения данных: ' + (e.message || 'Сбой сети'), 'error');
+        const delivSaveErr = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_save_error', { defaultValue: 'Ошибка сохранения данных: ' }) : 'Ошибка сохранения данных: ';
+        showToast(delivSaveErr + (e.message || 'Сбой сети'), 'error');
     } finally {
         window._isSavingProfileDelivery = false;
         saveBtns.forEach(b => {
@@ -1499,7 +1507,8 @@ async function checkPendingContactVerification(type) {
     if (startTime && (Date.now() - startTime > 120000)) {
         clearPendingContactState(type);
         resetContactSaveButtons(type);
-        showToast(cfg.timeoutToast, 'error');
+        const timeoutMsg = typeof i18next !== 'undefined' ? i18next.t('profile.timeout_toast_' + type, { defaultValue: cfg.timeoutToast }) : cfg.timeoutToast;
+        showToast(timeoutMsg, 'error');
         return;
     }
 
@@ -1525,7 +1534,8 @@ async function checkPendingContactVerification(type) {
                 if (isAvail === false) {
                     clearPendingContactState(type);
                     resetContactSaveButtons(type);
-                    showToast(cfg.duplicateToast, 'error');
+                    const dupMsg = typeof i18next !== 'undefined' ? i18next.t('profile.duplicate_toast_' + type, { defaultValue: cfg.duplicateToast }) : cfg.duplicateToast;
+                    showToast(dupMsg, 'error');
                     return;
                 }
             } catch(e) {}
@@ -1566,7 +1576,8 @@ async function checkPendingContactVerification(type) {
                         const { error: updErr } = await sb.from('profiles').update({ phone: pendingVal }).eq('id', currentUser.id);
                         if (updErr && (updErr.code === '23505' || updErr.message?.includes('duplicate'))) {
                             resetContactSaveButtons('phone');
-                            showToast('Этот номер уже подтвержден на другом аккаунте!', 'error');
+                            const phoneDupMsg = typeof i18next !== 'undefined' ? i18next.t('profile.phone_already_verified', { defaultValue: 'Этот номер уже подтвержден на другом аккаунте!' }) : 'Этот номер уже подтвержден на другом аккаунте!';
+                            showToast(phoneDupMsg, 'error');
                             return;
                         }
                         if (!userProfile) userProfile = {};
@@ -1587,7 +1598,7 @@ async function checkPendingContactVerification(type) {
             }
 
             const msg = window._hasLinkedTgOnPhoneVerify
-                ? 'Номер и Telegram подтверждены!'
+                ? (typeof i18next !== 'undefined' ? i18next.t('profile.both_verified', { defaultValue: 'Номер и Telegram подтверждены!' }) : 'Номер и Telegram подтверждены!')
                 : (typeof i18next !== 'undefined' ? i18next.t('messages.phone_verified', { defaultValue: 'Номер подтвержден!' }) : 'Номер подтвержден!');
             delete window._hasLinkedTgOnPhoneVerify;
             showToast(msg, 'success');
@@ -1631,7 +1642,8 @@ window.checkPendingTgVerification = checkPendingTgVerification;
 async function saveContactFromInput(type, isModal = false) {
     const activeUser = currentUser || window.currentUser;
     if (!activeUser) {
-        showToast('Сначала авторизуйтесь!', 'error');
+        const authReqMsg = typeof i18next !== 'undefined' ? i18next.t('messages.auth_required', { defaultValue: 'Сначала авторизуйтесь!' }) : 'Сначала авторизуйтесь!';
+        showToast(authReqMsg, 'error');
         return;
     }
     currentUser = activeUser;
@@ -1645,7 +1657,8 @@ async function saveContactFromInput(type, isModal = false) {
     const lastTs = isPhone ? lastPhoneSendTimestamp : lastTgSendTimestamp;
     const cooldownRemaining = Math.ceil((10000 - (now - lastTs)) / 1000);
     if (cooldownRemaining > 0) {
-        showToast(`Подождите ${cooldownRemaining} сек перед повторной отправкой!`, 'info');
+        const waitCooldownMsg = typeof i18next !== 'undefined' ? i18next.t('profile.cooldown_wait', { sec: cooldownRemaining, defaultValue: `Подождите ${cooldownRemaining} сек перед повторной отправкой!` }) : `Подождите ${cooldownRemaining} сек перед повторной отправкой!`;
+        showToast(waitCooldownMsg, 'info');
         return;
     }
 
@@ -1663,14 +1676,16 @@ async function saveContactFromInput(type, isModal = false) {
         if (!clean.startsWith('+') && clean.startsWith('380')) clean = '+' + clean;
         if (!clean.startsWith('+') && clean.length === 10) clean = '+38' + clean;
         if (clean.replace(/[^\d]/g, '').length < 10) {
-            showToast('Введите корректный номер (минимум 10 цифр)!', 'error');
+            const phoneMinDigitsMsg = typeof i18next !== 'undefined' ? i18next.t('profile.phone_min_digits', { defaultValue: 'Введите корректный номер (минимум 10 цифр)!' }) : 'Введите корректный номер (минимум 10 цифр)!';
+            showToast(phoneMinDigitsMsg, 'error');
             input.focus();
             return;
         }
         try {
             const { data: blacklisted } = await sb.from('blacklist').select('phone').eq('phone', clean).limit(1);
             if (blacklisted && blacklisted.length > 0) {
-                showToast('[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН', 'error');
+                const secBlockedMsg = typeof i18next !== 'undefined' ? i18next.t('profile.security_blocked', { defaultValue: '[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН' }) : '[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН';
+                showToast(secBlockedMsg, 'error');
                 return;
             }
         } catch(e) {}
@@ -1682,7 +1697,8 @@ async function saveContactFromInput(type, isModal = false) {
         const rawVal = input.value.trim().replace(/^(https?:\/\/)?(www\.)?t\.me\//i, '@');
         const cleanUser = rawVal.replace(/^@+/, '').replace(/[^a-zA-Z0-9_]/g, '');
         if (cleanUser.length < 2) {
-            showToast('Введите корректный Telegram username!', 'error');
+            const tgInvalidMsg = typeof i18next !== 'undefined' ? i18next.t('profile.tg_invalid', { defaultValue: 'Введите корректный Telegram username!' }) : 'Введите корректный Telegram username!';
+            showToast(tgInvalidMsg, 'error');
             input.focus();
             return;
         }
@@ -1735,7 +1751,8 @@ async function saveContactFromInput(type, isModal = false) {
         const { error: otpError } = await sb.rpc('generate_secure_otp', { p_phone: otpTarget });
         if (otpError) {
             console.error(`OTP generate error (${type}):`, otpError);
-            showToast('Ошибка сервера при генерации кода', 'error');
+            const otpServerErrMsg = typeof i18next !== 'undefined' ? i18next.t('profile.otp_server_err', { defaultValue: 'Ошибка сервера при генерации кода' }) : 'Ошибка сервера при генерации кода';
+            showToast(otpServerErrMsg, 'error');
             if (saveBtn) {
                 saveBtn.disabled = false;
                 saveBtn.innerText = '✓';
@@ -1756,8 +1773,8 @@ async function saveContactFromInput(type, isModal = false) {
     openTelegramBotDeepLink(tgLink);
     showToast(
         isPhone
-            ? 'Перейдите в бота и нажмите СТАРТ для подтверждения номера...'
-            : 'Перейдите в бота и нажмите СТАРТ для подтверждения Telegram...',
+            ? (typeof i18next !== 'undefined' ? i18next.t('profile.go_to_bot_phone', { defaultValue: 'Перейдите в бота и нажмите СТАРТ для подтверждения номера...' }) : 'Перейдите в бота и нажмите СТАРТ для подтверждения номера...')
+            : (typeof i18next !== 'undefined' ? i18next.t('profile.go_to_bot_tg', { defaultValue: 'Перейдите в бота и нажмите СТАРТ для подтверждения Telegram...' }) : 'Перейдите в бота и нажмите СТАРТ для подтверждения Telegram...'),
         'info'
     );
 

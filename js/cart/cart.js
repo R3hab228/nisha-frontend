@@ -335,7 +335,9 @@ function updateCartUI() {
         if (msg && promoCode) {
             const formattedSaved = (typeof formatPrice === 'function') ? formatPrice(savedMoney) : `${savedMoney} ${getCurrency()}`;
             const discDisplay = fixedAmt > 0 ? (typeof formatPrice === 'function' ? `-${formatPrice(fixedAmt)}` : `-${fixedAmt} ${getCurrency()}`) : `${Math.round(promoDiscount * 100)}%`;
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] Код активирован! Скидка ${discDisplay}<br><span style="font-size: 13px;">Вы сэкономили: <b>${formattedSaved}</b></span></span>`;
+            const succText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_success', { defaultValue: 'Код активирован! Скидка' }) : 'Код активирован! Скидка';
+    const savText = typeof i18next !== 'undefined' ? i18next.t('checkout.saved', { defaultValue: 'Вы сэкономили:' }) : 'Вы сэкономили:';
+    msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${succText} ${discDisplay}<br><span style="font-size: 13px;">${savText} <b>${formattedSaved}</b></span></span>`;
         }
     }
     
@@ -1063,7 +1065,7 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
         if (!cityRef) {
             const cityInput = document.getElementById('orderCity');
             if (input && (!cityInput || !cityInput.value.trim())) {
-                input.placeholder = "Сначала выберите город";
+                input.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_first', { defaultValue: 'Сначала выберите город' }) : 'Сначала выберите город';
             }
             return;
         }
@@ -1094,7 +1096,8 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
 
     const myToken = ++_branchLoadToken;
     if (showDropdown) {
-        dropdown.innerHTML = '<div style="color:#aaa; padding:12px; font-style: italic;">Завантаження відділень...</div>';
+        const loadBranchText = typeof i18next !== 'undefined' ? i18next.t('checkout.loading_branches', { defaultValue: 'Завантаження відділень...' }) : 'Завантаження відділень...';
+        dropdown.innerHTML = `<div style="color:#aaa; padding:12px; font-style: italic;">${loadBranchText}</div>`;
         dropdown.style.display = 'block';
     }
 
@@ -1318,7 +1321,7 @@ async function calculateDeliveryCost() {
     if (!cityRef || currentCart.length === 0) return;
     
     document.getElementById('deliveryCostInfo').style.display = 'block';
-    document.getElementById('calcCostVal').innerText = "Рассчитываем...";
+    document.getElementById('calcCostVal').innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.calc_pending', { defaultValue: 'Рассчитываем...' }) : 'Рассчитываем...';
     
     const totalCost = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
 
@@ -1329,13 +1332,14 @@ async function calculateDeliveryCost() {
         }, { timeout: 10000, retries: 1, dedupe: true });
 
         if (data && data.success) {
-            document.getElementById('calcCostVal').innerText = data.cost + " грн";
+            const uahText = (typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн';
+            document.getElementById('calcCostVal').innerText = data.cost + ' ' + uahText;
         } else {
-            document.getElementById('calcCostVal').innerText = "По тарифам НП";
+            document.getElementById('calcCostVal').innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.np_rates', { defaultValue: 'По тарифам НП' }) : 'По тарифам НП';
         }
     } catch(e) { 
         console.error("Ошибка расчета НП", e);
-        document.getElementById('calcCostVal').innerText = "По тарифам НП";
+        document.getElementById('calcCostVal').innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.np_rates', { defaultValue: 'По тарифам НП' }) : 'По тарифам НП';
     }
 }
 window.calculateDeliveryCost = calculateDeliveryCost;
@@ -1736,7 +1740,7 @@ async function openCheckoutModal() {
     
     isCheckoutOpening = true;
     const originalText = btn.innerText;
-    btn.innerText = "[ ПРОВЕРКА НАЛИЧИЯ... ]";
+    btn.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.checking_stock', { defaultValue: '[ ПРОВЕРКА НАЛИЧИЯ... ]' }) : '[ ПРОВЕРКА НАЛИЧИЯ... ]';
     btn.style.pointerEvents = "none";
 
     try {
@@ -1752,7 +1756,8 @@ async function openCheckoutModal() {
                 currentCart = currentCart.filter(cartItem => {
                     const dbItem = dbItems.find(i => i.id === cartItem.id);
                     if (!dbItem || dbItem.status === 'sold') {
-                        showToast(`Товар "${cartItem.name}" уже кто-то купил! 😢`, 'error');
+                        const itemBoughtMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.item_bought_toast', { name: cartItem.name, defaultValue: `Товар "${cartItem.name}" уже кто-то купил! 😢` }) : `Товар "${cartItem.name}" уже кто-то купил! 😢`;
+            showToast(itemBoughtMsg, 'error');
                         hasSoldItems = true;
                         return false; 
                     }
@@ -2117,7 +2122,8 @@ async function submitOrder() {
 
     const isVerified = window.otpVerified || (typeof otpVerified !== 'undefined' && otpVerified);
     if (!isVerified) {
-        showToast('Подтвердите номер телефона!', 'error');
+        const verifyPhoneMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.verify_phone_first', { defaultValue: 'Подтвердите номер телефона!' }) : 'Подтвердите номер телефона!';
+            showToast(verifyPhoneMsg, 'error');
         return;
     }
 
@@ -2156,14 +2162,16 @@ async function submitOrder() {
     const cityRef = window.selectedCityRef || selectedCityRef;
     if (!city || !cityRef) {
         highlightFieldError(cityInput);
-        showToast('Выберите Город строго из выпадающего списка!', 'error');
+        const chooseCityMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_from_dropdown', { defaultValue: 'Выберите Город строго из выпадающего списка!' }) : 'Выберите Город строго из выпадающего списка!';
+            showToast(chooseCityMsg, 'error');
         return;
     }
 
     const branchRef = window.selectedBranchRef || selectedBranchRef;
     if (!branch || !branchRef) {
         highlightFieldError(branchInput);
-        showToast('Выберите Отделение или Поштомат из выпадающего списка!', 'error');
+        const chooseBranchMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_branch_from_dropdown', { defaultValue: 'Выберите Отделение или Поштомат из выпадающего списка!' }) : 'Выберите Отделение или Поштомат из выпадающего списка!';
+            showToast(chooseBranchMsg, 'error');
         return;
     }
 
@@ -2207,7 +2215,8 @@ async function confirmEmailPrompt(wantsEmail) {
         if (prompt) prompt.style.display = 'none';
         const cityInput = document.getElementById('orderCity');
         if (typeof highlightFieldError === 'function') highlightFieldError(cityInput);
-        showToast('Выберите Город строго из выпадающего списка!', 'error');
+        const chooseCityMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_from_dropdown', { defaultValue: 'Выберите Город строго из выпадающего списка!' }) : 'Выберите Город строго из выпадающего списка!';
+            showToast(chooseCityMsg, 'error');
         return;
     }
 
@@ -2216,7 +2225,8 @@ async function confirmEmailPrompt(wantsEmail) {
         if (prompt) prompt.style.display = 'none';
         const branchInput = document.getElementById('orderBranch');
         if (typeof highlightFieldError === 'function') highlightFieldError(branchInput);
-        showToast('Выберите Отделение или Поштомат из выпадающего списка!', 'error');
+        const chooseBranchMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_branch_from_dropdown', { defaultValue: 'Выберите Отделение или Поштомат из выпадающего списка!' }) : 'Выберите Отделение или Поштомат из выпадающего списка!';
+            showToast(chooseBranchMsg, 'error');
         return;
     }
 
@@ -2229,7 +2239,8 @@ async function confirmEmailPrompt(wantsEmail) {
         finalEmail = emailInput ? emailInput.value.trim() : '';
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(finalEmail)) {
-            showToast('Введите корректный E-mail!', 'error');
+            const enterEmailMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.enter_valid_email', { defaultValue: 'Введите корректный E-mail!' }) : 'Введите корректный E-mail!';
+            showToast(enterEmailMsg, 'error');
             return; 
         }
         if (store) store.set('nisha_email_preference', finalEmail);
@@ -2298,7 +2309,8 @@ async function executeOrderFinal(emailToSave) {
         resetSubmitButton();
         const cityInput = document.getElementById('orderCity');
         if (typeof highlightFieldError === 'function') highlightFieldError(cityInput);
-        showToast('Выберите Город строго из выпадающего списка!', 'error');
+        const chooseCityMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_from_dropdown', { defaultValue: 'Выберите Город строго из выпадающего списка!' }) : 'Выберите Город строго из выпадающего списка!';
+            showToast(chooseCityMsg, 'error');
         return;
     }
     if (!branch || !branchRef) {
@@ -2306,7 +2318,8 @@ async function executeOrderFinal(emailToSave) {
         resetSubmitButton();
         const branchInput = document.getElementById('orderBranch');
         if (typeof highlightFieldError === 'function') highlightFieldError(branchInput);
-        showToast('Выберите Отделение или Поштомат из выпадающего списка!', 'error');
+        const chooseBranchMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_branch_from_dropdown', { defaultValue: 'Выберите Отделение или Поштомат из выпадающего списка!' }) : 'Выберите Отделение или Поштомат из выпадающего списка!';
+            showToast(chooseBranchMsg, 'error');
         return;
     }
 
@@ -2421,7 +2434,8 @@ async function executeOrderFinal(emailToSave) {
             if (!city || !branch || !cityRef || !branchRef) {
                 isOrderSubmitting = false;
                 resetSubmitButton();
-                showToast('Выберите Город и Отделение строго из выпадающего списка!', 'error');
+                const chooseCityBranchMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_branch_from_dropdown', { defaultValue: 'Выберите Город и Отделение строго из выпадающего списка!' }) : 'Выберите Город и Отделение строго из выпадающего списка!';
+            showToast(chooseCityBranchMsg, 'error');
                 return;
             }
 
@@ -2576,7 +2590,8 @@ async function executeOrderFinal(emailToSave) {
         if (typeof window.captureError === 'function') {
             window.captureError(err, { action: 'checkout_order_failed', city: city });
         }
-        showToast('Ошибка при оформлении: ' + err.message, 'error');
+        const orderErrPref = typeof i18next !== 'undefined' ? i18next.t('checkout.order_submit_err', { defaultValue: 'Ошибка при оформлении: ' }) : 'Ошибка при оформлении: ';
+        showToast(orderErrPref + err.message, 'error');
         btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
         btnSubmit.style.pointerEvents = "auto";
         btnSubmit.style.opacity = "1";
@@ -2596,7 +2611,7 @@ async function autoDetectCity() {
     if (!cityInput || cityInput.value.trim() !== '') return;
 
     const originalPlaceholder = cityInput.placeholder;
-    cityInput.placeholder = "Поиск спутников..."; 
+    cityInput.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.geo_searching', { defaultValue: 'Поиск спутников...' }) : 'Поиск спутников...'; 
 
     try {
         let data = null;
@@ -2682,7 +2697,8 @@ async function autoDetectCity() {
                 loadNPBranches("", false);
                 hideNPDropdowns();
                 
-                showToast(`[GEO] Локация: ${cityObj.MainDescription}`, 'success');
+                const locPrefix = typeof i18next !== 'undefined' ? i18next.t('checkout.location_prefix', { defaultValue: 'Локация: ' }) : 'Локация: ';
+        showToast(`[GEO] ${locPrefix}${cityObj.MainDescription}`, 'success');
             } else {
                 cityInput.value = detectedCity; 
                 cityInput.placeholder = originalPlaceholder;
@@ -2740,8 +2756,9 @@ async function applyPromoCode() {
             window.appliedPromoCode = appliedPromoCode;
             window.currentPromoFixed = data.is_fixed ? data.saved_money : null;
             
-            const discDisplay = data.is_fixed ? `-${data.saved_money} грн` : `${Math.round(data.discount_percent * 100)}%`;
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${successText} ${discDisplay}<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} грн</b></span></span>`;
+            const discDisplay = data.is_fixed ? `-${data.saved_money} ${(typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн'}` : `${Math.round(data.discount_percent * 100)}%`;
+            const curSuffix = (typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн';
+            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${successText} ${discDisplay}<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} ${curSuffix}</b></span></span>`;
         } else {
             currentPromoDiscount = 0;
             window.currentPromoDiscount = 0;
@@ -2757,7 +2774,8 @@ async function applyPromoCode() {
         }
     } catch (err) {
         if (err && (err.name === 'AbortError' || err.isTimeout)) {
-            msg.innerHTML = `<span style="color: var(--accent-yellow);">[!] Сервер запускается, нажмите «Применить» ещё раз</span>`;
+            const warmingMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_warming', { defaultValue: 'Сервер запускается, нажмите «Применить» ещё раз' }) : 'Сервер запускается, нажмите «Применить» ещё раз';
+                msg.innerHTML = `<span style="color: var(--accent-yellow);">[!] ${warmingMsg}</span>`;
         } else {
             msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error') : 'Ошибка сервера'}</span>`;
         }

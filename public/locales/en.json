@@ -2,7 +2,9 @@
   "translation": {
     "search": {
       "placeholder": "Search items...",
-      "btn": "Search"
+      "btn": "Search",
+      "no_matches": "NO MATCHES FOUND",
+      "no_items": "NO ITEMS FOUND"
     },
     "nav": {
       "home": "HOME",
@@ -100,7 +102,17 @@
       "qa_title": "Q&A: Customer questions",
       "ask_btn": "Ask a question?",
       "ask_ph": "Your question...",
-      "ask_send": "SEND"
+      "ask_send": "SEND",
+      "support_service": "Customer support:",
+      "qa_err_auth": "Sign in to ask a question!",
+      "qa_err_short": "Question is too short!",
+      "qa_err_limit": "Limit: 2 questions per day.",
+      "qa_success": "Question submitted!",
+      "qa_err_send": "Error submitting question.",
+      "err_not_found": "Item not found",
+      "fav": "Favorites",
+      "share": "Share",
+      "no_photo": "NO PHOTO"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
@@ -114,7 +126,8 @@
       "refund_yes_text": "<span style=\"color:var(--accent-green); font-weight:bold; font-size:16px;\">[ RETURN AVAILABLE ]</span><br><br>This item can be returned and exchanged within <b>14 days</b> of purchase, according to the legislation of Ukraine.<br><br><i>Condition for return: preserving the commercial appearance, all tags, and no signs of wear.</i>",
       "drop_title": "WARNING: DROP_ITEM",
       "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA acts as the deal escrow.</span><br><br>Inspection and try-on — strictly at Nova Poshta (with COD, the remainder is paid after inspection).<br><br>After picking up the package, returns are not possible: the deal is considered closed, and funds are immediately transferred to the owner.",
-      "btn_understood": "[ GOT IT ]"
+      "btn_understood": "[ GOT IT ]",
+      "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA is the deal escrow.</span><br><br>Inspection and try-on strictly at Nova Poshta (for COD, remaining balance is paid after check).<br><br>No returns after pickup: deal is finalized and funds are immediately transferred to seller."
     },
     "grid": {
       "size_prefix": "Size: "
@@ -135,7 +148,21 @@
       "link_copied": "Link copied!",
       "copy_error": "Copy error",
       "phone_verified": "Phone verified!",
-      "tg_verified": "Telegram verified!"
+      "tg_verified": "Telegram verified!",
+      "enter_email_pass": "Enter Email and password!",
+      "need_nickname": "A nickname is required for registration!",
+      "reg_success": "Registration successful! Check your email.",
+      "new_items_toast": "New Items!!!",
+      "sale_prefix": "🔥 SALE: ",
+      "reservation_expired": "Reservation expired: ",
+      "back_in_stock": " back in stock!",
+      "new_items_count": "+{{count}} new items in catalog",
+      "new_item_fallback": "New item",
+      "cart_restored": "Cart restored",
+      "cart_synced": "Carts synchronized",
+      "auth_required": "Please sign in first!",
+      "item_sold_removed": "Item \"{{name}}\" has been sold and removed from cart.",
+      "secret_discount_applied": "Secret 10% discount activated"
     },
     "checkout": {
       "desc": "Fill in shipping details. Reserved for 2 hours.",
@@ -159,7 +186,27 @@
       "payment_cod": "Cash on delivery (200 UAH prepay)",
       "otp_expired": "Verification time expired. Please request the code again.",
       "offline_banner": "[!] OFFLINE MODE: Showing saved items. Ordering will resume when online.",
-      "save_to_profile": "Save this address to profile"
+      "save_to_profile": "Save this address to profile",
+      "name_ph": "Ivanov Ivan",
+      "city_ph": "Kyiv...",
+      "branch_ph": "Branch or parcel locker...",
+      "promo_ph": "Enter promo code...",
+      "branch_placeholder": "Select branch...",
+      "choose_city_first": "Choose a city first",
+      "loading_branches": "Loading branches...",
+      "calc_pending": "Calculating...",
+      "np_rates": "At NP rates",
+      "checking_stock": "[ CHECKING STOCK... ]",
+      "item_bought_toast": "Item \"{{name}}\" was just purchased by someone else! 😢",
+      "verify_phone_first": "Please verify your phone number!",
+      "choose_city_from_dropdown": "Please select City strictly from the dropdown!",
+      "choose_branch_from_dropdown": "Please select Branch or Locker from the dropdown!",
+      "choose_city_branch_from_dropdown": "Please select City and Branch from the dropdown!",
+      "enter_valid_email": "Please enter a valid email!",
+      "order_submit_err": "Order submission error: ",
+      "geo_searching": "Detecting location...",
+      "promo_warming": "Server is warming up, please click \"Apply\" again",
+      "location_prefix": "Location: "
     },
     "orders_modal": {
       "access_granted": "Access granted",
@@ -170,14 +217,40 @@
       "tab_cancelled": "CANCELLED",
       "loading": "Waiting for data...",
       "empty_title": "NO ORDERS",
-      "empty_desc": "You haven't ordered anything yet."
+      "empty_desc": "You haven't ordered anything yet.",
+      "err_phone": "Please enter a valid phone number!",
+      "guest_desc": "Enter the phone number used during checkout to track status:",
+      "search_placeholder": "Enter phone number to search...",
+      "loading_db": "[ LOADING DATABASE... ]",
+      "err_no_phone": "[ NO PHONE NUMBER ENTERED ]",
+      "access_denied_otp": "[ ACCESS DENIED ]<br><br>Please verify ownership of this phone number first.",
+      "verify_bot_btn": "VERIFY NUMBER IN TELEGRAM BOT",
+      "ttn_copied": "Tracking number copied: ",
+      "empty_accepted": "No active orders.",
+      "empty_shipped": "No shipped orders.",
+      "empty_cancelled": "No cancelled orders.",
+      "ttn_pending": "Tracking: Pending generation...",
+      "leave_review": "Leave review",
+      "review_left": "[✔] REVIEW SUBMITTED",
+      "order_prefix": "ORDER #",
+      "total_prefix": "TOTAL:"
     },
     "reviews_modal": {
       "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
       "loading": "LOADING REVIEWS",
       "empty_reviews": "NO REVIEWS AT THE MOMENT",
-      "send": "SEND",
-      "later": "LATER"
+      "send": "SUBMIT",
+      "later": "LATER",
+      "cancel": "CANCEL",
+      "placeholder": "Write your review about the purchase...",
+      "auto_placeholder": "A few words about the purchase...",
+      "already_left": "A review for this order has already been left.",
+      "text_short": "Text is too short!",
+      "success": "Review successfully published!",
+      "err_send": "Error submitting review: ",
+      "db_error": "DATABASE CONNECTION ERROR",
+      "new_review_from": "⭐ New review from {{author}}: \"{{snippet}}\"",
+      "author_fallback": "Customer"
     },
     "profile": {
       "google_login": "SIGN IN WITH GOOGLE",
@@ -204,7 +277,34 @@
       "delivery_city": "CITY (NOVA POSHTA):",
       "delivery_branch": "BRANCH OR POSTOMAT:",
       "delivery_saved_btn": "[ SAVED ✓ ]",
-      "delivery_edit": "[ EDIT ]"
+      "delivery_edit": "[ EDIT ]",
+      "order_status_title": "ATTENTION! Your order status has updated.",
+      "order_status_order": "Order:",
+      "order_status_new": "New status:",
+      "order_status_view": "[ VIEW ]",
+      "google_webview_warn": "To sign in with Google, please open the site in a standard browser (Safari or Chrome)",
+      "err_prefix": "Error: ",
+      "search_city_np": "[ Searching city in Nova Poshta... ]",
+      "indicate_city_first": "Please specify city first ☝️",
+      "loading_branches": "[ Loading branches... ]",
+      "choose_city_from_list": "[ Select a city from the list above ]",
+      "branches_load_error": "[ Failed to load branches ]",
+      "delivery_save_error": "Failed to save delivery details: ",
+      "phone_already_verified": "This phone number is already verified on another account!",
+      "cooldown_wait": "Please wait {{sec}} sec before requesting again!",
+      "phone_min_digits": "Please enter a valid phone number (at least 10 digits)!",
+      "security_blocked": "[!] SECURITY ERROR: YOUR NUMBER IS BLOCKED",
+      "tg_invalid": "Please enter a valid Telegram username!",
+      "otp_server_err": "Server error generating verification code",
+      "go_to_bot_phone": "Open the Telegram bot and press START to verify phone number...",
+      "go_to_bot_tg": "Open the Telegram bot and press START to verify Telegram...",
+      "remove_title_phone": "Remove phone",
+      "removed_toast_phone": "Phone number removed!",
+      "timeout_toast_phone": "Phone verification timed out",
+      "remove_title_tg": "Remove Telegram",
+      "removed_toast_tg": "Telegram removed!",
+      "timeout_toast_tg": "Telegram verification timed out",
+      "both_verified": "Phone and Telegram verified!"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",
@@ -233,7 +333,16 @@
       "warning_loss_text": "You have unsaved changes. If you close the window, the form will be completely cleared.",
       "btn_close": "[ CLOSE ]",
       "btn_cancel": "[ CANCEL ]",
-      "btn_submit": "[ SUBMIT PROPOSAL ]"
+      "btn_submit": "[ SUBMIT PROPOSAL ]",
+      "success_title": "SYSTEM_OK.LOG",
+      "success_text": "Proposal successfully submitted.",
+      "err_fill_all": "Please fill in absolutely all fields!",
+      "err_max_files": "Maximum 5 photos/videos!",
+      "err_cond_range": "Condition rating must be from 1 to 10!",
+      "err_network": "Error submitting proposal to server. Check your connection and try again.",
+      "compressing": "COMPRESSING PHOTO",
+      "err_server": "Server failure: ",
+      "btn_retry": "[ RETRY ]"
     },
     "email_prompt": {
       "desc": "Send receipts and delivery statuses (Waybill) to your E-mail?",
@@ -294,11 +403,21 @@
       "title": "SUPPORT_TICKET.EXE",
       "desc": "Describe the issue, idea, or bug. The message will go directly to the developer.",
       "placeholder": "Start typing...",
-      "submit": "SEND SIGNAL"
+      "submit": "SEND SIGNAL",
+      "min_len": "Describe the problem in more detail (at least 5 characters)",
+      "sending": "[ SENDING... ]",
+      "success_sent": "Message successfully delivered to admin!",
+      "reply_title": "Support Reply:",
+      "reply_btn_read": "[ READ ]"
     },
     "pwa": {
       "refresh": "REFRESH",
-      "refreshing": "REFRESHING..."
+      "refreshing": "REFRESHING...",
+      "offline_msg": "Connection lost",
+      "online_msg": "Connection restored!!!",
+      "update_title": "SYSTEM_UPDATE.EXE",
+      "update_text": "A new version of the site has been released (bug fixes, new features).<br><br>We recommend refreshing the page.",
+      "btn_update": "[ REFRESH NOW ]"
     },
     "np": {
       "branch_empty": "Not found",
@@ -308,6 +427,19 @@
       "branch_err": "Branch loading error",
       "branch_placeholder": "Select branch or postomat...",
       "searching": "Searching branches in Nova Poshta..."
+    },
+    "common": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "close": "Close",
+      "to_home": "To homepage",
+      "password": "Password"
+    },
+    "auth": {
+      "turnstile_err": "Turnstile security check failed",
+      "access_denied": "Access denied",
+      "wait_sec": "Wait {{sec}}s",
+      "db_connecting": "Connecting to DB..."
     }
   }
 }

@@ -32,7 +32,8 @@ async function submitSupportTicket() {
     let message = input.value.trim();
 
     if (message.length < 5) {
-        showToast('Опиши проблему подробнее (минимум 5 символов)', 'error');
+        const minLenMsg = typeof i18next !== 'undefined' ? i18next.t('support.min_len', { defaultValue: 'Опиши проблему подробнее (минимум 5 символов)' }) : 'Опиши проблему подробнее (минимум 5 символов)';
+        showToast(minLenMsg, 'error');
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         return;
     }
@@ -41,7 +42,7 @@ async function submitSupportTicket() {
     }
 
     btn.style.pointerEvents = 'none';
-    btn.innerText = '[ ОТПРАВКА... ]';
+    btn.innerText = (typeof i18next !== 'undefined' && i18next.t('support.sending', { defaultValue: '[ ОТПРАВКА... ]' })) || '[ ОТПРАВКА... ]';
 
     const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
@@ -60,7 +61,8 @@ async function submitSupportTicket() {
 
     // Моментальный отклик интерфейса
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
-    showToast('Сообщение успешно доставлено админу!', 'success');
+    const successMsg = typeof i18next !== 'undefined' ? i18next.t('support.success_sent', { defaultValue: 'Сообщение успешно доставлено админу!' }) : 'Сообщение успешно доставлено админу!';
+    showToast(successMsg, 'success');
     
     if (typeof closeModal === 'function') {
         closeModal('supportModal');
@@ -71,7 +73,7 @@ async function submitSupportTicket() {
     // Возвращаем кнопку в исходное состояние
     setTimeout(() => {
         btn.style.pointerEvents = 'auto';
-        btn.innerText = 'ОТПРАВИТЬ СИГНАЛ';
+        btn.innerText = typeof i18next !== 'undefined' ? i18next.t('support.submit', { defaultValue: 'ОТПРАВИТЬ СИГНАЛ' }) : 'ОТПРАВИТЬ СИГНАЛ';
         input.value = '';
     }, 500);
 }
@@ -110,7 +112,9 @@ function initSupportRepliesSystem() {
                         if (r.id && window._shownSupportReplyIds.has(r.id)) return;
                         if (r.id) window._shownSupportReplyIds.add(r.id);
                         const safeAnswer = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(r.answer_text) : (typeof window.escapeHtml === 'function' ? window.escapeHtml(r.answer_text) : r.answer_text);
-                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${safeAnswer}`, '[ ПРОЧИТАНО ]', () => {
+                        const replyTitle = (typeof i18next !== 'undefined' && i18next.t('support.reply_title', { defaultValue: 'Ответ от Поддержки:' })) || 'Ответ от Поддержки:';
+                        const replyReadBtn = (typeof i18next !== 'undefined' && i18next.t('support.reply_btn_read', { defaultValue: '[ ПРОЧИТАНО ]' })) || '[ ПРОЧИТАНО ]';
+                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>${replyTitle}</b><br><br>${safeAnswer}`, replyReadBtn, () => {
                             activeSb.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                         });
                     });
@@ -146,7 +150,9 @@ function initSupportRepliesSystem() {
                 if (r.id && window._shownSupportReplyIds.has(r.id)) return;
                 if (r.id) window._shownSupportReplyIds.add(r.id);
                 const safeAnswer = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(r.answer_text) : (typeof window.escapeHtml === 'function' ? window.escapeHtml(r.answer_text) : r.answer_text);
-                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>Ответ от Поддержки:</b><br><br>${safeAnswer}`, '[ ПРОЧИТАНО ]', () => {
+                        const replyTitle = (typeof i18next !== 'undefined' && i18next.t('support.reply_title', { defaultValue: 'Ответ от Поддержки:' })) || 'Ответ от Поддержки:';
+                        const replyReadBtn = (typeof i18next !== 'undefined' && i18next.t('support.reply_btn_read', { defaultValue: '[ ПРОЧИТАНО ]' })) || '[ ПРОЧИТАНО ]';
+                        showTerminalModal('INCOMING_MESSAGE.SYS', `<b>${replyTitle}</b><br><br>${safeAnswer}`, replyReadBtn, () => {
                     sb.from('support_replies').update({ is_read: true }).eq('id', r.id).then();
                 });
             })

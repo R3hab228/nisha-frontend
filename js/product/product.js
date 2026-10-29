@@ -205,7 +205,8 @@ async function openProductModalById(itemId) {
             }
         } catch(e) { console.error("Ошибка сети:", e); }
     } else if (!item) {
-        showToast('Товар не найден', 'error'); 
+        const notFoundMsg = (typeof i18next !== 'undefined' && i18next.t('product.err_not_found')) || 'Товар не найден';
+        showToast(notFoundMsg, 'error'); 
     }
 }
 window.openProductModalById = openProductModalById;
@@ -486,7 +487,8 @@ function openProductModal(item) {
             });
             thumbs.innerHTML = thumbsHtml;
         } else {
-            wrapper.innerHTML = `<a class="slide" style="background:#111; pointer-events:none;">НЕТ ФОТО</a>`;
+            const noPhotoText = typeof i18next !== 'undefined' ? i18next.t('product.no_photo', { defaultValue: 'НЕТ ФОТО' }) : 'НЕТ ФОТО';
+    wrapper.innerHTML = `<a class="slide" style="background:#111; pointer-events:none;">${noPhotoText}</a>`;
         }
     }
 
@@ -1313,7 +1315,8 @@ window.toggleQuestionForm = toggleQuestionForm;
 async function submitQuestion(itemId) {
     const currentUser = getUser();
     if (!currentUser) {
-        showToast('Для отправки вопроса нужно войти в аккаунт!', 'error');
+        const authMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_auth')) || 'Для отправки вопроса нужно войти в аккаунт!';
+        showToast(authMsg, 'error');
         if (typeof openProfileModal === 'function') openProfileModal();
         return;
     }
@@ -1322,7 +1325,8 @@ async function submitQuestion(itemId) {
     if (!input) return;
     let text = input.value.trim();
     if (text.length < 5) {
-        showToast('Вопрос слишком короткий!', 'error');
+        const shortMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_short')) || 'Вопрос слишком короткий!';
+        showToast(shortMsg, 'error');
         return;
     }
     if (text.length > 100) {
@@ -1336,7 +1340,8 @@ async function submitQuestion(itemId) {
     if (questionData.date !== today) questionData = { date: today, count: 0 };
     if (questionData.count >= 2) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        return showToast('Лимит: 2 вопроса в день.', 'error');
+        const limitMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_limit')) || 'Лимит: 2 вопроса в день.';
+        return showToast(limitMsg, 'error');
     }
 
     let itemName = "Товар";
@@ -1359,12 +1364,15 @@ async function submitQuestion(itemId) {
             if (store) store.setJSON('nisha_questions', questionData);
             input.value = '';
             toggleQuestionForm(); 
-            showToast('Вопрос отправлен!', 'success');
+            const sentMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_success')) || 'Вопрос отправлен!';
+            showToast(sentMsg, 'success');
         } else {
-            showToast('Ошибка при отправке вопроса.', 'error');
+            const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_send')) || 'Ошибка при отправке вопроса.';
+            showToast(sendErrMsg, 'error');
         }
     } catch (err) {
-        showToast('Ошибка соединения с сервером.', 'error');
+        const connErrMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Ошибка соединения с сервером.';
+        showToast(connErrMsg, 'error');
     }
 }
 window.submitQuestion = submitQuestion;

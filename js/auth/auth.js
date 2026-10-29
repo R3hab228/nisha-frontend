@@ -233,7 +233,7 @@ async function checkPhoneAuth() {
         if (btnOtp) {
             btnOtp.style.display = 'block';
             btnOtp.disabled = false;
-            btnOtp.innerHTML = 'Подтвердить';
+            btnOtp.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
             btnOtp.style.background = 'var(--text-main)';
             btnOtp.style.borderColor = '#eee';
             btnOtp.style.opacity = '1';
@@ -265,7 +265,7 @@ async function checkPhoneAuth() {
             if (btnOtp) {
                 btnOtp.style.display = 'block';
                 btnOtp.disabled = true; 
-                btnOtp.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>УСПЕХ!</span>";
+                btnOtp.innerHTML = `<span style='color:var(--accent-green); font-weight:bold;'>${typeof i18next !== 'undefined' ? i18next.t('profile.saved', { defaultValue: 'УСПЕХ!' }) : 'УСПЕХ!'}</span>`;
                 btnOtp.style.background = 'var(--text-main)';
                 btnOtp.style.borderColor = 'var(--accent-green)';
                 btnOtp.style.opacity = '1';
@@ -275,7 +275,7 @@ async function checkPhoneAuth() {
             if (btnOtp) {
                 btnOtp.style.display = 'block';
                 btnOtp.disabled = false;
-                btnOtp.innerHTML = 'Подтвердить';
+                btnOtp.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
                 btnOtp.style.background = 'var(--text-main)';
                 btnOtp.style.borderColor = '#eee';
                 btnOtp.style.opacity = '1';
@@ -292,7 +292,7 @@ async function generateAndSendOTP() {
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
     
     if (!cleanPhone || cleanPhone.length < 10) {
-        showToast('Введите корректный номер телефона!', 'error');
+        showToast(typeof i18next !== 'undefined' ? i18next.t('orders_modal.err_phone', { defaultValue: 'Введите корректный номер телефона!' }) : 'Введите корректный номер телефона!', 'error');
         return;
     }
 
@@ -305,7 +305,7 @@ async function generateAndSendOTP() {
     
     // Блокируем кнопку от двойных нажатий
     btnOtp.disabled = true;
-    btnOtp.innerText = 'Связь с БД...';
+    btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('auth.db_connecting', { defaultValue: 'Связь с БД...' }) : 'Связь с БД...';
     btnOtp.style.opacity = '0.5';
 
     // Верификация капчи на бэкенде
@@ -313,13 +313,13 @@ async function generateAndSendOTP() {
         try {
             const vData = await window.apiClient.post('/api/verify-turnstile', { token: turnToken }, { timeout: 8000 });
             if (!vData || !vData.success) {
-                showToast('Ошибка проверки безопасности Turnstile', 'error');
+                showToast(typeof i18next !== 'undefined' ? i18next.t('auth.turnstile_err', { defaultValue: 'Ошибка проверки безопасности Turnstile' }) : 'Ошибка проверки безопасности Turnstile', 'error');
                 if (typeof turnstile !== 'undefined' && widgetId !== null && widgetId !== undefined) {
                     turnstile.reset(widgetId);
                 }
                 window._turnstileOtpToken = null;
                 btnOtp.disabled = false;
-                btnOtp.innerText = 'Подтвердить';
+                btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
                 btnOtp.style.opacity = '1';
                 return;
             }
@@ -334,9 +334,10 @@ async function generateAndSendOTP() {
     const { data: blacklisted } = await sb.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
     if (blacklisted && blacklisted.length > 0) {
         const statusEl = document.getElementById('otpStatus');
-        if (statusEl) statusEl.innerHTML = "<span style='color:red; font-weight:bold;'>[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.</span>";
-        showToast('Доступ запрещен', 'error');
-        btnOtp.innerText = 'Подтвердить';
+        const secBlockedText = typeof i18next !== 'undefined' ? i18next.t('profile.security_blocked', { defaultValue: '[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН' }) : '[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.';
+        if (statusEl) statusEl.innerHTML = `<span style='color:red; font-weight:bold;'>${secBlockedText}</span>`;
+        showToast(typeof i18next !== 'undefined' ? i18next.t('auth.access_denied', { defaultValue: 'Доступ запрещен' }) : 'Доступ запрещен', 'error');
+        btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
         return; 
     }
     
@@ -353,7 +354,7 @@ async function generateAndSendOTP() {
     const updateOtpBtnText = () => {
         const remaining = Math.max(0, Math.ceil((otpEndTime - Date.now()) / 1000));
         if (remaining > 0) {
-            btnOtp.innerText = `Ждите ${remaining}с`;
+            btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('auth.wait_sec', { sec: remaining, defaultValue: `Ждите ${remaining}с` }) : `Ждите ${remaining}с`;
             return false;
         } else {
             if (otpInterval) {
@@ -374,7 +375,7 @@ async function generateAndSendOTP() {
     // 4. Генерация кода в базе
     const { error } = await sb.rpc('generate_secure_otp', { p_phone: cleanPhone });
     if (error) {
-        showToast('Ошибка сервера', 'error');
+        showToast(typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error', { defaultValue: 'Ошибка сервера' }) : 'Ошибка сервера', 'error');
         clearInterval(otpInterval);
         btnOtp.disabled = false;
         btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
@@ -395,7 +396,8 @@ async function generateAndSendOTP() {
     
     const statusEl = document.getElementById('otpStatus');
     if (statusEl) {
-        statusEl.innerHTML = "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... " + getWin95HourglassHtml(14);
+        const botPromptText = typeof i18next !== 'undefined' ? i18next.t('profile.go_to_bot_phone', { defaultValue: "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... " }) : "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... ";
+        statusEl.innerHTML = botPromptText + ' ' + getWin95HourglassHtml(14);
     }
     
     // 6. Опрос базы данных каждые 2 секунды с таймаутом безопасности 2.5 минуты

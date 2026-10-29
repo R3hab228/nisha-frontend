@@ -48,8 +48,10 @@ function openOrdersModal() {
         fetchMyOrders();
     } else {
         if (guestInputGroup) guestInputGroup.style.display = 'flex';
-        if (guestText) guestText.innerHTML = 'Введите номер телефона, указанный при заказе, чтобы отследить статус:';
-        if (listArea) listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace; padding: 30px;">Введите номер телефона для поиска...</div>';
+        const guestDescMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.guest_desc', {defaultValue: 'Введите номер телефона, указанный при заказе, чтобы отследить статус:'}) : 'Введите номер телефона, указанный при заказе, чтобы отследить статус:';
+        const searchPlaceholderMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.search_placeholder', {defaultValue: 'Введите номер телефона для поиска...'}) : 'Введите номер телефона для поиска...';
+        if (guestText) guestText.innerHTML = guestDescMsg;
+        if (listArea) listArea.innerHTML = `<div style="text-align:center; color:#555; font-family: monospace; padding: 30px;">${searchPlaceholderMsg}</div>`;
         updateOrderTabCounters();
 
         const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
@@ -150,7 +152,8 @@ async function fetchMyOrders() {
     }
 
     if (!window.globalOrdersData || window.globalOrdersData.length === 0) {
-        listArea.innerHTML = '<div style="text-align:center; color:#aaa; font-family: monospace;">[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]</div>';
+        const loadingDbMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.loading_db', {defaultValue: '[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]'}) : '[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]';
+        listArea.innerHTML = `<div style="text-align:center; color:#aaa; font-family: monospace;">${loadingDbMsg}</div>`;
         if (tabsContainer) tabsContainer.style.display = 'none';
     }
 
@@ -302,16 +305,22 @@ async function fetchMyOrders() {
         const phoneInput = document.getElementById('ordersSearchPhone');
         const phone = phoneInput ? phoneInput.value.replace(/[^\d+]/g, '') : '';
         if (!phone || phone.length < 10) { 
-            if (typeof showToast === 'function') showToast('Введите корректный номер телефона!', 'error'); 
-            listArea.innerHTML = '<div style="text-align:center; color:#555; font-family: monospace;">[ НОМЕР НЕ ВВЕДЕН ]</div>';
+            if (typeof showToast === 'function') {
+                const errPhoneMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.err_phone', {defaultValue: 'Введите корректный номер телефона!'}) : 'Введите корректный номер телефона!';
+                showToast(errPhoneMsg, 'error'); 
+            }
+            const errNoPhoneMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.err_no_phone', {defaultValue: '[ НОМЕР НЕ ВВЕДЕН ]'}) : '[ НОМЕР НЕ ВВЕДЕН ]';
+            listArea.innerHTML = `<div style="text-align:center; color:#555; font-family: monospace;">${errNoPhoneMsg}</div>`;
             return; 
         }
 
         const { data: vResult } = await sb.rpc('check_otp_verified', { p_phone: phone });
         const otpCheck = vResult ? [{is_verified: true}] : [];
         if (!otpCheck || otpCheck.length === 0 || !otpCheck[0].is_verified) {
-            listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.</div>
-            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" data-action="verify-orders-phone" data-phone="${typeof window.escapeAttr === 'function' ? window.escapeAttr(phone) : phone}">ПОДТВЕРДИТЬ НОМЕР В БОТЕ</button>`;
+            const deniedOtpMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_denied_otp', {defaultValue: '[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.'}) : '[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.';
+            const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', {defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ'}) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
+            listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">${deniedOtpMsg}</div>
+            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" data-action="verify-orders-phone" data-phone="${typeof window.escapeAttr === 'function' ? window.escapeAttr(phone) : phone}">${verifyBotMsg}</button>`;
             return; 
         }
 
@@ -508,7 +517,8 @@ if (typeof globalThis !== 'undefined') globalThis.switchOrderTab = switchOrderTa
 function copyTTN(ttn, el) {
     if (!ttn) return;
     const cleanTtn = String(ttn).trim();
-    const successMsg = 'ТТН скопирован: ' + cleanTtn;
+    const ttnCopiedPrefix = typeof i18next !== 'undefined' ? i18next.t('orders_modal.ttn_copied', {defaultValue: 'ТТН скопирован: '}) : 'ТТН скопирован: ';
+    const successMsg = ttnCopiedPrefix + cleanTtn;
 
     const animateCopiedIcon = () => {
         if (typeof triggerHaptic === 'function') triggerHaptic('success');
@@ -559,8 +569,11 @@ function renderFilteredOrders() {
     const filteredData = grouped[activeTab] || [];
 
     if (filteredData.length === 0) {
-        let emptyMsg = activeTab === 'accepted' ? 'Нет активных заказов.' : 
-                       activeTab === 'shipped' ? 'Нет отправленных посылок.' : 'Нет отмененных заказов.';
+        const emptyAccepted = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_accepted', {defaultValue: 'Нет активных заказов.'}) : 'Нет активных заказов.';
+        const emptyShipped = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_shipped', {defaultValue: 'Нет отправленных посылок.'}) : 'Нет отправленных посылок.';
+        const emptyCancelled = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_cancelled', {defaultValue: 'Нет отмененных заказов.'}) : 'Нет отмененных заказов.';
+        let emptyMsg = activeTab === 'accepted' ? emptyAccepted : 
+                       activeTab === 'shipped' ? emptyShipped : emptyCancelled;
         listArea.innerHTML = `<div style="text-align:center; color:#666; font-family: monospace; padding: 30px;">[ ${emptyMsg} ]</div>`;
         return;
     }
@@ -610,7 +623,7 @@ function renderFilteredOrders() {
                          <svg class="barcode-svg" data-ttn="${typeof window.escapeAttr==='function'?window.escapeAttr(order.tracking_number):order.tracking_number}"></svg>
                      </div>
                    </div>`
-                : `<div class="order-ttn" style="color:#777;">ТТН: Ожидается генерация...</div>`;
+                : `<div class="order-ttn" style="color:#777;">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.ttn_pending', {defaultValue: 'ТТН: Ожидается генерация...'}) : 'ТТН: Ожидается генерация...'}</div>`;
         }
 
         // Кнопка отзыва для завершенных заказов
@@ -631,13 +644,13 @@ function renderFilteredOrders() {
                              data-action="prompt-order-review" data-hover-action="review-link-hover" data-order-id="${typeof window.escapeAttr==='function'?window.escapeAttr(order.id):order.id}" data-item-name="${typeof window.escapeAttr==='function'?window.escapeAttr(safeName):safeName}" data-item-img="${typeof window.escapeAttr==='function'?window.escapeAttr(firstItemImg):firstItemImg}" data-item-id="${typeof window.escapeAttr==='function'?window.escapeAttr(firstItem.id):firstItem.id}"
                              role="button"
                              tabindex="0">
-                            ${msgIcon} Оставить отзыв
+                            ${msgIcon} ${typeof i18next !== 'undefined' ? i18next.t('orders_modal.leave_review', {defaultValue: 'Оставить отзыв'}) : 'Оставить отзыв'}
                         </div>
                     `;
                 } else {
                     reviewBtnHtml = `
                         <div style="margin-top: 10px; color: #666; font-size: 12px; font-family: var(--font-mono); text-align: center; user-select: none; cursor: default;">
-                            [✔] ОТЗЫВ ОСТАВЛЕН
+                            ${typeof i18next !== 'undefined' ? i18next.t('orders_modal.review_left', {defaultValue: '[✔] ОТЗЫВ ОСТАВЛЕН'}) : '[✔] ОТЗЫВ ОСТАВЛЕН'}
                         </div>
                     `;
                 }
@@ -649,12 +662,12 @@ function renderFilteredOrders() {
         listArea.innerHTML += `
             <div class="order-card">
                 <div class="order-header">
-                    <span class="order-id">ЗАКАЗ #${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
+                    <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', {defaultValue: 'ЗАКАЗ #'}) : 'ЗАКАЗ #'}${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
                     <span class="order-status status-${typeof window.escapeAttr==='function'?window.escapeAttr(statusSlug):statusSlug}">${typeof window.escapeHtml==='function'?window.escapeHtml((order.status || '').toUpperCase()):(order.status || '').toUpperCase()}</span>
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>
                 ${reviewBtnHtml}
-                <div class="order-footer">${ttnHtml}<div class="order-total">ИТОГО: ${order.total_sum} грн</div></div>
+                <div class="order-footer">${ttnHtml}<div class="order-total">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.total_prefix', {defaultValue: 'ИТОГО:'}) : 'ИТОГО:'} ${order.total_sum} ${(typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн'}</div></div>
             </div>`;
     });
 

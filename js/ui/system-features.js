@@ -135,7 +135,8 @@ function triggerEasterEgg() {
     if (overlay) {
         const msgEl = document.getElementById('glitchMessage');
         if (msgEl) {
-            msgEl.innerHTML = "SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]<br><span style='font-size: 20px; color:#fff; font-family: Tahoma;'>Секретная скидка -10% активирована</span>";
+            const secretMsg = typeof i18next !== 'undefined' ? i18next.t('messages.secret_discount_applied', { defaultValue: 'Секретная скидка -10% активирована' }) : 'Секретная скидка -10% активирована';
+            msgEl.innerHTML = `SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]<br><span style='font-size: 20px; color:#fff; font-family: Tahoma;'>${secretMsg}</span>`;
         }
         overlay.style.display = 'flex';
         setTimeout(() => { 

@@ -88,10 +88,13 @@ if ('serviceWorker' in navigator) {
                         console.log('[PWA] Найдено новое обновление:', workerVersion);
 
                         const triggerUpdateModal = () => {
+                            const updTitle = (typeof i18next !== 'undefined' && i18next.t('pwa.update_title', { defaultValue: 'SYSTEM_UPDATE.EXE' })) || 'SYSTEM_UPDATE.EXE';
+                            const updText = (typeof i18next !== 'undefined' && i18next.t('pwa.update_text', { defaultValue: 'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.' })) || 'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.';
+                            const updBtn = (typeof i18next !== 'undefined' && i18next.t('pwa.btn_update', { defaultValue: '[ ОБНОВИТЬ СЕЙЧАС ]' })) || '[ ОБНОВИТЬ СЕЙЧАС ]';
                             showTerminalModal(
-                                'SYSTEM_UPDATE.EXE',
-                                'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.',
-                                '[ ОБНОВИТЬ СЕЙЧАС ]',
+                                updTitle,
+                                updText,
+                                updBtn,
                                 async () => {
                                     try {
                                         if (store && store.session) store.session.set('nisha_sw_update_reloaded', '1');
@@ -521,7 +524,7 @@ function createNetErrorElement() {
   <path fill="#1c5e96" d="M29,22h1v1h-1z" />
 </svg>
 </div>
-<p id="win95-error-msg" style="color:#000;margin-top:15px;margin-bottom:0;font-family:Tahoma,sans-serif;font-size:13px;font-weight:normal">Соединение потеряно</p>
+<p id="win95-error-msg" data-i18n="pwa.offline_msg" style="color:#000;margin-top:15px;margin-bottom:0;font-family:Tahoma,sans-serif;font-size:13px;font-weight:normal">${(typeof i18next !== 'undefined' && i18next.t('pwa.offline_msg')) || 'Соединение потеряно'}</p>
 </div>
 </div>`;
     return wrapper;
@@ -564,7 +567,7 @@ function handleNetworkOffline() {
             if (netError) {
                 const msgEl = document.getElementById('win95-error-msg') || netError.querySelector('#win95-error-msg');
                 if (msgEl) {
-                    msgEl.textContent = 'Соединение потеряно';
+                    msgEl.textContent = (typeof i18next !== 'undefined' && i18next.t('pwa.offline_msg')) || 'Соединение потеряно';
                     msgEl.style.color = '#000';
                     msgEl.style.fontFamily = "Tahoma, sans-serif";
                     msgEl.style.fontSize = '13px';
@@ -594,7 +597,7 @@ function handleNetworkOnline() {
     const grid = document.getElementById('itemsGrid');
     
     if (msgEl) {
-        msgEl.textContent = 'Соединение восстановлено!!!';
+        msgEl.textContent = (typeof i18next !== 'undefined' && i18next.t('pwa.online_msg')) || 'Соединение восстановлено!!!';
         msgEl.style.color = '#008000';
         msgEl.style.fontFamily = "Tahoma, sans-serif";
         msgEl.style.fontSize = '13px';

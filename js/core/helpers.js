@@ -176,10 +176,15 @@ function _displayUnifiedNewItemToast(items) {
 
     let titleText = '';
     if (isMulti) {
-        titleText = `+${items.length} новых вещей в каталоге`;
+        titleText = typeof i18next !== 'undefined'
+            ? i18next.t('messages.new_items_count', { count: items.length, defaultValue: `+${items.length} новых вещей в каталоге` })
+            : `+${items.length} новых вещей в каталоге`;
     } else {
         const brandPart = firstItem.brand ? `${safeToastEscape(firstItem.brand)} — ` : '';
-        const namePart = safeToastEscape(firstItem.name || 'Новая вещь');
+        const fallbackName = typeof i18next !== 'undefined'
+            ? i18next.t('messages.new_item_fallback', { defaultValue: 'Новая вещь' })
+            : 'Новая вещь';
+        const namePart = safeToastEscape(firstItem.name || fallbackName);
         titleText = `${brandPart}${namePart}`;
     }
 
@@ -191,7 +196,7 @@ function _displayUnifiedNewItemToast(items) {
     }
     html += `
         <div class="toast-item-content">
-            <div class="toast-item-tag">Новые Вещи!!!</div>
+            <div class="toast-item-tag">${typeof i18next !== 'undefined' ? i18next.t('messages.new_items_toast', { defaultValue: 'Новые Вещи!!!' }) : 'Новые Вещи!!!'}</div>
             <div class="toast-item-title">${titleText}</div>
         </div>
     `;
