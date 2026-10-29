@@ -50,6 +50,10 @@
         "new": "Новые",
         "cheap": "Дешевые"
       },
+      "pagination": {
+        "page": "СТРАНИЦА",
+        "of": "ИЗ"
+      },
       "mobile": {
         "show_filters": "[+] ПОКАЗАТЬ ФИЛЬТРЫ",
         "hide_filters": "[-] СКРЫТЬ ФИЛЬТРЫ"
@@ -354,6 +358,10 @@
         "new": "Нові",
         "cheap": "Дешеві"
       },
+      "pagination": {
+        "page": "СТОРІНКА",
+        "of": "З"
+      },
       "mobile": {
         "show_filters": "[+] ПОКАЗАТИ ФІЛЬТРИ",
         "hide_filters": "[-] ПРИХОВАТИ ФІЛЬТРИ"
@@ -657,6 +665,10 @@
         "sorting": "Sort by:",
         "new": "Newest",
         "cheap": "Cheapest"
+      },
+      "pagination": {
+        "page": "PAGE",
+        "of": "OF"
       },
       "mobile": {
         "show_filters": "[+] SHOW FILTERS",

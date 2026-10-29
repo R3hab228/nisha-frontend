@@ -2394,5 +2394,37 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 3. Must be included in custom pointer cursor selectors
             expect(css).toContain('.np-clear-btn');
         });
+
+        it('37. Catalog pagination ("СТРАНИЦА ... ИЗ ...") localized in RU, UA, and EN via i18n', () => {
+            const ruJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ru.json'), 'utf8'));
+            const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
+            const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
+            const allLocales = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf8'));
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+
+            // 1. RU dictionary
+            expect(ruJson.translation.pagination.page).toBe('СТРАНИЦА');
+            expect(ruJson.translation.pagination.of).toBe('ИЗ');
+            expect(allLocales.ru.translation.pagination.page).toBe('СТРАНИЦА');
+            expect(allLocales.ru.translation.pagination.of).toBe('ИЗ');
+
+            // 2. UA dictionary
+            expect(uaJson.translation.pagination.page).toBe('СТОРІНКА');
+            expect(uaJson.translation.pagination.of).toBe('З');
+            expect(allLocales.ua.translation.pagination.page).toBe('СТОРІНКА');
+            expect(allLocales.ua.translation.pagination.of).toBe('З');
+
+            // 3. EN dictionary
+            expect(enJson.translation.pagination.page).toBe('PAGE');
+            expect(enJson.translation.pagination.of).toBe('OF');
+            expect(allLocales.en.translation.pagination.page).toBe('PAGE');
+            expect(allLocales.en.translation.pagination.of).toBe('OF');
+
+            // 4. catalog.js dynamically references i18n and includes data-i18n attributes for live switching
+            expect(catalogCode).toContain("i18next.t('pagination.page'");
+            expect(catalogCode).toContain("i18next.t('pagination.of'");
+            expect(catalogCode).toContain('data-i18n="pagination.page"');
+            expect(catalogCode).toContain('data-i18n="pagination.of"');
+        });
     });
 });

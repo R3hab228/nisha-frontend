@@ -2531,10 +2531,12 @@ function renderNextBatch(targetMobileCount = 0) {
             
             const prevDisabled = window.currentPage === 1 ? 'disabled' : '';
             const nextDisabled = window.currentPage === totalPages ? 'disabled' : '';
+            const pageText = (typeof i18next !== 'undefined' && i18next.t('pagination.page', { defaultValue: 'СТРАНИЦА' })) || 'СТРАНИЦА';
+            const ofText = (typeof i18next !== 'undefined' && i18next.t('pagination.of', { defaultValue: 'ИЗ' })) || 'ИЗ';
 
             paginationWrap.innerHTML = `
                 <button class="page-arrow" data-action="change-page" data-dir="-1" ${prevDisabled}>&#10094;</button>
-                <div class="page-numbers">[ СТРАНИЦА <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> ИЗ ${totalPages} ]</div>
+                <div class="page-numbers">[ <span data-i18n="pagination.page">${pageText}</span> <span style="color:var(--accent-green); font-weight:bold;">${window.currentPage}</span> <span data-i18n="pagination.of">${ofText}</span> ${totalPages} ]</div>
                 <button class="page-arrow" data-action="change-page" data-dir="1" ${nextDisabled}>&#10095;</button>
             `;
             

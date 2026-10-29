@@ -49,6 +49,10 @@
       "new": "Newest",
       "cheap": "Cheapest"
     },
+    "pagination": {
+      "page": "PAGE",
+      "of": "OF"
+    },
     "mobile": {
       "show_filters": "[+] SHOW FILTERS",
       "hide_filters": "[-] HIDE FILTERS"
