@@ -2587,5 +2587,19 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(isCartBtn(cartBtn)).toBe(true);
             expect(isCartBtn(otherEl)).toBe(false);
         });
+
+        it('displays the sharp-pointed star icon ★ for saved items on PC and mobile instead of heart', () => {
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(html).not.toContain('❤');
+            expect(html).not.toContain('❤️');
+
+            // PC sidebar profile saved counter
+            expect(html).toMatch(/<span[^>]*id=profileLikesCount/);
+            expect(html).toContain('★ <span id=profileLikesCount>');
+
+            // Mobile modal profile saved counter
+            expect(html).toMatch(/<span[^>]*id=modalProfileLikesCount/);
+            expect(html).toContain('★ <span id=modalProfileLikesCount>');
+        });
     });
 });
