@@ -1739,7 +1739,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
                 if (!item) return false;
                 
                 const isFav = favsSet.has(item.id);
-                const matchesAvailability = !hideUnavailable || item.status === 'available';
+                const matchesAvailability = (!hideUnavailable && (searchTerm === '' || item.status !== 'sold')) || item.status === 'available';
                 const matchesSale = !onlySale || !!item.is_sale;
                 
                 if (onlyFavs) {
@@ -1782,6 +1782,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
                             for (const variant of queryVariants) {
                                 const found = fuse.search(variant);
                                 found.forEach(res => {
+                                    if (res.item && res.item.status === 'sold') return;
                                     if (!matchedIds.has(res.item.id)) {
                                         matchedIds.add(res.item.id);
                                         finalResults.push(res.item);
@@ -1791,6 +1792,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
                             window.filteredItems = finalResults;
                         } else {
                             window.filteredItems = window.filteredItems.filter(item => {
+                                if (item.status === 'sold') return false;
                                 const name = (item.name || '').toLowerCase();
                                 const brand = (item.brand || '').toLowerCase();
                                 const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : (item.tags || '').toLowerCase();

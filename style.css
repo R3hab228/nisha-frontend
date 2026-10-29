@@ -73,9 +73,53 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     touch-action: pan-y; 
 }
 .live-search-item:hover { background: #1a1a1a; padding-left: 15px; }
-.live-search-img { width: 40px; height: 40px; background-color: #000; background-size: cover; background-position: center; border: 1px solid #444; }
-.live-search-info { display: flex; flex-direction: column; }
-.live-search-title { color: #fff; font-size: 13px; font-family: var(--font-mono); }
+.live-search-img { 
+    width: 44px; 
+    height: 44px; 
+    background-color: #000; 
+    background-size: cover; 
+    background-position: center; 
+    border: 1px solid #444; 
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.live-search-item.reserved-item .live-search-img {
+    filter: brightness(0.65);
+}
+.live-search-reserved-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    color: var(--accent-yellow);
+    border: 1.5px solid var(--accent-yellow);
+    background: rgba(0, 0, 0, 0.9);
+    font-size: 8px;
+    font-weight: bold;
+    font-family: var(--font-mono);
+    letter-spacing: 0.8px;
+    padding: 1.5px 3.5px;
+    box-shadow: 0 0 8px var(--accent-yellow);
+    text-shadow: 1px 1px 0 #000;
+    white-space: nowrap;
+    pointer-events: none;
+    line-height: 1;
+    text-align: center;
+    z-index: 2;
+    box-sizing: border-box;
+}
+.live-search-info { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; }
+.live-search-title { 
+    color: #fff; 
+    font-size: 13px; 
+    font-family: var(--font-mono); 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .live-search-price { color: var(--accent-green); font-size: 12px; font-weight: bold; }
 
 .top-nav a { color: var(--text-main); text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: bold; padding: 5px 10px; border: 1px solid transparent; text-transform: uppercase; transition: 0.2s;}
@@ -1953,7 +1997,7 @@ body, html, .modal-overlay, a, button, select, label, .clickable, [onclick],
 .search-history-clear, .history-item-remove, .grid-slider-btn,
 .search-wrapper, .search-section,
 .live-search-dropdown, .live-search-item, .live-search-item *,
-.live-search-img, .live-search-info, .live-search-title, .live-search-price {
+.live-search-img, .live-search-info, .live-search-title, .live-search-price, .live-search-reserved-badge {
     cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCAyIEw0IDIyIEwxMCAxNiBMMTUgMjQgTDE4IDIyIEwxMyAxNSBMMjAgMTUgWicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==") 0 0, auto !important;
 }
 

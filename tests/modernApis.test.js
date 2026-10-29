@@ -2311,5 +2311,36 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toContain('.live-search-dropdown');
             expect(css).toMatch(/\.live-search-item[^}]*cursor:\s*url\(/);
         });
+
+        it('33. Live search and catalog search exclude sold items and render yellow RESERVED badge for reserved items', () => {
+            const workerCode = readFileSync(resolve(__dirname, '../src/workers/search.worker.js'), 'utf8');
+            const clientCode = readFileSync(resolve(__dirname, '../js/core/search-worker-client.js'), 'utf8');
+            const liveSearchCode = readFileSync(resolve(__dirname, '../js/catalog/live-search.js'), 'utf8');
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+            // 1. Worker and client must skip sold items in searchLive and searchCatalog
+            expect(workerCode).toContain("if (r.item && r.item.status === 'sold') continue;");
+            expect(workerCode).toContain("if (item && item.status === 'sold') continue;");
+            expect(clientCode).toContain("if (r.item && r.item.status === 'sold') continue;");
+            expect(clientCode).toContain("if (item && item.status === 'sold') continue;");
+
+            // 2. Catalog applyFilters must exclude sold items when searching (searchTerm !== '')
+            expect(catalogCode).toContain("(searchTerm === '' || item.status !== 'sold')");
+
+            // 3. live-search.js must filter out sold items and attach yellow reserved badge
+            expect(liveSearchCode).toContain("if (!item || item.status === 'sold') return;");
+            expect(liveSearchCode).toContain("const isReserved = item.status === 'reserved';");
+            expect(liveSearchCode).toContain('const reservedBadgeHtml = isReserved ? \'<div class="live-search-reserved-badge">RESERVED</div>\' : \'\';');
+            expect(liveSearchCode).toContain('class="live-search-item ${isReserved ? \'reserved-item\' : \'\'}"');
+
+            // 4. CSS must define the yellow RESERVED badge with matching brand styling
+            expect(css).toContain('.live-search-reserved-badge');
+            expect(css).toContain('color: var(--accent-yellow);');
+            expect(css).toContain('border: 1.5px solid var(--accent-yellow);');
+            expect(css).toContain('transform: translate(-50%, -50%) rotate(-15deg);');
+            expect(css).toContain('.live-search-item.reserved-item .live-search-img');
+            expect(css).toContain('filter: brightness(0.65);');
+        });
     });
 });

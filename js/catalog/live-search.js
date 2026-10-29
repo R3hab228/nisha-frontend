@@ -116,6 +116,7 @@ function handleLiveSearch() {
                 for (const variant of queryVariants) {
                     const subResults = fuse.search(variant);
                     subResults.forEach(r => {
+                        if (r.item && r.item.status === 'sold') return;
                         if (!seenIds.has(r.item.id)) {
                             seenIds.add(r.item.id);
                             collected.push(r);
@@ -148,6 +149,9 @@ function handleLiveSearch() {
             let html = '';
             results.forEach(result => {
                 const item = result.item;
+                if (!item || item.status === 'sold') return;
+                const isReserved = item.status === 'reserved';
+                const reservedBadgeHtml = isReserved ? '<div class="live-search-reserved-badge">RESERVED</div>' : '';
                 const rawImg = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : ((item.images && item.images[0]) ? item.images[0] : '');
                 const img = typeof window.toCDN === 'function' ? window.toCDN(rawImg) : rawImg;
                 const safeImg = escJs(img);
@@ -170,19 +174,32 @@ function handleLiveSearch() {
                     }
                 }
 
+                const curr = typeof getCurrency === 'function' ? getCurrency() : 'грн';
+                let priceHtml = `${escHtml(item.price)} ${curr}`;
+                if (item.is_sale && item.old_price) {
+                    priceHtml = `<span style="color:#666; text-decoration:line-through; font-size:10px; margin-right:4px;">${escHtml(item.old_price)}</span>${escHtml(item.price)} ${curr}`;
+                }
+
                 html += `
-                    <div class="live-search-item" data-action="select-live-search-item" data-id="${escHtml(item.id)}">
-                        <div class="live-search-img" style="background-image: url('${safeImg}')"></div>
+                    <div class="live-search-item ${isReserved ? 'reserved-item' : ''}" data-action="select-live-search-item" data-id="${escHtml(item.id)}">
+                        <div class="live-search-img" style="background-image: url('${safeImg}')">${reservedBadgeHtml}</div>
                         <div class="live-search-info">
                             <span class="live-search-title">${highlightedName}</span>
-                            <span class="live-search-price">${escHtml(item.price)} грн</span>
+                            <span class="live-search-price">${priceHtml}</span>
                         </div>
                     </div>`;
             });
 
             if (dropdown) {
-                dropdown.innerHTML = html;
-                dropdown.style.display = 'block';
+                if (html) {
+                    dropdown.innerHTML = html;
+                    dropdown.style.display = 'block';
+                } else {
+                    dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';
+                    dropdown.style.display = 'block';
+                    document.body.classList.remove('search-lock');
+                    if (typeof window.startLenis === 'function') window.startLenis();
+                }
             }
         } else if (dropdown) {
             dropdown.innerHTML = '<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ СОВПАДЕНИЙ НЕТ ]</div>';

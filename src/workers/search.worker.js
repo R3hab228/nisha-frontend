@@ -163,6 +163,7 @@ self.onmessage = function(e) {
                 const subResults = fuseInstance.search(variant);
                 for (let i = 0; i < subResults.length; i++) {
                     const r = subResults[i];
+                    if (r.item && r.item.status === 'sold') continue;
                     if (!seenIds.has(r.item.id)) {
                         seenIds.add(r.item.id);
                         collected.push({
@@ -204,7 +205,9 @@ self.onmessage = function(e) {
             for (const variant of queryVariants) {
                 const results = fuseInstance.search(variant);
                 for (let i = 0; i < results.length; i++) {
-                    const id = results[i].item.id;
+                    const item = results[i].item;
+                    const id = item.id;
+                    if (item && item.status === 'sold') continue;
                     if (!seenIds.has(id)) {
                         if (!candidateSet || candidateSet.has(id)) {
                             seenIds.add(id);
