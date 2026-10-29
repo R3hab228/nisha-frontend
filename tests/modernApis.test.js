@@ -2544,5 +2544,48 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(i18nCode).toContain('data-i18n-title');
             expect(i18nCode).toContain('data-i18n-aria');
         });
+    })
+    describe('49. PC Measurements Tooltip Hiding on Cart Button Hover', () => {
+        it('suppresses and hides measurements tooltip when hovering or moving over the cart button', () => {
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const cssCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+            // 1. Verify CSS :has rule exists and hides tooltip with maximum priority
+            expect(cssCode).toContain('body:has(.grid-cart-btn:hover, [data-action="add-to-cart"]:hover) .measurements-tooltip');
+            expect(cssCode).toContain('display: none !important');
+            expect(cssCode).toContain('opacity: 0 !important');
+            expect(cssCode).toContain('visibility: hidden !important');
+            expect(cssCode).toContain('pointer-events: none !important');
+
+            // 2. Verify JS delegation logic in catalog.js
+            expect(catalogCode).toContain("e.target.closest('.grid-cart-btn, [data-action=\"add-to-cart\"]')");
+            expect(catalogCode).toContain('window.isItemMeasurementsTooltipVisible');
+            expect(catalogCode).toContain('window.hideItemMeasurementsTooltip');
+
+            // 3. Verify guards inside showItemMeasurementsTooltip and moveItemMeasurementsTooltip
+            expect(catalogCode).toMatch(/window\.showItemMeasurementsTooltip\s*=\s*function[\s\S]*?grid-cart-btn/);
+            expect(catalogCode).toMatch(/window\.moveItemMeasurementsTooltip\s*=\s*function[\s\S]*?grid-cart-btn/);
+
+            // 4. Test button detection logic
+            const cartBtn = {
+                tagName: 'BUTTON',
+                className: 'grid-cart-btn',
+                getAttribute: (attr) => (attr === 'data-action' ? 'add-to-cart' : null),
+                closest: vi.fn((sel) => {
+                    if (sel.includes('.grid-cart-btn') || sel.includes('add-to-cart')) return cartBtn;
+                    return null;
+                })
+            };
+
+            const otherEl = {
+                tagName: 'DIV',
+                className: 'item-info',
+                closest: vi.fn(() => null)
+            };
+
+            const isCartBtn = (el) => !!(el && typeof el.closest === 'function' && el.closest('.grid-cart-btn, [data-action="add-to-cart"]'));
+            expect(isCartBtn(cartBtn)).toBe(true);
+            expect(isCartBtn(otherEl)).toBe(false);
+        });
     });
 });

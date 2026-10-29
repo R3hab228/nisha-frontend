@@ -2220,6 +2220,14 @@ input, textarea {
     transform: scale(1);
 }
 
+/* Прячем плашку замеров при наведении на кнопку корзины на ПК */
+body:has(.grid-cart-btn:hover, [data-action="add-to-cart"]:hover) .measurements-tooltip {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 .measurements-tooltip-header {
     font-size: 11px;
     font-weight: 700;

@@ -600,6 +600,11 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
     // Не показываем на сенсорных мобильных устройствах
     if (('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth <= 768) return;
     
+    // Не показываем плашку замеров при наведении на кнопку "В корзину"
+    if (e && e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]')) {
+        return;
+    }
+    
     let item = itemOrId;
     if (typeof itemOrId === 'string') {
         item = (window.allItems || []).find(i => i.id === itemOrId);
@@ -652,6 +657,13 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
 
 window.moveItemMeasurementsTooltip = function(e) {
     if (!e || !_isTooltipVisible) return;
+    // Если курсор оказался над кнопкой корзины - прячем плашку замеров
+    if (e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]')) {
+        if (typeof window.hideItemMeasurementsTooltip === 'function') {
+            window.hideItemMeasurementsTooltip();
+        }
+        return;
+    }
     const tooltip = getMeasurementsTooltip();
     if (!tooltip || tooltip.style.display === 'none') return;
 
@@ -680,6 +692,10 @@ window.moveItemMeasurementsTooltip = function(e) {
 
     tooltip.style.left = `${x}px`;
     tooltip.style.top = `${y}px`;
+};
+
+window.isItemMeasurementsTooltipVisible = function() {
+    return !!_isTooltipVisible;
 };
 
 window.hideItemMeasurementsTooltip = function() {
@@ -2068,19 +2084,51 @@ function initGridEventDelegation() {
         const card = e.target.closest('.item-card');
         if (!card) return;
         activateCardSlides(card);
-        if (card === currentTooltipCard) return;
-        currentTooltipCard = card;
-        const id = card.getAttribute('data-id');
-        if (!id) return;
-        if (typeof window.prefetchItemImages === 'function') window.prefetchItemImages(id);
-        const item = window.allItems && window.allItems.find(i => String(i.id) === String(id));
-        if (item && typeof window.showItemMeasurementsTooltip === 'function') {
-            window.showItemMeasurementsTooltip(item, e);
+
+        if (card !== currentTooltipCard) {
+            currentTooltipCard = card;
+            const id = card.getAttribute('data-id');
+            if (id && typeof window.prefetchItemImages === 'function') window.prefetchItemImages(id);
+        }
+
+        const isCartBtn = !!(e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]'));
+        if (isCartBtn) {
+            if (typeof window.hideItemMeasurementsTooltip === 'function') {
+                window.hideItemMeasurementsTooltip();
+            }
+            return;
+        }
+
+        // Если не над кнопкой корзины и плашка скрыта (например, вернулись с кнопки корзины на карточку)
+        if (!_isTooltipVisible && typeof window.showItemMeasurementsTooltip === 'function') {
+            const id = card.getAttribute('data-id');
+            const item = window.allItems && window.allItems.find(i => String(i.id) === String(id));
+            if (item) {
+                window.showItemMeasurementsTooltip(item, e);
+            }
         }
     });
 
     grid.addEventListener('mousemove', (e) => {
-        if (currentTooltipCard && typeof window.moveItemMeasurementsTooltip === 'function') {
+        if (!currentTooltipCard) return;
+        const isCartBtn = !!(e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]'));
+        if (isCartBtn) {
+            if (_isTooltipVisible && typeof window.hideItemMeasurementsTooltip === 'function') {
+                window.hideItemMeasurementsTooltip();
+            }
+            return;
+        }
+
+        // Если курсор вернулся с кнопки корзины на карточку товара
+        if (!_isTooltipVisible && typeof window.showItemMeasurementsTooltip === 'function') {
+            const id = currentTooltipCard.getAttribute('data-id');
+            const item = window.allItems && window.allItems.find(i => String(i.id) === String(id));
+            if (item) {
+                window.showItemMeasurementsTooltip(item, e);
+            }
+        }
+
+        if (typeof window.moveItemMeasurementsTooltip === 'function') {
             window.moveItemMeasurementsTooltip(e);
         }
     });
