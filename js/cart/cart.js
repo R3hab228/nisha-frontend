@@ -1430,15 +1430,15 @@ function renderCartItems() {
         list.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a; margin: 10px;">
                 <div style="font-size: 30px; margin-bottom: 15px;">🛒</div>
-                <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;">${typeof i18next !== 'undefined' ? i18next.t('cart.empty_title') : 'КОРЗИНА ПУСТА'}</div>
-                <div style="color:#888; font-size: 12px; line-height: 1.5;">${typeof i18next !== 'undefined' ? i18next.t('cart.empty_desc') : 'Выберите понравившиеся вещи в каталоге'}</div>
+                <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;" data-i18n="cart.empty_title">${typeof i18next !== 'undefined' ? i18next.t('cart.empty_title') : 'КОРЗИНА ПУСТА'}</div>
+                <div style="color:#888; font-size: 12px; line-height: 1.5;" data-i18n="cart.empty_desc">${typeof i18next !== 'undefined' ? i18next.t('cart.empty_desc') : 'Выберите понравившиеся вещи в каталоге'}</div>
             </div>`;
         return;
     }
 
     list.innerHTML = `
         <div style="padding: 10px; margin-bottom: 10px; border-bottom: 1px dashed #333; display: flex; flex-direction: column; gap: 10px;">
-            <div style="color: #666; font-size: 10px; font-family: var(--font-main); text-align: center; margin-top: 5px;">
+            <div style="color: #666; font-size: 10px; font-family: var(--font-main); text-align: center; margin-top: 5px;" data-i18n="cart.warning">
                 ${typeof i18next !== 'undefined' ? i18next.t('cart.warning', {defaultValue: 'Вещи не бронируются и могут быть куплены кем-то другим в любой момент.'}) : 'Вещи не бронируются и могут быть куплены кем-то другим в любой момент.'}
             </div>
         </div>
@@ -1453,6 +1453,7 @@ function renderCartItems() {
             ? `<div class="cart-sold-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>${typeof i18next !== 'undefined' ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' }) : 'Товар уже куплен'}</span></div>`
             : '';
         const rowStyle = isSold ? 'opacity: 0.8; border-left: 3px solid #ff4444;' : '';
+        const sizePrefix = typeof i18next !== 'undefined' ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
         
         row.innerHTML = `
             <div class="swipe-background">
@@ -1470,7 +1471,7 @@ function renderCartItems() {
                 <div class="cart-item-img" style="background-image: url('${imgUrl}')"></div>
                 <div class="cart-item-info">
                     <div class="cart-item-name" title="${escCartHtml(item.name)}">${escCartHtml(item.name)}</div>
-                    <div class="cart-item-size">${typeof i18next !== 'undefined' ? i18next.t('grid.size_prefix') : 'Размер: '}${escCartHtml(item.size)}</div>
+                    <div class="cart-item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${escCartHtml(item.size)}</div>
                     ${soldBadgeHtml}
                 </div>
                 <div class="cart-item-price-wrapper">

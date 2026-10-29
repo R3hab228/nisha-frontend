@@ -2435,5 +2435,43 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(dropCode).not.toContain('<circle cx="9" cy="12"');
             expect(dropCode).not.toContain('<circle cx="15" cy="19"');
         });
+
+        it('39. Unsaved data warning modal & cart in_cart localized across RU, UA, EN; cart-dropdown width on PC aligns with cart-info', () => {
+            const ruJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ru.json'), 'utf8'));
+            const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
+            const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
+            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cssCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+            // 1. Unsaved data warning modal localized in RU, UA, EN
+            expect(ruJson.translation.propose.warning_loss_text).toContain('несохраненные данные');
+            expect(ruJson.translation.propose.btn_close).toBe('[ ЗАКРЫТЬ ]');
+            expect(ruJson.translation.propose.btn_cancel).toBe('[ ОТМЕНА ]');
+
+            expect(uaJson.translation.propose.warning_loss_text).toContain('незбережені дані');
+            expect(uaJson.translation.propose.btn_close).toBe('[ ЗАКРИТИ ]');
+            expect(uaJson.translation.propose.btn_cancel).toBe('[ СКАСУВАТИ ]');
+
+            expect(enJson.translation.propose.warning_loss_text).toContain('unsaved changes');
+            expect(enJson.translation.propose.btn_close).toBe('[ CLOSE ]');
+            expect(enJson.translation.propose.btn_cancel).toBe('[ CANCEL ]');
+
+            // 2. product.in_cart localized in RU, UA, EN
+            expect(ruJson.translation.product.in_cart).toBe('[ В КОРЗИНЕ ]');
+            expect(uaJson.translation.product.in_cart).toBe('[ В КОШИКУ ]');
+            expect(enJson.translation.product.in_cart).toBe('[ IN CART ]');
+
+            // 3. windows.js uses i18n
+            expect(windowsCode).toContain("i18next.t('propose.warning_loss_text'");
+            expect(windowsCode).toContain("i18next.t('propose.btn_close'");
+
+            // 4. cart.js includes data-i18n on warning and size prefix
+            expect(cartCode).toContain('data-i18n="cart.warning"');
+            expect(cartCode).toContain('data-i18n="grid.size_prefix"');
+
+            // 5. style.css .cart-dropdown on PC has 100% width matching cart-info so it ends at the last letter 'н' of 'грн'
+            expect(cssCode).toContain('.cart-dropdown { position: absolute; bottom: calc(100% + 15px); left: 0; width: 100%; min-width: 100%; box-sizing: border-box;');
+        });
     });
 });

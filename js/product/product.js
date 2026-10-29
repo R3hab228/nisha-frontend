@@ -394,7 +394,9 @@ function openProductModal(item) {
                         ? (window.store.get('cart') || [])
                         : (window.cart || [])));
             const isInCart = userCart.some(i => i && String(i.id) === String(item.id));
-            cartBtn.innerText = isInCart ? '[ В КОРЗИНЕ ]' : (typeof i18next !== 'undefined' ? i18next.t('product.add_to_cart') : 'В КОРЗИНУ');
+            const inCartText = (typeof i18next !== 'undefined') ? i18next.t('product.in_cart', { defaultValue: '[ В КОРЗИНЕ ]' }) : '[ В КОРЗИНЕ ]';
+            const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
+            cartBtn.innerText = isInCart ? inCartText : addToCartText;
         }
     }
 

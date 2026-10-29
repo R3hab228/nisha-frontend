@@ -1031,7 +1031,9 @@ function updateCardDOM(item) {
                 modalCartBtn.style.display = 'block';
                 const userCart = (typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []);
                 const isInCart = userCart.some(i => String(i.id) === String(item.id));
-                modalCartBtn.innerText = isInCart ? '[ В КОРЗИНЕ ]' : (typeof i18next !== 'undefined' ? i18next.t('product.add_to_cart') : 'В КОРЗИНУ');
+                const inCartText = (typeof i18next !== 'undefined') ? i18next.t('product.in_cart', { defaultValue: '[ В КОРЗИНЕ ]' }) : '[ В КОРЗИНЕ ]';
+                const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
+                modalCartBtn.innerText = isInCart ? inCartText : addToCartText;
             }
         }
         if (modalPriceEl) {

@@ -1217,7 +1217,7 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
 
 #mobileFilterBtn { display: none; }
 
-.cart-dropdown { position: absolute; bottom: calc(100% + 15px); left: 0; width: 380px; background: rgba(10, 10, 10, 0.95); border: 1px solid var(--accent-green); box-shadow: 0 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); opacity: 0; visibility: hidden; transform: translateY(5px); transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 1000; display: flex; flex-direction: column; }
+.cart-dropdown { position: absolute; bottom: calc(100% + 15px); left: 0; width: 100%; min-width: 100%; box-sizing: border-box; background: rgba(10, 10, 10, 0.95); border: 1px solid var(--accent-green); box-shadow: 0 0 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); opacity: 0; visibility: hidden; transform: translateY(5px); transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 1000; display: flex; flex-direction: column; }
 @media (min-width: 901px) {
     .cart-info:hover .cart-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
     .cart-close-mobile { display: none; }

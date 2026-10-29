@@ -90,6 +90,7 @@
         "measure": "Как мы делаем замеры?",
         "measure_text": "Все замеры снимаются с вещи на ровной поверхности.",
         "add_to_cart": "В КОРЗИНУ",
+        "in_cart": "[ В КОРЗИНЕ ]",
         "notify": "УВЕДОМИТЬ О ПОЯВЛЕНИИ",
         "badge_orig": "БЕЗОПАСНАЯ СДЕЛКА",
         "badge_fast": "БЫСТРАЯ ОТПРАВКА",
@@ -229,6 +230,10 @@
         "price_place": "Например: 1500",
         "contact_label": "СВЯЗЬ (@TELEGRAM ИЛИ ТЕЛЕФОН):",
         "contact_place": "@твои_ник или +380...",
+        "warning_loss_title": "WARNING_DATA_LOSS.SYS",
+        "warning_loss_text": "У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.",
+        "btn_close": "[ ЗАКРЫТЬ ]",
+        "btn_cancel": "[ ОТМЕНА ]",
         "btn_submit": "[ ОТПРАВИТЬ ЗАЯВКУ ]"
       },
       "email_prompt": {
@@ -398,6 +403,7 @@
         "measure": "Як ми робимо заміри?",
         "measure_text": "Всі заміри знімаються з речі на рівній поверхні.",
         "add_to_cart": "В КОШИК",
+        "in_cart": "[ В КОШИКУ ]",
         "notify": "ПОВІДОМИТИ ПРО НАЯВНІСТЬ",
         "badge_orig": "БЕЗПЕЧНА УГОДА",
         "badge_fast": "ШВИДКА ВІДПРАВКА",
@@ -537,6 +543,10 @@
         "price_place": "Наприклад: 1500",
         "contact_label": "ЗВ'ЯЗОК (@TELEGRAM АБО ТЕЛЕФОН):",
         "contact_place": "@твій_нік або +380...",
+        "warning_loss_title": "WARNING_DATA_LOSS.SYS",
+        "warning_loss_text": "У вас є незбережені дані. Якщо ви закриєте вікно, форма повністю очиститься.",
+        "btn_close": "[ ЗАКРИТИ ]",
+        "btn_cancel": "[ СКАСУВАТИ ]",
         "btn_submit": "[ ВІДПРАВИТИ ЗАЯВКУ ]"
       },
       "email_prompt": {
@@ -706,6 +716,7 @@
         "measure": "How we take measurements?",
         "measure_text": "All measurements are taken on a flat surface.",
         "add_to_cart": "ADD TO CART",
+        "in_cart": "[ IN CART ]",
         "notify": "NOTIFY WHEN AVAILABLE",
         "badge_orig": "SECURE TRANSACTION",
         "badge_fast": "FAST SHIPPING",
@@ -845,6 +856,10 @@
         "price_place": "E.g.: 1500",
         "contact_label": "CONTACT (@TELEGRAM OR PHONE):",
         "contact_place": "@your_nick or +380...",
+        "warning_loss_title": "WARNING_DATA_LOSS.SYS",
+        "warning_loss_text": "You have unsaved changes. If you close the window, the form will be completely cleared.",
+        "btn_close": "[ CLOSE ]",
+        "btn_cancel": "[ CANCEL ]",
         "btn_submit": "[ SUBMIT PROPOSAL ]"
       },
       "email_prompt": {

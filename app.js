@@ -326,6 +326,8 @@ async function initApp() {
                     });
                     
                     if (typeof updateContentLanguage === 'function') updateContentLanguage();
+                    if (typeof updateCartUI === 'function') updateCartUI();
+                    if (typeof renderCartItems === 'function') renderCartItems();
                     document.documentElement.lang = (savedLng === 'ua' ? 'uk' : (savedLng || 'ru'));
                     const flagEl = document.getElementById('currentFlag');
                     if (flagEl) flagEl.innerText = savedFlag;

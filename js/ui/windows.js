@@ -169,11 +169,15 @@ function closeModal(id, e) {
         // Если юзер ввел реальные данные — вызываем терминал подтверждения
         if (hasUnsavedData) {
             if (typeof showConfirmTerminalModal === 'function') {
+                const title = (typeof i18next !== 'undefined' && i18next.t('propose.warning_loss_title', { defaultValue: 'WARNING_DATA_LOSS.SYS' })) || 'WARNING_DATA_LOSS.SYS';
+                const text = (typeof i18next !== 'undefined' && i18next.t('propose.warning_loss_text', { defaultValue: 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.' })) || 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.';
+                const closeBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' })) || '[ ЗАКРЫТЬ ]';
+                const cancelBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_cancel', { defaultValue: '[ ОТМЕНА ]' })) || '[ ОТМЕНА ]';
                 showConfirmTerminalModal(
-                    'WARNING_DATA_LOSS.SYS', 
-                    'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.', 
-                    '[ ЗАКРЫТЬ ]', 
-                    '[ ОТМЕНА ]', 
+                    title, 
+                    text, 
+                    closeBtn, 
+                    cancelBtn, 
                     () => { 
                         if (typeof resetProposalForm === 'function') resetProposalForm(); 
                         executeCloseModal(id, evt); 

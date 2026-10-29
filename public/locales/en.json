@@ -89,6 +89,7 @@
       "measure": "How we take measurements?",
       "measure_text": "All measurements are taken on a flat surface.",
       "add_to_cart": "ADD TO CART",
+      "in_cart": "[ IN CART ]",
       "notify": "NOTIFY WHEN AVAILABLE",
       "badge_orig": "SECURE TRANSACTION",
       "badge_fast": "FAST SHIPPING",
@@ -228,6 +229,10 @@
       "price_place": "E.g.: 1500",
       "contact_label": "CONTACT (@TELEGRAM OR PHONE):",
       "contact_place": "@your_nick or +380...",
+      "warning_loss_title": "WARNING_DATA_LOSS.SYS",
+      "warning_loss_text": "You have unsaved changes. If you close the window, the form will be completely cleared.",
+      "btn_close": "[ CLOSE ]",
+      "btn_cancel": "[ CANCEL ]",
       "btn_submit": "[ SUBMIT PROPOSAL ]"
     },
     "email_prompt": {
