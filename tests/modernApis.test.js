@@ -2342,5 +2342,18 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toContain('.live-search-item.reserved-item .live-search-img');
             expect(css).toContain('filter: brightness(0.65);');
         });
+
+        it('34. Sidebar categories list displays all items cleanly without unnecessary scrollbar on PC', () => {
+            const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+            // Categories list in sidebar must not be constrained by scrollable-list or overflow-y scroll container
+            const categoriesBox = indexHtml.match(/sidebar\.categories[\s\S]*?<\/ul>/);
+            expect(categoriesBox).toBeTruthy();
+            expect(categoriesBox[0]).not.toContain('scrollable-list');
+
+            // CSS must not force max-height 150px with overflow-y: auto on the categories list
+            expect(css).not.toContain('.scrollable-list { max-height: 150px; overflow-y: auto;');
+        });
     });
 });
