@@ -770,7 +770,8 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
     justify-content: center;
     background: transparent;
     border: none;
-    color: #888;
+    color: var(--accent-red);
+    opacity: 0.75;
     font-size: 14px;
     font-family: var(--font-mono);
     cursor: pointer;
@@ -778,12 +779,14 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
     padding: 0;
     line-height: 1;
     border-radius: 4px;
-    transition: color 0.15s ease, background 0.15s ease;
+    transition: color 0.15s ease, opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
 .np-clear-btn:hover,
 .np-clear-btn:active {
-    color: var(--accent-green);
-    background: rgba(255, 255, 255, 0.06);
+    color: var(--accent-red);
+    opacity: 1;
+    background: rgba(255, 51, 51, 0.14);
+    transform: translateY(-50%) scale(1.15);
 }
 
 .custom-dropdown {
@@ -2029,7 +2032,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 body, html, .modal-overlay, a, button, select, label, .clickable, [onclick], 
 .slider-btn, .custom-summary, .buy-tg-btn, .share-btn, .badge-item, 
 .order-item-row, .accept-btn, .cart-close-mobile, .cart-item-remove, 
-.grid-cart-btn, #currentLangLabelFooter, .clear-search-btn, .reviews-nav button, 
+.grid-cart-btn, #currentLangLabelFooter, .clear-search-btn, .np-clear-btn, .reviews-nav button, 
 .fab-propose, .upload-dropzone, .order-tab, .eye-icon, .search-history-item, 
 .search-history-clear, .history-item-remove, .grid-slider-btn,
 .search-wrapper, .search-section,

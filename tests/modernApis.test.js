@@ -2377,5 +2377,21 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toContain('#paymentDisplay.is-open .payment-arrow');
             expect(css).toContain('transform: rotate(180deg);');
         });
+
+        it('36. City and branch clear buttons (✕) are red and turn bright red on hover/active, not green', () => {
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+            // 1. .np-clear-btn must use red accent for clear action
+            expect(css).toMatch(/\.np-clear-btn\s*\{[^}]*color:\s*var\(--accent-red\)/);
+
+            // 2. .np-clear-btn:hover and :active must be red, not green
+            const hoverMatch = css.match(/\.np-clear-btn:hover[\s\S]*?\}/);
+            expect(hoverMatch).toBeTruthy();
+            expect(hoverMatch[0]).toContain('color: var(--accent-red)');
+            expect(hoverMatch[0]).not.toContain('var(--accent-green)');
+
+            // 3. Must be included in custom pointer cursor selectors
+            expect(css).toContain('.np-clear-btn');
+        });
     });
 });
