@@ -345,14 +345,17 @@ window.getCurrency = getCurrency;
 if (typeof globalThis !== 'undefined') globalThis.getCurrency = getCurrency;
 
 function formatPrice(amount, options = {}) {
-    const num = Number(amount) || 0;
+    const cleanNum = typeof amount === 'number'
+        ? amount
+        : Number(String(amount || 0).replace(/[^\d.-]/g, '')) || 0;
+    const rounded = Math.round(cleanNum);
     const lang = (window.storage && typeof window.storage.get === 'function')
         ? window.storage.get('nisha_lang', 'ru')
         : (typeof storage !== 'undefined' && storage ? storage.get('nisha_lang', 'ru') : 'ru');
     const currency = lang === 'en' ? 'UAH' : 'грн';
     
-    // Форматирование чисел через Intl с неразрывным пробелом (\u00A0)
-    const formattedNum = num.toLocaleString(lang === 'en' ? 'en-US' : 'ru-RU', {
+    // Форматирование чисел: разделитель тысяч запятая (1,500) без пробелов
+    const formattedNum = rounded.toLocaleString('en-US', {
         maximumFractionDigits: 0
     });
     

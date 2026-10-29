@@ -175,9 +175,11 @@ function handleLiveSearch() {
                 }
 
                 const curr = typeof getCurrency === 'function' ? getCurrency() : 'грн';
-                let priceHtml = `${escHtml(item.price)} ${curr}`;
+                const formattedSearchPrice = typeof window.formatPrice === 'function' ? window.formatPrice(item.price) : `${escHtml(item.price)} ${curr}`;
+                let priceHtml = formattedSearchPrice;
                 if (item.is_sale && item.old_price) {
-                    priceHtml = `<span style="color:#666; text-decoration:line-through; font-size:10px; margin-right:4px;">${escHtml(item.old_price)}</span>${escHtml(item.price)} ${curr}`;
+                    const formattedOld = typeof window.formatPrice === 'function' ? window.formatPrice(item.old_price) : `${escHtml(item.old_price)} ${curr}`;
+                    priceHtml = `<span style="color:#666; text-decoration:line-through; font-size:10px; margin-right:4px;">${formattedOld}</span>${formattedSearchPrice}`;
                 }
 
                 html += `

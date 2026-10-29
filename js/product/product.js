@@ -795,7 +795,8 @@ function openProductModal(item) {
 
     let statusPrefix = item.status === 'sold' ? '🔴 SOLD | ' : (item.status === 'reserved' ? '🟡 RESERVED | ' : '🟢 ');
     let ogTitle = `${statusPrefix}NISHA: ${item.brand} - ${item.name}`;
-    let ogDesc = `Размер: ${item.size} | Цена: ${item.price} грн. ${item.description ? item.description.slice(0, 150) : ''}`;
+    const formattedOgPrice = (typeof formatPrice === 'function') ? formatPrice(item.price) : `${item.price} грн.`;
+    let ogDesc = `Размер: ${item.size} | Цена: ${formattedOgPrice} ${item.description ? item.description.slice(0, 150) : ''}`;
     let ogImage = (item.images && item.images.length > 0) ? item.images[0] : 'https://www.nisha-store.shop/icon-512.png';
     let ogUrl = `https://www.nisha-store.shop/?item=${encodeURIComponent(item.id)}`;
 
@@ -1157,10 +1158,12 @@ function renderHistory() {
         
         let finalPriceHTML = '';
         const curr = typeof getCurrency === 'function' ? getCurrency() : 'грн';
+        const formattedHistoryPrice = (typeof formatPrice === 'function') ? formatPrice(livePrice) : `${livePrice} ${curr}`;
         if (liveIsSale && liveOldPrice) {
-            finalPriceHTML = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${liveOldPrice}</span>${livePrice} ${curr}`;
+            const formattedOld = (typeof formatPrice === 'function') ? formatPrice(liveOldPrice) : `${liveOldPrice} ${curr}`;
+            finalPriceHTML = `<span style="color:#4a704a; text-decoration:line-through; font-size:10px; margin-right:4px;">${formattedOld}</span>${formattedHistoryPrice}`;
         } else {
-            finalPriceHTML = `${livePrice} ${curr}`;
+            finalPriceHTML = formattedHistoryPrice;
         }
 
         let statusOverlayHTML = '';

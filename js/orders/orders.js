@@ -668,7 +668,7 @@ function renderFilteredOrders() {
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>
                 ${reviewBtnHtml}
-                <div class="order-footer">${ttnHtml}<div class="order-total">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.total_prefix', {defaultValue: 'ИТОГО:'}) : 'ИТОГО:'} ${order.total_sum} ${(typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн'}</div></div>
+                <div class="order-footer">${ttnHtml}<div class="order-total">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.total_prefix', {defaultValue: 'ИТОГО:'}) : 'ИТОГО:'} ${typeof window.formatPrice === 'function' ? window.formatPrice(order.total_sum) : `${order.total_sum} ${(typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн'}`}</div></div>
             </div>`;
     });
 

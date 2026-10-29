@@ -990,10 +990,12 @@ function updateCardDOM(item) {
             // 3. Обновляем цену, название, размер, бренд и состояние в карточке
             const priceDiv = card.querySelector('.item-price');
             if (priceDiv) {
+                const fPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
                 if (item.is_sale && item.old_price) {
-                    priceDiv.innerHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${item.old_price} ${curr}</span><span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
+                    const fOld = (typeof window.formatPrice === 'function') ? window.formatPrice(item.old_price) : `${item.old_price} ${curr}`;
+                    priceDiv.innerHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${fOld}</span><span style="color: var(--accent-green);">${fPrice}</span>`;
                 } else {
-                    priceDiv.innerHTML = `<span style="color: var(--accent-green);">${item.price} ${curr}</span>`;
+                    priceDiv.innerHTML = `<span style="color: var(--accent-green);">${fPrice}</span>`;
                 }
             }
 
@@ -1040,7 +1042,7 @@ function updateCardDOM(item) {
         if (modalPriceEl) {
             const isHackedActive = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
             const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
-            modalPriceEl.innerText = finalPrice + ' ' + curr;
+            modalPriceEl.innerText = (typeof window.formatPrice === 'function') ? window.formatPrice(finalPrice) : (finalPrice + ' ' + curr);
         }
     }
 }

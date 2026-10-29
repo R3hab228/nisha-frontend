@@ -339,14 +339,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     describe('6. formatPrice() with Intl.NumberFormat and non-breaking space', () => {
         it('formats amounts with non-breaking spaces and proper currency symbol', () => {
             const formatted = window.formatPrice(1500);
-            expect(formatted).toContain('1');
-            expect(formatted).toContain('500');
-            expect(formatted).toContain('\u00A0');
-            expect(formatted).toContain('грн');
+            expect(formatted).toBe('1,500\u00A0грн');
 
             const numberOnly = window.formatPrice(25000, { numberOnly: true });
-            expect(numberOnly).not.toContain('грн');
-            expect(numberOnly).toContain('25');
+            expect(numberOnly).toBe('25,000');
         });
     });
 
