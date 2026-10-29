@@ -825,6 +825,42 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
     color: var(--accent-green);
 }
 
+/* --- СТРЕЛОЧКА И ВЫПАДАЮЩИЙ СПИСОК СПОСОБА ОПЛАТЫ --- */
+#paymentDisplay {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+#paymentDisplay.is-open {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 6px rgba(0, 255, 0, 0.25);
+}
+.payment-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    color: #666;
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.2s ease;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    user-select: none;
+    pointer-events: none;
+    transform: rotate(0deg);
+}
+.payment-arrow svg {
+    display: block;
+    width: 10px;
+    height: 10px;
+}
+#paymentDisplay:hover .payment-arrow {
+    color: var(--accent-green);
+}
+#paymentDisplay.is-open .payment-arrow,
+.payment-arrow.is-open {
+    transform: rotate(180deg);
+    color: var(--accent-green);
+}
+
 /* ==========================================
    ORDERS MODAL WINDOW (FIXED OPTIMAL DIMENSIONS ON PC)
    ========================================== */

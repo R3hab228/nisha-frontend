@@ -603,28 +603,32 @@ function handleNetworkOnline() {
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
     
     setTimeout(() => {
-        if (netError && netError.style.display !== 'none') {
+        if (netError && netError.style && netError.style.display !== 'none') {
             netError.classList.remove('fade-in');
             netError.classList.add('fade-out');
         }
         
         setTimeout(async () => {
             if (netError) {
-                netError.style.display = 'none';
-                netError.classList.remove('fade-out');
-                netError.classList.remove('fade-in');
+                if (netError.style) netError.style.display = 'none';
+                if (netError.classList) {
+                    netError.classList.remove('fade-out');
+                    netError.classList.remove('fade-in');
+                }
             }
             
             if (grid) {
-                grid.style.display = '';
-                grid.classList.remove('fade-out');
-                grid.classList.add('feed-restore-anim');
+                if (grid.style) grid.style.display = '';
+                if (grid.classList) {
+                    grid.classList.remove('fade-out');
+                    grid.classList.add('feed-restore-anim');
+                }
                 
                 if (typeof loadAllItems === 'function') {
                     loadAllItems();
                 }
                 setTimeout(() => {
-                    grid.classList.remove('feed-restore-anim');
+                    if (grid && grid.classList) grid.classList.remove('feed-restore-anim');
                 }, 700);
             }
             if (typeof checkSession === 'function') checkSession();
@@ -638,20 +642,26 @@ window.dismissNetError = function() {
     const netError = document.getElementById('win95-net-error');
     const grid = document.getElementById('itemsGrid');
     if (netError) {
-        netError.classList.remove('fade-in');
-        netError.classList.add('fade-out');
-        setTimeout(() => {
-            netError.style.display = 'none';
-            netError.classList.remove('fade-out');
+        if (netError.classList) {
             netError.classList.remove('fade-in');
+            netError.classList.add('fade-out');
+        }
+        setTimeout(() => {
+            if (netError.style) netError.style.display = 'none';
+            if (netError.classList) {
+                netError.classList.remove('fade-out');
+                netError.classList.remove('fade-in');
+            }
         }, 280);
     }
     if (grid) {
-        grid.style.display = '';
-        grid.classList.remove('fade-out');
-        grid.classList.add('feed-restore-anim');
+        if (grid.style) grid.style.display = '';
+        if (grid.classList) {
+            grid.classList.remove('fade-out');
+            grid.classList.add('feed-restore-anim');
+        }
         setTimeout(() => {
-            grid.classList.remove('feed-restore-anim');
+            if (grid && grid.classList) grid.classList.remove('feed-restore-anim');
         }, 700);
     }
 };

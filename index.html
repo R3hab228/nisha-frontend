@@ -633,9 +633,13 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 <div style="position:relative; z-index:20;">
     <div id="paymentDisplay" class="form-input" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="togglePaymentDropdown()">
         <span id="paymentSelectedText" data-i18n="checkout.payment_full">Полная предоплата</span>
-        <span style="color:#666; font-size:10px;">▼</span>
+        <span id="paymentArrow" class="payment-arrow" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
+                <polygon points="2,4 10,4 6,9"/>
+            </svg>
+        </span>
     </div>
-    <div id="paymentDropdown" class="custom-dropdown" style="display:none; position:absolute; width:100%; z-index:200; border-top:1px solid var(--accent-green); opacity:0; visibility:hidden; transform:translateY(-5px); transition:all 0.2s ease;">
+    <div id="paymentDropdown" class="custom-dropdown" style="display:none; position:absolute; width:100%; z-index:200; border-top:1px solid var(--accent-green); opacity:0; visibility:hidden; transform:translateY(-6px); transition:opacity 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.22s;">
         <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" data-i18n="checkout.payment_full" onclick="selectPaymentMethod('Полная предоплата', this.innerText)">Полная предоплата</div>
         <div style="padding:12px; cursor:pointer;" data-i18n="checkout.payment_cod" onclick="selectPaymentMethod('Наложка (предоплата 200грн)', this.innerText)">Наложка (предоплата 200грн)</div>
     </div>
@@ -643,11 +647,20 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ru}function setL
 <script>
 function closePaymentDropdown() {
     const pd = document.getElementById('paymentDropdown');
+    const display = document.getElementById('paymentDisplay');
+    const arrow = document.getElementById('paymentArrow');
+    if (display) display.classList.remove('is-open');
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
     if (pd && (pd.style.display === 'block' || pd.style.opacity === '1')) {
         pd.style.opacity = '0';
         pd.style.visibility = 'hidden';
-        pd.style.transform = 'translateY(-5px)';
-        setTimeout(() => { pd.style.display = 'none'; }, 200);
+        pd.style.transform = 'translateY(-6px)';
+        setTimeout(() => { 
+            const d = document.getElementById('paymentDisplay');
+            if (!d || !d.classList.contains('is-open')) {
+                pd.style.display = 'none'; 
+            }
+        }, 220);
     }
 }
 window.closePaymentDropdown = closePaymentDropdown;
@@ -677,8 +690,10 @@ window.selectPaymentMethod = selectPaymentMethod;
 
 function togglePaymentDropdown() {
     const pd = document.getElementById('paymentDropdown');
+    const display = document.getElementById('paymentDisplay');
+    const arrow = document.getElementById('paymentArrow');
     if (!pd) return;
-    const isOpen = (pd.style.display === 'block' && pd.style.opacity === '1');
+    const isOpen = (pd.style.display === 'block' && pd.style.opacity === '1') || (display && display.classList.contains('is-open'));
     if (isOpen) {
         closePaymentDropdown();
     } else {
@@ -687,10 +702,12 @@ function togglePaymentDropdown() {
         const cd = document.getElementById('cityDropdown');
         if (cd) cd.style.display = 'none';
         pd.style.display = 'block';
+        if (display) display.classList.add('is-open');
         requestAnimationFrame(() => {
             pd.style.opacity = '1';
             pd.style.visibility = 'visible';
             pd.style.transform = 'translateY(0)';
+            if (arrow) arrow.style.transform = 'rotate(180deg)';
         });
     }
 }
