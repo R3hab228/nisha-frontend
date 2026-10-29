@@ -2384,11 +2384,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 1. .np-clear-btn must use red accent for clear action
             expect(css).toMatch(/\.np-clear-btn\s*\{[^}]*color:\s*var\(--accent-red\)/);
 
-            // 2. .np-clear-btn:hover and :active must be red, not green
+            // 2. .np-clear-btn:hover and :active must be red, not green, with transparent background (no box)
             const hoverMatch = css.match(/\.np-clear-btn:hover[\s\S]*?\}/);
             expect(hoverMatch).toBeTruthy();
             expect(hoverMatch[0]).toContain('color: var(--accent-red)');
             expect(hoverMatch[0]).not.toContain('var(--accent-green)');
+            expect(hoverMatch[0]).toContain('background: transparent');
 
             // 3. Must be included in custom pointer cursor selectors
             expect(css).toContain('.np-clear-btn');

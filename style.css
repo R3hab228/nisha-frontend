@@ -763,13 +763,14 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
     right: 6px;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     display: none;
     align-items: center;
     justify-content: center;
     background: transparent;
     border: none;
+    outline: none;
     color: var(--accent-red);
     opacity: 0.75;
     font-size: 14px;
@@ -778,15 +779,14 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
     z-index: 5;
     padding: 0;
     line-height: 1;
-    border-radius: 4px;
-    transition: color 0.15s ease, opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 .np-clear-btn:hover,
 .np-clear-btn:active {
     color: var(--accent-red);
     opacity: 1;
-    background: rgba(255, 51, 51, 0.14);
-    transform: translateY(-50%) scale(1.15);
+    background: transparent;
+    transform: translateY(-50%) scale(1.2);
 }
 
 .custom-dropdown {
