@@ -42,7 +42,8 @@ import defaultModularFacade, {
     addToCartWithAnimation,
     removeFromCart,
     openCart,
-    openCheckoutModal
+    openCheckoutModal,
+    updateCartUI
 } from '../src/modules/index.js';
 
 class MockStorage {
@@ -241,6 +242,7 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(() => removeFromCart('item_1', 'M')).not.toThrow();
             expect(() => openCart()).not.toThrow();
             expect(() => openCheckoutModal()).not.toThrow();
+            expect(() => updateCartUI()).not.toThrow();
             await expect(addToCartById('item_1', 'L')).resolves.not.toThrow();
             await expect(addToCartWithAnimation('item_1')).resolves.not.toThrow();
         });

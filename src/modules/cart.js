@@ -117,3 +117,12 @@ export async function syncCartToServer() {
         return window.syncCartToServer();
     }
 }
+
+/**
+ * Updates cart badges, counts and total price in DOM
+ */
+export function updateCartUI() {
+    if (typeof window !== 'undefined' && typeof window.updateCartUI === 'function') {
+        return window.updateCartUI();
+    }
+}

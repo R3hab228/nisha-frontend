@@ -2,6 +2,20 @@
 // NISHA SYSTEM FEATURES (Broadcasts, Rules, Hit Counter, Easter Egg, Shortcuts)
 // ==========================================
 
+import {
+    storage,
+    openModal,
+    executeCloseModal,
+    isUserInProductFeed,
+    showTerminalModal,
+    showToast,
+    apiClient,
+    applyFilters,
+    syncCartToServer,
+    updateCartUI,
+    generateShortId
+} from '../../src/modules/index.js';
+
 let pendingBroadcastQueue = null;
 
 function tryShowBroadcast(title, htmlText, btnText, callback) {
@@ -9,7 +23,7 @@ function tryShowBroadcast(title, htmlText, btnText, callback) {
         if (callback) callback();
         return;
     }
-    const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
+    const inFeed = isUserInProductFeed();
     if (inFeed) {
         showTerminalModal(title, htmlText, btnText, callback);
         pendingBroadcastQueue = null;
@@ -22,7 +36,7 @@ window.tryShowBroadcast = tryShowBroadcast;
 function checkPendingBroadcast() {
     if (!pendingBroadcastQueue) return;
     setTimeout(() => {
-        const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
+        const inFeed = isUserInProductFeed();
         if (pendingBroadcastQueue && inFeed) {
             const { title, htmlText, btnText, callback } = pendingBroadcastQueue;
             pendingBroadcastQueue = null;
@@ -38,7 +52,7 @@ window.checkPendingBroadcast = checkPendingBroadcast;
 
 setInterval(() => {
     if (document.hidden) return;
-    const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
+    const inFeed = isUserInProductFeed();
     if (pendingBroadcastQueue && inFeed) {
         checkPendingBroadcast();
     }
@@ -46,18 +60,16 @@ setInterval(() => {
 
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden && pendingBroadcastQueue) {
-        const inFeed = (typeof isUserInProductFeed === 'function') ? isUserInProductFeed() : (typeof window.isUserInProductFeed === 'function' ? window.isUserInProductFeed() : false);
+        const inFeed = isUserInProductFeed();
         if (inFeed) checkPendingBroadcast();
     }
 });
 
 // === RULES MODAL ===
 function checkRules() {
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    if (!store || !store.get('nisha_rules_accepted')) {
+    if (!storage || !storage.get('nisha_rules_accepted')) {
         setTimeout(() => {
-            const s = window.storage || (typeof storage !== 'undefined' ? storage : null);
-            if (!s || !s.get('nisha_rules_accepted')) {
+            if (!storage || !storage.get('nisha_rules_accepted')) {
                 showRulesModal();
             }
         }, 550);
@@ -66,58 +78,14 @@ function checkRules() {
 window.checkRules = checkRules;
 
 function showRulesModal() { 
-    if (typeof openModal === 'function') {
-        openModal('rulesModal');
-    } else {
-        const modal = document.getElementById('rulesModal');
-        if (modal) {
-            modal.inert = false;
-            modal.removeAttribute('inert');
-            modal.setAttribute('aria-hidden', 'false');
-            modal.classList.remove('closing');
-            const win = modal.querySelector('.modal-window');
-            if (win) {
-                win.style.transform = '';
-                win.style.opacity = '';
-            }
-            if (typeof window.stopLenis === 'function') window.stopLenis();
-            document.body.style.overflow = 'hidden';
-            modal.style.display = 'flex'; 
-        }
-    }
+    openModal('rulesModal');
 }
 window.showRulesModal = showRulesModal;
 
 function acceptRules() {
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    if (store) store.set('nisha_rules_accepted', 'true');
-    if (typeof executeCloseModal === 'function') {
-        executeCloseModal('rulesModal');
-    } else {
-        const modal = document.getElementById('rulesModal');
-        if (modal) {
-            if (modal.classList.contains('closing')) return;
-            modal.classList.add('closing');
-            modal.setAttribute('aria-hidden', 'true');
-            setTimeout(() => {
-                modal.style.display = 'none';
-                modal.classList.remove('closing');
-                modal.inert = true;
-                modal.setAttribute('inert', '');
-                const win = modal.querySelector('.modal-window');
-                if (win) {
-                    win.style.transform = '';
-                    win.style.opacity = '';
-                }
-                document.body.style.overflow = 'auto';
-                if (typeof window.startLenis === 'function') window.startLenis(); 
-            }, 300);
-        } else {
-            document.body.style.overflow = 'auto';
-            if (typeof window.startLenis === 'function') window.startLenis(); 
-        }
-    }
-    if (typeof showToast === 'function' && typeof i18next !== 'undefined') {
+    if (storage) storage.set('nisha_rules_accepted', 'true');
+    executeCloseModal('rulesModal');
+    if (typeof i18next !== 'undefined') {
         showToast(i18next.t('messages.rules_accepted'), 'success');
     }
     
@@ -144,16 +112,15 @@ function triggerEasterEgg() {
         }, 2500);
     }
     
-    if (typeof applyFilters === 'function') applyFilters(); 
+    applyFilters(); 
     
     const activeCart = (typeof cart !== 'undefined' && Array.isArray(cart)) ? cart : (window.cart || []);
     activeCart.forEach(item => { 
         item.price = Math.floor(item.price * 0.9); 
     });
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    if (store) store.setJSON('nisha_cart', activeCart);
-    if (typeof syncCartToServer === 'function') syncCartToServer();
-    if (typeof updateCartUI === 'function') updateCartUI();
+    if (storage && typeof storage.setJSON === 'function') storage.setJSON('nisha_cart', activeCart);
+    syncCartToServer();
+    updateCartUI();
 }
 window.triggerEasterEgg = triggerEasterEgg;
 
@@ -166,17 +133,16 @@ async function initHitCounter() {
     const counterEl = document.getElementById('hitCounterValue');
 
     try {
-        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-        let visitorId = store ? store.get('nisha_visitor_id') : null;
+        let visitorId = storage ? storage.get('nisha_visitor_id') : null;
         if (!visitorId) {
-            visitorId = 'user_' + (typeof window.generateShortId === 'function' ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '').slice(0, 9) : Date.now().toString(36)));
-            if (store) store.set('nisha_visitor_id', visitorId);
+            visitorId = 'user_' + generateShortId(9);
+            if (storage) storage.set('nisha_visitor_id', visitorId);
         }
         window.clientFingerprint = visitorId;
         if (typeof globalThis !== 'undefined') globalThis.clientFingerprint = visitorId;
 
         const todayDate = new Date().toISOString().slice(0, 10);
-        const lastVisitDate = store ? store.get('nisha_last_visit_date') : null;
+        const lastVisitDate = storage ? storage.get('nisha_last_visit_date') : null;
         const isNewVisitToday = (lastVisitDate !== todayDate);
 
         if (isNewVisitToday && window.analytics && typeof window.analytics.track === 'function') {
@@ -185,21 +151,21 @@ async function initHitCounter() {
 
         if (!counterEl) return;
 
-        const cachedCount = (store ? store.get('nisha_last_hit_count', '0') : '0') || '0';
+        const cachedCount = (storage ? storage.get('nisha_last_hit_count', '0') : '0') || '0';
         counterEl.innerText = String(cachedCount).padStart(5, '0').split('').join(' ');
 
-        const data = await window.apiClient.post('/api/hit', {
+        const data = await apiClient.post('/api/hit', {
             date: todayDate,
             countAsNew: isNewVisitToday
         }, { timeout: 5500, retries: 1, dedupe: true });
 
         if (data && data.success && data.count !== undefined) {
-            if (isNewVisitToday && store) {
-                store.set('nisha_last_visit_date', todayDate);
+            if (isNewVisitToday && storage) {
+                storage.set('nisha_last_visit_date', todayDate);
             }
             
-            if (store) {
-                store.set('nisha_last_hit_count', data.count);
+            if (storage) {
+                storage.set('nisha_last_hit_count', data.count);
             }
             
             const strCount = data.count.toString().padStart(5, '0');

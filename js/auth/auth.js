@@ -2,6 +2,8 @@
 // NISHA AUTH & SECURITY MODULE (OTP & Turnstile)
 // ==========================================
 
+import { storage, apiClient, showToast } from '../../src/modules/index.js';
+
 // --- CLOUDFLARE TURNSTILE (CAPTCHA / BOT SHIELD) ---
 const isLocalhost = Boolean(
     window.location.hostname === 'localhost' ||
@@ -98,8 +100,7 @@ function getUserPhone() {
     if (activeUser && profile?.phone) {
         return profile.phone.trim();
     }
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    return (store ? store.get('nisha_last_phone', '') : '').trim();
+    return (storage ? storage.get('nisha_last_phone', '') : '').trim();
 }
 window.getUserPhone = getUserPhone;
 
@@ -109,8 +110,7 @@ function getUserTg() {
     if (activeUser && profile?.tg) {
         return profile.tg.trim();
     }
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    return (store ? store.get('nisha_last_tg', '') : '').trim();
+    return (storage ? storage.get('nisha_last_tg', '') : '').trim();
 }
 window.getUserTg = getUserTg;
 
@@ -251,7 +251,7 @@ async function checkPhoneAuth() {
             // Номер уже подтвержден
             otpVerified = true;
             window.otpVerified = true;
-            if (window.storage) window.storage.set('nisha_last_phone', cleanPhone);
+            if (storage) storage.set('nisha_last_phone', cleanPhone);
             if (btnSubmit) {
                 btnSubmit.style.opacity = '1';
                 btnSubmit.style.pointerEvents = 'auto';
@@ -311,7 +311,7 @@ async function generateAndSendOTP() {
     // Верификация капчи на бэкенде
     if (turnToken) {
         try {
-            const vData = await window.apiClient.post('/api/verify-turnstile', { token: turnToken }, { timeout: 8000 });
+            const vData = await apiClient.post('/api/verify-turnstile', { token: turnToken }, { timeout: 8000 });
             if (!vData || !vData.success) {
                 showToast(typeof i18next !== 'undefined' ? i18next.t('auth.turnstile_err', { defaultValue: 'Ошибка проверки безопасности Turnstile' }) : 'Ошибка проверки безопасности Turnstile', 'error');
                 if (typeof turnstile !== 'undefined' && widgetId !== null && widgetId !== undefined) {
@@ -460,11 +460,10 @@ document.addEventListener('visibilitychange', () => {
         if (typeof window._checkActiveOtp === 'function') {
             window._checkActiveOtp();
         }
-        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-        if (typeof window.checkPendingPhoneVerification === 'function' && store && store.get('nisha_pending_otp_phone')) {
+        if (typeof window.checkPendingPhoneVerification === 'function' && storage && storage.get('nisha_pending_otp_phone')) {
             window.checkPendingPhoneVerification();
         }
-        if (typeof window.checkPendingTgVerification === 'function' && store && store.get('nisha_pending_otp_tg')) {
+        if (typeof window.checkPendingTgVerification === 'function' && storage && storage.get('nisha_pending_otp_tg')) {
             window.checkPendingTgVerification();
         }
     }
