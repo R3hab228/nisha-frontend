@@ -50,7 +50,20 @@ import defaultModularFacade, {
     trackCheckoutStart,
     trackPurchase,
     trackFavorite,
-    initAnalytics
+    initAnalytics,
+    openProductModal,
+    openProductModalById,
+    closeProductModal,
+    moveSlide,
+    setSlide,
+    openProductPhotoZoom,
+    shareItem,
+    toggleFavFromModal,
+    addToHistory,
+    renderHistory,
+    removeHistoryItem,
+    submitQuestion,
+    loadItemQuestions
 } from '../src/modules/index.js';
 
 class MockStorage {
@@ -100,6 +113,8 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(defaultModularFacade.telemetry).toBeDefined();
             expect(defaultModularFacade.catalog).toBeDefined();
             expect(defaultModularFacade.cart).toBeDefined();
+            expect(defaultModularFacade.product).toBeDefined();
+            expect(defaultModularFacade.analytics).toBeDefined();
         });
     });
 
@@ -264,6 +279,24 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(() => trackPurchase({ orderId: 'ord_1', value: 1000 })).not.toThrow();
             expect(() => trackFavorite('item_1', true)).not.toThrow();
             expect(() => initAnalytics()).not.toThrow();
+        });
+    });
+
+    describe('Product Module (src/modules/product.js)', () => {
+        it('handles product modals, slider controls and history without throwing', async () => {
+            expect(() => openProductModal({ id: 'item_1', name: 'Sweater' })).not.toThrow();
+            await expect(openProductModalById('item_1')).resolves.not.toThrow();
+            expect(() => closeProductModal()).not.toThrow();
+            expect(() => moveSlide(1)).not.toThrow();
+            expect(() => setSlide(0)).not.toThrow();
+            expect(() => openProductPhotoZoom(0)).not.toThrow();
+            await expect(shareItem('item_1')).resolves.not.toThrow();
+            expect(() => toggleFavFromModal()).not.toThrow();
+            expect(() => addToHistory({ id: 'item_1', name: 'Sweater', price: 1200 })).not.toThrow();
+            expect(() => renderHistory()).not.toThrow();
+            expect(() => removeHistoryItem('item_1')).not.toThrow();
+            await expect(submitQuestion('item_1')).resolves.not.toThrow();
+            await expect(loadItemQuestions('item_1')).resolves.toEqual([]);
         });
     });
 });

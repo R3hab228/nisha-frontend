@@ -112,3 +112,49 @@ export function renderNextBatch() {
         return window.renderNextBatch();
     }
 }
+
+/**
+ * Updates item counters in sidebar categories
+ */
+export function updateSidebarCounters() {
+    if (typeof window !== 'undefined' && typeof window.updateSidebarCounters === 'function') {
+        return window.updateSidebarCounters();
+    }
+}
+
+/**
+ * Filters view to favorite items only
+ */
+export function filterFavorites() {
+    if (typeof window !== 'undefined' && typeof window.filterFavorites === 'function') {
+        return window.filterFavorites();
+    }
+}
+
+/**
+ * Sorts catalog items by sort type
+ * @param {string} sortType
+ */
+export function sortItems(sortType) {
+    if (typeof window !== 'undefined' && typeof window.sortItems === 'function') {
+        return window.sortItems(sortType);
+    }
+}
+
+/**
+ * Clears search input and resets search filter
+ */
+export function clearSearchInput() {
+    if (typeof window !== 'undefined' && typeof window.clearSearchInput === 'function') {
+        return window.clearSearchInput();
+    }
+}
+
+/**
+ * Starts interactive onboarding tour
+ */
+export function startOnboardingTour() {
+    if (typeof window !== 'undefined' && typeof window.startOnboardingTour === 'function') {
+        return window.startOnboardingTour();
+    }
+}
