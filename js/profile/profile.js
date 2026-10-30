@@ -290,6 +290,27 @@ async function checkSession() {
                             if (typeof window.updateOrderTabCounters === 'function') window.updateOrderTabCounters();
                             if (typeof window.renderFilteredOrders === 'function') window.renderFilteredOrders();
                         }
+
+                        // Мгновенная синхронизация статусов товаров в каталоге клиента
+                        if (Array.isArray(payload.new.items) && payload.new.items.length > 0 && Array.isArray(window.allItems)) {
+                            const lowerSt = String(payload.new.status || '').toLowerCase();
+                            const isPaidOrShipped = lowerSt.includes('оплач') || lowerSt.includes('отправ') || lowerSt.includes('заверш');
+                            const isCancelled = lowerSt.includes('отмен') || lowerSt.includes('возврат');
+                            payload.new.items.forEach(orderedItem => {
+                                const itId = orderedItem && (orderedItem.id || orderedItem);
+                                const catItem = window.allItems.find(i => i && String(i.id) === String(itId));
+                                if (catItem) {
+                                    if (isPaidOrShipped && catItem.status !== 'sold') {
+                                        catItem.status = 'sold';
+                                        if (typeof window.updateCardDOM === 'function') window.updateCardDOM(catItem);
+                                        if (typeof window.removeSoldItemFromCart === 'function') window.removeSoldItemFromCart(catItem.id, catItem.name);
+                                    } else if (isCancelled && catItem.status !== 'available') {
+                                        catItem.status = 'available';
+                                        if (typeof window.updateCardDOM === 'function') window.updateCardDOM(catItem);
+                                    }
+                                }
+                            });
+                        }
                     }
 
                     const newStatus = payload.new.status;
