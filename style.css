@@ -567,8 +567,10 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px; bac
 
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; will-change: opacity, backdrop-filter; contain: layout paint; }
 /* Ленивый рендеринг DOM: закрытые модалки полностью исключаются из дерева рендеринга браузера */
-.modal-overlay:not(.is-open) { content-visibility: hidden; contain-intrinsic-size: 0 0; }
-.modal-overlay.is-open { content-visibility: visible; }
+.modal-overlay:not(.is-open):not([style*="display: flex"]):not([style*="display: block"]) { content-visibility: hidden; contain-intrinsic-size: 0 0; }
+.modal-overlay.is-open,
+.modal-overlay[style*="display: flex"],
+.modal-overlay[style*="display: block"] { content-visibility: visible !important; }
 .modal-window { background-color: #111; border: 2px outset var(--border-light); max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.8); overscroll-behavior: contain; animation: modalPopDesktop 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; will-change: transform, opacity; transform: translateZ(0); contain: layout style; }
 
 @keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(3px); } }

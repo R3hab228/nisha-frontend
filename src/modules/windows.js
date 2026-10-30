@@ -3,6 +3,8 @@
 // Safe, typed ES module exports for modal dialogs & drawers
 // ==========================================
 
+const _modularModalInits = new Map();
+
 /**
  * Opens modal dialog by container ID
  * @param {string} modalId
@@ -11,6 +13,18 @@
 export function openModal(modalId, options) {
     if (typeof window !== 'undefined' && typeof window.openModal === 'function') {
         return window.openModal(modalId, options);
+    }
+    const initFn = _modularModalInits.get(modalId);
+    if (typeof initFn === 'function') {
+        _modularModalInits.delete(modalId);
+        try { initFn(); } catch (_) {}
+    }
+    if (typeof document !== 'undefined' && typeof document.getElementById === 'function') {
+        const el = document.getElementById(modalId);
+        if (el) {
+            if (el.classList && typeof el.classList.add === 'function') el.classList.add('is-open');
+            if (el.style) el.style.display = 'flex';
+        }
     }
 }
 
@@ -22,6 +36,7 @@ export function closeModal(modalId) {
     if (typeof window !== 'undefined' && typeof window.closeModal === 'function') {
         return window.closeModal(modalId);
     }
+    return executeCloseModal(modalId);
 }
 
 /**
@@ -31,6 +46,13 @@ export function closeModal(modalId) {
 export function executeCloseModal(modalId) {
     if (typeof window !== 'undefined' && typeof window.executeCloseModal === 'function') {
         return window.executeCloseModal(modalId);
+    }
+    if (typeof document !== 'undefined' && typeof document.getElementById === 'function') {
+        const el = document.getElementById(modalId);
+        if (el) {
+            if (el.classList && typeof el.classList.remove === 'function') el.classList.remove('is-open');
+            if (el.style) el.style.display = 'none';
+        }
     }
 }
 
@@ -42,6 +64,9 @@ export function executeCloseModal(modalId) {
 export function registerModalInitializer(modalId, initFn) {
     if (typeof window !== 'undefined' && typeof window.registerModalInitializer === 'function') {
         return window.registerModalInitializer(modalId, initFn);
+    }
+    if (typeof initFn === 'function') {
+        _modularModalInits.set(modalId, initFn);
     }
 }
 

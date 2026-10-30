@@ -222,6 +222,46 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(isUserInProductFeed()).toBe(false);
             expect(() => defaultModularFacade.windows.registerModalInitializer('testModal', () => {})).not.toThrow();
         });
+
+        it('manages lazy modal initialization and containment classes', () => {
+            const classSet = new Set();
+            const mockEl = {
+                id: 'customLazyModal',
+                style: { display: 'none' },
+                classList: {
+                    add: vi.fn(cls => classSet.add(cls)),
+                    remove: vi.fn(cls => classSet.delete(cls)),
+                    contains: vi.fn(cls => classSet.has(cls))
+                },
+                setAttribute: vi.fn(),
+                removeAttribute: vi.fn(),
+                querySelector: vi.fn(() => null)
+            };
+
+            const prevDoc = globalThis.document;
+            globalThis.document = {
+                getElementById: vi.fn(id => (id === 'customLazyModal' ? mockEl : null)),
+                body: { style: {} }
+            };
+
+            try {
+                const initSpy = vi.fn();
+                defaultModularFacade.windows.registerModalInitializer('customLazyModal', initSpy);
+
+                openModal('customLazyModal');
+                expect(initSpy).toHaveBeenCalledTimes(1);
+                expect(mockEl.classList.add).toHaveBeenCalledWith('is-open');
+
+                // Second open should not re-trigger one-off initializer
+                openModal('customLazyModal');
+                expect(initSpy).toHaveBeenCalledTimes(1);
+
+                executeCloseModal('customLazyModal');
+                expect(mockEl.classList.remove).toHaveBeenCalledWith('is-open');
+            } finally {
+                globalThis.document = prevDoc;
+            }
+        });
     });
 
     describe('I18n Module (src/modules/i18n.js)', () => {
