@@ -5,13 +5,15 @@
 import { store, storage, apiClient, showToast } from '../../src/modules/index.js';
 
 // --- CLOUDFLARE TURNSTILE (CAPTCHA / BOT SHIELD) ---
+const locHost = (typeof window !== 'undefined' && window.location && window.location.hostname) || '';
+const locProto = (typeof window !== 'undefined' && window.location && window.location.protocol) || '';
 const isLocalhost = Boolean(
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '[::1]' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.startsWith('192.168.') ||
-    window.location.hostname.startsWith('10.') ||
-    window.location.protocol === 'file:'
+    locHost === 'localhost' ||
+    locHost === '[::1]' ||
+    locHost === '127.0.0.1' ||
+    locHost.startsWith('192.168.') ||
+    locHost.startsWith('10.') ||
+    locProto === 'file:'
 );
 
 // Для локальной разработки используем официальный тестовый ключ Cloudflare (Always passes),
@@ -95,38 +97,98 @@ window.initTurnstileWidgets = initTurnstileWidgets;
 
 // --- КОНТАКТНЫЕ ДАННЫЕ ЮЗЕРА ---
 function getUserPhone() {
-    const activeUser = store.user;
-    const profile = store.profile;
-    if (activeUser && profile?.phone) {
+    const activeUser = store.user || (typeof window !== 'undefined' ? window.currentUser : null);
+    const profile = store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
+    if (profile?.phone && profile.phone.trim()) {
         return profile.phone.trim();
     }
-    return (storage ? storage.get('nisha_last_phone', '') : '').trim();
+    if (activeUser?.phone && activeUser.phone.trim()) {
+        return activeUser.phone.trim();
+    }
+    if (activeUser?.user_metadata?.phone && activeUser.user_metadata.phone.trim()) {
+        return activeUser.user_metadata.phone.trim();
+    }
+    return (storage ? storage.get('nisha_last_phone', '') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_last_phone') : '') || '').trim();
 }
 window.getUserPhone = getUserPhone;
 
 function getUserTg() {
-    const activeUser = store.user;
-    const profile = store.profile;
-    if (activeUser && profile?.tg) {
+    const activeUser = store.user || (typeof window !== 'undefined' ? window.currentUser : null);
+    const profile = store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
+    if (profile?.tg && profile.tg.trim()) {
         return profile.tg.trim();
     }
-    return (storage ? storage.get('nisha_last_tg', '') : '').trim();
+    if (activeUser?.user_metadata?.tg && activeUser.user_metadata.tg.trim()) {
+        return activeUser.user_metadata.tg.trim();
+    }
+    return (storage ? storage.get('nisha_last_tg', '') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_last_tg') : '') || '').trim();
 }
 window.getUserTg = getUserTg;
+
+function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
+    if (!inputPhone || !verifiedPhone) return false;
+    const cleanA = String(inputPhone).replace(/\D/g, '');
+    const cleanB = String(verifiedPhone).replace(/\D/g, '');
+    if (!cleanA || !cleanB) return false;
+    if (cleanA === cleanB) return true;
+    if (cleanA.length >= 9 && cleanB.length >= 9) {
+        return cleanA.slice(-9) === cleanB.slice(-9);
+    }
+    return false;
+}
+window.isPhoneMatchingVerified = isPhoneMatchingVerified;
+
+function setOtpButtonSuccess(btnOtp) {
+    if (!btnOtp) return;
+    const successText = typeof i18next !== 'undefined'
+        ? i18next.t('checkout.btn_otp_success', { defaultValue: 'УСПЕХ ✓' })
+        : 'УСПЕХ ✓';
+    btnOtp.classList.add('btn-otp-success');
+    btnOtp.setAttribute('data-i18n', 'checkout.btn_otp_success');
+    btnOtp.disabled = true;
+    btnOtp.style.display = 'block';
+    btnOtp.style.pointerEvents = 'none';
+    btnOtp.style.cursor = 'default';
+    btnOtp.style.background = '#141414';
+    btnOtp.style.borderColor = '#777';
+    btnOtp.style.borderStyle = 'outset';
+    btnOtp.style.opacity = '1';
+    btnOtp.innerHTML = `<span style="color:var(--accent-green, #00ff00); font-weight:bold; font-family:var(--font-mono); letter-spacing:0.5px;">${successText}</span>`;
+}
+window.setOtpButtonSuccess = setOtpButtonSuccess;
+
+function setOtpButtonDefault(btnOtp) {
+    if (!btnOtp) return;
+    const defaultText = typeof i18next !== 'undefined'
+        ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' })
+        : 'Подтвердить';
+    btnOtp.classList.remove('btn-otp-success');
+    btnOtp.setAttribute('data-i18n', 'checkout.btn_otp');
+    btnOtp.disabled = false;
+    btnOtp.style.display = 'block';
+    btnOtp.style.pointerEvents = 'auto';
+    btnOtp.style.cursor = 'pointer';
+    btnOtp.style.background = 'var(--text-main)';
+    btnOtp.style.borderColor = '#eee';
+    btnOtp.style.borderStyle = 'outset';
+    btnOtp.style.opacity = '1';
+    btnOtp.innerText = defaultText;
+}
+window.setOtpButtonDefault = setOtpButtonDefault;
 
 // Автоподстановка контактов в форму предложки и оформление заказа
 function updateProposeAndCheckoutFields() {
     const phone = getUserPhone();
     const tg = getUserTg();
-    const activeUser = store.user;
-    const profile = store.profile;
-    const hasVerifiedProfilePhone = Boolean(activeUser && profile && profile.phone && profile.phone.trim());
-    const hasVerifiedProfileTg = Boolean(activeUser && profile && profile.tg && profile.tg.trim());
+    const activeUser = store.user || (typeof window !== 'undefined' ? window.currentUser : null);
+    const profile = store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
+    const hasVerifiedProfilePhone = Boolean(phone);
+    const hasVerifiedProfileTg = Boolean(tg);
 
     // 1. Предложка: если заполнены и телефон, и tg в профиле — поле связи скрывается, иначе остается редактируемым
     const propContactWrap = document.getElementById('propContactWrapper');
     const propContactInput = document.getElementById('propContact');
-    if (hasVerifiedProfilePhone && hasVerifiedProfileTg) {
+    if (hasVerifiedProfilePhone && hasVerifiedProfileTg && (activeUser || profile)) {
         if (propContactWrap) propContactWrap.style.display = 'none';
         if (propContactInput) propContactInput.value = `${tg} | ${phone}`;
     } else {
@@ -136,30 +198,36 @@ function updateProposeAndCheckoutFields() {
         }
     }
 
-    // 2. Оформление заказа: если номер подтвержден в профиле — поле телефон скрывается; для гостей — подставляется, но остается видимым
+    // 2. Оформление заказа: поле телефона всегда остается видимым
     const checkoutPhoneWrap = document.getElementById('checkoutPhoneWrapper');
     const orderPhoneInput = document.getElementById('orderPhone');
-    if (hasVerifiedProfilePhone) {
-        if (checkoutPhoneWrap) checkoutPhoneWrap.style.display = 'none';
-        if (orderPhoneInput) orderPhoneInput.value = phone;
+    const btnOtp = document.getElementById('btnGetOtp');
+    const statusOtp = document.getElementById('otpStatus');
+    const btnSubmit = document.getElementById('btnSubmitOrder');
+
+    if (checkoutPhoneWrap) checkoutPhoneWrap.style.display = 'flex';
+
+    if (orderPhoneInput && phone) {
+        if (!orderPhoneInput.value || !orderPhoneInput.dataset.userTyped) {
+            orderPhoneInput.value = phone;
+        }
+    }
+
+    const currentInputPhone = orderPhoneInput?.value || '';
+    if (phone && isPhoneMatchingVerified(currentInputPhone, phone)) {
         window.otpVerified = true;
-        const btnSubmit = document.getElementById('btnSubmitOrder');
+        otpVerified = true;
         if (btnSubmit) {
             btnSubmit.style.opacity = '1';
             btnSubmit.style.pointerEvents = 'auto';
         }
-    } else {
-        if (checkoutPhoneWrap) checkoutPhoneWrap.style.display = 'block';
-        if (orderPhoneInput && !orderPhoneInput.value && phone) {
-            orderPhoneInput.value = phone;
+        if (statusOtp) statusOtp.style.display = 'none';
+        if (orderPhoneInput) {
+            orderPhoneInput.classList.add('input-valid');
+            orderPhoneInput.classList.remove('input-invalid');
         }
-        if (phone) {
-            window.otpVerified = true;
-            const btnSubmit = document.getElementById('btnSubmitOrder');
-            if (btnSubmit) {
-                btnSubmit.style.opacity = '1';
-                btnSubmit.style.pointerEvents = 'auto';
-            }
+        if (btnOtp) {
+            setOtpButtonSuccess(btnOtp);
         }
     }
 }
@@ -201,23 +269,27 @@ async function checkPhoneAuth() {
     const rawPhone = document.getElementById('orderPhone')?.value || '';
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
 
-    if (typeof getUserPhone === 'function') {
-        const uPhone = getUserPhone().replace(/[^\d+]/g, '');
-        if (uPhone && cleanPhone && cleanPhone === uPhone) {
-            otpVerified = true;
-            window.otpVerified = true;
-            if (btnSubmit) {
-                btnSubmit.style.opacity = '1';
-                btnSubmit.style.pointerEvents = 'auto';
-            }
-            if (statusOtp) statusOtp.style.display = 'none';
-            const phoneEl = document.getElementById('orderPhone');
-            if (phoneEl) {
-                phoneEl.classList.add('input-valid');
-                phoneEl.classList.remove('input-invalid');
-            }
-            return;
+    const uPhone = (typeof getUserPhone === 'function' ? getUserPhone() : '').replace(/[^\d+]/g, '');
+    const isProfileVerified = Boolean(uPhone && isPhoneMatchingVerified(cleanPhone, uPhone));
+
+    if (isProfileVerified) {
+        otpVerified = true;
+        window.otpVerified = true;
+        if (storage) storage.set('nisha_last_phone', cleanPhone);
+        if (btnSubmit) {
+            btnSubmit.style.opacity = '1';
+            btnSubmit.style.pointerEvents = 'auto';
         }
+        if (statusOtp) statusOtp.style.display = 'none';
+        const phoneEl = document.getElementById('orderPhone');
+        if (phoneEl) {
+            phoneEl.classList.add('input-valid');
+            phoneEl.classList.remove('input-invalid');
+        }
+        if (btnOtp) {
+            setOtpButtonSuccess(btnOtp);
+        }
+        return;
     } 
 
     // Блокируем кнопку заказа по умолчанию
@@ -229,14 +301,9 @@ async function checkPhoneAuth() {
     }
 
     // Если номер короткий - просто показываем кнопку подтверждения
-    if (!cleanPhone || cleanPhone.length < 10) {
+    if (!cleanPhone || cleanPhone.replace(/\D/g, '').length < 10) {
         if (btnOtp) {
-            btnOtp.style.display = 'block';
-            btnOtp.disabled = false;
-            btnOtp.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
-            btnOtp.style.background = 'var(--text-main)';
-            btnOtp.style.borderColor = '#eee';
-            btnOtp.style.opacity = '1';
+            setOtpButtonDefault(btnOtp);
         }
         if (statusOtp) statusOtp.style.display = 'block';
         return;
@@ -244,43 +311,37 @@ async function checkPhoneAuth() {
 
     // Проверяем статус в базе
     if (sb) {
-        const { data: vResult } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
-        const existCode = vResult ? [{ is_verified: true }] : [];
-        
-        if (existCode && existCode.length > 0 && existCode[0].is_verified) {
-            // Номер уже подтвержден
-            otpVerified = true;
-            window.otpVerified = true;
-            if (storage) storage.set('nisha_last_phone', cleanPhone);
-            if (btnSubmit) {
-                btnSubmit.style.opacity = '1';
-                btnSubmit.style.pointerEvents = 'auto';
+        try {
+            const { data: vResult } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
+            const existCode = vResult ? [{ is_verified: true }] : [];
+            
+            if (existCode && existCode.length > 0 && existCode[0].is_verified) {
+                // Номер уже подтвержден
+                otpVerified = true;
+                window.otpVerified = true;
+                if (storage) storage.set('nisha_last_phone', cleanPhone);
+                if (btnSubmit) {
+                    btnSubmit.style.opacity = '1';
+                    btnSubmit.style.pointerEvents = 'auto';
+                }
+                if (statusOtp) statusOtp.style.display = 'none';
+                const phoneEl = document.getElementById('orderPhone');
+                if (phoneEl) {
+                    phoneEl.classList.add('input-valid');
+                    phoneEl.classList.remove('input-invalid');
+                }
+                if (btnOtp) {
+                    setOtpButtonSuccess(btnOtp);
+                }
+            } else {
+                // Номер есть, но еще не подтвержден
+                if (btnOtp) {
+                    setOtpButtonDefault(btnOtp);
+                }
+                if (statusOtp) statusOtp.style.display = 'block';
             }
-            if (statusOtp) statusOtp.style.display = 'none';
-            const phoneEl = document.getElementById('orderPhone');
-            if (phoneEl) {
-                phoneEl.classList.add('input-valid');
-                phoneEl.classList.remove('input-invalid');
-            }
-            if (btnOtp) {
-                btnOtp.style.display = 'block';
-                btnOtp.disabled = true; 
-                btnOtp.innerHTML = `<span style='color:var(--accent-green); font-weight:bold;'>${typeof i18next !== 'undefined' ? i18next.t('profile.saved', { defaultValue: 'УСПЕХ!' }) : 'УСПЕХ!'}</span>`;
-                btnOtp.style.background = 'var(--text-main)';
-                btnOtp.style.borderColor = 'var(--accent-green)';
-                btnOtp.style.opacity = '1';
-            }
-        } else {
-            // Номер есть, но еще не подтвержден
-            if (btnOtp) {
-                btnOtp.style.display = 'block';
-                btnOtp.disabled = false;
-                btnOtp.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
-                btnOtp.style.background = 'var(--text-main)';
-                btnOtp.style.borderColor = '#eee';
-                btnOtp.style.opacity = '1';
-            }
-            if (statusOtp) statusOtp.style.display = 'block';
+        } catch (err) {
+            console.warn('[checkPhoneAuth] Ошибка проверки RPC:', err);
         }
     }
 }
@@ -298,6 +359,13 @@ async function generateAndSendOTP() {
 
     const btnOtp = document.getElementById('btnGetOtp');
     if (!btnOtp || btnOtp.disabled) return;
+
+    // Проверяем: если уже подтвержден в профиле
+    const uPhone = (typeof getUserPhone === 'function' ? getUserPhone() : '').replace(/[^\d+]/g, '');
+    if (uPhone && isPhoneMatchingVerified(cleanPhone, uPhone)) {
+        checkPhoneAuth();
+        return;
+    }
 
     // Токен Turnstile из памяти
     const widgetId = (typeof turnstileOtpWidgetId !== 'undefined') ? turnstileOtpWidgetId : window.turnstileOtpWidgetId;
@@ -318,9 +386,7 @@ async function generateAndSendOTP() {
                     turnstile.reset(widgetId);
                 }
                 window._turnstileOtpToken = null;
-                btnOtp.disabled = false;
-                btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
-                btnOtp.style.opacity = '1';
+                setOtpButtonDefault(btnOtp);
                 return;
             }
         } catch(err) {
@@ -337,7 +403,7 @@ async function generateAndSendOTP() {
         const secBlockedText = typeof i18next !== 'undefined' ? i18next.t('profile.security_blocked', { defaultValue: '[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН' }) : '[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.';
         if (statusEl) statusEl.innerHTML = `<span style='color:red; font-weight:bold;'>${secBlockedText}</span>`;
         showToast(typeof i18next !== 'undefined' ? i18next.t('auth.access_denied', { defaultValue: 'Доступ запрещен' }) : 'Доступ запрещен', 'error');
-        btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
+        setOtpButtonDefault(btnOtp);
         return; 
     }
     
@@ -361,9 +427,7 @@ async function generateAndSendOTP() {
                 clearInterval(otpInterval);
                 otpInterval = null;
             }
-            btnOtp.disabled = false;
-            btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
-            btnOtp.style.opacity = '1';
+            setOtpButtonDefault(btnOtp);
             return true;
         }
     };
@@ -377,8 +441,7 @@ async function generateAndSendOTP() {
     if (error) {
         showToast(typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error', { defaultValue: 'Ошибка сервера' }) : 'Ошибка сервера', 'error');
         clearInterval(otpInterval);
-        btnOtp.disabled = false;
-        btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' }) : 'Подтвердить';
+        setOtpButtonDefault(btnOtp);
         return;
     }
     
@@ -438,9 +501,7 @@ async function generateAndSendOTP() {
                 otpInterval = null;
             }
             if (btnOtp) {
-                btnOtp.disabled = false;
-                btnOtp.style.opacity = '1';
-                btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_otp') : 'Подтвердить';
+                setOtpButtonDefault(btnOtp);
             }
             if (statusEl) {
                 const expiredMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.otp_expired') : 'Время ожидания подтверждения истекло. Запросите код снова.';

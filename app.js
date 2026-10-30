@@ -360,6 +360,11 @@ async function initApp() {
             function validatePhoneVisual() {
                 const unmasked = phoneMask.unmaskedValue || '';
                 const btnOtp = document.getElementById('btnGetOtp');
+                if (window.otpVerified && btnOtp && btnOtp.classList.contains('btn-otp-success')) {
+                    phoneInput.classList.add('input-valid');
+                    phoneInput.classList.remove('input-invalid');
+                    return;
+                }
                 if (!unmasked || unmasked.length <= 3) {
                     phoneInput.classList.remove('input-valid', 'input-invalid');
                     if (btnOtp && !window.otpVerified) {
@@ -386,6 +391,7 @@ async function initApp() {
             }
 
             phoneMask.on('accept', () => {
+                phoneInput.dataset.userTyped = '1';
                 validatePhoneVisual();
                 if (typeof checkPhoneAuth === 'function') checkPhoneAuth();
             });

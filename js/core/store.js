@@ -415,8 +415,8 @@
                 return target.get(prop);
             }
             // Алиасы
-            if (prop === 'user') return target.get('currentUser');
-            if (prop === 'profile') return target.get('userProfile');
+            if (prop === 'user') return target.get('currentUser') || (typeof window !== 'undefined' ? window.currentUser : null);
+            if (prop === 'profile') return target.get('userProfile') || (typeof window !== 'undefined' ? window.userProfile : null);
             if (prop === 'cartCount') return (target.get('cart') || []).length;
             if (prop === 'cartTotal') {
                 const c = target.get('cart') || [];
@@ -430,8 +430,16 @@
                 return true;
             }
             // Алиасы
-            if (prop === 'user') { target.set('currentUser', value); return true; }
-            if (prop === 'profile') { target.set('userProfile', value); return true; }
+            if (prop === 'user') {
+                target.set('currentUser', value);
+                if (typeof window !== 'undefined') window.currentUser = value;
+                return true;
+            }
+            if (prop === 'profile') {
+                target.set('userProfile', value);
+                if (typeof window !== 'undefined') window.userProfile = value;
+                return true;
+            }
 
             target.set(prop, value);
             return true;

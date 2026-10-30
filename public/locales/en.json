@@ -169,6 +169,7 @@
       "name": "Full Name:",
       "phone": "Phone (REQUIRED):",
       "btn_otp": "Verify",
+      "btn_otp_success": "SUCCESS ✓",
       "otp_status": "Please verify your number first!",
       "city": "City (Nova Poshta):",
       "branch": "Branch or Postomat:",

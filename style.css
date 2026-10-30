@@ -141,6 +141,19 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 .search-input:focus { border-color: var(--accent-green); box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }
 .search-btn { background-color: var(--text-main); color: #000; border: 2px outset #eee; padding: 10px 30px; font-weight: bold; cursor: pointer; text-transform: uppercase;}
 .search-btn:active { border-style: inset; background-color: #aaa;}
+.search-btn#btnGetOtp.btn-otp-success,
+#btnGetOtp.btn-otp-success {
+    background: #141414 !important;
+    border: 2px outset #777 !important;
+    color: var(--accent-green, #00ff00) !important;
+    font-family: var(--font-mono) !important;
+    font-weight: bold !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 1px 1px 0 #000 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    opacity: 1 !important;
+}
 
 .main-container { display: flex; flex-grow: 1; padding: 20px 30px; gap: 25px; }
 
