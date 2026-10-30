@@ -25,24 +25,89 @@ let cachedBranches = [];
 const npBranchCache = {};
 const npBranchCacheComplete = {};
 
-// Кэш отделений Новой Почты (In-Memory + IndexedDB + sessionStorage)
-const NP_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 часа актуальности отделений
+// ==========================================
+// КЭШ НОВОЙ ПОЧТЫ (IN-MEMORY L1 + INDEXEDDB L2 + SAFE FALLBACK)
+// ==========================================
+const NP_BRANCH_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 часа актуальности отделений
+const NP_CITY_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 дней актуальности городов
 
+// L1 In-Memory кэш (мгновенный отклик 0ms в рамках вкладки)
+const npMemoryCache = new Map();
+
+function getNPDefaultTTL(key) {
+    if (typeof key === 'string' && key.startsWith('city_')) {
+        return NP_CITY_CACHE_TTL_MS;
+    }
+    return NP_BRANCH_CACHE_TTL_MS;
+}
+
+// Минимальный вид отделения для кэша (экономит память и дисковое пространство)
+function slimBranches(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map(b => ({
+        Ref: b.Ref,
+        Description: b.Description || '',
+        TypeOfWarehouse: b.TypeOfWarehouse || '',
+        Number: b.Number ? String(b.Number) : ''
+    }));
+}
+window.slimBranches = slimBranches;
+
+/**
+ * Асинхронно получает данные из кэша: Memory L1 -> IndexedDB L2 -> Safe Fallback L3
+ * @param {string} key
+ * @returns {Promise<any>}
+ */
 async function getNPStorageAsync(key) {
-    // 1. Проверяем IndexedDB (без лимита в 5MB)
+    if (!key) return null;
+    const ttl = getNPDefaultTTL(key);
+
+    // 1. Проверяем L1 In-Memory Cache (0ms)
+    const memEntry = npMemoryCache.get(key);
+    if (memEntry && memEntry.ts && (Date.now() - memEntry.ts < (memEntry.ttl || ttl)) && memEntry.data) {
+        return memEntry.data;
+    }
+
+    // 2. Проверяем L2 IndexedDB (основное надёжное хранилище без 5MB лимита)
     if (typeof window.idbGet === 'function') {
         try {
             const entry = await window.idbGet('np_' + key);
-            if (entry && entry.ts && (Date.now() - entry.ts < NP_CACHE_TTL_MS) && entry.data) {
-                return entry.data;
+            if (entry && entry.ts && entry.data) {
+                const itemTtl = entry.ttl || ttl;
+                if (Date.now() - entry.ts < itemTtl) {
+                    // Синхронизируем в L1 In-Memory для мгновенного доступа при повторных обращениях
+                    npMemoryCache.set(key, { ts: entry.ts, ttl: itemTtl, data: entry.data });
+                    return entry.data;
+                } else if (typeof window.idbDel === 'function') {
+                    // Асинхронно удаляем устаревшую запись
+                    window.idbDel('np_' + key).catch(() => {});
+                }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn('[NP Cache] Ошибка чтения IndexedDB:', e);
+        }
     }
-    // 2. Fallback к safe session storage
-    return getNPStorage(key);
-}
 
+    // 3. Fallback к L3 Safe sessionStorage (для сред без IndexedDB)
+    const fallbackData = getNPStorage(key);
+    if (fallbackData) {
+        npMemoryCache.set(key, { ts: Date.now(), ttl, data: fallbackData });
+    }
+    return fallbackData;
+}
+window.getNPStorageAsync = getNPStorageAsync;
+
+/**
+ * Синхронное получение из кэша (для мгновенного чтения fallback)
+ * @param {string} key
+ * @returns {any}
+ */
 function getNPStorage(key) {
+    if (!key) return null;
+    // Сначала проверяем memory cache
+    const mem = npMemoryCache.get(key);
+    if (mem && mem.data) return mem.data;
+
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     if (store && store.session) {
         return store.session.getJSON('nisha_np_' + key, null);
@@ -55,27 +120,75 @@ function getNPStorage(key) {
     } catch(e) {}
     return null;
 }
+window.getNPStorage = getNPStorage;
 
-function setNPStorage(key, val) {
-    if (!val || typeof val !== 'object') return;
-    // 1. Надежное сохранение в IndexedDB (поддерживает Киев и мегаполисы > 1500 отделений, а также объекты поиска городов)
-    if (typeof window.idbSet === 'function') {
-        window.idbSet('np_' + key, { ts: Date.now(), data: val }).catch(() => {});
+/**
+ * Сохраняет данные Новой Почты в кэш: Memory L1 -> IndexedDB L2 -> Safe Fallback L3
+ * @param {string} key
+ * @param {any} val
+ * @param {number} [customTtl]
+ */
+function setNPStorage(key, val, customTtl) {
+    if (!key || !val || typeof val !== 'object') return;
+    const ttl = customTtl || getNPDefaultTTL(key);
+
+    // Сжимаем массив отделений перед сохранением
+    let payload = val;
+    if (Array.isArray(val) && val.length > 0 && val[0] && typeof val[0] === 'object' && 'Ref' in val[0]) {
+        payload = slimBranches(val);
     }
-    // 2. Сохранение в safe session storage (если помещается)
-    if (!Array.isArray(val) || val.length <= 1500) {
-        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-        if (store && store.session) {
-            store.session.setJSON('nisha_np_' + key, val);
-            return;
-        }
+
+    // 1. Сохраняем в L1 In-Memory кэш
+    npMemoryCache.set(key, { ts: Date.now(), ttl, data: payload });
+
+    // 2. Сохраняем в L2 IndexedDB (надежное хранилище без лимита, сохраняет все 2000+ отделений Киева)
+    if (typeof window.idbSet === 'function') {
+        window.idbSet('np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
+    }
+
+    // 3. Fallback в L3 sessionStorage (только для компактных данных <= 200 записей)
+    if (!Array.isArray(payload) || payload.length <= 200) {
         try {
-            if (typeof sessionStorage !== 'undefined') {
-                sessionStorage.setItem('nisha_np_' + key, JSON.stringify(val));
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            if (store && store.session) {
+                store.session.setJSON('nisha_np_' + key, payload);
+            } else if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.setItem('nisha_np_' + key, JSON.stringify(payload));
             }
-        } catch(e) {}
+        } catch (storageErr) {
+            // Защита от QuotaExceededError: очищаем старые ключи nisha_np_ из sessionStorage
+            try {
+                if (typeof sessionStorage !== 'undefined') {
+                    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+                        const k = sessionStorage.key(i);
+                        if (k && k.startsWith('nisha_np_')) {
+                            sessionStorage.removeItem(k);
+                        }
+                    }
+                }
+            } catch (_) {}
+        }
     }
 }
+window.setNPStorage = setNPStorage;
+
+/**
+ * Очищает кэш отделений и городов Новой Почты
+ */
+async function clearNPCache() {
+    npMemoryCache.clear();
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            for (let i = sessionStorage.length - 1; i >= 0; i--) {
+                const k = sessionStorage.key(i);
+                if (k && k.startsWith('nisha_np_')) {
+                    sessionStorage.removeItem(k);
+                }
+            }
+        }
+    } catch (_) {}
+}
+window.clearNPCache = clearNPCache;
 
 let cartSwipeStartX = 0;
 let cartSwipeCurrentX = 0;
@@ -575,10 +688,10 @@ function renderCitySearchResults(data) {
     if (typeof dropdown.replaceChildren === 'function') dropdown.replaceChildren();
     else dropdown.innerHTML = '';
 
-    dropdown.setAttribute('data-lenis-prevent', 'true');
+    if (typeof dropdown.setAttribute === 'function') dropdown.setAttribute('data-lenis-prevent', 'true');
     bindDropdownScrollDismissKeyboard(dropdown, 'orderCity');
     
-    if (data.success && data.data[0] && data.data[0].Addresses.length > 0) {
+    if (data && data.success && Array.isArray(data.data) && data.data[0] && Array.isArray(data.data[0].Addresses) && data.data[0].Addresses.length > 0) {
         data.data[0].Addresses.forEach(city => {
             const div = document.createElement('div');
             div.className = 'city-item';
@@ -630,10 +743,10 @@ function renderCitySearchResults(data) {
     }
 }
 
-// Поиск города (с sessionStorage кэшированием)
+// Поиск города (с IndexedDB + In-Memory кэшированием)
 async function searchNPCity(query) {
     const normKey = 'city_' + query.trim().toLowerCase();
-    const cached = getNPStorage(normKey);
+    const cached = await getNPStorageAsync(normKey);
     if (cached) {
         renderCitySearchResults(cached);
         return;
@@ -867,16 +980,6 @@ async function npFetchPage(props) {
         }
     }
     throw lastErr;
-}
-
-// Минимальный вид отделения для кэша (экономит память и sessionStorage)
-function slimBranches(list) {
-    return list.map(b => ({
-        Ref: b.Ref,
-        Description: b.Description || '',
-        TypeOfWarehouse: b.TypeOfWarehouse || '',
-        Number: b.Number ? String(b.Number) : ''
-    }));
 }
 
 // Если город вписан руками (или восстановлен из черновика) и не выбран из списка —
@@ -1211,7 +1314,7 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
                 if (!search) {
                     npBranchCacheComplete[cityRef] = isCityFullyLoaded;
                 }
-                if (finalBranches.length <= 1500) setNPStorage('branchall_' + cacheKey, finalBranches);
+                setNPStorage('branchall_' + cacheKey, finalBranches);
             }
             if (showDropdown) {
                 renderBranches(finalBranches);
@@ -1255,7 +1358,7 @@ function renderBranches(branches) {
         return;
     }
 
-    dropdown.setAttribute('data-lenis-prevent', 'true');
+    if (typeof dropdown.setAttribute === 'function') dropdown.setAttribute('data-lenis-prevent', 'true');
     bindDropdownScrollDismissKeyboard(dropdown, 'orderBranch');
 
     const fragment = document.createDocumentFragment();

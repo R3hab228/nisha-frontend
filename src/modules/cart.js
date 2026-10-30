@@ -126,3 +126,67 @@ export function updateCartUI() {
         return window.updateCartUI();
     }
 }
+
+/**
+ * Asynchronously retrieves cached Nova Poshta data (Memory -> IndexedDB -> Fallback)
+ * @param {string} key
+ * @returns {Promise<any>}
+ */
+export async function getNPStorageAsync(key) {
+    if (typeof window !== 'undefined' && typeof window.getNPStorageAsync === 'function') {
+        return window.getNPStorageAsync(key);
+    }
+    return null;
+}
+
+/**
+ * Synchronous fallback retrieval of Nova Poshta data
+ * @param {string} key
+ * @returns {any}
+ */
+export function getNPStorage(key) {
+    if (typeof window !== 'undefined' && typeof window.getNPStorage === 'function') {
+        return window.getNPStorage(key);
+    }
+    return null;
+}
+
+/**
+ * Saves Nova Poshta data to cache (Memory -> IndexedDB -> Fallback)
+ * @param {string} key
+ * @param {any} val
+ * @param {number} [ttl]
+ */
+export function setNPStorage(key, val, ttl) {
+    if (typeof window !== 'undefined' && typeof window.setNPStorage === 'function') {
+        return window.setNPStorage(key, val, ttl);
+    }
+}
+
+/**
+ * Clears Nova Poshta caches across memory, IndexedDB and sessionStorage
+ * @returns {Promise<void>}
+ */
+export async function clearNPCache() {
+    if (typeof window !== 'undefined' && typeof window.clearNPCache === 'function') {
+        return window.clearNPCache();
+    }
+}
+
+/**
+ * Slims Nova Poshta branch array to minimal payload for storage
+ * @param {any[]} list
+ * @returns {any[]}
+ */
+export function slimBranches(list) {
+    if (typeof window !== 'undefined' && typeof window.slimBranches === 'function') {
+        return window.slimBranches(list);
+    }
+    if (!Array.isArray(list)) return [];
+    return list.map(b => ({
+        Ref: b.Ref,
+        Description: b.Description || '',
+        TypeOfWarehouse: b.TypeOfWarehouse || '',
+        Number: b.Number ? String(b.Number) : ''
+    }));
+}

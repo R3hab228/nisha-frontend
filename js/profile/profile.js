@@ -786,13 +786,16 @@ async function searchProfileNPCity(isModal, query) {
     dropdown.style.display = 'block';
 
     const normKey = 'city_' + trimmed.toLowerCase();
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    let cached = null;
-    if (store && store.session) {
-        cached = store.session.getJSON('nisha_np_' + normKey, null);
+    let data = null;
+    if (typeof window.getNPStorageAsync === 'function') {
+        data = await window.getNPStorageAsync(normKey);
+    } else {
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store && store.session) {
+            data = store.session.getJSON('nisha_np_' + normKey, null);
+        }
     }
 
-    let data = cached;
     if (!data) {
         try {
             data = await window.apiClient.post('/api/np-proxy', {
@@ -801,8 +804,13 @@ async function searchProfileNPCity(isModal, query) {
                 methodProperties: { CityName: trimmed, Limit: '10' }
             }, { timeout: 10000, retries: 1, dedupe: true });
 
-            if (data && data.success && store && store.session) {
-                store.session.setJSON('nisha_np_' + normKey, data);
+            if (data && data.success) {
+                if (typeof window.setNPStorage === 'function') {
+                    window.setNPStorage(normKey, data);
+                } else {
+                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                    if (store && store.session) store.session.setJSON('nisha_np_' + normKey, data);
+                }
             }
         } catch (e) {
             console.error('Ошибка поиска города НП в профиле:', e);
@@ -946,13 +954,25 @@ async function loadProfileBranches(isModal, searchString = '') {
 
     const rawTrimmed = (searchString || '').trim();
     const cacheKey = `branches_${cityRef}_${rawTrimmed.toLowerCase()}`;
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    let cached = null;
-    if (store && store.session) {
-        cached = store.session.getJSON('nisha_np_' + cacheKey, null);
+    let list = null;
+    if (typeof window.getNPStorageAsync === 'function') {
+        list = await window.getNPStorageAsync(cacheKey);
+        // Если чекаут уже сохранил полный список отделений города в IndexedDB — фильтруем его на месте
+        if (!list) {
+            const allCityBranches = await window.getNPStorageAsync(`branchall_${cityRef}_`);
+            if (allCityBranches && Array.isArray(allCityBranches) && allCityBranches.length > 0) {
+                list = rawTrimmed && typeof window.filterAndSortBranches === 'function'
+                    ? window.filterAndSortBranches(allCityBranches, rawTrimmed)
+                    : allCityBranches;
+            }
+        }
+    } else {
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store && store.session) {
+            list = store.session.getJSON('nisha_np_' + cacheKey, null);
+        }
     }
 
-    let list = cached;
     if (!list) {
         try {
             const props = { CityRef: cityRef, Limit: '100' };
@@ -989,8 +1009,11 @@ async function loadProfileBranches(isModal, searchString = '') {
                 if (rawTrimmed && typeof window.filterAndSortBranches === 'function') {
                     list = window.filterAndSortBranches(list, rawTrimmed);
                 }
-                if (store && store.session) {
-                    store.session.setJSON('nisha_np_' + cacheKey, list);
+                if (typeof window.setNPStorage === 'function') {
+                    window.setNPStorage(cacheKey, list);
+                } else {
+                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                    if (store && store.session) store.session.setJSON('nisha_np_' + cacheKey, list);
                 }
             } else {
                 list = [];
