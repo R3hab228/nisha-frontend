@@ -43,7 +43,14 @@ import defaultModularFacade, {
     removeFromCart,
     openCart,
     openCheckoutModal,
-    updateCartUI
+    updateCartUI,
+    track,
+    trackProductView,
+    trackAddToCart,
+    trackCheckoutStart,
+    trackPurchase,
+    trackFavorite,
+    initAnalytics
 } from '../src/modules/index.js';
 
 class MockStorage {
@@ -245,6 +252,18 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(() => updateCartUI()).not.toThrow();
             await expect(addToCartById('item_1', 'L')).resolves.not.toThrow();
             await expect(addToCartWithAnimation('item_1')).resolves.not.toThrow();
+        });
+    });
+
+    describe('Analytics Module (src/modules/analytics.js)', () => {
+        it('tracks e-commerce funnel events gracefully', () => {
+            expect(() => track('Custom Event', { prop: 1 })).not.toThrow();
+            expect(() => trackProductView({ id: 'item_1', name: 'Jacket', price: 1000 })).not.toThrow();
+            expect(() => trackAddToCart({ id: 'item_1', name: 'Jacket', price: 1000 })).not.toThrow();
+            expect(() => trackCheckoutStart([{ id: 'item_1', price: 1000 }])).not.toThrow();
+            expect(() => trackPurchase({ orderId: 'ord_1', value: 1000 })).not.toThrow();
+            expect(() => trackFavorite('item_1', true)).not.toThrow();
+            expect(() => initAnalytics()).not.toThrow();
         });
     });
 });

@@ -90,3 +90,11 @@ if ('requestIdleCallback' in window) {
 } else {
     setTimeout(preloadSecondaryModules, 800);
 }
+
+export {
+    loadDropModule,
+    loadReviewsModule,
+    loadChatModule,
+    loadOrdersModule,
+    preloadSecondaryModules
+};

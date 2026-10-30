@@ -65,6 +65,44 @@ export async function subscribeUserToPush() {
 }
 
 /**
+ * Synchronizes notification permissions with system
+ * @returns {Promise<string>}
+ */
+export async function syncNotificationPermission() {
+    if (typeof window !== 'undefined' && typeof window.syncNotificationPermission === 'function') {
+        return window.syncNotificationPermission();
+    }
+    return 'default';
+}
+
+/**
+ * Handles offline network state
+ */
+export function handleNetworkOffline() {
+    if (typeof window !== 'undefined' && typeof window.handleNetworkOffline === 'function') {
+        return window.handleNetworkOffline();
+    }
+}
+
+/**
+ * Handles online network recovery state
+ */
+export function handleNetworkOnline() {
+    if (typeof window !== 'undefined' && typeof window.handleNetworkOnline === 'function') {
+        return window.handleNetworkOnline();
+    }
+}
+
+/**
+ * Dismisses network error banner
+ */
+export function dismissNetError() {
+    if (typeof window !== 'undefined' && typeof window.dismissNetError === 'function') {
+        return window.dismissNetError();
+    }
+}
+
+/**
  * Initializes mobile pull-to-refresh gesture
  * @param {HTMLElement} [container]
  */
