@@ -11,9 +11,13 @@ import {
     showToast,
     apiClient,
     applyFilters,
+    getActiveCart,
     syncCartToServer,
     updateCartUI,
-    generateShortId
+    generateShortId,
+    initAnalytics,
+    track,
+    startOnboardingTour
 } from '../../src/modules/index.js';
 
 let pendingBroadcastQueue = null;
@@ -90,7 +94,7 @@ function acceptRules() {
     }
     
     setTimeout(() => {
-        if (typeof startOnboardingTour === 'function') startOnboardingTour();
+        startOnboardingTour();
     }, 450); 
 }
 window.acceptRules = acceptRules;
@@ -114,7 +118,7 @@ function triggerEasterEgg() {
     
     applyFilters(); 
     
-    const activeCart = (typeof cart !== 'undefined' && Array.isArray(cart)) ? cart : (window.cart || []);
+    const activeCart = getActiveCart();
     activeCart.forEach(item => { 
         item.price = Math.floor(item.price * 0.9); 
     });
@@ -126,9 +130,7 @@ window.triggerEasterEgg = triggerEasterEgg;
 
 // === ПРИВАТНАЯ АНАЛИТИКА (PLAUSIBLE / POSTHOG) И ВИЗУАЛЬНЫЙ РЕТРО-СЧЕТЧИК WIN95 ===
 async function initHitCounter() {
-    if (window.analytics && typeof window.analytics.init === 'function') {
-        window.analytics.init();
-    }
+    initAnalytics();
 
     const counterEl = document.getElementById('hitCounterValue');
 
@@ -145,8 +147,8 @@ async function initHitCounter() {
         const lastVisitDate = storage ? storage.get('nisha_last_visit_date') : null;
         const isNewVisitToday = (lastVisitDate !== todayDate);
 
-        if (isNewVisitToday && window.analytics && typeof window.analytics.track === 'function') {
-            window.analytics.track('Daily Unique Visit', { date: todayDate });
+        if (isNewVisitToday) {
+            track('Daily Unique Visit', { date: todayDate });
         }
 
         if (!counterEl) return;

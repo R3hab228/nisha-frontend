@@ -2,7 +2,7 @@
 // NISHA AUTH & SECURITY MODULE (OTP & Turnstile)
 // ==========================================
 
-import { storage, apiClient, showToast } from '../../src/modules/index.js';
+import { store, storage, apiClient, showToast } from '../../src/modules/index.js';
 
 // --- CLOUDFLARE TURNSTILE (CAPTCHA / BOT SHIELD) ---
 const isLocalhost = Boolean(
@@ -95,8 +95,8 @@ window.initTurnstileWidgets = initTurnstileWidgets;
 
 // --- КОНТАКТНЫЕ ДАННЫЕ ЮЗЕРА ---
 function getUserPhone() {
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
-    const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+    const activeUser = store.user;
+    const profile = store.profile;
     if (activeUser && profile?.phone) {
         return profile.phone.trim();
     }
@@ -105,8 +105,8 @@ function getUserPhone() {
 window.getUserPhone = getUserPhone;
 
 function getUserTg() {
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
-    const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+    const activeUser = store.user;
+    const profile = store.profile;
     if (activeUser && profile?.tg) {
         return profile.tg.trim();
     }
@@ -118,8 +118,8 @@ window.getUserTg = getUserTg;
 function updateProposeAndCheckoutFields() {
     const phone = getUserPhone();
     const tg = getUserTg();
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
-    const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+    const activeUser = store.user;
+    const profile = store.profile;
     const hasVerifiedProfilePhone = Boolean(activeUser && profile && profile.phone && profile.phone.trim());
     const hasVerifiedProfileTg = Boolean(activeUser && profile && profile.tg && profile.tg.trim());
 
@@ -384,7 +384,7 @@ async function generateAndSendOTP() {
     
     // 5. Открываем Telegram-бота
     const payloadPhone = cleanPhone.replace('+', '');
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const activeUser = store.user;
     const userPrefix = (activeUser && activeUser.id) ? `${activeUser.id}_` : '';
     const tgLink = `https://t.me/nisha_store1_bot?start=otp_${userPrefix}${payloadPhone}`;
     

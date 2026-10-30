@@ -5,11 +5,15 @@
 import {
     store,
     storage,
+    apiClient,
     openCart,
     openReviewsModal,
+    openProductModalById,
     applyFilters,
     loadAllItems,
-    renderNextBatch
+    renderNextBatch,
+    startOnboardingTour,
+    handleNetworkOffline
 } from './src/modules/index.js';
 
 console.log(`
@@ -208,8 +212,8 @@ async function initApp() {
     if (typeof window.startLenis === 'function') window.startLenis();
     if (typeof window.cleanStorageLimits === 'function') window.cleanStorageLimits();
 
-    if (!navigator.onLine && typeof window.handleNetworkOffline === 'function') {
-        setTimeout(window.handleNetworkOffline, 100);
+    if (!navigator.onLine) {
+        setTimeout(handleNetworkOffline, 100);
     }
 
     try {
@@ -437,7 +441,7 @@ async function initApp() {
                 if (broadcasts && broadcasts.length > 0) {
                     const bData = broadcasts[0];
                     const localSeenId = (storage && typeof storage.get === 'function') ? storage.get('nisha_last_broadcast') : null;
-                    const profile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
+                    const profile = store.profile;
                     const dbSeenId = profile ? profile.last_broadcast_id : null;
                     const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
 
@@ -447,7 +451,7 @@ async function initApp() {
 
                         const markAsSeen = () => {
                             if (storage && typeof storage.set === 'function') storage.set('nisha_last_broadcast', bData.id);
-                            const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+                            const activeUser = store.user;
                             if (activeUser && _supabase) {
                                 _supabase.from('profiles').update({ last_broadcast_id: bData.id }).eq('id', activeUser.id).then();
                             }
@@ -480,7 +484,7 @@ async function initApp() {
         // Тихий фоновый прогрев бэкенда
         const pingBackend = () => {
             try {
-                if (window.apiClient) window.apiClient.ping();
+                if (apiClient && typeof apiClient.ping === 'function') apiClient.ping();
             } catch(e) {}
         };
         if ('requestIdleCallback' in window) {
@@ -490,7 +494,7 @@ async function initApp() {
         }
 
         const openItemId = urlParams.get('item');
-        if (openItemId && typeof openProductModalById === 'function') {
+        if (openItemId) {
             setTimeout(() => openProductModalById(openItemId), 500);
         }
         
@@ -550,13 +554,13 @@ async function initApp() {
         if (typeof initHitCounter === 'function') initHitCounter();
         if (typeof updateSidebarCounters === 'function') updateSidebarCounters();
         
-        const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+        const activeUser = store.user;
         if (activeUser && activeUser.phone) {
             const ordSearchEl = document.getElementById('ordersSearchPhone');
             if (ordSearchEl) ordSearchEl.value = activeUser.phone;
         }
 
-        if (storage && storage.get('nisha_rules_accepted') && typeof startOnboardingTour === 'function') {
+        if (storage && storage.get('nisha_rules_accepted')) {
             startOnboardingTour();
         }
     } catch (err) {
