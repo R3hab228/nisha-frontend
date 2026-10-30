@@ -240,6 +240,27 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
         expect(globalThis.apiClient.post).not.toHaveBeenCalled();
     });
 
+    it('getNPStorage checks TTL and returns null when in-memory entry is expired', () => {
+        const { setNPStorage, getNPStorage } = window;
+
+        setNPStorage('branchall_exp_sync', [{ Ref: 'r1', Description: 'D1' }], -1000); // negative TTL = already expired
+        const res = getNPStorage('branchall_exp_sync');
+        expect(res).toBeNull();
+    });
+
+    it('trims in-memory cache to prevent memory leaks when inserting over 150 items', () => {
+        const { setNPStorage, getNPStorage } = window;
+
+        for (let i = 0; i < 160; i++) {
+            setNPStorage(`key_${i}`, { data: i });
+        }
+
+        // Oldest item key_0 should have been evicted by FIFO trim
+        expect(getNPStorage('key_0')).toBeNull();
+        // Recent item key_159 should be in memory
+        expect(getNPStorage('key_159')).toEqual({ data: 159 });
+    });
+
     it('exports NP storage functions from modular facade (src/modules/cart.js)', async () => {
         const cartMod = await import('../src/modules/cart.js');
         expect(typeof cartMod.getNPStorageAsync).toBe('function');

@@ -33,6 +33,14 @@ const NP_CITY_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 дней актуал
 
 // L1 In-Memory кэш (мгновенный отклик 0ms в рамках вкладки)
 const npMemoryCache = new Map();
+const NP_MAX_MEMORY_ENTRIES = 150;
+
+function trimMemoryCacheIfNeeded() {
+    if (npMemoryCache.size > NP_MAX_MEMORY_ENTRIES) {
+        const oldestKey = npMemoryCache.keys().next().value;
+        if (oldestKey) npMemoryCache.delete(oldestKey);
+    }
+}
 
 function getNPDefaultTTL(key) {
     if (typeof key === 'string' && key.startsWith('city_')) {
@@ -64,7 +72,7 @@ async function getNPStorageAsync(key) {
 
     // 1. Проверяем L1 In-Memory Cache (0ms)
     const memEntry = npMemoryCache.get(key);
-    if (memEntry && memEntry.ts && (Date.now() - memEntry.ts < (memEntry.ttl || ttl)) && memEntry.data) {
+    if (memEntry && memEntry.ts && (Date.now() - memEntry.ts < (memEntry.ttl !== undefined ? memEntry.ttl : ttl)) && memEntry.data) {
         return memEntry.data;
     }
 
@@ -73,10 +81,11 @@ async function getNPStorageAsync(key) {
         try {
             const entry = await window.idbGet('np_' + key);
             if (entry && entry.ts && entry.data) {
-                const itemTtl = entry.ttl || ttl;
+                const itemTtl = entry.ttl !== undefined ? entry.ttl : ttl;
                 if (Date.now() - entry.ts < itemTtl) {
                     // Синхронизируем в L1 In-Memory для мгновенного доступа при повторных обращениях
                     npMemoryCache.set(key, { ts: entry.ts, ttl: itemTtl, data: entry.data });
+                    trimMemoryCacheIfNeeded();
                     return entry.data;
                 } else if (typeof window.idbDel === 'function') {
                     // Асинхронно удаляем устаревшую запись
@@ -92,6 +101,7 @@ async function getNPStorageAsync(key) {
     const fallbackData = getNPStorage(key);
     if (fallbackData) {
         npMemoryCache.set(key, { ts: Date.now(), ttl, data: fallbackData });
+        trimMemoryCacheIfNeeded();
     }
     return fallbackData;
 }
@@ -104,9 +114,12 @@ window.getNPStorageAsync = getNPStorageAsync;
  */
 function getNPStorage(key) {
     if (!key) return null;
-    // Сначала проверяем memory cache
+    const ttl = getNPDefaultTTL(key);
+    // Сначала проверяем memory cache с проверкой актуальности по TTL
     const mem = npMemoryCache.get(key);
-    if (mem && mem.data) return mem.data;
+    if (mem && mem.ts && (Date.now() - mem.ts < (mem.ttl !== undefined ? mem.ttl : ttl)) && mem.data) {
+        return mem.data;
+    }
 
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     if (store && store.session) {
@@ -130,7 +143,7 @@ window.getNPStorage = getNPStorage;
  */
 function setNPStorage(key, val, customTtl) {
     if (!key || !val || typeof val !== 'object') return;
-    const ttl = customTtl || getNPDefaultTTL(key);
+    const ttl = (typeof customTtl === 'number') ? customTtl : getNPDefaultTTL(key);
 
     // Сжимаем массив отделений перед сохранением
     let payload = val;
@@ -140,33 +153,35 @@ function setNPStorage(key, val, customTtl) {
 
     // 1. Сохраняем в L1 In-Memory кэш
     npMemoryCache.set(key, { ts: Date.now(), ttl, data: payload });
+    trimMemoryCacheIfNeeded();
 
-    // 2. Сохраняем в L2 IndexedDB (надежное хранилище без лимита, сохраняет все 2000+ отделений Киева)
-    if (typeof window.idbSet === 'function') {
+    // 2. Сохраняем в L2 IndexedDB (основное надёжное хранилище для всех городов и отделений)
+    const hasIdb = typeof window.idbSet === 'function';
+    if (hasIdb) {
         window.idbSet('np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
-    }
-
-    // 3. Fallback в L3 sessionStorage (только для компактных данных <= 200 записей)
-    if (!Array.isArray(payload) || payload.length <= 200) {
-        try {
-            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-            if (store && store.session) {
-                store.session.setJSON('nisha_np_' + key, payload);
-            } else if (typeof sessionStorage !== 'undefined') {
-                sessionStorage.setItem('nisha_np_' + key, JSON.stringify(payload));
-            }
-        } catch (storageErr) {
-            // Защита от QuotaExceededError: очищаем старые ключи nisha_np_ из sessionStorage
+    } else {
+        // 3. Fallback в L3 sessionStorage только если IndexedDB недоступен
+        if (!Array.isArray(payload) || payload.length <= 200) {
             try {
-                if (typeof sessionStorage !== 'undefined') {
-                    for (let i = sessionStorage.length - 1; i >= 0; i--) {
-                        const k = sessionStorage.key(i);
-                        if (k && k.startsWith('nisha_np_')) {
-                            sessionStorage.removeItem(k);
+                const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                if (store && store.session) {
+                    store.session.setJSON('nisha_np_' + key, payload);
+                } else if (typeof sessionStorage !== 'undefined') {
+                    sessionStorage.setItem('nisha_np_' + key, JSON.stringify(payload));
+                }
+            } catch (storageErr) {
+                // Защита от QuotaExceededError
+                try {
+                    if (typeof sessionStorage !== 'undefined') {
+                        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+                            const k = sessionStorage.key(i);
+                            if (k && k.startsWith('nisha_np_')) {
+                                sessionStorage.removeItem(k);
+                            }
                         }
                     }
-                }
-            } catch (_) {}
+                } catch (_) {}
+            }
         }
     }
 }
