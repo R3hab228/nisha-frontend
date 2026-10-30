@@ -217,6 +217,19 @@ export const storage = new Proxy({}, {
             return typeof val === 'function' ? val.bind(window.storage) : val;
         }
         return undefined;
+    },
+    set(_target, prop, value) {
+        if (typeof window !== 'undefined' && window.storage) {
+            window.storage[prop] = value;
+            return true;
+        }
+        return false;
+    },
+    has(_target, prop) {
+        if (typeof window !== 'undefined' && window.storage) {
+            return prop in window.storage;
+        }
+        return false;
     }
 });
 
@@ -230,5 +243,18 @@ export const safeStorage = new Proxy({}, {
             return typeof val === 'function' ? val.bind(window.safeStorage) : val;
         }
         return undefined;
+    },
+    set(_target, prop, value) {
+        if (typeof window !== 'undefined' && window.safeStorage) {
+            window.safeStorage[prop] = value;
+            return true;
+        }
+        return false;
+    },
+    has(_target, prop) {
+        if (typeof window !== 'undefined' && window.safeStorage) {
+            return prop in window.safeStorage;
+        }
+        return false;
     }
 });

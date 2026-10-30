@@ -34,32 +34,6 @@ export function executeCloseModal(modalId) {
     }
 }
 
-/**
- * Opens reviews modal dialog
- */
-export function openReviewsModal() {
-    if (typeof window !== 'undefined' && typeof window.openReviewsModal === 'function') {
-        return window.openReviewsModal();
-    }
-}
-
-/**
- * Opens user orders history modal dialog
- */
-export function openOrdersModal() {
-    if (typeof window !== 'undefined' && typeof window.openOrdersModal === 'function') {
-        return window.openOrdersModal();
-    }
-}
-
-/**
- * Opens item proposal modal dialog
- */
-export function openProposeModal() {
-    if (typeof window !== 'undefined' && typeof window.openProposeModal === 'function') {
-        return window.openProposeModal();
-    }
-}
 
 /**
  * Opens support chat dialog

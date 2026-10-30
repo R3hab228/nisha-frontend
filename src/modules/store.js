@@ -87,4 +87,6 @@ export const store = new Proxy({}, {
     }
 });
 
+export { storage, safeStorage } from './helpers.js';
+
 export default store;

@@ -115,6 +115,10 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(defaultModularFacade.cart).toBeDefined();
             expect(defaultModularFacade.product).toBeDefined();
             expect(defaultModularFacade.analytics).toBeDefined();
+            expect(defaultModularFacade.reviews).toBeDefined();
+            expect(defaultModularFacade.orders).toBeDefined();
+            expect(defaultModularFacade.drop).toBeDefined();
+            expect(defaultModularFacade.profile).toBeDefined();
         });
     });
 
@@ -297,6 +301,75 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(() => removeHistoryItem('item_1')).not.toThrow();
             await expect(submitQuestion('item_1')).resolves.not.toThrow();
             await expect(loadItemQuestions('item_1')).resolves.toEqual([]);
+        });
+    });
+
+    describe('Reviews Module (src/modules/reviews.js)', () => {
+        it('handles reviews interactions without throwing', async () => {
+            const reviews = defaultModularFacade.reviews;
+            await expect(reviews.openReviewImage('https://cdn.example.com/test.jpg')).resolves.not.toThrow();
+            await expect(reviews.openReviewsModal()).resolves.not.toThrow();
+            expect(() => reviews.scrollReviews(1)).not.toThrow();
+            expect(() => reviews.equalizeReviewCardHeights()).not.toThrow();
+            expect(() => reviews.promptOrderReview('ord_1', 'Item', '', 1)).not.toThrow();
+            await expect(reviews.sendReviewPayload({ text: 'Good' })).resolves.toBeDefined();
+            await expect(reviews.submitAutoReview()).resolves.not.toThrow();
+            expect(() => reviews.skipAutoReview()).not.toThrow();
+            expect(() => reviews.writeReviewOnSite()).not.toThrow();
+            await expect(reviews.submitManualReview()).resolves.not.toThrow();
+            expect(() => reviews.initReviewsRealtime(null)).not.toThrow();
+        });
+    });
+
+    describe('Orders Module (src/modules/orders.js)', () => {
+        it('categorizes and manages order tabs safely', async () => {
+            const orders = defaultModularFacade.orders;
+            expect(orders.getOrderTabBucket({ status: 'Принят в обработку' })).toBe('accepted');
+            expect(orders.getOrderTabBucket({ status: 'Отправлен' })).toBe('shipped');
+            expect(orders.getOrderTabBucket({ status: 'Отменен покупателем' })).toBe('cancelled');
+            expect(orders.getOrderTabBucket({ status: 'Неизвестный' })).toBe('other');
+
+            expect(() => orders.openOrdersModal()).not.toThrow();
+            expect(() => orders.updateOrderTabCounters()).not.toThrow();
+            await expect(orders.fetchMyOrders()).resolves.toEqual([]);
+            expect(orders.getOrderItemImage({})).toBe('');
+            await expect(orders.ensureOrderImagesLoaded([])).resolves.not.toThrow();
+            expect(() => orders.switchOrderTab('accepted')).not.toThrow();
+            await expect(orders.copyTTN('20400000000000')).resolves.toBe(false);
+            expect(() => orders.renderFilteredOrders()).not.toThrow();
+        });
+    });
+
+    describe('Drop Module (src/modules/drop.js)', () => {
+        it('handles proposal submissions and uploads gracefully', async () => {
+            const drop = defaultModularFacade.drop;
+            expect(drop.getCurrentProposalFiles()).toEqual([]);
+            expect(() => drop.openProposeModal()).not.toThrow();
+            expect(() => drop.resetProposalForm()).not.toThrow();
+            await expect(drop.handleNewProposalFiles([])).resolves.not.toThrow();
+            expect(() => drop.openProposalPhotoByIndex(0)).not.toThrow();
+            expect(() => drop.removeProposalFile(0)).not.toThrow();
+            expect(() => drop.renderProposalPreviews()).not.toThrow();
+            await expect(drop.submitProposal()).resolves.not.toThrow();
+        });
+    });
+
+    describe('Profile Module (src/modules/profile.js)', () => {
+        it('manages profile actions and auth callbacks safely', async () => {
+            const profile = defaultModularFacade.profile;
+            expect(() => profile.openProfileModal()).not.toThrow();
+            await expect(profile.checkSession()).resolves.toBeNull();
+            expect(() => profile.toggleRegMode()).not.toThrow();
+            await expect(profile.handleAuth()).resolves.not.toThrow();
+            await expect(profile.handleForgotPassword()).resolves.not.toThrow();
+            await expect(profile.logout()).resolves.not.toThrow();
+            await expect(profile.loginWithGoogle()).resolves.not.toThrow();
+            expect(() => profile.togglePasswordVisibility('testInput')).not.toThrow();
+            await expect(profile.toggleFav('item_1', true)).resolves.toBe(false);
+            await expect(profile.loadFavorites()).resolves.toEqual([]);
+            expect(() => profile.updateFavBadge()).not.toThrow();
+            expect(() => defaultModularFacade.catalog.filterFavorites()).not.toThrow();
+            expect(() => profile.initAuthListener()).not.toThrow();
         });
     });
 });
