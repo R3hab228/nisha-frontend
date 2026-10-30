@@ -2,6 +2,15 @@
 // NISHA LIVE SEARCH & SEARCH HISTORY MODULE
 // ==========================================
 
+import {
+    storage,
+    escapeHtml,
+    escapeJsString,
+    formatPrice,
+    toCDN,
+    applyFilters
+} from '../../src/modules/index.js';
+
 let searchDebounce;
 let currentLiveSearchSeq = 0;
 let cachedFuseInstance = null;
@@ -44,15 +53,14 @@ window.invalidateLiveSearchFuse = function() {
 // Функция сохранения истории поиска (с защитой от квоты localStorage)
 function saveRecentSearch(term) {
     if (!term || term.length < 2) return;
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    let history = store ? store.getJSON('nisha_search_history', []) : [];
+    let history = storage ? storage.getJSON('nisha_search_history', []) : [];
     if (!Array.isArray(history)) history = [];
     history = history.filter(t => t.toLowerCase() !== term.toLowerCase());
     history.unshift(term);
     if (history.length > 5) history.pop();
     
-    if (store) {
-        store.setJSON('nisha_search_history', history);
+    if (storage) {
+        storage.setJSON('nisha_search_history', history);
     }
 }
 
@@ -60,14 +68,12 @@ function saveRecentSearch(term) {
 function showSearchHistory() {
     const dropdown = document.getElementById('liveSearchDropdown');
     if (!dropdown) return;
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    const history = store ? store.getJSON('nisha_search_history', []) : [];
+    const history = storage ? storage.getJSON('nisha_search_history', []) : [];
     if (!Array.isArray(history) || history.length === 0) return;
 
-    const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
     let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" data-action="clear-search-history">[ ОЧИСТИТЬ ]</span></div>`;
     history.forEach(term => {
-        const safeTermHtml = escHtml(term);
+        const safeTermHtml = escapeHtml(term);
         html += `<div class="search-history-item" data-action="apply-search-history" data-term="${safeTermHtml}">
                     <span>> ${safeTermHtml}</span>
                  </div>`;
@@ -144,8 +150,6 @@ function handleLiveSearch() {
             document.body.classList.add('search-lock');
             if (typeof window.stopLenis === 'function') window.stopLenis();
             
-            const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
-            const escJs = typeof window.escapeJsString === 'function' ? window.escapeJsString : (s) => escHtml(String(s || '').replaceAll('\\', '\\\\').replaceAll("'", "\\'"));
             let html = '';
             results.forEach(result => {
                 const item = result.item;
@@ -153,36 +157,35 @@ function handleLiveSearch() {
                 const isReserved = item.status === 'reserved';
                 const reservedBadgeHtml = isReserved ? '<div class="live-search-reserved-badge">RESERVED</div>' : '';
                 const rawImg = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : ((item.images && item.images[0]) ? item.images[0] : '');
-                const img = typeof window.toCDN === 'function' ? window.toCDN(rawImg) : rawImg;
-                const safeImg = escJs(img);
+                const img = toCDN(rawImg);
+                const safeImg = escapeJsString(img);
                 const rawItemName = String(item.name || '');
                 
-                let highlightedName = escHtml(rawItemName);
+                let highlightedName = escapeHtml(rawItemName);
                 if (result.matches) {
                     const nameMatch = result.matches.find(m => m.key === 'name');
                     if (nameMatch) {
                         let tempName = '';
                         let lastIdx = 0;
                         nameMatch.indices.forEach(([start, end]) => {
-                            tempName += escHtml(rawItemName.substring(lastIdx, start));
-                            tempName += `<span style="color: var(--accent-green); background: rgba(0,255,0,0.1);">${escHtml(rawItemName.substring(start, end + 1))}</span>`;
+                            tempName += escapeHtml(rawItemName.substring(lastIdx, start));
+                            tempName += `<span style="color: var(--accent-green); background: rgba(0,255,0,0.1);">${escapeHtml(rawItemName.substring(start, end + 1))}</span>`;
                             lastIdx = end + 1;
                         });
-                        tempName += escHtml(rawItemName.substring(lastIdx));
+                        tempName += escapeHtml(rawItemName.substring(lastIdx));
                         highlightedName = tempName;
                     }
                 }
 
-                const curr = typeof getCurrency === 'function' ? getCurrency() : 'грн';
-                const formattedSearchPrice = typeof window.formatPrice === 'function' ? window.formatPrice(item.price) : `${escHtml(item.price)} ${curr}`;
+                const formattedSearchPrice = formatPrice(item.price);
                 let priceHtml = formattedSearchPrice;
                 if (item.is_sale && item.old_price) {
-                    const formattedOld = typeof window.formatPrice === 'function' ? window.formatPrice(item.old_price) : `${escHtml(item.old_price)} ${curr}`;
+                    const formattedOld = formatPrice(item.old_price);
                     priceHtml = `<span style="color:#666; text-decoration:line-through; font-size:10px; margin-right:4px;">${formattedOld}</span>${formattedSearchPrice}`;
                 }
 
                 html += `
-                    <div class="live-search-item ${isReserved ? 'reserved-item' : ''}" data-action="select-live-search-item" data-id="${escHtml(item.id)}">
+                    <div class="live-search-item ${isReserved ? 'reserved-item' : ''}" data-action="select-live-search-item" data-id="${escapeHtml(item.id)}">
                         <div class="live-search-img" style="background-image: url('${safeImg}')">${reservedBadgeHtml}</div>
                         <div class="live-search-info">
                             <span class="live-search-title">${highlightedName}</span>
@@ -234,7 +237,7 @@ if (mainSearchInput) {
         if (e.key === 'Enter') {
             e.preventDefault();
             saveRecentSearch(this.value.trim());
-            if (typeof applyFilters === 'function') applyFilters();
+            applyFilters();
             closeSearch();
         } else if (e.key === 'Escape') {
             closeSearch();
