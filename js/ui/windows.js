@@ -100,11 +100,37 @@ function isUserInProductFeed() {
 }
 window.isUserInProductFeed = isUserInProductFeed;
 
-// 2. Универсальное открытие модального окна
+// Реестр функций ленивой гидратации модальных окон
+const _modalInitializers = new Map();
+function registerModalInitializer(id, initFn) {
+    if (typeof initFn === 'function') {
+        _modalInitializers.set(id, initFn);
+    }
+}
+window.registerModalInitializer = registerModalInitializer;
+
+function triggerModalInitializer(id) {
+    const fn = _modalInitializers.get(id);
+    if (typeof fn === 'function') {
+        _modalInitializers.delete(id); // Выполняем ровно 1 раз при первом открытии
+        try { fn(); } catch(e) { console.warn('[ModalInit] Lazy init error:', id, e); }
+    }
+}
+
+// 2. Универсальное открытие модального окна (с ленивой инициализацией)
 function openModal(id) {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     const modal = document.getElementById(id);
     if (!modal) return;
+
+    // Ленивая привязка интерактивных слушателей и жестов к открываемому окну
+    if (typeof attachModalOverlayInteractions === 'function') {
+        attachModalOverlayInteractions(modal);
+    }
+
+    // Ленивая гидратация содержимого окна при первом открытии
+    triggerModalInitializer(id);
+
     if (typeof document !== 'undefined' && document.activeElement) {
         modal._returnFocusElement = document.activeElement;
     }
@@ -114,10 +140,15 @@ function openModal(id) {
     }
     modal.inert = false;
     modal.removeAttribute('inert');
-    modal.classList.remove('closing');
+    if (modal.classList && typeof modal.classList.remove === 'function') {
+        modal.classList.remove('closing');
+    }
+    if (modal.classList && typeof modal.classList.add === 'function') {
+        modal.classList.add('is-open');
+    }
     modal.style.pointerEvents = '';
     modal.setAttribute('aria-hidden', 'false');
-    const win = modal.querySelector('.modal-window');
+    const win = modal.querySelector ? modal.querySelector('.modal-window') : null;
     if (win) {
         win.scrollTop = 0;
         win.style.transform = '';
@@ -242,6 +273,9 @@ function executeCloseModal(id, e) {
         try { document.activeElement.blur(); } catch (e) {}
     }
 
+    if (modal.classList && typeof modal.classList.remove === 'function') {
+        modal.classList.remove('is-open');
+    }
     modal.classList.add('closing');
     modal.setAttribute('aria-hidden', 'true');
     const winClosing = modal.querySelector('.modal-window');
@@ -310,27 +344,28 @@ function executeCloseModal(id, e) {
 window.executeCloseModal = executeCloseModal;
 
 // 5. Мобильный жест: свайп окна вниз для закрытия
-function initMobileSwipe() {
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-        const modalWin = overlay.querySelector('.modal-window');
-        if (!modalWin || modalWin._swipeBound) return;
-        modalWin._swipeBound = true;
+function attachMobileSwipeToWindow(overlay) {
+    if (!overlay) return;
+    const modalWin = overlay.querySelector ? overlay.querySelector('.modal-window') : null;
+    if (!modalWin || modalWin._swipeBound) return;
+    modalWin._swipeBound = true;
 
-        let startX = 0;
-        let startY = 0;
-        let currentX = 0;
-        let currentY = 0;
-        let isDragging = false;
-        let canDrag = false;
-        let isGalleryTouch = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let canDrag = false;
+    let isGalleryTouch = false;
 
-        modalWin.addEventListener('touchstart', (e) => {
-            if (window.innerWidth > 900) return;
-            if (e.touches.length > 1) return;
-            
-            // ЗАЩИТА: Отключаем свайп окна при зуме в PhotoSwipe, вводе текста, открытых выпадающих списках НП или открытой клавиатуре
-            if (document.body.classList.contains('sort-lock') || 
-                (document.documentElement && document.documentElement.classList && document.documentElement.classList.contains('keyboard-open')) ||
+    modalWin.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 900) return;
+        if (e.touches && e.touches.length > 1) return;
+        
+        // ЗАЩИТА: Отключаем свайп окна при зуме в PhotoSwipe, вводе текста, открытых выпадающих списках НП или открытой клавиатуре
+        if (document.body && document.body.classList && document.body.classList.contains('sort-lock') || 
+            (document.documentElement && document.documentElement.classList && document.documentElement.classList.contains('keyboard-open')) ||
+            (e.target && e.target.closest && (
                 e.target.closest('.preview-container') || 
                 e.target.closest('.pswp') || 
                 e.target.closest('.close-btn') || 
@@ -347,82 +382,118 @@ function initMobileSwipe() {
                 e.target.closest('.np-clear-btn') || 
                 e.target.closest('.rules-content') || 
                 e.target.closest('.orders-container') || 
-                e.target.closest('#reviewsContainerList')) {
-                canDrag = false;
-                return;
-            }
+                e.target.closest('#reviewsContainerList')
+            ))) {
+            canDrag = false;
+            return;
+        }
 
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            currentX = startX;
-            currentY = startY;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentX = startX;
+        currentY = startY;
 
-            isGalleryTouch = !!e.target.closest('.modal-gallery');
-            canDrag = (modalWin.scrollTop <= 0); 
+        isGalleryTouch = Boolean(e.target && e.target.closest && e.target.closest('.modal-gallery'));
+        canDrag = (modalWin.scrollTop <= 0); 
+        isDragging = false;
+
+        modalWin.style.transition = 'none';
+        overlay.style.transition = 'none';
+    }, { passive: true });
+
+    modalWin.addEventListener('touchmove', (e) => {
+        if (window.innerWidth > 900 || !canDrag) return;
+        if (e.touches && e.touches.length > 1) return;
+
+        currentX = e.touches[0].clientX;
+        currentY = e.touches[0].clientY;
+        const diffX = Math.abs(currentX - startX);
+        const diffY = currentY - startY;
+
+        // Если касание началось на галерее и жест горизонтальный — отдаем управление слайдеру фото
+        if (isGalleryTouch && diffX > diffY) {
+            canDrag = false;
             isDragging = false;
+            modalWin.style.transform = 'translateY(0px)';
+            return;
+        }
 
-            modalWin.style.transition = 'none';
-            overlay.style.transition = 'none';
-        }, { passive: true });
+        // Плавное перетягивание шторки вниз
+        if (diffY > 8) {
+            isDragging = true;
+            if (e.cancelable && typeof e.preventDefault === 'function') e.preventDefault(); 
+            
+            requestAnimationFrame(() => {
+                if (!isDragging) return;
+                modalWin.style.transform = `translateY(${diffY}px)`;
+                let opacity = 1 - (diffY / (window.innerHeight * 0.7));
+                overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0.15, opacity * 0.95)})`;
+            });
+        } else if (diffY <= 0) {
+            isDragging = false;
+            modalWin.style.transform = `translateY(0px)`;
+        }
+    }, { passive: false });
 
-        modalWin.addEventListener('touchmove', (e) => {
-            if (window.innerWidth > 900 || !canDrag) return;
-            if (e.touches.length > 1) return;
-
-            currentX = e.touches[0].clientX;
-            currentY = e.touches[0].clientY;
-            const diffX = Math.abs(currentX - startX);
+    const handleTouchFinish = () => {
+        if (window.innerWidth > 900) return;
+        
+        if (isDragging) {
             const diffY = currentY - startY;
+            isDragging = false;
+            canDrag = false;
+            
+            // Естественный порог 80px (или быстрый свайп) вместо жестких 150px
+            if (diffY > 80) { 
+                if (typeof triggerHaptic === 'function') triggerHaptic('light');
+                closeModal(overlay.id);
+            } else {
+                modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                overlay.style.transition = 'background-color 0.25s ease';
+                modalWin.style.transform = `translateY(0px)`;
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+            }
+        }
+    };
 
-            // Если касание началось на галерее и жест горизонтальный — отдаем управление слайдеру фото
-            if (isGalleryTouch && diffX > diffY) {
-                canDrag = false;
-                isDragging = false;
-                modalWin.style.transform = 'translateY(0px)';
+    modalWin.addEventListener('touchend', handleTouchFinish, { passive: true });
+    modalWin.addEventListener('touchcancel', handleTouchFinish, { passive: true });
+}
+
+// Ленивая привязка интерактивных слушателей и жестов к модальному окну при первом открытии
+function attachModalOverlayInteractions(overlay) {
+    if (!overlay || overlay._interactionsAttached) return;
+    overlay._interactionsAttached = true;
+
+    // Закрытие по клику на темный фон оверлея
+    if (typeof overlay.addEventListener === 'function') {
+        overlay.addEventListener('click', function(e) {
+            if (this.classList && typeof this.classList.contains === 'function' && this.classList.contains('closing')) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
                 return;
             }
-
-            // Плавное перетягивание шторки вниз
-            if (diffY > 8) {
-                isDragging = true;
-                if (e.cancelable) e.preventDefault(); 
-                
-                requestAnimationFrame(() => {
-                    if (!isDragging) return;
-                    modalWin.style.transform = `translateY(${diffY}px)`;
-                    let opacity = 1 - (diffY / (window.innerHeight * 0.7));
-                    overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0.15, opacity * 0.95)})`;
-                });
-            } else if (diffY <= 0) {
-                isDragging = false;
-                modalWin.style.transform = `translateY(0px)`;
+            if (this.id === 'rulesModal') return; 
+            if (e.target === this) { 
+                closeModal(this.id, e); 
             }
-        }, { passive: false });
+        });
+    }
 
-        const handleTouchFinish = () => {
-            if (window.innerWidth > 900) return;
-            
-            if (isDragging) {
-                const diffY = currentY - startY;
-                isDragging = false;
-                canDrag = false;
-                
-                // Естественный порог 80px (или быстрый свайп) вместо жестких 150px
-                if (diffY > 80) { 
-                    if (typeof triggerHaptic === 'function') triggerHaptic('light');
-                    closeModal(overlay.id);
-                } else {
-                    modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                    overlay.style.transition = 'background-color 0.25s ease';
-                    modalWin.style.transform = `translateY(0px)`;
-                    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
-                }
-            }
-        };
+    // Предотвращение скролла Lenis внутри открытого модального окна
+    const modalWin = overlay.querySelector ? overlay.querySelector('.modal-window') : null;
+    if (modalWin && typeof modalWin.setAttribute === 'function') {
+        modalWin.setAttribute('data-lenis-prevent', 'true');
+    }
 
-        modalWin.addEventListener('touchend', handleTouchFinish, { passive: true });
-        modalWin.addEventListener('touchcancel', handleTouchFinish, { passive: true });
-    });
+    // Подключение мобильного свайпа
+    attachMobileSwipeToWindow(overlay);
+}
+window.attachModalOverlayInteractions = attachModalOverlayInteractions;
+
+function initMobileSwipe() {
+    if (typeof document === 'undefined' || !document.querySelectorAll) return;
+    document.querySelectorAll('.modal-overlay').forEach(attachMobileSwipeToWindow);
 }
 window.initMobileSwipe = initMobileSwipe;
 
@@ -501,31 +572,14 @@ window.initMobileKeyboardViewport = initMobileKeyboardViewport;
 
 // 6. Инициализация клика по фону и защиты скролла
 function initWindowOverlayListeners() {
-    // Закрытие по клику на темный фон оверлея
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-        if (!overlay._overlayBound) {
-            overlay._overlayBound = true;
-            overlay.addEventListener('click', function(e) {
-                if (this.classList.contains('closing')) {
-                    if (typeof e.preventDefault === 'function') e.preventDefault();
-                    if (typeof e.stopPropagation === 'function') e.stopPropagation();
-                    return;
-                }
-                if (this.id === 'rulesModal') return; 
-                if (e.target === this) { 
-                    closeModal(this.id, e); 
-                }
-            });
-        }
-    });
+    // Предотвращение скролла Lenis внутри контейнеров
+    if (typeof document !== 'undefined' && document.querySelectorAll) {
+        document.querySelectorAll('.orders-container').forEach(el => {
+            if (typeof el.setAttribute === 'function') el.setAttribute('data-lenis-prevent', 'true');
+        });
+    }
 
-    // Предотвращение скролла Lenis внутри модальных окон
-    document.querySelectorAll('.modal-window, .orders-container').forEach(el => {
-        el.setAttribute('data-lenis-prevent', 'true');
-    });
-
-    // Подключение мобильного свайпа и адаптации под клавиатуру
-    initMobileSwipe();
+    // Подключение адаптации под мобильную клавиатуру
     initMobileKeyboardViewport();
 }
 

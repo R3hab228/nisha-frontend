@@ -34,6 +34,17 @@ export function executeCloseModal(modalId) {
     }
 }
 
+/**
+ * Registers lazy initializer callback for specific modal dialog
+ * @param {string} modalId
+ * @param {() => void} initFn
+ */
+export function registerModalInitializer(modalId, initFn) {
+    if (typeof window !== 'undefined' && typeof window.registerModalInitializer === 'function') {
+        return window.registerModalInitializer(modalId, initFn);
+    }
+}
+
 
 /**
  * Opens support chat dialog

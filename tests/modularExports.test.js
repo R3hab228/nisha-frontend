@@ -220,6 +220,7 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(() => executeCloseModal('nonExistentModal')).not.toThrow();
             expect(isElementVisible(null)).toBe(false);
             expect(isUserInProductFeed()).toBe(false);
+            expect(() => defaultModularFacade.windows.registerModalInitializer('testModal', () => {})).not.toThrow();
         });
     });
 
