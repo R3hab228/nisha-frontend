@@ -441,7 +441,7 @@ function initMobileKeyboardViewport() {
         }
         const vv = window.visualViewport;
         const currentH = vv ? vv.height : window.innerHeight;
-        const offsetTop = vv ? vv.offsetTop : 0;
+        const _offsetTop = vv ? vv.offsetTop : 0;
 
         if (currentH > baselineHeight) baselineHeight = currentH;
         const refHeight = Math.max(baselineHeight, window.innerHeight || 0);

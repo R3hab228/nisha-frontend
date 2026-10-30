@@ -7,7 +7,6 @@ if (typeof window.currentOpenedItem === 'undefined') window.currentOpenedItem = 
 let currentOpenedItem = window.currentOpenedItem;
 
 let currentSlide = 0;
-let totalSlides = 0;
 
 const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
 
@@ -1384,7 +1383,7 @@ async function loadItemQuestions(itemId) {
     const sb = getSupabase();
     if (!sb) return;
     
-    const { data, error } = await sb.from('item_questions').select('question, answer, user_name, created_at').eq('item_id', itemId).order('created_at', { ascending: true });
+    const { data } = await sb.from('item_questions').select('question, answer, user_name, created_at').eq('item_id', itemId).order('created_at', { ascending: true });
     
     const wrapper = document.getElementById('qaWrapper');
     const list = document.getElementById('qaList');

@@ -2630,4 +2630,35 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(html).toContain('★ <span id=modalProfileLikesCount>');
         });
     });
+
+    describe('50. Code Quality, Linting & Formatting Toolchain (ESLint & Prettier)', () => {
+        it('has valid ESLint 9+ flat configuration, Prettier configuration, and package scripts', () => {
+            const pkg = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8'));
+            expect(pkg.scripts.lint).toBe('eslint .');
+            expect(pkg.scripts['lint:fix']).toBe('eslint . --fix');
+            expect(pkg.scripts.format).toBe('prettier --write .');
+            expect(pkg.scripts['format:check']).toBe('prettier --check .');
+
+            expect(pkg.devDependencies.eslint).toBeDefined();
+            expect(pkg.devDependencies.prettier).toBeDefined();
+            expect(pkg.devDependencies['eslint-config-prettier']).toBeDefined();
+
+            // Config files existence
+            const eslintConfig = readFileSync(resolve(__dirname, '../eslint.config.mjs'), 'utf8');
+            expect(eslintConfig).toContain('prettierConfig');
+            expect(eslintConfig).toContain('no-unused-vars');
+
+            const prettierConfig = JSON.parse(readFileSync(resolve(__dirname, '../.prettierrc'), 'utf8'));
+            expect(prettierConfig.tabWidth).toBe(4);
+            expect(prettierConfig.singleQuote).toBe(true);
+
+            const prettierIgnore = readFileSync(resolve(__dirname, '../.prettierignore'), 'utf8');
+            expect(prettierIgnore).toContain('node_modules');
+            expect(prettierIgnore).toContain('dist');
+
+            // GitHub CI check
+            const ciWorkflow = readFileSync(resolve(__dirname, '../.github/workflows/lint.yml'), 'utf8');
+            expect(ciWorkflow).toContain('npm run lint');
+        });
+    });
 });

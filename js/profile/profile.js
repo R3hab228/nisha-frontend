@@ -11,8 +11,6 @@ if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCa
 let currentUser = window.currentUser;
 let userProfile = window.userProfile;
 let favorites = window.favorites;
-
-let isRegMode = false;
 if (typeof window.globalOrdersData === 'undefined') window.globalOrdersData = [];
 if (typeof window.currentOrderTab === 'undefined') window.currentOrderTab = 'accepted'; // accepted, shipped, cancelled
 let isTogglingFav = false; // Защита от двойного клика
@@ -585,7 +583,7 @@ async function loginWithGoogle() {
     if (!sb) return;
 
     const redirectUrl = window.location.origin || 'https://www.nisha-store.shop';
-    const { data, error } = await sb.auth.signInWithOAuth({
+    const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
             redirectTo: redirectUrl,

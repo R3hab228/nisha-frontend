@@ -155,7 +155,6 @@ function handleLiveSearch() {
                 const rawImg = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : ((item.images && item.images[0]) ? item.images[0] : '');
                 const img = typeof window.toCDN === 'function' ? window.toCDN(rawImg) : rawImg;
                 const safeImg = escJs(img);
-                const safeId = escJs(item.id);
                 const rawItemName = String(item.name || '');
                 
                 let highlightedName = escHtml(rawItemName);

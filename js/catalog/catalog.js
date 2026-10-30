@@ -1211,14 +1211,14 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
     const oldIsSale = item.is_sale;
 
     const statusChanged = item.status !== fresh.status;
-    const saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
-    const priceChanged = item.price !== fresh.price;
+    const _saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
+    const _priceChanged = item.price !== fresh.price;
     const wasHot = (item.views_count || 0) >= 25;
     const nowHot = (fresh.views_count !== undefined ? fresh.views_count : (item.views_count || 0)) >= 25;
-    const hotChanged = wasHot !== nowHot;
+    const _hotChanged = wasHot !== nowHot;
     const categoryChanged = fresh.category !== undefined && item.category !== fresh.category;
     const sizeChanged = fresh.size !== undefined && item.size !== fresh.size;
-    const metaChanged = (fresh.name !== undefined && item.name !== fresh.name) ||
+    const _metaChanged = (fresh.name !== undefined && item.name !== fresh.name) ||
                         (fresh.brand !== undefined && item.brand !== fresh.brand) ||
                         (fresh.condition !== undefined && item.condition !== fresh.condition) ||
                         categoryChanged || sizeChanged;
@@ -2528,14 +2528,7 @@ function renderNextBatch(targetMobileCount = 0) {
             window._seenItemsSet = new Set();
         }
     }
-    const seenSet = window._seenItemsSet;
-    
-    const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
-    const favSet = new Set(Array.isArray(userFavs) ? userFavs.map(String) : []);
-    const curr = (typeof getCurrency === 'function') ? getCurrency() : 'грн';
-    const sizePrefix = (typeof i18next !== 'undefined') ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
-    const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
-    const nowTs = Date.now();
+    // Note: card properties (seenSet, favSet, curr, etc.) are computed in buildCardDOM
 
     const fragment = document.createDocumentFragment();
     const newVideoElements = [];
