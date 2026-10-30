@@ -379,6 +379,63 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             await expect(orders.copyTTN('20400000000000')).resolves.toBe(false);
             expect(() => orders.renderFilteredOrders()).not.toThrow();
         });
+
+        it('supports single and multiple TTNs in order rendering', async () => {
+            await import('../js/orders/orders.js');
+            const listArea = {
+                id: 'ordersListArea',
+                innerHTML: '',
+                querySelectorAll: (sel) => {
+                    if (sel === '.ttn-copy-btn') {
+                        const matches = listArea.innerHTML.match(/class="ttn-copy-btn"[^>]*data-ttn="([^"]+)"/g) || [];
+                        return matches.map(m => {
+                            const val = m.match(/data-ttn="([^"]+)"/)?.[1];
+                            return { getAttribute: (attr) => attr === 'data-ttn' ? val : null };
+                        });
+                    }
+                    if (sel === '.barcode-svg') {
+                        const matches = listArea.innerHTML.match(/class="barcode-svg"[^>]*data-ttn="([^"]+)"/g) || [];
+                        return matches.map(m => {
+                            const val = m.match(/data-ttn="([^"]+)"/)?.[1];
+                            return { getAttribute: (attr) => attr === 'data-ttn' ? val : null };
+                        });
+                    }
+                    return [];
+                }
+            };
+            const origDoc = globalThis.document;
+            globalThis.document = {
+                getElementById: vi.fn((id) => (id === 'ordersListArea' ? listArea : null)),
+                querySelector: vi.fn(() => null),
+                querySelectorAll: vi.fn(() => [])
+            };
+
+            window.globalOrdersData = [
+                {
+                    id: 'test-order-multi-ttn',
+                    status: 'Отправлен',
+                    created_at: new Date().toISOString(),
+                    items: [{ name: 'Вещь 1' }, { name: 'Вещь 2' }],
+                    tracking_number: '20450123456789, 20450987654321',
+                    total_sum: 2400
+                }
+            ];
+            window.currentOrderTab = 'shipped';
+
+            window.renderFilteredOrders();
+
+            const copyBtns = listArea.querySelectorAll('.ttn-copy-btn');
+            expect(copyBtns.length).toBe(2);
+            expect(copyBtns[0].getAttribute('data-ttn')).toBe('20450123456789');
+            expect(copyBtns[1].getAttribute('data-ttn')).toBe('20450987654321');
+
+            const barcodes = listArea.querySelectorAll('.barcode-svg');
+            expect(barcodes.length).toBe(2);
+            expect(barcodes[0].getAttribute('data-ttn')).toBe('20450123456789');
+            expect(barcodes[1].getAttribute('data-ttn')).toBe('20450987654321');
+
+            globalThis.document = origDoc;
+        });
     });
 
     describe('Drop Module (src/modules/drop.js)', () => {
