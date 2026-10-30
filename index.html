@@ -43,6 +43,15 @@
     }
   } catch(e){}
   try {
+    if (typeof window !== 'undefined' && typeof window.ethereum === 'undefined') {
+      var _ethTarget = {};
+      window.ethereum = typeof Proxy === 'function' ? new Proxy(_ethTarget, {
+        get: function(t, p){ return t[p]; },
+        set: function(t, p, v){ t[p] = v; return true; }
+      }) : _ethTarget;
+    }
+  } catch(e){}
+  try {
     var s = (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: minimal-ui)').matches)) || (typeof navigator !== 'undefined' && navigator.standalone === true) || (document.referrer && document.referrer.indexOf('android-app://') !== -1);
     if (s && document.documentElement) document.documentElement.classList.add('pwa-standalone');
   } catch(e){}

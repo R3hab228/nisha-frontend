@@ -1818,6 +1818,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(telemetry.isIgnoredError('Script error')).toBe(true);
             expect(telemetry.isIgnoredError('Error in extension', '', 'chrome-extension://abc123xyz')).toBe(true);
             expect(telemetry.isIgnoredError("undefined is not an object (evaluating 'window._META.IABInnerFrame')")).toBe(true);
+            expect(telemetry.isIgnoredError("undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')")).toBe(true);
+            expect(telemetry.isIgnoredError("Cannot read properties of undefined (reading 'selectedAddress')")).toBe(true);
+            expect(telemetry.isIgnoredError("ethereum is not defined")).toBe(true);
             expect(telemetry.isIgnoredError('TypeError: Cannot read properties of undefined (reading "id")', 'at renderGrid (catalog.js:2100)')).toBe(false);
         });
 
@@ -2106,6 +2109,31 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
             expect(profileCode).toContain('window.resetCheckoutAddressState');
+        });
+
+        it('intercepts third-party web3/ethereum injected script crashes via safe window.ethereum stub and filters them in telemetry', () => {
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(html).toContain('window.ethereum');
+            expect(html).toContain('window._META');
+
+            // Test execution of injected script assignment on stubbed environment
+            const fakeWin = {};
+            const fn = new Function('window', `
+                if (typeof window.ethereum === 'undefined') {
+                    var _ethTarget = {};
+                    window.ethereum = typeof Proxy === 'function' ? new Proxy(_ethTarget, {
+                        get: function(t, p){ return t[p]; },
+                        set: function(t, p, v){ t[p] = v; return true; }
+                    }) : _ethTarget;
+                }
+            `);
+            fn(fakeWin);
+
+            expect(fakeWin.ethereum).toBeDefined();
+            expect(() => {
+                fakeWin.ethereum.selectedAddress = undefined;
+            }).not.toThrow();
+            expect(fakeWin.ethereum.selectedAddress).toBeUndefined();
         });
 
         it('guards IDBDatabase operations against closing connections and ignores connection closure in telemetry', () => {

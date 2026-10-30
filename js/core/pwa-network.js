@@ -182,7 +182,10 @@ const IGNORED_ERROR_PATTERNS = [
     /__firefox__/i,
     /fb_xd_fragment/i,
     /database connection is closing/i,
-    /IDBDatabase/i
+    /IDBDatabase/i,
+    /ethereum/i,
+    /selectedAddress/i,
+    /web3/i
 ];
 
 function sanitizeContext(context) {
@@ -235,7 +238,8 @@ function getReadableDevice() {
     else if (/linux/i.test(ua)) os = '🐧 Linux';
 
     let browser = '';
-    if (/chrome|crios/i.test(ua) && !/edg|opr|opera/i.test(ua)) browser = 'Chrome';
+    if (/brave/i.test(ua) || (typeof navigator !== 'undefined' && navigator.brave)) browser = 'Brave';
+    else if (/chrome|crios/i.test(ua) && !/edg|opr|opera/i.test(ua)) browser = 'Chrome';
     else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
     else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
     else if (/edg/i.test(ua)) browser = 'Edge';
@@ -332,6 +336,8 @@ function sendTelegramErrorAlert(errorObj, context = {}) {
 }
 
 function recordEarlySentryError(evt) {
+    const err = evt.error || evt.reason || evt.message || evt;
+    if (isIgnoredError(err && (err.message || err.reason || err), err && err.stack, evt.filename || evt.source)) return;
     if (!window._sentryActive && earlySentryErrors.length < 20) {
         earlySentryErrors.push(evt);
         initSentryDeferred();
@@ -373,8 +379,12 @@ function initSentryDeferred() {
                         'The operation was aborted',
                         'AbortError: The play() request was interrupted',
                         "undefined is not an object (evaluating 'window._META.IABInnerFrame')",
+                        "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')",
                         '_META',
-                        'IABInnerFrame'
+                        'IABInnerFrame',
+                        'ethereum',
+                        'selectedAddress',
+                        'web3'
                     ],
                     denyUrls: [
                         /extensions\//i,
