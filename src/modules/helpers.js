@@ -258,3 +258,41 @@ export const safeStorage = new Proxy({}, {
         return false;
     }
 });
+
+/**
+ * Safely executes DOM mutation callback with View Transitions API when supported,
+ * falling back gracefully for unsupported browsers or prefers-reduced-motion.
+ * @param {() => void | Promise<void>} updateFn
+ * @returns {{ finished: Promise<any>, ready: Promise<any>, updateCallbackDone: Promise<any>, skipTransition: () => void }}
+ */
+export function safeViewTransition(updateFn) {
+    if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
+        return window.safeViewTransition(updateFn);
+    }
+    if (typeof updateFn !== 'function') {
+        return {
+            finished: Promise.resolve(),
+            ready: Promise.resolve(),
+            updateCallbackDone: Promise.resolve(),
+            skipTransition: () => {}
+        };
+    }
+    try {
+        const res = updateFn();
+        const p = res instanceof Promise ? res : Promise.resolve(res);
+        return {
+            finished: p,
+            ready: Promise.resolve(),
+            updateCallbackDone: p,
+            skipTransition: () => {}
+        };
+    } catch (err) {
+        console.error('[ViewTransitions] updateFn fallback failed:', err);
+        return {
+            finished: Promise.reject(err),
+            ready: Promise.resolve(),
+            updateCallbackDone: Promise.reject(err),
+            skipTransition: () => {}
+        };
+    }
+}

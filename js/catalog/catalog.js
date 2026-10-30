@@ -13,6 +13,7 @@ window.showingOnlyFavs = false;
 
 let itemsPageSize = window.innerWidth <= 900 ? 12 : 15;
 let applyFiltersTimeout = null;
+let _resolveApplyFilters = null;
 let changePageTimeout = null;
 let priceTimeout = null;
 
@@ -1739,7 +1740,13 @@ function applyFilters(immediate = false, preserveViewport = false) {
     clearTimeout(applyFiltersTimeout);
     const delay = (immediate || preserveViewport || isInitialRender) ? 0 : 160;
 
-    applyFiltersTimeout = setTimeout(async () => {
+    if (typeof _resolveApplyFilters === 'function') {
+        _resolveApplyFilters();
+        _resolveApplyFilters = null;
+    }
+    return new Promise((resolve) => {
+        _resolveApplyFilters = resolve;
+        applyFiltersTimeout = setTimeout(async () => {
         try {
             const searchInput = document.getElementById('mainSearch');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -1930,8 +1937,14 @@ function applyFilters(immediate = false, preserveViewport = false) {
                 grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${safeRenderErr} ]</div>`;
                 grid.classList.remove('fade-out');
             }
+        } finally {
+            if (_resolveApplyFilters === resolve) {
+                _resolveApplyFilters = null;
+            }
+            resolve();
         }
-    }, delay); 
+    }, delay);
+}); 
 }
 window.applyFilters = applyFilters;
 
@@ -2637,29 +2650,49 @@ window.sortItems = sortItems;
 
 // Установка фильтра категории
 function setCategoryFilter(cat, element) { 
-    document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
-    if (element) {
-        element.classList.add('active-filter');
+    const updateDom = async () => {
+        document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
+        if (element) {
+            element.classList.add('active-filter');
+        }
+        window.currentCategory = cat; 
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store && store.session) store.session.set('nisha_last_category', cat);
+        else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_last_category', cat); } catch (e) {} }
+        await applyFilters(true, false); 
+    };
+
+    if (typeof safeViewTransition === 'function') {
+        return safeViewTransition(updateDom);
+    } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
+        return window.safeViewTransition(updateDom);
+    } else {
+        return updateDom();
     }
-    window.currentCategory = cat; 
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    if (store && store.session) store.session.set('nisha_last_category', cat);
-    else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_last_category', cat); } catch (e) {} }
-    applyFilters(); 
 }
 window.setCategoryFilter = setCategoryFilter;
 
 // Очистка поиска крестиком
 function clearSearchInput() {
-    const input = document.getElementById('mainSearch');
-    if (input) input.value = '';
-    const clearBtn = document.getElementById('clearSearchBtn');
-    if (clearBtn) clearBtn.style.display = 'none';
-    const liveDropdown = document.getElementById('liveSearchDropdown');
-    if (liveDropdown) liveDropdown.style.display = 'none';
-    document.body.classList.remove('search-lock'); 
-    if (typeof window.startLenis === 'function') window.startLenis();
-    applyFilters();
+    const updateDom = async () => {
+        const input = document.getElementById('mainSearch');
+        if (input) input.value = '';
+        const clearBtn = document.getElementById('clearSearchBtn');
+        if (clearBtn) clearBtn.style.display = 'none';
+        const liveDropdown = document.getElementById('liveSearchDropdown');
+        if (liveDropdown) liveDropdown.style.display = 'none';
+        document.body.classList.remove('search-lock'); 
+        if (typeof window.startLenis === 'function') window.startLenis();
+        await applyFilters(true, false);
+    };
+
+    if (typeof safeViewTransition === 'function') {
+        return safeViewTransition(updateDom);
+    } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
+        return window.safeViewTransition(updateDom);
+    } else {
+        return updateDom();
+    }
 }
 window.clearSearchInput = clearSearchInput;
 

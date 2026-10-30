@@ -1962,15 +1962,25 @@ function filterFavorites() {
         showToast(msg, 'error'); 
         return; 
     }
-    const currentFavState = window.showingOnlyFavs || false;
-    window.showingOnlyFavs = !currentFavState;
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    if (store && store.session) store.session.set('nisha_showing_favs', window.showingOnlyFavs);
-    else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_showing_favs', window.showingOnlyFavs); } catch (e) {} }
-    
-    const favNav = document.getElementById('favNav');
-    if (favNav) favNav.style.color = window.showingOnlyFavs ? '#fff' : 'var(--accent-yellow)'; 
-    if (typeof applyFilters === 'function') applyFilters(); 
+    const updateDom = async () => {
+        const currentFavState = window.showingOnlyFavs || false;
+        window.showingOnlyFavs = !currentFavState;
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        if (store && store.session) store.session.set('nisha_showing_favs', window.showingOnlyFavs);
+        else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_showing_favs', window.showingOnlyFavs); } catch (e) {} }
+        
+        const favNav = document.getElementById('favNav');
+        if (favNav) favNav.style.color = window.showingOnlyFavs ? '#fff' : 'var(--accent-yellow)'; 
+        if (typeof applyFilters === 'function') await applyFilters(true, false); 
+    };
+
+    if (typeof safeViewTransition === 'function') {
+        return safeViewTransition(updateDom);
+    } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
+        return window.safeViewTransition(updateDom);
+    } else {
+        return updateDom();
+    }
 }
 window.filterFavorites = filterFavorites;
 

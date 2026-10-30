@@ -19,6 +19,7 @@ import defaultModularFacade, {
     clamp,
     generateShortId,
     deepClone,
+    safeViewTransition,
     openModal,
     closeModal,
     executeCloseModal,
@@ -210,6 +211,32 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(cloned).toEqual(original);
             expect(cloned).not.toBe(original);
             expect(cloned.a).not.toBe(original.a);
+        });
+
+        it('executes safeViewTransition gracefully with fallback and transition promises', async () => {
+            let executed = false;
+            const res = safeViewTransition(() => {
+                executed = true;
+            });
+            expect(executed).toBe(true);
+            expect(res).toBeDefined();
+            expect(typeof res.finished.then).toBe('function');
+            expect(typeof res.ready.then).toBe('function');
+            expect(typeof res.skipTransition).toBe('function');
+            await res.finished;
+            expect(typeof defaultModularFacade.helpers.safeViewTransition).toBe('function');
+        });
+
+        it('supports async callbacks in safeViewTransition', async () => {
+            let asyncExecuted = false;
+            const res = safeViewTransition(async () => {
+                asyncExecuted = true;
+                return 'done';
+            });
+            expect(res).toBeDefined();
+            const val = await res.finished;
+            expect(asyncExecuted).toBe(true);
+            expect(val).toBe('done');
         });
     });
 

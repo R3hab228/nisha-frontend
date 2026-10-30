@@ -2710,3 +2710,71 @@ html.pwa-standalone body {
     font-weight: 700;
 }
 
+
+/* ==========================================
+   VIEW TRANSITIONS API (Плавные переходы страниц и вкладок)
+   ========================================== */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 0.18s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #itemsGrid {
+        view-transition-name: catalog-grid;
+    }
+
+    #ordersListArea {
+        view-transition-name: orders-list;
+    }
+
+    ::view-transition-old(catalog-grid),
+    ::view-transition-new(catalog-grid),
+    ::view-transition-old(orders-list),
+    ::view-transition-new(orders-list) {
+        animation-duration: 0.2s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        mix-blend-mode: normal;
+    }
+
+    ::view-transition-old(catalog-grid),
+    ::view-transition-old(orders-list) {
+        animation-name: vt-fade-out;
+    }
+
+    ::view-transition-new(catalog-grid),
+    ::view-transition-new(orders-list) {
+        animation-name: vt-fade-in;
+    }
+}
+
+@keyframes vt-fade-out {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.995);
+    }
+}
+
+@keyframes vt-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.995);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

@@ -501,16 +501,27 @@ if (typeof globalThis !== 'undefined') globalThis.ensureOrderImagesLoaded = ensu
 
 function switchOrderTab(tabName) {
     if (window.currentOrderTab === tabName) return;
-    window.currentOrderTab = tabName;
     
-    const tabYellow = document.querySelector('.order-tab.tab-yellow');
-    const tabBlue = document.querySelector('.order-tab.tab-blue');
-    const tabRed = document.querySelector('.order-tab.tab-red');
-    if (tabYellow) tabYellow.classList.toggle('active', tabName === 'accepted');
-    if (tabBlue) tabBlue.classList.toggle('active', tabName === 'shipped');
-    if (tabRed) tabRed.classList.toggle('active', tabName === 'cancelled');
-    
-    renderFilteredOrders();
+    const updateDom = () => {
+        window.currentOrderTab = tabName;
+        
+        const tabYellow = document.querySelector('.order-tab.tab-yellow');
+        const tabBlue = document.querySelector('.order-tab.tab-blue');
+        const tabRed = document.querySelector('.order-tab.tab-red');
+        if (tabYellow) tabYellow.classList.toggle('active', tabName === 'accepted');
+        if (tabBlue) tabBlue.classList.toggle('active', tabName === 'shipped');
+        if (tabRed) tabRed.classList.toggle('active', tabName === 'cancelled');
+        
+        renderFilteredOrders();
+    };
+
+    if (typeof safeViewTransition === 'function') {
+        return safeViewTransition(updateDom);
+    } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
+        return window.safeViewTransition(updateDom);
+    } else {
+        return updateDom();
+    }
 }
 window.switchOrderTab = switchOrderTab;
 if (typeof globalThis !== 'undefined') globalThis.switchOrderTab = switchOrderTab;

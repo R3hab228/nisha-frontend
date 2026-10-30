@@ -2660,5 +2660,119 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const ciWorkflow = readFileSync(resolve(__dirname, '../.github/workflows/lint.yml'), 'utf8');
             expect(ciWorkflow).toContain('npm run lint');
         });
+    });
+
+    describe('29. Modern View Transitions API for Smooth Tab & Page Navigation', () => {
+        it('exports and exposes window.safeViewTransition globally', () => {
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain('function safeViewTransition(updateFn)');
+            expect(helpersCode).toContain('window.safeViewTransition = safeViewTransition');
+            expect(typeof window.safeViewTransition).toBe('function');
+        });
+
+        it('executes fallback update callback synchronously and resolves finished promise when startViewTransition is absent', async () => {
+            let executed = false;
+            const originalSVT = document.startViewTransition;
+            delete document.startViewTransition;
+
+            try {
+                const res = window.safeViewTransition(() => {
+                    executed = true;
+                });
+                expect(executed).toBe(true);
+                expect(res).toBeDefined();
+                expect(typeof res.finished.then).toBe('function');
+                expect(typeof res.ready.then).toBe('function');
+                expect(typeof res.skipTransition).toBe('function');
+                await res.finished;
+            } finally {
+                if (originalSVT) document.startViewTransition = originalSVT;
+            }
+        });
+
+        it('delegates to native document.startViewTransition when supported and motion is allowed', async () => {
+            let svtCalled = false;
+            let callbackExecuted = false;
+            const mockTransition = {
+                finished: Promise.resolve('finished'),
+                ready: Promise.resolve('ready'),
+                updateCallbackDone: Promise.resolve('done'),
+                skipTransition: vi.fn()
+            };
+
+            document.startViewTransition = vi.fn((cb) => {
+                svtCalled = true;
+                cb();
+                return mockTransition;
+            });
+            window.matchMedia = vi.fn(() => ({ matches: false }));
+
+            const res = window.safeViewTransition(() => {
+                callbackExecuted = true;
+            });
+
+            expect(svtCalled).toBe(true);
+            expect(callbackExecuted).toBe(true);
+            expect(res).toBe(mockTransition);
+
+            delete document.startViewTransition;
+        });
+
+        it('bypasses document.startViewTransition when user prefers reduced motion', async () => {
+            let svtCalled = false;
+            let callbackExecuted = false;
+            document.startViewTransition = vi.fn((cb) => {
+                svtCalled = true;
+                cb();
+                return {};
+            });
+            window.matchMedia = vi.fn((query) => ({
+                matches: query.includes('prefers-reduced-motion')
+            }));
+
+            const res = window.safeViewTransition(() => {
+                callbackExecuted = true;
+            });
+
+            expect(svtCalled).toBe(false);
+            expect(callbackExecuted).toBe(true);
+            expect(res).toBeDefined();
+            await res.finished;
+
+            delete document.startViewTransition;
+            window.matchMedia = vi.fn(() => ({ matches: false }));
+        });
+
+        it('gracefully handles missing updateFn without throwing error', () => {
+            expect(() => {
+                const res = window.safeViewTransition(null);
+                expect(res).toBeDefined();
+                expect(typeof res.finished.then).toBe('function');
+            }).not.toThrow();
+        });
+
+        it('integrates safeViewTransition into switchOrderTab for smooth tab switching', () => {
+            const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            expect(ordersCode).toContain('safeViewTransition(updateDom)');
+            expect(ordersCode).toContain('window.currentOrderTab = tabName');
+            expect(ordersCode).toContain('renderFilteredOrders()');
+        });
+
+        it('integrates safeViewTransition into catalog setCategoryFilter and clearSearchInput', () => {
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('function setCategoryFilter(cat, element)');
+            expect(catalogCode).toContain('safeViewTransition(updateDom)');
+            expect(catalogCode).toContain('function clearSearchInput()');
+        });
+
+        it('declares scoped view-transition CSS rules for catalog-grid and orders-list', () => {
+            const cssCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(cssCode).toContain('view-transition-name: catalog-grid');
+            expect(cssCode).toContain('view-transition-name: orders-list');
+            expect(cssCode).toContain('@media (prefers-reduced-motion: reduce)');
+            expect(cssCode).toContain('@media (prefers-reduced-motion: no-preference)');
+            expect(cssCode).toContain('::view-transition-old(catalog-grid)');
+            expect(cssCode).toContain('::view-transition-new(catalog-grid)');
+        });
     });
 });

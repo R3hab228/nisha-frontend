@@ -1694,3 +1694,80 @@ function attachFullNameAutoCapitalize(input) {
     }
 }
 window.attachFullNameAutoCapitalize = attachFullNameAutoCapitalize;
+
+// ==========================================
+// VIEW TRANSITIONS API WRAPPER (Плавные переходы страниц и вкладок)
+// ==========================================
+/**
+ * Safely executes a DOM update callback using modern document.startViewTransition
+ * when supported by the browser, respecting the user's prefers-reduced-motion preference.
+ * Gracefully executes updateFn synchronously/asynchronously as a fallback.
+ *
+ * @param {() => void | Promise<void>} updateFn
+ * @returns {{ finished: Promise<any>, ready: Promise<any>, updateCallbackDone: Promise<any>, skipTransition: () => void }}
+ */
+function safeViewTransition(updateFn) {
+    if (typeof updateFn !== 'function') {
+        return {
+            finished: Promise.resolve(),
+            ready: Promise.resolve(),
+            updateCallbackDone: Promise.resolve(),
+            skipTransition: () => {}
+        };
+    }
+
+    const prefersReducedMotion = typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (
+        typeof document !== 'undefined' &&
+        typeof document.startViewTransition === 'function' &&
+        !prefersReducedMotion
+    ) {
+        try {
+            return document.startViewTransition(updateFn);
+        } catch (e) {
+            console.warn('[ViewTransitions] startViewTransition failed, falling back:', e);
+            try {
+                const res = updateFn();
+                const p = res instanceof Promise ? res : Promise.resolve(res);
+                return {
+                    finished: p,
+                    ready: Promise.resolve(),
+                    updateCallbackDone: p,
+                    skipTransition: () => {}
+                };
+            } catch (err) {
+                console.error('[ViewTransitions] updateFn failed in fallback:', err);
+                return {
+                    finished: Promise.reject(err),
+                    ready: Promise.resolve(),
+                    updateCallbackDone: Promise.reject(err),
+                    skipTransition: () => {}
+                };
+            }
+        }
+    }
+
+    try {
+        const res = updateFn();
+        const p = res instanceof Promise ? res : Promise.resolve(res);
+        return {
+            finished: p,
+            ready: Promise.resolve(),
+            updateCallbackDone: p,
+            skipTransition: () => {}
+        };
+    } catch (err) {
+        console.error('[ViewTransitions] updateFn failed in fallback:', err);
+        return {
+            finished: Promise.reject(err),
+            ready: Promise.resolve(),
+            updateCallbackDone: Promise.reject(err),
+            skipTransition: () => {}
+        };
+    }
+}
+window.safeViewTransition = safeViewTransition;
+if (typeof globalThis !== 'undefined') globalThis.safeViewTransition = safeViewTransition;
