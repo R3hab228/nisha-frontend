@@ -1,3 +1,17 @@
+// ==========================================
+// NISHA STORE - MAIN APPLICATION ORCHESTRATOR
+// ==========================================
+
+import {
+    store,
+    storage,
+    openCart,
+    openReviewsModal,
+    applyFilters,
+    loadAllItems,
+    renderNextBatch
+} from './src/modules/index.js';
+
 console.log(`
       _   _ _____  _____ _    _          
      | \\ | |_   _|/ ____| |  | |   /\\    
@@ -104,7 +118,7 @@ window.addEventListener('scroll', () => {
 // ==========================================
 window.isHacked = false;
 let _supabase = null;
-let clientFingerprint = (window.storage && typeof window.storage.get === 'function') ? window.storage.get('nisha_visitor_id') : null;
+let clientFingerprint = (storage && typeof storage.get === 'function') ? storage.get('nisha_visitor_id') : null;
 if (!clientFingerprint) {
     clientFingerprint = "guest_" + Date.now();
 }
@@ -179,7 +193,7 @@ function resetToMain() {
     const allItemsLink = document.querySelector('.sidebar .filter-list:first-of-type a');
     if (allItemsLink) allItemsLink.classList.add('active-filter');
 
-    if (typeof applyFilters === 'function') applyFilters();
+    applyFilters();
 }
 window.resetToMain = resetToMain;
 
@@ -200,11 +214,10 @@ async function initApp() {
 
     try {
         try {
-            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-            if (store) {
-                store.remove('nisha_cart_time');
-                store.remove('nisha_cart_reminded');
-                store.remove('nisha_cart_push_sent_time');
+            if (storage && typeof storage.remove === 'function') {
+                storage.remove('nisha_cart_time');
+                storage.remove('nisha_cart_reminded');
+                storage.remove('nisha_cart_push_sent_time');
             }
         } catch (e) {}
 
@@ -213,8 +226,7 @@ async function initApp() {
         const quickAction = urlParams.get('action');
         if (quickAction === 'cart') {
             setTimeout(() => {
-                if (typeof openCart === 'function') openCart();
-                else if (typeof toggleCartDropdown === 'function') toggleCartDropdown();
+                openCart();
             }, 150);
         } else if (quickAction === 'fav') {
             window.showingOnlyFavs = true;
@@ -223,10 +235,10 @@ async function initApp() {
             if (favNav) favNav.style.color = '#fff';
             setTimeout(() => {
                 if (typeof toggleFavFilter === 'function') toggleFavFilter(true);
-                else if (typeof applyFilters === 'function') applyFilters();
+                else applyFilters();
             }, 150);
         } else if (quickAction === 'reviews' || urlParams.get('open') === 'reviews') {
-            setTimeout(() => { if (typeof openReviewsModal === 'function') openReviewsModal(); }, 250);
+            setTimeout(() => { openReviewsModal(); }, 250);
         }
 
         if (sessionStorage.getItem('nisha_showing_favs') === 'true') {
@@ -269,15 +281,14 @@ async function initApp() {
         }
 
         // 2. Мгновенный запуск каталога, сессии и словарей локализации параллельно
-        const itemsPromise = (typeof loadAllItems === 'function') ? loadAllItems() : Promise.resolve();
+        const itemsPromise = loadAllItems();
         const sessionPromise = (_supabase && typeof checkSession === 'function') ? checkSession() : Promise.resolve();
 
         const langPromise = (async () => {
             try {
                 if (typeof i18next !== 'undefined') {
-                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-                    let savedLng = store ? store.get('nisha_lang') : null;
-                    let savedFlag = store ? store.get('nisha_flag') : null;
+                    let savedLng = (storage && typeof storage.get === 'function') ? storage.get('nisha_lang') : null;
+                    let savedFlag = (storage && typeof storage.get === 'function') ? storage.get('nisha_flag') : null;
                     
                     if (!savedLng) {
                         const browserLang = navigator.language || navigator.userLanguage || '';
@@ -288,9 +299,9 @@ async function initApp() {
                         } else {
                             savedLng = 'ua'; savedFlag = '🇺🇦';
                         }
-                        if (store) {
-                            store.set('nisha_lang', savedLng);
-                            store.set('nisha_flag', savedFlag);
+                        if (storage && typeof storage.set === 'function') {
+                            storage.set('nisha_lang', savedLng);
+                            storage.set('nisha_flag', savedFlag);
                         }
                     }
                     
@@ -425,8 +436,7 @@ async function initApp() {
                 
                 if (broadcasts && broadcasts.length > 0) {
                     const bData = broadcasts[0];
-                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-                    const localSeenId = store ? store.get('nisha_last_broadcast') : null;
+                    const localSeenId = (storage && typeof storage.get === 'function') ? storage.get('nisha_last_broadcast') : null;
                     const profile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
                     const dbSeenId = profile ? profile.last_broadcast_id : null;
                     const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
@@ -436,7 +446,7 @@ async function initApp() {
                         const hasValidImg = bData.image_url && typeof bData.image_url === 'string' && bData.image_url.trim();
 
                         const markAsSeen = () => {
-                            if (store) store.set('nisha_last_broadcast', bData.id);
+                            if (storage && typeof storage.set === 'function') storage.set('nisha_last_broadcast', bData.id);
                             const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
                             if (activeUser && _supabase) {
                                 _supabase.from('profiles').update({ last_broadcast_id: bData.id }).eq('id', activeUser.id).then();
@@ -503,8 +513,7 @@ async function initApp() {
 
                     if (typeof tryShowBroadcast === 'function') {
                         tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
-                            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-                            if (store) store.set('nisha_last_broadcast', bData.id);
+                            if (storage && typeof storage.set === 'function') storage.set('nisha_last_broadcast', bData.id);
                         });
                     }
                 })
@@ -527,9 +536,7 @@ async function initApp() {
                 if (window.renderedCount < (window.filteredItems ? window.filteredItems.length : 0) && window.innerWidth <= 900) {
                     isBatchLoading = true;
                     requestAnimationFrame(() => {
-                        if (typeof renderNextBatch === 'function') {
-                            renderNextBatch();
-                        }
+                        renderNextBatch();
                         isBatchLoading = false;
                     });
                 }
@@ -549,8 +556,7 @@ async function initApp() {
             if (ordSearchEl) ordSearchEl.value = activeUser.phone;
         }
 
-        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-        if (store && store.get('nisha_rules_accepted') && typeof startOnboardingTour === 'function') {
+        if (storage && storage.get('nisha_rules_accepted') && typeof startOnboardingTour === 'function') {
             startOnboardingTour();
         }
     } catch (err) {
