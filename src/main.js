@@ -35,3 +35,8 @@ import '../js/cart/cart.js';
 import '../js/product/product.js';
 import '../js/profile/profile.js';
 import '../app.js';
+
+// 8. Экспорт официального модульного API приложения (Modern ES Modules Facade)
+export * from './modules/index.js';
+export { default } from './modules/index.js';
+

@@ -60,6 +60,12 @@ function swBuildIdPlugin() {
 
 export default defineConfig({
   publicDir: 'public',
+  resolve: {
+    alias: {
+      '@': resolve(import.meta.dirname, 'src'),
+      '@modules': resolve(import.meta.dirname, 'src/modules'),
+    },
+  },
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
