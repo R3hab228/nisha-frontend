@@ -2968,4 +2968,113 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(elements.modalAuthUsername.style.display).toBe('none');
         });
     });
+
+    describe('51. Telemetry Danger Rating & Error Severity Rubric (1-10 Scale)', () => {
+        beforeAll(async () => {
+            // Load pwa-network script into environment
+            const pwaCode = readFileSync(resolve(import.meta.dirname, '../js/core/pwa-network.js'), 'utf8');
+            eval(pwaCode);
+        });
+
+        it('assigns 10/10 💀 for checkout, payment, and order creation failures', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'Error: submitOrder failed to reserve item oversell',
+                location: '/assets/orders.js:150'
+            });
+            expect(res.score).toBe(10);
+            expect(res.level).toBe('Критическая');
+            expect(res.emoji).toBe('💀');
+        });
+
+        it('assigns 9/10 💀 for database deadlocks and cart checkout corruptions', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'PostgREST deadlock in cart checkout saveCart',
+                location: '/assets/app-cart.js:300'
+            });
+            expect(res.score).toBe(9);
+            expect(res.level).toBe('Критическая');
+            expect(res.emoji).toBe('💀');
+        });
+
+        it('assigns 8/10 🔴 for authentication and registration failures (e.g. isRegMode, OTP)', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'ReferenceError: isRegMode is not defined',
+                location: '/assets/app-profile-D0ix5DAz.js:18'
+            });
+            expect(res.score).toBe(8);
+            expect(res.level).toBe('Высокая');
+            expect(res.emoji).toBe('🔴');
+            expect(res.reason).toContain('авторизации');
+        });
+
+        it('assigns 7/10 🟠 for catalog storefront and product modal loading failures', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'Cannot read properties of undefined in loadAllItems',
+                location: '/assets/app-catalog.js:80'
+            });
+            expect(res.score).toBe(7);
+            expect(res.level).toBe('Повышенная');
+            expect(res.emoji).toBe('🟠');
+        });
+
+        it('assigns 6/10 🟠 for Nova Poshta branches and seller drop submission failures', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'NovaPoshta API network fail in loadNPBranches',
+                location: '/assets/app-cart.js:740'
+            });
+            expect(res.score).toBe(6);
+            expect(res.level).toBe('Повышенная');
+            expect(res.emoji).toBe('🟠');
+        });
+
+        it('assigns 5/10 🟡 for secondary user actions: favorites and reviews', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'Error in toggleFav: failed to sync',
+                location: '/assets/reviews.js:110'
+            });
+            expect(res.score).toBe(5);
+            expect(res.level).toBe('Средняя');
+            expect(res.emoji).toBe('🟡');
+        });
+
+        it('assigns 4/10 🟡 for local UI glitches, PhotoSwipe, and modal transitions', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'PhotoSwipe is not defined',
+                location: '/assets/windows.js:200'
+            });
+            expect(res.score).toBe(4);
+            expect(res.level).toBe('Средняя');
+            expect(res.emoji).toBe('🟡');
+        });
+
+        it('assigns 3/10 🟡 for retryable network timeouts and HTTP 502/503 errors', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'Failed to fetch (timeout after 8000ms)',
+                location: '/assets/apiClient.js:40'
+            });
+            expect(res.score).toBe(3);
+            expect(res.level).toBe('Умеренная');
+            expect(res.emoji).toBe('🟡');
+        });
+
+        it('assigns 2/10 🟢 for non-blocking cosmetics: audio context and animations', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'AudioContext was not allowed to start',
+                location: '/assets/app-core.js:80'
+            });
+            expect(res.score).toBe(2);
+            expect(res.level).toBe('Низкая');
+            expect(res.emoji).toBe('🟢');
+        });
+
+        it('assigns 1/10 ⚪ for background tracking, clarity, ttq, and AbortErrors', () => {
+            const res = window.evaluateClientErrorSeverity({
+                message: 'The user aborted a request.',
+                location: '/assets/pwa-network.js:50'
+            });
+            expect(res.score).toBe(1);
+            expect(res.level).toBe('Инфо');
+            expect(res.emoji).toBe('⚪');
+        });
+    });
 });

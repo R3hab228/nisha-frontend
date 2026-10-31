@@ -111,3 +111,15 @@ export function initPwaPullToRefresh(container) {
         return window.initPwaPullToRefresh(container);
     }
 }
+
+/**
+ * Evaluates telemetry client error severity on a 1-10 scale
+ * @param {Record<string, any>} [params={}]
+ * @returns {{ score: number, level: string, emoji: string, reason: string }}
+ */
+export function evaluateTelemetrySeverity(params = {}) {
+    if (typeof window !== 'undefined' && typeof window.evaluateClientErrorSeverity === 'function') {
+        return window.evaluateClientErrorSeverity(params);
+    }
+    return { score: 4, level: 'Средняя', emoji: '🟡', reason: 'Некритичное предупреждение интерфейса' };
+}

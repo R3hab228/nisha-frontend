@@ -277,6 +277,101 @@ function formatCleanContext(ctx) {
     return Object.entries(clean).map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`).join(', ');
 }
 
+function evaluateClientErrorSeverity(params = {}) {
+    const message = String(params.message || '');
+    const location = String(params.location || '');
+    const page = String(params.page || '');
+    const stack = String(params.stack || '');
+    const details = String(params.details || '');
+    const fullText = `${message} ${location} ${page} ${stack} ${details}`.toLowerCase();
+
+    // 10/10 - Оформление заказа, платежи, финансовые действия
+    if (
+        /create_?order|submit_?order|confirm_?order|make_?order|\/api\/orders|orderroutes|processorder|checkoutorder|oversell/i.test(fullText) ||
+        /payment|checkout_?error|novaposhta.*waybill|monobank|liqpay|fondy/i.test(fullText) ||
+        (/checkout/i.test(fullText) && /fail|error|fatal|cannot|uncaught|reject/i.test(fullText))
+    ) {
+        return { score: 10, level: 'Критическая', emoji: '💀', reason: 'Блокировка оформления заказа или оплаты' };
+    }
+
+    // 9/10 - Отказ базы данных, повреждение или блокировка корзины
+    if (
+        /pgrst|postgrest|supabase.*deadlock|cart.*checkout|savecart|clearcart|item_reservations/i.test(fullText) ||
+        (/cart/i.test(fullText) && /uncaught|null|undefined|crash/i.test(fullText) && /order/i.test(fullText))
+    ) {
+        return { score: 9, level: 'Критическая', emoji: '💀', reason: 'Сбой базы данных или блокировка корзины' };
+    }
+
+    // 8/10 - Авторизация, регистрация, OTP-подтверждение
+    if (
+        /isregmode|toggle_?reg_?mode|handle_?auth|signin|signup|sign_in|sign_up|loginwithgoogle|google_?auth/i.test(fullText) ||
+        /check_?otp|generate_?secure_?otp|send_?otp|verify_?turnstile|checksession|auth\.js|app-profile/i.test(fullText) ||
+        (/login|register|profile/i.test(fullText) && /not defined|cannot read|uncaught/i.test(fullText))
+    ) {
+        return { score: 8, level: 'Высокая', emoji: '🔴', reason: 'Сбой авторизации или регистрации пользователей' };
+    }
+
+    // 7/10 - Каталог товаров, карточка товара, загрузка ассортимента
+    if (
+        /loadallitems|fetchitems|render_?catalog|openproductmodal|catalog\.js|product\.js|app-catalog|app-product/i.test(fullText) ||
+        (/catalog|items/i.test(fullText) && /cannot read|not defined|null|undefined/i.test(fullText))
+    ) {
+        return { score: 7, level: 'Повышенная', emoji: '🟠', reason: 'Сбой каталога или карточки товара' };
+    }
+
+    // 6/10 - Доставка Новая Почта (города/отделения), предложка вещей (дроп)
+    if (
+        /novaposhta|searchcities|loadnpbranches|filternpbranches|propose_?item|drop\.js|app-drop|upload_?photo/i.test(fullText)
+    ) {
+        return { score: 6, level: 'Повышенная', emoji: '🟠', reason: 'Сбой поиска отделений Новой Почты или предложки' };
+    }
+
+    // 5/10 - Избранное, отзывы, история заказов, переключение табов
+    if (
+        /togglefav|favorites|submitreview|reviews\.js|loaduserorders|switchordertab|orders\.js/i.test(fullText)
+    ) {
+        return { score: 5, level: 'Средняя', emoji: '🟡', reason: 'Сбой вторичных функций (избранное, отзывы, история)' };
+    }
+
+    // 4/10 - Локальные UI-сбои: PhotoSwipe, модалки, масштабирование
+    if (
+        /photoswipe|photoswipelightbox|modal|openmodal|closemodal|windows\.js|gallery|zoom|tooltip|measurements/i.test(fullText)
+    ) {
+        return { score: 4, level: 'Средняя', emoji: '🟡', reason: 'Локальный сбой UI, фотогалереи или модальных окон' };
+    }
+
+    // 3/10 - Временный сетевой сбой / таймаут с автоповтором
+    if (
+        /failed to fetch|networkerror|network_error|load failed|timeout|etimedout|econnreset|502|503|504/i.test(fullText)
+    ) {
+        return { score: 3, level: 'Умеренная', emoji: '🟡', reason: 'Временный сбой сети или таймаут (автоповтор)' };
+    }
+
+    // 2/10 - Анимации, View Transitions, Web Audio, тактильный отклик (Haptics)
+    if (
+        /audiocontext|viewtransition|triggerhaptic|vibrate|tilt|vanillatilt|lenis|autoanimate|scroll|cursor/i.test(fullText)
+    ) {
+        return { score: 2, level: 'Низкая', emoji: '🟢', reason: 'Косметический сбой анимации, звуков или эффектов' };
+    }
+
+    // 1/10 - Фоновые трекеры аналитики, отмена запроса пользователем
+    if (
+        /aborterror|user aborted|resizeobserver|ttq|clarity|gtag|pixel|sentry|track/i.test(fullText)
+    ) {
+        return { score: 1, level: 'Инфо', emoji: '⚪', reason: 'Фоновая аналитика или прерывание запроса' };
+    }
+
+    if (/syntaxerror|referenceerror|typeerror/i.test(fullText)) {
+        return { score: 6, level: 'Повышенная', emoji: '🟠', reason: 'Необработанное исключение выполнения JavaScript' };
+    }
+
+    return { score: 4, level: 'Средняя', emoji: '🟡', reason: 'Некритичное предупреждение интерфейса' };
+}
+
+if (typeof window !== 'undefined') {
+    window.evaluateClientErrorSeverity = evaluateClientErrorSeverity;
+}
+
 function sendTelegramErrorAlert(errorObj, context = {}) {
     if (telemetrySentCount >= MAX_SESSION_TELEMETRY) return;
 
@@ -311,8 +406,17 @@ function sendTelegramErrorAlert(errorObj, context = {}) {
         } catch (e) {}
     }
 
+    const severity = evaluateClientErrorSeverity({
+        message: msg,
+        location: loc,
+        page: cleanPage,
+        stack,
+        details: cleanDetails
+    });
+
     const alertMessage = 
         `⚠️ [NISHA CLIENT ERROR ALERT]\n` +
+        `• Опасность: ${severity.emoji} ${severity.score}/10 (${severity.level} — ${severity.reason})\n` +
         `• Ошибка: ${msg.slice(0, 160)}\n` +
         `• Файл / Локация: ${loc}\n` +
         `• Страница: ${cleanPage}\n` +
