@@ -1591,7 +1591,26 @@ function initActionDelegation() {
     document.addEventListener('canplay', handleDelegatedMediaCanPlay, true);
     document.addEventListener('scroll', handleDelegatedScroll, { capture: true, passive: true });
 
+    document.addEventListener('touchstart', (e) => {
+        if (!e.target || typeof e.target.closest !== 'function') return;
+        const trigger = e.target.closest('.live-search-item, [data-action="open-product"]');
+        if (trigger) {
+            const id = trigger.getAttribute('data-id');
+            if (id && typeof window.prewarmProductModal === 'function') {
+                window.prewarmProductModal(id, true);
+            }
+        }
+    }, { passive: true });
+
     document.addEventListener('mouseover', (e) => {
+        if (!e.target || typeof e.target.closest !== 'function') return;
+        const trigger = e.target.closest('.live-search-item, [data-action="open-product"]');
+        if (trigger) {
+            const id = trigger.getAttribute('data-id');
+            if (id && typeof window.prewarmProductModal === 'function') {
+                window.prewarmProductModal(id);
+            }
+        }
         if (!e.target || typeof e.target.closest !== 'function') return;
         const hoverEl = e.target.closest('[data-hover-action]');
         if (!hoverEl) return;

@@ -2836,4 +2836,71 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toContain('::view-transition-group(*)');
         });
     });
+
+    describe('31. Smart Product Modal Pre-warm & Speculative Data Preloading', () => {
+        it('declares and exposes prewarmProductModal, cancelPrewarmProductModal, and _prewarmedItemDetails', () => {
+            const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+            expect(productCode).toContain('function prewarmProductModal(id, immediate = false)');
+            expect(productCode).toContain('function cancelPrewarmProductModal(id)');
+            expect(productCode).toContain('window.prewarmProductModal = prewarmProductModal');
+            expect(productCode).toContain('window._prewarmedItemDetails = _prewarmedItemDetails');
+            expect(productCode).toContain('window._prewarmedImagesSet = _prewarmedImagesSet');
+        });
+
+        it('integrates prewarmProductModal into catalog grid mouseover, touchstart, and mouseout cancel', () => {
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('window.prewarmProductModal(id)');
+            expect(catalogCode).toContain('window.cancelPrewarmProductModal(leavingId)');
+            expect(catalogCode).toContain('window.prewarmProductModal(cardId, true)');
+        });
+
+        it('integrates prewarmProductModal into live-search and open-product hover/touch delegation in helpers.js', () => {
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain('window.prewarmProductModal(id, true)');
+            expect(helpersCode).toContain('window.prewarmProductModal(id)');
+        });
+
+        it('exports prewarmProductModal and cancelPrewarmProductModal from modular facade', () => {
+            const modProductCode = readFileSync(resolve(__dirname, '../src/modules/product.js'), 'utf8');
+            expect(modProductCode).toContain('export function prewarmProductModal');
+            expect(modProductCode).toContain('export function cancelPrewarmProductModal');
+        });
+
+        it('executes prewarmProductModal speculatively caching Supabase item promise and preloading images', async () => {
+            window.allItems = [
+                {
+                    id: 'warm_item_1',
+                    name: 'Vintage Alpha MA-1 Bomber',
+                    brand: 'Alpha Industries',
+                    images: ['https://example.com/bomber_full.jpg'],
+                    thumbnails: ['https://example.com/bomber_thumb.jpg']
+                }
+            ];
+
+            const mockSelect = vi.fn().mockReturnThis();
+            const mockEq = vi.fn().mockReturnThis();
+            const mockLimit = vi.fn().mockResolvedValue({
+                data: [{
+                    id: 'warm_item_1',
+                    name: 'Vintage Alpha MA-1 Bomber',
+                    brand: 'Alpha Industries',
+                    description: 'Full spec measurements: Pit to pit 62cm, Length 68cm.',
+                    size: 'L'
+                }],
+                error: null
+            });
+
+            window.supabaseClient = {
+                from: vi.fn(() => ({
+                    select: mockSelect,
+                    eq: mockEq,
+                    limit: mockLimit
+                }))
+            };
+
+            const mod = await import('../src/modules/product.js');
+            expect(typeof mod.prewarmProductModal).toBe('function');
+            expect(typeof mod.cancelPrewarmProductModal).toBe('function');
+        });
+    });
 });

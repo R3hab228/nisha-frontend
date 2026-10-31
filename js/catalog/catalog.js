@@ -55,6 +55,10 @@ let _prefetchDebounceTimer = null;
 let _prefetchPendingId = null;
 
 window.prefetchItemImages = function(id) {
+    if (typeof window.prewarmProductModal === "function") {
+        window.prewarmProductModal(id);
+        return;
+    }
     if (!window._prefetchedItems) window._prefetchedItems = new Set();
     if (window._prefetchedItems.has(id)) return;
     
@@ -2101,7 +2105,10 @@ function initGridEventDelegation() {
         if (card !== currentTooltipCard) {
             currentTooltipCard = card;
             const id = card.getAttribute('data-id');
-            if (id && typeof window.prefetchItemImages === 'function') window.prefetchItemImages(id);
+            if (id) {
+                if (typeof window.prewarmProductModal === "function") window.prewarmProductModal(id);
+                else if (typeof window.prefetchItemImages === "function") window.prefetchItemImages(id);
+            }
         }
 
         const isCartBtn = !!(e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]'));
@@ -2150,8 +2157,9 @@ function initGridEventDelegation() {
         if (!currentTooltipCard) return;
         if (!e.relatedTarget || !currentTooltipCard.contains(e.relatedTarget)) {
             const leavingId = currentTooltipCard.getAttribute('data-id');
-            if (leavingId && typeof window.cancelPrefetchItemImages === 'function') {
-                window.cancelPrefetchItemImages(leavingId);
+            if (leavingId) {
+                if (typeof window.cancelPrewarmProductModal === "function") window.cancelPrewarmProductModal(leavingId);
+                if (typeof window.cancelPrefetchItemImages === "function") window.cancelPrefetchItemImages(leavingId);
             }
             currentTooltipCard = null;
             if (typeof window.hideItemMeasurementsTooltip === 'function') {
@@ -2177,6 +2185,11 @@ function initGridEventDelegation() {
         const wrapper = e.target.closest('.card-slider-wrapper');
         if (!wrapper) return;
         activateCardSlides(wrapper);
+        const card = wrapper.closest('.item-card');
+        const cardId = card ? card.getAttribute('data-id') : null;
+        if (cardId && typeof window.prewarmProductModal === "function") {
+            window.prewarmProductModal(cardId, true);
+        }
         isDraggingSlider = false;
         if (e.touches && e.touches[0]) {
             startX = e.touches[0].clientX;

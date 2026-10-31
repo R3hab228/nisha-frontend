@@ -109,6 +109,132 @@ function preloadSlide(step) {
 }
 window.preloadSlide = preloadSlide;
 
+// ========================================== 
+// УМНЫЙ УПРЕЖДАЮЩИЙ PRELOAD МОДАЛКИ ТОВАРА (SMART PRE-WARM)
+// ========================================== 
+const _prewarmedItemDetails = new Map();
+const _prewarmedImagesSet = new Set();
+let _prewarmDebounceTimer = null;
+let _prewarmPendingId = null;
+
+window._prewarmedItemDetails = _prewarmedItemDetails;
+window._prewarmedImagesSet = _prewarmedImagesSet;
+
+function isDataSaverActive() {
+    try {
+        if (typeof navigator !== "undefined" && navigator.connection) {
+            const conn = navigator.connection;
+            if (conn.saveData === true) return true;
+            if (conn.effectiveType === "slow-2g" || conn.effectiveType === "2g") return true;
+        }
+    } catch (_) {}
+    return false;
+}
+
+function prewarmItemDetails(itemId) {
+    if (!itemId) return Promise.resolve(null);
+    const key = String(itemId);
+    if (_prewarmedItemDetails.has(key)) {
+        return _prewarmedItemDetails.get(key);
+    }
+
+    if (_prewarmedItemDetails.size >= 50) {
+        const firstKey = _prewarmedItemDetails.keys().next().value;
+        _prewarmedItemDetails.delete(firstKey);
+    }
+
+    const fetchPromise = (async () => {
+        try {
+            const sb = typeof getSupabase === "function" ? getSupabase() : (window.supabaseClient || null);
+            if (!sb) return null;
+            let { data } = await sb.from("items")
+                .select("id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable")
+                .eq("id", itemId)
+                .limit(1);
+            if (data && data.length > 0) return data[0];
+            let { data: archData } = await sb.from("archived_items")
+                .select("id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable")
+                .eq("id", itemId)
+                .limit(1);
+            if (archData && archData.length > 0) return archData[0];
+            return null;
+        } catch (_) {
+            return null;
+        }
+    })();
+
+    _prewarmedItemDetails.set(key, fetchPromise);
+    return fetchPromise;
+}
+
+function prewarmProductModal(id, immediate = false) {
+    if (!id) return;
+    const itemIdStr = String(id);
+
+    const executePrewarm = () => {
+        const catalog = (typeof getCatalog === "function") ? getCatalog() : (window.allItems || []);
+        const item = catalog.find(i => String(i.id) === itemIdStr);
+
+        // 1. Предзагрузка полных данных из БД (замеры, описание, теги)
+        prewarmItemDetails(id);
+
+        // 2. Фоновый прогрев PhotoSwipe в idle-время
+        if (typeof ensurePhotoSwipe === "function") {
+            if (typeof window.requestIdleCallback === "function") {
+                window.requestIdleCallback(() => ensurePhotoSwipe().catch(() => {}), { timeout: 300 });
+            } else {
+                setTimeout(() => ensurePhotoSwipe().catch(() => {}), 40);
+            }
+        }
+
+        // 3. Предзагрузка первых двух полноразмерных фото в кэш браузера (если не Save-Data)
+        if (item && !isDataSaverActive()) {
+            const mediaList = (Array.isArray(item.images) && item.images.length > 0)
+                ? item.images
+                : (Array.isArray(item.thumbnails) ? item.thumbnails : []);
+
+            mediaList.slice(0, 2).forEach(url => {
+                if (url && typeof url === "string" && !url.endsWith(".mp4")) {
+                    const cdnUrl = typeof toCDN === "function" ? toCDN(url) : url;
+                    if (!_prewarmedImagesSet.has(cdnUrl)) {
+                        _prewarmedImagesSet.add(cdnUrl);
+                        if (_prewarmedImagesSet.size > 100) {
+                            const first = _prewarmedImagesSet.values().next().value;
+                            _prewarmedImagesSet.delete(first);
+                        }
+                        const img = new Image();
+                        img.decoding = "async";
+                        img.src = cdnUrl;
+                    }
+                }
+            });
+        }
+    };
+
+    if (immediate) {
+        executePrewarm();
+        return;
+    }
+
+    clearTimeout(_prewarmDebounceTimer);
+    _prewarmPendingId = itemIdStr;
+    _prewarmDebounceTimer = setTimeout(() => {
+        _prewarmPendingId = null;
+        executePrewarm();
+    }, 80);
+}
+
+function cancelPrewarmProductModal(id) {
+    if (_prewarmPendingId && String(_prewarmPendingId) === String(id)) {
+        clearTimeout(_prewarmDebounceTimer);
+        _prewarmPendingId = null;
+    }
+}
+
+window.prewarmProductModal = prewarmProductModal;
+window.cancelPrewarmProductModal = cancelPrewarmProductModal;
+window.prewarmItemDetails = prewarmItemDetails;
+
 // ==========================================
 // 1. ОТКРЫТИЕ КАРТОЧКИ ТОВАРА (MODAL)
 // ==========================================
@@ -116,10 +242,24 @@ window.preloadSlide = preloadSlide;
 async function openProductModalById(itemId) {
     if (typeof window.hideItemMeasurementsTooltip === 'function') window.hideItemMeasurementsTooltip();
     const catalog = getCatalog();
-    let item = catalog.find(i => i.id === itemId);
+    let item = catalog.find(i => String(i.id) === String(itemId));
+
+    // Проверяем, есть ли уже предзагруженные полные данные товара в преварм-кэше
+    const key = String(itemId);
+    let fullItem = null;
+    const prewarmedPromise = (typeof window._prewarmedItemDetails !== 'undefined' && window._prewarmedItemDetails)
+        ? window._prewarmedItemDetails.get(key)
+        : null;
+    if (prewarmedPromise) {
+        try {
+            fullItem = await prewarmedPromise;
+        } catch (_) {}
+    }
+
+    const initialItem = fullItem ? { ...item, ...fullItem } : item;
     
-    // МГНОВЕННО открываем модалку, если товар есть в кэше
-    if (item) {
+    // МГНОВЕННО открываем модалку с полными данными
+    if (initialItem) {
         const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
 
@@ -140,10 +280,11 @@ async function openProductModalById(itemId) {
             const rm = document.getElementById('reviewsModal');
             if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal'); 
         }
-        openProductModal(item); 
+        openProductModal(initialItem); 
     }
     
-    // В ФОНЕ подгружаем полное описание и замеры
+    // В ФОНЕ подгружаем полное описание и замеры (если еще не было в prewarm)
+    if (!fullItem) {
     const sb = getSupabase();
     if (sb) {
         try {
@@ -203,6 +344,7 @@ async function openProductModalById(itemId) {
                 }
             }
         } catch(e) { console.error("Ошибка сети:", e); }
+    }
     } else if (!item) {
         const notFoundMsg = (typeof i18next !== 'undefined' && i18next.t('product.err_not_found')) || 'Товар не найден';
         showToast(notFoundMsg, 'error'); 

@@ -146,3 +146,24 @@ export async function loadItemQuestions(id) {
     }
     return [];
 }
+
+/**
+ * Speculatively pre-warms product modal data, images and PhotoSwipe
+ * @param {string|number} id
+ * @param {boolean} [immediate=false]
+ */
+export function prewarmProductModal(id, immediate = false) {
+    if (typeof window !== 'undefined' && typeof window.prewarmProductModal === 'function') {
+        return window.prewarmProductModal(id, immediate);
+    }
+}
+
+/**
+ * Cancels pending pre-warm debounce when cursor leaves card
+ * @param {string|number} id
+ */
+export function cancelPrewarmProductModal(id) {
+    if (typeof window !== 'undefined' && typeof window.cancelPrewarmProductModal === 'function') {
+        return window.cancelPrewarmProductModal(id);
+    }
+}
