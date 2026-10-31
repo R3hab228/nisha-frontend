@@ -2815,6 +2815,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(helpersCode).toContain('/Viewport size changed/i');
         });
 
+        it('identifies and ignores cross-origin frame security errors in telemetry', () => {
+            const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+            expect(pwaCode).toContain('/Blocked a frame with origin/i');
+            expect(pwaCode).toContain('/cross-origin frame/i');
+            expect(pwaCode).toContain('/Protocols, domains, and ports must match/i');
+        });
+
         it('integrates safeViewTransition into sortItems for smooth FLIP card re-ordering', () => {
             const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
             expect(catalogCode).toContain('function sortItems(type)');

@@ -188,7 +188,11 @@ const IGNORED_ERROR_PATTERNS = [
     /IDBDatabase/i,
     /ethereum/i,
     /selectedAddress/i,
-    /web3/i
+    /web3/i,
+    /Blocked a frame with origin/i,
+    /cross-origin frame/i,
+    /Protocols, domains, and ports must match/i,
+    /SecurityError.*cross-origin/i
 ];
 
 function sanitizeContext(context) {
@@ -390,7 +394,11 @@ function initSentryDeferred() {
                         'IABInnerFrame',
                         'ethereum',
                         'selectedAddress',
-                        'web3'
+                        'web3',
+                        'Blocked a frame with origin',
+                        'cross-origin frame',
+                        'Protocols, domains, and ports must match',
+                        'SecurityError: Blocked a frame with origin'
                     ],
                     denyUrls: [
                         /extensions\//i,
