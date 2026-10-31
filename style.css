@@ -2712,8 +2712,12 @@ html.pwa-standalone body {
 
 
 /* ==========================================
-   VIEW TRANSITIONS API (Плавные переходы страниц и вкладок)
+   VIEW TRANSITIONS API (Изолированные плавные переходы без дергания страницы)
    ========================================== */
+:root {
+    view-transition-name: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-group(*),
     ::view-transition-old(*),
@@ -2723,10 +2727,11 @@ html.pwa-standalone body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+    /* Полное отключение перехода для root страницы, чтобы сайт не прыгал и не масштабировался */
+    ::view-transition-group(root),
     ::view-transition-old(root),
     ::view-transition-new(root) {
-        animation-duration: 0.18s;
-        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        animation: none !important;
     }
 
     #itemsGrid {
@@ -2737,73 +2742,54 @@ html.pwa-standalone body {
         view-transition-name: orders-list;
     }
 
-    /* Плавное перемещение карточек товаров при сортировке и фильтрации (FLIP)
-       Увеличена длительность до 0.38s с роскошным замедлением cubic-bezier */
+    /* Контейнер сетки фиксирован — не прыгает по высоте при изменении числа карточек */
+    ::view-transition-group(catalog-grid) {
+        animation: none !important;
+    }
+
+    /* Плавное перемещение карточек товаров при сортировке и фильтрации (FLIP) */
     ::view-transition-group(*) {
-        animation-duration: 0.38s;
+        animation-duration: 0.35s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Мягкое растворение уходящих и плавное проявление возвращающихся карточек */
+    /* Чистое растворение уходящих и появление новых карточек через opacity (БЕЗ scale-дерганий) */
     ::view-transition-old(*),
     ::view-transition-new(*) {
-        animation-duration: 0.32s;
+        animation-duration: 0.28s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
         mix-blend-mode: normal;
     }
 
     ::view-transition-old(*) {
-        animation-name: vt-card-fade-out;
+        animation-name: vt-fade-out;
     }
 
     ::view-transition-new(*) {
-        animation-name: vt-card-fade-in;
+        animation-name: vt-fade-in;
     }
 
-    /* Контейнеры сетки каталога и списка заказов: чистый crossfade без дергающих scale-трансформаций */
     ::view-transition-old(catalog-grid),
     ::view-transition-new(catalog-grid),
     ::view-transition-old(orders-list),
     ::view-transition-new(orders-list) {
-        animation-duration: 0.3s;
+        animation-duration: 0.25s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
         mix-blend-mode: normal;
     }
 
     ::view-transition-old(catalog-grid),
     ::view-transition-old(orders-list) {
-        animation-name: vt-pure-fade-out;
+        animation-name: vt-fade-out;
     }
 
     ::view-transition-new(catalog-grid),
     ::view-transition-new(orders-list) {
-        animation-name: vt-pure-fade-in;
+        animation-name: vt-fade-in;
     }
 }
 
-@keyframes vt-card-fade-out {
-    from {
-        opacity: 1;
-        transform: scale(1);
-    }
-    to {
-        opacity: 0;
-        transform: scale(0.96);
-    }
-}
-
-@keyframes vt-card-fade-in {
-    from {
-        opacity: 0;
-        transform: scale(0.96);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-@keyframes vt-pure-fade-out {
+@keyframes vt-fade-out {
     from {
         opacity: 1;
     }
@@ -2812,7 +2798,7 @@ html.pwa-standalone body {
     }
 }
 
-@keyframes vt-pure-fade-in {
+@keyframes vt-fade-in {
     from {
         opacity: 0;
     }
