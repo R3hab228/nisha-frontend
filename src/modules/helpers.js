@@ -260,6 +260,27 @@ export const safeStorage = new Proxy({}, {
 });
 
 /**
+ * Checks if an error is a benign ViewTransition abort (e.g. mobile URL bar resize)
+ * @param {any} err
+ * @returns {boolean}
+ */
+export function isViewTransitionAbortError(err) {
+    if (typeof window !== 'undefined' && typeof window.isViewTransitionAbortError === 'function') {
+        return window.isViewTransitionAbortError(err);
+    }
+    if (!err) return false;
+    const msg = String(err.message || err.reason || err);
+    const name = String(err.name || '');
+    return (
+        name === 'AbortError' ||
+        name === 'InvalidStateError' ||
+        /Transition was aborted/i.test(msg) ||
+        /Viewport size changed/i.test(msg) ||
+        /ViewTransition/i.test(msg)
+    );
+}
+
+/**
  * Safely executes DOM mutation callback with View Transitions API when supported,
  * falling back gracefully for unsupported browsers or prefers-reduced-motion.
  * @param {() => void | Promise<void>} updateFn

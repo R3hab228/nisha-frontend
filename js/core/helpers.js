@@ -1698,6 +1698,21 @@ window.attachFullNameAutoCapitalize = attachFullNameAutoCapitalize;
 // ==========================================
 // VIEW TRANSITIONS API WRAPPER (Плавные переходы страниц и вкладок)
 // ==========================================
+function isViewTransitionAbortError(err) {
+    if (!err) return false;
+    const msg = String(err.message || err.reason || err);
+    const name = String(err.name || '');
+    return (
+        name === 'AbortError' ||
+        name === 'InvalidStateError' ||
+        /Transition was aborted/i.test(msg) ||
+        /Viewport size changed/i.test(msg) ||
+        /ViewTransition/i.test(msg)
+    );
+}
+window.isViewTransitionAbortError = isViewTransitionAbortError;
+if (typeof globalThis !== 'undefined') globalThis.isViewTransitionAbortError = isViewTransitionAbortError;
+
 /**
  * Safely executes a DOM update callback using modern document.startViewTransition
  * when supported by the browser, respecting the user's prefers-reduced-motion preference.
@@ -1726,7 +1741,32 @@ function safeViewTransition(updateFn) {
         !prefersReducedMotion
     ) {
         try {
-            return document.startViewTransition(updateFn);
+            const transition = document.startViewTransition(updateFn);
+
+            // Attaching silent catch handlers to ready & finished promises
+            // prevents browser's unhandledrejection event when transitions are aborted
+            // (e.g. mobile URL bar resize, virtual keyboard popup, orientation change).
+            if (transition && typeof transition.ready?.catch === 'function') {
+                const safeReady = transition.ready.catch((err) => {
+                    if (isViewTransitionAbortError(err)) return;
+                    throw err;
+                });
+                try {
+                    Object.defineProperty(transition, 'ready', { value: safeReady, configurable: true, writable: true });
+                } catch (_) {}
+            }
+
+            if (transition && typeof transition.finished?.catch === 'function') {
+                const safeFinished = transition.finished.catch((err) => {
+                    if (isViewTransitionAbortError(err)) return;
+                    throw err;
+                });
+                try {
+                    Object.defineProperty(transition, 'finished', { value: safeFinished, configurable: true, writable: true });
+                } catch (_) {}
+            }
+
+            return transition;
         } catch (e) {
             console.warn('[ViewTransitions] startViewTransition failed, falling back:', e);
             try {

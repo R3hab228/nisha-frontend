@@ -2774,5 +2774,45 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cssCode).toContain('::view-transition-old(catalog-grid)');
             expect(cssCode).toContain('::view-transition-new(catalog-grid)');
         });
+    
+        it('suppresses and absorbs mobile viewport aborts on ready and finished promises without unhandled rejection', async () => {
+            const abortError = new Error('Transition was aborted because of invalid state. Viewport size changed');
+            abortError.name = 'InvalidStateError';
+
+            const rawMock = {
+                ready: Promise.reject(abortError),
+                finished: Promise.reject(abortError),
+                updateCallbackDone: Promise.resolve(),
+                skipTransition: vi.fn()
+            };
+
+            document.startViewTransition = vi.fn((cb) => {
+                cb();
+                return rawMock;
+            });
+            window.matchMedia = vi.fn(() => ({ matches: false }));
+
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            eval(helpersCode);
+
+            const res = window.safeViewTransition(() => {});
+            expect(res).toBe(rawMock);
+
+            await expect(res.ready).resolves.toBeUndefined();
+            await expect(res.finished).resolves.toBeUndefined();
+
+            delete document.startViewTransition;
+        });
+
+        it('identifies and ignores ViewTransition viewport abort errors in telemetry', () => {
+            const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+            expect(pwaCode).toContain('/Transition was aborted/i');
+            expect(pwaCode).toContain('/Viewport size changed/i');
+            expect(pwaCode).toContain('/ViewTransition/i');
+
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain('function isViewTransitionAbortError(err)');
+            expect(helpersCode).toContain('/Viewport size changed/i');
+        });
     });
 });
