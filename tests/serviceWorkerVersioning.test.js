@@ -71,4 +71,12 @@ describe('Service Worker & PWA Cache Automation', () => {
         expect(content).toContain("parsed.hostname.includes('vercel.app')");
         expect(content).toContain("parsed.hostname = 'www.nisha-store.shop'");
     });
+
+    it('sw.js performs parallel pre-caching of STATIC_URLS during install via Promise.allSettled', () => {
+        const content = readFileSync(publicSwPath, 'utf8');
+
+        expect(content).toContain('Promise.allSettled');
+        expect(content).toContain('STATIC_URLS.map');
+        expect(content).not.toMatch(/for\s*\(\s*const\s+url\s+of\s+STATIC_URLS\s*\)\s*\{\s*await\s+cache\.add/);
+    });
 });

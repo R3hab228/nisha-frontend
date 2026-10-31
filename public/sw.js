@@ -48,12 +48,14 @@ self.addEventListener('message', event => {
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then(async cache => {
-            for (const url of STATIC_URLS) {
-                try {
-                    await cache.add(url);
-                } catch (e) {}
-            }
+        caches.open(CACHE_NAME).then(cache => {
+            return Promise.allSettled(
+                STATIC_URLS.map(url =>
+                    cache.add(url).catch(err => {
+                        console.warn('[SW] Ошибка предварительного кэширования ресурса:', url, err);
+                    })
+                )
+            );
         })
     );
 });
