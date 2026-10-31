@@ -1508,7 +1508,7 @@ window.syncCriticalStatuses = syncCriticalStatuses;
 // Периодический фоновый опрос и мгновенная синхронизация при возвращении в PWA / вкладку
 if (!window._catalogAutoSyncInitialized) {
     window._catalogAutoSyncInitialized = true;
-    setInterval(() => {
+    window._catalogSyncIntervalId = setInterval(() => {
         if (document.visibilityState === 'visible') {
             syncCriticalStatuses();
         }

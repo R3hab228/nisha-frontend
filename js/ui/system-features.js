@@ -54,7 +54,7 @@ function checkPendingBroadcast() {
 }
 window.checkPendingBroadcast = checkPendingBroadcast;
 
-setInterval(() => {
+window._pendingBroadcastIntervalId = setInterval(() => {
     if (document.hidden) return;
     const inFeed = isUserInProductFeed();
     if (pendingBroadcastQueue && inFeed) {

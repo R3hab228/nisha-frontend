@@ -734,7 +734,9 @@ function syncNotificationPermission() {
             window.store.set('notificationPermissionTime', Date.now());
         }
     } else if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('nisha_notification_permission', perm);
+        try {
+            localStorage.setItem('nisha_notification_permission', perm);
+        } catch (_) {}
     }
     return perm;
 }

@@ -172,9 +172,15 @@ export function deepClone(obj) {
         return window.deepClone(obj);
     }
     if (typeof structuredClone === 'function') {
-        return structuredClone(obj);
+        try {
+            return structuredClone(obj);
+        } catch (_) {}
     }
-    return JSON.parse(JSON.stringify(obj));
+    try {
+        return JSON.parse(JSON.stringify(obj));
+    } catch (_) {
+        return obj;
+    }
 }
 
 /**
