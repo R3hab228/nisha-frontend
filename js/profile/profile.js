@@ -11,6 +11,7 @@ if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCa
 let currentUser = window.currentUser;
 let userProfile = window.userProfile;
 let favorites = window.favorites;
+if (typeof window.isRegMode === 'undefined') window.isRegMode = false;
 if (typeof window.globalOrdersData === 'undefined') window.globalOrdersData = [];
 if (typeof window.currentOrderTab === 'undefined') window.currentOrderTab = 'accepted'; // accepted, shipped, cancelled
 let isTogglingFav = false; // Защита от двойного клика
@@ -432,7 +433,9 @@ function toggleRegMode(isModal = false) {
 
     const currentlyReg = btnRegister && btnRegister.style.display === 'block';
     const nextRegMode = !currentlyReg;
-    isRegMode = nextRegMode;
+    if (typeof window !== 'undefined') {
+        window.isRegMode = nextRegMode;
+    }
 
     if (nextRegMode) {
         if (btnLogin) btnLogin.style.display = 'none';

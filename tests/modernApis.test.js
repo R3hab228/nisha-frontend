@@ -2910,4 +2910,62 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(typeof mod.cancelPrewarmProductModal).toBe('function');
         });
     });
+
+    describe('48. Auth and Registration Mode Toggle (toggleRegMode & isRegMode scoping)', () => {
+        let elements = {};
+
+        beforeEach(() => {
+            elements = {
+                btnLogin: { style: { display: 'block' } },
+                btnShowReg: { style: { display: 'block' } },
+                btnRegister: { style: { display: 'none' } },
+                btnBackLogin: { style: { display: 'none' } },
+                authUsername: { style: { display: 'none' } },
+                authForgotPassWrap: { style: { display: 'flex' } },
+                modalBtnLogin: { style: { display: 'block' } },
+                modalBtnShowReg: { style: { display: 'block' } },
+                modalBtnRegister: { style: { display: 'none' } },
+                modalBtnBackLogin: { style: { display: 'none' } },
+                modalAuthUsername: { style: { display: 'none' } },
+                modalAuthForgotPassWrap: { style: { display: 'flex' } },
+            };
+            globalThis.document.getElementById = vi.fn(id => elements[id] || null);
+        });
+
+        it('toggles registration mode without ReferenceError: isRegMode is not defined', async () => {
+            // Import the actual profile script
+            await import('../js/profile/profile.js');
+            expect(typeof window.toggleRegMode).toBe('function');
+
+            // 1. Toggle to registration mode (sidebar mode)
+            expect(() => window.toggleRegMode(false)).not.toThrow();
+            expect(window.isRegMode).toBe(true);
+            expect(elements.btnLogin.style.display).toBe('none');
+            expect(elements.btnRegister.style.display).toBe('block');
+            expect(elements.authUsername.style.display).toBe('block');
+            expect(elements.authForgotPassWrap.style.display).toBe('none');
+
+            // 2. Toggle back to login mode (sidebar mode)
+            expect(() => window.toggleRegMode(false)).not.toThrow();
+            expect(window.isRegMode).toBe(false);
+            expect(elements.btnLogin.style.display).toBe('block');
+            expect(elements.btnRegister.style.display).toBe('none');
+            expect(elements.authUsername.style.display).toBe('none');
+            expect(elements.authForgotPassWrap.style.display).toBe('flex');
+
+            // 3. Toggle in modal mode
+            expect(() => window.toggleRegMode(true)).not.toThrow();
+            expect(window.isRegMode).toBe(true);
+            expect(elements.modalBtnLogin.style.display).toBe('none');
+            expect(elements.modalBtnRegister.style.display).toBe('block');
+            expect(elements.modalAuthUsername.style.display).toBe('block');
+
+            // 4. Toggle back in modal mode
+            expect(() => window.toggleRegMode(true)).not.toThrow();
+            expect(window.isRegMode).toBe(false);
+            expect(elements.modalBtnLogin.style.display).toBe('block');
+            expect(elements.modalBtnRegister.style.display).toBe('none');
+            expect(elements.modalAuthUsername.style.display).toBe('none');
+        });
+    });
 });
