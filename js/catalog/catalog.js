@@ -2644,27 +2644,37 @@ function sortItems(type) {
         await applyFilters(true, false);
     };
 
-    const scrollGridIntoView = () => {
-        setTimeout(() => {
+    const scrollGridIntoView = (tr) => {
+        const onFinish = () => {
             const grid = document.getElementById('itemsGrid');
             if (grid) {
-                const y = grid.getBoundingClientRect().top + window.scrollY - 100;
-                window.scrollTo({ top: y, behavior: 'smooth' });
+                const rect = grid.getBoundingClientRect();
+                // Скроллим только если пользователь промотал далеко ниже сетки каталога
+                if (rect.top < -100 || rect.top > (window.innerHeight || 800)) {
+                    const y = rect.top + window.scrollY - 100;
+                    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+                }
             }
-        }, 100);
+        };
+
+        if (tr && typeof tr.finished?.then === 'function') {
+            tr.finished.then(onFinish);
+        } else {
+            setTimeout(onFinish, 450);
+        }
     };
 
     if (typeof safeViewTransition === 'function') {
         const tr = safeViewTransition(updateDom);
-        scrollGridIntoView();
+        scrollGridIntoView(tr);
         return tr;
     } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
         const tr = window.safeViewTransition(updateDom);
-        scrollGridIntoView();
+        scrollGridIntoView(tr);
         return tr;
     } else {
         const res = updateDom();
-        scrollGridIntoView();
+        scrollGridIntoView(null);
         return res;
     }
 }

@@ -2737,57 +2737,86 @@ html.pwa-standalone body {
         view-transition-name: orders-list;
     }
 
-    /* Плавное перемещение карточек товаров при сортировке и фильтрации (FLIP) */
+    /* Плавное перемещение карточек товаров при сортировке и фильтрации (FLIP)
+       Увеличена длительность до 0.38s с роскошным замедлением cubic-bezier */
     ::view-transition-group(*) {
-        animation-duration: 0.25s;
+        animation-duration: 0.38s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
+    /* Мягкое растворение уходящих и плавное проявление возвращающихся карточек */
     ::view-transition-old(*),
     ::view-transition-new(*) {
-        animation-duration: 0.22s;
+        animation-duration: 0.32s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
         mix-blend-mode: normal;
     }
 
+    ::view-transition-old(*) {
+        animation-name: vt-card-fade-out;
+    }
+
+    ::view-transition-new(*) {
+        animation-name: vt-card-fade-in;
+    }
+
+    /* Контейнеры сетки каталога и списка заказов: чистый crossfade без дергающих scale-трансформаций */
     ::view-transition-old(catalog-grid),
     ::view-transition-new(catalog-grid),
     ::view-transition-old(orders-list),
     ::view-transition-new(orders-list) {
-        animation-duration: 0.2s;
+        animation-duration: 0.3s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
         mix-blend-mode: normal;
     }
 
     ::view-transition-old(catalog-grid),
     ::view-transition-old(orders-list) {
-        animation-name: vt-fade-out;
+        animation-name: vt-pure-fade-out;
     }
 
     ::view-transition-new(catalog-grid),
     ::view-transition-new(orders-list) {
-        animation-name: vt-fade-in;
+        animation-name: vt-pure-fade-in;
     }
 }
 
-@keyframes vt-fade-out {
+@keyframes vt-card-fade-out {
     from {
         opacity: 1;
         transform: scale(1);
     }
     to {
         opacity: 0;
-        transform: scale(0.995);
+        transform: scale(0.96);
     }
 }
 
-@keyframes vt-fade-in {
+@keyframes vt-card-fade-in {
     from {
         opacity: 0;
-        transform: scale(0.995);
+        transform: scale(0.96);
     }
     to {
         opacity: 1;
         transform: scale(1);
+    }
+}
+
+@keyframes vt-pure-fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes vt-pure-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
