@@ -2742,8 +2742,9 @@ html.pwa-standalone body {
         view-transition-name: orders-list;
     }
 
-    /* Контейнер сетки фиксирован — не прыгает по высоте при изменении числа карточек */
-    ::view-transition-group(catalog-grid) {
+    /* Контейнеры списков фиксированы — не прыгают по высоте при изменении числа карточек */
+    ::view-transition-group(catalog-grid),
+    ::view-transition-group(orders-list) {
         animation: none !important;
     }
 

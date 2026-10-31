@@ -2658,7 +2658,7 @@ function sortItems(type) {
         };
 
         if (tr && typeof tr.finished?.then === 'function') {
-            tr.finished.then(onFinish);
+            tr.finished.then(onFinish).catch(() => {});
         } else {
             setTimeout(onFinish, 450);
         }

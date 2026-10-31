@@ -1756,6 +1756,12 @@ function safeViewTransition(updateFn) {
                 } catch (_) {}
             }
 
+            if (transition && typeof transition.updateCallbackDone?.catch === 'function') {
+                transition.updateCallbackDone.catch((err) => {
+                    if (isViewTransitionAbortError(err)) return;
+                });
+            }
+
             if (transition && typeof transition.finished?.catch === 'function') {
                 const safeFinished = transition.finished.catch((err) => {
                     if (isViewTransitionAbortError(err)) return;
