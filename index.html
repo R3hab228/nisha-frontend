@@ -253,23 +253,23 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </div>
 <div style="margin-top:20px;border-top:1px dashed #444;padding-top:10px"></div>
 <ul class="filter-list checkbox-list">
-<li><label><input type=checkbox class=size-cb value=S onchange=applyFilters()> <span data-i18n=sidebar.size_s>Размер S</span></label></li>
-<li><label><input type=checkbox class=size-cb value=M onchange=applyFilters()> <span data-i18n=sidebar.size_m>Размер M</span></label></li>
-<li><label><input type=checkbox class=size-cb value=L onchange=applyFilters()> <span data-i18n=sidebar.size_l>Размер L</span></label></li>
-<li><label><input type=checkbox class=size-cb value=XL onchange=applyFilters()> <span data-i18n=sidebar.size_xl>Размер XL / XXL</span></label></li>
+<li><label><input type=checkbox class=size-cb value=S onchange=triggerFilterTransition()> <span data-i18n=sidebar.size_s>Размер S</span></label></li>
+<li><label><input type=checkbox class=size-cb value=M onchange=triggerFilterTransition()> <span data-i18n=sidebar.size_m>Размер M</span></label></li>
+<li><label><input type=checkbox class=size-cb value=L onchange=triggerFilterTransition()> <span data-i18n=sidebar.size_l>Размер L</span></label></li>
+<li><label><input type=checkbox class=size-cb value=XL onchange=triggerFilterTransition()> <span data-i18n=sidebar.size_xl>Размер XL / XXL</span></label></li>
 <li style="margin-top:10px;border-top:1px dashed #444;padding-top:10px">
-<label><input type=checkbox class=size-cb value="40-42" onchange=applyFilters()> <span data-i18n=sidebar.shoes_1>Обувь (40 - 42)</span></label>
+<label><input type=checkbox class=size-cb value="40-42" onchange=triggerFilterTransition()> <span data-i18n=sidebar.shoes_1>Обувь (40 - 42)</span></label>
 </li>
-<li><label><input type=checkbox class=size-cb value="43-46" onchange=applyFilters()> <span data-i18n=sidebar.shoes_2>Обувь (43 - 46)</span></label></li>
+<li><label><input type=checkbox class=size-cb value="43-46" onchange=triggerFilterTransition()> <span data-i18n=sidebar.shoes_2>Обувь (43 - 46)</span></label></li>
 <li style="margin-top:15px;border-top:1px dashed #444;padding-top:15px">
 <label style="cursor:pointer">
-<input type=checkbox id=onlySaleCb onchange=applyFilters()>
+<input type=checkbox id=onlySaleCb onchange=triggerFilterTransition()>
 <span data-i18n=sidebar.only_sale style="color:var(--accent-red);font-weight:bold">% Только со скидкой</span>
 </label>
 </li>
 <li style="margin-top:8px">
 <label style="cursor:pointer">
-<input type=checkbox id=hideUnavailableCb onchange=applyFilters()>
+<input type=checkbox id=hideUnavailableCb onchange=triggerFilterTransition()>
 <span data-i18n=sidebar.hide_unavailable>Скрыть проданное/бронь</span>
 </label>
 </li>

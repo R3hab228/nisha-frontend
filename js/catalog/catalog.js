@@ -2317,6 +2317,10 @@ function buildCardDOM(item, idx = 0) {
     const card = document.createElement('div');
     card.className = ['item-card', statusClass, pulseClass].filter(Boolean).join(' ');
     card.setAttribute('data-id', item.id);
+    if (item && item.id && card.style && typeof card.style.setProperty === 'function') {
+        const safeId = String(item.id).replace(/[^a-zA-Z0-9_-]/g, '_');
+        card.style.setProperty('view-transition-name', 'item-' + safeId);
+    }
 
     let priceHTML = '';
     const formattedPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
@@ -2615,38 +2619,73 @@ function renderNextBatch(targetMobileCount = 0) {
 }
 window.renderNextBatch = renderNextBatch;
 
-// Сортировка товаров
+// Сортировка товаров (с плавной анимацией перемещения карточек через View Transitions API)
 function sortItems(type) {
-    const sortNew = document.getElementById('sort-new');
-    const sortCheap = document.getElementById('sort-cheap');
-    if (sortNew) sortNew.classList.remove('active-sort');
-    if (sortCheap) sortCheap.classList.remove('active-sort');
-    
-    const targetSort = document.getElementById('sort-' + type);
-    if (targetSort) targetSort.classList.add('active-sort');
-    
-    const countEl = document.getElementById('itemCount');
-    if (countEl) {
-        countEl.style.transition = '0.3s';
-        countEl.style.opacity = '0.2';
-        countEl.style.color = 'var(--accent-yellow)';
-        setTimeout(() => { 
-            countEl.style.opacity = '1'; 
-            countEl.style.color = 'var(--accent-green)';
-        }, 300);
-    }
-    
-    applyFilters();
-    
-    setTimeout(() => {
-        const grid = document.getElementById('itemsGrid');
-        if (grid) {
-            const y = grid.getBoundingClientRect().top + window.scrollY - 100;
-            window.scrollTo({ top: y, behavior: 'smooth' });
+    const updateDom = async () => {
+        const sortNew = document.getElementById('sort-new');
+        const sortCheap = document.getElementById('sort-cheap');
+        if (sortNew) sortNew.classList.remove('active-sort');
+        if (sortCheap) sortCheap.classList.remove('active-sort');
+        
+        const targetSort = document.getElementById('sort-' + type);
+        if (targetSort) targetSort.classList.add('active-sort');
+        
+        const countEl = document.getElementById('itemCount');
+        if (countEl) {
+            countEl.style.transition = '0.3s';
+            countEl.style.opacity = '0.2';
+            countEl.style.color = 'var(--accent-yellow)';
+            setTimeout(() => { 
+                countEl.style.opacity = '1'; 
+                countEl.style.color = 'var(--accent-green)';
+            }, 300);
         }
-    }, 100);
+        
+        await applyFilters(true, false);
+    };
+
+    const scrollGridIntoView = () => {
+        setTimeout(() => {
+            const grid = document.getElementById('itemsGrid');
+            if (grid) {
+                const y = grid.getBoundingClientRect().top + window.scrollY - 100;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+        }, 100);
+    };
+
+    if (typeof safeViewTransition === 'function') {
+        const tr = safeViewTransition(updateDom);
+        scrollGridIntoView();
+        return tr;
+    } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
+        const tr = window.safeViewTransition(updateDom);
+        scrollGridIntoView();
+        return tr;
+    } else {
+        const res = updateDom();
+        scrollGridIntoView();
+        return res;
+    }
 }
 window.sortItems = sortItems;
+
+// Плавное применение фильтров чекбоксов (размеры, скидки, наличие) через View Transitions API
+function triggerFilterTransition() {
+    const updateDom = async () => {
+        await applyFilters(true, false);
+    };
+
+    if (typeof safeViewTransition === 'function') {
+        return safeViewTransition(updateDom);
+    } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
+        return window.safeViewTransition(updateDom);
+    } else {
+        return updateDom();
+    }
+}
+window.triggerFilterTransition = triggerFilterTransition;
+if (typeof globalThis !== 'undefined') globalThis.triggerFilterTransition = triggerFilterTransition;
 
 // Установка фильтра категории
 function setCategoryFilter(cat, element) { 

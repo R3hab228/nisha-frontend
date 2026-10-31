@@ -2814,5 +2814,26 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(helpersCode).toContain('function isViewTransitionAbortError(err)');
             expect(helpersCode).toContain('/Viewport size changed/i');
         });
+
+        it('integrates safeViewTransition into sortItems for smooth FLIP card re-ordering', () => {
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('function sortItems(type)');
+            expect(catalogCode).toContain('safeViewTransition(updateDom)');
+            expect(catalogCode).toContain('await applyFilters(true, false)');
+        });
+
+        it('provides triggerFilterTransition and assigns view-transition-name to catalog item cards', () => {
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('function triggerFilterTransition()');
+            expect(catalogCode).toContain('card.style.setProperty(\'view-transition-name\', \'item-\' + safeId)');
+
+            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            expect(html).toContain('class=size-cb value=S onchange=triggerFilterTransition()');
+            expect(html).toContain('id=onlySaleCb onchange=triggerFilterTransition()');
+            expect(html).toContain('id=hideUnavailableCb onchange=triggerFilterTransition()');
+
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('::view-transition-group(*)');
+        });
     });
 });

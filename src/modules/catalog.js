@@ -39,6 +39,16 @@ export function applyFilters() {
 }
 
 /**
+ * Triggers smooth filter change with View Transitions API for checkboxes and sorting
+ * @returns {any}
+ */
+export function triggerFilterTransition() {
+    if (typeof window !== 'undefined' && typeof window.triggerFilterTransition === 'function') {
+        return window.triggerFilterTransition();
+    }
+}
+
+/**
  * Sets current category filter
  * @param {string} category
  */

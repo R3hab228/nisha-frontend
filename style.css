@@ -2737,6 +2737,19 @@ html.pwa-standalone body {
         view-transition-name: orders-list;
     }
 
+    /* Плавное перемещение карточек товаров при сортировке и фильтрации (FLIP) */
+    ::view-transition-group(*) {
+        animation-duration: 0.25s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation-duration: 0.22s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        mix-blend-mode: normal;
+    }
+
     ::view-transition-old(catalog-grid),
     ::view-transition-new(catalog-grid),
     ::view-transition-old(orders-list),
