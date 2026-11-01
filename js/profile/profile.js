@@ -5,7 +5,11 @@
 // Глобальные переменные состояния пользователя и заказов
 if (typeof window.currentUser === 'undefined') window.currentUser = null;
 if (typeof window.userProfile === 'undefined') window.userProfile = null;
-if (typeof window.favorites === 'undefined') window.favorites = [];
+if (typeof window.favorites === 'undefined' || !Array.isArray(window.favorites) || window.favorites.length === 0) {
+    const _store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    const _cachedFavs = (_store && typeof _store.getJSON === 'function') ? _store.getJSON('nisha_cached_favorites', null) : null;
+    window.favorites = Array.isArray(_cachedFavs) ? _cachedFavs : (window.favorites || []);
+}
 if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCache = {};
 
 let currentUser = window.currentUser;
@@ -572,9 +576,12 @@ async function logout() {
     window.showingOnlyFavs = false;
     window.globalOrdersData = [];
     window.otpVerified = false;
+    favorites = [];
+    window.favorites = [];
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     const keysToClear = [
         'nisha_cached_orders',
+        'nisha_cached_favorites',
         'nisha_last_phone',
         'nisha_last_tg',
         'nisha_profile_delivery',
@@ -1861,12 +1868,25 @@ async function loadFavorites() {
     if (data && !error) {
         favorites = data.map(f => f.item_id);
         window.favorites = favorites;
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store && typeof store.setJSON === 'function') {
+        store.setJSON('nisha_cached_favorites', favorites);
+    }
+    if (window.store && typeof window.store.set === 'function') {
+        window.store.set('favorites', favorites);
+    }
         const pCount = document.getElementById('profileLikesCount');
         if (pCount) pCount.innerText = favorites.length;
         const mCount = document.getElementById('modalProfileLikesCount');
         if (mCount) mCount.innerText = favorites.length;
+        updateFavBadge();
+
+        if (window.showingOnlyFavs && typeof applyFilters === 'function') {
+            applyFilters();
+        }
+    } else {
+        updateFavBadge();
     }
-    updateFavBadge();
 }
 window.loadFavorites = loadFavorites;
 
@@ -1897,6 +1917,13 @@ async function toggleFav(event, itemId) {
         favorites.push(itemId);
     }
     window.favorites = favorites;
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store && typeof store.setJSON === 'function') {
+        store.setJSON('nisha_cached_favorites', favorites);
+    }
+    if (window.store && typeof window.store.set === 'function') {
+        window.store.set('favorites', favorites);
+    }
     if (window.analytics && typeof window.analytics.trackFavorite === 'function') {
         window.analytics.trackFavorite(itemId, !isFav);
     }
@@ -2005,7 +2032,10 @@ function initAuthListener() {
             console.log('[AUTH] Выполнен выход из аккаунта.');
             window.globalOrdersData = [];
             const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-            if (store) store.remove('nisha_cached_orders');
+            if (store) {
+                store.remove('nisha_cached_orders');
+                store.remove('nisha_cached_favorites');
+            }
             currentUser = null;
             window.currentUser = null;
             userProfile = null;

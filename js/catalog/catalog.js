@@ -1014,9 +1014,9 @@ function updateCardDOM(item) {
                 const fPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
                 if (item.is_sale && item.old_price) {
                     const fOld = (typeof window.formatPrice === 'function') ? window.formatPrice(item.old_price) : `${item.old_price} ${curr}`;
-                    priceDiv.innerHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${fOld}</span><span style="color: var(--accent-green);">${fPrice}</span>`;
+                    priceDiv.innerHTML = `<span class="card-old-price" style="color: #4a704a; text-decoration: line-through;">${fOld}</span><span class="card-current-price" style="color: var(--accent-green);">${fPrice}</span>`;
                 } else {
-                    priceDiv.innerHTML = `<span style="color: var(--accent-green);">${fPrice}</span>`;
+                    priceDiv.innerHTML = `<span class="card-current-price" style="color: var(--accent-green);">${fPrice}</span>`;
                 }
             }
 
@@ -1766,7 +1766,15 @@ function applyFilters(immediate = false, preserveViewport = false) {
             const maxPrice = (Number.isFinite(rawMax) && rawMax > 0) ? rawMax : Infinity;
 
             const getSafePrice = (price) => Number.parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
-            const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
+            let userFavs = (typeof favorites !== 'undefined' && Array.isArray(favorites) && favorites.length > 0) ? favorites : ((window.favorites && Array.isArray(window.favorites) && window.favorites.length > 0) ? window.favorites : null);
+            if (!userFavs || userFavs.length === 0) {
+                const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                const cachedFavs = (store && typeof store.getJSON === 'function') ? store.getJSON('nisha_cached_favorites', null) : null;
+                if (Array.isArray(cachedFavs) && cachedFavs.length > 0) {
+                    userFavs = cachedFavs;
+                    window.favorites = cachedFavs;
+                }
+            }
             const favsSet = new Set(userFavs);
             const hacked = (typeof isHacked !== 'undefined') ? isHacked : (window.isHacked || false);
             const curCat = window.currentCategory || '';
@@ -2339,9 +2347,9 @@ function buildCardDOM(item, idx = 0) {
     const formattedPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
     if (item.is_sale && item.old_price) {
         const formattedOldPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.old_price) : `${item.old_price} ${curr}`;
-        priceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 14px; margin-right: 8px;">${formattedOldPrice}</span><span style="color: var(--accent-green);">${formattedPrice}</span>`;
+        priceHTML = `<span class="card-old-price" style="color: #4a704a; text-decoration: line-through;">${formattedOldPrice}</span><span class="card-current-price" style="color: var(--accent-green);">${formattedPrice}</span>`;
     } else {
-        priceHTML = `<span style="color: var(--accent-green);">${formattedPrice}</span>`;
+        priceHTML = `<span class="card-current-price" style="color: var(--accent-green);">${formattedPrice}</span>`;
     }
 
     let controlsHTML = '';

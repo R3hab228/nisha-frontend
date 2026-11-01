@@ -182,6 +182,7 @@ function resetToMain() {
     window.currentCategory = '';
     window.currentBrand = '';
     window.showingOnlyFavs = false;
+    try { sessionStorage.removeItem('nisha_showing_favs'); } catch (e) {}
     
     const searchInput = document.getElementById('mainSearch');
     if (searchInput) searchInput.value = '';
@@ -234,13 +235,9 @@ async function initApp() {
             }, 150);
         } else if (quickAction === 'fav') {
             window.showingOnlyFavs = true;
-            sessionStorage.setItem('nisha_showing_favs', 'true');
+            try { sessionStorage.setItem('nisha_showing_favs', 'true'); } catch (e) {}
             const favNav = document.getElementById('favNav');
             if (favNav) favNav.style.color = '#fff';
-            setTimeout(() => {
-                if (typeof toggleFavFilter === 'function') toggleFavFilter(true);
-                else applyFilters();
-            }, 150);
         } else if (quickAction === 'reviews' || urlParams.get('open') === 'reviews') {
             setTimeout(() => { openReviewsModal(); }, 250);
         }
@@ -435,6 +432,23 @@ async function initApp() {
         if (typeof updateCartUI === 'function') updateCartUI(); 
 
         await Promise.all([itemsPromise, sessionPromise, langPromise]);
+
+        // Надежная синхронизация отображения Избранного после завершения загрузки каталога и сессии
+        if (window.showingOnlyFavs) {
+            const activeUser = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
+            const favNav = document.getElementById('favNav');
+            if (!activeUser) {
+                window.showingOnlyFavs = false;
+                try { sessionStorage.removeItem('nisha_showing_favs'); } catch (e) {}
+                if (favNav) favNav.style.color = 'var(--accent-yellow)';
+                const authMsg = (typeof i18next !== 'undefined') ? i18next.t('messages.cart_error_auth') : 'Пожалуйста, войдите в аккаунт';
+                if (typeof showToast === 'function') showToast(authMsg, 'error');
+                if (typeof applyFilters === 'function') applyFilters(true);
+            } else {
+                if (favNav) favNav.style.color = '#fff';
+                if (typeof applyFilters === 'function') applyFilters(true);
+            }
+        }
 
         // Проверка рассылок от админа
         setTimeout(async () => {
