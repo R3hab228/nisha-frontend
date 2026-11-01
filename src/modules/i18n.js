@@ -18,7 +18,7 @@ export function getCurrentSiteLang() {
     if (typeof window !== 'undefined' && window.i18next && window.i18next.language) {
         return window.i18next.language;
     }
-    return 'ru';
+    return 'ua';
 }
 
 /**

@@ -2863,7 +2863,7 @@ async function applyPromoCode() {
         }, { timeout: 10000, retries: 1 });
 
         const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-        const currentLang = store ? store.get('nisha_lang', 'ru') : 'ru';
+        const currentLang = store ? store.get('nisha_lang', 'ua') : 'ua';
         if (typeof i18next !== 'undefined' && i18next.language !== currentLang) {
             await i18next.changeLanguage(currentLang);
         }

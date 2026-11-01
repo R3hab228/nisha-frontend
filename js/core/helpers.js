@@ -337,8 +337,8 @@ if (typeof globalThis !== 'undefined') globalThis.clearElement = clearElement;
 // --- ВАЛЮТА И ФОРМАТИРОВАНИЕ (INTL.NUMBERFORMAT) ---
 function getCurrency() {
     const lang = (window.storage && typeof window.storage.get === 'function')
-        ? window.storage.get('nisha_lang', 'ru')
-        : (typeof storage !== 'undefined' && storage ? storage.get('nisha_lang', 'ru') : 'ru');
+        ? window.storage.get('nisha_lang', 'ua')
+        : (typeof storage !== 'undefined' && storage ? storage.get('nisha_lang', 'ua') : 'ua');
     return lang === 'en' ? 'UAH' : 'грн';
 }
 window.getCurrency = getCurrency;
@@ -350,8 +350,8 @@ function formatPrice(amount, options = {}) {
         : Number(String(amount || 0).replace(/[^\d.-]/g, '')) || 0;
     const rounded = Math.round(cleanNum);
     const lang = (window.storage && typeof window.storage.get === 'function')
-        ? window.storage.get('nisha_lang', 'ru')
-        : (typeof storage !== 'undefined' && storage ? storage.get('nisha_lang', 'ru') : 'ru');
+        ? window.storage.get('nisha_lang', 'ua')
+        : (typeof storage !== 'undefined' && storage ? storage.get('nisha_lang', 'ua') : 'ua');
     const currency = lang === 'en' ? 'UAH' : 'грн';
     
     // Форматирование чисел: разделитель тысяч запятая (1,500) без пробелов

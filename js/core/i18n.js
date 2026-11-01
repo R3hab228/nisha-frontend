@@ -3,7 +3,7 @@
 // ==========================================
 
 let searchTypewriterInterval = null;
-let currentSearchLang = 'ru';
+let currentSearchLang = 'ua';
 
 function toggleLangDropdown(event) {
     if (event) event.stopPropagation();
@@ -63,7 +63,7 @@ async function changeLanguage(lng) {
                 store.set('nisha_lang', lng); 
                 store.set('i18nextLng', lng); 
             } 
-            document.documentElement.lang = (lng === 'ua' ? 'uk' : (lng || 'ru'));
+            document.documentElement.lang = (lng === 'ua' ? 'uk' : (lng || 'ua'));
             
             updateContentLanguage();
             
@@ -167,7 +167,7 @@ function updateContentLanguage() {
     }
 
     // Запускаем печатную машинку поиска
-    currentSearchLang = i18next.language || 'ru';
+    currentSearchLang = i18next.language || 'ua';
     startSearchTypewriter();
 
     // Немедленно восстанавливаем красные индикаторы количества товаров в фильтрах и счетчики заказов после перевода
@@ -193,7 +193,7 @@ function startSearchTypewriter() {
         'en': ['Search items...']
     };
     
-    const words = translatedWords[currentSearchLang] || translatedWords['ru'];
+    const words = translatedWords[currentSearchLang] || translatedWords['ua'];
     let wordIndex = 0;
     let charIndex = 0;
     let isDeleting = false;

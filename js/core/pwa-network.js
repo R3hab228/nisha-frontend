@@ -1119,7 +1119,7 @@ function initPwaPullToRefresh() {
             const val = i18next.t('pwa.' + key);
             if (val && val !== 'pwa.' + key) return val;
         }
-        const currentLang = (window.storage ? window.storage.get('nisha_lang') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_lang') : 'ru')) || 'ru';
+        const currentLang = (window.storage ? window.storage.get('nisha_lang') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_lang') : 'ua')) || 'ua';
         if (key === 'refreshing') {
             if (currentLang === 'ua') return 'ОНОВЛЕННЯ...';
             if (currentLang === 'en') return 'REFRESHING...';

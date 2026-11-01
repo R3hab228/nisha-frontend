@@ -47,7 +47,7 @@ describe('ReactiveStore (js/core/store.js) — State, Cart, Favorites & Persiste
         expect(store.cart).toEqual([]);
         expect(store.cartCount).toBe(0);
         expect(store.cartTotal).toBe(0);
-        expect(store.lang).toBe('ru');
+        expect(store.lang).toBe('ua');
     });
 
     it('adds items to cart, prevents duplicates, and calculates cartCount & cartTotal', () => {

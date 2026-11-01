@@ -74,10 +74,10 @@ export function extractItemMeasurements(item) {
  * Formats individual measurement value for tooltip
  * @param {string} key
  * @param {any} val
- * @param {string} [lang='ru']
+ * @param {string} [lang='ua']
  * @returns {string}
  */
-export function formatMeasurementItem(key, val, lang = 'ru') {
+export function formatMeasurementItem(key, val, lang = 'ua') {
     if (typeof window !== 'undefined' && typeof window.formatMeasurementItem === 'function') {
         return window.formatMeasurementItem(key, val, lang);
     }

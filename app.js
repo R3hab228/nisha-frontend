@@ -295,10 +295,8 @@ async function initApp() {
                     let savedFlag = (storage && typeof storage.get === 'function') ? storage.get('nisha_flag') : null;
                     
                     if (!savedLng) {
-                        const browserLang = navigator.language || navigator.userLanguage || '';
-                        if (browserLang.toLowerCase().includes('ru')) {
-                            savedLng = 'ru'; savedFlag = '🇷🇺';
-                        } else if (browserLang.toLowerCase().includes('en')) {
+                        const browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+                        if (browserLang.startsWith('en')) {
                             savedLng = 'en'; savedFlag = '🇬🇧';
                         } else {
                             savedLng = 'ua'; savedFlag = '🇺🇦';
@@ -336,14 +334,14 @@ async function initApp() {
                     await i18next.init({
                         resources: langResources,
                         lng: savedLng, 
-                        fallbackLng: 'ru',
+                        fallbackLng: ['ua', 'ru'],
                         debug: false
                     });
                     
                     if (typeof updateContentLanguage === 'function') updateContentLanguage();
                     if (typeof updateCartUI === 'function') updateCartUI();
                     if (typeof renderCartItems === 'function') renderCartItems();
-                    document.documentElement.lang = (savedLng === 'ua' ? 'uk' : (savedLng || 'ru'));
+                    document.documentElement.lang = (savedLng === 'ua' ? 'uk' : (savedLng || 'ua'));
                     const flagEl = document.getElementById('currentFlag');
                     if (flagEl) flagEl.innerText = savedFlag;
                 }

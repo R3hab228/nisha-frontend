@@ -128,7 +128,7 @@ async function checkSession() {
                 // Синхронизация языка из БД в браузер
                 if (userProfile.language) {
                     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-                    const currentLang = store ? store.get('nisha_lang', 'ru') : 'ru';
+                    const currentLang = store ? store.get('nisha_lang', 'ua') : 'ua';
                     if (userProfile.language !== currentLang) {
                         if (store) store.set('nisha_lang', userProfile.language);
                         const newFlag = userProfile.language === 'ru' ? '🇷🇺' : (userProfile.language === 'en' ? '🇬🇧' : '🇺🇦');

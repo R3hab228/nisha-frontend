@@ -3077,4 +3077,19 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(res.emoji).toBe('⚪');
         });
     });
+
+    describe('52. Ukrainian Default Language & Localization Baseline', () => {
+        it('ensures index.html defines uk as default HTML lang and og:locale', () => {
+            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            expect(html).toContain('<html lang=uk>');
+            expect(html).toContain('content="uk_UA"');
+            expect(html).toContain('[UA] ▼');
+        });
+
+        it('defaults getCurrentSiteLang to ua when no saved language exists', async () => {
+            const { getCurrentSiteLang } = await import('../src/modules/i18n.js');
+            expect(typeof getCurrentSiteLang).toBe('function');
+            expect(['ua', 'uk']).toContain(getCurrentSiteLang());
+        });
+    });
 });

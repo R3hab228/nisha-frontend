@@ -107,10 +107,10 @@ window.cancelPrefetchItemImages = function(id) {
 
 function getCurrentSiteLang() {
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    let l = store ? (store.get('nisha_lang') || store.get('i18nextLng') || 'ru') : 'ru';
+    let l = store ? (store.get('nisha_lang') || store.get('i18nextLng') || 'ua') : 'ua';
     l = l.substring(0, 2).toLowerCase();
     if (l === 'uk') l = 'ua';
-    if (!['ru', 'ua', 'en'].includes(l)) l = 'ru';
+    if (!['ru', 'ua', 'en'].includes(l)) l = 'ua';
     return l;
 }
 window.getCurrentSiteLang = getCurrentSiteLang;
