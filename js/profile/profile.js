@@ -783,6 +783,7 @@ window.removeProfileTg = (isModal = false) => removeProfileContact('tg', isModal
 let profileNpCityTimeout = null;
 let profileNpBranchTimeout = null;
 const profileSelectedCityRef = { desktop: '', modal: '' };
+const profileSelectedBranchRef = { desktop: '', modal: '' };
 
 function getProfileScopeKey(isModal) {
     return isModal ? 'modal' : 'desktop';
@@ -1110,6 +1111,7 @@ function renderProfileBranchDropdown(isModal, list) {
             setTimeout(() => { selectedOnce = false; }, 300);
 
             branchInput.value = desc;
+            profileSelectedBranchRef[scopeKey] = b.Ref || '';
             dropdown.style.display = 'none';
             if (typeof branchInput.blur === 'function') branchInput.blur();
             syncProfileCombinedAddress(isModal);
@@ -1294,8 +1296,14 @@ function renderProfileDelivery(fullName, address) {
     if (store) {
         if (fn || addr) {
             store.setJSON('nisha_profile_delivery', { full_name: fn, delivery_address: addr });
+            const cRef = profileSelectedCityRef.desktop || profileSelectedCityRef.modal || '';
+            const bRef = profileSelectedBranchRef.desktop || profileSelectedBranchRef.modal || '';
+            if (cRef || bRef) {
+                store.setJSON('nisha_profile_delivery_refs', { cityRef: cRef, branchRef: bRef });
+            }
         } else {
             store.remove('nisha_profile_delivery');
+            store.remove('nisha_profile_delivery_refs');
         }
     }
 }
@@ -1396,9 +1404,13 @@ async function saveProfileDeliveryFromForm(isModal, btn) {
         b.style.opacity = '0.7';
     });
 
+    const scopeKey = getProfileScopeKey(isModal);
+    const cityRef = profileSelectedCityRef[scopeKey] || '';
+    const branchRef = profileSelectedBranchRef[scopeKey] || '';
+
     window._isSavingProfileDelivery = true;
     try {
-        await saveDeliveryToProfile(fullName, address);
+        await saveDeliveryToProfile(fullName, address, { cityRef, branchRef });
         const successMsg = typeof i18next !== 'undefined' ? i18next.t('profile.delivery_saved_toast', { defaultValue: 'Данные доставки сохранены!' }) : 'Данные доставки сохранены!';
         showToast(successMsg, 'success');
 
@@ -1427,17 +1439,23 @@ async function saveProfileDeliveryFromForm(isModal, btn) {
 }
 window.saveProfileDeliveryFromForm = saveProfileDeliveryFromForm;
 
-async function saveDeliveryToProfile(fullName, address) {
+async function saveDeliveryToProfile(fullName, address, refs = {}) {
     const fn = (fullName || '').trim();
     const addr = (address || '').trim();
+    const cityRef = (refs && refs.cityRef) || '';
+    const branchRef = (refs && refs.branchRef) || '';
 
     if (userProfile) {
         userProfile.full_name = fn;
         userProfile.delivery_address = addr;
+        if (cityRef) userProfile.delivery_city_ref = cityRef;
+        if (branchRef) userProfile.delivery_branch_ref = branchRef;
     }
     if (window.userProfile) {
         window.userProfile.full_name = fn;
         window.userProfile.delivery_address = addr;
+        if (cityRef) window.userProfile.delivery_city_ref = cityRef;
+        if (branchRef) window.userProfile.delivery_branch_ref = branchRef;
     }
 
     renderProfileDelivery(fn, addr);
@@ -1448,6 +1466,20 @@ async function saveDeliveryToProfile(fullName, address) {
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     if (store) {
         store.remove('nisha_checkout_data');
+        if (fn || addr) {
+            store.setJSON('nisha_profile_delivery', {
+                full_name: fn,
+                delivery_address: addr
+            });
+            if (cityRef || branchRef) {
+                store.setJSON('nisha_profile_delivery_refs', {
+                    cityRef: cityRef,
+                    branchRef: branchRef
+                });
+            }
+        } else {
+            store.remove('nisha_profile_delivery_refs');
+        }
     }
     // Адрес в профиле изменился — форма заказа при следующем открытии подставит его заново
     if (typeof window.resetCheckoutAddressState === 'function') {
