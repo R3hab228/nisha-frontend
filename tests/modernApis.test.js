@@ -3092,4 +3092,16 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(['ua', 'uk']).toContain(getCurrentSiteLang());
         });
     });
+
+    describe('53. Secure Deal Shield Icon Checkmark', () => {
+        it('renders shield with inner checkmark in index.html and js/product/product.js', () => {
+            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            const productJs = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+
+            expect(html).toContain('m9 12 2 2 4-4');
+            expect(productJs).toContain('m9 12 2 2 4-4');
+            expect(html).toContain('M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z');
+            expect(productJs).toContain('M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z');
+        });
+    });
 });
