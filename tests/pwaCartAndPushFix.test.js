@@ -52,4 +52,12 @@ describe('PWA Quick Action Cart Drawer, FAB Propose Hiding & Notification Permis
             expect(swJs).toMatch(/sub\.unsubscribe\(\)/);
         });
     });
+
+    describe('3. Footer Background Uniformity (No Grey Band Below Footer)', () => {
+        it('footer has pure black background and margin-bottom: 0 to prevent wrapper grey background leakage', () => {
+            expect(styleCss).toMatch(/footer:not\(\.driver-popover-footer\)\s*\{[^}]*background-color:\s*#000000;/);
+            expect(styleCss).toMatch(/footer:not\(\.driver-popover-footer\)\s*\{[^}]*margin-bottom:\s*0\s*!important;/);
+            expect(styleCss).toMatch(/footer:not\(\.driver-popover-footer\)\s*\{[^}]*padding:[^;]*calc\(120px \+ env\(safe-area-inset-bottom/);
+        });
+    });
 });
