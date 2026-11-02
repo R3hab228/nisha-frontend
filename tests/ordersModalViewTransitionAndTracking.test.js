@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { getNovaPoshtaTrackingUrl } from '../src/modules/orders.js';
+import { getNovaPoshtaTrackingUrl, encodeNovaPoshtaTtn } from '../src/modules/orders.js';
 
 describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
     const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
@@ -20,10 +20,28 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
             expect(styleCode).toContain('::view-transition-group(orders-list)');
             expect(styleCode).toContain('z-index: 1000000 !important');
         });
+
+        it('hides old orders view transition snapshot instantly to avoid ghosting paid items on tab switch', () => {
+            expect(styleCode).toContain('::view-transition-old(orders-list)');
+            expect(styleCode).toContain('display: none !important');
+            expect(styleCode).toContain('::view-transition-new(orders-list)');
+            expect(styleCode).toContain('animation: vt-orders-fade-in');
+        });
+
+        it('locks ordersModal height on mobile to 78dvh and makes list area flexibly scrollable', () => {
+            expect(styleCode).toContain('#ordersModal .modal-window');
+            expect(styleCode).toContain('height: 78dvh !important');
+            expect(styleCode).toContain('max-height: 84dvh !important');
+            expect(styleCode).toContain('#ordersModal #ordersListArea');
+            expect(styleCode).toContain('flex: 1 1 auto !important');
+            expect(styleCode).toContain('overflow-y: auto !important');
+        });
     });
 
-    describe('2. Nova Poshta Direct Tracking Link Generation', () => {
-        it('defines getNovaPoshtaTrackingUrl in orders.js and exposes it on window', () => {
+    describe('2. Nova Poshta Direct Tracking Link Generation & Base64 Reverse Encoding', () => {
+        it('defines encodeNovaPoshtaTtn and getNovaPoshtaTrackingUrl in orders.js and exposes them on window', () => {
+            expect(ordersCode).toContain('function encodeNovaPoshtaTtn(ttn)');
+            expect(ordersCode).toContain('window.encodeNovaPoshtaTtn = encodeNovaPoshtaTtn');
             expect(ordersCode).toContain('function getNovaPoshtaTrackingUrl(ttn, lang)');
             expect(ordersCode).toContain('window.getNovaPoshtaTrackingUrl = getNovaPoshtaTrackingUrl');
         });
@@ -33,13 +51,26 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
             expect(ordersCode).toContain('https://tracking.novaposhta.ua/#/');
         });
 
-        it('evaluates getNovaPoshtaTrackingUrl correctly for various languages and TTNs', () => {
+        it('correctly encodes TTN into Nova Poshta SPA base64-reverse format without gibberish decoding', () => {
+            // Test user's exact TTN: 20483289403202
+            const encoded = encodeNovaPoshtaTtn('20483289403202');
+            expect(encoded).toBe('IDMyMDM0kDOyMDO0AjM');
+
+            // Simulate Nova Poshta's own decoder function O(e):
+            // function O(e){return e?(e=e.split('').reverse().join(''),e.length%4!==0&&(e+='==='.slice(0,4-e.length%4)),atob(e)):''}
+            const npReverse = encoded.split('').reverse().join('');
+            const npPadded = npReverse + '==='.slice(0, (4 - npReverse.length % 4) % 4);
+            const npDecoded = Buffer.from(npPadded, 'base64').toString('utf8');
+            expect(npDecoded).toBe('20483289403202');
+        });
+
+        it('evaluates getNovaPoshtaTrackingUrl correctly for various languages and TTNs with encoded payload', () => {
             // Default UK
-            expect(getNovaPoshtaTrackingUrl('20450912345678', 'uk')).toBe('https://tracking.novaposhta.ua/#/uk/20450912345678');
+            expect(getNovaPoshtaTrackingUrl('20483289403202', 'uk')).toBe('https://tracking.novaposhta.ua/#/uk/IDMyMDM0kDOyMDO0AjM');
             // Russian
-            expect(getNovaPoshtaTrackingUrl('20450912345678', 'ru')).toBe('https://tracking.novaposhta.ua/#/ru/20450912345678');
+            expect(getNovaPoshtaTrackingUrl('20483289403202', 'ru')).toBe('https://tracking.novaposhta.ua/#/ru/IDMyMDM0kDOyMDO0AjM');
             // Trims whitespace
-            expect(getNovaPoshtaTrackingUrl('  20450912345678  ', 'uk')).toBe('https://tracking.novaposhta.ua/#/uk/20450912345678');
+            expect(getNovaPoshtaTrackingUrl('  20483289403202  ', 'uk')).toBe('https://tracking.novaposhta.ua/#/uk/IDMyMDM0kDOyMDO0AjM');
             // Empty TTN fallback
             expect(getNovaPoshtaTrackingUrl('', 'uk')).toBe('https://tracking.novaposhta.ua/');
         });
@@ -51,6 +82,10 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
             expect(ordersCode).toContain("card.style.setProperty('view-transition-name', 'none', 'important')");
             expect(ordersCode).toContain('safeViewTransition(updateDom)');
             expect(ordersCode).toContain('restoreBgTransitions');
+        });
+
+        it('resets listArea.scrollTop = 0 upon tab switch', () => {
+            expect(ordersCode).toContain('listArea.scrollTop = 0');
         });
 
         it('restores background card transitions cleanly after transition completes', async () => {

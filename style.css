@@ -1973,8 +1973,24 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     .modal-overlay.closing .modal-window {
         animation: slideDownMobile 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
     }
-    #ordersModal .modal-window { width: 100% !important; max-width: 100% !important; height: auto !important; min-height: 55vh !important; max-height: 90dvh !important; overflow-y: auto !important; }
-    #ordersModal #ordersListArea { max-height: 55vh !important; overflow-y: auto !important; padding: 15px !important; flex: none !important; }
+    #ordersModal .modal-window {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 78dvh !important;
+        min-height: min(480px, 78dvh) !important;
+        max-height: 84dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+    #ordersModal #ordersListArea {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding: 15px !important;
+    }
     .modal-content { padding: 15px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); flex-direction: column; gap: 15px; }
     .form-layout { padding: 15px; padding-bottom: calc(25px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; }
     html.keyboard-open .modal-overlay {
@@ -2846,6 +2862,28 @@ html.pwa-standalone body {
 
     ::view-transition-group(orders-list) {
         z-index: 1000000 !important;
+    }
+
+    /* При переключении вкладок старое содержимое не должно висеть полупрозрачным призраком:
+       старый снимок мгновенно скрывается, а новое содержимое плавно появляется */
+    ::view-transition-old(orders-list) {
+        display: none !important;
+        animation: none !important;
+    }
+
+    ::view-transition-new(orders-list) {
+        animation: vt-orders-fade-in 0.14s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    @keyframes vt-orders-fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(3px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* Плавное перемещение карточек товаров при сортировке и фильтрации (FLIP) */

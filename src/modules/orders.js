@@ -102,6 +102,25 @@ export async function copyTTN(ttn, btnEl) {
 }
 
 /**
+ * Encodes TTN for Nova Poshta tracking web application (base64 reverse format)
+ * @param {string} ttn
+ * @returns {string}
+ */
+export function encodeNovaPoshtaTtn(ttn) {
+    if (typeof window !== 'undefined' && typeof window.encodeNovaPoshtaTtn === 'function') {
+        return window.encodeNovaPoshtaTtn(ttn);
+    }
+    const clean = String(ttn || '').replace(/\D+/g, '');
+    if (!clean) return '';
+    try {
+        const b64 = (typeof btoa === 'function' ? btoa(clean) : Buffer.from(clean).toString('base64')).replace(/=+$/, '');
+        return b64.split('').reverse().join('');
+    } catch (_) {
+        return clean;
+    }
+}
+
+/**
  * Returns direct URL to Nova Poshta official tracking web app for a given TTN
  * @param {string} ttn
  * @param {'uk'|'ru'} [lang]
@@ -114,7 +133,8 @@ export function getNovaPoshtaTrackingUrl(ttn, lang) {
     const cleanTtn = String(ttn || '').trim();
     if (!cleanTtn) return 'https://tracking.novaposhta.ua/';
     const currentLang = lang || ((typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk');
-    return `https://tracking.novaposhta.ua/#/${currentLang}/${encodeURIComponent(cleanTtn)}`;
+    const encoded = encodeNovaPoshtaTtn(cleanTtn) || encodeURIComponent(cleanTtn);
+    return `https://tracking.novaposhta.ua/#/${currentLang}/${encoded}`;
 }
 
 /**

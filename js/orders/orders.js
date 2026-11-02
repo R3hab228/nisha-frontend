@@ -500,11 +500,25 @@ async function ensureOrderImagesLoaded() {
 window.ensureOrderImagesLoaded = ensureOrderImagesLoaded;
 if (typeof globalThis !== 'undefined') globalThis.ensureOrderImagesLoaded = ensureOrderImagesLoaded;
 
+function encodeNovaPoshtaTtn(ttn) {
+    const clean = String(ttn || '').replace(/\D+/g, '');
+    if (!clean) return '';
+    try {
+        const b64 = (typeof btoa === 'function' ? btoa(clean) : Buffer.from(clean).toString('base64')).replace(/=+$/, '');
+        return b64.split('').reverse().join('');
+    } catch (_) {
+        return clean;
+    }
+}
+window.encodeNovaPoshtaTtn = encodeNovaPoshtaTtn;
+if (typeof globalThis !== 'undefined') globalThis.encodeNovaPoshtaTtn = encodeNovaPoshtaTtn;
+
 function getNovaPoshtaTrackingUrl(ttn, lang) {
     const cleanTtn = String(ttn || '').trim();
     if (!cleanTtn) return 'https://tracking.novaposhta.ua/';
     const currentLang = lang || ((typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk');
-    return `https://tracking.novaposhta.ua/#/${currentLang}/${encodeURIComponent(cleanTtn)}`;
+    const encoded = encodeNovaPoshtaTtn(cleanTtn) || encodeURIComponent(cleanTtn);
+    return `https://tracking.novaposhta.ua/#/${currentLang}/${encoded}`;
 }
 window.getNovaPoshtaTrackingUrl = getNovaPoshtaTrackingUrl;
 if (typeof globalThis !== 'undefined') globalThis.getNovaPoshtaTrackingUrl = getNovaPoshtaTrackingUrl;
@@ -552,6 +566,9 @@ function switchOrderTab(tabName) {
         if (tabBlue) tabBlue.classList.toggle('active', tabName === 'shipped');
         if (tabRed) tabRed.classList.toggle('active', tabName === 'cancelled');
         
+        const listArea = document.getElementById('ordersListArea');
+        if (listArea) listArea.scrollTop = 0;
+
         renderFilteredOrders();
     };
 
