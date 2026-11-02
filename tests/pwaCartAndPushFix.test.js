@@ -21,10 +21,13 @@ describe('PWA Quick Action Cart Drawer, FAB Propose Hiding & Notification Permis
             expect(styleCss).toMatch(/\.cart-panel\.show,\s*\.cart-panel\.dropdown-open/);
         });
 
-        it('style.css styles mobile .cart-dropdown as a fixed bottom drawer with rounded top borders', () => {
+        it('style.css styles mobile .cart-dropdown as a fixed bottom drawer with rounded top borders and full 100vw width', () => {
             expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.cart-dropdown\s*\{[^}]*position:\s*fixed\s*!important/);
             expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.cart-dropdown\s*\{[^}]*bottom:\s*0\s*!important/);
+            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.cart-dropdown\s*\{[^}]*width:\s*100vw\s*!important/);
             expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.cart-dropdown\s*\{[^}]*border-radius:\s*18px 18px 0 0\s*!important/);
+            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.cart-panel\s+\.cart-info\s*\{[^}]*position:\s*static\s*!important/);
+            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.cart-panel\.show\s+\.cart-dropdown\s*\{[^}]*width:\s*100vw\s*!important/);
         });
 
         it('style.css hides .fab-propose completely when .cart-dropdown is active', () => {
