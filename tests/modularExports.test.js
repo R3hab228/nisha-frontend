@@ -404,6 +404,7 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             await expect(orders.ensureOrderImagesLoaded([])).resolves.not.toThrow();
             expect(() => orders.switchOrderTab('accepted')).not.toThrow();
             await expect(orders.copyTTN('20400000000000')).resolves.toBe(false);
+            expect(orders.getNovaPoshtaTrackingUrl('20400000000000', 'uk')).toBe('https://tracking.novaposhta.ua/#/uk/20400000000000');
             expect(() => orders.renderFilteredOrders()).not.toThrow();
         });
 

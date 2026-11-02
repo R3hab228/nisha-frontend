@@ -2823,10 +2823,29 @@ html.pwa-standalone body {
         view-transition-name: orders-list;
     }
 
+    /* Изоляция View Transitions от модальных окон: когда открыто любое модальное окно (включая заказы),
+       фоновая сетка товаров и карточки избранного/каталога не должны захватываться в Top Layer браузера */
+    body:has(.modal-overlay.is-open) #itemsGrid,
+    body:has(.modal-overlay.is-open) .item-card,
+    body:has(.modal-overlay[style*="display: flex"]) #itemsGrid,
+    body:has(.modal-overlay[style*="display: flex"]) .item-card,
+    body:has(#ordersModal.is-open) #itemsGrid,
+    body:has(#ordersModal.is-open) .item-card,
+    body:has(#ordersModal[style*="display: flex"]) #itemsGrid,
+    body:has(#ordersModal[style*="display: flex"]) .item-card,
+    body:has(#ordersModal:not([style*="display: none"])) #itemsGrid,
+    body:has(#ordersModal:not([style*="display: none"])) .item-card {
+        view-transition-name: none !important;
+    }
+
     /* Контейнеры списков фиксированы — не прыгают по высоте при изменении числа карточек */
     ::view-transition-group(catalog-grid),
     ::view-transition-group(orders-list) {
         animation: none !important;
+    }
+
+    ::view-transition-group(orders-list) {
+        z-index: 1000000 !important;
     }
 
     /* Плавное перемещение карточек товаров при сортировке и фильтрации (FLIP) */

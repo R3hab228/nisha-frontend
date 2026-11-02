@@ -102,6 +102,22 @@ export async function copyTTN(ttn, btnEl) {
 }
 
 /**
+ * Returns direct URL to Nova Poshta official tracking web app for a given TTN
+ * @param {string} ttn
+ * @param {'uk'|'ru'} [lang]
+ * @returns {string}
+ */
+export function getNovaPoshtaTrackingUrl(ttn, lang) {
+    if (typeof window !== 'undefined' && typeof window.getNovaPoshtaTrackingUrl === 'function') {
+        return window.getNovaPoshtaTrackingUrl(ttn, lang);
+    }
+    const cleanTtn = String(ttn || '').trim();
+    if (!cleanTtn) return 'https://tracking.novaposhta.ua/';
+    const currentLang = lang || ((typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk');
+    return `https://tracking.novaposhta.ua/#/${currentLang}/${encodeURIComponent(cleanTtn)}`;
+}
+
+/**
  * Re-renders orders list matching active tab filter
  */
 export function renderFilteredOrders() {

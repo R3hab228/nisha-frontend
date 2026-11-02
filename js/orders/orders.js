@@ -18,6 +18,7 @@ function openOrdersModal() {
             modal.inert = false;
             modal.removeAttribute('inert');
             modal.setAttribute('aria-hidden', 'false');
+            modal.classList.add('is-open');
             modal.style.display = 'flex';
         }
         document.body.style.overflow = 'hidden';
@@ -499,8 +500,47 @@ async function ensureOrderImagesLoaded() {
 window.ensureOrderImagesLoaded = ensureOrderImagesLoaded;
 if (typeof globalThis !== 'undefined') globalThis.ensureOrderImagesLoaded = ensureOrderImagesLoaded;
 
+function getNovaPoshtaTrackingUrl(ttn, lang) {
+    const cleanTtn = String(ttn || '').trim();
+    if (!cleanTtn) return 'https://tracking.novaposhta.ua/';
+    const currentLang = lang || ((typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk');
+    return `https://tracking.novaposhta.ua/#/${currentLang}/${encodeURIComponent(cleanTtn)}`;
+}
+window.getNovaPoshtaTrackingUrl = getNovaPoshtaTrackingUrl;
+if (typeof globalThis !== 'undefined') globalThis.getNovaPoshtaTrackingUrl = getNovaPoshtaTrackingUrl;
+
 function switchOrderTab(tabName) {
     if (window.currentOrderTab === tabName) return;
+
+    // Временно изолируем фоновые элементы каталога от View Transition,
+    // чтобы браузер анимировал исключительно #ordersListArea внутри модального окна
+    // и ни при каких условиях не захватывал карточки товаров/избранного в Top Layer поверх модалки
+    const bgGrid = document.getElementById('itemsGrid');
+    const prevGridVt = bgGrid ? bgGrid.style.viewTransitionName : '';
+    if (bgGrid) bgGrid.style.setProperty('view-transition-name', 'none', 'important');
+
+    const bgCards = document.querySelectorAll('#itemsGrid .item-card');
+    const cardsToRestore = [];
+    if (bgCards && bgCards.length > 0) {
+        bgCards.forEach(card => {
+            const vt = card.style.getPropertyValue('view-transition-name');
+            const prio = card.style.getPropertyPriority('view-transition-name');
+            if (vt && vt !== 'none') {
+                cardsToRestore.push({ card, vt, prio });
+                card.style.setProperty('view-transition-name', 'none', 'important');
+            }
+        });
+    }
+
+    const restoreBgTransitions = () => {
+        if (bgGrid) {
+            if (prevGridVt) bgGrid.style.setProperty('view-transition-name', prevGridVt);
+            else bgGrid.style.removeProperty('view-transition-name');
+        }
+        cardsToRestore.forEach(({ card, vt, prio }) => {
+            card.style.setProperty('view-transition-name', vt, prio);
+        });
+    };
     
     const updateDom = () => {
         window.currentOrderTab = tabName;
@@ -515,13 +555,24 @@ function switchOrderTab(tabName) {
         renderFilteredOrders();
     };
 
+    let transitionResult;
     if (typeof safeViewTransition === 'function') {
-        return safeViewTransition(updateDom);
+        transitionResult = safeViewTransition(updateDom);
     } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
-        return window.safeViewTransition(updateDom);
+        transitionResult = window.safeViewTransition(updateDom);
     } else {
-        return updateDom();
+        transitionResult = updateDom();
     }
+
+    if (transitionResult && typeof transitionResult.finished?.finally === 'function') {
+        transitionResult.finished.finally(restoreBgTransitions);
+    } else if (transitionResult && typeof transitionResult.then === 'function') {
+        transitionResult.finally(restoreBgTransitions);
+    } else {
+        restoreBgTransitions();
+    }
+
+    return transitionResult;
 }
 window.switchOrderTab = switchOrderTab;
 if (typeof globalThis !== 'undefined') globalThis.switchOrderTab = switchOrderTab;
@@ -626,6 +677,13 @@ function renderFilteredOrders() {
                     const safeTtnAttr = typeof window.escapeAttr === 'function' ? window.escapeAttr(ttn) : ttn;
                     const safeTtnHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml(ttn) : ttn;
 
+                    const trackingLang = (typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk';
+                    const npTrackingUrl = typeof window.getNovaPoshtaTrackingUrl === 'function'
+                        ? window.getNovaPoshtaTrackingUrl(ttn, trackingLang)
+                        : (typeof getNovaPoshtaTrackingUrl === 'function'
+                            ? getNovaPoshtaTrackingUrl(ttn, trackingLang)
+                            : `https://tracking.novaposhta.ua/#/${trackingLang}/${encodeURIComponent(String(ttn || '').trim())}`);
+
                     return `<div class="order-ttn" style="margin-top: ${idx > 0 ? '12px' : '8px'}; ${rawTtns.length > 1 ? 'padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1);' : ''}">
                              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
                                  <span style="font-family: var(--font-mono); font-size: 13px; color: #aaa;">${labelPrefix}</span>
@@ -637,7 +695,7 @@ function renderFilteredOrders() {
                                          </svg>
                                          <span style="color:var(--accent-green); font-weight:bold; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.5px; user-select: all;">${safeTtnHtml}</span>
                                      </div>
-                                     <a href="https://novaposhta.ua/tracking/?cargo_number=${encodeURIComponent(ttn)}" target="_blank" rel="noopener noreferrer" title="Отследить на Новой Почте" style="display: inline-flex; align-items: center; gap: 4px; color: var(--accent-green); text-decoration: none; font-size: 11px; font-family: var(--font-mono); padding: 3px 6px; border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 4px; background: rgba(0, 255, 0, 0.05); transition: 0.2s;">
+                                     <a href="${npTrackingUrl}" target="_blank" rel="noopener noreferrer" title="Отследить на Новой Почте" style="display: inline-flex; align-items: center; gap: 4px; color: var(--accent-green); text-decoration: none; font-size: 11px; font-family: var(--font-mono); padding: 3px 6px; border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 4px; background: rgba(0, 255, 0, 0.05); transition: 0.2s;">
                                          <span>ТРЕК</span>
                                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                                      </a>
