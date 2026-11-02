@@ -261,6 +261,15 @@ self.addEventListener('fetch', event => {
 
 // Перехват Push-уведомлений
 self.addEventListener('push', event => {
+    const isVercelOrigin = self.location.origin.includes('vercel.app') && !self.location.origin.includes('nisha-store.shop');
+    if (isVercelOrigin) {
+        event.waitUntil(
+            self.registration.pushManager.getSubscription().then(sub => {
+                if (sub) return sub.unsubscribe();
+            }).catch(() => {})
+        );
+        return;
+    }
     if (event.data) {
         let data = {};
         try {
@@ -271,8 +280,8 @@ self.addEventListener('push', event => {
         const origin = 'https://www.nisha-store.shop';
         const options = {
             body: data.body,
-            icon: (data.icon && !data.icon.includes('vercel.app')) ? data.icon : (origin + '/icon-192.png?v=5'),
-            badge: (data.badge && !data.badge.includes('vercel.app')) ? data.badge : (origin + '/badge.png?v=5'),
+            icon: (data.icon && !data.icon.includes('vercel.app')) ? data.icon : (origin + '/icon-192.png?v=6'),
+            badge: (data.badge && !data.badge.includes('vercel.app')) ? data.badge : (origin + '/badge.png?v=6'),
             vibrate: [200, 100, 200],
             tag: data.tag || (data.itemId ? 'nisha-item-' + data.itemId : (data.id ? 'nisha-item-' + data.id : (data.title ? 'nisha-' + encodeURIComponent(data.title) : 'nisha-push'))),
             renotify: false,

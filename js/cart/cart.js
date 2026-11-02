@@ -427,14 +427,24 @@ function updateCartUI() {
     if (!p) return; 
     
     const currentCart = getActiveCart();
+    const dropdown = document.getElementById('cartDropdown');
+    const isDropdownOpen = dropdown && dropdown.classList.contains('active');
     if (currentCart.length === 0) { 
         p.classList.remove('show'); 
+        if (isDropdownOpen) p.classList.add('dropdown-open');
+        else p.classList.remove('dropdown-open');
         if(fab) {
             fab.classList.remove('cart-active'); 
             fab.classList.remove('hidden-scroll'); 
-            fab.style.display = 'flex'; 
-            fab.style.opacity = '1';
-            fab.style.pointerEvents = 'auto';
+            if (isDropdownOpen) {
+                fab.style.setProperty('display', 'none', 'important');
+                fab.style.setProperty('opacity', '0', 'important');
+                fab.style.setProperty('pointer-events', 'none', 'important');
+            } else {
+                fab.style.removeProperty('display');
+                fab.style.removeProperty('opacity');
+                fab.style.removeProperty('pointer-events');
+            }
         }
         // Пустая корзина: сбрасываем промокод и перерисовываем список (иначе остаются "призраки" старых товаров)
         if (window.currentPromoDiscount || window.appliedPromoCode) resetPromoState();
@@ -1514,21 +1524,30 @@ async function checkCartItemsAvailability() {
 window.checkCartItemsAvailability = checkCartItemsAvailability;
 
 function toggleCartDropdown(e) {
-    if (e) e.stopPropagation();
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
     const dropdown = document.getElementById('cartDropdown');
+    const panel = document.getElementById('cartPanel');
     const fab = document.querySelector('.fab-propose');
     if (dropdown) {
         dropdown.classList.toggle('active');
-        if (dropdown.classList.contains('active')) {
-            checkCartItemsAvailability();
+        const isActive = dropdown.classList.contains('active');
+        if (panel) {
+            if (isActive) panel.classList.add('dropdown-open');
+            else panel.classList.remove('dropdown-open');
+        }
+        if (isActive) {
+            if (typeof checkCartItemsAvailability === 'function') checkCartItemsAvailability();
+            if (typeof renderCartItems === 'function') renderCartItems();
         }
         if (fab) {
-            if (dropdown.classList.contains('active')) {
-                fab.style.opacity = '0';
-                fab.style.pointerEvents = 'none';
+            if (isActive) {
+                fab.style.setProperty('display', 'none', 'important');
+                fab.style.setProperty('opacity', '0', 'important');
+                fab.style.setProperty('pointer-events', 'none', 'important');
             } else {
-                fab.style.opacity = '1';
-                fab.style.pointerEvents = 'auto';
+                fab.style.removeProperty('display');
+                fab.style.removeProperty('opacity');
+                fab.style.removeProperty('pointer-events');
             }
         }
     }
@@ -1536,13 +1555,16 @@ function toggleCartDropdown(e) {
 window.toggleCartDropdown = toggleCartDropdown;
 
 function closeCartDropdown(e) {
-    if (e) e.stopPropagation();
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
     const dropdown = document.getElementById('cartDropdown');
+    const panel = document.getElementById('cartPanel');
     const fab = document.querySelector('.fab-propose');
     if (dropdown) dropdown.classList.remove('active');
+    if (panel) panel.classList.remove('dropdown-open');
     if (fab) {
-        fab.style.opacity = '1';
-        fab.style.pointerEvents = 'auto';
+        fab.style.removeProperty('display');
+        fab.style.removeProperty('opacity');
+        fab.style.removeProperty('pointer-events');
     }
 }
 window.closeCartDropdown = closeCartDropdown;
@@ -1738,14 +1760,17 @@ function handleDropdownsOutsideClick(e) {
     if (!e.target.closest('#paymentDisplay') && !e.target.closest('#paymentDropdown')) {
         if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
     }
-    if (!e.target.closest('#cartInfoWrapper')) {
+    if (!e.target.closest('#cartInfoWrapper') && !e.target.closest('#cartDropdown')) {
         const cartDrop = document.getElementById('cartDropdown');
         if (cartDrop && cartDrop.classList.contains('active')) {
             cartDrop.classList.remove('active');
+            const panel = document.getElementById('cartPanel');
+            if (panel) panel.classList.remove('dropdown-open');
             const fab = document.querySelector('.fab-propose');
             if (fab) {
-                fab.style.opacity = '1';
-                fab.style.pointerEvents = 'auto';
+                fab.style.removeProperty('display');
+                fab.style.removeProperty('opacity');
+                fab.style.removeProperty('pointer-events');
             }
         }
     }
@@ -2911,8 +2936,18 @@ async function applyPromoCode() {
 window.applyPromoCode = applyPromoCode;
 window.openCart = function() {
     const dropdown = document.getElementById('cartDropdown');
-    if (dropdown && !dropdown.classList.contains('active') && typeof toggleCartDropdown === 'function') {
-        toggleCartDropdown();
+    const panel = document.getElementById('cartPanel');
+    const fab = document.querySelector('.fab-propose');
+    if (dropdown) {
+        dropdown.classList.add('active');
+        if (panel) panel.classList.add('dropdown-open');
+        if (fab) {
+            fab.style.setProperty('display', 'none', 'important');
+            fab.style.setProperty('opacity', '0', 'important');
+            fab.style.setProperty('pointer-events', 'none', 'important');
+        }
+        if (typeof checkCartItemsAvailability === 'function') checkCartItemsAvailability();
+        if (typeof renderCartItems === 'function') renderCartItems();
     }
 };
 

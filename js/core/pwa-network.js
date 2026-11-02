@@ -839,16 +839,18 @@ window.checkIsPwaInstalled = checkIsPwaInstalled;
 function syncNotificationPermission() {
     if (typeof Notification === 'undefined') return 'unsupported';
     const perm = Notification.permission;
+    if (typeof localStorage !== 'undefined') {
+        try {
+            localStorage.setItem('nisha_notification_permission', perm);
+            localStorage.setItem('nisha_notification_permission_time', String(Date.now()));
+        } catch (_) {}
+    }
     if (window.store) {
         const stored = window.store.get('notificationPermission');
         if (stored !== perm) {
             window.store.set('notificationPermission', perm);
             window.store.set('notificationPermissionTime', Date.now());
         }
-    } else if (typeof localStorage !== 'undefined') {
-        try {
-            localStorage.setItem('nisha_notification_permission', perm);
-        } catch (_) {}
     }
     return perm;
 }
