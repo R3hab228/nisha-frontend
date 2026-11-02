@@ -137,4 +137,21 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
             expect(mockCard2.style.setProperty).toHaveBeenCalledWith('view-transition-name', 'item-102', '');
         });
     });
+
+    describe('3. Order Footer TTNs & Total Spacing Layout', () => {
+        it('isolates multiple TTNs inside order-ttns-wrapper grid and places total on its own row', () => {
+            const freshOrdersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            const freshStyleCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+            expect(freshOrdersCode).toContain('class="order-ttns-wrapper"');
+            expect(freshOrdersCode).toContain('class="order-total-row"');
+            expect(freshOrdersCode).toContain('class="order-ttn-header"');
+            expect(freshOrdersCode).toContain('class="order-ttn-barcode"');
+
+            expect(freshStyleCode).toContain('.order-ttns-wrapper');
+            expect(freshStyleCode).toContain('grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));');
+            expect(freshStyleCode).toContain('.order-total-row');
+            expect(freshStyleCode).toContain('justify-content: flex-end;');
+        });
+    });
 });

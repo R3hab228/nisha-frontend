@@ -984,9 +984,165 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .order-item-name { color: var(--text-main); font-size: 14px; font-weight: bold;}
 .order-item-meta { color: #888; font-size: 12px; display: flex; justify-content: space-between;}
 .order-item-price { color: var(--accent-green); font-family: var(--font-mono); font-weight: bold;}
-.order-footer { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-family: var(--font-mono); padding-top: 10px; border-top: 1px dashed #333;}
-.order-total { color: var(--accent-green); font-size: 18px; font-weight: bold;}
-.order-ttn { color: #fff; background: #222; padding: 5px 10px; border: 1px inset #555;}
+.order-footer { 
+    display: flex; 
+    flex-direction: column;
+    gap: 12px; 
+    font-size: 14px; 
+    font-family: var(--font-mono); 
+    padding-top: 14px; 
+    border-top: 1px dashed #333;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.order-ttns-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.order-ttn { 
+    color: #fff; 
+    background: #111; 
+    padding: 10px 12px; 
+    border: 1px solid #333;
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.order-ttn:hover {
+    border-color: #555;
+}
+
+.order-ttn.order-ttn-pending {
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed #333;
+}
+
+.order-ttn-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.order-ttn-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #aaa;
+    white-space: nowrap;
+}
+
+.order-ttn-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ttn-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(0, 255, 0, 0.05);
+    border: 1px dashed rgba(0, 255, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.ttn-copy-btn:hover {
+    background: rgba(0, 255, 0, 0.12);
+    border-color: var(--accent-green);
+}
+
+.ttn-copy-icon {
+    flex-shrink: 0;
+    vertical-align: middle;
+    transition: transform 0.2s ease, stroke 0.2s ease;
+}
+
+.ttn-number {
+    color: var(--accent-green);
+    font-weight: bold;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    user-select: all;
+}
+
+.ttn-track-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--accent-green);
+    text-decoration: none;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 3px 7px;
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    border-radius: 4px;
+    background: rgba(0, 255, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.ttn-track-link:hover {
+    background: rgba(0, 255, 0, 0.15);
+    border-color: var(--accent-green);
+}
+
+.order-ttn-barcode {
+    background: #fff;
+    text-align: center;
+    padding: 8px 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.barcode-svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.order-total-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    box-sizing: border-box;
+}
+
+.order-footer > .order-total-row:only-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.order-total { 
+    color: var(--accent-green); 
+    font-size: 18px; 
+    font-weight: bold;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    text-align: right;
+}
 
 /* ==========================================
    PHOTOSWIPE CUSTOM CONTROLS
@@ -2064,18 +2220,21 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 
     /* --- РљСЂР°СЃРёРІС‹Р№ РїРѕРґРІР°Р» Р·Р°РєР°Р·Р° РЅР° РјРѕР±РёР»РєРµ --- */
     .order-footer {
-        flex-direction: column; 
-        align-items: stretch; 
-        gap: 12px; 
+        gap: 10px; 
+        padding-top: 10px;
+    }
+    .order-ttns-wrapper {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
     .order-ttn {
         width: 100%;
-        text-align: center;
         font-size: 12px; 
-        white-space: normal; 
+    }
+    .order-total-row {
+        padding-top: 8px;
     }
     .order-total {
-        text-align: right; 
         font-size: 16px; 
     }
 
