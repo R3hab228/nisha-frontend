@@ -20,7 +20,7 @@ class MockStorage {
     }
 }
 
-describe('PWA Quick Action Favorites & Mobile Price Layout Fixes', () => {
+describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixes', () => {
     let styleCss;
     let catalogJs;
     let profileJs;
@@ -88,6 +88,32 @@ describe('PWA Quick Action Favorites & Mobile Price Layout Fixes', () => {
             expect(catalogJs).toContain('card-current-price');
             // Ensure no hardcoded font-size: 14px on old price span in buildCardDOM
             expect(catalogJs).not.toMatch(/priceHTML = `<span style="[^"]*font-size:\s*14px/);
+        });
+    });
+
+    describe('3. Mobile Modal Scrollbar Suppression (Eliminates Right-Side Card Clipping)', () => {
+        it('desktop custom scrollbar is scoped to @media (min-width: 901px)', () => {
+            expect(styleCss).toMatch(/@media\s*\(min-width:\s*901px\)\s*\{\s*::-webkit-scrollbar\s*\{\s*width:\s*8px;/);
+        });
+
+        it('desktop red arrow cursor for scrollbars is scoped to @media (min-width: 901px)', () => {
+            expect(styleCss).toMatch(/@media\s*\(min-width:\s*901px\)\s*\{[\s\S]*?RED ARROW FOR SCROLLBARS[\s\S]*?cursor:\s*url/);
+        });
+
+        it('mobile @media (max-width: 900px) completely suppresses ::-webkit-scrollbar and sets scrollbar-width: none', () => {
+            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?::-webkit-scrollbar\s*\{[^}]*display:\s*none\s*!important/);
+            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?::-webkit-scrollbar\s*\{[^}]*width:\s*0\s*!important/);
+            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?scrollbar-width:\s*none/);
+        });
+
+        it('.modal-window on mobile includes scrollbar-width: none !important', () => {
+            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.modal-window\s*\{[^}]*scrollbar-width:\s*none\s*!important/);
+            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.modal-window\s*\{[^}]*-ms-overflow-style:\s*none\s*!important/);
+        });
+
+        it('@media (pointer: coarse) suppresses scrollbars across all touch devices and modals', () => {
+            expect(styleCss).toMatch(/@media\s*\(pointer:\s*coarse\)[\s\S]*?\.modal-window[\s\S]*?scrollbar-width:\s*none\s*!important/);
+            expect(styleCss).toMatch(/@media\s*\(pointer:\s*coarse\)[\s\S]*?\.modal-window::-webkit-scrollbar[\s\S]*?display:\s*none\s*!important/);
         });
     });
 });
