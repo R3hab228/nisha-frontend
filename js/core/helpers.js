@@ -1208,8 +1208,8 @@ function parseDeliveryAddress(addr) {
     const str = addr.trim();
     if (!str) return { city: '', branch: '' };
 
-    // 1. Ищем маркеры отделения/почтомата
-    const markerMatch = str.match(/,\s*(відділення|поштомат|пункт|склад|отделение|почтомат)\b/i);
+    // 1. Ищем маркеры отделения/почтомата с кириллице-безопасной границей слов
+    const markerMatch = str.match(/,\s*(відділення|поштомат|пункт|склад|отделение|почтомат|нова\s*пошта|№|відд\.?|отд\.?)(?![а-яёіїєa-z0-9])/i);
     if (markerMatch && markerMatch.index !== undefined) {
         const cityPart = str.slice(0, markerMatch.index).trim();
         const branchPart = str.slice(markerMatch.index).replace(/^,\s*/, '').trim();
@@ -1221,18 +1221,18 @@ function parseDeliveryAddress(addr) {
     if (parts.length <= 1) {
         return { city: str, branch: '' };
     }
-    if (parts.length === 2) {
-        return { city: parts[0], branch: parts[1] };
+
+    // Определяем части, относящиеся к городу и области/району
+    let splitIdx = 1;
+    while (splitIdx < parts.length && /обл|район|р-н/i.test(parts[splitIdx])) {
+        splitIdx++;
     }
-    // Если 3 или более частей, проверяем, является ли 2-я часть областью/районом
-    if (/обл|район|р-н/i.test(parts[1])) {
-        const cityPart = `${parts[0]}, ${parts[1]}`;
-        const branchPart = parts.slice(2).join(', ');
-        return { city: cityPart, branch: branchPart };
+    if (splitIdx >= parts.length) {
+        return { city: parts.join(', '), branch: '' };
     }
     return {
-        city: parts[0],
-        branch: parts.slice(1).join(', ')
+        city: parts.slice(0, splitIdx).join(', '),
+        branch: parts.slice(splitIdx).join(', ')
     };
 }
 window.parseDeliveryAddress = parseDeliveryAddress;

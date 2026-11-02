@@ -2179,114 +2179,146 @@ async function openCheckoutModal() {
         const activeProfile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
         const deliveryStore = window.storage || (typeof storage !== 'undefined' ? storage : null);
         const cachedDelivery = deliveryStore ? deliveryStore.getJSON('nisha_profile_delivery', null) : null;
-        const profileFullName = (activeProfile?.full_name || cachedDelivery?.full_name || '').trim();
-        const profileAddress = (activeProfile?.delivery_address || cachedDelivery?.delivery_address || '').trim();
+        const cachedRefs = deliveryStore ? deliveryStore.getJSON('nisha_profile_delivery_refs', null) : null;
+
+        // DOM-элементы профиля (на случай если пользователь авторизован или форма профиля уже заполнена)
+        const profFullNameEl = document.getElementById('profileDeliveryFullName') || document.getElementById('modalProfileDeliveryFullName');
+        const profPhoneEl = document.getElementById('profilePhone') || document.getElementById('modalProfilePhone');
+        const profCityEl = document.getElementById('profileDeliveryCity') || document.getElementById('modalProfileDeliveryCity');
+        const profBranchEl = document.getElementById('profileDeliveryBranch') || document.getElementById('modalProfileDeliveryBranch');
+        const profAddrEl = document.getElementById('profileDeliveryAddress') || document.getElementById('modalProfileDeliveryAddress');
+
+        const profileFullName = (activeProfile?.full_name || cachedDelivery?.full_name || profFullNameEl?.value || '').trim();
+        const profilePhone = (activeProfile?.phone || window.userProfile?.phone || profPhoneEl?.value || (deliveryStore ? (deliveryStore.get('nisha_last_phone') || deliveryStore.get('user_phone')) : '') || '').trim();
+        const profileAddress = (activeProfile?.delivery_address || cachedDelivery?.delivery_address || profAddrEl?.value || '').trim();
+        const profCityVal = (profCityEl?.value || '').trim();
+        const profBranchVal = (profBranchEl?.value || activeProfile?.delivery_branch || cachedDelivery?.delivery_branch || '').trim();
+
+        const parsed = (typeof parseDeliveryAddress === 'function')
+            ? parseDeliveryAddress(profileAddress)
+            : ((window.parseDeliveryAddress) ? window.parseDeliveryAddress(profileAddress) : null);
+        const pCity = (parsed && parsed.city) ? parsed.city : (profCityVal || profileAddress);
+        const pBranch = (parsed && parsed.branch) ? parsed.branch : profBranchVal;
+
+        // Сохраненные Nova Poshta refs профиля
+        const savedCityRef = activeProfile?.delivery_city_ref || cachedRefs?.cityRef || cachedDelivery?.delivery_city_ref || window.profileSelectedCityRef?.desktop || window.profileSelectedCityRef?.modal || '';
+        const savedBranchRef = activeProfile?.delivery_branch_ref || cachedRefs?.branchRef || cachedDelivery?.delivery_branch_ref || window.profileSelectedBranchRef?.desktop || window.profileSelectedBranchRef?.modal || '';
 
         const nameInput = document.getElementById('orderName');
         const phoneInput = document.getElementById('orderPhone');
         const cityInput = document.getElementById('orderCity');
         const branchInput = document.getElementById('orderBranch');
 
-        // Если адрес уже заполнен и подтверждён в этой сессии (форму просто закрывали/открывали) — ничего не трогаем
-        const alreadyFilled = !!(cityInput && cityInput.value.trim() && (window.selectedCityRef || selectedCityRef));
+        // Если адрес уже полностью заполнен (и город, и отделение) и подтверждён — ничего не перезаписываем
+        const alreadyFilled = !!(cityInput && cityInput.value.trim() && branchInput && branchInput.value.trim() && (window.selectedCityRef || selectedCityRef));
 
         if (alreadyFilled) {
             if (branchInput) branchInput.readOnly = false;
             if (nameInput && !nameInput.value.trim() && profileFullName) nameInput.value = profileFullName;
-        } else {
-            let addressSourceFound = false;
-
-            // 1. Черновик текущей сессии (правки клиента); сбрасывается при сохранении адреса в профиле
-            if (restoreCheckoutDraft()) {
-                addressSourceFound = true;
-                if (cityInput && cityInput.value.trim() && branchInput) branchInput.readOnly = false;
-                if (cityInput && cityInput.value.trim() && !(window.selectedCityRef || selectedCityRef)) {
-                    ensureCityRef().then(ref => {
-                        if (!ref) return;
-                        const draftBranch = (branchInput?.value || '').trim();
-                        if (draftBranch && !(window.selectedBranchRef || selectedBranchRef)) {
-                            ensureBranchRef(draftBranch).catch(() => {});
-                        } else {
-                            loadNPBranches("", false).catch(() => {});
-                        }
-                    }).catch(() => {});
-                }
+            if (phoneInput && !phoneInput.value.trim() && profilePhone) {
+                phoneInput.value = profilePhone;
+                if (typeof formatPhoneInput === 'function') formatPhoneInput(phoneInput);
             }
+        } else {
+            // 1. Черновик текущей сессии (правки клиента); сбрасывается при сохранении адреса в профиле
+            restoreCheckoutDraft();
 
             // 2. Адрес из профиля пользователя
-            if (!addressSourceFound && profileAddress) {
-                const parsed = (typeof parseDeliveryAddress === 'function')
-                    ? parseDeliveryAddress(profileAddress)
-                    : ((window.parseDeliveryAddress) ? window.parseDeliveryAddress(profileAddress) : null);
-                const pCity = parsed ? parsed.city : profileAddress;
-                const pBranch = parsed ? parsed.branch : '';
-
-                if (pCity) {
-                    // Восстанавливаем сохраненные ref из профиля/кэша, если они были сохранены
-                    const savedRefs = (window.storage && window.storage.getJSON('nisha_profile_delivery_refs', null)) || {};
-                    const savedCityRef = activeProfile?.delivery_city_ref || savedRefs.cityRef || cachedDelivery?.delivery_city_ref || '';
-                    const savedBranchRef = activeProfile?.delivery_branch_ref || savedRefs.branchRef || cachedDelivery?.delivery_branch_ref || '';
-
-                    selectedCityRef = savedCityRef;
-                    window.selectedCityRef = savedCityRef;
-                    selectedBranchRef = savedBranchRef;
-                    window.selectedBranchRef = savedBranchRef;
-                    window.selectedSettlementRef = '';
-
-                    if (cityInput) cityInput.value = pCity;
-                    if (branchInput) {
-                        branchInput.readOnly = false;
-                        branchInput.value = pBranch || '';
-                    }
-                    addressSourceFound = true;
-                    ensureCityRef().then(ref => {
-                        if (!ref) return;
-                        if (pBranch && !(window.selectedBranchRef || selectedBranchRef)) {
-                            ensureBranchRef(pBranch).catch(() => {});
-                        } else {
-                            loadNPBranches("", false).catch(() => {});
-                        }
-                        hideNPDropdowns();
-                    }).catch(() => {});
-                }
-            }
-
-            // 3. Данные прошлого заказа (только если нет ни черновика, ни профиля)
-            if (!addressSourceFound) {
-                const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-                const saved = store ? store.getJSON('nisha_checkout_data', null) : null;
-                if (saved && typeof saved === 'object' && saved.city) {
-                    try {
-                        if (nameInput && !nameInput.value.trim()) nameInput.value = saved.name || '';
-                        if (phoneInput && !phoneInput.value.trim()) phoneInput.value = saved.phone || '';
-                        if (cityInput) cityInput.value = saved.city || '';
-                        if (branchInput) {
-                            branchInput.value = saved.branch || '';
-                            branchInput.readOnly = false;
-                        }
-                        selectedCityRef = saved.cityRef || '';
-                        window.selectedCityRef = selectedCityRef;
-                        selectedBranchRef = saved.branchRef || '';
-                        window.selectedBranchRef = selectedBranchRef;
-                        addressSourceFound = true;
-                        if (!selectedCityRef) ensureCityRef().catch(() => {});
-                        if (!selectedBranchRef && saved.branch) ensureBranchRef(saved.branch).catch(() => {});
-                    } catch (e) { addressSourceFound = false; }
-                }
-            }
-
-            // 4. Вообще ничего нет — определяем город по GeoIP (тоже без выпадающих списков)
-            if (!addressSourceFound) {
-                autoDetectCity();
-            }
-
-            // ФИО: из профиля, если поле ещё пустое
             if (nameInput && !nameInput.value.trim() && profileFullName) {
                 nameInput.value = profileFullName;
+                nameInput._lastExplicitValue = profileFullName;
             }
-            if (nameInput && nameInput.value.trim()) {
-                nameInput._lastExplicitValue = nameInput.value.trim();
+
+            if (phoneInput && !phoneInput.value.trim() && profilePhone) {
+                phoneInput.value = profilePhone;
+                if (typeof formatPhoneInput === 'function') formatPhoneInput(phoneInput);
             }
+
+            // Город: если поле ещё пустое (черновик не восстановил город), подставляем из профиля
+            if (cityInput && !cityInput.value.trim()) {
+                if (pCity) {
+                    cityInput.value = pCity;
+                    if (savedCityRef) {
+                        selectedCityRef = savedCityRef;
+                        window.selectedCityRef = savedCityRef;
+                    }
+                } else {
+                    // 3. Данные прошлого заказа (только если нет ни черновика, ни профиля)
+                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                    const pastOrder = store ? store.getJSON('nisha_checkout_data', null) : null;
+                    if (pastOrder && pastOrder.city) {
+                        cityInput.value = pastOrder.city;
+                        if (pastOrder.cityRef) {
+                            selectedCityRef = pastOrder.cityRef;
+                            window.selectedCityRef = pastOrder.cityRef;
+                        }
+                    } else {
+                        // 4. Вообще ничего нет — определяем город по GeoIP (без выпадающих списков)
+                        autoDetectCity();
+                    }
+                }
+            }
+
+            // Разблокировка отделения, если город введен
+            if (cityInput && cityInput.value.trim() && branchInput) {
+                branchInput.readOnly = false;
+            }
+
+            // Отделение: если поле пустое (черновик не содержал отделения или был без него), подставляем из профиля
+            if (branchInput && !branchInput.value.trim()) {
+                if (pBranch) {
+                    branchInput.value = pBranch;
+                    branchInput.readOnly = false;
+                    if (savedBranchRef) {
+                        selectedBranchRef = savedBranchRef;
+                        window.selectedBranchRef = savedBranchRef;
+                    }
+                } else {
+                    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+                    const pastOrder = store ? store.getJSON('nisha_checkout_data', null) : null;
+                    if (pastOrder && pastOrder.branch && (!pastOrder.city || pastOrder.city === (cityInput?.value || '').trim())) {
+                        branchInput.value = pastOrder.branch;
+                        branchInput.readOnly = false;
+                        if (pastOrder.branchRef) {
+                            selectedBranchRef = pastOrder.branchRef;
+                            window.selectedBranchRef = pastOrder.branchRef;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 6. СИНХРОНИЗАЦИЯ REFS И ПРЕДЗАГРУЗКА СПИСКОВ НОВОЙ ПОЧТЫ
+        const currentCityVal = (cityInput?.value || '').trim();
+        const currentBranchVal = (branchInput?.value || '').trim();
+
+        if (currentCityVal) {
+            if (!(window.selectedCityRef || selectedCityRef)) {
+                ensureCityRef().then(ref => {
+                    if (!ref) return;
+                    const bVal = (branchInput?.value || '').trim();
+                    if (bVal && !(window.selectedBranchRef || selectedBranchRef)) {
+                        ensureBranchRef(bVal).catch(() => {});
+                    } else {
+                        loadNPBranches("", false).catch(() => {});
+                    }
+                    hideNPDropdowns();
+                }).catch(() => {});
+            } else {
+                if (currentBranchVal && !(window.selectedBranchRef || selectedBranchRef)) {
+                    ensureBranchRef(currentBranchVal).catch(() => {});
+                } else {
+                    if (window.selectedBranchRef || selectedBranchRef) {
+                        if (typeof calculateDeliveryCost === 'function') calculateDeliveryCost();
+                    }
+                    loadNPBranches("", false).catch(() => {});
+                }
+            }
+        }
+
+        // ФИО защита: фиксируем последнее значение
+        if (nameInput && nameInput.value.trim()) {
+            nameInput._lastExplicitValue = nameInput.value.trim();
         }
 
         // Автозаполнение браузера срабатывает уже после отрисовки — чистим промокод с задержкой

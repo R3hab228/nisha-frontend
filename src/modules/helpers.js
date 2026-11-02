@@ -323,3 +323,41 @@ export function safeViewTransition(updateFn) {
         };
     }
 }
+
+/**
+ * Parses delivery address into city and branch components safely
+ * @param {string} addr
+ * @returns {{ city: string, branch: string }}
+ */
+export function parseDeliveryAddress(addr) {
+    if (typeof window !== 'undefined' && typeof window.parseDeliveryAddress === 'function') {
+        return window.parseDeliveryAddress(addr);
+    }
+    if (!addr || typeof addr !== 'string') return { city: '', branch: '' };
+    const str = addr.trim();
+    if (!str) return { city: '', branch: '' };
+
+    const markerMatch = str.match(/,\s*(відділення|поштомат|пункт|склад|отделение|почтомат|нова\s*пошта|№|відд\.?|отд\.?)(?![а-яёіїєa-z0-9])/i);
+    if (markerMatch && markerMatch.index !== undefined) {
+        const cityPart = str.slice(0, markerMatch.index).trim();
+        const branchPart = str.slice(markerMatch.index).replace(/^,\s*/, '').trim();
+        return { city: cityPart, branch: branchPart };
+    }
+
+    const parts = str.split(',').map(p => p.trim()).filter(Boolean);
+    if (parts.length <= 1) {
+        return { city: str, branch: '' };
+    }
+
+    let splitIdx = 1;
+    while (splitIdx < parts.length && /обл|район|р-н/i.test(parts[splitIdx])) {
+        splitIdx++;
+    }
+    if (splitIdx >= parts.length) {
+        return { city: parts.join(', '), branch: '' };
+    }
+    return {
+        city: parts.slice(0, splitIdx).join(', '),
+        branch: parts.slice(splitIdx).join(', ')
+    };
+}
