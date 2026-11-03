@@ -1751,7 +1751,7 @@ function renderCartItems() {
     const currentCart = getActiveCart();
     if (currentCart.length === 0) {
         list.innerHTML = `
-            <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a; margin: 10px;">
+            <div style="text-align:center; padding: 40px 20px; border: 1px dashed #222; background: #000; margin: 15px 5px;">
                 <div style="font-size: 30px; margin-bottom: 15px;">🛒</div>
                 <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;" data-i18n="cart.empty_title">${typeof i18next !== 'undefined' ? i18next.t('cart.empty_title') : 'КОРЗИНА ПУСТА'}</div>
                 <div style="color:#888; font-size: 12px; line-height: 1.5;" data-i18n="cart.empty_desc">${typeof i18next !== 'undefined' ? i18next.t('cart.empty_desc') : 'Выберите понравившиеся вещи в каталоге'}</div>
@@ -1760,7 +1760,7 @@ function renderCartItems() {
     }
 
     list.innerHTML = `
-        <div class="cart-warning-bar" style="padding: 10px 14px; margin-bottom: 10px; border-bottom: 1px dashed #333; background: rgba(0, 0, 0, 0.4); text-align: center;">
+        <div class="cart-warning-bar" style="padding: 10px 14px; margin-bottom: 10px; border-bottom: 1px dashed #333; background: #000; text-align: center;">
             <div style="color: #aaa; font-size: 11px; line-height: 1.45; font-family: var(--font-main);" data-i18n="cart.warning">
                 ${typeof i18next !== 'undefined' ? i18next.t('cart.warning', {defaultValue: 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'}) : 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'}
             </div>
@@ -1794,7 +1794,11 @@ function renderCartItems() {
                 <div class="cart-item-img" style="background-image: url('${imgUrl}')"></div>
                 <div class="cart-item-info">
                     <div class="cart-item-name" title="${escCartHtml(item.name)}">${escCartHtml(item.name)}</div>
-                    <div class="cart-item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${escCartHtml(item.size)}</div>
+                    ${(() => {
+                    const rawSize = String(item.size || '').trim();
+                    const cleanSize = rawSize ? rawSize.toUpperCase() : '-';
+                    return `<div class="cart-item-size item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span><span class="size-val">${escCartHtml(cleanSize)}</span></div>`;
+                })()}
                     ${soldBadgeHtml}
                 </div>
                 <div class="cart-item-price-wrapper">
