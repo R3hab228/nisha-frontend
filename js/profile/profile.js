@@ -69,6 +69,9 @@ function openProfileModal() {
         }
         document.body.style.overflow = 'hidden';
     }
+    if (typeof triggerModalTypewriter === 'function') {
+        triggerModalTypewriter('profileModal');
+    }
 
     // Повторная синхронизация контактов и данных доставки в модалке при каждом открытии
     const activeUser = currentUser || window.currentUser;

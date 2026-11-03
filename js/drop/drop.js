@@ -126,6 +126,7 @@ function openProposeModal() {
     
     if (typeof openModal === 'function') {
         openModal('proposeModal');
+        if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter('proposeModal');
         if (typeof initTurnstileWidgets === 'function') {
             setTimeout(initTurnstileWidgets, 100);
         }

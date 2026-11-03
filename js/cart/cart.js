@@ -1708,6 +1708,7 @@ function toggleCartDropdown(e) {
             else panel.classList.remove('dropdown-open');
         }
         if (isActive) {
+            if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(dropdown);
             if (typeof checkCartItemsAvailability === 'function') checkCartItemsAvailability();
             if (typeof renderCartItems === 'function') renderCartItems();
         }
@@ -2118,6 +2119,7 @@ async function openCheckoutModal() {
             }
             document.body.style.overflow = 'hidden';
         }
+        if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter('checkoutModal');
         if (window.analytics && typeof window.analytics.trackCheckoutStart === 'function') {
             window.analytics.trackCheckoutStart(currentCart);
         }
@@ -2584,6 +2586,7 @@ async function submitOrder() {
     if (prompt && emailInput) {
         emailInput.value = '';
         prompt.style.display = 'flex';
+        if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(prompt);
     } else {
         await executeOrderFinal('');
     }
@@ -3000,7 +3003,10 @@ async function executeOrderFinal(emailToSave) {
             btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
             
             const overlay = document.getElementById('orderSuccessOverlay');
-            if (overlay) overlay.style.display = 'flex';
+            if (overlay) {
+                overlay.style.display = 'flex';
+                if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(overlay);
+            }
             
             setTimeout(() => { 
                 if (overlay) overlay.style.display = 'none'; 

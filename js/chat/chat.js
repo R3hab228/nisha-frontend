@@ -10,6 +10,7 @@ function openSupportModalWindow() {
     
     if (typeof openModal === 'function') {
         openModal('supportModal');
+        if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter('supportModal');
     } else {
         const modal = document.getElementById('supportModal');
         if (modal) {

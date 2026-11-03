@@ -117,6 +117,37 @@ function triggerModalInitializer(id) {
     }
 }
 
+// Перезапуск анимации печатной машинки заголовка с мигающим квадратным курсором (1-в-1 как в ITEM_INFO.EXE)
+function triggerModalTypewriter(modalOrId) {
+    if (!modalOrId) return;
+    const modal = typeof modalOrId === 'string'
+        ? (typeof document !== 'undefined' && document.getElementById ? document.getElementById(modalOrId) : null)
+        : modalOrId;
+    if (!modal) return;
+
+    const twElements = [];
+    if (modal.classList && typeof modal.classList.contains === 'function' && modal.classList.contains('typewriter')) {
+        twElements.push(modal);
+    } else if (typeof modal.querySelectorAll === 'function') {
+        try {
+            modal.querySelectorAll('.typewriter').forEach(el => twElements.push(el));
+        } catch (_) {}
+    } else if (typeof modal.querySelector === 'function') {
+        try {
+            const single = modal.querySelector('.typewriter');
+            if (single) twElements.push(single);
+        } catch (_) {}
+    }
+
+    twElements.forEach(tw => {
+        if (!tw || !tw.style) return;
+        tw.style.animation = 'none';
+        void tw.offsetHeight; // форсируем перерасчет стилей для перезапуска CSS-анимации
+        tw.style.animation = '';
+    });
+}
+window.triggerModalTypewriter = triggerModalTypewriter;
+
 // 2. Универсальное открытие модального окна (с ленивой инициализацией)
 function openModal(id) {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
@@ -158,6 +189,7 @@ function openModal(id) {
     }
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    triggerModalTypewriter(modal);
 }
 window.openModal = openModal;
 

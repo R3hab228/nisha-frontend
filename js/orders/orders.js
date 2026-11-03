@@ -23,6 +23,9 @@ function openOrdersModal() {
         }
         document.body.style.overflow = 'hidden';
     }
+    if (typeof triggerModalTypewriter === 'function') {
+        triggerModalTypewriter('ordersModal');
+    }
 
     if (typeof window.stopLenis === 'function') window.stopLenis();
     else if (typeof lenis !== 'undefined') lenis.stop();

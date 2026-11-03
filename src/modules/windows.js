@@ -1,3 +1,39 @@
+/**
+ * Triggers typewriter animation on modal title elements (1-to-1 with ITEM_INFO.EXE)
+ * @param {HTMLElement|string} modalOrId
+ */
+export function triggerModalTypewriter(modalOrId) {
+    if (typeof window !== 'undefined' && typeof window.triggerModalTypewriter === 'function') {
+        return window.triggerModalTypewriter(modalOrId);
+    }
+    if (!modalOrId) return;
+    const modal = typeof modalOrId === 'string'
+        ? (typeof document !== 'undefined' && document.getElementById ? document.getElementById(modalOrId) : null)
+        : modalOrId;
+    if (!modal) return;
+
+    const twElements = [];
+    if (modal.classList && typeof modal.classList.contains === 'function' && modal.classList.contains('typewriter')) {
+        twElements.push(modal);
+    } else if (typeof modal.querySelectorAll === 'function') {
+        try {
+            modal.querySelectorAll('.typewriter').forEach(el => twElements.push(el));
+        } catch (_) {}
+    } else if (typeof modal.querySelector === 'function') {
+        try {
+            const single = modal.querySelector('.typewriter');
+            if (single) twElements.push(single);
+        } catch (_) {}
+    }
+
+    twElements.forEach(tw => {
+        if (!tw || !tw.style) return;
+        tw.style.animation = 'none';
+        void tw.offsetHeight;
+        tw.style.animation = '';
+    });
+}
+
 // ==========================================
 // NISHA STORE - MODULAR WINDOWS & MODALS FACADE
 // Safe, typed ES module exports for modal dialogs & drawers
@@ -24,6 +60,7 @@ export function openModal(modalId, options) {
         if (el) {
             if (el.classList && typeof el.classList.add === 'function') el.classList.add('is-open');
             if (el.style) el.style.display = 'flex';
+            triggerModalTypewriter(el);
         }
     }
 }

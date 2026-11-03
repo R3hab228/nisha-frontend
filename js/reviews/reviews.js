@@ -42,6 +42,9 @@ async function openReviewsModal() {
         }
         document.body.style.overflow = 'hidden'; 
     }
+    if (typeof triggerModalTypewriter === 'function') {
+        triggerModalTypewriter('reviewsModal');
+    }
     
     const container = document.getElementById('reviewsContainerList');
     if (!container) return;
@@ -245,6 +248,7 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
 
     if (typeof openModal === 'function') {
         openModal('autoReviewModal');
+        if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter('autoReviewModal');
     } else {
         const autoModal = document.getElementById('autoReviewModal');
         if (autoModal) {
@@ -423,6 +427,7 @@ function writeReviewOnSite() {
     setTimeout(() => {
         if (typeof openModal === 'function') {
             openModal('writeReviewModal');
+            if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter('writeReviewModal');
         } else {
             const writeModal = document.getElementById('writeReviewModal');
             if (writeModal) {
