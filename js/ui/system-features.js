@@ -195,6 +195,9 @@ function updateCharCount(textarea) {
 window.updateCharCount = updateCharCount;
 
 // === ГОРЯЧИЕ КЛАВИШИ И НАВИГАЦИЯ С КЛАВИАТУРЫ ===
+let lastTextareaEnterTime = 0;
+let lastTextareaTarget = null;
+
 document.addEventListener('keydown', function(e) {
     const isCtrlK = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K');
     const isSlash = e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey;
@@ -224,18 +227,106 @@ document.addEventListener('keydown', function(e) {
         }
     }
 
+    if (e.key !== 'Enter') {
+        lastTextareaEnterTime = 0;
+        lastTextareaTarget = null;
+    }
+
     if (e.key === 'Enter') {
         const activeEl = document.activeElement;
-        if (!activeEl || activeEl.tagName === 'TEXTAREA') return;
+        if (!activeEl) return;
+
+        // В многострочном поле (textarea): быстрый двойной Enter переводит фокус на следующее поле формы
+        if (activeEl.tagName === 'TEXTAREA') {
+            if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                const now = Date.now();
+                if (activeEl === lastTextareaTarget && (now - lastTextareaEnterTime) < 450) {
+                    e.preventDefault();
+                    lastTextareaEnterTime = 0;
+                    lastTextareaTarget = null;
+
+                    // Убираем перевод строки, вставленный первым нажатием Enter
+                    const pos = typeof activeEl.selectionStart === 'number' ? activeEl.selectionStart : activeEl.value.length;
+                    const val = activeEl.value;
+                    if (pos > 0 && val.charAt(pos - 1) === '\n') {
+                        activeEl.value = val.slice(0, pos - 1) + val.slice(pos);
+                        const newPos = pos - 1;
+                        try { activeEl.setSelectionRange(newPos, newPos); } catch (_) {}
+                    } else if (val.endsWith('\n')) {
+                        activeEl.value = val.slice(0, -1);
+                    }
+
+                    try {
+                        activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    } catch (_) {}
+                    if (typeof updateCharCount === 'function') {
+                        updateCharCount(activeEl);
+                    }
+
+                    const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields') || activeEl.closest('.modal-window');
+                    if (form) {
+                        const isVisible = (el) => {
+                            if (!el || el.disabled || el.type === 'hidden') return false;
+                            if (el.style && el.style.display === 'none') return false;
+                            if (el.closest && el.closest('[style*="display: none"]')) return false;
+                            return true;
+                        };
+                        const focusables = Array.from(form.querySelectorAll('input, textarea, button')).filter(isVisible);
+                        const currentIndex = focusables.indexOf(activeEl);
+                        if (currentIndex > -1 && currentIndex < focusables.length - 1) {
+                            const nextEl = focusables[currentIndex + 1];
+                            nextEl.focus();
+                            if (typeof nextEl.select === 'function' && nextEl.tagName === 'INPUT') {
+                                try { nextEl.select(); } catch (_) {}
+                            }
+                            if (typeof nextEl.scrollIntoView === 'function') {
+                                const rect = nextEl.getBoundingClientRect();
+                                if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                                    nextEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                }
+                            }
+                        }
+                    }
+                    return;
+                } else {
+                    lastTextareaEnterTime = now;
+                    lastTextareaTarget = activeEl;
+                    activeEl.addEventListener('blur', () => {
+                        lastTextareaEnterTime = 0;
+                        lastTextareaTarget = null;
+                    }, { once: true });
+                }
+            } else {
+                lastTextareaEnterTime = 0;
+                lastTextareaTarget = null;
+            }
+            return;
+        }
 
         if (activeEl.tagName === 'INPUT') {
             e.preventDefault();
-            const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields');
+            const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields') || activeEl.closest('.modal-window');
             if (form) {
-                const focusables = Array.from(form.querySelectorAll('input:not([type="hidden"]):not([style*="display: none"]):not([disabled]), textarea, button:not([style*="display: none"]):not([disabled])'));
+                const isVisible = (el) => {
+                    if (!el || el.disabled || el.type === 'hidden') return false;
+                    if (el.style && el.style.display === 'none') return false;
+                    if (el.closest && el.closest('[style*="display: none"]')) return false;
+                    return true;
+                };
+                const focusables = Array.from(form.querySelectorAll('input, textarea, button')).filter(isVisible);
                 const currentIndex = focusables.indexOf(activeEl);
                 if (currentIndex > -1 && currentIndex < focusables.length - 1) {
-                    focusables[currentIndex + 1].focus();
+                    const nextEl = focusables[currentIndex + 1];
+                    nextEl.focus();
+                    if (typeof nextEl.select === 'function' && nextEl.tagName === 'INPUT') {
+                        try { nextEl.select(); } catch (_) {}
+                    }
+                    if (typeof nextEl.scrollIntoView === 'function') {
+                        const rect = nextEl.getBoundingClientRect();
+                        if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                            nextEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    }
                 }
             }
         }

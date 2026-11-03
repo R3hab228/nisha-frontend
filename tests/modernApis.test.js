@@ -2913,8 +2913,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
     describe('48. Auth and Registration Mode Toggle (toggleRegMode & isRegMode scoping)', () => {
         let elements = {};
+        let origGetElementById;
 
         beforeEach(() => {
+            origGetElementById = globalThis.document.getElementById;
             elements = {
                 btnLogin: { style: { display: 'block' } },
                 btnShowReg: { style: { display: 'block' } },
@@ -2930,6 +2932,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 modalAuthForgotPassWrap: { style: { display: 'flex' } },
             };
             globalThis.document.getElementById = vi.fn(id => elements[id] || null);
+        });
+
+        afterEach(() => {
+            if (origGetElementById) {
+                globalThis.document.getElementById = origGetElementById;
+            }
         });
 
         it('toggles registration mode without ReferenceError: isRegMode is not defined', async () => {
@@ -3102,6 +3110,84 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(productJs).toContain('m9 12 2 2 4-4');
             expect(html).toContain('M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z');
             expect(productJs).toContain('M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z');
+        });
+    });
+
+    describe('54. Propose Modal Keyboard Navigation & Number Input Spinner Suppression', () => {
+        it('hides number input spin buttons across WebKit and Gecko in style.css', () => {
+            const styleCss = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            expect(styleCss).toMatch(/input\[type=["']?number["']?\]::-webkit-inner-spin-button/);
+            expect(styleCss).toMatch(/input\[type=["']?number["']?\]::-webkit-outer-spin-button/);
+            expect(styleCss).toMatch(/-webkit-appearance:\s*none\s*!important/);
+            expect(styleCss).toMatch(/-moz-appearance:\s*textfield\s*!important/);
+            expect(styleCss).toMatch(/appearance:\s*textfield\s*!important/);
+        });
+
+        it('includes double-Enter textarea navigation logic and newline trimming in system-features.js', () => {
+            const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
+            expect(sysCode).toContain("activeEl.tagName === 'TEXTAREA'");
+            expect(sysCode).toContain('now - lastTextareaEnterTime');
+            expect(sysCode).toContain('450');
+            expect(sysCode).toContain("val.charAt(pos - 1) === '\\n'");
+            expect(sysCode).toContain('updateCharCount(activeEl)');
+            expect(sysCode).toContain('nextEl.focus()');
+        });
+
+        it('executes double-Enter newline trimming and focus advance logic', () => {
+            let lastTextareaEnterTime = 0;
+            let lastTextareaTarget = null;
+
+            function handleEnter(e, activeEl, formFocusables) {
+                if (activeEl.tagName === 'TEXTAREA') {
+                    if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                        const now = Date.now();
+                        if (activeEl === lastTextareaTarget && (now - lastTextareaEnterTime) < 450) {
+                            e.preventDefault();
+                            lastTextareaEnterTime = 0;
+                            lastTextareaTarget = null;
+
+                            const pos = typeof activeEl.selectionStart === 'number' ? activeEl.selectionStart : activeEl.value.length;
+                            const val = activeEl.value;
+                            if (pos > 0 && val.charAt(pos - 1) === '\n') {
+                                activeEl.value = val.slice(0, pos - 1) + val.slice(pos);
+                                const newPos = pos - 1;
+                                if (activeEl.setSelectionRange) activeEl.setSelectionRange(newPos, newPos);
+                            } else if (val.endsWith('\n')) {
+                                activeEl.value = val.slice(0, -1);
+                            }
+
+                            const currentIndex = formFocusables.indexOf(activeEl);
+                            if (currentIndex > -1 && currentIndex < formFocusables.length - 1) {
+                                formFocusables[currentIndex + 1].focus();
+                            }
+                            return 'advanced';
+                        } else {
+                            lastTextareaEnterTime = now;
+                            lastTextareaTarget = activeEl;
+                            return 'first-enter';
+                        }
+                    }
+                }
+            }
+
+            const nextField = { id: 'propCond', focus: vi.fn() };
+            const textarea = {
+                tagName: 'TEXTAREA',
+                value: 'Great item\n',
+                selectionStart: 11,
+                setSelectionRange: vi.fn()
+            };
+            const focusables = [textarea, nextField];
+
+            const e1 = { key: 'Enter', preventDefault: vi.fn() };
+            expect(handleEnter(e1, textarea, focusables)).toBe('first-enter');
+            expect(nextField.focus).not.toHaveBeenCalled();
+
+            const e2 = { key: 'Enter', preventDefault: vi.fn() };
+            expect(handleEnter(e2, textarea, focusables)).toBe('advanced');
+            expect(e2.preventDefault).toHaveBeenCalled();
+            expect(textarea.value).toBe('Great item');
+            expect(nextField.focus).toHaveBeenCalledTimes(1);
         });
     });
 });

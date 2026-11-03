@@ -810,6 +810,20 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .form-input::placeholder { color: #555; }
 .form-input.input-valid { border-color: var(--accent-green) !important; box-shadow: 0 0 8px rgba(0, 255, 0, 0.35) !important; }
 .form-input.input-invalid { border-color: var(--accent-red) !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.35) !important; }
+
+/* Убираем стрелочки спиннера (вверх/вниз) в полях type=number на ПК и мобильных (Chrome, Edge, Safari, Opera, Firefox) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
+.form-input[type="number"]::-webkit-outer-spin-button,
+.form-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+input[type="number"],
+.form-input[type="number"] {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+}
 .np-loader { font-size: 11px; color: var(--accent-yellow); font-family: var(--font-mono); display: none; margin-top: -10px; }
 
 .np-input-wrap {
