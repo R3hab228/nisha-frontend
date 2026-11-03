@@ -1761,7 +1761,7 @@ function renderCartItems() {
 
     list.innerHTML = `
         <div class="cart-warning-bar" style="padding: 10px 14px; margin-bottom: 10px; border-bottom: 1px dashed #333; background: #000; text-align: center;">
-            <div style="color: #aaa; font-size: 11px; line-height: 1.45; font-family: var(--font-main);" data-i18n="cart.warning">
+            <div style="color: var(--accent-red); font-size: 11px; line-height: 1.45; font-family: var(--font-main);" data-i18n="cart.warning">
                 ${typeof i18next !== 'undefined' ? i18next.t('cart.warning', {defaultValue: 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'}) : 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'}
             </div>
         </div>
