@@ -1797,7 +1797,7 @@ function renderCartItems() {
                     ${(() => {
                     const rawSize = String(item.size || '').trim();
                     const cleanSize = rawSize ? rawSize.toUpperCase() : '-';
-                    return `<div class="cart-item-size item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span><span class="size-val">${escCartHtml(cleanSize)}</span></div>`;
+                    return `<div class="cart-item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span><span class="size-val">${escCartHtml(cleanSize)}</span></div>`;
                 })()}
                     ${soldBadgeHtml}
                 </div>
