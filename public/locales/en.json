@@ -65,7 +65,7 @@
     "cart": {
       "in_cart": "IN CART:",
       "items_total": "ITEMS | TOTAL:",
-      "title": "[ YOUR CART ]",
+      "title": "YOUR_CART.TXT",
       "checkout": "CHECKOUT",
       "empty_title": "CART IS EMPTY",
       "empty_desc": "You haven't added anything yet.",

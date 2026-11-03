@@ -92,7 +92,8 @@ describe('Typewriter Animation with Blinking Block Cursor Across All Modals', ()
             'NEW_REVIEW.EXE',
             'DELIVERY_SUCCESS.LOG',
             'SUPPORT_TICKET.EXE',
-            'USER_AGREEMENT.TXT'
+            'USER_AGREEMENT.TXT',
+            'YOUR_CART.TXT'
         ];
 
         for (const title of requiredTypewriterTitles) {

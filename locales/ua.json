@@ -65,7 +65,7 @@
     "cart": {
       "in_cart": "У КОШИКУ:",
       "items_total": "РЕЧЕЙ | РАЗОМ:",
-      "title": "[ ВАШІ ПОКУПКИ ]",
+      "title": "YOUR_CART.TXT",
       "checkout": "ОФОРМИТИ ЗАМОВЛЕННЯ",
       "empty_title": "КОШИК ПОРОЖНІЙ",
       "empty_desc": "Ви ще нічого не додали.",

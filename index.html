@@ -425,10 +425,10 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div class=cart-click-area>
 <span data-i18n=cart.in_cart>В КОРЗИНЕ:</span> <b id=cartCount>0</b> <span data-i18n=cart.items_total>ВЕЩЕЙ | ИТОГО:</span> <span id=cartTotal>0 грн</span>
 </div>
-<div id=cartDropdown class=cart-dropdown onclick="event.stopPropagation()">
-<div class=cart-dropdown-header>
-<span class=typewriter id=cartDropdownTitle data-i18n=cart.title>[ ВАШИ ПОКУПКИ ]</span>
-<button class=cart-close-mobile onclick=toggleCartDropdown(event) aria-label="Закрыть корзину">&times;</button>
+<div id=cartDropdown class="cart-dropdown modal-window-style" onclick="event.stopPropagation()">
+<div class="cart-dropdown-header modal-header">
+<span class="modal-title typewriter" id=cartDropdownTitle data-i18n=cart.title>YOUR_CART.TXT</span>
+<button class="close-btn cart-close-mobile" onclick="closeCartDropdown(event)" aria-label="Закрыть корзину">X</button>
 </div>
 <div id=cartDropdownList class=cart-dropdown-list>
 </div>

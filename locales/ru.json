@@ -65,7 +65,7 @@
     "cart": {
       "in_cart": "В КОРЗИНЕ:",
       "items_total": "ВЕЩЕЙ | ИТОГО:",
-      "title": "[ ВАШИ ПОКУПКИ ]",
+      "title": "YOUR_CART.TXT",
       "checkout": "ОФОРМИТЬ ЗАКАЗ",
       "empty_title": "КОРЗИНА ПУСТА",
       "empty_desc": "Вы еще ничего не добавили.",

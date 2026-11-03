@@ -66,7 +66,7 @@
       "cart": {
         "in_cart": "В КОРЗИНЕ:",
         "items_total": "ВЕЩЕЙ | ИТОГО:",
-        "title": "[ ВАШИ ПОКУПКИ ]",
+        "title": "YOUR_CART.TXT",
         "checkout": "ОФОРМИТЬ ЗАКАЗ",
         "empty_title": "КОРЗИНА ПУСТА",
         "empty_desc": "Вы еще ничего не добавили.",
@@ -512,7 +512,7 @@
       "cart": {
         "in_cart": "У КОШИКУ:",
         "items_total": "РЕЧЕЙ | РАЗОМ:",
-        "title": "[ ВАШІ ПОКУПКИ ]",
+        "title": "YOUR_CART.TXT",
         "checkout": "ОФОРМИТИ ЗАМОВЛЕННЯ",
         "empty_title": "КОШИК ПОРОЖНІЙ",
         "empty_desc": "Ви ще нічого не додали.",
@@ -958,7 +958,7 @@
       "cart": {
         "in_cart": "IN CART:",
         "items_total": "ITEMS | TOTAL:",
-        "title": "[ YOUR CART ]",
+        "title": "YOUR_CART.TXT",
         "checkout": "CHECKOUT",
         "empty_title": "CART IS EMPTY",
         "empty_desc": "You haven't added anything yet.",

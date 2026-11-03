@@ -1760,9 +1760,9 @@ function renderCartItems() {
     }
 
     list.innerHTML = `
-        <div style="padding: 10px; margin-bottom: 10px; border-bottom: 1px dashed #333; display: flex; flex-direction: column; gap: 10px;">
-            <div style="color: #666; font-size: 10px; font-family: var(--font-main); text-align: center; margin-top: 5px;" data-i18n="cart.warning">
-                ${typeof i18next !== 'undefined' ? i18next.t('cart.warning', {defaultValue: 'Вещи не бронируются и могут быть куплены кем-то другим в любой момент.'}) : 'Вещи не бронируются и могут быть куплены кем-то другим в любой момент.'}
+        <div class="cart-warning-bar" style="padding: 10px 14px; margin-bottom: 10px; border-bottom: 1px dashed #333; background: rgba(0, 0, 0, 0.4); text-align: center;">
+            <div style="color: #aaa; font-size: 11px; line-height: 1.45; font-family: var(--font-main);" data-i18n="cart.warning">
+                ${typeof i18next !== 'undefined' ? i18next.t('cart.warning', {defaultValue: 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'}) : 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'}
             </div>
         </div>
     `;
