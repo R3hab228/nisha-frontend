@@ -361,3 +361,83 @@ export function parseDeliveryAddress(addr) {
         branch: parts.slice(splitIdx).join(', ')
     };
 }
+
+/**
+ * Parses a search query looking for price specifications (e.g. "800", "800грн", "до 800", "500-800")
+ * @param {string} query
+ * @returns {{ type: 'exact'|'max'|'min'|'range', price?: number, min?: number, max?: number }|null}
+ */
+export function parsePriceSearchQuery(query) {
+    if (typeof window !== 'undefined' && typeof window.parsePriceSearchQuery === 'function') {
+        return window.parsePriceSearchQuery(query);
+    }
+    if (!query || typeof query !== 'string') return null;
+    const clean = query.trim().toLowerCase();
+
+    const rangeMatch = clean.match(/^(\d+(?:[\s.,]\d+)?)\s*(?:-|–|—|\.\.|to)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (rangeMatch) {
+        const min = Number.parseInt(rangeMatch[1].replace(/[\s.,]/g, ''), 10);
+        const max = Number.parseInt(rangeMatch[2].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(min) && Number.isFinite(max) && min > 0 && max > 0) {
+            return { type: 'range', min: Math.min(min, max), max: Math.max(min, max), price: Math.min(min, max) };
+        }
+    }
+
+    const maxMatch = clean.match(/^(?:до|<=|<)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (maxMatch) {
+        const val = Number.parseInt(maxMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'max', max: val, price: val };
+        }
+    }
+
+    const minMatch = clean.match(/^(?:от|від|>=|>)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (minMatch) {
+        const val = Number.parseInt(minMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'min', min: val, price: val };
+        }
+    }
+
+    const exactMatch = clean.match(/^(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (exactMatch) {
+        const val = Number.parseInt(exactMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'exact', price: val };
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Checks if a product matches a parsed price query
+ * @param {object} item
+ * @param {object} priceQuery
+ * @returns {boolean}
+ */
+export function itemMatchesPrice(item, priceQuery) {
+    if (typeof window !== 'undefined' && typeof window.itemMatchesPrice === 'function') {
+        return window.itemMatchesPrice(item, priceQuery);
+    }
+    if (!item || !priceQuery) return false;
+    const rawPrice = item.price;
+    const price = typeof rawPrice === 'number' ? rawPrice : (Number.parseInt(String(rawPrice || '').replace(/[^\d]/g, ''), 10) || 0);
+    const oldPrice = (item.old_price !== null && item.old_price !== undefined)
+        ? (typeof item.old_price === 'number' ? item.old_price : (Number.parseInt(String(item.old_price).replace(/[^\d]/g, ''), 10) || null))
+        : null;
+
+    if (priceQuery.type === 'exact') {
+        return price === priceQuery.price || (oldPrice !== null && oldPrice === priceQuery.price);
+    }
+    if (priceQuery.type === 'max') {
+        return price <= priceQuery.max;
+    }
+    if (priceQuery.type === 'min') {
+        return price >= priceQuery.min;
+    }
+    if (priceQuery.type === 'range') {
+        return price >= priceQuery.min && price <= priceQuery.max;
+    }
+    return false;
+}

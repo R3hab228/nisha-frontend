@@ -926,6 +926,77 @@ function expandSearchQuery(query) {
 window.expandSearchQuery = expandSearchQuery;
 window.transliterateCyrillic = transliterateCyrillic;
 
+// === ПОИСК ПО ЦЕНЕ (Например: "800", "800грн", "800 грн", "до 800", "500-800") ===
+function parsePriceSearchQuery(query) {
+    if (!query || typeof query !== 'string') return null;
+    const clean = query.trim().toLowerCase();
+
+    // 1. Диапазон: "500-800", "500 - 800 грн", "500..800", "500 to 800"
+    const rangeMatch = clean.match(/^(\d+(?:[\s.,]\d+)?)\s*(?:-|–|—|\.\.|to)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (rangeMatch) {
+        const min = Number.parseInt(rangeMatch[1].replace(/[\s.,]/g, ''), 10);
+        const max = Number.parseInt(rangeMatch[2].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(min) && Number.isFinite(max) && min > 0 && max > 0) {
+            return { type: 'range', min: Math.min(min, max), max: Math.max(min, max), price: Math.min(min, max) };
+        }
+    }
+
+    // 2. Верхняя граница: "до 800", "до 800 грн", "до 800грн", "<= 800", "< 800"
+    const maxMatch = clean.match(/^(?:до|<=|<)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (maxMatch) {
+        const val = Number.parseInt(maxMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'max', max: val, price: val };
+        }
+    }
+
+    // 3. Нижняя граница: "от 800", "від 800", ">= 800", "> 800"
+    const minMatch = clean.match(/^(?:от|від|>=|>)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (minMatch) {
+        const val = Number.parseInt(minMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'min', min: val, price: val };
+        }
+    }
+
+    // 4. Точная цена: "800", "800грн", "800 грн", "800 uah", "800uah", "800₴", "800 ₴", "800г", "800гр", "800 грн."
+    const exactMatch = clean.match(/^(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (exactMatch) {
+        const val = Number.parseInt(exactMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'exact', price: val };
+        }
+    }
+
+    return null;
+}
+
+function itemMatchesPrice(item, priceQuery) {
+    if (!item || !priceQuery) return false;
+    const rawPrice = item.price;
+    const price = typeof rawPrice === 'number' ? rawPrice : (Number.parseInt(String(rawPrice || '').replace(/[^\d]/g, ''), 10) || 0);
+    const oldPrice = (item.old_price !== null && item.old_price !== undefined)
+        ? (typeof item.old_price === 'number' ? item.old_price : (Number.parseInt(String(item.old_price).replace(/[^\d]/g, ''), 10) || null))
+        : null;
+
+    if (priceQuery.type === 'exact') {
+        return price === priceQuery.price || (oldPrice !== null && oldPrice === priceQuery.price);
+    }
+    if (priceQuery.type === 'max') {
+        return price <= priceQuery.max;
+    }
+    if (priceQuery.type === 'min') {
+        return price >= priceQuery.min;
+    }
+    if (priceQuery.type === 'range') {
+        return price >= priceQuery.min && price <= priceQuery.max;
+    }
+    return false;
+}
+
+window.parsePriceSearchQuery = parsePriceSearchQuery;
+window.itemMatchesPrice = itemMatchesPrice;
+
 // --- ВНЕШНИЙ ЛОАДЕР СКРИПТОВ И СТИЛЕЙ ПО ТРЕБОВАНИЮ (LAZY LOADER) ---
 const _loadedExternalScripts = {};
 function loadExternalScript(src) {

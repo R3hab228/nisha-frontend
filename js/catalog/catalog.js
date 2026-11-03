@@ -1817,15 +1817,31 @@ function applyFilters(immediate = false, preserveViewport = false) {
                         const itemMap = new Map(window.filteredItems.map(i => [i.id, i]));
                         window.filteredItems = matchedIds.map(id => itemMap.get(id)).filter(Boolean);
                     } else {
+                        const priceQuery = (typeof parsePriceSearchQuery === 'function')
+                            ? parsePriceSearchQuery(cleanSearchTerm)
+                            : (typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanSearchTerm) : null);
+                        const checkPriceFn = typeof itemMatchesPrice === 'function' ? itemMatchesPrice : window.itemMatchesPrice;
+
+                        const matchedIds = new Set();
+                        const finalResults = [];
+
+                        if (priceQuery && typeof checkPriceFn === 'function') {
+                            window.filteredItems.forEach(item => {
+                                if (item && item.status !== 'sold' && checkPriceFn(item, priceQuery)) {
+                                    if (!matchedIds.has(item.id)) {
+                                        matchedIds.add(item.id);
+                                        finalResults.push(item);
+                                    }
+                                }
+                            });
+                        }
+
                         const queryVariants = (typeof expandSearchQuery === 'function')
                             ? expandSearchQuery(cleanSearchTerm)
                             : [cleanSearchTerm.toLowerCase()];
 
                         if (typeof Fuse !== 'undefined') {
                             const fuse = getCatalogFuse(window.filteredItems);
-                            const matchedIds = new Set();
-                            const finalResults = [];
-
                             for (const variant of queryVariants) {
                                 const found = fuse.search(variant);
                                 found.forEach(res => {
@@ -1840,6 +1856,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
                         } else {
                             window.filteredItems = window.filteredItems.filter(item => {
                                 if (item.status === 'sold') return false;
+                                if (matchedIds.has(item.id)) return true;
                                 const name = (item.name || '').toLowerCase();
                                 const brand = (item.brand || '').toLowerCase();
                                 const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : (item.tags || '').toLowerCase();

@@ -3289,4 +3289,111 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(field3.focus).toHaveBeenCalledTimes(1);
         });
     });
+
+    describe('55. Price-Only Search Queries (e.g. 800, 800грн, 800 грн, до 800, 500-1000)', () => {
+        it('parses numeric and currency price queries accurately via parsePriceSearchQuery', async () => {
+            const { parsePriceSearchQuery } = await import('../src/modules/helpers.js');
+
+            // Exact prices
+            expect(parsePriceSearchQuery('800')).toEqual({ type: 'exact', price: 800 });
+            expect(parsePriceSearchQuery('800грн')).toEqual({ type: 'exact', price: 800 });
+            expect(parsePriceSearchQuery('800 грн')).toEqual({ type: 'exact', price: 800 });
+            expect(parsePriceSearchQuery('800 грн.')).toEqual({ type: 'exact', price: 800 });
+            expect(parsePriceSearchQuery('800uah')).toEqual({ type: 'exact', price: 800 });
+            expect(parsePriceSearchQuery('800 uah')).toEqual({ type: 'exact', price: 800 });
+            expect(parsePriceSearchQuery('800₴')).toEqual({ type: 'exact', price: 800 });
+            expect(parsePriceSearchQuery('800 ₴')).toEqual({ type: 'exact', price: 800 });
+            expect(parsePriceSearchQuery('1500')).toEqual({ type: 'exact', price: 1500 });
+            expect(parsePriceSearchQuery('1 500 грн')).toEqual({ type: 'exact', price: 1500 });
+
+            // Range
+            expect(parsePriceSearchQuery('500-1000')).toEqual({ type: 'range', min: 500, max: 1000, price: 500 });
+            expect(parsePriceSearchQuery('500 - 1000 грн')).toEqual({ type: 'range', min: 500, max: 1000, price: 500 });
+
+            // Max and Min
+            expect(parsePriceSearchQuery('до 800')).toEqual({ type: 'max', max: 800, price: 800 });
+            expect(parsePriceSearchQuery('до 800 грн')).toEqual({ type: 'max', max: 800, price: 800 });
+            expect(parsePriceSearchQuery('<= 800')).toEqual({ type: 'max', max: 800, price: 800 });
+            expect(parsePriceSearchQuery('от 1000')).toEqual({ type: 'min', min: 1000, price: 1000 });
+            expect(parsePriceSearchQuery('від 1000 грн')).toEqual({ type: 'min', min: 1000, price: 1000 });
+
+            // Non-price queries must return null
+            expect(parsePriceSearchQuery('nike')).toBeNull();
+            expect(parsePriceSearchQuery('hoodie')).toBeNull();
+            expect(parsePriceSearchQuery('800 hoodie')).toBeNull();
+            expect(parsePriceSearchQuery('carhartt 800')).toBeNull();
+            expect(parsePriceSearchQuery('')).toBeNull();
+        });
+
+        it('matches items by price and old_price via itemMatchesPrice', async () => {
+            const { parsePriceSearchQuery, itemMatchesPrice } = await import('../src/modules/helpers.js');
+
+            const item800 = { id: 'it-800', name: 'Vintage Tee', price: 800 };
+            const item1200 = { id: 'it-1200', name: 'Hoodie', price: 1200 };
+            const itemSale800 = { id: 'it-sale', name: 'Pants', price: 600, old_price: 800 };
+
+            const q800 = parsePriceSearchQuery('800 грн');
+            expect(itemMatchesPrice(item800, q800)).toBe(true);
+            expect(itemMatchesPrice(itemSale800, q800)).toBe(true);
+            expect(itemMatchesPrice(item1200, q800)).toBe(false);
+
+            const qMax1000 = parsePriceSearchQuery('до 1000 грн');
+            expect(itemMatchesPrice(item800, qMax1000)).toBe(true);
+            expect(itemMatchesPrice(itemSale800, qMax1000)).toBe(true);
+            expect(itemMatchesPrice(item1200, qMax1000)).toBe(false);
+
+            const qRange = parsePriceSearchQuery('700-1500');
+            expect(itemMatchesPrice(item800, qRange)).toBe(true);
+            expect(itemMatchesPrice(item1200, qRange)).toBe(true);
+            expect(itemMatchesPrice({ price: 500 }, qRange)).toBe(false);
+        });
+
+        it('integrates price search in search.worker.js, search-worker-client.js and live-search.js', () => {
+            const workerCode = readFileSync(resolve(import.meta.dirname, '../src/workers/search.worker.js'), 'utf8');
+            const clientCode = readFileSync(resolve(import.meta.dirname, '../js/core/search-worker-client.js'), 'utf8');
+            const liveSearchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+
+            // 1. Worker and client must parse price queries and check itemMatchesPrice
+            expect(workerCode).toContain('function parsePriceSearchQuery');
+            expect(workerCode).toContain('function itemMatchesPrice');
+            expect(workerCode).toContain('const priceQuery = parsePriceSearchQuery(cleanTerm);');
+            expect(workerCode).toContain('itemMatchesPrice(item, priceQuery)');
+            expect(clientCode).toContain('parsePriceSearchQuery(cleanTerm)');
+            expect(clientCode).toContain('itemMatchesPrice(item, priceQuery)');
+
+            // 2. Live search must highlight matching price with green star glow
+            expect(liveSearchCode).toContain('parsePriceSearchQuery');
+            expect(liveSearchCode).toContain('itemMatchesPrice');
+            expect(liveSearchCode).toContain('★ ${priceHtml}');
+
+            // 3. Catalog applyFilters fallback must support price search
+            expect(catalogCode).toContain('parsePriceSearchQuery');
+            expect(catalogCode).toContain('itemMatchesPrice');
+        });
+
+        it('filters items correctly by price query excluding sold items', async () => {
+            const { parsePriceSearchQuery, itemMatchesPrice } = await import('../src/modules/helpers.js');
+
+            const mockItems = [
+                { id: '1', name: 'Nike Cap', price: 800, status: 'available' },
+                { id: '2', name: 'Carhartt Jacket', price: 1800, status: 'available' },
+                { id: '3', name: 'Stussy Tee', price: 800, status: 'available' },
+                { id: '4', name: 'Sold Hoodie', price: 800, status: 'sold' },
+                { id: '5', name: 'Adidas Pants', price: 1200, status: 'available' }
+            ];
+
+            const q800 = parsePriceSearchQuery('800грн');
+            expect(q800).toEqual({ type: 'exact', price: 800 });
+
+            // Available items with price 800
+            const matched = mockItems.filter(item => item.status !== 'sold' && itemMatchesPrice(item, q800));
+            expect(matched.map(i => i.id)).toEqual(['1', '3']);
+
+            // Range filter 500-1000 excluding sold
+            const qRange = parsePriceSearchQuery('500 - 1000 грн');
+            const matchedRange = mockItems.filter(item => item.status !== 'sold' && itemMatchesPrice(item, qRange));
+            expect(matchedRange.map(i => i.id)).toEqual(['1', '3']);
+        });
+    });
 });

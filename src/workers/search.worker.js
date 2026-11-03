@@ -85,6 +85,74 @@ function expandSearchQuery(query) {
     return Array.from(variants);
 }
 
+// === ПОИСК ПО ЦЕНЕ (Например: "800", "800грн", "800 грн", "до 800", "500-800") ===
+function parsePriceSearchQuery(query) {
+    if (!query || typeof query !== 'string') return null;
+    const clean = query.trim().toLowerCase();
+
+    // 1. Диапазон: "500-800", "500 - 800 грн", "500..800", "500 to 800"
+    const rangeMatch = clean.match(/^(\d+(?:[\s.,]\d+)?)\s*(?:-|–|—|\.\.|to)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (rangeMatch) {
+        const min = Number.parseInt(rangeMatch[1].replace(/[\s.,]/g, ''), 10);
+        const max = Number.parseInt(rangeMatch[2].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(min) && Number.isFinite(max) && min > 0 && max > 0) {
+            return { type: 'range', min: Math.min(min, max), max: Math.max(min, max), price: Math.min(min, max) };
+        }
+    }
+
+    // 2. Верхняя граница: "до 800", "до 800 грн", "до 800грн", "<= 800", "< 800"
+    const maxMatch = clean.match(/^(?:до|<=|<)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (maxMatch) {
+        const val = Number.parseInt(maxMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'max', max: val, price: val };
+        }
+    }
+
+    // 3. Нижняя граница: "от 800", "від 800", ">= 800", "> 800"
+    const minMatch = clean.match(/^(?:от|від|>=|>)\s*(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (minMatch) {
+        const val = Number.parseInt(minMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'min', min: val, price: val };
+        }
+    }
+
+    // 4. Точная цена: "800", "800грн", "800 грн", "800 uah", "800uah", "800₴", "800 ₴", "800г", "800гр", "800 грн."
+    const exactMatch = clean.match(/^(\d+(?:[\s.,]\d+)?)\s*(?:грн|uah|гривен|гривень|гр|г|₴)?\.?$/i);
+    if (exactMatch) {
+        const val = Number.parseInt(exactMatch[1].replace(/[\s.,]/g, ''), 10);
+        if (Number.isFinite(val) && val > 0) {
+            return { type: 'exact', price: val };
+        }
+    }
+
+    return null;
+}
+
+function itemMatchesPrice(item, priceQuery) {
+    if (!item || !priceQuery) return false;
+    const rawPrice = item.price;
+    const price = typeof rawPrice === 'number' ? rawPrice : (Number.parseInt(String(rawPrice || '').replace(/[^\d]/g, ''), 10) || 0);
+    const oldPrice = (item.old_price !== null && item.old_price !== undefined)
+        ? (typeof item.old_price === 'number' ? item.old_price : (Number.parseInt(String(item.old_price).replace(/[^\d]/g, ''), 10) || null))
+        : null;
+
+    if (priceQuery.type === 'exact') {
+        return price === priceQuery.price || (oldPrice !== null && oldPrice === priceQuery.price);
+    }
+    if (priceQuery.type === 'max') {
+        return price <= priceQuery.max;
+    }
+    if (priceQuery.type === 'min') {
+        return price >= priceQuery.min;
+    }
+    if (priceQuery.type === 'range') {
+        return price >= priceQuery.min && price <= priceQuery.max;
+    }
+    return false;
+}
+
 // Конфигурация Fuse.js
 const FUSE_OPTIONS = {
     includeScore: true,
@@ -145,7 +213,7 @@ self.onmessage = function(e) {
 
         case 'SEARCH_LIVE': {
             const { query, limit = 8, requestId } = data;
-            if (!fuseInstance || !query || !query.trim()) {
+            if (!query || !query.trim()) {
                 self.postMessage({
                     type: 'SEARCH_LIVE_RESULTS',
                     results: [],
@@ -155,26 +223,50 @@ self.onmessage = function(e) {
             }
 
             const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
-            const queryVariants = expandSearchQuery(cleanTerm);
+            const priceQuery = parsePriceSearchQuery(cleanTerm);
             const collected = [];
             const seenIds = new Set();
 
-            for (const variant of queryVariants) {
-                const subResults = fuseInstance.search(variant);
-                for (let i = 0; i < subResults.length; i++) {
-                    const r = subResults[i];
-                    if (r.item && r.item.status === 'sold') continue;
-                    if (!seenIds.has(r.item.id)) {
-                        seenIds.add(r.item.id);
-                        collected.push({
-                            item: r.item,
-                            matches: r.matches,
-                            score: r.score
-                        });
-                        if (collected.length >= limit) break;
+            // 1. Приоритетный поиск по цене (например, 800 или 800грн)
+            if (priceQuery) {
+                for (let i = 0; i < allItems.length; i++) {
+                    const item = allItems[i];
+                    if (item && item.status === 'sold') continue;
+                    if (itemMatchesPrice(item, priceQuery)) {
+                        if (!seenIds.has(item.id)) {
+                            seenIds.add(item.id);
+                            collected.push({
+                                item,
+                                matches: [],
+                                score: 0,
+                                isPriceMatch: true
+                            });
+                            if (collected.length >= limit) break;
+                        }
                     }
                 }
-                if (collected.length >= limit) break;
+            }
+
+            // 2. Дополнение текстовым поиском через Fuse
+            if (fuseInstance && collected.length < limit) {
+                const queryVariants = expandSearchQuery(cleanTerm);
+                for (const variant of queryVariants) {
+                    const subResults = fuseInstance.search(variant);
+                    for (let i = 0; i < subResults.length; i++) {
+                        const r = subResults[i];
+                        if (r.item && r.item.status === 'sold') continue;
+                        if (!seenIds.has(r.item.id)) {
+                            seenIds.add(r.item.id);
+                            collected.push({
+                                item: r.item,
+                                matches: r.matches,
+                                score: r.score
+                            });
+                            if (collected.length >= limit) break;
+                        }
+                    }
+                    if (collected.length >= limit) break;
+                }
             }
 
             self.postMessage({
@@ -187,7 +279,7 @@ self.onmessage = function(e) {
 
         case 'SEARCH_CATALOG': {
             const { query, candidateIds, requestId } = data;
-            if (!fuseInstance || !query || !query.trim()) {
+            if (!query || !query.trim()) {
                 self.postMessage({
                     type: 'SEARCH_CATALOG_RESULTS',
                     matchedIds: candidateIds || [],
@@ -197,21 +289,42 @@ self.onmessage = function(e) {
             }
 
             const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
-            const queryVariants = expandSearchQuery(cleanTerm);
+            const priceQuery = parsePriceSearchQuery(cleanTerm);
             const candidateSet = candidateIds ? new Set(candidateIds) : null;
             const matchedIds = [];
             const seenIds = new Set();
 
-            for (const variant of queryVariants) {
-                const results = fuseInstance.search(variant);
-                for (let i = 0; i < results.length; i++) {
-                    const item = results[i].item;
-                    const id = item.id;
+            // 1. Поиск по цене
+            if (priceQuery) {
+                for (let i = 0; i < allItems.length; i++) {
+                    const item = allItems[i];
                     if (item && item.status === 'sold') continue;
-                    if (!seenIds.has(id)) {
-                        if (!candidateSet || candidateSet.has(id)) {
-                            seenIds.add(id);
-                            matchedIds.push(id);
+                    const id = item.id;
+                    if (!candidateSet || candidateSet.has(id)) {
+                        if (itemMatchesPrice(item, priceQuery)) {
+                            if (!seenIds.has(id)) {
+                                seenIds.add(id);
+                                matchedIds.push(id);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Текстовый поиск через Fuse.js
+            if (fuseInstance) {
+                const queryVariants = expandSearchQuery(cleanTerm);
+                for (const variant of queryVariants) {
+                    const results = fuseInstance.search(variant);
+                    for (let i = 0; i < results.length; i++) {
+                        const item = results[i].item;
+                        const id = item.id;
+                        if (item && item.status === 'sold') continue;
+                        if (!seenIds.has(id)) {
+                            if (!candidateSet || candidateSet.has(id)) {
+                                seenIds.add(id);
+                                matchedIds.push(id);
+                            }
                         }
                     }
                 }

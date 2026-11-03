@@ -182,32 +182,57 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
         // Синхронный fallback для живого поиска
         fallbackLiveSearch(query, limit = 8) {
             const items = window.allItems || [];
-            const fuse = getFallbackFuse(items);
-            if (!fuse || !query || !query.trim()) return [];
+            if (!query || !query.trim()) return [];
 
             const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
-            const queryVariants = (typeof window.expandSearchQuery === 'function')
-                ? window.expandSearchQuery(cleanTerm)
-                : [cleanTerm];
-
+            const priceQuery = typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanTerm) : null;
             const collected = [];
             const seenIds = new Set();
-            for (const variant of queryVariants) {
-                const subResults = fuse.search(variant);
-                for (let i = 0; i < subResults.length; i++) {
-                    const r = subResults[i];
-                    if (r.item && r.item.status === 'sold') continue;
-                    if (!seenIds.has(r.item.id)) {
-                        seenIds.add(r.item.id);
-                        collected.push({
-                            item: r.item,
-                            matches: r.matches,
-                            score: r.score
-                        });
-                        if (collected.length >= limit) break;
+
+            // 1. Поиск по цене
+            if (priceQuery && typeof window.itemMatchesPrice === 'function') {
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item && item.status === 'sold') continue;
+                    if (window.itemMatchesPrice(item, priceQuery)) {
+                        if (!seenIds.has(item.id)) {
+                            seenIds.add(item.id);
+                            collected.push({
+                                item,
+                                matches: [],
+                                score: 0,
+                                isPriceMatch: true
+                            });
+                            if (collected.length >= limit) break;
+                        }
                     }
                 }
-                if (collected.length >= limit) break;
+            }
+
+            // 2. Дополнение поиском через Fuse
+            const fuse = getFallbackFuse(items);
+            if (fuse && collected.length < limit) {
+                const queryVariants = (typeof window.expandSearchQuery === 'function')
+                    ? window.expandSearchQuery(cleanTerm)
+                    : [cleanTerm];
+
+                for (const variant of queryVariants) {
+                    const subResults = fuse.search(variant);
+                    for (let i = 0; i < subResults.length; i++) {
+                        const r = subResults[i];
+                        if (r.item && r.item.status === 'sold') continue;
+                        if (!seenIds.has(r.item.id)) {
+                            seenIds.add(r.item.id);
+                            collected.push({
+                                item,
+                                matches: r.matches,
+                                score: r.score
+                            });
+                            if (collected.length >= limit) break;
+                        }
+                    }
+                    if (collected.length >= limit) break;
+                }
             }
             return collected.slice(0, limit);
         },
@@ -215,28 +240,49 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
         // Синхронный fallback для каталога
         fallbackCatalogSearch(query, candidateIds = null) {
             const items = window.allItems || [];
-            const fuse = getFallbackFuse(items);
-            if (!fuse || !query || !query.trim()) return candidateIds || [];
+            if (!query || !query.trim()) return candidateIds || [];
 
             const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
-            const queryVariants = (typeof window.expandSearchQuery === 'function')
-                ? window.expandSearchQuery(cleanTerm)
-                : [cleanTerm];
-
+            const priceQuery = typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanTerm) : null;
             const candidateSet = candidateIds ? new Set(candidateIds) : null;
             const matchedIds = [];
             const seenIds = new Set();
 
-            for (const variant of queryVariants) {
-                const results = fuse.search(variant);
-                for (let i = 0; i < results.length; i++) {
-                    const item = results[i].item;
-                    const id = item.id;
+            // 1. Поиск по цене
+            if (priceQuery && typeof window.itemMatchesPrice === 'function') {
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
                     if (item && item.status === 'sold') continue;
-                    if (!seenIds.has(id)) {
-                        if (!candidateSet || candidateSet.has(id)) {
-                            seenIds.add(id);
-                            matchedIds.push(id);
+                    const id = item.id;
+                    if (!candidateSet || candidateSet.has(id)) {
+                        if (window.itemMatchesPrice(item, priceQuery)) {
+                            if (!seenIds.has(id)) {
+                                seenIds.add(id);
+                                matchedIds.push(id);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Текстовый поиск через Fuse
+            const fuse = getFallbackFuse(items);
+            if (fuse) {
+                const queryVariants = (typeof window.expandSearchQuery === 'function')
+                    ? window.expandSearchQuery(cleanTerm)
+                    : [cleanTerm];
+
+                for (const variant of queryVariants) {
+                    const results = fuse.search(variant);
+                    for (let i = 0; i < results.length; i++) {
+                        const item = results[i].item;
+                        const id = item.id;
+                        if (item && item.status === 'sold') continue;
+                        if (!seenIds.has(id)) {
+                            if (!candidateSet || candidateSet.has(id)) {
+                                seenIds.add(id);
+                                matchedIds.push(id);
+                            }
                         }
                     }
                 }

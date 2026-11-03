@@ -111,24 +111,46 @@ function handleLiveSearch() {
             if (window.searchWorker && typeof window.searchWorker.searchLive === 'function') {
                 results = await window.searchWorker.searchLive(cleanSearchTerm, 8);
             } else {
-                const fuse = getLiveSearchFuse();
-                if (!fuse) return;
-                const queryVariants = (typeof expandSearchQuery === 'function') 
-                    ? expandSearchQuery(cleanSearchTerm) 
-                    : [cleanSearchTerm];
-                
+                const priceQuery = (typeof parsePriceSearchQuery === 'function')
+                    ? parsePriceSearchQuery(cleanSearchTerm)
+                    : (typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanSearchTerm) : null);
+                const checkPriceFn = typeof itemMatchesPrice === 'function' ? itemMatchesPrice : window.itemMatchesPrice;
+
                 const collected = [];
                 const seenIds = new Set();
-                for (const variant of queryVariants) {
-                    const subResults = fuse.search(variant);
-                    subResults.forEach(r => {
-                        if (r.item && r.item.status === 'sold') return;
-                        if (!seenIds.has(r.item.id)) {
-                            seenIds.add(r.item.id);
-                            collected.push(r);
+
+                if (priceQuery && typeof checkPriceFn === 'function') {
+                    const allItemsList = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+                    for (let i = 0; i < allItemsList.length; i++) {
+                        const itm = allItemsList[i];
+                        if (!itm || itm.status === 'sold') continue;
+                        if (checkPriceFn(itm, priceQuery)) {
+                            if (!seenIds.has(itm.id)) {
+                                seenIds.add(itm.id);
+                                collected.push({ item: itm, matches: [], score: 0, isPriceMatch: true });
+                                if (collected.length >= 8) break;
+                            }
                         }
-                    });
-                    if (collected.length >= 8) break;
+                    }
+                }
+
+                const fuse = getLiveSearchFuse();
+                if (fuse && collected.length < 8) {
+                    const queryVariants = (typeof expandSearchQuery === 'function') 
+                        ? expandSearchQuery(cleanSearchTerm) 
+                        : [cleanSearchTerm];
+                    
+                    for (const variant of queryVariants) {
+                        const subResults = fuse.search(variant);
+                        subResults.forEach(r => {
+                            if (r.item && r.item.status === 'sold') return;
+                            if (!seenIds.has(r.item.id)) {
+                                seenIds.add(r.item.id);
+                                collected.push(r);
+                            }
+                        });
+                        if (collected.length >= 8) break;
+                    }
                 }
                 results = collected.slice(0, 8);
             }
@@ -182,6 +204,14 @@ function handleLiveSearch() {
                 if (item.is_sale && item.old_price) {
                     const formattedOld = formatPrice(item.old_price);
                     priceHtml = `<span style="color:#666; text-decoration:line-through; font-size:10px; margin-right:4px;">${formattedOld}</span>${formattedSearchPrice}`;
+                }
+
+                const priceQuery = (typeof parsePriceSearchQuery === 'function')
+                    ? parsePriceSearchQuery(cleanSearchTerm)
+                    : (typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanSearchTerm) : null);
+                const checkPriceFn = typeof itemMatchesPrice === 'function' ? itemMatchesPrice : window.itemMatchesPrice;
+                if (priceQuery && typeof checkPriceFn === 'function' && checkPriceFn(item, priceQuery)) {
+                    priceHtml = `<span style="color: var(--accent-green); text-shadow: 0 0 6px rgba(0,255,0,0.5); font-weight: bold;">★ ${priceHtml}</span>`;
                 }
 
                 html += `
