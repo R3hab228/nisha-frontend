@@ -13,7 +13,14 @@
     --font-mono: 'Courier New', Courier, monospace;
 }
 
-* { box-sizing: border-box; }
+*, *::before, *::after { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+:focus:not(:focus-visible) {
+    outline: none !important;
+}
 
 body { 
     background-color: var(--bg-main); 
