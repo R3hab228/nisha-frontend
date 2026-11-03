@@ -431,20 +431,14 @@ function updateCartUI() {
     const isDropdownOpen = dropdown && dropdown.classList.contains('active');
     if (currentCart.length === 0) { 
         p.classList.remove('show'); 
-        if (isDropdownOpen) p.classList.add('dropdown-open');
-        else p.classList.remove('dropdown-open');
-        if(fab) {
+        p.classList.remove('dropdown-open');
+        if (dropdown) dropdown.classList.remove('active');
+        if (fab) {
             fab.classList.remove('cart-active'); 
             fab.classList.remove('hidden-scroll'); 
-            if (isDropdownOpen) {
-                fab.style.setProperty('display', 'none', 'important');
-                fab.style.setProperty('opacity', '0', 'important');
-                fab.style.setProperty('pointer-events', 'none', 'important');
-            } else {
-                fab.style.removeProperty('display');
-                fab.style.removeProperty('opacity');
-                fab.style.removeProperty('pointer-events');
-            }
+            fab.style.removeProperty('display');
+            fab.style.removeProperty('opacity');
+            fab.style.removeProperty('pointer-events');
         }
         // Пустая корзина: сбрасываем промокод и перерисовываем список (иначе остаются "призраки" старых товаров)
         if (window.currentPromoDiscount || window.appliedPromoCode) resetPromoState();
@@ -1738,6 +1732,12 @@ function closeCartDropdown(e) {
         fab.style.removeProperty('display');
         fab.style.removeProperty('opacity');
         fab.style.removeProperty('pointer-events');
+        const currentCart = (typeof getActiveCart === 'function') ? getActiveCart() : [];
+        if (currentCart && currentCart.length > 0) {
+            fab.classList.add('cart-active');
+        } else {
+            fab.classList.remove('cart-active');
+        }
     }
 }
 window.closeCartDropdown = closeCartDropdown;
@@ -1835,13 +1835,18 @@ async function removeFromCart(index, event, rowElement) {
 
             liveCart.splice(liveIndex, 1);
             setActiveCart(liveCart);
+            if (liveCart.length === 0) {
+                if (typeof closeCartDropdown === 'function') {
+                    closeCartDropdown();
+                } else {
+                    const dropdown = document.getElementById('cartDropdown');
+                    if (dropdown) dropdown.classList.remove('active');
+                    const panel = document.getElementById('cartPanel');
+                    if (panel) panel.classList.remove('dropdown-open');
+                }
+            }
             updateCartUI(); 
             showToast(`${typeof i18next !== 'undefined' ? i18next.t('messages.cart_delete') : 'Удалено: '}${removedItem.name}`, 'error', imgUrl);
-            
-            if (liveCart.length === 0) {
-                const dropdown = document.getElementById('cartDropdown');
-                if (dropdown) dropdown.classList.remove('active');
-            }
             await syncCartToServer();
         } finally {
             removingCartIds.delete(removedId);
