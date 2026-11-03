@@ -3189,5 +3189,104 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(textarea.value).toBe('Great item');
             expect(nextField.focus).toHaveBeenCalledTimes(1);
         });
+
+        it('includes Backspace backward navigation in system-features.js', () => {
+            const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
+            expect(sysCode).toContain("e.key === 'Backspace'");
+            expect(sysCode).toContain('shouldGoBack');
+            expect(sysCode).toContain('activeEl.tagName === \'BUTTON\'');
+            expect(sysCode).toContain('activeEl.tagName === \'INPUT\'');
+            expect(sysCode).toContain('activeEl.tagName === \'TEXTAREA\'');
+            expect(sysCode).toContain('focusables[currentIndex - 1]');
+            expect(sysCode).toContain('prevEl.focus()');
+        });
+
+        it('executes Backspace backward navigation when field is empty, at start, or on button', () => {
+            function handleBackspace(e, activeEl, focusables) {
+                if (e.key === 'Backspace' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    let shouldGoBack = false;
+                    if (activeEl.tagName === 'BUTTON') {
+                        shouldGoBack = true;
+                    } else if (activeEl.tagName === 'INPUT') {
+                        const isEmpty = !activeEl.value || activeEl.value.length === 0;
+                        if (isEmpty) {
+                            shouldGoBack = true;
+                        } else {
+                            try {
+                                if (typeof activeEl.selectionStart === 'number' && typeof activeEl.selectionEnd === 'number') {
+                                    shouldGoBack = activeEl.selectionStart === 0 && activeEl.selectionEnd === 0;
+                                }
+                            } catch (_) {
+                                shouldGoBack = false;
+                            }
+                        }
+                    } else if (activeEl.tagName === 'TEXTAREA') {
+                        const isEmpty = !activeEl.value || activeEl.value.length === 0 || activeEl.value.trim().length === 0;
+                        if (isEmpty) {
+                            shouldGoBack = true;
+                        }
+                    }
+
+                    if (shouldGoBack) {
+                        const currentIndex = focusables.indexOf(activeEl);
+                        if (currentIndex > 0) {
+                            e.preventDefault();
+                            const prevEl = focusables[currentIndex - 1];
+                            prevEl.focus();
+                            if (prevEl.tagName === 'INPUT' || prevEl.tagName === 'TEXTAREA') {
+                                const len = prevEl.value ? prevEl.value.length : 0;
+                                if (typeof prevEl.setSelectionRange === 'function') {
+                                    prevEl.setSelectionRange(len, len);
+                                }
+                            }
+                            return 'went-back';
+                        }
+                    }
+                    return 'stayed';
+                }
+            }
+
+            const field1 = { id: 'propName', tagName: 'INPUT', value: 'Vintage Hoodie', focus: vi.fn(), setSelectionRange: vi.fn() };
+            const field2 = { id: 'propBrand', tagName: 'INPUT', value: '', selectionStart: 0, selectionEnd: 0, focus: vi.fn(), setSelectionRange: vi.fn() };
+            const field3 = { id: 'propDesc', tagName: 'TEXTAREA', value: '', focus: vi.fn(), setSelectionRange: vi.fn() };
+            const btn = { id: 'btnSubmit', tagName: 'BUTTON', focus: vi.fn() };
+            const focusables = [field1, field2, field3, btn];
+
+            // 1. In empty field2, Backspace navigates back to field1 and positions cursor at end
+            const e1 = { key: 'Backspace', preventDefault: vi.fn() };
+            expect(handleBackspace(e1, field2, focusables)).toBe('went-back');
+            expect(e1.preventDefault).toHaveBeenCalled();
+            expect(field1.focus).toHaveBeenCalledTimes(1);
+            expect(field1.setSelectionRange).toHaveBeenCalledWith(14, 14);
+
+            // 2. In field2 with text at pos 4, Backspace stays to delete text
+            field2.value = 'Nike';
+            field2.selectionStart = field2.selectionEnd = 4;
+            const e2 = { key: 'Backspace', preventDefault: vi.fn() };
+            expect(handleBackspace(e2, field2, focusables)).toBe('stayed');
+            expect(e2.preventDefault).not.toHaveBeenCalled();
+
+            // 3. In field2 with text but cursor at pos 0, Backspace navigates back to field1
+            field2.selectionStart = field2.selectionEnd = 0;
+            const e3 = { key: 'Backspace', preventDefault: vi.fn() };
+            expect(handleBackspace(e3, field2, focusables)).toBe('went-back');
+            expect(field1.focus).toHaveBeenCalledTimes(2);
+
+            // 4. In textarea with text, Backspace stays to delete text
+            field3.value = 'Description text';
+            const e4 = { key: 'Backspace', preventDefault: vi.fn() };
+            expect(handleBackspace(e4, field3, focusables)).toBe('stayed');
+
+            // 5. In empty textarea, Backspace navigates back to field2
+            field3.value = '';
+            const e5 = { key: 'Backspace', preventDefault: vi.fn() };
+            expect(handleBackspace(e5, field3, focusables)).toBe('went-back');
+            expect(field2.focus).toHaveBeenCalledTimes(1);
+
+            // 6. On submit button, Backspace navigates back to field3
+            const e6 = { key: 'Backspace', preventDefault: vi.fn() };
+            expect(handleBackspace(e6, btn, focusables)).toBe('went-back');
+            expect(field3.focus).toHaveBeenCalledTimes(1);
+        });
     });
 });
