@@ -377,6 +377,8 @@
       "min_bid_place": "Например: 1200",
       "toast_bargain_on": "Торг включен (мин. ставка: {{min}} грн)",
       "toast_bargain_off": "Торг выключен",
+      "toast_bargain_tag": "ТОРГ",
+      "toast_bargain_saved": "СОХРАНЕНО: от {{min}} грн",
       "bargain_ph": "Мин. ставка торга (грн)...",
       "err_bargain_min": "Минимальная цена торга должна быть не менее 100 грн!",
       "err_bargain_less_price": "Минимальная цена торга должна быть меньше желаемой цены!"

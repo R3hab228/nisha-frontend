@@ -3449,7 +3449,7 @@ html.pwa-standalone body {
     min-height: 44px;
     width: 48px;
     min-width: 48px;
-    padding: 0;
+    padding: 0 !important;
     background: #000;
     border: 2px inset var(--border-light, #555);
     cursor: pointer;
@@ -3458,6 +3458,11 @@ html.pwa-standalone body {
     justify-content: center;
     box-sizing: border-box;
     transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prop-bargain-confirm-btn::before,
+.prop-bargain-confirm-btn::after {
+    display: none !important;
+    content: none !important;
 }
 .prop-bargain-confirm-btn:hover {
     border-color: var(--accent-green, #00ff66);
@@ -3470,11 +3475,70 @@ html.pwa-standalone body {
 }
 .prop-bargain-confirm-btn svg {
     display: block;
-    filter: drop-shadow(0 0 4px rgba(0, 255, 0, 0.6));
+    width: 22px;
+    height: 22px;
+    stroke: var(--accent-green, #00ff66) !important;
+    filter: drop-shadow(0 0 6px rgba(0, 255, 102, 0.8));
     transition: transform 0.16s ease;
 }
 .prop-bargain-confirm-btn:hover svg {
-    transform: scale(1.12);
+    transform: scale(1.15);
+}
+
+/* Компактный тост «СОХРАНЕНО: ТОРГ» по размерам и верстке как «Новые вещи» */
+.toast.toast-bargain-saved {
+    animation: slideInRight 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    padding: 6px 12px;
+    max-width: 240px;
+    width: auto;
+    gap: 8px;
+    border-radius: 3px;
+    background: rgba(10, 10, 10, 0.96);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 255, 0, 0.2);
+    border: 1px solid var(--accent-green);
+    border-left: 3px solid var(--accent-green);
+    cursor: default;
+    pointer-events: auto;
+}
+.toast.toast-bargain-saved:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 255, 0, 0.3);
+}
+.toast.toast-bargain-saved::before {
+    display: none !important;
+}
+.toast.toast-bargain-saved::after {
+    animation: toastTimer 3.2s linear forwards;
+}
+.toast.toast-bargain-saved.toast-leaving {
+    animation: slideOutRightSmooth 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+.toast-bargain-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border: 1px solid var(--accent-green);
+    border-radius: 2px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+.toast-bargain-icon svg {
+    display: block;
+    filter: drop-shadow(0 0 4px rgba(0, 255, 102, 0.8));
+}
+@media (max-width: 480px) {
+    .toast.toast-bargain-saved {
+        max-width: 200px;
+        width: auto;
+        padding: 5px 10px;
+        gap: 6px;
+    }
+    .toast-bargain-icon {
+        width: 28px;
+        height: 28px;
+    }
 }
 
 /* Плавные переходы для комфорта глаз */

@@ -3869,6 +3869,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cssCode).toContain('.prop-bargain-confirm-btn');
             expect(cssCode).toContain('.prop-price-row');
             expect(cssCode).toContain('.prop-bargain-cancel-btn');
+            expect(cssCode).toContain('.toast.toast-bargain-saved');
+            expect(dropCode).toContain('showBargainSavedToast');
         });
     });
 });

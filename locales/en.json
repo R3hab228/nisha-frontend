@@ -377,6 +377,8 @@
       "min_bid_place": "e.g.: 1200",
       "toast_bargain_on": "Bargain enabled (min bid: {{min}} UAH)",
       "toast_bargain_off": "Bargain disabled",
+      "toast_bargain_tag": "BARGAIN",
+      "toast_bargain_saved": "SAVED: from {{min}} UAH",
       "bargain_ph": "Min. bargain bid (UAH)...",
       "err_bargain_min": "Minimum bargain price must be at least 100 UAH!",
       "err_bargain_less_price": "Minimum bargain price must be less than requested price!"

@@ -361,12 +361,63 @@ function confirmPropBargainInput() {
 
     returnToDesiredPriceMode(true, minBid);
 
-    const onMsg = (typeof i18next !== 'undefined')
-        ? i18next.t('propose.toast_bargain_on', { min: minBid, defaultValue: `Торг включен (мин. ставка: ${minBid} грн)` })
-        : `Торг включен (мин. ставка: ${minBid} грн)`;
-    if (typeof showToast === 'function') showToast(onMsg, 'success');
+    if (typeof showBargainSavedToast === 'function') {
+        showBargainSavedToast(minBid);
+    } else {
+        const onMsg = (typeof i18next !== 'undefined')
+            ? i18next.t('propose.toast_bargain_on', { min: minBid, defaultValue: `Торг включен (мин. ставка: ${minBid} грн)` })
+            : `Торг включен (мин. ставка: ${minBid} грн)`;
+        if (typeof showToast === 'function') showToast(onMsg, 'success');
+    }
 }
 window.confirmPropBargainInput = confirmPropBargainInput;
+
+function showBargainSavedToast(minBid) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const oldToast = container.querySelector('.toast-bargain-saved');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-new-item toast-bargain-saved success';
+
+    const tagText = (typeof i18next !== 'undefined')
+        ? i18next.t('propose.toast_bargain_tag', { defaultValue: 'ТОРГ' })
+        : 'ТОРГ';
+    const savedText = (typeof i18next !== 'undefined')
+        ? i18next.t('propose.toast_bargain_saved', { min: minBid, defaultValue: `СОХРАНЕНО: от ${minBid} грн` })
+        : `СОХРАНЕНО: от ${minBid} грн`;
+
+    toast.innerHTML = `
+        <div class="toast-item-thumb toast-bargain-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green, #00ff66)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div class="toast-item-content">
+            <div class="toast-item-tag">${tagText}</div>
+            <div class="toast-item-title">${savedText}</div>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    let dismissed = false;
+    const dismiss = () => {
+        if (dismissed) return;
+        dismissed = true;
+        toast.classList.add('toast-leaving');
+        setTimeout(() => toast.remove(), 320);
+    };
+
+    const timer = setTimeout(dismiss, 3200);
+    toast.onclick = () => {
+        clearTimeout(timer);
+        dismiss();
+    };
+}
+window.showBargainSavedToast = showBargainSavedToast;
 
 function hidePropBargainInput() {
     const minInput = document.getElementById('propMinBargainPrice');
