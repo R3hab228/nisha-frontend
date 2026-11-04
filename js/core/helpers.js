@@ -1795,6 +1795,10 @@ function handleDelegatedAction(e) {
             if (typeof window.openPropBargainInput === 'function') window.openPropBargainInput();
             break;
         }
+        case 'confirm-prop-bargain': {
+            if (typeof window.confirmPropBargainInput === 'function') window.confirmPropBargainInput();
+            break;
+        }
         case 'cancel-prop-bargain': {
             if (typeof window.hidePropBargainInput === 'function') window.hidePropBargainInput();
             break;

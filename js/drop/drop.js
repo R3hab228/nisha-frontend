@@ -234,7 +234,7 @@ function resetProposalForm() {
     if (typeof window.hidePropBargainInput === 'function') {
         window.hidePropBargainInput();
     }
-    const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc'];
+    const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc', 'propMinBargainPrice'];
     fields.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -281,40 +281,165 @@ function resetProposalForm() {
 window.resetProposalForm = resetProposalForm;
 
 function openPropBargainInput() {
-    const btn = document.getElementById('btnTogglePropBargain');
-    const row = document.getElementById('propBargainInputRow');
-    const input = document.getElementById('propMinBargainPrice');
-    if (!btn || !row) return;
+    const label = document.getElementById('propPriceLabel');
+    const priceInput = document.getElementById('propPrice');
+    const minBox = document.getElementById('propMinBargainBox');
+    const minInput = document.getElementById('propMinBargainPrice');
+    const btnToggle = document.getElementById('btnTogglePropBargain');
+    const btnConfirm = document.getElementById('btnConfirmPropBargain');
 
-    btn.style.opacity = '0';
-    btn.style.transform = 'translateY(-4px)';
-    setTimeout(() => {
-        btn.style.display = 'none';
-        row.style.display = 'flex';
-        row.offsetHeight;
-        row.classList.add('visible');
-        if (input) input.focus();
-    }, 110);
+    if (!minBox || !btnConfirm) return;
+
+    window._propBargainMode = true;
+
+    // 1. Анимация зеленого лейбла
+    if (label) {
+        label.classList.add('label-animating');
+        setTimeout(() => {
+            const minBidText = (typeof i18next !== 'undefined')
+                ? i18next.t('propose.min_bid_label', { defaultValue: 'МИНИМАЛЬНАЯ СТАВКА (ГРН) :' })
+                : 'МИНИМАЛЬНАЯ СТАВКА (ГРН) :';
+            label.innerText = minBidText;
+            label.setAttribute('data-i18n', 'propose.min_bid_label');
+            label.classList.remove('label-animating');
+        }, 110);
+    }
+
+    // 2. Переключение инпута с комфортной анимацией
+    if (priceInput) priceInput.style.display = 'none';
+    minBox.style.display = 'flex';
+    minBox.classList.remove('anim-switch');
+    void minBox.offsetWidth;
+    minBox.classList.add('anim-switch');
+
+    // 3. Переключение кнопки справа на черную с зеленой галочкой
+    if (btnToggle) btnToggle.style.display = 'none';
+    btnConfirm.style.display = 'flex';
+    btnConfirm.classList.remove('anim-switch');
+    void btnConfirm.offsetWidth;
+    btnConfirm.classList.add('anim-switch');
+
+    if (minInput) minInput.focus();
 }
 window.openPropBargainInput = openPropBargainInput;
 
-function hidePropBargainInput() {
-    const btn = document.getElementById('btnTogglePropBargain');
-    const row = document.getElementById('propBargainInputRow');
-    const input = document.getElementById('propMinBargainPrice');
-    if (!btn || !row) return;
+function confirmPropBargainInput() {
+    const minInput = document.getElementById('propMinBargainPrice');
+    const priceInput = document.getElementById('propPrice');
+    const rawVal = (minInput?.value || '').trim();
 
-    if (input) input.value = '';
-    row.classList.remove('visible');
-    setTimeout(() => {
-        row.style.display = 'none';
-        btn.style.display = 'flex';
-        btn.offsetHeight;
-        btn.style.opacity = '1';
-        btn.style.transform = 'translateY(0)';
-    }, 110);
+    if (!rawVal) {
+        window._propBargainEnabled = false;
+        hidePropBargainInput();
+        return;
+    }
+
+    const minBid = Number.parseInt(rawVal, 10);
+    if (Number.isNaN(minBid) || minBid < 100) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const minErrMsg = (typeof i18next !== 'undefined')
+            ? i18next.t('propose.err_bargain_min', { defaultValue: 'Минимальная цена торга должна быть не менее 100 грн!' })
+            : 'Минимальная цена торга должна быть не менее 100 грн!';
+        if (typeof showToast === 'function') showToast(minErrMsg, 'error');
+        if (minInput) minInput.focus();
+        return;
+    }
+
+    const desiredPrice = Number.parseInt(priceInput?.value || '', 10);
+    if (!Number.isNaN(desiredPrice) && desiredPrice > 0 && minBid >= desiredPrice) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const lessErrMsg = (typeof i18next !== 'undefined')
+            ? i18next.t('propose.err_bargain_less_price', { defaultValue: 'Минимальная цена торга должна быть меньше желаемой цены!' })
+            : 'Минимальная цена торга должна быть меньше желаемой цены!';
+        if (typeof showToast === 'function') showToast(lessErrMsg, 'error');
+        if (minInput) minInput.focus();
+        return;
+    }
+
+    window._propBargainEnabled = true;
+    if (typeof triggerHaptic === 'function') triggerHaptic('success');
+
+    returnToDesiredPriceMode(true, minBid);
+
+    const onMsg = (typeof i18next !== 'undefined')
+        ? i18next.t('propose.toast_bargain_on', { min: minBid, defaultValue: `Торг включен (мин. ставка: ${minBid} грн)` })
+        : `Торг включен (мин. ставка: ${minBid} грн)`;
+    if (typeof showToast === 'function') showToast(onMsg, 'success');
+}
+window.confirmPropBargainInput = confirmPropBargainInput;
+
+function hidePropBargainInput() {
+    const minInput = document.getElementById('propMinBargainPrice');
+    if (minInput) minInput.value = '';
+    const wasBargain = window._propBargainEnabled;
+    window._propBargainEnabled = false;
+
+    returnToDesiredPriceMode(false);
+
+    if (wasBargain) {
+        const offMsg = (typeof i18next !== 'undefined')
+            ? i18next.t('propose.toast_bargain_off', { defaultValue: 'Торг выключен' })
+            : 'Торг выключен';
+        if (typeof showToast === 'function') showToast(offMsg, 'info');
+    }
 }
 window.hidePropBargainInput = hidePropBargainInput;
+
+function returnToDesiredPriceMode(hasBargain = false, minBid = null) {
+    const label = document.getElementById('propPriceLabel');
+    const priceInput = document.getElementById('propPrice');
+    const minBox = document.getElementById('propMinBargainBox');
+    const btnToggle = document.getElementById('btnTogglePropBargain');
+    const btnConfirm = document.getElementById('btnConfirmPropBargain');
+
+    window._propBargainMode = false;
+
+    // 1. Анимация лейбла назад
+    if (label) {
+        label.classList.add('label-animating');
+        setTimeout(() => {
+            const priceLabelText = (typeof i18next !== 'undefined')
+                ? i18next.t('propose.price_label', { defaultValue: 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):' })
+                : 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):';
+            label.innerText = priceLabelText;
+            label.setAttribute('data-i18n', 'propose.price_label');
+            label.classList.remove('label-animating');
+        }, 110);
+    }
+
+    // 2. Переключение инпутов с анимацией
+    if (minBox) minBox.style.display = 'none';
+    if (priceInput) {
+        priceInput.style.display = 'block';
+        priceInput.classList.remove('anim-switch');
+        void priceInput.offsetWidth;
+        priceInput.classList.add('anim-switch');
+    }
+
+    // 3. Переключение кнопки справа
+    if (btnConfirm) btnConfirm.style.display = 'none';
+    if (btnToggle) {
+        btnToggle.style.display = 'flex';
+        btnToggle.classList.remove('anim-switch');
+        void btnToggle.offsetWidth;
+        btnToggle.classList.add('anim-switch');
+
+        if (hasBargain) {
+            btnToggle.classList.add('active');
+            const activeText = (typeof i18next !== 'undefined')
+                ? i18next.t('propose.btn_bargain_active', { defaultValue: '[ ТОРГ ✓ ]' })
+                : '[ ТОРГ ✓ ]';
+            btnToggle.innerText = activeText;
+        } else {
+            btnToggle.classList.remove('active');
+            const defText = (typeof i18next !== 'undefined')
+                ? i18next.t('propose.btn_bargain', { defaultValue: '[ ТОРГ ]' })
+                : '[ ТОРГ ]';
+            btnToggle.innerText = defText;
+        }
+    }
+}
+window.returnToDesiredPriceMode = returnToDesiredPriceMode;
 
 
 // 4. Добавление новых файлов (до 5 шт)
@@ -609,11 +734,10 @@ async function submitProposal() {
     }
 
     const minBargainInput = document.getElementById('propMinBargainPrice');
-    const isBargainOpen = document.getElementById('propBargainInputRow')?.style.display !== 'none';
     const rawMinBargain = (minBargainInput?.value || '').trim();
     let minBargainPrice = null;
 
-    if (isBargainOpen && rawMinBargain) {
+    if (rawMinBargain && (window._propBargainEnabled || window._propBargainMode)) {
         minBargainPrice = Number.parseInt(rawMinBargain, 10);
         if (Number.isNaN(minBargainPrice) || minBargainPrice < 100) {
             if (typeof triggerHaptic === 'function') triggerHaptic('error');

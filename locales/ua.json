@@ -371,7 +371,12 @@
       "compressing": "СТИСНЕННЯ ФОТО",
       "err_server": "Збій сервера: ",
       "btn_retry": "[ ПОВТОРИТИ СПРОБУ ]",
-      "btn_bargain": "[ + ТОРГ ]",
+      "btn_bargain": "[ ТОРГ ]",
+      "btn_bargain_active": "[ ТОРГ ✓ ]",
+      "min_bid_label": "МІНІМАЛЬНА СТАВКА (ГРН) :",
+      "min_bid_place": "Наприклад: 1200",
+      "toast_bargain_on": "Торг увімкнено (мін. ставка: {{min}} грн)",
+      "toast_bargain_off": "Торг вимкнено",
       "bargain_ph": "Мін. ставка торга (грн)...",
       "err_bargain_min": "Мінімальна ціна торга має бути від 100 грн!",
       "err_bargain_less_price": "Мінімальна ціна торга має бути меншою за бажану ціну!"

@@ -3831,22 +3831,24 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/en.json'), 'utf8'));
 
-            // 1. Propose modal HTML contains bargain toggle button and input row
-            expect(htmlCode).toContain('id="propBargainWrapper"');
+            // 1. Propose modal HTML contains inline bargain toggle button, confirm checkmark and min bid input
+            expect(htmlCode).toContain('id="propPriceRow"');
             expect(htmlCode).toContain('data-action="toggle-prop-bargain"');
+            expect(htmlCode).toContain('data-action="confirm-prop-bargain"');
             expect(htmlCode).toContain('id="propMinBargainPrice"');
             expect(htmlCode).toContain('data-action="cancel-prop-bargain"');
 
             // 2. Localization keys for bargain in proposals and badges
-            expect(ruJson.translation.propose.btn_bargain).toBe('[ + ТОРГ ]');
-            expect(uaJson.translation.propose.btn_bargain).toBe('[ + ТОРГ ]');
-            expect(enJson.translation.propose.btn_bargain).toBe('[ + BARGAIN ]');
+            expect(ruJson.translation.propose.btn_bargain).toBe('[ ТОРГ ]');
+            expect(uaJson.translation.propose.btn_bargain).toBe('[ ТОРГ ]');
+            expect(enJson.translation.propose.btn_bargain).toBe('[ BARGAIN ]');
             expect(ruJson.translation.product.badge_bargain).toBe('ЕСТЬ ТОРГ');
             expect(uaJson.translation.product.badge_bargain).toBe('Є ТОРГ');
             expect(enJson.translation.product.badge_bargain).toBe('BARGAIN');
 
-            // 3. Drop JS exports toggle handlers, checks >= 100, and attaches to formData
+            // 3. Drop JS exports toggle, confirm and cancel handlers, checks >= 100, and attaches to formData
             expect(dropCode).toContain('openPropBargainInput');
+            expect(dropCode).toContain('confirmPropBargainInput');
             expect(dropCode).toContain('hidePropBargainInput');
             expect(dropCode).toContain('minBargainPrice < 100');
             expect(dropCode).toContain('minBargainPrice >= price');
@@ -3862,9 +3864,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain("type === 'bargain'");
             expect(catalogCode).toContain('BARGAIN_AVAILABLE.SYS');
 
-            // 6. CSS defines styling for proposal bargain button and input
+            // 6. CSS defines styling for proposal bargain button, confirm checkmark and input
             expect(cssCode).toContain('.prop-bargain-toggle-btn');
-            expect(cssCode).toContain('.prop-bargain-input-row');
+            expect(cssCode).toContain('.prop-bargain-confirm-btn');
+            expect(cssCode).toContain('.prop-price-row');
             expect(cssCode).toContain('.prop-bargain-cancel-btn');
         });
     });
