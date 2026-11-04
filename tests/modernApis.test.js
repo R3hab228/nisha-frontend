@@ -3881,6 +3881,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cssCode).toContain('.prop-bargain-cancel-btn');
             expect(cssCode).toContain('.toast.toast-bargain-saved');
             expect(dropCode).toContain('showBargainSavedToast');
+
+            // 7. Desktop Cart Dropdown Complete Border & Close Button Removal
+            expect(cssCode).toContain('.cart-close-mobile { display: none !important; }');
+            expect(cssCode).toContain('border: 2px solid rgba(255, 255, 255, 0.45); border-radius: 18px;');
         });
     });
 });
