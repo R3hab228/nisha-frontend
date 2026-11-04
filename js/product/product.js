@@ -567,6 +567,8 @@ function openProductModal(item) {
             if (offerInputRow) {
                 offerInputRow.style.display = 'none';
                 offerInputRow.classList.remove('visible');
+                offerInputRow.style.opacity = '0';
+                offerInputRow.style.transform = 'translateY(4px)';
             }
             if (inlineInput) inlineInput.value = '';
         }
@@ -1819,10 +1821,14 @@ function showInlineOfferPriceInput() {
     setTimeout(() => {
         btn.style.display = 'none';
         row.style.display = 'flex';
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(4px)';
         void row.offsetWidth;
         row.classList.add('visible');
+        row.style.opacity = '1';
+        row.style.transform = 'translateY(0)';
         input.focus();
-    }, 200);
+    }, 110);
 }
 window.showInlineOfferPriceInput = showInlineOfferPriceInput;
 
@@ -1841,12 +1847,14 @@ function hideInlineOfferPriceInput() {
     setTimeout(() => {
         row.style.display = 'none';
         btn.style.display = 'flex';
+        btn.style.opacity = '0';
+        btn.style.transform = 'translateY(-4px)';
         void btn.offsetWidth;
         btn.style.opacity = '1';
         btn.style.transform = 'translateY(0)';
         btn.style.pointerEvents = 'auto';
         if (input) input.value = '';
-    }, 200);
+    }, 110);
 }
 window.hideInlineOfferPriceInput = hideInlineOfferPriceInput;
 
