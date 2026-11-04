@@ -462,3 +462,23 @@ export function runMicrotask(fn) {
         setTimeout(fn, 0);
     }
 }
+
+/**
+ * Returns the last item of an array using ES2022 array.at(-1)
+ * @param {Array<any>} arr
+ * @returns {any}
+ */
+export function getLastItem(arr) {
+    if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
+    return arr.at(-1);
+}
+
+/**
+ * Returns the first item of an array using ES2022 array.at(0)
+ * @param {Array<any>} arr
+ * @returns {any}
+ */
+export function getFirstItem(arr) {
+    if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
+    return arr.at(0);
+}

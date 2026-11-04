@@ -42,7 +42,7 @@ function openOrdersModal() {
         
         let dName = activeProfile?.username;
         if (!dName || dName === 'User') {
-            dName = activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || activeUser.email.split('@')[0];
+            dName = activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || activeUser.email.split('@').at(0);
         }
         
         const grantedMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_granted', {defaultValue: 'Доступ разрешен'}) : 'Доступ разрешен';
@@ -322,7 +322,7 @@ async function fetchMyOrders() {
 
         const { data: vResult } = await sb.rpc('check_otp_verified', { p_phone: phone });
         const otpCheck = vResult ? [{is_verified: true}] : [];
-        if (!otpCheck || otpCheck.length === 0 || !otpCheck[0].is_verified) {
+        if (!otpCheck || otpCheck.length === 0 || !otpCheck.at(0).is_verified) {
             const deniedOtpMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_denied_otp', {defaultValue: '[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.'}) : '[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.';
             const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', {defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ'}) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
             listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">${deniedOtpMsg}</div>
@@ -405,11 +405,11 @@ function getOrderItemImage(item) {
     }
 
     // 2. Массивы картинок
-    if (Array.isArray(item.thumbnails) && item.thumbnails.length > 0 && typeof item.thumbnails[0] === 'string' && item.thumbnails[0].trim().length > 5) {
-        return toCDN(item.thumbnails[0]);
+    if (Array.isArray(item.thumbnails) && item.thumbnails.length > 0 && typeof item.thumbnails.at(0) === 'string' && item.thumbnails.at(0).trim().length > 5) {
+        return toCDN(item.thumbnails.at(0));
     }
-    if (Array.isArray(item.images) && item.images.length > 0 && typeof item.images[0] === 'string' && item.images[0].trim().length > 5) {
-        return toCDN(item.images[0]);
+    if (Array.isArray(item.images) && item.images.length > 0 && typeof item.images.at(0) === 'string' && item.images.at(0).trim().length > 5) {
+        return toCDN(item.images.at(0));
     }
 
     // 3. Кэш уже подгруженных картинок
@@ -429,10 +429,10 @@ function getOrderItemImage(item) {
                 foundUrl = getOptimizedImageUrl(catalogItem, true);
             }
             if (!foundUrl && Array.isArray(catalogItem.thumbnails) && catalogItem.thumbnails.length > 0) {
-                foundUrl = catalogItem.thumbnails[0];
+                foundUrl = catalogItem.thumbnails.at(0);
             }
             if (!foundUrl && Array.isArray(catalogItem.images) && catalogItem.images.length > 0) {
-                foundUrl = catalogItem.images[0];
+                foundUrl = catalogItem.images.at(0);
             }
             if (foundUrl) {
                 const cdnUrl = toCDN(foundUrl);
@@ -469,7 +469,7 @@ async function ensureOrderImagesLoaded() {
         const { data } = await sb.from('items').select('id, thumbnails, images').in('id', missingIds);
         if (data && data.length > 0) {
             data.forEach(di => {
-                const imgUrl = (di.thumbnails && di.thumbnails.length > 0) ? di.thumbnails[0] : (di.images && di.images.length > 0 ? di.images[0] : '');
+                const imgUrl = (di.thumbnails && di.thumbnails.length > 0) ? di.thumbnails.at(0) : (di.images && di.images.length > 0 ? di.images.at(0) : '');
                 if (imgUrl) {
                     window.orderItemsImageCache[di.id] = toCDN(imgUrl);
                 }
@@ -481,7 +481,7 @@ async function ensureOrderImagesLoaded() {
             const { data: archData } = await sb.from('archived_items').select('id, thumbnails, images').in('id', stillMissing);
             if (archData && archData.length > 0) {
                 archData.forEach(di => {
-                    const imgUrl = (di.thumbnails && di.thumbnails.length > 0) ? di.thumbnails[0] : (di.images && di.images.length > 0 ? di.images[0] : '');
+                    const imgUrl = (di.thumbnails && di.thumbnails.length > 0) ? di.thumbnails.at(0) : (di.images && di.images.length > 0 ? di.images.at(0) : '');
                     if (imgUrl) {
                         window.orderItemsImageCache[di.id] = toCDN(imgUrl);
                     }
@@ -740,7 +740,7 @@ function renderFilteredOrders() {
             if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
 
             if (order.items && order.items.length > 0) {
-                const firstItem = order.items[0];
+                const firstItem = order.items.at(0);
                 const firstItemImg = getOrderItemImage(firstItem);
                 const safeName = String(firstItem.name || '');
                 const msgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; position: relative; top: 2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
@@ -772,7 +772,7 @@ function renderFilteredOrders() {
         listArea.innerHTML += `
             <div class="order-card">
                 <div class="order-header">
-                    <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', {defaultValue: 'ЗАКАЗ #'}) : 'ЗАКАЗ #'}${order.id.split('-')[0].toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
+                    <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', {defaultValue: 'ЗАКАЗ #'}) : 'ЗАКАЗ #'}${order.id.split('-').at(0).toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
                     <span class="order-status status-${typeof window.escapeAttr==='function'?window.escapeAttr(statusSlug):statusSlug}">${typeof window.escapeHtml==='function'?window.escapeHtml((order.status || '').toUpperCase()):(order.status || '').toUpperCase()}</span>
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>

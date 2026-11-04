@@ -345,7 +345,7 @@ async function submitAutoReview() {
     const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
     let uName = profile?.username;
     if (!uName || uName === 'User') {
-        uName = activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')[0] || 'User';
+        uName = activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User';
     }
 
     window._isSubmittingAutoReview = true;
@@ -460,7 +460,7 @@ async function submitManualReview() {
 
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
     const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
-    const uName = profile?.username || activeUser?.email?.split('@')[0] || 'User';
+    const uName = profile?.username || activeUser?.email?.split('@')?.at(0) || 'User';
 
     try {
         const payload = {

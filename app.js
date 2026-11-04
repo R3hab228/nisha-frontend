@@ -458,7 +458,7 @@ async function initApp() {
                 const { data: broadcasts } = await _supabase.from('site_broadcasts').select('id, message_text, image_url').order('created_at', { ascending: false }).limit(1);
                 
                 if (broadcasts && broadcasts.length > 0) {
-                    const bData = broadcasts[0];
+                    const bData = broadcasts.at(0);
                     const localSeenId = (storage && typeof storage.get === 'function') ? storage.get('nisha_last_broadcast') : null;
                     const profile = store.profile;
                     const dbSeenId = profile ? profile.last_broadcast_id : null;
@@ -555,7 +555,7 @@ async function initApp() {
         // Интеллектуальный скролл каталога для мобильных устройств
         let isBatchLoading = false;
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && !isBatchLoading) {
+            if (entries.at(0).isIntersecting && !isBatchLoading) {
                 if (window.renderedCount < (window.filteredItems ? window.filteredItems.length : 0) && window.innerWidth <= 900) {
                     isBatchLoading = true;
                     requestAnimationFrame(() => {

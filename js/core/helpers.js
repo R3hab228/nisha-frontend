@@ -56,6 +56,21 @@ function runMicrotask(fn) {
 window.runMicrotask = runMicrotask;
 if (typeof globalThis !== 'undefined') globalThis.runMicrotask = globalThis.runMicrotask || runMicrotask;
 
+// --- MODERN ARRAY INDEXING UTILITIES (ES2022+ array.at) ---
+function getLastItem(arr) {
+    if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
+    return arr.at(-1);
+}
+window.getLastItem = getLastItem;
+if (typeof globalThis !== 'undefined') globalThis.getLastItem = globalThis.getLastItem || getLastItem;
+
+function getFirstItem(arr) {
+    if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
+    return arr.at(0);
+}
+window.getFirstItem = getFirstItem;
+if (typeof globalThis !== 'undefined') globalThis.getFirstItem = globalThis.getFirstItem || getFirstItem;
+
 // --- VIBRATION & HAPTIC FEEDBACK ---
 function triggerVibration(duration = 150) {
     if ('vibrate' in navigator) {
@@ -920,7 +935,7 @@ function expandSearchQuery(query) {
         const replacedWords = words.map(w => {
             if (SEARCH_SYNONYMS[w]) {
                 hasWordSynonym = true;
-                return SEARCH_SYNONYMS[w].split(' ')[0];
+                return SEARCH_SYNONYMS[w].split(' ').at(0);
             }
             return w;
         });

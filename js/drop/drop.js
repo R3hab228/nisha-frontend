@@ -333,7 +333,7 @@ async function openProposalPhotoByIndex(index, element = null) {
     }
     const files = Array.isArray(window.currentProposalFiles) ? window.currentProposalFiles : currentProposalFiles;
     if (typeof targetIndex !== 'number' || targetIndex < 0 || targetIndex >= files.length) return;
-    const item = files[targetIndex];
+    const item = files.at(targetIndex);
     if (!item || !item.url) return;
 
     if (typeof ensurePhotoSwipe === 'function') {
@@ -374,8 +374,8 @@ function removeProposalFile(index, element = null) {
     const files = Array.isArray(window.currentProposalFiles) ? window.currentProposalFiles : currentProposalFiles;
     if (typeof targetIndex !== 'number' || targetIndex < 0 || targetIndex >= files.length) return;
     const removed = files.splice(targetIndex, 1);
-    if (removed && removed.length > 0 && removed[0].url) {
-        try { URL.revokeObjectURL(removed[0].url); } catch (e) {}
+    if (removed && removed.length > 0 && removed.at(0)?.url) {
+        try { URL.revokeObjectURL(removed.at(0).url); } catch (e) {}
     }
     currentProposalFiles = files;
     window.currentProposalFiles = files;
@@ -591,7 +591,7 @@ async function submitProposal() {
         for (let i = 0; i < files.length; i++) {
             const compressText = typeof i18next !== 'undefined' ? i18next.t('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' }) : 'СЖАТИЕ ФОТО';
                 btn.innerText = `[ ${compressText}: ${i + 1}/${files.length} ]`;
-            const compressed = await compressImage(files[i]);
+            const compressed = await compressImage(files.at(i));
             compressedFiles.push(compressed);
         }
         

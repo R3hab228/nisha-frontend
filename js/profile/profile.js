@@ -129,7 +129,7 @@ async function checkSession() {
             }
 
             if (!profileErr && profiles && profiles.length > 0) {
-                userProfile = profiles[0];
+                userProfile = profiles.at(0);
                 window.userProfile = userProfile;
                 
                 // Синхронизация языка из БД в браузер
@@ -161,7 +161,7 @@ async function checkSession() {
             // Определение имени (если пусто или User — берем из метаданных)
             let uName = userProfile?.username;
             if (!uName || uName === 'User') {
-                uName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@')[0];
+                uName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@').at(0);
             }
             const uEmail = currentUser.email;
 
@@ -324,13 +324,13 @@ async function checkSession() {
                     const newStatus = payload.new.status;
                     if (newStatus !== payload.old.status) {
                         const orderPref = typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', { defaultValue: 'ЗАКАЗ #' }) : 'ЗАКАЗ #';
-                        showToast(`${orderPref}${payload.new.id.split('-')[0].toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
+                        showToast(`${orderPref}${payload.new.id.split('-').at(0).toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
                         
                         if (typeof showTerminalModal === 'function') {
                             showTerminalModal(
                                 'SYSTEM_NOTIFICATION.LOG',
                                 `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_title', { defaultValue: 'ВНИМАНИЕ! Статус вашего заказа изменился.' }) : 'ВНИМАНИЕ! Статус вашего заказа изменился.'}<br><br>` +
-                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_order', { defaultValue: 'Заказ:' }) : 'Заказ:'} #${payload.new.id.split('-')[0].toUpperCase()}<br>` +
+                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_order', { defaultValue: 'Заказ:' }) : 'Заказ:'} #${payload.new.id.split('-').at(0).toUpperCase()}<br>` +
                                 `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_new', { defaultValue: 'Новый статус:' }) : 'Новый статус:'} <b style="color:var(--accent-green);">${newStatus.toUpperCase()}</b>`,
                                 (typeof i18next !== 'undefined' ? i18next.t('profile.order_status_view', { defaultValue: '[ ПОСМОТРЕТЬ ]' }) : '[ ПОСМОТРЕТЬ ]'),
                                 () => { if (typeof window.openOrdersModal === 'function') window.openOrdersModal(); }
@@ -947,7 +947,7 @@ async function resolveProfileCityRef(isModal) {
 
         const addrs = (data && data.success && data.data && data.data[0] && data.data[0].Addresses) || [];
         if (addrs.length > 0) {
-            const ref = addrs[0].DeliveryCity || addrs[0].Ref || '';
+            const ref = addrs.at(0).DeliveryCity || addrs.at(0).Ref || '';
             profileSelectedCityRef[scopeKey] = ref;
             return ref;
         }
@@ -1270,7 +1270,7 @@ function renderProfileDelivery(fullName, address) {
     const parsed = (typeof parseDeliveryAddress === 'function')
         ? parseDeliveryAddress(addr)
         : ((window.parseDeliveryAddress) ? window.parseDeliveryAddress(addr) : null);
-    const cityPart = parsed ? parsed.city : (addr.split(',')[0] || '').trim();
+    const cityPart = parsed ? parsed.city : (addr.split(',').at(0) || '').trim();
     const branchPart = parsed ? parsed.branch : (addr.split(',').slice(1).join(', ') || '').trim();
 
     [false, true].forEach(isModal => {

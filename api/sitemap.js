@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
         if (item.created_at) {
           const parsedTs = Date.parse(item.created_at);
           if (Number.isFinite(parsedTs)) {
-            date = new Date(parsedTs).toISOString().split('T')[0];
+            date = new Date(parsedTs).toISOString().split('T').at(0);
           }
         }
         const lastModTag = date ? `\n    <lastmod>${date}</lastmod>` : '';

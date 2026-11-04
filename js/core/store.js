@@ -369,10 +369,20 @@
             if (!item || !item.id) return;
             let hist = Array.isArray(this._state.history) ? [...this._state.history] : [];
             hist = hist.filter(h => h.id !== item.id);
-            const img = (Array.isArray(item.images) && item.images.length > 0) ? item.images[0] : (item.img || '');
+            const img = (Array.isArray(item.images) && item.images.length > 0) ? item.images.at(0) : (item.img || '');
             hist.unshift({ id: item.id, name: item.name, price: item.price, img: img });
             if (hist.length > 30) hist = hist.slice(0, 30);
             this.set('history', hist);
+        }
+
+        lastCartItem() {
+            const c = Array.isArray(this._state.cart) ? this._state.cart : [];
+            return c.at(-1) || null;
+        }
+
+        lastHistoryItem() {
+            const h = Array.isArray(this._state.history) ? this._state.history : [];
+            return h.at(-1) || null;
         }
 
         // 8. ХЕЛПЕРЫ ДЛЯ ОТЗЫВОВ
@@ -421,6 +431,14 @@
             if (prop === 'cartTotal') {
                 const c = target.get('cart') || [];
                 return c.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+            }
+            if (prop === 'lastCartItem') {
+                const c = target.get('cart') || [];
+                return c.at(-1) || null;
+            }
+            if (prop === 'lastHistoryItem') {
+                const h = target.get('history') || [];
+                return h.at(-1) || null;
             }
             return undefined;
         },

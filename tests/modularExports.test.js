@@ -21,6 +21,8 @@ import defaultModularFacade, {
     deepClone,
     safeViewTransition,
     runMicrotask,
+    getLastItem,
+    getFirstItem,
     openModal,
     closeModal,
     executeCloseModal,
@@ -247,6 +249,17 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(typeof defaultModularFacade.helpers.runMicrotask).toBe('function');
             await Promise.resolve();
             expect(fired).toBe(true);
+        });
+
+        it('supports modern ES2022+ array.at indexing via getLastItem and getFirstItem', () => {
+            const list = ['first', 'middle', 'last'];
+            expect(getLastItem(list)).toBe('last');
+            expect(getFirstItem(list)).toBe('first');
+            expect(defaultModularFacade.helpers.getLastItem(list)).toBe('last');
+            expect(defaultModularFacade.helpers.getFirstItem(list)).toBe('first');
+            expect(getLastItem([])).toBeUndefined();
+            expect(getFirstItem([])).toBeUndefined();
+            expect(getLastItem(null)).toBeUndefined();
         });
     });
 

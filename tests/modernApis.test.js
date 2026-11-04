@@ -2207,6 +2207,43 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(dropCode).not.toContain('[0,');
         });
 
+        it('implements modern ES2022+ array.at(-1) and array.at(0) for safe element and split access', () => {
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain('function getLastItem');
+            expect(helpersCode).toContain('arr.at(-1)');
+            expect(helpersCode).toContain('function getFirstItem');
+            expect(helpersCode).toContain('arr.at(0)');
+
+            // Verify drop.js uses .at()
+            const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            expect(dropCode).toContain('files.at(targetIndex)');
+            expect(dropCode).toContain('removed.at(0)');
+
+            // Verify catalog.js uses .at()
+            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('item.thumbnails.at(0)');
+            expect(catalogCode).toContain('item.images.at(0)');
+            expect(catalogCode).toContain("link.innerHTML.split('<span').at(0).trim()");
+
+            // Verify orders.js uses .at()
+            const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            expect(ordersCode).toContain("activeUser.email.split('@').at(0)");
+            expect(ordersCode).toContain('order.items.at(0)');
+            expect(ordersCode).toContain("order.id.split('-').at(0).toUpperCase()");
+
+            // Verify product.js uses .at()
+            const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+            expect(productCode).toContain('data.at(0)');
+            expect(productCode).toContain('archData.at(0)');
+
+            // Test functional behavior of array.at(-1)
+            const demo = [10, 20, 30, 40, 50];
+            expect(demo.at(-1)).toBe(50);
+            expect(demo.at(-2)).toBe(40);
+            expect(demo.at(0)).toBe(10);
+            expect(demo.at(100)).toBeUndefined();
+        });
+
         it('matches and ranks branches and postomats by number without false positives on weight limits', () => {
             const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
             eval(cartCode);

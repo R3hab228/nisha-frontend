@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
     let item = null;
     if (dbRes.ok) {
       const data = await dbRes.json();
-      item = data[0];
+      item = data.at(0);
     }
 
     // Фоллбек на архивные товары, если вещь уже выкуплена и отправлена в архив
@@ -28,8 +28,8 @@ module.exports = async function handler(req, res) {
         const archRes = await fetch(archiveUrl, { headers });
         if (archRes.ok) {
           const archData = await archRes.json();
-          if (archData && archData[0]) {
-            item = archData[0];
+          if (archData && archData.at(0)) {
+            item = archData.at(0);
             item.status = item.status || 'sold';
           }
         }
@@ -66,11 +66,11 @@ module.exports = async function handler(req, res) {
     let videoUrl = '';
     
     if (item.images && item.images.length > 0) {
-      const photo = item.images[0];
+      const photo = item.images.at(0);
       if (photo.endsWith('.mp4')) {
           videoUrl = escapeHTML(photo);
-          if (item.thumbnails && item.thumbnails.length > 0 && item.thumbnails[0]) {
-              rawImageUrl = String(item.thumbnails[0]);
+          if (item.thumbnails && item.thumbnails.length > 0 && item.thumbnails.at(0)) {
+              rawImageUrl = String(item.thumbnails.at(0));
               imageUrl = escapeHTML(rawImageUrl);
           }
       } else {

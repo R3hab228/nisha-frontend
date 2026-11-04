@@ -151,12 +151,12 @@ function prewarmItemDetails(itemId) {
                 .select("id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable")
                 .eq("id", itemId)
                 .limit(1);
-            if (data && data.length > 0) return data[0];
+            if (data && data.length > 0) return data.at(0);
             let { data: archData } = await sb.from("archived_items")
                 .select("id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable")
                 .eq("id", itemId)
                 .limit(1);
-            if (archData && archData.length > 0) return archData[0];
+            if (archData && archData.length > 0) return archData.at(0);
             return null;
         } catch (_) {
             return null;
@@ -291,10 +291,10 @@ async function openProductModalById(itemId) {
             let { data } = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
             let fullItem = null;
             if (data && data.length > 0) {
-                fullItem = data[0];
+                fullItem = data.at(0);
             } else {
                 let { data: archData } = await sb.from('archived_items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
-                if (archData && archData.length > 0) fullItem = archData[0];
+                if (archData && archData.length > 0) fullItem = archData.at(0);
             }
             
             // Если товара не было в кэше вообще (переход по прямой ссылке), открываем сейчас
@@ -907,7 +907,7 @@ function openProductModal(item) {
         "@context": "https://schema.org/",
         "@type": "Product",
         "name": item.name,
-        "image": (item.images && item.images.length > 0) ? item.images[0] : "",
+        "image": (item.images && item.images.length > 0) ? item.images.at(0) : "",
         "description": item.description || item.name,
         "brand": { "@type": "Brand", "name": item.brand },
         "offers": {
@@ -938,7 +938,7 @@ function openProductModal(item) {
     let ogTitle = `${statusPrefix}NISHA: ${item.brand} - ${item.name}`;
     const formattedOgPrice = (typeof formatPrice === 'function') ? formatPrice(item.price) : `${item.price} грн.`;
     let ogDesc = `Размер: ${item.size} | Цена: ${formattedOgPrice} ${item.description ? item.description.slice(0, 150) : ''}`;
-    let ogImage = (item.images && item.images.length > 0) ? item.images[0] : 'https://www.nisha-store.shop/icon-512.png';
+    let ogImage = (item.images && item.images.length > 0) ? item.images.at(0) : 'https://www.nisha-store.shop/icon-512.png';
     let ogUrl = `https://www.nisha-store.shop/?item=${encodeURIComponent(item.id)}`;
 
     setMetaTag('og:title', ogTitle);
@@ -1065,7 +1065,7 @@ async function openProductPhotoZoom(targetSlideOrIndex) {
         if (foundIdx >= 0) targetIndex = foundIdx;
     } else {
         const allSlides = Array.from(wrapper.querySelectorAll('.slide'));
-        const activeSlide = allSlides[window.currentSlide || 0];
+        const activeSlide = allSlides.at(window.currentSlide || 0);
         const foundIdx = imageSlides.indexOf(activeSlide);
         if (foundIdx >= 0) targetIndex = foundIdx;
     }
@@ -1234,7 +1234,7 @@ function addToHistory(item) {
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     let hist = store ? store.getJSON('nisha_history', []) : [];
     hist = hist.filter(i => i.id !== item.id);
-    const img = getOptimizedImg(item, true) || ((item.images && item.images.length > 0) ? item.images[0] : '');
+    const img = getOptimizedImg(item, true) || ((item.images && item.images.length > 0) ? item.images.at(0) : '');
     
     hist.unshift({ 
         id: item.id, 

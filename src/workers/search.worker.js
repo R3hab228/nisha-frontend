@@ -65,7 +65,7 @@ function expandSearchQuery(query) {
         const replacedWords = words.map(w => {
             if (SEARCH_SYNONYMS[w]) {
                 hasWordSynonym = true;
-                return SEARCH_SYNONYMS[w].split(' ')[0];
+                return SEARCH_SYNONYMS[w].split(' ').at(0);
             }
             return w;
         });

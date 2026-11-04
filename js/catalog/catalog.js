@@ -39,11 +39,11 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
     let resultUrl = '';
 
     if (wantsThumb && Array.isArray(item.thumbnails) && item.thumbnails.length > 0) {
-        if (isValid(item.thumbnails[0])) resultUrl = item.thumbnails[0];
+        if (isValid(item.thumbnails.at(0))) resultUrl = item.thumbnails.at(0);
     }
 
     if (!resultUrl && Array.isArray(item.images) && item.images.length > 0) {
-        if (isValid(item.images[0])) resultUrl = item.images[0];
+        if (isValid(item.images.at(0))) resultUrl = item.images.at(0);
     }
 
     return window.toCDN(resultUrl);
@@ -1647,7 +1647,7 @@ function updateSidebarCounters() {
 
     // 1. Категории
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(link => {
-        let baseText = link.innerHTML.split('<span')[0].trim();
+        let baseText = link.innerHTML.split('<span').at(0).trim();
         const dataCat = link.getAttribute('data-category');
         const onclickAttr = link.getAttribute('onclick') || '';
         
@@ -1695,7 +1695,7 @@ function updateSidebarCounters() {
     document.querySelectorAll('.size-cb').forEach(cb => {
         const labelSpan = cb.nextElementSibling;
         if (!labelSpan) return;
-        let baseText = labelSpan.innerHTML.split('<span')[0].trim();
+        let baseText = labelSpan.innerHTML.split('<span').at(0).trim();
         const sizeVal = cb.value;
         const count = availableCategoryItems.filter(item => itemMatchesSizeFilter(item, sizeVal)).length;
 
@@ -2961,7 +2961,7 @@ window.preloadGridSlide = function(event, itemId, direction) {
     const targetIdx = typeof clamp === 'function' 
         ? clamp(currentIdx + direction, 0, mediaArray.length - 1)
         : Math.max(0, Math.min(mediaArray.length - 1, currentIdx + direction));
-    const url = toCDN(mediaArray[targetIdx]);
+    const url = toCDN(mediaArray.at(targetIdx));
     if (url && !url.endsWith('.mp4')) {
         const img = new Image();
         img.src = url;

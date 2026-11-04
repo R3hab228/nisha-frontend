@@ -797,7 +797,7 @@ function extractBranchNumber(branch) {
     const desc = String(branch.Description || '');
     const m = desc.match(/№\s*(\d+[а-яa-zіїєґ]?)/i);
     if (m) return m[1].toLowerCase();
-    const head = desc.split(':')[0].replace(/\([^)]*\)/g, '');
+    const head = desc.split(':').at(0).replace(/\([^)]*\)/g, '');
     const hm = head.match(/\b(\d+)\b/);
     return hm ? hm[1].toLowerCase() : '';
 }
@@ -878,7 +878,7 @@ function filterAndSortBranches(list, rawQuery) {
             } else if (bNum && bNum.includes(wanted)) {
                 score = 400;
             } else {
-                const addrPart = (descLower.split(':')[1] || '').replace(/\([^)]*\)/g, '');
+                const addrPart = (descLower.split(':').at(1) || '').replace(/\([^)]*\)/g, '');
                 if (addrPart.includes(wanted)) {
                     score = 100;
                 }
@@ -1013,7 +1013,7 @@ function matchAndSetBranchRef(branchText) {
     const norm = (str) => String(str || '').toLowerCase().replace(/[^a-zа-яёіїєґ0-9]/gi, '');
     const wanted = norm(branchText);
     const numMatch = branchText.match(/\d+/);
-    const wantedNum = numMatch ? numMatch[0] : null;
+    const wantedNum = numMatch ? numMatch.at(0) : null;
     const isPostomat = /поштомат|почтомат|postomat/i.test(branchText);
 
     let match = branches.find(b => norm(b.Description) === wanted);
@@ -1073,7 +1073,7 @@ async function ensureBranchRef(branchText) {
     const norm = (str) => String(str || '').toLowerCase().replace(/[^a-zа-яёіїєґ0-9]/gi, '');
     const wanted = norm(typed);
     const numMatch = typed.match(/\d+/);
-    const wantedNum = numMatch ? numMatch[0] : null;
+    const wantedNum = numMatch ? numMatch.at(0) : null;
     const isPostomat = /поштомат|почтомат|postomat/i.test(typed);
 
     const cacheKeys = Object.keys(npBranchCache).filter(k => k.startsWith(cityRef + "_"));
@@ -1177,7 +1177,7 @@ async function ensureBranchRef(branchText) {
                 }
             }
             if (!pick) {
-                pick = slimmed.find(b => norm(b.Description) === wanted) || slimmed[0];
+                pick = slimmed.find(b => norm(b.Description) === wanted) || slimmed.at(0);
             }
 
             if (pick) {
@@ -1279,9 +1279,9 @@ async function ensureCityRef(opts = {}) {
 
     const run = (async () => {
         try {
-            const cleanTyped = typed.replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село|г\.|гор\.|город)\s*/i, '').split(',')[0].trim();
+            const cleanTyped = typed.replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село|г\.|гор\.|город)\s*/i, '').split(',').at(0).trim();
             const data = await npProxyRequest({ CityName: cleanTyped || typed, Limit: "10" }, 'searchSettlements');
-            const addrs = (data && data.success && data.data && data.data[0] && data.data[0].Addresses) || [];
+            const addrs = (data && data.success && data.data && data.data.at(0) && data.data.at(0).Addresses) || [];
             if (addrs.length === 0) return '';
 
             // Пока шёл запрос, клиент мог изменить поле — тогда результат уже неактуален
@@ -1292,16 +1292,16 @@ async function ensureCityRef(opts = {}) {
             // 1) точное совпадение по полному названию (с областью/районом) — различает одноимённые сёла
             const wantedFull = _npNorm(typed);
             // 2) совпадение по названию без префикса, с учётом района/области если они указаны
-            const wantedName = _npStripPrefix(typed.split(',')[0]);
-            const regionToken = _npNorm(typed.split(',').slice(1).join(',')).split(',')[0].trim();
+            const wantedName = _npStripPrefix(typed.split(',').at(0));
+            const regionToken = _npNorm(typed.split(',').slice(1).join(',')).split(',').at(0).trim();
             const pick =
                 addrs.find(a => _npNorm(a.Present) === wantedFull) ||
-                addrs.find(a => _npStripPrefix(String(a.Present || '').split(',')[0]) === wantedName && (!regionToken || _npNorm(a.Present).includes(regionToken))) ||
+                addrs.find(a => _npStripPrefix(String(a.Present || '').split(',').at(0)) === wantedName && (!regionToken || _npNorm(a.Present).includes(regionToken))) ||
                 addrs.find(a => _npStripPrefix(a.MainDescription) === wantedName && !regionToken) ||
-                (addrs.length === 1 ? addrs[0] : null);
+                (addrs.length === 1 ? addrs.at(0) : null);
 
             const fallbackPick = (!pick && !interactive && addrs.length > 0)
-                ? (addrs.find(a => _npNorm(a.MainDescription).includes(wantedName) || _npNorm(a.Present).includes(wantedName)) || addrs[0])
+                ? (addrs.find(a => _npNorm(a.MainDescription).includes(wantedName) || _npNorm(a.Present).includes(wantedName)) || addrs.at(0))
                 : null;
             const resolvedPick = pick || fallbackPick;
 
@@ -1680,7 +1680,7 @@ async function checkCartItemsAvailability() {
                 const soldMsg = typeof i18next !== 'undefined'
                     ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' })
                     : 'Товар уже куплен';
-                showToast(`⚠️ ${soldMsg}: ${soldNames[0]}`, 'error');
+                showToast(`⚠️ ${soldMsg}: ${soldNames.at(0)}`, 'error');
             }
         }
     } catch (e) {
@@ -3123,8 +3123,8 @@ async function autoDetectCity() {
                 return;
             }
 
-            if (npData && npData.success && npData.data && npData.data[0] && npData.data[0].Addresses.length > 0) {
-                const cityObj = npData.data[0].Addresses[0];
+            if (npData && npData.success && npData.data && npData.data.at(0) && npData.data.at(0).Addresses.length > 0) {
+                const cityObj = npData.data.at(0).Addresses.at(0);
                 cityInput.value = cityObj.Present; 
                 cityInput.placeholder = originalPlaceholder;
                 selectedCityRef = cityObj.DeliveryCity || cityObj.Ref; 
