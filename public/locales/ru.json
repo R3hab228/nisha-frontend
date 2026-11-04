@@ -125,11 +125,12 @@
       "offer_sending": "[ ОТПРАВКА... ]",
       "offer_sent_toast": "Предложение отправлено продавцу! Ожидайте ответа.",
       "offer_accepted_title": "ВАША ЦЕНА ПРИНЯТА!",
-      "offer_accepted_text": "Продавец одобрил вашу цену на вещь",
+      "offer_accepted_text": "Ваше предложение принято на сумму",
       "offer_buy_btn": "В КОРЗИНУ",
       "offer_invalid_price": "Укажите корректную цену меньше текущей!",
       "offer_added_toast": "Товар добавлен в корзину по согласованной цене!",
-      "offer_pending": "[ ПРЕДЛОЖЕНИЕ ОТПРАВЛЕНО ✓ ]"
+      "offer_pending": "[ ПРЕДЛОЖЕНИЕ ОТПРАВЛЕНО ✓ ]",
+      "offer_accepted_btn": "[ ПРЕДЛОЖЕНИЕ ПРИНЯТО ✓ ]"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",

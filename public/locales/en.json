@@ -125,11 +125,12 @@
       "offer_sending": "[ SENDING... ]",
       "offer_sent_toast": "Offer sent to seller! Waiting for response.",
       "offer_accepted_title": "YOUR OFFER IS ACCEPTED!",
-      "offer_accepted_text": "The seller approved your price offer for",
+      "offer_accepted_text": "Your offer has been accepted for the amount of",
       "offer_buy_btn": "ADD TO CART",
       "offer_invalid_price": "Enter a valid price lower than current price!",
       "offer_added_toast": "Item added to cart at agreed price!",
-      "offer_pending": "[ OFFER SENT ✓ ]"
+      "offer_pending": "[ OFFER SENT ✓ ]",
+      "offer_accepted_btn": "[ OFFER ACCEPTED ✓ ]"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",

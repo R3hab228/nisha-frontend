@@ -2,46 +2,66 @@
 // --- МОДАЛЬНОЕ ОКНО ПРИНЯТОГО ТОРГА С ПРЯМЫМ ДОБАВЛЕНИЕМ В КОРЗИНУ ---
 function showBargainAcceptedModal(bargainData, onDismiss) {
     if (!bargainData) return;
-    document.querySelectorAll('.bargain-broadcast-overlay').forEach(el => el.remove());
+    document.querySelectorAll('.bargain-broadcast-overlay, .terminal-modal-overlay').forEach(el => el.remove());
 
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
     const escHtml = (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
     const titleText = t('product.offer_accepted_title', 'ВАША ЦІНА ПРИЙНЯТА!');
-    const descText = t('product.offer_accepted_text', 'Продавець погодився на вашу ціну! Натисніть кнопку нижче, щоб додати річ у кошик за узгодженою ціною.');
-    const buyBtnText = t('product.offer_buy_btn', '[ В КОШИК ЗА УЗГОДЖЕНОЮ ЦІНОЮ ]');
+    const descText = t('product.offer_accepted_text', 'Ваша пропозиція прийнята на суму');
+    const buyBtnText = t('product.offer_buy_btn', 'В КОШИК');
+
+    // 1. Сохраняем состояние принятого торга для текущего товара
+    try {
+        sessionStorage.setItem('accepted_bargain_' + bargainData.itemId, JSON.stringify(bargainData));
+    } catch (e) {}
+
+    // 2. Обновляем кнопку предложения цены на карточке товара: окантовка и текст становятся жёлтыми
+    const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
+    if (offerPriceBtn) {
+        const acceptedBtnText = t('product.offer_accepted_btn', '[ ПРОПОЗИЦІЮ ПРИЙНЯТО ✓ ]');
+        offerPriceBtn.innerText = acceptedBtnText;
+        offerPriceBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
+        offerPriceBtn.style.color = 'var(--accent-yellow, #ffd700)';
+        offerPriceBtn.style.boxShadow = 'none';
+    }
+
+    const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    if (activeItem && String(activeItem.id) === String(bargainData.itemId)) {
+        const priceEl = document.getElementById('modalPrice');
+        if (priceEl) {
+            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${bargainData.originalPrice || activeItem.price}</span><span style="color: var(--accent-yellow, #ffd700);">${bargainData.acceptedPrice} UAH</span>`;
+        }
+    }
 
     const overlay = document.createElement('div');
-    overlay.className = 'bargain-broadcast-overlay';
-    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10001; display: flex; justify-content: center; align-items: center; padding: 16px; box-sizing: border-box;";
+    overlay.className = 'bargain-broadcast-overlay terminal-modal-overlay';
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10001; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;";
 
     const safeName = escHtml(bargainData.itemName || 'Товар');
     const safeImg = bargainData.itemImage ? escHtml(bargainData.itemImage) : '';
-    const oldPrice = bargainData.originalPrice || '';
     const newPrice = bargainData.acceptedPrice || '';
 
     overlay.innerHTML = `
-        <div class="success-terminal-box" style="max-width: 440px; width: 100%; border: 1px solid var(--accent-green, #00ff66); box-shadow: 0 0 25px rgba(0, 255, 102, 0.15); background: #0a0a0a; padding: 22px;">
+        <div class="success-terminal-box" style="max-width: 420px; width: 90%; background: #0a0a0a; border: 1px solid var(--accent-yellow, #ffd700); box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 215, 0, 0.15); padding: 25px 22px; text-align: center;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent-green, #00ff66); letter-spacing: 0.5px;">🤝 ${titleText}</div>
-                <button class="close-bargain-x-btn" style="background: none; border: none; color: #888; font-family: var(--font-mono); font-size: 16px; cursor: pointer; padding: 4px 8px;">✕</button>
+                <div class="success-title" style="color: var(--accent-yellow, #ffd700); font-family: var(--font-mono); font-size: 15px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">🤝 ${titleText}</div>
+                <button class="close-bargain-x-btn" style="background: none; border: none; color: #888; font-family: var(--font-mono); font-size: 16px; cursor: pointer; padding: 4px 8px; line-height: 1;">✕</button>
             </div>
-            <div class="success-divider" style="height: 1px; background: #222; margin-bottom: 16px;"></div>
-            
-            <div style="display: flex; gap: 14px; align-items: center; background: #121212; padding: 12px; border: 1px solid #262626; margin-bottom: 14px;">
-                ${safeImg ? `<img src="${safeImg}" alt="${safeName}" style="width: 64px; height: 64px; object-fit: cover; border: 1px solid #333; flex-shrink: 0;">` : ''}
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px;">${safeName}</div>
-                    <div style="font-family: var(--font-mono); font-size: 13px;">
-                        ${oldPrice ? `<span style="text-decoration: line-through; color: #777; margin-right: 8px;">${oldPrice} грн</span>` : ''}
-                        <span style="color: var(--accent-green, #00ff66); font-weight: 700; font-size: 15px;">${newPrice} грн</span>
-                    </div>
-                </div>
+            <div class="success-divider" style="margin-bottom: 16px;"></div>
+
+            ${safeImg ? `
+            <div style="display: flex; justify-content: center; margin-bottom: 14px;">
+                <img src="${safeImg}" alt="${safeName}" class="bargain-broadcast-img" style="width: 140px; height: 140px; aspect-ratio: 1/1; object-fit: cover; border: 2px inset var(--border-light, #555); cursor: pointer; display: block; transition: transform 0.15s ease, border-color 0.15s ease;">
+            </div>
+            ` : ''}
+
+            <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; text-transform: uppercase;">${safeName}</div>
+            <div style="font-family: var(--font-main); font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 22px;">
+                ${descText}: <b style="color: var(--accent-yellow, #ffd700); font-size: 16px; font-family: var(--font-mono);">${newPrice} грн</b>
             </div>
 
-            <p style="font-size: 12px; color: #aaa; line-height: 1.5; margin: 0 0 18px 0; font-family: var(--font-main, sans-serif);">${descText}</p>
-
-            <button class="cart-checkout-btn btn-target bargain-add-cart-btn" style="width: 100%; padding: 15px; font-size: 13px; font-weight: 700; background: var(--accent-yellow, #ffd700); color: #000; border: none; font-family: var(--font-mono); cursor: pointer; letter-spacing: 0.5px; transition: transform 0.15s ease;">
+            <button class="buy-tg-btn cart-add btn-target bargain-add-cart-btn" style="width: 100%; min-height: 52px; font-size: 16px; text-transform: uppercase;">
                 ${buyBtnText}
             </button>
         </div>
@@ -59,6 +79,20 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     const addBtn = overlay.querySelector('.bargain-add-cart-btn');
     const closeXBtn = overlay.querySelector('.close-bargain-x-btn');
+    const imgEl = overlay.querySelector('.bargain-broadcast-img');
+
+    if (imgEl) {
+        imgEl.addEventListener('click', () => {
+            closeOverlay();
+            if (typeof window.openProductModalById === 'function') {
+                window.openProductModalById(bargainData.itemId);
+            } else if (typeof window.openProductModal === 'function') {
+                const all = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+                const found = all.find(i => String(i.id) === String(bargainData.itemId));
+                if (found) window.openProductModal(found);
+            }
+        }, { signal: modalCtrl.signal });
+    }
 
     if (addBtn) {
         addBtn.addEventListener('click', async () => {

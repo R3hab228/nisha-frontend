@@ -554,15 +554,31 @@ function openProductModal(item) {
             if (offerInputRow) offerInputRow.style.display = 'none';
         } else {
             if (offerWrapper) offerWrapper.style.display = 'block';
+            let isAcceptedBargain = false;
+            try {
+                const saved = sessionStorage.getItem('accepted_bargain_' + item.id);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.acceptedPrice) isAcceptedBargain = true;
+                }
+            } catch (e) {}
+
             if (offerPriceBtn) {
                 offerPriceBtn.style.display = 'flex';
                 offerPriceBtn.style.opacity = '1';
                 offerPriceBtn.style.transform = 'translateY(0)';
                 offerPriceBtn.style.pointerEvents = 'auto';
-                const offerText = (typeof i18next !== 'undefined') ? i18next.t('product.offer_price', { defaultValue: '[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]' }) : '[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]';
-                offerPriceBtn.innerText = offerText;
-                offerPriceBtn.style.borderColor = '#333';
-                offerPriceBtn.style.color = 'var(--accent-green, #00ff66)';
+                if (isAcceptedBargain) {
+                    const acceptedText = (typeof i18next !== 'undefined') ? i18next.t('product.offer_accepted_btn', { defaultValue: '[ ПРОПОЗИЦІЮ ПРИЙНЯТО ✓ ]' }) : '[ ПРОПОЗИЦІЮ ПРИЙНЯТО ✓ ]';
+                    offerPriceBtn.innerText = acceptedText;
+                    offerPriceBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
+                    offerPriceBtn.style.color = 'var(--accent-yellow, #ffd700)';
+                } else {
+                    const offerText = (typeof i18next !== 'undefined') ? i18next.t('product.offer_price', { defaultValue: '[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]' }) : '[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]';
+                    offerPriceBtn.innerText = offerText;
+                    offerPriceBtn.style.borderColor = '#333';
+                    offerPriceBtn.style.color = 'var(--accent-green, #00ff66)';
+                }
             }
             if (offerInputRow) {
                 offerInputRow.style.display = 'none';
@@ -1805,6 +1821,23 @@ function showInlineOfferPriceInput() {
     const input = document.getElementById('inlineBargainPriceInput');
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
     if (!activeItem || !btn || !row || !input) return;
+
+    try {
+        const saved = sessionStorage.getItem('accepted_bargain_' + activeItem.id);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.acceptedPrice) {
+                if (typeof triggerHaptic === 'function') triggerHaptic('success');
+                if (typeof window.addToCartById === 'function') {
+                    window.addToCartById(activeItem.id, parsed.acceptedPrice);
+                }
+                if (typeof window.openCart === 'function') {
+                    window.openCart();
+                }
+                return;
+            }
+        }
+    } catch (e) {}
 
     const suggested = Math.max(1, Math.round((activeItem.price || 1000) * 0.85));
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
