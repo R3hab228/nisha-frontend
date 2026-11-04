@@ -2244,6 +2244,31 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(demo.at(100)).toBeUndefined();
         });
 
+        it('implements hardware virtual scrolling via content-visibility: auto and contain-intrinsic-size across long feeds', () => {
+            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+            // Product card feed virtualization
+            expect(css).toMatch(/\.item-card\s*\{[^}]*content-visibility:\s*auto/);
+            expect(css).toMatch(/\.item-card\s*\{[^}]*contain-intrinsic-size:\s*auto\s*380px/);
+            expect(css).toMatch(/@media\s*\(max-width:\s*768px\)[\s\S]*?\.item-card[\s\S]*?contain-intrinsic-size:\s*auto\s*280px/);
+
+            // Orders list virtualization
+            expect(css).toMatch(/\.order-card\s*\{[^}]*content-visibility:\s*auto/);
+            expect(css).toMatch(/\.order-card\s*\{[^}]*contain-intrinsic-size:\s*auto\s*170px/);
+
+            // Reviews feed virtualization
+            expect(css).toMatch(/\.review-card-ui\s*\{[^}]*content-visibility:\s*auto/);
+            expect(css).toMatch(/\.review-card-ui\s*\{[^}]*contain-intrinsic-size:\s*auto\s*160px/);
+
+            // History grid and similar items
+            expect(css).toMatch(/\.history-card\s*\{[^}]*content-visibility:\s*auto/);
+            expect(css).toMatch(/\.similar-item-card\s*\{[^}]*content-visibility:\s*auto/);
+            expect(css).toMatch(/\.live-search-item\s*\{[^}]*content-visibility:\s*auto/);
+
+            // Print reset
+            expect(css).toMatch(/@media\s*print[\s\S]*?content-visibility:\s*visible\s*!important/);
+        });
+
         it('matches and ranks branches and postomats by number without false positives on weight limits', () => {
             const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
             eval(cartCode);

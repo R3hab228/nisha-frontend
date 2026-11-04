@@ -80,6 +80,8 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCAyIEw0IDIyIEwxMCAxNiBMMTUgMjQgTDE4IDIyIEwxMyAxNSBMMjAgMTUgWicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==") 0 0, auto !important; 
     transition: 0.2s; 
     touch-action: pan-y; 
+    content-visibility: auto;
+    contain-intrinsic-size: auto 54px;
 }
 .live-search-item:hover { background: #1a1a1a; padding-left: 15px; }
 .live-search-img { 
@@ -590,7 +592,7 @@ label:hover .win95-cb:checked {
 .history-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; max-height: 250px; opacity: 1; transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.4s ease; will-change: max-height, opacity; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;}
 .history-grid.collapsed { max-height: 0; opacity: 0; padding-bottom: 0; overflow: hidden; }
 .history-grid::-webkit-scrollbar { height: 6px; }
-.history-card { width: 140px; flex: 0 0 140px; background: #111; border: 1px solid #333; text-decoration: none; display: flex; flex-direction: column; transition: 0.1s; cursor: pointer; transform-style: preserve-3d;}
+.history-card { width: 140px; flex: 0 0 140px; background: #111; border: 1px solid #333; text-decoration: none; display: flex; flex-direction: column; transition: 0.1s; cursor: pointer; transform-style: preserve-3d; content-visibility: auto; contain-intrinsic-size: 140px 180px; }
 .history-card:hover { border-color: var(--accent-green); }
 .history-img { height: 100px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; color: #444; font-size: 10px; border-bottom: 1px solid #333; font-family: var(--font-mono); text-align: center; background-size: cover; background-position: center; transform: translateZ(10px);}
 .history-info { padding: 10px; display: flex; flex-direction: column; transform: translateZ(5px);}
@@ -766,6 +768,8 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
     border: 1px solid #333;
     position: relative;
     user-select: none;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 150px;
 }
 .similar-item-card:hover {
     border-color: var(--accent-green) !important;
@@ -984,7 +988,7 @@ input[type="number"],
 }
 
 .orders-container { padding: 20px; display: flex; flex-direction: column; gap: 20px;}
-.order-card { background: #0a0a0a; border: 1px solid #444; padding: 15px; display: flex; flex-direction: column; gap: 15px; transition: 0.2s;}
+.order-card { background: #0a0a0a; border: 1px solid #444; padding: 15px; display: flex; flex-direction: column; gap: 15px; transition: 0.2s; content-visibility: auto; contain-intrinsic-size: auto 170px; }
 .order-card:hover { border-color: #777; }
 .order-header { display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 10px; font-family: var(--font-mono); font-size: 13px;}
 .order-id { color: #fff; font-weight: bold; }
@@ -1572,6 +1576,8 @@ input[type="number"],
     border-left: 3px solid var(--accent-green); display: flex; flex-direction: column;
     transition: 0.2s; height: 100%; min-height: 140px; width: 100%; box-sizing: border-box;
     scroll-snap-align: start; scroll-snap-stop: always;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 160px;
 }/* Состояние загрузки и пустого списка отзывов (центрирование на ПК и телефонах) */
 .reviews-slider.is-loading,
 .reviews-slider.is-empty,
@@ -2106,7 +2112,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
    .main-container { flex-direction: column; padding: 15px; gap: 15px; overflow-x: hidden; }
     .search-section { padding: 10px 15px; }
     .items-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
-    .item-card { min-width: 0; }
+    .item-card { min-width: 0; contain-intrinsic-size: auto 280px; }
     .card-slider-wrapper { height: 160px; }
     .card-slider-container { }
     .item-title { font-size: 12px; height: 32px; margin-bottom: 4px; }
@@ -3180,5 +3186,17 @@ html.pwa-standalone body {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
+    }
+}
+
+/* ПЕЧАТЬ И ЭКСПОРТ (отключение виртуализации скролла для полной отрисовки всех страниц) */
+@media print {
+    .item-card,
+    .order-card,
+    .review-card-ui,
+    .history-card,
+    .similar-item-card,
+    .live-search-item {
+        content-visibility: visible !important;
     }
 }
