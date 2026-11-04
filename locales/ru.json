@@ -118,7 +118,7 @@
       "offer_modal_desc": "Предложите свою цену продавцу. Если цена будет принята, вы получите уведомление и сможете купить вещь по вашей цене!",
       "offer_curr_price": "Текущая цена:",
       "offer_your_price": "Ваша цена (грн):",
-      "offer_your_price_ph": "Например, 1200",
+      "offer_your_price_ph": "Ваша цена (грн)...",
       "offer_comment": "Контакт (Telegram или телефон, необязательно):",
       "offer_comment_ph": "@username или +380...",
       "offer_send_btn": "[ ОТПРАВИТЬ ПРЕДЛОЖЕНИЕ ]",
@@ -128,7 +128,8 @@
       "offer_accepted_text": "Продавец одобрил вашу цену на вещь",
       "offer_buy_btn": "В КОРЗИНУ",
       "offer_invalid_price": "Укажите корректную цену меньше текущей!",
-      "offer_added_toast": "Товар добавлен в корзину по согласованной цене!"
+      "offer_added_toast": "Товар добавлен в корзину по согласованной цене!",
+      "offer_pending": "[ ПРЕДЛОЖЕНИЕ ОТПРАВЛЕНО ✓ ]"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",

@@ -113,7 +113,9 @@
         "err_not_found": "Товар не найден",
         "fav": "Избранное",
         "share": "Поделиться",
-        "no_photo": "НЕТ ФОТО"
+        "no_photo": "НЕТ ФОТО",
+        "offer_pending": "[ ПРЕДЛОЖЕНИЕ ОТПРАВЛЕНО ✓ ]",
+        "offer_your_price_ph": "Ваша цена (грн)..."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -561,7 +563,9 @@
         "err_not_found": "Товар не знайдено",
         "fav": "Обране",
         "share": "Поділитися",
-        "no_photo": "НЕМАЄ ФОТО"
+        "no_photo": "НЕМАЄ ФОТО",
+        "offer_pending": "[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]",
+        "offer_your_price_ph": "Ваша ціна (грн)..."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -1009,7 +1013,9 @@
         "err_not_found": "Item not found",
         "fav": "Favorites",
         "share": "Share",
-        "no_photo": "NO PHOTO"
+        "no_photo": "NO PHOTO",
+        "offer_pending": "[ OFFER SENT ✓ ]",
+        "offer_your_price_ph": "Your price (UAH)..."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",

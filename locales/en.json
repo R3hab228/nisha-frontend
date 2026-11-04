@@ -118,7 +118,7 @@
       "offer_modal_desc": "Make a price offer to the seller. If approved, you will get a notification to purchase this item at your price!",
       "offer_curr_price": "Current price:",
       "offer_your_price": "Your price (UAH):",
-      "offer_your_price_ph": "e.g. 1200",
+      "offer_your_price_ph": "Your price (UAH)...",
       "offer_comment": "Contact (Telegram or phone, optional):",
       "offer_comment_ph": "@username or +380...",
       "offer_send_btn": "[ SEND OFFER ]",
@@ -128,7 +128,8 @@
       "offer_accepted_text": "The seller approved your price offer for",
       "offer_buy_btn": "ADD TO CART",
       "offer_invalid_price": "Enter a valid price lower than current price!",
-      "offer_added_toast": "Item added to cart at agreed price!"
+      "offer_added_toast": "Item added to cart at agreed price!",
+      "offer_pending": "[ OFFER SENT ✓ ]"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",

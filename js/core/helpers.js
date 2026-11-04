@@ -1779,6 +1779,22 @@ function handleDelegatedAction(e) {
             if (typeof window.addToCartFromModal === 'function') window.addToCartFromModal();
             break;
         }
+        case 'open-offer-price': {
+            if (typeof window.showInlineOfferPriceInput === 'function') {
+                window.showInlineOfferPriceInput();
+            } else if (typeof window.openOfferPriceModal === 'function') {
+                window.openOfferPriceModal();
+            }
+            break;
+        }
+        case 'cancel-offer-price': {
+            if (typeof window.hideInlineOfferPriceInput === 'function') window.hideInlineOfferPriceInput();
+            break;
+        }
+        case 'submit-inline-bargain': {
+            if (typeof window.submitInlineBargainOffer === 'function') window.submitInlineBargainOffer();
+            break;
+        }
         case 'share-item': {
             if (typeof window.shareItem === 'function') window.shareItem();
             break;

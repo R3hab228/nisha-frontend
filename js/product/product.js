@@ -542,12 +542,33 @@ function openProductModal(item) {
         }
     }
 
+    const offerWrapper = document.getElementById('offerPriceWrapper');
     const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
-    if (offerPriceBtn) {
+    const offerInputRow = document.getElementById('offerPriceInputRow');
+    const inlineInput = document.getElementById('inlineBargainPriceInput');
+
+    if (offerWrapper || offerPriceBtn) {
         if (item && item.status === 'sold') {
-            offerPriceBtn.style.display = 'none';
+            if (offerWrapper) offerWrapper.style.display = 'none';
+            if (offerPriceBtn) offerPriceBtn.style.display = 'none';
+            if (offerInputRow) offerInputRow.style.display = 'none';
         } else {
-            offerPriceBtn.style.display = 'flex';
+            if (offerWrapper) offerWrapper.style.display = 'block';
+            if (offerPriceBtn) {
+                offerPriceBtn.style.display = 'flex';
+                offerPriceBtn.style.opacity = '1';
+                offerPriceBtn.style.transform = 'translateY(0)';
+                offerPriceBtn.style.pointerEvents = 'auto';
+                const offerText = (typeof i18next !== 'undefined') ? i18next.t('product.offer_price', { defaultValue: '[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]' }) : '[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]';
+                offerPriceBtn.innerText = offerText;
+                offerPriceBtn.style.borderColor = '#333';
+                offerPriceBtn.style.color = 'var(--accent-green, #00ff66)';
+            }
+            if (offerInputRow) {
+                offerInputRow.style.display = 'none';
+                offerInputRow.classList.remove('visible');
+            }
+            if (inlineInput) inlineInput.value = '';
         }
     }
 
@@ -1771,3 +1792,145 @@ async function submitBargainOffer() {
     }
 }
 window.submitBargainOffer = submitBargainOffer;
+
+
+// ==========================================
+// ИНЛАЙН СИСТЕМА ТОРГА (ПРЯМО В КАРТОЧКЕ)
+// ==========================================
+function showInlineOfferPriceInput() {
+    const btn = document.getElementById('modalOfferPriceBtn');
+    const row = document.getElementById('offerPriceInputRow');
+    const input = document.getElementById('inlineBargainPriceInput');
+    const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    if (!activeItem || !btn || !row || !input) return;
+
+    const suggested = Math.max(1, Math.round((activeItem.price || 1000) * 0.85));
+    const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+    const phText = t('product.offer_your_price_ph', `Наприклад, ${suggested}`);
+    input.placeholder = phText;
+    input.value = '';
+
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+
+    btn.style.opacity = '0';
+    btn.style.transform = 'translateY(-4px)';
+    btn.style.pointerEvents = 'none';
+
+    setTimeout(() => {
+        btn.style.display = 'none';
+        row.style.display = 'flex';
+        void row.offsetWidth;
+        row.classList.add('visible');
+        input.focus();
+    }, 200);
+}
+window.showInlineOfferPriceInput = showInlineOfferPriceInput;
+
+function hideInlineOfferPriceInput() {
+    const btn = document.getElementById('modalOfferPriceBtn');
+    const row = document.getElementById('offerPriceInputRow');
+    const input = document.getElementById('inlineBargainPriceInput');
+    if (!btn || !row) return;
+
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+
+    row.classList.remove('visible');
+    row.style.opacity = '0';
+    row.style.transform = 'translateY(4px)';
+
+    setTimeout(() => {
+        row.style.display = 'none';
+        btn.style.display = 'flex';
+        void btn.offsetWidth;
+        btn.style.opacity = '1';
+        btn.style.transform = 'translateY(0)';
+        btn.style.pointerEvents = 'auto';
+        if (input) input.value = '';
+    }, 200);
+}
+window.hideInlineOfferPriceInput = hideInlineOfferPriceInput;
+
+async function submitInlineBargainOffer() {
+    const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    if (!activeItem) return;
+
+    const input = document.getElementById('inlineBargainPriceInput');
+    const submitBtn = document.getElementById('inlineBargainSubmitBtn');
+    if (!input || !submitBtn) return;
+
+    const offeredPrice = Number.parseInt(input.value, 10);
+    const currentPrice = Number(activeItem.price) || 0;
+
+    const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+
+    if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice <= 0 || offeredPrice >= currentPrice) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const invalidMsg = t('product.offer_invalid_price', 'Будь ласка, вкажіть реальну ціну нижче поточної!');
+        showToast(invalidMsg, 'error');
+        input.focus();
+        return;
+    }
+
+    const fingerprint = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : ('guest_' + Date.now()));
+    const currentUser = (typeof getUser === 'function') ? getUser() : (window.currentUser || null);
+    const savedContact = (currentUser && (currentUser.email || currentUser.phone)) || '';
+
+    const firstImg = (Array.isArray(activeItem.images) && activeItem.images[0]) ||
+                     (Array.isArray(activeItem.thumbnails) && activeItem.thumbnails[0]) ||
+                     (typeof getOptimizedImg === 'function' ? getOptimizedImg(activeItem) : '') || '';
+
+    submitBtn.disabled = true;
+    submitBtn.classList.add('sending');
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+
+    try {
+        const payload = {
+            itemId: activeItem.id,
+            itemName: activeItem.name,
+            itemImage: firstImg,
+            currentPrice: currentPrice,
+            offeredPrice: offeredPrice,
+            contact: savedContact,
+            clientId: fingerprint
+        };
+
+        if (window.apiClient && typeof window.apiClient.post === 'function') {
+            await window.apiClient.post('/api/bargain', payload, { timeout: 12000, retries: 1 });
+        }
+
+        if (typeof triggerHaptic === 'function') triggerHaptic('success');
+        const sentMsg = t('product.offer_sent_toast', 'Пропозицію надіслано! Очікуйте відповіді продавця.');
+        showToast(sentMsg, 'success');
+
+        hideInlineOfferPriceInput();
+        const btn = document.getElementById('modalOfferPriceBtn');
+        if (btn) {
+            btn.innerText = t('product.offer_pending', '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]');
+            btn.style.borderColor = 'var(--accent-green, #00ff66)';
+            btn.style.color = 'var(--accent-green, #00ff66)';
+        }
+    } catch (err) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const errMsg = t('propose.err_network', 'Помилка зв\'язку з сервером.');
+        showToast(errMsg, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('sending');
+    }
+}
+window.submitInlineBargainOffer = submitInlineBargainOffer;
+
+// Обработка Enter и Escape в инлайн-поле торга
+document.addEventListener('keydown', (e) => {
+    const input = document.getElementById('inlineBargainPriceInput');
+    const row = document.getElementById('offerPriceInputRow');
+    if (!row || row.style.display === 'none') return;
+
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        hideInlineOfferPriceInput();
+    } else if (e.key === 'Enter' && document.activeElement === input) {
+        e.preventDefault();
+        submitInlineBargainOffer();
+    }
+});
