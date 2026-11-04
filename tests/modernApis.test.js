@@ -3729,10 +3729,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toMatch(/\.promo-notice\s*\{[^}]*box-shadow:\s*none\s*!important/);
             expect(css).toMatch(/\.promo-notice\s*\{[^}]*text-shadow:\s*none\s*!important/);
 
-            // 2. promo-msg:empty must hide
+            // 2. Exact match with var(--accent-green) theme colors
+            expect(css).toMatch(/\.promo-notice-success\s*\{[^}]*border-left:\s*3px\s*solid\s*var\(--accent-green\)/);
+            expect(css).toMatch(/\.promo-notice-val\s*\{[^}]*color:\s*var\(--accent-green\)/);
+
+            // 3. promo-msg:empty must hide
             expect(css).toMatch(/\.promo-msg:empty\s*\{[^}]*display:\s*none/);
 
-            // 3. Zero legacy inline promo styling in cart.js
+            // 4. Zero legacy inline promo styling in cart.js
             const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
             expect(cartCode).not.toContain('<span style="color: var(--accent-green);">[✔]');
         });

@@ -1615,52 +1615,52 @@ input[type="number"],
 
 .promo-notice-savings {
     font-size: 11px;
-    color: #9cb8a3;
+    color: var(--text-main);
     letter-spacing: 0.2px;
     padding-left: 18px;
 }
 
 .promo-notice-val {
-    color: #00ff88;
+    color: var(--accent-green);
     font-weight: 700;
 }
 
 .promo-notice-pct {
-    color: #00ff88;
+    color: var(--accent-green);
     font-weight: 700;
 }
 
 .promo-notice-success {
-    background: #08100b;
-    border: 1px solid #1c3824;
-    border-left: 3px solid #00e676;
-    color: #e2f5e8;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-green);
+    color: #fff;
 }
 
 .promo-notice-success .promo-notice-icon {
-    color: #00e676;
+    color: var(--accent-green);
 }
 
 .promo-notice-error {
-    background: #140808;
-    border: 1px solid #3d1c1c;
-    border-left: 3px solid #ff4444;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-red);
     color: #ff9999;
 }
 
 .promo-notice-error .promo-notice-icon {
-    color: #ff4444;
+    color: var(--accent-red);
 }
 
 .promo-notice-warning {
-    background: #141108;
-    border: 1px solid #3d331c;
-    border-left: 3px solid #ffcc00;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-yellow);
     color: #ffe680;
 }
 
 .promo-notice-warning .promo-notice-icon {
-    color: #ffcc00;
+    color: var(--accent-yellow);
 }
 
 /* РљРђР РЈРЎР•Р›Р¬ РћРўР—Р«Р’РћР’ (РљРѕР»РѕРЅРєРё РїРѕ 2 С€С‚) */
