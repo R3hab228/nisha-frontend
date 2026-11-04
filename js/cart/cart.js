@@ -424,6 +424,16 @@ async function addToCartFromModal() {
     if (hacked) {
         cartItem.price = Math.floor(cartItem.price * 0.9);
     }
+    try {
+        const savedBargain = sessionStorage.getItem('accepted_bargain_' + activeItem.id);
+        if (savedBargain) {
+            const parsedBargain = JSON.parse(savedBargain);
+            if (parsedBargain && parsedBargain.acceptedPrice) {
+                cartItem.price = Number(parsedBargain.acceptedPrice);
+                cartItem.bargainPrice = Number(parsedBargain.acceptedPrice);
+            }
+        }
+    } catch (e) {}
     currentCart.push(cartItem);
     setActiveCart(currentCart);
     updateCartUI();
@@ -2875,8 +2885,10 @@ async function executeOrderFinal(emailToSave) {
 
         // 1. ОСНОВНОЙ ПУТЬ: Атомарное оформление через защищенный сервер (/api/create-order)
         try {
+            const activeClientId = (typeof clientFingerprint !== 'undefined' ? clientFingerprint : window.clientFingerprint) || (user ? user.id : null) || ('guest_' + Date.now());
             const serverOrderRes = await window.apiClient.post('/api/create-order', {
                 userId: user ? user.id : null,
+                clientId: String(activeClientId),
                 name: name,
                 phone: phone,
                 email: emailToSave,

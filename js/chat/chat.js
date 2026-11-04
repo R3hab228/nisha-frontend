@@ -49,9 +49,9 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
     if (activeItem && String(activeItem.id) === String(bargainData.itemId)) {
-        const priceEl = document.getElementById('modalPrice');
+        const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
         if (priceEl) {
-            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${bargainData.originalPrice || activeItem.price}</span><span style="color: var(--accent-yellow, #ffd700);">${bargainData.acceptedPrice} UAH</span>`;
+            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${bargainData.originalPrice || activeItem.price} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${bargainData.acceptedPrice} грн</span>`;
         }
     }
 
@@ -236,9 +236,9 @@ function handleIncomingSupportReply(r, sbClient) {
                 offerPriceBtn.style.cursor = 'default';
                 offerPriceBtn.disabled = true;
             }
-            const priceEl = document.getElementById('modalPrice');
+            const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
             if (priceEl) {
-                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${parsed.originalPrice || activeItem.price}</span><span style="color: var(--accent-yellow, #ffd700);">${parsed.acceptedPrice} UAH</span>`;
+                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${parsed.originalPrice || activeItem.price} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${parsed.acceptedPrice} грн</span>`;
             }
         }
 

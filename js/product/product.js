@@ -394,6 +394,18 @@ function openProductModal(item) {
     let finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
     const priceEl = document.getElementById('modalItemPrice');
     if (priceEl) priceEl.innerText = (typeof formatPrice === 'function') ? formatPrice(finalPrice) : (finalPrice + ' ' + (typeof getCurrency === 'function' ? getCurrency() : 'грн'));
+
+    // Если у текущего покупателя есть персональная согласованная цена (Торг)
+    try {
+        const savedBargain = sessionStorage.getItem('accepted_bargain_' + item.id);
+        if (savedBargain) {
+            const parsedBargain = JSON.parse(savedBargain);
+            if (parsedBargain && parsedBargain.acceptedPrice && priceEl) {
+                const cur = (typeof getCurrency === 'function' ? getCurrency() : 'грн').trim();
+                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${parsedBargain.originalPrice || item.price} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${parsedBargain.acceptedPrice} ${cur}</span>`;
+            }
+        }
+    } catch (e) {}
     
     const sizeDescEl = document.getElementById('modalItemSizeDesc');
     if (sizeDescEl) sizeDescEl.innerText = item.size;
