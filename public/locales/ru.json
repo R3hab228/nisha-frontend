@@ -207,7 +207,9 @@
       "order_submit_err": "Ошибка при оформлении: ",
       "geo_searching": "Поиск спутников...",
       "promo_warming": "Сервер запускается, нажмите «Применить» ещё раз",
-      "location_prefix": "Локация: "
+      "location_prefix": "Локация: ",
+      "promo_applied": "Код активирован",
+      "promo_order_discount": "Скидка на заказ:"
     },
     "orders_modal": {
       "access_granted": "Доступ разрешен",

@@ -207,7 +207,9 @@
       "order_submit_err": "Order submission error: ",
       "geo_searching": "Detecting location...",
       "promo_warming": "Server is warming up, please click \"Apply\" again",
-      "location_prefix": "Location: "
+      "location_prefix": "Location: ",
+      "promo_applied": "Code applied",
+      "promo_order_discount": "Order discount:"
     },
     "orders_modal": {
       "access_granted": "Access granted",

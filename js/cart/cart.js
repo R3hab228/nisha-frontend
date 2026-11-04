@@ -420,6 +420,49 @@ async function addToCartFromModal() {
 }
 window.addToCartFromModal = addToCartFromModal;
 
+// ==========================================
+// РЕНДЕРИНГ МИНИМАЛИСТИЧНОГО УВЕДОМЛЕНИЯ ПРОМОКОДА (БЕЗ СВЕЧЕНИЙ)
+// ==========================================
+function renderPromoCodeNotice(options = {}) {
+    const { isError, isWarning, message, percent, savedMoney, isFixed } = options;
+    const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+    const escapeSafe = (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+
+    if (isError) {
+        const errorText = escapeSafe(message || t('checkout.promo_invalid', 'Неверный промокод'));
+        return `<div class="promo-notice promo-notice-error"><div class="promo-notice-header"><span class="promo-notice-icon">[!]</span><span class="promo-notice-title">${errorText}</span></div></div>`;
+    }
+
+    if (isWarning) {
+        const warningText = escapeSafe(message || t('checkout.promo_warming', 'Сервер запускается, нажмите «Применить» ещё раз'));
+        return `<div class="promo-notice promo-notice-warning"><div class="promo-notice-header"><span class="promo-notice-icon">[!]</span><span class="promo-notice-title">${warningText}</span></div></div>`;
+    }
+
+    const curSuffix = (typeof getCurrency === 'function') ? getCurrency() : ((typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн');
+    const safeSaved = Number(savedMoney) || 0;
+    const formattedSaved = (typeof formatPrice === 'function') ? formatPrice(safeSaved) : `${safeSaved} ${curSuffix}`;
+    const codeAppliedText = t('checkout.promo_applied', 'Код активовано');
+    const discountLabel = t('checkout.promo_order_discount', 'Знижка на замовлення:');
+
+    let headerHtml = '';
+    let detailHtml = '';
+
+    if (isFixed) {
+        // Фиксированная скидка (например: -200 грн)
+        headerHtml = `<span class="promo-notice-icon">[✓]</span><span class="promo-notice-title">${codeAppliedText}</span>`;
+        detailHtml = `<div class="promo-notice-savings">${discountLabel} <span class="promo-notice-val">-${formattedSaved}</span></div>`;
+    } else {
+        // Процентная скидка (например: -10%, с указанием точной суммы скидки в грн на этот заказ)
+        const safePercent = Number(percent) || 0;
+        const pctDisplay = safePercent > 0 ? `-${safePercent}%` : '';
+        headerHtml = `<span class="promo-notice-icon">[✓]</span><span class="promo-notice-title">${codeAppliedText}${pctDisplay ? `: <span class="promo-notice-pct">${pctDisplay}</span>` : ''}</span>`;
+        detailHtml = `<div class="promo-notice-savings">${discountLabel} <span class="promo-notice-val">-${formattedSaved}</span></div>`;
+    }
+
+    return `<div class="promo-notice promo-notice-success"><div class="promo-notice-header">${headerHtml}</div>${detailHtml}</div>`;
+}
+window.renderPromoCodeNotice = renderPromoCodeNotice;
+
 // Обновление интерфейса корзины (плавающая панель, бейдж, сумма)
 function updateCartUI() {
     const p = document.getElementById('cartPanel');
@@ -461,7 +504,8 @@ function updateCartUI() {
     // Применяем скидку по промокоду, если она есть
     const promoDiscount = window.currentPromoDiscount || currentPromoDiscount || 0;
     const promoCode = window.appliedPromoCode || appliedPromoCode || '';
-    if (promoDiscount > 0) {
+    const msg = document.getElementById('promoMessage');
+    if (promoDiscount > 0 && promoCode) {
         const fixedAmt = Number(window.currentPromoFixed) || 0;
         // Фиксированная скидка не должна "плыть" при изменении состава корзины; итог не может быть <= 0
         const savedMoney = fixedAmt > 0
@@ -469,14 +513,19 @@ function updateCartUI() {
             : Math.floor(total * promoDiscount);
         total = total - savedMoney;
         
-        const msg = document.getElementById('promoMessage');
-        if (msg && promoCode) {
-            const formattedSaved = (typeof formatPrice === 'function') ? formatPrice(savedMoney) : `${savedMoney} ${getCurrency()}`;
-            const discDisplay = fixedAmt > 0 ? (typeof formatPrice === 'function' ? `-${formatPrice(fixedAmt)}` : `-${fixedAmt} ${getCurrency()}`) : `${Math.round(promoDiscount * 100)}%`;
-            const succText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_success', { defaultValue: 'Код активирован! Скидка' }) : 'Код активирован! Скидка';
-    const savText = typeof i18next !== 'undefined' ? i18next.t('checkout.saved', { defaultValue: 'Вы сэкономили:' }) : 'Вы сэкономили:';
-    msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${succText} ${discDisplay}<br><span style="font-size: 13px;">${savText} <b>${formattedSaved}</b></span></span>`;
+        if (msg) {
+            const isFixed = fixedAmt > 0;
+            const percentVal = Math.round(promoDiscount * 100);
+            msg.innerHTML = renderPromoCodeNotice({
+                promoCode,
+                percent: percentVal,
+                savedMoney,
+                isFixed
+            });
         }
+    } else if (!promoCode && msg && !msg.querySelector('.promo-notice-error, .promo-notice-warning')) {
+        if (typeof msg.replaceChildren === 'function') msg.replaceChildren();
+        else msg.innerHTML = '';
     }
     
     document.getElementById('cartTotal').innerText = (typeof formatPrice === 'function') ? formatPrice(total) : (total + ' ' + getCurrency());
@@ -3195,11 +3244,10 @@ async function applyPromoCode() {
             window.currentPromoDiscount = currentPromoDiscount;
             appliedPromoCode = input;
             window.appliedPromoCode = appliedPromoCode;
-            window.currentPromoFixed = data.is_fixed ? data.saved_money : null;
+            window.currentPromoFixed = data.is_fixed ? (data.fixed_amount || data.saved_money) : null;
             
-            const discDisplay = data.is_fixed ? `-${data.saved_money} ${(typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн'}` : `${Math.round(data.discount_percent * 100)}%`;
-            const curSuffix = (typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн';
-            msg.innerHTML = `<span style="color: var(--accent-green);">[✔] ${successText} ${discDisplay}<br><span style="font-size: 13px;">${savedText}: <b>${data.saved_money} ${curSuffix}</b></span></span>`;
+            // updateCartUI() выполняет динамический пересчет суммы в грн от текущего состава корзины и рендерит карточку
+            updateCartUI();
         } else {
             currentPromoDiscount = 0;
             window.currentPromoDiscount = 0;
@@ -3208,22 +3256,39 @@ async function applyPromoCode() {
             window.currentPromoFixed = null;
             
             let errorMsg = invalidErrorText;
-            if (data && data.message && data.message.includes('Лимит')) {
+            if (data && data.message && (data.message.includes('Лимит') || data.message.includes('Ліміт') || data.message.includes('limit'))) {
                 errorMsg = limitErrorText;
             }
-            msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${errorMsg}</span>`;
+            if (msg) {
+                msg.innerHTML = renderPromoCodeNotice({
+                    isError: true,
+                    message: errorMsg
+                });
+            }
+            updateCartUI();
         }
     } catch (err) {
         if (err && (err.name === 'AbortError' || err.isTimeout)) {
             const warmingMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_warming', { defaultValue: 'Сервер запускается, нажмите «Применить» ещё раз' }) : 'Сервер запускается, нажмите «Применить» ещё раз';
-                msg.innerHTML = `<span style="color: var(--accent-yellow);">[!] ${warmingMsg}</span>`;
+            if (msg) {
+                msg.innerHTML = renderPromoCodeNotice({
+                    isWarning: true,
+                    message: warmingMsg
+                });
+            }
         } else {
-            msg.innerHTML = `<span style="color: var(--accent-red);">[!] ${typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error') : 'Ошибка сервера'}</span>`;
+            const errMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error') : 'Ошибка сервера';
+            if (msg) {
+                msg.innerHTML = renderPromoCodeNotice({
+                    isError: true,
+                    message: errMsg
+                });
+            }
         }
+        updateCartUI();
     }
     
     btn.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.apply') : 'ПРИМЕНИТЬ';
-    updateCartUI();
 }
 window.applyPromoCode = applyPromoCode;
 window.openCart = function() {

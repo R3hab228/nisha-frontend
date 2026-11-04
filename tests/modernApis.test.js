@@ -3629,4 +3629,112 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catSpy).toHaveBeenCalledWith('Обувь', catEl);
         });
     });
+
+    describe('34. Minimalist Promo Code Notifications & Dynamic Percentage Savings', () => {
+        it('renders percentage promo with percentage tag and calculated order discount in UAH', () => {
+            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).toContain('function renderPromoCodeNotice');
+            expect(cartCode).toContain('window.renderPromoCodeNotice = renderPromoCodeNotice');
+
+            // Evaluate renderPromoCodeNotice in sandbox
+            const sandboxFn = new Function('i18next', 'formatPrice', 'getCurrency', `
+                ${cartCode.slice(cartCode.indexOf('function renderPromoCodeNotice'), cartCode.indexOf('window.renderPromoCodeNotice = renderPromoCodeNotice'))}
+                return renderPromoCodeNotice;
+            `);
+
+            const mockI18n = {
+                language: 'ua',
+                t: (k, opts) => {
+                    const dict = {
+                        'checkout.promo_applied': 'Код активовано',
+                        'checkout.promo_order_discount': 'Знижка на замовлення:'
+                    };
+                    return dict[k] || opts?.defaultValue || k;
+                }
+            };
+            const renderNotice = sandboxFn(mockI18n, (p) => p + ' грн', () => 'грн');
+
+            const html = renderNotice({
+                promoCode: 'TEST10',
+                percent: 10,
+                savedMoney: 150,
+                isFixed: false
+            });
+
+            expect(html).toContain('promo-notice-success');
+            expect(html).toContain('[✓]');
+            expect(html).toContain('Код активовано');
+            expect(html).toContain('-10%');
+            expect(html).toContain('Знижка на замовлення:');
+            expect(html).toContain('-150 грн');
+        });
+
+        it('renders fixed promo with clean order discount without duplicate lines', () => {
+            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const sandboxFn = new Function('i18next', 'formatPrice', 'getCurrency', `
+                ${cartCode.slice(cartCode.indexOf('function renderPromoCodeNotice'), cartCode.indexOf('window.renderPromoCodeNotice = renderPromoCodeNotice'))}
+                return renderPromoCodeNotice;
+            `);
+
+            const mockI18n = {
+                language: 'ua',
+                t: (k, opts) => {
+                    const dict = {
+                        'checkout.promo_applied': 'Код активовано',
+                        'checkout.promo_order_discount': 'Знижка на замовлення:'
+                    };
+                    return dict[k] || opts?.defaultValue || k;
+                }
+            };
+            const renderNotice = sandboxFn(mockI18n, (p) => p + ' грн', () => 'грн');
+
+            const html = renderNotice({
+                promoCode: 'FIXED200',
+                savedMoney: 200,
+                isFixed: true
+            });
+
+            expect(html).toContain('promo-notice-success');
+            expect(html).toContain('[✓]');
+            expect(html).toContain('Код активовано');
+            expect(html).toContain('Знижка на замовлення:');
+            expect(html).toContain('-200 грн');
+            expect(html).not.toContain('Ви зекономили');
+        });
+
+        it('renders error and warning notifications cleanly with proper [!] icons', () => {
+            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const sandboxFn = new Function('i18next', 'formatPrice', 'getCurrency', `
+                ${cartCode.slice(cartCode.indexOf('function renderPromoCodeNotice'), cartCode.indexOf('window.renderPromoCodeNotice = renderPromoCodeNotice'))}
+                return renderPromoCodeNotice;
+            `);
+
+            const renderNotice = sandboxFn({ language: 'ua', t: (k, opts) => opts?.defaultValue || k }, null, () => 'грн');
+
+            const errHtml = renderNotice({ isError: true, message: 'Невірний промокод' });
+            expect(errHtml).toContain('promo-notice-error');
+            expect(errHtml).toContain('[!]');
+            expect(errHtml).toContain('Невірний промокод');
+
+            const warnHtml = renderNotice({ isWarning: true, message: 'Сервер запускається' });
+            expect(warnHtml).toContain('promo-notice-warning');
+            expect(warnHtml).toContain('[!]');
+            expect(warnHtml).toContain('Сервер запускається');
+        });
+
+        it('enforces minimalist CSS styles with zero background glow or text shadow in style.css', () => {
+            const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+
+            // 1. promo-notice must have box-shadow: none !important and text-shadow: none !important
+            expect(css).toMatch(/\.promo-notice\s*\{[^}]*box-shadow:\s*none\s*!important/);
+            expect(css).toMatch(/\.promo-notice\s*\{[^}]*text-shadow:\s*none\s*!important/);
+
+            // 2. promo-msg:empty must hide
+            expect(css).toMatch(/\.promo-msg:empty\s*\{[^}]*display:\s*none/);
+
+            // 3. Zero legacy inline promo styling in cart.js
+            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            expect(cartCode).not.toContain('<span style="color: var(--accent-green);">[✔]');
+        });
+    });
 });

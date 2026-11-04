@@ -207,7 +207,9 @@
       "order_submit_err": "Помилка при оформленні: ",
       "geo_searching": "Пошук супутників...",
       "promo_warming": "Сервер запускається, натисніть «Застосувати» ще раз",
-      "location_prefix": "Локація: "
+      "location_prefix": "Локація: ",
+      "promo_applied": "Код активовано",
+      "promo_order_discount": "Знижка на замовлення:"
     },
     "orders_modal": {
       "access_granted": "Доступ дозволено",

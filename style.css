@@ -1569,7 +1569,99 @@ input[type="number"],
 .flying-item { position: fixed; z-index: 9999; width: 60px; height: 60px; border-radius: 5px; background-size: cover; background-position: center; border: 2px solid var(--accent-yellow); transition: all 0.85s ease-in-out; pointer-events: none; opacity: 1; box-shadow: 0 0 15px rgba(255,204,0,0.5); }
 
 .promo-wrapper { display: flex; gap: 10px; margin-top: 5px; }
-.promo-msg { font-size: 11px; font-family: var(--font-mono); margin-top: 5px; }
+.promo-msg { 
+    margin-top: 8px; 
+    font-family: var(--font-mono); 
+    font-size: 12px; 
+    line-height: 1.45;
+}
+.promo-msg:empty {
+    display: none;
+    margin-top: 0;
+}
+
+.promo-notice {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    font-family: var(--font-mono);
+    letter-spacing: 0.2px;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: promoNoticeFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes promoNoticeFade {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.promo-notice-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+}
+
+.promo-notice-icon {
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.promo-notice-savings {
+    font-size: 11px;
+    color: #9cb8a3;
+    letter-spacing: 0.2px;
+    padding-left: 18px;
+}
+
+.promo-notice-val {
+    color: #00ff88;
+    font-weight: 700;
+}
+
+.promo-notice-pct {
+    color: #00ff88;
+    font-weight: 700;
+}
+
+.promo-notice-success {
+    background: #08100b;
+    border: 1px solid #1c3824;
+    border-left: 3px solid #00e676;
+    color: #e2f5e8;
+}
+
+.promo-notice-success .promo-notice-icon {
+    color: #00e676;
+}
+
+.promo-notice-error {
+    background: #140808;
+    border: 1px solid #3d1c1c;
+    border-left: 3px solid #ff4444;
+    color: #ff9999;
+}
+
+.promo-notice-error .promo-notice-icon {
+    color: #ff4444;
+}
+
+.promo-notice-warning {
+    background: #141108;
+    border: 1px solid #3d331c;
+    border-left: 3px solid #ffcc00;
+    color: #ffe680;
+}
+
+.promo-notice-warning .promo-notice-icon {
+    color: #ffcc00;
+}
 
 /* РљРђР РЈРЎР•Р›Р¬ РћРўР—Р«Р’РћР’ (РљРѕР»РѕРЅРєРё РїРѕ 2 С€С‚) */
 .reviews-slider { 
