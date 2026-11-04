@@ -1775,13 +1775,13 @@ async function submitBargainOffer() {
 
     try {
         const payload = {
-            itemId: activeItem.id,
-            itemName: activeItem.name,
+            itemId: String(activeItem.id),
+            itemName: activeItem.name || '',
             itemImage: firstImg,
             currentPrice: currentPrice,
             offeredPrice: offeredPrice,
             contact: contact,
-            clientId: fingerprint
+            clientId: String(fingerprint)
         };
 
         if (window.apiClient && typeof window.apiClient.post === 'function') {
@@ -1926,13 +1926,13 @@ async function submitInlineBargainOffer() {
 
     try {
         const payload = {
-            itemId: activeItem.id,
-            itemName: activeItem.name,
+            itemId: String(activeItem.id),
+            itemName: activeItem.name || '',
             itemImage: firstImg,
             currentPrice: currentPrice,
             offeredPrice: offeredPrice,
             contact: savedContact,
-            clientId: fingerprint
+            clientId: String(fingerprint)
         };
 
         if (window.apiClient && typeof window.apiClient.post === 'function') {
