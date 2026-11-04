@@ -542,6 +542,15 @@ function openProductModal(item) {
         }
     }
 
+    const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
+    if (offerPriceBtn) {
+        if (item && item.status === 'sold') {
+            offerPriceBtn.style.display = 'none';
+        } else {
+            offerPriceBtn.style.display = 'flex';
+        }
+    }
+
     const wrapper = document.getElementById('sliderWrapper');
     const thumbs = document.getElementById('modalThumbnails');
     if (wrapper) {
@@ -1638,3 +1647,127 @@ if (document.readyState === 'loading') {
     initProductModule();
 }
 
+
+// ==========================================
+// СИСТЕМА ТОРГА (ПРЕДЛОЖЕНИЕ СВОЕЙ ЦЕНЫ)
+// ==========================================
+function openOfferPriceModal() {
+    const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    if (!activeItem) return;
+
+    const modal = document.getElementById('bargainModal');
+    if (!modal) return;
+
+    const thumbEl = document.getElementById('bargainItemThumb');
+    const nameEl = document.getElementById('bargainItemName');
+    const priceEl = document.getElementById('bargainItemPrice');
+    const priceInput = document.getElementById('bargainPriceInput');
+    const contactInput = document.getElementById('bargainContactInput');
+    const submitBtn = document.getElementById('bargainSubmitBtn');
+
+    const firstImg = (Array.isArray(activeItem.images) && activeItem.images[0]) ||
+                     (Array.isArray(activeItem.thumbnails) && activeItem.thumbnails[0]) ||
+                     (typeof getOptimizedImg === 'function' ? getOptimizedImg(activeItem) : '') || '';
+
+    if (thumbEl) {
+        thumbEl.src = firstImg;
+        thumbEl.alt = activeItem.name || 'Товар';
+    }
+    if (nameEl) nameEl.innerText = activeItem.name || 'Товар';
+    if (priceEl) priceEl.innerText = `${activeItem.price || 0} грн`;
+
+    if (priceInput) {
+        priceInput.value = '';
+        const suggestedOffer = Math.max(1, Math.round((activeItem.price || 1000) * 0.85));
+        priceInput.placeholder = String(suggestedOffer);
+    }
+
+    if (contactInput) {
+        const currentUser = (typeof getUser === 'function') ? getUser() : (window.currentUser || null);
+        const savedContact = (currentUser && (currentUser.email || currentUser.phone)) || '';
+        contactInput.value = savedContact;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        const btnText = (typeof i18next !== 'undefined' && i18next.t('product.offer_send_btn')) || '[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]';
+        submitBtn.innerText = btnText;
+    }
+
+    if (typeof openModal === 'function') {
+        openModal('bargainModal');
+    } else {
+        modal.style.display = 'flex';
+    }
+
+    setTimeout(() => {
+        if (priceInput) priceInput.focus();
+    }, 150);
+}
+window.openOfferPriceModal = openOfferPriceModal;
+
+async function submitBargainOffer() {
+    const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    if (!activeItem) return;
+
+    const priceInput = document.getElementById('bargainPriceInput');
+    const contactInput = document.getElementById('bargainContactInput');
+    const submitBtn = document.getElementById('bargainSubmitBtn');
+
+    const offeredPrice = priceInput ? Number.parseInt(priceInput.value, 10) : 0;
+    const currentPrice = Number(activeItem.price) || 0;
+
+    if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice <= 0 || offeredPrice >= currentPrice) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const invalidMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_invalid_price')) || 'Будь ласка, вкажіть реальну ціну нижче поточної!';
+        return showToast(invalidMsg, 'error');
+    }
+
+    const contact = contactInput ? contactInput.value.trim() : '';
+    const fingerprint = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : ('guest_' + Date.now()));
+    const firstImg = (Array.isArray(activeItem.images) && activeItem.images[0]) ||
+                     (Array.isArray(activeItem.thumbnails) && activeItem.thumbnails[0]) ||
+                     (typeof getOptimizedImg === 'function' ? getOptimizedImg(activeItem) : '') || '';
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = (typeof i18next !== 'undefined' && i18next.t('product.offer_sending')) || '[ ВІДПРАВКА... ]';
+    }
+
+    try {
+        const payload = {
+            itemId: activeItem.id,
+            itemName: activeItem.name,
+            itemImage: firstImg,
+            currentPrice: currentPrice,
+            offeredPrice: offeredPrice,
+            contact: contact,
+            clientId: fingerprint
+        };
+
+        if (window.apiClient && typeof window.apiClient.post === 'function') {
+            await window.apiClient.post('/api/bargain', payload, { timeout: 12000, retries: 1 });
+        }
+
+        if (typeof triggerHaptic === 'function') triggerHaptic('success');
+        const sentMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_sent_toast')) || 'Пропозицію надіслано! Очікуйте відповіді продавця.';
+        showToast(sentMsg, 'success');
+
+        if (typeof closeModal === 'function') {
+            closeModal('bargainModal');
+        } else {
+            const m = document.getElementById('bargainModal');
+            if (m) m.style.display = 'none';
+        }
+    } catch (err) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const errMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Помилка зв\'язку з сервером.';
+        showToast(errMsg, 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = (typeof i18next !== 'undefined' && i18next.t('product.offer_send_btn')) || '[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]';
+        }
+    }
+}
+window.submitBargainOffer = submitBargainOffer;

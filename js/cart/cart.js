@@ -283,7 +283,15 @@ function getSupabaseClient() {
 // ==========================================
 
 // Добавление в корзину прямо с главной страницы (доступно и гостям, и авторизованным)
-async function addToCartById(itemId) {
+async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
+    let customPrice = null;
+    if (typeof customPriceOrSize === 'number') {
+        customPrice = customPriceOrSize;
+    } else if (typeof customPriceOrSize === 'string' && !Number.isNaN(Number(customPriceOrSize)) && customPriceOrSize.trim() !== '') {
+        customPrice = Number(customPriceOrSize);
+    } else if (options && (options.price || options.customPrice)) {
+        customPrice = Number(options.price || options.customPrice);
+    }
 
     const catalog = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
     const item = catalog.find(i => i.id === itemId);
@@ -298,9 +306,15 @@ async function addToCartById(itemId) {
     let cartItem = (typeof deepClone === 'function')
         ? deepClone(item)
         : ((typeof structuredClone === 'function') ? structuredClone(item) : { ...item });
-    const hacked = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
-    if (hacked) {
-        cartItem.price = Math.floor(cartItem.price * 0.9);
+
+    if (customPrice !== null && !Number.isNaN(customPrice) && customPrice > 0) {
+        cartItem.price = Math.round(Number(customPrice));
+        cartItem.bargainPrice = Math.round(Number(customPrice));
+    } else {
+        const hacked = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
+        if (hacked) {
+            cartItem.price = Math.floor(cartItem.price * 0.9);
+        }
     }
     currentCart.push(cartItem);
     setActiveCart(currentCart);
