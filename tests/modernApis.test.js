@@ -2176,14 +2176,35 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('totalPagesGuard');
         });
 
-        it('protects the proposal item-name field from browser autofill of the buyer full name', () => {
+        it('protects the proposal item-name field from browser autofill of the buyer full name using queueMicrotask and deferred timers', () => {
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             expect(html).toMatch(/id=propName[^>]*name=prop_item_title/);
             expect(html).toMatch(/id=propName[^>]*autocomplete=off/);
             const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
             expect(dropCode).toContain('function sanitizeProposalNameField');
-            expect(dropCode).toContain('[0, 150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms))');
+            expect(dropCode).toContain('queueMicrotask(sanitizeProposalNameField)');
+            expect(dropCode).toContain('[150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms))');
             expect(dropCode).toContain("dataset.userTyped = '1'");
+        });
+
+        it('replaces legacy setTimeout 0 with modern queueMicrotask / runMicrotask without timer clamps', async () => {
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain('function runMicrotask');
+            expect(helpersCode).toContain('queueMicrotask(fn)');
+
+            // Verify microtask executes before macrotask (setTimeout 0)
+            const order = [];
+            eval(helpersCode);
+            setTimeout(() => order.push('macrotask'), 0);
+            window.runMicrotask(() => order.push('microtask'));
+
+            await new Promise(r => setTimeout(r, 10));
+            expect(order).toEqual(['microtask', 'macrotask']);
+
+            // Ensure no legacy setTimeout(..., 0) exists in js/drop/drop.js
+            const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            expect(dropCode).not.toMatch(/setTimeout\s*\([^,)]+,\s*0\s*\)/);
+            expect(dropCode).not.toContain('[0,');
         });
 
         it('matches and ranks branches and postomats by number without false positives on weight limits', () => {

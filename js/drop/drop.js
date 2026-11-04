@@ -111,8 +111,15 @@ function openProposeModal() {
     const propNameEl = document.getElementById('propName');
     if (propNameEl) {
         delete propNameEl.dataset.userTyped;
-        // Автозаполнение браузера может прилететь с задержкой — проверяем несколько раз после открытия окна
-        [0, 150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms));
+        // Автозаполнение браузера может прилететь с задержкой — мгновенная проверка через очередь микрозадач и отложенные таймеры
+        if (typeof queueMicrotask === 'function') {
+            queueMicrotask(sanitizeProposalNameField);
+        } else if (typeof runMicrotask === 'function') {
+            runMicrotask(sanitizeProposalNameField);
+        } else {
+            Promise.resolve().then(sanitizeProposalNameField);
+        }
+        [150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms));
     }
     const contactEl = document.getElementById('propContact');
     if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {

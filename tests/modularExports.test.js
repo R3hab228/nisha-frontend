@@ -20,6 +20,7 @@ import defaultModularFacade, {
     generateShortId,
     deepClone,
     safeViewTransition,
+    runMicrotask,
     openModal,
     closeModal,
     executeCloseModal,
@@ -237,6 +238,15 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             const val = await res.finished;
             expect(asyncExecuted).toBe(true);
             expect(val).toBe('done');
+        });
+
+        it('dispatches microtasks with zero latency via runMicrotask and defaultModularFacade.helpers.runMicrotask', async () => {
+            let fired = false;
+            runMicrotask(() => { fired = true; });
+            expect(typeof runMicrotask).toBe('function');
+            expect(typeof defaultModularFacade.helpers.runMicrotask).toBe('function');
+            await Promise.resolve();
+            expect(fired).toBe(true);
         });
     });
 

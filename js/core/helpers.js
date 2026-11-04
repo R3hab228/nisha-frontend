@@ -40,6 +40,22 @@ function escapeJsString(str) {
 }
 window.escapeJsString = escapeJsString;
 
+// --- ZERO-DELAY TASK SCHEDULER (FAST MICROTASK QUEUE INSTEAD OF SETTIMEOUT 0) ---
+function runMicrotask(fn) {
+    if (typeof fn !== 'function') return;
+    if (typeof queueMicrotask === 'function') {
+        queueMicrotask(fn);
+    } else if (typeof Promise !== 'undefined') {
+        Promise.resolve().then(fn).catch(err => {
+            setTimeout(() => { throw err; }, 0);
+        });
+    } else {
+        setTimeout(fn, 0);
+    }
+}
+window.runMicrotask = runMicrotask;
+if (typeof globalThis !== 'undefined') globalThis.runMicrotask = globalThis.runMicrotask || runMicrotask;
+
 // --- VIBRATION & HAPTIC FEEDBACK ---
 function triggerVibration(duration = 150) {
     if ('vibrate' in navigator) {

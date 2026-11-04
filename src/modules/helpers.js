@@ -441,3 +441,24 @@ export function itemMatchesPrice(item, priceQuery) {
     }
     return false;
 }
+
+/**
+ * Schedules a zero-delay task in the microtask queue
+ * @param {Function} fn
+ */
+export function runMicrotask(fn) {
+    if (typeof fn !== 'function') return;
+    if (typeof window !== 'undefined' && typeof window.runMicrotask === 'function') {
+        window.runMicrotask(fn);
+        return;
+    }
+    if (typeof queueMicrotask === 'function') {
+        queueMicrotask(fn);
+    } else if (typeof Promise !== 'undefined') {
+        Promise.resolve().then(fn).catch(err => {
+            setTimeout(() => { throw err; }, 0);
+        });
+    } else {
+        setTimeout(fn, 0);
+    }
+}

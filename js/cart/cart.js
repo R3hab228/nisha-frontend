@@ -361,9 +361,9 @@ function addToCartWithAnimation(itemId, btnElement, event) {
     
     document.body.appendChild(flyingImg);
 
-    // Гарантируем, что браузер сначала отрисует стартовую позицию, а только потом начнет двигать
+    // Гарантируем, что браузер сначала отрисует стартовую позицию, а только потом начнет двигать (двойной rAF без таймеров)
     requestAnimationFrame(() => {
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             // Конечная позиция (всегда в левый нижний угол экрана, куда приедет корзина)
             flyingImg.style.left = `20px`;
             flyingImg.style.top = `${window.innerHeight - 60}px`;
@@ -371,7 +371,7 @@ function addToCartWithAnimation(itemId, btnElement, event) {
             // Добавили эффект вращения в полете (rotate(360deg))
             flyingImg.style.transform = 'scale(0.1) rotate(360deg)';
             flyingImg.style.opacity = '0.3';
-        }, 10); 
+        }); 
     });
 
     // Удаляем элемент, когда анимация закончится (0.85s = 850ms)
