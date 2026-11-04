@@ -1811,10 +1811,20 @@ async function submitBargainOffer() {
     const offeredPrice = priceInput ? Number.parseInt(priceInput.value, 10) : 0;
     const currentPrice = Number(activeItem.price) || 0;
 
-    if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice <= 0 || offeredPrice >= currentPrice) {
+    if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice < 100 || offeredPrice >= currentPrice) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const invalidMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_invalid_price')) || 'Будь ласка, вкажіть реальну ціну нижче поточної!';
+        const invalidMsg = (offeredPrice > 0 && offeredPrice < 100)
+            ? ((typeof i18next !== 'undefined' && i18next.t('product.offer_min_100')) || 'Мінімальна ціна для пропозиції: 100 грн!')
+            : ((typeof i18next !== 'undefined' && i18next.t('product.offer_invalid_price')) || 'Будь ласка, вкажіть реальну ціну нижче поточної!');
         return showToast(invalidMsg, 'error');
+    }
+
+    const descMatch = (typeof activeItem.description === 'string') && activeItem.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+    const itemMinBargain = activeItem.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
+    if (itemMinBargain && offeredPrice < itemMinBargain) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const minMsg = ((typeof i18next !== 'undefined' && i18next.t('product.offer_below_min')) || 'Мінімальна ціна для пропозиції: {{min}} грн!').replace('{{min}}', itemMinBargain);
+        return showToast(minMsg, 'error');
     }
 
     const contact = contactInput ? contactInput.value.trim() : '';
@@ -1855,7 +1865,9 @@ async function submitBargainOffer() {
         }
     } catch (err) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const errMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Помилка зв\'язку з сервером.';
+        const serverMsg = err.response?.data?.message || err.data?.message || err.message;
+        const isSafeServerMsg = serverMsg && typeof serverMsg === 'string' && !serverMsg.includes('status code') && !serverMsg.includes('fetch') && !serverMsg.includes('Network');
+        const errMsg = isSafeServerMsg ? serverMsg : ((typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Помилка зв\'язку з сервером.');
         showToast(errMsg, 'error');
     } finally {
         if (submitBtn) {
@@ -1951,9 +1963,11 @@ async function submitInlineBargainOffer() {
 
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
 
-    if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice <= 0 || offeredPrice >= currentPrice) {
+    if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice < 100 || offeredPrice >= currentPrice) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const invalidMsg = t('product.offer_invalid_price', 'Будь ласка, вкажіть реальну ціну нижче поточної!');
+        const invalidMsg = (offeredPrice > 0 && offeredPrice < 100)
+            ? t('product.offer_min_100', 'Мінімальна ціна для пропозиції: 100 грн!')
+            : t('product.offer_invalid_price', 'Будь ласка, вкажіть реальну ціну нижче поточної!');
         showToast(invalidMsg, 'error');
         input.focus();
         return;
@@ -2009,7 +2023,9 @@ async function submitInlineBargainOffer() {
         }
     } catch (err) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const errMsg = t('propose.err_network', 'Помилка зв\'язку з сервером.');
+        const serverMsg = err.response?.data?.message || err.data?.message || err.message;
+        const isSafeServerMsg = serverMsg && typeof serverMsg === 'string' && !serverMsg.includes('status code') && !serverMsg.includes('fetch') && !serverMsg.includes('Network');
+        const errMsg = isSafeServerMsg ? serverMsg : t('propose.err_network', 'Помилка зв\'язку з сервером.');
         showToast(errMsg, 'error');
     } finally {
         submitBtn.disabled = false;
