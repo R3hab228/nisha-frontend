@@ -278,11 +278,12 @@ async function fetchMyOrders() {
                             });
                             if (added) {
                                 const orderValues = Array.from(orderMap.values());
+                                const sortOrdersDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
                                 window.globalOrdersData = (typeof window.toSorted === 'function')
-                                    ? window.toSorted(orderValues, (a, b) => new Date(b.created_at) - new Date(a.created_at))
+                                    ? window.toSorted(orderValues, sortOrdersDesc)
                                     : (typeof orderValues.toSorted === 'function'
-                                        ? orderValues.toSorted((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                                        : [...orderValues].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+                                        ? orderValues.toSorted(sortOrdersDesc)
+                                        : [...orderValues].sort(sortOrdersDesc));
                                 try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
                                 updateOrderTabCounters();
                                 ensureOrderImagesLoaded();
@@ -294,11 +295,12 @@ async function fetchMyOrders() {
             }
 
             const initialOrderValues = Array.from(orderMap.values());
+            const sortOrdersDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
             window.globalOrdersData = (typeof window.toSorted === 'function')
-                ? window.toSorted(initialOrderValues, (a, b) => new Date(b.created_at) - new Date(a.created_at))
+                ? window.toSorted(initialOrderValues, sortOrdersDesc)
                 : (typeof initialOrderValues.toSorted === 'function'
-                    ? initialOrderValues.toSorted((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                    : [...initialOrderValues].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+                    ? initialOrderValues.toSorted(sortOrdersDesc)
+                    : [...initialOrderValues].sort(sortOrdersDesc));
             if (window.globalOrdersData.length > 0) {
                 try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
             }
@@ -662,8 +664,8 @@ function renderFilteredOrders() {
     }
 
     filteredData.forEach(order => {
-        const orderDate = new Date(order.created_at);
-        const date = !Number.isNaN(orderDate.getTime()) ? orderDateFormatter.format(orderDate) : '';
+        const orderDateMs = Date.parse(order.created_at);
+        const date = Number.isFinite(orderDateMs) ? orderDateFormatter.format(orderDateMs) : '';
         let itemsHtml = '';
         if (order.items && Array.isArray(order.items)) {
             order.items.forEach(item => {

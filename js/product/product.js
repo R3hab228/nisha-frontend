@@ -724,7 +724,7 @@ function openProductModal(item) {
                 let miniBadgeHTML = '';
                 const hasSale = s.is_sale;
                 const hasHot = (s.views_count || 0) >= 25;
-                const isTop = s.is_top === true && s.top_until && new Date(s.top_until).getTime() > Date.now();
+                const isTop = s.is_top === true && s.top_until && Date.parse(s.top_until) > Date.now();
 
                 if ((hasSale || hasHot || isTop) && s.status === 'available') {
                     miniBadgeHTML = `<div style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 4px; padding: 1px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none;">`;
@@ -1294,7 +1294,7 @@ function renderHistory() {
         const liveOldPrice = realItem ? realItem.old_price : h.old_price;
         const liveIsSale = realItem ? !!realItem.is_sale : !!h.is_sale;
         const liveName = realItem && realItem.name ? realItem.name : h.name;
-        const liveIsTop = !!(realItem && realItem.is_top === true && realItem.top_until && new Date(realItem.top_until).getTime() > Date.now());
+        const liveIsTop = !!(realItem && realItem.is_top === true && realItem.top_until && Date.parse(realItem.top_until) > Date.now());
         const liveIsHot = !!(realItem && (realItem.views_count || 0) >= 25);
         
         let finalPriceHTML = '';

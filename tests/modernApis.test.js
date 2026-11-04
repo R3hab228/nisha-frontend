@@ -3396,4 +3396,56 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(matchedRange.map(i => i.id)).toEqual(['1', '3']);
         });
     });
+
+    describe('32. Catalog Performance: Date.parse() instead of new Date().getTime()', () => {
+        it('verifies Date.parse() is used across catalog, product, orders, and reviews with zero .getTime()', () => {
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const ordersCode = readFileSync(resolve(import.meta.dirname, '../js/orders/orders.js'), 'utf8');
+            const reviewsCode = readFileSync(resolve(import.meta.dirname, '../js/reviews/reviews.js'), 'utf8');
+
+            // 1. Zero .getTime() in all 4 modules
+            expect(catalogCode).not.toContain('.getTime()');
+            expect(productCode).not.toContain('.getTime()');
+            expect(ordersCode).not.toContain('.getTime()');
+            expect(reviewsCode).not.toContain('.getTime()');
+
+            // 2. Date.parse is used for top_until and created_at sorting
+            expect(catalogCode).toContain('Date.parse(item.top_until) > Date.now()');
+            expect(catalogCode).toContain('(Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0)');
+            expect(productCode).toContain('Date.parse(s.top_until) > Date.now()');
+            expect(ordersCode).toContain('(Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0)');
+            expect(ordersCode).toContain('Date.parse(order.created_at)');
+            expect(reviewsCode).toContain('Date.parse(rev.created_at)');
+        });
+
+        it('sorts items descending by created_at using zero-allocation Date.parse without heap churn', () => {
+            const sortDateDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+
+            const items = [
+                { id: 1, created_at: '2026-01-01T10:00:00.000Z' },
+                { id: 2, created_at: '2026-03-15T12:00:00.000Z' },
+                { id: 3, created_at: null },
+                { id: 4, created_at: '2026-02-20T08:00:00.000Z' }
+            ];
+
+            const sorted = [...items].sort(sortDateDesc);
+            expect(sorted.map(i => i.id)).toEqual([2, 4, 1, 3]);
+        });
+
+        it('correctly evaluates top_until with Date.parse for future, past, and invalid dates', () => {
+            const nowTs = Date.now();
+            const futureIso = new Date(nowTs + 3600000).toISOString();
+            const pastIso = new Date(nowTs - 3600000).toISOString();
+
+            const isTopNow = (it) => !!(it && it.is_top === true && it.top_until && Date.parse(it.top_until) > nowTs);
+
+            expect(isTopNow({ is_top: true, top_until: futureIso })).toBe(true);
+            expect(isTopNow({ is_top: true, top_until: pastIso })).toBe(false);
+            expect(isTopNow({ is_top: false, top_until: futureIso })).toBe(false);
+            expect(isTopNow({ is_top: true, top_until: null })).toBe(false);
+            expect(isTopNow({ is_top: true, top_until: 'invalid-date' })).toBe(false);
+            expect(isTopNow(null)).toBe(false);
+        });
+    });
 });

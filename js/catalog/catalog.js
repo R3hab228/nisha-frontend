@@ -988,7 +988,7 @@ function updateCardDOM(item) {
 
                 const hasSale = !!item.is_sale;
                 const hasHot = (item.views_count || 0) >= 25;
-                const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > Date.now();
+                const isTop = item.is_top === true && item.top_until && Date.parse(item.top_until) > Date.now();
 
                 if (hasSale || hasHot || isTop) {
                     let badgeHTML = `<div class="system-status-bar">`;
@@ -1174,7 +1174,7 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
         } else {
             window.allItems.unshift(fresh);
         }
-        const sortDateDesc = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        const sortDateDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
         window.allItems = (typeof window.toSorted === 'function')
             ? window.toSorted(window.allItems, sortDateDesc)
             : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
@@ -1207,8 +1207,8 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
     // UPDATE существующего товара
     const item = window.allItems[existingIdx];
     const nowTs = Date.now();
-    const wasTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > nowTs;
-    const nowTop = fresh.is_top === true && fresh.top_until && new Date(fresh.top_until).getTime() > nowTs;
+    const wasTop = item.is_top === true && item.top_until && Date.parse(item.top_until) > nowTs;
+    const nowTop = fresh.is_top === true && fresh.top_until && Date.parse(fresh.top_until) > nowTs;
     const topChanged = wasTop !== nowTop || item.top_until !== fresh.top_until || !!item.is_top !== !!fresh.is_top;
 
     const oldStatus = item.status;
@@ -1372,7 +1372,7 @@ async function syncCriticalStatuses() {
                     }
                 });
 
-                const sortDateDesc = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0);
+                const sortDateDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
                 window.allItems = (typeof window.toSorted === 'function')
                     ? window.toSorted(window.allItems, sortDateDesc)
                     : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
@@ -1407,8 +1407,8 @@ async function syncCriticalStatuses() {
             const fresh = freshMap.get(item.id);
             if (!fresh) return;
 
-            const wasTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > nowTs;
-            const nowTop = fresh.is_top === true && fresh.top_until && new Date(fresh.top_until).getTime() > nowTs;
+            const wasTop = item.is_top === true && item.top_until && Date.parse(item.top_until) > nowTs;
+            const nowTop = fresh.is_top === true && fresh.top_until && Date.parse(fresh.top_until) > nowTs;
             const domCard = document.querySelector(`.item-card[data-id="${item.id}"]`);
             const domHasTopBadge = !!(domCard && domCard.querySelector('.status-top'));
             const topExpiredInDom = domHasTopBadge && !nowTop;
@@ -1869,7 +1869,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
 
             // 3. Сортировка
             const now = Date.now();
-            const isItemTop = (item) => item.is_top === true && item.top_until && new Date(item.top_until).getTime() > now;
+            const isItemTop = (item) => item.is_top === true && item.top_until && Date.parse(item.top_until) > now;
             const sortCheap = document.getElementById('sort-cheap');
 
             if (sortCheap && sortCheap.classList.contains('active-sort')) {
@@ -1889,7 +1889,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
                     const topB = isItemTop(b);
                     if (topA && !topB) return -1;
                     if (!topA && topB) return 1;
-                    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+                    return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
                 };
                 window.filteredItems = (typeof window.toSorted === 'function')
                     ? window.toSorted(window.filteredItems, sortDateFn)
@@ -2293,7 +2293,7 @@ function buildCardDOM(item, idx = 0) {
     } else {
         const hasSale = item.is_sale;
         const hasHot = (item.views_count || 0) >= 25;
-        const isTop = item.is_top === true && item.top_until && new Date(item.top_until).getTime() > nowTs;
+        const isTop = item.is_top === true && item.top_until && Date.parse(item.top_until) > nowTs;
 
         if (hasSale || hasHot || isTop) {
             badgeHTML = `<div class="system-status-bar">`;
@@ -2403,7 +2403,7 @@ window.buildCardDOM = buildCardDOM;
 // Единый компаратор витрины (TOP-закрепленные всегда выше, далее активная сортировка: дата или цена)
 function getCatalogItemComparator() {
     const nowTs = Date.now();
-    const isTopNow = (it) => !!(it && it.is_top === true && it.top_until && new Date(it.top_until).getTime() > nowTs);
+    const isTopNow = (it) => !!(it && it.is_top === true && it.top_until && Date.parse(it.top_until) > nowTs);
     const sortCheapEl = document.getElementById('sort-cheap');
     const byCheap = !!(sortCheapEl && sortCheapEl.classList.contains('active-sort'));
     const safePrice = (p) => Number.parseInt(String(p).replace(/[^\d]/g, ''), 10) || 0;
@@ -2413,7 +2413,7 @@ function getCatalogItemComparator() {
         if (topA && !topB) return -1;
         if (!topA && topB) return 1;
         if (byCheap) return safePrice(a.price) - safePrice(b.price);
-        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
     };
 }
 window.getCatalogItemComparator = getCatalogItemComparator;

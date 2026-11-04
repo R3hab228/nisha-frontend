@@ -63,8 +63,8 @@ async function openReviewsModal() {
         
         let html = ''; 
         data.forEach(rev => {
-            const revDate = new Date(rev.created_at);
-            const date = !Number.isNaN(revDate.getTime()) ? reviewDateFormatter.format(revDate) : '';
+            const revDateMs = Date.parse(rev.created_at);
+            const date = Number.isFinite(revDateMs) ? reviewDateFormatter.format(revDateMs) : '';
             const safeText = (typeof window.sanitizeText === 'function') ? window.sanitizeText(rev.text) : (rev.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
             const safeName = (typeof window.sanitizeText === 'function') ? window.sanitizeText(rev.user_name) : (rev.user_name || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
             
