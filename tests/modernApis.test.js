@@ -2743,7 +2743,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const ciWorkflow = readFileSync(resolve(__dirname, '../.github/workflows/lint.yml'), 'utf8');
             expect(ciWorkflow).toContain('npm run lint');
         });
-    });
+    });
 
     describe('29. Modern View Transitions API for Smooth Tab & Page Navigation', () => {
         it('exports and exposes window.safeViewTransition globally', () => {
@@ -3854,11 +3854,21 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(dropCode).toContain('minBargainPrice >= price');
             expect(dropCode).toContain("formData.append('minBargainPrice'");
 
-            // 4. Product JS renders gavel SVG and badge_bargain when item has bargain
+            // 4. Product JS renders refined gavel SVG and badge_bargain with fallback
             expect(productCode).toContain('badge_bargain');
             expect(productCode).toContain('hasBargain');
             expect(productCode).toContain('fill="var(--accent-green, #00ff66)"');
             expect(productCode).toContain('itemMinBargain');
+            expect(productCode).toContain('viewBox="30 30 205 170"');
+            expect(productCode).toContain('fallbackBargainText');
+
+            // 4b. Public locales are in sync with root locales
+            const pubRuJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales/ru.json'), 'utf8'));
+            const pubUaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales/ua.json'), 'utf8'));
+            const pubEnJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales/en.json'), 'utf8'));
+            expect(pubRuJson.translation.product.badge_bargain).toBe('ЕСТЬ ТОРГ');
+            expect(pubUaJson.translation.product.badge_bargain).toBe('Є ТОРГ');
+            expect(pubEnJson.translation.product.badge_bargain).toBe('BARGAIN');
 
             // 5. Catalog JS handles bargain badge info modal
             expect(catalogCode).toContain("type === 'bargain'");

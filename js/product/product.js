@@ -920,11 +920,19 @@ function openProductModal(item) {
 
         let deliveryOrBargainBadgeHTML = '';
         if (hasBargain) {
-            const gavelSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent-green, #00ff66)" stroke="none" aria-hidden="true"><path d="M2.5 21.5h8c.55 0 1-.45 1-1s-.45-1-1-1h-8c-.55 0-1 .45-1 1s.45 1 1 1zM3.5 18.5h6c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-6c-.28 0-.5.22-.5.5s.22.5.5.5z"/><path d="M13.2 12.1l6.1 6.1c.39.39 1.02.39 1.41 0l.71-.71c.39-.39.39-1.02 0-1.41l-6.1-6.1-2.12 2.12z"/><path d="M14.6 4.3l1.4-1.4c.39-.39 1.02-.39 1.41 0l2.12 2.12c.39.39.39 1.02 0 1.41l-1.4 1.4-3.53-3.53z"/><path d="M7.5 11.4l7.07-7.07 2.83 2.83-7.07 7.07z"/><path d="M6.1 12.8l1.4-1.4 2.12 2.12-1.4 1.4c-.39.39-1.02.39-1.41 0L5.39 13.5c-.39-.39-.39-1.02 0-1.41l.71-.71z"/></svg>`;
+            const gavelSvg = `<svg width="18" height="18" viewBox="30 30 205 170" fill="var(--accent-green, #00ff66)" stroke="none" aria-hidden="true"><path d="M128 37 L135 38 L170 67 L177 74 L177 81 L173 84 L165 82 L129 52 L124 47 L124 41 L127 38 Z M124 54 L126 54 L162 84 L162 86 L126 129 L123 132 L120 130 L85 101 L123 55 Z M77 101 L83 104 L118 133 L124 140 L123 146 L118 149 L112 147 L77 118 L70 110 L71 104 L76 102 Z M149 107 L222 163 L227 169 L226 176 L221 180 L216 180 L208 174 L143 115 L148 108 Z M55 167 H133 C136 167 138 169 138 172 V174 C138 175.5 140 176.5 142 176.5 H145 C148.5 176.5 151 179 151 182.5 V188.5 C151 192 148.5 194.5 145 194.5 H43 C39.5 194.5 37 192 37 188.5 V182.5 C37 179 39.5 176.5 43 176.5 H46 C48 176.5 50 175.5 50 174 V172 C50 169 52 167 55 167 Z" /></svg>`;
+            const curLang = (typeof i18next !== 'undefined' && i18next.language) ? i18next.language : 'ru';
+            const fallbackBargainText = (curLang.startsWith('ua') || curLang.startsWith('uk')) ? 'Є ТОРГ' : (curLang.startsWith('en') ? 'BARGAIN' : 'ЕСТЬ ТОРГ');
+            let bargainText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+                ? i18next.t('product.badge_bargain', { defaultValue: fallbackBargainText })
+                : fallbackBargainText;
+            if (!bargainText || bargainText === 'product.badge_bargain') {
+                bargainText = fallbackBargainText;
+            }
             deliveryOrBargainBadgeHTML = `
                 <div class="badge-item" data-action="show-badge-info" data-badge="bargain">
                     <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${gavelSvg}</span>
-                    <span class="badge-text" data-i18n="product.badge_bargain">${typeof i18next !== 'undefined' ? i18next.t('product.badge_bargain') : 'ЕСТЬ ТОРГ'}</span>
+                    <span class="badge-text" data-i18n="product.badge_bargain">${bargainText}</span>
                 </div>`;
         } else {
             deliveryOrBargainBadgeHTML = `
