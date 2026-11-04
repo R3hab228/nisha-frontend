@@ -92,7 +92,7 @@
         "measure": "Как мы делаем замеры?",
         "measure_text": "Все замеры снимаются с вещи на ровной поверхности.",
         "add_to_cart": "В КОРЗИНУ",
-        "in_cart": "[ В КОРЗИНЕ ]",
+        "in_cart": "В КОРЗИНЕ",
         "notify": "УВЕДОМИТЬ О ПОЯВЛЕНИИ",
         "badge_orig": "БЕЗОПАСНАЯ СДЕЛКА",
         "badge_fast": "БЫСТРАЯ ОТПРАВКА",
@@ -115,7 +115,10 @@
         "share": "Поделиться",
         "no_photo": "НЕТ ФОТО",
         "offer_pending": "[ ПРЕДЛОЖЕНИЕ ОТПРАВЛЕНО ✓ ]",
-        "offer_your_price_ph": "Ваша цена (грн)..."
+        "offer_your_price_ph": "Ваша цена (грн)...",
+        "offer_accepted_btn": "ПРЕДЛОЖЕНИЕ ПРИНЯТО ✓",
+        "offer_declined_btn": "ПРЕДЛОЖЕНИЕ ОТКЛОНЕНО",
+        "offer_accepted_title": "ВАША ЦЕНА ПРИНЯТА!"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -542,7 +545,7 @@
         "measure": "Як ми робимо заміри?",
         "measure_text": "Всі заміри знімаються з речі на рівній поверхні.",
         "add_to_cart": "В КОШИК",
-        "in_cart": "[ В КОШИКУ ]",
+        "in_cart": "В КОШИКУ",
         "notify": "ПОВІДОМИТИ ПРО НАЯВНІСТЬ",
         "badge_orig": "БЕЗПЕЧНА УГОДА",
         "badge_fast": "ШВИДКА ВІДПРАВКА",
@@ -565,7 +568,10 @@
         "share": "Поділитися",
         "no_photo": "НЕМАЄ ФОТО",
         "offer_pending": "[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]",
-        "offer_your_price_ph": "Ваша ціна (грн)..."
+        "offer_your_price_ph": "Ваша ціна (грн)...",
+        "offer_accepted_btn": "ПРОПОЗИЦІЮ ПРИЙНЯТО ✓",
+        "offer_declined_btn": "ПРОПОЗИЦІЮ ВІДХИЛЕНО",
+        "offer_accepted_title": "ВАША ЦІНА ПРИЙНЯТА!"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -992,7 +998,7 @@
         "measure": "How we take measurements?",
         "measure_text": "All measurements are taken on a flat surface.",
         "add_to_cart": "ADD TO CART",
-        "in_cart": "[ IN CART ]",
+        "in_cart": "IN CART",
         "notify": "NOTIFY WHEN AVAILABLE",
         "badge_orig": "SECURE TRANSACTION",
         "badge_fast": "FAST SHIPPING",
@@ -1015,7 +1021,10 @@
         "share": "Share",
         "no_photo": "NO PHOTO",
         "offer_pending": "[ OFFER SENT ✓ ]",
-        "offer_your_price_ph": "Your price (UAH)..."
+        "offer_your_price_ph": "Your price (UAH)...",
+        "offer_accepted_btn": "OFFER ACCEPTED ✓",
+        "offer_declined_btn": "OFFER DECLINED",
+        "offer_accepted_title": "YOUR OFFER WAS ACCEPTED!"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",

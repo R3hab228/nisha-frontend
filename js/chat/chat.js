@@ -14,16 +14,20 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     // 1. Сохраняем состояние принятого торга для текущего товара
     try {
         sessionStorage.setItem('accepted_bargain_' + bargainData.itemId, JSON.stringify(bargainData));
+        sessionStorage.removeItem('declined_bargain_' + bargainData.itemId);
     } catch (e) {}
 
-    // 2. Обновляем кнопку предложения цены на карточке товара: окантовка и текст становятся жёлтыми
+    // 2. Обновляем кнопку предложения цены на карточке товара: окантовка и текст становятся жёлтыми, кнопка НЕКЛИКАБЕЛЬНА
     const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
     if (offerPriceBtn) {
-        const acceptedBtnText = t('product.offer_accepted_btn', '[ ПРОПОЗИЦІЮ ПРИЙНЯТО ✓ ]');
+        const acceptedBtnText = t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
         offerPriceBtn.innerText = acceptedBtnText;
         offerPriceBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
         offerPriceBtn.style.color = 'var(--accent-yellow, #ffd700)';
         offerPriceBtn.style.boxShadow = 'none';
+        offerPriceBtn.style.pointerEvents = 'none';
+        offerPriceBtn.style.cursor = 'default';
+        offerPriceBtn.disabled = true;
     }
 
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
@@ -36,32 +40,32 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     const overlay = document.createElement('div');
     overlay.className = 'bargain-broadcast-overlay terminal-modal-overlay';
-    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10001; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;";
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 10001; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;";
 
     const safeName = escHtml(bargainData.itemName || 'Товар');
     const safeImg = bargainData.itemImage ? escHtml(bargainData.itemImage) : '';
     const newPrice = bargainData.acceptedPrice || '';
 
     overlay.innerHTML = `
-        <div class="success-terminal-box" style="max-width: 420px; width: 90%; background: #0a0a0a; border: 1px solid var(--accent-yellow, #ffd700); box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 215, 0, 0.15); padding: 25px 22px; text-align: center;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div class="success-title" style="color: var(--accent-yellow, #ffd700); font-family: var(--font-mono); font-size: 15px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">🤝 ${titleText}</div>
-                <button class="close-bargain-x-btn" style="background: none; border: none; color: #888; font-family: var(--font-mono); font-size: 16px; cursor: pointer; padding: 4px 8px; line-height: 1;">✕</button>
+        <div class="success-terminal-box" style="max-width: 420px; width: 90%; background: #0a0a0a; border: 1px solid #333; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.85); padding: 30px 24px; text-align: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <div class="success-title" style="color: var(--accent-green, #00ff66); font-family: var(--font-mono); font-size: 16px; font-weight: 700; margin: 0; letter-spacing: 0.5px; text-transform: uppercase;">${titleText}</div>
+                <button class="close-bargain-x-btn" aria-label="Close" style="background: none; border: none; color: #777; font-family: var(--font-mono); font-size: 16px; cursor: pointer; padding: 2px 6px; line-height: 1; transition: color 0.15s ease;">✕</button>
             </div>
-            <div class="success-divider" style="margin-bottom: 16px;"></div>
+            <div class="success-divider" style="margin-bottom: 18px;"></div>
 
             ${safeImg ? `
             <div style="display: flex; justify-content: center; margin-bottom: 14px;">
-                <img src="${safeImg}" alt="${safeName}" class="bargain-broadcast-img" style="width: 140px; height: 140px; aspect-ratio: 1/1; object-fit: cover; border: 2px inset var(--border-light, #555); cursor: pointer; display: block; transition: transform 0.15s ease, border-color 0.15s ease;">
+                <img src="${safeImg}" alt="${safeName}" class="bargain-broadcast-img" style="width: 140px; height: 140px; aspect-ratio: 1/1; object-fit: cover; border: 1px solid #333; cursor: pointer; display: block; transition: transform 0.15s ease, border-color 0.15s ease;">
             </div>
             ` : ''}
 
-            <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; text-transform: uppercase;">${safeName}</div>
-            <div style="font-family: var(--font-main); font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 22px;">
-                ${descText}: <b style="color: var(--accent-yellow, #ffd700); font-size: 16px; font-family: var(--font-mono);">${newPrice} грн</b>
+            <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">${safeName}</div>
+            <div style="font-family: var(--font-main); font-size: 14px; color: #ddd; line-height: 1.6; margin-bottom: 22px;">
+                ${descText}: <b style="color: #fff; font-size: 15px; font-family: var(--font-mono);"><span style="color: var(--accent-green, #00ff66);">${newPrice}</span> грн</b>
             </div>
 
-            <button class="buy-tg-btn cart-add btn-target bargain-add-cart-btn" style="width: 100%; min-height: 52px; font-size: 16px; text-transform: uppercase;">
+            <button class="buy-tg-btn cart-add btn-target bargain-add-cart-btn" style="width: 100%; min-height: 52px; font-size: 16px; text-transform: uppercase; font-family: var(--font-main); font-weight: bold;">
                 ${buyBtnText}
             </button>
         </div>
@@ -146,7 +150,28 @@ function handleIncomingSupportReply(r, sbClient) {
     }
 
     if (parsed && parsed.type === 'BARGAIN_DECLINED') {
+        try {
+            sessionStorage.setItem('declined_bargain_' + parsed.itemId, 'true');
+            sessionStorage.removeItem('accepted_bargain_' + parsed.itemId);
+        } catch (e) {}
+
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+
+        const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        if (activeItem && String(activeItem.id) === String(parsed.itemId)) {
+            const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
+            if (offerPriceBtn) {
+                const declinedBtnText = t('product.offer_declined_btn', 'ПРОПОЗИЦІЮ ВІДХИЛЕНО');
+                offerPriceBtn.innerText = declinedBtnText;
+                offerPriceBtn.style.borderColor = 'var(--accent-red, #ff3333)';
+                offerPriceBtn.style.color = 'var(--accent-red, #ff3333)';
+                offerPriceBtn.style.boxShadow = 'none';
+                offerPriceBtn.style.pointerEvents = 'none';
+                offerPriceBtn.style.cursor = 'default';
+                offerPriceBtn.disabled = true;
+            }
+        }
+
         const declMsg = t('product.offer_declined_toast', 'Продавець відхилив пропозицію ціни на товар.');
         if (typeof showToast === 'function') showToast(declMsg, 'info');
         markAsRead();

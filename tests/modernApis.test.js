@@ -2565,9 +2565,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(enJson.translation.propose.btn_cancel).toBe('[ CANCEL ]');
 
             // 2. product.in_cart localized in RU, UA, EN
-            expect(ruJson.translation.product.in_cart).toBe('[ В КОРЗИНЕ ]');
-            expect(uaJson.translation.product.in_cart).toBe('[ В КОШИКУ ]');
-            expect(enJson.translation.product.in_cart).toBe('[ IN CART ]');
+            expect(ruJson.translation.product.in_cart).toBe('В КОРЗИНЕ');
+            expect(uaJson.translation.product.in_cart).toBe('В КОШИКУ');
+            expect(enJson.translation.product.in_cart).toBe('IN CART');
 
             // 3. windows.js uses i18n
             expect(windowsCode).toContain("i18next.t('propose.warning_loss_text'");
@@ -3739,6 +3739,40 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 4. Zero legacy inline promo styling in cart.js
             const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
             expect(cartCode).not.toContain('<span style="color: var(--accent-green);">[✔]');
+        });
+
+        it('46. Bargain offer broadcast styling, unclickable accepted/declined buttons, and cart brackets removal', () => {
+            const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
+            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
+            const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
+            const enJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/en.json'), 'utf8'));
+
+            // 1. in_cart has no square brackets across all locales
+            expect(ruJson.translation.product.in_cart).toBe('В КОРЗИНЕ');
+            expect(uaJson.translation.product.in_cart).toBe('В КОШИКУ');
+            expect(enJson.translation.product.in_cart).toBe('IN CART');
+            expect(ruJson.translation.product.in_cart).not.toContain('[');
+            expect(uaJson.translation.product.in_cart).not.toContain('[');
+            expect(enJson.translation.product.in_cart).not.toContain('[');
+
+            // 2. offer_declined_btn exists in all locales
+            expect(uaJson.translation.product.offer_declined_btn).toBe('ПРОПОЗИЦІЮ ВІДХИЛЕНО');
+            expect(ruJson.translation.product.offer_declined_btn).toBe('ПРЕДЛОЖЕНИЕ ОТКЛОНЕНО');
+            expect(enJson.translation.product.offer_declined_btn).toBe('OFFER DECLINED');
+
+            // 3. Broadcast modal has no handshake emoji and uses terminal styling
+            expect(chatCode).not.toContain('🤝');
+            expect(chatCode).not.toContain('border: 1px solid var(--accent-yellow');
+            expect(chatCode).toContain('border: 1px solid #333');
+            expect(chatCode).toContain('color: var(--accent-green, #00ff66)');
+
+            // 4. Accepted and declined states make offerPriceBtn unclickable with pointer-events: none
+            expect(chatCode).toContain("offerPriceBtn.style.pointerEvents = 'none'");
+            expect(chatCode).toContain("offerPriceBtn.style.borderColor = 'var(--accent-red, #ff3333)'");
+            expect(productCode).toContain("offerPriceBtn.style.pointerEvents = 'none'");
+            expect(productCode).toContain("isDeclinedBargain");
+            expect(productCode).toContain("var(--accent-red, #ff3333)");
         });
     });
 });

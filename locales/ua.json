@@ -91,7 +91,7 @@
       "measure": "Як ми робимо заміри?",
       "measure_text": "Всі заміри знімаються з речі на рівній поверхні.",
       "add_to_cart": "В КОШИК",
-      "in_cart": "[ В КОШИКУ ]",
+      "in_cart": "В КОШИКУ",
       "notify": "ПОВІДОМИТИ ПРО НАЯВНІСТЬ",
       "badge_orig": "БЕЗПЕЧНА УГОДА",
       "badge_fast": "ШВИДКА ВІДПРАВКА",
@@ -124,13 +124,14 @@
       "offer_send_btn": "[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]",
       "offer_sending": "[ НАДСИЛАННЯ... ]",
       "offer_sent_toast": "Пропозицію надіслано продавцю! Очікуйте відповіді.",
-      "offer_accepted_title": "ВАШУ ЦІНУ ПРИЙНЯТО!",
+      "offer_accepted_title": "ВАША ЦІНА ПРИЙНЯТА!",
       "offer_accepted_text": "Ваша пропозиція прийнята на суму",
       "offer_buy_btn": "В КОШИК",
       "offer_invalid_price": "Вкажіть коректну ціну меншу за поточну!",
       "offer_added_toast": "Товар додано в кошик за узгодженою ціною!",
       "offer_pending": "[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]",
-      "offer_accepted_btn": "[ ПРОПОЗИЦІЮ ПРИЙНЯТО ✓ ]"
+      "offer_accepted_btn": "ПРОПОЗИЦІЮ ПРИЙНЯТО ✓",
+      "offer_declined_btn": "ПРОПОЗИЦІЮ ВІДХИЛЕНО"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",

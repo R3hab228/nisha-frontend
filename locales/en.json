@@ -91,7 +91,7 @@
       "measure": "How we take measurements?",
       "measure_text": "All measurements are taken on a flat surface.",
       "add_to_cart": "ADD TO CART",
-      "in_cart": "[ IN CART ]",
+      "in_cart": "IN CART",
       "notify": "NOTIFY WHEN AVAILABLE",
       "badge_orig": "SECURE TRANSACTION",
       "badge_fast": "FAST SHIPPING",
@@ -124,13 +124,14 @@
       "offer_send_btn": "[ SEND OFFER ]",
       "offer_sending": "[ SENDING... ]",
       "offer_sent_toast": "Offer sent to seller! Waiting for response.",
-      "offer_accepted_title": "YOUR OFFER IS ACCEPTED!",
+      "offer_accepted_title": "YOUR OFFER WAS ACCEPTED!",
       "offer_accepted_text": "Your offer has been accepted for the amount of",
       "offer_buy_btn": "ADD TO CART",
       "offer_invalid_price": "Enter a valid price lower than current price!",
       "offer_added_toast": "Item added to cart at agreed price!",
       "offer_pending": "[ OFFER SENT ✓ ]",
-      "offer_accepted_btn": "[ OFFER ACCEPTED ✓ ]"
+      "offer_accepted_btn": "OFFER ACCEPTED ✓",
+      "offer_declined_btn": "OFFER DECLINED"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
