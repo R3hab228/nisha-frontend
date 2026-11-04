@@ -60,12 +60,18 @@ window._pendingBroadcastIntervalId = setInterval(() => {
     if (pendingBroadcastQueue && inFeed) {
         checkPendingBroadcast();
     }
+    if (typeof checkPendingBargainNotification === 'function' && inFeed && (window.pendingBargainNotification || (window.pendingBargainNotifications && window.pendingBargainNotifications.length > 0))) {
+        checkPendingBargainNotification();
+    }
 }, 1500);
 
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && pendingBroadcastQueue) {
+    if (!document.hidden) {
         const inFeed = isUserInProductFeed();
-        if (inFeed) checkPendingBroadcast();
+        if (pendingBroadcastQueue && inFeed) checkPendingBroadcast();
+        if (typeof checkPendingBargainNotification === 'function' && inFeed && (window.pendingBargainNotification || (window.pendingBargainNotifications && window.pendingBargainNotifications.length > 0))) {
+            checkPendingBargainNotification();
+        }
     }
 });
 

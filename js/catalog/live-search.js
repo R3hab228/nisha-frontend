@@ -57,7 +57,7 @@ function saveRecentSearch(term) {
     if (!Array.isArray(history)) history = [];
     history = history.filter(t => t.toLowerCase() !== term.toLowerCase());
     history.unshift(term);
-    if (history.length > 5) history.pop();
+    if (history.length > 8) history.pop();
     
     if (storage) {
         storage.setJSON('nisha_search_history', history);
@@ -69,9 +69,13 @@ function showSearchHistory() {
     const dropdown = document.getElementById('liveSearchDropdown');
     if (!dropdown) return;
     const history = storage ? storage.getJSON('nisha_search_history', []) : [];
-    if (!Array.isArray(history) || history.length === 0) return;
+    if (!Array.isArray(history) || history.length < 4) return;
 
-    let html = `<div class="search-history-title">🕒 НЕДАВНИЕ ЗАПРОСЫ <span class="search-history-clear" data-action="clear-search-history">[ ОЧИСТИТЬ ]</span></div>`;
+    const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+    const recentQueriesText = t('search.recent_queries', 'НЕДАВНИЕ ЗАПРОСЫ');
+    const clearText = t('search.clear_history', 'ОЧИСТИТЬ');
+
+    let html = `<div class="search-history-title"><span>${recentQueriesText}</span><span class="search-history-clear" data-action="clear-search-history">[ ${clearText} ]</span></div>`;
     history.forEach(term => {
         const safeTermHtml = escapeHtml(term);
         html += `<div class="search-history-item" data-action="apply-search-history" data-term="${safeTermHtml}">

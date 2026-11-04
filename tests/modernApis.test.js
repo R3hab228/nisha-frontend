@@ -3782,5 +3782,43 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cssCode).toContain('border-radius: 16px 16px 0 0');
             expect(cssCode).toContain('.cart-panel:not(.show) .cart-dropdown { display: none !important');
         });
+
+        it('47. Search history threshold >= 4, clock icon removal, right-aligned clear button, and feed-only bargain notifications', () => {
+            const liveSearchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
+            const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
+            const winCode = readFileSync(resolve(import.meta.dirname, '../js/ui/windows.js'), 'utf8');
+            const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
+            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
+            const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
+            const enJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/en.json'), 'utf8'));
+
+            // 1. Clock icon is removed from live search history title
+            expect(liveSearchCode).not.toContain('🕒');
+
+            // 2. Search history appears only after at least 4 searches (length < 4 returns)
+            expect(liveSearchCode).toContain('history.length < 4');
+
+            // 3. Search history clear button and recent queries localization keys exist
+            expect(ruJson.translation.search.recent_queries).toBe('НЕДАВНИЕ ЗАПРОСЫ');
+            expect(ruJson.translation.search.clear_history).toBe('ОЧИСТИТЬ');
+            expect(uaJson.translation.search.recent_queries).toBe('НЕЩОДАВНІ ЗАПИТИ');
+            expect(uaJson.translation.search.clear_history).toBe('ОЧИСТИТИ');
+            expect(enJson.translation.search.recent_queries).toBe('RECENT SEARCHES');
+            expect(enJson.translation.search.clear_history).toBe('CLEAR');
+
+            // 4. CSS flex layout pushes clear button to the right
+            expect(cssCode).toContain('.search-history-title { display: flex; justify-content: space-between; align-items: center; width: 100%;');
+            expect(cssCode).toContain('.search-history-clear { margin-left: auto;');
+
+            // 5. Bargain accepted & declined notifications check isUserInProductFeed
+            expect(chatCode).toContain('queueBargainNotification');
+            expect(chatCode).toContain('checkPendingBargainNotification');
+            expect(chatCode).toContain('isUserInProductFeed');
+
+            // 6. Windows deferBackgroundTasks and systemFeatures interval check checkPendingBargainNotification
+            expect(winCode).toContain('checkPendingBargainNotification');
+            expect(sysCode).toContain('checkPendingBargainNotification');
+        });
     });
 });

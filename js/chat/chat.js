@@ -2,6 +2,22 @@
 // --- МОДАЛЬНОЕ ОКНО ПРИНЯТОГО ТОРГА С ПРЯМЫМ ДОБАВЛЕНИЕМ В КОРЗИНУ ---
 function showBargainAcceptedModal(bargainData, onDismiss) {
     if (!bargainData) return;
+
+    const checkFeed = () => {
+        if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
+        if (typeof window.isUserInProductFeed === 'function') return window.isUserInProductFeed();
+        return true;
+    };
+
+    if (!checkFeed()) {
+        if (typeof queueBargainNotification === 'function') {
+            queueBargainNotification('BARGAIN_ACCEPTED', bargainData, onDismiss);
+        } else {
+            window.pendingBargainNotification = { type: 'BARGAIN_ACCEPTED', data: bargainData, markAsRead: onDismiss };
+        }
+        return;
+    }
+
     document.querySelectorAll('.bargain-broadcast-overlay, .terminal-modal-overlay').forEach(el => el.remove());
 
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
@@ -80,6 +96,11 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         modalCtrl.abort();
         overlay.remove();
         if (typeof onDismiss === 'function') onDismiss();
+        setTimeout(() => {
+            if (typeof checkPendingBargainNotification === 'function') {
+                checkPendingBargainNotification();
+            }
+        }, 150);
     };
 
     const addBtn = overlay.querySelector('.bargain-add-cart-btn');
@@ -128,6 +149,53 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 }
 window.showBargainAcceptedModal = showBargainAcceptedModal;
 
+window.pendingBargainNotifications = window.pendingBargainNotifications || [];
+
+function queueBargainNotification(type, data, markAsRead) {
+    window.pendingBargainNotifications = window.pendingBargainNotifications || [];
+    window.pendingBargainNotifications.push({ type, data, markAsRead });
+    window.pendingBargainNotification = window.pendingBargainNotifications[0];
+}
+window.queueBargainNotification = queueBargainNotification;
+
+function checkPendingBargainNotification() {
+    if (!window.pendingBargainNotifications || window.pendingBargainNotifications.length === 0) {
+        if (window.pendingBargainNotification) {
+            window.pendingBargainNotifications = [window.pendingBargainNotification];
+        } else {
+            return;
+        }
+    }
+
+    const checkFeed = () => {
+        if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
+        if (typeof window.isUserInProductFeed === 'function') return window.isUserInProductFeed();
+        return true;
+    };
+
+    if (!checkFeed()) return;
+
+    const notif = window.pendingBargainNotifications.shift();
+    window.pendingBargainNotification = window.pendingBargainNotifications[0] || null;
+    if (!notif) return;
+
+    if (notif.type === 'BARGAIN_ACCEPTED') {
+        showBargainAcceptedModal(notif.data, () => {
+            if (typeof notif.markAsRead === 'function') notif.markAsRead();
+            setTimeout(checkPendingBargainNotification, 200);
+        });
+    } else if (notif.type === 'BARGAIN_DECLINED') {
+        const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+        const declMsg = t('product.offer_declined_toast', 'Продавець відхилив пропозицію ціни на товар.');
+        if (typeof showToast === 'function') showToast(declMsg, 'info');
+        if (typeof notif.markAsRead === 'function') notif.markAsRead();
+        if (window.pendingBargainNotifications.length > 0) {
+            setTimeout(checkPendingBargainNotification, 200);
+        }
+    }
+}
+window.checkPendingBargainNotification = checkPendingBargainNotification;
+
 function handleIncomingSupportReply(r, sbClient) {
     if (!r) return;
     window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
@@ -148,7 +216,43 @@ function handleIncomingSupportReply(r, sbClient) {
     }
 
     if (parsed && parsed.type === 'BARGAIN_ACCEPTED') {
-        showBargainAcceptedModal(parsed, markAsRead);
+        try {
+            sessionStorage.setItem('accepted_bargain_' + parsed.itemId, JSON.stringify(parsed));
+            sessionStorage.removeItem('declined_bargain_' + parsed.itemId);
+        } catch (e) {}
+
+        const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+
+        const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        if (activeItem && String(activeItem.id) === String(parsed.itemId)) {
+            const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
+            if (offerPriceBtn) {
+                const acceptedBtnText = t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
+                offerPriceBtn.innerText = acceptedBtnText;
+                offerPriceBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
+                offerPriceBtn.style.color = 'var(--accent-yellow, #ffd700)';
+                offerPriceBtn.style.boxShadow = 'none';
+                offerPriceBtn.style.pointerEvents = 'none';
+                offerPriceBtn.style.cursor = 'default';
+                offerPriceBtn.disabled = true;
+            }
+            const priceEl = document.getElementById('modalPrice');
+            if (priceEl) {
+                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${parsed.originalPrice || activeItem.price}</span><span style="color: var(--accent-yellow, #ffd700);">${parsed.acceptedPrice} UAH</span>`;
+            }
+        }
+
+        const checkFeed = () => {
+            if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
+            if (typeof window.isUserInProductFeed === 'function') return window.isUserInProductFeed();
+            return true;
+        };
+
+        if (checkFeed()) {
+            showBargainAcceptedModal(parsed, markAsRead);
+        } else {
+            queueBargainNotification('BARGAIN_ACCEPTED', parsed, markAsRead);
+        }
         return;
     }
 
@@ -175,9 +279,19 @@ function handleIncomingSupportReply(r, sbClient) {
             }
         }
 
-        const declMsg = t('product.offer_declined_toast', 'Продавець відхилив пропозицію ціни на товар.');
-        if (typeof showToast === 'function') showToast(declMsg, 'info');
-        markAsRead();
+        const checkFeed = () => {
+            if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
+            if (typeof window.isUserInProductFeed === 'function') return window.isUserInProductFeed();
+            return true;
+        };
+
+        if (checkFeed()) {
+            const declMsg = t('product.offer_declined_toast', 'Продавець відхилив пропозицію ціни на товар.');
+            if (typeof showToast === 'function') showToast(declMsg, 'info');
+            markAsRead();
+        } else {
+            queueBargainNotification('BARGAIN_DECLINED', parsed, markAsRead);
+        }
         return;
     }
 

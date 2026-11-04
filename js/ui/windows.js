@@ -364,6 +364,9 @@ function executeCloseModal(id, e) {
             if (typeof checkPendingBroadcast === 'function') {
                 checkPendingBroadcast();
             }
+            if (typeof checkPendingBargainNotification === 'function') {
+                checkPendingBargainNotification();
+            }
         };
 
         if ('requestIdleCallback' in window) {

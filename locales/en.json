@@ -4,7 +4,9 @@
       "placeholder": "Search items...",
       "btn": "Search",
       "no_matches": "NO MATCHES FOUND",
-      "no_items": "NO ITEMS FOUND"
+      "no_items": "NO ITEMS FOUND",
+      "recent_queries": "RECENT SEARCHES",
+      "clear_history": "CLEAR"
     },
     "nav": {
       "home": "HOME",

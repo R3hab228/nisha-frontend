@@ -1947,10 +1947,11 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 .item-card.unseen-pulse { animation: unseenPulseAnim 2.5s infinite alternate; }
 @keyframes unseenPulseAnim { 0% { border-color: var(--border-color); } 100% { border-color: rgba(220, 20, 60, 0.85); } }
 
-.search-history-title { padding: 10px 15px; color: #555; font-size: 11px; font-weight: bold; letter-spacing: 1px; border-bottom: 1px dashed #222; background: #050505; }
+.search-history-title { display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; padding: 10px 15px; color: #555; font-size: 11px; font-weight: bold; letter-spacing: 1px; border-bottom: 1px dashed #222; background: #050505; }
 .search-history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px dashed #222; cursor: pointer; color: #aaa; font-family: var(--font-mono); }
 .search-history-item:hover { background: #111; color: var(--accent-green); }
-.search-history-clear { color: var(--accent-red); font-size: 10px; cursor: pointer; }
+.search-history-clear { margin-left: auto; color: var(--accent-red); font-size: 10px; cursor: pointer; transition: opacity 0.2s; }
+.search-history-clear:hover { opacity: 0.8; }
 
 .history-item-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(0, 0, 0, 0.85); border: 1px solid #333; color: var(--accent-red); font-family: var(--font-mono); font-size: 12px; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 20; transition: 0.2s; }
 .history-item-remove:hover { border-color: var(--accent-red); background: #111; }
