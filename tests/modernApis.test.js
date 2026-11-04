@@ -3820,5 +3820,52 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(winCode).toContain('checkPendingBargainNotification');
             expect(sysCode).toContain('checkPendingBargainNotification');
         });
+
+        it('48. Proposal bargain toggle ([ + ТОРГ ]), validation >= 100 UAH, green gavel badge, and fallback', () => {
+            const htmlCode = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
+            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
+            const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
+            const enJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/en.json'), 'utf8'));
+
+            // 1. Propose modal HTML contains bargain toggle button and input row
+            expect(htmlCode).toContain('id="propBargainWrapper"');
+            expect(htmlCode).toContain('data-action="toggle-prop-bargain"');
+            expect(htmlCode).toContain('id="propMinBargainPrice"');
+            expect(htmlCode).toContain('data-action="cancel-prop-bargain"');
+
+            // 2. Localization keys for bargain in proposals and badges
+            expect(ruJson.translation.propose.btn_bargain).toBe('[ + ТОРГ ]');
+            expect(uaJson.translation.propose.btn_bargain).toBe('[ + ТОРГ ]');
+            expect(enJson.translation.propose.btn_bargain).toBe('[ + BARGAIN ]');
+            expect(ruJson.translation.product.badge_bargain).toBe('ЕСТЬ ТОРГ');
+            expect(uaJson.translation.product.badge_bargain).toBe('Є ТОРГ');
+            expect(enJson.translation.product.badge_bargain).toBe('BARGAIN');
+
+            // 3. Drop JS exports toggle handlers, checks >= 100, and attaches to formData
+            expect(dropCode).toContain('openPropBargainInput');
+            expect(dropCode).toContain('hidePropBargainInput');
+            expect(dropCode).toContain('minBargainPrice < 100');
+            expect(dropCode).toContain('minBargainPrice >= price');
+            expect(dropCode).toContain("formData.append('minBargainPrice'");
+
+            // 4. Product JS renders gavel SVG and badge_bargain when item has bargain
+            expect(productCode).toContain('badge_bargain');
+            expect(productCode).toContain('hasBargain');
+            expect(productCode).toContain('fill="var(--accent-green, #00ff66)"');
+            expect(productCode).toContain('itemMinBargain');
+
+            // 5. Catalog JS handles bargain badge info modal
+            expect(catalogCode).toContain("type === 'bargain'");
+            expect(catalogCode).toContain('BARGAIN_AVAILABLE.SYS');
+
+            // 6. CSS defines styling for proposal bargain button and input
+            expect(cssCode).toContain('.prop-bargain-toggle-btn');
+            expect(cssCode).toContain('.prop-bargain-input-row');
+            expect(cssCode).toContain('.prop-bargain-cancel-btn');
+        });
     });
 });

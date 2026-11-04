@@ -1791,6 +1791,14 @@ function handleDelegatedAction(e) {
             if (typeof window.hideInlineOfferPriceInput === 'function') window.hideInlineOfferPriceInput();
             break;
         }
+        case 'toggle-prop-bargain': {
+            if (typeof window.openPropBargainInput === 'function') window.openPropBargainInput();
+            break;
+        }
+        case 'cancel-prop-bargain': {
+            if (typeof window.hidePropBargainInput === 'function') window.hidePropBargainInput();
+            break;
+        }
         case 'submit-inline-bargain': {
             if (typeof window.submitInlineBargainOffer === 'function') window.submitInlineBargainOffer();
             break;

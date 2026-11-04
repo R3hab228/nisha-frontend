@@ -133,7 +133,9 @@
       "offer_added_toast": "Item added to cart at agreed price!",
       "offer_pending": "[ OFFER SENT ✓ ]",
       "offer_accepted_btn": "OFFER ACCEPTED ✓",
-      "offer_declined_btn": "OFFER DECLINED"
+      "offer_declined_btn": "OFFER DECLINED",
+      "badge_bargain": "BARGAIN",
+      "offer_below_min": "Minimum offer price: {{min}} UAH!"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
@@ -148,7 +150,9 @@
       "drop_title": "WARNING: DROP_ITEM",
       "drop_text": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA acts as the deal escrow.</span><br><br>Inspection and try-on — strictly at Nova Poshta (with COD, the remainder is paid after inspection).<br><br>After picking up the package, returns are not possible: the deal is considered closed, and funds are immediately transferred to the owner.",
       "btn_understood": "[ GOT IT ]",
-      "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA is the deal escrow.</span><br><br>Inspection and try-on strictly at Nova Poshta (for COD, remaining balance is paid after check).<br><br>No returns after pickup: deal is finalized and funds are immediately transferred to seller."
+      "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA is the deal escrow.</span><br><br>Inspection and try-on strictly at Nova Poshta (for COD, remaining balance is paid after check).<br><br>No returns after pickup: deal is finalized and funds are immediately transferred to seller.",
+      "bargain_title": "BARGAIN_AVAILABLE.SYS",
+      "bargain_text": "Bargaining is available for this item. You can make an offer to the seller using the MAKE AN OFFER button."
     },
     "grid": {
       "size_prefix": "Size: "
@@ -366,7 +370,11 @@
       "err_network": "Error submitting proposal to server. Check your connection and try again.",
       "compressing": "COMPRESSING PHOTO",
       "err_server": "Server failure: ",
-      "btn_retry": "[ RETRY ]"
+      "btn_retry": "[ RETRY ]",
+      "btn_bargain": "[ + BARGAIN ]",
+      "bargain_ph": "Min. bargain bid (UAH)...",
+      "err_bargain_min": "Minimum bargain price must be at least 100 UAH!",
+      "err_bargain_less_price": "Minimum bargain price must be less than requested price!"
     },
     "email_prompt": {
       "desc": "Send receipts and delivery statuses (Waybill) to your E-mail?",

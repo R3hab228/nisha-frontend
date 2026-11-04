@@ -3011,6 +3011,12 @@ window.showBadgeInfo = function(type) {
     } else if (type === 'fast') {
         title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.fast_title', { defaultValue: 'FAST_SHIPPING.SYS' }) : 'FAST_SHIPPING.SYS';
         text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.fast_text', { defaultValue: 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.' }) : 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
+    } else if (type === 'bargain') {
+        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.bargain_title', { defaultValue: 'BARGAIN_AVAILABLE.SYS' }) : 'BARGAIN_AVAILABLE.SYS';
+        const descMatch = activeItem && typeof activeItem.description === 'string' && activeItem.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+        const minVal = activeItem?.min_bargain_price || (descMatch ? descMatch[1] : null);
+        const minText = minVal ? `<br><br>Мінімальна ціна для торгу: <b style="color:var(--accent-green);">${minVal} грн</b>` : '';
+        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.bargain_text', { defaultValue: `Продавець увімкнув можливість торгу для цієї речі. Ви можете запропонувати свою суму за допомогою кнопки <b>«ЗАПРОПОНУВАТИ СВОЮ ЦІНУ»</b>.${minText}` }) : `Продавець увімкнув можливість торгу для цієї речі. Ви можете запропонувати свою суму за допомогою кнопки <b>«ЗАПРОПОНУВАТИ СВОЮ ЦІНУ»</b>.${minText}`;
     } else if (type === 'refund_no') {
         title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_no_title', { defaultValue: 'NO_RETURN_POLICY.LOG' }) : 'NO_RETURN_POLICY.LOG';
         text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_no_text', { defaultValue: '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>' }) : '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>';

@@ -231,6 +231,9 @@ window.compressImage = compressImage;
 
 // 3. Полная очистка формы предложки
 function resetProposalForm() {
+    if (typeof window.hidePropBargainInput === 'function') {
+        window.hidePropBargainInput();
+    }
     const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc'];
     fields.forEach(id => {
         const el = document.getElementById(id);
@@ -276,6 +279,43 @@ function resetProposalForm() {
     window._turnstilePropToken = null;
 }
 window.resetProposalForm = resetProposalForm;
+
+function openPropBargainInput() {
+    const btn = document.getElementById('btnTogglePropBargain');
+    const row = document.getElementById('propBargainInputRow');
+    const input = document.getElementById('propMinBargainPrice');
+    if (!btn || !row) return;
+
+    btn.style.opacity = '0';
+    btn.style.transform = 'translateY(-4px)';
+    setTimeout(() => {
+        btn.style.display = 'none';
+        row.style.display = 'flex';
+        row.offsetHeight;
+        row.classList.add('visible');
+        if (input) input.focus();
+    }, 110);
+}
+window.openPropBargainInput = openPropBargainInput;
+
+function hidePropBargainInput() {
+    const btn = document.getElementById('btnTogglePropBargain');
+    const row = document.getElementById('propBargainInputRow');
+    const input = document.getElementById('propMinBargainPrice');
+    if (!btn || !row) return;
+
+    if (input) input.value = '';
+    row.classList.remove('visible');
+    setTimeout(() => {
+        row.style.display = 'none';
+        btn.style.display = 'flex';
+        btn.offsetHeight;
+        btn.style.opacity = '1';
+        btn.style.transform = 'translateY(0)';
+    }, 110);
+}
+window.hidePropBargainInput = hidePropBargainInput;
+
 
 // 4. Добавление новых файлов (до 5 шт)
 function handleNewProposalFiles(newFiles) {
@@ -568,6 +608,29 @@ async function submitProposal() {
         return;
     }
 
+    const minBargainInput = document.getElementById('propMinBargainPrice');
+    const isBargainOpen = document.getElementById('propBargainInputRow')?.style.display !== 'none';
+    const rawMinBargain = (minBargainInput?.value || '').trim();
+    let minBargainPrice = null;
+
+    if (isBargainOpen && rawMinBargain) {
+        minBargainPrice = Number.parseInt(rawMinBargain, 10);
+        if (Number.isNaN(minBargainPrice) || minBargainPrice < 100) {
+            if (typeof triggerHaptic === 'function') triggerHaptic('error');
+            const minBargainMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_bargain_min')) || 'Минимальная цена торга должна быть не менее 100 грн!';
+            showToast(minBargainMsg, 'error');
+            minBargainInput.focus();
+            return;
+        }
+        if (minBargainPrice >= price) {
+            if (typeof triggerHaptic === 'function') triggerHaptic('error');
+            const lessPriceMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_bargain_less_price')) || 'Минимальная цена торга должна быть меньше желаемой цены!';
+            showToast(lessPriceMsg, 'error');
+            minBargainInput.focus();
+            return;
+        }
+    }
+
     // Сохраняем контакт для мгновенной отправки следующей вещи без повторного ввода
     window._lastProposalContact = contact;
 
@@ -605,7 +668,15 @@ async function submitProposal() {
         formData.append('measurements', size);
         formData.append('condition', cond);
         formData.append('price', price);
-        formData.append('description', desc);
+        let finalDesc = desc;
+        if (minBargainPrice && !finalDesc.includes('[ТОРГ:')) {
+            finalDesc = `${finalDesc}\n\n[ТОРГ: от ${minBargainPrice} грн]`;
+        }
+        formData.append('description', finalDesc);
+        if (minBargainPrice) {
+            formData.append('minBargainPrice', minBargainPrice);
+            formData.append('isBargain', 'true');
+        }
         formData.append('contact', contact);
         formData.append('clientId', activeClientId);
         if (propToken) formData.append('turnstileToken', propToken);

@@ -548,7 +548,16 @@ function openProductModal(item) {
     const inlineInput = document.getElementById('inlineBargainPriceInput');
 
     if (offerWrapper || offerPriceBtn) {
+        const isDropItem = item && (item.is_drop === true || (item.tags && item.tags.map(t => t.toLowerCase()).includes('drop')));
+        const descMatch = item && (typeof item.description === 'string') && item.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+        const itemMinBargain = item ? (item.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null)) : null;
+        const hasBargain = Boolean(item && (item.is_bargain || itemMinBargain));
+
         if (item && item.status === 'sold') {
+            if (offerWrapper) offerWrapper.style.display = 'none';
+            if (offerPriceBtn) offerPriceBtn.style.display = 'none';
+            if (offerInputRow) offerInputRow.style.display = 'none';
+        } else if (isDropItem && !hasBargain) {
             if (offerWrapper) offerWrapper.style.display = 'none';
             if (offerPriceBtn) offerPriceBtn.style.display = 'none';
             if (offerInputRow) offerInputRow.style.display = 'none';
@@ -905,15 +914,32 @@ function openProductModal(item) {
 
         const secureSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>`;
 
+        const descMatch = (typeof item.description === 'string') && item.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+        const itemMinBargain = item.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
+        const hasBargain = Boolean(item.is_bargain || itemMinBargain);
+
+        let deliveryOrBargainBadgeHTML = '';
+        if (hasBargain) {
+            const gavelSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent-green, #00ff66)" stroke="none" aria-hidden="true"><path d="M2.5 21.5h8c.55 0 1-.45 1-1s-.45-1-1-1h-8c-.55 0-1 .45-1 1s.45 1 1 1zM3.5 18.5h6c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-6c-.28 0-.5.22-.5.5s.22.5.5.5z"/><path d="M13.2 12.1l6.1 6.1c.39.39 1.02.39 1.41 0l.71-.71c.39-.39.39-1.02 0-1.41l-6.1-6.1-2.12 2.12z"/><path d="M14.6 4.3l1.4-1.4c.39-.39 1.02-.39 1.41 0l2.12 2.12c.39.39.39 1.02 0 1.41l-1.4 1.4-3.53-3.53z"/><path d="M7.5 11.4l7.07-7.07 2.83 2.83-7.07 7.07z"/><path d="M6.1 12.8l1.4-1.4 2.12 2.12-1.4 1.4c-.39.39-1.02.39-1.41 0L5.39 13.5c-.39-.39-.39-1.02 0-1.41l.71-.71z"/></svg>`;
+            deliveryOrBargainBadgeHTML = `
+                <div class="badge-item" data-action="show-badge-info" data-badge="bargain">
+                    <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${gavelSvg}</span>
+                    <span class="badge-text" data-i18n="product.badge_bargain">${typeof i18next !== 'undefined' ? i18next.t('product.badge_bargain') : 'ЕСТЬ ТОРГ'}</span>
+                </div>`;
+        } else {
+            deliveryOrBargainBadgeHTML = `
+                <div class="badge-item" data-action="show-badge-info" data-badge="fast">
+                    <span class="badge-icon">24H</span> 
+                    <span class="badge-text" data-i18n="product.badge_fast">${typeof i18next !== 'undefined' ? i18next.t('product.badge_fast') : 'БЫСТРАЯ ОТПРАВКА'}</span>
+                </div>`;
+        }
+
         badgesContainer.innerHTML = `
             <div class="badge-item" data-action="show-badge-info" data-badge="secure">
                 <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${secureSvg}</span> 
                 <span class="badge-text" data-i18n="product.badge_orig">${typeof i18next !== 'undefined' ? i18next.t('product.badge_orig') : '100% ОРИГИНАЛ'}</span>
             </div>
-            <div class="badge-item" data-action="show-badge-info" data-badge="fast">
-                <span class="badge-icon">24H</span> 
-                <span class="badge-text" data-i18n="product.badge_fast">${typeof i18next !== 'undefined' ? i18next.t('product.badge_fast') : 'БЫСТРАЯ ОТПРАВКА'}</span>
-            </div>
+            ${deliveryOrBargainBadgeHTML}
             ${refundBadgeHTML}
         `;
     }
@@ -1921,6 +1947,16 @@ async function submitInlineBargainOffer() {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const invalidMsg = t('product.offer_invalid_price', 'Будь ласка, вкажіть реальну ціну нижче поточної!');
         showToast(invalidMsg, 'error');
+        input.focus();
+        return;
+    }
+
+    const descMatch = (typeof activeItem.description === 'string') && activeItem.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+    const itemMinBargain = activeItem.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
+    if (itemMinBargain && offeredPrice < itemMinBargain) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const minMsg = t('product.offer_below_min', 'Мінімальна ціна для пропозиції: {{min}} грн!').replace('{{min}}', itemMinBargain);
+        showToast(minMsg, 'error');
         input.focus();
         return;
     }
