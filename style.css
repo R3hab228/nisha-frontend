@@ -720,28 +720,31 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .offer-price-btn:hover { border-color: var(--accent-green, #00ff66); background: transparent; box-shadow: none; color: var(--accent-green, #00ff66); }
 .offer-price-btn:active { border-style: inset; transform: scale(0.99); }
 
-.offer-price-input-row { display: flex; gap: 8px; align-items: stretch; width: 100%; opacity: 0; transform: translateY(4px); transition: opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1), transform 0.12s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; }
+.offer-price-input-row { display: flex; gap: 10px; align-items: stretch; width: 100%; opacity: 0; transform: translateY(4px); transition: opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1), transform 0.12s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; }
 .offer-price-input-row.visible { opacity: 1; transform: translateY(0); }
 .offer-input-box { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
-.offer-input-box .offer-input { width: 100%; margin-bottom: 0; height: 48px; padding: 12px 38px 12px 14px; font-size: 15px; font-weight: normal; font-family: var(--font-main); color: #fff; background: #000; border: 2px inset var(--border-light, #555); outline: none; box-sizing: border-box; transition: 0.2s; }
+.offer-input-box .offer-input { width: 100%; margin-bottom: 0; height: 52px; min-height: 52px; padding: 12px 42px 12px 14px; font-size: 15px; font-weight: normal; font-family: var(--font-main); color: #fff; background: #000; border: 2px inset var(--border-light, #555); outline: none; box-sizing: border-box; transition: 0.2s; }
 .offer-input-box .offer-input:focus { border-color: var(--accent-green, #00ff66); box-shadow: 0 0 8px rgba(0, 255, 102, 0.25); }
 .offer-input-box .offer-input::placeholder,
 .offer-input-box .offer-input::-webkit-input-placeholder,
 .offer-input-box .offer-input::-moz-placeholder { color: #555; font-family: var(--font-main); font-size: 15px; font-weight: normal; opacity: 1; }
-.offer-cancel-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--accent-red, #ff0055); font-size: 15px; font-weight: 700; padding: 6px 10px; cursor: pointer; line-height: 1; transition: color 0.12s ease, transform 0.12s ease; display: flex; align-items: center; justify-content: center; }
-.offer-cancel-btn:hover { color: #ff3366; transform: translateY(-50%) scale(1.15); }
+.offer-cancel-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; background: transparent; border: none; outline: none; color: var(--accent-red, #ff0055); padding: 0; margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color 0.12s ease, transform 0.12s ease; z-index: 5; box-sizing: border-box; }
+.offer-cancel-btn:hover { color: #ff3366; transform: translateY(-50%) scale(1.18); }
 .offer-cancel-btn::before, .offer-cancel-btn::after { display: none !important; content: none !important; }
-.offer-submit-btn { background-color: var(--text-main, #eee); color: #000; border: 2px outset #eee; padding: 0 20px; height: 48px; min-width: 58px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.12s ease; box-sizing: border-box; }
+.offer-cancel-btn svg { display: block; width: 14px; height: 14px; pointer-events: none; }
+.offer-submit-btn { background-color: var(--text-main, #eee); color: #000; border: 2px outset #eee; padding: 0 !important; height: 52px; min-height: 52px; width: 62px; min-width: 62px; max-width: 62px; flex: 0 0 62px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.12s ease; box-sizing: border-box; position: relative; }
 .offer-submit-btn:hover { filter: brightness(1.1); }
 .offer-submit-btn:active { border-style: inset; background-color: #aaa; transform: scale(0.97); }
-.offer-submit-btn svg { display: block; width: 18px; height: 18px; transition: none; }
+.offer-submit-btn.btn-target::before { left: 6px !important; }
+.offer-submit-btn.btn-target::after { right: 6px !important; }
+.offer-submit-btn svg { display: block; width: 22px; height: 22px; transition: none; }
 .offer-submit-btn.sending svg { animation: tgPlaneFly 0.5s ease-in-out infinite alternate; }
 @keyframes tgPlaneFly { 0% { transform: translate(0, 0) rotate(0deg); opacity: 0.8; } 100% { transform: translate(4px, -4px) rotate(-8deg); opacity: 1; } }
 
-.share-btn { background: #0a0a0a; color: #888; border: 1px solid #333; padding: 0 20px; font-weight: normal; cursor: pointer; font-family: var(--font-mono); font-size: 18px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 52px; min-height: 52px; min-width: 62px; margin-left: auto; }
+.share-btn { background: #0a0a0a; color: #888; border: 1px solid #333; padding: 0; font-weight: normal; cursor: pointer; font-family: var(--font-mono); font-size: 18px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 52px; min-height: 52px; width: 62px; min-width: 62px; max-width: 62px; flex: 0 0 62px; margin-left: auto; }
 .share-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05);}
 .share-btn:active { transform: scale(0.95); }
-.share-btn svg { display: block; }
+.share-btn svg { display: block; width: 20px; height: 20px; }
 
 .trust-badges { display: flex; gap: 10px; margin-top: 20px; border-top: 1px dashed #333; padding-top: 20px; }
 .badge-item { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 5px; background: #0a0a0a; border: 1px solid #222; padding: 10px 12px; border-left: 3px solid #333; transition: 0.2s; cursor: pointer; min-height: 60px; }
