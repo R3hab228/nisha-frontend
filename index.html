@@ -297,7 +297,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <img src=https://www.google.com/favicon.ico width=14> <span data-i18n=sidebar.google_id>GOOGLE ID</span>
 </button>
 <div id=authForgotPassWrap style="display:flex;justify-content:flex-end;margin:4px 2px 0 0;font-size:11px;font-family:var(--font-mono)">
-<a href="javascript:void(0)" data-action="forgot-password" data-is-modal="false" style="color:#888;text-decoration:underline;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
+<a href="javascript:void(0)" class="forgot-password-link" data-action="forgot-password" data-is-modal="false" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
 </div>
 <button class="auth-btn btn-target" id=btnRegister data-action="handle-auth" data-auth-mode="register" data-is-modal="false" style=display:none;background:var(--accent-green);color:#000 data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
 <button class="auth-btn btn-target" id=btnBackLogin data-action="toggle-reg-mode" data-is-modal="false" style=display:none;background:#333;color:#fff data-i18n=sidebar.back>НАЗАД</button>
@@ -525,8 +525,8 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
 <div class=slider-container id=sliderContainer>
 <div id=photoCounter class=photo-counter>1/1</div>
 <div class=slider-wrapper id=sliderWrapper></div>
-<button class="slider-btn prev" onmouseenter="preloadSlide(-1)" data-action="move-slide" data-dir="-1" aria-label="Предыдущее фото">&#10094;</button>
-<button class="slider-btn next" onmouseenter="preloadSlide(1)" data-action="move-slide" data-dir="1" aria-label="Следующее фото">&#10095;</button>
+<button class="slider-btn prev" data-hover-action="preload-slide" data-action="move-slide" data-dir="-1" aria-label="Предыдущее фото">&#10094;</button>
+<button class="slider-btn next" data-hover-action="preload-slide" data-action="move-slide" data-dir="1" aria-label="Следующее фото">&#10095;</button>
 </div>
 <div class=modal-thumbnails id=modalThumbnails></div>
 <div class="similar-items-section similar-desktop">
@@ -725,7 +725,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 </div>
 <label style=margin-top:10px data-i18n=checkout.promo>Промокод (если есть):</label>
 <div class=promo-wrapper>
-<input id=promoInput name=promo_code class=form-input placeholder="Введите код..." data-i18n-ph="checkout.promo_ph" autocomplete=off autocapitalize=characters autocorrect=off spellcheck=false data-lpignore=true data-form-type=other onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode();}">
+<input id=promoInput name=promo_code class=form-input placeholder="Введите код..." data-i18n-ph="checkout.promo_ph" autocomplete=off autocapitalize=characters autocorrect=off spellcheck=false data-lpignore=true data-form-type=other>
 <button class="search-btn btn-target" data-action="apply-promo-code" style=padding:10px data-i18n=checkout.apply>ПРИМЕНИТЬ</button>
 </div>
 <div id=promoMessage class=promo-msg></div>
@@ -751,7 +751,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=form-layout id=ordersAuthSection style="border-bottom:1px dashed #333;padding-bottom:15px">
 <p id=guestOrderText style=margin:0;font-size:13px;color:#aaa data-i18n=orders_modal.desc>Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
 <div id=guestOrderInputGroup style=display:flex;gap:10px;margin-top:10px>
-<input type=tel id=ordersSearchPhone class=form-input placeholder=+380... inputmode=numeric onkeydown="if(event.key==='Enter'){event.preventDefault();fetchMyOrders();}">
+<input type=tel id=ordersSearchPhone class=form-input placeholder=+380... inputmode=numeric>
 <button class="search-btn btn-target" data-action="fetch-my-orders" data-i18n=orders_modal.btn>НАЙТИ</button>
 </div>
 </div>
@@ -814,7 +814,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <img src=https://www.google.com/favicon.ico width=18> <span data-i18n=sidebar.google_login>ВОЙТИ ЧЕРЕЗ GOOGLE</span>
 </button>
 <div id=modalAuthForgotPassWrap style="display:flex;justify-content:flex-end;margin:2px 2px 0 0;font-size:11px;font-family:var(--font-mono)">
-<a href="javascript:void(0)" data-action="forgot-password" data-is-modal="true" style="color:#888;text-decoration:underline;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
+<a href="javascript:void(0)" class="forgot-password-link" data-action="forgot-password" data-is-modal="true" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
 </div>
 <button class="cart-checkout-btn btn-target" id=modalBtnRegister data-action="handle-auth" data-auth-mode="register" data-is-modal="true" style=display:none;background:var(--accent-green);color:#000;width:100% data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
 <button class="cart-checkout-btn btn-target" id=modalBtnBackLogin data-action="toggle-reg-mode" data-is-modal="true" style=display:none;background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.back>НАЗАД</button>

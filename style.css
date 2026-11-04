@@ -291,6 +291,17 @@ label:hover .win95-cb:checked {
 .auth-btn { background-color: var(--text-main); color: #000; border: 2px outset #eee; padding: 8px; font-weight: bold; cursor: pointer; font-family: var(--font-main); font-size: 13px; margin-top: 5px; transition: 0.1s;}
 .auth-btn:active { border-style: inset; }
 
+.forgot-password-link {
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+.forgot-password-link:hover,
+.forgot-password-link:focus-visible {
+    color: #fff !important;
+}
+
 .profile-info-block { font-size: 12px; color: #aaa; margin-bottom: 10px; padding: 10px; background: #000; border: 1px dashed #444;}
 .profile-info-block span { color: var(--accent-green); font-family: var(--font-mono);}
 

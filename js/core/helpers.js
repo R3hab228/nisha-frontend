@@ -1959,6 +1959,9 @@ function initActionDelegation() {
             const id = hoverEl.getAttribute('data-id');
             const dir = Number.parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
             if (id && typeof window.preloadGridSlide === 'function') window.preloadGridSlide(e, id, dir);
+        } else if (hoverAction === 'preload-slide') {
+            const dir = Number.parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
+            if (typeof window.preloadSlide === 'function') window.preloadSlide(dir);
         } else if (hoverAction === 'similar-item-tooltip') {
             const id = hoverEl.getAttribute('data-id');
             if (id && typeof window.showItemMeasurementsTooltip === 'function') window.showItemMeasurementsTooltip(id, e);

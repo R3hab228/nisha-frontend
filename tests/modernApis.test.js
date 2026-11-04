@@ -3539,6 +3539,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(matches.length).toBe(0);
         });
 
+        it('verifies index.html has 0 inline mouse and keyboard event attributes', () => {
+            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            const mouseMatches = html.match(/\bonmouse(over|out|enter|leave)\s*=/gi) || [];
+            const keyMatches = html.match(/\bonkey(down|up|press)\s*=/gi) || [];
+            expect(mouseMatches.length).toBe(0);
+            expect(keyMatches.length).toBe(0);
+        });
+
         it('verifies all interactive elements have data-action attributes and valid parameters', () => {
             const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
             expect(html).toContain('data-action="navigate-home"');

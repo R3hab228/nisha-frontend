@@ -236,6 +236,18 @@ document.addEventListener('keydown', function(e) {
         const activeEl = document.activeElement;
         if (!activeEl) return;
 
+        if (activeEl.id === 'promoInput') {
+            e.preventDefault();
+            if (typeof window.applyPromoCode === 'function') window.applyPromoCode();
+            return;
+        }
+
+        if (activeEl.id === 'ordersSearchPhone') {
+            e.preventDefault();
+            if (typeof window.fetchMyOrders === 'function') window.fetchMyOrders();
+            return;
+        }
+
         // В многострочном поле (textarea): быстрый двойной Enter переводит фокус на следующее поле формы
         if (activeEl.tagName === 'TEXTAREA') {
             if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
