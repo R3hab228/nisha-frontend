@@ -2578,7 +2578,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('data-i18n="grid.size_prefix"');
 
             // 5. style.css .cart-dropdown on PC has 100% width matching cart-info so it ends at the last letter 'н' of 'грн'
-            expect(cssCode).toContain('.cart-dropdown { position: absolute; bottom: calc(100% + 15px); left: 0; width: 100%; min-width: 100%; box-sizing: border-box;');
+            expect(cssCode).toContain('.cart-dropdown { position: absolute; bottom: calc(100% + 24px); left: 0; width: 100%; min-width: 100%; box-sizing: border-box;');
         });
 
         it('40. Customer support and site-wide UI strings localized across RU, UA, EN with dynamic i18n placeholders and toasts', () => {
@@ -3744,6 +3744,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('46. Bargain offer broadcast styling, unclickable accepted/declined buttons, and cart brackets removal', () => {
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
             const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
             const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/en.json'), 'utf8'));
@@ -3761,11 +3762,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(ruJson.translation.product.offer_declined_btn).toBe('ПРЕДЛОЖЕНИЕ ОТКЛОНЕНО');
             expect(enJson.translation.product.offer_declined_btn).toBe('OFFER DECLINED');
 
-            // 3. Broadcast modal has no handshake emoji and uses terminal styling
+            // 3. Broadcast modal has no handshake emoji, red close button, green currency text
             expect(chatCode).not.toContain('🤝');
             expect(chatCode).not.toContain('border: 1px solid var(--accent-yellow');
             expect(chatCode).toContain('border: 1px solid #333');
             expect(chatCode).toContain('color: var(--accent-green, #00ff66)');
+            expect(chatCode).toContain('color: var(--accent-red, #ff3333)');
+            expect(chatCode).toContain('currencyText');
 
             // 4. Accepted and declined states make offerPriceBtn unclickable with pointer-events: none
             expect(chatCode).toContain("offerPriceBtn.style.pointerEvents = 'none'");
@@ -3773,6 +3776,11 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(productCode).toContain("offerPriceBtn.style.pointerEvents = 'none'");
             expect(productCode).toContain("isDeclinedBargain");
             expect(productCode).toContain("var(--accent-red, #ff3333)");
+
+            // 5. Cart dropdown styling on PC: rounded top corners, raised offset, hidden when empty
+            expect(cssCode).toContain('border-radius: 18px 18px 0 0');
+            expect(cssCode).toContain('border-radius: 16px 16px 0 0');
+            expect(cssCode).toContain('.cart-panel:not(.show) .cart-dropdown { display: none !important');
         });
     });
 });

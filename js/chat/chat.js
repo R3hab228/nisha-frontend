@@ -10,6 +10,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     const titleText = t('product.offer_accepted_title', 'ВАША ЦІНА ПРИЙНЯТА!');
     const descText = t('product.offer_accepted_text', 'Ваша пропозиція прийнята на суму');
     const buyBtnText = t('product.offer_buy_btn', 'В КОШИК');
+    const currencyText = (typeof getCurrency === 'function' ? getCurrency() : (typeof i18next !== 'undefined' ? i18next.t('currency', { defaultValue: 'грн' }) : 'грн')).trim();
 
     // 1. Сохраняем состояние принятого торга для текущего товара
     try {
@@ -50,7 +51,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         <div class="success-terminal-box" style="max-width: 420px; width: 90%; background: #0a0a0a; border: 1px solid #333; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.85); padding: 30px 24px; text-align: center;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <div class="success-title" style="color: var(--accent-green, #00ff66); font-family: var(--font-mono); font-size: 16px; font-weight: 700; margin: 0; letter-spacing: 0.5px; text-transform: uppercase;">${titleText}</div>
-                <button class="close-bargain-x-btn" aria-label="Close" style="background: none; border: none; color: #777; font-family: var(--font-mono); font-size: 16px; cursor: pointer; padding: 2px 6px; line-height: 1; transition: color 0.15s ease;">✕</button>
+                <button class="close-bargain-x-btn" aria-label="Close" style="background: none; border: none; color: var(--accent-red, #ff3333); font-family: var(--font-mono); font-size: 18px; font-weight: bold; cursor: pointer; padding: 2px 6px; line-height: 1; transition: transform 0.15s ease, opacity 0.15s ease;">✕</button>
             </div>
             <div class="success-divider" style="margin-bottom: 18px;"></div>
 
@@ -62,7 +63,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
             <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">${safeName}</div>
             <div style="font-family: var(--font-main); font-size: 14px; color: #ddd; line-height: 1.6; margin-bottom: 22px;">
-                ${descText}: <b style="color: #fff; font-size: 15px; font-family: var(--font-mono);"><span style="color: var(--accent-green, #00ff66);">${newPrice}</span> грн</b>
+                ${descText}: <b style="color: var(--accent-green, #00ff66); font-size: 16px; font-family: var(--font-mono);"><span class="bargain-price-val">${newPrice}</span> ${currencyText}</b>
             </div>
 
             <button class="buy-tg-btn cart-add btn-target bargain-add-cart-btn" style="width: 100%; min-height: 52px; font-size: 16px; text-transform: uppercase; font-family: var(--font-main); font-weight: bold;">
@@ -114,6 +115,8 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     }
 
     if (closeXBtn) {
+        closeXBtn.addEventListener('mouseenter', () => { closeXBtn.style.opacity = '0.75'; closeXBtn.style.transform = 'scale(1.15)'; });
+        closeXBtn.addEventListener('mouseleave', () => { closeXBtn.style.opacity = '1'; closeXBtn.style.transform = 'scale(1)'; });
         closeXBtn.addEventListener('click', closeOverlay, { signal: modalCtrl.signal });
     }
     overlay.addEventListener('click', (e) => {

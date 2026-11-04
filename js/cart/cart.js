@@ -487,9 +487,17 @@ function updateCartUI() {
     const dropdown = document.getElementById('cartDropdown');
     const isDropdownOpen = dropdown && dropdown.classList.contains('active');
     if (currentCart.length === 0) { 
-        p.classList.remove('show'); 
-        p.classList.remove('dropdown-open');
-        if (dropdown) dropdown.classList.remove('active');
+        p.classList.remove('show', 'dropdown-open');
+        if (dropdown) {
+            dropdown.classList.remove('active');
+            dropdown.style.display = 'none';
+            dropdown.style.opacity = '0';
+            dropdown.style.visibility = 'hidden';
+            dropdown.style.pointerEvents = 'none';
+            setTimeout(() => {
+                if (dropdown) dropdown.style.removeProperty('display');
+            }, 400);
+        }
         if (fab) {
             fab.classList.remove('cart-active'); 
             fab.classList.remove('hidden-scroll'); 
@@ -497,9 +505,8 @@ function updateCartUI() {
             fab.style.removeProperty('opacity');
             fab.style.removeProperty('pointer-events');
         }
-        // Пустая корзина: сбрасываем промокод и перерисовываем список (иначе остаются "призраки" старых товаров)
+        // Пустая корзина: сбрасываем промокод без вспышки пустого списка
         if (window.currentPromoDiscount || window.appliedPromoCode) resetPromoState();
-        if (typeof renderCartItems === 'function') renderCartItems();
         return; 
     }
     
@@ -1899,13 +1906,23 @@ async function removeFromCart(index, event, rowElement) {
             liveCart.splice(liveIndex, 1);
             setActiveCart(liveCart);
             if (liveCart.length === 0) {
+                const dropdown = document.getElementById('cartDropdown');
+                const panel = document.getElementById('cartPanel');
+                if (dropdown) {
+                    dropdown.classList.remove('active');
+                    dropdown.style.display = 'none';
+                    dropdown.style.opacity = '0';
+                    dropdown.style.visibility = 'hidden';
+                    dropdown.style.pointerEvents = 'none';
+                    setTimeout(() => {
+                        if (dropdown) dropdown.style.removeProperty('display');
+                    }, 400);
+                }
+                if (panel) {
+                    panel.classList.remove('show', 'dropdown-open');
+                }
                 if (typeof closeCartDropdown === 'function') {
                     closeCartDropdown();
-                } else {
-                    const dropdown = document.getElementById('cartDropdown');
-                    if (dropdown) dropdown.classList.remove('active');
-                    const panel = document.getElementById('cartPanel');
-                    if (panel) panel.classList.remove('dropdown-open');
                 }
             }
             updateCartUI(); 
