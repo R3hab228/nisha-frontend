@@ -1648,22 +1648,27 @@ function updateSidebarCounters() {
     // 1. Категории
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(link => {
         let baseText = link.innerHTML.split('<span')[0].trim();
+        const dataCat = link.getAttribute('data-category');
         const onclickAttr = link.getAttribute('onclick') || '';
         
         let catName = 'Все вещи';
-        const match = onclickAttr.match(/setCategoryFilter\s*\(\s*["']([^"']*)["']/);
-        if (match && match[1]) {
-            catName = match[1];
-        } else if (onclickAttr.includes('""') || onclickAttr.includes("''")) {
-            catName = 'Все вещи';
+        if (dataCat !== null) {
+            catName = dataCat || 'Все вещи';
         } else {
-            // Fallback по тексту
-            if (baseText.includes('Все') || baseText.includes('Всі') || baseText.includes('All')) catName = 'Все вещи';
-            else if (baseText.includes('Верхн')) catName = 'Верхняя одежда';
-            else if (baseText.includes('Кофт') || baseText.includes('Светр')) catName = 'Кофты и Свитера';
-            else if (baseText.includes('Штан') || baseText.includes('Джинс')) catName = 'Штаны и Джинсы';
-            else if (baseText.includes('Обув') || baseText.includes('Взутт') || baseText.includes('Shoes')) catName = 'Обувь';
-            else if (baseText.includes('Акс') || baseText.includes('Acc')) catName = 'Аксессуары';
+            const match = onclickAttr.match(/setCategoryFilter\s*\(\s*["']([^"']*)["']/);
+            if (match && match[1]) {
+                catName = match[1];
+            } else if (onclickAttr.includes('""') || onclickAttr.includes("''")) {
+                catName = 'Все вещи';
+            } else {
+                // Fallback по тексту
+                if (baseText.includes('Все') || baseText.includes('Всі') || baseText.includes('All')) catName = 'Все вещи';
+                else if (baseText.includes('Верхн')) catName = 'Верхняя одежда';
+                else if (baseText.includes('Кофт') || baseText.includes('Светр')) catName = 'Кофты и Свитера';
+                else if (baseText.includes('Штан') || baseText.includes('Джинс')) catName = 'Штаны и Джинсы';
+                else if (baseText.includes('Обув') || baseText.includes('Взутт') || baseText.includes('Shoes')) catName = 'Обувь';
+                else if (baseText.includes('Акс') || baseText.includes('Acc')) catName = 'Аксессуары';
+            }
         }
 
         const count = catCounts[catName] || 0;
@@ -1942,8 +1947,9 @@ function applyFilters(immediate = false, preserveViewport = false) {
             
             if (curCat) {
                 catLinks.forEach(link => {
+                    const dataCat = link.getAttribute('data-category');
                     const onclickText = link.getAttribute('onclick') || '';
-                    if (onclickText.includes(`'${curCat}'`)) {
+                    if (dataCat === curCat || onclickText.includes(`'${curCat}'`)) {
                         link.classList.add('active-filter');
                     }
                 });

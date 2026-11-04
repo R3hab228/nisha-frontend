@@ -255,8 +255,9 @@ async function initApp() {
         if (savedCat) {
             window.currentCategory = savedCat;
             catLinks.forEach(link => {
+                const dataCat = link.getAttribute('data-category');
                 const onclickText = link.getAttribute('onclick') || '';
-                if (onclickText.includes(`'${savedCat}'`)) {
+                if (dataCat === savedCat || onclickText.includes(`'${savedCat}'`)) {
                     link.classList.add('active-filter');
                 }
             });

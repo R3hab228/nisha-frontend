@@ -145,7 +145,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div id=glitchOverlay>
 <div class=glitch-text id=glitchMessage>SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]</div>
 </div>
-<div id=orderSuccessOverlay style="display:none; cursor:pointer;" onclick="this.style.display='none'">
+<div id=orderSuccessOverlay style="display:none; cursor:pointer;" data-action="close-order-success">
 <div class=success-terminal-box>
 <div class=success-icon-wrapper>
 <svg class=animated-check viewBox="0 0 24 24">
@@ -160,7 +160,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </div>
 </div>
 </div>
-<div id=emailPromptOverlay onclick="if(event.target===this)confirmEmailPrompt(false)" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:9999;justify-content:center;align-items:center;flex-direction:column;padding:15px;box-sizing:border-box">
+<div id=emailPromptOverlay data-action="email-prompt-backdrop" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:9999;justify-content:center;align-items:center;flex-direction:column;padding:15px;box-sizing:border-box">
 <div class=success-terminal-box style=opacity:1;transform:scale(1);animation:none>
 <div class="success-title typewriter" id=emailPromptTitle style=color:#0af>NOTIFICATIONS.SYS</div>
 <div class=success-divider style="background:repeating-linear-gradient(90deg,#0af,#0af 5px,transparent 5px,transparent 10px)"></div>
@@ -169,8 +169,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </div>
 <input type=email id=promptEmailInput class=form-input placeholder=your@email.com style=margin-bottom:15px;text-align:center;border-color:#0af>
 <div style=display:flex;gap:10px>
-<button id=btnEmailYes onclick=confirmEmailPrompt(!0) style="flex:1;padding:10px;font-size:13px;background:#0af;color:#000;font-family:var(--font-mono);font-weight:700;border:2px outset #fff;cursor:pointer;text-transform:uppercase" data-i18n=email_prompt.yes>[ ДА ]</button>
-<button id=btnEmailSkip onclick=confirmEmailPrompt(!1) style="flex:1;padding:10px;font-size:13px;background:#333;border:2px outset #555;color:#fff;font-family:var(--font-mono);font-weight:700;cursor:pointer;text-transform:uppercase;white-space:nowrap" data-i18n=email_prompt.skip>[ ПРОПУСТИТЬ ]</button>
+<button id=btnEmailYes data-action="confirm-email-prompt" data-confirm="true" style="flex:1;padding:10px;font-size:13px;background:#0af;color:#000;font-family:var(--font-mono);font-weight:700;border:2px outset #fff;cursor:pointer;text-transform:uppercase" data-i18n=email_prompt.yes>[ ДА ]</button>
+<button id=btnEmailSkip data-action="confirm-email-prompt" data-confirm="false" style="flex:1;padding:10px;font-size:13px;background:#333;border:2px outset #555;color:#fff;font-family:var(--font-mono);font-weight:700;cursor:pointer;text-transform:uppercase;white-space:nowrap" data-i18n=email_prompt.skip>[ ПРОПУСТИТЬ ]</button>
 </div>
 </div>
 </div>
@@ -191,15 +191,15 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div id="offlineStickyBanner" class="offline-sticky-banner" data-i18n="checkout.offline_banner">[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары. Оформление заказа возобновится при появлении сети.</div>
 <header>
 <div class=header-top>
-<h1 onclick='window.location.href="/"' style=cursor:pointer;user-select:none title="На главную">
+<h1 data-action="navigate-home" style=cursor:pointer;user-select:none title="На главную">
 <span class=typewriter>[ NISHA ]</span>
 </h1>
 <nav class=top-nav>
-<a href=javascript:void(0) onclick=resetToMain() data-i18n=nav.home>ГЛАВНАЯ</a>
-<a href=javascript:void(0) onclick=filterFavorites() id=favNav><span data-i18n=nav.favorites>ИЗБРАННОЕ</span> <span id=favCountBadge>[0]</span></a>
-<a href=javascript:void(0) onclick=openReviewsModal() style=color:var(--accent-yellow) data-i18n=nav.reviews>ОТЗЫВЫ</a>
-<a href=javascript:void(0) onclick=openOrdersModal() style=color:#0af data-i18n=nav.orders>МОИ ЗАКАЗЫ</a>
-<a href=javascript:void(0) onclick=openProfileModal() class=mobile-profile-link style=color:#f0f data-i18n=nav.profile>ПРОФИЛЬ</a>
+<a href=javascript:void(0) data-action="reset-to-main" data-i18n=nav.home>ГЛАВНАЯ</a>
+<a href=javascript:void(0) data-action="filter-favorites" id=favNav><span data-i18n=nav.favorites>ИЗБРАННОЕ</span> <span id=favCountBadge>[0]</span></a>
+<a href=javascript:void(0) data-action="open-reviews" style=color:var(--accent-yellow) data-i18n=nav.reviews>ОТЗЫВЫ</a>
+<a href=javascript:void(0) data-action="open-orders" style=color:#0af data-i18n=nav.orders>МОИ ЗАКАЗЫ</a>
+<a href=javascript:void(0) data-action="open-profile" class=mobile-profile-link style=color:#f0f data-i18n=nav.profile>ПРОФИЛЬ</a>
 </nav>
 </div>
 <div class=marquee-container role="region" aria-label="Announcement">
@@ -224,22 +224,22 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <form autocomplete=off onsubmit='event.preventDefault(),saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),closeSearch()' style=margin:0;padding:0;display:flex;width:100%>
 <input class=search-input id=mainSearch autocomplete=off autocorrect=off spellcheck=false placeholder="Поиск вещи..." data-i18n-ph="search.placeholder" oninput=handleLiveSearch() style=width:100%;padding-right:40px>
 </form>
-<span id=clearSearchBtn class=clear-search-btn onclick=clearSearchInput()>✖</span>
+<span id=clearSearchBtn class=clear-search-btn data-action="clear-search-input">✖</span>
 <div id=liveSearchDropdown class="live-search-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
-<button class="search-btn btn-target" onclick='saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),closeSearch()' data-i18n=search.btn>Искать</button>
+<button class="search-btn btn-target" data-action="submit-main-search" data-i18n=search.btn>Искать</button>
 </div>
 <div class=main-container>
 <aside class=sidebar>
 <div class=filter-box>
 <div class=filter-title data-i18n=sidebar.categories>КАТЕГОРИИ</div>
 <ul class=filter-list>
-<li><a href=javascript:void(0) onclick='setCategoryFilter("",this)' class=active-filter data-i18n=sidebar.all>[>] Все вещи</a></li>
-<li><a href=javascript:void(0) onclick='setCategoryFilter("Верхняя одежда",this)' data-i18n=sidebar.outerwear>[>] Верхняя одежда</a></li>
-<li><a href=javascript:void(0) onclick='setCategoryFilter("Кофты и Свитера",this)' data-i18n=sidebar.sweaters>[>] Кофты и Свитера</a></li>
-<li><a href=javascript:void(0) onclick='setCategoryFilter("Штаны и Джинсы",this)' data-i18n=sidebar.pants>[>] Штаны и Джинсы</a></li>
-<li><a href=javascript:void(0) onclick='setCategoryFilter("Обувь",this)' data-i18n=sidebar.shoes>[>] Обувь</a></li>
-<li><a href=javascript:void(0) onclick='setCategoryFilter("Аксессуары",this)' data-i18n=sidebar.accs>[>] Аксессуары</a></li>
+<li><a href=javascript:void(0) data-action="set-category-filter" data-category="" class=active-filter data-i18n=sidebar.all>[>] Все вещи</a></li>
+<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Верхняя одежда" data-i18n=sidebar.outerwear>[>] Верхняя одежда</a></li>
+<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Кофты и Свитера" data-i18n=sidebar.sweaters>[>] Кофты и Свитера</a></li>
+<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Штаны и Джинсы" data-i18n=sidebar.pants>[>] Штаны и Джинсы</a></li>
+<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Обувь" data-i18n=sidebar.shoes>[>] Обувь</a></li>
+<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Аксессуары" data-i18n=sidebar.accs>[>] Аксессуары</a></li>
 </ul>
 </div>
 <div class=filter-box>
@@ -283,7 +283,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <input type=text id=authUsername class=auth-input placeholder=Никнейм data-i18n-ph="profile.nickname" style=display:none>
 <div class=password-wrapper>
 <input type=password id=authPass class=auth-input placeholder=Пароль data-i18n-ph="common.password">
-<div class=eye-icon onclick='togglePasswordVisibility("authPass",this)'>
+<div class=eye-icon data-action="toggle-password-visibility" data-input-id="authPass">
 <svg viewBox="0 0 24 24" fill=none stroke-width=2 stroke-linecap=round stroke-linejoin=round>
 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
 <circle cx=12 cy=12 r=3></circle>
@@ -291,16 +291,16 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </svg>
 </div>
 </div>
-<button class="auth-btn btn-target" id=btnLogin onclick='handleAuth("login")' data-i18n=sidebar.login>ВОЙТИ</button>
-<button class="auth-btn btn-target" id=btnShowReg onclick=toggleRegMode() style=background:#333;color:#fff data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
-<button class="auth-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap>
+<button class="auth-btn btn-target" id=btnLogin data-action="handle-auth" data-auth-mode="login" data-is-modal="false" data-i18n=sidebar.login>ВОЙТИ</button>
+<button class="auth-btn btn-target" id=btnShowReg data-action="toggle-reg-mode" data-is-modal="false" style=background:#333;color:#fff data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
+<button class="auth-btn btn-target" data-action="login-with-google" style=background:#fff;color:#000;border-color:#fff;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap>
 <img src=https://www.google.com/favicon.ico width=14> <span data-i18n=sidebar.google_id>GOOGLE ID</span>
 </button>
 <div id=authForgotPassWrap style="display:flex;justify-content:flex-end;margin:4px 2px 0 0;font-size:11px;font-family:var(--font-mono)">
-<a href="javascript:void(0)" onclick="handleForgotPassword(false)" style="color:#888;text-decoration:underline;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
+<a href="javascript:void(0)" data-action="forgot-password" data-is-modal="false" style="color:#888;text-decoration:underline;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
 </div>
-<button class="auth-btn btn-target" id=btnRegister onclick='handleAuth("register")' style=display:none;background:var(--accent-green);color:#000 data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
-<button class="auth-btn btn-target" id=btnBackLogin onclick=toggleRegMode() style=display:none;background:#333;color:#fff data-i18n=sidebar.back>НАЗАД</button>
+<button class="auth-btn btn-target" id=btnRegister data-action="handle-auth" data-auth-mode="register" data-is-modal="false" style=display:none;background:var(--accent-green);color:#000 data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
+<button class="auth-btn btn-target" id=btnBackLogin data-action="toggle-reg-mode" data-is-modal="false" style=display:none;background:#333;color:#fff data-i18n=sidebar.back>НАЗАД</button>
 </div>
 <div class=auth-fields id=profileForm style=display:none;flex-direction:column>
 <div style="background:#0a0a0a;border:1px solid #333;padding:15px;text-align:left;font-family:var(--font-mono);box-shadow:inset 0 0 10px rgba(0,0,0,.5)">
@@ -311,21 +311,21 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.phone>НОМЕР ТЕЛЕФОНА:</div>
 <div style="margin-bottom:12px" id=profilePhoneContainer>
 <div style="color:#fff;font-size:13px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=profilePhone></div>
-<a href=javascript:void(0) onclick="showPhoneInput(false)" id=profileAddPhoneBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
+<a href=javascript:void(0) data-action="show-phone-input" data-is-modal="false" id=profileAddPhoneBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
 <div id=profilePhoneInputWrap style="display:none;align-items:center;gap:6px;margin-top:4px">
 <input type=tel id=profilePhoneInput placeholder="+380..." style="background:#000;color:var(--accent-green);border:2px inset #555;padding:4px 8px;font-family:var(--font-mono);font-size:12px;width:145px;outline:none">
-<button onclick="savePhoneFromInput(false)" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
-<button onclick="hidePhoneInput(false)" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+<button data-action="save-phone-input" data-is-modal="false" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button data-action="hide-phone-input" data-is-modal="false" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.tg>ТГ ЮЗ:</div>
 <div style="border-bottom:1px dashed #333;padding-bottom:12px;margin-bottom:12px" id=profileTgContainer>
 <div style="color:#fff;font-size:13px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=profileTg></div>
-<a href=javascript:void(0) onclick="showTgInput(false)" id=profileAddTgBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
+<a href=javascript:void(0) data-action="show-tg-input" data-is-modal="false" id=profileAddTgBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
 <div id=profileTgInputWrap style="display:none;align-items:center;gap:6px;margin-top:4px">
 <input type=text id=profileTgInput placeholder="@username" style="background:#000;color:var(--accent-green);border:2px inset #555;padding:4px 8px;font-family:var(--font-mono);font-size:12px;width:145px;outline:none" autocomplete=off autocapitalize=none>
-<button onclick="saveTgFromInput(false)" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
-<button onclick="hideTgInput(false)" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+<button data-action="save-tg-input" data-is-modal="false" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button data-action="hide-tg-input" data-is-modal="false" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:11px;padding:3px 6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div class=profile-delivery-section>
@@ -362,24 +362,24 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <span style="color:var(--accent-red);font-size:16px;font-weight:700;text-shadow:0 0 10px rgba(255,0,0,.4)">★ <span id=profileLikesCount>0</span></span>
 </div>
 </div>
-<button class="auth-btn btn-target" onclick=logout() style=background:#333;color:#fff;margin-top:10px data-i18n=sidebar.logout>ВЫЙТИ</button>
+<button class="auth-btn btn-target" data-action="logout" style=background:#333;color:#fff;margin-top:10px data-i18n=sidebar.logout>ВЫЙТИ</button>
 </div>
 </div>
 </aside>
 <main class=content-area>
-<button id=mobileFilterBtn onclick=toggleMobileSidebar() data-i18n=mobile.show_filters>[+] ПОКАЗАТЬ ФИЛЬТРЫ</button>
+<button id=mobileFilterBtn data-action="toggle-mobile-sidebar" data-i18n=mobile.show_filters>[+] ПОКАЗАТЬ ФИЛЬТРЫ</button>
 <div class=sorting>
 <span><span data-i18n=sort.found>Найдено вещей:</span> <strong id=itemCount style=color:var(--accent-green)>0</strong></span>
 <span><span data-i18n=sort.sorting>Сортировка:</span>
-<a href=javascript:void(0) id=sort-new class=active-sort onclick='sortItems("new")' data-i18n=sort.new>Новые</a> |
-<a href=javascript:void(0) id=sort-cheap onclick='sortItems("cheap")' data-i18n=sort.cheap>Дешевые</a>
+<a href=javascript:void(0) id=sort-new class=active-sort data-action="sort-items" data-sort="new" data-i18n=sort.new>Новые</a> |
+<a href=javascript:void(0) id=sort-cheap data-action="sort-items" data-sort="cheap" data-i18n=sort.cheap>Дешевые</a>
 </span>
 </div>
 <div id=win95-net-error style="display:none;justify-content:center;padding:50px 10px;width:100%;box-sizing:border-box">
 <div style="background:#dfd8c1;border-top:2px solid #fff;border-left:2px solid #fff;border-right:2px solid #0a0a0a;border-bottom:2px solid #0a0a0a;padding:2px;width:100%;max-width:300px;box-shadow:4px 4px 0 rgba(0,0,0,.8)">
 <div style="background:navy;color:#fff;font-family:Tahoma,sans-serif;font-weight:700;font-size:12px;padding:3px 5px;display:flex;justify-content:space-between;align-items:center">
 <span>Error_NISHA.exe</span>
-<div onclick="dismissNetError()" style="background:silver;color:#000;border:1px solid #000;width:14px;height:14px;display:flex;justify-content:center;align-items:center;font-size:10px;cursor:pointer">X</div>
+<div data-action="dismiss-net-error" style="background:silver;color:#000;border:1px solid #000;width:14px;height:14px;display:flex;justify-content:center;align-items:center;font-size:10px;cursor:pointer">X</div>
 </div>
 <div style="padding:20px;text-align:center;background:#dfd8c1">
 <div style="height:60px;display:flex;align-items:center;justify-content:center;margin:0 auto">
@@ -414,52 +414,52 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </main>
 </div>
 <div class=history-section id=historySection>
-<div class=history-title onclick=toggleHistory() style=cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none>
+<div class=history-title data-action="toggle-history" style=cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none>
 <span data-i18n=history.title>HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:</span>
 <span id=historyArrow style="transition:transform .2s;color:var(--accent-green)">▼</span>
 </div>
 <div class=history-grid id=historyGrid></div>
 </div>
 <div class=cart-panel id=cartPanel>
-<div class=cart-info id=cartInfoWrapper onclick=toggleCartDropdown(event)>
+<div class=cart-info id=cartInfoWrapper data-action="toggle-cart-dropdown">
 <div class=cart-click-area>
 <span data-i18n=cart.in_cart>В КОРЗИНЕ:</span> <b id=cartCount>0</b> <span data-i18n=cart.items_total>ВЕЩЕЙ | ИТОГО:</span> <span id=cartTotal>0 грн</span>
 </div>
-<div id=cartDropdown class="cart-dropdown modal-window-style" onclick="event.stopPropagation()">
+<div id=cartDropdown class="cart-dropdown modal-window-style">
 <div class="cart-dropdown-header modal-header">
 <span class="modal-title typewriter" id=cartDropdownTitle data-i18n=cart.title>YOUR_CART.TXT</span>
-<button class="close-btn cart-close-mobile" onclick="closeCartDropdown(event)" aria-label="Закрыть корзину">X</button>
+<button class="close-btn cart-close-mobile" data-action="close-cart-dropdown" aria-label="Закрыть корзину">X</button>
 </div>
 <div id=cartDropdownList class=cart-dropdown-list>
 </div>
 </div>
 </div>
-<button onclick=openCheckoutModal() class="cart-checkout-btn btn-target" data-i18n=cart.checkout>ОФОРМИТЬ ЗАКАЗ</button>
+<button data-action="open-checkout" class="cart-checkout-btn btn-target" data-i18n=cart.checkout>ОФОРМИТЬ ЗАКАЗ</button>
 </div>
 <footer>
 <div class=hit-counter><span data-i18n=footer.visitors>VISITORS:</span> <span id=hitCounterValue>_ _ _ _ _</span></div>
 <div class=legal-info>
 <p data-i18n=footer.legal_text>Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.</p>
 <div>
-<a href=javascript:void(0) onclick=showRulesModal() data-i18n=footer.privacy_policy>Політика конфіденційності</a>
+<a href=javascript:void(0) data-action="show-rules" data-i18n=footer.privacy_policy>Політика конфіденційності</a>
 </div>
 <button id=installAppBtn style="display:none;background:0 0;color:var(--accent-green);font-family:var(--font-mono);font-weight:700;font-size:14px;padding:15px 10px;border:none;cursor:pointer;margin:5px auto 10px auto;width:100%;text-align:center;text-transform:uppercase" data-i18n=footer.install>⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ</button>
 <p style=margin-top:10px;color:#555 data-i18n=footer.refund_policy>Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
 <div style="margin-top:15px;border-top:1px dashed #333;padding-top:15px;font-family:var(--font-mono);font-size:11px">
 <span style=color:var(--accent-red);font-weight:700>[ SUPPORT ]</span>
 <span style=color:#888 data-i18n=footer.support_text>Нашли баг или есть идея? Пишите:</span>
-<a href=javascript:void(0) onclick=openSupportModalWindow() style=color:var(--accent-green);text-decoration:none;font-weight:700;margin-left:5px>nisha.store.ua@gmail.com</a>
+<a href=javascript:void(0) data-action="open-support-modal" style=color:var(--accent-green);text-decoration:none;font-weight:700;margin-left:5px>nisha.store.ua@gmail.com</a>
 </div>
 <p style=margin-top:15px;color:#444 data-i18n=footer.copyright>© 2026 NISHA. All rights reserved.</p>
 <div class=footer-lang-dropdown id=footerLangWrapper style="margin:20px auto 0 auto;display:inline-block">
-<span id=currentLangLabelFooter onclick='document.getElementById("footerLangWrapper").classList.toggle("active")' style="display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;margin:0 auto">
+<span id=currentLangLabelFooter data-action="toggle-footer-lang" style="display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;margin:0 auto">
 <img id=currentFlagImg src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E" width=20 height=15 alt=UA style=border-radius:2px;pointer-events:none>
 <span>[UA] ▼</span>
 </span>
 <div class=footer-lang-menu>
-<a href=javascript:void(0) onclick='setLang("ua")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> UA</a>
-<a href=javascript:void(0) onclick='setLang("ru")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> RU</a>
-<a href=javascript:void(0) onclick='setLang("en")' style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3CclipPath id='s'%3E%3Cpath d='M0,0 v18 h24 v-18 z'/%3E%3C/clipPath%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23fff' stroke-width='3' clip-path='url(%23s)'/%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23C8102E' stroke-width='1.5' clip-path='url(%23s)'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23C8102E' stroke-width='3'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> EN</a>
+<a href=javascript:void(0) data-action="set-lang" data-lang="ua" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> UA</a>
+<a href=javascript:void(0) data-action="set-lang" data-lang="ru" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> RU</a>
+<a href=javascript:void(0) data-action="set-lang" data-lang="en" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3CclipPath id='s'%3E%3Cpath d='M0,0 v18 h24 v-18 z'/%3E%3C/clipPath%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23fff' stroke-width='3' clip-path='url(%23s)'/%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23C8102E' stroke-width='1.5' clip-path='url(%23s)'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23C8102E' stroke-width='3'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> EN</a>
 </div>
 </div>
 </div>
@@ -510,7 +510,7 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
 </ul>
 </div>
 <div class=rules-footer style="background:#000;padding:15px;border-top:2px inset var(--border-light);flex-shrink:0">
-<button class="accept-btn btn-target" onclick=acceptRules() data-i18n=rules.btn_accept style="background:#111;color:var(--accent-green);font-weight:700;padding:15px 20px;font-size:15px;font-family:var(--font-mono);border:2px outset #444;cursor:pointer;text-transform:uppercase;width:100%">[ Я СОГЛАСЕН С ПРАВИЛАМИ ]</button>
+<button class="accept-btn btn-target" data-action="accept-rules" data-i18n=rules.btn_accept style="background:#111;color:var(--accent-green);font-weight:700;padding:15px 20px;font-size:15px;font-family:var(--font-mono);border:2px outset #444;cursor:pointer;text-transform:uppercase;width:100%">[ Я СОГЛАСЕН С ПРАВИЛАМИ ]</button>
 </div>
 </div>
 </div>
@@ -518,15 +518,15 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
 <div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" id=modalTypewriterTitle>ITEM_INFO.EXE</span>
-<button class=close-btn data-action=close-modal data-modal-id=productModal onclick='closeModal("productModal", event)' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=productModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=modal-content>
 <div class=modal-gallery>
 <div class=slider-container id=sliderContainer>
 <div id=photoCounter class=photo-counter>1/1</div>
 <div class=slider-wrapper id=sliderWrapper></div>
-<button class="slider-btn prev" onmouseenter="preloadSlide(-1)" onclick=moveSlide(-1) aria-label="Предыдущее фото">&#10094;</button>
-<button class="slider-btn next" onmouseenter="preloadSlide(1)" onclick=moveSlide(1) aria-label="Следующее фото">&#10095;</button>
+<button class="slider-btn prev" onmouseenter="preloadSlide(-1)" data-action="move-slide" data-dir="-1" aria-label="Предыдущее фото">&#10094;</button>
+<button class="slider-btn next" onmouseenter="preloadSlide(1)" data-action="move-slide" data-dir="1" aria-label="Следующее фото">&#10095;</button>
 </div>
 <div class=modal-thumbnails id=modalThumbnails></div>
 <div class="similar-items-section similar-desktop">
@@ -537,7 +537,7 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
 <div class=modal-info>
 <div style=display:flex;justify-content:space-between;align-items:center;margin-bottom:10px>
 <h2 id=modalItemTitle style=margin:0;color:#fff;font-size:22px;padding-right:15px;line-height:1.2>Название товара</h2>
-<div id=modalFavStar class=fav-star-modal onclick=toggleFavFromModal(event) title=Избранное data-i18n-title=product.fav>★</div>
+<div id=modalFavStar class=fav-star-modal data-action="toggle-fav-from-modal" title=Избранное data-i18n-title=product.fav>★</div>
 </div>
 <div class=price-views-row>
 <div class=modal-price id=modalItemPrice>0 грн</div>
@@ -563,13 +563,13 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
 </div>
 <div class=info-accordions>
 <div class=custom-details>
-<div class=custom-summary onclick=toggleAccordion(this) data-i18n=product.delivery>Доставка и оплата</div>
+<div class=custom-summary data-action="toggle-accordion" data-i18n=product.delivery>Доставка и оплата</div>
 <div class=custom-content-wrapper>
 <div><div class=details-content data-i18n=product.delivery_text>Отправка Новой Почтой. Працюємо по повній передоплаті...</div></div>
 </div>
 </div>
 <div class=custom-details>
-<div class=custom-summary onclick=toggleAccordion(this) data-i18n=product.measure>Как мы делаем замеры?</div>
+<div class=custom-summary data-action="toggle-accordion" data-i18n=product.measure>Как мы делаем замеры?</div>
 <div class=custom-content-wrapper>
 <div>
 <div class=details-content>
@@ -581,19 +581,19 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
 </div>
 <div style="margin-bottom: 15px; text-align: left; color: #888; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;"><span data-i18n=product.support_service>Служба поддержки:</span> <a href="https://t.me/NISHA_ADMIN01" target="_blank" style="color: var(--accent-green); text-decoration: underline;">@NISHA_ADMIN01</a></div>
 <div class=buy-share-row id=actionButtonsRow>
-<button class="buy-tg-btn cart-add btn-target" id=modalCartBtn onclick=addToCartFromModal() data-i18n=product.add_to_cart>В КОРЗИНУ</button>
-<button class=share-btn onclick=shareItem() title="Поделиться" data-i18n-title=product.share aria-label="Поделиться" data-i18n-aria=product.share><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="miter"><path d="M3 21.5C3.5 12 7 7 13 7V2.5L22 10.5L13 18.5V14C8 14 5 16.5 3 21.5Z"/></svg></button>
+<button class="buy-tg-btn cart-add btn-target" id=modalCartBtn data-action="add-to-cart-from-modal" data-i18n=product.add_to_cart>В КОРЗИНУ</button>
+<button class=share-btn data-action="share-item" title="Поделиться" data-i18n-title=product.share aria-label="Поделиться" data-i18n-aria=product.share><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="miter"><path d="M3 21.5C3.5 12 7 7 13 7V2.5L22 10.5L13 18.5V14C8 14 5 16.5 3 21.5Z"/></svg></button>
 </div>
 <div class=trust-badges>
-<div class=badge-item onclick='showBadgeInfo("secure")'>
+<div class=badge-item data-action="show-badge-info" data-badge="secure">
 <span class=badge-icon style="background:0 0;padding:0;display:flex"><svg width=18 height=18 viewBox="0 0 24 24" fill=none stroke=var(--accent-green) stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg></span>
 <span class=badge-text data-i18n=product.badge_orig>БЕЗОПАСНАЯ СДЕЛКА</span>
 </div>
-<div class=badge-item onclick='showBadgeInfo("fast")'>
+<div class=badge-item data-action="show-badge-info" data-badge="fast">
 <span class=badge-icon>24H</span>
 <span class=badge-text data-i18n=product.badge_fast>БЫСТРАЯ ОТПРАВКА</span>
 </div>
-<div class=badge-item onclick='showBadgeInfo("refund_yes")'>
+<div class=badge-item data-action="show-badge-info" data-badge="refund_yes">
 <span class=badge-icon style="background:0 0;padding:0;display:flex"><svg width=18 height=18 viewBox="0 0 24 24" fill=none stroke=var(--accent-green) stroke-width=2 stroke-linecap=round stroke-linejoin=round><circle cx=12 cy=12 r=10></circle><text x=12 y=16 font-family=monospace font-size=12 font-weight=bold fill=var(--accent-green) text-anchor=middle stroke=none>R</text></svg></span>
 <span class=badge-text data-i18n=product.badge_refund>ВОЗВРАТ 14 ДНЕЙ</span>
 </div>
@@ -610,7 +610,7 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
 <div class=modal-window style=max-width:550px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=checkoutModalTitle>SECURE_CHECKOUT.EXE</span>
-<button class=close-btn data-action=close-modal data-modal-id=checkoutModal onclick='closeModal("checkoutModal", event)' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=checkoutModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=checkoutFormLayout>
 <p style=margin:0;font-size:13px;color:#aaa data-i18n=checkout.desc>Заполните данные для отправки. Бронь 2 часа.</p>
@@ -621,26 +621,26 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
 <label data-i18n=checkout.phone style="margin-bottom:0">Телефон (ОБЯЗАТЕЛЬНО):</label>
 <div style=display:flex;gap:10px>
 <input type=tel id=orderPhone class=form-input placeholder=+380... inputmode=numeric>
-<button class="search-btn btn-target" id=btnGetOtp onclick=generateAndSendOTP() style="white-space:nowrap;padding:10px 15px;font-size:12px" data-i18n=checkout.btn_otp>Подтвердить</button>
+<button class="search-btn btn-target" id=btnGetOtp data-action="generate-and-send-otp" style="white-space:nowrap;padding:10px 15px;font-size:12px" data-i18n=checkout.btn_otp>Подтвердить</button>
 </div>
 <div id=otpStatus style="color:var(--accent-red);font-size:11px;font-family:var(--font-mono);line-height:1.4;margin-top:2px" data-i18n=checkout.otp_status>Сначала подтвердите номер для заказа!</div>
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div class=np-input-wrap style="position:relative; z-index:35;">
 <input id=orderCity name=nisha_order_city class=form-input placeholder=Київ... data-i18n-ph="checkout.city_ph" oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
-<button type=button id=clearOrderCityBtn class=np-clear-btn onclick=clearNPCityInput(event) aria-label="Очистить город" tabindex=-1>✕</button>
+<button type=button id=clearOrderCityBtn class=np-clear-btn data-action="clear-np-city" aria-label="Очистить город" tabindex=-1>✕</button>
 <div id=cityDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
 <label data-i18n=checkout.branch>Отделение или Почтомат:</label>
 <div class=np-input-wrap style="position:relative; z-index:30;">
 <input id=orderBranch name=nisha_order_branch class=form-input placeholder=Відділення... data-i18n-ph="checkout.branch_ph" onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
-<button type=button id=clearOrderBranchBtn class=np-clear-btn onclick=clearNPBranchInput(event) aria-label="Очистить отделение" tabindex=-1>✕</button>
+<button type=button id=clearOrderBranchBtn class=np-clear-btn data-action="clear-np-branch" aria-label="Очистить отделение" tabindex=-1>✕</button>
 <div id=branchDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
 
 <label style="margin-top:10px;" data-i18n="checkout.payment_method">СПОСОБ ОПЛАТЫ:</label>
 <div style="position:relative; z-index:20;">
-    <div id="paymentDisplay" class="form-input" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="togglePaymentDropdown()">
+    <div id="paymentDisplay" class="form-input" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" data-action="toggle-payment-dropdown">
         <span id="paymentSelectedText" data-i18n="checkout.payment_full">Полная предоплата</span>
         <span id="paymentArrow" class="payment-arrow" aria-hidden="true">
             <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
@@ -649,8 +649,8 @@ function getFlagUrlByLang(e){return NISHA_FLAGS[e]||NISHA_FLAGS.ua}function setL
         </span>
     </div>
     <div id="paymentDropdown" class="custom-dropdown" style="display:none; position:absolute; width:100%; z-index:200; border-top:1px solid var(--accent-green); opacity:0; visibility:hidden; transform:translateY(-6px); transition:opacity 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.22s;">
-        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" data-i18n="checkout.payment_full" onclick="selectPaymentMethod('Полная предоплата', this.innerText)">Полная предоплата</div>
-        <div style="padding:12px; cursor:pointer;" data-i18n="checkout.payment_cod" onclick="selectPaymentMethod('Наложка (предоплата 200грн)', this.innerText)">Наложка (предоплата 200грн)</div>
+        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" data-i18n="checkout.payment_full" data-action="select-payment-method" data-payment-method="Полная предоплата">Полная предоплата</div>
+        <div style="padding:12px; cursor:pointer;" data-i18n="checkout.payment_cod" data-action="select-payment-method" data-payment-method="Наложка (предоплата 200грн)">Наложка (предоплата 200грн)</div>
     </div>
     <input type="hidden" id="orderPaymentMethod" value="Полная предоплата">
 <script>
@@ -726,7 +726,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <label style=margin-top:10px data-i18n=checkout.promo>Промокод (если есть):</label>
 <div class=promo-wrapper>
 <input id=promoInput name=promo_code class=form-input placeholder="Введите код..." data-i18n-ph="checkout.promo_ph" autocomplete=off autocapitalize=characters autocorrect=off spellcheck=false data-lpignore=true data-form-type=other onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode();}">
-<button class="search-btn btn-target" onclick=applyPromoCode() style=padding:10px data-i18n=checkout.apply>ПРИМЕНИТЬ</button>
+<button class="search-btn btn-target" data-action="apply-promo-code" style=padding:10px data-i18n=checkout.apply>ПРИМЕНИТЬ</button>
 </div>
 <div id=promoMessage class=promo-msg></div>
 <div id=deliveryCostInfo style="background:#111;padding:10px;border:1px solid #444;font-family:var(--font-mono);font-size:12px;color:var(--accent-green);display:none;margin-top:5px">
@@ -738,7 +738,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <span data-i18n=checkout.save_to_profile>Запомнить этот адрес в профиле</span>
 </label>
 </div>
-<button class="cart-checkout-btn btn-target" id=btnSubmitOrder onclick=submitOrder() style=margin-top:15px;width:100%;opacity:.5;pointer-events:none data-i18n=checkout.btn_submit>ПОДТВЕРДИТЬ ЗАКАЗ</button>
+<button class="cart-checkout-btn btn-target" id=btnSubmitOrder data-action="submit-order" style=margin-top:15px;width:100%;opacity:.5;pointer-events:none data-i18n=checkout.btn_submit>ПОДТВЕРДИТЬ ЗАКАЗ</button>
 </div>
 </div>
 </div>
@@ -746,19 +746,19 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" id=ordersModalTitle>MY_ORDERS.DB</span>
-<button class=close-btn data-action=close-modal data-modal-id=ordersModal onclick='closeModal("ordersModal", event)' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=ordersModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=ordersAuthSection style="border-bottom:1px dashed #333;padding-bottom:15px">
 <p id=guestOrderText style=margin:0;font-size:13px;color:#aaa data-i18n=orders_modal.desc>Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
 <div id=guestOrderInputGroup style=display:flex;gap:10px;margin-top:10px>
 <input type=tel id=ordersSearchPhone class=form-input placeholder=+380... inputmode=numeric onkeydown="if(event.key==='Enter'){event.preventDefault();fetchMyOrders();}">
-<button class="search-btn btn-target" onclick=fetchMyOrders() data-i18n=orders_modal.btn>НАЙТИ</button>
+<button class="search-btn btn-target" data-action="fetch-my-orders" data-i18n=orders_modal.btn>НАЙТИ</button>
 </div>
 </div>
 <div class=orders-tabs id=ordersTabs style=display:none>
-<button class="order-tab tab-yellow active" onclick='switchOrderTab("accepted")'><span data-i18n=orders_modal.tab_accepted>ПРИНЯТЫЕ</span> <span id=orderTabCountAccepted>(0)</span></button>
-<button class="order-tab tab-blue" onclick='switchOrderTab("shipped")'><span data-i18n=orders_modal.tab_shipped>ОТПРАВЛЕНЫ</span> <span id=orderTabCountShipped>(0)</span></button>
-<button class="order-tab tab-red" onclick='switchOrderTab("cancelled")'><span data-i18n=orders_modal.tab_cancelled>ОТМЕНЕНЫ</span> <span id=orderTabCountCancelled>(0)</span></button>
+<button class="order-tab tab-yellow active" data-action="switch-order-tab" data-tab="accepted"><span data-i18n=orders_modal.tab_accepted>ПРИНЯТЫЕ</span> <span id=orderTabCountAccepted>(0)</span></button>
+<button class="order-tab tab-blue" data-action="switch-order-tab" data-tab="shipped"><span data-i18n=orders_modal.tab_shipped>ОТПРАВЛЕНЫ</span> <span id=orderTabCountShipped>(0)</span></button>
+<button class="order-tab tab-red" data-action="switch-order-tab" data-tab="cancelled"><span data-i18n=orders_modal.tab_cancelled>ОТМЕНЕНЫ</span> <span id=orderTabCountCancelled>(0)</span></button>
 </div>
 <div class=orders-container id=ordersListArea>
 <div style=text-align:center;color:#555;font-family:var(--font-mono);padding:30px data-i18n=orders_modal.loading>
@@ -771,26 +771,26 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div class=modal-window style=max-width:600px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=reviewsModalTitle>REVIEWS.TXT</span>
-<button class=close-btn data-action=close-modal data-modal-id=reviewsModal onclick='closeModal("reviewsModal", event)' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=reviewsModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=orders-container style=position:relative;padding-bottom:40px>
 <p style=color:#aaa;margin-top:0;font-size:14px data-i18n=reviews_modal.desc>Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.</p>
 <div id=reviewsContainerList class=reviews-slider></div>
 <div class=reviews-nav>
-<button onclick=scrollReviews(-1) aria-label="Предыдущие отзывы">&#10094;</button>
-<button onclick=scrollReviews(1) aria-label="Следующие отзывы">&#10095;</button>
+<button data-action="scroll-reviews" data-dir="-1" aria-label="Предыдущие отзывы">&#10094;</button>
+<button data-action="scroll-reviews" data-dir="1" aria-label="Следующие отзывы">&#10095;</button>
 </div>
 </div>
 </div>
 </div>
-<button class=fab-propose onclick=openProposeModal() title="Предложить вещь" aria-label="Предложить вещь">
+<button class=fab-propose data-action="open-propose-modal" title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>
 <div class=modal-overlay id=profileModal>
 <div class=modal-window style=max-width:450px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=profileModalTitle>PROFILE/LOGIN.EXE</span>
-<button class=close-btn data-action=close-modal data-modal-id=profileModal onclick='closeModal("profileModal", event)' aria-label="Закрыть окно">X</button>
+<button class=close-btn data-action=close-modal data-modal-id=profileModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=modalAuthBox style="padding:25px 20px">
 <div class=auth-fields id=modalLoginForm style=display:flex;flex-direction:column;gap:15px>
@@ -799,7 +799,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <input id=modalAuthUsername class=form-input placeholder=Никнейм style=display:none;padding:15px data-i18n-ph=profile.nickname_ph>
 <div class=password-wrapper>
 <input type=password id=modalAuthPass class=form-input placeholder=Пароль style=padding:15px data-i18n-ph=profile.password_ph>
-<div class=eye-icon onclick='togglePasswordVisibility("modalAuthPass",this)' style=right:15px>
+<div class=eye-icon data-action="toggle-password-visibility" data-input-id="modalAuthPass" style=right:15px>
 <svg viewBox="0 0 24 24" fill=none stroke-width=2 stroke-linecap=round stroke-linejoin=round>
 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
 <circle cx=12 cy=12 r=3></circle>
@@ -808,16 +808,16 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 </div>
 </div>
 <div style=margin-top:10px;display:flex;flex-direction:column;gap:12px>
-<button class="cart-checkout-btn btn-target" id=modalBtnLogin onclick='handleAuth("login",!0)' style=width:100% data-i18n=sidebar.login>ВОЙТИ</button>
-<button class="cart-checkout-btn btn-target" id=modalBtnShowReg onclick=toggleRegMode(!0) style=background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
-<button class="cart-checkout-btn btn-target" onclick=loginWithGoogle() style=background:#fff;color:#000;border-color:#fff;width:100%;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:10px;white-space:nowrap>
+<button class="cart-checkout-btn btn-target" id=modalBtnLogin data-action="handle-auth" data-auth-mode="login" data-is-modal="true" style=width:100% data-i18n=sidebar.login>ВОЙТИ</button>
+<button class="cart-checkout-btn btn-target" id=modalBtnShowReg data-action="toggle-reg-mode" data-is-modal="true" style=background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.reg>РЕГИСТРАЦИЯ</button>
+<button class="cart-checkout-btn btn-target" data-action="login-with-google" style=background:#fff;color:#000;border-color:#fff;width:100%;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:10px;white-space:nowrap>
 <img src=https://www.google.com/favicon.ico width=18> <span data-i18n=sidebar.google_login>ВОЙТИ ЧЕРЕЗ GOOGLE</span>
 </button>
 <div id=modalAuthForgotPassWrap style="display:flex;justify-content:flex-end;margin:2px 2px 0 0;font-size:11px;font-family:var(--font-mono)">
-<a href="javascript:void(0)" onclick="handleForgotPassword(true)" style="color:#888;text-decoration:underline;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
+<a href="javascript:void(0)" data-action="forgot-password" data-is-modal="true" style="color:#888;text-decoration:underline;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
 </div>
-<button class="cart-checkout-btn btn-target" id=modalBtnRegister onclick='handleAuth("register",!0)' style=display:none;background:var(--accent-green);color:#000;width:100% data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
-<button class="cart-checkout-btn btn-target" id=modalBtnBackLogin onclick=toggleRegMode(!0) style=display:none;background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.back>НАЗАД</button>
+<button class="cart-checkout-btn btn-target" id=modalBtnRegister data-action="handle-auth" data-auth-mode="register" data-is-modal="true" style=display:none;background:var(--accent-green);color:#000;width:100% data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
+<button class="cart-checkout-btn btn-target" id=modalBtnBackLogin data-action="toggle-reg-mode" data-is-modal="true" style=display:none;background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.back>НАЗАД</button>
 </div>
 </div>
 <div class=auth-fields id=modalProfileForm style=display:none;text-align:center>
@@ -829,21 +829,21 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.phone>НОМЕР ТЕЛЕФОНА:</div>
 <div style="margin-bottom:15px" id=modalProfilePhoneContainer>
 <div style="color:#fff;font-size:14px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=modalProfilePhone></div>
-<a href=javascript:void(0) onclick="showPhoneInput(true)" id=modalProfileAddPhoneBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
+<a href=javascript:void(0) data-action="show-phone-input" data-is-modal="true" id=modalProfileAddPhoneBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
 <div id=modalProfilePhoneInputWrap style="display:none;align-items:center;gap:8px;margin-top:6px">
 <input type=tel id=modalProfilePhoneInput placeholder="+380..." style="background:#000;color:var(--accent-green);border:2px inset #555;padding:6px 10px;font-family:var(--font-mono);font-size:13px;flex:1;max-width:175px;outline:none">
-<button onclick="savePhoneFromInput(true)" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
-<button onclick="hidePhoneInput(true)" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+<button data-action="save-phone-input" data-is-modal="true" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button data-action="hide-phone-input" data-is-modal="true" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.tg>ТГ ЮЗ:</div>
 <div style="border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px" id=modalProfileTgContainer>
 <div style="color:#fff;font-size:14px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=modalProfileTg></div>
-<a href=javascript:void(0) onclick="showTgInput(true)" id=modalProfileAddTgBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
+<a href=javascript:void(0) data-action="show-tg-input" data-is-modal="true" id=modalProfileAddTgBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
 <div id=modalProfileTgInputWrap style="display:none;align-items:center;gap:8px;margin-top:6px">
 <input type=text id=modalProfileTgInput placeholder="@username" style="background:#000;color:var(--accent-green);border:2px inset #555;padding:6px 10px;font-family:var(--font-mono);font-size:13px;flex:1;max-width:175px;outline:none" autocomplete=off autocapitalize=none>
-<button onclick="saveTgFromInput(true)" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
-<button onclick="hideTgInput(true)" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
+<button data-action="save-tg-input" data-is-modal="true" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
+<button data-action="hide-tg-input" data-is-modal="true" title="Отмена" data-i18n-title="common.cancel" class="win95-check-btn win95-cancel-btn" style="background:#2a2a2a;border:2px outset #777;color:#888;font-family:var(--font-mono);font-size:12px;padding:5px 8px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✕</button>
 </div>
 </div>
 <div class=profile-delivery-section>
@@ -880,7 +880,7 @@ window.togglePaymentDropdown = togglePaymentDropdown;
 <span style="color:var(--accent-red);font-size:18px;font-weight:700;text-shadow:0 0 15px rgba(255,0,0,.4)">★ <span id=modalProfileLikesCount>0</span></span>
 </div>
 </div>
-<button class=cart-checkout-btn onclick='logout(),closeModal("profileModal")' style=background:#333;color:#fff;margin-top:25px;width:100%;border-color:#555;text-transform:uppercase data-i18n=profile.logout>[ ВЫЙТИ ИЗ СИСТЕМЫ ]</button>
+<button class=cart-checkout-btn data-action="logout" data-close-modal="profileModal" style=background:#333;color:#fff;margin-top:25px;width:100%;border-color:#555;text-transform:uppercase data-i18n=profile.logout>[ ВЫЙТИ ИЗ СИСТЕМЫ ]</button>
 </div>
 </div>
 </div>

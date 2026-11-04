@@ -1564,6 +1564,242 @@ function handleDelegatedAction(e) {
             if (typeof window.submitSupportTicket === 'function') window.submitSupportTicket();
             break;
         }
+        case 'close-order-success': {
+            const overlay = typeof document !== 'undefined' ? document.getElementById('orderSuccessOverlay') : null;
+            if (overlay) overlay.style.display = 'none';
+            break;
+        }
+        case 'email-prompt-backdrop': {
+            if (e.target === actionEl && typeof window.confirmEmailPrompt === 'function') {
+                window.confirmEmailPrompt(false);
+            }
+            break;
+        }
+        case 'confirm-email-prompt': {
+            const isYes = actionEl.getAttribute('data-confirm') === 'true';
+            if (typeof window.confirmEmailPrompt === 'function') window.confirmEmailPrompt(isYes);
+            break;
+        }
+        case 'navigate-home': {
+            window.location.href = '/';
+            break;
+        }
+        case 'reset-to-main': {
+            if (typeof window.resetToMain === 'function') window.resetToMain();
+            break;
+        }
+        case 'filter-favorites': {
+            if (typeof window.filterFavorites === 'function') window.filterFavorites();
+            break;
+        }
+        case 'open-reviews': {
+            if (typeof window.openReviewsModal === 'function') window.openReviewsModal();
+            break;
+        }
+        case 'open-orders': {
+            if (typeof window.openOrdersModal === 'function') window.openOrdersModal();
+            break;
+        }
+        case 'open-profile': {
+            if (typeof window.openProfileModal === 'function') window.openProfileModal();
+            break;
+        }
+        case 'clear-search-input': {
+            if (typeof window.clearSearchInput === 'function') window.clearSearchInput();
+            break;
+        }
+        case 'submit-main-search': {
+            const input = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
+            const val = input ? input.value.trim() : '';
+            if (typeof window.saveRecentSearch === 'function') window.saveRecentSearch(val);
+            if (typeof window.applyFilters === 'function') window.applyFilters();
+            if (typeof window.closeSearch === 'function') window.closeSearch();
+            break;
+        }
+        case 'set-category-filter': {
+            const cat = actionEl.getAttribute('data-category') || '';
+            if (typeof window.setCategoryFilter === 'function') window.setCategoryFilter(cat, actionEl);
+            break;
+        }
+        case 'toggle-password-visibility': {
+            const inputId = actionEl.getAttribute('data-input-id');
+            if (inputId && typeof window.togglePasswordVisibility === 'function') {
+                window.togglePasswordVisibility(inputId, actionEl);
+            }
+            break;
+        }
+        case 'handle-auth': {
+            const mode = actionEl.getAttribute('data-auth-mode') || 'login';
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.handleAuth === 'function') window.handleAuth(mode, isModal);
+            break;
+        }
+        case 'toggle-reg-mode': {
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.toggleRegMode === 'function') window.toggleRegMode(isModal);
+            break;
+        }
+        case 'login-with-google': {
+            if (typeof window.loginWithGoogle === 'function') window.loginWithGoogle();
+            break;
+        }
+        case 'forgot-password': {
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.handleForgotPassword === 'function') window.handleForgotPassword(isModal);
+            break;
+        }
+        case 'show-phone-input': {
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.showPhoneInput === 'function') window.showPhoneInput(isModal);
+            break;
+        }
+        case 'save-phone-input': {
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.savePhoneFromInput === 'function') window.savePhoneFromInput(isModal);
+            break;
+        }
+        case 'hide-phone-input': {
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.hidePhoneInput === 'function') window.hidePhoneInput(isModal);
+            break;
+        }
+        case 'show-tg-input': {
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.showTgInput === 'function') window.showTgInput(isModal);
+            break;
+        }
+        case 'save-tg-input': {
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.saveTgFromInput === 'function') window.saveTgFromInput(isModal);
+            break;
+        }
+        case 'hide-tg-input': {
+            const isModal = actionEl.getAttribute('data-is-modal') === 'true';
+            if (typeof window.hideTgInput === 'function') window.hideTgInput(isModal);
+            break;
+        }
+        case 'logout': {
+            const closeTargetModal = actionEl.getAttribute('data-close-modal');
+            if (typeof window.logout === 'function') window.logout();
+            if (closeTargetModal && typeof window.closeModal === 'function') window.closeModal(closeTargetModal);
+            break;
+        }
+        case 'toggle-mobile-sidebar': {
+            if (typeof window.toggleMobileSidebar === 'function') window.toggleMobileSidebar();
+            break;
+        }
+        case 'sort-items': {
+            const sort = actionEl.getAttribute('data-sort') || 'new';
+            if (typeof window.sortItems === 'function') window.sortItems(sort);
+            break;
+        }
+        case 'toggle-history': {
+            if (typeof window.toggleHistory === 'function') window.toggleHistory();
+            break;
+        }
+        case 'toggle-cart-dropdown': {
+            if (typeof window.toggleCartDropdown === 'function') window.toggleCartDropdown(e);
+            break;
+        }
+        case 'close-cart-dropdown': {
+            if (typeof window.closeCartDropdown === 'function') window.closeCartDropdown(e);
+            break;
+        }
+        case 'open-checkout': {
+            if (typeof window.openCheckoutModal === 'function') window.openCheckoutModal();
+            break;
+        }
+        case 'show-rules': {
+            if (typeof window.showRulesModal === 'function') window.showRulesModal();
+            break;
+        }
+        case 'open-support-modal': {
+            if (typeof window.openSupportModalWindow === 'function') window.openSupportModalWindow();
+            break;
+        }
+        case 'toggle-footer-lang': {
+            const wrapper = typeof document !== 'undefined' ? document.getElementById('footerLangWrapper') : null;
+            if (wrapper) wrapper.classList.toggle('active');
+            break;
+        }
+        case 'set-lang': {
+            const lang = actionEl.getAttribute('data-lang');
+            if (lang && typeof window.setLang === 'function') window.setLang(lang);
+            break;
+        }
+        case 'accept-rules': {
+            if (typeof window.acceptRules === 'function') window.acceptRules();
+            break;
+        }
+        case 'move-slide': {
+            const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
+            if (typeof window.moveSlide === 'function') window.moveSlide(dir);
+            break;
+        }
+        case 'toggle-fav-from-modal': {
+            if (typeof window.toggleFavFromModal === 'function') window.toggleFavFromModal(e);
+            break;
+        }
+        case 'toggle-accordion': {
+            if (typeof window.toggleAccordion === 'function') window.toggleAccordion(actionEl);
+            break;
+        }
+        case 'add-to-cart-from-modal': {
+            if (typeof window.addToCartFromModal === 'function') window.addToCartFromModal();
+            break;
+        }
+        case 'share-item': {
+            if (typeof window.shareItem === 'function') window.shareItem();
+            break;
+        }
+        case 'generate-and-send-otp': {
+            if (typeof window.generateAndSendOTP === 'function') window.generateAndSendOTP();
+            break;
+        }
+        case 'clear-np-city': {
+            if (typeof window.clearNPCityInput === 'function') window.clearNPCityInput(e);
+            break;
+        }
+        case 'clear-np-branch': {
+            if (typeof window.clearNPBranchInput === 'function') window.clearNPBranchInput(e);
+            break;
+        }
+        case 'toggle-payment-dropdown': {
+            if (typeof window.togglePaymentDropdown === 'function') window.togglePaymentDropdown();
+            break;
+        }
+        case 'select-payment-method': {
+            const method = actionEl.getAttribute('data-payment-method') || '';
+            const text = actionEl.innerText || method;
+            if (typeof window.selectPaymentMethod === 'function') window.selectPaymentMethod(method, text);
+            break;
+        }
+        case 'apply-promo-code': {
+            if (typeof window.applyPromoCode === 'function') window.applyPromoCode();
+            break;
+        }
+        case 'submit-order': {
+            if (typeof window.submitOrder === 'function') window.submitOrder();
+            break;
+        }
+        case 'fetch-my-orders': {
+            if (typeof window.fetchMyOrders === 'function') window.fetchMyOrders();
+            break;
+        }
+        case 'switch-order-tab': {
+            const tab = actionEl.getAttribute('data-tab') || 'accepted';
+            if (typeof window.switchOrderTab === 'function') window.switchOrderTab(tab);
+            break;
+        }
+        case 'scroll-reviews': {
+            const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
+            if (typeof window.scrollReviews === 'function') window.scrollReviews(dir);
+            break;
+        }
+        case 'open-propose-modal': {
+            if (typeof window.openProposeModal === 'function') window.openProposeModal();
+            break;
+        }
     }
 }
 window.handleDelegatedAction = handleDelegatedAction;

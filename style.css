@@ -2332,7 +2332,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 
 
 /* RED ARROW EVERYWHERE (Overriding default pointer) */
-body, html, .modal-overlay, a, button, select, label, .clickable, [onclick], 
+body, html, .modal-overlay, a, button, select, label, .clickable, [onclick], [data-action], 
 .slider-btn, .custom-summary, .buy-tg-btn, .share-btn, .badge-item, 
 .order-item-row, .accept-btn, .cart-close-mobile, .cart-item-remove, 
 .grid-cart-btn, #currentLangLabelFooter, .clear-search-btn, .np-clear-btn, .reviews-nav button, 

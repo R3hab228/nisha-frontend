@@ -3448,4 +3448,94 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(isTopNow(null)).toBe(false);
         });
     });
+
+    describe('33. Full CSP Migration: Elimination of inline onclick in index.html in favor of data-action', () => {
+        it('verifies index.html has 0 inline onclick attributes', () => {
+            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            const matches = html.match(/\bonclick\s*=/gi) || [];
+            expect(matches.length).toBe(0);
+        });
+
+        it('verifies all interactive elements have data-action attributes and valid parameters', () => {
+            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            expect(html).toContain('data-action="navigate-home"');
+            expect(html).toContain('data-action="reset-to-main"');
+            expect(html).toContain('data-action="filter-favorites"');
+            expect(html).toContain('data-action="open-reviews"');
+            expect(html).toContain('data-action="open-orders"');
+            expect(html).toContain('data-action="open-profile"');
+            expect(html).toContain('data-action="clear-search-input"');
+            expect(html).toContain('data-action="submit-main-search"');
+            expect(html).toContain('data-action="set-category-filter"');
+            expect(html).toContain('data-action="toggle-mobile-sidebar"');
+            expect(html).toContain('data-action="sort-items"');
+            expect(html).toContain('data-action="toggle-history"');
+            expect(html).toContain('data-action="toggle-cart-dropdown"');
+            expect(html).toContain('data-action="open-checkout"');
+            expect(html).toContain('data-action="show-rules"');
+            expect(html).toContain('data-action="open-support-modal"');
+            expect(html).toContain('data-action="toggle-footer-lang"');
+            expect(html).toContain('data-action="set-lang"');
+            expect(html).toContain('data-action="accept-rules"');
+            expect(html).toContain('data-action="move-slide"');
+            expect(html).toContain('data-action="toggle-fav-from-modal"');
+            expect(html).toContain('data-action="toggle-accordion"');
+            expect(html).toContain('data-action="add-to-cart-from-modal"');
+            expect(html).toContain('data-action="share-item"');
+            expect(html).toContain('data-action="toggle-payment-dropdown"');
+            expect(html).toContain('data-action="select-payment-method"');
+            expect(html).toContain('data-action="apply-promo-code"');
+            expect(html).toContain('data-action="submit-order"');
+            expect(html).toContain('data-action="fetch-my-orders"');
+            expect(html).toContain('data-action="switch-order-tab"');
+            expect(html).toContain('data-action="scroll-reviews"');
+            expect(html).toContain('data-action="open-propose-modal"');
+        });
+
+        it('dispatches delegated actions properly through handleDelegatedAction', () => {
+            const resetSpy = vi.fn();
+            const favSpy = vi.fn();
+            const sortSpy = vi.fn();
+            const catSpy = vi.fn();
+            globalThis.window.resetToMain = resetSpy;
+            globalThis.window.filterFavorites = favSpy;
+            globalThis.window.sortItems = sortSpy;
+            globalThis.window.setCategoryFilter = catSpy;
+
+            const createMockEl = (action, attrs = {}) => {
+                const el = {
+                    disabled: false,
+                    hasAttribute: () => false,
+                    getAttribute: (k) => k === 'data-action' ? action : attrs[k] || null
+                };
+                el.closest = (sel) => sel === '[data-action]' ? el : null;
+                return el;
+            };
+
+            // 1. reset-to-main
+            globalThis.window.handleDelegatedAction({
+                target: createMockEl('reset-to-main')
+            });
+            expect(resetSpy).toHaveBeenCalledTimes(1);
+
+            // 2. filter-favorites
+            globalThis.window.handleDelegatedAction({
+                target: createMockEl('filter-favorites')
+            });
+            expect(favSpy).toHaveBeenCalledTimes(1);
+
+            // 3. sort-items
+            globalThis.window.handleDelegatedAction({
+                target: createMockEl('sort-items', { 'data-sort': 'cheap' })
+            });
+            expect(sortSpy).toHaveBeenCalledWith('cheap');
+
+            // 4. set-category-filter
+            const catEl = createMockEl('set-category-filter', { 'data-category': 'Обувь' });
+            globalThis.window.handleDelegatedAction({
+                target: catEl
+            });
+            expect(catSpy).toHaveBeenCalledWith('Обувь', catEl);
+        });
+    });
 });

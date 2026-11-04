@@ -364,16 +364,18 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(ttqSpy.track).toHaveBeenCalledWith('CompletePayment', expect.objectContaining({ value: 4500 }));
     });
 
-    it('bottom modals in index.html have zero inline onclick handlers and use data-action delegation', () => {
+    it('index.html has zero inline onclick handlers and uses data-action delegation everywhere', () => {
         const htmlContent = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-        const bottomModalsHtml = htmlContent.slice(htmlContent.indexOf('id=proposeModal'));
-        expect(bottomModalsHtml.length).toBeGreaterThan(100);
-        expect(bottomModalsHtml).not.toMatch(/\bonclick\s*=/i);
-        expect(bottomModalsHtml).toContain('data-action=close-modal');
-        expect(bottomModalsHtml).toContain('data-action=submit-proposal');
-        expect(bottomModalsHtml).toContain('data-action=submit-manual-review');
-        expect(bottomModalsHtml).toContain('data-action=submit-auto-review');
-        expect(bottomModalsHtml).toContain('data-action=submit-support-ticket');
+        expect(htmlContent).not.toMatch(/\bonclick\s*=/i);
+        expect(htmlContent).toContain('data-action=close-modal');
+        expect(htmlContent).toContain('data-action=submit-proposal');
+        expect(htmlContent).toContain('data-action=submit-manual-review');
+        expect(htmlContent).toContain('data-action=submit-auto-review');
+        expect(htmlContent).toContain('data-action=submit-support-ticket');
+        expect(htmlContent).toContain('data-action="reset-to-main"');
+        expect(htmlContent).toContain('data-action="filter-favorites"');
+        expect(htmlContent).toContain('data-action="open-checkout"');
+        expect(htmlContent).toContain('data-action="set-category-filter"');
     });
 
     it('isolates Driver.js onboarding popover header and footer from global site header/footer CSS rules', () => {

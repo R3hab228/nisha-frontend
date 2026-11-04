@@ -168,8 +168,8 @@ describe('Google OAuth & Authentication Recovery (Supabase)', () => {
 
         expect(indexHtml).not.toContain('data-google-signin');
         expect(indexHtml).not.toContain('g-signin-overlay');
-        expect(indexHtml).toContain('onclick=loginWithGoogle()');
-        expect(indexHtml).toContain('handleForgotPassword');
+        expect(indexHtml).toMatch(/data-action=["']?login-with-google["']?/);
+        expect(indexHtml).toMatch(/data-action=["']?forgot-password["']?/);
         expect(indexHtml).toMatch(/id=btnBackLogin[^>]*data-i18n=sidebar\.back/);
     });
 });
