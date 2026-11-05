@@ -2027,8 +2027,16 @@ async function submitBargainOffer() {
             userId: currentUid
         };
 
+        let bargainResponse = null;
         if (window.apiClient && typeof window.apiClient.post === 'function') {
-            await window.apiClient.post('/api/bargain', payload, { timeout: 12000, retries: 1 });
+            bargainResponse = await window.apiClient.post('/api/bargain', payload, {
+                timeout: 12000,
+                retries: 1,
+                throwOnHttpError: true
+            });
+        }
+        if (bargainResponse && bargainResponse.success === false) {
+            throw new Error(bargainResponse.message || 'Ошибка отправки предложения');
         }
         recordClientBargainOffer();
         try {
@@ -2230,8 +2238,16 @@ async function submitInlineBargainOffer() {
             userId: currentUid
         };
 
+        let bargainResponse = null;
         if (window.apiClient && typeof window.apiClient.post === 'function') {
-            await window.apiClient.post('/api/bargain', payload, { timeout: 12000, retries: 1 });
+            bargainResponse = await window.apiClient.post('/api/bargain', payload, {
+                timeout: 12000,
+                retries: 1,
+                throwOnHttpError: true
+            });
+        }
+        if (bargainResponse && bargainResponse.success === false) {
+            throw new Error(bargainResponse.message || 'Ошибка отправки предложения');
         }
         recordClientBargainOffer();
 
