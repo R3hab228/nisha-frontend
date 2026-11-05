@@ -137,7 +137,8 @@
         "offer_declined_btn": "ПРЕДЛОЖЕНИЕ ОТКЛОНЕНО",
         "badge_bargain": "ЕСТЬ ТОРГ",
         "offer_below_min": "Минимальная цена предложения: {{min}} грн!",
-        "offer_min_100": "Минимальная цена предложения: 100 грн!"
+        "offer_min_100": "Минимальная цена предложения: 100 грн!",
+        "offer_rate_limit": "Максимум 2 предложения за 10 минут. Пожалуйста, подождите ещё {{min}} мин."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -622,7 +623,8 @@
         "offer_declined_btn": "ПРОПОЗИЦІЮ ВІДХИЛЕНО",
         "badge_bargain": "Є ТОРГ",
         "offer_below_min": "Мінімальна ціна для пропозиції: {{min}} грн!",
-        "offer_min_100": "Мінімальна ціна для пропозиції: 100 грн!"
+        "offer_min_100": "Мінімальна ціна для пропозиції: 100 грн!",
+        "offer_rate_limit": "Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -1107,7 +1109,8 @@
         "offer_declined_btn": "OFFER DECLINED",
         "badge_bargain": "BARGAIN",
         "offer_below_min": "Minimum offer price: {{min}} UAH!",
-        "offer_min_100": "Minimum offer price is 100 UAH!"
+        "offer_min_100": "Minimum offer price is 100 UAH!",
+        "offer_rate_limit": "Maximum 2 offers per 10 minutes. Please wait {{min}} min."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",

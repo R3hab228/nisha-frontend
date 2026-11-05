@@ -3886,5 +3886,45 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cssCode).toContain('.cart-close-mobile { display: none !important; }');
             expect(cssCode).toContain('border: 2px solid rgba(255, 255, 255, 0.45); border-radius: 18px;');
         });
+
+        it('49. Offer modal deduplication / memory (localStorage nisha_shown_bargain_popups) and rate limiting (max 2 offers per 10 mins)', () => {
+            const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
+            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const rootLocales = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales.json'), 'utf8'));
+            const pubLocales = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales.json'), 'utf8'));
+            const pubRu = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales/ru.json'), 'utf8'));
+            const pubUa = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales/ua.json'), 'utf8'));
+            const pubEn = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales/en.json'), 'utf8'));
+
+            // 1. Chat JS remembers seen bargain modals to avoid annoying the user on refresh/navigation
+            expect(chatCode).toContain("BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups'");
+            expect(chatCode).toContain("SUPPORT_REPLY_SEEN_STORAGE_KEY = 'nisha_seen_support_reply_ids'");
+            expect(chatCode).toContain('function hasSeenBargainPopup');
+            expect(chatCode).toContain('function markBargainPopupAsSeen');
+            expect(chatCode).toContain('hasSeenBargainPopup(offerKey)');
+            expect(chatCode).toContain('markBargainPopupAsSeen(offerKey)');
+
+            // 2. Product JS enforces rate limit of maximum 2 offers per 10 minutes
+            expect(productCode).toContain("BARGAIN_RATE_LIMIT_STORAGE_KEY = 'nisha_bargain_offers_history'");
+            expect(productCode).toContain('BARGAIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000');
+            expect(productCode).toContain('BARGAIN_RATE_LIMIT_MAX = 2');
+            expect(productCode).toContain('function checkClientBargainRateLimit');
+            expect(productCode).toContain('function recordClientBargainOffer');
+            expect(productCode).toContain('checkClientBargainRateLimit()');
+            expect(productCode).toContain('recordClientBargainOffer()');
+
+            // 3. Rate limit i18n keys are present in all locales
+            expect(rootLocales.ru.translation.product.offer_rate_limit).toContain('Максимум 2 предложения за 10 минут');
+            expect(rootLocales.ua.translation.product.offer_rate_limit).toContain('Максимум 2 пропозиції за 10 хвилин');
+            expect(rootLocales.en.translation.product.offer_rate_limit).toContain('Maximum 2 offers per 10 minutes');
+
+            expect(pubLocales.ru.translation.product.offer_rate_limit).toContain('Максимум 2 предложения за 10 минут');
+            expect(pubLocales.ua.translation.product.offer_rate_limit).toContain('Максимум 2 пропозиції за 10 хвилин');
+            expect(pubLocales.en.translation.product.offer_rate_limit).toContain('Maximum 2 offers per 10 minutes');
+
+            expect(pubRu.translation.product.offer_rate_limit).toContain('Максимум 2 предложения за 10 минут');
+            expect(pubUa.translation.product.offer_rate_limit).toContain('Максимум 2 пропозиції за 10 хвилин');
+            expect(pubEn.translation.product.offer_rate_limit).toContain('Maximum 2 offers per 10 minutes');
+        });
     });
 });

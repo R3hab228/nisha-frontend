@@ -135,7 +135,8 @@
       "offer_accepted_btn": "OFFER ACCEPTED ✓",
       "offer_declined_btn": "OFFER DECLINED",
       "badge_bargain": "BARGAIN",
-      "offer_below_min": "Minimum offer price: {{min}} UAH!"
+      "offer_below_min": "Minimum offer price: {{min}} UAH!",
+      "offer_rate_limit": "Maximum 2 offers per 10 minutes. Please wait {{min}} min."
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",

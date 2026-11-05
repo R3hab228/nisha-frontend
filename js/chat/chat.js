@@ -1,7 +1,72 @@
 
+// --- СИСТЕМА ЗАПОМИНАНИЯ ПОКАЗАННЫХ ОФФЕРОВ (ЧТОБЫ НЕ НАДОЕДАТЬ ПОЛЬЗОВАТЕЛЮ) ---
+const BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups';
+const SUPPORT_REPLY_SEEN_STORAGE_KEY = 'nisha_seen_support_reply_ids';
+
+function hasSeenBargainPopup(key) {
+    if (!key) return false;
+    try {
+        const raw = localStorage.getItem(BARGAIN_SEEN_STORAGE_KEY);
+        if (!raw) return false;
+        const list = JSON.parse(raw);
+        return Array.isArray(list) && list.includes(String(key));
+    } catch (e) {
+        return false;
+    }
+}
+
+function markBargainPopupAsSeen(key) {
+    if (!key) return;
+    try {
+        const raw = localStorage.getItem(BARGAIN_SEEN_STORAGE_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        if (!list.includes(String(key))) {
+            list.push(String(key));
+            if (list.length > 100) list.shift();
+            localStorage.setItem(BARGAIN_SEEN_STORAGE_KEY, JSON.stringify(list));
+        }
+    } catch (e) {}
+}
+
+function isSupportReplySeen(id) {
+    if (!id) return false;
+    window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
+    if (window._shownSupportReplyIds.has(String(id))) return true;
+    try {
+        const raw = localStorage.getItem(SUPPORT_REPLY_SEEN_STORAGE_KEY);
+        if (raw) {
+            const list = JSON.parse(raw);
+            if (Array.isArray(list) && list.includes(String(id))) return true;
+        }
+    } catch (e) {}
+    return false;
+}
+
+function markSupportReplyAsSeen(id) {
+    if (!id) return;
+    window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
+    window._shownSupportReplyIds.add(String(id));
+    try {
+        const raw = localStorage.getItem(SUPPORT_REPLY_SEEN_STORAGE_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        if (!list.includes(String(id))) {
+            list.push(String(id));
+            if (list.length > 100) list.shift();
+            localStorage.setItem(SUPPORT_REPLY_SEEN_STORAGE_KEY, JSON.stringify(list));
+        }
+    } catch (e) {}
+}
+
 // --- МОДАЛЬНОЕ ОКНО ПРИНЯТОГО ТОРГА С ПРЯМЫМ ДОБАВЛЕНИЕМ В КОРЗИНУ ---
 function showBargainAcceptedModal(bargainData, onDismiss) {
     if (!bargainData) return;
+
+    const offerKey = String(bargainData.bargainId || ('accepted_' + bargainData.itemId + '_' + bargainData.acceptedPrice));
+    if (hasSeenBargainPopup(offerKey)) {
+        if (typeof onDismiss === 'function') onDismiss();
+        return;
+    }
+    markBargainPopupAsSeen(offerKey);
 
     const checkFeed = () => {
         if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
@@ -180,6 +245,12 @@ function checkPendingBargainNotification() {
     if (!notif) return;
 
     if (notif.type === 'BARGAIN_ACCEPTED') {
+        const offerKey = String(notif.data.bargainId || ('accepted_' + notif.data.itemId + '_' + notif.data.acceptedPrice));
+        if (hasSeenBargainPopup(offerKey)) {
+            if (typeof notif.markAsRead === 'function') notif.markAsRead();
+            setTimeout(checkPendingBargainNotification, 100);
+            return;
+        }
         showBargainAcceptedModal(notif.data, () => {
             if (typeof notif.markAsRead === 'function') notif.markAsRead();
             setTimeout(checkPendingBargainNotification, 200);
@@ -198,9 +269,8 @@ window.checkPendingBargainNotification = checkPendingBargainNotification;
 
 function handleIncomingSupportReply(r, sbClient) {
     if (!r) return;
-    window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
-    if (r.id && window._shownSupportReplyIds.has(r.id)) return;
-    if (r.id) window._shownSupportReplyIds.add(r.id);
+    if (r.id && isSupportReplySeen(r.id)) return;
+    if (r.id) markSupportReplyAsSeen(r.id);
 
     const markAsRead = () => {
         if (r.id && sbClient) {
@@ -240,6 +310,12 @@ function handleIncomingSupportReply(r, sbClient) {
             if (priceEl) {
                 priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${parsed.originalPrice || activeItem.price} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${parsed.acceptedPrice} грн</span>`;
             }
+        }
+
+        const offerKey = String(parsed.bargainId || ('accepted_' + parsed.itemId + '_' + parsed.acceptedPrice));
+        if (hasSeenBargainPopup(offerKey)) {
+            markAsRead();
+            return;
         }
 
         const checkFeed = () => {

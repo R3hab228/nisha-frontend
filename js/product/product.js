@@ -1757,9 +1757,57 @@ if (document.readyState === 'loading') {
 // ==========================================
 // СИСТЕМА ТОРГА (ПРЕДЛОЖЕНИЕ СВОЕЙ ЦЕНЫ)
 // ==========================================
+// --- КЛИЕНТСКИЙ RATE LIMIT ДЛЯ ТОРГА (МАКСИМУМ 2 ОФФЕРА В 10 МИНУТ) ---
+const BARGAIN_RATE_LIMIT_STORAGE_KEY = 'nisha_bargain_offers_history';
+const BARGAIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const BARGAIN_RATE_LIMIT_MAX = 2;
+
+function checkClientBargainRateLimit() {
+    try {
+        const raw = localStorage.getItem(BARGAIN_RATE_LIMIT_STORAGE_KEY);
+        if (!raw) return { allowed: true };
+        const history = JSON.parse(raw);
+        if (!Array.isArray(history)) return { allowed: true };
+
+        const now = Date.now();
+        const validTimestamps = history.filter(ts => typeof ts === 'number' && (now - ts) < BARGAIN_RATE_LIMIT_WINDOW_MS);
+        if (validTimestamps.length >= BARGAIN_RATE_LIMIT_MAX) {
+            const oldest = Math.min(...validTimestamps);
+            const remainingMs = Math.max(0, BARGAIN_RATE_LIMIT_WINDOW_MS - (now - oldest));
+            const remainingMin = Math.max(1, Math.ceil(remainingMs / 60000));
+            return { allowed: false, remainingMin };
+        }
+        return { allowed: true };
+    } catch (e) {
+        return { allowed: true };
+    }
+}
+
+function recordClientBargainOffer() {
+    try {
+        const raw = localStorage.getItem(BARGAIN_RATE_LIMIT_STORAGE_KEY);
+        const history = raw ? JSON.parse(raw) : [];
+        const now = Date.now();
+        const validTimestamps = Array.isArray(history)
+            ? history.filter(ts => typeof ts === 'number' && (now - ts) < BARGAIN_RATE_LIMIT_WINDOW_MS)
+            : [];
+        validTimestamps.push(now);
+        localStorage.setItem(BARGAIN_RATE_LIMIT_STORAGE_KEY, JSON.stringify(validTimestamps));
+    } catch (e) {}
+}
+window.checkClientBargainRateLimit = checkClientBargainRateLimit;
+window.recordClientBargainOffer = recordClientBargainOffer;
+
 function openOfferPriceModal() {
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
     if (!activeItem) return;
+
+    const rateCheck = checkClientBargainRateLimit();
+    if (!rateCheck.allowed) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const limitMsg = ((typeof i18next !== 'undefined' && i18next.t('product.offer_rate_limit')) || 'Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.').replace('{{min}}', rateCheck.remainingMin);
+        return showToast(limitMsg, 'error');
+    }
 
     const modal = document.getElementById('bargainModal');
     if (!modal) return;
@@ -1823,6 +1871,13 @@ async function submitBargainOffer() {
     const offeredPrice = priceInput ? Number.parseInt(priceInput.value, 10) : 0;
     const currentPrice = Number(activeItem.price) || 0;
 
+    const rateCheck = checkClientBargainRateLimit();
+    if (!rateCheck.allowed) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const limitMsg = ((typeof i18next !== 'undefined' && i18next.t('product.offer_rate_limit')) || 'Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.').replace('{{min}}', rateCheck.remainingMin);
+        return showToast(limitMsg, 'error');
+    }
+
     if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice < 100 || offeredPrice >= currentPrice) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const invalidMsg = (offeredPrice > 0 && offeredPrice < 100)
@@ -1864,6 +1919,7 @@ async function submitBargainOffer() {
         if (window.apiClient && typeof window.apiClient.post === 'function') {
             await window.apiClient.post('/api/bargain', payload, { timeout: 12000, retries: 1 });
         }
+        recordClientBargainOffer();
 
         if (typeof triggerHaptic === 'function') triggerHaptic('success');
         const sentMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_sent_toast')) || 'Пропозицію надіслано! Очікуйте відповіді продавця.';
@@ -1912,6 +1968,14 @@ function showInlineOfferPriceInput() {
 
     const suggested = Math.max(1, Math.round((activeItem.price || 1000) * 0.85));
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+
+    const rateCheck = checkClientBargainRateLimit();
+    if (!rateCheck.allowed) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const limitMsg = t('product.offer_rate_limit', 'Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.').replace('{{min}}', rateCheck.remainingMin);
+        showToast(limitMsg, 'error');
+        return;
+    }
     const phText = t('product.offer_your_price_ph', `Наприклад, ${suggested}`);
     input.placeholder = phText;
     input.value = '';
@@ -1975,6 +2039,14 @@ async function submitInlineBargainOffer() {
 
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
 
+    const rateCheck = checkClientBargainRateLimit();
+    if (!rateCheck.allowed) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const limitMsg = t('product.offer_rate_limit', 'Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.').replace('{{min}}', rateCheck.remainingMin);
+        showToast(limitMsg, 'error');
+        return;
+    }
+
     if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice < 100 || offeredPrice >= currentPrice) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const invalidMsg = (offeredPrice > 0 && offeredPrice < 100)
@@ -2021,6 +2093,7 @@ async function submitInlineBargainOffer() {
         if (window.apiClient && typeof window.apiClient.post === 'function') {
             await window.apiClient.post('/api/bargain', payload, { timeout: 12000, retries: 1 });
         }
+        recordClientBargainOffer();
 
         if (typeof triggerHaptic === 'function') triggerHaptic('success');
         const sentMsg = t('product.offer_sent_toast', 'Пропозицію надіслано! Очікуйте відповіді продавця.');
