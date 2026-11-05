@@ -318,7 +318,8 @@ async function openProductModalById(itemId) {
                 }
 
                 if (fullItem.description) {
-                    const descText = fullItem.description ? fullItem.description.replaceAll('\n', '<br>') : `<span style="color:#666;">[ Описание отсутствует ]</span>`;
+                    const cleanFullDesc = String(fullItem.description).replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
+                    const descText = cleanFullDesc ? cleanFullDesc.replaceAll('\n', '<br>') : `<span style="color:#666;">[ Описание отсутствует ]</span>`;
                     const descContainer = document.querySelector('.modal-desc');
                     if (descContainer) {
                         const sizeTitle = typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР';
@@ -456,7 +457,7 @@ function openProductModal(item) {
 
     const rawDesc = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
     const cleanDesc = rawDesc.replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
-    const descText = cleanDesc || rawDesc;
+    const descText = (cleanDesc || rawDesc).replaceAll('\n', '<br>');
     const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
     const safeDescHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : escHtml(descText);
     const descBlock = document.querySelector('.modal-desc');
@@ -862,6 +863,16 @@ function openProductModal(item) {
                     const formattedOld = (typeof formatPrice === 'function') ? formatPrice(s.old_price, { numberOnly: true }) : s.old_price;
                     miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${formattedOld}</span><span style="color: var(--accent-green);">${formattedSimilarPrice}</span>`;
                 }
+                try {
+                    const rawSimBargain = sessionStorage.getItem('accepted_bargain_' + s.id) || localStorage.getItem('accepted_bargain_' + s.id);
+                    if (rawSimBargain && s.status === 'available') {
+                        const simBargain = JSON.parse(rawSimBargain);
+                        if (simBargain && simBargain.acceptedPrice) {
+                            const origSimPrice = simBargain.originalPrice || s.price;
+                            miniPriceHTML = `<span style="color: #777; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${origSimPrice} ${curr}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${simBargain.acceptedPrice} ${curr}</span>`;
+                        }
+                    }
+                } catch (e) {}
 
                 const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
                 const unseenClass = isUnseen ? 'is-unseen' : '';
@@ -975,10 +986,11 @@ function openProductModal(item) {
                     bargainText = `ОТ ${itemMinBargain} ГРН`;
                 }
             }
+            const badgeI18nAttr = itemMinBargain ? `data-min-bargain="${itemMinBargain}"` : 'data-i18n="product.badge_bargain"';
             deliveryOrBargainBadgeHTML = `
                 <div class="badge-item" data-action="show-badge-info" data-badge="bargain">
                     <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${gavelSvg}</span>
-                    <span class="badge-text" data-i18n="product.badge_bargain">${bargainText}</span>
+                    <span class="badge-text" ${badgeI18nAttr}>${bargainText}</span>
                 </div>`;
         } else {
             deliveryOrBargainBadgeHTML = `
@@ -2127,7 +2139,7 @@ function hideInlineOfferPriceInput() {
         void btn.offsetWidth;
         btn.style.opacity = '1';
         btn.style.transform = 'translateY(0)';
-        btn.style.pointerEvents = 'auto';
+        btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
         if (input) input.value = '';
     }, 110);
 }
@@ -2245,7 +2257,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         e.preventDefault();
         hideInlineOfferPriceInput();
-    } else if (e.key === 'Enter' && document.activeElement === input) {
+    } else if (e.key === 'Enter' && (document.activeElement === input || e.target === input)) {
         e.preventDefault();
         submitInlineBargainOffer();
     }
@@ -2286,8 +2298,45 @@ async function syncUserBargains() {
         }
 
         if (Array.isArray(bargains) && bargains.length > 0) {
+            const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+            let cartUpdated = false;
+            const activeCart = (typeof window.getActiveCart === 'function') ? window.getActiveCart() : ((typeof getActiveCart === 'function') ? getActiveCart() : null);
+
             bargains.forEach(b => {
-                if (!b.itemId || !b.acceptedPrice) return;
+                if (!b || !b.itemId) return;
+
+                if (b.status === 'pending' || (!b.acceptedPrice && b.offeredPrice)) {
+                    try {
+                        const hasAccepted = localStorage.getItem('accepted_bargain_' + b.itemId) || sessionStorage.getItem('accepted_bargain_' + b.itemId);
+                        const hasDeclined = localStorage.getItem('declined_bargain_' + b.itemId) || sessionStorage.getItem('declined_bargain_' + b.itemId);
+                        if (!hasAccepted && !hasDeclined) {
+                            const pData = {
+                                itemId: String(b.itemId),
+                                offeredPrice: b.offeredPrice,
+                                timestamp: b.timestamp ? Date.parse(b.timestamp) || Date.now() : Date.now()
+                            };
+                            localStorage.setItem('pending_bargain_' + b.itemId, JSON.stringify(pData));
+                            sessionStorage.setItem('pending_bargain_' + b.itemId, JSON.stringify(pData));
+                        }
+                    } catch (e) {}
+
+                    const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+                    if (activeItem && String(activeItem.id) === String(b.itemId)) {
+                        const offerBtn = document.getElementById('modalOfferPriceBtn');
+                        if (offerBtn && !localStorage.getItem('accepted_bargain_' + b.itemId)) {
+                            offerBtn.innerText = t('product.offer_pending', '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]');
+                            offerBtn.style.borderColor = 'var(--accent-green, #00ff66)';
+                            offerBtn.style.color = 'var(--accent-green, #00ff66)';
+                            offerBtn.style.pointerEvents = 'none';
+                            offerBtn.style.cursor = 'default';
+                            offerBtn.style.boxShadow = 'none';
+                            offerBtn.disabled = true;
+                        }
+                    }
+                    return;
+                }
+
+                if (!b.acceptedPrice) return;
                 const payload = {
                     type: 'BARGAIN_ACCEPTED',
                     bargainId: b.bargainId,
@@ -2303,13 +2352,51 @@ async function syncUserBargains() {
                     sessionStorage.setItem('accepted_bargain_' + b.itemId, JSON.stringify(payload));
                     localStorage.removeItem('declined_bargain_' + b.itemId);
                     sessionStorage.removeItem('declined_bargain_' + b.itemId);
+                    localStorage.removeItem('pending_bargain_' + b.itemId);
+                    sessionStorage.removeItem('pending_bargain_' + b.itemId);
                 } catch (e) {}
+
+                if (Array.isArray(activeCart)) {
+                    const cartItem = activeCart.find(ci => ci && String(ci.id) === String(b.itemId));
+                    if (cartItem && Number(cartItem.price) !== Number(b.acceptedPrice)) {
+                        cartItem.originalPrice = Number(b.originalPrice || cartItem.originalPrice || cartItem.price);
+                        cartItem.price = Number(b.acceptedPrice);
+                        cartItem.bargainPrice = Number(b.acceptedPrice);
+                        cartUpdated = true;
+                    }
+                }
+
+                const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+                if (activeItem && String(activeItem.id) === String(b.itemId)) {
+                    const offerBtn = document.getElementById('modalOfferPriceBtn');
+                    if (offerBtn) {
+                        offerBtn.innerText = t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
+                        offerBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
+                        offerBtn.style.color = 'var(--accent-yellow, #ffd700)';
+                        offerBtn.style.pointerEvents = 'none';
+                        offerBtn.style.cursor = 'default';
+                        offerBtn.style.boxShadow = 'none';
+                        offerBtn.disabled = true;
+                    }
+                    const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
+                    if (priceEl) {
+                        const cur = (typeof getCurrency === 'function' ? getCurrency() : 'грн').trim();
+                        priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${b.originalPrice || activeItem.price} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${b.acceptedPrice} ${cur}</span>`;
+                    }
+                }
 
                 if (typeof window.updateCardDOM === 'function' && Array.isArray(window.allItems)) {
                     const found = window.allItems.find(it => String(it.id) === String(b.itemId));
                     if (found) window.updateCardDOM(found);
                 }
             });
+
+            if (cartUpdated && Array.isArray(activeCart)) {
+                if (typeof window.setActiveCart === 'function') window.setActiveCart(activeCart);
+                else if (typeof setActiveCart === 'function') setActiveCart(activeCart);
+                if (typeof window.updateCartUI === 'function') window.updateCartUI();
+                else if (typeof updateCartUI === 'function') updateCartUI();
+            }
         }
     } catch (e) {
         console.warn('[SYNC BARGAINS] Error:', e);

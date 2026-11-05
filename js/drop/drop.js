@@ -361,6 +361,10 @@ function confirmPropBargainInput() {
 
     returnToDesiredPriceMode(true, minBid);
 
+    if (priceInput && (!desiredPrice || Number.isNaN(desiredPrice) || desiredPrice <= 0)) {
+        priceInput.focus();
+    }
+
     if (typeof showBargainSavedToast === 'function') {
         showBargainSavedToast(minBid);
     } else {
@@ -771,7 +775,20 @@ async function submitProposal() {
     const contact = sanitize(rawContact);
 
     // Валидация
-    if (!files.length || !nameItem || !brand || !size || !desc || Number.isNaN(cond) || price <= 0 || !contact) {
+    if ((Number.isNaN(price) || price <= 0) && window._propBargainMode) {
+        const minEl = document.getElementById('propMinBargainPrice');
+        const savedMin = Number.parseInt((minEl?.value || '').trim(), 10);
+        if (!Number.isNaN(savedMin) && savedMin >= 100) {
+            window._propBargainEnabled = true;
+            returnToDesiredPriceMode(true, savedMin);
+        } else {
+            returnToDesiredPriceMode(false);
+        }
+        const prEl = document.getElementById('propPrice');
+        if (prEl) prEl.focus();
+    }
+
+    if (!files.length || !nameItem || !brand || !size || !desc || Number.isNaN(cond) || Number.isNaN(price) || price <= 0 || !contact) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const fillAllMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_fill_all')) || 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!';
         showToast(fillAllMsg, 'error');
@@ -794,14 +811,16 @@ async function submitProposal() {
             if (typeof triggerHaptic === 'function') triggerHaptic('error');
             const minBargainMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_bargain_min')) || 'Минимальная цена торга должна быть не менее 100 грн!';
             showToast(minBargainMsg, 'error');
-            minBargainInput.focus();
+            if (!window._propBargainMode && typeof openPropBargainInput === 'function') openPropBargainInput();
+            else if (minBargainInput) minBargainInput.focus();
             return;
         }
         if (minBargainPrice >= price) {
             if (typeof triggerHaptic === 'function') triggerHaptic('error');
             const lessPriceMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_bargain_less_price')) || 'Минимальная цена торга должна быть меньше желаемой цены!';
             showToast(lessPriceMsg, 'error');
-            minBargainInput.focus();
+            if (!window._propBargainMode && typeof openPropBargainInput === 'function') openPropBargainInput();
+            else if (minBargainInput) minBargainInput.focus();
             return;
         }
     }

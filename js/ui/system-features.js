@@ -322,13 +322,36 @@ document.addEventListener('keydown', function(e) {
         }
 
         if (activeEl.tagName === 'INPUT') {
+            if (activeEl.id === 'propMinBargainPrice') {
+                e.preventDefault();
+                if (typeof window.confirmPropBargainInput === 'function') {
+                    window.confirmPropBargainInput();
+                }
+                return;
+            }
+            if (activeEl.id === 'inlineBargainPriceInput') {
+                e.preventDefault();
+                if (typeof window.submitInlineBargainOffer === 'function') {
+                    window.submitInlineBargainOffer();
+                }
+                return;
+            }
+            if (activeEl.id === 'bargainPriceInput') {
+                e.preventDefault();
+                if (typeof window.submitBargainOffer === 'function') {
+                    window.submitBargainOffer();
+                }
+                return;
+            }
+
             e.preventDefault();
             const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields') || activeEl.closest('.modal-window');
             if (form) {
                 const isVisible = (el) => {
                     if (!el || el.disabled || el.type === 'hidden') return false;
                     if (el.style && el.style.display === 'none') return false;
-                    if (el.closest && el.closest('[style*="display: none"]')) return false;
+                    if (el.closest && (el.closest('[style*="display: none"]') || el.closest('[style*="display:none"]'))) return false;
+                    if (el.id === 'btnTogglePropBargain' || el.id === 'btnCancelPropBargain' || el.id === 'btnConfirmPropBargain' || el.id === 'inlineBargainCancelBtn') return false;
                     return true;
                 };
                 const focusables = Array.from(form.querySelectorAll('input, textarea, button')).filter(isVisible);

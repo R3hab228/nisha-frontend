@@ -3938,5 +3938,43 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cssCode).toContain('opacity: 1 !important');
             expect(cssCode).toContain('visibility: visible !important');
         });
+
+        it('54. Deep Bargain System Audit: Enter key handlers, pointerEvents preservation, clean descriptions, badge i18n guard, queued popup seen-timing, and feed addToCart bargain price', () => {
+            const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
+            const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
+            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+
+            // 1. Enter key in bargain inputs calls their dedicated confirm/submit actions instead of shifting focus
+            expect(sysCode).toContain("activeEl.id === 'propMinBargainPrice'");
+            expect(sysCode).toContain("window.confirmPropBargainInput()");
+            expect(sysCode).toContain("activeEl.id === 'inlineBargainPriceInput'");
+            expect(sysCode).toContain("window.submitInlineBargainOffer()");
+            expect(sysCode).toContain("el.closest('[style*=\"display:none\"]')");
+
+            // 2. Proposal form gracefully switches back to desired price mode if submitted while in bargain mode without desired price
+            expect(dropCode).toContain('if ((Number.isNaN(price) || price <= 0) && window._propBargainMode)');
+            expect(dropCode).toContain('if (!window._propBargainMode && typeof openPropBargainInput === \'function\') openPropBargainInput()');
+
+            // 3. Product modal strips [ТОРГ: ...] in both openProductModal and openProductModalById, and preserves disabled pointerEvents
+            expect(productCode).toContain("const cleanFullDesc = String(fullItem.description).replace(/\\s*\\[ТОРГ:?[^\\]]*\\]/gi, '').trim()");
+            expect(productCode).toContain("btn.style.pointerEvents = btn.disabled ? 'none' : 'auto'");
+            expect(productCode).toContain('data-min-bargain="${itemMinBargain}"');
+            expect(productCode).toContain("b.status === 'pending' || (!b.acceptedPrice && b.offeredPrice)");
+
+            // 4. Queued BARGAIN_ACCEPTED notification only marks popup as seen when actually displayed in feed
+            const checkFeedIdx = chatCode.indexOf('if (!checkFeed())');
+            const markSeenIdx = chatCode.indexOf('markBargainPopupAsSeen(offerKey)');
+            expect(checkFeedIdx).toBeGreaterThan(-1);
+            expect(markSeenIdx).toBeGreaterThan(checkFeedIdx);
+
+            // 5. Catalog badge info appends minText outside i18next defaultValue so it is always visible
+            expect(catalogCode).toContain('text = baseBargainText + minText');
+
+            // 6. Adding item to cart from catalog feed automatically applies accepted bargain price if present
+            expect(cartCode).toContain("const rawBargain = sessionStorage.getItem('accepted_bargain_' + itemId) || localStorage.getItem('accepted_bargain_' + itemId)");
+        });
     });
 });

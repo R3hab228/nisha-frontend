@@ -293,6 +293,18 @@ async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
         customPrice = Number(options.price || options.customPrice);
     }
 
+    if (customPrice === null) {
+        try {
+            const rawBargain = sessionStorage.getItem('accepted_bargain_' + itemId) || localStorage.getItem('accepted_bargain_' + itemId);
+            if (rawBargain) {
+                const parsedBargain = JSON.parse(rawBargain);
+                if (parsedBargain && parsedBargain.acceptedPrice) {
+                    customPrice = Number(parsedBargain.acceptedPrice);
+                }
+            }
+        } catch (e) {}
+    }
+
     const catalog = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
     const item = catalog.find(i => String(i.id) === String(itemId));
     if (!item) return;
@@ -300,7 +312,7 @@ async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
     let currentCart = getActiveCart();
     const existingIndex = currentCart.findIndex(i => String(i.id) === String(item.id));
     if (existingIndex !== -1) { 
-        if (customPrice !== null && !Number.isNaN(customPrice) && customPrice > 0) {
+        if (customPrice !== null && !Number.isNaN(customPrice) && customPrice > 0 && (customPriceOrSize !== null || Number(currentCart[existingIndex].price) !== Math.round(Number(customPrice)))) {
             currentCart[existingIndex].price = Math.round(Number(customPrice));
             currentCart[existingIndex].bargainPrice = Math.round(Number(customPrice));
             setActiveCart(currentCart);
