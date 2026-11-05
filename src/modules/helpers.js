@@ -46,6 +46,67 @@ export function isSchedulerYieldSupported() {
     return typeof globalThis.scheduler !== 'undefined' && typeof globalThis.scheduler.yield === 'function';
 }
 
+/**
+ * Checks if browser natively supports Compression Streams API (gzip/deflate)
+ * @returns {boolean}
+ */
+export function isCompressionStreamSupported() {
+    return typeof globalThis.CompressionStream !== 'undefined' && typeof globalThis.DecompressionStream !== 'undefined';
+}
+
+/**
+ * Compresses a UTF-8 string into a Uint8Array using native CompressionStream
+ * @param {string} str
+ * @param {'gzip'|'deflate'} [format='gzip']
+ * @returns {Promise<Uint8Array>}
+ */
+export async function compressString(str, format = 'gzip') {
+    if (!isCompressionStreamSupported()) {
+        return new TextEncoder().encode(str);
+    }
+    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream(format));
+    const response = new Response(stream);
+    const buffer = await response.arrayBuffer();
+    return new Uint8Array(buffer);
+}
+
+/**
+ * Decompresses a Uint8Array/ArrayBuffer back into a UTF-8 string using native DecompressionStream
+ * @param {ArrayBuffer|Uint8Array} data
+ * @param {'gzip'|'deflate'} [format='gzip']
+ * @returns {Promise<string>}
+ */
+export async function decompressString(data, format = 'gzip') {
+    if (!isCompressionStreamSupported()) {
+        return new TextDecoder().decode(data);
+    }
+    const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream(format));
+    const response = new Response(stream);
+    return response.text();
+}
+
+/**
+ * Compresses an object into a compressed Uint8Array using native CompressionStream
+ * @param {any} obj
+ * @param {'gzip'|'deflate'} [format='gzip']
+ * @returns {Promise<Uint8Array>}
+ */
+export async function compressJSON(obj, format = 'gzip') {
+    const jsonStr = JSON.stringify(obj);
+    return compressString(jsonStr, format);
+}
+
+/**
+ * Decompresses a compressed buffer back into an object using native DecompressionStream
+ * @param {ArrayBuffer|Uint8Array} data
+ * @param {'gzip'|'deflate'} [format='gzip']
+ * @returns {Promise<any>}
+ */
+export async function decompressJSON(data, format = 'gzip') {
+    const text = await decompressString(data, format);
+    return JSON.parse(text);
+}
+
 export function toCDN(url) {
     if (typeof window !== 'undefined' && typeof window.toCDN === 'function') {
         return window.toCDN(url);

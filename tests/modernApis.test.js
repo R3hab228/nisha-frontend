@@ -4062,5 +4062,53 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 4. Catalog applyFilters leverages cooperative yielding to prevent INP latency spikes
             expect(catalogCode).toContain("if (typeof window.yieldToMain === 'function') await window.yieldToMain()");
         });
+
+        it('57. Native CSS Subgrid for Catalog Cards and Native Compression Streams API (gzip/deflate)', async () => {
+            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
+            const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
+            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+
+            // 1. CSS Subgrid on items-grid and item-card
+            expect(cssCode).toContain('@supports (grid-template-rows: subgrid)');
+            expect(cssCode).toContain('.items-grid {\n        grid-auto-rows: auto 1fr auto;\n    }');
+            expect(cssCode).toContain('.item-card:not(.skeleton-card) {\n        grid-row: span 3;\n        display: grid;\n        grid-template-rows: subgrid;\n    }');
+
+            // 2. Compression Streams API facade exports
+            expect(helpersCode).toContain('export function isCompressionStreamSupported()');
+            expect(helpersCode).toContain('export async function compressString(');
+            expect(helpersCode).toContain('export async function decompressString(');
+            expect(helpersCode).toContain('export async function compressJSON(');
+            expect(helpersCode).toContain('export async function decompressJSON(');
+
+            expect(coreHelpersCode).toContain('function isCompressionStreamSupported()');
+            expect(coreHelpersCode).toContain('window.compressJSON = compressJSON;');
+            expect(coreHelpersCode).toContain('window.decompressJSON = decompressJSON;');
+
+            // 3. Compression / Decompression roundtrip test
+            const { isCompressionStreamSupported, compressJSON, decompressJSON } = await import('../src/modules/helpers.js');
+            expect(typeof isCompressionStreamSupported).toBe('function');
+            expect(isCompressionStreamSupported()).toBe(true);
+
+            const testData = Array.from({ length: 100 }, (_, i) => ({
+                id: `branch_${i}`,
+                name: `Отделение №${i} (до 30 кг): ул. Крещатик, ${i + 1}`,
+                ref: `ref_guid_${i}_${Date.now()}`,
+                settlement: 'Киев'
+            }));
+
+            const rawJson = JSON.stringify(testData);
+            const compressed = await compressJSON(testData);
+            expect(compressed).toBeInstanceOf(Uint8Array);
+            // Verify significant size reduction on repeated JSON
+            expect(compressed.byteLength).toBeLessThan(rawJson.length / 2);
+
+            const restored = await decompressJSON(compressed);
+            expect(restored).toEqual(testData);
+
+            // 4. Cart NP storage integration checks
+            expect(cartCode).toContain('entry.compressed && typeof window.decompressJSON === \'function\'');
+            expect(cartCode).toContain('window.compressJSON(payload)');
+        });
     });
 });

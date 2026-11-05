@@ -83,10 +83,18 @@ async function getNPStorageAsync(key) {
             if (entry && entry.ts && entry.data) {
                 const itemTtl = entry.ttl !== undefined ? entry.ttl : ttl;
                 if (Date.now() - entry.ts < itemTtl) {
+                    let actualData = entry.data;
+                    if (entry.compressed && typeof window.decompressJSON === 'function') {
+                        try {
+                            actualData = await window.decompressJSON(entry.data);
+                        } catch (compErr) {
+                            console.warn('[NP Cache] Decompress error fallback:', compErr);
+                        }
+                    }
                     // Синхронизируем в L1 In-Memory для мгновенного доступа при повторных обращениях
-                    npMemoryCache.set(key, { ts: entry.ts, ttl: itemTtl, data: entry.data });
+                    npMemoryCache.set(key, { ts: entry.ts, ttl: itemTtl, data: actualData });
                     trimMemoryCacheIfNeeded();
-                    return entry.data;
+                    return actualData;
                 } else if (typeof window.idbDel === 'function') {
                     // Асинхронно удаляем устаревшую запись
                     window.idbDel('np_' + key).catch(() => {});
@@ -158,7 +166,20 @@ function setNPStorage(key, val, customTtl) {
     // 2. Сохраняем в L2 IndexedDB (основное надёжное хранилище для всех городов и отделений)
     const hasIdb = typeof window.idbSet === 'function';
     if (hasIdb) {
-        window.idbSet('np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
+        const shouldCompress = typeof window.compressJSON === 'function' &&
+                               typeof window.isCompressionStreamSupported === 'function' &&
+                               window.isCompressionStreamSupported() &&
+                               Array.isArray(payload) && payload.length > 20;
+
+        if (shouldCompress) {
+            window.compressJSON(payload).then(compressedBuffer => {
+                window.idbSet('np_' + key, { ts: Date.now(), ttl, data: compressedBuffer, compressed: true }).catch(() => {});
+            }).catch(() => {
+                window.idbSet('np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
+            });
+        } else {
+            window.idbSet('np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
+        }
     } else {
         // 3. Fallback в L3 sessionStorage только если IndexedDB недоступен
         if (!Array.isArray(payload) || payload.length <= 200) {

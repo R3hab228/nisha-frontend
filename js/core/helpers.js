@@ -23,6 +23,44 @@ function isSchedulerYieldSupported() {
 }
 window.isSchedulerYieldSupported = isSchedulerYieldSupported;
 
+function isCompressionStreamSupported() {
+    return typeof globalThis.CompressionStream !== 'undefined' && typeof globalThis.DecompressionStream !== 'undefined';
+}
+window.isCompressionStreamSupported = isCompressionStreamSupported;
+
+async function compressString(str, format = 'gzip') {
+    if (!isCompressionStreamSupported()) {
+        return new TextEncoder().encode(str);
+    }
+    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream(format));
+    const response = new Response(stream);
+    const buffer = await response.arrayBuffer();
+    return new Uint8Array(buffer);
+}
+window.compressString = compressString;
+
+async function decompressString(data, format = 'gzip') {
+    if (!isCompressionStreamSupported()) {
+        return new TextDecoder().decode(data);
+    }
+    const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream(format));
+    const response = new Response(stream);
+    return response.text();
+}
+window.decompressString = decompressString;
+
+async function compressJSON(obj, format = 'gzip') {
+    const jsonStr = JSON.stringify(obj);
+    return compressString(jsonStr, format);
+}
+window.compressJSON = compressJSON;
+
+async function decompressJSON(data, format = 'gzip') {
+    const text = await decompressString(data, format);
+    return JSON.parse(text);
+}
+window.decompressJSON = decompressJSON;
+
 // --- UNIFIED CDN URL REWRITER ---
 function toCDN(url) {
     if (!url || typeof url !== 'string') return '';
