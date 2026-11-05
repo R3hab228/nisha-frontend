@@ -4020,19 +4020,15 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(notFoundHtml).toContain('@media (color-gamut: p3)');
         });
 
-        it('56. CSS @starting-style, transition-behavior: allow-discrete, and Cooperative Task Scheduling scheduler.yield()', async () => {
+        it('56. Cooperative Task Scheduling scheduler.yield() and Clean Modal Overlay Transitions (No Black Blink)', async () => {
             const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
             const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
             const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
 
-            // 1. CSS Level 2 Discrete Transitions and @starting-style
-            expect(cssCode).toContain('@supports (transition-behavior: allow-discrete)');
-            expect(cssCode).toContain('display 0.28s allow-discrete');
-            expect(cssCode).toContain('@starting-style');
-            expect(cssCode).toContain('.modal-overlay.is-open');
-            expect(cssCode).toContain('.toast');
-            expect(cssCode).toContain('.cart-dropdown.active');
+            // 1. Clean modal overlay transitions: zero conflicting allow-discrete on modal-overlay to prevent black flash
+            expect(cssCode).not.toContain('display 0.28s allow-discrete');
+            expect(cssCode).not.toContain('.modal-overlay {\n        transition: opacity 0.28s');
 
             // 2. Cooperative scheduling yieldToMain and isSchedulerYieldSupported in facades
             expect(helpersCode).toContain('export async function yieldToMain()');
