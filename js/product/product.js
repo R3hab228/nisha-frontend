@@ -1974,7 +1974,10 @@ function openOfferPriceModal() {
 }
 window.openOfferPriceModal = openOfferPriceModal;
 
+let isSubmittingBargainOffer = false;
+
 async function submitBargainOffer() {
+    if (isSubmittingBargainOffer) return;
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
     if (!activeItem) return;
 
@@ -2020,9 +2023,10 @@ async function submitBargainOffer() {
                      (Array.isArray(activeItem.thumbnails) && activeItem.thumbnails[0]) ||
                      (typeof getOptimizedImg === 'function' ? getOptimizedImg(activeItem) : '') || '';
 
+    isSubmittingBargainOffer = true;
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerText = (typeof i18next !== 'undefined' && i18next.t('product.offer_sending')) || '[ ВІДПРАВКА... ]';
+        submitBtn.innerHTML = '<span class="inline-btn-spinner" aria-hidden="true" style="margin-right:8px"></span>' + ((typeof i18next !== 'undefined' && i18next.t('product.offer_sending')) || '[ ВІДПРАВКА... ]');
     }
 
     try {
@@ -2041,8 +2045,8 @@ async function submitBargainOffer() {
         let bargainResponse = null;
         if (window.apiClient && typeof window.apiClient.post === 'function') {
             bargainResponse = await window.apiClient.post('/api/bargain', payload, {
-                timeout: 12000,
-                retries: 1,
+                timeout: 15000,
+                retries: 0,
                 throwOnHttpError: true
             });
         }
@@ -2083,6 +2087,7 @@ async function submitBargainOffer() {
         const errMsg = isSafeServerMsg ? serverMsg : ((typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Помилка зв\'язку з сервером.');
         showToast(errMsg, 'error');
     } finally {
+        isSubmittingBargainOffer = false;
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerText = (typeof i18next !== 'undefined' && i18next.t('product.offer_send_btn')) || '[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]';
@@ -2178,6 +2183,7 @@ function hideInlineOfferPriceInput() {
 window.hideInlineOfferPriceInput = hideInlineOfferPriceInput;
 
 async function submitInlineBargainOffer() {
+    if (isSubmittingBargainOffer) return;
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
     if (!activeItem) return;
 
@@ -2232,8 +2238,12 @@ async function submitInlineBargainOffer() {
                      (Array.isArray(activeItem.thumbnails) && activeItem.thumbnails[0]) ||
                      (typeof getOptimizedImg === 'function' ? getOptimizedImg(activeItem) : '') || '';
 
+    isSubmittingBargainOffer = true;
     submitBtn.disabled = true;
     submitBtn.classList.add('sending');
+    if (input) input.disabled = true;
+    const originalBtnHtml = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="inline-btn-spinner" aria-hidden="true"></span>';
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
     try {
@@ -2252,8 +2262,8 @@ async function submitInlineBargainOffer() {
         let bargainResponse = null;
         if (window.apiClient && typeof window.apiClient.post === 'function') {
             bargainResponse = await window.apiClient.post('/api/bargain', payload, {
-                timeout: 12000,
-                retries: 1,
+                timeout: 15000,
+                retries: 0,
                 throwOnHttpError: true
             });
         }
@@ -2263,6 +2273,13 @@ async function submitInlineBargainOffer() {
         recordClientBargainOffer();
 
         if (typeof triggerHaptic === 'function') triggerHaptic('success');
+
+        // Плавная индикация успешной отправки с галочкой перед закрытием поля
+        submitBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green, #00ff66)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        submitBtn.style.borderColor = 'var(--accent-green, #00ff66)';
+
+        await new Promise(r => setTimeout(r, 220));
+
         const sentMsg = t('product.offer_sent_toast', 'Пропозицію надіслано! Очікуйте відповіді продавця.');
         showToast(sentMsg, 'success');
 
@@ -2289,8 +2306,12 @@ async function submitInlineBargainOffer() {
         const errMsg = isSafeServerMsg ? serverMsg : t('propose.err_network', 'Помилка зв\'язку з сервером.');
         showToast(errMsg, 'error');
     } finally {
+        isSubmittingBargainOffer = false;
         submitBtn.disabled = false;
+        if (input) input.disabled = false;
         submitBtn.classList.remove('sending');
+        submitBtn.innerHTML = originalBtnHtml;
+        submitBtn.style.borderColor = '';
     }
 }
 window.submitInlineBargainOffer = submitInlineBargainOffer;

@@ -382,7 +382,8 @@
       "toast_bargain_saved": "SAVED: from {{min}} UAH",
       "bargain_ph": "Min. bargain bid (UAH)...",
       "err_bargain_min": "Minimum bargain price must be at least 100 UAH!",
-      "err_bargain_less_price": "Minimum bargain price must be less than requested price!"
+      "err_bargain_less_price": "Minimum bargain price must be less than requested price!",
+      "err_confirm_bargain": "Please confirm bargain with the checkmark [ ✓ ]!"
     },
     "email_prompt": {
       "desc": "Send receipts and delivery statuses (Waybill) to your E-mail?",

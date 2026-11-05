@@ -788,6 +788,28 @@ async function submitProposal() {
         if (prEl) prEl.focus();
     }
 
+    const minBargainInput = document.getElementById('propMinBargainPrice');
+    const rawMinBargain = (minBargainInput?.value || '').trim();
+
+    // Защита: если открыт ввод торга или введена мин. ставка, но галочка подтверждения [ ✓ ] не была нажата
+    if (window._propBargainMode || (rawMinBargain && !window._propBargainEnabled)) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('warning');
+        const confirmMsg = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+            ? i18next.t('propose.err_confirm_bargain', { defaultValue: 'Подтвердите торг нажатием на галочку [ ✓ ]!' })
+            : 'Подтвердите торг нажатием на галочку [ ✓ ]!';
+        showToast(confirmMsg, 'warning');
+
+        const btnConfirm = document.getElementById('btnConfirmPropBargain');
+        if (btnConfirm && btnConfirm.style.display !== 'none') {
+            btnConfirm.focus();
+            btnConfirm.classList.add('pulse-highlight');
+            setTimeout(() => btnConfirm.classList.remove('pulse-highlight'), 1200);
+        } else if (minBargainInput) {
+            minBargainInput.focus();
+        }
+        return;
+    }
+
     if (!files.length || !nameItem || !brand || !size || !desc || Number.isNaN(cond) || Number.isNaN(price) || price <= 0 || !contact) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const fillAllMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_fill_all')) || 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!';
@@ -801,11 +823,9 @@ async function submitProposal() {
         return;
     }
 
-    const minBargainInput = document.getElementById('propMinBargainPrice');
-    const rawMinBargain = (minBargainInput?.value || '').trim();
     let minBargainPrice = null;
 
-    if (rawMinBargain) {
+    if (window._propBargainEnabled && rawMinBargain) {
         minBargainPrice = Number.parseInt(rawMinBargain, 10);
         if (Number.isNaN(minBargainPrice) || minBargainPrice < 100) {
             if (typeof triggerHaptic === 'function') triggerHaptic('error');
@@ -927,6 +947,20 @@ window.submitProposal = submitProposal;
 
 // 7. Инициализация слушателей для инпута и Drag & Drop
 function initProposalListeners() {
+    const minInput = document.getElementById('propMinBargainPrice');
+    if (minInput && !minInput._bargainKeyBound) {
+        minInput._bargainKeyBound = true;
+        minInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmPropBargainInput();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                hidePropBargainInput();
+            }
+        });
+    }
+
     const fileInput = document.getElementById('propFiles');
     if (fileInput && !fileInput._propBound) {
         fileInput._propBound = true;

@@ -768,6 +768,33 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .offer-submit-btn.sending svg { animation: tgPlaneFly 0.5s ease-in-out infinite alternate; }
 @keyframes tgPlaneFly { 0% { transform: translate(0, 0) rotate(0deg); opacity: 0.8; } 100% { transform: translate(4px, -4px) rotate(-8deg); opacity: 1; } }
 
+.inline-btn-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0, 255, 102, 0.25);
+    border-top-color: var(--accent-green, #00ff66);
+    border-radius: 50%;
+    animation: inlineBtnSpin 0.6s linear infinite;
+    display: inline-block;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+.offer-submit-btn .inline-btn-spinner {
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-top-color: #000;
+}
+@keyframes inlineBtnSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.pulse-highlight {
+    animation: pulseHighlight 0.6s ease-in-out 2 !important;
+}
+@keyframes pulseHighlight {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.7); }
+    50% { transform: scale(1.1); box-shadow: 0 0 16px 4px rgba(0, 255, 102, 0.9); border-color: var(--accent-green, #00ff66) !important; }
+}
+
 .share-btn { background: #0a0a0a; color: #888; border: 1px solid #333; padding: 0; font-weight: normal; cursor: pointer; font-family: var(--font-mono); font-size: 18px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 52px; min-height: 52px; width: 62px; min-width: 62px; max-width: 62px; flex: 0 0 62px; margin-left: auto; }
 .share-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05);}
 .share-btn:active { transform: scale(0.95); }
