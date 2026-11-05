@@ -273,13 +273,15 @@ async function openProductModalById(itemId) {
         if (window._seenItemsSet) {
             window._seenItemsSet.add(String(itemId));
         }
-        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-        let seenItemsIds = store ? store.getJSON('nisha_seen_items', []) : [];
-        if (!seenItemsIds.includes(itemId)) {
-            seenItemsIds.push(itemId);
-            if (seenItemsIds.length > 200) seenItemsIds = seenItemsIds.slice(-200); 
-            if (store) store.setJSON('nisha_seen_items', seenItemsIds);
-        }
+        setTimeout(() => {
+            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            let seenItemsIds = store ? store.getJSON('nisha_seen_items', []) : [];
+            if (!seenItemsIds.includes(itemId)) {
+                seenItemsIds.push(itemId);
+                if (seenItemsIds.length > 200) seenItemsIds = seenItemsIds.slice(-200); 
+                if (store) store.setJSON('nisha_seen_items', seenItemsIds);
+            }
+        }, 0);
 
         if (typeof closeModal === 'function') {
             const om = document.getElementById('ordersModal');
@@ -1050,18 +1052,11 @@ function openProductModal(item) {
         document.body.style.overflow = 'hidden';
     }
 
-    const tw = document.getElementById('modalTypewriterTitle');
-    if(tw) {
-        tw.style.animation = 'none'; 
-        tw.offsetHeight; 
-        tw.style.animation = null;
-    }
-
     addToHistory(item);
 
     const modalWin = document.querySelector('#productModal .modal-window');
     if (modalWin) {
-        modalWin.scrollTo({ top: 0, behavior: 'smooth' });
+        modalWin.scrollTop = 0;
     }
 
     // Умная очистка URL от ?item=...
@@ -2413,8 +2408,15 @@ async function syncUserBargains() {
                     itemImage: b.itemImage,
                     originalPrice: b.originalPrice,
                     acceptedPrice: b.acceptedPrice,
-                    expiresAt: b.expiresAt
+                    expiresAt: b.expiresAt,
+                    seen_popup: Boolean(b.seen_popup)
                 };
+                if (b.seen_popup) {
+                    const offerKey = String(b.bargainId || ('accepted_' + b.itemId + '_' + b.acceptedPrice));
+                    if (typeof window.markBargainPopupAsSeen === 'function') {
+                        window.markBargainPopupAsSeen(offerKey);
+                    }
+                }
                 try {
                     localStorage.setItem('accepted_bargain_' + b.itemId, JSON.stringify(payload));
                     sessionStorage.setItem('accepted_bargain_' + b.itemId, JSON.stringify(payload));

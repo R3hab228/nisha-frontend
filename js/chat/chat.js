@@ -57,6 +57,7 @@ function markSupportReplyAsSeen(id) {
     } catch (e) {}
 }
 
+
 // --- МОДАЛЬНОЕ ОКНО ПРИНЯТОГО ТОРГА С ПРЯМЫМ ДОБАВЛЕНИЕМ В КОРЗИНУ ---
 function showBargainAcceptedModal(bargainData, onDismiss) {
     if (!bargainData) return;
@@ -83,6 +84,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     }
 
     markBargainPopupAsSeen(offerKey);
+    syncBargainPopupSeenToServer(bargainData);
 
     document.querySelectorAll('.bargain-broadcast-overlay, .terminal-modal-overlay').forEach(el => el.remove());
 
@@ -133,7 +135,16 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     const overlay = document.createElement('div');
     overlay.className = 'bargain-broadcast-overlay terminal-modal-overlay';
-    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 10001; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;";
+    // Прозрачный фон без затемнения сайта и запрет скролла страницы
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; z-index: 10001; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; touch-action: none; overscroll-behavior: contain;";
+
+    // Блокируем скролл ленты товаров, пока открыт броадкаст
+    document.body.style.overflow = 'hidden';
+    if (window.lenis && typeof window.lenis.stop === 'function') {
+        window.lenis.stop();
+    } else if (typeof lenis !== 'undefined' && lenis && typeof lenis.stop === 'function') {
+        lenis.stop();
+    }
 
     const safeName = escHtml(bargainData.itemName || 'Товар');
     const safeImg = bargainData.itemImage ? escHtml(bargainData.itemImage) : '';
@@ -171,6 +182,22 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     const closeOverlay = () => {
         modalCtrl.abort();
         overlay.remove();
+
+        // Разблокируем скролл страницы, если другие модальные окна не открыты
+        const anyModalOpen = Boolean(
+            document.querySelector('.modal-overlay.is-open, .modal-overlay[style*="display: flex"], .modal-overlay[style*="display: block"]') ||
+            document.querySelector('.terminal-modal-overlay:not(.bargain-broadcast-overlay)') ||
+            document.querySelector('.cart-panel.open')
+        );
+        if (!anyModalOpen) {
+            document.body.style.overflow = '';
+            if (window.lenis && typeof window.lenis.start === 'function') {
+                window.lenis.start();
+            } else if (typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') {
+                lenis.start();
+            }
+        }
+
         if (typeof onDismiss === 'function') onDismiss();
         setTimeout(() => {
             if (typeof checkPendingBargainNotification === 'function') {
@@ -178,6 +205,13 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
             }
         }, 150);
     };
+
+    overlay.addEventListener('touchmove', (e) => {
+        if (!e.target.closest('.success-terminal-box')) e.preventDefault();
+    }, { passive: false, signal: modalCtrl.signal });
+    overlay.addEventListener('wheel', (e) => {
+        if (!e.target.closest('.success-terminal-box')) e.preventDefault();
+    }, { passive: false, signal: modalCtrl.signal });
 
     const addBtn = overlay.querySelector('.bargain-add-cart-btn');
     const closeXBtn = overlay.querySelector('.close-bargain-x-btn');
@@ -225,6 +259,44 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 }
 window.showBargainAcceptedModal = showBargainAcceptedModal;
 
+// Кросс-девайс синхронизация: помечаем попап как просмотренный на сервере, чтобы он больше не всплывал на других устройствах (ПК <-> Смартфон)
+async function syncBargainPopupSeenToServer(bargainData) {
+    if (!bargainData) return;
+    const offerKey = String(bargainData.bargainId || ('accepted_' + bargainData.itemId + '_' + bargainData.acceptedPrice));
+    markBargainPopupAsSeen(offerKey);
+
+    try {
+        const activeSb = (typeof getSupabase === 'function' ? getSupabase() : null) || window.supabaseClient;
+        if (activeSb) {
+            if (bargainData.bargainId) {
+                activeSb.from('support_replies')
+                    .update({ is_read: true })
+                    .ilike('answer_text', `%"bargainId":"${bargainData.bargainId}"%`)
+                    .then();
+            }
+            if (bargainData.itemId) {
+                activeSb.from('support_replies')
+                    .update({ is_read: true })
+                    .ilike('answer_text', `%"itemId":"${bargainData.itemId}"%`)
+                    .then();
+            }
+        }
+    } catch (_) {}
+
+    try {
+        const backendUrl = (window.CONFIG && window.CONFIG.BACKEND_URL) || window.location.origin;
+        fetch(`${backendUrl}/api/bargains/seen`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                bargainId: bargainData.bargainId || null,
+                itemId: bargainData.itemId || null
+            })
+        }).catch(() => {});
+    } catch (_) {}
+}
+window.syncBargainPopupSeenToServer = syncBargainPopupSeenToServer;
+
 window.pendingBargainNotifications = window.pendingBargainNotifications || [];
 
 function queueBargainNotification(type, data, markAsRead) {
@@ -257,7 +329,7 @@ function checkPendingBargainNotification() {
 
     if (notif.type === 'BARGAIN_ACCEPTED') {
         const offerKey = String(notif.data.bargainId || ('accepted_' + notif.data.itemId + '_' + notif.data.acceptedPrice));
-        if (hasSeenBargainPopup(offerKey)) {
+        if (hasSeenBargainPopup(offerKey) || notif.data.seen_popup) {
             if (typeof notif.markAsRead === 'function') notif.markAsRead();
             setTimeout(checkPendingBargainNotification, 100);
             return;
@@ -350,7 +422,7 @@ function handleIncomingSupportReply(r, sbClient) {
         } catch (e) {}
 
         const offerKey = String(parsed.bargainId || ('accepted_' + parsed.itemId + '_' + parsed.acceptedPrice));
-        if (hasSeenBargainPopup(offerKey)) {
+        if (hasSeenBargainPopup(offerKey) || parsed.seen_popup) {
             markAsRead();
             return;
         }

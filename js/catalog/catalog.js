@@ -2297,7 +2297,7 @@ function initGridEventDelegation() {
                 clickTimer = null;
                 lastClickedWrapper = null;
                 if (typeof openProductModalById === 'function') openProductModalById(itemId);
-            }, 180);
+            }, 120);
         } else {
             clearTimeout(clickTimer);
             clickTimer = null;
