@@ -3926,5 +3926,30 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(pubUa.translation.product.offer_rate_limit).toContain('Максимум 2 пропозиції за 10 хвилин');
             expect(pubEn.translation.product.offer_rate_limit).toContain('Maximum 2 offers per 10 minutes');
         });
+
+        it('50. Feed strikethrough price, badge minimum bid text, description [ТОРГ] sanitization, and buyer TG/phone priority contact', () => {
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
+
+            // 1. Catalog feed renders strikethrough price and yellow agreed price when accepted bargain exists
+            expect(catalogCode).toContain("sessionStorage.getItem('accepted_bargain_' + item.id)");
+            expect(catalogCode).toContain("localStorage.getItem('accepted_bargain_' + item.id)");
+            expect(catalogCode).toContain('card-current-price" style="color: var(--accent-yellow, #ffd700)');
+
+            // 2. Chat JS reactive updateCardDOM on accepted offer
+            expect(chatCode).toContain('window.updateCardDOM(match)');
+
+            // 3. Buyer contact prioritizes Telegram username and phone over email
+            expect(productCode).toContain('function getBestBuyerContact');
+            expect(productCode).toContain('getBestBuyerContact()');
+
+            // 4. Badge renders minimum bid text directly (e.g. ОТ / ВІД minBargain ГРН)
+            expect(productCode).toContain('ВІД ${itemMinBargain} ГРН');
+            expect(productCode).toContain('ОТ ${itemMinBargain} ГРН');
+
+            // 5. Technical [ТОРГ: ...] tag is stripped from user-facing description
+            expect(productCode).toContain('replace(/\\s*\\[ТОРГ:?[^\\]]*\\]/gi');
+        });
     });
 });

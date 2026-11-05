@@ -1012,7 +1012,17 @@ function updateCardDOM(item) {
             const priceDiv = card.querySelector('.item-price');
             if (priceDiv) {
                 const fPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
-                if (item.is_sale && item.old_price) {
+                let savedBargain = null;
+                try {
+                    const rawB = sessionStorage.getItem('accepted_bargain_' + item.id) || localStorage.getItem('accepted_bargain_' + item.id);
+                    if (rawB) savedBargain = JSON.parse(rawB);
+                } catch (e) {}
+
+                if (savedBargain && savedBargain.acceptedPrice) {
+                    const fOldB = (typeof window.formatPrice === 'function') ? window.formatPrice(savedBargain.originalPrice || item.price) : `${savedBargain.originalPrice || item.price} ${curr}`;
+                    const fAccB = (typeof window.formatPrice === 'function') ? window.formatPrice(savedBargain.acceptedPrice) : `${savedBargain.acceptedPrice} ${curr}`;
+                    priceDiv.innerHTML = `<span class="card-old-price" style="color: #777; text-decoration: line-through; margin-right: 6px;">${fOldB}</span><span class="card-current-price" style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${fAccB}</span>`;
+                } else if (item.is_sale && item.old_price) {
                     const fOld = (typeof window.formatPrice === 'function') ? window.formatPrice(item.old_price) : `${item.old_price} ${curr}`;
                     priceDiv.innerHTML = `<span class="card-old-price" style="color: #4a704a; text-decoration: line-through;">${fOld}</span><span class="card-current-price" style="color: var(--accent-green);">${fPrice}</span>`;
                 } else {
@@ -2368,7 +2378,17 @@ function buildCardDOM(item, idx = 0) {
 
     let priceHTML = '';
     const formattedPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.price) : `${item.price} ${curr}`;
-    if (item.is_sale && item.old_price) {
+    let savedBargainForCard = null;
+    try {
+        const rawB = sessionStorage.getItem('accepted_bargain_' + item.id) || localStorage.getItem('accepted_bargain_' + item.id);
+        if (rawB) savedBargainForCard = JSON.parse(rawB);
+    } catch (e) {}
+
+    if (savedBargainForCard && savedBargainForCard.acceptedPrice) {
+        const fOldB = (typeof window.formatPrice === 'function') ? window.formatPrice(savedBargainForCard.originalPrice || item.price) : `${savedBargainForCard.originalPrice || item.price} ${curr}`;
+        const fAccB = (typeof window.formatPrice === 'function') ? window.formatPrice(savedBargainForCard.acceptedPrice) : `${savedBargainForCard.acceptedPrice} ${curr}`;
+        priceHTML = `<span class="card-old-price" style="color: #777; text-decoration: line-through; margin-right: 6px;">${fOldB}</span><span class="card-current-price" style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${fAccB}</span>`;
+    } else if (item.is_sale && item.old_price) {
         const formattedOldPrice = (typeof window.formatPrice === 'function') ? window.formatPrice(item.old_price) : `${item.old_price} ${curr}`;
         priceHTML = `<span class="card-old-price" style="color: #4a704a; text-decoration: line-through;">${formattedOldPrice}</span><span class="card-current-price" style="color: var(--accent-green);">${formattedPrice}</span>`;
     } else {

@@ -454,7 +454,9 @@ function openProductModal(item) {
         }
     }
 
-    const descText = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
+    const rawDesc = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
+    const cleanDesc = rawDesc.replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
+    const descText = cleanDesc || rawDesc;
     const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
     const safeDescHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : escHtml(descText);
     const descBlock = document.querySelector('.modal-desc');
@@ -940,6 +942,15 @@ function openProductModal(item) {
                 : fallbackBargainText;
             if (!bargainText || bargainText === 'product.badge_bargain') {
                 bargainText = fallbackBargainText;
+            }
+            if (itemMinBargain) {
+                if (curLang.startsWith('ua') || curLang.startsWith('uk')) {
+                    bargainText = `ВІД ${itemMinBargain} ГРН`;
+                } else if (curLang.startsWith('en')) {
+                    bargainText = `FROM ${itemMinBargain} UAH`;
+                } else {
+                    bargainText = `ОТ ${itemMinBargain} ГРН`;
+                }
             }
             deliveryOrBargainBadgeHTML = `
                 <div class="badge-item" data-action="show-badge-info" data-badge="bargain">
@@ -1757,6 +1768,58 @@ if (document.readyState === 'loading') {
 // ==========================================
 // СИСТЕМА ТОРГА (ПРЕДЛОЖЕНИЕ СВОЕЙ ЦЕНЫ)
 // ==========================================
+// --- ОПРЕДЕЛЕНИЕ ЛУЧШЕГО КОНТАКТА ПОКУПАТЕЛЯ ДЛЯ ТОРГА (TELEGRAM -> ТЕЛЕФОН -> EMAIL) ---
+function getBestBuyerContact() {
+    // 1. Telegram username из Telegram WebApp (если сайт открыт в боте)
+    try {
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        if (tgUser && tgUser.username) {
+            return '@' + tgUser.username.replace(/^@/, '');
+        }
+    } catch (e) {}
+
+    // 2. Telegram username из профиля / хранилища
+    try {
+        const profile = window.userProfile || null;
+        const currentUser = (typeof getUser === 'function') ? getUser() : (window.currentUser || null);
+        const tgCandidate = (profile && (profile.tg || profile.telegram || profile.username)) ||
+                            (currentUser && currentUser.user_metadata && (currentUser.user_metadata.telegram || currentUser.user_metadata.tg || currentUser.user_metadata.user_name)) ||
+                            localStorage.getItem('nisha_last_tg') ||
+                            localStorage.getItem('user_tg');
+        if (tgCandidate && typeof tgCandidate === 'string' && tgCandidate.trim()) {
+            const cleanTg = tgCandidate.trim().replace(/^https?:\/\/t\.me\//, '').replace(/^@/, '');
+            if (cleanTg && !cleanTg.includes('@')) return '@' + cleanTg;
+        }
+    } catch (e) {}
+
+    // 3. Номер телефона (из профиля или последнего заказа/чекаута)
+    try {
+        const profile = window.userProfile || null;
+        const currentUser = (typeof getUser === 'function') ? getUser() : (window.currentUser || null);
+        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const phoneCandidate = (profile && profile.phone) ||
+                               (currentUser && (currentUser.phone || (currentUser.user_metadata && currentUser.user_metadata.phone))) ||
+                               (store && store.get && (store.get('nisha_last_phone') || store.get('user_phone'))) ||
+                               localStorage.getItem('nisha_last_phone') ||
+                               localStorage.getItem('user_phone');
+        if (phoneCandidate && typeof phoneCandidate === 'string' && phoneCandidate.trim()) {
+            return phoneCandidate.trim();
+        }
+    } catch (e) {}
+
+    // 4. Только если нет ни Telegram, ни телефона — email
+    try {
+        const currentUser = (typeof getUser === 'function') ? getUser() : (window.currentUser || null);
+        if (currentUser && currentUser.email) return currentUser.email.trim();
+        const lastEmail = localStorage.getItem('nisha_last_email');
+        if (lastEmail) return lastEmail.trim();
+    } catch (e) {}
+
+    return '';
+}
+window.getBestBuyerContact = getBestBuyerContact;
+
+
 // --- КЛИЕНТСКИЙ RATE LIMIT ДЛЯ ТОРГА (МАКСИМУМ 2 ОФФЕРА В 10 МИНУТ) ---
 const BARGAIN_RATE_LIMIT_STORAGE_KEY = 'nisha_bargain_offers_history';
 const BARGAIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -1837,9 +1900,7 @@ function openOfferPriceModal() {
     }
 
     if (contactInput) {
-        const currentUser = (typeof getUser === 'function') ? getUser() : (window.currentUser || null);
-        const savedContact = (currentUser && (currentUser.email || currentUser.phone)) || '';
-        contactInput.value = savedContact;
+        contactInput.value = getBestBuyerContact();
     }
 
     if (submitBtn) {
@@ -2068,8 +2129,7 @@ async function submitInlineBargainOffer() {
     }
 
     const fingerprint = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : ('guest_' + Date.now()));
-    const currentUser = (typeof getUser === 'function') ? getUser() : (window.currentUser || null);
-    const savedContact = (currentUser && (currentUser.email || currentUser.phone)) || '';
+    const savedContact = getBestBuyerContact();
 
     const firstImg = (Array.isArray(activeItem.images) && activeItem.images[0]) ||
                      (Array.isArray(activeItem.thumbnails) && activeItem.thumbnails[0]) ||

@@ -122,6 +122,13 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         }
     }
 
+    // Реактивно обновляем карточку товара прямо в ленте каталога
+    if (typeof window.updateCardDOM === 'function') {
+        const all = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+        const match = all.find(i => String(i.id) === String(bargainData.itemId));
+        if (match) window.updateCardDOM(match);
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'bargain-broadcast-overlay terminal-modal-overlay';
     overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 10001; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;";
