@@ -137,7 +137,8 @@
       "badge_bargain": "BARGAIN",
       "offer_below_min": "Minimum offer price: {{min}} UAH!",
       "offer_rate_limit": "Maximum 2 offers per 10 minutes. Please wait {{min}} min.",
-      "offer_cart_updated": "Cart price updated to agreed offer!"
+      "offer_cart_updated": "Cart price updated to agreed offer!",
+      "offer_disabled": "Bargaining is not available for this item!"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",

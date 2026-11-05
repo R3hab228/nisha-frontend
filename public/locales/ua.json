@@ -137,7 +137,8 @@
       "badge_bargain": "Є ТОРГ",
       "offer_below_min": "Мінімальна ціна для пропозиції: {{min}} грн!",
       "offer_rate_limit": "Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.",
-      "offer_cart_updated": "Ціну в кошику оновлено за узгодженою ставкою!"
+      "offer_cart_updated": "Ціну в кошику оновлено за узгодженою ставкою!",
+      "offer_disabled": "Для цього товару торг не передбачено!"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",

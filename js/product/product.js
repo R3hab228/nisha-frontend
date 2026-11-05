@@ -572,7 +572,7 @@ function openProductModal(item) {
             if (offerWrapper) offerWrapper.style.display = 'none';
             if (offerPriceBtn) offerPriceBtn.style.display = 'none';
             if (offerInputRow) offerInputRow.style.display = 'none';
-        } else if (isDropItem && !hasBargain) {
+        } else if (!hasBargain) {
             if (offerWrapper) offerWrapper.style.display = 'none';
             if (offerPriceBtn) offerPriceBtn.style.display = 'none';
             if (offerInputRow) offerInputRow.style.display = 'none';
@@ -1984,6 +1984,12 @@ async function submitBargainOffer() {
 
     const descMatch = (typeof activeItem.description === 'string') && activeItem.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
     const itemMinBargain = activeItem.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
+    const hasBargain = Boolean(activeItem.is_bargain || itemMinBargain);
+    if (!hasBargain) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const disabledMsg = ((typeof i18next !== 'undefined' && i18next.t('product.offer_disabled')) || 'Для цього товару торг не передбачено!');
+        return showToast(disabledMsg, 'error');
+    }
     if (itemMinBargain && offeredPrice < itemMinBargain) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const minMsg = ((typeof i18next !== 'undefined' && i18next.t('product.offer_below_min')) || 'Мінімальна ціна для пропозиції: {{min}} грн!').replace('{{min}}', itemMinBargain);
@@ -2178,6 +2184,13 @@ async function submitInlineBargainOffer() {
 
     const descMatch = (typeof activeItem.description === 'string') && activeItem.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
     const itemMinBargain = activeItem.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
+    const hasBargain = Boolean(activeItem.is_bargain || itemMinBargain);
+    if (!hasBargain) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const disabledMsg = t('product.offer_disabled', 'Для цього товару торг не передбачено!');
+        showToast(disabledMsg, 'error');
+        return;
+    }
     if (itemMinBargain && offeredPrice < itemMinBargain) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const minMsg = t('product.offer_below_min', 'Мінімальна ціна для пропозиції: {{min}} грн!').replace('{{min}}', itemMinBargain);

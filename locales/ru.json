@@ -135,7 +135,8 @@
       "offer_accepted_btn": "ПРЕДЛОЖЕНИЕ ПРИНЯТО ✓",
       "offer_declined_btn": "ПРЕДЛОЖЕНИЕ ОТКЛОНЕНО",
       "badge_bargain": "ЕСТЬ ТОРГ",
-      "offer_below_min": "Минимальная цена предложения: {{min}} грн!"
+      "offer_below_min": "Минимальная цена предложения: {{min}} грн!",
+      "offer_disabled": "Для этого товара торг не предусмотрен!"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
