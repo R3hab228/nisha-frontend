@@ -3610,19 +3610,4 @@ html.pwa-standalone body {
     }
 }
 
-/* ==========================================
-   NATIVE CSS SUBGRID FOR CATALOG CARDS
-   Perfect horizontal baseline alignment across image, info, and buttons
-   ========================================== */
-@supports (grid-template-rows: subgrid) {
-    .items-grid {
-        grid-auto-rows: auto 1fr auto;
-    }
 
-    .item-card:not(.skeleton-card) {
-        grid-row: span 3;
-        display: grid;
-        grid-template-rows: subgrid;
-        row-gap: 0;
-    }
-}

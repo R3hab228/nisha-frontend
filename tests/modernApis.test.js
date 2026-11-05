@@ -4063,16 +4063,15 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain("if (typeof window.yieldToMain === 'function') await window.yieldToMain()");
         });
 
-        it('57. Native CSS Subgrid for Catalog Cards and Native Compression Streams API (gzip/deflate)', async () => {
+        it('57. Stable Product Card Grid and Native Compression Streams API (gzip/deflate)', async () => {
             const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
             const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
             const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
 
-            // 1. CSS Subgrid on items-grid and item-card
-            expect(cssCode).toContain('@supports (grid-template-rows: subgrid)');
-            expect(cssCode).toContain('.items-grid {\n        grid-auto-rows: auto 1fr auto;\n    }');
-            expect(cssCode).toContain('.item-card:not(.skeleton-card) {\n        grid-row: span 3;\n        display: grid;\n        grid-template-rows: subgrid;\n        row-gap: 0;\n    }');
+            // 1. Stable responsive catalog grid without subgrid distortion
+            expect(cssCode).toContain('.items-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }');
+            expect(cssCode).not.toContain('grid-template-rows: subgrid');
 
             // 2. Compression Streams API facade exports
             expect(helpersCode).toContain('export function isCompressionStreamSupported()');
