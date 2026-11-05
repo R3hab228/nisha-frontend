@@ -3951,5 +3951,32 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 5. Technical [ТОРГ: ...] tag is stripped from user-facing description
             expect(productCode).toContain('replace(/\\s*\\[ТОРГ:?[^\\]]*\\]/gi');
         });
+
+        it('51. Cross-device account synchronization for bargains (userId in offer payload, active bargains sync & Realtime multi-device support)', () => {
+            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const profileCode = readFileSync(resolve(import.meta.dirname, '../js/profile/profile.js'), 'utf8');
+            const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+
+            // 1. Offer payloads attach userId if user is logged in
+            expect(productCode).toContain('userId: currentUid');
+
+            // 2. product.js implements syncUserBargains querying /api/bargains/active
+            expect(productCode).toContain('async function syncUserBargains');
+            expect(productCode).toContain('/api/bargains/active?');
+            expect(productCode).toContain('window.syncUserBargains = syncUserBargains');
+
+            // 3. profile.js triggers syncUserBargains and user Realtime subscription on checkSession
+            expect(profileCode).toContain('window.syncUserBargains()');
+            expect(profileCode).toContain('window.subscribeUserRealtime(currentUser.id)');
+
+            // 4. chat.js queries unread replies for user_<id> and subscribes to user channel
+            expect(chatCode).toContain('user_${currentUid}');
+            expect(chatCode).toContain('function subscribeUserRealtime(userId)');
+            expect(chatCode).toContain('window.subscribeUserRealtime = subscribeUserRealtime');
+
+            // 5. catalog.js synchronizes bargains on catalog load and visibility/focus change
+            expect(catalogCode).toContain('if (typeof window.syncUserBargains === \'function\') window.syncUserBargains()');
+        });
     });
 });

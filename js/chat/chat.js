@@ -490,22 +490,59 @@ function initSupportRepliesSystem() {
     function checkUnreadSupportReplies() {
         const activeSb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
         const activeFp = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : null);
-        if (!activeSb || !activeFp) return;
+        const currentUid = (window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : null;
+        if (!activeSb || (!activeFp && !currentUid)) return;
 
-        activeSb.from('support_replies')
-            .select('id, answer_text')
-            .eq('client_id', activeFp)
-            .eq('is_read', false)
-            .then(({ data: replies, error: replErr }) => {
-                if (replErr) return;
-                if (replies && replies.length > 0) {
-                    console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
-                    window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
-                    replies.forEach(r => handleIncomingSupportReply(r, activeSb));
-                }
-            });
+        window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
+
+        const processReplies = (replies) => {
+            if (replies && replies.length > 0) {
+                console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
+                replies.forEach(r => handleIncomingSupportReply(r, activeSb));
+            }
+        };
+
+        if (activeFp) {
+            activeSb.from('support_replies')
+                .select('id, answer_text')
+                .eq('client_id', activeFp)
+                .eq('is_read', false)
+                .then(({ data: replies, error: replErr }) => {
+                    if (!replErr) processReplies(replies);
+                });
+        }
+
+        if (currentUid) {
+            activeSb.from('support_replies')
+                .select('id, answer_text')
+                .eq('client_id', `user_${currentUid}`)
+                .eq('is_read', false)
+                .then(({ data: userReplies, error: uErr }) => {
+                    if (!uErr) processReplies(userReplies);
+                });
+        }
     }
     window.checkUnreadSupportReplies = checkUnreadSupportReplies;
+
+    function subscribeUserRealtime(userId) {
+        if (!userId || !sb) return;
+        const channelName = `support-replies-user-${userId}`;
+        if (window._userSupportChannel) {
+            try { sb.removeChannel(window._userSupportChannel); } catch (e) {}
+        }
+        window._userSupportChannel = sb.channel(channelName)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'support_replies',
+                filter: `client_id=eq.user_${userId}`
+            }, payload => {
+                console.log('[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение (user) Online:', payload.new);
+                handleIncomingSupportReply(payload.new, sb);
+            })
+            .subscribe();
+    }
+    window.subscribeUserRealtime = subscribeUserRealtime;
 
     try {
         // 1. Проверяем пропущенные сообщения (Offline)
@@ -515,6 +552,9 @@ function initSupportRepliesSystem() {
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 checkUnreadSupportReplies();
+                if (typeof window.syncUserBargains === 'function') {
+                    window.syncUserBargains();
+                }
             }
         });
 
@@ -535,6 +575,10 @@ function initSupportRepliesSystem() {
                     console.log('[СИСТЕМА ОТВЕТОВ] Успешно подключен к каналу!');
                 }
             });
+
+        if (window.currentUser && window.currentUser.id) {
+            subscribeUserRealtime(window.currentUser.id);
+        }
     } catch(e) {
         console.error('[СИСТЕМА ОТВЕТОВ] Глобальная ошибка:', e);
     }

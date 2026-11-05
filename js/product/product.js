@@ -1967,6 +1967,7 @@ async function submitBargainOffer() {
     }
 
     try {
+        const currentUid = (window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : null;
         const payload = {
             itemId: String(activeItem.id),
             itemName: activeItem.name || '',
@@ -1974,7 +1975,8 @@ async function submitBargainOffer() {
             currentPrice: currentPrice,
             offeredPrice: offeredPrice,
             contact: contact,
-            clientId: String(fingerprint)
+            clientId: String(fingerprint),
+            userId: currentUid
         };
 
         if (window.apiClient && typeof window.apiClient.post === 'function') {
@@ -2140,6 +2142,7 @@ async function submitInlineBargainOffer() {
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
     try {
+        const currentUid = (window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : null;
         const payload = {
             itemId: String(activeItem.id),
             itemName: activeItem.name || '',
@@ -2147,7 +2150,8 @@ async function submitInlineBargainOffer() {
             currentPrice: currentPrice,
             offeredPrice: offeredPrice,
             contact: savedContact,
-            clientId: String(fingerprint)
+            clientId: String(fingerprint),
+            userId: currentUid
         };
 
         if (window.apiClient && typeof window.apiClient.post === 'function') {
@@ -2193,3 +2197,69 @@ document.addEventListener('keydown', (e) => {
         submitInlineBargainOffer();
     }
 });
+
+
+// ==========================================
+// КРОСС-ДЕВАЙС СИНХРОНИЗАЦИЯ ТОРГА (PC <-> MOBILE)
+// ==========================================
+async function syncUserBargains() {
+    try {
+        const fp = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : '');
+        const uid = (window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : '';
+        if (!fp && !uid) return;
+
+        const params = new URLSearchParams();
+        if (fp) params.append('clientId', fp);
+        if (uid) params.append('userId', uid);
+
+        const backendUrl = window.BACKEND_URL || (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : '');
+        let bargains = [];
+        if (window.apiClient && typeof window.apiClient.get === 'function') {
+            try {
+                const res = await window.apiClient.get(`/api/bargains/active?${params.toString()}`);
+                bargains = res?.data?.bargains || res?.bargains || [];
+            } catch (apiErr) {
+                // fallback to fetch
+            }
+        }
+        if (!Array.isArray(bargains) || bargains.length === 0) {
+            try {
+                const res = await fetch(`${backendUrl}/api/bargains/active?${params.toString()}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    bargains = data?.bargains || [];
+                }
+            } catch (fErr) {}
+        }
+
+        if (Array.isArray(bargains) && bargains.length > 0) {
+            bargains.forEach(b => {
+                if (!b.itemId || !b.acceptedPrice) return;
+                const payload = {
+                    type: 'BARGAIN_ACCEPTED',
+                    bargainId: b.bargainId,
+                    itemId: b.itemId,
+                    itemName: b.itemName,
+                    itemImage: b.itemImage,
+                    originalPrice: b.originalPrice,
+                    acceptedPrice: b.acceptedPrice,
+                    expiresAt: b.expiresAt
+                };
+                try {
+                    localStorage.setItem('accepted_bargain_' + b.itemId, JSON.stringify(payload));
+                    sessionStorage.setItem('accepted_bargain_' + b.itemId, JSON.stringify(payload));
+                    localStorage.removeItem('declined_bargain_' + b.itemId);
+                    sessionStorage.removeItem('declined_bargain_' + b.itemId);
+                } catch (e) {}
+
+                if (typeof window.updateCardDOM === 'function' && Array.isArray(window.allItems)) {
+                    const found = window.allItems.find(it => String(it.id) === String(b.itemId));
+                    if (found) window.updateCardDOM(found);
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('[SYNC BARGAINS] Error:', e);
+    }
+}
+window.syncUserBargains = syncUserBargains;

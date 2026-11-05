@@ -392,6 +392,15 @@ async function checkSession() {
                 }
             }
             if (typeof updateCartUI === 'function') updateCartUI();
+            if (typeof window.subscribeUserRealtime === 'function' && currentUser?.id) {
+                window.subscribeUserRealtime(currentUser.id);
+            }
+            if (typeof window.syncUserBargains === 'function') {
+                window.syncUserBargains();
+            }
+            if (typeof window.checkUnreadSupportReplies === 'function') {
+                window.checkUnreadSupportReplies();
+            }
 
         } else {
             currentUser = null;

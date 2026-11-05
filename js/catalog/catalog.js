@@ -941,6 +941,7 @@ async function loadAllItems() {
         }
         changedCardItems.forEach(item => updateCardDOM(item));
     }
+    if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
 }
 window.loadAllItems = loadAllItems;
 
@@ -1528,15 +1529,18 @@ if (!window._catalogAutoSyncInitialized) {
         if (document.visibilityState === 'visible') {
             initCatalogRealtimeSubscription();
             syncCriticalStatuses();
+            if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
         }
     });
     window.addEventListener('focus', () => {
         initCatalogRealtimeSubscription();
         syncCriticalStatuses();
+        if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
     });
     window.addEventListener('online', () => {
         initCatalogRealtimeSubscription();
         syncCriticalStatuses();
+        if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
     });
 }
 
