@@ -850,7 +850,7 @@ async function loadAllItems() {
             const nowHot = (next.views_count || 0) >= 25;
             const curThumb0 = Array.isArray(cur.thumbnails) ? cur.thumbnails[0] : '';
             const nextThumb0 = Array.isArray(next.thumbnails) ? next.thumbnails[0] : '';
-            if (cur.price !== next.price || cur.old_price !== next.old_price || cur.status !== next.status || !!cur.is_sale !== !!next.is_sale || wasHot !== nowHot || curThumb0 !== nextThumb0) {
+            if (cur.price !== next.price || cur.old_price !== next.old_price || cur.status !== next.status || !!cur.is_sale !== !!next.is_sale || wasHot !== nowHot || curThumb0 !== nextThumb0 || cur.description !== next.description || !!cur.is_returnable !== !!next.is_returnable || cur.condition !== next.condition) {
                 changedCardItems.push(next);
             }
         }

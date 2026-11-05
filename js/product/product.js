@@ -308,11 +308,17 @@ async function openProductModalById(itemId) {
             if (fullItem && active && active.id === fullItem.id) {
                 const hadNoImages = (!active.images || active.images.length === 0) && (!active.thumbnails || active.thumbnails.length === 0);
                 const hasFullImages = (fullItem.images && fullItem.images.length > 0) || (fullItem.thumbnails && fullItem.thumbnails.length > 0);
+                const hadBargain = Boolean(active.is_bargain || active.min_bargain_price || (typeof active.description === 'string' && /\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i.test(active.description)));
+                const nowHasBargain = Boolean(fullItem.is_bargain || fullItem.min_bargain_price || (typeof fullItem.description === 'string' && /\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i.test(fullItem.description)));
                 
                 currentOpenedItem = fullItem;
                 window.currentOpenedItem = fullItem;
+                if (Array.isArray(window.allItems)) {
+                    const idx = window.allItems.findIndex(it => it && String(it.id) === String(fullItem.id));
+                    if (idx !== -1) window.allItems[idx] = { ...window.allItems[idx], ...fullItem };
+                }
 
-                if (hadNoImages && hasFullImages) {
+                if ((hadNoImages && hasFullImages) || hadBargain !== nowHasBargain) {
                     if (typeof closeModal === 'function') { const om = document.getElementById('ordersModal'); if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal'); const rm = document.getElementById('reviewsModal'); if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal'); } openProductModal(fullItem);
                     return;
                 }
@@ -455,9 +461,10 @@ function openProductModal(item) {
         }
     }
 
-    const rawDesc = item.description ? item.description : "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
+    const defaultDesc = "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
+    const rawDesc = item.description ? String(item.description) : defaultDesc;
     const cleanDesc = rawDesc.replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
-    const descText = (cleanDesc || rawDesc).replaceAll('\n', '<br>');
+    const descText = (cleanDesc || defaultDesc).replaceAll('\n', '<br>');
     const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
     const safeDescHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : escHtml(descText);
     const descBlock = document.querySelector('.modal-desc');
@@ -1069,7 +1076,7 @@ function openProductModal(item) {
         "@type": "Product",
         "name": item.name,
         "image": (item.images && item.images.length > 0) ? item.images.at(0) : "",
-        "description": item.description || item.name,
+        "description": cleanDesc || item.name,
         "brand": { "@type": "Brand", "name": item.brand },
         "offers": {
             "@type": "Offer",
@@ -1098,7 +1105,7 @@ function openProductModal(item) {
     let statusPrefix = item.status === 'sold' ? '🔴 SOLD | ' : (item.status === 'reserved' ? '🟡 RESERVED | ' : '🟢 ');
     let ogTitle = `${statusPrefix}NISHA: ${item.brand} - ${item.name}`;
     const formattedOgPrice = (typeof formatPrice === 'function') ? formatPrice(item.price) : `${item.price} грн.`;
-    let ogDesc = `Размер: ${item.size} | Цена: ${formattedOgPrice} ${item.description ? item.description.slice(0, 150) : ''}`;
+    let ogDesc = `Размер: ${item.size} | Цена: ${formattedOgPrice} ${cleanDesc ? cleanDesc.slice(0, 150) : ''}`;
     let ogImage = (item.images && item.images.length > 0) ? item.images.at(0) : 'https://www.nisha-store.shop/icon-512.png';
     let ogUrl = `https://www.nisha-store.shop/?item=${encodeURIComponent(item.id)}`;
 
