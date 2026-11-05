@@ -2,6 +2,14 @@
 // NISHA SYSTEM FEATURES (Broadcasts, Rules, Hit Counter, Easter Egg, Shortcuts)
 // ==========================================
 
+// === SPECULATION RULES API SUPPORT (Instant 0ms Prerender/Prefetch) ===
+export function isSpeculationRulesSupported() {
+    return typeof HTMLScriptElement !== 'undefined' &&
+           typeof HTMLScriptElement.supports === 'function' &&
+           HTMLScriptElement.supports('speculationrules');
+}
+window.isSpeculationRulesSupported = isSpeculationRulesSupported;
+
 import {
     storage,
     openModal,

@@ -13,6 +13,33 @@
     --font-mono: 'Courier New', Courier, monospace;
 }
 
+/* ==========================================
+   MODERN OKLCH COLOR SPACE (Wide Gamut Display P3 & Calibrated Perceptual Colors)
+   ========================================== */
+@supports (color: oklch(0% 0 0)) {
+    :root {
+        --bg-main: oklch(0% 0 0);
+        --bg-panel: oklch(14% 0 0);
+        --bg-card: oklch(10% 0 0);
+        --text-main: oklch(80% 0 0);
+        --text-muted: oklch(48% 0 0);
+        --accent-green: oklch(86.6% 0.295 142.5);
+        --accent-red: oklch(63% 0.26 29.2);
+        --accent-yellow: oklch(88% 0.21 95);
+        --border-color: oklch(25% 0 0);
+        --border-light: oklch(40% 0 0);
+    }
+
+    @media (color-gamut: p3) {
+        :root {
+            /* Расширенный цветовой охват Display P3 для современных iPhone, Mac и AMOLED */
+            --accent-green: oklch(87.5% 0.315 142.5);
+            --accent-yellow: oklch(89% 0.225 95);
+            --accent-red: oklch(64% 0.275 29.2);
+        }
+    }
+}
+
 *, *::before, *::after { 
     box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent !important;

@@ -8,6 +8,16 @@
  * @param {string} url
  * @returns {string}
  */
+/**
+ * Checks if browser supports Speculation Rules API for instant 0ms prefetching/prerendering
+ * @returns {boolean}
+ */
+export function isSpeculationRulesSupported() {
+    return typeof HTMLScriptElement !== 'undefined' &&
+           typeof HTMLScriptElement.supports === 'function' &&
+           HTMLScriptElement.supports('speculationrules');
+}
+
 export function toCDN(url) {
     if (typeof window !== 'undefined' && typeof window.toCDN === 'function') {
         return window.toCDN(url);

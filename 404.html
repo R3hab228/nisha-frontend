@@ -12,6 +12,21 @@
             --font-mono: 'Courier New', Courier, monospace;
         }
 
+        @supports (color: oklch(0% 0 0)) {
+            :root {
+                --bg-main: oklch(0% 0 0);
+                --accent-green: oklch(86.6% 0.295 142.5);
+                --accent-red: oklch(63% 0.26 29.2);
+            }
+
+            @media (color-gamut: p3) {
+                :root {
+                    --accent-green: oklch(87.5% 0.315 142.5);
+                    --accent-red: oklch(64% 0.275 29.2);
+                }
+            }
+        }
+
         body {
             background-color: var(--bg-main);
             color: var(--accent-green);

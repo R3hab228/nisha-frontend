@@ -3976,5 +3976,48 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 6. Adding item to cart from catalog feed automatically applies accepted bargain price if present
             expect(cartCode).toContain("const rawBargain = sessionStorage.getItem('accepted_bargain_' + itemId) || localStorage.getItem('accepted_bargain_' + itemId)");
         });
+
+        it('55. Modern Standards: Speculation Rules API (<script type="speculationrules">) and OKLCH Wide-Gamut Color Space (Display P3)', () => {
+            const indexHtml = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            const returnPolicyHtml = readFileSync(resolve(import.meta.dirname, '../return-policy.html'), 'utf8');
+            const notFoundHtml = readFileSync(resolve(import.meta.dirname, '../404.html'), 'utf8');
+            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
+            const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
+
+            // 1. Speculation Rules in index.html with valid JSON rules for prerender and prefetch
+            expect(indexHtml).toContain('<script type="speculationrules">');
+            const indexMatch = indexHtml.match(/<script type="speculationrules">\s*([\s\S]*?)\s*<\/script>/);
+            expect(indexMatch).not.toBeNull();
+            const indexRules = JSON.parse(indexMatch[1]);
+            expect(indexRules.prerender).toBeDefined();
+            expect(indexRules.prefetch).toBeDefined();
+            expect(indexRules.prerender[0].urls).toContain('/return-policy.html');
+
+            // 2. Speculation Rules in return-policy.html for instant 0ms back-to-home
+            expect(returnPolicyHtml).toContain('<script type="speculationrules">');
+            const rpMatch = returnPolicyHtml.match(/<script type="speculationrules">\s*([\s\S]*?)\s*<\/script>/);
+            expect(rpMatch).not.toBeNull();
+            const rpRules = JSON.parse(rpMatch[1]);
+            expect(rpRules.prerender[0].urls).toContain('/');
+
+            // 3. isSpeculationRulesSupported utility exported in system-features and helpers facade
+            expect(sysCode).toContain('export function isSpeculationRulesSupported()');
+            expect(sysCode).toContain("HTMLScriptElement.supports('speculationrules')");
+            expect(helpersCode).toContain('export function isSpeculationRulesSupported()');
+
+            // 4. OKLCH color space with Display P3 wide gamut enhancements in style.css
+            expect(cssCode).toContain('@supports (color: oklch(0% 0 0))');
+            expect(cssCode).toContain('--accent-green: oklch(86.6% 0.295 142.5);');
+            expect(cssCode).toContain('--accent-yellow: oklch(88% 0.21 95);');
+            expect(cssCode).toContain('@media (color-gamut: p3)');
+            expect(cssCode).toContain('--accent-green: oklch(87.5% 0.315 142.5);');
+
+            // 5. OKLCH color space in standalone html pages
+            expect(returnPolicyHtml).toContain('@supports (color: oklch(0% 0 0))');
+            expect(returnPolicyHtml).toContain('@media (color-gamut: p3)');
+            expect(notFoundHtml).toContain('@supports (color: oklch(0% 0 0))');
+            expect(notFoundHtml).toContain('@media (color-gamut: p3)');
+        });
     });
 });

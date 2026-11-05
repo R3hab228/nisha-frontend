@@ -57,6 +57,36 @@
   } catch(e){}
 })();
 </script>
+<script type="speculationrules">
+{
+  "prerender": [
+    {
+      "source": "list",
+      "urls": ["/return-policy.html"],
+      "eagerness": "moderate"
+    }
+  ],
+  "prefetch": [
+    {
+      "source": "list",
+      "urls": ["/return-policy.html"],
+      "eagerness": "conservative"
+    },
+    {
+      "source": "document",
+      "where": {
+        "and": [
+          { "href_matches": "/*" },
+          { "not": { "href_matches": "/api/*" } },
+          { "not": { "href_matches": "/*?*order=*" } },
+          { "not": { "selector_matches": ".no-speculate" } }
+        ]
+      },
+      "eagerness": "moderate"
+    }
+  ]
+}
+</script>
 <link rel=preconnect href=https://nmpuefxqtkhvtltdvllz.supabase.co crossorigin>
 <link rel=preconnect href=https://nisha-cdn.mtyagniryadno.workers.dev crossorigin>
 <link rel=preconnect href=https://nisha-api.onrender.com crossorigin>
