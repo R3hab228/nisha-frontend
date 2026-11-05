@@ -89,12 +89,18 @@ async function getNPStorageAsync(key) {
                             actualData = await window.decompressJSON(entry.data);
                         } catch (compErr) {
                             console.warn('[NP Cache] Decompress error fallback:', compErr);
+                            actualData = null;
                         }
                     }
-                    // Синхронизируем в L1 In-Memory для мгновенного доступа при повторных обращениях
-                    npMemoryCache.set(key, { ts: entry.ts, ttl: itemTtl, data: actualData });
-                    trimMemoryCacheIfNeeded();
-                    return actualData;
+                    if (actualData) {
+                        // Синхронизируем в L1 In-Memory для мгновенного доступа при повторных обращениях
+                        npMemoryCache.set(key, { ts: entry.ts, ttl: itemTtl, data: actualData });
+                        trimMemoryCacheIfNeeded();
+                        return actualData;
+                    } else if (typeof window.idbDel === 'function') {
+                        // Асинхронно удаляем поврежденную запись
+                        window.idbDel('np_' + key).catch(() => {});
+                    }
                 } else if (typeof window.idbDel === 'function') {
                     // Асинхронно удаляем устаревшую запись
                     window.idbDel('np_' + key).catch(() => {});
