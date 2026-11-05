@@ -819,7 +819,7 @@ async function loadAllItems() {
 
     // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров, включая description)
     const { data, error } = await sb.from('items')
-        .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable')
+        .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price')
         .limit(1000)
         .order('created_at', { ascending: false });
     
@@ -850,7 +850,7 @@ async function loadAllItems() {
             const nowHot = (next.views_count || 0) >= 25;
             const curThumb0 = Array.isArray(cur.thumbnails) ? cur.thumbnails[0] : '';
             const nextThumb0 = Array.isArray(next.thumbnails) ? next.thumbnails[0] : '';
-            if (cur.price !== next.price || cur.old_price !== next.old_price || cur.status !== next.status || !!cur.is_sale !== !!next.is_sale || wasHot !== nowHot || curThumb0 !== nextThumb0 || cur.description !== next.description || !!cur.is_returnable !== !!next.is_returnable || cur.condition !== next.condition) {
+            if (cur.price !== next.price || cur.old_price !== next.old_price || cur.status !== next.status || !!cur.is_sale !== !!next.is_sale || wasHot !== nowHot || curThumb0 !== nextThumb0 || cur.description !== next.description || !!cur.is_returnable !== !!next.is_returnable || cur.condition !== next.condition || !!cur.is_bargain !== !!next.is_bargain || cur.min_bargain_price !== next.min_bargain_price) {
                 changedCardItems.push(next);
             }
         }
