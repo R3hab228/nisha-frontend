@@ -923,7 +923,10 @@ async function loadAllItems() {
     // 4. СИНХРОНИЗАЦИЯ КОРЗИНЫ
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     let userCart = (typeof cart !== 'undefined') ? cart : (window.cart || (store ? store.getJSON('nisha_cart', []) : []));
-    const validCart = userCart.filter(cItem => window.allItems.some(dbItem => dbItem.id === cItem.id));
+    const validCart = userCart.filter(cItem => {
+        const cId = String(cItem?.id || cItem?.item_id || cItem).trim();
+        return window.allItems.some(dbItem => String(dbItem.id).trim() === cId);
+    });
     if (validCart.length !== userCart.length) {
         if (typeof cart !== 'undefined') cart = validCart;
         window.cart = validCart;

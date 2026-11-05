@@ -300,6 +300,8 @@ function handleIncomingSupportReply(r, sbClient) {
             localStorage.setItem('accepted_bargain_' + parsed.itemId, JSON.stringify(parsed));
             sessionStorage.removeItem('declined_bargain_' + parsed.itemId);
             localStorage.removeItem('declined_bargain_' + parsed.itemId);
+            sessionStorage.removeItem('pending_bargain_' + parsed.itemId);
+            localStorage.removeItem('pending_bargain_' + parsed.itemId);
         } catch (e) {}
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
@@ -349,6 +351,8 @@ function handleIncomingSupportReply(r, sbClient) {
             localStorage.setItem('declined_bargain_' + parsed.itemId, 'true');
             sessionStorage.removeItem('accepted_bargain_' + parsed.itemId);
             localStorage.removeItem('accepted_bargain_' + parsed.itemId);
+            sessionStorage.removeItem('pending_bargain_' + parsed.itemId);
+            localStorage.removeItem('pending_bargain_' + parsed.itemId);
         } catch (e) {}
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;

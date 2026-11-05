@@ -579,14 +579,28 @@ function openProductModal(item) {
             if (offerWrapper) offerWrapper.style.display = 'block';
             let isAcceptedBargain = false;
             let isDeclinedBargain = false;
+            let isPendingBargain = false;
             try {
-                if (sessionStorage.getItem('declined_bargain_' + item.id) || localStorage.getItem('declined_bargain_' + item.id)) {
+                const sId = String(item.id);
+                if (sessionStorage.getItem('declined_bargain_' + sId) || localStorage.getItem('declined_bargain_' + sId)) {
                     isDeclinedBargain = true;
                 } else {
-                    const saved = sessionStorage.getItem('accepted_bargain_' + item.id) || localStorage.getItem('accepted_bargain_' + item.id);
-                    if (saved) {
-                        const parsed = JSON.parse(saved);
+                    const savedAcc = sessionStorage.getItem('accepted_bargain_' + sId) || localStorage.getItem('accepted_bargain_' + sId);
+                    if (savedAcc) {
+                        const parsed = JSON.parse(savedAcc);
                         if (parsed && parsed.acceptedPrice) isAcceptedBargain = true;
+                    }
+                    if (!isAcceptedBargain) {
+                        const savedPend = sessionStorage.getItem('pending_bargain_' + sId) || localStorage.getItem('pending_bargain_' + sId);
+                        if (savedPend) {
+                            const parsedPend = JSON.parse(savedPend);
+                            if (parsedPend && (Date.now() - (parsedPend.timestamp || 0) < 24 * 60 * 60 * 1000)) {
+                                isPendingBargain = true;
+                            } else {
+                                sessionStorage.removeItem('pending_bargain_' + sId);
+                                localStorage.removeItem('pending_bargain_' + sId);
+                            }
+                        }
                     }
                 }
             } catch (e) {}
@@ -609,6 +623,15 @@ function openProductModal(item) {
                     offerPriceBtn.innerText = acceptedText;
                     offerPriceBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
                     offerPriceBtn.style.color = 'var(--accent-yellow, #ffd700)';
+                    offerPriceBtn.style.pointerEvents = 'none';
+                    offerPriceBtn.style.cursor = 'default';
+                    offerPriceBtn.style.boxShadow = 'none';
+                    offerPriceBtn.disabled = true;
+                } else if (isPendingBargain) {
+                    const pendingText = (typeof i18next !== 'undefined') ? i18next.t('product.offer_pending', { defaultValue: '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]' }) : '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]';
+                    offerPriceBtn.innerText = pendingText;
+                    offerPriceBtn.style.borderColor = 'var(--accent-green, #00ff66)';
+                    offerPriceBtn.style.color = 'var(--accent-green, #00ff66)';
                     offerPriceBtn.style.pointerEvents = 'none';
                     offerPriceBtn.style.cursor = 'default';
                     offerPriceBtn.style.boxShadow = 'none';
@@ -1983,6 +2006,21 @@ async function submitBargainOffer() {
             await window.apiClient.post('/api/bargain', payload, { timeout: 12000, retries: 1 });
         }
         recordClientBargainOffer();
+        try {
+            const pData = { itemId: String(activeItem.id), offeredPrice: offeredPrice, timestamp: Date.now() };
+            sessionStorage.setItem('pending_bargain_' + activeItem.id, JSON.stringify(pData));
+            localStorage.setItem('pending_bargain_' + activeItem.id, JSON.stringify(pData));
+        } catch (e) {}
+        const modalBtn = document.getElementById('modalOfferPriceBtn');
+        if (modalBtn) {
+            const pendingText = (typeof i18next !== 'undefined') ? i18next.t('product.offer_pending', { defaultValue: '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]' }) : '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]';
+            modalBtn.innerText = pendingText;
+            modalBtn.style.borderColor = 'var(--accent-green, #00ff66)';
+            modalBtn.style.color = 'var(--accent-green, #00ff66)';
+            modalBtn.style.pointerEvents = 'none';
+            modalBtn.style.cursor = 'default';
+            modalBtn.disabled = true;
+        }
 
         if (typeof triggerHaptic === 'function') triggerHaptic('success');
         const sentMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_sent_toast')) || 'Пропозицію надіслано! Очікуйте відповіді продавця.';
@@ -2021,11 +2059,17 @@ function showInlineOfferPriceInput() {
     if (!activeItem || !btn || !row || !input) return;
 
     try {
-        if (sessionStorage.getItem('declined_bargain_' + activeItem.id)) return;
-        const saved = sessionStorage.getItem('accepted_bargain_' + activeItem.id);
+        const sId = String(activeItem.id);
+        if (sessionStorage.getItem('declined_bargain_' + sId) || localStorage.getItem('declined_bargain_' + sId)) return;
+        const saved = sessionStorage.getItem('accepted_bargain_' + sId) || localStorage.getItem('accepted_bargain_' + sId);
         if (saved) {
             const parsed = JSON.parse(saved);
             if (parsed && parsed.acceptedPrice) return;
+        }
+        const pending = sessionStorage.getItem('pending_bargain_' + sId) || localStorage.getItem('pending_bargain_' + sId);
+        if (pending) {
+            const parsedPend = JSON.parse(pending);
+            if (parsedPend && (Date.now() - (parsedPend.timestamp || 0) < 24 * 60 * 60 * 1000)) return;
         }
     } catch (e) {}
 
@@ -2164,11 +2208,20 @@ async function submitInlineBargainOffer() {
         showToast(sentMsg, 'success');
 
         hideInlineOfferPriceInput();
+        try {
+            const pData = { itemId: String(activeItem.id), offeredPrice: offeredPrice, timestamp: Date.now() };
+            sessionStorage.setItem('pending_bargain_' + activeItem.id, JSON.stringify(pData));
+            localStorage.setItem('pending_bargain_' + activeItem.id, JSON.stringify(pData));
+        } catch (e) {}
         const btn = document.getElementById('modalOfferPriceBtn');
         if (btn) {
             btn.innerText = t('product.offer_pending', '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]');
             btn.style.borderColor = 'var(--accent-green, #00ff66)';
             btn.style.color = 'var(--accent-green, #00ff66)';
+            btn.style.pointerEvents = 'none';
+            btn.style.cursor = 'default';
+            btn.style.boxShadow = 'none';
+            btn.disabled = true;
         }
     } catch (err) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');

@@ -364,7 +364,14 @@ async function checkSession() {
                 const dbCart = userProfile.cart;
                 
                 if (localCart.length === 0) {
-                    localCart = dbCart;
+                    localCart = dbCart.map(it => {
+                        if (it && typeof it === 'object') {
+                            const clean = { ...it };
+                            delete clean._isSold;
+                            return clean;
+                        }
+                        return it;
+                    });
                     window.cart = localCart;
                     showToast((typeof i18next !== 'undefined' && i18next.t('messages.cart_restored')) || 'Корзина восстановлена', 'success');
                 } else {
@@ -372,8 +379,11 @@ async function checkSession() {
                     let addedCount = 0;
                     
                     dbCart.forEach(dbItem => {
-                        if (!mergedCart.some(it => it.id === dbItem.id)) {
-                            mergedCart.push(dbItem);
+                        const dbId = String(dbItem?.id || dbItem?.item_id || dbItem).trim();
+                        if (!mergedCart.some(it => String(it?.id || it?.item_id || it).trim() === dbId)) {
+                            const clean = (dbItem && typeof dbItem === 'object') ? { ...dbItem } : dbItem;
+                            if (clean && typeof clean === 'object') delete clean._isSold;
+                            mergedCart.push(clean);
                             addedCount++;
                         }
                     });

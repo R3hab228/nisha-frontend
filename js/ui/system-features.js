@@ -350,69 +350,6 @@ document.addEventListener('keydown', function(e) {
         }
     }
 
-    // Навигация назад по нажатию Backspace на ПК: возвращает на предыдущее поле формы
-    if (e.key === 'Backspace' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        const activeEl = document.activeElement;
-        if (!activeEl) return;
-
-        const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields') || activeEl.closest('.modal-window');
-        if (!form) return;
-
-        let shouldGoBack = false;
-
-        if (activeEl.tagName === 'BUTTON') {
-            shouldGoBack = true;
-        } else if (activeEl.tagName === 'INPUT') {
-            const isEmpty = !activeEl.value || activeEl.value.length === 0;
-            if (isEmpty) {
-                shouldGoBack = true;
-            } else {
-                try {
-                    if (typeof activeEl.selectionStart === 'number' && typeof activeEl.selectionEnd === 'number') {
-                        shouldGoBack = activeEl.selectionStart === 0 && activeEl.selectionEnd === 0;
-                    }
-                } catch (_) {
-                    shouldGoBack = false;
-                }
-            }
-        } else if (activeEl.tagName === 'TEXTAREA') {
-            const isEmpty = !activeEl.value || activeEl.value.length === 0 || activeEl.value.trim().length === 0;
-            if (isEmpty) {
-                shouldGoBack = true;
-            }
-        }
-
-        if (shouldGoBack) {
-            const isVisible = (el) => {
-                if (!el || el.disabled || el.type === 'hidden') return false;
-                if (el.style && el.style.display === 'none') return false;
-                if (el.closest && el.closest('[style*="display: none"]')) return false;
-                return true;
-            };
-            const focusables = Array.from(form.querySelectorAll('input, textarea, button')).filter(isVisible);
-            const currentIndex = focusables.indexOf(activeEl);
-            if (currentIndex > 0) {
-                e.preventDefault();
-                const prevEl = focusables[currentIndex - 1];
-                prevEl.focus();
-                if (prevEl.tagName === 'INPUT' || prevEl.tagName === 'TEXTAREA') {
-                    if (typeof prevEl.setSelectionRange === 'function' && prevEl.type !== 'number') {
-                        const len = prevEl.value ? prevEl.value.length : 0;
-                        try { prevEl.setSelectionRange(len, len); } catch (_) {}
-                    } else if (typeof prevEl.select === 'function' && prevEl.tagName === 'INPUT') {
-                        try { prevEl.select(); } catch (_) {}
-                    }
-                }
-                if (typeof prevEl.scrollIntoView === 'function') {
-                    const rect = prevEl.getBoundingClientRect();
-                    if (rect.top < 0 || rect.bottom > window.innerHeight) {
-                        prevEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
-                }
-            }
-        }
-    }
-
     const pModal = document.getElementById('productModal');
     if (pModal && (pModal.style.display === 'flex' || pModal.style.display === 'block')) {
         if (e.key === 'ArrowLeft') {

@@ -232,7 +232,7 @@ window.compressImage = compressImage;
 // 3. Полная очистка формы предложки
 function resetProposalForm() {
     if (typeof window.hidePropBargainInput === 'function') {
-        window.hidePropBargainInput();
+        window.hidePropBargainInput(true);
     }
     const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc', 'propMinBargainPrice'];
     fields.forEach(id => {
@@ -419,7 +419,7 @@ function showBargainSavedToast(minBid) {
 }
 window.showBargainSavedToast = showBargainSavedToast;
 
-function hidePropBargainInput() {
+function hidePropBargainInput(silent = false) {
     const minInput = document.getElementById('propMinBargainPrice');
     if (minInput) minInput.value = '';
     const wasBargain = window._propBargainEnabled;
@@ -427,7 +427,7 @@ function hidePropBargainInput() {
 
     returnToDesiredPriceMode(false);
 
-    if (wasBargain) {
+    if (wasBargain && !silent) {
         const offMsg = (typeof i18next !== 'undefined')
             ? i18next.t('propose.toast_bargain_off', { defaultValue: 'Торг выключен' })
             : 'Торг выключен';
@@ -788,7 +788,7 @@ async function submitProposal() {
     const rawMinBargain = (minBargainInput?.value || '').trim();
     let minBargainPrice = null;
 
-    if (rawMinBargain && (window._propBargainEnabled || window._propBargainMode)) {
+    if (rawMinBargain) {
         minBargainPrice = Number.parseInt(rawMinBargain, 10);
         if (Number.isNaN(minBargainPrice) || minBargainPrice < 100) {
             if (typeof triggerHaptic === 'function') triggerHaptic('error');

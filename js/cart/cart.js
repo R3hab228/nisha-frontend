@@ -1767,8 +1767,10 @@ async function checkCartItemsAvailability() {
             let hasChanges = false;
             let soldNames = [];
             currentCart.forEach(cartItem => {
-                const dbItem = dbItems.find(i => i.id === cartItem.id);
-                const isSold = !dbItem || dbItem.status === 'sold';
+                const cId = String(cartItem?.id || cartItem?.item_id || cartItem).trim();
+                const dbItem = dbItems.find(i => String(i.id).trim() === cId);
+                // Товар считается проданным ТОЛЬКО если запись найдена в базе данных и ее статус явно 'sold'
+                const isSold = Boolean(dbItem && dbItem.status === 'sold');
                 if (cartItem._isSold !== isSold) {
                     cartItem._isSold = isSold;
                     hasChanges = true;
@@ -2201,10 +2203,11 @@ async function openCheckoutModal() {
 
             if (dbItems && !error) {
                 currentCart = currentCart.filter(cartItem => {
-                    const dbItem = dbItems.find(i => i.id === cartItem.id);
-                    if (!dbItem || dbItem.status === 'sold') {
+                    const cId = String(cartItem?.id || cartItem?.item_id || cartItem).trim();
+                    const dbItem = dbItems.find(i => String(i.id).trim() === cId);
+                    if (dbItem && dbItem.status === 'sold') {
                         const itemBoughtMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.item_bought_toast', { name: cartItem.name, defaultValue: `Товар "${cartItem.name}" уже кто-то купил! 😢` }) : `Товар "${cartItem.name}" уже кто-то купил! 😢`;
-            showToast(itemBoughtMsg, 'error');
+                        showToast(itemBoughtMsg, 'error');
                         hasSoldItems = true;
                         return false; 
                     }
@@ -3111,6 +3114,8 @@ async function executeOrderFinal(emailToSave) {
                     localStorage.removeItem('accepted_bargain_' + ordered.id);
                     sessionStorage.removeItem('declined_bargain_' + ordered.id);
                     localStorage.removeItem('declined_bargain_' + ordered.id);
+                    sessionStorage.removeItem('pending_bargain_' + ordered.id);
+                    localStorage.removeItem('pending_bargain_' + ordered.id);
                 } catch (e) {}
             });
             if (typeof window.updateSidebarCounters === 'function') window.updateSidebarCounters();
