@@ -513,6 +513,37 @@ function renderPromoCodeNotice(options = {}) {
 }
 window.renderPromoCodeNotice = renderPromoCodeNotice;
 
+// Очистка inline-стилей cartDropdown (чтобы не блокировать CSS :hover на ПК)
+function clearDropdownInlineStyles(el) {
+    if (!el || !el.style) return;
+    el.style.removeProperty('display');
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('visibility');
+    el.style.removeProperty('pointer-events');
+    el.style.removeProperty('transform');
+}
+window.clearDropdownInlineStyles = clearDropdownInlineStyles;
+
+// Гарантия обновления содержимого корзины при наведении курсора на ПК
+function initCartHoverDesktop() {
+    if (typeof document === 'undefined') return;
+    const infoWrapper = document.getElementById('cartInfoWrapper');
+    if (!infoWrapper || infoWrapper._cartHoverBound) return;
+    infoWrapper._cartHoverBound = true;
+
+    infoWrapper.addEventListener('mouseenter', () => {
+        if (typeof window !== 'undefined' && window.innerWidth > 900) {
+            const dropdown = document.getElementById('cartDropdown');
+            if (dropdown) clearDropdownInlineStyles(dropdown);
+            const currentCart = (typeof getActiveCart === 'function') ? getActiveCart() : [];
+            if (currentCart && currentCart.length > 0) {
+                if (typeof renderCartItems === 'function') renderCartItems();
+            }
+        }
+    });
+}
+window.initCartHoverDesktop = initCartHoverDesktop;
+
 // Обновление интерфейса корзины (плавающая панель, бейдж, сумма)
 function updateCartUI() {
     const p = document.getElementById('cartPanel');
@@ -526,13 +557,7 @@ function updateCartUI() {
         p.classList.remove('show', 'dropdown-open');
         if (dropdown) {
             dropdown.classList.remove('active');
-            dropdown.style.display = 'none';
-            dropdown.style.opacity = '0';
-            dropdown.style.visibility = 'hidden';
-            dropdown.style.pointerEvents = 'none';
-            setTimeout(() => {
-                if (dropdown) dropdown.style.removeProperty('display');
-            }, 400);
+            clearDropdownInlineStyles(dropdown);
         }
         if (fab) {
             fab.classList.remove('cart-active'); 
@@ -547,6 +572,10 @@ function updateCartUI() {
     }
     
     p.classList.add('show'); 
+    if (dropdown) {
+        clearDropdownInlineStyles(dropdown);
+    }
+    if (typeof initCartHoverDesktop === 'function') initCartHoverDesktop();
     if(fab) fab.classList.add('cart-active'); 
     const themeMeta = document.querySelector('meta[name="theme-color"]');
     if (themeMeta) themeMeta.setAttribute('content', '#000a1a');
@@ -1800,6 +1829,7 @@ window.checkCartItemsAvailability = checkCartItemsAvailability;
 function toggleCartDropdown(e) {
     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
     const dropdown = document.getElementById('cartDropdown');
+    if (dropdown) clearDropdownInlineStyles(dropdown);
     const panel = document.getElementById('cartPanel');
     const fab = document.querySelector('.fab-propose');
     if (dropdown) {
@@ -1834,7 +1864,10 @@ function closeCartDropdown(e) {
     const dropdown = document.getElementById('cartDropdown');
     const panel = document.getElementById('cartPanel');
     const fab = document.querySelector('.fab-propose');
-    if (dropdown) dropdown.classList.remove('active');
+    if (dropdown) {
+        dropdown.classList.remove('active');
+        clearDropdownInlineStyles(dropdown);
+    }
     if (panel) panel.classList.remove('dropdown-open');
     if (fab) {
         fab.style.removeProperty('display');
@@ -1948,13 +1981,7 @@ async function removeFromCart(index, event, rowElement) {
                 const panel = document.getElementById('cartPanel');
                 if (dropdown) {
                     dropdown.classList.remove('active');
-                    dropdown.style.display = 'none';
-                    dropdown.style.opacity = '0';
-                    dropdown.style.visibility = 'hidden';
-                    dropdown.style.pointerEvents = 'none';
-                    setTimeout(() => {
-                        if (dropdown) dropdown.style.removeProperty('display');
-                    }, 400);
+                    clearDropdownInlineStyles(dropdown);
                 }
                 if (panel) {
                     panel.classList.remove('show', 'dropdown-open');
@@ -2064,6 +2091,7 @@ function handleDropdownsOutsideClick(e) {
         const cartDrop = document.getElementById('cartDropdown');
         if (cartDrop && cartDrop.classList.contains('active')) {
             cartDrop.classList.remove('active');
+            clearDropdownInlineStyles(cartDrop);
             const panel = document.getElementById('cartPanel');
             if (panel) panel.classList.remove('dropdown-open');
             const fab = document.querySelector('.fab-propose');
@@ -3376,6 +3404,7 @@ window.openCart = function() {
     const panel = document.getElementById('cartPanel');
     const fab = document.querySelector('.fab-propose');
     if (dropdown) {
+        clearDropdownInlineStyles(dropdown);
         dropdown.classList.add('active');
         if (panel) panel.classList.add('dropdown-open');
         if (fab) {
@@ -3388,3 +3417,10 @@ window.openCart = function() {
     }
 };
 
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCartHoverDesktop);
+    } else {
+        initCartHoverDesktop();
+    }
+}

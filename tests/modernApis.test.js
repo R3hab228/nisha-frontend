@@ -3910,5 +3910,33 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain("const isSold = Boolean(dbItem && dbItem.status === 'sold')");
             expect(cartCode).not.toContain("const isSold = !dbItem || dbItem.status === 'sold'");
         });
+
+        it('53. Desktop cart hover: clearDropdownInlineStyles, no sticky inline opacity/visibility, bridge pseudo-element, and desktop hover refresh', () => {
+            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+
+            // 1. clearDropdownInlineStyles exists and cleans all inline blocking properties
+            expect(cartCode).toContain('function clearDropdownInlineStyles(el)');
+            expect(cartCode).toContain("el.style.removeProperty('display')");
+            expect(cartCode).toContain("el.style.removeProperty('opacity')");
+            expect(cartCode).toContain("el.style.removeProperty('visibility')");
+            expect(cartCode).toContain("el.style.removeProperty('pointer-events')");
+
+            // 2. updateCartUI and removeFromCart do not set sticky inline opacity/visibility/display: none
+            expect(cartCode).not.toContain("dropdown.style.display = 'none';\n            dropdown.style.opacity = '0';");
+            expect(cartCode).toContain('clearDropdownInlineStyles(dropdown)');
+
+            // 3. Desktop hover refresh listener initCartHoverDesktop is defined and auto-bound
+            expect(cartCode).toContain('function initCartHoverDesktop()');
+            expect(cartCode).toContain("infoWrapper.addEventListener('mouseenter'");
+            expect(cartCode).toContain("if (typeof renderCartItems === 'function') renderCartItems()");
+
+            // 4. CSS contains bridge pseudo-element and !important for desktop hover
+            expect(cssCode).toContain('.cart-dropdown::before');
+            expect(cssCode).toContain('height: 30px');
+            expect(cssCode).toContain('.cart-panel.show .cart-info:hover .cart-dropdown');
+            expect(cssCode).toContain('opacity: 1 !important');
+            expect(cssCode).toContain('visibility: visible !important');
+        });
     });
 });
