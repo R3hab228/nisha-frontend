@@ -397,7 +397,7 @@ function openProductModal(item) {
 
     // Если у текущего покупателя есть персональная согласованная цена (Торг)
     try {
-        const savedBargain = sessionStorage.getItem('accepted_bargain_' + item.id);
+        const savedBargain = sessionStorage.getItem('accepted_bargain_' + item.id) || localStorage.getItem('accepted_bargain_' + item.id);
         if (savedBargain) {
             const parsedBargain = JSON.parse(savedBargain);
             if (parsedBargain && parsedBargain.acceptedPrice && priceEl) {
@@ -578,10 +578,10 @@ function openProductModal(item) {
             let isAcceptedBargain = false;
             let isDeclinedBargain = false;
             try {
-                if (sessionStorage.getItem('declined_bargain_' + item.id)) {
+                if (sessionStorage.getItem('declined_bargain_' + item.id) || localStorage.getItem('declined_bargain_' + item.id)) {
                     isDeclinedBargain = true;
                 } else {
-                    const saved = sessionStorage.getItem('accepted_bargain_' + item.id);
+                    const saved = sessionStorage.getItem('accepted_bargain_' + item.id) || localStorage.getItem('accepted_bargain_' + item.id);
                     if (saved) {
                         const parsed = JSON.parse(saved);
                         if (parsed && parsed.acceptedPrice) isAcceptedBargain = true;

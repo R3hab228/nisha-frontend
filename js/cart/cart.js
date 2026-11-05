@@ -294,11 +294,22 @@ async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
     }
 
     const catalog = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
-    const item = catalog.find(i => i.id === itemId);
+    const item = catalog.find(i => String(i.id) === String(itemId));
     if (!item) return;
 
     let currentCart = getActiveCart();
-    if (currentCart.some(i => i.id === item.id)) { 
+    const existingIndex = currentCart.findIndex(i => String(i.id) === String(item.id));
+    if (existingIndex !== -1) { 
+        if (customPrice !== null && !Number.isNaN(customPrice) && customPrice > 0) {
+            currentCart[existingIndex].price = Math.round(Number(customPrice));
+            currentCart[existingIndex].bargainPrice = Math.round(Number(customPrice));
+            setActiveCart(currentCart);
+            updateCartUI();
+            if (typeof syncCartToServer === 'function') syncCartToServer();
+            const updateMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_cart_updated')) || 'Цену в корзине обновлено по согласованной ставке!';
+            showToast(updateMsg, 'success');
+            return;
+        }
         showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_exist') : 'Уже в корзине!', 'error');
         return; 
     }
@@ -412,7 +423,28 @@ async function addToCartFromModal() {
     if (!activeItem) return;
     
     let currentCart = getActiveCart();
-    if (currentCart.some(i => i.id === activeItem.id)) { 
+    const existingIndex = currentCart.findIndex(i => String(i.id) === String(activeItem.id));
+
+    let parsedBargain = null;
+    try {
+        const rawBargain = sessionStorage.getItem('accepted_bargain_' + activeItem.id) || localStorage.getItem('accepted_bargain_' + activeItem.id);
+        if (rawBargain) {
+            parsedBargain = JSON.parse(rawBargain);
+        }
+    } catch (e) {}
+
+    if (existingIndex !== -1) { 
+        if (parsedBargain && parsedBargain.acceptedPrice && currentCart[existingIndex].price !== Number(parsedBargain.acceptedPrice)) {
+            currentCart[existingIndex].price = Number(parsedBargain.acceptedPrice);
+            currentCart[existingIndex].bargainPrice = Number(parsedBargain.acceptedPrice);
+            setActiveCart(currentCart);
+            updateCartUI();
+            if (typeof closeModal === 'function') closeModal('productModal');
+            const updateMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_cart_updated')) || 'Цену в корзине обновлено по согласованной ставке!';
+            showToast(updateMsg, 'success');
+            if (typeof syncCartToServer === 'function') syncCartToServer();
+            return;
+        }
         showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_exist') : 'Уже в корзине!', 'error');
         return; 
     }
@@ -424,16 +456,10 @@ async function addToCartFromModal() {
     if (hacked) {
         cartItem.price = Math.floor(cartItem.price * 0.9);
     }
-    try {
-        const savedBargain = sessionStorage.getItem('accepted_bargain_' + activeItem.id);
-        if (savedBargain) {
-            const parsedBargain = JSON.parse(savedBargain);
-            if (parsedBargain && parsedBargain.acceptedPrice) {
-                cartItem.price = Number(parsedBargain.acceptedPrice);
-                cartItem.bargainPrice = Number(parsedBargain.acceptedPrice);
-            }
-        }
-    } catch (e) {}
+    if (parsedBargain && parsedBargain.acceptedPrice) {
+        cartItem.price = Number(parsedBargain.acceptedPrice);
+        cartItem.bargainPrice = Number(parsedBargain.acceptedPrice);
+    }
     currentCart.push(cartItem);
     setActiveCart(currentCart);
     updateCartUI();
@@ -3080,6 +3106,12 @@ async function executeOrderFinal(emailToSave) {
                     catItem.status = 'reserved';
                     if (typeof window.updateCardDOM === 'function') window.updateCardDOM(catItem);
                 }
+                try {
+                    sessionStorage.removeItem('accepted_bargain_' + ordered.id);
+                    localStorage.removeItem('accepted_bargain_' + ordered.id);
+                    sessionStorage.removeItem('declined_bargain_' + ordered.id);
+                    localStorage.removeItem('declined_bargain_' + ordered.id);
+                } catch (e) {}
             });
             if (typeof window.updateSidebarCounters === 'function') window.updateSidebarCounters();
             if (typeof renderHistory === 'function') renderHistory();

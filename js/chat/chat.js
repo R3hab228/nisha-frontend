@@ -96,7 +96,9 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     // 1. Сохраняем состояние принятого торга для текущего товара
     try {
         sessionStorage.setItem('accepted_bargain_' + bargainData.itemId, JSON.stringify(bargainData));
+        localStorage.setItem('accepted_bargain_' + bargainData.itemId, JSON.stringify(bargainData));
         sessionStorage.removeItem('declined_bargain_' + bargainData.itemId);
+        localStorage.removeItem('declined_bargain_' + bargainData.itemId);
     } catch (e) {}
 
     // 2. Обновляем кнопку предложения цены на карточке товара: окантовка и текст становятся жёлтыми, кнопка НЕКЛИКАБЕЛЬНА
@@ -288,7 +290,9 @@ function handleIncomingSupportReply(r, sbClient) {
     if (parsed && parsed.type === 'BARGAIN_ACCEPTED') {
         try {
             sessionStorage.setItem('accepted_bargain_' + parsed.itemId, JSON.stringify(parsed));
+            localStorage.setItem('accepted_bargain_' + parsed.itemId, JSON.stringify(parsed));
             sessionStorage.removeItem('declined_bargain_' + parsed.itemId);
+            localStorage.removeItem('declined_bargain_' + parsed.itemId);
         } catch (e) {}
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
@@ -335,7 +339,9 @@ function handleIncomingSupportReply(r, sbClient) {
     if (parsed && parsed.type === 'BARGAIN_DECLINED') {
         try {
             sessionStorage.setItem('declined_bargain_' + parsed.itemId, 'true');
+            localStorage.setItem('declined_bargain_' + parsed.itemId, 'true');
             sessionStorage.removeItem('accepted_bargain_' + parsed.itemId);
+            localStorage.removeItem('accepted_bargain_' + parsed.itemId);
         } catch (e) {}
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
