@@ -1829,6 +1829,8 @@ function applyFilters(immediate = false, preserveViewport = false) {
                 return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability && matchesSale;
             });
 
+            if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+
             // 2. Умный поиск (Web Worker Fuse.js с поддержкой транслитерации и надежный fallback)
             if (searchTerm !== '') {
                 const cleanSearchTerm = searchTerm.replaceAll('#', '').trim();
@@ -1889,6 +1891,8 @@ function applyFilters(immediate = false, preserveViewport = false) {
                 }
             }
 
+            if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+
             // 3. Сортировка
             const now = Date.now();
             const isItemTop = (item) => item.is_top === true && item.top_until && Date.parse(item.top_until) > now;
@@ -1917,6 +1921,8 @@ function applyFilters(immediate = false, preserveViewport = false) {
                     ? window.toSorted(window.filteredItems, sortDateFn)
                     : (window.filteredItems.toSorted ? window.filteredItems.toSorted(sortDateFn) : [...window.filteredItems].sort(sortDateFn));
             }
+
+            if (typeof window.yieldToMain === 'function') await window.yieldToMain();
             
             // СБРОС И РЕНДЕР (при preserveViewport сохраняем текущую страницу на ПК и число карточек на моб)
             const prevRenderedCount = window.renderedCount || 0;

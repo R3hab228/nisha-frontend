@@ -2,6 +2,27 @@
 // NISHA CORE HELPERS (Утилиты, тосты, вибрация)
 // ==========================================
 
+async function yieldToMain() {
+    if (typeof globalThis.scheduler !== 'undefined' && typeof globalThis.scheduler.yield === 'function') {
+        return globalThis.scheduler.yield();
+    }
+    return new Promise(resolve => {
+        if (typeof MessageChannel !== 'undefined') {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = () => resolve();
+            channel.port2.postMessage(null);
+        } else {
+            setTimeout(resolve, 0);
+        }
+    });
+}
+window.yieldToMain = yieldToMain;
+
+function isSchedulerYieldSupported() {
+    return typeof globalThis.scheduler !== 'undefined' && typeof globalThis.scheduler.yield === 'function';
+}
+window.isSchedulerYieldSupported = isSchedulerYieldSupported;
+
 // --- UNIFIED CDN URL REWRITER ---
 function toCDN(url) {
     if (!url || typeof url !== 'string') return '';

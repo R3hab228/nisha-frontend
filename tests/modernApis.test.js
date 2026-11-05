@@ -4019,5 +4019,52 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(notFoundHtml).toContain('@supports (color: oklch(0% 0 0))');
             expect(notFoundHtml).toContain('@media (color-gamut: p3)');
         });
+
+        it('56. CSS @starting-style, transition-behavior: allow-discrete, and Cooperative Task Scheduling scheduler.yield()', async () => {
+            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
+            const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+
+            // 1. CSS Level 2 Discrete Transitions and @starting-style
+            expect(cssCode).toContain('@supports (transition-behavior: allow-discrete)');
+            expect(cssCode).toContain('display 0.28s allow-discrete');
+            expect(cssCode).toContain('@starting-style');
+            expect(cssCode).toContain('.modal-overlay.is-open');
+            expect(cssCode).toContain('.toast');
+            expect(cssCode).toContain('.cart-dropdown.active');
+
+            // 2. Cooperative scheduling yieldToMain and isSchedulerYieldSupported in facades
+            expect(helpersCode).toContain('export async function yieldToMain()');
+            expect(helpersCode).toContain('export function isSchedulerYieldSupported()');
+            expect(coreHelpersCode).toContain('async function yieldToMain()');
+            expect(coreHelpersCode).toContain('window.yieldToMain = yieldToMain');
+
+            // 3. Native scheduler.yield execution & MessageChannel fallback
+            const { yieldToMain, isSchedulerYieldSupported } = await import('../src/modules/helpers.js');
+            expect(typeof yieldToMain).toBe('function');
+            expect(typeof isSchedulerYieldSupported).toBe('function');
+
+            // Test execution completes without throwing
+            const start = performance.now();
+            await yieldToMain();
+            expect(performance.now() - start).toBeGreaterThanOrEqual(0);
+
+            // Test with mock scheduler.yield
+            let nativeSchedulerYieldCalled = false;
+            globalThis.scheduler = {
+                yield: () => {
+                    nativeSchedulerYieldCalled = true;
+                    return Promise.resolve();
+                }
+            };
+            expect(isSchedulerYieldSupported()).toBe(true);
+            await yieldToMain();
+            expect(nativeSchedulerYieldCalled).toBe(true);
+            delete globalThis.scheduler;
+
+            // 4. Catalog applyFilters leverages cooperative yielding to prevent INP latency spikes
+            expect(catalogCode).toContain("if (typeof window.yieldToMain === 'function') await window.yieldToMain()");
+        });
     });
 });

@@ -18,6 +18,34 @@ export function isSpeculationRulesSupported() {
            HTMLScriptElement.supports('speculationrules');
 }
 
+/**
+ * Cooperative Task Scheduling (scheduler.yield() with fallback)
+ * Yields execution to the browser main thread to process high-priority input, touch, and animations (Zero INP)
+ * @returns {Promise<void>}
+ */
+export async function yieldToMain() {
+    if (typeof globalThis.scheduler !== 'undefined' && typeof globalThis.scheduler.yield === 'function') {
+        return globalThis.scheduler.yield();
+    }
+    return new Promise(resolve => {
+        if (typeof MessageChannel !== 'undefined') {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = () => resolve();
+            channel.port2.postMessage(null);
+        } else {
+            setTimeout(resolve, 0);
+        }
+    });
+}
+
+/**
+ * Checks if browser natively supports scheduler.yield()
+ * @returns {boolean}
+ */
+export function isSchedulerYieldSupported() {
+    return typeof globalThis.scheduler !== 'undefined' && typeof globalThis.scheduler.yield === 'function';
+}
+
 export function toCDN(url) {
     if (typeof window !== 'undefined' && typeof window.toCDN === 'function') {
         return window.toCDN(url);
