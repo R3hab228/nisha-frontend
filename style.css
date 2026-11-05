@@ -3623,5 +3623,6 @@ html.pwa-standalone body {
         grid-row: span 3;
         display: grid;
         grid-template-rows: subgrid;
+        row-gap: 0;
     }
 }

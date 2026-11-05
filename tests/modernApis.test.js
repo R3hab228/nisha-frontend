@@ -4072,7 +4072,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 1. CSS Subgrid on items-grid and item-card
             expect(cssCode).toContain('@supports (grid-template-rows: subgrid)');
             expect(cssCode).toContain('.items-grid {\n        grid-auto-rows: auto 1fr auto;\n    }');
-            expect(cssCode).toContain('.item-card:not(.skeleton-card) {\n        grid-row: span 3;\n        display: grid;\n        grid-template-rows: subgrid;\n    }');
+            expect(cssCode).toContain('.item-card:not(.skeleton-card) {\n        grid-row: span 3;\n        display: grid;\n        grid-template-rows: subgrid;\n        row-gap: 0;\n    }');
 
             // 2. Compression Streams API facade exports
             expect(helpersCode).toContain('export function isCompressionStreamSupported()');
