@@ -818,10 +818,19 @@ async function loadAllItems() {
     if (typeof initCatalogRealtimeSubscription === 'function') initCatalogRealtimeSubscription();
 
     // 2. ФОНОВЫЙ ЗАПРОС К БД (Снимаем лимит, берем 1000 товаров, включая description)
-    const { data, error } = await sb.from('items')
+    let { data, error } = await sb.from('items')
         .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price')
         .limit(1000)
         .order('created_at', { ascending: false });
+
+    if (error && (error.message?.includes('is_bargain') || error.message?.includes('min_bargain_price') || error.code === '42703' || error.code === 'PGRST204')) {
+        const retryRes = await sb.from('items')
+            .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable')
+            .limit(1000)
+            .order('created_at', { ascending: false });
+        data = retryRes.data;
+        error = retryRes.error;
+    }
     
     if (error) { 
         if (window.allItems.length === 0) {
@@ -1369,9 +1378,15 @@ async function syncCriticalStatuses() {
                 ? Array.from(window.setDifference(freshIdSet, currentIdSet))
                 : data.filter(d => d && !currentIdSet.has(d.id)).map(d => d.id));
         if (newIds.length > 0) {
-            const { data: fullNewItems } = await sb.from('items')
-                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable')
+            let { data: fullNewItems, error: newItemsErr } = await sb.from('items')
+                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price')
                 .in('id', newIds);
+            if (newItemsErr && (newItemsErr.message?.includes('is_bargain') || newItemsErr.message?.includes('min_bargain_price') || newItemsErr.code === '42703' || newItemsErr.code === 'PGRST204')) {
+                const retryNew = await sb.from('items')
+                    .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable')
+                    .in('id', newIds);
+                fullNewItems = retryNew.data;
+            }
 
             if (fullNewItems && fullNewItems.length > 0) {
                 window._notifiedItemIds = window._notifiedItemIds || new Set();
@@ -3046,7 +3061,7 @@ window.showBadgeInfo = function(type) {
         text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.fast_text', { defaultValue: 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.' }) : 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
     } else if (type === 'bargain') {
         title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.bargain_title', { defaultValue: 'BARGAIN_AVAILABLE.SYS' }) : 'BARGAIN_AVAILABLE.SYS';
-        const descMatch = activeItem && typeof activeItem.description === 'string' && activeItem.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+        const descMatch = activeItem && typeof activeItem.description === 'string' && activeItem.description.match(/\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i);
         const minVal = activeItem?.min_bargain_price || (descMatch ? descMatch[1] : null);
         const minText = minVal ? `<br><br>Мінімальна ціна для торгу: <b style="color:var(--accent-green);">${minVal} грн</b>` : '';
         const baseBargainText = (typeof i18next !== 'undefined')

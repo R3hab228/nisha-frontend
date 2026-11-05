@@ -147,13 +147,20 @@ function prewarmItemDetails(itemId) {
         try {
             const sb = typeof getSupabase === "function" ? getSupabase() : (window.supabaseClient || null);
             if (!sb) return null;
-            let { data } = await sb.from("items")
+            let { data, error: itemErr } = await sb.from("items")
                 .select("id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price")
                 .eq("id", itemId)
                 .limit(1);
+            if (itemErr && (itemErr.message?.includes('is_bargain') || itemErr.message?.includes('min_bargain_price') || itemErr.code === '42703' || itemErr.code === 'PGRST204')) {
+                const retryRes = await sb.from("items")
+                    .select("id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable")
+                    .eq("id", itemId)
+                    .limit(1);
+                data = retryRes.data;
+            }
             if (data && data.length > 0) return data.at(0);
             let { data: archData } = await sb.from("archived_items")
-                .select("id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price")
+                .select("id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable")
                 .eq("id", itemId)
                 .limit(1);
             if (archData && archData.length > 0) return archData.at(0);
@@ -288,7 +295,11 @@ async function openProductModalById(itemId) {
     const sb = getSupabase();
     if (sb) {
         try {
-            let { data } = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price').eq('id', itemId).limit(1);
+            let { data, error: itemErr } = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price').eq('id', itemId).limit(1);
+            if (itemErr && (itemErr.message?.includes('is_bargain') || itemErr.message?.includes('min_bargain_price') || itemErr.code === '42703' || itemErr.code === 'PGRST204')) {
+                const retryRes = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
+                data = retryRes.data;
+            }
             let fullItem = null;
             if (data && data.length > 0) {
                 fullItem = data.at(0);
@@ -308,8 +319,8 @@ async function openProductModalById(itemId) {
             if (fullItem && active && active.id === fullItem.id) {
                 const hadNoImages = (!active.images || active.images.length === 0) && (!active.thumbnails || active.thumbnails.length === 0);
                 const hasFullImages = (fullItem.images && fullItem.images.length > 0) || (fullItem.thumbnails && fullItem.thumbnails.length > 0);
-                const hadBargain = Boolean(active.is_bargain || active.min_bargain_price || (typeof active.description === 'string' && /\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i.test(active.description)));
-                const nowHasBargain = Boolean(fullItem.is_bargain || fullItem.min_bargain_price || (typeof fullItem.description === 'string' && /\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i.test(fullItem.description)));
+                const hadBargain = Boolean(active.is_bargain || active.min_bargain_price || (typeof active.description === 'string' && /\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i.test(active.description)));
+                const nowHasBargain = Boolean(fullItem.is_bargain || fullItem.min_bargain_price || (typeof fullItem.description === 'string' && /\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i.test(fullItem.description)));
                 
                 currentOpenedItem = fullItem;
                 window.currentOpenedItem = fullItem;
@@ -571,9 +582,9 @@ function openProductModal(item) {
 
     if (offerWrapper || offerPriceBtn) {
         const isDropItem = item && (item.is_drop === true || (item.tags && item.tags.map(t => t.toLowerCase()).includes('drop')));
-        const descMatch = item && (typeof item.description === 'string') && item.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+        const descMatch = item && (typeof item.description === 'string') && item.description.match(/\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i);
         const itemMinBargain = item ? (item.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null)) : null;
-        const hasBargain = Boolean(item && (item.is_bargain || itemMinBargain));
+        const hasBargain = Boolean(item && (item.is_bargain || itemMinBargain || (typeof item.description === 'string' && /\[ТОРГ/i.test(item.description))));
 
         if (item && item.status === 'sold') {
             if (offerWrapper) offerWrapper.style.display = 'none';
@@ -969,9 +980,9 @@ function openProductModal(item) {
 
         const secureSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>`;
 
-        const descMatch = (typeof item.description === 'string') && item.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+        const descMatch = (typeof item.description === 'string') && item.description.match(/\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i);
         const itemMinBargain = item.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
-        const hasBargain = Boolean(item.is_bargain || itemMinBargain);
+        const hasBargain = Boolean(item.is_bargain || itemMinBargain || (typeof item.description === 'string' && /\[ТОРГ/i.test(item.description)));
 
         let deliveryOrBargainBadgeHTML = '';
         if (hasBargain) {
@@ -1989,9 +2000,9 @@ async function submitBargainOffer() {
         return showToast(invalidMsg, 'error');
     }
 
-    const descMatch = (typeof activeItem.description === 'string') && activeItem.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+    const descMatch = (typeof activeItem.description === 'string') && activeItem.description.match(/\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i);
     const itemMinBargain = activeItem.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
-    const hasBargain = Boolean(activeItem.is_bargain || itemMinBargain);
+    const hasBargain = Boolean(activeItem.is_bargain || itemMinBargain || (typeof activeItem.description === 'string' && /\[ТОРГ/i.test(activeItem.description)));
     if (!hasBargain) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const disabledMsg = ((typeof i18next !== 'undefined' && i18next.t('product.offer_disabled')) || 'Для цього товару торг не передбачено!');
@@ -2197,9 +2208,9 @@ async function submitInlineBargainOffer() {
         return;
     }
 
-    const descMatch = (typeof activeItem.description === 'string') && activeItem.description.match(/\[ТОРГ:?\s*(?:від|от\s*)?(\d+)/i);
+    const descMatch = (typeof activeItem.description === 'string') && activeItem.description.match(/\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i);
     const itemMinBargain = activeItem.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
-    const hasBargain = Boolean(activeItem.is_bargain || itemMinBargain);
+    const hasBargain = Boolean(activeItem.is_bargain || itemMinBargain || (typeof activeItem.description === 'string' && /\[ТОРГ/i.test(activeItem.description)));
     if (!hasBargain) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const disabledMsg = t('product.offer_disabled', 'Для цього товару торг не передбачено!');
