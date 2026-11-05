@@ -60,4 +60,22 @@ describe('PWA Quick Action Cart Drawer, FAB Propose Hiding & Notification Permis
             expect(styleCss).toMatch(/footer:not\(\.driver-popover-footer\)\s*\{[^}]*padding:[^;]*calc\(120px \+ env\(safe-area-inset-bottom/);
         });
     });
+    describe('4. Desktop Cart Dropdown Scroll Isolation (Overscroll Containment & Lenis Prevention)', () => {
+        it('isolates scroll inside cart dropdown and cart dropdown list using overscroll-behavior: contain', () => {
+            expect(styleCss).toMatch(/\.cart-dropdown\s*\{[^}]*overscroll-behavior:\s*contain/);
+            expect(styleCss).toMatch(/\.cart-dropdown-list\s*\{[^}]*overscroll-behavior:\s*contain/);
+        });
+
+        it('index.html equips cartDropdown and cartDropdownList with data-lenis-prevent and data-no-pull', () => {
+            const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf-8');
+            expect(indexHtml).toContain('id=cartDropdown class="cart-dropdown modal-window-style" data-lenis-prevent data-no-pull');
+            expect(indexHtml).toContain('id=cartDropdownList class="cart-dropdown-list no-pull" data-lenis-prevent data-no-pull');
+        });
+
+        it('cart.js implements initCartScrollIsolation with wheel boundary traps to prevent page scrolling', () => {
+            expect(cartJs).toContain('function initCartScrollIsolation()');
+            expect(cartJs).toContain("el.setAttribute('data-lenis-prevent', 'true')");
+            expect(cartJs).toContain('window.initCartScrollIsolation = initCartScrollIsolation');
+        });
+    });
 });

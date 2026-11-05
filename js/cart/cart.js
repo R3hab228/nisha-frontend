@@ -563,8 +563,67 @@ function clearDropdownInlineStyles(el) {
 }
 window.clearDropdownInlineStyles = clearDropdownInlineStyles;
 
+// Изоляция скролла списка корзины на ПК: скроллится только сам список корзины, а не весь сайт
+function initCartScrollIsolation() {
+    if (typeof document === 'undefined') return;
+    const dropdown = document.getElementById('cartDropdown');
+    const list = document.getElementById('cartDropdownList');
+    if (!dropdown && !list) return;
+
+    [dropdown, list].forEach(el => {
+        if (!el) return;
+        if (typeof el.setAttribute === 'function') {
+            el.setAttribute('data-lenis-prevent', 'true');
+            el.setAttribute('data-no-pull', 'true');
+        }
+        if (el.classList && !el.classList.contains('lenis-prevent')) {
+            el.classList.add('lenis-prevent', 'no-pull');
+        }
+    });
+
+    if (list && !list._cartScrollIsoBound) {
+        list._cartScrollIsoBound = true;
+        list.addEventListener('wheel', (e) => {
+            if (typeof window !== 'undefined' && window.innerWidth <= 900) return;
+            const scrollTop = list.scrollTop;
+            const scrollHeight = list.scrollHeight;
+            const clientHeight = list.clientHeight;
+            const deltaY = e.deltaY;
+
+            if (scrollHeight > clientHeight) {
+                const isAtTop = scrollTop <= 0 && deltaY < 0;
+                const isAtBottom = (scrollTop + clientHeight >= scrollHeight - 1) && deltaY > 0;
+                if (isAtTop || isAtBottom) {
+                    e.preventDefault();
+                }
+            } else {
+                // Если мало товаров и скролла внутри списка нет — блокируем прокрутку сайта под курсором в корзине
+                e.preventDefault();
+            }
+            e.stopPropagation();
+        }, { passive: false });
+    }
+
+    if (dropdown && !dropdown._cartScrollIsoBound) {
+        dropdown._cartScrollIsoBound = true;
+        dropdown.addEventListener('wheel', (e) => {
+            if (typeof window !== 'undefined' && window.innerWidth <= 900) return;
+            if (list && list.scrollHeight > list.clientHeight && !e.target.closest('#cartDropdownList')) {
+                list.scrollTop += e.deltaY;
+                e.preventDefault();
+                e.stopPropagation();
+            } else if (!e.target.closest('#cartDropdownList')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, { passive: false });
+    }
+}
+window.initCartScrollIsolation = initCartScrollIsolation;
+
 // Гарантия обновления содержимого корзины при наведении курсора на ПК
 function initCartHoverDesktop() {
+    if (typeof initCartScrollIsolation === 'function') initCartScrollIsolation();
     if (typeof document === 'undefined') return;
     const infoWrapper = document.getElementById('cartInfoWrapper');
     if (!infoWrapper || infoWrapper._cartHoverBound) return;
@@ -3458,8 +3517,12 @@ window.openCart = function() {
 
 if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCartHoverDesktop);
+        document.addEventListener('DOMContentLoaded', () => {
+            initCartHoverDesktop();
+            initCartScrollIsolation();
+        });
     } else {
         initCartHoverDesktop();
+        initCartScrollIsolation();
     }
 }
