@@ -71,9 +71,9 @@ body {
 header:not(.driver-popover-title) { background: linear-gradient(to bottom, #002244, #000a1a); border-bottom: 2px solid var(--border-light); border-style: inset; }
 .header-top { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; }
 h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em; margin: 0; text-shadow: 2px 2px 0px #000; }
-.typewriter { display: inline-block; overflow: hidden; white-space: nowrap; border-right: 12px solid var(--accent-green); animation: typing 1.2s steps(20, end), blink-caret 0.75s step-end infinite; max-width: 100%; vertical-align: bottom; }
+.typewriter { display: inline-block; overflow: hidden; white-space: nowrap; border-right: 8px solid var(--accent-green); animation: typing 0.65s cubic-bezier(0.2, 0.8, 0.25, 1) forwards, blink-caret 0.75s step-end infinite; max-width: 100%; vertical-align: bottom; }
 
-@keyframes typing { from { max-width: 0; } to { max-width: 100%; } }
+@keyframes typing { 0% { max-width: 0; } 85% { max-width: 25ch; } 100% { max-width: 100%; } }
 @keyframes blink-caret { from, to { border-color: transparent; } 50% { border-color: var(--accent-green); } }
 .live-viewers-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,0,0,0.1); border: 1px solid var(--accent-red); color: var(--accent-red); font-family: monospace; font-size: 11px; padding: 4px 8px; margin-bottom: 10px; border-radius: 3px; }
 .pulsing-dot { width: 6px; height: 6px; background: var(--accent-red); border-radius: 50%; animation: pulse-red 1.5s infinite; }
@@ -657,16 +657,16 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .legal-info a { color: #888; text-decoration: underline; margin: 0 10px; cursor: pointer;}
 .legal-info a:hover { color: var(--text-main); }
 
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards; will-change: opacity, backdrop-filter; contain: layout paint; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards; will-change: opacity, backdrop-filter; contain: layout paint; }
 /* Ленивый рендеринг DOM: закрытые модалки полностью исключаются из дерева рендеринга браузера */
 .modal-overlay:not(.is-open):not([style*="display: flex"]):not([style*="display: block"]) { content-visibility: hidden; contain-intrinsic-size: 0 0; }
 .modal-overlay.is-open,
 .modal-overlay[style*="display: flex"],
 .modal-overlay[style*="display: block"] { content-visibility: visible !important; }
-.modal-window { background-color: #111; border: 2px outset var(--border-light); max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.8); overscroll-behavior: contain; animation: modalPopDesktop 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards; will-change: transform, opacity; transform: translateZ(0); contain: layout style; }
+.modal-window { background-color: #111; border: 2px outset var(--border-light); max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.8); overscroll-behavior: contain; animation: modalPopDesktop 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards; will-change: transform, opacity; transform: translateZ(0); contain: layout style; }
 
 @keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(3px); } }
-@keyframes modalPopDesktop { from { opacity: 0; transform: scale(0.97) translateY(8px) translateZ(0); } to { opacity: 1; transform: scale(1) translateY(0) translateZ(0); } }
+@keyframes modalPopDesktop { from { opacity: 0; transform: scale(0.96) translateY(12px) translateZ(0); } to { opacity: 1; transform: scale(1) translateY(0) translateZ(0); } }
 @keyframes slideUpMobile { from { opacity: 0; transform: translateY(32px) translateZ(0); } to { opacity: 1; transform: translateY(0) translateZ(0); } }
 @keyframes fadeOutOverlay { from { opacity: 1; } to { opacity: 0; } }
 @keyframes modalPopOutDesktop { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.97) translateY(8px); } }
@@ -674,10 +674,10 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 
 .modal-overlay.closing {
     pointer-events: auto !important;
-    animation: fadeOutOverlay 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    animation: fadeOutOverlay 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 .modal-overlay.closing .modal-window {
-    animation: modalPopOutDesktop 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    animation: modalPopOutDesktop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 .modal-overlay.closing * {
     pointer-events: none !important;
@@ -2365,7 +2365,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         overflow-y: auto !important; -webkit-overflow-scrolling: touch !important;
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
-        animation: slideUpMobile 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: slideUpMobile 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         will-change: transform; overscroll-behavior-y: none;
         padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
         box-sizing: border-box;
@@ -2383,7 +2383,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         box-sizing: border-box !important;
     }
     .modal-overlay.closing .modal-window {
-        animation: slideDownMobile 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        animation: slideDownMobile 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
     #ordersModal .modal-window {
         width: 100% !important;

@@ -374,7 +374,7 @@ function executeCloseModal(id, e) {
         } else {
             setTimeout(deferBackgroundTasks, 300);
         }
-    }, 130);
+    }, 190);
 }
 window.executeCloseModal = executeCloseModal;
 
