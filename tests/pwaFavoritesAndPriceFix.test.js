@@ -152,4 +152,74 @@ describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixe
             expect(localesEn.remove_item).toBe('Remove from history');
         });
     });
+
+    describe('5. Mobile Propose Form Viewport Stability & Anti-Jitter Keyboard Adaptation', () => {
+        const windowsJs = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf-8');
+
+        it('sets stable full-height flex column layout on mobile for #proposeModal to prevent jumping', () => {
+            expect(styleCss).toContain('#proposeModal .modal-window');
+            expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*height:\s*85dvh\s*!important/);
+            expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*display:\s*flex\s*!important/);
+            expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*flex-direction:\s*column\s*!important/);
+            expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*overflow:\s*hidden\s*!important/);
+        });
+
+        it('makes #proposeModal .form-layout smoothly scrollable with overscroll containment', () => {
+            expect(styleCss).toContain('#proposeModal .form-layout');
+            expect(styleCss).toMatch(/#proposeModal\s+\.form-layout\s*\{[^}]*flex:\s*1\s+1\s+auto\s*!important/);
+            expect(styleCss).toMatch(/#proposeModal\s+\.form-layout\s*\{[^}]*overflow-y:\s*auto\s*!important/);
+            expect(styleCss).toMatch(/#proposeModal\s+\.form-layout\s*\{[^}]*overscroll-behavior-y:\s*contain/);
+        });
+
+        it('disables animation transitions during keyboard-open to eliminate delay bouncing', () => {
+            expect(styleCss).toMatch(/html\.keyboard-open\s+\.modal-overlay\s*\{[^}]*transition:\s*none\s*!important/);
+            expect(styleCss).toMatch(/html\.keyboard-open\s+\.modal-window\s*\{[^}]*transition:\s*none\s*!important/);
+            expect(styleCss).toMatch(/html\.keyboard-open\s+#proposeModal\s+\.modal-window\s*\{[^}]*height:\s*100%\s*!important/);
+        });
+
+        it('applies scroll-margin to inputs so focused fields never hide behind sticky modal header', () => {
+            expect(styleCss).toMatch(/\.form-input[^}]*scroll-margin-top:\s*65px\s*!important/);
+            expect(styleCss).toMatch(/\.form-input[^}]*scroll-margin-bottom:\s*25px\s*!important/);
+        });
+
+        it('defines ensureFieldVisibleInModal in windows.js and skips scrolling if element is already visible', async () => {
+            globalThis.window = globalThis.window || globalThis;
+            if (typeof globalThis.window.addEventListener !== 'function') globalThis.window.addEventListener = vi.fn();
+            await import('../js/ui/windows.js');
+            expect(typeof window.ensureFieldVisibleInModal).toBe('function');
+
+            // Test element already within visible area
+            const mockScrollContainer = {
+                scrollTop: 100,
+                scrollTo: vi.fn(),
+                getBoundingClientRect: () => ({ top: 0, bottom: 400 })
+            };
+            const mockInputInView = {
+                id: 'propName',
+                closest: (sel) => (sel === '.form-layout' ? mockScrollContainer : null),
+                getBoundingClientRect: () => ({ top: 120, bottom: 160 })
+            };
+
+            window.innerWidth = 390;
+            window.ensureFieldVisibleInModal(mockInputInView);
+
+            // Should NOT scroll when input is already comfortably visible
+            expect(mockScrollContainer.scrollTo).not.toHaveBeenCalled();
+            expect(mockScrollContainer.scrollTop).toBe(100);
+
+            // Test element partially below viewport (behind keyboard)
+            const mockInputBelow = {
+                id: 'propPrice',
+                closest: (sel) => (sel === '.form-layout' ? mockScrollContainer : null),
+                getBoundingClientRect: () => ({ top: 380, bottom: 420 })
+            };
+
+            window.ensureFieldVisibleInModal(mockInputBelow);
+            // Delta should scroll container down to reveal input
+            expect(mockScrollContainer.scrollTo).toHaveBeenCalledWith({
+                top: 100 + (420 - (400 - 24)),
+                behavior: 'smooth'
+            });
+        });
+    });
 });

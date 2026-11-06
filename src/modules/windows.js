@@ -165,3 +165,23 @@ export function showConfirmTerminalModal(title, text, onConfirm = null, onCancel
         return window.showConfirmTerminalModal(title, text, onConfirm, onCancel);
     }
 }
+
+
+/**
+ * Ensures active input field remains visible without bounce or layout jump
+ * @param {HTMLElement} targetEl
+ */
+export function ensureFieldVisibleInModal(targetEl) {
+    if (typeof window !== 'undefined' && typeof window.ensureFieldVisibleInModal === 'function') {
+        return window.ensureFieldVisibleInModal(targetEl);
+    }
+}
+
+/**
+ * Initializes mobile keyboard viewport adaptation
+ */
+export function initMobileKeyboardViewport() {
+    if (typeof window !== 'undefined' && typeof window.initMobileKeyboardViewport === 'function') {
+        return window.initMobileKeyboardViewport();
+    }
+}

@@ -533,14 +533,68 @@ function initMobileSwipe() {
 window.initMobileSwipe = initMobileSwipe;
 
 // 5b. Адаптация модальных окон и выпадающих списков под мобильную клавиатуру (VisualViewport API)
+// Плавное удержание активного поля в комфортной зоне видимости без подскакиваний и рывков
+function ensureFieldVisibleInModal(targetEl) {
+    if (!targetEl || typeof window === 'undefined' || window.innerWidth > 900) return;
+
+    // Если это поле Новой Почты (город/отделение) — сохраняем совместимость с NP-скроллером
+    if (targetEl.id === 'orderCity' || targetEl.id === 'orderBranch' || (targetEl.classList && targetEl.classList.contains('np-input'))) {
+        if (typeof window.scrollNPFieldIntoModalView === 'function') {
+            window.scrollNPFieldIntoModalView(targetEl);
+            return;
+        }
+    }
+
+    const scrollContainer = (targetEl.closest && (targetEl.closest('.form-layout') || targetEl.closest('.modal-window'))) || null;
+    if (!scrollContainer) {
+        try { targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
+        return;
+    }
+
+    const cRect = scrollContainer.getBoundingClientRect();
+    const elRect = targetEl.getBoundingClientRect();
+    const topSafe = 56; // Высота липкой шапки .modal-header (48px) + безопасный отступ (8px)
+    const botSafe = 24; // Безопасный отступ над клавиатурой
+
+    const isAbove = elRect.top < (cRect.top + topSafe);
+    const isBelow = elRect.bottom > (cRect.bottom - botSafe);
+
+    // Скроллим ТОЛЬКО если поле действительно перекрыто шапкой или клавиатурой.
+    // Если поле уже находится в зоне видимости — не дергаем и не подскакиваем!
+    if (isAbove) {
+        const delta = (cRect.top + topSafe) - elRect.top;
+        if (typeof scrollContainer.scrollTo === 'function') {
+            scrollContainer.scrollTo({
+                top: Math.max(0, scrollContainer.scrollTop - delta),
+                behavior: 'smooth'
+            });
+        } else {
+            scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop - delta);
+        }
+    } else if (isBelow) {
+        const delta = elRect.bottom - (cRect.bottom - botSafe);
+        if (typeof scrollContainer.scrollTo === 'function') {
+            scrollContainer.scrollTo({
+                top: scrollContainer.scrollTop + delta,
+                behavior: 'smooth'
+            });
+        } else {
+            scrollContainer.scrollTop = scrollContainer.scrollTop + delta;
+        }
+    }
+}
+window.ensureFieldVisibleInModal = ensureFieldVisibleInModal;
+if (typeof globalThis !== 'undefined') globalThis.ensureFieldVisibleInModal = ensureFieldVisibleInModal;
+
 function initMobileKeyboardViewport() {
     if (typeof window === 'undefined' || typeof document === 'undefined' || window._mobileKbBound) return;
     window._mobileKbBound = true;
 
     const root = document.documentElement;
     let baselineHeight = window.innerHeight || 0;
+    let scrollDebounceTimer = null;
 
-    const updateViewportMetrics = () => {
+    const updateViewportMetrics = (source = '') => {
         if (window.innerWidth > 900) {
             if (root && root.classList) root.classList.remove('keyboard-open');
             return;
@@ -563,34 +617,39 @@ function initMobileKeyboardViewport() {
             root.classList.toggle('keyboard-open', isKeyboardOpen);
         }
 
-        if (isKeyboardOpen && activeEl) {
-            if (typeof window.scrollNPFieldIntoModalView === 'function') {
-                window.scrollNPFieldIntoModalView(activeEl);
-            } else if (typeof activeEl.scrollIntoView === 'function') {
-                try { activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
-            }
+        // При скролле пальцем (source === 'scroll') НЕ вызываем авто-скролл, чтобы не блокировать и не дёргать пользователя
+        if (isKeyboardOpen && activeEl && isInputFocused && source !== 'scroll') {
+            if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
+            scrollDebounceTimer = setTimeout(() => {
+                scrollDebounceTimer = null;
+                if (document.activeElement === activeEl) {
+                    ensureFieldVisibleInModal(activeEl);
+                }
+            }, source === 'focusin' ? 120 : 60);
         }
     };
 
     if (window.visualViewport && typeof window.visualViewport.addEventListener === 'function') {
-        window.visualViewport.addEventListener('resize', updateViewportMetrics);
-        window.visualViewport.addEventListener('scroll', updateViewportMetrics);
+        window.visualViewport.addEventListener('resize', () => updateViewportMetrics('resize'));
+        window.visualViewport.addEventListener('scroll', () => updateViewportMetrics('scroll'));
     }
-    window.addEventListener('resize', updateViewportMetrics);
+    window.addEventListener('resize', () => updateViewportMetrics('resize'));
 
     if (typeof document.addEventListener === 'function') {
         document.addEventListener('focusin', (e) => {
             if (window.innerWidth > 900) return;
             const t = e && e.target;
             if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA')) return;
-            setTimeout(updateViewportMetrics, 60);
-            setTimeout(updateViewportMetrics, 260);
+            updateViewportMetrics('focusin');
         });
         document.addEventListener('focusout', () => {
             if (window.innerWidth > 900) return;
-            setTimeout(updateViewportMetrics, 60);
-            setTimeout(updateViewportMetrics, 200);
-            setTimeout(updateViewportMetrics, 350);
+            if (scrollDebounceTimer) {
+                clearTimeout(scrollDebounceTimer);
+                scrollDebounceTimer = null;
+            }
+            setTimeout(() => updateViewportMetrics('focusout'), 60);
+            setTimeout(() => updateViewportMetrics('focusout'), 200);
             setTimeout(() => {
                 const activeEl = document.activeElement;
                 const stillFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
@@ -619,6 +678,7 @@ function initWindowOverlayListeners() {
 }
 
 // 7. Универсальное закрытие окон и оверлеев по клавише Escape
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         // 1. Закрытие терминальных окон подтверждения или алертов
@@ -658,8 +718,13 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Автозапуск при готовности DOM
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWindowOverlayListeners);
-} else {
-    initWindowOverlayListeners();
+}
+
+// Автозапуск при готовности DOM
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWindowOverlayListeners);
+    } else {
+        initWindowOverlayListeners();
+    }
 }
