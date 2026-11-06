@@ -1547,8 +1547,17 @@ function showContactInput(type, isModal = false) {
     if (!input) return;
 
     if (type === 'phone') {
-        if (typeof IMask !== 'undefined' && !input._imask) {
-            input._imask = IMask(input, { mask: '+{380} (00) 000-00-00' });
+        const attachMask = (MaskLib) => {
+            if (MaskLib && input && !input._imask) {
+                input._imask = MaskLib(input, { mask: '+{380} (00) 000-00-00' });
+            }
+        };
+        if (typeof IMask === 'function' && !IMask._isStub) {
+            attachMask(IMask);
+        } else if (typeof window.loadIMask === 'function') {
+            window.loadIMask().then(attachMask);
+        } else if (typeof IMask !== 'undefined') {
+            attachMask(IMask);
         }
         input.focus();
         input.onkeydown = (e) => {

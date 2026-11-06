@@ -83,6 +83,9 @@ const preloadSecondaryModules = () => {
     loadReviewsModule();
     loadChatModule();
     loadOrdersModule();
+    if (typeof window.loadIMask === 'function') {
+        window.loadIMask().catch(() => {});
+    }
 };
 
 if ('requestIdleCallback' in window) {

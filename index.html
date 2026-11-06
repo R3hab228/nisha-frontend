@@ -104,7 +104,25 @@
 <link rel=apple-touch-icon sizes=180x180 href="/icon-512.png?v=6">
 <link rel=icon type=image/png sizes=32x32 href="/icon.png?v=6">
 <link rel=manifest href="/manifest.json?v=5">
-<link rel=preload href=/locales/ru.json as=fetch crossorigin=anonymous>
+<!-- Smart adaptive locale preloading (UA default / saved preference) -->
+<script>
+(function(){
+  try {
+    var l = (window.localStorage && (localStorage.getItem('nisha_lang') || localStorage.getItem('i18nextLng'))) || '';
+    if (!l) {
+      var nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+      l = nav.startsWith('uk') ? 'ua' : (nav.startsWith('en') ? 'en' : 'ru');
+    }
+    if (l !== 'ua' && l !== 'ru' && l !== 'en') l = 'ua';
+    var link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'fetch';
+    link.href = '/locales/' + l + '.json';
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  } catch(e) {}
+})();
+</script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 
 <!-- Microsoft Clarity (Отложенная загрузка на 3 секунды без фризов) -->
@@ -124,14 +142,33 @@
         setTimeout(initClarityDeferred, 4500);
     }
 </script>
-<!-- TikTok Pixel Code Start -->
+<!-- TikTok Pixel Code Start (Deferred for non-blocking FCP/LCP) -->
 <script>
 !function (w, d, t) {
   w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
 var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
 ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-  ttq.load('DB0HAT3C77U5HCCK4S10');
-  ttq.page();
+  
+  function initTikTokDeferred() {
+    if (w._tiktokLoaded) return;
+    w._tiktokLoaded = true;
+    ttq.load('DB0HAT3C77U5HCCK4S10');
+    ttq.page();
+  }
+  if ('requestIdleCallback' in w) {
+    setTimeout(function() { requestIdleCallback(initTikTokDeferred, { timeout: 2000 }); }, 2500);
+  } else {
+    setTimeout(initTikTokDeferred, 2500);
+  }
+  function onFirstInteraction() {
+    initTikTokDeferred();
+    d.removeEventListener('click', onFirstInteraction);
+    d.removeEventListener('touchstart', onFirstInteraction);
+    d.removeEventListener('scroll', onFirstInteraction);
+  }
+  d.addEventListener('click', onFirstInteraction, { passive: true, once: true });
+  d.addEventListener('touchstart', onFirstInteraction, { passive: true, once: true });
+  d.addEventListener('scroll', onFirstInteraction, { passive: true, once: true });
 }(window, document, 'ttq');
 </script>
 <!-- TikTok Pixel Code End -->

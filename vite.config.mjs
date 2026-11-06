@@ -93,7 +93,8 @@ export default defineConfig({
             if (id.includes('vanilla-tilt')) return 'feature-tilt';
             if (id.includes('lenis')) return 'feature-lenis';
             if (id.includes('fuse.js')) return 'feature-fuse';
-            if (id.includes('dompurify') || id.includes('imask')) return 'vendor-libs';
+            if (id.includes('imask')) return 'feature-imask';
+            if (id.includes('dompurify')) return 'vendor-dompurify';
             return 'vendor';
           }
           if (id.includes('/js/core/') || id.includes('\\js\\core\\')) {

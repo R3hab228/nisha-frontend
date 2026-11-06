@@ -593,6 +593,9 @@ function initMobileKeyboardViewport() {
     const root = document.documentElement;
     let baselineHeight = window.innerHeight || 0;
     let scrollDebounceTimer = null;
+    let vvRafPending = false;
+    let lastVvHeight = null;
+    let lastKeyboardOpen = null;
 
     const updateViewportMetrics = (source = '') => {
         if (window.innerWidth > 900) {
@@ -610,11 +613,18 @@ function initMobileKeyboardViewport() {
         const isInputFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
         const isKeyboardOpen = kbDelta > 90 || (isInputFocused && kbDelta > 40);
 
-        if (root && root.style && typeof root.style.setProperty === 'function') {
-            root.style.setProperty('--vv-height', `${Math.round(currentH)}px`);
+        const roundedH = Math.round(currentH);
+        if (roundedH !== lastVvHeight) {
+            lastVvHeight = roundedH;
+            if (root && root.style && typeof root.style.setProperty === 'function') {
+                root.style.setProperty('--vv-height', `${roundedH}px`);
+            }
         }
-        if (root && root.classList) {
-            root.classList.toggle('keyboard-open', isKeyboardOpen);
+        if (isKeyboardOpen !== lastKeyboardOpen) {
+            lastKeyboardOpen = isKeyboardOpen;
+            if (root && root.classList) {
+                root.classList.toggle('keyboard-open', isKeyboardOpen);
+            }
         }
 
         // При скролле пальцем (source === 'scroll') НЕ вызываем авто-скролл, чтобы не блокировать и не дёргать пользователя
@@ -629,11 +639,29 @@ function initMobileKeyboardViewport() {
         }
     };
 
+    const scheduleViewportMetrics = (source = '') => {
+        if (source === 'scroll') {
+            if (vvRafPending) return;
+            vvRafPending = true;
+            if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => {
+                    vvRafPending = false;
+                    updateViewportMetrics(source);
+                });
+            } else {
+                vvRafPending = false;
+                updateViewportMetrics(source);
+            }
+        } else {
+            updateViewportMetrics(source);
+        }
+    };
+
     if (window.visualViewport && typeof window.visualViewport.addEventListener === 'function') {
-        window.visualViewport.addEventListener('resize', () => updateViewportMetrics('resize'));
-        window.visualViewport.addEventListener('scroll', () => updateViewportMetrics('scroll'));
+        window.visualViewport.addEventListener('resize', () => scheduleViewportMetrics('resize'));
+        window.visualViewport.addEventListener('scroll', () => scheduleViewportMetrics('scroll'), { passive: true });
     }
-    window.addEventListener('resize', () => updateViewportMetrics('resize'));
+    window.addEventListener('resize', () => scheduleViewportMetrics('resize'));
 
     if (typeof document.addEventListener === 'function') {
         document.addEventListener('focusin', (e) => {
