@@ -899,6 +899,9 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 }
 
 .form-layout { display: flex; flex-direction: column; gap: 15px; width: 100%; padding: 25px; box-sizing: border-box;}
+.form-layout > * { flex-shrink: 0; }
+.form-layout textarea,
+#propDesc { min-height: 85px !important; height: 85px !important; flex-shrink: 0 !important; resize: none; box-sizing: border-box; }
 .form-layout label { color: var(--accent-green); font-family: var(--font-mono); font-size: 14px; font-weight: bold; margin-bottom: -10px; text-transform: uppercase;}
 .form-input { background: #000; color: #fff; border: 2px inset var(--border-light); padding: 12px; font-family: var(--font-main); font-size: 15px; outline: none; width: 100%; box-sizing: border-box; transition: 0.2s;}
 .form-input:focus { border-color: var(--accent-green); box-shadow: 0 0 8px rgba(0, 255, 0, 0.2); }
@@ -2459,9 +2462,9 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     #proposeModal .modal-window {
         width: 100% !important;
         max-width: 100% !important;
-        height: 85dvh !important;
-        min-height: min(520px, 85dvh) !important;
-        max-height: 88dvh !important;
+        height: 92dvh !important;
+        min-height: min(560px, 92dvh) !important;
+        max-height: 94dvh !important;
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
@@ -2475,6 +2478,12 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         overscroll-behavior-y: contain;
         padding: 15px !important;
         padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    #proposeModal #propDesc,
+    #proposeModal textarea {
+        min-height: 85px !important;
+        height: 85px !important;
+        flex-shrink: 0 !important;
     }
     html.keyboard-open .modal-overlay {
         height: var(--vv-height, 100dvh) !important;

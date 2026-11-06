@@ -158,7 +158,9 @@ describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixe
 
         it('sets stable full-height flex column layout on mobile for #proposeModal to prevent jumping', () => {
             expect(styleCss).toContain('#proposeModal .modal-window');
-            expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*height:\s*85dvh\s*!important/);
+            expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*height:\s*92dvh\s*!important/);
+            expect(styleCss).toMatch(/#propDesc\s*\{[^}]*min-height:\s*85px\s*!important/);
+            expect(styleCss).toMatch(/#propDesc\s*\{[^}]*flex-shrink:\s*0\s*!important/);
             expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*display:\s*flex\s*!important/);
             expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*flex-direction:\s*column\s*!important/);
             expect(styleCss).toMatch(/#proposeModal\s+\.modal-window\s*\{[^}]*overflow:\s*hidden\s*!important/);
