@@ -265,7 +265,13 @@
         "leave_review": "Оставить отзыв",
         "review_left": "[✔] ОТЗЫВ ОСТАВЛЕН",
         "order_prefix": "ЗАКАЗ #",
-        "total_prefix": "ИТОГО:"
+        "total_prefix": "ИТОГО:",
+        "status_processing": "В ОБРАБОТКЕ",
+        "status_shipped": "ОТПРАВЛЕН",
+        "status_completed": "ЗАВЕРШЕН",
+        "status_cancelled": "ОТМЕНЕН",
+        "status_paid": "ОПЛАЧЕН",
+        "status_accepted": "ПРИНЯТ"
       },
       "reviews_modal": {
         "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",
@@ -752,7 +758,13 @@
         "leave_review": "Залишити відгук",
         "review_left": "[✔] ВІДГУК ЗАЛИШЕНО",
         "order_prefix": "ЗАМОВЛЕННЯ #",
-        "total_prefix": "РАЗОМ:"
+        "total_prefix": "РАЗОМ:",
+        "status_processing": "В ОБРОБЦІ",
+        "status_shipped": "ВІДПРАВЛЕНО",
+        "status_completed": "ЗАВЕРШЕНО",
+        "status_cancelled": "СКАСОВАНО",
+        "status_paid": "ОПЛАЧЕНО",
+        "status_accepted": "ПРИЙНЯТО"
       },
       "reviews_modal": {
         "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",
@@ -1239,7 +1251,13 @@
         "leave_review": "Leave review",
         "review_left": "[✔] REVIEW SUBMITTED",
         "order_prefix": "ORDER #",
-        "total_prefix": "TOTAL:"
+        "total_prefix": "TOTAL:",
+        "status_processing": "IN PROCESSING",
+        "status_shipped": "SHIPPED",
+        "status_completed": "COMPLETED",
+        "status_cancelled": "CANCELLED",
+        "status_paid": "PAID",
+        "status_accepted": "ACCEPTED"
       },
       "reviews_modal": {
         "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",

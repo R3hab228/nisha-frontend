@@ -145,3 +145,15 @@ export function renderFilteredOrders() {
         return window.renderFilteredOrders();
     }
 }
+
+/**
+ * Localizes raw order status string based on current language
+ * @param {string} rawStatus
+ * @returns {string}
+ */
+export function formatOrderStatus(rawStatus) {
+    if (typeof window !== 'undefined' && typeof window.formatOrderStatus === 'function') {
+        return window.formatOrderStatus(rawStatus);
+    }
+    return String(rawStatus || '').toUpperCase();
+}

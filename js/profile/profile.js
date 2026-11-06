@@ -324,14 +324,15 @@ async function checkSession() {
                     const newStatus = payload.new.status;
                     if (newStatus !== payload.old.status) {
                         const orderPref = typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', { defaultValue: 'ЗАКАЗ #' }) : 'ЗАКАЗ #';
-                        showToast(`${orderPref}${payload.new.id.split('-').at(0).toUpperCase()}: ${newStatus.toUpperCase()}`, 'success');
+                        const formattedNewStatus = typeof window.formatOrderStatus === 'function' ? window.formatOrderStatus(newStatus) : (newStatus || '').toUpperCase();
+                        showToast(`${orderPref}${payload.new.id.split('-').at(0).toUpperCase()}: ${formattedNewStatus}`, 'success');
                         
                         if (typeof showTerminalModal === 'function') {
                             showTerminalModal(
                                 'SYSTEM_NOTIFICATION.LOG',
                                 `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_title', { defaultValue: 'ВНИМАНИЕ! Статус вашего заказа изменился.' }) : 'ВНИМАНИЕ! Статус вашего заказа изменился.'}<br><br>` +
                                 `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_order', { defaultValue: 'Заказ:' }) : 'Заказ:'} #${payload.new.id.split('-').at(0).toUpperCase()}<br>` +
-                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_new', { defaultValue: 'Новый статус:' }) : 'Новый статус:'} <b style="color:var(--accent-green);">${newStatus.toUpperCase()}</b>`,
+                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_new', { defaultValue: 'Новый статус:' }) : 'Новый статус:'} <b style="color:var(--accent-green);">${formattedNewStatus}</b>`,
                                 (typeof i18next !== 'undefined' ? i18next.t('profile.order_status_view', { defaultValue: '[ ПОСМОТРЕТЬ ]' }) : '[ ПОСМОТРЕТЬ ]'),
                                 () => { if (typeof window.openOrdersModal === 'function') window.openOrdersModal(); }
                             );

@@ -72,6 +72,41 @@ function openOrdersModal() {
 window.openOrdersModal = openOrdersModal;
 if (typeof globalThis !== 'undefined') globalThis.openOrdersModal = openOrdersModal;
 
+// Локализация статусов заказов для всех поддерживаемых языков (RU, UA, EN)
+function formatOrderStatus(rawStatus) {
+    if (!rawStatus) return '';
+    const s = String(rawStatus).trim().toLowerCase();
+    const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+
+    // 1. Отменен / Скасовано / Cancelled / Возврат
+    if (s.includes('отмен') || s.includes('скас') || s.includes('cancel') || s.includes('возврат') || s.includes('поверн')) {
+        return t('orders_modal.status_cancelled', 'ОТМЕНЕН').toUpperCase();
+    }
+    // 2. Завершен / Завершено / Completed / Получен / Доставлен
+    if (s.includes('заверш') || s.includes('выполнен') || s.includes('получен') || s.includes('доставлен') || s.includes('complet') || s.includes('deliver')) {
+        return t('orders_modal.status_completed', 'ЗАВЕРШЕН').toUpperCase();
+    }
+    // 3. Отправлен / Відправлено / Shipped
+    if (s.includes('отправ') || s.includes('відправ') || s.includes('ship')) {
+        return t('orders_modal.status_shipped', 'ОТПРАВЛЕН').toUpperCase();
+    }
+    // 4. Оплачен / Оплачено / Paid
+    if (s.includes('оплач') || s.includes('paid')) {
+        return t('orders_modal.status_paid', 'ОПЛАЧЕН').toUpperCase();
+    }
+    // 5. Принят / Прийнято / Accepted
+    if (s.includes('принят') || s.includes('прийнят') || s.includes('accept')) {
+        return t('orders_modal.status_accepted', 'ПРИНЯТ').toUpperCase();
+    }
+    // 6. В обработке / В обробці / In Processing / Новый
+    if (s.includes('обработ') || s.includes('оброб') || s.includes('process') || s.includes('нов')) {
+        return t('orders_modal.status_processing', 'В ОБРАБОТКЕ').toUpperCase();
+    }
+
+    return String(rawStatus).toUpperCase();
+}
+window.formatOrderStatus = formatOrderStatus;
+if (typeof globalThis !== 'undefined') globalThis.formatOrderStatus = formatOrderStatus;
 // Вспомогательная группировка заказов по статусам для вкладок (через Object.groupBy)
 function getOrderTabBucket(order) {
     const s = (order?.status || '').toLowerCase();
@@ -773,7 +808,10 @@ function renderFilteredOrders() {
             <div class="order-card">
                 <div class="order-header">
                     <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', {defaultValue: 'ЗАКАЗ #'}) : 'ЗАКАЗ #'}${order.id.split('-').at(0).toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
-                    <span class="order-status status-${typeof window.escapeAttr==='function'?window.escapeAttr(statusSlug):statusSlug}">${typeof window.escapeHtml==='function'?window.escapeHtml((order.status || '').toUpperCase()):(order.status || '').toUpperCase()}</span>
+                    ${(() => {
+                        const fmtStatus = typeof window.formatOrderStatus === 'function' ? window.formatOrderStatus(order.status) : (order.status || '').toUpperCase();
+                        return `<span class="order-status status-${typeof window.escapeAttr==='function'?window.escapeAttr(statusSlug):statusSlug}" data-raw-status="${typeof window.escapeAttr==='function'?window.escapeAttr(order.status || ''):order.status || ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(fmtStatus):fmtStatus}</span>`;
+                    })()}
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>
                 ${reviewBtnHtml}

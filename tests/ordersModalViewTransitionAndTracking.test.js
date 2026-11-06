@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { getNovaPoshtaTrackingUrl, encodeNovaPoshtaTtn } from '../src/modules/orders.js';
+import { getNovaPoshtaTrackingUrl, encodeNovaPoshtaTtn, formatOrderStatus } from '../src/modules/orders.js';
 
 describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
     const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
@@ -152,6 +152,103 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
             expect(freshStyleCode).toContain('grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));');
             expect(freshStyleCode).toContain('.order-total-row');
             expect(freshStyleCode).toContain('justify-content: flex-end;');
+        });
+    });
+
+    describe('4. Order Status Localization (RU, UA, EN) & Dynamic Language Switching', () => {
+        globalThis.window = globalThis.window || globalThis;
+        if (typeof globalThis.window.addEventListener !== 'function') globalThis.window.addEventListener = vi.fn();
+        const localesRu = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf8')).ru.translation.orders_modal;
+        const localesUa = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf8')).ua.translation.orders_modal;
+        const localesEn = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf8')).en.translation.orders_modal;
+
+        it('has all order status translations in locales.json and public/locales.json', () => {
+            const pubLocales = JSON.parse(readFileSync(resolve(__dirname, '../public/locales.json'), 'utf8'));
+            ['ru', 'ua', 'en'].forEach(lang => {
+                const om = pubLocales[lang].translation.orders_modal;
+                expect(om.status_processing).toBeDefined();
+                expect(om.status_shipped).toBeDefined();
+                expect(om.status_completed).toBeDefined();
+                expect(om.status_cancelled).toBeDefined();
+                expect(om.status_paid).toBeDefined();
+                expect(om.status_accepted).toBeDefined();
+            });
+
+            expect(localesRu.status_processing).toBe('В ОБРАБОТКЕ');
+            expect(localesUa.status_processing).toBe('В ОБРОБЦІ');
+            expect(localesEn.status_processing).toBe('IN PROCESSING');
+
+            expect(localesRu.status_shipped).toBe('ОТПРАВЛЕН');
+            expect(localesUa.status_shipped).toBe('ВІДПРАВЛЕНО');
+            expect(localesEn.status_shipped).toBe('SHIPPED');
+
+            expect(localesRu.status_completed).toBe('ЗАВЕРШЕН');
+            expect(localesUa.status_completed).toBe('ЗАВЕРШЕНО');
+            expect(localesEn.status_completed).toBe('COMPLETED');
+
+            expect(localesRu.status_cancelled).toBe('ОТМЕНЕН');
+            expect(localesUa.status_cancelled).toBe('СКАСОВАНО');
+            expect(localesEn.status_cancelled).toBe('CANCELLED');
+        });
+
+        it('formats statuses properly using formatOrderStatus with i18next', async () => {
+            await import('../js/orders/orders.js');
+            expect(typeof window.formatOrderStatus).toBe('function');
+            expect(typeof formatOrderStatus).toBe('function');
+
+            // Mock i18next for UA
+            window.i18next = {
+                t: (key, opts) => {
+                    if (key === 'orders_modal.status_processing') return 'В ОБРОБЦІ';
+                    if (key === 'orders_modal.status_shipped') return 'ВІДПРАВЛЕНО';
+                    if (key === 'orders_modal.status_completed') return 'ЗАВЕРШЕНО';
+                    if (key === 'orders_modal.status_cancelled') return 'СКАСОВАНО';
+                    if (key === 'orders_modal.status_paid') return 'ОПЛАЧЕНО';
+                    if (key === 'orders_modal.status_accepted') return 'ПРИЙНЯТО';
+                    return opts?.defaultValue || key;
+                }
+            };
+
+            expect(window.formatOrderStatus('В обработке')).toBe('В ОБРОБЦІ');
+            expect(window.formatOrderStatus('Отправлен')).toBe('ВІДПРАВЛЕНО');
+            expect(window.formatOrderStatus('Завершен')).toBe('ЗАВЕРШЕНО');
+            expect(window.formatOrderStatus('Отменен')).toBe('СКАСОВАНО');
+            expect(window.formatOrderStatus('Оплачен')).toBe('ОПЛАЧЕНО');
+
+            // Mock i18next for EN
+            window.i18next = {
+                t: (key, opts) => {
+                    if (key === 'orders_modal.status_processing') return 'IN PROCESSING';
+                    if (key === 'orders_modal.status_shipped') return 'SHIPPED';
+                    if (key === 'orders_modal.status_completed') return 'COMPLETED';
+                    if (key === 'orders_modal.status_cancelled') return 'CANCELLED';
+                    return opts?.defaultValue || key;
+                }
+            };
+
+            expect(window.formatOrderStatus('В обработке')).toBe('IN PROCESSING');
+            expect(window.formatOrderStatus('Отправлен')).toBe('SHIPPED');
+            expect(window.formatOrderStatus('Завершен')).toBe('COMPLETED');
+            expect(window.formatOrderStatus('Отменен')).toBe('CANCELLED');
+        });
+
+        it('orders.js attaches data-raw-status for dynamic re-translation on language switch', () => {
+            expect(ordersCode).toContain('data-raw-status=');
+            expect(ordersCode).toContain('window.formatOrderStatus');
+        });
+
+        it('i18n.js re-translates .order-status[data-raw-status] inside updateContentLanguage', () => {
+            const i18nCode = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
+            expect(i18nCode).toContain('.order-status[data-raw-status]');
+            expect(i18nCode).toContain('window.formatOrderStatus(raw)');
+        });
+
+        it('style.css defines glowing badge styles for localized status slug classes', () => {
+            expect(styleCode).toContain('.status-в-обробці');
+            expect(styleCode).toContain('.status-відправлено');
+            expect(styleCode).toContain('.status-завершено');
+            expect(styleCode).toContain('.status-скасовано');
+            expect(styleCode).toContain('.status-in-processing');
         });
     });
 });

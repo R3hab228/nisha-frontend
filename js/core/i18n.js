@@ -177,6 +177,13 @@ function updateContentLanguage() {
     if (typeof window.updateOrderTabCounters === 'function') {
         window.updateOrderTabCounters();
     }
+    // Обновляем текст статусов в карточках заказов при переключении языка
+    document.querySelectorAll('.order-status[data-raw-status]').forEach(el => {
+        const raw = el.getAttribute('data-raw-status');
+        if (raw && typeof window.formatOrderStatus === 'function') {
+            el.textContent = window.formatOrderStatus(raw);
+        }
+    });
 }
 window.updateContentLanguage = updateContentLanguage;
 
