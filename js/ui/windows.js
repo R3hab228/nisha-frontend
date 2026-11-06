@@ -266,6 +266,9 @@ function executeCloseModal(id, e) {
         if (typeof evt.stopImmediatePropagation === 'function') evt.stopImmediatePropagation();
     }
     if (id === 'checkoutModal' && window.otpPollInterval) clearInterval(window.otpPollInterval);
+    if (id === 'proposeModal' && typeof window.resetPropBargainState === 'function') {
+        window.resetPropBargainState();
+    }
     const modal = document.getElementById(id);
     if (!modal) return;
 

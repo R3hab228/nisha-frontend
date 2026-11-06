@@ -108,6 +108,9 @@ window.sanitizeProposalNameField = sanitizeProposalNameField;
 function openProposeModal() {
     if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
     if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
+    if (typeof resetPropBargainState === 'function') {
+        resetPropBargainState();
+    }
     const propNameEl = document.getElementById('propName');
     if (propNameEl) {
         delete propNameEl.dataset.userTyped;
@@ -231,7 +234,11 @@ window.compressImage = compressImage;
 
 // 3. Полная очистка формы предложки
 function resetProposalForm() {
-    if (typeof window.hidePropBargainInput === 'function') {
+    window._propBargainEnabled = false;
+    window._propBargainMode = false;
+    if (typeof resetPropBargainState === 'function') {
+        resetPropBargainState();
+    } else if (typeof window.hidePropBargainInput === 'function') {
         window.hidePropBargainInput(true);
     }
     const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc', 'propMinBargainPrice'];
@@ -495,6 +502,45 @@ function returnToDesiredPriceMode(hasBargain = false, minBid = null) {
     }
 }
 window.returnToDesiredPriceMode = returnToDesiredPriceMode;
+
+function resetPropBargainState() {
+    window._propBargainMode = false;
+    const label = document.getElementById('propPriceLabel');
+    const priceInput = document.getElementById('propPrice');
+    const minBox = document.getElementById('propMinBargainBox');
+    const btnToggle = document.getElementById('btnTogglePropBargain');
+    const btnConfirm = document.getElementById('btnConfirmPropBargain');
+
+    if (label) {
+        label.classList.remove('label-animating');
+        const priceLabelText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+            ? i18next.t('propose.price_label', { defaultValue: 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):' })
+            : 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):';
+        label.innerText = priceLabelText;
+        label.setAttribute('data-i18n', 'propose.price_label');
+    }
+    if (minBox) minBox.style.display = 'none';
+    if (priceInput) priceInput.style.display = 'block';
+    if (btnConfirm) btnConfirm.style.display = 'none';
+    if (btnToggle) {
+        btnToggle.style.display = 'flex';
+        if (window._propBargainEnabled) {
+            btnToggle.classList.add('active');
+            const activeText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+                ? i18next.t('propose.btn_bargain_active', { defaultValue: '[ ТОРГ ✓ ]' })
+                : '[ ТОРГ ✓ ]';
+            btnToggle.innerText = activeText;
+        } else {
+            btnToggle.classList.remove('active');
+            const defText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+                ? i18next.t('propose.btn_bargain', { defaultValue: '[ ТОРГ ]' })
+                : '[ ТОРГ ]';
+            btnToggle.innerText = defText;
+        }
+    }
+}
+window.resetPropBargainState = resetPropBargainState;
+if (typeof globalThis !== 'undefined') globalThis.resetPropBargainState = resetPropBargainState;
 
 
 // 4. Добавление новых файлов (до 5 шт)

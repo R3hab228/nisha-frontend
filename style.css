@@ -2485,6 +2485,15 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         height: 85px !important;
         flex-shrink: 0 !important;
     }
+    .prop-bargain-toggle-btn {
+        min-width: 85px;
+        padding: 0 10px;
+        font-size: 12px;
+        flex-shrink: 0 !important;
+    }
+    .prop-bargain-confirm-btn {
+        flex-shrink: 0 !important;
+    }
     html.keyboard-open .modal-overlay {
         height: var(--vv-height, 100dvh) !important;
         top: 0 !important;
@@ -3535,6 +3544,7 @@ html.pwa-standalone body {
     width: 100%;
     margin-bottom: 14px;
     box-sizing: border-box;
+    flex-wrap: nowrap;
 }
 
 .prop-price-input-wrapper {
@@ -3591,6 +3601,7 @@ html.pwa-standalone body {
     height: 44px;
     min-height: 44px;
     min-width: 95px;
+    flex-shrink: 0 !important;
     padding: 0 16px;
     background: #000;
     color: var(--accent-green, #00ff66);
@@ -3629,6 +3640,7 @@ html.pwa-standalone body {
     min-height: 44px;
     width: 48px;
     min-width: 48px;
+    flex-shrink: 0 !important;
     padding: 0 !important;
     background: #000;
     border: 2px inset var(--border-light, #555);

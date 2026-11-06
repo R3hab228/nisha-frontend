@@ -97,3 +97,40 @@ export async function submitProposal() {
         return window.submitProposal();
     }
 }
+
+/**
+ * Toggles and opens consignment proposal bargain min bid input
+ */
+export function openPropBargainInput() {
+    if (typeof window !== 'undefined' && typeof window.openPropBargainInput === 'function') {
+        return window.openPropBargainInput();
+    }
+}
+
+/**
+ * Confirms proposal bargain minimum price
+ */
+export function confirmPropBargainInput() {
+    if (typeof window !== 'undefined' && typeof window.confirmPropBargainInput === 'function') {
+        return window.confirmPropBargainInput();
+    }
+}
+
+/**
+ * Hides proposal bargain input and restores regular price input
+ * @param {boolean} [silent=false]
+ */
+export function hidePropBargainInput(silent = false) {
+    if (typeof window !== 'undefined' && typeof window.hidePropBargainInput === 'function') {
+        return window.hidePropBargainInput(silent);
+    }
+}
+
+/**
+ * Cleanly resets proposal bargain state ensuring [ ТОРГ ] toggle button is visible
+ */
+export function resetPropBargainState() {
+    if (typeof window !== 'undefined' && typeof window.resetPropBargainState === 'function') {
+        return window.resetPropBargainState();
+    }
+}

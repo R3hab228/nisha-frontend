@@ -37,7 +37,11 @@ const loadDropModule = registerLazyModuleBridge(
         'resetProposalForm',
         'handleNewProposalFiles',
         'renderProposalPreviews',
-        'submitProposal'
+        'submitProposal',
+        'openPropBargainInput',
+        'confirmPropBargainInput',
+        'hidePropBargainInput',
+        'resetPropBargainState'
     ]
 );
 
