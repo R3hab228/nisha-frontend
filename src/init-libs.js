@@ -30,6 +30,7 @@ export async function loadIMask() {
 
 function imaskStub(el, opts) {
     const fakeInstance = {
+        _isStub: true,
         value: el ? el.value : '',
         unmaskedValue: el ? el.value : '',
         destroy: () => {},
@@ -40,6 +41,10 @@ function imaskStub(el, opts) {
     loadIMask().then(realIMask => {
         if (realIMask && el) {
             const real = realIMask(el, opts);
+            if (fakeInstance.value && fakeInstance.value !== (el ? el.value : '')) {
+                try { real.value = fakeInstance.value; } catch (e) {}
+            }
+            fakeInstance._isStub = false;
             Object.assign(fakeInstance, real);
             el._imask = real;
         }

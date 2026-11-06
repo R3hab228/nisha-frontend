@@ -606,11 +606,15 @@ function initMobileKeyboardViewport() {
         const currentH = vv ? vv.height : window.innerHeight;
         const _offsetTop = vv ? vv.offsetTop : 0;
 
-        if (currentH > baselineHeight) baselineHeight = currentH;
-        const refHeight = Math.max(baselineHeight, window.innerHeight || 0);
-        const kbDelta = refHeight - currentH;
         const activeEl = document.activeElement;
         const isInputFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
+        if (!isInputFocused) {
+            baselineHeight = currentH;
+        } else if (currentH > baselineHeight) {
+            baselineHeight = currentH;
+        }
+        const refHeight = Math.max(baselineHeight, window.innerHeight || 0);
+        const kbDelta = refHeight - currentH;
         const isKeyboardOpen = kbDelta > 90 || (isInputFocused && kbDelta > 40);
 
         const roundedH = Math.round(currentH);

@@ -1548,13 +1548,14 @@ function showContactInput(type, isModal = false) {
 
     if (type === 'phone') {
         const attachMask = (MaskLib) => {
-            if (MaskLib && input && !input._imask) {
+            if (MaskLib && input && (!input._imask || input._imask._isStub)) {
                 input._imask = MaskLib(input, { mask: '+{380} (00) 000-00-00' });
             }
         };
         if (typeof IMask === 'function' && !IMask._isStub) {
             attachMask(IMask);
         } else if (typeof window.loadIMask === 'function') {
+            if (typeof IMask === 'function') attachMask(IMask);
             window.loadIMask().then(attachMask);
         } else if (typeof IMask !== 'undefined') {
             attachMask(IMask);
