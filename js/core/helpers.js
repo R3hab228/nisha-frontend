@@ -1939,6 +1939,7 @@ function handleDelegatedMediaLoad(e) {
             if (target.naturalHeight) target.parentElement.setAttribute('data-pswp-height', target.naturalHeight);
             target.parentElement.classList.remove('skeleton');
             target.parentElement.style.border = 'none';
+            target.parentElement.style.backgroundImage = 'none';
         }
     }
 }
@@ -1967,6 +1968,14 @@ function handleDelegatedMediaError(e) {
         target.style.display = 'none';
         if (target.parentElement) {
             target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555;font-size:10px;font-family:var(--font-mono);">ERROR</div>';
+        }
+    } else if (target.classList.contains('modal-slide-img')) {
+        target.style.display = 'none';
+        if (target.parentElement) {
+            target.parentElement.classList.remove('skeleton');
+            target.parentElement.style.border = '1px solid #333';
+            target.parentElement.style.backgroundImage = 'none';
+            target.parentElement.innerHTML = '<div style="width:100%;height:100%;min-height:260px;display:flex;align-items:center;justify-content:center;color:#666;font-size:12px;font-family:var(--font-mono);">[ ОШИБКА ЗАГРУЗКИ ФОТО ]</div>';
         }
     }
 }

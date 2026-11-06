@@ -251,22 +251,69 @@ async function openProductModalById(itemId) {
     const catalog = getCatalog();
     let item = catalog.find(i => String(i.id) === String(itemId));
 
-    // Проверяем, есть ли уже предзагруженные полные данные товара в преварм-кэше
     const key = String(itemId);
-    let fullItem = null;
     const prewarmedPromise = (typeof window._prewarmedItemDetails !== 'undefined' && window._prewarmedItemDetails)
         ? window._prewarmedItemDetails.get(key)
         : null;
-    if (prewarmedPromise) {
-        try {
-            fullItem = await prewarmedPromise;
-        } catch (_) {}
-    }
 
-    const initialItem = fullItem ? { ...item, ...fullItem } : item;
-    
-    // МГНОВЕННО открываем модалку с полными данными
-    if (initialItem) {
+    const onFullItemLoaded = (fullItem) => {
+        if (!fullItem) return;
+        const active = window.currentOpenedItem || currentOpenedItem;
+        if (active && String(active.id) === String(fullItem.id)) {
+            const hadNoImages = (!active.images || active.images.length === 0) && (!active.thumbnails || active.thumbnails.length === 0);
+            const hasFullImages = (fullItem.images && fullItem.images.length > 0) || (fullItem.thumbnails && fullItem.thumbnails.length > 0);
+            const hadBargain = Boolean(active.is_bargain || active.min_bargain_price || (typeof active.description === 'string' && /\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i.test(active.description)));
+            const nowHasBargain = Boolean(fullItem.is_bargain || fullItem.min_bargain_price || (typeof fullItem.description === 'string' && /\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i.test(fullItem.description)));
+            
+            currentOpenedItem = { ...active, ...fullItem };
+            window.currentOpenedItem = currentOpenedItem;
+            if (Array.isArray(window.allItems)) {
+                const idx = window.allItems.findIndex(it => it && String(it.id) === String(fullItem.id));
+                if (idx !== -1) window.allItems[idx] = { ...window.allItems[idx], ...fullItem };
+            }
+
+            if ((hadNoImages && hasFullImages) || hadBargain !== nowHasBargain) {
+                if (typeof closeModal === 'function') {
+                    const om = document.getElementById('ordersModal');
+                    if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal');
+                    const rm = document.getElementById('reviewsModal');
+                    if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal');
+                }
+                openProductModal(currentOpenedItem);
+                return;
+            }
+
+            if (fullItem.description) {
+                const cleanFullDesc = String(fullItem.description).replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
+                const descText = cleanFullDesc ? cleanFullDesc.replaceAll('\n', '<br>') : '<span style="color:#666;">[ Описание отсутствует ]</span>';
+                const descContainer = document.querySelector('.modal-desc');
+                if (descContainer) {
+                    const sizeTitle = typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР';
+                    const brandTitle = typeof i18next !== 'undefined' ? i18next.t('product.brand') : 'БРЕНД';
+                    const qaMarker = '<!-- Блок Вопросов и Ответов (Q&A) -->';
+                    const qaIndex = descContainer.innerHTML.includes(qaMarker) 
+                        ? descContainer.innerHTML.indexOf(qaMarker) 
+                        : descContainer.innerHTML.indexOf('<div id="qaWrapper"');
+                    const qaPart = qaIndex !== -1 ? descContainer.innerHTML.substring(qaIndex) : '';
+                    const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
+                    descContainer.innerHTML = `
+                        <div style="margin-bottom: 5px;">
+                            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">${sizeTitle}</span></strong> 
+                            <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${escHtml(fullItem.size)}</span>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${brandTitle}</span></strong> 
+                            <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${escHtml(fullItem.brand)}</span>
+                        </div>
+                        <div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : escHtml(descText)}</div>
+                    ` + qaPart;
+                }
+            }
+        }
+    };
+
+    // 1. МГНОВЕННО открываем модалку (0 мс задержки), если товар есть в памяти каталога
+    if (item) {
         const cardInGrid = document.querySelector(`.item-card[data-id="${itemId}"]`);
         if (cardInGrid) cardInGrid.classList.remove('unseen-pulse');
 
@@ -289,85 +336,43 @@ async function openProductModalById(itemId) {
             const rm = document.getElementById('reviewsModal');
             if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal'); 
         }
-        openProductModal(initialItem); 
+        openProductModal(item); 
     }
-    
-    // В ФОНЕ подгружаем полное описание и замеры (если еще не было в prewarm)
-    if (!fullItem) {
-    const sb = getSupabase();
-    if (sb) {
-        try {
-            let { data, error: itemErr } = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price').eq('id', itemId).limit(1);
-            if (itemErr && (itemErr.message?.includes('is_bargain') || itemErr.message?.includes('min_bargain_price') || itemErr.code === '42703' || itemErr.code === 'PGRST204')) {
-                const retryRes = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
-                data = retryRes.data;
-            }
-            let fullItem = null;
-            if (data && data.length > 0) {
-                fullItem = data.at(0);
-            } else {
-                let { data: archData } = await sb.from('archived_items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
-                if (archData && archData.length > 0) fullItem = archData.at(0);
-            }
-            
-            // Если товара не было в кэше вообще (переход по прямой ссылке), открываем сейчас
-            if (!item && fullItem) {
-                if (typeof closeModal === 'function') { const om = document.getElementById('ordersModal'); if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal'); const rm = document.getElementById('reviewsModal'); if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal'); } openProductModal(fullItem);
-                return;
-            }
-            
-            // Если модалка открыта и мы догрузили описание/фото
-            const active = window.currentOpenedItem || currentOpenedItem;
-            if (fullItem && active && active.id === fullItem.id) {
-                const hadNoImages = (!active.images || active.images.length === 0) && (!active.thumbnails || active.thumbnails.length === 0);
-                const hasFullImages = (fullItem.images && fullItem.images.length > 0) || (fullItem.thumbnails && fullItem.thumbnails.length > 0);
-                const hadBargain = Boolean(active.is_bargain || active.min_bargain_price || (typeof active.description === 'string' && /\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i.test(active.description)));
-                const nowHasBargain = Boolean(fullItem.is_bargain || fullItem.min_bargain_price || (typeof fullItem.description === 'string' && /\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i.test(fullItem.description)));
-                
-                currentOpenedItem = fullItem;
-                window.currentOpenedItem = fullItem;
-                if (Array.isArray(window.allItems)) {
-                    const idx = window.allItems.findIndex(it => it && String(it.id) === String(fullItem.id));
-                    if (idx !== -1) window.allItems[idx] = { ...window.allItems[idx], ...fullItem };
-                }
 
-                if ((hadNoImages && hasFullImages) || hadBargain !== nowHasBargain) {
-                    if (typeof closeModal === 'function') { const om = document.getElementById('ordersModal'); if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal'); const rm = document.getElementById('reviewsModal'); if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal'); } openProductModal(fullItem);
-                    return;
-                }
-
-                if (fullItem.description) {
-                    const cleanFullDesc = String(fullItem.description).replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
-                    const descText = cleanFullDesc ? cleanFullDesc.replaceAll('\n', '<br>') : `<span style="color:#666;">[ Описание отсутствует ]</span>`;
-                    const descContainer = document.querySelector('.modal-desc');
-                    if (descContainer) {
-                        const sizeTitle = typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР';
-                        const brandTitle = typeof i18next !== 'undefined' ? i18next.t('product.brand') : 'БРЕНД';
-                        const qaMarker = '<!-- Блок Вопросов и Ответов (Q&A) -->';
-                        const qaIndex = descContainer.innerHTML.includes(qaMarker) 
-                            ? descContainer.innerHTML.indexOf(qaMarker) 
-                            : descContainer.innerHTML.indexOf('<div id="qaWrapper"');
-                        const qaPart = qaIndex !== -1 ? descContainer.innerHTML.substring(qaIndex) : '';
-                        const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
-                        descContainer.innerHTML = `
-                            <div style="margin-bottom: 5px;">
-                                <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">${sizeTitle}</span></strong> 
-                                <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${escHtml(fullItem.size)}</span>
-                            </div>
-                            <div style="margin-bottom: 15px;">
-                                <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${brandTitle}</span></strong> 
-                                <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${escHtml(fullItem.brand)}</span>
-                            </div>
-                            <div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : escHtml(descText)}</div>
-                        ` + qaPart;
+    // 2. В ФОНЕ подтягиваем полные данные (описание, замеры) без блокировки UI
+    if (prewarmedPromise) {
+        prewarmedPromise.then(onFullItemLoaded).catch(() => {});
+    } else {
+        const sb = getSupabase();
+        if (sb) {
+            (async () => {
+                try {
+                    let { data, error: itemErr } = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price').eq('id', itemId).limit(1);
+                    if (itemErr && (itemErr.message?.includes('is_bargain') || itemErr.message?.includes('min_bargain_price') || itemErr.code === '42703' || itemErr.code === 'PGRST204')) {
+                        const retryRes = await sb.from('items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
+                        data = retryRes.data;
                     }
-                }
-            }
-        } catch(e) { console.error("Ошибка сети:", e); }
-    }
-    } else if (!item) {
-        const notFoundMsg = (typeof i18next !== 'undefined' && i18next.t('product.err_not_found')) || 'Товар не найден';
-        showToast(notFoundMsg, 'error'); 
+                    let full = null;
+                    if (data && data.length > 0) {
+                        full = data.at(0);
+                    } else {
+                        let { data: archData } = await sb.from('archived_items').select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable').eq('id', itemId).limit(1);
+                        if (archData && archData.length > 0) full = archData.at(0);
+                    }
+                    if (!item && full) {
+                        if (typeof closeModal === 'function') {
+                            const om = document.getElementById('ordersModal');
+                            if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal');
+                            const rm = document.getElementById('reviewsModal');
+                            if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal');
+                        }
+                        openProductModal(full);
+                        return;
+                    }
+                    if (full) onFullItemLoaded(full);
+                } catch(e) { console.error("Ошибка сети:", e); }
+            })();
+        }
     }
 }
 window.openProductModalById = openProductModalById;
@@ -477,7 +482,7 @@ function openProductModal(item) {
     const defaultDesc = "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.";
     const rawDesc = item.description ? String(item.description) : defaultDesc;
     const cleanDesc = rawDesc.replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
-    const descText = (cleanDesc || defaultDesc).replaceAll('\n', '<br>');
+    const descText = (cleanDesc || defaultDesc).replaceAll('\r', '').replaceAll('\n', '<br>');
     const escHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
     const safeDescHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : escHtml(descText);
     const descBlock = document.querySelector('.modal-desc');
@@ -741,8 +746,9 @@ function openProductModal(item) {
                     const isFirst = (index === 0);
                     const isSecond = (index === 1);
                     const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
+                    const thumbBg = currentThumb ? `background-image: url('${currentThumb}'); background-size: contain; background-repeat: no-repeat; background-position: center;` : 'background-image: none;';
                     slidesHtml += `
-                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide skeleton" style="background-image:none; display:flex; align-items:center; justify-content:center; border: 1px solid #222;">
+                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide skeleton" style="${thumbBg} display:flex; align-items:center; justify-content:center; border: 1px solid #222;">
                             <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.25s ease-in-out;" 
                             >
                         </a>`;
