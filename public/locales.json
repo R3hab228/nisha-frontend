@@ -467,7 +467,8 @@
         "online_msg": "Соединение восстановлено!!!",
         "update_title": "SYSTEM_UPDATE.EXE",
         "update_text": "Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.",
-        "btn_update": "[ ОБНОВИТЬ СЕЙЧАС ]"
+        "btn_update": "[ ОБНОВИТЬ СЕЙЧАС ]",
+        "scroll_restored": "[ ПОЗИЦИЯ ЛЕНТЫ ВОССТАНОВЛЕНА ]"
       },
       "np": {
         "branch_empty": "Не найдено",
@@ -961,7 +962,8 @@
         "online_msg": "З'єднання відновлено!!!",
         "update_title": "SYSTEM_UPDATE.EXE",
         "update_text": "Випущена нова версія сайту (виправлення багів, нові фічі).<br><br>Рекомендуємо оновити сторінку.",
-        "btn_update": "[ ОНОВИТИ ЗАРАЗ ]"
+        "btn_update": "[ ОНОВИТИ ЗАРАЗ ]",
+        "scroll_restored": "[ ПОЗИЦІЮ СТРІЧКИ ВІДНОВЛЕНО ]"
       },
       "np": {
         "branch_empty": "Не знайдено",
@@ -1455,7 +1457,8 @@
         "online_msg": "Connection restored!!!",
         "update_title": "SYSTEM_UPDATE.EXE",
         "update_text": "A new version of the site has been released (bug fixes, new features).<br><br>We recommend refreshing the page.",
-        "btn_update": "[ REFRESH NOW ]"
+        "btn_update": "[ REFRESH NOW ]",
+        "scroll_restored": "[ FEED POSITION RESTORED ]"
       },
       "np": {
         "branch_empty": "Not found",

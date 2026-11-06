@@ -1054,6 +1054,12 @@ function openProductModal(item) {
             }
             modal.style.display = 'flex';
         }
+        if (!document.body.style.overflow || document.body.style.overflow !== 'hidden') {
+            window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
+        }
+        if (item && item.id && typeof window.saveCurrentFeedScrollState === 'function') {
+            window.saveCurrentFeedScrollState(item.id);
+        }
         document.body.style.overflow = 'hidden';
     }
 

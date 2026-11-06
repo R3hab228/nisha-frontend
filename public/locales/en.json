@@ -460,7 +460,8 @@
       "online_msg": "Connection restored!!!",
       "update_title": "SYSTEM_UPDATE.EXE",
       "update_text": "A new version of the site has been released (bug fixes, new features).<br><br>We recommend refreshing the page.",
-      "btn_update": "[ REFRESH NOW ]"
+      "btn_update": "[ REFRESH NOW ]",
+      "scroll_restored": "[ FEED POSITION RESTORED ]"
     },
     "np": {
       "branch_empty": "Not found",

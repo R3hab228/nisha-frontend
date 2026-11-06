@@ -22,6 +22,168 @@ if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
 
+// ==========================================
+// SMART FEED SCROLL RESTORATION ENGINE
+// ==========================================
+const FEED_SCROLL_STORAGE_KEY = 'nisha_feed_scroll_v1';
+let _saveScrollRafId = null;
+let _saveScrollTimeout = null;
+let _scrollRestoredBadgeTimeout = null;
+
+function isAnyModalActive() {
+    if (typeof document === 'undefined') return false;
+    if (document.body && document.body.style && document.body.style.overflow === 'hidden') return true;
+    const modals = document.querySelectorAll('.modal-overlay');
+    for (let i = 0; i < modals.length; i++) {
+        const m = modals[i];
+        if (m.classList.contains('closing')) continue;
+        if (m.classList.contains('is-open') || m.style.display === 'flex' || m.style.display === 'block') {
+            return true;
+        }
+    }
+    return false;
+}
+
+function saveCurrentFeedScrollState(preferredActiveItemId = null) {
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return;
+    if (isAnyModalActive()) return;
+
+    const scrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
+    const effectiveScrollY = scrollY < 70 ? 0 : Math.round(scrollY);
+
+    let activeItemId = preferredActiveItemId;
+    if (!activeItemId && effectiveScrollY > 100 && typeof document !== 'undefined') {
+        const cards = document.querySelectorAll('#itemsGrid .item-card');
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            const rect = card.getBoundingClientRect();
+            if (rect.top >= -100 && rect.top <= window.innerHeight * 0.5) {
+                activeItemId = card.dataset.id || null;
+                break;
+            }
+        }
+    }
+
+    const searchEl = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
+    const state = {
+        scrollY: effectiveScrollY,
+        renderedCount: window.renderedCount || 0,
+        currentPage: window.currentPage || 1,
+        category: window.currentCategory || '',
+        search: (searchEl && searchEl.value ? searchEl.value.trim().toLowerCase() : ''),
+        showingFavs: Boolean(window.showingOnlyFavs),
+        activeItemId: activeItemId,
+        timestamp: Date.now()
+    };
+
+    try {
+        sessionStorage.setItem(FEED_SCROLL_STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {}
+}
+
+function scheduleFeedScrollSave() {
+    if (_saveScrollRafId) cancelAnimationFrame(_saveScrollRafId);
+    _saveScrollRafId = requestAnimationFrame(() => {
+        _saveScrollRafId = null;
+        clearTimeout(_saveScrollTimeout);
+        _saveScrollTimeout = setTimeout(() => {
+            saveCurrentFeedScrollState();
+        }, 120);
+    });
+}
+
+function getSavedFeedScrollState() {
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return null;
+    try {
+        const raw = sessionStorage.getItem(FEED_SCROLL_STORAGE_KEY);
+        if (!raw) return null;
+        const state = JSON.parse(raw);
+        if (!state || typeof state.scrollY !== 'number') return null;
+        if (Date.now() - (state.timestamp || 0) > 4 * 60 * 60 * 1000) {
+            sessionStorage.removeItem(FEED_SCROLL_STORAGE_KEY);
+            return null;
+        }
+        return state;
+    } catch (e) {
+        return null;
+    }
+}
+
+function clearSavedFeedScrollState() {
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return;
+    try {
+        sessionStorage.removeItem(FEED_SCROLL_STORAGE_KEY);
+    } catch (e) {}
+}
+
+function showScrollRestoredBadge() {
+    if (typeof document === 'undefined') return;
+    const badge = document.getElementById('feedScrollRestoredBadge');
+    if (!badge) return;
+
+    if (_scrollRestoredBadgeTimeout) clearTimeout(_scrollRestoredBadgeTimeout);
+    badge.classList.add('is-visible');
+
+    const onScrollHide = () => {
+        badge.classList.remove('is-visible');
+        window.removeEventListener('scroll', onScrollHide);
+    };
+    window.addEventListener('scroll', onScrollHide, { passive: true, once: true });
+
+    _scrollRestoredBadgeTimeout = setTimeout(() => {
+        badge.classList.remove('is-visible');
+        window.removeEventListener('scroll', onScrollHide);
+    }, 2200);
+}
+
+function restoreFeedScrollPosition(state) {
+    if (!state || typeof state.scrollY !== 'number' || state.scrollY <= 0) return;
+
+    const targetY = state.scrollY;
+    const activeItemId = state.activeItemId;
+
+    requestAnimationFrame(() => {
+        let exactY = targetY;
+        if (activeItemId && typeof document !== 'undefined') {
+            const cardEl = document.querySelector(`#itemsGrid .item-card[data-id="${activeItemId}"]`);
+            if (cardEl) {
+                const cardTop = cardEl.offsetTop;
+                if (cardTop > 0 && Math.abs(cardTop - targetY) < 500) {
+                    exactY = cardTop;
+                }
+            }
+        }
+
+        window.scrollTo({ top: exactY, behavior: 'instant' });
+        if (typeof window.lenis !== 'undefined' && window.lenis && typeof window.lenis.scrollTo === 'function') {
+            window.lenis.scrollTo(exactY, { immediate: true });
+        }
+
+        setTimeout(() => {
+            const currentY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
+            if (Math.abs(currentY - exactY) > 80) {
+                window.scrollTo({ top: exactY, behavior: 'instant' });
+                if (typeof window.lenis !== 'undefined' && window.lenis && typeof window.lenis.scrollTo === 'function') {
+                    window.lenis.scrollTo(exactY, { immediate: true });
+                }
+            }
+            showScrollRestoredBadge();
+        }, 80);
+    });
+}
+
+window.saveCurrentFeedScrollState = saveCurrentFeedScrollState;
+window.scheduleFeedScrollSave = scheduleFeedScrollSave;
+window.getSavedFeedScrollState = getSavedFeedScrollState;
+window.clearSavedFeedScrollState = clearSavedFeedScrollState;
+window.restoreFeedScrollPosition = restoreFeedScrollPosition;
+window.showScrollRestoredBadge = showScrollRestoredBadge;
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('scroll', scheduleFeedScrollSave, { passive: true });
+}
+
+
 // Глобальный перехватчик URL для CDN
 window.toCDN = window.toCDN || function(url) {
     if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
@@ -945,7 +1107,7 @@ async function loadAllItems() {
 
     // 5. ПЕРЕРИСОВКА (Без сброса скролла, если изменились только точечные статусы/цены)
     if (!cachedItems || isStructureChanged) {
-        applyFilters(!cachedItems); 
+        applyFilters(!cachedItems, Boolean(cachedItems)); 
     } else if (changedCardItems.length > 0) {
         const freshMap = new Map(window.allItems.map(i => [i.id, i]));
         if (Array.isArray(window.filteredItems)) {
@@ -1945,12 +2107,23 @@ function applyFilters(immediate = false, preserveViewport = false) {
             const batchSizeNow = window.innerWidth <= 900 ? 12 : 15;
             const maxPageNow = Math.max(1, Math.ceil(window.filteredItems.length / batchSizeNow));
 
+            const savedScrollState = (isInitialRender && !preserveViewport) ? getSavedFeedScrollState() : null;
+            const canRestoreScroll = Boolean(
+                savedScrollState &&
+                savedScrollState.scrollY > 80 &&
+                (savedScrollState.category || '') === (curCat || '') &&
+                (savedScrollState.search || '') === (searchTerm || '') &&
+                Boolean(savedScrollState.showingFavs) === Boolean(onlyFavs)
+            );
+
             if (grid) {
                 if (typeof grid.replaceChildren === 'function') grid.replaceChildren();
                 else grid.innerHTML = '';
             }
             window.renderedCount = 0; 
-            window.currentPage = preserveViewport ? Math.min(prevPage, maxPageNow) : 1; 
+            window.currentPage = preserveViewport
+                ? Math.min(prevPage, maxPageNow)
+                : (canRestoreScroll && window.innerWidth > 900 ? Math.min(savedScrollState.currentPage || 1, maxPageNow) : 1); 
             
             const scrollTrigger = document.getElementById('loadingTrigger');
             if (scrollTrigger && window.innerWidth <= 900) {
@@ -1968,8 +2141,17 @@ function applyFilters(immediate = false, preserveViewport = false) {
                 const noItemsMsg = typeof i18next !== 'undefined' ? i18next.t('search.no_items', { defaultValue: 'ТОВАРОВ НЕ НАЙДЕНО' }) : 'ТОВАРОВ НЕ НАЙДЕНО';
     if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ ${noItemsMsg} ]</div>`;
             } else {
-                const targetMobileCount = preserveViewport ? Math.max(prevRenderedCount, batchSizeNow) : 0;
+                let targetMobileCount = 0;
+                if (preserveViewport) {
+                    targetMobileCount = Math.max(prevRenderedCount, batchSizeNow);
+                } else if (canRestoreScroll) {
+                    targetMobileCount = Math.max(savedScrollState.renderedCount || 0, batchSizeNow);
+                }
                 renderNextBatch(targetMobileCount); 
+
+                if (canRestoreScroll) {
+                    restoreFeedScrollPosition(savedScrollState);
+                }
             }
 
             // Обновляем URL параметры
@@ -2296,6 +2478,9 @@ function initGridEventDelegation() {
             clickTimer = setTimeout(() => {
                 clickTimer = null;
                 lastClickedWrapper = null;
+                if (typeof saveCurrentFeedScrollState === 'function') {
+                    saveCurrentFeedScrollState(itemId);
+                }
                 if (typeof openProductModalById === 'function') openProductModalById(itemId);
             }, 120);
         } else {
@@ -2796,6 +2981,9 @@ function setCategoryFilter(cat, element) {
         if (element) {
             element.classList.add('active-filter');
         }
+        if (window.currentCategory !== cat) {
+            clearSavedFeedScrollState();
+        }
         window.currentCategory = cat; 
         const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
         if (store && store.session) store.session.set('nisha_last_category', cat);
@@ -2816,6 +3004,7 @@ window.setCategoryFilter = setCategoryFilter;
 // Очистка поиска крестиком
 function clearSearchInput() {
     const updateDom = async () => {
+        clearSavedFeedScrollState();
         const input = document.getElementById('mainSearch');
         if (input) input.value = '';
         const clearBtn = document.getElementById('clearSearchBtn');

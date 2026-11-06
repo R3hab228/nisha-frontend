@@ -1259,6 +1259,9 @@ function initPwaPullToRefresh() {
     async function triggerRefresh() {
         if (isRefreshing || !container) return;
         isRefreshing = true;
+        if (typeof window.clearSavedFeedScrollState === 'function') {
+            window.clearSavedFeedScrollState();
+        }
 
         container.classList.remove('is-ready', 'is-pulling');
         container.classList.add('is-refreshing', 'pwa-pull-spinning');

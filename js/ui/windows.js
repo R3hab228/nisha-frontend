@@ -187,6 +187,9 @@ function openModal(id) {
         win.style.transition = '';
         win.style.animation = '';
     }
+    if (!document.body.style.overflow || document.body.style.overflow !== 'hidden') {
+        window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
+    }
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     triggerModalTypewriter(modal);
@@ -277,6 +280,12 @@ function executeCloseModal(id, e) {
     });
     if (!hasOtherOpenModal()) {
         document.body.style.overflow = 'auto';
+        if (typeof window._preModalScrollY === 'number') {
+            const curY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
+            if (Math.abs(curY - window._preModalScrollY) > 5) {
+                window.scrollTo({ top: window._preModalScrollY, behavior: 'instant' });
+            }
+        }
         if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
     }
 
