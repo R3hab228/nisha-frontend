@@ -650,7 +650,6 @@ function updateCartUI() {
     
     const currentCart = getActiveCart();
     const dropdown = document.getElementById('cartDropdown');
-    const isDropdownOpen = dropdown && dropdown.classList.contains('active');
     if (currentCart.length === 0) { 
         p.classList.remove('show', 'dropdown-open');
         if (dropdown) {
@@ -2963,8 +2962,6 @@ async function executeOrderFinal(emailToSave) {
 
     const currentCart = getActiveCart();
     const orderItemIds = currentCart.map(i => i.id);
-    const cityInput = document.getElementById('orderCity');
-    const branchInput = document.getElementById('orderBranch');
 
     let cityRef = window.selectedCityRef || selectedCityRef;
     if (!cityRef && city) {
@@ -3440,8 +3437,6 @@ async function applyPromoCode() {
             await i18next.changeLanguage(currentLang);
         }
 
-        const savedText = typeof i18next !== 'undefined' ? i18next.t('checkout.saved') : 'Сэкономлено';
-        const successText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_success') : 'Код активирован!';
         const limitErrorText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_limit') : 'Лимит использований исчерпан';
         const invalidErrorText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_invalid') : 'Неверный промокод';
 

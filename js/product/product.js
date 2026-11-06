@@ -588,7 +588,6 @@ function openProductModal(item) {
     const inlineInput = document.getElementById('inlineBargainPriceInput');
 
     if (offerWrapper || offerPriceBtn) {
-        const isDropItem = item && (item.is_drop === true || (item.tags && item.tags.map(t => t.toLowerCase()).includes('drop')));
         const descMatch = item && (typeof item.description === 'string') && item.description.match(/\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i);
         const itemMinBargain = item ? (item.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null)) : null;
         const hasBargain = Boolean(item && (item.is_bargain || itemMinBargain || (typeof item.description === 'string' && /\[ТОРГ/i.test(item.description))));
