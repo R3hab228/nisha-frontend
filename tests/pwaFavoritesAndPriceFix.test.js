@@ -116,4 +116,40 @@ describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixe
             expect(styleCss).toMatch(/@media\s*\(pointer:\s*coarse\)[\s\S]*?\.modal-window::-webkit-scrollbar[\s\S]*?display:\s*none\s*!important/);
         });
     });
+
+    describe('4. History Section Windows 95 Close Button Styling & Touch Accessibility', () => {
+        const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf-8');
+        const localesRu = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf-8')).ru.translation.history;
+        const localesUa = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf-8')).ua.translation.history;
+        const localesEn = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf-8')).en.translation.history;
+
+        it('styles .history-item-remove with classic Windows 95 bevel, 24px comfortable size and black bold X', () => {
+            expect(styleCss).toContain('.history-item-remove {');
+            expect(styleCss).toMatch(/width:\s*24px/);
+            expect(styleCss).toMatch(/height:\s*24px/);
+            expect(styleCss).toMatch(/background:\s*var\(--text-main,\s*#c0c0c0\)/);
+            expect(styleCss).toMatch(/border:\s*2px\s+outset\s+#eee/);
+            expect(styleCss).toMatch(/box-shadow:\s*1px\s+1px\s+0px\s+#000/);
+            expect(styleCss).toMatch(/color:\s*#000/);
+            expect(styleCss).toMatch(/font-weight:\s*bold/);
+            expect(styleCss).toMatch(/border-style:\s*inset/);
+        });
+
+        it('provides expanded hit area pseudo-element for effortless mobile tap precision', () => {
+            expect(styleCss).toContain('.history-item-remove::before');
+            expect(styleCss).toMatch(/\.history-item-remove::before\s*\{[^}]*position:\s*absolute/);
+        });
+
+        it('renders accessible semantic close-btn button in product.js with remove-history-item action', () => {
+            expect(productJs).toContain('class="close-btn history-item-remove"');
+            expect(productJs).toContain('data-action="remove-history-item"');
+            expect(productJs).toContain('title="${typeof i18next !== \'undefined\' ? i18next.t(\'history.remove_item\', { defaultValue: \'Удалить\' }) : \'Удалить\'}"');
+        });
+
+        it('localizes history remove action in locales.json', () => {
+            expect(localesRu.remove_item).toBe('Удалить из истории');
+            expect(localesUa.remove_item).toBe('Видалити з історії');
+            expect(localesEn.remove_item).toBe('Remove from history');
+        });
+    });
 });

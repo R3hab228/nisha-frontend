@@ -63,7 +63,8 @@
         "hide_filters": "[-] СКРЫТЬ ФИЛЬТРЫ"
       },
       "history": {
-        "title": "HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:"
+        "title": "HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:",
+        "remove_item": "Удалить из истории"
       },
       "cart": {
         "in_cart": "В КОРЗИНЕ:",
@@ -556,7 +557,8 @@
         "hide_filters": "[-] ПРИХОВАТИ ФІЛЬТРИ"
       },
       "history": {
-        "title": "HISTORY.LOG // ВИ НЕЩОДАВНО ДИВИЛИСЯ:"
+        "title": "HISTORY.LOG // ВИ НЕЩОДАВНО ДИВИЛИСЯ:",
+        "remove_item": "Видалити з історії"
       },
       "cart": {
         "in_cart": "У КОШИКУ:",
@@ -1049,7 +1051,8 @@
         "hide_filters": "[-] HIDE FILTERS"
       },
       "history": {
-        "title": "HISTORY.LOG // RECENTLY VIEWED:"
+        "title": "HISTORY.LOG // RECENTLY VIEWED:",
+        "remove_item": "Remove from history"
       },
       "cart": {
         "in_cart": "IN CART:",

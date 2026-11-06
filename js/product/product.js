@@ -1526,7 +1526,7 @@ function renderHistory() {
                 ${mediaHTML}
                 ${miniBadgeHTML}
                 ${statusOverlayHTML}
-                <div class="history-item-remove" data-action="remove-history-item" data-id="${typeof window.escapeAttr==='function'?window.escapeAttr(h.id):h.id}" title="Удалить" style="z-index: 20;">X</div>
+                <button type="button" class="close-btn history-item-remove" data-action="remove-history-item" data-id="${typeof window.escapeAttr==='function'?window.escapeAttr(h.id):h.id}" title="${typeof i18next !== 'undefined' ? i18next.t('history.remove_item', { defaultValue: 'Удалить' }) : 'Удалить'}" aria-label="${typeof i18next !== 'undefined' ? i18next.t('history.remove_item', { defaultValue: 'Удалить' }) : 'Удалить'}" style="z-index: 20;">X</button>
             </div>
             <div class="history-info">
                 <div class="history-name" title="${typeof window.escapeAttr==='function'?window.escapeAttr(liveName):liveName}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(liveName):liveName}</div>

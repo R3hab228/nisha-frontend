@@ -2040,9 +2040,55 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 .search-history-clear { margin-left: auto; color: var(--accent-red); font-size: 10px; cursor: pointer; transition: opacity 0.2s; }
 .search-history-clear:hover { opacity: 0.8; }
 
-.history-item-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(0, 0, 0, 0.85); border: 1px solid #333; color: var(--accent-red); font-family: var(--font-mono); font-size: 12px; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 20; transition: 0.2s; }
-.history-item-remove:hover { border-color: var(--accent-red); background: #111; }
-.history-item-remove:active { transform: scale(0.8); }
+.history-item-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: var(--text-main, #c0c0c0) !important;
+    border: 2px outset #eee !important;
+    box-shadow: 1px 1px 0px #000;
+    color: #000 !important;
+    font-family: var(--font-main, 'Tahoma', sans-serif) !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center;
+    cursor: pointer;
+    z-index: 20;
+    box-sizing: border-box;
+    user-select: none;
+    touch-action: manipulation;
+    outline: none;
+    transform: translateZ(25px);
+    transition: filter 0.1s ease;
+}
+.history-item-remove::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    bottom: -8px;
+    left: -8px;
+}
+.history-item-remove:hover {
+    filter: brightness(1.08);
+}
+.history-item-remove:active {
+    border-style: inset !important;
+    box-shadow: none !important;
+    transform: translateZ(25px) translate(1px, 1px);
+}
 
 .grid-slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(10, 10, 10, 0.7); color: var(--accent-green); border: 1px solid #444; width: 28px; height: 36px; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; cursor: pointer; z-index: 20; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, background 0.2s, color 0.2s, transform 0.2s; backdrop-filter: blur(2px); user-select: none; }
 .card-slider-wrapper:hover .grid-slider-btn { opacity: 1; pointer-events: auto; }
