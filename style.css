@@ -673,10 +673,11 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 @keyframes slideDownMobile { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(32px); } }
 
 .modal-overlay.closing {
-    pointer-events: auto !important;
+    pointer-events: none !important;
     animation: fadeOutOverlay 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 .modal-overlay.closing .modal-window {
+    pointer-events: none !important;
     animation: modalPopOutDesktop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 .modal-overlay.closing * {
@@ -1377,10 +1378,12 @@ input[type="number"],
 }
 
 #rulesModal.closing {
+    pointer-events: none !important;
     animation: fadeOutRulesOverlay 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
 }
 
 #rulesModal.closing .modal-window {
+    pointer-events: none !important;
     animation: rulesSlideDown 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards !important;
 }
 
@@ -2440,6 +2443,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         box-sizing: border-box !important;
     }
     .modal-overlay.closing .modal-window {
+        pointer-events: none !important;
         animation: slideDownMobile 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
     #ordersModal .modal-window {

@@ -283,7 +283,7 @@ function executeCloseModal(id, e) {
         return m.style.display === 'flex' || m.style.display === 'block';
     });
     if (!hasOtherOpenModal()) {
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
         if (typeof window._preModalScrollY === 'number') {
             const curY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
             if (Math.abs(curY - window._preModalScrollY) > 5) {
@@ -333,9 +333,11 @@ function executeCloseModal(id, e) {
         modal.classList.remove('is-open');
     }
     modal.classList.add('closing');
+    modal.style.pointerEvents = 'none';
     modal.setAttribute('aria-hidden', 'true');
     const winClosing = modal.querySelector('.modal-window');
     if (winClosing) {
+        winClosing.style.pointerEvents = 'none';
         winClosing.style.transform = '';
         winClosing.style.transition = '';
     }
@@ -376,7 +378,7 @@ function executeCloseModal(id, e) {
         }
 
         if (!hasOtherOpenModal()) {
-            document.body.style.overflow = 'auto';
+            document.body.style.overflow = '';
             if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
         }
 
@@ -396,7 +398,7 @@ function executeCloseModal(id, e) {
         if ('requestIdleCallback' in window) {
             requestIdleCallback(deferBackgroundTasks, { timeout: 1500 });
         } else {
-            setTimeout(deferBackgroundTasks, 300);
+            setTimeout(deferBackgroundTasks, 500);
         }
     }, 190);
 }
