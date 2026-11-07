@@ -283,6 +283,7 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(id1).not.toBe(id2);
 
         const writeTextMock = vi.fn().mockResolvedValue(undefined);
+        if (!globalThis.navigator) globalThis.navigator = {};
         const prevClipboard = globalThis.navigator?.clipboard;
         Object.defineProperty(globalThis.navigator, 'clipboard', {
             value: { writeText: writeTextMock },

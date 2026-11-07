@@ -71,6 +71,7 @@ describe('Google OAuth & Authentication Recovery (Supabase)', () => {
     });
 
     it('loginWithGoogle warns in-app browsers (Instagram, TikTok) before OAuth', async () => {
+        if (!globalThis.navigator) globalThis.navigator = {};
         Object.defineProperty(globalThis.navigator, 'userAgent', {
             value: 'Mozilla/5.0 Instagram 123.0.0 Android',
             configurable: true

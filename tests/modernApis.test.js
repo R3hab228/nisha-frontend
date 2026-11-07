@@ -47,6 +47,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         };
         globalThis.Notification = { permission: 'default', requestPermission: vi.fn(() => Promise.resolve('granted')) };
         globalThis.window.matchMedia = vi.fn((q) => ({ matches: false }));
+        if (!globalThis.navigator) globalThis.navigator = {};
         Object.defineProperty(globalThis.navigator, 'serviceWorker', {
             value: {
                 ready: Promise.resolve({
