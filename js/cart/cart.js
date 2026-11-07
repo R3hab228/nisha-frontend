@@ -214,10 +214,106 @@ function setNPStorage(key, val, customTtl) {
 }
 window.setNPStorage = setNPStorage;
 
+const NP_MAX_CACHE_AGE_MS = 14 * 24 * 60 * 60 * 1000; // 14 дней - предельный срок актуальности кэша
+const NP_SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 часа - интервал фоновой проверки устаревших записей
+
 /**
- * Очищает кэш отделений и городов Новой Почты
+ * Выполняет фоновую очистку устаревших или поврежденных записей Новой Почты из IndexedDB, SessionStorage и In-Memory кэша
+ * @param {boolean} [forceAll=false] - Если true, удаляет абсолютно все записи Новой Почты (полный сброс)
+ * @returns {Promise<{ deleted: number, checked: number, success: boolean }>}
  */
-async function clearNPCache() {
+async function cleanupStaleNPCache(forceAll = false) {
+    let deleted = 0;
+    let checked = 0;
+    const now = Date.now();
+
+    // 1. Очистка L1 In-Memory
+    if (forceAll) {
+        npMemoryCache.clear();
+    } else {
+        for (const [key, entry] of npMemoryCache.entries()) {
+            const ttl = (entry && typeof entry.ttl === 'number') ? entry.ttl : getNPDefaultTTL(key);
+            if (!entry || !entry.ts || (now - entry.ts >= ttl)) {
+                npMemoryCache.delete(key);
+            }
+        }
+    }
+
+    // 2. Очистка L3 SessionStorage
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            for (let i = sessionStorage.length - 1; i >= 0; i--) {
+                const k = sessionStorage.key(i);
+                if (k && k.startsWith('nisha_np_')) {
+                    if (forceAll) {
+                        sessionStorage.removeItem(k);
+                    } else {
+                        try {
+                            const raw = sessionStorage.getItem(k);
+                            const parsed = raw ? JSON.parse(raw) : null;
+                            if (!parsed || (parsed.ts && (now - parsed.ts >= (parsed.ttl || NP_BRANCH_CACHE_TTL_MS)))) {
+                                sessionStorage.removeItem(k);
+                            }
+                        } catch (_) {
+                            sessionStorage.removeItem(k);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (_) {}
+
+    // 3. Очистка L2 IndexedDB
+    try {
+        let keys = [];
+        if (typeof window.idbGetAllKeys === 'function') {
+            keys = await window.idbGetAllKeys();
+        } else if (typeof window.idbClearNP === 'function' && forceAll) {
+            await window.idbClearNP();
+            return { deleted: 1, checked: 1, success: true };
+        }
+
+        const npKeys = (Array.isArray(keys) ? keys : []).filter(k => typeof k === 'string' && k.startsWith('np_'));
+
+        for (const fullKey of npKeys) {
+            checked++;
+            if (forceAll) {
+                if (typeof window.idbDel === 'function') {
+                    await window.idbDel(fullKey);
+                    deleted++;
+                }
+                continue;
+            }
+
+            const rawKey = fullKey.replace(/^np_/, '');
+            const defaultTtl = getNPDefaultTTL(rawKey);
+
+            if (typeof window.idbGet === 'function') {
+                const entry = await window.idbGet(fullKey);
+                const isCorrupt = !entry || typeof entry !== 'object' || !entry.ts;
+                const isExpired = entry && entry.ts && (now - entry.ts >= (typeof entry.ttl === 'number' ? entry.ttl : defaultTtl));
+                const isTooOld = entry && entry.ts && (now - entry.ts >= NP_MAX_CACHE_AGE_MS);
+
+                if (isCorrupt || isExpired || isTooOld) {
+                    if (typeof window.idbDel === 'function') {
+                        await window.idbDel(fullKey);
+                        deleted++;
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[NP Cache] Ошибка фоновой очистки IndexedDB:', e);
+    }
+
+    return { deleted, checked, success: true };
+}
+window.cleanupStaleNPCache = cleanupStaleNPCache;
+
+/**
+ * Очищает кэш отделений и городов Новой Почты во всех уровнях хранилища
+ */
+async function clearNPCache(includeIdb = false) {
     npMemoryCache.clear();
     try {
         if (typeof sessionStorage !== 'undefined') {
@@ -229,8 +325,46 @@ async function clearNPCache() {
             }
         }
     } catch (_) {}
+    if (includeIdb) {
+        if (typeof cleanupStaleNPCache === 'function') {
+            await cleanupStaleNPCache(true);
+        } else if (typeof window.idbClearNP === 'function') {
+            await window.idbClearNP();
+        }
+    }
 }
 window.clearNPCache = clearNPCache;
+
+/**
+ * Автоматический запуск проверки устаревшего кэша в idle-время раз в 24 часа
+ */
+function scheduleAutoNPCacheCleanup() {
+    if (typeof window === 'undefined') return;
+    try {
+        const lastSweepStr = (typeof localStorage !== 'undefined') ? localStorage.getItem('nisha_np_last_sweep') : null;
+        const lastSweep = lastSweepStr ? Number(lastSweepStr) : 0;
+        const now = Date.now();
+
+        if (!lastSweep || (now - lastSweep > NP_SWEEP_INTERVAL_MS)) {
+            const executeSweep = () => {
+                cleanupStaleNPCache(false).then(() => {
+                    try {
+                        if (typeof localStorage !== 'undefined') {
+                            localStorage.setItem('nisha_np_last_sweep', String(Date.now()));
+                        }
+                    } catch (_) {}
+                }).catch(() => {});
+            };
+
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(executeSweep, { timeout: 4000 });
+            } else {
+                setTimeout(executeSweep, 3000);
+            }
+        }
+    } catch (_) {}
+}
+scheduleAutoNPCacheCleanup();
 
 let cartSwipeStartX = 0;
 let cartSwipeCurrentX = 0;

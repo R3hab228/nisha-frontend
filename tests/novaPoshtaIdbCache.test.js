@@ -65,6 +65,13 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
         globalThis.window.idbGet = vi.fn(async (k) => mockIdbMap.has(k) ? mockIdbMap.get(k) : null);
         globalThis.window.idbSet = vi.fn(async (k, v) => { mockIdbMap.set(k, v); return true; });
         globalThis.window.idbDel = vi.fn(async (k) => { mockIdbMap.delete(k); return true; });
+        globalThis.window.idbGetAllKeys = vi.fn(async () => Array.from(mockIdbMap.keys()));
+        globalThis.window.idbClearNP = vi.fn(async () => {
+            for (const k of Array.from(mockIdbMap.keys())) {
+                if (k.startsWith('np_')) mockIdbMap.delete(k);
+            }
+            return true;
+        });
 
         // Mock DOM elements
         const elements = {
@@ -267,6 +274,54 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
         expect(typeof cartMod.getNPStorage).toBe('function');
         expect(typeof cartMod.setNPStorage).toBe('function');
         expect(typeof cartMod.clearNPCache).toBe('function');
+        expect(typeof cartMod.cleanupStaleNPCache).toBe('function');
         expect(typeof cartMod.slimBranches).toBe('function');
+    });
+
+    it('cleanupStaleNPCache sweeps expired and corrupt records while retaining fresh ones', async () => {
+        const { cleanupStaleNPCache, setNPStorage } = window;
+        expect(typeof cleanupStaleNPCache).toBe('function');
+
+        // Fresh item (1 hour old)
+        setNPStorage('branchall_fresh', [{ Ref: 'fresh1', Description: 'Свіже відділення' }]);
+
+        // Expired item (25 hours old)
+        const expiredTs = Date.now() - (25 * 60 * 60 * 1000);
+        mockIdbMap.set('np_branchall_old', {
+            ts: expiredTs,
+            ttl: 24 * 60 * 60 * 1000,
+            data: [{ Ref: 'old1', Description: 'Старе відділення' }]
+        });
+
+        // Corrupt item (no timestamp)
+        mockIdbMap.set('np_corrupted', { data: 'broken' });
+
+        const sweepResult = await cleanupStaleNPCache(false);
+        expect(sweepResult.success).toBe(true);
+        expect(sweepResult.deleted).toBeGreaterThanOrEqual(2);
+
+        // Fresh remains
+        expect(mockIdbMap.has('np_branchall_fresh')).toBe(true);
+        // Stale & corrupt deleted
+        expect(mockIdbMap.has('np_branchall_old')).toBe(false);
+        expect(mockIdbMap.has('np_corrupted')).toBe(false);
+    });
+
+    it('clearNPCache purges all NP cache entries across IndexedDB, sessionStorage and memory', async () => {
+        const { setNPStorage, clearNPCache, getNPStorage } = window;
+
+        setNPStorage('branchall_to_wipe1', [{ Ref: 'w1' }]);
+        setNPStorage('city_to_wipe2', [{ Ref: 'w2' }]);
+        globalThis.sessionStorage.setItem('nisha_np_temp_session', JSON.stringify({ Ref: 's1' }));
+
+        expect(mockIdbMap.has('np_branchall_to_wipe1')).toBe(true);
+        expect(mockIdbMap.has('np_city_to_wipe2')).toBe(true);
+
+        await clearNPCache(true);
+
+        expect(mockIdbMap.has('np_branchall_to_wipe1')).toBe(false);
+        expect(mockIdbMap.has('np_city_to_wipe2')).toBe(false);
+        expect(globalThis.sessionStorage.getItem('nisha_np_temp_session')).toBeNull();
+        expect(getNPStorage('branchall_to_wipe1')).toBeNull();
     });
 });

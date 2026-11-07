@@ -185,13 +185,31 @@ if (typeof window !== 'undefined') {
 
 
 // Глобальный перехватчик URL для CDN
-window.toCDN = window.toCDN || function(url) {
-    if (typeof url === 'string' && url.includes('nmpuefxqtkhvtltdvllz.supabase.co')) {
-        return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+window.toCDN = window.toCDN || function(url, options = {}) {
+    if (!url || typeof url !== 'string') return '';
+    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+    if (!options || typeof options !== 'object' || Object.keys(options).length === 0) return result;
+    if (result.endsWith('.mp4') || result.endsWith('.webm') || result.endsWith('.svg')) return result;
+    const isThumb = options.isThumb === true || (typeof options.width === 'number' && options.width <= 480);
+    if (isThumb && result.includes('/items-images/item_') && !result.includes('/items-images/thumb_item_')) {
+        result = result.replace('/items-images/item_', '/items-images/thumb_item_');
     }
-    return url || '';
+    const width = options.width || options.w;
+    const height = options.height || options.h;
+    const quality = options.quality || options.q;
+    const format = options.format || options.fmt;
+    if (width || height || quality || format) {
+        const sep = result.includes('?') ? '&' : '?';
+        const params = [];
+        if (width) params.push(`w=${encodeURIComponent(width)}`);
+        if (height) params.push(`h=${encodeURIComponent(height)}`);
+        if (quality) params.push(`q=${encodeURIComponent(quality)}`);
+        if (format) params.push(`fmt=${encodeURIComponent(format)}`);
+        result += sep + params.join('&');
+    }
+    return result;
 };
-const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
+const toCDN = (u, opts) => (typeof window.toCDN === 'function' ? window.toCDN(u, opts) : (u || ''));
 
 // Оптимизированный URL картинки (превью / оригинал)
 function getOptimizedImageUrl(item, wantsThumb = false) {
@@ -208,7 +226,7 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
         if (isValid(item.images.at(0))) resultUrl = item.images.at(0);
     }
 
-    return window.toCDN(resultUrl);
+    return window.toCDN(resultUrl, wantsThumb ? { width: 400, quality: 85, format: 'webp', isThumb: true } : {});
 }
 window.getOptimizedImageUrl = getOptimizedImageUrl;
 
@@ -2552,7 +2570,7 @@ function buildCardDOM(item, idx = 0) {
     thumbsArray.forEach((thumbUrl, thumbIdx) => {
         const rawVidUrl = item.images && item.images[thumbIdx] ? item.images[thumbIdx] : '';
         const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
-        const cdnThumb = (typeof window.toCDN === 'function') ? window.toCDN(thumbUrl) : thumbUrl;
+        const cdnThumb = (typeof window.toCDN === 'function') ? window.toCDN(thumbUrl, { width: 400, quality: 85, format: 'webp', isThumb: true }) : thumbUrl;
         const cdnVidUrl = (typeof window.toCDN === 'function') ? window.toCDN(rawVidUrl) : rawVidUrl;
         const slideAlt = cleanAlt + (thumbIdx > 0 ? ` - фото ${thumbIdx + 1}` : '');
 

@@ -107,12 +107,53 @@ export async function decompressJSON(data, format = 'gzip') {
     return JSON.parse(text);
 }
 
-export function toCDN(url) {
+export function toCDN(url, options = {}) {
     if (typeof window !== 'undefined' && typeof window.toCDN === 'function') {
-        return window.toCDN(url);
+        return window.toCDN(url, options);
     }
     if (!url || typeof url !== 'string') return '';
-    return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+    if (!options || typeof options !== 'object' || Object.keys(options).length === 0) {
+        return result;
+    }
+    if (result.endsWith('.mp4') || result.endsWith('.webm') || result.endsWith('.svg')) {
+        return result;
+    }
+    const isThumb = options.isThumb === true || (typeof options.width === 'number' && options.width <= 480);
+    if (isThumb && result.includes('/items-images/item_') && !result.includes('/items-images/thumb_item_')) {
+        result = result.replace('/items-images/item_', '/items-images/thumb_item_');
+    }
+    const width = options.width || options.w;
+    const height = options.height || options.h;
+    const quality = options.quality || options.q;
+    const format = options.format || options.fmt;
+    if (width || height || quality || format) {
+        const sep = result.includes('?') ? '&' : '?';
+        const params = [];
+        if (width) params.push(`w=${encodeURIComponent(width)}`);
+        if (height) params.push(`h=${encodeURIComponent(height)}`);
+        if (quality) params.push(`q=${encodeURIComponent(quality)}`);
+        if (format) params.push(`fmt=${encodeURIComponent(format)}`);
+        result += sep + params.join('&');
+    }
+    return result;
+}
+
+export function getOptimizedCDNImageUrl(url, options = {}) {
+    if (typeof window !== 'undefined' && typeof window.getOptimizedCDNImageUrl === 'function') {
+        return window.getOptimizedCDNImageUrl(url, options);
+    }
+    return toCDN(url, options);
+}
+
+export function getImageSrcSet(url, widths = [320, 480, 768]) {
+    if (typeof window !== 'undefined' && typeof window.getImageSrcSet === 'function') {
+        return window.getImageSrcSet(url, widths);
+    }
+    if (!url || typeof url !== 'string' || url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.svg')) return '';
+    return widths
+        .map(w => `${toCDN(url, { width: w, quality: 85, format: 'webp' })} ${w}w`)
+        .join(', ');
 }
 
 /**

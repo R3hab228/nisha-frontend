@@ -61,13 +61,62 @@ async function decompressJSON(data, format = 'gzip') {
 }
 window.decompressJSON = decompressJSON;
 
-// --- UNIFIED CDN URL REWRITER ---
-function toCDN(url) {
+// --- UNIFIED CDN URL REWRITER & ADAPTIVE IMAGE OPTIMIZER ---
+function toCDN(url, options = {}) {
     if (!url || typeof url !== 'string') return '';
-    return url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+
+    // Если опции не переданы или пустые, возвращаем чистый URL без изменений (100% обратная совместимость)
+    if (!options || typeof options !== 'object' || Object.keys(options).length === 0) {
+        return result;
+    }
+
+    // Пропускаем видео и векторную графику
+    if (result.endsWith('.mp4') || result.endsWith('.webm') || result.endsWith('.svg')) {
+        return result;
+    }
+
+    // 1. Автоматическое разрешение thumbnail файла в items-images
+    const isThumb = options.isThumb === true || (typeof options.width === 'number' && options.width <= 480);
+    if (isThumb && result.includes('/items-images/item_') && !result.includes('/items-images/thumb_item_')) {
+        result = result.replace('/items-images/item_', '/items-images/thumb_item_');
+    }
+
+    // 2. Параметры сжатия и ресайза для Cloudflare Worker / Edge Image Resizing
+    const width = options.width || options.w;
+    const height = options.height || options.h;
+    const quality = options.quality || options.q;
+    const format = options.format || options.fmt;
+
+    if (width || height || quality || format) {
+        const sep = result.includes('?') ? '&' : '?';
+        const params = [];
+        if (width) params.push(`w=${encodeURIComponent(width)}`);
+        if (height) params.push(`h=${encodeURIComponent(height)}`);
+        if (quality) params.push(`q=${encodeURIComponent(quality)}`);
+        if (format) params.push(`fmt=${encodeURIComponent(format)}`);
+        result += sep + params.join('&');
+    }
+
+    return result;
 }
-window.toCDN = window.toCDN || toCDN;
-if (typeof globalThis !== 'undefined') globalThis.toCDN = globalThis.toCDN || toCDN;
+window.toCDN = toCDN;
+if (typeof globalThis !== 'undefined') globalThis.toCDN = toCDN;
+
+function getOptimizedCDNImageUrl(url, options = {}) {
+    return toCDN(url, options);
+}
+window.getOptimizedCDNImageUrl = getOptimizedCDNImageUrl;
+if (typeof globalThis !== 'undefined') globalThis.getOptimizedCDNImageUrl = getOptimizedCDNImageUrl;
+
+function getImageSrcSet(url, widths = [320, 480, 768]) {
+    if (!url || typeof url !== 'string' || url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.svg')) return '';
+    return widths
+        .map(w => `${toCDN(url, { width: w, quality: 85, format: 'webp' })} ${w}w`)
+        .join(', ');
+}
+window.getImageSrcSet = getImageSrcSet;
+if (typeof globalThis !== 'undefined') globalThis.getImageSrcSet = getImageSrcSet;
 
 // --- SANITIZATION & ESCAPING UTILITIES (XSS SHIELD) ---
 function escapeHtml(str) {
@@ -1351,6 +1400,81 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
                     tx.onabort = () => resolve(false);
                     const store = tx.objectStore(STORE_NAME);
                     store.delete(key);
+                } catch (txErr) {
+                    _dbPromise = null;
+                    resolve(false);
+                }
+            });
+        } catch (e) {
+            _dbPromise = null;
+            return false;
+        }
+    };
+
+    window.idbGetAllKeys = async function() {
+        try {
+            const db = await getDB();
+            if (!db) return [];
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    tx.onerror = () => resolve([]);
+                    tx.onabort = () => resolve([]);
+                    const store = tx.objectStore(STORE_NAME);
+                    if (typeof store.getAllKeys === 'function') {
+                        const req = store.getAllKeys();
+                        req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+                        req.onerror = () => resolve([]);
+                    } else {
+                        const keys = [];
+                        const req = store.openKeyCursor ? store.openKeyCursor() : store.openCursor();
+                        req.onsuccess = (e) => {
+                            const cursor = e.target.result;
+                            if (cursor) {
+                                keys.push(cursor.key);
+                                cursor.continue();
+                            } else {
+                                resolve(keys);
+                            }
+                        };
+                        req.onerror = () => resolve(keys);
+                    }
+                } catch (txErr) {
+                    _dbPromise = null;
+                    resolve([]);
+                }
+            });
+        } catch (e) {
+            _dbPromise = null;
+            return [];
+        }
+    };
+
+    window.idbClearNP = async function() {
+        try {
+            const db = await getDB();
+            if (!db) return false;
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => resolve(false);
+                    tx.onabort = () => resolve(false);
+                    const store = tx.objectStore(STORE_NAME);
+                    if (typeof store.openCursor === 'function') {
+                        const req = store.openCursor();
+                        req.onsuccess = (e) => {
+                            const cursor = e.target.result;
+                            if (cursor) {
+                                if (typeof cursor.key === 'string' && cursor.key.startsWith('np_')) {
+                                    cursor.delete();
+                                }
+                                cursor.continue();
+                            }
+                        };
+                    } else {
+                        resolve(false);
+                    }
                 } catch (txErr) {
                     _dbPromise = null;
                     resolve(false);

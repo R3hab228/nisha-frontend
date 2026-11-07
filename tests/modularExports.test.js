@@ -14,6 +14,8 @@ import defaultModularFacade, {
     escapeJsString,
     sanitizeText,
     toCDN,
+    getOptimizedCDNImageUrl,
+    getImageSrcSet,
     formatPrice,
     getCurrency,
     clamp,
@@ -48,6 +50,7 @@ import defaultModularFacade, {
     openCart,
     openCheckoutModal,
     updateCartUI,
+    cleanupStaleNPCache,
     track,
     trackProductView,
     trackAddToCart,
@@ -192,6 +195,22 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items/photo.jpg';
             const cdnUrl = toCDN(supabaseUrl);
             expect(cdnUrl).toBe('https://nisha-cdn.mtyagniryadno.workers.dev/storage/v1/object/public/items/photo.jpg');
+        });
+
+        it('generates optimized CDN URLs with thumbnail resolution and resizing query parameters', () => {
+            const itemUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items-images/item_1785941189142_93.webp';
+            const optThumb = toCDN(itemUrl, { width: 400, quality: 85, format: 'webp', isThumb: true });
+            expect(optThumb).toContain('https://nisha-cdn.mtyagniryadno.workers.dev/storage/v1/object/public/items-images/thumb_item_1785941189142_93.webp');
+            expect(optThumb).toContain('w=400');
+            expect(optThumb).toContain('q=85');
+            expect(optThumb).toContain('fmt=webp');
+
+            const directOpt = getOptimizedCDNImageUrl(itemUrl, { w: 320 });
+            expect(directOpt).toContain('w=320');
+
+            const srcSet = getImageSrcSet(itemUrl, [320, 640]);
+            expect(srcSet).toContain('320w');
+            expect(srcSet).toContain('640w');
         });
 
         it('formats prices and handles currency symbols', () => {
@@ -351,6 +370,11 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
     });
 
     describe('Cart Module (src/modules/cart.js)', () => {
+        it('exports cleanupStaleNPCache and cart management utilities', () => {
+            expect(typeof cleanupStaleNPCache).toBe('function');
+            expect(typeof defaultModularFacade.cart.cleanupStaleNPCache).toBe('function');
+        });
+
         it('manages cart state and handles actions gracefully', async () => {
             expect(getActiveCart()).toEqual([]);
             setActiveCart([{ id: 'item_1', size: 'M', quantity: 1 }]);

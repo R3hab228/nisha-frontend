@@ -174,6 +174,18 @@ export async function clearNPCache() {
 }
 
 /**
+ * Sweeps expired or corrupted Nova Poshta records from storage
+ * @param {boolean} [forceAll=false]
+ * @returns {Promise<{ deleted: number, checked: number, success: boolean }>}
+ */
+export async function cleanupStaleNPCache(forceAll = false) {
+    if (typeof window !== 'undefined' && typeof window.cleanupStaleNPCache === 'function') {
+        return window.cleanupStaleNPCache(forceAll);
+    }
+    return { deleted: 0, checked: 0, success: true };
+}
+
+/**
  * Slims Nova Poshta branch array to minimal payload for storage
  * @param {any[]} list
  * @returns {any[]}
