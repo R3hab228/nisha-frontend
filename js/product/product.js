@@ -757,10 +757,9 @@ function openProductModal(item) {
                     const isFirst = (index === 0);
                     const isSecond = (index === 1);
                     const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
-                    const thumbBg = currentThumb ? `background-image: url('${currentThumb}'); background-size: contain; background-repeat: no-repeat; background-position: center;` : 'background-image: none;';
                     slidesHtml += `
-                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide" style="${thumbBg} display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
-                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:${isFirst ? '1' : '0'}; transition:opacity 0.25s ease-in-out;" 
+                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:#000;">
+                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:${isFirst ? '1' : '0'}; transition:opacity 0.2s ease-in-out;" 
                             >
                         </a>`;
                 }
@@ -1046,46 +1045,62 @@ function openProductModal(item) {
         `;
     }
 
-    if (typeof openModal === 'function') {
-        openModal('productModal');
-    } else {
-        const modal = document.getElementById('productModal');
-        if (modal) {
-            modal.inert = false;
-            modal.removeAttribute('inert');
-            modal.classList.remove('closing');
-            modal.style.pointerEvents = '';
-            modal.setAttribute('aria-hidden', 'false');
-            const win = modal.querySelector('.modal-window');
+    const modalEl = document.getElementById('productModal');
+    const isAlreadyOpen = modalEl && (modalEl.classList.contains('is-open') || modalEl.style.display === 'flex');
+
+    if (!isAlreadyOpen) {
+        if (typeof openModal === 'function') {
+            openModal('productModal');
+        } else if (modalEl) {
+            modalEl.inert = false;
+            modalEl.removeAttribute('inert');
+            modalEl.classList.remove('closing');
+            modalEl.style.pointerEvents = '';
+            modalEl.setAttribute('aria-hidden', 'false');
+            const win = modalEl.querySelector('.modal-window');
             if (win) {
                 win.style.transform = '';
                 win.style.opacity = '';
                 win.style.transition = '';
                 win.style.animation = '';
             }
-            modal.style.display = 'flex';
+            modalEl.style.display = 'flex';
+            if (!document.body.style.overflow || document.body.style.overflow !== 'hidden') {
+                window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
+            }
+            if (item && item.id && typeof window.saveCurrentFeedScrollState === 'function') {
+                window.saveCurrentFeedScrollState(item.id);
+            }
+            document.body.style.overflow = 'hidden';
         }
-        if (!document.body.style.overflow || document.body.style.overflow !== 'hidden') {
-            window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
-        }
-        if (item && item.id && typeof window.saveCurrentFeedScrollState === 'function') {
-            window.saveCurrentFeedScrollState(item.id);
-        }
-        document.body.style.overflow = 'hidden';
+    } else if (typeof triggerModalTypewriter === 'function') {
+        triggerModalTypewriter(modalEl);
     }
 
     addToHistory(item);
 
     const modalWin = document.querySelector('#productModal .modal-window');
     if (modalWin) {
-        modalWin.scrollTop = 0;
-    }
-    requestAnimationFrame(() => {
-        const mWin = document.querySelector('#productModal .modal-window');
-        if (mWin && mWin.scrollTop > 0) {
-            mWin.scrollTop = 0;
+        if (isAlreadyOpen && modalWin.scrollTop > 20) {
+            if (typeof modalWin.scrollTo === 'function') {
+                try {
+                    modalWin.scrollTo({ top: 0, behavior: 'smooth' });
+                } catch (_) {
+                    modalWin.scrollTop = 0;
+                }
+            } else {
+                modalWin.scrollTop = 0;
+            }
+        } else {
+            modalWin.scrollTop = 0;
+            requestAnimationFrame(() => {
+                const mWin = document.querySelector('#productModal .modal-window');
+                if (mWin && mWin.scrollTop > 0) {
+                    mWin.scrollTop = 0;
+                }
+            });
         }
-    });
+    }
 
     // Умная очистка URL от ?item=...
     const url = new URL(window.location);

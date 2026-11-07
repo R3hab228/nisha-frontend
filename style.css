@@ -866,6 +866,9 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
     border-color: var(--accent-green) !important;
     transform: translateY(-2px);
 }
+.similar-item-card:active {
+    transform: scale(0.97);
+}
 .similar-item-card.is-unseen {
     border-color: var(--accent-red);
     animation: unseenPulseAnim 2s infinite alternate;
