@@ -1046,9 +1046,16 @@ function openProductModal(item) {
     }
 
     const modalEl = document.getElementById('productModal');
-    const isAlreadyOpen = modalEl && (modalEl.classList.contains('is-open') || modalEl.style.display === 'flex');
+    const isAlreadyOpen = Boolean(
+        modalEl &&
+        !modalEl.classList.contains('closing') &&
+        (modalEl.classList.contains('is-open') || modalEl.style.display === 'flex')
+    );
 
     if (!isAlreadyOpen) {
+        if (item && item.id && typeof window.saveCurrentFeedScrollState === 'function') {
+            window.saveCurrentFeedScrollState(item.id);
+        }
         if (typeof openModal === 'function') {
             openModal('productModal');
         } else if (modalEl) {
@@ -1059,6 +1066,7 @@ function openProductModal(item) {
             modalEl.setAttribute('aria-hidden', 'false');
             const win = modalEl.querySelector('.modal-window');
             if (win) {
+                win.style.pointerEvents = '';
                 win.style.transform = '';
                 win.style.opacity = '';
                 win.style.transition = '';
@@ -1068,19 +1076,23 @@ function openProductModal(item) {
             if (!document.body.style.overflow || document.body.style.overflow !== 'hidden') {
                 window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
             }
-            if (item && item.id && typeof window.saveCurrentFeedScrollState === 'function') {
-                window.saveCurrentFeedScrollState(item.id);
-            }
             document.body.style.overflow = 'hidden';
         }
-    } else if (typeof triggerModalTypewriter === 'function') {
-        triggerModalTypewriter(modalEl);
+    } else {
+        if (modalEl) modalEl.style.pointerEvents = '';
+        const win = modalEl ? modalEl.querySelector('.modal-window') : null;
+        if (win) win.style.pointerEvents = '';
+        if (typeof triggerModalTypewriter === 'function') {
+            triggerModalTypewriter(modalEl);
+        }
     }
 
     addToHistory(item);
 
     const modalWin = document.querySelector('#productModal .modal-window');
     if (modalWin) {
+        modalWin.style.pointerEvents = '';
+        if (typeof modalWin.setAttribute === 'function') modalWin.setAttribute('data-lenis-prevent', 'true');
         if (isAlreadyOpen && modalWin.scrollTop > 20) {
             if (typeof modalWin.scrollTo === 'function') {
                 try {

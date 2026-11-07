@@ -59,7 +59,10 @@ export function openModal(modalId, options) {
         const el = document.getElementById(modalId);
         if (el) {
             if (el.classList && typeof el.classList.add === 'function') el.classList.add('is-open');
-            if (el.style) el.style.display = 'flex';
+            if (el.style) {
+                el.style.display = 'flex';
+                el.style.pointerEvents = '';
+            }
             triggerModalTypewriter(el);
         }
     }

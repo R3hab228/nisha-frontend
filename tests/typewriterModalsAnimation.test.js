@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { triggerModalTypewriter, openModal } from '../src/modules/windows.js';
+import { triggerModalTypewriter, openModal, executeCloseModal } from '../src/modules/windows.js';
 
 describe('Typewriter Animation with Blinking Block Cursor Across All Modals', () => {
     let mockElement;
@@ -75,6 +75,73 @@ describe('Typewriter Animation with Blinking Block Cursor Across All Modals', ()
         openModal('testModal');
         expect(mockElement.style.display).toBe('flex');
         expect(mockTypewriter.style.animation).toBe('');
+    });
+
+    it('openModal and executeCloseModal never leave .modal-window with pointer-events: none after closing and reopening', async () => {
+        vi.useFakeTimers();
+        globalThis.window = globalThis;
+        await import('../js/ui/windows.js');
+        const mockWin = {
+            scrollTop: 120,
+            style: {
+                pointerEvents: '',
+                transform: '',
+                opacity: '',
+                transition: '',
+                animation: ''
+            },
+            setAttribute: vi.fn(),
+            addEventListener: vi.fn()
+        };
+        mockElement.querySelector = vi.fn(selector => {
+            if (selector === '.typewriter') return mockTypewriter;
+            if (selector === '.modal-window') return mockWin;
+            return null;
+        });
+        mockElement.querySelectorAll = vi.fn(selector => {
+            if (selector === '.typewriter') return [mockTypewriter];
+            return [];
+        });
+        const classes = new Set();
+        mockElement.classList = {
+            add: vi.fn(c => classes.add(c)),
+            remove: vi.fn(c => classes.delete(c)),
+            contains: vi.fn(c => classes.has(c))
+        };
+        mockElement.setAttribute = vi.fn();
+        mockElement.removeAttribute = vi.fn();
+        globalThis.document.querySelectorAll = vi.fn(() => [mockElement]);
+
+        // 1. First open
+        openModal('testModal');
+        expect(mockElement.style.display).toBe('flex');
+        expect(mockElement.style.pointerEvents).toBe('');
+        expect(mockWin.style.pointerEvents).toBe('');
+        expect(mockWin.setAttribute).toHaveBeenCalledWith('data-lenis-prevent', 'true');
+
+        // 2. Close modal
+        executeCloseModal('testModal');
+        expect(mockElement.style.pointerEvents).toBe('none');
+        expect(mockWin.style.pointerEvents).toBe('');
+
+        // 3. Reopen before 190ms close timer finishes
+        openModal('testModal');
+        expect(mockElement.style.pointerEvents).toBe('');
+        expect(mockWin.style.pointerEvents).toBe('');
+
+        // 4. Close again and let 190ms timer finish
+        executeCloseModal('testModal');
+        vi.advanceTimersByTime(250);
+        expect(mockElement.style.display).toBe('none');
+        expect(mockElement.style.pointerEvents).toBe('');
+        expect(mockWin.style.pointerEvents).toBe('');
+
+        // 5. Reopen after full close
+        openModal('testModal');
+        expect(mockElement.style.display).toBe('flex');
+        expect(mockElement.style.pointerEvents).toBe('');
+        expect(mockWin.style.pointerEvents).toBe('');
+        vi.useRealTimers();
     });
 
     it('verifies index.html has no animation:none disabling typewriter on modal headers', () => {

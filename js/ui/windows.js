@@ -150,7 +150,8 @@ window.triggerModalTypewriter = triggerModalTypewriter;
 
 // 2. Универсальное открытие модального окна (с ленивой инициализацией)
 function openModal(id) {
-    if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
+    if (typeof window.stopLenis === 'function') window.stopLenis();
+    else if (typeof lenis !== 'undefined' && lenis && typeof lenis.stop === 'function') lenis.stop();
     const modal = document.getElementById(id);
     if (!modal) return;
 
@@ -181,6 +182,7 @@ function openModal(id) {
     modal.setAttribute('aria-hidden', 'false');
     const win = modal.querySelector ? modal.querySelector('.modal-window') : null;
     if (win) {
+        win.style.pointerEvents = '';
         win.scrollTop = 0;
         win.style.transform = '';
         win.style.opacity = '';
@@ -290,7 +292,8 @@ function executeCloseModal(id, e) {
                 window.scrollTo({ top: window._preModalScrollY, behavior: 'instant' });
             }
         }
-        if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
+        if (typeof window.startLenis === 'function') window.startLenis();
+        else if (typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') lenis.start();
     }
 
     // Мгновенная пауза любых видео в закрывающемся окне
@@ -337,7 +340,7 @@ function executeCloseModal(id, e) {
     modal.setAttribute('aria-hidden', 'true');
     const winClosing = modal.querySelector('.modal-window');
     if (winClosing) {
-        winClosing.style.pointerEvents = 'none';
+        winClosing.style.pointerEvents = '';
         winClosing.style.transform = '';
         winClosing.style.transition = '';
     }
@@ -358,6 +361,7 @@ function executeCloseModal(id, e) {
 
         const win = modal.querySelector('.modal-window');
         if (win) {
+            win.style.pointerEvents = '';
             win.style.transform = '';
             win.style.opacity = '';
             win.style.transition = '';
@@ -379,7 +383,8 @@ function executeCloseModal(id, e) {
 
         if (!hasOtherOpenModal()) {
             document.body.style.overflow = '';
-            if (typeof lenis !== 'undefined' && window.startLenis) window.startLenis();
+            if (typeof window.startLenis === 'function') window.startLenis();
+            else if (typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') lenis.start();
         }
 
         // Фоновые задачи (история и рассылки) запускаем безопасно в idle-потоке без фризов UI
@@ -479,8 +484,14 @@ function attachMobileSwipeToWindow(overlay) {
             return;
         }
 
-        // Плавное перетягивание шторки вниз
-        if (diffY > 8) {
+        // Если пользователь скроллит карточку вниз (палец идет вверх) или окно уже прокручено — не мешаем нативному скроллу
+        if (!isDragging && (diffY < -4 || modalWin.scrollTop > 0)) {
+            canDrag = false;
+            return;
+        }
+
+        // Плавное перетягивание шторки вниз (только с самого верха карточки и при вертикальном жесте)
+        if (diffY > 8 && diffY > diffX) {
             isDragging = true;
             if (e.cancelable && typeof e.preventDefault === 'function') e.preventDefault(); 
             
@@ -490,9 +501,9 @@ function attachMobileSwipeToWindow(overlay) {
                 let opacity = 1 - (diffY / (window.innerHeight * 0.7));
                 overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0.15, opacity * 0.95)})`;
             });
-        } else if (diffY <= 0) {
+        } else if (isDragging && diffY <= 0) {
             isDragging = false;
-            modalWin.style.transform = `translateY(0px)`;
+            modalWin.style.transform = '';
         }
     }, { passive: false });
 
@@ -691,7 +702,9 @@ function initMobileKeyboardViewport() {
         window.visualViewport.addEventListener('resize', () => scheduleViewportMetrics('resize'));
         window.visualViewport.addEventListener('scroll', () => scheduleViewportMetrics('scroll'), { passive: true });
     }
-    window.addEventListener('resize', () => scheduleViewportMetrics('resize'));
+    if (typeof window.addEventListener === 'function') {
+        window.addEventListener('resize', () => scheduleViewportMetrics('resize'));
+    }
 
     if (typeof document.addEventListener === 'function') {
         document.addEventListener('focusin', (e) => {
