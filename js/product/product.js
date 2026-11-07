@@ -8,7 +8,7 @@ let currentOpenedItem = window.currentOpenedItem;
 
 let currentSlide = 0;
 
-const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
+const toCDN = (u, opts) => (typeof window.toCDN === 'function' ? window.toCDN(u, opts) : (u || ''));
 
 // Безопасные геттеры зависимостей
 function getFavs() {
@@ -717,7 +717,7 @@ function openProductModal(item) {
             mediaList.forEach((url, index) => {
                 const cdnUrl = toCDN(url);
                 const isVideo = typeof cdnUrl === 'string' && cdnUrl.endsWith('.mp4');
-                let currentThumb = (item.thumbnails && item.thumbnails[index]) ? toCDN(item.thumbnails[index]) : cdnUrl;
+                let currentThumb = (item.thumbnails && item.thumbnails[index]) ? toCDN(item.thumbnails[index], { isThumb: true }) : toCDN(url, { isThumb: true });
                 
                 if (isVideo && (!item.thumbnails || !item.thumbnails[index])) {
                     currentThumb = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23000'/%3E%3Cpolygon points='40,30 70,50 40,70' fill='%2300ff00'/%3E%3Ctext x='50' y='88' font-family='monospace' font-size='11' font-weight='bold' fill='%2300ff00' text-anchor='middle'%3EVIDEO%3C/text%3E%3C/svg%3E";

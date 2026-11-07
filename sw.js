@@ -295,6 +295,14 @@ self.addEventListener('push', event => {
         const notifKey = String(options.tag) + '::' + String(data.body);
         const now = Date.now();
         self._recentPushes = self._recentPushes || {};
+        const recentKeys = Object.keys(self._recentPushes);
+        if (recentKeys.length > 50) {
+            for (let i = 0; i < recentKeys.length; i++) {
+                if (now - self._recentPushes[recentKeys[i]] >= 600000) {
+                    delete self._recentPushes[recentKeys[i]];
+                }
+            }
+        }
         if (self._recentPushes[notifKey] && (now - self._recentPushes[notifKey] < 600000)) {
             return;
         }

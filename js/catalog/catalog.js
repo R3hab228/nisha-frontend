@@ -226,7 +226,7 @@ function getOptimizedImageUrl(item, wantsThumb = false) {
         if (isValid(item.images.at(0))) resultUrl = item.images.at(0);
     }
 
-    return window.toCDN(resultUrl, wantsThumb ? { width: 400, quality: 85, format: 'webp', isThumb: true } : {});
+    return window.toCDN(resultUrl, wantsThumb ? { isThumb: true } : {});
 }
 window.getOptimizedImageUrl = getOptimizedImageUrl;
 
@@ -256,7 +256,7 @@ window.prefetchItemImages = function(id) {
                     if (url && typeof url === 'string' && !url.endsWith('.mp4')) {
                         const img = new Image();
                         img.decoding = 'async';
-                        img.src = toCDN(url);
+                        img.src = toCDN(url, { isThumb: true });
                     }
                 });
             }
@@ -2568,9 +2568,9 @@ function buildCardDOM(item, idx = 0) {
     const cleanAlt = baseAlt.replaceAll('"', '&quot;');
 
     thumbsArray.forEach((thumbUrl, thumbIdx) => {
-        const rawVidUrl = item.images && item.images[thumbIdx] ? item.images[thumbIdx] : '';
+        const rawVidUrl = (item.images && item.images[thumbIdx]) ? item.images[thumbIdx] : thumbUrl;
         const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
-        const cdnThumb = (typeof window.toCDN === 'function') ? window.toCDN(thumbUrl, { width: 400, quality: 85, format: 'webp', isThumb: true }) : thumbUrl;
+        const cdnThumb = (typeof window.toCDN === 'function') ? window.toCDN(thumbUrl, { isThumb: true }) : thumbUrl;
         const cdnVidUrl = (typeof window.toCDN === 'function') ? window.toCDN(rawVidUrl) : rawVidUrl;
         const slideAlt = cleanAlt + (thumbIdx > 0 ? ` - фото ${thumbIdx + 1}` : '');
 
@@ -3216,7 +3216,7 @@ window.preloadGridSlide = function(event, itemId, direction) {
     const targetIdx = typeof clamp === 'function' 
         ? clamp(currentIdx + direction, 0, mediaArray.length - 1)
         : Math.max(0, Math.min(mediaArray.length - 1, currentIdx + direction));
-    const url = toCDN(mediaArray.at(targetIdx));
+    const url = toCDN(mediaArray.at(targetIdx), { isThumb: true });
     if (url && !url.endsWith('.mp4')) {
         const img = new Image();
         img.src = url;
