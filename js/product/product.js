@@ -2351,18 +2351,20 @@ async function syncUserBargains() {
         if (fp) params.append('clientId', fp);
         if (uid) params.append('userId', uid);
 
-        const backendUrl = window.BACKEND_URL || (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : '');
-        let bargains = [];
+        let bargains = null;
         if (window.apiClient && typeof window.apiClient.get === 'function') {
             try {
                 const res = await window.apiClient.get(`/api/bargains/active?${params.toString()}`);
                 bargains = res?.data?.bargains || res?.bargains || [];
             } catch (apiErr) {
-                // fallback to fetch
+                // fallback to fetch if apiClient network error
             }
         }
-        if (!Array.isArray(bargains) || bargains.length === 0) {
+        if (bargains === null) {
             try {
+                const backendUrl = (window.apiClient && typeof window.apiClient.getBaseUrl === 'function')
+                    ? window.apiClient.getBaseUrl()
+                    : ((window.ENV && window.ENV.API_BASE_URL) || window.BACKEND_URL || 'https://nisha-api.onrender.com');
                 const res = await fetch(`${backendUrl}/api/bargains/active?${params.toString()}`);
                 if (res.ok) {
                     const data = await res.json();

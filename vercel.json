@@ -122,6 +122,10 @@
     {
       "source": "/google-feed.xml",
       "destination": "https://nisha-api.onrender.com/api/google-feed.xml"
+    },
+    {
+      "source": "/api/bargains/:path*",
+      "destination": "https://nisha-api.onrender.com/api/bargains/:path*"
     }
   ]
 }

@@ -284,15 +284,24 @@ async function syncBargainPopupSeenToServer(bargainData) {
     } catch (_) {}
 
     try {
-        const backendUrl = (window.CONFIG && window.CONFIG.BACKEND_URL) || window.location.origin;
-        fetch(`${backendUrl}/api/bargains/seen`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        if (window.apiClient && typeof window.apiClient.post === 'function') {
+            window.apiClient.post('/api/bargains/seen', {
                 bargainId: bargainData.bargainId || null,
                 itemId: bargainData.itemId || null
-            })
-        }).catch(() => {});
+            }, { retries: 1, timeout: 8000 }).catch(() => {});
+        } else {
+            const backendUrl = (window.apiClient && typeof window.apiClient.getBaseUrl === 'function')
+                ? window.apiClient.getBaseUrl()
+                : ((window.ENV && window.ENV.API_BASE_URL) || window.BACKEND_URL || 'https://nisha-api.onrender.com');
+            fetch(`${backendUrl}/api/bargains/seen`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bargainId: bargainData.bargainId || null,
+                    itemId: bargainData.itemId || null
+                })
+            }).catch(() => {});
+        }
     } catch (_) {}
 }
 window.syncBargainPopupSeenToServer = syncBargainPopupSeenToServer;
