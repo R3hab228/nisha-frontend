@@ -2063,7 +2063,6 @@ function handleDelegatedMediaLoad(e) {
             if (target.naturalWidth) target.parentElement.setAttribute('data-pswp-width', target.naturalWidth);
             if (target.naturalHeight) target.parentElement.setAttribute('data-pswp-height', target.naturalHeight);
             target.parentElement.classList.remove('skeleton');
-            target.parentElement.style.border = 'none';
             target.parentElement.style.backgroundImage = 'none';
         }
     }

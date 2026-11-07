@@ -191,6 +191,7 @@ function openModal(id) {
         window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
     }
     modal.style.display = 'flex';
+    if (win) win.scrollTop = 0;
     document.body.style.overflow = 'hidden';
     triggerModalTypewriter(modal);
 }
@@ -302,6 +303,17 @@ function executeCloseModal(id, e) {
         document.title = 'NISHA | Underground Store';
         window.currentOpenedItem = null;
         if (typeof currentOpenedItem !== 'undefined') currentOpenedItem = null;
+        window.currentSlide = 0;
+        if (typeof currentSlide !== 'undefined') currentSlide = 0;
+        const sw = document.getElementById('sliderWrapper');
+        if (sw && sw.style) {
+            sw.style.transition = 'none';
+            sw.style.transform = 'translateX(0%)';
+        }
+        const mWin = document.querySelector('#productModal .modal-window');
+        if (mWin) {
+            mWin.scrollTop = 0;
+        }
         if (typeof window.resetOpenGraphTags === 'function') window.resetOpenGraphTags();
         try {
             const u = new URL(window.location);

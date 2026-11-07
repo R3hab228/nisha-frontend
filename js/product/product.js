@@ -272,7 +272,7 @@ async function openProductModalById(itemId) {
                 if (idx !== -1) window.allItems[idx] = { ...window.allItems[idx], ...fullItem };
             }
 
-            if ((hadNoImages && hasFullImages) || hadBargain !== nowHasBargain) {
+            if (hadNoImages && hasFullImages) {
                 if (typeof closeModal === 'function') {
                     const om = document.getElementById('ordersModal');
                     if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal');
@@ -281,6 +281,12 @@ async function openProductModalById(itemId) {
                 }
                 openProductModal(currentOpenedItem);
                 return;
+            }
+            if (hadBargain !== nowHasBargain) {
+                const offerWrapper = document.getElementById('offerPriceWrapper');
+                const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
+                if (offerWrapper) offerWrapper.style.display = nowHasBargain ? 'block' : 'none';
+                if (offerPriceBtn) offerPriceBtn.style.display = nowHasBargain ? 'block' : 'none';
             }
 
             if (fullItem.description) {
@@ -682,9 +688,15 @@ function openProductModal(item) {
         }
     }
 
+    currentSlide = 0;
+    window.currentSlide = 0;
     const wrapper = document.getElementById('sliderWrapper');
     const thumbs = document.getElementById('modalThumbnails');
     if (wrapper) {
+        if (wrapper.style) {
+            wrapper.style.transition = 'none';
+            wrapper.style.transform = 'translateX(0%)';
+        }
         if (typeof wrapper.replaceChildren === 'function') wrapper.replaceChildren();
         else wrapper.innerHTML = '';
     }
@@ -747,8 +759,8 @@ function openProductModal(item) {
                     const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
                     const thumbBg = currentThumb ? `background-image: url('${currentThumb}'); background-size: contain; background-repeat: no-repeat; background-position: center;` : 'background-image: none;';
                     slidesHtml += `
-                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide skeleton" style="${thumbBg} display:flex; align-items:center; justify-content:center; border: 1px solid #222;">
-                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.25s ease-in-out;" 
+                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide" style="${thumbBg} display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
+                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:${isFirst ? '1' : '0'}; transition:opacity 0.25s ease-in-out;" 
                             >
                         </a>`;
                 }
@@ -763,7 +775,6 @@ function openProductModal(item) {
                         img.parentElement.setAttribute('data-pswp-width', img.naturalWidth);
                         img.parentElement.setAttribute('data-pswp-height', img.naturalHeight);
                         img.parentElement.classList.remove('skeleton');
-                        img.parentElement.style.border = 'none';
                     }
                 }
             });
@@ -774,7 +785,7 @@ function openProductModal(item) {
         }
     }
 
-    setSlide(0);
+    setSlide(0, false);
 
     // Мгновенная предзагрузка первых слайдов для бесшовного свайпа и зума без задержек
     if (mediaList.length > 0) {
@@ -1069,6 +1080,12 @@ function openProductModal(item) {
     if (modalWin) {
         modalWin.scrollTop = 0;
     }
+    requestAnimationFrame(() => {
+        const mWin = document.querySelector('#productModal .modal-window');
+        if (mWin && mWin.scrollTop > 0) {
+            mWin.scrollTop = 0;
+        }
+    });
 
     // Умная очистка URL от ?item=...
     const url = new URL(window.location);
@@ -1173,11 +1190,12 @@ function moveSlide(step) {
 }
 window.moveSlide = moveSlide;
 
-function setSlide(index) {
+function setSlide(index, animated = true) {
     const slides = document.querySelectorAll('.slide');
     if (slides.length === 0) return;
     currentSlide = index;
-    updateSlider();
+    window.currentSlide = currentSlide;
+    updateSlider(animated);
 
     // Предзагружаем следующее фото для непрерывного мгновенного свайпа
     const active = window.currentOpenedItem;
@@ -1191,11 +1209,25 @@ function setSlide(index) {
 }
 window.setSlide = setSlide;
 
-function updateSlider() {
+function updateSlider(animated = true) {
     const sliderWrapper = document.getElementById('sliderWrapper');
     if (!sliderWrapper) return;
 
+    if (!animated && sliderWrapper.style) {
+        sliderWrapper.style.transition = 'none';
+    } else if (sliderWrapper.style) {
+        sliderWrapper.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+    }
+
     sliderWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+    if (!animated) {
+        requestAnimationFrame(() => {
+            if (sliderWrapper && sliderWrapper.style) {
+                sliderWrapper.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            }
+        });
+    }
     
     const counter = document.getElementById('photoCounter');
     const total = document.querySelectorAll('.slide').length;
