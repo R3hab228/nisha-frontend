@@ -1016,6 +1016,8 @@ async function subscribeUserToPush(registration, silent = false) {
             const payload = {
                 subscription: targetSub,
                 userId: activeUser ? activeUser.id : fp,
+                deviceId: fp,
+                clientId: fp,
                 clientType: isPwa ? 'pwa' : 'web',
                 isPwa: isPwa
             };
@@ -1026,6 +1028,27 @@ async function subscribeUserToPush(registration, silent = false) {
     }
 }
 window.subscribeUserToPush = subscribeUserToPush;
+
+// Защита от тестовых Vercel превью: мгновенно отписываем и очищаем Push на любых доменах кроме официального
+if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname.includes('.vercel.app')) {
+    pushPrompted = true;
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(async reg => {
+            if (reg && reg.pushManager) {
+                const sub = await reg.pushManager.getSubscription();
+                if (sub) {
+                    try {
+                        if (window.apiClient) {
+                            window.apiClient.post('/api/unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
+                        }
+                    } catch (_) {}
+                    await sub.unsubscribe().catch(() => {});
+                    if (window.store) window.store.set('pushSubEndpoint', '');
+                }
+            }
+        }).catch(() => {});
+    }
+}
 
 if (typeof Notification !== 'undefined' && Notification.permission !== 'default') {
     pushPrompted = true;

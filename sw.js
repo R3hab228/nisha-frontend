@@ -277,16 +277,29 @@ self.addEventListener('push', event => {
         } catch(e) {
             data = { title: 'NISHA STORE', body: event.data.text() };
         }
-        const origin = 'https://www.nisha-store.shop';
+        const baseOrigin = self.location.origin || 'https://www.nisha-store.shop';
+        const iconUrl = new URL('/icon-192.png?v=6', baseOrigin).href;
+        const badgeUrl = new URL('/badge.png?v=6', baseOrigin).href;
+
         const options = {
             body: data.body,
-            icon: (data.icon && !data.icon.includes('vercel.app')) ? data.icon : (origin + '/icon-192.png?v=6'),
-            badge: (data.badge && !data.badge.includes('vercel.app')) ? data.badge : (origin + '/badge.png?v=6'),
+            icon: (data.icon && !data.icon.includes('vercel.app')) ? data.icon : iconUrl,
+            badge: (data.badge && !data.badge.includes('vercel.app')) ? data.badge : badgeUrl,
             vibrate: [200, 100, 200],
             tag: data.tag || (data.itemId ? 'nisha-item-' + data.itemId : (data.id ? 'nisha-item-' + data.id : (data.title ? 'nisha-' + encodeURIComponent(data.title) : 'nisha-push'))),
             renotify: false,
-            data: { url: data.url || (origin + '/') }
+            data: { url: data.url || (baseOrigin + '/') }
         };
+
+        // Запоминание и дедупликация на клиенте: не показывать идентичное уведомление дважды за 10 минут
+        const notifKey = String(options.tag) + '::' + String(data.body);
+        const now = Date.now();
+        self._recentPushes = self._recentPushes || {};
+        if (self._recentPushes[notifKey] && (now - self._recentPushes[notifKey] < 600000)) {
+            return;
+        }
+        self._recentPushes[notifKey] = now;
+
         event.waitUntil(
             self.registration.showNotification(data.title || 'NISHA STORE', options)
         );
