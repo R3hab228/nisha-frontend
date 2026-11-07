@@ -2341,6 +2341,17 @@ window.changePage = function(step) {
 };
 
 // Мгновенная активация скрытых слайдов карточки при первом взаимодействии (свайп/наведение/стрелки)
+function isSafeMediaUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return false;
+    try {
+        const base = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'https://www.nisha-store.shop';
+        const u = new URL(rawUrl, base);
+        return u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'data:';
+    } catch (_) {
+        return false;
+    }
+}
+
 function activateCardSlides(target) {
     if (!target) return;
     const wrapper = (target.classList && target.classList.contains('card-slider-wrapper'))
@@ -2352,13 +2363,11 @@ function activateCardSlides(target) {
     for (let i = 0; i < lazyImgs.length; i++) {
         const img = lazyImgs[i];
         const src = img.getAttribute('data-src');
-        if (src) {
+        if (src && isSafeMediaUrl(src)) {
             if (img.parentElement && !img.parentElement.classList.contains('img-8bit-loaded')) {
                 img.parentElement.classList.add('img-8bit-loading');
             }
-            if (!/^\s*javascript:/i.test(src)) {
-                img.src = src;
-            }
+            img.src = src;
             img.removeAttribute('data-src');
             if (img.complete && img.naturalWidth > 0) {
                 img.style.opacity = '1';

@@ -2070,6 +2070,18 @@ function handleDelegatedMediaLoad(e) {
 }
 window.handleDelegatedMediaLoad = handleDelegatedMediaLoad;
 
+function isSafeMediaUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return false;
+    try {
+        const base = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'https://www.nisha-store.shop';
+        const u = new URL(rawUrl, base);
+        return u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'data:';
+    } catch (_) {
+        return false;
+    }
+}
+window.isSafeMediaUrl = isSafeMediaUrl;
+
 function handleDelegatedMediaError(e) {
     const target = e && e.target;
     if (!target || !target.classList) return;
@@ -2079,7 +2091,7 @@ function handleDelegatedMediaError(e) {
         const fallbackSrc = ds.fallbackSrc || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fallback-src') : '');
         const hasTriedFb = ds.fb || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fb') : '');
         const currentSrc = target.src || (typeof target.getAttribute === 'function' ? target.getAttribute('src') : '');
-        if (!hasTriedFb && fallbackSrc && fallbackSrc !== currentSrc && !/^\s*javascript:/i.test(fallbackSrc)) {
+        if (!hasTriedFb && fallbackSrc && fallbackSrc !== currentSrc && isSafeMediaUrl(fallbackSrc)) {
             if (target.dataset) target.dataset.fb = '1';
             if (typeof target.setAttribute === 'function') target.setAttribute('data-fb', '1');
             target.src = fallbackSrc;
