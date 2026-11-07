@@ -88,9 +88,9 @@ self.addEventListener('fetch', event => {
         event.request.headers.get('range') ||
         url.pathname.startsWith('/api/') || 
         url.pathname.startsWith('/.well-known/') || 
-        url.hostname.includes('novaposhta') ||
+        url.hostname === 'novaposhta.ua' || url.hostname.endsWith('.novaposhta.ua') ||
         url.hostname === 'accounts.google.com' ||
-        url.hostname.includes('onrender.com')
+        url.hostname === 'onrender.com' || url.hostname.endsWith('.onrender.com')
     ) {
         return; 
     }
@@ -98,15 +98,15 @@ self.addEventListener('fetch', event => {
     // Проверяем происхождение запроса
     const isSameOrigin = url.origin === self.location.origin;
     const isAllowedCdn = (
-        url.hostname.includes('cdn.jsdelivr.net') || 
-        url.hostname.includes('cdnjs.cloudflare.com') ||
-        url.hostname.includes('unpkg.com') ||
-        url.hostname.includes('fonts.googleapis.com') ||
-        url.hostname.includes('fonts.gstatic.com')
+        url.hostname === 'cdn.jsdelivr.net' || 
+        url.hostname === 'cdnjs.cloudflare.com' ||
+        url.hostname === 'unpkg.com' ||
+        url.hostname === 'fonts.googleapis.com' ||
+        url.hostname === 'fonts.gstatic.com'
     );
     const isAllowedBackend = (
-        url.hostname.includes('supabase.co') || 
-        url.hostname.includes('workers.dev')
+        url.hostname === 'supabase.co' || url.hostname.endsWith('.supabase.co') ||
+        url.hostname === 'workers.dev' || url.hostname.endsWith('.workers.dev')
     );
 
     // Сторонние сервисы (аналитика Clarity, TikTok Pixel, GeoJS, Turnstile и сторонние трекеры) НЕ перехватываем в SW!
@@ -132,7 +132,7 @@ self.addEventListener('fetch', event => {
     }
 
     // --- ПЕРЕХВАТ SUPABASE API ДЛЯ ОФЛАЙНА (ТОЛЬКО ПУБЛИЧНЫЙ КАТАЛОГ, БЕЗ ПРОФИЛЕЙ И ЗАКАЗОВ) ---
-    const isSupabaseRestApi = (url.hostname.includes('supabase.co') || url.hostname.includes('workers.dev')) &&
+    const isSupabaseRestApi = (url.hostname.endsWith('.supabase.co') || url.hostname.endsWith('.workers.dev')) &&
         (url.pathname.includes('/rest/v1/items') || url.pathname.includes('/rest/v1/reviews') || url.pathname.includes('/rest/v1/site_broadcasts') || url.pathname.includes('/rest/v1/item_questions'));
     if (isSupabaseRestApi) {
         event.respondWith(
@@ -154,7 +154,7 @@ self.addEventListener('fetch', event => {
     }
 
     // --- ИЗОБРАЖЕНИЯ (Cache-First + Лимит) ---
-    const isImage = (url.hostname.includes('workers.dev') || url.hostname.includes('supabase.co')) &&
+    const isImage = (url.hostname.endsWith('.workers.dev') || url.hostname.endsWith('.supabase.co')) &&
                     (url.pathname.includes('/storage/') || /\.(webp|jpg|jpeg|png|gif|svg|avif|ico)$/i.test(url.pathname)) &&
                     !url.pathname.includes('/rest/v1/');
     
@@ -221,9 +221,9 @@ self.addEventListener('fetch', event => {
                 const isAllowedToCache = networkResponse && networkResponse.status === 200 && (
                     networkResponse.type === 'basic' || 
                     (networkResponse.type === 'cors' && (
-                        url.hostname.includes('cdn.jsdelivr.net') || 
-                        url.hostname.includes('cdnjs.cloudflare.com') ||
-                        url.hostname.includes('unpkg.com')
+                        url.hostname === 'cdn.jsdelivr.net' || 
+                        url.hostname === 'cdnjs.cloudflare.com' ||
+                        url.hostname === 'unpkg.com'
                     ))
                 );
 
