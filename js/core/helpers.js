@@ -253,9 +253,10 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
         html += `<div style="width: 35px; height: 35px; background-image: url('${safeImgUrl}'); background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #444; flex-shrink: 0;"></div>`;
     }
     const rawMsgStr = String(message ?? '');
+    const escFn = (typeof escapeHtml === 'function') ? escapeHtml : (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
     const safeMsgHtml = (typeof window !== 'undefined' && window.DOMPurify && typeof window.DOMPurify.sanitize === 'function')
         ? window.DOMPurify.sanitize(rawMsgStr)
-        : rawMsgStr.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/\son\w+\s*=/gi, ' data-blocked=');
+        : escFn(rawMsgStr).replace(/\bon\w+\s*=/gi, 'data-blocked=');
     html += `<div>${safeMsgHtml}</div>`;
     
     toast.innerHTML = html;
@@ -2078,7 +2079,7 @@ function handleDelegatedMediaError(e) {
         const fallbackSrc = ds.fallbackSrc || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fallback-src') : '');
         const hasTriedFb = ds.fb || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fb') : '');
         const currentSrc = target.src || (typeof target.getAttribute === 'function' ? target.getAttribute('src') : '');
-        if (!hasTriedFb && fallbackSrc && fallbackSrc !== currentSrc) {
+        if (!hasTriedFb && fallbackSrc && fallbackSrc !== currentSrc && !/^\s*javascript:/i.test(fallbackSrc)) {
             if (target.dataset) target.dataset.fb = '1';
             if (typeof target.setAttribute === 'function') target.setAttribute('data-fb', '1');
             target.src = fallbackSrc;

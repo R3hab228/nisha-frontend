@@ -810,14 +810,6 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
 
     const tooltip = getMeasurementsTooltip();
     
-    const escape = (str) => String(str).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-    const itemsHTML = measures.map(m => `
-        <li class="measurements-tooltip-item">
-            <span class="measurements-dot"></span>
-            <span class="measurements-text">${escape(m)}</span>
-        </li>
-    `).join('');
-
     const titles = {
         ru: '[ ЗАМЕРЫ ]',
         ua: '[ ЗАМІРИ ]',
@@ -825,10 +817,32 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
     };
     const headerTitle = titles[currentLang] || titles.ru;
 
-    tooltip.innerHTML = `
-        <div class="measurements-tooltip-header">${headerTitle}</div>
-        <ul class="measurements-tooltip-list">${itemsHTML}</ul>
-    `;
+    if (typeof tooltip.replaceChildren === 'function') {
+        tooltip.replaceChildren();
+    } else {
+        tooltip.textContent = '';
+    }
+
+    const headerEl = document.createElement('div');
+    headerEl.className = 'measurements-tooltip-header';
+    headerEl.textContent = headerTitle;
+    tooltip.appendChild(headerEl);
+
+    const listEl = document.createElement('ul');
+    listEl.className = 'measurements-tooltip-list';
+    measures.forEach(m => {
+        const li = document.createElement('li');
+        li.className = 'measurements-tooltip-item';
+        const dot = document.createElement('span');
+        dot.className = 'measurements-dot';
+        const text = document.createElement('span');
+        text.className = 'measurements-text';
+        text.textContent = String(m);
+        li.appendChild(dot);
+        li.appendChild(text);
+        listEl.appendChild(li);
+    });
+    tooltip.appendChild(listEl);
 
     if (_tooltipHideTimer) {
         clearTimeout(_tooltipHideTimer);
@@ -2342,7 +2356,9 @@ function activateCardSlides(target) {
             if (img.parentElement && !img.parentElement.classList.contains('img-8bit-loaded')) {
                 img.parentElement.classList.add('img-8bit-loading');
             }
-            img.src = src;
+            if (!/^\s*javascript:/i.test(src)) {
+                img.src = src;
+            }
             img.removeAttribute('data-src');
             if (img.complete && img.naturalWidth > 0) {
                 img.style.opacity = '1';
