@@ -52,3 +52,16 @@ jobs:
             });
           "
           echo "✅ All JSON files are structurally sound!"
+
+      - name: 🚨 Notify Telegram on CI Failure
+        if: failure()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_ADMIN_ID: ${{ secrets.TG_ADMIN_ID || secrets.ADMIN_ID }}
+          REPO_NAME: ${{ github.repository }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+        run: node .github/scripts/notify-failure.js
