@@ -159,26 +159,29 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     right: 12px !important;
     display: inline-block !important;
     font-family: var(--font-mono) !important;
-    font-size: 9px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     letter-spacing: 0.8px !important;
     color: var(--accent-green, #00ff66) !important;
-    background: rgba(0, 255, 102, 0.08) !important;
-    border: 1px solid var(--accent-green, #00ff66) !important;
-    padding: 2px 6px !important;
-    border-radius: 2px !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
     pointer-events: none !important;
     line-height: 1.2 !important;
     text-transform: uppercase !important;
-    box-shadow: 0 0 6px rgba(0, 255, 102, 0.25) !important;
+    box-shadow: none !important;
+    text-shadow: 0 0 6px rgba(0, 255, 102, 0.45) !important;
     white-space: nowrap !important;
     z-index: 5 !important;
-    transition: all 0.2s ease !important;
+    transition: color 0.2s ease, text-shadow 0.2s ease !important;
 }
 .live-search-item:hover .live-search-bargain-badge {
-    background: rgba(0, 255, 102, 0.18) !important;
-    box-shadow: 0 0 10px rgba(0, 255, 102, 0.45) !important;
-    border-color: #55ff99 !important;
+    color: #55ff99 !important;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.8) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .live-search-title { 

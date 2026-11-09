@@ -224,7 +224,7 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
                         if (!seenIds.has(r.item.id)) {
                             seenIds.add(r.item.id);
                             collected.push({
-                                item,
+                                item: r.item,
                                 matches: r.matches,
                                 score: r.score
                             });

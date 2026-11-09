@@ -3,7 +3,7 @@ function isItemBargainEnabled(item) {
     if (!item || item.status === 'sold') return false;
     if (item.is_bargain === true || String(item.is_bargain) === 'true' || item.is_bargain === 1) return true;
     if (item.min_bargain_price !== null && item.min_bargain_price !== undefined && Number(item.min_bargain_price) > 0) return true;
-    if (typeof item.description === 'string' && /\[(?:ТОРГ|торг|bargain)/i.test(item.description)) return true;
+    if (typeof item.description === 'string' && /(?:\[\s*(?:торг|bargain)|(?<![\p{L}\p{N}_])торг(?![\p{L}\p{N}_]))/iu.test(item.description)) return true;
     return false;
 }
 window.isItemBargainEnabled = isItemBargainEnabled;
@@ -190,7 +190,11 @@ function handleLiveSearch() {
             results.forEach(result => {
                 const rawItem = result.item;
                 if (!rawItem) return;
-                const item = (window.allItems && window.allItems.find(i => String(i.id) === String(rawItem.id))) || rawItem;
+                const catItem = (window.allItems && window.allItems.find(i => String(i.id) === String(rawItem.id))) || {};
+                const item = { ...rawItem, ...catItem };
+                if (item.is_bargain === undefined) item.is_bargain = rawItem.is_bargain;
+                if (item.min_bargain_price === undefined) item.min_bargain_price = rawItem.min_bargain_price;
+                if (!item.description && rawItem.description) item.description = rawItem.description;
                 if (!item || item.status === 'sold') return;
                 const isReserved = item.status === 'reserved';
                 const reservedBadgeHtml = isReserved ? '<div class="live-search-reserved-badge">RESERVED</div>' : '';

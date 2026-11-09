@@ -304,12 +304,36 @@ describe('Modern Performance APIs Suite', () => {
             expect(searchCode).toContain("t('search.bargain_badge'");
         });
 
-        it('style.css defines .live-search-bargain-badge in top right corner with padding-right clearance', () => {
+        it('style.css defines .live-search-bargain-badge with no green border, transparent bg and glowing text', () => {
             const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
             expect(cssCode).toContain('.live-search-bargain-badge');
             expect(cssCode).toContain('top: 12px');
             expect(cssCode).toContain('right: 12px');
             expect(cssCode).toContain('padding-right: 52px');
+            expect(cssCode).toContain('border: none !important');
+            expect(cssCode).toContain('background: transparent !important');
+            expect(cssCode).toContain('box-shadow: none !important');
+            expect(cssCode).toContain('text-shadow: 0 0 6px rgba(0, 255, 102, 0.45) !important');
+        });
+
+        it('isItemBargainEnabled accurately detects all bargaining flags and descriptions', async () => {
+            const { isItemBargainEnabled } = await import('../src/modules/catalog.js');
+            expect(isItemBargainEnabled(null)).toBe(false);
+            expect(isItemBargainEnabled({ status: 'sold', is_bargain: true })).toBe(false);
+            expect(isItemBargainEnabled({ is_bargain: true })).toBe(true);
+            expect(isItemBargainEnabled({ is_bargain: 'true' })).toBe(true);
+            expect(isItemBargainEnabled({ is_bargain: 1 })).toBe(true);
+            expect(isItemBargainEnabled({ min_bargain_price: 540 })).toBe(true);
+            expect(isItemBargainEnabled({ description: 'Крутая куртка [ТОРГ: от 540 грн]' })).toBe(true);
+            expect(isItemBargainEnabled({ description: 'Винтажный худи [торг]' })).toBe(true);
+            expect(isItemBargainEnabled({ description: 'Куртка из кожи, возможен торг' })).toBe(true);
+            expect(isItemBargainEnabled({ description: 'Обычное описание без скидки' })).toBe(false);
+        });
+
+        it('search-worker-client fallback uses r.item without reference errors', () => {
+            const clientCode = readFileSync(resolve(import.meta.dirname, '../js/core/search-worker-client.js'), 'utf8');
+            expect(clientCode).toContain('item: r.item');
+            expect(clientCode).not.toMatch(/collected\.push\(\{[\s\r\n]*item,[\s\r\n]*matches: r\.matches/);
         });
     });
 });

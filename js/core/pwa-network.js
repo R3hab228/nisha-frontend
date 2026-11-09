@@ -651,6 +651,9 @@ window.addEventListener("pageshow", async (event) => {
         if (spinner) spinner.style.display = 'none';
 
         // 4. Мгновенная синхронизация Realtime и критических статусов товаров при пробуждении из bfcache
+        if (typeof window.initLeaderElection === 'function') {
+            try { window.initLeaderElection(); } catch (_) {}
+        }
         if (typeof window.initCatalogRealtimeSubscription === 'function') {
             try { window.initCatalogRealtimeSubscription(); } catch (_) {}
         }

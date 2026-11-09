@@ -128,6 +128,7 @@ export async function updateAppBadge(count) {
         const cartList = (typeof window !== 'undefined' && window.cart) ? window.cart : [];
         badgeCount = Array.isArray(cartList) ? cartList.length : 0;
     }
+    badgeCount = Math.max(0, Math.floor(Number(badgeCount) || 0));
 
     try {
         if (badgeCount > 0) {

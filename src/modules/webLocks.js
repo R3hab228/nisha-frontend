@@ -119,6 +119,9 @@ export function initLeaderElection() {
         if (err && err.name !== 'AbortError') {
             console.debug('[WebLocks] Tab is follower or election standby:', err.message);
         }
+    }).finally(() => {
+        _isLeader = false;
+        _leaderAbortController = null;
     });
 
     return leaderPromise;

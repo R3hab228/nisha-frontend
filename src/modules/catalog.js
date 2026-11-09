@@ -168,3 +168,16 @@ export function startOnboardingTour() {
         return window.startOnboardingTour();
     }
 }
+
+/**
+ * Checks if an item supports bargaining (ТОРГ)
+ * @param {Object} item - Product item
+ * @returns {boolean}
+ */
+export function isItemBargainEnabled(item) {
+    if (!item || item.status === 'sold') return false;
+    if (item.is_bargain === true || String(item.is_bargain) === 'true' || item.is_bargain === 1) return true;
+    if (item.min_bargain_price !== null && item.min_bargain_price !== undefined && Number(item.min_bargain_price) > 0) return true;
+    if (typeof item.description === 'string' && /(?:\[\s*(?:торг|bargain)|(?<![\p{L}\p{N}_])торг(?![\p{L}\p{N}_]))/iu.test(item.description)) return true;
+    return false;
+}
