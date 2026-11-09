@@ -2004,7 +2004,8 @@ function openOfferPriceModal() {
                      (typeof getOptimizedImg === 'function' ? getOptimizedImg(activeItem) : '') || '';
 
     if (thumbEl) {
-        thumbEl.src = firstImg;
+        const safeThumb = typeof sanitizeHtmlMediaUrl === 'function' ? sanitizeHtmlMediaUrl(firstImg) : firstImg;
+        if (safeThumb) thumbEl.src = safeThumb;
         thumbEl.alt = activeItem.name || 'Товар';
     }
     if (nameEl) nameEl.innerText = activeItem.name || 'Товар';

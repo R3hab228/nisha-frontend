@@ -3095,8 +3095,9 @@ function updatePriceUI(e) {
     let maxVal = Number.parseInt(maxInput.value, 10);
 
     if (minVal >= maxVal) {
-        const activeTargetId = (e && e.target && e.target.id) 
-            || (typeof window !== 'undefined' && window.event && window.event.target && window.event.target.id);
+        const activeTargetId = e?.target?.id 
+            || (typeof document !== 'undefined' ? document.activeElement?.id : '')
+            || (typeof window !== 'undefined' && window.event ? window.event.target?.id : '');
         if (activeTargetId === 'priceMin') { 
             minInput.value = maxVal - 100; 
             minVal = maxVal - 100; 

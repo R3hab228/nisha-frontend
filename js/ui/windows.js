@@ -201,7 +201,7 @@ window.openModal = openModal;
 
 // 3. Закрытие модального окна по крестику (с защитой данных)
 function closeModal(id, e) { 
-    const evt = e || (typeof window !== 'undefined' && window.event);
+    const evt = e || (typeof window !== 'undefined' ? window.event : null);
     if (evt) {
         if (typeof evt.preventDefault === 'function') evt.preventDefault();
         if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
@@ -262,7 +262,7 @@ window.closeModal = closeModal;
 
 // 4. Исполнение плавного закрытия окна с анимацией
 function executeCloseModal(id, e) {
-    const evt = e || (typeof window !== 'undefined' && window.event);
+    const evt = e || (typeof window !== 'undefined' ? window.event : null);
     if (evt) {
         if (typeof evt.preventDefault === 'function') evt.preventDefault();
         if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
