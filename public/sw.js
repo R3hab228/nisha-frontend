@@ -12,10 +12,10 @@ const STATIC_URLS = [
     '/locales/en.json',
     '/404.html',
     '/return-policy.html',
-    '/badge.png',
-    '/icon-192.png',
-    '/icon-512.png',
-    '/icon.png',
+    '/badge.png?v=8',
+    '/icon-192.png?v=8',
+    '/icon-512.png?v=8',
+    '/icon.png?v=8',
     '/cables.svg'
 ];
 
@@ -78,6 +78,15 @@ self.addEventListener('activate', event => {
                     }
                 })
             );
+            const isVercelPreview = self.location.origin.includes('vercel.app') && !self.location.origin.includes('nisha-store.shop');
+            if (isVercelPreview) {
+                try {
+                    const sub = await self.registration.pushManager.getSubscription();
+                    if (sub) await sub.unsubscribe();
+                    await self.registration.unregister();
+                } catch (_) {}
+                return;
+            }
             await self.clients.claim();
         })()
     );
@@ -287,7 +296,7 @@ self.addEventListener('push', event => {
         event.waitUntil(
             self.registration.pushManager.getSubscription().then(sub => {
                 if (sub) return sub.unsubscribe();
-            }).catch(() => {})
+            }).then(() => self.registration.unregister()).catch(() => {})
         );
         return;
     }
@@ -298,14 +307,17 @@ self.addEventListener('push', event => {
         } catch(e) {
             data = { title: 'NISHA STORE', body: event.data.text() };
         }
-        const baseOrigin = self.location.origin || 'https://www.nisha-store.shop';
-        const iconUrl = new URL('/icon-192.png?v=6', baseOrigin).href;
-        const badgeUrl = new URL('/badge.png?v=6', baseOrigin).href;
+        const baseOrigin = 'https://www.nisha-store.shop';
+        const iconUrl = new URL('/icon-192.png?v=8', baseOrigin).href;
+        const badgeUrl = new URL('/badge.png?v=8', baseOrigin).href;
+
+        const hasValidCustomIcon = data.icon && !data.icon.includes('vercel.app') && !data.icon.includes('?v=5') && !data.icon.includes('?v=6');
+        const hasValidCustomBadge = data.badge && !data.badge.includes('vercel.app') && !data.badge.includes('?v=5') && !data.badge.includes('?v=6');
 
         const options = {
             body: data.body,
-            icon: (data.icon && !data.icon.includes('vercel.app')) ? data.icon : iconUrl,
-            badge: (data.badge && !data.badge.includes('vercel.app')) ? data.badge : badgeUrl,
+            icon: hasValidCustomIcon ? data.icon : iconUrl,
+            badge: hasValidCustomBadge ? data.badge : badgeUrl,
             vibrate: [200, 100, 200],
             tag: data.tag || (data.itemId ? 'nisha-item-' + data.itemId : (data.id ? 'nisha-item-' + data.id : (data.title ? 'nisha-' + encodeURIComponent(data.title) : 'nisha-push'))),
             renotify: false,

@@ -1041,8 +1041,10 @@ async function subscribeUserToPush(registration, silent = false) {
         let targetSub = await registration.pushManager.getSubscription();
         
         if (!targetSub) {
-            if (silent) return;
-            const permission = await Notification.requestPermission();
+            if (silent && Notification.permission !== 'granted') return;
+            const permission = Notification.permission === 'granted'
+                ? 'granted'
+                : await Notification.requestPermission();
             syncNotificationPermission();
             if (permission !== 'granted') return;
             
@@ -1073,7 +1075,8 @@ async function subscribeUserToPush(registration, silent = false) {
                 deviceId: fp,
                 clientId: fp,
                 clientType: isPwa ? 'pwa' : 'web',
-                isPwa: isPwa
+                isPwa: isPwa,
+                origin: (typeof window !== 'undefined' && window.location) ? window.location.origin : 'https://www.nisha-store.shop'
             };
             await window.apiClient.post('/api/subscribe', payload, { timeout: 10000, retries: 1 });
         }
@@ -1100,12 +1103,27 @@ if (typeof window !== 'undefined' && window.location && window.location.hostname
                     if (window.store) window.store.set('pushSubEndpoint', '');
                 }
             }
+            if (reg && typeof reg.unregister === 'function') {
+                await reg.unregister().catch(() => {});
+            }
         }).catch(() => {});
     }
 }
 
 if (typeof Notification !== 'undefined' && Notification.permission !== 'default') {
     pushPrompted = true;
+    if (
+        Notification.permission === 'granted' &&
+        typeof navigator !== 'undefined' &&
+        'serviceWorker' in navigator &&
+        typeof window !== 'undefined' &&
+        window.location &&
+        !window.location.hostname.includes('.vercel.app')
+    ) {
+        navigator.serviceWorker.ready.then(reg => {
+            if (reg) subscribeUserToPush(reg, true);
+        }).catch(() => {});
+    }
 }
 
 document.addEventListener('click', (e) => {

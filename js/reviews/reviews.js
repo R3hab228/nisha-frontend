@@ -574,10 +574,10 @@ function initReviewsRealtime(sb) {
                         const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
                             ? window.location.origin
                             : 'https://www.nisha-store.shop';
-                        const notifBadge = `${origin}/badge.png`;
+                        const notifBadge = `${origin}/badge.png?v=8`;
                         const notifIcon = (rev.item_image && rev.item_image.trim())
                             ? ((typeof window.toCDN === 'function') ? window.toCDN(rev.item_image) : rev.item_image)
-                            : `${origin}/icon-192.png`;
+                            : `${origin}/icon-192.png?v=8`;
 
                         reg.showNotification('NISHA STORE | Новый отзыв ⭐', {
                             body: `${author}: "${snippet}"`,
