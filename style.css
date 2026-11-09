@@ -692,10 +692,53 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .modal-content { display: flex; padding: 20px; gap: 30px; }
 
 .modal-gallery { width: 50%; display: flex; flex-direction: column; gap: 10px;}
-.slider-container { position: relative; width: 100%; height: 400px; background: #000; border: 1px solid #444; overflow: hidden; touch-action: pan-y; contain: layout paint; }
+.slider-container { 
+    position: relative; 
+    width: 100%; 
+    height: 400px; 
+    background: #000; 
+    border: 1px solid #444; 
+    overflow: hidden; 
+    touch-action: pan-y; 
+    contain: layout paint; 
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
 .slider-wrapper { display: flex; width: 100%; height: 100%; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); will-change: transform; }
-.slide { flex: 0 0 100%; width: 100%; max-width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #555; font-size: 20px; font-family: var(--font-mono); box-sizing: border-box; position: relative; background-size: contain; background-repeat: no-repeat; background-position: center; text-decoration: none; overflow: hidden; contain: layout paint; }
-.slide.zoomed-in { transform: scale(1.8); z-index: 50; cursor: zoom-out; }
+.slide { 
+    flex: 0 0 100%; 
+    width: 100%; 
+    max-width: 100%; 
+    height: 100%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #555; 
+    font-size: 20px; 
+    font-family: var(--font-mono); 
+    box-sizing: border-box; 
+    position: relative; 
+    background-size: contain; 
+    background-repeat: no-repeat; 
+    background-position: center; 
+    text-decoration: none; 
+    overflow: hidden; 
+    contain: layout paint; 
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    touch-action: pan-y;
+}
+.slide img, .slide video {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+.slide.zoomed-in { transform: none !important; }
 
 .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(10, 10, 10, 0.7); border: 1px solid #444; color: var(--accent-green); font-weight: bold; padding: 15px 8px; cursor: pointer; z-index: 10; font-size: 16px; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, background 0.2s, color 0.2s, transform 0.2s; backdrop-filter: blur(2px); user-select: none; }
 .slider-container:hover .slider-btn { opacity: 1; pointer-events: auto; }

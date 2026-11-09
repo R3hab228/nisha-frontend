@@ -822,6 +822,8 @@ function openProductModal(item) {
             if (!slide || !wrapper.contains(slide)) return;
             // Не перехватываем клики по кнопкам управления (звук видео и т.д.)
             if (e.target.closest('button, [data-action], video')) return;
+            // Если пользователь делал свайп — не открываем PhotoSwipe ошибочно
+            if (window._isSliderSwiping) return;
 
             e.preventDefault();
             e.stopPropagation();
@@ -1378,7 +1380,10 @@ function initSliderSwipe() {
     let touchStartY = 0;
     let touchEndX = 0;
     let touchEndY = 0;
-    let lastTapTime = 0;
+
+    // Блокируем контекстное меню и случайное перетаскивание при долгом зажатии пальца
+    sliderContainer.addEventListener('contextmenu', (e) => e.preventDefault());
+    sliderContainer.addEventListener('dragstart', (e) => e.preventDefault());
 
     sliderContainer.addEventListener('touchstart', (e) => {
         if (e.touches.length > 1) return;
@@ -1386,18 +1391,7 @@ function initSliderSwipe() {
         touchStartY = e.touches[0].clientY;
         touchEndX = touchStartX;
         touchEndY = touchStartY;
-
-        const currentTime = Date.now();
-        const tapLength = currentTime - lastTapTime;
-        if (tapLength < 300 && tapLength > 0) {
-            const slides = document.querySelectorAll('.slide');
-            if (slides[currentSlide]) {
-                slides[currentSlide].classList.toggle('zoomed-in');
-            }
-            if (e.cancelable) e.preventDefault();
-        }
-        lastTapTime = currentTime;
-
+        window._isSliderSwiping = false;
     }, { passive: true });
 
     sliderContainer.addEventListener('touchmove', (e) => {
@@ -1406,6 +1400,10 @@ function initSliderSwipe() {
         touchEndY = e.touches[0].clientY;
         const diffX = Math.abs(touchEndX - touchStartX);
         const diffY = Math.abs(touchEndY - touchStartY);
+
+        if (diffX > 10) {
+            window._isSliderSwiping = true;
+        }
 
         // Если свайп идет по горизонтали — блокируем вертикальный скролл страницы
         if (diffX > 10 && diffX > diffY) {
@@ -1416,12 +1414,9 @@ function initSliderSwipe() {
     sliderContainer.addEventListener('touchend', (e) => {
         const diffX = touchStartX - touchEndX;
         const diffY = touchStartY - touchEndY;
-        
-        const currentSlideEl = document.querySelectorAll('.slide')[currentSlide];
-        const isZoomed = currentSlideEl && currentSlideEl.classList.contains('zoomed-in');
 
         // Четкий горизонтальный свайп (порог 40px и преобладание горизонтали над вертикалью в 1.3 раза)
-        if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.3 && !isZoomed) {
+        if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.3) {
             const slides = document.querySelectorAll('.slide');
             if (slides.length > 1) {
                 if (diffX > 0) {
@@ -1439,6 +1434,10 @@ function initSliderSwipe() {
                 }
             }
         }
+
+        setTimeout(() => {
+            window._isSliderSwiping = false;
+        }, 120);
     }, { passive: true });
 }
 window.initSliderSwipe = initSliderSwipe;
