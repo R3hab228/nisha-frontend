@@ -1,9 +1,10 @@
 
 function isItemBargainEnabled(item) {
     if (!item || item.status === 'sold') return false;
-    const descMatch = typeof item.description === 'string' && item.description.match(/\[(?:ТОРГ|торг|bargain):?\s*(?:(?:від|от)\s*)?(\d+)/i);
-    const itemMinBargain = item.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
-    return Boolean(item.is_bargain || itemMinBargain || (typeof item.description === 'string' && /\[(?:ТОРГ|торг|bargain)/i.test(item.description)));
+    if (item.is_bargain === true || String(item.is_bargain) === 'true' || item.is_bargain === 1) return true;
+    if (item.min_bargain_price !== null && item.min_bargain_price !== undefined && Number(item.min_bargain_price) > 0) return true;
+    if (typeof item.description === 'string' && /\[(?:ТОРГ|торг|bargain)/i.test(item.description)) return true;
+    return false;
 }
 window.isItemBargainEnabled = isItemBargainEnabled;
 
@@ -187,7 +188,9 @@ function handleLiveSearch() {
             
             let html = '';
             results.forEach(result => {
-                const item = result.item;
+                const rawItem = result.item;
+                if (!rawItem) return;
+                const item = (window.allItems && window.allItems.find(i => String(i.id) === String(rawItem.id))) || rawItem;
                 if (!item || item.status === 'sold') return;
                 const isReserved = item.status === 'reserved';
                 const reservedBadgeHtml = isReserved ? '<div class="live-search-reserved-badge">RESERVED</div>' : '';
@@ -228,8 +231,10 @@ function handleLiveSearch() {
                 }
 
                 const hasBargain = isItemBargainEnabled(item);
+                const rawBargainText = (typeof i18next !== 'undefined' && i18next.t && i18next.t('search.bargain_badge', { defaultValue: 'ТОРГ' })) || 'ТОРГ';
+                const bargainText = (typeof rawBargainText === 'string' && !rawBargainText.includes('search.')) ? rawBargainText : 'ТОРГ';
                 const bargainBadgeHtml = hasBargain
-                    ? `<span class="live-search-bargain-badge">${(typeof i18next !== 'undefined' && i18next.t('search.bargain_badge', { defaultValue: 'ТОРГ' })) || 'ТОРГ'}</span>`
+                    ? `<span class="live-search-bargain-badge">${bargainText}</span>`
                     : '';
 
                 html += `

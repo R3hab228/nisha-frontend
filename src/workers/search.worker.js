@@ -194,7 +194,10 @@ self.onmessage = function(e) {
                 status: item.status || 'available',
                 is_sale: item.is_sale,
                 thumbnails: item.thumbnails || [],
-                images: item.images || []
+                images: item.images || [],
+                is_bargain: item.is_bargain,
+                min_bargain_price: item.min_bargain_price,
+                description: item.description || ''
             }));
 
             itemsById.clear();
