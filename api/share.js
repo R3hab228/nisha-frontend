@@ -99,7 +99,7 @@ module.exports = async function handler(req, res) {
       },
       "offers": {
         "@type": "Offer",
-        "url": "https://www.nisha-store.shop/?item=" + id,
+        "url": "https://www.nisha-store.shop/share/" + id,
         "priceCurrency": "UAH",
         "price": String(item.price || 0),
         "priceValidUntil": "2027-12-31",
@@ -174,7 +174,7 @@ videoTags + '\n' +
 '    <p style="margin:12px 0 0 0;color:#aaa;">' + safeCleanDesc + '</p>\n' +
 '  </div>\n' +
 '  <div style="margin-top:24px;text-align:center;">\n' +
-'    <a href="/?item=' + id + '" style="display:inline-block;padding:12px 28px;background:#00ff66;color:#000;font-weight:700;text-decoration:none;border-radius:6px;text-transform:uppercase;font-family:monospace;">Відкрити в магазині NISHA →</a>\n' +
+'    <a href="/?item=' + id + '" rel="nofollow" style="display:inline-block;padding:12px 28px;background:#00ff66;color:#000;font-weight:700;text-decoration:none;border-radius:6px;text-transform:uppercase;font-family:monospace;">Відкрити в магазині NISHA →</a>\n' +
 '  </div>\n' +
 '</main>\n' +
 '<script>\n' +
