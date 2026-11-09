@@ -2424,7 +2424,9 @@ async function syncUserBargains() {
                 const backendUrl = (window.apiClient && typeof window.apiClient.getBaseUrl === 'function')
                     ? window.apiClient.getBaseUrl()
                     : ((window.ENV && window.ENV.API_BASE_URL) || window.BACKEND_URL || 'https://nisha-api.onrender.com');
-                const res = await fetch(`${backendUrl}/api/bargains/active?${params.toString()}`);
+                const res = await fetch(`${backendUrl}/api/bargains/active?${params.toString()}`, {
+                    signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(6000) : undefined
+                });
                 if (res.ok) {
                     const data = await res.json();
                     bargains = data?.bargains || [];

@@ -296,6 +296,7 @@ async function syncBargainPopupSeenToServer(bargainData) {
             fetch(`${backendUrl}/api/bargains/seen`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(6000) : undefined,
                 body: JSON.stringify({
                     bargainId: bargainData.bargainId || null,
                     itemId: bargainData.itemId || null

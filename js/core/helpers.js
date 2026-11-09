@@ -817,7 +817,7 @@ const storage = {
     },
 
     clear() {
-        for (const k in _memStorageFallback) delete _memStorageFallback[k];
+        for (const k of Object.keys(_memStorageFallback)) delete _memStorageFallback[k];
         try {
             const store = getLocalStore();
             if (store) store.clear();
@@ -936,7 +936,7 @@ const storage = {
         },
 
         clear() {
-            for (const k in _memSessionFallback) delete _memSessionFallback[k];
+            for (const k of Object.keys(_memSessionFallback)) delete _memSessionFallback[k];
             try {
                 const store = getSessionStore();
                 if (store) store.clear();

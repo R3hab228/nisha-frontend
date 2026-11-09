@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
   const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + id + '&select=name,price,brand,images,thumbnails,size,condition,description,status';
   
   try {
-    const dbRes = await fetch(supabaseUrl, { headers });
+    const dbRes = await fetch(supabaseUrl, { headers, signal: AbortSignal.timeout(4500) });
     let item = null;
     if (dbRes.ok) {
       const data = await dbRes.json();
@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     if (!item) {
       const archiveUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/archived_items?id=eq.' + id + '&select=name,price,brand,images,thumbnails,size,condition,description,status';
       try {
-        const archRes = await fetch(archiveUrl, { headers });
+        const archRes = await fetch(archiveUrl, { headers, signal: AbortSignal.timeout(3000) });
         if (archRes.ok) {
           const archData = await archRes.json();
           if (archData && archData.at(0)) {

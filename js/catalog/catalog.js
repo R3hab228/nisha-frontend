@@ -1860,8 +1860,8 @@ function updateSidebarCounters() {
     const catCounts = { 'Все вещи': availableItemsAll.length };
     if (typeof Object.groupBy === 'function') {
         const groups = Object.groupBy(availableItemsAll, item => item?.category || 'Без категории');
-        for (const cat in groups) {
-            catCounts[cat] = groups[cat] ? groups[cat].length : 0;
+        for (const [cat, items] of Object.entries(groups)) {
+            catCounts[cat] = items ? items.length : 0;
         }
     } else {
         availableItemsAll.forEach(item => {
