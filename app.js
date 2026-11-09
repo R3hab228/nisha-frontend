@@ -558,9 +558,12 @@ async function initApp() {
             if (entries.at(0).isIntersecting && !isBatchLoading) {
                 if (window.renderedCount < (window.filteredItems ? window.filteredItems.length : 0) && window.innerWidth <= 900) {
                     isBatchLoading = true;
-                    requestAnimationFrame(() => {
-                        renderNextBatch();
-                        isBatchLoading = false;
+                    requestAnimationFrame(async () => {
+                        try {
+                            await renderNextBatch();
+                        } finally {
+                            isBatchLoading = false;
+                        }
                     });
                 }
             }

@@ -231,6 +231,8 @@ function handleLiveSearch() {
             if (dropdown) {
                 if (html) {
                     if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+                    if (seq !== currentLiveSearchSeq) return;
+                    if (searchInput.value.trim() !== searchTerm) return;
                     dropdown.innerHTML = html;
                     dropdown.style.display = 'block';
                 } else {

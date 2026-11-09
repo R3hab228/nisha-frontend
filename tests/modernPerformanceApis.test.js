@@ -59,6 +59,21 @@ describe('Modern Performance APIs Suite', () => {
             expect(catalogCode).toContain('async function renderNextBatch');
             expect(searchCode).toContain("if (typeof window.yieldToMain === 'function') await window.yieldToMain()");
         });
+
+        it('guards catalog infinite scroll against concurrency race conditions during yield', () => {
+            const appCode = readFileSync(resolve(import.meta.dirname, '../app.js'), 'utf8');
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+
+            expect(appCode).toContain('await renderNextBatch()');
+            expect(appCode).toContain('isBatchLoading = false');
+            expect(catalogCode).toContain('window.renderedCount = endIndex;');
+        });
+
+        it('guards live search against stale query results after yielding', () => {
+            const searchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
+            expect(searchCode).toContain('if (seq !== currentLiveSearchSeq) return;');
+            expect(searchCode).toContain('if (searchInput.value.trim() !== searchTerm) return;');
+        });
     });
 
     describe('2. Back/Forward Cache (bfcache) + pageshow (event.persisted)', () => {
@@ -68,6 +83,8 @@ describe('Modern Performance APIs Suite', () => {
             expect(pwaCode).toContain('event.persisted');
             expect(pwaCode).toContain('[BFCache]');
             expect(pwaCode).toContain('window.addEventListener("pagehide"');
+            expect(pwaCode).toContain('initCatalogRealtimeSubscription');
+            expect(pwaCode).toContain('syncCriticalStatuses');
         });
 
         it('drop.js avoids permanent beforeunload listeners to ensure 100% bfcache compliance', () => {

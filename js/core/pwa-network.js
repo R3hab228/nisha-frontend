@@ -647,7 +647,15 @@ window.addEventListener("pageshow", async (event) => {
         const spinner = document.getElementById('loadingSpinner') || document.querySelector('.global-loading');
         if (spinner) spinner.style.display = 'none';
 
-        // 4. Проверка актуальности открытого товара
+        // 4. Мгновенная синхронизация Realtime и критических статусов товаров при пробуждении из bfcache
+        if (typeof window.initCatalogRealtimeSubscription === 'function') {
+            try { window.initCatalogRealtimeSubscription(); } catch (_) {}
+        }
+        if (typeof window.syncCriticalStatuses === 'function') {
+            try { window.syncCriticalStatuses(); } catch (_) {}
+        }
+
+        // 5. Проверка актуальности открытого товара
         const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
         if (activeItem && typeof window.checkItemAvailability === 'function') {
             try { await window.checkItemAvailability(activeItem.id); } catch (_) {}

@@ -2864,7 +2864,8 @@ async function renderNextBatch(targetMobileCount = 0) {
         }
         startIndex = window.renderedCount;
         const batchLen = (startIndex === 0 && targetMobileCount > BATCH_SIZE) ? targetMobileCount : BATCH_SIZE;
-        endIndex = Math.min(startIndex + batchLen, window.filteredItems.length); 
+        endIndex = Math.min(startIndex + batchLen, window.filteredItems.length);
+        window.renderedCount = endIndex; 
     } else {
         if (gridVideoObserver) gridVideoObserver.disconnect();
         if (typeof grid.replaceChildren === 'function') grid.replaceChildren();
