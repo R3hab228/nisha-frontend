@@ -1,9 +1,22 @@
+// Кэш-щит от всплесков трафика (In-Memory Micro-Cache для Vercel Serverless)
+const shareHtmlCache = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 минут
+const MAX_CACHE_ENTRIES = 250;
+
 module.exports = async function handler(req, res) {
   const id = req.query.id;
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
   if (!id || !uuidRegex.test(id)) {
     return res.redirect('/');
+  }
+
+  const cached = shareHtmlCache.get(id);
+  if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    res.setHeader('X-Cache-Shield', 'HIT');
+    return res.status(200).send(cached.html);
   }
 
   const headers = {
@@ -141,6 +154,7 @@ module.exports = async function handler(req, res) {
 '<title>' + title + '</title>\n' +
 '<meta name="description" content="' + description + '">\n' +
 '<link rel="canonical" href="' + shareUrl + '">\n' +
+'<link rel="preload" as="image" href="' + imageUrl + '" fetchpriority="high">\n' +
 '<meta property="og:type" content="product">\n' +
 '<meta property="og:site_name" content="NISHA">\n' +
 '<meta property="og:title" content="' + title + '">\n' +
@@ -189,8 +203,15 @@ videoTags + '\n' +
 '</body>\n' +
 '</html>';
 
+    if (shareHtmlCache.size >= MAX_CACHE_ENTRIES) {
+      const oldestKey = shareHtmlCache.keys().next().value;
+      if (oldestKey) shareHtmlCache.delete(oldestKey);
+    }
+    shareHtmlCache.set(id, { html, timestamp: Date.now() });
+
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    res.setHeader('X-Cache-Shield', 'MISS');
     return res.status(200).send(html);
 
   } catch (e) {
