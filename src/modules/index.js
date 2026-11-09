@@ -17,6 +17,7 @@ export * from './reviews.js';
 export * from './orders.js';
 export * from './drop.js';
 export * from './profile.js';
+export * from './webLocks.js';
 
 // Default export grouping core services for convenience
 import store from './store.js';
@@ -33,6 +34,7 @@ import * as reviews from './reviews.js';
 import * as orders from './orders.js';
 import * as drop from './drop.js';
 import * as profile from './profile.js';
+import * as webLocks from './webLocks.js';
 
 export default {
     store,
@@ -48,5 +50,6 @@ export default {
     reviews,
     orders,
     drop,
-    profile
+    profile,
+    webLocks
 };

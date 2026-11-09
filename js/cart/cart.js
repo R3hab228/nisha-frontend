@@ -816,6 +816,7 @@ function updateCartUI() {
     } 
     
     document.getElementById('cartCount').innerText = currentCart.length;
+    if (typeof window.updateAppBadge === 'function') window.updateAppBadge(currentCart.length);
     let total = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
     
     // Применяем скидку по промокоду, если она есть

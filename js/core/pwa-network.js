@@ -637,6 +637,9 @@ window.addEventListener("pageshow", async (event) => {
         if (typeof window.updateCartUI === 'function') {
             try { window.updateCartUI(); } catch (_) {}
         }
+        if (typeof window.updateAppBadge === 'function') {
+            try { window.updateAppBadge(); } catch (_) {}
+        }
 
         // 2. Тихое обновление маркеров избранного
         if (typeof window.renderFavoritesMarkers === 'function') {

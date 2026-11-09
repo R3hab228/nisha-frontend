@@ -1,3 +1,12 @@
+
+function isItemBargainEnabled(item) {
+    if (!item || item.status === 'sold') return false;
+    const descMatch = typeof item.description === 'string' && item.description.match(/\[(?:ТОРГ|торг|bargain):?\s*(?:(?:від|от)\s*)?(\d+)/i);
+    const itemMinBargain = item.min_bargain_price || (descMatch ? Number.parseInt(descMatch[1], 10) : null);
+    return Boolean(item.is_bargain || itemMinBargain || (typeof item.description === 'string' && /\[(?:ТОРГ|торг|bargain)/i.test(item.description)));
+}
+window.isItemBargainEnabled = isItemBargainEnabled;
+
 // ==========================================
 // NISHA LIVE SEARCH & SEARCH HISTORY MODULE
 // ==========================================
@@ -218,6 +227,11 @@ function handleLiveSearch() {
                     priceHtml = `<span style="color: var(--accent-green); text-shadow: 0 0 6px rgba(0,255,0,0.5); font-weight: bold;">★ ${priceHtml}</span>`;
                 }
 
+                const hasBargain = isItemBargainEnabled(item);
+                const bargainBadgeHtml = hasBargain
+                    ? `<span class="live-search-bargain-badge">${(typeof i18next !== 'undefined' && i18next.t('search.bargain_badge', { defaultValue: 'ТОРГ' })) || 'ТОРГ'}</span>`
+                    : '';
+
                 html += `
                     <div class="live-search-item ${isReserved ? 'reserved-item' : ''}" data-action="select-live-search-item" data-id="${escapeHtml(item.id)}">
                         <div class="live-search-img" style="background-image: url('${safeImg}')">${reservedBadgeHtml}</div>
@@ -225,6 +239,7 @@ function handleLiveSearch() {
                             <span class="live-search-title">${highlightedName}</span>
                             <span class="live-search-price">${priceHtml}</span>
                         </div>
+                        ${bargainBadgeHtml}
                     </div>`;
             });
 

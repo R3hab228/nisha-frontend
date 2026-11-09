@@ -109,6 +109,7 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     touch-action: pan-y; 
     content-visibility: auto;
     contain-intrinsic-size: auto 54px;
+    position: relative;
 }
 .live-search-item:hover { background: #1a1a1a; padding-left: 15px; }
 .live-search-img { 
@@ -149,7 +150,36 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
     z-index: 2;
     box-sizing: border-box;
 }
-.live-search-info { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; }
+.live-search-info { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; padding-right: 52px; }
+
+/* Бейдж [ТОРГ] в правом верхнем углу найденного товара */
+.live-search-bargain-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--accent-green, #00ff66);
+    background: rgba(0, 255, 102, 0.08);
+    border: 1px solid var(--accent-green, #00ff66);
+    padding: 1.5px 5.5px;
+    border-radius: 2px;
+    pointer-events: none;
+    line-height: 1.2;
+    text-transform: uppercase;
+    box-shadow: 0 0 6px rgba(0, 255, 102, 0.25);
+    white-space: nowrap;
+    z-index: 2;
+    transition: all 0.2s ease;
+}
+.live-search-item:hover .live-search-bargain-badge {
+    background: rgba(0, 255, 102, 0.18);
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.45);
+    border-color: #55ff99;
+}
+
 .live-search-title { 
     color: #fff; 
     font-size: 13px; 

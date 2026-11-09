@@ -1533,7 +1533,8 @@ async function syncCriticalStatuses() {
     if (!sb || !window.allItems || window.allItems.length === 0) return;
     initCatalogRealtimeSubscription();
 
-    _isSyncingItems = true;
+    const executeSync = async () => {
+        _isSyncingItems = true;
     try {
         const { data, error } = await sb.from('items')
             .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, views_count, created_at, category, size, condition')
@@ -1725,6 +1726,12 @@ async function syncCriticalStatuses() {
     } finally {
         _isSyncingItems = false;
     }
+    };
+
+    if (typeof window.runWithLock === 'function') {
+        return window.runWithLock('nisha_critical_sync_lock', executeSync, { ifAvailable: true });
+    }
+    return executeSync();
 }
 window.syncCriticalStatuses = syncCriticalStatuses;
 

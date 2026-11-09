@@ -575,6 +575,8 @@ async function initApp() {
         if (typeof renderHistory === 'function') renderHistory();
         if (typeof initHitCounter === 'function') initHitCounter();
         if (typeof updateSidebarCounters === 'function') updateSidebarCounters();
+        if (typeof window.initLeaderElection === 'function') window.initLeaderElection();
+        if (typeof window.updateAppBadge === 'function') window.updateAppBadge();
         
         const activeUser = store.user;
         if (activeUser && activeUser.phone) {

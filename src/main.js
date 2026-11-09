@@ -18,6 +18,7 @@ import '../style.css';
 import '../config.js';
 import '../js/core/apiClient.js';
 import '../js/core/helpers.js';
+import '../js/core/web-locks.js';
 import '../js/core/analytics.js';
 import '../js/core/rum.js';
 import '../js/core/i18n.js';

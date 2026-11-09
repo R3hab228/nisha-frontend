@@ -27,6 +27,14 @@ import defaultModularFacade, {
     getFirstItem,
     isSaveDataMode,
     initNetworkAwareRendering,
+    isAppBadgingSupported,
+    updateAppBadge,
+    clearAppBadge,
+    isWebLocksSupported,
+    isTabLeader,
+    onLeaderElected,
+    runWithLock,
+    initLeaderElection,
     openModal,
     closeModal,
     executeCloseModal,
@@ -289,6 +297,15 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(typeof defaultModularFacade.helpers.isSaveDataMode).toBe('function');
             expect(typeof defaultModularFacade.helpers.initNetworkAwareRendering).toBe('function');
             expect(typeof isSaveDataMode()).toBe('boolean');
+        });
+
+        it('exports App Badging API on helpers facade', () => {
+            expect(typeof isAppBadgingSupported).toBe('function');
+            expect(typeof updateAppBadge).toBe('function');
+            expect(typeof clearAppBadge).toBe('function');
+            expect(typeof defaultModularFacade.helpers.isAppBadgingSupported).toBe('function');
+            expect(typeof defaultModularFacade.helpers.updateAppBadge).toBe('function');
+            expect(typeof defaultModularFacade.helpers.clearAppBadge).toBe('function');
         });
     });
 
@@ -562,6 +579,18 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(() => profile.updateFavBadge()).not.toThrow();
             expect(() => defaultModularFacade.catalog.filterFavorites()).not.toThrow();
             expect(() => profile.initAuthListener()).not.toThrow();
+        });
+    });
+
+    describe('Web Locks & Leader Election Module (src/modules/webLocks.js)', () => {
+        it('exports complete Web Locks & Leader Election facade', () => {
+            expect(typeof isWebLocksSupported).toBe('function');
+            expect(typeof isTabLeader).toBe('function');
+            expect(typeof onLeaderElected).toBe('function');
+            expect(typeof runWithLock).toBe('function');
+            expect(typeof initLeaderElection).toBe('function');
+            expect(defaultModularFacade.webLocks).toBeDefined();
+            expect(typeof defaultModularFacade.webLocks.runWithLock).toBe('function');
         });
     });
 });

@@ -104,6 +104,61 @@ export function initNetworkAwareRendering() {
  * Checks if browser natively supports Compression Streams API (gzip/deflate)
  * @returns {boolean}
  */
+
+/**
+ * Checks if browser supports the Badging API (PWA / Installed Desktop & Mobile)
+ * @returns {boolean}
+ */
+export function isAppBadgingSupported() {
+    return typeof navigator !== 'undefined' &&
+           'setAppBadge' in navigator &&
+           typeof navigator.setAppBadge === 'function';
+}
+
+/**
+ * Updates application icon badge in PWA / Installed Web App mode
+ * Synchronizes with total items in cart or clears badge if empty
+ * @param {number} [count]
+ * @returns {Promise<boolean>}
+ */
+export async function updateAppBadge(count) {
+    if (typeof navigator === 'undefined') return false;
+    let badgeCount = count;
+    if (typeof badgeCount !== 'number') {
+        const cartList = (typeof window !== 'undefined' && window.cart) ? window.cart : [];
+        badgeCount = Array.isArray(cartList) ? cartList.length : 0;
+    }
+
+    try {
+        if (badgeCount > 0) {
+            if ('setAppBadge' in navigator && typeof navigator.setAppBadge === 'function') {
+                await navigator.setAppBadge(badgeCount);
+                return true;
+            }
+        } else {
+            if ('clearAppBadge' in navigator && typeof navigator.clearAppBadge === 'function') {
+                await navigator.clearAppBadge();
+                return true;
+            }
+        }
+    } catch (_) {}
+    return false;
+}
+
+/**
+ * Clears application icon badge
+ * @returns {Promise<boolean>}
+ */
+export async function clearAppBadge() {
+    if (typeof navigator !== 'undefined' && 'clearAppBadge' in navigator && typeof navigator.clearAppBadge === 'function') {
+        try {
+            await navigator.clearAppBadge();
+            return true;
+        } catch (_) {}
+    }
+    return false;
+}
+
 export function isCompressionStreamSupported() {
     return typeof globalThis.CompressionStream !== 'undefined' && typeof globalThis.DecompressionStream !== 'undefined';
 }

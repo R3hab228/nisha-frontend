@@ -5,11 +5,29 @@
 // 1. scheduler.yield() & Cooperative Task Scheduling
 // 2. Back/Forward Cache (bfcache) + pageshow/pagehide lifecycle
 // 3. Save-Data & Network-Aware Rendering (navigator.connection.saveData)
+// 4. App Badging API (navigator.setAppBadge / clearAppBadge)
+// 5. Web Locks API (navigator.locks) & Leader Election
+// 6. Live Search Bargain Badge ([ТОРГ])
 // ==========================================
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { yieldToMain, isSchedulerYieldSupported, isSaveDataMode, initNetworkAwareRendering } from '../src/modules/helpers.js';
+import {
+    yieldToMain,
+    isSchedulerYieldSupported,
+    isSaveDataMode,
+    initNetworkAwareRendering,
+    isAppBadgingSupported,
+    updateAppBadge,
+    clearAppBadge
+} from '../src/modules/helpers.js';
+import {
+    isWebLocksSupported,
+    isTabLeader,
+    onLeaderElected,
+    runWithLock,
+    initLeaderElection
+} from '../src/modules/webLocks.js';
 
 describe('Modern Performance APIs Suite', () => {
     beforeAll(() => {
@@ -155,6 +173,143 @@ describe('Modern Performance APIs Suite', () => {
             expect(cssCode).toContain('html.save-data-active');
             expect(cssCode).toContain('backdrop-filter: none !important');
             expect(cssCode).toContain('grid-lazy-video');
+        });
+    });
+
+    describe('4. App Badging API (navigator.setAppBadge / clearAppBadge)', () => {
+        beforeEach(() => {
+            delete globalThis.navigator.setAppBadge;
+            delete globalThis.navigator.clearAppBadge;
+        });
+
+        it('isAppBadgingSupported correctly identifies browser support', () => {
+            expect(isAppBadgingSupported()).toBe(false);
+
+            globalThis.navigator.setAppBadge = vi.fn();
+            expect(isAppBadgingSupported()).toBe(true);
+        });
+
+        it('updateAppBadge and clearAppBadge invoke native navigator methods safely', async () => {
+            const setBadgeMock = vi.fn().mockResolvedValue(undefined);
+            const clearBadgeMock = vi.fn().mockResolvedValue(undefined);
+
+            globalThis.navigator.setAppBadge = setBadgeMock;
+            globalThis.navigator.clearAppBadge = clearBadgeMock;
+
+            const resSet = await updateAppBadge(3);
+            expect(resSet).toBe(true);
+            expect(setBadgeMock).toHaveBeenCalledWith(3);
+
+            const resClear = await updateAppBadge(0);
+            expect(resClear).toBe(true);
+            expect(clearBadgeMock).toHaveBeenCalled();
+
+            const resDirectClear = await clearAppBadge();
+            expect(resDirectClear).toBe(true);
+        });
+
+        it('updateAppBadge defaults to window.cart length if count is omitted', async () => {
+            const setBadgeMock = vi.fn().mockResolvedValue(undefined);
+            globalThis.navigator.setAppBadge = setBadgeMock;
+
+            globalThis.window.cart = [{ id: '1' }, { id: '2' }];
+            await updateAppBadge();
+            expect(setBadgeMock).toHaveBeenCalledWith(2);
+        });
+    });
+
+    describe('5. Web Locks API (navigator.locks) & Leader Election', () => {
+        let origLocks;
+
+        beforeAll(() => {
+            origLocks = Object.getOwnPropertyDescriptor(globalThis.navigator, 'locks');
+        });
+
+        afterEach(() => {
+            if (origLocks) {
+                Object.defineProperty(globalThis.navigator, 'locks', origLocks);
+            }
+        });
+
+        it('isWebLocksSupported detects native locks.request support', () => {
+            Object.defineProperty(globalThis.navigator, 'locks', {
+                value: { request: vi.fn() },
+                configurable: true
+            });
+            expect(isWebLocksSupported()).toBe(true);
+
+            Object.defineProperty(globalThis.navigator, 'locks', {
+                value: undefined,
+                configurable: true
+            });
+            expect(isWebLocksSupported()).toBe(false);
+        });
+
+        it('runWithLock executes tasks with native lock or graceful fallback', async () => {
+            Object.defineProperty(globalThis.navigator, 'locks', {
+                value: undefined,
+                configurable: true
+            });
+
+            let taskRan = false;
+            const resFallback = await runWithLock('test_fallback', async () => {
+                taskRan = true;
+                return 'result';
+            });
+            expect(taskRan).toBe(true);
+            expect(resFallback).toBe('result');
+
+            let lockRequested = false;
+            Object.defineProperty(globalThis.navigator, 'locks', {
+                value: {
+                    request: vi.fn().mockImplementation(async (name, opts, cb) => {
+                        lockRequested = true;
+                        return cb({ name });
+                    })
+                },
+                configurable: true
+            });
+
+            const resLocked = await runWithLock('test_lock', async () => 42);
+            expect(lockRequested).toBe(true);
+            expect(resLocked).toBe(42);
+        });
+
+        it('runWithLock respects ifAvailable and returns null when lock is contested', async () => {
+            Object.defineProperty(globalThis.navigator, 'locks', {
+                value: {
+                    request: vi.fn().mockImplementation(async (name, opts, cb) => {
+                        // Simulates unavailable lock
+                        return cb(null);
+                    })
+                },
+                configurable: true
+            });
+
+            const contestedRes = await runWithLock('contested_lock', async () => 'not_run', { ifAvailable: true });
+            expect(contestedRes).toBeNull();
+        });
+
+        it('catalog syncCriticalStatuses uses runWithLock with nisha_critical_sync_lock', () => {
+            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain("window.runWithLock('nisha_critical_sync_lock', executeSync, { ifAvailable: true })");
+        });
+    });
+
+    describe('6. Live Search Bargain Badge ([ТОРГ])', () => {
+        it('live-search.js contains isItemBargainEnabled helper and live-search-bargain-badge', () => {
+            const searchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
+            expect(searchCode).toContain('function isItemBargainEnabled');
+            expect(searchCode).toContain('live-search-bargain-badge');
+            expect(searchCode).toContain("t('search.bargain_badge'");
+        });
+
+        it('style.css defines .live-search-bargain-badge in top right corner with padding-right clearance', () => {
+            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            expect(cssCode).toContain('.live-search-bargain-badge');
+            expect(cssCode).toContain('top: 12px');
+            expect(cssCode).toContain('right: 12px');
+            expect(cssCode).toContain('padding-right: 52px');
         });
     });
 });
