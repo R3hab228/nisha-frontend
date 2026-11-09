@@ -13,12 +13,21 @@ let proposalSortable = null;
 let proposalUploadChain = Promise.resolve();
 let activeProposalUploads = 0;
 
-window.addEventListener('beforeunload', (e) => {
+function onProposalBeforeUnload(e) {
     if (activeProposalUploads > 0) {
         e.preventDefault();
         e.returnValue = '';
     }
-});
+}
+
+function updateProposalBeforeUnloadListener() {
+    if (typeof window === 'undefined') return;
+    if (activeProposalUploads > 0) {
+        window.addEventListener('beforeunload', onProposalBeforeUnload);
+    } else {
+        window.removeEventListener('beforeunload', onProposalBeforeUnload);
+    }
+}
 
 async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
     let lastError = null;
@@ -49,6 +58,7 @@ async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
 
 function enqueueProposalUpload(formData) {
     activeProposalUploads++;
+    updateProposalBeforeUnloadListener();
     proposalUploadChain = proposalUploadChain
         .then(() => sendProposalFormDataWithRetry(formData, 3))
         .catch((err) => {
@@ -60,6 +70,7 @@ function enqueueProposalUpload(formData) {
         })
         .finally(() => {
             activeProposalUploads = Math.max(0, activeProposalUploads - 1);
+            updateProposalBeforeUnloadListener();
         });
     return proposalUploadChain;
 }

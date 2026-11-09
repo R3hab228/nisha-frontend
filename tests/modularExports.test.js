@@ -25,6 +25,8 @@ import defaultModularFacade, {
     runMicrotask,
     getLastItem,
     getFirstItem,
+    isSaveDataMode,
+    initNetworkAwareRendering,
     openModal,
     closeModal,
     executeCloseModal,
@@ -279,6 +281,14 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(getLastItem([])).toBeUndefined();
             expect(getFirstItem([])).toBeUndefined();
             expect(getLastItem(null)).toBeUndefined();
+        });
+
+        it('exports isSaveDataMode and initNetworkAwareRendering on helpers facade', () => {
+            expect(typeof isSaveDataMode).toBe('function');
+            expect(typeof initNetworkAwareRendering).toBe('function');
+            expect(typeof defaultModularFacade.helpers.isSaveDataMode).toBe('function');
+            expect(typeof defaultModularFacade.helpers.initNetworkAwareRendering).toBe('function');
+            expect(typeof isSaveDataMode()).toBe('boolean');
         });
     });
 

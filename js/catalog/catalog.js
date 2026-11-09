@@ -2266,7 +2266,9 @@ window.applyFilters = applyFilters;
 // Умный плеер для видео в сетке (IntersectionObserver с поддержкой Network Information API)
 const gridVideoObserver = new IntersectionObserver((entries) => {
     const conn = (typeof navigator !== 'undefined') ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
-    const isSaveData = Boolean(conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g'));
+    const isSaveData = (typeof window.isSaveDataMode === 'function')
+        ? window.isSaveDataMode()
+        : Boolean(conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g'));
 
     entries.forEach(entry => {
         const video = entry.target;
@@ -2831,7 +2833,7 @@ function insertNewItemCardSmoothly(item) {
 window.insertNewItemCardSmoothly = insertNewItemCardSmoothly;
 
 // Рендер следующей пачки товаров
-function renderNextBatch(targetMobileCount = 0) {
+async function renderNextBatch(targetMobileCount = 0) {
     const grid = document.getElementById('itemsGrid');
     if (!grid) return;
     initGridEventDelegation();
@@ -2901,6 +2903,7 @@ function renderNextBatch(targetMobileCount = 0) {
     }
 
     grid.appendChild(fragment);
+    if (typeof window.yieldToMain === 'function') await window.yieldToMain();
     grid.querySelectorAll('img.card-slide-img').forEach(img => {
         if (img.complete && img.naturalWidth > 0 && img.style.opacity !== '1') {
             img.style.opacity = '1';

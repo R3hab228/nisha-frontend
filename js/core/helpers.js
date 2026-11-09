@@ -23,6 +23,54 @@ function isSchedulerYieldSupported() {
 }
 window.isSchedulerYieldSupported = isSchedulerYieldSupported;
 
+/**
+ * Detects whether client has Data Saver enabled or is on a 2G/constrained network
+ * @returns {boolean}
+ */
+function isSaveDataMode() {
+    if (typeof navigator === 'undefined') return false;
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (!conn) return false;
+    if (conn.saveData === true) return true;
+    if (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') return true;
+    return false;
+}
+window.isSaveDataMode = isSaveDataMode;
+
+/**
+ * Automatically attaches or updates save-data CSS class on document element
+ */
+function initNetworkAwareRendering() {
+    if (typeof document === 'undefined' || typeof navigator === 'undefined') return;
+    const update = () => {
+        const active = isSaveDataMode();
+        if (active) {
+            if (document.documentElement.classList && typeof document.documentElement.classList.add === 'function') {
+                document.documentElement.classList.add('save-data-active');
+            }
+            if (typeof document.documentElement.setAttribute === 'function') {
+                document.documentElement.setAttribute('data-save-data', 'true');
+            }
+        } else {
+            if (document.documentElement.classList && typeof document.documentElement.classList.remove === 'function') {
+                document.documentElement.classList.remove('save-data-active');
+            }
+            if (typeof document.documentElement.removeAttribute === 'function') {
+                document.documentElement.removeAttribute('data-save-data');
+            }
+        }
+    };
+    update();
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (conn && typeof conn.addEventListener === 'function') {
+        conn.addEventListener('change', update, { passive: true });
+    }
+}
+window.initNetworkAwareRendering = initNetworkAwareRendering;
+if (typeof window !== 'undefined') {
+    initNetworkAwareRendering();
+}
+
 function isCompressionStreamSupported() {
     return typeof globalThis.CompressionStream !== 'undefined' && typeof globalThis.DecompressionStream !== 'undefined';
 }

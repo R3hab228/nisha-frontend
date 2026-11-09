@@ -627,6 +627,43 @@ document.addEventListener("visibilitychange", async () => {
     }
 });
 
+
+// === 4.1. BACK/FORWARD CACHE (bfcache) LIFECYCLE MANAGEMENT ===
+window.addEventListener("pageshow", async (event) => {
+    if (event.persisted) {
+        console.info('[BFCache] Страница мгновенно восстановлена из памяти браузера (0ms Instant Load)');
+
+        // 1. Тихое обновление корзины и счетчиков
+        if (typeof window.updateCartUI === 'function') {
+            try { window.updateCartUI(); } catch (_) {}
+        }
+
+        // 2. Тихое обновление маркеров избранного
+        if (typeof window.renderFavoritesMarkers === 'function') {
+            try { window.renderFavoritesMarkers(); } catch (_) {}
+        }
+
+        // 3. Снятие возможных залипших прелоадеров
+        const spinner = document.getElementById('loadingSpinner') || document.querySelector('.global-loading');
+        if (spinner) spinner.style.display = 'none';
+
+        // 4. Проверка актуальности открытого товара
+        const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        if (activeItem && typeof window.checkItemAvailability === 'function') {
+            try { await window.checkItemAvailability(activeItem.id); } catch (_) {}
+        }
+    }
+}, { passive: true });
+
+window.addEventListener("pagehide", (event) => {
+    if (event.persisted) {
+        // При переходе страницы в bfcache приостанавливаем тяжелые видео для экономии RAM/GPU
+        document.querySelectorAll('video').forEach(video => {
+            try { video.pause(); } catch (_) {}
+        });
+    }
+}, { passive: true });
+
 // === 5. WINDOWS 95 ОФЛАЙН-РЕЖИМ (Error_NISHA.exe) ===
 function createNetErrorElement() {
     const wrapper = document.createElement('div');

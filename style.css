@@ -3843,3 +3843,18 @@ html.pwa-standalone body {
 
 
 
+
+/* ==========================================
+   NETWORK-AWARE RENDERING & SAVE-DATA (navigator.connection.saveData)
+   ========================================== */
+html.save-data-active * {
+    text-shadow: none !important;
+}
+html.save-data-active .glass-effect,
+html.save-data-active .modal-overlay {
+    backdrop-filter: none !important;
+    background: rgba(10, 10, 10, 0.96) !important;
+}
+html.save-data-active .grid-lazy-video {
+    display: none !important;
+}

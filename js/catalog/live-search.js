@@ -230,6 +230,7 @@ function handleLiveSearch() {
 
             if (dropdown) {
                 if (html) {
+                    if (typeof window.yieldToMain === 'function') await window.yieldToMain();
                     dropdown.innerHTML = html;
                     dropdown.style.display = 'block';
                 } else {

@@ -121,6 +121,9 @@ window._prewarmedItemDetails = _prewarmedItemDetails;
 window._prewarmedImagesSet = _prewarmedImagesSet;
 
 function isDataSaverActive() {
+    if (typeof window.isSaveDataMode === 'function') {
+        return window.isSaveDataMode();
+    }
     try {
         if (typeof navigator !== "undefined" && navigator.connection) {
             const conn = navigator.connection;
