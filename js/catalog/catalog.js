@@ -2341,16 +2341,32 @@ window.changePage = function(step) {
 };
 
 // Мгновенная активация скрытых слайдов карточки при первом взаимодействии (свайп/наведение/стрелки)
-function isSafeMediaUrl(rawUrl) {
-    if (!rawUrl || typeof rawUrl !== 'string') return false;
+function sanitizeHtmlMediaUrl(rawUrl) {
+    if (typeof window !== 'undefined' && typeof window.sanitizeHtmlMediaUrl === 'function') {
+        return window.sanitizeHtmlMediaUrl(rawUrl);
+    }
+    if (!rawUrl || typeof rawUrl !== 'string') return null;
     try {
+        const cleaned = (typeof window !== 'undefined' && window.DOMPurify && typeof window.DOMPurify.sanitize === 'function')
+            ? window.DOMPurify.sanitize(rawUrl)
+            : rawUrl;
+        const trimmed = String(cleaned || '').trim();
+        if (!trimmed) return null;
         const base = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'https://www.nisha-store.shop';
-        const u = new URL(rawUrl, base);
-        return u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'data:';
+        const u = new URL(trimmed, base);
+        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'data:') {
+            return u.href;
+        }
+        return null;
     } catch (_) {
-        return false;
+        return null;
     }
 }
+
+function isSafeMediaUrl(rawUrl) {
+    return Boolean(sanitizeHtmlMediaUrl(rawUrl));
+}
+window.isSafeMediaUrl = isSafeMediaUrl;
 
 function activateCardSlides(target) {
     if (!target) return;
@@ -2362,12 +2378,13 @@ function activateCardSlides(target) {
     const lazyImgs = wrapper.querySelectorAll('img[data-src]');
     for (let i = 0; i < lazyImgs.length; i++) {
         const img = lazyImgs[i];
-        const src = img.getAttribute('data-src');
-        if (src && isSafeMediaUrl(src)) {
+        const rawSrc = img.getAttribute('data-src');
+        const safeSrc = sanitizeHtmlMediaUrl(rawSrc);
+        if (safeSrc) {
             if (img.parentElement && !img.parentElement.classList.contains('img-8bit-loaded')) {
                 img.parentElement.classList.add('img-8bit-loading');
             }
-            img.src = src;
+            img.src = safeSrc;
             img.removeAttribute('data-src');
             if (img.complete && img.naturalWidth > 0) {
                 img.style.opacity = '1';

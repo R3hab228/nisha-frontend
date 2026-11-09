@@ -2069,15 +2069,28 @@ function handleDelegatedMediaLoad(e) {
 }
 window.handleDelegatedMediaLoad = handleDelegatedMediaLoad;
 
-function isSafeMediaUrl(rawUrl) {
-    if (!rawUrl || typeof rawUrl !== 'string') return false;
+function sanitizeHtmlMediaUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return null;
     try {
+        const cleaned = (typeof window !== 'undefined' && window.DOMPurify && typeof window.DOMPurify.sanitize === 'function')
+            ? window.DOMPurify.sanitize(rawUrl)
+            : rawUrl;
+        const trimmed = String(cleaned || '').trim();
+        if (!trimmed) return null;
         const base = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'https://www.nisha-store.shop';
-        const u = new URL(rawUrl, base);
-        return u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'data:';
+        const u = new URL(trimmed, base);
+        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'data:') {
+            return u.href;
+        }
+        return null;
     } catch (_) {
-        return false;
+        return null;
     }
+}
+window.sanitizeHtmlMediaUrl = sanitizeHtmlMediaUrl;
+
+function isSafeMediaUrl(rawUrl) {
+    return Boolean(sanitizeHtmlMediaUrl(rawUrl));
 }
 window.isSafeMediaUrl = isSafeMediaUrl;
 
@@ -2090,10 +2103,11 @@ function handleDelegatedMediaError(e) {
         const fallbackSrc = ds.fallbackSrc || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fallback-src') : '');
         const hasTriedFb = ds.fb || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fb') : '');
         const currentSrc = target.src || (typeof target.getAttribute === 'function' ? target.getAttribute('src') : '');
-        if (!hasTriedFb && fallbackSrc && fallbackSrc !== currentSrc && isSafeMediaUrl(fallbackSrc)) {
+        const safeFbSrc = sanitizeHtmlMediaUrl(fallbackSrc);
+        if (!hasTriedFb && safeFbSrc && safeFbSrc !== currentSrc) {
             if (target.dataset) target.dataset.fb = '1';
             if (typeof target.setAttribute === 'function') target.setAttribute('data-fb', '1');
-            target.src = fallbackSrc;
+            target.src = safeFbSrc;
             return;
         }
         if (target.parentElement) {
