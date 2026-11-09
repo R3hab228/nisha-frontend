@@ -36,7 +36,7 @@ function swBuildIdPlugin() {
             const src = readFileSync(swPath, 'utf8');
             res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-            return res.end(src.split('__BUILD_ID__').join(BUILD_ID));
+            return res.end(src.replaceAll('__BUILD_ID__', BUILD_ID));
           }
         }
         next();
@@ -46,7 +46,7 @@ function swBuildIdPlugin() {
       const swDistPath = resolve(import.meta.dirname, 'dist', 'sw.js');
       if (existsSync(swDistPath)) {
         const src = readFileSync(swDistPath, 'utf8');
-        writeFileSync(swDistPath, src.split('__BUILD_ID__').join(BUILD_ID));
+        writeFileSync(swDistPath, src.replaceAll('__BUILD_ID__', BUILD_ID));
       }
       const swRootPath = resolve(import.meta.dirname, 'sw.js');
       const swPublicPath = resolve(import.meta.dirname, 'public', 'sw.js');

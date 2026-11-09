@@ -726,8 +726,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('guarantees no loose parseInt/parseFloat exists in frontend js codebase', () => {
-            const { readdirSync, statSync, readFileSync } = require('fs');
-            const { join } = require('path');
+            const { readdirSync, statSync, readFileSync } = require('node:fs');
+            const { join } = require('node:path');
 
             const jsDir = resolve(__dirname, '../js');
             const getFiles = (dir) => {

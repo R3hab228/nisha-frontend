@@ -46,14 +46,14 @@ export default {
         if (isImage && (hasResizeParams || width)) {
             const cfOptions = {
                 image: {
-                    quality: Math.min(100, Math.max(20, parseInt(quality, 10) || 85)),
+                    quality: Math.min(100, Math.max(20, Number.parseInt(quality, 10) || 85)),
                     format: format === 'origin' ? undefined : (format || 'webp'),
                     fit: 'scale-down',
                     metadata: 'none',
                 }
             };
-            if (width) cfOptions.image.width = Math.min(2400, Math.max(32, parseInt(width, 10)));
-            if (height) cfOptions.image.height = Math.min(2400, Math.max(32, parseInt(height, 10)));
+            if (width) cfOptions.image.width = Math.min(2400, Math.max(32, Number.parseInt(width, 10)));
+            if (height) cfOptions.image.height = Math.min(2400, Math.max(32, Number.parseInt(height, 10)));
 
             try {
                 const response = await fetch(targetUrl.toString(), {

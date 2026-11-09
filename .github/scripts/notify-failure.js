@@ -1,4 +1,4 @@
-const https = require('https');
+const https = require('node:https');
 
 function escapeHtml(str) {
     if (!str) return '';
