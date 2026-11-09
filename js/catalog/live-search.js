@@ -254,6 +254,8 @@ function handleLiveSearch() {
 }
 
 function closeSearch() {
+    clearTimeout(searchDebounce);
+    currentLiveSearchSeq++;
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
     if (dropdown) dropdown.style.display = 'none';

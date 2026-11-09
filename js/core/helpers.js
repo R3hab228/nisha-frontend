@@ -4,12 +4,22 @@
 
 async function yieldToMain() {
     if (typeof globalThis.scheduler !== 'undefined' && typeof globalThis.scheduler.yield === 'function') {
-        return globalThis.scheduler.yield();
+        try {
+            return await globalThis.scheduler.yield();
+        } catch (_) {
+            // fallback if scheduler.yield rejects or is aborted
+        }
     }
     return new Promise(resolve => {
         if (typeof MessageChannel !== 'undefined') {
             const channel = new MessageChannel();
-            channel.port1.onmessage = () => resolve();
+            channel.port1.onmessage = () => {
+                try {
+                    channel.port1.close();
+                    channel.port2.close();
+                } catch (_) {}
+                resolve();
+            };
             channel.port2.postMessage(null);
         } else {
             setTimeout(resolve, 0);
@@ -62,8 +72,9 @@ function initNetworkAwareRendering() {
     };
     update();
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (conn && typeof conn.addEventListener === 'function') {
+    if (conn && typeof conn.addEventListener === 'function' && !conn._hasSaveDataListener) {
         conn.addEventListener('change', update, { passive: true });
+        conn._hasSaveDataListener = true;
     }
 }
 window.initNetworkAwareRendering = initNetworkAwareRendering;

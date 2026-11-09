@@ -2874,7 +2874,15 @@ async function renderNextBatch(targetMobileCount = 0) {
         endIndex = Math.min(startIndex + BATCH_SIZE, window.filteredItems.length);
     }
     
-    if (startIndex >= endIndex) return;
+    if (startIndex >= endIndex) {
+        if (isMobile) {
+            const scrollTrigger = document.getElementById('loadingTrigger');
+            if (scrollTrigger && window.renderedCount >= (window.filteredItems ? window.filteredItems.length : 0)) {
+                scrollTrigger.style.display = 'none';
+            }
+        }
+        return;
+    }
     
     if (!window._seenItemsSet) {
         try {
