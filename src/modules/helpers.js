@@ -295,8 +295,11 @@ export function clamp(val, min, max) {
  * @returns {string}
  */
 export function generateShortId(prefix = 'id') {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `${prefix}_${crypto.randomUUID().replaceAll('-', '').slice(0, 8)}`;
+    }
     if (typeof window !== 'undefined' && typeof window.generateShortId === 'function') {
-        return window.generateShortId(prefix);
+        return `${prefix}_${window.generateShortId(8)}`;
     }
     return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
