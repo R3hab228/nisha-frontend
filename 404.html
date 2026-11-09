@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - CONNECTION_LOST.LOG</title>
+    <script type="speculationrules">
+    {
+      "prerender": [
+        {
+          "source": "list",
+          "urls": ["/"],
+          "eagerness": "moderate"
+        }
+      ],
+      "prefetch": [
+        {
+          "source": "list",
+          "urls": ["/"],
+          "eagerness": "conservative"
+        }
+      ]
+    }
+    </script>
     <style>
         :root {
             --bg-main: #000000;

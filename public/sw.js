@@ -62,15 +62,24 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
+        (async () => {
+            if (self.registration && self.registration.navigationPreload) {
+                try {
+                    await self.registration.navigationPreload.enable();
+                } catch (err) {
+                    console.warn('[SW] Navigation Preload не поддерживается:', err);
+                }
+            }
+            const cacheNames = await caches.keys();
+            await Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME && cacheName !== IMAGE_CACHE && cacheName !== API_CACHE) {
                         return caches.delete(cacheName);
                     }
                 })
             );
-        }).then(() => self.clients.claim())
+            await self.clients.claim();
+        })()
     );
 });
 
@@ -184,10 +193,22 @@ self.addEventListener('fetch', event => {
         return; 
     }
 
-    // --- ОСНОВНЫЕ ФАЙЛЫ САЙТА (Network-First с fallback на кэш при офлайне) ---
+    // --- ОСНОВНЫЕ ФАЙЛЫ САЙТА (Network-First с поддержкой Navigation Preload и fallback на кэш при офлайне) ---
     event.respondWith(
         (async () => {
             try {
+                // Если запрос навигационный и браузер заранее загрузил HTML параллельно старту SW
+                if (event.request.mode === 'navigate' && event.preloadResponse) {
+                    try {
+                        const preloadResponse = await event.preloadResponse;
+                        if (preloadResponse && (preloadResponse.status === 200 || preloadResponse.type === 'opaque')) {
+                            const responseToCache = preloadResponse.clone();
+                            caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache)).catch(() => {});
+                            return preloadResponse;
+                        }
+                    } catch (_) {}
+                }
+
                 // Пытаемся получить свежую версию из сети
                 const networkPromise = fetch(event.request);
                 

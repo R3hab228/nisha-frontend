@@ -79,4 +79,12 @@ describe('Service Worker & PWA Cache Automation', () => {
         expect(content).toContain('STATIC_URLS.map');
         expect(content).not.toMatch(/for\s*\(\s*const\s+url\s+of\s+STATIC_URLS\s*\)\s*\{\s*await\s+cache\.add/);
     });
+
+    it('sw.js enables Navigation Preload during activate and leverages event.preloadResponse on navigate', () => {
+        const content = readFileSync(publicSwPath, 'utf8');
+
+        expect(content).toContain('self.registration.navigationPreload.enable()');
+        expect(content).toContain("event.request.mode === 'navigate'");
+        expect(content).toContain('event.preloadResponse');
+    });
 });
