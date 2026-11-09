@@ -48,17 +48,17 @@ module.exports = async function handler(req, res) {
         .replaceAll('>', '&gt;');
     const rawBrand = item.brand ? item.brand.trim() : '';
     const rawName = item.name ? item.name.trim() : '';
-    const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || 'Винтажная вещь';
+    const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || 'Вінтажна річ';
     const statusPrefix = isSold ? '[ПРОДАНО] ' : '';
-    const title = escapeHTML(statusPrefix + 'NISHA | ' + fullItemTitle);
 
-    let descParts = [];
-    if (isSold) descParts.push('ПРОДАНО');
-    if (item.size) descParts.push('Размер: ' + item.size);
-    if (item.condition) descParts.push('Состояние: ' + item.condition);
-    if (item.price) descParts.push('Цена: ' + item.price + ' грн');
-    const rawDescription = descParts.join(' | ') || (item.description ? item.description.slice(0, 150) : 'Винтажная одежда в магазине NISHA');
-    const description = escapeHTML(rawDescription);
+    // Оптимальный заголовок до 55 символов для идеального Ahrefs / Google SEO
+    const cleanTitle = (statusPrefix + fullItemTitle).slice(0, 48).trim();
+    const title = escapeHTML(cleanTitle + ' | NISHA');
+
+    const cleanItemDesc = String(item.description || '').replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
+    const descSnippet = cleanItemDesc ? ` ${cleanItemDesc.slice(0, 50)}.` : '';
+    const rawMetaDesc = `${statusPrefix}Купити ${fullItemTitle} в інтернет-магазині NISHA. Розмір: ${item.size || 'One size'}, стан: ${item.condition || '9/10'}, ціна: ${item.price || 0} грн.${descSnippet} Доставка Новою Поштою по Україні.`.slice(0, 155);
+    const description = escapeHTML(rawMetaDesc);
     const shareUrl = 'https://www.nisha-store.shop/share/' + id;
     
     let rawImageUrl = 'https://www.nisha-store.shop/og-image.png';
@@ -82,14 +82,17 @@ module.exports = async function handler(req, res) {
     const videoTags = videoUrl ? 
       '<meta property="og:video" content="' + videoUrl + '">\n<meta property="og:video:type" content="video/mp4">' : '';
 
-    const safePriceStr = escapeHTML(item.price || 0);
+    const safePriceStr = escapeHTML(String(item.price || 0));
+    const safeSize = escapeHTML(item.size || 'One size');
+    const safeCondition = escapeHTML(item.condition || '9/10');
+    const safeCleanDesc = escapeHTML(cleanItemDesc || 'Вінтажна та архівна річ у відмінному стані. Доставка по всій Україні.');
 
     const jsonLd = JSON.stringify({
       "@context": "https://schema.org/",
       "@type": "Product",
       "name": fullItemTitle,
       "image": [rawImageUrl],
-      "description": rawDescription,
+      "description": rawMetaDesc,
       "brand": {
         "@type": "Brand",
         "name": rawBrand || "NISHA"
@@ -99,15 +102,42 @@ module.exports = async function handler(req, res) {
         "url": "https://www.nisha-store.shop/?item=" + id,
         "priceCurrency": "UAH",
         "price": String(item.price || 0),
+        "priceValidUntil": "2027-12-31",
         "itemCondition": "https://schema.org/UsedCondition",
-        "availability": isSold ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
+        "availability": isSold ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+        "seller": {
+          "@type": "Organization",
+          "name": "NISHA STORE",
+          "url": "https://www.nisha-store.shop"
+        },
+        "hasMerchantReturnPolicy": {
+          "@type": "MerchantReturnPolicy",
+          "applicableCountry": "UA",
+          "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+          "merchantReturnDays": 14,
+          "returnMethod": "https://schema.org/ReturnByMail",
+          "returnFees": "https://schema.org/FreeReturn"
+        },
+        "shippingDetails": {
+          "@type": "OfferShippingDetails",
+          "shippingRate": {
+            "@type": "MonetaryAmount",
+            "value": "80",
+            "currency": "UAH"
+          },
+          "shippingDestination": [{
+            "@type": "DefinedRegion",
+            "addressCountry": "UA"
+          }]
+        }
       }
     });
 
     const html = '<!DOCTYPE html>\n' +
-'<html lang="ru">\n' +
+'<html lang="uk">\n' +
 '<head>\n' +
 '<meta charset="UTF-8">\n' +
+'<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
 '<title>' + title + '</title>\n' +
 '<meta name="description" content="' + description + '">\n' +
 '<link rel="canonical" href="' + shareUrl + '">\n' +
@@ -127,8 +157,35 @@ videoTags + '\n' +
 '<meta name="twitter:image" content="' + imageUrl + '">\n' +
 '<script type="application/ld+json">' + jsonLd.replaceAll('<', '\\u003c') + '</script>\n' +
 '</head>\n' +
-'<body>\n' +
-'<script>window.location.replace("/?item=' + id + '");</script>\n' +
+'<body style="background:#0a0a0a;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;margin:0;padding:20px;text-align:center;">\n' +
+'<main style="max-width:640px;margin:30px auto;background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:24px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,0.5);">\n' +
+'  <nav style="margin-bottom:16px;">\n' +
+'    <a href="/" style="color:#00ff66;text-decoration:none;font-weight:700;font-family:monospace;font-size:14px;">← ГОЛОВНА NISHA STORE</a>\n' +
+'  </nav>\n' +
+'  <h1 style="font-size:22px;color:#fff;margin:0 0 16px 0;line-height:1.3;">' + title + '</h1>\n' +
+'  <div style="text-align:center;margin-bottom:20px;">\n' +
+'    <img src="' + imageUrl + '" alt="' + title + '" style="max-width:100%;max-height:480px;border-radius:8px;object-fit:cover;border:1px solid #2a2a2a;">\n' +
+'  </div>\n' +
+'  <div style="font-size:15px;line-height:1.6;color:#ccc;margin-bottom:20px;">\n' +
+'    <p style="margin:6px 0;"><strong style="color:#fff;">Ціна:</strong> <span style="color:#00ff66;font-size:18px;font-weight:700;">' + safePriceStr + ' грн</span></p>\n' +
+'    <p style="margin:6px 0;"><strong style="color:#fff;">Розмір:</strong> ' + safeSize + '</p>\n' +
+'    <p style="margin:6px 0;"><strong style="color:#fff;">Стан:</strong> ' + safeCondition + '</p>\n' +
+'    <p style="margin:6px 0;"><strong style="color:#fff;">Статус:</strong> ' + (isSold ? '<span style="color:#ff3366;font-weight:700;">ПРОДАНО</span>' : '<span style="color:#00ff66;font-weight:700;">В наявності</span>') + '</p>\n' +
+'    <p style="margin:12px 0 0 0;color:#aaa;">' + safeCleanDesc + '</p>\n' +
+'  </div>\n' +
+'  <div style="margin-top:24px;text-align:center;">\n' +
+'    <a href="/?item=' + id + '" style="display:inline-block;padding:12px 28px;background:#00ff66;color:#000;font-weight:700;text-decoration:none;border-radius:6px;text-transform:uppercase;font-family:monospace;">Відкрити в магазині NISHA →</a>\n' +
+'  </div>\n' +
+'</main>\n' +
+'<script>\n' +
+'  try {\n' +
+'    if (!navigator.userAgent.match(/(bot|crawl|spider|slurp|facebookexternalhit|bingbot|googlebot|ahrefs)/i)) {\n' +
+'      window.location.replace("/?item=' + id + '");\n' +
+'    }\n' +
+'  } catch(e) {\n' +
+'    window.location.replace("/?item=' + id + '");\n' +
+'  }\n' +
+'</script>\n' +
 '</body>\n' +
 '</html>';
 
