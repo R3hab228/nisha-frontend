@@ -123,3 +123,26 @@ export function evaluateTelemetrySeverity(params = {}) {
     }
     return { score: 4, level: 'Средняя', emoji: '🟡', reason: 'Некритичное предупреждение интерфейса' };
 }
+
+/**
+ * Returns Real User Monitoring (RUM) metrics
+ * @returns {Record<string, any>}
+ */
+export function getRumMetrics() {
+    if (typeof window !== 'undefined' && typeof window.getRumMetrics === 'function') {
+        return window.getRumMetrics();
+    }
+    return { lcp: null, inp: null, cls: 0, ttfb: null, device: 'Desktop', connection: 'unknown', url: '/' };
+}
+
+/**
+ * Manually dispatches RUM metrics report
+ * @param {string} [reason='manual']
+ * @returns {boolean}
+ */
+export function sendRumReport(reason = 'manual') {
+    if (typeof window !== 'undefined' && window.__nishaRUM && typeof window.__nishaRUM.sendRumReport === 'function') {
+        return window.__nishaRUM.sendRumReport(reason);
+    }
+    return false;
+}

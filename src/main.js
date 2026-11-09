@@ -19,6 +19,7 @@ import '../config.js';
 import '../js/core/apiClient.js';
 import '../js/core/helpers.js';
 import '../js/core/analytics.js';
+import '../js/core/rum.js';
 import '../js/core/i18n.js';
 import '../js/core/pwa-network.js';
 import '../js/ui/windows.js';

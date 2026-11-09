@@ -149,6 +149,10 @@
       "destination": "https://nisha-api.onrender.com/api/google-feed.xml"
     },
     {
+      "source": "/api/rum",
+      "destination": "https://nisha-api.onrender.com/api/rum"
+    },
+    {
       "source": "/api/bargains/:path*",
       "destination": "https://nisha-api.onrender.com/api/bargains/:path*"
     }
