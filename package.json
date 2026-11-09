@@ -43,5 +43,8 @@
     "photoswipe": "^5.4.4",
     "sortablejs": "^1.15.7",
     "vanilla-tilt": "^1.8.1"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
   }
 }
