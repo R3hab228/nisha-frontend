@@ -51,7 +51,7 @@
         try {
             if (typeof performance === 'undefined') return;
             const navEntries = performance.getEntriesByType('navigation');
-            if (navEntries && navEntries.length > 0 && Number.isFinite(navEntries[0].responseStart)) {
+            if (navEntries && navEntries.length > 0 && Number.isFinite(navEntries[0].responseStart) && navEntries[0].responseStart > 0) {
                 rumData.ttfb = Math.round(navEntries[0].responseStart);
                 return;
             }
@@ -157,25 +157,32 @@
             );
             const endpoint = isProdDomain ? '/api/rum' : `${backendUrl}/api/rum`;
 
-            // Modern transport: fetch with keepalive: true
+            // Modern transport: fetch with keepalive: true with sync & async beacon fallback
+            let fetchAttempted = false;
             if (typeof fetch === 'function') {
-                fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: jsonStr,
-                    keepalive: true
-                }).catch(() => {
-                    // Fallback to beacon on network error
-                    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-                        try {
-                            const blob = new Blob([jsonStr], { type: 'application/json' });
-                            navigator.sendBeacon(endpoint, blob);
-                        } catch (_) {
-                            navigator.sendBeacon(endpoint, jsonStr);
+                try {
+                    fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: jsonStr,
+                        keepalive: true
+                    }).catch(() => {
+                        // Fallback to beacon on network error
+                        if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+                            try {
+                                const blob = new Blob([jsonStr], { type: 'application/json' });
+                                navigator.sendBeacon(endpoint, blob);
+                            } catch (_) {
+                                navigator.sendBeacon(endpoint, jsonStr);
+                            }
                         }
-                    }
-                });
-            } else if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+                    });
+                    fetchAttempted = true;
+                } catch (_) {
+                    fetchAttempted = false;
+                }
+            }
+            if (!fetchAttempted && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
                 try {
                     const blob = new Blob([jsonStr], { type: 'application/json' });
                     navigator.sendBeacon(endpoint, blob);

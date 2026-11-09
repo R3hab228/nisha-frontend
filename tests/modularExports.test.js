@@ -352,6 +352,15 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(checkIsPwaInstalled()).toBe(false);
             consoleSpy.mockRestore();
         });
+
+        it('exports getRumMetrics and sendRumReport on telemetry facade', () => {
+            expect(typeof defaultModularFacade.telemetry.getRumMetrics).toBe('function');
+            expect(typeof defaultModularFacade.telemetry.sendRumReport).toBe('function');
+            const metrics = defaultModularFacade.telemetry.getRumMetrics();
+            expect(metrics).toHaveProperty('lcp');
+            expect(metrics).toHaveProperty('ttfb');
+            expect(metrics).toHaveProperty('cls');
+        });
     });
 
     describe('Catalog Module (src/modules/catalog.js)', () => {
