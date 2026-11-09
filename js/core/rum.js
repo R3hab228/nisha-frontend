@@ -4,7 +4,7 @@
 // ==========================================
 // Monitors:
 // - LCP (Largest Contentful Paint)
-// - INP (Interaction to Next Paint / First Input Delay)
+// - INP (Interaction to Next Paint / Event Timing & First Input)
 // - CLS (Cumulative Layout Shift)
 // - TTFB (Time to First Byte)
 // - Device Category (iOS, Android, Desktop) & Connection Type
@@ -23,6 +23,7 @@
 
     let hasReported = false;
     let isInitialized = false;
+    let lastReportedSig = '';
 
     // Detect device category safely
     function detectDevice() {
@@ -91,17 +92,26 @@
             clsObserver.observe({ type: 'layout-shift', buffered: true });
         } catch (_) {}
 
-        // 3. INP / First Input Delay
-        try {
-            const inpObserver = new PerformanceObserver((entryList) => {
-                for (const entry of entryList.getEntries()) {
-                    const duration = entry.duration || (entry.processingStart - entry.startTime);
-                    if (Number.isFinite(duration)) {
-                        rumData.inp = Math.round(Math.max(rumData.inp || 0, duration));
-                    }
+        // 3. INP (Interaction to Next Paint) & First Input Delay
+        const handleInputEntry = (entryList) => {
+            for (const entry of entryList.getEntries()) {
+                const duration = entry.duration || (entry.processingStart - entry.startTime);
+                if (Number.isFinite(duration)) {
+                    rumData.inp = Math.round(Math.max(rumData.inp || 0, duration));
                 }
-            });
-            inpObserver.observe({ type: 'first-input', buffered: true });
+            }
+        };
+
+        // Modern Event Timing (INP) with durationThreshold
+        try {
+            const eventObserver = new PerformanceObserver(handleInputEntry);
+            eventObserver.observe({ type: 'event', durationThreshold: 40, buffered: true });
+        } catch (_) {}
+
+        // Universal first-input fallback (FID / Initial Interaction)
+        try {
+            const fidObserver = new PerformanceObserver(handleInputEntry);
+            fidObserver.observe({ type: 'first-input', buffered: true });
         } catch (_) {}
     }
 
@@ -119,6 +129,12 @@
             rumData.connection = detectConnection();
             rumData.url = (typeof window !== 'undefined' && window.location) ? window.location.pathname : '/';
 
+            // Deduplication: do not re-send identical vitals unless triggered manually
+            const payloadSig = `${rumData.lcp}_${rumData.inp}_${rumData.cls}_${rumData.ttfb}`;
+            if (payloadSig === lastReportedSig && reason !== 'manual' && reason !== 'manual_test') {
+                return false;
+            }
+
             const payload = {
                 lcp: rumData.lcp,
                 inp: rumData.inp,
@@ -134,7 +150,12 @@
             const backendUrl = (typeof window !== 'undefined' && window.BACKEND_URL)
                 ? String(window.BACKEND_URL).replace(/\/+$/, '')
                 : 'https://nisha-api.onrender.com';
-            const endpoint = `${backendUrl}/api/rum`;
+
+            const isProdDomain = typeof window !== 'undefined' && window.location && (
+                window.location.hostname.includes('nisha-store.shop') ||
+                window.location.hostname.includes('vercel.app')
+            );
+            const endpoint = isProdDomain ? '/api/rum' : `${backendUrl}/api/rum`;
 
             // Modern transport: fetch with keepalive: true
             if (typeof fetch === 'function') {
@@ -144,21 +165,26 @@
                     body: jsonStr,
                     keepalive: true
                 }).catch(() => {
-                    // Fallback to beacon on failure
+                    // Fallback to beacon on network error
                     if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
                         try {
                             const blob = new Blob([jsonStr], { type: 'application/json' });
                             navigator.sendBeacon(endpoint, blob);
-                        } catch (_) {}
+                        } catch (_) {
+                            navigator.sendBeacon(endpoint, jsonStr);
+                        }
                     }
                 });
             } else if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
                 try {
                     const blob = new Blob([jsonStr], { type: 'application/json' });
                     navigator.sendBeacon(endpoint, blob);
-                } catch (_) {}
+                } catch (_) {
+                    navigator.sendBeacon(endpoint, jsonStr);
+                }
             }
 
+            lastReportedSig = payloadSig;
             hasReported = true;
             return true;
         } catch (_) {
