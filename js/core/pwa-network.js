@@ -52,6 +52,9 @@ if ('serviceWorker' in navigator) {
 
         navigator.serviceWorker.register(SW_SCRIPT_URL, { updateViaCache: 'none' }).then(registration => {
             console.log('[PWA] SW зарегистрирован');
+            if (registration.navigationPreload) {
+                registration.navigationPreload.enable().catch(() => {});
+            }
 
             // Проверяем обновления без использования HTTP-кэша
             registration.update().catch(() => {});

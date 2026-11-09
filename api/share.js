@@ -170,6 +170,7 @@ videoTags + '\n' +
 '<meta name="twitter:description" content="' + description + '">\n' +
 '<meta name="twitter:image" content="' + imageUrl + '">\n' +
 '<script type="application/ld+json">' + jsonLd.replaceAll('<', '\\u003c') + '</script>\n' +
+'<script type="speculationrules">{"prerender":[{"source":"list","urls":["/","/?item=' + id + '"],"eagerness":"immediate"}],"prefetch":[{"source":"list","urls":["/","/?item=' + id + '"],"eagerness":"immediate"}]}</script>\n' +
 '</head>\n' +
 '<body style="background:#0a0a0a;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;margin:0;padding:20px;text-align:center;">\n' +
 '<main style="max-width:640px;margin:30px auto;background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:24px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,0.5);">\n' +
