@@ -12,10 +12,10 @@ const STATIC_URLS = [
     '/locales/en.json',
     '/404.html',
     '/return-policy.html',
-    '/badge.png?v=10',
-    '/icon-192.png?v=10',
-    '/icon-512.png?v=10',
-    '/icon.png?v=10',
+    '/badge.png?v=11',
+    '/icon-192.png?v=11',
+    '/icon-512.png?v=11',
+    '/icon.png?v=11',
     '/cables.svg'
 ];
 
@@ -308,11 +308,11 @@ self.addEventListener('push', event => {
             data = { title: 'NISHA STORE', body: event.data.text() };
         }
         const baseOrigin = 'https://www.nisha-store.shop';
-        const iconUrl = new URL('/icon-192.png?v=10', baseOrigin).href;
-        const badgeUrl = new URL('/badge.png?v=10', baseOrigin).href;
+        const iconUrl = new URL('/icon-192.png?v=11', baseOrigin).href;
+        const badgeUrl = new URL('/badge.png?v=11', baseOrigin).href;
 
-        const hasValidCustomIcon = data.icon && !data.icon.includes('vercel.app') && !data.icon.includes('?v=5') && !data.icon.includes('?v=6') && !data.icon.includes('?v=8') && !data.icon.includes('?v=9');
-        const hasValidCustomBadge = data.badge && !data.badge.includes('vercel.app') && !data.badge.includes('?v=5') && !data.badge.includes('?v=6') && !data.badge.includes('?v=8') && !data.badge.includes('?v=9');
+        const hasValidCustomIcon = data.icon && !data.icon.includes('vercel.app') && !data.icon.includes('?v=5') && !data.icon.includes('?v=6') && !data.icon.includes('?v=8') && !data.icon.includes('?v=9') && !data.icon.includes('?v=10');
+        const hasValidCustomBadge = data.badge && !data.badge.includes('vercel.app') && !data.badge.includes('?v=5') && !data.badge.includes('?v=6') && !data.badge.includes('?v=8') && !data.badge.includes('?v=9') && !data.badge.includes('?v=10');
 
         const options = {
             body: data.body,
