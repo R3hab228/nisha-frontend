@@ -451,28 +451,26 @@ describe('Modern Performance APIs Suite', () => {
             else delete globalThis.CSS;
         });
 
-        it('index.html contains .nisha-scroll-progress bar at top of body', () => {
+        it('index.html does not contain the intrusive progress bar', () => {
             const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
-            expect(html).toContain('<div class="nisha-scroll-progress" id="nishaScrollProgress" aria-hidden="true"></div>');
+            expect(html).not.toContain('id="nishaScrollProgress"');
+            expect(html).not.toContain('class="nisha-scroll-progress"');
         });
 
-        it('style.css defines @supports (animation-timeline: scroll()) and @supports (animation-timeline: view())', () => {
+        it('style.css defines @supports (animation-timeline: scroll()) with header elevation and prevents feed dimming', () => {
             const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
             expect(css).toContain('@supports (animation-timeline: scroll())');
             expect(css).toContain('animation-timeline: scroll(root block);');
-            expect(css).toContain('@keyframes nishaScrollProgressAnim');
             expect(css).toContain('animation: headerScrollElevation');
-
-            expect(css).toContain('@supports (animation-timeline: view())');
-            expect(css).toContain('animation: itemCardViewEntrance');
-            expect(css).toContain('animation-timeline: view();');
-            expect(css).toContain('animation-range: entry 0% cover 28%;');
+            expect(css).not.toContain('@keyframes nishaScrollProgressAnim');
+            expect(css).not.toContain('animation: itemCardViewEntrance');
+            expect(css).toContain('opacity: 1 !important;');
         });
 
         it('style.css guarantees reduced motion and low-power-mode disable scroll animations', () => {
             const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
             expect(css).toContain('@media (prefers-reduced-motion: reduce)');
-            expect(css).toContain('html.low-power-mode .nisha-scroll-progress');
+            expect(css).toContain('html.low-power-mode header:not(.driver-popover-title)');
             expect(css).toContain('animation: none !important;');
         });
     });

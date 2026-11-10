@@ -3975,37 +3975,8 @@ html.save-data-active .grid-lazy-video {
    CSS SCROLL-DRIVEN ANIMATIONS
    (animation-timeline: scroll() and view())
    ========================================== */
-.nisha-scroll-progress {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, var(--accent-green, #00ff66), #00e5ff, var(--accent-green, #00ff66));
-    transform-origin: 0 50%;
-    transform: scaleX(0);
-    z-index: 999999;
-    pointer-events: none;
-    display: none;
-    box-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
-}
-
 @supports (animation-timeline: scroll()) {
     @media (prefers-reduced-motion: no-preference) {
-        .nisha-scroll-progress {
-            display: block;
-            animation: nishaScrollProgressAnim linear;
-            animation-timeline: scroll(root block);
-        }
-        @keyframes nishaScrollProgressAnim {
-            from {
-                transform: scaleX(0);
-            }
-            to {
-                transform: scaleX(1);
-            }
-        }
-
         header:not(.driver-popover-title) {
             animation: headerScrollElevation linear both;
             animation-timeline: scroll(root block);
@@ -4024,55 +3995,18 @@ html.save-data-active .grid-lazy-video {
     }
 }
 
-@supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-        .item-card:not(.skeleton-card) {
-            animation: itemCardViewEntrance linear both;
-            animation-timeline: view();
-            animation-range: entry 0% cover 28%;
-        }
-        @keyframes itemCardViewEntrance {
-            from {
-                opacity: 0.2;
-                transform: translateY(20px) scale(0.98);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .history-card {
-            animation: historyCardViewEntrance linear both;
-            animation-timeline: view(inline);
-            animation-range: entry 0% cover 25%;
-        }
-        @keyframes historyCardViewEntrance {
-            from {
-                opacity: 0.3;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-    }
+/* Ensure catalog items always stay 100% visible and bright with no scroll dimming */
+.item-card {
+    opacity: 1 !important;
 }
 
 /* Reduced Motion and Low Power Mode safety */
 @media (prefers-reduced-motion: reduce) {
-    .nisha-scroll-progress,
-    .item-card:not(.skeleton-card),
-    .history-card,
     header:not(.driver-popover-title) {
         animation: none !important;
     }
 }
 
-html.low-power-mode .nisha-scroll-progress,
-html.low-power-mode .item-card:not(.skeleton-card),
-html.low-power-mode .history-card,
 html.low-power-mode header:not(.driver-popover-title) {
     animation: none !important;
 }
