@@ -76,6 +76,34 @@ function saveRecentSearch(term) {
     }
 }
 
+function positionLiveSearchDropdown(dropdown) {
+    if (!dropdown) return;
+    const wrapper = (dropdown.closest && dropdown.closest('.search-wrapper')) || document.querySelector('.search-wrapper');
+    if (!wrapper) return;
+    const rect = wrapper.getBoundingClientRect();
+    
+    // Viewport calculation respecting mobile virtual keyboard
+    const viewportHeight = (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.height) 
+        ? window.visualViewport.height 
+        : (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight) : 800);
+    
+    // Dropdown MUST ALWAYS be anchored strictly below the search input
+    const topPos = Math.round(rect.bottom);
+    
+    // Available height strictly below search input to keyboard/viewport edge
+    const spaceBelow = Math.max(120, Math.round(viewportHeight - topPos - 8));
+    const maxHeight = Math.min(spaceBelow, Math.round(viewportHeight * 0.55));
+
+    dropdown.style.setProperty('position', 'fixed', 'important');
+    dropdown.style.setProperty('top', `${topPos}px`, 'important');
+    dropdown.style.setProperty('bottom', 'auto', 'important');
+    dropdown.style.setProperty('left', `${Math.round(rect.left)}px`, 'important');
+    dropdown.style.setProperty('width', `${Math.round(rect.width)}px`, 'important');
+    dropdown.style.setProperty('max-height', `${maxHeight}px`, 'important');
+    dropdown.style.setProperty('margin', '0', 'important');
+}
+window.positionLiveSearchDropdown = positionLiveSearchDropdown;
+
 function openSearchDropdown(dropdown) {
     if (!dropdown) return;
     if (typeof showPopoverSafe === 'function') {
@@ -84,18 +112,7 @@ function openSearchDropdown(dropdown) {
         window.showPopoverSafe(dropdown);
     }
     dropdown.style.display = 'block';
-    if (dropdown.matches && dropdown.matches(':popover-open')) {
-        const wrapper = dropdown.closest('.search-wrapper');
-        if (wrapper) {
-            const rect = wrapper.getBoundingClientRect();
-            dropdown.style.position = 'fixed';
-            dropdown.style.top = `${rect.bottom}px`;
-            dropdown.style.left = `${rect.left}px`;
-            dropdown.style.width = `${rect.width}px`;
-            dropdown.style.margin = '0';
-            dropdown.style.inset = 'auto';
-        }
-    }
+    positionLiveSearchDropdown(dropdown);
 }
 window.openSearchDropdown = openSearchDropdown;
 
@@ -321,8 +338,11 @@ function closeSearch() {
         dropdown.style.display = 'none';
         dropdown.style.removeProperty('position');
         dropdown.style.removeProperty('top');
+        dropdown.style.removeProperty('bottom');
         dropdown.style.removeProperty('left');
         dropdown.style.removeProperty('width');
+        dropdown.style.removeProperty('max-height');
+        dropdown.style.removeProperty('margin');
     }
     document.body.classList.remove('search-lock');
     if (typeof window.startLenis === 'function') window.startLenis();
@@ -398,18 +418,22 @@ if (typeof document !== 'undefined') {
     }
 }
 
-// Reposition live search dropdown on orientation/resize
+// Reposition live search dropdown on orientation, resize, visualViewport change, and page scroll
 if (typeof window !== 'undefined') {
-    window.addEventListener('resize', () => {
+    const handleReposition = () => {
         const dropdown = document.getElementById('liveSearchDropdown');
-        if (dropdown && dropdown.matches && dropdown.matches(':popover-open')) {
-            const wrapper = dropdown.closest('.search-wrapper');
-            if (wrapper) {
-                const rect = wrapper.getBoundingClientRect();
-                dropdown.style.top = `${rect.bottom}px`;
-                dropdown.style.left = `${rect.left}px`;
-                dropdown.style.width = `${rect.width}px`;
-            }
+        if (dropdown && (
+            (typeof dropdown.matches === 'function' && dropdown.matches(':popover-open')) ||
+            (dropdown.style && dropdown.style.display === 'block')
+        )) {
+            positionLiveSearchDropdown(dropdown);
         }
-    }, { passive: true });
+    };
+
+    window.addEventListener('resize', handleReposition, { passive: true });
+    window.addEventListener('scroll', handleReposition, { passive: true });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleReposition, { passive: true });
+        window.visualViewport.addEventListener('scroll', handleReposition, { passive: true });
+    }
 }

@@ -3947,9 +3947,13 @@ html.save-data-active .grid-lazy-video {
 }
 #liveSearchDropdown[popover] {
     position-anchor: --nisha-search-wrapper;
-    top: anchor(bottom);
-    left: anchor(left);
-    width: anchor-size(width);
+    top: anchor(bottom) !important;
+    bottom: auto !important;
+    left: anchor(left) !important;
+    width: anchor-size(width) !important;
+    position-try-fallbacks: none !important;
+    position-try: none !important;
+    margin: 0 !important;
     background: #0a0a0a !important;
     background-color: #0a0a0a !important;
     border: 2px solid var(--accent-green) !important;
@@ -3960,10 +3964,20 @@ html.save-data-active .grid-lazy-video {
     display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
+    top: anchor(bottom) !important;
+    bottom: auto !important;
+    position-try-fallbacks: none !important;
+    position-try: none !important;
     background: #0a0a0a !important;
     background-color: #0a0a0a !important;
     border: 2px solid var(--accent-green) !important;
     border-top: none !important;
+}
+html.keyboard-open #liveSearchDropdown {
+    top: anchor(bottom) !important;
+    bottom: auto !important;
+    position-try-fallbacks: none !important;
+    position-try: none !important;
 }
 
 /* Popover state styling for Checkout Payment selector */
