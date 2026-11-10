@@ -3088,10 +3088,14 @@ function clearSearchInput() {
         if (input) input.value = '';
         const clearBtn = document.getElementById('clearSearchBtn');
         if (clearBtn) clearBtn.style.display = 'none';
-        const liveDropdown = document.getElementById('liveSearchDropdown');
-        if (liveDropdown) liveDropdown.style.display = 'none';
-        document.body.classList.remove('search-lock'); 
-        if (typeof window.startLenis === 'function') window.startLenis();
+        if (typeof window.closeSearch === 'function') {
+            window.closeSearch();
+        } else {
+            const liveDropdown = document.getElementById('liveSearchDropdown');
+            if (liveDropdown) liveDropdown.style.display = 'none';
+            document.body.classList.remove('search-lock'); 
+            if (typeof window.startLenis === 'function') window.startLenis();
+        }
         await applyFilters(true, false);
     };
 
