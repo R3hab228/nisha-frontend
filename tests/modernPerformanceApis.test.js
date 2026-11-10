@@ -440,6 +440,7 @@ it('isPopoverOpenSafe accurately detects open state across popover, class and st
             expect(css).toContain('margin: unset;');
             expect(css).toContain('[popover]::backdrop {');
             expect(css).toContain('#liveSearchDropdown:popover-open');
+            expect(css).toContain('background: #0a0a0a !important;');
             expect(css).toContain('#paymentDropdown:popover-open');
             // cart-dropdown is docked directly with translateY animation
             expect(css).toContain('.cart-panel.show .cart-dropdown.active');
