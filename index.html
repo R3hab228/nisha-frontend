@@ -840,11 +840,11 @@ function togglePaymentDropdown() {
         if (display && pd.matches && pd.matches(':popover-open')) {
             const rect = display.getBoundingClientRect();
             pd.style.position = 'fixed';
-            pd.style.top = `${rect.bottom}px`;
-            pd.style.left = `${rect.left}px`;
-            pd.style.width = `${rect.width}px`;
+            pd.style.top = `${Math.round(rect.bottom)}px`;
+            pd.style.bottom = 'auto';
+            pd.style.left = `${Math.round(rect.left)}px`;
+            pd.style.width = `${Math.round(rect.width)}px`;
             pd.style.margin = '0';
-            pd.style.inset = 'auto';
         }
         pd.style.display = 'block';
         requestAnimationFrame(() => {
@@ -877,7 +877,7 @@ if (typeof document !== 'undefined') {
             checkoutModal._scrollDismissBound = true;
             checkoutModal.addEventListener('scroll', () => {
                 if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
-            }, { passive: true });
+            }, { capture: true, passive: true });
         }
     };
     if (document.readyState === 'loading') {

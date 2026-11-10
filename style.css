@@ -3996,6 +3996,8 @@ html.keyboard-open #liveSearchDropdown {
     border: 1px solid var(--accent-green) !important;
     border-top: none !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9) !important;
+    bottom: auto !important;
+    margin: 0 !important;
 }
 #paymentDropdown:popover-open {
     display: block !important;
@@ -4006,6 +4008,7 @@ html.keyboard-open #liveSearchDropdown {
     background-color: #111111 !important;
     border: 1px solid var(--accent-green) !important;
     border-top: none !important;
+    bottom: auto !important;
 }
 
 
