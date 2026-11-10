@@ -66,8 +66,8 @@ describe('Service Worker & PWA Cache Automation', () => {
     it('sw.js ensures push notifications use square v6 icons and redirect away from vercel preview domains', () => {
         const content = readFileSync(publicSwPath, 'utf8');
 
-        expect(content).toContain('/icon-192.png?v=8');
-        expect(content).toContain('/badge.png?v=8');
+        expect(content).toContain('/icon-192.png?v=9');
+        expect(content).toContain('/badge.png?v=9');
         expect(content).toContain("parsed.hostname.includes('vercel.app')");
         expect(content).toContain("parsed.hostname = 'www.nisha-store.shop'");
     });
