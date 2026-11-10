@@ -735,3 +735,95 @@ export function getFirstItem(arr) {
     if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
     return arr.at(0);
 }
+
+/**
+ * Checks if browser supports the native Popover API (HTMLElement.prototype.showPopover)
+ * @returns {boolean}
+ */
+export function isPopoverSupported() {
+    return typeof HTMLElement !== 'undefined' &&
+           typeof HTMLElement.prototype.showPopover === 'function' &&
+           typeof HTMLElement.prototype.hidePopover === 'function';
+}
+if (typeof window !== 'undefined') window.isPopoverSupported = isPopoverSupported;
+
+/**
+ * Safely displays a native popover element if supported, catching DOMExceptions
+ * @param {HTMLElement} element
+ * @returns {boolean} True if native showPopover was invoked successfully
+ */
+export function showPopoverSafe(element) {
+    if (!element) return false;
+    if (typeof element.showPopover === 'function') {
+        try {
+            if (typeof element.matches === 'function' && element.matches(':popover-open')) {
+                return true;
+            }
+            element.showPopover();
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    return false;
+}
+if (typeof window !== 'undefined') window.showPopoverSafe = showPopoverSafe;
+
+/**
+ * Safely hides a native popover element if supported, catching DOMExceptions
+ * @param {HTMLElement} element
+ * @returns {boolean} True if native hidePopover was invoked successfully
+ */
+export function hidePopoverSafe(element) {
+    if (!element) return false;
+    if (typeof element.hidePopover === 'function') {
+        try {
+            if (typeof element.matches === 'function' && !element.matches(':popover-open')) {
+                return false;
+            }
+            element.hidePopover();
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    return false;
+}
+if (typeof window !== 'undefined') window.hidePopoverSafe = hidePopoverSafe;
+
+/**
+ * Safely toggles a native popover element if supported, catching DOMExceptions
+ * @param {HTMLElement} element
+ * @param {boolean} [force]
+ * @returns {boolean}
+ */
+export function togglePopoverSafe(element, force) {
+    if (!element) return false;
+    if (typeof element.togglePopover === 'function') {
+        try {
+            return element.togglePopover(force);
+        } catch {
+            return false;
+        }
+    }
+    return false;
+}
+if (typeof window !== 'undefined') window.togglePopoverSafe = togglePopoverSafe;
+
+/**
+ * Checks if CSS Scroll-Driven Animations (animation-timeline: scroll() or view()) are supported
+ * @returns {boolean}
+ */
+export function isScrollDrivenAnimationSupported() {
+    if (typeof CSS !== 'undefined' && typeof CSS.supports === 'function') {
+        try {
+            return CSS.supports('animation-timeline', 'scroll()') ||
+                   CSS.supports('animation-timeline', 'view()');
+        } catch {
+            return false;
+        }
+    }
+    return false;
+}
+if (typeof window !== 'undefined') window.isScrollDrivenAnimationSupported = isScrollDrivenAnimationSupported;
+

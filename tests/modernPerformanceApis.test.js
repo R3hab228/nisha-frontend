@@ -19,7 +19,12 @@ import {
     initNetworkAwareRendering,
     isAppBadgingSupported,
     updateAppBadge,
-    clearAppBadge
+    clearAppBadge,
+    isPopoverSupported,
+    showPopoverSafe,
+    hidePopoverSafe,
+    togglePopoverSafe,
+    isScrollDrivenAnimationSupported
 } from '../src/modules/helpers.js';
 import {
     isWebLocksSupported,
@@ -334,6 +339,141 @@ describe('Modern Performance APIs Suite', () => {
             const clientCode = readFileSync(resolve(import.meta.dirname, '../js/core/search-worker-client.js'), 'utf8');
             expect(clientCode).toContain('item: r.item');
             expect(clientCode).not.toMatch(/collected\.push\(\{[\s\r\n]*item,[\s\r\n]*matches: r\.matches/);
+        });
+    });
+    describe('7. Native Popover API ([popover]) & Light Dismiss', () => {
+        it('isPopoverSupported accurately detects Popover API methods on HTMLElement prototype', () => {
+            const origHTMLElement = globalThis.HTMLElement;
+
+            delete globalThis.HTMLElement;
+            expect(isPopoverSupported()).toBe(false);
+
+            globalThis.HTMLElement = class MockHTMLElement {};
+            expect(isPopoverSupported()).toBe(false);
+
+            globalThis.HTMLElement.prototype.showPopover = vi.fn();
+            globalThis.HTMLElement.prototype.hidePopover = vi.fn();
+            expect(isPopoverSupported()).toBe(true);
+
+            if (origHTMLElement) globalThis.HTMLElement = origHTMLElement;
+            else delete globalThis.HTMLElement;
+        });
+
+        it('showPopoverSafe and hidePopoverSafe execute safely and handle DOMExceptions', () => {
+            const fakeElement = {
+                showPopover: vi.fn(),
+                hidePopover: vi.fn(),
+                togglePopover: vi.fn().mockReturnValue(true),
+                matches: vi.fn().mockReturnValue(false)
+            };
+
+            expect(showPopoverSafe(null)).toBe(false);
+            expect(hidePopoverSafe(null)).toBe(false);
+            expect(togglePopoverSafe(null)).toBe(false);
+
+            // Open
+            expect(showPopoverSafe(fakeElement)).toBe(true);
+            expect(fakeElement.showPopover).toHaveBeenCalled();
+
+            // When already open
+            fakeElement.matches.mockReturnValue(true);
+            expect(showPopoverSafe(fakeElement)).toBe(true);
+
+            // Hide
+            expect(hidePopoverSafe(fakeElement)).toBe(true);
+            expect(fakeElement.hidePopover).toHaveBeenCalled();
+
+            // When throwing DOMException (e.g. InvalidStateError)
+            fakeElement.showPopover.mockImplementationOnce(() => {
+                throw new Error('InvalidStateError');
+            });
+            fakeElement.matches.mockReturnValue(false);
+            expect(showPopoverSafe(fakeElement)).toBe(false);
+
+            fakeElement.matches.mockReturnValue(true);
+            fakeElement.hidePopover.mockImplementationOnce(() => {
+                throw new Error('InvalidStateError');
+            });
+            expect(hidePopoverSafe(fakeElement)).toBe(false);
+
+            // Toggle
+            expect(togglePopoverSafe(fakeElement, true)).toBe(true);
+            expect(fakeElement.togglePopover).toHaveBeenCalledWith(true);
+        });
+
+        it('index.html applies popover="auto" to #cartDropdown, #liveSearchDropdown, and #paymentDropdown', () => {
+            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            expect(html).toMatch(/id=["']?liveSearchDropdown["']?[^>]*popover=["']?auto["']?/);
+            expect(html).toMatch(/id=["']?cartDropdown["']?[^>]*popover=["']?auto["']?/);
+            expect(html).toMatch(/id=["']?paymentDropdown["']?[^>]*popover=["']?auto["']?/);
+        });
+
+        it('style.css defines universal [popover] UA reset and :popover-open styling', () => {
+            const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            expect(css).toContain('[popover] {');
+            expect(css).toContain('margin: unset;');
+            expect(css).toContain('[popover]::backdrop {');
+            expect(css).toContain('#liveSearchDropdown:popover-open');
+            expect(css).toContain('#cartDropdown:popover-open');
+            expect(css).toContain('#paymentDropdown:popover-open');
+        });
+
+        it('cart.js, live-search.js, and index.html register toggle listeners for Light Dismiss', () => {
+            const cartJs = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const searchJs = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
+            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+
+            expect(cartJs).toContain("cartDrop.addEventListener('toggle'");
+            expect(cartJs).toContain("evt.newState === 'closed'");
+            expect(searchJs).toContain("liveSearchDropEl.addEventListener('toggle'");
+            expect(searchJs).toContain("evt.newState === 'closed'");
+            expect(html).toContain("pd.addEventListener('toggle'");
+            expect(html).toContain("evt.newState === 'closed'");
+        });
+    });
+
+    describe('8. CSS Scroll-Driven Animations (animation-timeline: scroll() and view())', () => {
+        it('isScrollDrivenAnimationSupported checks CSS.supports for scroll() and view()', () => {
+            const origCSS = globalThis.CSS;
+            globalThis.CSS = {
+                supports: vi.fn().mockImplementation((prop, val) => {
+                    return prop === 'animation-timeline' && (val === 'scroll()' || val === 'view()');
+                })
+            };
+
+            expect(isScrollDrivenAnimationSupported()).toBe(true);
+            expect(globalThis.CSS.supports).toHaveBeenCalledWith('animation-timeline', 'scroll()');
+
+            globalThis.CSS.supports = vi.fn().mockReturnValue(false);
+            expect(isScrollDrivenAnimationSupported()).toBe(false);
+
+            if (origCSS) globalThis.CSS = origCSS;
+            else delete globalThis.CSS;
+        });
+
+        it('index.html contains .nisha-scroll-progress bar at top of body', () => {
+            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+            expect(html).toContain('<div class="nisha-scroll-progress" id="nishaScrollProgress" aria-hidden="true"></div>');
+        });
+
+        it('style.css defines @supports (animation-timeline: scroll()) and @supports (animation-timeline: view())', () => {
+            const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            expect(css).toContain('@supports (animation-timeline: scroll())');
+            expect(css).toContain('animation-timeline: scroll(root block);');
+            expect(css).toContain('@keyframes nishaScrollProgressAnim');
+            expect(css).toContain('animation: headerScrollElevation');
+
+            expect(css).toContain('@supports (animation-timeline: view())');
+            expect(css).toContain('animation: itemCardViewEntrance');
+            expect(css).toContain('animation-timeline: view();');
+            expect(css).toContain('animation-range: entry 0% cover 28%;');
+        });
+
+        it('style.css guarantees reduced motion and low-power-mode disable scroll animations', () => {
+            const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            expect(css).toContain('@media (prefers-reduced-motion: reduce)');
+            expect(css).toContain('html.low-power-mode .nisha-scroll-progress');
+            expect(css).toContain('animation: none !important;');
         });
     });
 });

@@ -18,7 +18,9 @@ import {
     escapeJsString,
     formatPrice,
     toCDN,
-    applyFilters
+    applyFilters,
+    showPopoverSafe,
+    hidePopoverSafe
 } from '../../src/modules/index.js';
 
 let searchDebounce;
@@ -74,6 +76,29 @@ function saveRecentSearch(term) {
     }
 }
 
+function openSearchDropdown(dropdown) {
+    if (!dropdown) return;
+    if (typeof showPopoverSafe === 'function') {
+        showPopoverSafe(dropdown);
+    } else if (typeof window.showPopoverSafe === 'function') {
+        window.showPopoverSafe(dropdown);
+    }
+    dropdown.style.display = 'block';
+    if (dropdown.matches && dropdown.matches(':popover-open')) {
+        const wrapper = dropdown.closest('.search-wrapper');
+        if (wrapper) {
+            const rect = wrapper.getBoundingClientRect();
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = `${rect.bottom}px`;
+            dropdown.style.left = `${rect.left}px`;
+            dropdown.style.width = `${rect.width}px`;
+            dropdown.style.margin = '0';
+            dropdown.style.inset = 'auto';
+        }
+    }
+}
+window.openSearchDropdown = openSearchDropdown;
+
 // Отображение истории поиска
 function showSearchHistory() {
     const dropdown = document.getElementById('liveSearchDropdown');
@@ -93,7 +118,7 @@ function showSearchHistory() {
                  </div>`;
     });
     dropdown.innerHTML = html;
-    dropdown.style.display = 'block';
+    openSearchDropdown(dropdown);
     document.body.classList.add('search-lock');
     if (typeof window.stopLenis === 'function') window.stopLenis();
 }
@@ -111,7 +136,15 @@ function handleLiveSearch() {
     }
 
     if (searchTerm.length < 2) {
-        if (dropdown) dropdown.style.display = 'none';
+        if (dropdown) {
+            if (typeof hidePopoverSafe === 'function') hidePopoverSafe(dropdown);
+            else if (typeof window.hidePopoverSafe === 'function') window.hidePopoverSafe(dropdown);
+            dropdown.style.display = 'none';
+            dropdown.style.removeProperty('position');
+            dropdown.style.removeProperty('top');
+            dropdown.style.removeProperty('left');
+            dropdown.style.removeProperty('width');
+        }
         document.body.classList.remove('search-lock');
         if (typeof window.startLenis === 'function') window.startLenis();
         return; 
@@ -258,11 +291,11 @@ function handleLiveSearch() {
                     if (seq !== currentLiveSearchSeq) return;
                     if (searchInput.value.trim() !== searchTerm) return;
                     dropdown.innerHTML = html;
-                    dropdown.style.display = 'block';
+                    openSearchDropdown(dropdown);
                 } else {
                     const noMatchesText = typeof i18next !== 'undefined' ? i18next.t('search.no_matches', { defaultValue: 'СОВПАДЕНИЙ НЕТ' }) : 'СОВПАДЕНИЙ НЕТ';
         dropdown.innerHTML = `<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ ${noMatchesText} ]</div>`;
-                    dropdown.style.display = 'block';
+                    openSearchDropdown(dropdown);
                     document.body.classList.remove('search-lock');
                     if (typeof window.startLenis === 'function') window.startLenis();
                 }
@@ -270,7 +303,7 @@ function handleLiveSearch() {
         } else if (dropdown) {
             const noMatchesText = typeof i18next !== 'undefined' ? i18next.t('search.no_matches', { defaultValue: 'СОВПАДЕНИЙ НЕТ' }) : 'СОВПАДЕНИЙ НЕТ';
         dropdown.innerHTML = `<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ ${noMatchesText} ]</div>`;
-            dropdown.style.display = 'block';
+            openSearchDropdown(dropdown);
             document.body.classList.remove('search-lock');
             if (typeof window.startLenis === 'function') window.startLenis();
         }
@@ -282,7 +315,15 @@ function closeSearch() {
     currentLiveSearchSeq++;
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
-    if (dropdown) dropdown.style.display = 'none';
+    if (dropdown) {
+        if (typeof hidePopoverSafe === 'function') hidePopoverSafe(dropdown);
+        else if (typeof window.hidePopoverSafe === 'function') window.hidePopoverSafe(dropdown);
+        dropdown.style.display = 'none';
+        dropdown.style.removeProperty('position');
+        dropdown.style.removeProperty('top');
+        dropdown.style.removeProperty('left');
+        dropdown.style.removeProperty('width');
+    }
     document.body.classList.remove('search-lock');
     if (typeof window.startLenis === 'function') window.startLenis();
     if (searchInput) searchInput.blur();
@@ -335,3 +376,24 @@ document.addEventListener('touchstart', (e) => {
         }
     }
 }, { passive: true });
+
+
+// Native Popover API Light Dismiss Sync
+if (typeof document !== 'undefined') {
+    const initLiveSearchPopoverSync = () => {
+        const liveSearchDropEl = document.getElementById('liveSearchDropdown');
+        if (liveSearchDropEl && !liveSearchDropEl._popoverBound) {
+            liveSearchDropEl._popoverBound = true;
+            liveSearchDropEl.addEventListener('toggle', (evt) => {
+                if (evt.newState === 'closed') {
+                    closeSearch();
+                }
+            });
+        }
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLiveSearchPopoverSync);
+    } else {
+        initLiveSearchPopoverSync();
+    }
+}

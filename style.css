@@ -3892,3 +3892,187 @@ html.save-data-active .modal-overlay {
 html.save-data-active .grid-lazy-video {
     display: none !important;
 }
+
+
+/* ==========================================
+   NATIVE POPOVER API & TOP LAYER RESET
+   ========================================== */
+[popover] {
+    margin: unset;
+    padding: unset;
+    border: unset;
+    background: unset;
+    color: unset;
+    overflow: visible;
+}
+[popover]::backdrop {
+    background: transparent;
+}
+
+/* Popover state styling for Live Search */
+.search-wrapper {
+    anchor-name: --nisha-search-wrapper;
+}
+#liveSearchDropdown[popover] {
+    position-anchor: --nisha-search-wrapper;
+    top: anchor(bottom);
+    left: anchor(left);
+    width: anchor-size(width);
+}
+#liveSearchDropdown:popover-open {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Popover state styling for Checkout Payment selector */
+#paymentDropdown:popover-open {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+/* Popover state styling for Cart Dropdown */
+#cartDropdown:popover-open,
+#cartDropdown.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+}
+
+@media (max-width: 900px) {
+    #cartDropdown:popover-open {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        inset: auto 0 0 0 !important;
+        transform: translateY(0) !important;
+        z-index: 10000 !important;
+    }
+}
+
+@media (min-width: 901px) {
+    #cartDropdown:popover-open {
+        position: fixed !important;
+        bottom: 84px !important;
+        left: 30px !important;
+        margin: 0 !important;
+        inset: auto auto 84px 30px !important;
+        width: max(380px, 28vw) !important;
+        max-width: 500px !important;
+        transform: translateY(0) !important;
+        z-index: 10000 !important;
+    }
+}
+
+/* ==========================================
+   CSS SCROLL-DRIVEN ANIMATIONS
+   (animation-timeline: scroll() and view())
+   ========================================== */
+.nisha-scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-green, #00ff66), #00e5ff, var(--accent-green, #00ff66));
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    z-index: 999999;
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
+}
+
+@supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .nisha-scroll-progress {
+            display: block;
+            animation: nishaScrollProgressAnim linear;
+            animation-timeline: scroll(root block);
+        }
+        @keyframes nishaScrollProgressAnim {
+            from {
+                transform: scaleX(0);
+            }
+            to {
+                transform: scaleX(1);
+            }
+        }
+
+        header:not(.driver-popover-title) {
+            animation: headerScrollElevation linear both;
+            animation-timeline: scroll(root block);
+            animation-range: 0px 160px;
+        }
+        @keyframes headerScrollElevation {
+            from {
+                box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+                border-bottom-color: var(--border-light);
+            }
+            to {
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), 0 2px 10px rgba(0, 255, 102, 0.15);
+                border-bottom-color: var(--accent-green);
+            }
+        }
+    }
+}
+
+@supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .item-card:not(.skeleton-card) {
+            animation: itemCardViewEntrance linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 28%;
+        }
+        @keyframes itemCardViewEntrance {
+            from {
+                opacity: 0.2;
+                transform: translateY(20px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .history-card {
+            animation: historyCardViewEntrance linear both;
+            animation-timeline: view(inline);
+            animation-range: entry 0% cover 25%;
+        }
+        @keyframes historyCardViewEntrance {
+            from {
+                opacity: 0.3;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    }
+}
+
+/* Reduced Motion and Low Power Mode safety */
+@media (prefers-reduced-motion: reduce) {
+    .nisha-scroll-progress,
+    .item-card:not(.skeleton-card),
+    .history-card,
+    header:not(.driver-popover-title) {
+        animation: none !important;
+    }
+}
+
+html.low-power-mode .nisha-scroll-progress,
+html.low-power-mode .item-card:not(.skeleton-card),
+html.low-power-mode .history-card,
+html.low-power-mode header:not(.driver-popover-title) {
+    animation: none !important;
+}
