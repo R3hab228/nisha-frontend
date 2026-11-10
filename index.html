@@ -872,6 +872,13 @@ if (typeof document !== 'undefined') {
                 }
             });
         }
+        const checkoutModal = document.getElementById('checkoutModal');
+        if (checkoutModal && !checkoutModal._scrollDismissBound) {
+            checkoutModal._scrollDismissBound = true;
+            checkoutModal.addEventListener('scroll', () => {
+                if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
+            }, { passive: true });
+        }
     };
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initPaymentPopoverSync);

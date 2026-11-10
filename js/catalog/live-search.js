@@ -397,3 +397,19 @@ if (typeof document !== 'undefined') {
         initLiveSearchPopoverSync();
     }
 }
+
+// Reposition live search dropdown on orientation/resize
+if (typeof window !== 'undefined') {
+    window.addEventListener('resize', () => {
+        const dropdown = document.getElementById('liveSearchDropdown');
+        if (dropdown && dropdown.matches && dropdown.matches(':popover-open')) {
+            const wrapper = dropdown.closest('.search-wrapper');
+            if (wrapper) {
+                const rect = wrapper.getBoundingClientRect();
+                dropdown.style.top = `${rect.bottom}px`;
+                dropdown.style.left = `${rect.left}px`;
+                dropdown.style.width = `${rect.width}px`;
+            }
+        }
+    }, { passive: true });
+}

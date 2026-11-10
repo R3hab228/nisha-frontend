@@ -364,7 +364,8 @@ describe('Modern Performance APIs Suite', () => {
                 showPopover: vi.fn(),
                 hidePopover: vi.fn(),
                 togglePopover: vi.fn().mockReturnValue(true),
-                matches: vi.fn().mockReturnValue(false)
+                matches: vi.fn().mockReturnValue(false),
+                hasAttribute: vi.fn().mockReturnValue(true)
             };
 
             expect(showPopoverSafe(null)).toBe(false);
@@ -421,13 +422,13 @@ describe('Modern Performance APIs Suite', () => {
             expect(css).toContain('transform: translateY(0)');
         });
 
-        it('cart.js, live-search.js, and index.html register toggle listeners for Light Dismiss', () => {
+        it('live-search.js and index.html register toggle listeners for Light Dismiss, cart uses smooth bottom sheet', () => {
             const cartJs = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
             const searchJs = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
             const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
 
-            expect(cartJs).toContain("cartDrop.addEventListener('toggle'");
-            expect(cartJs).toContain("evt.newState === 'closed'");
+            expect(cartJs).toContain('function toggleCartDropdown');
+            expect(cartJs).toContain('function closeCartDropdown');
             expect(searchJs).toContain("liveSearchDropEl.addEventListener('toggle'");
             expect(searchJs).toContain("evt.newState === 'closed'");
             expect(html).toContain("pd.addEventListener('toggle'");

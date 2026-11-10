@@ -2074,14 +2074,9 @@ function toggleCartDropdown(e) {
             else panel.classList.remove('dropdown-open');
         }
         if (isActive) {
-            if (typeof window.showPopoverSafe === 'function') window.showPopoverSafe(dropdown);
-            else if (typeof dropdown.showPopover === 'function') { try { dropdown.showPopover(); } catch (_) {} }
             if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(dropdown);
             if (typeof checkCartItemsAvailability === 'function') checkCartItemsAvailability();
             if (typeof renderCartItems === 'function') renderCartItems();
-        } else {
-            if (typeof window.hidePopoverSafe === 'function') window.hidePopoverSafe(dropdown);
-            else if (typeof dropdown.hidePopover === 'function' && dropdown.matches && dropdown.matches(':popover-open')) { try { dropdown.hidePopover(); } catch (_) {} }
         }
         if (fab) {
             if (isActive) {
@@ -2106,8 +2101,6 @@ function closeCartDropdown(e) {
     if (dropdown) {
         dropdown.classList.remove('active');
         clearDropdownInlineStyles(dropdown);
-        if (typeof window.hidePopoverSafe === 'function') window.hidePopoverSafe(dropdown);
-        else if (typeof dropdown.hidePopover === 'function' && dropdown.matches && dropdown.matches(':popover-open')) { try { dropdown.hidePopover(); } catch (_) {} }
     }
     if (panel) panel.classList.remove('dropdown-open');
     if (fab) {
@@ -3667,24 +3660,4 @@ if (typeof document !== 'undefined') {
 }
 
 
-// Native Popover API Light Dismiss Sync for Cart Dropdown
-if (typeof document !== 'undefined') {
-    const initCartPopoverSync = () => {
-        const cartDrop = document.getElementById('cartDropdown');
-        if (cartDrop && !cartDrop._popoverBound) {
-            cartDrop._popoverBound = true;
-            cartDrop.addEventListener('toggle', (evt) => {
-                if (evt.newState === 'closed') {
-                    if (typeof closeCartDropdown === 'function') {
-                        closeCartDropdown();
-                    }
-                }
-            });
-        }
-    };
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCartPopoverSync);
-    } else {
-        initCartPopoverSync();
-    }
-}
+

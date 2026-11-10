@@ -754,6 +754,7 @@ if (typeof window !== 'undefined') window.isPopoverSupported = isPopoverSupporte
  */
 export function showPopoverSafe(element) {
     if (!element) return false;
+    if (typeof element.hasAttribute === 'function' && !element.hasAttribute('popover')) return false;
     if (typeof element.showPopover === 'function') {
         try {
             if (typeof element.matches === 'function' && element.matches(':popover-open')) {
@@ -776,6 +777,7 @@ if (typeof window !== 'undefined') window.showPopoverSafe = showPopoverSafe;
  */
 export function hidePopoverSafe(element) {
     if (!element) return false;
+    if (typeof element.hasAttribute === 'function' && !element.hasAttribute('popover')) return false;
     if (typeof element.hidePopover === 'function') {
         try {
             if (typeof element.matches === 'function' && !element.matches(':popover-open')) {
@@ -799,6 +801,7 @@ if (typeof window !== 'undefined') window.hidePopoverSafe = hidePopoverSafe;
  */
 export function togglePopoverSafe(element, force) {
     if (!element) return false;
+    if (typeof element.hasAttribute === 'function' && !element.hasAttribute('popover')) return false;
     if (typeof element.togglePopover === 'function') {
         try {
             return element.togglePopover(force);
