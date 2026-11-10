@@ -40,11 +40,11 @@ jobs:
           find . -maxdepth 3 -name "*.js" -not -path "*/node_modules/*" -not -path "*/dist/*" -not -path "*/public/*" -print -exec node --check {} \;
           echo "✅ All JavaScript files passed syntax verification!"
 
-      - name: 🛡️ Validate JSON files (locales, manifest, vercel)
+      - name: 🛡️ Validate JSON files (locales, manifest, vercel, lighthouserc)
         run: |
           node -e "
             const fs = require('fs');
-            const files = ['package.json', 'locales.json', 'manifest.json', 'vercel.json', '.well-known/assetlinks.json'];
+            const files = ['package.json', 'locales.json', 'manifest.json', 'vercel.json', '.well-known/assetlinks.json', '.lighthouserc.json'];
             files.forEach(file => {
               if (fs.existsSync(file)) {
                 JSON.parse(fs.readFileSync(file, 'utf8'));
