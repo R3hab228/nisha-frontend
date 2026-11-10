@@ -781,7 +781,12 @@ document.addEventListener('keydown', (e) => {
         // 4. Закрытие выпадающего списка живого поиска
         const dropdown = document.getElementById('liveSearchDropdown');
         const searchInput = document.getElementById('mainSearch');
-        if (dropdown && dropdown.style.display === 'block') {
+        const isLiveSearchOpen = dropdown && (
+            (typeof dropdown.matches === 'function' && dropdown.matches(':popover-open')) ||
+            (typeof window.isPopoverOpenSafe === 'function' && window.isPopoverOpenSafe(dropdown)) ||
+            dropdown.style.display === 'block'
+        );
+        if (isLiveSearchOpen) {
             if (typeof closeSearch === 'function') closeSearch();
             if (searchInput) searchInput.blur();
         }

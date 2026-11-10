@@ -34,6 +34,7 @@ import defaultModularFacade, {
     showPopoverSafe,
     hidePopoverSafe,
     togglePopoverSafe,
+    isPopoverOpenSafe,
     isScrollDrivenAnimationSupported,
     isWebLocksSupported,
     isTabLeader,
@@ -318,10 +319,12 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
             expect(typeof showPopoverSafe).toBe('function');
             expect(typeof hidePopoverSafe).toBe('function');
             expect(typeof togglePopoverSafe).toBe('function');
+            expect(typeof isPopoverOpenSafe).toBe('function');
             expect(typeof defaultModularFacade.helpers.isPopoverSupported).toBe('function');
             expect(typeof defaultModularFacade.helpers.showPopoverSafe).toBe('function');
             expect(typeof defaultModularFacade.helpers.hidePopoverSafe).toBe('function');
             expect(typeof defaultModularFacade.helpers.togglePopoverSafe).toBe('function');
+            expect(typeof defaultModularFacade.helpers.isPopoverOpenSafe).toBe('function');
         });
 
         it('exports isScrollDrivenAnimationSupported on helpers facade', () => {

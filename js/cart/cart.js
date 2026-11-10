@@ -1273,13 +1273,19 @@ function filterAndSortBranches(list, rawQuery) {
         }
     }
 
-    scored.sort((a, b) => {
+    const sortBranchesFn = (a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         if (a.numVal !== b.numVal) return a.numVal - b.numVal;
         return a.idx - b.idx;
-    });
+    };
 
-    return scored.map(s => s.branch);
+    const sortedScored = (typeof window.toSorted === 'function')
+        ? window.toSorted(scored, sortBranchesFn)
+        : (typeof scored.toSorted === 'function'
+            ? scored.toSorted(sortBranchesFn)
+            : [...scored].sort(sortBranchesFn));
+
+    return sortedScored.map(s => s.branch);
 }
 window.filterAndSortBranches = filterAndSortBranches;
 

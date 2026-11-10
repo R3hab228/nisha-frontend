@@ -829,4 +829,26 @@ export function isScrollDrivenAnimationSupported() {
     return false;
 }
 if (typeof window !== 'undefined') window.isScrollDrivenAnimationSupported = isScrollDrivenAnimationSupported;
-
+/**
+ * Safely checks if a native popover or dropdown element is currently open
+ * @param {HTMLElement} element
+ * @returns {boolean}
+ */
+export function isPopoverOpenSafe(element) {
+    if (!element) return false;
+    try {
+        if (typeof element.matches === 'function' && element.matches(':popover-open')) {
+            return true;
+        }
+    } catch (_) {}
+    if (element.classList && (element.classList.contains('is-open') || element.classList.contains('active'))) {
+        return true;
+    }
+    if (element.style && element.style.display && element.style.display !== 'none' && element.style.display !== '') {
+        if (element.style.opacity !== '0' && element.style.visibility !== 'hidden') {
+            return true;
+        }
+    }
+    return false;
+}
+if (typeof window !== 'undefined') window.isPopoverOpenSafe = isPopoverOpenSafe;

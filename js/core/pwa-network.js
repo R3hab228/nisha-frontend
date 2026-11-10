@@ -1303,6 +1303,8 @@ function initPwaPullToRefresh() {
         const isLiveSearchOpen = Boolean(
             (document.body && document.body.classList && document.body.classList.contains && document.body.classList.contains('search-lock')) ||
             (liveSearchDropdown && (
+                (typeof liveSearchDropdown.matches === 'function' && liveSearchDropdown.matches(':popover-open')) ||
+                (typeof window.isPopoverOpenSafe === 'function' && window.isPopoverOpenSafe(liveSearchDropdown)) ||
                 (liveSearchDropdown.style && liveSearchDropdown.style.display === 'block') ||
                 (window.getComputedStyle && typeof window.getComputedStyle === 'function' && window.getComputedStyle(liveSearchDropdown) && window.getComputedStyle(liveSearchDropdown).display === 'block')
             ))

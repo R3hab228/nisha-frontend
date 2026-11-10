@@ -24,6 +24,7 @@ import {
     showPopoverSafe,
     hidePopoverSafe,
     togglePopoverSafe,
+    isPopoverOpenSafe,
     isScrollDrivenAnimationSupported
 } from '../src/modules/helpers.js';
 import {
@@ -400,6 +401,29 @@ describe('Modern Performance APIs Suite', () => {
             // Toggle
             expect(togglePopoverSafe(fakeElement, true)).toBe(true);
             expect(fakeElement.togglePopover).toHaveBeenCalledWith(true);
+        });
+it('isPopoverOpenSafe accurately detects open state across popover, class and styles', () => {
+            expect(isPopoverOpenSafe(null)).toBe(false);
+            expect(isPopoverOpenSafe(undefined)).toBe(false);
+
+            // Native popover open (:popover-open)
+            const openPopover = { matches: (sel) => sel === ':popover-open' };
+            expect(isPopoverOpenSafe(openPopover)).toBe(true);
+
+            // Closed popover
+            const closedPopover = { matches: () => false, classList: { contains: () => false }, style: { display: 'none' } };
+            expect(isPopoverOpenSafe(closedPopover)).toBe(false);
+
+            // Active / is-open class
+            const activeEl = { classList: { contains: (cls) => cls === 'active' } };
+            expect(isPopoverOpenSafe(activeEl)).toBe(true);
+
+            const isOpenEl = { classList: { contains: (cls) => cls === 'is-open' } };
+            expect(isPopoverOpenSafe(isOpenEl)).toBe(true);
+
+            // Visible display block
+            const blockEl = { classList: { contains: () => false }, style: { display: 'block', opacity: '1', visibility: 'visible' } };
+            expect(isPopoverOpenSafe(blockEl)).toBe(true);
         });
 
         it('index.html applies popover="auto" to #liveSearchDropdown and #paymentDropdown', () => {

@@ -3092,7 +3092,14 @@ function clearSearchInput() {
             window.closeSearch();
         } else {
             const liveDropdown = document.getElementById('liveSearchDropdown');
-            if (liveDropdown) liveDropdown.style.display = 'none';
+            if (liveDropdown) {
+                if (typeof window.hidePopoverSafe === 'function') {
+                    window.hidePopoverSafe(liveDropdown);
+                } else if (typeof liveDropdown.hidePopover === 'function' && liveDropdown.matches && liveDropdown.matches(':popover-open')) {
+                    try { liveDropdown.hidePopover(); } catch (_) {}
+                }
+                liveDropdown.style.display = 'none';
+            }
             document.body.classList.remove('search-lock'); 
             if (typeof window.startLenis === 'function') window.startLenis();
         }

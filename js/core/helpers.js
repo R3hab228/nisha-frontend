@@ -696,6 +696,102 @@ function setDifference(setA, setB) {
 }
 window.setDifference = setDifference;
 if (typeof globalThis !== 'undefined') globalThis.setDifference = setDifference;
+// --- NATIVE POPOVER API & SCROLL-DRIVEN ANIMATIONS HELPER FACADE ---
+function isPopoverSupported() {
+    return typeof HTMLElement !== 'undefined' &&
+           typeof HTMLElement.prototype.showPopover === 'function' &&
+           typeof HTMLElement.prototype.hidePopover === 'function';
+}
+window.isPopoverSupported = isPopoverSupported;
+if (typeof globalThis !== 'undefined') globalThis.isPopoverSupported = isPopoverSupported;
+
+function showPopoverSafe(element) {
+    if (!element) return false;
+    if (typeof element.hasAttribute === 'function' && !element.hasAttribute('popover')) return false;
+    if (typeof element.showPopover === 'function') {
+        try {
+            if (typeof element.matches === 'function' && element.matches(':popover-open')) {
+                return true;
+            }
+            element.showPopover();
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+    return false;
+}
+window.showPopoverSafe = showPopoverSafe;
+if (typeof globalThis !== 'undefined') globalThis.showPopoverSafe = showPopoverSafe;
+
+function hidePopoverSafe(element) {
+    if (!element) return false;
+    if (typeof element.hasAttribute === 'function' && !element.hasAttribute('popover')) return false;
+    if (typeof element.hidePopover === 'function') {
+        try {
+            if (typeof element.matches === 'function' && !element.matches(':popover-open')) {
+                return false;
+            }
+            element.hidePopover();
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+    return false;
+}
+window.hidePopoverSafe = hidePopoverSafe;
+if (typeof globalThis !== 'undefined') globalThis.hidePopoverSafe = hidePopoverSafe;
+
+function togglePopoverSafe(element, force) {
+    if (!element) return false;
+    if (typeof element.hasAttribute === 'function' && !element.hasAttribute('popover')) return false;
+    if (typeof element.togglePopover === 'function') {
+        try {
+            return element.togglePopover(force);
+        } catch (_) {
+            return false;
+        }
+    }
+    return false;
+}
+window.togglePopoverSafe = togglePopoverSafe;
+if (typeof globalThis !== 'undefined') globalThis.togglePopoverSafe = togglePopoverSafe;
+
+function isPopoverOpenSafe(element) {
+    if (!element) return false;
+    try {
+        if (typeof element.matches === 'function' && element.matches(':popover-open')) {
+            return true;
+        }
+    } catch (_) {}
+    if (element.classList && (element.classList.contains('is-open') || element.classList.contains('active'))) {
+        return true;
+    }
+    if (element.style && element.style.display && element.style.display !== 'none' && element.style.display !== '') {
+        if (element.style.opacity !== '0' && element.style.visibility !== 'hidden') {
+            return true;
+        }
+    }
+    return false;
+}
+window.isPopoverOpenSafe = isPopoverOpenSafe;
+if (typeof globalThis !== 'undefined') globalThis.isPopoverOpenSafe = isPopoverOpenSafe;
+
+function isScrollDrivenAnimationSupported() {
+    if (typeof CSS !== 'undefined' && typeof CSS.supports === 'function') {
+        try {
+            return CSS.supports('animation-timeline', 'scroll()') ||
+                   CSS.supports('animation-timeline', 'view()');
+        } catch (_) {
+            return false;
+        }
+    }
+    return false;
+}
+window.isScrollDrivenAnimationSupported = isScrollDrivenAnimationSupported;
+if (typeof globalThis !== 'undefined') globalThis.isScrollDrivenAnimationSupported = isScrollDrivenAnimationSupported;
+
 
 // --- КОПИРОВАНИЕ В БУФЕР ОБМЕНА (ЕДИНЫЙ НАТИВНЫЙ ASYNC CLIPBOARD API) ---
 async function copyToClipboard(text, successMsg = 'Скопировано в буфер!', errorMsg = 'Ошибка копирования') {
