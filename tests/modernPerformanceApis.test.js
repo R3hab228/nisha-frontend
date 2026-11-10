@@ -401,11 +401,12 @@ describe('Modern Performance APIs Suite', () => {
             expect(fakeElement.togglePopover).toHaveBeenCalledWith(true);
         });
 
-        it('index.html applies popover="auto" to #cartDropdown, #liveSearchDropdown, and #paymentDropdown', () => {
+        it('index.html applies popover="auto" to #liveSearchDropdown and #paymentDropdown', () => {
             const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
             expect(html).toMatch(/id=["']?liveSearchDropdown["']?[^>]*popover=["']?auto["']?/);
-            expect(html).toMatch(/id=["']?cartDropdown["']?[^>]*popover=["']?auto["']?/);
             expect(html).toMatch(/id=["']?paymentDropdown["']?[^>]*popover=["']?auto["']?/);
+            // #cartDropdown uses seamless bottom-sheet slide-up drawer docked flush to cartPanel
+            expect(html).toContain('id=cartDropdown class="cart-dropdown modal-window-style" data-lenis-prevent data-no-pull');
         });
 
         it('style.css defines universal [popover] UA reset and :popover-open styling', () => {
@@ -414,8 +415,10 @@ describe('Modern Performance APIs Suite', () => {
             expect(css).toContain('margin: unset;');
             expect(css).toContain('[popover]::backdrop {');
             expect(css).toContain('#liveSearchDropdown:popover-open');
-            expect(css).toContain('#cartDropdown:popover-open');
             expect(css).toContain('#paymentDropdown:popover-open');
+            // cart-dropdown is docked directly with translateY animation
+            expect(css).toContain('.cart-panel.show .cart-dropdown.active');
+            expect(css).toContain('transform: translateY(0)');
         });
 
         it('cart.js, live-search.js, and index.html register toggle listeners for Light Dismiss', () => {
