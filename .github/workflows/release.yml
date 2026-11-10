@@ -1,0 +1,136 @@
+name: Automated Release & Changelog
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Тип обновления версии'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - custom
+      custom_version:
+        description: 'Кастомная версия (если выбран custom, например 1.0.2)'
+        required: false
+        default: ''
+      is_draft:
+        description: 'Создать как черновик (Draft)?'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: read
+  issues: read
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 🏷️ Resolve Version & Tag
+        id: versioning
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BUMP="${{ github.event.inputs.version_bump }}"
+            if [ "$BUMP" = "custom" ]; then
+              NEW_VERSION="${{ github.event.inputs.custom_version }}"
+              npm version "$NEW_VERSION" --no-git-tag-version
+            else
+              NEW_VERSION=$(npm version "$BUMP" --no-git-tag-version)
+              NEW_VERSION="${NEW_VERSION#v}"
+            fi
+
+            TAG="v${NEW_VERSION}"
+            echo "Bumping version to $NEW_VERSION and creating tag $TAG"
+            git add package.json package-lock.json || true
+            git commit -m "chore(release): bump version to ${TAG} [skip ci]" || true
+            git tag -a "$TAG" -m "Release ${TAG}"
+            git push origin main --follow-tags || git push origin "$TAG"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_TITLE=NISHA STORE ${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run Automated Tests
+        run: npm test
+
+      - name: ⚡ Build Production Bundle
+        run: npm run build
+
+      - name: 🗜️ Archive Production Bundle
+        run: |
+          cd dist
+          zip -r "../nisha-frontend-build-${{ steps.versioning.outputs.TAG }}.zip" ./*
+          cd ..
+
+      - name: 🚀 Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.versioning.outputs.TAG }}
+          TITLE: ${{ steps.versioning.outputs.RELEASE_TITLE }}
+          IS_DRAFT: ${{ github.event.inputs.is_draft || 'false' }}
+        run: |
+          DRAFT_FLAG=""
+          if [ "$IS_DRAFT" = "true" ]; then
+            DRAFT_FLAG="--draft"
+          fi
+
+          echo "Creating GitHub Release for $TAG..."
+          gh release create "$TAG" "./nisha-frontend-build-${TAG}.zip" \
+            --title "$TITLE" \
+            --generate-notes \
+            $DRAFT_FLAG
+
+      - name: 📢 Notify Telegram on Release
+        if: success()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_ADMIN_ID: ${{ secrets.TG_ADMIN_ID || secrets.ADMIN_ID }}
+          REPO_NAME: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.versioning.outputs.TAG }}
+          RELEASE_NAME: ${{ steps.versioning.outputs.RELEASE_TITLE }}
+          ACTOR: ${{ github.actor }}
+        run: node .github/scripts/notify-release.js
+
+      - name: 🚨 Notify Telegram on Failure
+        if: failure()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_ADMIN_ID: ${{ secrets.TG_ADMIN_ID || secrets.ADMIN_ID }}
+          REPO_NAME: ${{ github.repository }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: "Release workflow failed for ${{ steps.versioning.outputs.TAG || github.ref_name }}"
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+        run: node .github/scripts/notify-failure.js

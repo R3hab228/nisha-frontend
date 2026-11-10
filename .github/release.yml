@@ -1,0 +1,39 @@
+changelog:
+  categories:
+    - title: "🚀 Новые функции (Features)"
+      labels:
+        - "feat"
+        - "feature"
+        - "enhancement"
+    - title: "🐛 Исправления ошибок (Bug Fixes)"
+      labels:
+        - "fix"
+        - "bug"
+        - "bugfix"
+    - title: "⚡ Производительность и оптимизация (Performance)"
+      labels:
+        - "perf"
+        - "performance"
+        - "optimization"
+    - title: "🎨 Интерфейс и дизайн (UI / UX)"
+      labels:
+        - "ui"
+        - "style"
+        - "design"
+        - "mobile"
+    - title: "🛡️ Безопасность (Security)"
+      labels:
+        - "security"
+        - "audit"
+    - title: "🧹 Рефакторинг и поддержка (Maintenance & Dependencies)"
+      labels:
+        - "refactor"
+        - "dependencies"
+        - "chore"
+        - "ci"
+  exclude:
+    labels:
+      - "ignore"
+      - "skip-changelog"
+    authors:
+      - "dependabot[bot]"
