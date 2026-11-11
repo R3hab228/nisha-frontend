@@ -225,14 +225,14 @@ function formatCleanLocation(rawPath, context = {}) {
     const raw = (context && context.filename) || rawPath || '';
     if (!raw) return 'index.html';
     try {
-        const withoutHash = String(raw).split('#')[0].split('?')[0];
+        const withoutHash = String(raw).split('#').at(0).split('?').at(0);
         if (withoutHash.startsWith('http://') || withoutHash.startsWith('https://')) {
             const url = new URL(withoutHash);
             return url.pathname || '/';
         }
         return withoutHash.slice(-60) || '/';
     } catch (e) {
-        return String(raw).split('#')[0].split('?')[0].slice(-60) || '/';
+        return String(raw).split('#').at(0).split('?').at(0).slice(-60) || '/';
     }
 }
 
