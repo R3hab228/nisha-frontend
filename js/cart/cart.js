@@ -1803,7 +1803,8 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
     const parsedQuery = parseNPBranchQuery(search);
     const cacheKey = cityRef + "_" + search.toLowerCase();
 
-    if (npBranchCache[cacheKey] && npBranchCache[cacheKey].length > 0) {
+    const hasCachedKey = (typeof Object.hasOwn === 'function') ? Object.hasOwn(npBranchCache, cacheKey) : Object.prototype.hasOwnProperty.call(npBranchCache, cacheKey);
+    if (hasCachedKey && npBranchCache[cacheKey] && npBranchCache[cacheKey].length > 0) {
         if (showDropdown) {
             const listToRender = search ? filterAndSortBranches(npBranchCache[cacheKey], search) : npBranchCache[cacheKey];
             renderBranches(listToRender);
@@ -3112,6 +3113,7 @@ async function confirmEmailPrompt(wantsEmail) {
 window.confirmEmailPrompt = confirmEmailPrompt;
 
 async function executeOrderFinal(emailToSave) {
+    return await withCheckoutLock(async () => {
     if (isOrderSubmitting) return;
     isOrderSubmitting = true;
     const btnSubmit = document.getElementById('btnSubmitOrder');
@@ -3484,6 +3486,7 @@ async function executeOrderFinal(emailToSave) {
         btnSubmit.style.opacity = "1";
         if (typeof window.loadAllItems === 'function') window.loadAllItems();
     }
+    });
 }
 window.executeOrderFinal = executeOrderFinal;
 
