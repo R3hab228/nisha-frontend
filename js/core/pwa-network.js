@@ -195,7 +195,8 @@ const IGNORED_ERROR_PATTERNS = [
     /Blocked a frame with origin/i,
     /cross-origin frame/i,
     /Protocols, domains, and ports must match/i,
-    /SecurityError.*cross-origin/i
+    /SecurityError.*cross-origin/i,
+    /@context/i
 ];
 
 function sanitizeContext(context) {

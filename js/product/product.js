@@ -1138,7 +1138,7 @@ function openProductModal(item) {
         document.head.appendChild(schemaScript);
     }
     const schemaData = {
-        "@context": "https://schema.org/",
+        "@context": "https://schema.org",
         "@type": "Product",
         "name": item.name,
         "image": (item.images && item.images.length > 0) ? item.images.at(0) : "",
@@ -1153,7 +1153,7 @@ function openProductModal(item) {
             "itemCondition": "https://schema.org/UsedCondition"
         }
     };
-    schemaScript.innerText = JSON.stringify(schemaData);
+    schemaScript.textContent = JSON.stringify(schemaData);
 
     // Динамические OpenGraph теги
     const setMetaTag = (property, content) => {

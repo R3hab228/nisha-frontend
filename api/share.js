@@ -101,7 +101,7 @@ module.exports = async function handler(req, res) {
     const safeCleanDesc = escapeHTML(cleanItemDesc || 'Вінтажна та архівна річ у відмінному стані. Доставка по всій Україні.');
 
     const jsonLd = JSON.stringify({
-      "@context": "https://schema.org/",
+      "@context": "https://schema.org",
       "@type": "Product",
       "name": fullItemTitle,
       "image": [rawImageUrl],
