@@ -322,26 +322,79 @@ async function checkSession() {
                     }
 
                     const newStatus = payload.new.status;
-                    if (newStatus !== payload.old.status) {
-                        const orderPref = typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', { defaultValue: 'ЗАКАЗ #' }) : 'ЗАКАЗ #';
+                    const oldStatus = payload.old ? payload.old.status : null;
+                    const shortId = payload.new.id.split('-').at(0).toUpperCase();
+
+                    // 1. Изменение статуса заказа (без эмодзи)
+                    if (newStatus && newStatus !== oldStatus) {
                         const formattedNewStatus = typeof window.formatOrderStatus === 'function' ? window.formatOrderStatus(newStatus) : (newStatus || '').toUpperCase();
-                        showToast(`${orderPref}${payload.new.id.split('-').at(0).toUpperCase()}: ${formattedNewStatus}`, 'success');
                         
+                        if (newStatus === 'Завершен') {
+                            const firstItem = (Array.isArray(payload.new.items) && payload.new.items[0]) || null;
+                            const itemName = firstItem ? (firstItem.name || 'Товар') : 'Товар';
+                            const itemImg = firstItem ? (firstItem.image || firstItem.img || '') : '';
+                            const itemId = firstItem ? (firstItem.id || '') : '';
+
+                            showToast(`Заказ #${shortId} получен. Оставьте отзыв о покупке!`, 'info', itemImg, () => {
+                                if (typeof window.promptOrderReview === 'function') {
+                                    window.promptOrderReview(payload.new.id, itemName, itemImg, itemId);
+                                }
+                            });
+
+                            if (typeof showTerminalModal === 'function') {
+                                showTerminalModal(
+                                    'ORDER_COMPLETED.LOG',
+                                    `Заказ #${shortId} успешно получен.<br><br>` +
+                                    `Будем благодарны за отзыв о покупке на сайте.`,
+                                    '[ ОСТАВИТЬ ОТЗЫВ ]',
+                                    () => {
+                                        if (typeof window.promptOrderReview === 'function') {
+                                            window.promptOrderReview(payload.new.id, itemName, itemImg, itemId);
+                                        }
+                                    }
+                                );
+                            }
+                        } else {
+                            const orderPref = typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', { defaultValue: 'ЗАКАЗ #' }) : 'ЗАКАЗ #';
+                            showToast(`${orderPref}${shortId}: ${formattedNewStatus}`, 'success');
+                            
+                            if (typeof showTerminalModal === 'function') {
+                                showTerminalModal(
+                                    'SYSTEM_NOTIFICATION.LOG',
+                                    `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_title', { defaultValue: 'Статус вашего заказа изменился.' }) : 'Статус вашего заказа изменился.'}<br><br>` +
+                                    `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_order', { defaultValue: 'Заказ:' }) : 'Заказ:'} #${shortId}<br>` +
+                                    `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_new', { defaultValue: 'Новый статус:' }) : 'Новый статус:'} <b style="color:var(--accent-green);">${formattedNewStatus}</b>`,
+                                    (typeof i18next !== 'undefined' ? i18next.t('profile.order_status_view', { defaultValue: '[ ПОСМОТРЕТЬ ]' }) : '[ ПОСМОТРЕТЬ ]'),
+                                    () => { if (typeof window.openOrdersModal === 'function') window.openOrdersModal(); }
+                                );
+                            }
+                        }
+                    }
+
+                    // 2. Добавление / обновление номера ТТН Новой Почты (без эмодзи)
+                    const newTtn = payload.new.tracking_number;
+                    const oldTtn = payload.old ? payload.old.tracking_number : null;
+                    if (newTtn && newTtn !== oldTtn && !newTtn.startsWith('ОШИБКА')) {
+                        showToast(`Заказ #${shortId}: добавлен номер ТТН ${newTtn}`, 'success', null, () => {
+                            if (typeof window.openOrdersModal === 'function') window.openOrdersModal();
+                        });
+
                         if (typeof showTerminalModal === 'function') {
                             showTerminalModal(
-                                'SYSTEM_NOTIFICATION.LOG',
-                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_title', { defaultValue: 'ВНИМАНИЕ! Статус вашего заказа изменился.' }) : 'ВНИМАНИЕ! Статус вашего заказа изменился.'}<br><br>` +
-                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_order', { defaultValue: 'Заказ:' }) : 'Заказ:'} #${payload.new.id.split('-').at(0).toUpperCase()}<br>` +
-                                `${typeof i18next !== 'undefined' ? i18next.t('profile.order_status_new', { defaultValue: 'Новый статус:' }) : 'Новый статус:'} <b style="color:var(--accent-green);">${formattedNewStatus}</b>`,
-                                (typeof i18next !== 'undefined' ? i18next.t('profile.order_status_view', { defaultValue: '[ ПОСМОТРЕТЬ ]' }) : '[ ПОСМОТРЕТЬ ]'),
-                                () => { if (typeof window.openOrdersModal === 'function') window.openOrdersModal(); }
+                                'TRACKING_NUMBER.LOG',
+                                `Заказ #${shortId} передан в доставку.<br><br>` +
+                                `Номер ТТН Новой Почты: <b style="color:var(--accent-green);">${newTtn}</b>`,
+                                '[ ОТСЛЕДИТЬ ]',
+                                () => {
+                                    if (typeof window.openOrdersModal === 'function') window.openOrdersModal();
+                                }
                             );
                         }
                     }
                 })
                 .subscribe();
 
-            // Уведомления об ответах на вопросы в Q&A
+            // Уведомления об ответах на вопросы в Q&A (без эмодзи)
             if (qaUpdatesChannel) sb.removeChannel(qaUpdatesChannel);
             qaUpdatesChannel = sb.channel('qa-updates')
                 .on('postgres_changes', { 
@@ -350,9 +403,27 @@ async function checkSession() {
                     table: 'item_questions',
                     filter: `user_id=eq.${currentUser.id}` 
                 }, payload => {
-                    if (payload.new.answer && !payload.old.answer) {
-                        const msg = typeof i18next !== 'undefined' ? i18next.t('messages.qa_answered', {defaultValue: 'Вам ответили на вопрос!'}) : 'Вам ответили на вопрос!';
-                        showToast(msg, 'success');
+                    if (payload.new.answer && (!payload.old || !payload.old.answer)) {
+                        const msg = typeof i18next !== 'undefined' ? i18next.t('messages.qa_answered', { defaultValue: 'Вам ответили на вопрос по товару!' }) : 'Вам ответили на вопрос по товару!';
+                        showToast(msg, 'success', null, () => {
+                            if (payload.new.item_id && typeof window.openProductModalById === 'function') {
+                                window.openProductModalById(payload.new.item_id);
+                            }
+                        });
+
+                        if (typeof showTerminalModal === 'function') {
+                            showTerminalModal(
+                                'QUESTION_ANSWERED.LOG',
+                                `На ваш вопрос по товару опубликован ответ.<br><br>` +
+                                `<i>"${String(payload.new.answer || '').slice(0, 150)}"</i>`,
+                                '[ ПОСМОТРЕТЬ ТОВАР ]',
+                                () => {
+                                    if (payload.new.item_id && typeof window.openProductModalById === 'function') {
+                                        window.openProductModalById(payload.new.item_id);
+                                    }
+                                }
+                            );
+                        }
                     }
                 })
                 .subscribe();

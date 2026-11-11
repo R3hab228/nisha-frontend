@@ -516,6 +516,26 @@ async function initApp() {
         if (openItemId) {
             setTimeout(() => openProductModalById(openItemId), 500);
         }
+
+        const openAction = urlParams.get('action');
+        if (openAction === 'orders') {
+            setTimeout(() => {
+                if (typeof window.openOrdersModal === 'function') window.openOrdersModal();
+            }, 500);
+        } else if (openAction === 'reviews') {
+            setTimeout(() => {
+                if (typeof window.openReviewsModal === 'function') window.openReviewsModal();
+            }, 500);
+        } else if (openAction === 'review') {
+            const orderId = urlParams.get('orderId');
+            setTimeout(() => {
+                if (typeof window.promptOrderReview === 'function') {
+                    window.promptOrderReview(orderId || '');
+                } else if (typeof window.openReviewsModal === 'function') {
+                    window.openReviewsModal();
+                }
+            }, 600);
+        }
         
         if (_supabase) {
             _supabase.channel('public:site_broadcasts')
