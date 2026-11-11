@@ -3541,7 +3541,9 @@ async function autoDetectCity() {
                 'Pavlohrad': 'Павлоград', 'Pavlograd': 'Павлоград', 'Sievierodonetsk': 'Сєвєродонецьк', 'Severodonetsk': 'Сєвєродонецьк',
                 'Kamianets-Podilskyi': 'Кам\'янець-Подільський', 'Kamenets-Podolskiy': 'Кам\'янець-Подільський'
             };
-            let detectedCity = enToUaCities[data.city] || data.city;
+            let detectedCity = (typeof hasOwn === 'function' ? hasOwn(enToUaCities, data.city) : Object.hasOwn(enToUaCities, data.city))
+                ? enToUaCities[data.city]
+                : data.city;
             if (detectedCity === data.city && data.latitude && data.longitude) {
                 try {
                     const nomUrl = new URL('https://nominatim.openstreetmap.org/reverse');

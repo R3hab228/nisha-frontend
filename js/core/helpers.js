@@ -284,15 +284,15 @@ if (typeof globalThis !== 'undefined') globalThis.runMicrotask = globalThis.runM
 
 // --- MODERN ARRAY INDEXING UTILITIES (ES2022+ array.at) ---
 function getLastItem(arr) {
-    if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
-    return arr.at(-1);
+    if (!arr || arr.length === 0) return undefined;
+    return typeof arr.at === 'function' ? arr.at(-1) : arr[arr.length - 1];
 }
 window.getLastItem = getLastItem;
 if (typeof globalThis !== 'undefined') globalThis.getLastItem = globalThis.getLastItem || getLastItem;
 
 function getFirstItem(arr) {
-    if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
-    return arr.at(0);
+    if (!arr || arr.length === 0) return undefined;
+    return typeof arr.at === 'function' ? arr.at(0) : arr[0];
 }
 window.getFirstItem = getFirstItem;
 if (typeof globalThis !== 'undefined') globalThis.getFirstItem = globalThis.getFirstItem || getFirstItem;
@@ -983,7 +983,7 @@ const storage = {
                 raw = null;
             }
             if (raw === null || raw === undefined || raw === '') {
-                raw = _memStorageFallback[key];
+                raw = hasOwn(_memStorageFallback, key) ? _memStorageFallback[key] : undefined;
             }
             if (raw === null || raw === undefined || raw === '') {
                 return defaultValue;
@@ -1029,9 +1029,9 @@ const storage = {
                 val = null;
             }
             if (val !== null && val !== undefined) return val;
-            return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : defaultValue;
+            return hasOwn(_memStorageFallback, key) ? _memStorageFallback[key] : defaultValue;
         } catch (e) {
-            return _memStorageFallback[key] !== undefined ? _memStorageFallback[key] : defaultValue;
+            return hasOwn(_memStorageFallback, key) ? _memStorageFallback[key] : defaultValue;
         }
     },
 
@@ -1080,9 +1080,9 @@ const storage = {
                 hasInStore = false;
             }
             if (hasInStore) return true;
-            return _memStorageFallback[key] !== undefined;
+            return hasOwn(_memStorageFallback, key);
         } catch (e) {
-            return _memStorageFallback[key] !== undefined;
+            return hasOwn(_memStorageFallback, key);
         }
     },
 
@@ -1108,7 +1108,7 @@ const storage = {
                     raw = null;
                 }
                 if (raw === null || raw === undefined || raw === '') {
-                    raw = _memSessionFallback[key];
+                    raw = hasOwn(_memSessionFallback, key) ? _memSessionFallback[key] : undefined;
                 }
                 if (raw === null || raw === undefined || raw === '') {
                     return defaultValue;
@@ -1151,9 +1151,9 @@ const storage = {
                     val = null;
                 }
                 if (val !== null && val !== undefined) return val;
-                return _memSessionFallback[key] !== undefined ? _memSessionFallback[key] : defaultValue;
+                return hasOwn(_memSessionFallback, key) ? _memSessionFallback[key] : defaultValue;
             } catch (e) {
-                return _memSessionFallback[key] !== undefined ? _memSessionFallback[key] : defaultValue;
+                return hasOwn(_memSessionFallback, key) ? _memSessionFallback[key] : defaultValue;
             }
         },
 
@@ -1199,9 +1199,9 @@ const storage = {
                     hasInStore = false;
                 }
                 if (hasInStore) return true;
-                return _memSessionFallback[key] !== undefined;
+                return hasOwn(_memSessionFallback, key);
             } catch (e) {
-                return _memSessionFallback[key] !== undefined;
+                return hasOwn(_memSessionFallback, key);
             }
         },
 
@@ -1290,7 +1290,7 @@ function transliterateCyrillic(str) {
     if (!str || typeof str !== 'string') return '';
     return str.split('').map(char => {
         const lower = char.toLowerCase();
-        return CYRILLIC_TO_LATIN[lower] !== undefined ? CYRILLIC_TO_LATIN[lower] : char;
+        return hasOwn(CYRILLIC_TO_LATIN, lower) ? CYRILLIC_TO_LATIN[lower] : char;
     }).join('');
 }
 
@@ -1303,7 +1303,7 @@ function expandSearchQuery(query) {
     variants.add(clean);
 
     // 1. Прямой поиск по словарю синонимов
-    if (SEARCH_SYNONYMS[clean]) {
+    if (hasOwn(SEARCH_SYNONYMS, clean)) {
         SEARCH_SYNONYMS[clean].split(' ').forEach(w => variants.add(w));
     }
 
@@ -1312,7 +1312,7 @@ function expandSearchQuery(query) {
     if (words.length > 1) {
         let hasWordSynonym = false;
         const replacedWords = words.map(w => {
-            if (SEARCH_SYNONYMS[w]) {
+            if (hasOwn(SEARCH_SYNONYMS, w)) {
                 hasWordSynonym = true;
                 return SEARCH_SYNONYMS[w].split(' ').at(0);
             }

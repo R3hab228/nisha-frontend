@@ -41,7 +41,7 @@ function transliterateCyrillic(str) {
     if (!str || typeof str !== 'string') return '';
     return str.split('').map(char => {
         const lower = char.toLowerCase();
-        return CYRILLIC_TO_LATIN[lower] !== undefined ? CYRILLIC_TO_LATIN[lower] : char;
+        return Object.hasOwn(CYRILLIC_TO_LATIN, lower) ? CYRILLIC_TO_LATIN[lower] : char;
     }).join('');
 }
 
@@ -54,7 +54,7 @@ function expandSearchQuery(query) {
     variants.add(clean);
 
     // Прямой поиск синонимов
-    if (SEARCH_SYNONYMS[clean]) {
+    if (Object.hasOwn(SEARCH_SYNONYMS, clean)) {
         SEARCH_SYNONYMS[clean].split(' ').forEach(w => variants.add(w));
     }
 
@@ -63,7 +63,7 @@ function expandSearchQuery(query) {
     if (words.length > 1) {
         let hasWordSynonym = false;
         const replacedWords = words.map(w => {
-            if (SEARCH_SYNONYMS[w]) {
+            if (Object.hasOwn(SEARCH_SYNONYMS, w)) {
                 hasWordSynonym = true;
                 return SEARCH_SYNONYMS[w].split(' ').at(0);
             }

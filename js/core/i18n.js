@@ -42,7 +42,7 @@ async function ensureLanguageLoaded(lng) {
         const fallbackRes = await fetch('/locales.json');
         if (fallbackRes.ok) {
             const fullData = await fallbackRes.json();
-            if (fullData[lng]) {
+            if (fullData && Object.hasOwn(fullData, lng)) {
                 const translations = fullData[lng].translation || fullData[lng];
                 i18next.addResourceBundle(lng, 'translation', translations, true, true);
             }
@@ -200,7 +200,7 @@ function startSearchTypewriter() {
         'en': ['Search items...']
     };
     
-    const words = translatedWords[currentSearchLang] || translatedWords['ua'];
+    const words = Object.hasOwn(translatedWords, currentSearchLang) ? translatedWords[currentSearchLang] : translatedWords['ua'];
     let wordIndex = 0;
     let charIndex = 0;
     let isDeleting = false;

@@ -74,6 +74,15 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             expect(helpers.hasOwn(dict, 'key')).toBe(true);
             expect(helpers.hasOwn(dict, 'missing')).toBe(false);
         });
+
+        it('expandSearchQuery in helpers.js and search.worker.js uses Object.hasOwn / hasOwn to prevent prototype chain crashes', () => {
+            const helpersCode = fs.readFileSync(path.resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const workerCode = fs.readFileSync(path.resolve(__dirname, '../src/workers/search.worker.js'), 'utf8');
+            expect(helpersCode).toContain('hasOwn(SEARCH_SYNONYMS, clean)');
+            expect(helpersCode).toContain('hasOwn(SEARCH_SYNONYMS, w)');
+            expect(workerCode).toContain('Object.hasOwn(SEARCH_SYNONYMS, clean)');
+            expect(workerCode).toContain('Object.hasOwn(SEARCH_SYNONYMS, w)');
+        });
     });
 
     describe('4. Web Locks API (navigator.locks) for PWA / Multi-tab Synchronization', () => {

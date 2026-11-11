@@ -766,7 +766,7 @@ const CONTACT_CONFIG = {
 };
 
 function resetContactSaveButtons(type) {
-    const cfg = CONTACT_CONFIG[type];
+    const cfg = (typeof hasOwn === 'function' ? hasOwn(CONTACT_CONFIG, type) : Object.hasOwn(CONTACT_CONFIG, type)) ? CONTACT_CONFIG[type] : null;
     if (!cfg) return;
     const selector = `#profile${cfg.cap}InputWrap .win95-save-btn, #modalProfile${cfg.cap}InputWrap .win95-save-btn`;
     document.querySelectorAll(selector).forEach(b => {
@@ -776,7 +776,7 @@ function resetContactSaveButtons(type) {
 }
 
 function clearPendingContactState(type) {
-    const cfg = CONTACT_CONFIG[type];
+    const cfg = (typeof hasOwn === 'function' ? hasOwn(CONTACT_CONFIG, type) : Object.hasOwn(CONTACT_CONFIG, type)) ? CONTACT_CONFIG[type] : null;
     if (!cfg) return;
     if (window[cfg.pollVar]) {
         clearInterval(window[cfg.pollVar]);
@@ -803,7 +803,7 @@ function openTelegramBotDeepLink(tgLink) {
 }
 
 function renderProfileContact(type, rawVal) {
-    const cfg = CONTACT_CONFIG[type];
+    const cfg = (typeof hasOwn === 'function' ? hasOwn(CONTACT_CONFIG, type) : Object.hasOwn(CONTACT_CONFIG, type)) ? CONTACT_CONFIG[type] : null;
     if (!cfg) return;
 
     const trimmed = (rawVal || '').trim();
@@ -844,7 +844,7 @@ function renderProfileTg(tg) { renderProfileContact('tg', tg); }
 window.renderProfileTg = renderProfileTg;
 
 async function removeProfileContact(type) {
-    const cfg = CONTACT_CONFIG[type];
+    const cfg = (typeof hasOwn === 'function' ? hasOwn(CONTACT_CONFIG, type) : Object.hasOwn(CONTACT_CONFIG, type)) ? CONTACT_CONFIG[type] : null;
     const sb = getSupabase();
     const activeUser = currentUser || window.currentUser;
     if (!cfg || !activeUser || !sb) return;
@@ -1160,6 +1160,7 @@ window.loadProfileBranches = loadProfileBranches;
 
 function renderProfileBranchDropdown(isModal, list) {
     const prefix = isModal ? 'modalProfile' : 'profile';
+    const scopeKey = getProfileScopeKey(isModal);
     const dropdown = document.getElementById(`${prefix}DeliveryBranchDropdown`);
     const branchInput = document.getElementById(`${prefix}DeliveryBranch`);
     if (!dropdown || !branchInput) return;

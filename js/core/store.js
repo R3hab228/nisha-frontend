@@ -193,7 +193,7 @@
             }
 
             this._state[key] = value;
-            const schema = SCHEMAS[key];
+            const schema = Object.hasOwn(SCHEMAS, key) ? SCHEMAS[key] : null;
 
             // Сохранение в localStorage, если ключ персистентный
             if (schema && schema.storageKey && options.save !== false) {
@@ -302,7 +302,7 @@
 
         // Синхронизация при внешнем изменении storage (из другой вкладки или легаси кода)
         _syncFromExternalStorage(stateKey, rawValue) {
-            const schema = SCHEMAS[stateKey];
+            const schema = Object.hasOwn(SCHEMAS, stateKey) ? SCHEMAS[stateKey] : null;
             if (!schema) return;
             const parsed = deserializeValue(rawValue, schema);
             this.set(stateKey, parsed, { save: false });

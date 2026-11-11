@@ -377,23 +377,34 @@ export function getCurrency() {
  * @param {string} [currency='₴']
  * @returns {string}
  */
-const cachedPriceFormatter = (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function')
-    ? new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
+const cachedPriceNumberFormatter = (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function')
+    ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
     : null;
 
 /**
  * Formats numeric price into localized string with currency
  * @param {number|string} price
- * @param {string} [currency='₴']
+ * @param {string|object} [currencyOrOptions='₴']
  * @returns {string}
  */
-export function formatPrice(price, currency = '₴') {
+export function formatPrice(price, currencyOrOptions = '₴') {
     if (typeof window !== 'undefined' && typeof window.formatPrice === 'function') {
-        return window.formatPrice(price, currency);
+        return window.formatPrice(price, currencyOrOptions);
     }
-    const num = Number(price) || 0;
-    const formatted = cachedPriceFormatter ? cachedPriceFormatter.format(Math.round(num)) : Math.round(num).toLocaleString('ru-RU');
-    return `${formatted} ${currency}`;
+    const cleanNum = typeof price === 'number'
+        ? price
+        : Number(String(price || 0).replace(/[^\d.-]/g, '')) || 0;
+    const rounded = Math.round(cleanNum);
+    const formatted = cachedPriceNumberFormatter
+        ? cachedPriceNumberFormatter.format(rounded)
+        : rounded.toLocaleString('en-US', { maximumFractionDigits: 0 });
+    if (currencyOrOptions && typeof currencyOrOptions === 'object') {
+        const curr = getCurrency();
+        if (currencyOrOptions.currencyOnly) return curr;
+        if (currencyOrOptions.numberOnly) return formatted;
+        return `${formatted}\u00A0${curr}`;
+    }
+    return `${formatted} ${currencyOrOptions}`;
 }
 
 /**
@@ -733,8 +744,8 @@ export function runMicrotask(fn) {
  * @returns {any}
  */
 export function getLastItem(arr) {
-    if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
-    return arr.at(-1);
+    if (!arr || arr.length === 0) return undefined;
+    return typeof arr.at === 'function' ? arr.at(-1) : arr[arr.length - 1];
 }
 
 /**
@@ -743,8 +754,8 @@ export function getLastItem(arr) {
  * @returns {any}
  */
 export function getFirstItem(arr) {
-    if (!arr || typeof arr.at !== 'function' || arr.length === 0) return undefined;
-    return arr.at(0);
+    if (!arr || arr.length === 0) return undefined;
+    return typeof arr.at === 'function' ? arr.at(0) : arr[0];
 }
 
 /**

@@ -805,7 +805,7 @@ window.showItemMeasurementsTooltip = function(itemOrId, e) {
     }
 
     const currentLang = getCurrentSiteLang();
-    const measures = (item._measCache && item._measCache[currentLang]) ? item._measCache[currentLang] : extractItemMeasurements(item, currentLang);
+    const measures = (item._measCache && (typeof hasOwn === 'function' ? hasOwn(item._measCache, currentLang) : Object.hasOwn(item._measCache, currentLang))) ? item._measCache[currentLang] : extractItemMeasurements(item, currentLang);
     if (!measures || measures.length === 0) return;
 
     const tooltip = getMeasurementsTooltip();
@@ -1433,7 +1433,7 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
     const oldIsSale = item.is_sale;
 
     const statusChanged = item.status !== fresh.status;
-    const _saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
+    const saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
     const _priceChanged = item.price !== fresh.price;
     const wasHot = (item.views_count || 0) >= 25;
     const nowHot = (fresh.views_count !== undefined ? fresh.views_count : (item.views_count || 0)) >= 25;
@@ -1904,7 +1904,7 @@ function updateSidebarCounters() {
             }
         }
 
-        const count = catCounts[catName] || 0;
+        const count = (typeof hasOwn === 'function' ? hasOwn(catCounts, catName) : Object.hasOwn(catCounts, catName)) ? catCounts[catName] : 0;
         if (count > 0) {
             link.innerHTML = `${baseText} <span class="filter-count-badge">(${count})</span>`;
         } else {
@@ -3252,7 +3252,7 @@ window.updateCardDots = function(container, itemId) {
         const width = container.clientWidth;
         if (!width) return;
         const index = Math.round(container.scrollLeft / width);
-        if (_lastDotIndices[itemId] === index) return;
+        if ((typeof hasOwn === 'function' ? hasOwn(_lastDotIndices, itemId) : Object.hasOwn(_lastDotIndices, itemId)) && _lastDotIndices[itemId] === index) return;
         _lastDotIndices[itemId] = index;
 
         const dotsContainer = document.getElementById(`dots-${itemId}`);

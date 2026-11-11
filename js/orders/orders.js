@@ -448,7 +448,7 @@ function getOrderItemImage(item) {
     }
 
     // 3. Кэш уже подгруженных картинок
-    if (item.id && window.orderItemsImageCache && window.orderItemsImageCache[item.id]) {
+    if (item.id && window.orderItemsImageCache && (typeof hasOwn === 'function' ? hasOwn(window.orderItemsImageCache, item.id) : Object.hasOwn(window.orderItemsImageCache, item.id))) {
         return window.orderItemsImageCache[item.id];
     }
 
@@ -511,7 +511,7 @@ async function ensureOrderImagesLoaded() {
             });
         }
 
-        const stillMissing = missingIds.filter(id => !window.orderItemsImageCache[id]);
+        const stillMissing = missingIds.filter(id => !(typeof hasOwn === 'function' ? hasOwn(window.orderItemsImageCache, id) : Object.hasOwn(window.orderItemsImageCache, id)));
         if (stillMissing.length > 0) {
             const { data: archData } = await sb.from('archived_items').select('id, thumbnails, images').in('id', stillMissing);
             if (archData && archData.length > 0) {

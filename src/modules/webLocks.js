@@ -66,12 +66,16 @@ export async function runWithLock(lockName, taskFn, options = {}) {
     const { ifAvailable = true, mode = 'exclusive' } = options;
 
     if (isWebLocksSupported()) {
-        return navigator.locks.request(lockName, { mode, ifAvailable }, async (lock) => {
-            if (ifAvailable && !lock) {
-                return null;
-            }
+        try {
+            return await navigator.locks.request(lockName, { mode, ifAvailable }, async (lock) => {
+                if (ifAvailable && !lock) {
+                    return null;
+                }
+                return await taskFn();
+            });
+        } catch (err) {
             return await taskFn();
-        });
+        }
     }
 
     return await taskFn();
