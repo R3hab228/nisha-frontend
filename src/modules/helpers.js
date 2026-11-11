@@ -377,12 +377,23 @@ export function getCurrency() {
  * @param {string} [currency='₴']
  * @returns {string}
  */
+const cachedPriceFormatter = (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function')
+    ? new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
+    : null;
+
+/**
+ * Formats numeric price into localized string with currency
+ * @param {number|string} price
+ * @param {string} [currency='₴']
+ * @returns {string}
+ */
 export function formatPrice(price, currency = '₴') {
     if (typeof window !== 'undefined' && typeof window.formatPrice === 'function') {
         return window.formatPrice(price, currency);
     }
     const num = Number(price) || 0;
-    return `${Math.round(num).toLocaleString('ru-RU')} ${currency}`;
+    const formatted = cachedPriceFormatter ? cachedPriceFormatter.format(Math.round(num)) : Math.round(num).toLocaleString('ru-RU');
+    return `${formatted} ${currency}`;
 }
 
 /**
@@ -852,3 +863,81 @@ export function isPopoverOpenSafe(element) {
     return false;
 }
 if (typeof window !== 'undefined') window.isPopoverOpenSafe = isPopoverOpenSafe;
+
+
+/**
+ * Immutable array sort (ES2023 Array.prototype.toSorted with fallback)
+ * @template T
+ * @param {T[]} array
+ * @param {(a: T, b: T) => number} [compareFn]
+ * @returns {T[]}
+ */
+export function toSorted(array, compareFn) {
+    if (!Array.isArray(array)) return [];
+    if (typeof array.toSorted === 'function') {
+        return array.toSorted(compareFn);
+    }
+    return [...array].sort(compareFn);
+}
+
+/**
+ * Immutable array reverse (ES2023 Array.prototype.toReversed with fallback)
+ * @template T
+ * @param {T[]} array
+ * @returns {T[]}
+ */
+export function toReversed(array) {
+    if (!Array.isArray(array)) return [];
+    if (typeof array.toReversed === 'function') {
+        return array.toReversed();
+    }
+    return [...array].reverse();
+}
+
+/**
+ * Safe element accessor with negative index support (ES2022 Array.prototype.at with fallback)
+ * @template T
+ * @param {T[]|string} array
+ * @param {number} index
+ * @returns {T|string|undefined}
+ */
+export function at(array, index) {
+    if (!Array.isArray(array) && typeof array !== 'string') return undefined;
+    if (typeof array.at === 'function') {
+        return array.at(index);
+    }
+    const idx = Number(index) || 0;
+    return idx >= 0 ? array[idx] : array[array.length + idx];
+}
+
+/**
+ * Safe own-property check (ES2022 Object.hasOwn with fallback)
+ * @param {object} obj
+ * @param {string|symbol} prop
+ * @returns {boolean}
+ */
+export function hasOwn(obj, prop) {
+    if (obj === null || obj === undefined) return false;
+    if (typeof Object.hasOwn === 'function') {
+        return Object.hasOwn(obj, prop);
+    }
+    return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+/**
+ * Multi-tab / PWA asynchronous execution coordinator via Web Locks API
+ * @template T
+ * @param {string} name
+ * @param {() => Promise<T>|T} fn
+ * @returns {Promise<T>}
+ */
+export async function withWebLock(name, fn) {
+    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        try {
+            return await navigator.locks.request(name, fn);
+        } catch (_) {
+            return await fn();
+        }
+    }
+    return await fn();
+}

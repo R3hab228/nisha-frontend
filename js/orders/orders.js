@@ -545,7 +545,8 @@ function encodeNovaPoshtaTtn(ttn) {
     if (!clean) return '';
     try {
         const b64 = (typeof btoa === 'function' ? btoa(clean) : Buffer.from(clean).toString('base64')).replace(/=+$/, '');
-        return b64.split('').reverse().join('');
+        const chars = b64.split('');
+        return (typeof chars.toReversed === 'function' ? chars.toReversed() : chars.reverse()).join('');
     } catch (_) {
         return clean;
     }

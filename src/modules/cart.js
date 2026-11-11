@@ -202,3 +202,43 @@ export function slimBranches(list) {
         Number: b.Number ? String(b.Number) : ''
     }));
 }
+
+/**
+ * Safely executes asynchronous cart operation with Web Locks API
+ * @template T
+ * @param {() => Promise<T>|T} fn
+ * @returns {Promise<T>}
+ */
+export async function withCartLock(fn) {
+    if (typeof window !== 'undefined' && typeof window.withCartLock === 'function') {
+        return window.withCartLock(fn);
+    }
+    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        try {
+            return await navigator.locks.request('nisha_cart_lock', fn);
+        } catch (_) {
+            return await fn();
+        }
+    }
+    return await fn();
+}
+
+/**
+ * Safely executes asynchronous checkout submission with Web Locks API
+ * @template T
+ * @param {() => Promise<T>|T} fn
+ * @returns {Promise<T>}
+ */
+export async function withCheckoutLock(fn) {
+    if (typeof window !== 'undefined' && typeof window.withCheckoutLock === 'function') {
+        return window.withCheckoutLock(fn);
+    }
+    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        try {
+            return await navigator.locks.request('nisha_checkout_lock', fn);
+        } catch (_) {
+            return await fn();
+        }
+    }
+    return await fn();
+}

@@ -2039,6 +2039,13 @@ async function toggleFav(event, itemId) {
         return; 
     }
 
+    if (typeof window.withWebLock === 'function') {
+        return await window.withWebLock('nisha_fav_lock', async () => executeToggleFav(itemId));
+    }
+    return await executeToggleFav(itemId);
+}
+
+async function executeToggleFav(itemId) {
     if (isTogglingFav) return;
     isTogglingFav = true;
     setTimeout(() => { isTogglingFav = false; }, 300);

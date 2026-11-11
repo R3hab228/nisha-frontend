@@ -602,6 +602,14 @@ function getCurrency() {
 window.getCurrency = getCurrency;
 if (typeof globalThis !== 'undefined') globalThis.getCurrency = getCurrency;
 
+// Высокопроизводительный кэшированный форматтер чисел (Intl.NumberFormat)
+// В 10-20 раз быстрее многократного создания инстансов при вызовах toLocaleString()
+const cachedPriceNumberFormatter = (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function')
+    ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+    : null;
+window.cachedPriceNumberFormatter = cachedPriceNumberFormatter;
+if (typeof globalThis !== 'undefined') globalThis.cachedPriceNumberFormatter = cachedPriceNumberFormatter;
+
 function formatPrice(amount, options = {}) {
     const cleanNum = typeof amount === 'number'
         ? amount
@@ -612,10 +620,10 @@ function formatPrice(amount, options = {}) {
         : (typeof storage !== 'undefined' && storage ? storage.get('nisha_lang', 'ua') : 'ua');
     const currency = lang === 'en' ? 'UAH' : 'грн';
     
-    // Форматирование чисел: разделитель тысяч запятая (1,500) без пробелов
-    const formattedNum = rounded.toLocaleString('en-US', {
-        maximumFractionDigits: 0
-    });
+    // Форматирование чисел через кэшированный Intl.NumberFormat (разделитель тысяч запятая: 1,500)
+    const formattedNum = cachedPriceNumberFormatter
+        ? cachedPriceNumberFormatter.format(rounded)
+        : rounded.toLocaleString('en-US', { maximumFractionDigits: 0 });
     
     if (options.currencyOnly) return currency;
     if (options.numberOnly) return formattedNum;
@@ -680,6 +688,54 @@ function toSorted(array, compareFn) {
 }
 window.toSorted = toSorted;
 if (typeof globalThis !== 'undefined') globalThis.toSorted = toSorted;
+
+// --- ИММУТАБЕЛЬНЫЙ РЕВЕРС МАССИВОВ (TOREVERSED С SAFE FALLBACK) ---
+function toReversed(array) {
+    if (!Array.isArray(array)) return [];
+    if (typeof array.toReversed === 'function') {
+        return array.toReversed();
+    }
+    return [...array].reverse();
+}
+window.toReversed = toReversed;
+if (typeof globalThis !== 'undefined') globalThis.toReversed = toReversed;
+
+// --- БЕЗОПАСНЫЙ ИЗВЛЕКАТЕЛЬ ЭЛЕМЕНТОВ ARRAY.PROTOTYPE.AT() С ПОДДЕРЖКОЙ ОТРИЦАТЕЛЬНЫХ ИНДЕКСОВ ---
+function at(array, index) {
+    if (!Array.isArray(array) && typeof array !== 'string') return undefined;
+    if (typeof array.at === 'function') {
+        return array.at(index);
+    }
+    const idx = Number(index) || 0;
+    return idx >= 0 ? array[idx] : array[array.length + idx];
+}
+window.at = at;
+if (typeof globalThis !== 'undefined') globalThis.at = at;
+
+// --- БЕЗОПАСНАЯ ПРОВЕРКА СОБСТВЕННЫХ СВОЙСТВ (OBJECT.HASOWN ES2022 С FALLBACK) ---
+function hasOwn(obj, prop) {
+    if (obj === null || obj === undefined) return false;
+    if (typeof Object.hasOwn === 'function') {
+        return Object.hasOwn(obj, prop);
+    }
+    return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+window.hasOwn = hasOwn;
+if (typeof globalThis !== 'undefined') globalThis.hasOwn = hasOwn;
+
+// --- WEB LOCKS API (NAVIGATOR.LOCKS) ДЛЯ PWA И МУЛЬТИВКЛАДОЧНОСТИ ---
+async function withWebLock(name, fn) {
+    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        try {
+            return await navigator.locks.request(name, fn);
+        } catch (e) {
+            return await fn();
+        }
+    }
+    return await fn();
+}
+window.withWebLock = withWebLock;
+if (typeof globalThis !== 'undefined') globalThis.withWebLock = withWebLock;
 
 // --- ОПЕРАЦИИ НАД МНОЖЕСТВАМИ (SET.PROTOTYPE.DIFFERENCE / INTERSECTION) ---
 function setDifference(setA, setB) {

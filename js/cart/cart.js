@@ -440,11 +440,45 @@ function getSupabaseClient() {
 }
 
 // ==========================================
+// КООРДИНАТОР БЕЗОПАСНЫХ МУТАЦИЙ КОРЗИНЫ ЧЕРЕЗ WEB LOCKS API (ДЛЯ PWA И МУЛЬТИВКЛАДОЧНОСТИ)
+// ==========================================
+async function withCartLock(fn) {
+    if (typeof window.withWebLock === 'function') {
+        return await window.withWebLock('nisha_cart_lock', fn);
+    }
+    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        try {
+            return await navigator.locks.request('nisha_cart_lock', fn);
+        } catch (_) {
+            return await fn();
+        }
+    }
+    return await fn();
+}
+window.withCartLock = withCartLock;
+
+async function withCheckoutLock(fn) {
+    if (typeof window.withWebLock === 'function') {
+        return await window.withWebLock('nisha_checkout_lock', fn);
+    }
+    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        try {
+            return await navigator.locks.request('nisha_checkout_lock', fn);
+        } catch (_) {
+            return await fn();
+        }
+    }
+    return await fn();
+}
+window.withCheckoutLock = withCheckoutLock;
+
+// ==========================================
 // 1. ДОБАВЛЕНИЕ В КОРЗИНУ
 // ==========================================
 
 // Добавление в корзину прямо с главной страницы (доступно и гостям, и авторизованным)
 async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
+    return await withCartLock(async () => {
     let customPrice = null;
     if (typeof customPriceOrSize === 'number') {
         customPrice = customPriceOrSize;
@@ -516,6 +550,7 @@ async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
     updateCartUI();
     showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success', getOptimizedImg(item));
     await syncCartToServer();
+    });
 }
 window.addToCartById = addToCartById;
 
@@ -603,6 +638,7 @@ window.syncCartToServer = syncCartToServer;
 
 // Добавление в корзину из модального окна товара (доступно и гостям, и авторизованным)
 async function addToCartFromModal() {
+    return await withCartLock(async () => {
     const now = Date.now();
     if (now - lastCartActionTime < 350) return;
     lastCartActionTime = now;
@@ -655,6 +691,7 @@ async function addToCartFromModal() {
     showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success');
     if (typeof window.warmupBackendServer === 'function') window.warmupBackendServer();
     await syncCartToServer();
+    });
 }
 window.addToCartFromModal = addToCartFromModal;
 
@@ -2253,11 +2290,12 @@ async function removeFromCart(index, event, rowElement) {
         }
     };
 
+    const lockedRemoval = () => withCartLock(executeRemoval);
     if (rowElement) {
         rowElement.classList.add('removing');
-        setTimeout(executeRemoval, 300); 
+        setTimeout(lockedRemoval, 300); 
     } else {
-        await executeRemoval();
+        await lockedRemoval();
     }
 }
 window.removeFromCart = removeFromCart;
