@@ -577,12 +577,27 @@ function addToCartWithAnimation(itemId, btnElement, event) {
 }
 window.addToCartWithAnimation = addToCartWithAnimation;
 
-// Синхронизация корзины с сервером
+// Синхронизация корзины с сервером и сервисом брошенных корзин (Abandoned Cart Recovery)
 async function syncCartToServer() {
     const user = getCurrentUser();
     const sb = getSupabaseClient();
-    if (!user || !sb) return;
-    await sb.from('profiles').update({ cart: getActiveCart() }).eq('id', user.id);
+    const activeCart = getActiveCart();
+
+    if (user && sb) {
+        sb.from('profiles').update({ cart: activeCart }).eq('id', user.id).then().catch(() => {});
+    }
+
+    if (window.apiClient && typeof window.apiClient.post === 'function') {
+        const fp = (typeof clientFingerprint !== 'undefined' && clientFingerprint)
+            ? clientFingerprint
+            : (window.clientFingerprint || (window.store && window.store.get ? window.store.get('clientFingerprint') : null));
+
+        window.apiClient.post('/api/cart/sync', {
+            cart: activeCart,
+            userId: user ? user.id : null,
+            deviceId: fp || null
+        }, { timeout: 6000, dedupe: true }).catch(() => {});
+    }
 }
 window.syncCartToServer = syncCartToServer;
 
@@ -3391,9 +3406,7 @@ async function executeOrderFinal(emailToSave) {
         setActiveCart([]);
         clearCheckoutDraft();
         resetPromoState();
-        if (!handledViaAtomicServer) {
-            await syncCartToServer();
-        }
+        await syncCartToServer();
         updateCartUI();
         
         const bar = document.getElementById('btnProgressBar');
