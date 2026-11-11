@@ -2,10 +2,13 @@
   "ci": {
     "collect": {
       "staticDistDir": "./dist",
+      "isSinglePageApplication": true,
+      "url": [
+        "http://localhost/index.html"
+      ],
       "numberOfRuns": 3,
       "settings": {
-        "chromeFlags": "--no-sandbox --headless --disable-gpu",
-        "preset": "mobile"
+        "chromeFlags": "--no-sandbox --headless --disable-gpu"
       }
     },
     "assert": {
