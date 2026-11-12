@@ -28,14 +28,15 @@ describe('i18n Locale Completeness (ua / ru / en)', () => {
     const enMap = flattenKeys(en);
 
     it('has identical translation key sets across ua.json, ru.json, and en.json', () => {
+        const diffSets = (a, b) => [...a].filter((k) => !b.has(k));
         const uaKeys = new Set(uaMap.keys());
         const ruKeys = new Set(ruMap.keys());
         const enKeys = new Set(enMap.keys());
 
-        expect([...uaKeys.difference(ruKeys)]).toEqual([]);
-        expect([...ruKeys.difference(uaKeys)]).toEqual([]);
-        expect([...uaKeys.difference(enKeys)]).toEqual([]);
-        expect([...enKeys.difference(uaKeys)]).toEqual([]);
+        expect(diffSets(uaKeys, ruKeys)).toEqual([]);
+        expect(diffSets(ruKeys, uaKeys)).toEqual([]);
+        expect(diffSets(uaKeys, enKeys)).toEqual([]);
+        expect(diffSets(enKeys, uaKeys)).toEqual([]);
     });
 
     it('contains no empty string translations in any locale', () => {
