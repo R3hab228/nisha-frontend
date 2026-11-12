@@ -87,4 +87,17 @@ describe('Service Worker & PWA Cache Automation', () => {
         expect(content).toContain("event.request.mode === 'navigate'");
         expect(content).toContain('event.preloadResponse');
     });
+
+    it('sw.js covers cdn.nisha-store.shop in isAllowedBackend, isSupabaseRestApi, and isImage', () => {
+        for (const swFile of [rootSwPath, publicSwPath]) {
+            const content = readFileSync(swFile, 'utf8');
+            const backendBlock = content.match(/const isAllowedBackend\s*=\s*\(([\s\S]*?)\);/);
+            const restBlock = content.match(/const isSupabaseRestApi\s*=\s*\(([\s\S]*?)\)\s*&&/);
+            const imageBlock = content.match(/const isImage\s*=\s*\(([\s\S]*?)\)\s*&&/);
+
+            expect(backendBlock?.[1]).toContain("'cdn.nisha-store.shop'");
+            expect(restBlock?.[1]).toContain("'cdn.nisha-store.shop'");
+            expect(imageBlock?.[1]).toContain("'cdn.nisha-store.shop'");
+        }
+    });
 });

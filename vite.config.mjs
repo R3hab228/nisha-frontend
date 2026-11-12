@@ -123,6 +123,7 @@ export default defineConfig({
     port: 3000,
   },
   test: {
+    include: ['tests/**/*.test.js'],
     setupFiles: ['./tests/setup.js'],
   },
 });

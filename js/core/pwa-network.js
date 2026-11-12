@@ -1086,8 +1086,15 @@ async function subscribeUserToPush(registration, silent = false) {
             };
             await window.apiClient.post('/api/subscribe', payload, { timeout: 10000, retries: 1 });
         }
-    } catch(e) {
-        console.error('Push error:', e);
+    } catch (e) {
+        const expectedPushSkipNames = new Set(['NotAllowedError', 'AbortError', 'InvalidStateError', 'NotSupportedError']);
+        const isExpectedSkip = e && (
+            expectedPushSkipNames.has(e.name) ||
+            (typeof Notification !== 'undefined' && Notification.permission === 'denied')
+        );
+        if (!isExpectedSkip) {
+            console.error('Push error:', e);
+        }
     }
 }
 window.subscribeUserToPush = subscribeUserToPush;
