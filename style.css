@@ -1852,6 +1852,7 @@ input[type="number"],
 .footer-lang-menu a { padding: 8px 15px !important; color: #aaa !important; text-align: center; border-bottom: 1px dashed #333 !important; text-decoration: none; margin: 0 !important; transition: 0.2s; }
 .footer-lang-menu a:last-child { border-bottom: none !important; }
 .footer-lang-menu a:hover { background: #333 !important; color: #fff !important; }
+.footer-lang-menu a.active { background: #1c1c1c !important; color: var(--accent-green) !important; font-weight: 700; }
 
 .skeleton { background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%); background-size: 200% 100%; animation: loadingSkeleton 1.5s infinite; color: transparent !important; }
 @keyframes loadingSkeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }

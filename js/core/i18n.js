@@ -2,6 +2,99 @@
 // NISHA I18N & LANGUAGE MODULE (Локализация и печатная машинка поиска)
 // ==========================================
 
+const NISHA_FLAGS = {
+    ua: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E",
+    ru: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E",
+    en: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3CclipPath id='s'%3E%3Cpath d='M0,0 v18 h24 v-18 z'/%3E%3C/clipPath%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23fff' stroke-width='3' clip-path='url(%23s)'/%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23C8102E' stroke-width='1.5' clip-path='url(%23s)'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23C8102E' stroke-width='3'/%3E%3C/svg%3E"
+};
+
+const NISHA_EMOJI_FLAGS = {
+    ua: '🇺🇦',
+    ru: '🇷🇺',
+    en: '🇬🇧'
+};
+
+function normalizeSiteLang(lang) {
+    if (!lang || typeof lang !== 'string') return 'ua';
+    const clean = lang.trim().toLowerCase().substring(0, 2);
+    if (clean === 'ru') return 'ru';
+    if (clean === 'en') return 'en';
+    return 'ua';
+}
+
+function getFlagUrlByLang(lang) {
+    const code = normalizeSiteLang(lang);
+    return NISHA_FLAGS[code] || NISHA_FLAGS.ua;
+}
+
+function detectInitialSiteLang() {
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    let saved = store && typeof store.get === 'function' ? store.get('nisha_lang') : null;
+    if (!saved && typeof localStorage !== 'undefined') {
+        try { saved = localStorage.getItem('nisha_lang'); } catch (_) {}
+    }
+    if (saved) return normalizeSiteLang(saved);
+
+    let i18nSaved = store && typeof store.get === 'function' ? store.get('i18nextLng') : null;
+    if (!i18nSaved && typeof localStorage !== 'undefined') {
+        try { i18nSaved = localStorage.getItem('i18nextLng'); } catch (_) {}
+    }
+    if (i18nSaved) return normalizeSiteLang(i18nSaved);
+
+    if (typeof navigator !== 'undefined') {
+        const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+        if (nav.startsWith('ru')) return 'ru';
+        if (nav.startsWith('en')) return 'en';
+        if (nav.startsWith('uk')) return 'ua';
+    }
+    return 'ua';
+}
+
+function updateFooterLanguageUI(lang) {
+    const code = normalizeSiteLang(lang);
+    const upper = code.toUpperCase();
+    const flagUrl = getFlagUrlByLang(code);
+
+    if (typeof document === 'undefined') return;
+
+    const flagImg = document.getElementById('currentFlagImg');
+    if (flagImg) {
+        flagImg.src = flagUrl;
+        flagImg.alt = upper;
+    }
+
+    const labelFooter = document.getElementById('currentLangLabelFooter');
+    if (labelFooter) {
+        const span = labelFooter.querySelector('span');
+        if (span) {
+            span.textContent = `[${upper}] ▼`;
+        }
+    }
+
+    const menuLinks = document.querySelectorAll('.footer-lang-menu a[data-lang]');
+    menuLinks.forEach(link => {
+        const itemLang = normalizeSiteLang(link.getAttribute('data-lang'));
+        if (itemLang === code) {
+            link.classList.add('active');
+            link.setAttribute('aria-selected', 'true');
+        } else {
+            link.classList.remove('active');
+            link.setAttribute('aria-selected', 'false');
+        }
+    });
+
+    if (document.documentElement) {
+        document.documentElement.lang = (code === 'ua' ? 'uk' : code);
+    }
+}
+
+window.NISHA_FLAGS = NISHA_FLAGS;
+window.NISHA_EMOJI_FLAGS = NISHA_EMOJI_FLAGS;
+window.normalizeSiteLang = normalizeSiteLang;
+window.getFlagUrlByLang = getFlagUrlByLang;
+window.detectInitialSiteLang = detectInitialSiteLang;
+window.updateFooterLanguageUI = updateFooterLanguageUI;
+
 let searchTypewriterInterval = null;
 let currentSearchLang = 'ua';
 
@@ -54,18 +147,22 @@ async function ensureLanguageLoaded(lng) {
 window.ensureLanguageLoaded = ensureLanguageLoaded;
 
 async function changeLanguage(lng) {
+    const normalized = normalizeSiteLang(lng);
     if (typeof i18next !== 'undefined') {
-        await ensureLanguageLoaded(lng);
-        i18next.changeLanguage(lng).then(() => {
+        await ensureLanguageLoaded(normalized);
+        i18next.changeLanguage(normalized).then(() => {
             // ЖЕЛЕЗОБЕТОННОЕ сохранение через единый storage:
             const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
             if (store) {
-                store.set('nisha_lang', lng); 
-                store.set('i18nextLng', lng); 
+                store.set('nisha_lang', normalized); 
+                store.set('i18nextLng', normalized); 
+                const emoji = normalized === 'ru' ? '🇷🇺' : (normalized === 'en' ? '🇬🇧' : '🇺🇦');
+                store.set('nisha_flag', emoji);
             } 
-            document.documentElement.lang = (lng === 'ua' ? 'uk' : (lng || 'ua'));
+            document.documentElement.lang = (normalized === 'ua' ? 'uk' : normalized);
             
             updateContentLanguage();
+            updateFooterLanguageUI(normalized);
             
             // Мгновенно перерисовываем вообще ВСЕ цены и тексты на сайте
             if (typeof applyFilters === 'function') applyFilters(); 
@@ -77,7 +174,7 @@ async function changeLanguage(lng) {
                 window.renderFilteredOrders();
             }
             
-            const msg = i18next.t('messages.lang_changed') + ' [' + lng.toUpperCase() + ']';
+            const msg = i18next.t('messages.lang_changed') + ' [' + normalized.toUpperCase() + ']';
             if (typeof showToast === 'function') showToast(msg, 'success');
 
             // Если мобильное меню открыто/закрыто — переводим кнопку фильтров
@@ -94,7 +191,7 @@ async function changeLanguage(lng) {
             const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
             const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
             if (activeUser && sb) {
-                sb.from('profiles').update({ language: lng }).eq('id', activeUser.id).then();
+                sb.from('profiles').update({ language: normalized }).eq('id', activeUser.id).then();
             }
         });
     }
@@ -102,6 +199,9 @@ async function changeLanguage(lng) {
 window.changeLanguage = changeLanguage;
 
 function updateContentLanguage() {
+    const activeLang = normalizeSiteLang((typeof i18next !== 'undefined' && i18next.language) || 'ua');
+    updateFooterLanguageUI(activeLang);
+
     // Переводим обычный текст и placeholder'ы с префиксом [placeholder]
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');

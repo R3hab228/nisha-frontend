@@ -134,26 +134,23 @@ async function checkSession() {
                 
                 // Синхронизация языка из БД в браузер
                 if (userProfile.language) {
+                    const normLang = typeof normalizeSiteLang === 'function' ? normalizeSiteLang(userProfile.language) : userProfile.language;
                     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
                     const currentLang = store ? store.get('nisha_lang', 'ua') : 'ua';
-                    if (userProfile.language !== currentLang) {
-                        if (store) store.set('nisha_lang', userProfile.language);
-                        const newFlag = userProfile.language === 'ru' ? '🇷🇺' : (userProfile.language === 'en' ? '🇬🇧' : '🇺🇦');
+                    if (normLang !== currentLang) {
+                        if (store) store.set('nisha_lang', normLang);
+                        const newFlag = normLang === 'ru' ? '🇷🇺' : (normLang === 'en' ? '🇬🇧' : '🇺🇦');
                         if (store) store.set('nisha_flag', newFlag);
-                        if (typeof i18next !== 'undefined') {
-                            i18next.changeLanguage(userProfile.language).then(() => {
+                        if (typeof changeLanguage === 'function') {
+                            changeLanguage(normLang);
+                        } else if (typeof i18next !== 'undefined') {
+                            i18next.changeLanguage(normLang).then(() => {
                                 if (typeof updateContentLanguage === 'function') updateContentLanguage();
-                                const footLang = document.getElementById('currentLangLabelFooter');
-                                if (footLang) {
-                                    const span = footLang.querySelector('span');
-                                    if (span) span.innerText = '[' + userProfile.language.toUpperCase() + '] ▼';
-                                    const flagImg = document.getElementById('currentFlagImg');
-                                    if (flagImg && typeof getFlagUrlByLang === 'function') {
-                                        flagImg.src = getFlagUrlByLang(userProfile.language);
-                                    }
-                                }
+                                if (typeof updateFooterLanguageUI === 'function') updateFooterLanguageUI(normLang);
                             });
                         }
+                    } else if (typeof updateFooterLanguageUI === 'function') {
+                        updateFooterLanguageUI(normLang);
                     }
                 }
             }

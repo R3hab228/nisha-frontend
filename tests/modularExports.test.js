@@ -48,6 +48,12 @@ import defaultModularFacade, {
     isUserInProductFeed,
     getCurrentSiteLang,
     changeLanguage,
+    normalizeSiteLang,
+    getFlagUrlByLang,
+    detectInitialSiteLang,
+    updateFooterLanguageUI,
+    NISHA_FLAGS,
+    NISHA_EMOJI_FLAGS,
     t,
     captureError,
     reportError,
@@ -391,6 +397,117 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
 
             expect(t('common.buy')).toBe('common.buy');
             await expect(changeLanguage('en')).resolves.not.toThrow();
+        });
+
+        it('normalizes language codes accurately and safely', () => {
+            expect(normalizeSiteLang('ru')).toBe('ru');
+            expect(normalizeSiteLang('RU')).toBe('ru');
+            expect(normalizeSiteLang('ru-RU')).toBe('ru');
+            expect(normalizeSiteLang('en')).toBe('en');
+            expect(normalizeSiteLang('en-US')).toBe('en');
+            expect(normalizeSiteLang('ua')).toBe('ua');
+            expect(normalizeSiteLang('uk')).toBe('ua');
+            expect(normalizeSiteLang('uk-UA')).toBe('ua');
+            expect(normalizeSiteLang('de')).toBe('ua');
+            expect(normalizeSiteLang('')).toBe('ua');
+            expect(normalizeSiteLang(null)).toBe('ua');
+            expect(normalizeSiteLang(undefined)).toBe('ua');
+        });
+
+        it('provides valid SVG flag URLs and emoji flags for all supported languages', () => {
+            expect(NISHA_FLAGS.ua).toContain('svg');
+            expect(NISHA_FLAGS.ru).toContain('svg');
+            expect(NISHA_FLAGS.en).toContain('svg');
+
+            expect(NISHA_EMOJI_FLAGS.ua).toBe('🇺🇦');
+            expect(NISHA_EMOJI_FLAGS.ru).toBe('🇷🇺');
+            expect(NISHA_EMOJI_FLAGS.en).toBe('🇬🇧');
+
+            expect(getFlagUrlByLang('ru')).toBe(NISHA_FLAGS.ru);
+            expect(getFlagUrlByLang('en')).toBe(NISHA_FLAGS.en);
+            expect(getFlagUrlByLang('ua')).toBe(NISHA_FLAGS.ua);
+            expect(getFlagUrlByLang('uk')).toBe(NISHA_FLAGS.ua);
+            expect(getFlagUrlByLang('unknown')).toBe(NISHA_FLAGS.ua);
+        });
+
+        it('synchronizes footer language switcher DOM UI seamlessly', () => {
+            const imgEl = { src: '', alt: '' };
+            const spanEl = { textContent: '' };
+            const labelEl = { querySelector: vi.fn(() => spanEl) };
+            const links = [
+                {
+                    lang: 'ua',
+                    classList: { add: vi.fn(), remove: vi.fn() },
+                    setAttribute: vi.fn(),
+                    getAttribute: () => 'ua'
+                },
+                {
+                    lang: 'ru',
+                    classList: { add: vi.fn(), remove: vi.fn() },
+                    setAttribute: vi.fn(),
+                    getAttribute: () => 'ru'
+                },
+                {
+                    lang: 'en',
+                    classList: { add: vi.fn(), remove: vi.fn() },
+                    setAttribute: vi.fn(),
+                    getAttribute: () => 'en'
+                }
+            ];
+
+            const docElement = { lang: 'ua' };
+            const origDoc = globalThis.document;
+            globalThis.document = {
+                documentElement: docElement,
+                getElementById: vi.fn(id => {
+                    if (id === 'currentFlagImg') return imgEl;
+                    if (id === 'currentLangLabelFooter') return labelEl;
+                    return null;
+                }),
+                querySelectorAll: vi.fn(selector => {
+                    if (selector.includes('footer-lang-menu')) return links;
+                    return [];
+                })
+            };
+
+            try {
+                updateFooterLanguageUI('ru');
+                expect(imgEl.src).toBe(NISHA_FLAGS.ru);
+                expect(imgEl.alt).toBe('RU');
+                expect(spanEl.textContent).toBe('[RU] ▼');
+                expect(links[1].classList.add).toHaveBeenCalledWith('active');
+                expect(links[1].setAttribute).toHaveBeenCalledWith('aria-selected', 'true');
+                expect(links[0].classList.remove).toHaveBeenCalledWith('active');
+                expect(docElement.lang).toBe('ru');
+
+                updateFooterLanguageUI('ua');
+                expect(imgEl.src).toBe(NISHA_FLAGS.ua);
+                expect(imgEl.alt).toBe('UA');
+                expect(spanEl.textContent).toBe('[UA] ▼');
+                expect(links[0].classList.add).toHaveBeenCalledWith('active');
+                expect(docElement.lang).toBe('uk');
+
+                updateFooterLanguageUI('en');
+                expect(imgEl.src).toBe(NISHA_FLAGS.en);
+                expect(imgEl.alt).toBe('EN');
+                expect(spanEl.textContent).toBe('[EN] ▼');
+                expect(links[2].classList.add).toHaveBeenCalledWith('active');
+                expect(docElement.lang).toBe('en');
+            } finally {
+                globalThis.document = origDoc;
+            }
+        });
+
+        it('detectInitialSiteLang respects store and browser locales', () => {
+            store.lang = 'ru';
+            expect(detectInitialSiteLang()).toBe('ru');
+
+            store.lang = 'en';
+            expect(detectInitialSiteLang()).toBe('en');
+
+            store.lang = null;
+            const detected = detectInitialSiteLang();
+            expect(['ua', 'ru', 'en']).toContain(detected);
         });
     });
 

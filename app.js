@@ -296,11 +296,18 @@ async function initApp() {
                         const browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
                         if (browserLang.startsWith('en')) {
                             savedLng = 'en'; savedFlag = '🇬🇧';
+                        } else if (browserLang.startsWith('ru')) {
+                            savedLng = 'ru'; savedFlag = '🇷🇺';
                         } else {
                             savedLng = 'ua'; savedFlag = '🇺🇦';
                         }
                         if (storage && typeof storage.set === 'function') {
                             storage.set('nisha_lang', savedLng);
+                            storage.set('nisha_flag', savedFlag);
+                        }
+                    } else if (!savedFlag) {
+                        savedFlag = savedLng === 'ru' ? '🇷🇺' : (savedLng === 'en' ? '🇬🇧' : '🇺🇦');
+                        if (storage && typeof storage.set === 'function') {
                             storage.set('nisha_flag', savedFlag);
                         }
                     }
@@ -336,12 +343,15 @@ async function initApp() {
                         debug: false
                     });
                     
+                    const effectiveLang = (typeof normalizeSiteLang === 'function')
+                        ? normalizeSiteLang(i18next.language || savedLng)
+                        : (savedLng || 'ua');
+
                     if (typeof updateContentLanguage === 'function') updateContentLanguage();
+                    if (typeof updateFooterLanguageUI === 'function') updateFooterLanguageUI(effectiveLang);
                     if (typeof updateCartUI === 'function') updateCartUI();
                     if (typeof renderCartItems === 'function') renderCartItems();
-                    document.documentElement.lang = (savedLng === 'ua' ? 'uk' : (savedLng || 'ua'));
-                    const flagEl = document.getElementById('currentFlag');
-                    if (flagEl) flagEl.innerText = savedFlag;
+                    document.documentElement.lang = (effectiveLang === 'ua' ? 'uk' : effectiveLang);
                 }
             } catch (langErr) {
                 console.warn("[ ЯЗЫКИ ] Ошибка загрузки словарей:", langErr);
