@@ -1986,9 +1986,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
         _resolveApplyFilters();
         _resolveApplyFilters = null;
     }
-    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-        ? Promise.withResolvers()
-        : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+    const { promise, resolve } = Promise.withResolvers();
     _resolveApplyFilters = resolve;
     applyFiltersTimeout = setTimeout(async () => {
         try {

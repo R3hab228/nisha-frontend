@@ -9,35 +9,35 @@ const APP_SW_VERSION = 'nisha-cache-' + APP_BUILD_ID;
 const SW_SCRIPT_URL = '/sw.js?b=' + encodeURIComponent(APP_BUILD_ID);
 
 function queryServiceWorkerVersion(worker) {
-    return new Promise(resolve => {
-        if (!worker || typeof MessageChannel === 'undefined') {
-            return resolve(null);
+    if (!worker || typeof MessageChannel === 'undefined') {
+        return Promise.resolve(null);
+    }
+    const { promise, resolve } = Promise.withResolvers();
+    let settled = false;
+    const timer = setTimeout(() => {
+        if (!settled) {
+            settled = true;
+            resolve(null);
         }
-        let settled = false;
-        const timer = setTimeout(() => {
-            if (!settled) {
-                settled = true;
-                resolve(null);
-            }
-        }, 1200);
-        try {
-            const channel = new MessageChannel();
-            channel.port1.onmessage = event => {
-                if (!settled) {
-                    settled = true;
-                    clearTimeout(timer);
-                    resolve((event.data && event.data.version) ? event.data.version : null);
-                }
-            };
-            worker.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
-        } catch (e) {
+    }, 1200);
+    try {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = event => {
             if (!settled) {
                 settled = true;
                 clearTimeout(timer);
-                resolve(null);
+                resolve((event.data && event.data.version) ? event.data.version : null);
             }
+        };
+        worker.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+    } catch (e) {
+        if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve(null);
         }
-    });
+    }
+    return promise;
 }
 
 if ('serviceWorker' in navigator) {
@@ -227,8 +227,13 @@ function formatCleanLocation(rawPath, context = {}) {
     try {
         const withoutHash = String(raw).split('#').at(0).split('?').at(0);
         if (withoutHash.startsWith('http://') || withoutHash.startsWith('https://')) {
-            const url = new URL(withoutHash);
-            return url.pathname || '/';
+            const canParse = typeof window.canParseURL === 'function'
+                ? window.canParseURL(withoutHash)
+                : (typeof URL !== 'undefined' && typeof URL.canParse === 'function' ? URL.canParse(withoutHash) : true);
+            if (canParse) {
+                const url = new URL(withoutHash);
+                return url.pathname || '/';
+            }
         }
         return withoutHash.slice(-60) || '/';
     } catch (e) {

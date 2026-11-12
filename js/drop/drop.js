@@ -184,9 +184,7 @@ window.openProposeModal = openProposeModal;
 async function compressImage(file) {
     if (!file || (file.type && file.type.startsWith('video/'))) return file;
 
-    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-        ? Promise.withResolvers()
-        : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+    const { promise, resolve } = Promise.withResolvers();
 
     let settled = false;
     const objectUrl = URL.createObjectURL(file);

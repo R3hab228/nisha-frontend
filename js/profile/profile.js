@@ -170,11 +170,21 @@ async function checkSession() {
             // Если у пользователя есть никнейм, но в таблице profiles или в auth.users.user_metadata он отсутствует
             if (uName && uName !== 'User') {
                 if (!userProfile?.username || userProfile.username === 'User') {
-                    if (userProfile) userProfile.username = uName;
+                    const hadProfileRow = Boolean(userProfile);
+                    if (userProfile) {
+                        userProfile.username = uName;
+                    } else {
+                        userProfile = { id: currentUser.id, username: uName };
+                        window.userProfile = userProfile;
+                    }
                     try {
                         const table = typeof sb.from === 'function' ? sb.from('profiles') : null;
-                        if (table && typeof table.update === 'function') {
-                            table.update({ username: uName }).eq('id', currentUser.id).then().catch(() => {});
+                        if (table) {
+                            if (hadProfileRow && typeof table.update === 'function') {
+                                table.update({ username: uName }).eq('id', currentUser.id).then().catch(() => {});
+                            } else if (typeof table.upsert === 'function') {
+                                Promise.resolve(table.upsert({ id: currentUser.id, username: uName }, { onConflict: 'id' })).catch(() => {});
+                            }
                         }
                     } catch (_) {}
                 }
@@ -628,8 +638,7 @@ async function handleAuth(action, isModal = false) {
                     if (table && typeof table.upsert === 'function') {
                         await table.upsert({
                             id: result.data.user.id,
-                            username: username,
-                            full_name: username
+                            username: username
                         }, { onConflict: 'id' });
                     }
                 } catch (_) {}

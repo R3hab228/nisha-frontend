@@ -75,22 +75,22 @@ async function yieldToMain() {
             // fallback if scheduler.yield rejects or is aborted
         }
     }
-    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-        ? Promise.withResolvers()
-        : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+    const { promise, resolve } = Promise.withResolvers();
     if (typeof MessageChannel !== 'undefined') {
-        const channel = new MessageChannel();
-        channel.port1.onmessage = () => {
-            try {
-                channel.port1.close();
-                channel.port2.close();
-            } catch (_) {}
-            resolve();
-        };
-        channel.port2.postMessage(null);
-    } else {
-        setTimeout(resolve, 0);
+        try {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = () => {
+                try {
+                    channel.port1.close();
+                    channel.port2.close();
+                } catch (_) {}
+                resolve();
+            };
+            channel.port2.postMessage(null);
+            return promise;
+        } catch (_) {}
     }
+    setTimeout(resolve, 0);
     return promise;
 }
 window.yieldToMain = yieldToMain;
@@ -1538,33 +1538,36 @@ window.itemMatchesPrice = itemMatchesPrice;
 const _loadedExternalScripts = {};
 function loadExternalScript(src) {
     if (_loadedExternalScripts[src]) return _loadedExternalScripts[src];
-    const { promise, resolve, reject } = (typeof Promise.withResolvers === 'function')
-        ? Promise.withResolvers()
-        : (() => { let res, rej; const p = new Promise((r, j) => { res = r; rej = j; }); return { promise: p, resolve: res, reject: rej }; })();
+    const { promise, resolve, reject } = Promise.withResolvers();
     _loadedExternalScripts[src] = promise;
-    if (typeof document === 'undefined') {
-        resolve();
-        return promise;
-    }
-    const existing = document.querySelector ? document.querySelector(`script[src="${src}"]`) : null;
-    if (existing) {
-        resolve();
-        return promise;
-    }
-    const targetEl = document.head || document.body || document.documentElement;
-    if (!targetEl || typeof document.createElement !== 'function') {
-        resolve();
-        return promise;
-    }
-    const s = document.createElement('script');
-    s.src = src;
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = (err) => {
+    try {
+        if (typeof document === 'undefined') {
+            resolve();
+            return promise;
+        }
+        const existing = typeof document.querySelector === 'function' ? document.querySelector(`script[src="${src}"]`) : null;
+        if (existing) {
+            resolve();
+            return promise;
+        }
+        const targetEl = document.head || document.body || document.documentElement;
+        if (!targetEl || typeof targetEl.appendChild !== 'function' || typeof document.createElement !== 'function') {
+            resolve();
+            return promise;
+        }
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = (err) => {
+            delete _loadedExternalScripts[src];
+            reject(err);
+        };
+        targetEl.appendChild(s);
+    } catch (err) {
         delete _loadedExternalScripts[src];
         reject(err);
-    };
-    targetEl.appendChild(s);
+    }
     return promise;
 }
 window.loadExternalScript = loadExternalScript;
@@ -1572,30 +1575,32 @@ window.loadExternalScript = loadExternalScript;
 const _loadedExternalStyles = {};
 function loadExternalStyle(href) {
     if (_loadedExternalStyles[href]) return _loadedExternalStyles[href];
-    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-        ? Promise.withResolvers()
-        : (() => { let res; const p = new Promise(r => { res = r; }); return { promise: p, resolve: res }; })();
+    const { promise, resolve } = Promise.withResolvers();
     _loadedExternalStyles[href] = promise;
-    if (typeof document === 'undefined') {
+    try {
+        if (typeof document === 'undefined') {
+            resolve();
+            return promise;
+        }
+        const existing = typeof document.querySelector === 'function' ? document.querySelector(`link[href="${href}"]`) : null;
+        if (existing) {
+            resolve();
+            return promise;
+        }
+        const targetEl = document.head || document.body || document.documentElement;
+        if (!targetEl || typeof targetEl.appendChild !== 'function' || typeof document.createElement !== 'function') {
+            resolve();
+            return promise;
+        }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.onload = () => resolve();
+        link.onerror = () => resolve();
+        targetEl.appendChild(link);
+    } catch (_) {
         resolve();
-        return promise;
     }
-    const existing = document.querySelector ? document.querySelector(`link[href="${href}"]`) : null;
-    if (existing) {
-        resolve();
-        return promise;
-    }
-    const targetEl = document.head || document.body || document.documentElement;
-    if (!targetEl || typeof document.createElement !== 'function') {
-        resolve();
-        return promise;
-    }
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    link.onload = () => resolve();
-    link.onerror = () => resolve();
-    targetEl.appendChild(link);
     return promise;
 }
 window.loadExternalStyle = loadExternalStyle;
@@ -1728,35 +1733,38 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
 
     function getDB() {
         if (!_dbPromise) {
-            _dbPromise = new Promise((resolve) => {
-                if (!window.indexedDB) return resolve(null);
-                try {
-                    const req = indexedDB.open(DB_NAME, 1);
-                    req.onupgradeneeded = (e) => {
-                        const db = e.target.result;
-                        if (!db.objectStoreNames.contains(STORE_NAME)) {
-                            db.createObjectStore(STORE_NAME);
-                        }
-                    };
-                    req.onsuccess = () => {
-                        const db = req.result;
-                        db.onclose = () => { _dbPromise = null; };
-                        db.onversionchange = () => {
-                            try { db.close(); } catch (e) {}
-                            _dbPromise = null;
-                        };
-                        resolve(db);
-                    };
-                    req.onerror = () => {
-                        console.warn('[IDB] Failed to open IndexedDB:', req.error);
+            const { promise, resolve } = Promise.withResolvers();
+            _dbPromise = promise;
+            if (!window.indexedDB) {
+                resolve(null);
+                return _dbPromise;
+            }
+            try {
+                const req = indexedDB.open(DB_NAME, 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME);
+                    }
+                };
+                req.onsuccess = () => {
+                    const db = req.result;
+                    db.onclose = () => { _dbPromise = null; };
+                    db.onversionchange = () => {
+                        try { db.close(); } catch (e) {}
                         _dbPromise = null;
-                        resolve(null);
                     };
-                } catch (e) {
+                    resolve(db);
+                };
+                req.onerror = () => {
+                    console.warn('[IDB] Failed to open IndexedDB:', req.error);
                     _dbPromise = null;
                     resolve(null);
-                }
-            });
+                };
+            } catch (e) {
+                _dbPromise = null;
+                resolve(null);
+            }
         }
         return _dbPromise;
     }
@@ -1765,20 +1773,20 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
         try {
             const db = await getDB();
             if (!db) return null;
-            return new Promise((resolve) => {
-                try {
-                    const tx = db.transaction(STORE_NAME, 'readonly');
-                    tx.onerror = () => resolve(null);
-                    tx.onabort = () => resolve(null);
-                    const store = tx.objectStore(STORE_NAME);
-                    const req = store.get(key);
-                    req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
-                    req.onerror = () => resolve(null);
-                } catch (txErr) {
-                    _dbPromise = null;
-                    resolve(null);
-                }
-            });
+            const { promise, resolve } = Promise.withResolvers();
+            try {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                tx.onerror = () => resolve(null);
+                tx.onabort = () => resolve(null);
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
+                req.onerror = () => resolve(null);
+            } catch (txErr) {
+                _dbPromise = null;
+                resolve(null);
+            }
+            return promise;
         } catch (e) {
             _dbPromise = null;
             return null;
@@ -1789,19 +1797,19 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
         try {
             const db = await getDB();
             if (!db) return false;
-            return new Promise((resolve) => {
-                try {
-                    const tx = db.transaction(STORE_NAME, 'readwrite');
-                    tx.oncomplete = () => resolve(true);
-                    tx.onerror = () => resolve(false);
-                    tx.onabort = () => resolve(false);
-                    const store = tx.objectStore(STORE_NAME);
-                    store.put(val, key);
-                } catch (txErr) {
-                    _dbPromise = null;
-                    resolve(false);
-                }
-            });
+            const { promise, resolve } = Promise.withResolvers();
+            try {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+                tx.onabort = () => resolve(false);
+                const store = tx.objectStore(STORE_NAME);
+                store.put(val, key);
+            } catch (txErr) {
+                _dbPromise = null;
+                resolve(false);
+            }
+            return promise;
         } catch (e) {
             _dbPromise = null;
             return false;
@@ -1812,19 +1820,19 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
         try {
             const db = await getDB();
             if (!db) return false;
-            return new Promise((resolve) => {
-                try {
-                    const tx = db.transaction(STORE_NAME, 'readwrite');
-                    tx.oncomplete = () => resolve(true);
-                    tx.onerror = () => resolve(false);
-                    tx.onabort = () => resolve(false);
-                    const store = tx.objectStore(STORE_NAME);
-                    store.delete(key);
-                } catch (txErr) {
-                    _dbPromise = null;
-                    resolve(false);
-                }
-            });
+            const { promise, resolve } = Promise.withResolvers();
+            try {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+                tx.onabort = () => resolve(false);
+                const store = tx.objectStore(STORE_NAME);
+                store.delete(key);
+            } catch (txErr) {
+                _dbPromise = null;
+                resolve(false);
+            }
+            return promise;
         } catch (e) {
             _dbPromise = null;
             return false;
@@ -1835,35 +1843,35 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
         try {
             const db = await getDB();
             if (!db) return [];
-            return new Promise((resolve) => {
-                try {
-                    const tx = db.transaction(STORE_NAME, 'readonly');
-                    tx.onerror = () => resolve([]);
-                    tx.onabort = () => resolve([]);
-                    const store = tx.objectStore(STORE_NAME);
-                    if (typeof store.getAllKeys === 'function') {
-                        const req = store.getAllKeys();
-                        req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
-                        req.onerror = () => resolve([]);
-                    } else {
-                        const keys = [];
-                        const req = store.openKeyCursor ? store.openKeyCursor() : store.openCursor();
-                        req.onsuccess = (e) => {
-                            const cursor = e.target.result;
-                            if (cursor) {
-                                keys.push(cursor.key);
-                                cursor.continue();
-                            } else {
-                                resolve(keys);
-                            }
-                        };
-                        req.onerror = () => resolve(keys);
-                    }
-                } catch (txErr) {
-                    _dbPromise = null;
-                    resolve([]);
+            const { promise, resolve } = Promise.withResolvers();
+            try {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                tx.onerror = () => resolve([]);
+                tx.onabort = () => resolve([]);
+                const store = tx.objectStore(STORE_NAME);
+                if (typeof store.getAllKeys === 'function') {
+                    const req = store.getAllKeys();
+                    req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+                    req.onerror = () => resolve([]);
+                } else {
+                    const keys = [];
+                    const req = store.openKeyCursor ? store.openKeyCursor() : store.openCursor();
+                    req.onsuccess = (e) => {
+                        const cursor = e.target.result;
+                        if (cursor) {
+                            keys.push(cursor.key);
+                            cursor.continue();
+                        } else {
+                            resolve(keys);
+                        }
+                    };
+                    req.onerror = () => resolve(keys);
                 }
-            });
+            } catch (txErr) {
+                _dbPromise = null;
+                resolve([]);
+            }
+            return promise;
         } catch (e) {
             _dbPromise = null;
             return [];
@@ -1874,32 +1882,32 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
         try {
             const db = await getDB();
             if (!db) return false;
-            return new Promise((resolve) => {
-                try {
-                    const tx = db.transaction(STORE_NAME, 'readwrite');
-                    tx.oncomplete = () => resolve(true);
-                    tx.onerror = () => resolve(false);
-                    tx.onabort = () => resolve(false);
-                    const store = tx.objectStore(STORE_NAME);
-                    if (typeof store.openCursor === 'function') {
-                        const req = store.openCursor();
-                        req.onsuccess = (e) => {
-                            const cursor = e.target.result;
-                            if (cursor) {
-                                if (typeof cursor.key === 'string' && cursor.key.startsWith('np_')) {
-                                    cursor.delete();
-                                }
-                                cursor.continue();
+            const { promise, resolve } = Promise.withResolvers();
+            try {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+                tx.onabort = () => resolve(false);
+                const store = tx.objectStore(STORE_NAME);
+                if (typeof store.openCursor === 'function') {
+                    const req = store.openCursor();
+                    req.onsuccess = (e) => {
+                        const cursor = e.target.result;
+                        if (cursor) {
+                            if (typeof cursor.key === 'string' && cursor.key.startsWith('np_')) {
+                                cursor.delete();
                             }
-                        };
-                    } else {
-                        resolve(false);
-                    }
-                } catch (txErr) {
-                    _dbPromise = null;
+                            cursor.continue();
+                        }
+                    };
+                } else {
                     resolve(false);
                 }
-            });
+            } catch (txErr) {
+                _dbPromise = null;
+                resolve(false);
+            }
+            return promise;
         } catch (e) {
             _dbPromise = null;
             return false;

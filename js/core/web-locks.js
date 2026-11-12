@@ -105,9 +105,7 @@ function initLeaderElection() {
             _leaderCallbacks.forEach(cb => { try { cb(); } catch (_) {} });
 
             // Hold lock until tab closes, navigates away, or is hidden into bfcache
-            const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-                ? Promise.withResolvers()
-                : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+            const { promise, resolve } = Promise.withResolvers();
             window.addEventListener('pagehide', resolve, { once: true });
             window.addEventListener('beforeunload', resolve, { once: true });
             await promise;

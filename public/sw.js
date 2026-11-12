@@ -1,3 +1,10 @@
+if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function') {
+    Promise.withResolvers = function() {
+        let resolve, reject;
+        const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+        return { promise, resolve, reject };
+    };
+}
 const BUILD_ID = '__BUILD_ID__'; // подставляется при сборке (vite.config.mjs), уникален для каждого деплоя
 const CACHE_NAME = 'nisha-cache-' + BUILD_ID;
 const IMAGE_CACHE = 'nisha-images-v4';
@@ -227,10 +234,8 @@ self.addEventListener('fetch', event => {
                 let networkResponse;
                 if (cachedResponse) {
                     // Если копия уже есть в кэше — даем сети до 3.5 сек, иначе плавно отдаем кэш без принудительного разрыва соединения
-                    let timeoutId;
-                    const timeoutPromise = new Promise(resolve => {
-                        timeoutId = setTimeout(() => resolve(null), 3500);
-                    });
+                    const { promise: timeoutPromise, resolve: resolveTimeout } = Promise.withResolvers();
+                    const timeoutId = setTimeout(() => resolveTimeout(null), 3500);
                     
                     networkResponse = await Promise.race([
                         networkPromise.then(res => {

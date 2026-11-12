@@ -109,9 +109,7 @@ export function initLeaderElection() {
             _isLeader = true;
             _leaderCallbacks.forEach(cb => { try { cb(); } catch (_) {} });
 
-            const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-                ? Promise.withResolvers()
-                : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+            const { promise, resolve } = Promise.withResolvers();
             if (typeof window !== 'undefined') {
                 window.addEventListener('pagehide', resolve, { once: true });
                 window.addEventListener('beforeunload', resolve, { once: true });

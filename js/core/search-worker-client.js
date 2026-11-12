@@ -129,9 +129,7 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
 
             // Если воркер доступен и готов — выполняем поиск в фоновом потоке
             if (worker && isWorkerReady) {
-                const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-                    ? Promise.withResolvers()
-                    : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+                const { promise, resolve } = Promise.withResolvers();
                 pendingRequests.set(reqId, { resolve, channel: 'live', reqId });
                 worker.postMessage({
                     type: 'SEARCH_LIVE',
@@ -161,9 +159,7 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             lastActiveRequestId.catalog = reqId;
 
             if (worker && isWorkerReady) {
-                const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-                    ? Promise.withResolvers()
-                    : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+                const { promise, resolve } = Promise.withResolvers();
                 pendingRequests.set(reqId, { resolve, channel: 'catalog', reqId });
                 worker.postMessage({
                     type: 'SEARCH_CATALOG',

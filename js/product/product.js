@@ -1741,9 +1741,15 @@ async function submitQuestion(itemId) {
     }
 
     try {
+        const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+        const userDisplayName = typeof window.getUserDisplayName === 'function'
+            ? window.getUserDisplayName(currentUser, profile)
+            : (profile?.username || currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || (currentUser.email ? currentUser.email.split('@').at(0) : 'User'));
+
         const data = await window.apiClient.post('/api/question', {
             userId: currentUser.id,
             email: currentUser.email || 'Неизвестно',
+            username: userDisplayName,
             itemId: itemId,
             itemName: itemName,
             questionText: text

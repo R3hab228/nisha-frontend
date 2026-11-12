@@ -96,9 +96,7 @@ export async function yieldToMain() {
             // fallback if scheduler.yield rejects or is aborted
         }
     }
-    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
-        ? Promise.withResolvers()
-        : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+    const { promise, resolve } = Promise.withResolvers();
     if (typeof MessageChannel !== 'undefined') {
         const channel = new MessageChannel();
         channel.port1.onmessage = () => {
