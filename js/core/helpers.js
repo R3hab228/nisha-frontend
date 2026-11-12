@@ -373,10 +373,10 @@ function toCDN(url, options = {}) {
     if (width || height || quality || format) {
         const sep = result.includes('?') ? '&' : '?';
         const params = [];
-        if (width) params.push(`w=${encodeURIComponent(width)}`);
-        if (height) params.push(`h=${encodeURIComponent(height)}`);
-        if (quality) params.push(`q=${encodeURIComponent(quality)}`);
-        if (format) params.push(`fmt=${encodeURIComponent(format)}`);
+        if (width) params.push(`w=${safeEncodeURIComponent(width)}`);
+        if (height) params.push(`h=${safeEncodeURIComponent(height)}`);
+        if (quality) params.push(`q=${safeEncodeURIComponent(quality)}`);
+        if (format) params.push(`fmt=${safeEncodeURIComponent(format)}`);
         result += sep + params.join('&');
     }
 

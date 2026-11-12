@@ -1,3 +1,4 @@
+import { safeEncodeURIComponent } from './helpers.js';
 // ==========================================
 // NISHA STORE - MODULAR ORDERS FACADE
 // Safe, typed ES module exports for order tracking & history
@@ -134,7 +135,7 @@ export function getNovaPoshtaTrackingUrl(ttn, lang) {
     const cleanTtn = String(ttn || '').trim();
     if (!cleanTtn) return 'https://tracking.novaposhta.ua/';
     const currentLang = lang || ((typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk');
-    const encoded = encodeNovaPoshtaTtn(cleanTtn) || encodeURIComponent(cleanTtn);
+    const encoded = encodeNovaPoshtaTtn(cleanTtn) || safeEncodeURIComponent(cleanTtn);
     return `https://tracking.novaposhta.ua/#/${currentLang}/${encoded}`;
 }
 

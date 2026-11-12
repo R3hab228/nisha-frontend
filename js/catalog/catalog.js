@@ -1974,6 +1974,9 @@ window.invalidateFuseCache = function() {
     }
 };
 
+let _applyFiltersSeq = 0;
+let _renderBatchSeq = 0;
+
 // Основная функция фильтрации каталога
 function applyFilters(immediate = false, preserveViewport = false) {
     const grid = document.getElementById('itemsGrid');
@@ -1985,6 +1988,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
 
     clearTimeout(applyFiltersTimeout);
     const delay = (immediate || preserveViewport || isInitialRender) ? 0 : 160;
+    const filterSeq = ++_applyFiltersSeq;
 
     if (typeof _resolveApplyFilters === 'function') {
         _resolveApplyFilters();
@@ -1994,6 +1998,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
     _resolveApplyFilters = resolve;
     applyFiltersTimeout = setTimeout(async () => {
         try {
+            if (filterSeq !== _applyFiltersSeq) return;
             const searchInput = document.getElementById('mainSearch');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
             const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => cb.value);
@@ -2050,6 +2055,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
             });
 
             if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+            if (filterSeq !== _applyFiltersSeq) return;
 
             // 2. Умный поиск (Web Worker Fuse.js с поддержкой транслитерации и надежный fallback)
             if (searchTerm !== '') {
@@ -2058,6 +2064,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
                     if (window.searchWorker && window.searchWorker.isReady()) {
                         const candidateIds = window.filteredItems.map(i => i.id);
                         const matchedIds = await window.searchWorker.searchCatalog(cleanSearchTerm, candidateIds);
+                        if (filterSeq !== _applyFiltersSeq) return;
                         const itemMap = new Map(window.filteredItems.map(i => [i.id, i]));
                         window.filteredItems = matchedIds.map(id => itemMap.get(id)).filter(Boolean);
                     } else {
@@ -2112,6 +2119,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
             }
 
             if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+            if (filterSeq !== _applyFiltersSeq) return;
 
             // 3. Сортировка
             const now = Date.now();
@@ -2143,6 +2151,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
             }
 
             if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+            if (filterSeq !== _applyFiltersSeq) return;
             
             // СБРОС И РЕНДЕР (при preserveViewport сохраняем текущую страницу на ПК и число карточек на моб)
             const prevRenderedCount = window.renderedCount || 0;
@@ -2190,7 +2199,8 @@ function applyFilters(immediate = false, preserveViewport = false) {
                 } else if (canRestoreScroll) {
                     targetMobileCount = Math.max(savedScrollState.renderedCount || 0, batchSizeNow);
                 }
-                renderNextBatch(targetMobileCount); 
+                await renderNextBatch(targetMobileCount);
+                if (filterSeq !== _applyFiltersSeq) return;
 
                 if (canRestoreScroll) {
                     restoreFeedScrollPosition(savedScrollState);
@@ -2853,6 +2863,7 @@ async function renderNextBatch(targetMobileCount = 0) {
     const grid = document.getElementById('itemsGrid');
     if (!grid) return;
     initGridEventDelegation();
+    const batchSeq = ++_renderBatchSeq;
     
     const isMobile = window.innerWidth <= 900;
     window._catalogRenderedAsMobile = isMobile;
@@ -2925,24 +2936,17 @@ async function renderNextBatch(targetMobileCount = 0) {
                 vids.forEach(v => newVideoElements.push(v));
             }
         } catch (err) { console.error(err); }
-        // Periodically yield to main thread every 8 cards during large batch bursts (e.g. restoring 24-48 cards)
-        if ((i - startIndex + 1) % 8 === 0 && (endIndex - startIndex) > 12 && typeof window.yieldToMain === 'function') {
+        // Periodically flush and yield to main thread every 8 cards during large multi-batch bursts (e.g. restoring 24-48 cards)
+        if ((i - startIndex + 1) % 8 === 0 && (endIndex - startIndex) > 15 && typeof window.yieldToMain === 'function') {
+            grid.appendChild(fragment);
             await window.yieldToMain();
+            if (batchSeq !== _renderBatchSeq) return;
         }
     }
 
-    grid.appendChild(fragment);
-    if (typeof window.yieldToMain === 'function') await window.yieldToMain();
-    grid.querySelectorAll('img.card-slide-img').forEach(img => {
-        if (img.complete && img.naturalWidth > 0 && img.style.opacity !== '1') {
-            img.style.opacity = '1';
-            if (img.parentElement) {
-                img.parentElement.classList.remove('img-8bit-loading');
-                img.parentElement.classList.add('img-8bit-loaded');
-            }
-        }
-    });
-    newVideoElements.forEach(v => gridVideoObserver.observe(v));
+    if (fragment.childNodes.length > 0) {
+        grid.appendChild(fragment);
+    }
 
     if (isMobile) {
         window.renderedCount = endIndex;
@@ -2985,6 +2989,19 @@ async function renderNextBatch(targetMobileCount = 0) {
             grid.appendChild(paginationWrap);
         }
     }
+
+    if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+    if (batchSeq !== _renderBatchSeq) return;
+    grid.querySelectorAll('img.card-slide-img').forEach(img => {
+        if (img.complete && img.naturalWidth > 0 && img.style.opacity !== '1') {
+            img.style.opacity = '1';
+            if (img.parentElement) {
+                img.parentElement.classList.remove('img-8bit-loading');
+                img.parentElement.classList.add('img-8bit-loaded');
+            }
+        }
+    });
+    newVideoElements.forEach(v => gridVideoObserver.observe(v));
 }
 window.renderNextBatch = renderNextBatch;
 

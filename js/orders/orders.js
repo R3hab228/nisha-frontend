@@ -739,7 +739,7 @@ function renderFilteredOrders() {
                         ? window.getNovaPoshtaTrackingUrl(ttn, trackingLang)
                         : (typeof getNovaPoshtaTrackingUrl === 'function'
                             ? getNovaPoshtaTrackingUrl(ttn, trackingLang)
-                            : `https://tracking.novaposhta.ua/#/${trackingLang}/${encodeURIComponent(String(ttn || '').trim())}`);
+                            : `https://tracking.novaposhta.ua/#/${trackingLang}/${typeof window.safeEncodeURIComponent === 'function' ? window.safeEncodeURIComponent(String(ttn || '').trim()) : encodeURIComponent(String(ttn || '').trim())}`);
 
                     return `<div class="order-ttn">
                              <div class="order-ttn-header">

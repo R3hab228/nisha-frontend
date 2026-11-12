@@ -413,10 +413,23 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             await expect(helpers.yieldToMain()).resolves.toBeUndefined();
         });
 
-        it('catalog.js renderNextBatch includes cooperative yielding during large bursts', () => {
+        it('catalog.js renderNextBatch and applyFilters include cooperative yielding with sequence guards against race conditions', () => {
             const catCode = fs.readFileSync(path.resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
             expect(catCode).toContain('window.yieldToMain()');
             expect(catCode).toContain('(i - startIndex + 1) % 8 === 0');
+            expect(catCode).toContain('_applyFiltersSeq');
+            expect(catCode).toContain('_renderBatchSeq');
+            expect(catCode).toContain('await renderNextBatch(targetMobileCount)');
+        });
+
+        it('toCDN in helpers.js and tracking URLs in orders.js use safeEncodeURIComponent without raw islands', () => {
+            const helpersJs = fs.readFileSync(path.resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersMod = fs.readFileSync(path.resolve(__dirname, '../src/modules/helpers.js'), 'utf8');
+            const ordersMod = fs.readFileSync(path.resolve(__dirname, '../src/modules/orders.js'), 'utf8');
+
+            expect(helpersJs).toContain('safeEncodeURIComponent(width)');
+            expect(helpersMod).toContain('safeEncodeURIComponent(width)');
+            expect(ordersMod).toContain('safeEncodeURIComponent(cleanTtn)');
         });
     });
 

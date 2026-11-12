@@ -426,13 +426,13 @@ function sendTelegramErrorAlert(errorObj, context = {}) {
     const alertMessage = 
         `⚠️ [NISHA CLIENT ERROR ALERT]\n` +
         `• Опасность: ${severity.emoji} ${severity.score}/10 (${severity.level} — ${severity.reason})\n` +
-        `• Ошибка: ${msg.slice(0, 160)}\n` +
+        `• Ошибка: ${typeof window.safeTruncateText === 'function' ? window.safeTruncateText(msg, 160) : msg.slice(0, 160)}\n` +
         `• Файл / Локация: ${loc}\n` +
         `• Страница: ${cleanPage}\n` +
         `• Устройство: ${getReadableDevice()}\n` +
         `• Режим: ${getAppMode()}` +
-        (cleanDetails ? `\n• Детали: ${cleanDetails.slice(0, 150)}` : '') +
-        (stack && !stack.includes(msg) ? `\n• Стек: ${stack.slice(0, 220)}` : '');
+        (cleanDetails ? `\n• Детали: ${typeof window.safeTruncateText === 'function' ? window.safeTruncateText(cleanDetails, 150) : cleanDetails.slice(0, 150)}` : '') +
+        (stack && !stack.includes(msg) ? `\n• Стек: ${typeof window.safeTruncateText === 'function' ? window.safeTruncateText(stack, 220) : stack.slice(0, 220)}` : '');
 
     const payload = {
         contact: '🚨 SYSTEM_TELEMETRY',
