@@ -2512,11 +2512,20 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     text-align: center;
 }
 
-/* РџСЂРёРЅСѓРґРёС‚РµР»СЊРЅС‹Р№ РїРµСЂРµРЅРѕСЃ СЃС‚СЂРѕРєРё РїРѕСЃР»Рµ 3-Р№ РєРЅРѕРїРєРё */
-.top-nav a:nth-child(3)::after {
+/* Принудительный перенос строки после 3-й кнопки (работает на любом языке: ru/ua/en) */
+.top-nav a:nth-child(-n+3) {
+    order: 1;
+}
+.top-nav::after {
     content: "";
-    display: block;
-    width: 100%;
+    order: 2;
+    flex-basis: 100%;
+    height: 0;
+    margin-top: -14px;
+    pointer-events: none;
+}
+.top-nav a:nth-child(n+4) {
+    order: 3;
 }
 
     
