@@ -180,7 +180,7 @@ self.addEventListener('fetch', event => {
     }
 
     // --- ИЗОБРАЖЕНИЯ (Cache-First + Лимит) ---
-    const isImage = (url.hostname.endsWith('.workers.dev') || url.hostname.endsWith('.supabase.co')) &&
+    const isImage = (url.hostname === 'cdn.nisha-store.shop' || url.hostname.endsWith('.workers.dev') || url.hostname.endsWith('.supabase.co')) &&
                     (url.pathname.includes('/storage/') || /\.(webp|jpg|jpeg|png|gif|svg|avif|ico)$/i.test(url.pathname)) &&
                     !url.pathname.includes('/rest/v1/');
     
