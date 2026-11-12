@@ -612,7 +612,7 @@ function setLang(l){
 }
 window.setLang = setLang;
 
-(function syncInitialLangUI(){
+function detectInitialSiteLang(){
   let saved=(window.storage&&typeof window.storage.get==="function")?window.storage.get("nisha_lang"):null;
   if(!saved&&typeof localStorage!=="undefined"){
     try{saved=localStorage.getItem("nisha_lang");}catch(_){}
@@ -627,11 +627,15 @@ window.setLang = setLang;
     const nav=(navigator.language||navigator.userLanguage||"").toLowerCase();
     saved=nav.startsWith("ru")?"ru":(nav.startsWith("en")?"en":"ua");
   }
-  const finalLang=normalizeSiteLang(saved);
+  return normalizeSiteLang(saved);
+}
+window.detectInitialSiteLang = detectInitialSiteLang;
+
+(function syncInitialLangUI(){
+  const finalLang=detectInitialSiteLang();
+  updateFooterLanguageUI(finalLang);
   if(document.readyState==="loading"){
     document.addEventListener("DOMContentLoaded",function(){updateFooterLanguageUI(finalLang);});
-  }else{
-    updateFooterLanguageUI(finalLang);
   }
 })();
 </script>

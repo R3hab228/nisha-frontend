@@ -88,12 +88,44 @@ function updateFooterLanguageUI(lang) {
     }
 }
 
+function setLang(lang) {
+    const code = normalizeSiteLang(lang);
+    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    if (store && typeof store.set === 'function') {
+        store.set('nisha_lang', code);
+        store.set('i18nextLng', code);
+        const emoji = code === 'ru' ? '🇷🇺' : (code === 'en' ? '🇬🇧' : '🇺🇦');
+        store.set('nisha_flag', emoji);
+    } else if (typeof localStorage !== 'undefined') {
+        try {
+            localStorage.setItem('nisha_lang', code);
+            localStorage.setItem('i18nextLng', code);
+        } catch (_) {}
+    }
+    updateFooterLanguageUI(code);
+    if (typeof changeLanguage === 'function') {
+        changeLanguage(code);
+    }
+    if (typeof document !== 'undefined') {
+        const wrapper = document.getElementById('footerLangWrapper');
+        if (wrapper) wrapper.classList.remove('active');
+    }
+}
+
 window.NISHA_FLAGS = NISHA_FLAGS;
 window.NISHA_EMOJI_FLAGS = NISHA_EMOJI_FLAGS;
 window.normalizeSiteLang = normalizeSiteLang;
 window.getFlagUrlByLang = getFlagUrlByLang;
 window.detectInitialSiteLang = detectInitialSiteLang;
 window.updateFooterLanguageUI = updateFooterLanguageUI;
+window.setLang = setLang;
+
+if (typeof i18next !== 'undefined' && typeof i18next.on === 'function') {
+    i18next.on('languageChanged', (lng) => {
+        const norm = normalizeSiteLang(lng);
+        updateFooterLanguageUI(norm);
+    });
+}
 
 let searchTypewriterInterval = null;
 let currentSearchLang = 'ua';
@@ -267,7 +299,7 @@ function updateContentLanguage() {
     }
 
     // Запускаем печатную машинку поиска
-    currentSearchLang = i18next.language || 'ua';
+    currentSearchLang = normalizeSiteLang(i18next.language || 'ua');
     startSearchTypewriter();
 
     // Немедленно восстанавливаем красные индикаторы количества товаров в фильтрах и счетчики заказов после перевода

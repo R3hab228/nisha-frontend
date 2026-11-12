@@ -343,9 +343,24 @@ async function initApp() {
                         debug: false
                     });
                     
+                    if (typeof i18next.on === 'function') {
+                        i18next.on('languageChanged', (lng) => {
+                            const norm = (typeof normalizeSiteLang === 'function') ? normalizeSiteLang(lng) : (lng || 'ua');
+                            if (typeof updateFooterLanguageUI === 'function') {
+                                updateFooterLanguageUI(norm);
+                            }
+                        });
+                    }
+
                     const effectiveLang = (typeof normalizeSiteLang === 'function')
                         ? normalizeSiteLang(i18next.language || savedLng)
                         : (savedLng || 'ua');
+
+                    if (storage && typeof storage.set === 'function') {
+                        storage.set('nisha_lang', effectiveLang);
+                        const effectiveEmoji = effectiveLang === 'ru' ? '🇷🇺' : (effectiveLang === 'en' ? '🇬🇧' : '🇺🇦');
+                        storage.set('nisha_flag', effectiveEmoji);
+                    }
 
                     if (typeof updateContentLanguage === 'function') updateContentLanguage();
                     if (typeof updateFooterLanguageUI === 'function') updateFooterLanguageUI(effectiveLang);
