@@ -50,7 +50,7 @@ async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
             console.warn(`[PROPOSAL UPLOAD] Network error on attempt ${attempt}/${maxAttempts}:`, err.message);
         }
         if (attempt < maxAttempts) {
-            await new Promise(r => setTimeout(r, 1500 * attempt));
+            await sleep(1500 * attempt);
         }
     }
     throw lastError || new Error('Upload failed');

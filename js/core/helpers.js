@@ -892,16 +892,33 @@ function at(array, index) {
 window.at = at;
 if (typeof globalThis !== 'undefined') globalThis.at = at;
 
-// --- БЕЗОПАСНАЯ ПРОВЕРКА СОБСТВЕННЫХ СВОЙСТВ (OBJECT.HASOWN ES2022 С FALLBACK) ---
+// --- БЕЗОПАСНАЯ ПРОВЕРКА СОБСТВЕННЫХ СВОЙСТВ (OBJECT.HASOWN ES2022) ---
 function hasOwn(obj, prop) {
     if (obj === null || obj === undefined) return false;
-    if (typeof Object.hasOwn === 'function') {
-        return Object.hasOwn(obj, prop);
-    }
-    return Object.prototype.hasOwnProperty.call(obj, prop);
+    return Object.hasOwn(obj, prop);
 }
 window.hasOwn = hasOwn;
 if (typeof globalThis !== 'undefined') globalThis.hasOwn = hasOwn;
+
+// --- АСИНХРОННАЯ ЗАДЕРЖКА С ПОДДЕРЖКОЙ ABORTSIGNAL ---
+function sleep(ms, signal) {
+    if (signal?.aborted) {
+        return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
+    }
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            signal?.removeEventListener('abort', onAbort);
+            resolve();
+        }, ms);
+        function onAbort() {
+            clearTimeout(timer);
+            reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
+        }
+        signal?.addEventListener('abort', onAbort, { once: true });
+    });
+}
+window.sleep = sleep;
+if (typeof globalThis !== 'undefined') globalThis.sleep = sleep;
 
 // --- WEB LOCKS API (NAVIGATOR.LOCKS) ДЛЯ PWA И МУЛЬТИВКЛАДОЧНОСТИ ---
 async function withWebLock(name, fn) {

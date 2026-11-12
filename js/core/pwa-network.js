@@ -1381,7 +1381,7 @@ function initPwaPullToRefresh() {
             arrowIcon.style.transform = '';
         }
 
-        const minDelay = new Promise(resolve => setTimeout(resolve, 550));
+        const minDelay = sleep(550);
         const refreshAction = (async () => {
             try {
                 if (typeof window.loadAllItems === 'function') {

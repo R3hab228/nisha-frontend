@@ -608,13 +608,8 @@ export function deepClone(obj) {
     if (typeof window !== 'undefined' && typeof window.deepClone === 'function') {
         return window.deepClone(obj);
     }
-    if (typeof structuredClone === 'function') {
-        try {
-            return structuredClone(obj);
-        } catch (_) {}
-    }
     try {
-        return JSON.parse(JSON.stringify(obj));
+        return structuredClone(obj);
     } catch (_) {
         return obj;
     }
@@ -1107,17 +1102,40 @@ export function at(array, index) {
 }
 
 /**
- * Safe own-property check (ES2022 Object.hasOwn with fallback)
+ * Safe own-property check (ES2022 Object.hasOwn)
  * @param {object} obj
  * @param {string|symbol} prop
  * @returns {boolean}
  */
 export function hasOwn(obj, prop) {
     if (obj === null || obj === undefined) return false;
-    if (typeof Object.hasOwn === 'function') {
-        return Object.hasOwn(obj, prop);
+    return Object.hasOwn(obj, prop);
+}
+
+/**
+ * Asynchronous delay with optional AbortSignal cancellation
+ * @param {number} ms
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<void>}
+ */
+export function sleep(ms, signal) {
+    if (typeof window !== 'undefined' && typeof window.sleep === 'function') {
+        return window.sleep(ms, signal);
     }
-    return Object.prototype.hasOwnProperty.call(obj, prop);
+    if (signal?.aborted) {
+        return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
+    }
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            signal?.removeEventListener('abort', onAbort);
+            resolve();
+        }, ms);
+        function onAbort() {
+            clearTimeout(timer);
+            reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
+        }
+        signal?.addEventListener('abort', onAbort, { once: true });
+    });
 }
 
 /**

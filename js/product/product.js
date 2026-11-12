@@ -2354,7 +2354,7 @@ async function submitInlineBargainOffer() {
         submitBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green, #00ff66)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
         submitBtn.style.borderColor = 'var(--accent-green, #00ff66)';
 
-        await new Promise(r => setTimeout(r, 220));
+        await sleep(220);
 
         const sentMsg = t('product.offer_sent_toast', 'Пропозицію надіслано! Очікуйте відповіді продавця.');
         showToast(sentMsg, 'success');

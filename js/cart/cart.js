@@ -1422,7 +1422,7 @@ async function npFetchPage(props) {
             return await npProxyRequest(props, 'getWarehouses');
         } catch (e) {
             lastErr = e;
-            await new Promise(r => setTimeout(r, e && e.status === 429 ? 1500 : 800));
+            await sleep(e && e.status === 429 ? 1500 : 800);
         }
     }
     throw lastErr;
@@ -1803,7 +1803,7 @@ async function loadNPBranches(searchString = "", showDropdown = false) {
     const parsedQuery = parseNPBranchQuery(search);
     const cacheKey = cityRef + "_" + search.toLowerCase();
 
-    const hasCachedKey = (typeof Object.hasOwn === 'function') ? Object.hasOwn(npBranchCache, cacheKey) : Object.prototype.hasOwnProperty.call(npBranchCache, cacheKey);
+    const hasCachedKey = Object.hasOwn(npBranchCache, cacheKey);
     if (hasCachedKey && npBranchCache[cacheKey] && npBranchCache[cacheKey].length > 0) {
         if (showDropdown) {
             const listToRender = search ? filterAndSortBranches(npBranchCache[cacheKey], search) : npBranchCache[cacheKey];
