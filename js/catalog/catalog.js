@@ -187,7 +187,7 @@ if (typeof window !== 'undefined') {
 // Глобальный перехватчик URL для CDN
 window.toCDN = window.toCDN || function(url, options = {}) {
     if (!url || typeof url !== 'string') return '';
-    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://cdn.nisha-store.shop');
     if (!options || typeof options !== 'object' || Object.keys(options).length === 0) return result;
     if (result.endsWith('.mp4') || result.endsWith('.webm') || result.endsWith('.svg')) return result;
     const isThumb = options.isThumb === true || (typeof options.width === 'number' && options.width <= 480);

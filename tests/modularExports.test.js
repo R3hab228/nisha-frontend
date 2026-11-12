@@ -216,13 +216,13 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
         it('rewrites Supabase URLs to CDN URLs', () => {
             const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items/photo.jpg';
             const cdnUrl = toCDN(supabaseUrl);
-            expect(cdnUrl).toBe('https://nisha-cdn.mtyagniryadno.workers.dev/storage/v1/object/public/items/photo.jpg');
+            expect(cdnUrl).toBe('https://cdn.nisha-store.shop/storage/v1/object/public/items/photo.jpg');
         });
 
         it('generates optimized CDN URLs with thumbnail resolution and resizing query parameters', () => {
             const itemUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items-images/item_1785941189142_93.webp';
             const optThumb = toCDN(itemUrl, { width: 400, quality: 85, format: 'webp', isThumb: true });
-            expect(optThumb).toContain('https://nisha-cdn.mtyagniryadno.workers.dev/storage/v1/object/public/items-images/thumb_item_1785941189142_93.webp');
+            expect(optThumb).toContain('https://cdn.nisha-store.shop/storage/v1/object/public/items-images/thumb_item_1785941189142_93.webp');
             expect(optThumb).toContain('w=400');
             expect(optThumb).toContain('q=85');
             expect(optThumb).toContain('fmt=webp');

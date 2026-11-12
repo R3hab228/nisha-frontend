@@ -600,7 +600,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const rawUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/storage/v1/object/public/items/photo.webp';
             const cdnUrl = window.toCDN(rawUrl);
 
-            expect(cdnUrl).toBe('https://nisha-cdn.mtyagniryadno.workers.dev/storage/v1/object/public/items/photo.webp');
+            expect(cdnUrl).toBe('https://cdn.nisha-store.shop/storage/v1/object/public/items/photo.webp');
         });
 
         it('passes through external and already-proxied URLs without modification', () => {
@@ -1265,15 +1265,15 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const slideImg = {
                 tagName: 'IMG',
                 classList: { contains: vi.fn(() => false) },
-                src: 'https://nisha-cdn.mtyagniryadno.workers.dev/photo1.jpg',
-                currentSrc: 'https://nisha-cdn.mtyagniryadno.workers.dev/photo1.jpg',
+                src: 'https://cdn.nisha-store.shop/photo1.jpg',
+                currentSrc: 'https://cdn.nisha-store.shop/photo1.jpg',
                 naturalWidth: 1200,
                 naturalHeight: 1600
             };
 
             const slideA = {
                 tagName: 'A',
-                href: 'https://nisha-cdn.mtyagniryadno.workers.dev/photo1.jpg',
+                href: 'https://cdn.nisha-store.shop/photo1.jpg',
                 classList: {
                     contains: vi.fn((cls) => cls === 'slide'),
                     remove: vi.fn()
@@ -1363,7 +1363,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(createdConfig).not.toBeNull();
             expect(Array.isArray(createdConfig.dataSource)).toBe(true);
             expect(createdConfig.dataSource.length).toBe(1);
-            expect(createdConfig.dataSource[0].src).toBe('https://nisha-cdn.mtyagniryadno.workers.dev/photo1.jpg');
+            expect(createdConfig.dataSource[0].src).toBe('https://cdn.nisha-store.shop/photo1.jpg');
             expect(createdConfig.dataSource[0].width).toBe(1200);
             expect(createdConfig.dataSource[0].height).toBe(1600);
             expect(mockInstance.init).toHaveBeenCalled();

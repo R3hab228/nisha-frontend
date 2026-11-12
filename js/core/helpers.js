@@ -346,7 +346,7 @@ window.decompressJSON = decompressJSON;
 // --- UNIFIED CDN URL REWRITER & ADAPTIVE IMAGE OPTIMIZER ---
 function toCDN(url, options = {}) {
     if (!url || typeof url !== 'string') return '';
-    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://cdn.nisha-store.shop');
 
     // Если опции не переданы или пустые, возвращаем чистый URL без изменений (100% обратная совместимость)
     if (!options || typeof options !== 'object' || Object.keys(options).length === 0) {

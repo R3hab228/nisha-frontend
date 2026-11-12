@@ -384,7 +384,7 @@ export function toCDN(url, options = {}) {
         return window.toCDN(url, options);
     }
     if (!url || typeof url !== 'string') return '';
-    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://nisha-cdn.mtyagniryadno.workers.dev');
+    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://cdn.nisha-store.shop');
     if (!options || typeof options !== 'object' || Object.keys(options).length === 0) {
         return result;
     }
