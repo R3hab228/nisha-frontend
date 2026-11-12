@@ -187,12 +187,18 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             expect(globalThis.canParseURL('https://www.nisha-store.shop')).toBe(true);
         });
 
-        it('sw.js and pushService.js utilize URL.canParse safely', () => {
+        it('sw.js and catalog.js utilize URL.canParse safely', () => {
             const swCode = fs.readFileSync(path.resolve(__dirname, '../sw.js'), 'utf8');
             expect(swCode).toContain('URL.canParse');
 
-            const backendServerCode = fs.readFileSync(path.resolve(__dirname, '../../nisha-backend/server.js'), 'utf8');
-            expect(backendServerCode).toContain('URL.canParse(origin)');
+            const publicSwCode = fs.readFileSync(path.resolve(__dirname, '../public/sw.js'), 'utf8');
+            expect(publicSwCode).toContain('URL.canParse');
+
+            const catalogCode = fs.readFileSync(path.resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catalogCode).toContain('URL.canParse');
+
+            const helpersCode = fs.readFileSync(path.resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain('URL.canParse');
         });
     });
 
