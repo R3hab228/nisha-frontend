@@ -78,7 +78,7 @@ function saveCurrentFeedScrollState(preferredActiveItemId = null) {
 
     try {
         sessionStorage.setItem(FEED_SCROLL_STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {}
+    } catch {}
 }
 
 function scheduleFeedScrollSave() {
@@ -113,7 +113,7 @@ function clearSavedFeedScrollState() {
     if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return;
     try {
         sessionStorage.removeItem(FEED_SCROLL_STORAGE_KEY);
-    } catch (e) {}
+    } catch {}
 }
 
 function showScrollRestoredBadge() {
@@ -968,7 +968,7 @@ async function loadAllItems() {
     if (typeof window.idbGet === 'function') {
         try {
             cachedItems = await window.idbGet('nisha_cached_db');
-        } catch (e) {}
+        } catch {}
     }
 
     if (!cachedItems) {
@@ -1227,7 +1227,7 @@ function updateCardDOM(item) {
                 try {
                     const rawB = sessionStorage.getItem('accepted_bargain_' + item.id) || localStorage.getItem('accepted_bargain_' + item.id);
                     if (rawB) savedBargain = JSON.parse(rawB);
-                } catch (e) {}
+                } catch {}
 
                 if (savedBargain && savedBargain.acceptedPrice) {
                     const fOldB = (typeof window.formatPrice === 'function') ? window.formatPrice(savedBargain.originalPrice || item.price) : `${savedBargain.originalPrice || item.price} ${curr}`;
@@ -1373,7 +1373,7 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
         applyFilters(true, true);
 
         if (!fromBroadcast && _catalogBroadcastChannel) {
-            try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_DELETE', id: delId }); } catch (e) {}
+            try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_DELETE', id: delId }); } catch {}
         }
         return;
     }
@@ -1420,7 +1420,7 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
         safelySaveCatalogToStorage(window.allItems);
 
         if (!fromBroadcast && _catalogBroadcastChannel) {
-            try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_UPSERT', item: fresh }); } catch (e) {}
+            try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_UPSERT', item: fresh }); } catch {}
         }
         return;
     }
@@ -1496,7 +1496,7 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
     }
 
     if (!fromBroadcast && _catalogBroadcastChannel) {
-        try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_UPSERT', item }); } catch (e) {}
+        try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_UPSERT', item }); } catch {}
     }
 }
 window.handleRealtimeCatalogEvent = handleRealtimeCatalogEvent;
@@ -1509,7 +1509,7 @@ function initCatalogRealtimeSubscription() {
     if (_catalogRealtimeChannel) {
         const state = _catalogRealtimeChannel.state;
         if (state === 'joined' || state === 'joining') return;
-        try { sb.removeChannel(_catalogRealtimeChannel); } catch (e) {}
+        try { sb.removeChannel(_catalogRealtimeChannel); } catch {}
         _catalogRealtimeChannel = null;
     }
 
@@ -2280,7 +2280,7 @@ window.applyFilters = applyFilters;
         try {
             const mq = window.matchMedia('(max-width: 900px)');
             if (typeof mq.addEventListener === 'function') mq.addEventListener('change', scheduleCheck);
-        } catch (e) {}
+        } catch {}
     }
 })();
 
@@ -2683,7 +2683,7 @@ function buildCardDOM(item, idx = 0) {
     try {
         const rawB = sessionStorage.getItem('accepted_bargain_' + item.id) || localStorage.getItem('accepted_bargain_' + item.id);
         if (rawB) savedBargainForCard = JSON.parse(rawB);
-    } catch (e) {}
+    } catch {}
 
     if (savedBargainForCard && savedBargainForCard.acceptedPrice) {
         const fOldB = (typeof window.formatPrice === 'function') ? window.formatPrice(savedBargainForCard.originalPrice || item.price) : `${savedBargainForCard.originalPrice || item.price} ${curr}`;
@@ -3096,7 +3096,7 @@ function setCategoryFilter(cat, element) {
         window.currentCategory = cat; 
         const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
         if (store && store.session) store.session.set('nisha_last_category', cat);
-        else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_last_category', cat); } catch (e) {} }
+        else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_last_category', cat); } catch {} }
         await applyFilters(true, false); 
     };
 
@@ -3126,7 +3126,7 @@ function clearSearchInput() {
                 if (typeof window.hidePopoverSafe === 'function') {
                     window.hidePopoverSafe(liveDropdown);
                 } else if (typeof liveDropdown.hidePopover === 'function' && liveDropdown.matches && liveDropdown.matches(':popover-open')) {
-                    try { liveDropdown.hidePopover(); } catch (_) {}
+                    try { liveDropdown.hidePopover(); } catch {}
                 }
                 liveDropdown.style.display = 'none';
             }
@@ -3215,7 +3215,7 @@ function toggleMobileSidebar() {
         sidebar.style.maxHeight = targetHeight + 'px';
 
         if (sidebar._transitionCtrl) {
-            try { sidebar._transitionCtrl.abort(); } catch(e) {}
+            try { sidebar._transitionCtrl.abort(); } catch {}
         }
         const openCtrl = new AbortController();
         sidebar._transitionCtrl = openCtrl;
@@ -3249,7 +3249,7 @@ function toggleMobileSidebar() {
         sidebar.style.maxHeight = '0px';
 
         if (sidebar._transitionCtrl) {
-            try { sidebar._transitionCtrl.abort(); } catch(e) {}
+            try { sidebar._transitionCtrl.abort(); } catch {}
         }
         const closeCtrl = new AbortController();
         sidebar._transitionCtrl = closeCtrl;
@@ -3533,7 +3533,7 @@ if (!_tourStore || !_tourStore.get('nisha_tour_done')) {
             if (s && !s.get('nisha_tour_done')) {
                 s.set('nisha_tour_done', 'true');
                 if (window._activeDriverTour) {
-                    try { window._activeDriverTour.destroy(); } catch (e) {}
+                    try { window._activeDriverTour.destroy(); } catch {}
                     window._activeDriverTour = null;
                 }
                 flushPendingBroadcast();

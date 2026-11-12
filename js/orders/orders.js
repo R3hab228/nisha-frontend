@@ -318,7 +318,7 @@ async function fetchMyOrders() {
                                     : (typeof orderValues.toSorted === 'function'
                                         ? orderValues.toSorted(sortOrdersDesc)
                                         : [...orderValues].sort(sortOrdersDesc));
-                                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
+                                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch {}
                                 updateOrderTabCounters();
                                 ensureOrderImagesLoaded();
                                 renderFilteredOrders();
@@ -336,7 +336,7 @@ async function fetchMyOrders() {
                     ? initialOrderValues.toSorted(sortOrdersDesc)
                     : [...initialOrderValues].sort(sortOrdersDesc));
             if (window.globalOrdersData.length > 0) {
-                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
+                try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch {}
             }
         } catch (e) {
             fetchError = e;
@@ -370,7 +370,7 @@ async function fetchMyOrders() {
         fetchError = error;
 
         if (window.globalOrdersData.length > 0) {
-            try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch(e) {}
+            try { if (window.storage) window.storage.setJSON('nisha_cached_orders', window.globalOrdersData); } catch {}
         }
     }
 
@@ -835,7 +835,7 @@ function renderFilteredOrders() {
             if (ttn) {
                 try {
                     barcodeFn(svg, ttn, { format: "CODE128", lineColor: "#000", background: "transparent", width: 1.5, height: 50, displayValue: false });
-                } catch(e) {}
+                } catch {}
             }
         });
     };
@@ -858,5 +858,5 @@ window.renderFilteredOrders = renderFilteredOrders;
 if (typeof globalThis !== 'undefined') globalThis.renderFilteredOrders = renderFilteredOrders;
 
 if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
-    try { updateOrderTabCounters(); } catch (e) {}
+    try { updateOrderTabCounters(); } catch {}
 }

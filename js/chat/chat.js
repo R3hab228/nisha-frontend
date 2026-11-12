@@ -25,7 +25,7 @@ function markBargainPopupAsSeen(key) {
             if (list.length > 100) list.shift();
             localStorage.setItem(BARGAIN_SEEN_STORAGE_KEY, JSON.stringify(list));
         }
-    } catch (e) {}
+    } catch {}
 }
 
 function isSupportReplySeen(id) {
@@ -38,7 +38,7 @@ function isSupportReplySeen(id) {
             const list = JSON.parse(raw);
             if (Array.isArray(list) && list.includes(String(id))) return true;
         }
-    } catch (e) {}
+    } catch {}
     return false;
 }
 
@@ -54,7 +54,7 @@ function markSupportReplyAsSeen(id) {
             if (list.length > 100) list.shift();
             localStorage.setItem(SUPPORT_REPLY_SEEN_STORAGE_KEY, JSON.stringify(list));
         }
-    } catch (e) {}
+    } catch {}
 }
 
 
@@ -104,7 +104,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         localStorage.removeItem('declined_bargain_' + bargainData.itemId);
         sessionStorage.removeItem('pending_bargain_' + bargainData.itemId);
         localStorage.removeItem('pending_bargain_' + bargainData.itemId);
-    } catch (e) {}
+    } catch {}
 
     // 2. Обновляем кнопку предложения цены и цену на карточке товара, если открыт именно этот товар
     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
@@ -281,7 +281,7 @@ async function syncBargainPopupSeenToServer(bargainData) {
                     .then();
             }
         }
-    } catch (_) {}
+    } catch {}
 
     try {
         if (window.apiClient && typeof window.apiClient.post === 'function') {
@@ -303,7 +303,7 @@ async function syncBargainPopupSeenToServer(bargainData) {
                 })
             }).catch(() => {});
         }
-    } catch (_) {}
+    } catch {}
 }
 window.syncBargainPopupSeenToServer = syncBargainPopupSeenToServer;
 
@@ -375,7 +375,7 @@ function handleIncomingSupportReply(r, sbClient) {
     if (typeof r.answer_text === 'string' && r.answer_text.trim().startsWith('{')) {
         try {
             parsed = JSON.parse(r.answer_text);
-        } catch (e) {}
+        } catch {}
     }
 
     if (parsed && parsed.type === 'BARGAIN_ACCEPTED') {
@@ -386,7 +386,7 @@ function handleIncomingSupportReply(r, sbClient) {
             localStorage.removeItem('declined_bargain_' + parsed.itemId);
             sessionStorage.removeItem('pending_bargain_' + parsed.itemId);
             localStorage.removeItem('pending_bargain_' + parsed.itemId);
-        } catch (e) {}
+        } catch {}
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
 
@@ -429,7 +429,7 @@ function handleIncomingSupportReply(r, sbClient) {
                     else if (typeof updateCartUI === 'function') updateCartUI();
                 }
             }
-        } catch (e) {}
+        } catch {}
 
         const offerKey = String(parsed.bargainId || ('accepted_' + parsed.itemId + '_' + parsed.acceptedPrice));
         if (hasSeenBargainPopup(offerKey) || parsed.seen_popup) {
@@ -459,7 +459,7 @@ function handleIncomingSupportReply(r, sbClient) {
             localStorage.removeItem('accepted_bargain_' + parsed.itemId);
             sessionStorage.removeItem('pending_bargain_' + parsed.itemId);
             localStorage.removeItem('pending_bargain_' + parsed.itemId);
-        } catch (e) {}
+        } catch {}
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
 
@@ -638,7 +638,7 @@ function initSupportRepliesSystem() {
         if (!userId || !sb) return;
         const channelName = `support-replies-user-${userId}`;
         if (window._userSupportChannel) {
-            try { sb.removeChannel(window._userSupportChannel); } catch (e) {}
+            try { sb.removeChannel(window._userSupportChannel); } catch {}
         }
         window._userSupportChannel = sb.channel(channelName)
             .on('postgres_changes', {

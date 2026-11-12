@@ -42,7 +42,7 @@ function imaskStub(el, opts) {
         if (realIMask && el) {
             const real = realIMask(el, opts);
             if (fakeInstance.value && fakeInstance.value !== (el ? el.value : '')) {
-                try { real.value = fakeInstance.value; } catch (e) {}
+                try { real.value = fakeInstance.value; } catch {}
             }
             fakeInstance._isStub = false;
             Object.assign(fakeInstance, real);

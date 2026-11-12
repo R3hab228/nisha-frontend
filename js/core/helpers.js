@@ -112,7 +112,7 @@ function safeTruncateText(text, maxGraphemes, suffix = '') {
             const segments = Array.from(segmenter.segment(str));
             if (segments.length <= maxGraphemes) return str;
             return segments.slice(0, maxGraphemes).map(s => s.segment).join('') + suffix;
-        } catch (_) {}
+        } catch {}
     }
     const chars = Array.from(str);
     if (chars.length <= maxGraphemes) return str;
@@ -130,7 +130,7 @@ function getGraphemeCount(text) {
             let count = 0;
             for (const _ of segmenter.segment(str)) count++;
             return count;
-        } catch (_) {}
+        } catch {}
     }
     return Array.from(str).length;
 }
@@ -149,7 +149,7 @@ function combineAbortSignals(signals) {
     if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.any === 'function') {
         try {
             return AbortSignal.any(validSignals);
-        } catch (_) {}
+        } catch {}
     }
     const controller = new AbortController();
     for (const sig of validSignals) {
@@ -180,12 +180,12 @@ async function yieldToMain() {
                 try {
                     channel.port1.close();
                     channel.port2.close();
-                } catch (_) {}
+                } catch {}
                 resolve();
             };
             channel.port2.postMessage(null);
             return promise;
-        } catch (_) {}
+        } catch {}
     }
     setTimeout(resolve, 0);
     return promise;
@@ -284,7 +284,7 @@ async function updateAppBadge(count) {
                 return true;
             }
         }
-    } catch (_) {}
+    } catch {}
     return false;
 }
 window.updateAppBadge = updateAppBadge;
@@ -298,7 +298,7 @@ async function clearAppBadge() {
         try {
             await navigator.clearAppBadge();
             return true;
-        } catch (_) {}
+        } catch {}
     }
     return false;
 }
@@ -480,7 +480,7 @@ if (typeof globalThis !== 'undefined') globalThis.getUserDisplayName = globalThi
 // --- VIBRATION & HAPTIC FEEDBACK ---
 function triggerVibration(duration = 150) {
     if ('vibrate' in navigator) {
-        try { navigator.vibrate(duration); } catch(e){}
+        try { navigator.vibrate(duration); } catch {}
     }
 }
 window.triggerVibration = triggerVibration;
@@ -503,7 +503,7 @@ function triggerHaptic(type = 'light') {
                 return;
             }
         }
-    } catch (e) {}
+    } catch {}
 
     // 2. Стандартный Web Vibration API для мобильных браузеров
     if (typeof window === 'undefined' || window.innerWidth > 900 || typeof navigator === 'undefined' || !navigator.vibrate) return;
@@ -515,7 +515,7 @@ function triggerHaptic(type = 'light') {
             case 'success': navigator.vibrate([20, 60, 20]); break;
             case 'error': navigator.vibrate([30, 50, 30, 50, 30]); break;
         }
-    } catch(e) {}
+    } catch {}
 }
 window.triggerHaptic = triggerHaptic;
 if (typeof globalThis !== 'undefined') globalThis.triggerHaptic = triggerHaptic;
@@ -1061,7 +1061,7 @@ function isPopoverOpenSafe(element) {
         if (typeof element.matches === 'function' && element.matches(':popover-open')) {
             return true;
         }
-    } catch (_) {}
+    } catch {}
     if (element.classList && (element.classList.contains('is-open') || element.classList.contains('active'))) {
         return true;
     }
@@ -1115,7 +1115,7 @@ async function copyToClipboard(text, successMsg = 'Скопировано в б�
                 if (successMsg) showToast(successMsg, 'success');
                 return true;
             }
-        } catch (err) {}
+        } catch {}
     }
     if (errorMsg) showToast(errorMsg, 'error');
     return false;
@@ -1197,7 +1197,7 @@ function getLocalStore() {
         if (typeof localStorage !== 'undefined' && localStorage && typeof localStorage.getItem === 'function') {
             return localStorage;
         }
-    } catch (e) {}
+    } catch {}
     return null;
 }
 
@@ -1209,7 +1209,7 @@ function getSessionStore() {
         if (typeof sessionStorage !== 'undefined' && sessionStorage && typeof sessionStorage.getItem === 'function') {
             return sessionStorage;
         }
-    } catch (e) {}
+    } catch {}
     return null;
 }
 
@@ -1750,7 +1750,7 @@ window.safeStorage = {
                     if (typeof sessionStorage !== 'undefined' && storageInstance === sessionStorage) {
                         return _memSessionFallback;
                     }
-                } catch (e) {}
+                } catch {}
                 return _memStorageFallback;
             };
             const originalSetItem = Storage.prototype.setItem;
@@ -1789,11 +1789,11 @@ window.safeStorage = {
                     delete fbMap[key];
                     try {
                         originalRemoveItem.call(this, key);
-                    } catch (err) {}
+                    } catch {}
                 };
             }
         }
-    } catch (e) {}
+    } catch {}
 })();
 
 // --- ЛЕНИВАЯ ЗАГРУЗКА PHOTOSWIPE ПО ТРЕБОВАНИЮ (ON-DEMAND) ---
@@ -1865,7 +1865,7 @@ window.ensurePhotoSwipe = ensurePhotoSwipe;
                     const db = req.result;
                     db.onclose = () => { _dbPromise = null; };
                     db.onversionchange = () => {
-                        try { db.close(); } catch (e) {}
+                        try { db.close(); } catch {}
                         _dbPromise = null;
                     };
                     resolve(db);
@@ -2905,7 +2905,7 @@ function safeViewTransition(updateFn) {
                 });
                 try {
                     Object.defineProperty(transition, 'ready', { value: safeReady, configurable: true, writable: true });
-                } catch (_) {}
+                } catch {}
             }
 
             if (transition && typeof transition.updateCallbackDone?.catch === 'function') {
@@ -2921,7 +2921,7 @@ function safeViewTransition(updateFn) {
                 });
                 try {
                     Object.defineProperty(transition, 'finished', { value: safeFinished, configurable: true, writable: true });
-                } catch (_) {}
+                } catch {}
             }
 
             return transition;

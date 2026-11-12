@@ -182,7 +182,7 @@ function resetToMain() {
     window.currentCategory = '';
     window.currentBrand = '';
     window.showingOnlyFavs = false;
-    try { sessionStorage.removeItem('nisha_showing_favs'); } catch (e) {}
+    try { sessionStorage.removeItem('nisha_showing_favs'); } catch {}
     
     const searchInput = document.getElementById('mainSearch');
     if (searchInput) searchInput.value = '';
@@ -224,7 +224,7 @@ async function initApp() {
                 storage.remove('nisha_cart_reminded');
                 storage.remove('nisha_cart_push_sent_time');
             }
-        } catch (e) {}
+        } catch {}
 
         // 1. Восстанавливаем фильтры, категорию и поисковый запрос
         const urlParams = new URLSearchParams(window.location.search);
@@ -235,7 +235,7 @@ async function initApp() {
             }, 150);
         } else if (quickAction === 'fav') {
             window.showingOnlyFavs = true;
-            try { sessionStorage.setItem('nisha_showing_favs', 'true'); } catch (e) {}
+            try { sessionStorage.setItem('nisha_showing_favs', 'true'); } catch {}
             const favNav = document.getElementById('favNav');
             if (favNav) favNav.style.color = '#fff';
         } else if (quickAction === 'reviews' || urlParams.get('open') === 'reviews') {
@@ -325,7 +325,7 @@ async function initApp() {
                             langResources[savedLng] = singleData.translation ? singleData : { translation: singleData };
                             loadSuccess = true;
                         }
-                    } catch (e) {}
+                    } catch {}
 
                     if (!loadSuccess) {
                         try {
@@ -444,7 +444,7 @@ async function initApp() {
                             window.autoAnimate = fallbackMod.default;
                             fallbackMod.default(hGrid);
                         }
-                    } catch (err) {}
+                    } catch {}
                 }
             }
         };
@@ -465,7 +465,7 @@ async function initApp() {
             const favNav = document.getElementById('favNav');
             if (!activeUser) {
                 window.showingOnlyFavs = false;
-                try { sessionStorage.removeItem('nisha_showing_favs'); } catch (e) {}
+                try { sessionStorage.removeItem('nisha_showing_favs'); } catch {}
                 if (favNav) favNav.style.color = 'var(--accent-yellow)';
                 const authMsg = (typeof i18next !== 'undefined') ? i18next.t('messages.cart_error_auth') : 'Пожалуйста, войдите в аккаунт';
                 if (typeof showToast === 'function') showToast(authMsg, 'error');
@@ -529,7 +529,7 @@ async function initApp() {
         const pingBackend = () => {
             try {
                 if (apiClient && typeof apiClient.ping === 'function') apiClient.ping();
-            } catch(e) {}
+            } catch {}
         };
         if ('requestIdleCallback' in window) {
             requestIdleCallback(() => setTimeout(pingBackend, 2500));

@@ -54,7 +54,7 @@ function getHourglass(height = 14) {
 
 function openProfileModal() {
     if (typeof updateContentLanguage === 'function') {
-        try { updateContentLanguage(); } catch (e) {}
+        try { updateContentLanguage(); } catch {}
     }
 
     if (typeof openModal === 'function') {
@@ -125,7 +125,7 @@ async function checkSession() {
                     const fallbackRes = await sb.from('profiles').select('id, username, phone, tg, cart, language, last_broadcast_id').eq('id', currentUser.id).limit(1);
                     profiles = fallbackRes.data;
                     profileErr = fallbackRes.error;
-                } catch (e) {}
+                } catch {}
             }
 
             if (!profileErr && profiles && profiles.length > 0) {
@@ -183,7 +183,7 @@ async function checkSession() {
                                 Promise.resolve(table.upsert({ id: currentUser.id, username: uName }, { onConflict: 'id' })).catch(() => {});
                             }
                         }
-                    } catch (_) {}
+                    } catch {}
                 }
                 if (!currentUser.user_metadata?.display_name || !currentUser.user_metadata?.full_name) {
                     try {
@@ -197,7 +197,7 @@ async function checkSession() {
                                 }
                             }).then().catch(() => {});
                         }
-                    } catch (_) {}
+                    } catch {}
                 }
             }
             const uEmail = currentUser.email;
@@ -330,7 +330,7 @@ async function checkSession() {
                                     if (store) store.setJSON('nisha_cached_orders', cached);
                                 }
                             }
-                        } catch (e) {}
+                        } catch {}
                         const ordModal = document.getElementById('ordersModal');
                         if (ordModal && ordModal.style.display === 'flex') {
                             if (typeof window.updateOrderTabCounters === 'function') window.updateOrderTabCounters();
@@ -638,7 +638,7 @@ async function handleAuth(action, isModal = false) {
                             username: username
                         }, { onConflict: 'id' });
                     }
-                } catch (_) {}
+                } catch {}
             }
         }
     } else {
@@ -742,7 +742,7 @@ async function logout() {
     ];
     keysToClear.forEach(k => {
         if (store && typeof store.remove === 'function') store.remove(k);
-        try { localStorage.removeItem(k); } catch (e) {}
+        try { localStorage.removeItem(k); } catch {}
     });
     if (typeof caches !== 'undefined' && typeof caches.delete === 'function') {
         caches.delete('nisha-api-v2').catch(() => {});
@@ -909,7 +909,7 @@ async function removeProfileContact(type) {
 
     try {
         await sb.from('profiles').update({ [type]: null }).eq('id', activeUser.id);
-        try { await sb.auth.updateUser({ data: { [type]: null } }); } catch(e) {}
+        try { await sb.auth.updateUser({ data: { [type]: null } }); } catch {}
     } catch(err) {
         console.error(`Ошибка удаления ${type}:`, err);
     }
@@ -1785,7 +1785,7 @@ async function checkPendingContactVerification(type) {
                     showToast(dupMsg, 'error');
                     return;
                 }
-            } catch(e) {}
+            } catch {}
         }
 
         const otpRpcTarget = isPhone ? pendingVal : `tg_${cleanVal}`;
@@ -1835,7 +1835,7 @@ async function checkPendingContactVerification(type) {
                     }
                     window._hasLinkedTgOnPhoneVerify = hasLinkedTg;
                     await sb.auth.updateUser({ data: { phone: pendingVal } });
-                } catch(e) {}
+                } catch {}
             } else {
                 if (!userProfile) userProfile = {};
                 window.userProfile = userProfile;
@@ -1860,7 +1860,7 @@ async function checkPendingContactVerification(type) {
                         return;
                     }
                     await sb.auth.updateUser({ data: { tg: formattedTg } });
-                } catch(e) {}
+                } catch {}
             }
             if (!userProfile) userProfile = {};
             window.userProfile = userProfile;
@@ -1935,7 +1935,7 @@ async function saveContactFromInput(type, isModal = false) {
                 showToast(secBlockedMsg, 'error');
                 return;
             }
-        } catch(e) {}
+        } catch {}
         rpcAvailVal = clean;
         otpTarget = clean;
         const userPrefix = (currentUser && currentUser.id) ? `${currentUser.id}_` : '';
@@ -1967,7 +1967,7 @@ async function saveContactFromInput(type, isModal = false) {
             input.focus();
             return;
         }
-    } catch(e) {}
+    } catch {}
 
     try {
         let query = sb.from('profiles').select('id').neq('id', currentUser.id).limit(1);
@@ -1978,7 +1978,7 @@ async function saveContactFromInput(type, isModal = false) {
             input.focus();
             return;
         }
-    } catch(e) {}
+    } catch {}
 
     if (isPhone) {
         lastPhoneSendTimestamp = Date.now();
@@ -2199,7 +2199,7 @@ function filterFavorites() {
     window.showingOnlyFavs = !currentFavState;
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     if (store && store.session) store.session.set('nisha_showing_favs', window.showingOnlyFavs);
-    else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_showing_favs', window.showingOnlyFavs); } catch (e) {} }
+    else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_showing_favs', window.showingOnlyFavs); } catch {} }
     
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = window.showingOnlyFavs ? '#fff' : 'var(--accent-yellow)'; 

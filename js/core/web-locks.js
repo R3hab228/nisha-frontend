@@ -86,7 +86,7 @@ function initLeaderElection() {
     if (!isWebLocksSupported()) {
         // Fallback: standalone tab always acts as leader
         _isLeader = true;
-        _leaderCallbacks.forEach(cb => { try { cb(); } catch (_) {} });
+        _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
         return Promise.resolve(true);
     }
 
@@ -102,7 +102,7 @@ function initLeaderElection() {
         async () => {
             _isLeader = true;
             console.info('[WebLocks] Tab elected as Leader (cross-tab coordination active)');
-            _leaderCallbacks.forEach(cb => { try { cb(); } catch (_) {} });
+            _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
 
             // Hold lock until tab closes, navigates away, or is hidden into bfcache
             const { promise, resolve } = Promise.withResolvers();

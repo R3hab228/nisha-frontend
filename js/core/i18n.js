@@ -31,13 +31,13 @@ function detectInitialSiteLang() {
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     let saved = store && typeof store.get === 'function' ? store.get('nisha_lang') : null;
     if (!saved && typeof localStorage !== 'undefined') {
-        try { saved = localStorage.getItem('nisha_lang'); } catch (_) {}
+        try { saved = localStorage.getItem('nisha_lang'); } catch {}
     }
     if (saved) return normalizeSiteLang(saved);
 
     let i18nSaved = store && typeof store.get === 'function' ? store.get('i18nextLng') : null;
     if (!i18nSaved && typeof localStorage !== 'undefined') {
-        try { i18nSaved = localStorage.getItem('i18nextLng'); } catch (_) {}
+        try { i18nSaved = localStorage.getItem('i18nextLng'); } catch {}
     }
     if (i18nSaved) return normalizeSiteLang(i18nSaved);
 
@@ -100,7 +100,7 @@ function setLang(lang) {
         try {
             localStorage.setItem('nisha_lang', code);
             localStorage.setItem('i18nextLng', code);
-        } catch (_) {}
+        } catch {}
     }
     updateFooterLanguageUI(code);
     if (typeof changeLanguage === 'function') {

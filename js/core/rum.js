@@ -61,7 +61,7 @@
                     rumData.ttfb = Math.round(diff);
                 }
             }
-        } catch (_) {}
+        } catch {}
     }
 
     // Initialize PerformanceObservers for Core Web Vitals
@@ -78,7 +78,7 @@
                 }
             });
             lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
-        } catch (_) {}
+        } catch {}
 
         // 2. CLS (Cumulative Layout Shift)
         try {
@@ -90,7 +90,7 @@
                 }
             });
             clsObserver.observe({ type: 'layout-shift', buffered: true });
-        } catch (_) {}
+        } catch {}
 
         // 3. INP (Interaction to Next Paint) & First Input Delay
         const handleInputEntry = (entryList) => {
@@ -106,13 +106,13 @@
         try {
             const eventObserver = new PerformanceObserver(handleInputEntry);
             eventObserver.observe({ type: 'event', durationThreshold: 40, buffered: true });
-        } catch (_) {}
+        } catch {}
 
         // Universal first-input fallback (FID / Initial Interaction)
         try {
             const fidObserver = new PerformanceObserver(handleInputEntry);
             fidObserver.observe({ type: 'first-input', buffered: true });
-        } catch (_) {}
+        } catch {}
     }
 
     // Safely send RUM payload to backend

@@ -129,7 +129,7 @@
         } catch (err) {
             console.warn(`[Store] Не удалось записать ${storageKey} в localStorage:`, err);
             if (typeof window !== 'undefined' && typeof window.cleanStorageLimits === 'function') {
-                try { window.cleanStorageLimits(); } catch (e) {}
+                try { window.cleanStorageLimits(); } catch {}
             }
         } finally {
             isInternalStorageSync = false;
@@ -172,7 +172,7 @@
                         } else if (typeof localStorage !== 'undefined') {
                             raw = localStorage.getItem(schema.storageKey);
                         }
-                    } catch (e) {}
+                    } catch {}
                     this._state[key] = deserializeValue(raw, schema);
                 } else {
                     this._state[key] = typeof schema.default === 'function' ? schema.default() : schema.default;

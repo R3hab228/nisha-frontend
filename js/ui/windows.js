@@ -131,12 +131,12 @@ function triggerModalTypewriter(modalOrId) {
     } else if (typeof modal.querySelectorAll === 'function') {
         try {
             modal.querySelectorAll('.typewriter').forEach(el => twElements.push(el));
-        } catch (_) {}
+        } catch {}
     } else if (typeof modal.querySelector === 'function') {
         try {
             const single = modal.querySelector('.typewriter');
             if (single) twElements.push(single);
-        } catch (_) {}
+        } catch {}
     }
 
     twElements.forEach(tw => {
@@ -299,7 +299,7 @@ function executeCloseModal(id, e) {
     // Мгновенная пауза любых видео в закрывающемся окне
     const modalVideos = modal.querySelectorAll('video');
     modalVideos.forEach(v => {
-        try { v.pause(); } catch(e) {}
+        try { v.pause(); } catch {}
     });
 
     if (id === 'productModal') {
@@ -324,12 +324,12 @@ function executeCloseModal(id, e) {
                 u.searchParams.delete('item');
                 window.history.replaceState(null, '', u.pathname + u.search);
             }
-        } catch (e) {}
+        } catch {}
     }
 
     // Снимаем фокус с дочерних элементов закрывающегося окна перед aria-hidden=true (WAI-ARIA compliance)
     if (typeof document !== 'undefined' && document.activeElement && modal.contains(document.activeElement)) {
-        try { document.activeElement.blur(); } catch (e) {}
+        try { document.activeElement.blur(); } catch {}
     }
 
     if (modal.classList && typeof modal.classList.remove === 'function') {
@@ -375,7 +375,7 @@ function executeCloseModal(id, e) {
         modal.style.backgroundColor = '';
 
         if (modal._returnFocusElement && typeof modal._returnFocusElement.focus === 'function') {
-            try { modal._returnFocusElement.focus(); } catch (e) {}
+            try { modal._returnFocusElement.focus(); } catch {}
             modal._returnFocusElement = null;
         }
 
@@ -587,7 +587,7 @@ function ensureFieldVisibleInModal(targetEl) {
 
     const scrollContainer = (targetEl.closest && (targetEl.closest('.form-layout') || targetEl.closest('.modal-window'))) || null;
     if (!scrollContainer) {
-        try { targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
+        try { targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch {}
         return;
     }
 

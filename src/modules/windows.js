@@ -18,12 +18,12 @@ export function triggerModalTypewriter(modalOrId) {
     } else if (typeof modal.querySelectorAll === 'function') {
         try {
             modal.querySelectorAll('.typewriter').forEach(el => twElements.push(el));
-        } catch (_) {}
+        } catch {}
     } else if (typeof modal.querySelector === 'function') {
         try {
             const single = modal.querySelector('.typewriter');
             if (single) twElements.push(single);
-        } catch (_) {}
+        } catch {}
     }
 
     twElements.forEach(tw => {
@@ -53,7 +53,7 @@ export function openModal(modalId, options) {
     const initFn = _modularModalInits.get(modalId);
     if (typeof initFn === 'function') {
         _modularModalInits.delete(modalId);
-        try { initFn(); } catch (_) {}
+        try { initFn(); } catch {}
     }
     if (typeof document !== 'undefined' && typeof document.getElementById === 'function') {
         const el = document.getElementById(modalId);

@@ -39,7 +39,10 @@
         return `${prefix}_${Date.now()}_${rand}`;
     }
 
-    function sleep(ms) {
+    function waitMsDelay(ms) {
+        if (typeof globalThis.sleep === 'function') {
+            return globalThis.sleep(ms);
+        }
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
@@ -48,91 +51,17 @@
     }
 
     function createTimeoutSignal(timeoutMs, externalSignal) {
-        if (!timeoutMs && !externalSignal) {
-            return {
-                signal: undefined,
-                isTimedOut: () => false,
-                cleanup: () => {}
-            };
+        const timeoutSig = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : null;
+        let signal;
+        if (externalSignal && timeoutSig) {
+            signal = AbortSignal.any([externalSignal, timeoutSig]);
+        } else {
+            signal = externalSignal || timeoutSig || undefined;
         }
-
-        // Современный нативный AbortSignal.timeout(ms) без ручного setTimeout + controller.abort()
-        if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
-            const timeoutSig = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : null;
-            if (!externalSignal) {
-                return {
-                    signal: timeoutSig || undefined,
-                    isTimedOut: () => Boolean(timeoutSig && timeoutSig.aborted),
-                    cleanup: () => {}
-                };
-            }
-            if (typeof AbortSignal.any === 'function') {
-                return {
-                    signal: timeoutSig ? AbortSignal.any([externalSignal, timeoutSig]) : externalSignal,
-                    isTimedOut: () => Boolean(timeoutSig && timeoutSig.aborted),
-                    cleanup: () => {}
-                };
-            }
-            const combinedCtrl = new AbortController();
-            const cleanupCtrl = new AbortController();
-            const onAbort = () => {
-                cleanupCtrl.abort();
-                combinedCtrl.abort();
-            };
-            if (externalSignal.aborted || (timeoutSig && timeoutSig.aborted)) {
-                combinedCtrl.abort();
-            } else {
-                externalSignal.addEventListener('abort', onAbort, { once: true, signal: cleanupCtrl.signal });
-                if (timeoutSig) {
-                    timeoutSig.addEventListener('abort', onAbort, { once: true, signal: cleanupCtrl.signal });
-                }
-            }
-            return {
-                signal: combinedCtrl.signal,
-                isTimedOut: () => Boolean(timeoutSig && timeoutSig.aborted),
-                cleanup: () => cleanupCtrl.abort()
-            };
-        }
-
-        // Запасной fallback для устаревших окружений без AbortSignal.timeout
-        const controller = new AbortController();
-        let timedOut = false;
-
-        const timerId = timeoutMs > 0
-            ? setTimeout(() => {
-                timedOut = true;
-                controller.abort();
-            }, timeoutMs)
-            : null;
-
-        const onExternalAbort = () => {
-            if (timerId) clearTimeout(timerId);
-            controller.abort();
-        };
-
-        const cleanupCtrl = externalSignal ? new AbortController() : null;
-
-        if (externalSignal) {
-            if (externalSignal.aborted) {
-                if (timerId) clearTimeout(timerId);
-                controller.abort();
-            } else {
-                externalSignal.addEventListener('abort', onExternalAbort, {
-                    once: true,
-                    signal: cleanupCtrl.signal
-                });
-            }
-        }
-
-        const cleanup = () => {
-            if (timerId) clearTimeout(timerId);
-            if (cleanupCtrl) cleanupCtrl.abort();
-        };
-
         return {
-            signal: controller.signal,
-            isTimedOut: () => timedOut,
-            cleanup
+            signal,
+            isTimedOut: () => Boolean(timeoutSig?.aborted),
+            cleanup: () => {}
         };
     }
 
@@ -168,7 +97,7 @@
                         headers.set('Authorization', `Bearer ${tok}`);
                     }
                 }
-            } catch (authErr) {}
+            } catch {}
         }
 
         if (finalBody !== undefined && finalBody !== null && !isUpload) {
@@ -210,7 +139,7 @@
 
                 if (!response.ok && RETRYABLE_STATUSES.has(response.status) && attempt < maxRetries) {
                     const waitMs = response.status === 429 ? Math.max(2500, baseRetryDelay * (attempt + 1)) : baseRetryDelay * (attempt + 1);
-                    await sleep(waitMs);
+                    await waitMsDelay(waitMs);
                     continue;
                 }
 
@@ -234,7 +163,7 @@
                 }
 
                 if (attempt < maxRetries) {
-                    await sleep(baseRetryDelay * (attempt + 1));
+                    await waitMsDelay(baseRetryDelay * (attempt + 1));
                     continue;
                 }
                 throw lastError;
@@ -258,7 +187,7 @@
                 try {
                     Object.defineProperty(parsed, '_status', { value: response.status, enumerable: false });
                     Object.defineProperty(parsed, '_ok', { value: response.ok, enumerable: false });
-                } catch (e) {}
+                } catch {}
             }
             return parsed;
         } catch (parseErr) {

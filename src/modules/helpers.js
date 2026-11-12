@@ -128,7 +128,7 @@ export function safeTruncateText(text, maxGraphemes, suffix = '') {
             const segments = Array.from(segmenter.segment(str));
             if (segments.length <= maxGraphemes) return str;
             return segments.slice(0, maxGraphemes).map(s => s.segment).join('') + suffix;
-        } catch (_) {}
+        } catch {}
     }
     const chars = Array.from(str);
     if (chars.length <= maxGraphemes) return str;
@@ -146,7 +146,7 @@ export function getGraphemeCount(text) {
             let count = 0;
             for (const _ of segmenter.segment(str)) count++;
             return count;
-        } catch (_) {}
+        } catch {}
     }
     return Array.from(str).length;
 }
@@ -165,7 +165,7 @@ export function combineAbortSignals(signals) {
     if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.any === 'function') {
         try {
             return AbortSignal.any(validSignals);
-        } catch (_) {}
+        } catch {}
     }
     const controller = new AbortController();
     for (const sig of validSignals) {
@@ -200,7 +200,7 @@ export async function yieldToMain() {
             try {
                 channel.port1.close();
                 channel.port2.close();
-            } catch (_) {}
+            } catch {}
             resolve();
         };
         channel.port2.postMessage(null);
@@ -304,7 +304,7 @@ export async function updateAppBadge(count) {
                 return true;
             }
         }
-    } catch (_) {}
+    } catch {}
     return false;
 }
 
@@ -317,7 +317,7 @@ export async function clearAppBadge() {
         try {
             await navigator.clearAppBadge();
             return true;
-        } catch (_) {}
+        } catch {}
     }
     return false;
 }
@@ -495,7 +495,7 @@ export function triggerVibration(duration = 150) {
     if (typeof window !== 'undefined' && typeof window.triggerVibration === 'function') {
         window.triggerVibration(duration);
     } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try { navigator.vibrate(duration); } catch (_) {}
+        try { navigator.vibrate(duration); } catch {}
     }
 }
 
@@ -628,7 +628,7 @@ export async function copyToClipboard(text) {
         try {
             await navigator.clipboard.writeText(text);
             return true;
-        } catch (_) {}
+        } catch {}
     }
     return false;
 }
@@ -1042,7 +1042,7 @@ export function isPopoverOpenSafe(element) {
         if (typeof element.matches === 'function' && element.matches(':popover-open')) {
             return true;
         }
-    } catch (_) {}
+    } catch {}
     if (element.classList && (element.classList.contains('is-open') || element.classList.contains('active'))) {
         return true;
     }

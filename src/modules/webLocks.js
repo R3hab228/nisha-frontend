@@ -92,7 +92,7 @@ export function initLeaderElection() {
 
     if (!isWebLocksSupported()) {
         _isLeader = true;
-        _leaderCallbacks.forEach(cb => { try { cb(); } catch (_) {} });
+        _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
         return Promise.resolve(true);
     }
 
@@ -107,7 +107,7 @@ export function initLeaderElection() {
         { mode: 'exclusive', signal: _leaderAbortController.signal },
         async () => {
             _isLeader = true;
-            _leaderCallbacks.forEach(cb => { try { cb(); } catch (_) {} });
+            _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
 
             const { promise, resolve } = Promise.withResolvers();
             if (typeof window !== 'undefined') {

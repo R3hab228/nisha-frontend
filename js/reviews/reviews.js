@@ -398,7 +398,7 @@ function skipAutoReview() {
             if (!Array.isArray(dismissedOrders)) dismissedOrders = [];
             if (!dismissedOrders.includes(orderId)) dismissedOrders.push(orderId);
             if (store) store.setJSON('nisha_dismissed_reviews', dismissedOrders);
-        } catch(e) {}
+        } catch {}
     }
     closeModal('autoReviewModal');
 }

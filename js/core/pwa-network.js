@@ -75,7 +75,7 @@ if ('serviceWorker' in navigator) {
                             if (isReloaded) return;
                             const lastUpdateTs = Number.parseInt(store ? store.get('nisha_sw_updated_ts', '0') : '0', 10);
                             if (lastUpdateTs && (Date.now() - lastUpdateTs) < 10 * 60 * 1000) return;
-                        } catch (e) {}
+                        } catch {}
 
                         // Узнаем версию нового воркера: если страница УЖЕ загружена со свежим JS-бандлом этой же версии,
                         // плашка не нужна (воркер тихо активируется в фоне)
@@ -106,7 +106,7 @@ if ('serviceWorker' in navigator) {
                                             store.set('nisha_sw_updated_ts', String(Date.now()));
                                             store.set('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
                                         }
-                                    } catch (e) {}
+                                    } catch {}
 
                                     try {
                                         if (registration.waiting) {
@@ -115,14 +115,14 @@ if ('serviceWorker' in navigator) {
                                         if (installingWorker) {
                                             installingWorker.postMessage({ type: 'SKIP_WAITING' });
                                         }
-                                    } catch (e) {}
+                                    } catch {}
 
                                     try {
                                         if ('caches' in window) {
                                             const names = await caches.keys();
                                             await Promise.all(names.map(name => caches.delete(name)));
                                         }
-                                    } catch (e) {}
+                                    } catch {}
 
                                     window.location.reload();
                                 }
@@ -412,7 +412,7 @@ function sendTelegramErrorAlert(errorObj, context = {}) {
             if (window.location.search && window.location.search.length < 40) {
                 cleanPage += window.location.search;
             }
-        } catch (e) {}
+        } catch {}
     }
 
     const severity = evaluateClientErrorSeverity({
@@ -532,7 +532,7 @@ function initSentryDeferred() {
                         Sentry.captureMessage(earlyEvt.message);
                     }
                 }
-            } catch(e) {}
+            } catch {}
         }
     };
 
@@ -559,7 +559,7 @@ function captureError(err, context = {}) {
     if (typeof Sentry !== 'undefined' && Sentry.captureException) {
         try {
             Sentry.captureException(err, { extra: sanitizeContext(context) });
-        } catch(e) {}
+        } catch {}
     } else {
         console.warn('[ERROR CAPTURED]', err, context);
     }
@@ -567,7 +567,7 @@ function captureError(err, context = {}) {
     // 2. Отправка алерта в Telegram через бэкенд
     try {
         sendTelegramErrorAlert(err, context);
-    } catch(e) {}
+    } catch {}
 }
 
 window.captureError = captureError;
@@ -641,15 +641,15 @@ window.addEventListener("pageshow", async (event) => {
 
         // 1. Тихое обновление корзины и счетчиков
         if (typeof window.updateCartUI === 'function') {
-            try { window.updateCartUI(); } catch (_) {}
+            try { window.updateCartUI(); } catch {}
         }
         if (typeof window.updateAppBadge === 'function') {
-            try { window.updateAppBadge(); } catch (_) {}
+            try { window.updateAppBadge(); } catch {}
         }
 
         // 2. Тихое обновление маркеров избранного
         if (typeof window.renderFavoritesMarkers === 'function') {
-            try { window.renderFavoritesMarkers(); } catch (_) {}
+            try { window.renderFavoritesMarkers(); } catch {}
         }
 
         // 3. Снятие возможных залипших прелоадеров
@@ -658,19 +658,19 @@ window.addEventListener("pageshow", async (event) => {
 
         // 4. Мгновенная синхронизация Realtime и критических статусов товаров при пробуждении из bfcache
         if (typeof window.initLeaderElection === 'function') {
-            try { window.initLeaderElection(); } catch (_) {}
+            try { window.initLeaderElection(); } catch {}
         }
         if (typeof window.initCatalogRealtimeSubscription === 'function') {
-            try { window.initCatalogRealtimeSubscription(); } catch (_) {}
+            try { window.initCatalogRealtimeSubscription(); } catch {}
         }
         if (typeof window.syncCriticalStatuses === 'function') {
-            try { window.syncCriticalStatuses(); } catch (_) {}
+            try { window.syncCriticalStatuses(); } catch {}
         }
 
         // 5. Проверка актуальности открытого товара
         const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
         if (activeItem && typeof window.checkItemAvailability === 'function') {
-            try { await window.checkItemAvailability(activeItem.id); } catch (_) {}
+            try { await window.checkItemAvailability(activeItem.id); } catch {}
         }
     }
 }, { passive: true });
@@ -679,7 +679,7 @@ window.addEventListener("pagehide", (event) => {
     if (event.persisted) {
         // При переходе страницы в bfcache приостанавливаем тяжелые видео для экономии RAM/GPU
         document.querySelectorAll('video').forEach(video => {
-            try { video.pause(); } catch (_) {}
+            try { video.pause(); } catch {}
         });
     }
 }, { passive: true });
@@ -903,7 +903,7 @@ function syncNotificationPermission() {
         try {
             localStorage.setItem('nisha_notification_permission', perm);
             localStorage.setItem('nisha_notification_permission_time', String(Date.now()));
-        } catch (_) {}
+        } catch {}
     }
     if (window.store) {
         const stored = window.store.get('notificationPermission');
@@ -925,7 +925,7 @@ if (isPwaStandalone()) {
     try {
         localStorage.setItem('nisha_pwa_installed', 'true');
         document.cookie = 'nisha_pwa_installed=true; path=/; max-age=31536000; SameSite=Lax';
-    } catch (_) {}
+    } catch {}
 }
 
 // Отслеживание успешной установки PWA из браузера
@@ -934,7 +934,7 @@ window.addEventListener('appinstalled', async () => {
     try {
         localStorage.setItem('nisha_pwa_installed', 'true');
         document.cookie = 'nisha_pwa_installed=true; path=/; max-age=31536000; SameSite=Lax';
-    } catch (_) {}
+    } catch {}
 
     // Раз PWA установлено, уведомления теперь должны приходить ТОЛЬКО от PWA!
     // Отписываем обычный браузер от Web Push
@@ -947,7 +947,7 @@ window.addEventListener('appinstalled', async () => {
                         if (window.apiClient) {
                             await window.apiClient.post('/api/unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
                         }
-                    } catch (_) {}
+                    } catch {}
                     await sub.unsubscribe().catch(() => {});
                     if (window.store) window.store.set('pushSubEndpoint', '');
                 }
@@ -964,7 +964,7 @@ if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) 
             try {
                 localStorage.setItem('nisha_pwa_installed', 'true');
                 document.cookie = 'nisha_pwa_installed=true; path=/; max-age=31536000; SameSite=Lax';
-            } catch (_) {}
+            } catch {}
 
             // Если открыт обычный браузер, но PWA уже установлено — отписываем браузер от push
             if (!isPwaStandalone() && 'serviceWorker' in navigator) {
@@ -976,7 +976,7 @@ if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) 
                                 if (window.apiClient) {
                                     await window.apiClient.post('/api/unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
                                 }
-                            } catch (_) {}
+                            } catch {}
                             await sub.unsubscribe().catch(() => {});
                             if (window.store) window.store.set('pushSubEndpoint', '');
                         }
@@ -1000,7 +1000,7 @@ async function subscribeUserToPush(registration, silent = false) {
                             if (window.apiClient) {
                                 window.apiClient.post('/api/unsubscribe', { endpoint: existingSub.endpoint }).catch(() => {});
                             }
-                        } catch (_) {}
+                        } catch {}
                         existingSub.unsubscribe().catch(() => {});
                         if (window.store) window.store.set('pushSubEndpoint', '');
                     }
@@ -1023,7 +1023,7 @@ async function subscribeUserToPush(registration, silent = false) {
                         if (window.apiClient) {
                             await window.apiClient.post('/api/unsubscribe', { endpoint: existingSub.endpoint }).catch(() => {});
                         }
-                    } catch (_) {}
+                    } catch {}
                     await existingSub.unsubscribe().catch(() => {});
                     if (window.store) window.store.set('pushSubEndpoint', '');
                 }
@@ -1037,7 +1037,7 @@ async function subscribeUserToPush(registration, silent = false) {
             try {
                 localStorage.setItem('nisha_pwa_installed', 'true');
                 document.cookie = 'nisha_pwa_installed=true; path=/; max-age=31536000; SameSite=Lax';
-            } catch (_) {}
+            } catch {}
         }
 
         if (typeof Notification === 'undefined' || Notification.permission === 'denied') {
@@ -1104,7 +1104,7 @@ if (typeof window !== 'undefined' && window.location && window.location.hostname
                         if (window.apiClient) {
                             window.apiClient.post('/api/unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
                         }
-                    } catch (_) {}
+                    } catch {}
                     await sub.unsubscribe().catch(() => {});
                     if (window.store) window.store.set('pushSubEndpoint', '');
                 }
@@ -1277,7 +1277,7 @@ function initPwaPullToRefresh() {
                         return true;
                     }
                 }
-            } catch (e) {}
+            } catch {}
             node = node.parentElement;
         }
 

@@ -278,14 +278,14 @@ document.addEventListener('keydown', function(e) {
                     if (pos > 0 && val.charAt(pos - 1) === '\n') {
                         activeEl.value = val.slice(0, pos - 1) + val.slice(pos);
                         const newPos = pos - 1;
-                        try { activeEl.setSelectionRange(newPos, newPos); } catch (_) {}
+                        try { activeEl.setSelectionRange(newPos, newPos); } catch {}
                     } else if (val.endsWith('\n')) {
                         activeEl.value = val.slice(0, -1);
                     }
 
                     try {
                         activeEl.dispatchEvent(new Event('input', { bubbles: true }));
-                    } catch (_) {}
+                    } catch {}
                     if (typeof updateCharCount === 'function') {
                         updateCharCount(activeEl);
                     }
@@ -304,7 +304,7 @@ document.addEventListener('keydown', function(e) {
                             const nextEl = focusables[currentIndex + 1];
                             nextEl.focus();
                             if (typeof nextEl.select === 'function' && nextEl.tagName === 'INPUT') {
-                                try { nextEl.select(); } catch (_) {}
+                                try { nextEl.select(); } catch {}
                             }
                             if (typeof nextEl.scrollIntoView === 'function') {
                                 const rect = nextEl.getBoundingClientRect();
@@ -369,7 +369,7 @@ document.addEventListener('keydown', function(e) {
                     const nextEl = focusables[currentIndex + 1];
                     nextEl.focus();
                     if (typeof nextEl.select === 'function' && nextEl.tagName === 'INPUT') {
-                        try { nextEl.select(); } catch (_) {}
+                        try { nextEl.select(); } catch {}
                     }
                     if (typeof nextEl.scrollIntoView === 'function') {
                         const rect = nextEl.getBoundingClientRect();

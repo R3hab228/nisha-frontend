@@ -71,7 +71,7 @@
                         capture_pageleave: true
                     });
                 }
-            } catch (e) {}
+            } catch {}
         };
 
         if (typeof window.requestIdleCallback === 'function') {
@@ -94,13 +94,13 @@
             if (typeof window !== 'undefined' && typeof window.plausible === 'function') {
                 window.plausible(eventName, { props: safeProps });
             }
-        } catch (e) {}
+        } catch {}
 
         try {
             if (typeof window !== 'undefined' && window.posthog && typeof window.posthog.capture === 'function') {
                 window.posthog.capture(eventName, safeProps);
             }
-        } catch (e) {}
+        } catch {}
     }
 
     /**
@@ -129,7 +129,7 @@
                     currency: 'UAH'
                 });
             }
-        } catch (e) {}
+        } catch {}
     }
 
     /**
@@ -155,7 +155,7 @@
                     currency: 'UAH'
                 });
             }
-        } catch (e) {}
+        } catch {}
     }
 
     /**
@@ -179,7 +179,7 @@
                     currency: 'UAH'
                 });
             }
-        } catch (e) {}
+        } catch {}
     }
 
     /**
@@ -204,7 +204,7 @@
                     props: { order_id: String(orderId || ''), items_count: safeItems.length }
                 });
             }
-        } catch (e) {}
+        } catch {}
 
         try {
             if (typeof window !== 'undefined' && window.ttq && typeof window.ttq.track === 'function') {
@@ -214,7 +214,7 @@
                     currency: 'UAH'
                 });
             }
-        } catch (e) {}
+        } catch {}
     }
 
     /**

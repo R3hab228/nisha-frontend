@@ -144,7 +144,7 @@ function getNPStorage(key) {
             const raw = sessionStorage.getItem('nisha_np_' + key);
             return raw ? JSON.parse(raw) : null;
         }
-    } catch(e) {}
+    } catch {}
     return null;
 }
 window.getNPStorage = getNPStorage;
@@ -207,7 +207,7 @@ function setNPStorage(key, val, customTtl) {
                             }
                         }
                     }
-                } catch (_) {}
+                } catch {}
             }
         }
     }
@@ -261,7 +261,7 @@ async function cleanupStaleNPCache(forceAll = false) {
                 }
             }
         }
-    } catch (_) {}
+    } catch {}
 
     // 3. Очистка L2 IndexedDB
     try {
@@ -324,7 +324,7 @@ async function clearNPCache(includeIdb = false) {
                 }
             }
         }
-    } catch (_) {}
+    } catch {}
     if (includeIdb) {
         if (typeof cleanupStaleNPCache === 'function') {
             await cleanupStaleNPCache(true);
@@ -352,7 +352,7 @@ function scheduleAutoNPCacheCleanup() {
                         if (typeof localStorage !== 'undefined') {
                             localStorage.setItem('nisha_np_last_sweep', String(Date.now()));
                         }
-                    } catch (_) {}
+                    } catch {}
                 }).catch(() => {});
             };
 
@@ -362,7 +362,7 @@ function scheduleAutoNPCacheCleanup() {
                 setTimeout(executeSweep, 3000);
             }
         }
-    } catch (_) {}
+    } catch {}
 }
 scheduleAutoNPCacheCleanup();
 
@@ -376,7 +376,7 @@ let isOrderSubmitting = false;
 // Флаг оформления заказа виден другим модулям (например, баннеру обновления Service Worker)
 try {
     Object.defineProperty(window, 'isOrderSubmitting', { get: () => isOrderSubmitting, configurable: true });
-} catch (e) {}
+} catch {}
 
 // Защита от двойного удаления одного и того же товара (двойной клик / свайп + крестик)
 const removingCartIds = new Set();
@@ -497,7 +497,7 @@ async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
                     customPrice = Number(parsedBargain.acceptedPrice);
                 }
             }
-        } catch (e) {}
+        } catch {}
     }
 
     const catalog = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
@@ -655,7 +655,7 @@ async function addToCartFromModal() {
         if (rawBargain) {
             parsedBargain = JSON.parse(rawBargain);
         }
-    } catch (e) {}
+    } catch {}
 
     if (existingIndex !== -1) { 
         if (parsedBargain && parsedBargain.acceptedPrice && currentCart[existingIndex].price !== Number(parsedBargain.acceptedPrice)) {
@@ -842,7 +842,7 @@ function updateCartUI() {
             dropdown.classList.remove('active');
             clearDropdownInlineStyles(dropdown);
             if (typeof window.hidePopoverSafe === 'function') window.hidePopoverSafe(dropdown);
-            else if (typeof dropdown.hidePopover === 'function' && dropdown.matches && dropdown.matches(':popover-open')) { try { dropdown.hidePopover(); } catch (_) {} }
+            else if (typeof dropdown.hidePopover === 'function' && dropdown.matches && dropdown.matches(':popover-open')) { try { dropdown.hidePopover(); } catch {} }
         }
         if (fab) {
             fab.classList.remove('cart-active'); 
@@ -1086,7 +1086,7 @@ function scrollNPFieldIntoModalView(inputEl) {
         if (typeof inputEl.scrollIntoView === 'function') {
             inputEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-    } catch (e) {}
+    } catch {}
 }
 window.scrollNPFieldIntoModalView = scrollNPFieldIntoModalView;
 
@@ -1488,7 +1488,7 @@ async function ensureBranchRef(branchText) {
     if (!cityRef) {
         try {
             cityRef = await ensureCityRef();
-        } catch (e) {}
+        } catch {}
     }
     if (!cityRef) return '';
 
@@ -2430,9 +2430,9 @@ function saveCheckoutDraft() {
                 if (typeof sessionStorage !== 'undefined') {
                     sessionStorage.setItem('nisha_checkout_draft', JSON.stringify(draft));
                 }
-            } catch (e) {}
+            } catch {}
         }
-    } catch(e) {}
+    } catch {}
 }
 window.saveCheckoutDraft = saveCheckoutDraft;
 
@@ -2500,7 +2500,7 @@ function clearCheckoutDraft() {
         if (typeof sessionStorage !== 'undefined') {
             sessionStorage.removeItem('nisha_checkout_draft');
         }
-    } catch(e) {}
+    } catch {}
 }
 window.clearCheckoutDraft = clearCheckoutDraft;
 
@@ -2894,12 +2894,12 @@ function highlightFieldError(inputEl) {
     inputEl.classList.add('input-field-error');
     try {
         inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } catch(e) {}
+    } catch {}
     try {
         inputEl.focus();
-    } catch(e) {}
+    } catch {}
     if (inputEl._clearErrorCtrl) {
-        try { inputEl._clearErrorCtrl.abort(); } catch(e) {}
+        try { inputEl._clearErrorCtrl.abort(); } catch {}
     }
     const clearCtrl = new AbortController();
     inputEl._clearErrorCtrl = clearCtrl;
@@ -3053,7 +3053,7 @@ async function confirmEmailPrompt(wantsEmail) {
 
     let cityRef = window.selectedCityRef || selectedCityRef;
     if (!cityRef && city) {
-        try { cityRef = await ensureCityRef(); } catch (e) {}
+        try { cityRef = await ensureCityRef(); } catch {}
         if (!cityRef && city.length >= 2) {
             cityRef = 'city_auto_' + _npNorm(city);
             selectedCityRef = cityRef;
@@ -3072,7 +3072,7 @@ async function confirmEmailPrompt(wantsEmail) {
 
     let branchRef = window.selectedBranchRef || selectedBranchRef;
     if (!branchRef && branch) {
-        try { branchRef = await ensureBranchRef(branch); } catch (e) {}
+        try { branchRef = await ensureBranchRef(branch); } catch {}
         if (!branchRef && branch.length >= 2) {
             branchRef = 'branch_auto_' + _npNorm(branch);
             selectedBranchRef = branchRef;
@@ -3163,7 +3163,7 @@ async function executeOrderFinal(emailToSave) {
 
     let cityRef = window.selectedCityRef || selectedCityRef;
     if (!cityRef && city) {
-        try { cityRef = await ensureCityRef(); } catch (e) {}
+        try { cityRef = await ensureCityRef(); } catch {}
         if (!cityRef && city.length >= 2) {
             cityRef = 'city_auto_' + _npNorm(city);
             selectedCityRef = cityRef;
@@ -3173,7 +3173,7 @@ async function executeOrderFinal(emailToSave) {
 
     let branchRef = window.selectedBranchRef || selectedBranchRef;
     if (!branchRef && branch) {
-        try { branchRef = await ensureBranchRef(branch); } catch (e) {}
+        try { branchRef = await ensureBranchRef(branch); } catch {}
         if (!branchRef && branch.length >= 2) {
             branchRef = 'branch_auto_' + _npNorm(branch);
             selectedBranchRef = branchRef;
@@ -3360,7 +3360,7 @@ async function executeOrderFinal(emailToSave) {
 
                 try {
                     await sb.from('orders').update({ status: 'В обработке', payment_method: paymentMethod }).eq('id', orderId);
-                } catch (stErr) {}
+                } catch {}
             }
         }
 
@@ -3421,7 +3421,7 @@ async function executeOrderFinal(emailToSave) {
             };
             cached = [newOrderObj, ...cached.filter(c => c && c.id !== orderId)];
             if (store) store.setJSON('nisha_cached_orders', cached);
-        } catch (e) {}
+        } catch {}
 
         if (Array.isArray(window.allItems) && Array.isArray(finalOrderItems)) {
             finalOrderItems.forEach(ordered => {
@@ -3437,7 +3437,7 @@ async function executeOrderFinal(emailToSave) {
                     localStorage.removeItem('declined_bargain_' + ordered.id);
                     sessionStorage.removeItem('pending_bargain_' + ordered.id);
                     localStorage.removeItem('pending_bargain_' + ordered.id);
-                } catch (e) {}
+                } catch {}
             });
             if (typeof window.updateSidebarCounters === 'function') window.updateSidebarCounters();
             if (typeof renderHistory === 'function') renderHistory();
@@ -3511,7 +3511,7 @@ async function autoDetectCity() {
                 if (edgeGeo && edgeGeo.success && edgeGeo.city) {
                     data = edgeGeo;
                 }
-            } catch (edgeErr) {}
+            } catch {}
         }
         if (!data) {
             const res = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(4000) : undefined });
@@ -3558,7 +3558,7 @@ async function autoDetectCity() {
                     if (nomData && nomData.address) {
                         detectedCity = nomData.address.city || nomData.address.town || nomData.address.village || detectedCity;
                     }
-                } catch(e) {}
+                } catch {}
             }
             
             const npData = await window.apiClient.post('/api/np-proxy', {

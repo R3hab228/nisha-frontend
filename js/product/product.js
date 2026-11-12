@@ -130,7 +130,7 @@ function isDataSaverActive() {
             if (conn.saveData === true) return true;
             if (conn.effectiveType === "slow-2g" || conn.effectiveType === "2g") return true;
         }
-    } catch (_) {}
+    } catch {}
     return false;
 }
 
@@ -439,7 +439,7 @@ function openProductModal(item) {
                 priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${parsedBargain.originalPrice || item.price} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${parsedBargain.acceptedPrice} ${cur}</span>`;
             }
         }
-    } catch (e) {}
+    } catch {}
     
     const sizeDescEl = document.getElementById('modalItemSizeDesc');
     if (sizeDescEl) sizeDescEl.innerText = item.size;
@@ -637,7 +637,7 @@ function openProductModal(item) {
                         }
                     }
                 }
-            } catch (e) {}
+            } catch {}
 
             if (offerPriceBtn) {
                 offerPriceBtn.style.display = 'flex';
@@ -912,7 +912,7 @@ function openProductModal(item) {
                             miniPriceHTML = `<span style="color: #777; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${origSimPrice} ${curr}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${simBargain.acceptedPrice} ${curr}</span>`;
                         }
                     }
-                } catch (e) {}
+                } catch {}
 
                 const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
                 const unseenClass = isUnseen ? 'is-unseen' : '';
@@ -1341,7 +1341,7 @@ async function openProductPhotoZoom(targetSlideOrIndex) {
     imageSlides.forEach(s => s.classList.remove('zoomed-in'));
 
     if (window.pswpLightbox) {
-        try { window.pswpLightbox.destroy(); } catch (err) {}
+        try { window.pswpLightbox.destroy(); } catch {}
         window.pswpLightbox = null;
     }
 
@@ -1904,7 +1904,7 @@ function getBestBuyerContact() {
         if (tgUser && tgUser.username) {
             return '@' + tgUser.username.replace(/^@/, '');
         }
-    } catch (e) {}
+    } catch {}
 
     // 2. Telegram username из профиля / хранилища
     try {
@@ -1918,7 +1918,7 @@ function getBestBuyerContact() {
             const cleanTg = tgCandidate.trim().replace(/^https?:\/\/t\.me\//, '').replace(/^@/, '');
             if (cleanTg && !cleanTg.includes('@')) return '@' + cleanTg;
         }
-    } catch (e) {}
+    } catch {}
 
     // 3. Номер телефона (из профиля или последнего заказа/чекаута)
     try {
@@ -1933,7 +1933,7 @@ function getBestBuyerContact() {
         if (phoneCandidate && typeof phoneCandidate === 'string' && phoneCandidate.trim()) {
             return phoneCandidate.trim();
         }
-    } catch (e) {}
+    } catch {}
 
     // 4. Только если нет ни Telegram, ни телефона — email
     try {
@@ -1941,7 +1941,7 @@ function getBestBuyerContact() {
         if (currentUser && currentUser.email) return currentUser.email.trim();
         const lastEmail = localStorage.getItem('nisha_last_email');
         if (lastEmail) return lastEmail.trim();
-    } catch (e) {}
+    } catch {}
 
     return '';
 }
@@ -1984,7 +1984,7 @@ function recordClientBargainOffer() {
             : [];
         validTimestamps.push(now);
         localStorage.setItem(BARGAIN_RATE_LIMIT_STORAGE_KEY, JSON.stringify(validTimestamps));
-    } catch (e) {}
+    } catch {}
 }
 window.checkClientBargainRateLimit = checkClientBargainRateLimit;
 window.recordClientBargainOffer = recordClientBargainOffer;
@@ -2134,7 +2134,7 @@ async function submitBargainOffer() {
             const pData = { itemId: String(activeItem.id), offeredPrice: offeredPrice, timestamp: Date.now() };
             sessionStorage.setItem('pending_bargain_' + activeItem.id, JSON.stringify(pData));
             localStorage.setItem('pending_bargain_' + activeItem.id, JSON.stringify(pData));
-        } catch (e) {}
+        } catch {}
         const modalBtn = document.getElementById('modalOfferPriceBtn');
         if (modalBtn) {
             const pendingText = (typeof i18next !== 'undefined') ? i18next.t('product.offer_pending', { defaultValue: '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]' }) : '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]';
@@ -2196,7 +2196,7 @@ function showInlineOfferPriceInput() {
             const parsedPend = JSON.parse(pending);
             if (parsedPend && (Date.now() - (parsedPend.timestamp || 0) < 24 * 60 * 60 * 1000)) return;
         }
-    } catch (e) {}
+    } catch {}
 
     const suggested = Math.max(1, Math.round((activeItem.price || 1000) * 0.85));
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
@@ -2364,7 +2364,7 @@ async function submitInlineBargainOffer() {
             const pData = { itemId: String(activeItem.id), offeredPrice: offeredPrice, timestamp: Date.now() };
             sessionStorage.setItem('pending_bargain_' + activeItem.id, JSON.stringify(pData));
             localStorage.setItem('pending_bargain_' + activeItem.id, JSON.stringify(pData));
-        } catch (e) {}
+        } catch {}
         const btn = document.getElementById('modalOfferPriceBtn');
         if (btn) {
             btn.innerText = t('product.offer_pending', '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]');
@@ -2442,7 +2442,7 @@ async function syncUserBargains() {
                     const data = await res.json();
                     bargains = data?.bargains || [];
                 }
-            } catch (fErr) {}
+            } catch {}
         }
 
         if (Array.isArray(bargains) && bargains.length > 0) {
@@ -2466,7 +2466,7 @@ async function syncUserBargains() {
                             localStorage.setItem('pending_bargain_' + b.itemId, JSON.stringify(pData));
                             sessionStorage.setItem('pending_bargain_' + b.itemId, JSON.stringify(pData));
                         }
-                    } catch (e) {}
+                    } catch {}
 
                     const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
                     if (activeItem && String(activeItem.id) === String(b.itemId)) {
@@ -2509,7 +2509,7 @@ async function syncUserBargains() {
                     sessionStorage.removeItem('declined_bargain_' + b.itemId);
                     localStorage.removeItem('pending_bargain_' + b.itemId);
                     sessionStorage.removeItem('pending_bargain_' + b.itemId);
-                } catch (e) {}
+                } catch {}
 
                 if (Array.isArray(activeCart)) {
                     const cartItem = activeCart.find(ci => ci && String(ci.id) === String(b.itemId));

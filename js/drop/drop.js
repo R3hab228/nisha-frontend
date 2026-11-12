@@ -85,7 +85,7 @@ function sanitizeProposalNameField() {
     const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
     const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
     let cachedDelivery = null;
-    try { cachedDelivery = store ? store.getJSON('nisha_profile_delivery', null) : null; } catch (e) {}
+    try { cachedDelivery = store ? store.getJSON('nisha_profile_delivery', null) : null; } catch {}
     const prof = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
 
     const knownNames = [
@@ -191,7 +191,7 @@ async function compressImage(file) {
     const finish = (resultFile) => {
         if (settled) return;
         settled = true;
-        try { URL.revokeObjectURL(objectUrl); } catch (e) {}
+        try { URL.revokeObjectURL(objectUrl); } catch {}
         resolve(resultFile || file);
     };
 
@@ -269,7 +269,7 @@ function resetProposalForm() {
     if (Array.isArray(currentProposalFiles)) {
         currentProposalFiles.forEach(item => {
             if (item && item.url) {
-                try { URL.revokeObjectURL(item.url); } catch(e) {}
+                try { URL.revokeObjectURL(item.url); } catch {}
             }
         });
     }
@@ -293,7 +293,7 @@ function resetProposalForm() {
     
     const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
     if (typeof turnstile !== 'undefined' && propWidgetId !== null && propWidgetId !== undefined) {
-        try { turnstile.reset(propWidgetId); } catch(e) {}
+        try { turnstile.reset(propWidgetId); } catch {}
     }
     window._turnstilePropToken = null;
 }
@@ -653,7 +653,7 @@ function removeProposalFile(index, element = null) {
     if (typeof targetIndex !== 'number' || targetIndex < 0 || targetIndex >= files.length) return;
     const removed = files.splice(targetIndex, 1);
     if (removed && removed.length > 0 && removed.at(0)?.url) {
-        try { URL.revokeObjectURL(removed.at(0).url); } catch (e) {}
+        try { URL.revokeObjectURL(removed.at(0).url); } catch {}
     }
     currentProposalFiles = files;
     window.currentProposalFiles = files;
