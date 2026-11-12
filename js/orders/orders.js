@@ -40,10 +40,9 @@ function openOrdersModal() {
     if (activeUser) {
         if (guestInputGroup) guestInputGroup.style.display = 'none';
         
-        let dName = activeProfile?.username;
-        if (!dName || dName === 'User') {
-            dName = activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || activeUser.email.split('@').at(0);
-        }
+        let dName = typeof getUserDisplayName === 'function'
+            ? getUserDisplayName(activeUser, activeProfile)
+            : (activeProfile?.username || activeUser.user_metadata?.display_name || activeUser.user_metadata?.username || activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || activeUser.email.split('@').at(0));
         
         const grantedMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_granted', {defaultValue: 'Доступ разрешен'}) : 'Доступ разрешен';
         const safeDName = typeof window.escapeHtml === 'function' ? window.escapeHtml(dName) : String(dName || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');

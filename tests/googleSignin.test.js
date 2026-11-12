@@ -173,4 +173,75 @@ describe('Google OAuth & Authentication Recovery (Supabase)', () => {
         expect(indexHtml).toMatch(/data-action=["']?forgot-password["']?/);
         expect(indexHtml).toMatch(/id=btnBackLogin[^>]*data-i18n=sidebar\.back/);
     });
+
+    it('handleAuth register supplies display_name, username, full_name, and name in auth.signUp options.data', async () => {
+        mockSupabase.auth.signUp.mockResolvedValue({
+            data: { user: { id: 'usr-123', email: 'vibe@test.com' } },
+            error: null
+        });
+
+        globalThis.document.getElementById = vi.fn((id) => {
+            if (id === 'authEmail') return { value: 'vibe@test.com' };
+            if (id === 'authPass') return { value: 'securepassword123' };
+            if (id === 'authUsername') return { value: 'VibeLord' };
+            return null;
+        });
+
+        await globalThis.handleAuth('register', false);
+
+        expect(mockSupabase.auth.signUp).toHaveBeenCalledTimes(1);
+        const [signUpPayload] = mockSupabase.auth.signUp.mock.calls[0];
+        expect(signUpPayload.email).toBe('vibe@test.com');
+        expect(signUpPayload.password).toBe('securepassword123');
+        expect(signUpPayload.options.data).toEqual({
+            username: 'VibeLord',
+            display_name: 'VibeLord',
+            full_name: 'VibeLord',
+            name: 'VibeLord'
+        });
+        expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('Регистрация успешна'), 'success');
+    });
+
+    it('checkSession synchronizes display_name to user metadata and profiles when nickname exists', async () => {
+        const mockUpdateUser = vi.fn().mockResolvedValue({ error: null });
+        mockSupabase.auth.updateUser = mockUpdateUser;
+
+        const mockProfileUpdate = vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+                then: vi.fn().mockReturnValue({ catch: vi.fn() })
+            })
+        });
+
+        mockSupabase.from = vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                    limit: vi.fn().mockResolvedValue({
+                        data: [{ id: 'usr-456', username: 'VintageFan' }],
+                        error: null
+                    })
+                })
+            }),
+            update: mockProfileUpdate
+        });
+
+        mockSupabase.auth.getUser.mockResolvedValue({
+            data: {
+                user: {
+                    id: 'usr-456',
+                    email: 'vintage@test.com',
+                    user_metadata: {} // missing display_name
+                }
+            },
+            error: null
+        });
+
+        await globalThis.checkSession();
+
+        expect(mockUpdateUser).toHaveBeenCalledWith({
+            data: expect.objectContaining({
+                display_name: 'VintageFan',
+                username: 'VintageFan'
+            })
+        });
+    });
 });

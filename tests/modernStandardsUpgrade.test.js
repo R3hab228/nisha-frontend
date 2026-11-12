@@ -133,4 +133,35 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             expect(cartCode).toContain('nisha_checkout_lock');
         });
     });
+
+    describe('5. User Display Name & Profile Nickname Resolution (getUserDisplayName)', () => {
+        it('prioritizes profile.username if present and not User', () => {
+            const user = { email: 'test@example.com', user_metadata: { display_name: 'MetaNick' } };
+            const profile = { username: 'ProfileNick' };
+            expect(helpers.getUserDisplayName(user, profile)).toBe('ProfileNick');
+        });
+
+        it('prioritizes user_metadata.display_name when profile username is empty', () => {
+            const user = { email: 'alex@example.com', user_metadata: { display_name: 'AlexVibe', full_name: 'Alex Full' } };
+            const profile = { username: '' };
+            expect(helpers.getUserDisplayName(user, profile)).toBe('AlexVibe');
+        });
+
+        it('supports username, full_name, or name in user_metadata', () => {
+            const userWithUsername = { email: 'u@test.com', user_metadata: { username: 'CoolCat' } };
+            expect(helpers.getUserDisplayName(userWithUsername, null)).toBe('CoolCat');
+
+            const userWithFullName = { email: 'u@test.com', user_metadata: { full_name: 'John Doe' } };
+            expect(helpers.getUserDisplayName(userWithFullName, null)).toBe('John Doe');
+        });
+
+        it('falls back to email prefix when metadata and profile are empty', () => {
+            const user = { email: 'streetwear_fan@gmail.com', user_metadata: {} };
+            expect(helpers.getUserDisplayName(user, null)).toBe('streetwear_fan');
+        });
+
+        it('returns User when user is null or undefined', () => {
+            expect(helpers.getUserDisplayName(null, null)).toBe('User');
+        });
+    });
 });

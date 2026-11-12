@@ -297,6 +297,22 @@ function getFirstItem(arr) {
 window.getFirstItem = getFirstItem;
 if (typeof globalThis !== 'undefined') globalThis.getFirstItem = globalThis.getFirstItem || getFirstItem;
 
+// --- USER DISPLAY NAME RESOLVER ---
+function getUserDisplayName(user, profile) {
+    const profName = (profile?.username || profile?.display_name || profile?.full_name || '').trim();
+    if (profName && profName !== 'User') return profName;
+    const meta = user?.user_metadata || {};
+    const metaName = (meta.display_name || meta.username || meta.full_name || meta.name || '').trim();
+    if (metaName && metaName !== 'User') return metaName;
+    if (user?.email && typeof user.email === 'string') {
+        const emailPrefix = user.email.split('@').at(0);
+        if (emailPrefix) return emailPrefix;
+    }
+    return 'User';
+}
+window.getUserDisplayName = getUserDisplayName;
+if (typeof globalThis !== 'undefined') globalThis.getUserDisplayName = globalThis.getUserDisplayName || getUserDisplayName;
+
 // --- VIBRATION & HAPTIC FEEDBACK ---
 function triggerVibration(duration = 150) {
     if ('vibrate' in navigator) {

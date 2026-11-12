@@ -343,10 +343,9 @@ async function submitAutoReview() {
 
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
     const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
-    let uName = profile?.username;
-    if (!uName || uName === 'User') {
-        uName = activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User';
-    }
+    let uName = typeof getUserDisplayName === 'function'
+        ? getUserDisplayName(activeUser, profile)
+        : (profile?.username || activeUser?.user_metadata?.display_name || activeUser?.user_metadata?.username || activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User');
 
     window._isSubmittingAutoReview = true;
     try {
@@ -460,7 +459,9 @@ async function submitManualReview() {
 
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
     const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
-    const uName = profile?.username || activeUser?.email?.split('@')?.at(0) || 'User';
+    const uName = typeof getUserDisplayName === 'function'
+        ? getUserDisplayName(activeUser, profile)
+        : (profile?.username || activeUser?.user_metadata?.display_name || activeUser?.user_metadata?.username || activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User');
 
     try {
         const payload = {

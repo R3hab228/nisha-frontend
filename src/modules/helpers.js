@@ -759,6 +759,29 @@ export function getFirstItem(arr) {
 }
 
 /**
+ * Resolves user display name cleanly across profile and user metadata
+ * Prioritizes username, display_name, full_name, name before email prefix fallback
+ * @param {object} [user]
+ * @param {object} [profile]
+ * @returns {string}
+ */
+export function getUserDisplayName(user, profile) {
+    if (typeof window !== 'undefined' && typeof window.getUserDisplayName === 'function') {
+        return window.getUserDisplayName(user, profile);
+    }
+    const profName = (profile?.username || profile?.display_name || profile?.full_name || '').trim();
+    if (profName && profName !== 'User') return profName;
+    const meta = user?.user_metadata || {};
+    const metaName = (meta.display_name || meta.username || meta.full_name || meta.name || '').trim();
+    if (metaName && metaName !== 'User') return metaName;
+    if (user?.email && typeof user.email === 'string') {
+        const emailPrefix = user.email.split('@').at(0);
+        if (emailPrefix) return emailPrefix;
+    }
+    return 'User';
+}
+
+/**
  * Checks if browser supports the native Popover API (HTMLElement.prototype.showPopover)
  * @returns {boolean}
  */

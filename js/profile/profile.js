@@ -158,10 +158,40 @@ async function checkSession() {
                 }
             }
 
-            // Определение имени (если пусто или User — берем из метаданных)
-            let uName = userProfile?.username;
-            if (!uName || uName === 'User') {
-                uName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email.split('@').at(0);
+            // Определение имени (приоритет: профиль БД -> user_metadata -> префикс email)
+            let uName = typeof getUserDisplayName === 'function'
+                ? getUserDisplayName(currentUser, userProfile)
+                : ((userProfile?.username || currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || (currentUser.email ? currentUser.email.split('@').at(0) : '')) || 'User');
+            if (uName === 'User' && currentUser.email) {
+                uName = currentUser.email.split('@').at(0);
+            }
+
+            // Самовосстановление / синхронизация:
+            // Если у пользователя есть никнейм, но в таблице profiles или в auth.users.user_metadata он отсутствует
+            if (uName && uName !== 'User') {
+                if (!userProfile?.username || userProfile.username === 'User') {
+                    if (userProfile) userProfile.username = uName;
+                    try {
+                        const table = typeof sb.from === 'function' ? sb.from('profiles') : null;
+                        if (table && typeof table.update === 'function') {
+                            table.update({ username: uName }).eq('id', currentUser.id).then().catch(() => {});
+                        }
+                    } catch (_) {}
+                }
+                if (!currentUser.user_metadata?.display_name || !currentUser.user_metadata?.full_name) {
+                    try {
+                        if (typeof sb.auth?.updateUser === 'function') {
+                            sb.auth.updateUser({
+                                data: {
+                                    display_name: uName,
+                                    username: uName,
+                                    full_name: currentUser.user_metadata?.full_name || uName,
+                                    name: currentUser.user_metadata?.name || uName
+                                }
+                            }).then().catch(() => {});
+                        }
+                    } catch (_) {}
+                }
             }
             const uEmail = currentUser.email;
 
@@ -267,8 +297,9 @@ async function checkSession() {
             }
             
             // Уведомления о статусе заказа в реальном времени
-            if (orderStatusChannel) sb.removeChannel(orderStatusChannel);
-            orderStatusChannel = sb.channel('order-status-updates')
+            if (typeof sb.channel === 'function') {
+                if (orderStatusChannel && typeof sb.removeChannel === 'function') sb.removeChannel(orderStatusChannel);
+                orderStatusChannel = sb.channel('order-status-updates')
                 .on('postgres_changes', { 
                     event: 'UPDATE', 
                     schema: 'public', 
@@ -427,6 +458,7 @@ async function checkSession() {
                     }
                 })
                 .subscribe();
+            }
 
             await loadFavorites();
            
@@ -577,12 +609,32 @@ async function handleAuth(action, isModal = false) {
             showToast((typeof i18next !== 'undefined' && i18next.t('messages.need_nickname')) || 'Для регистрации нужен никнейм!', 'error');
             return;
         }
+        const userMetaData = {
+            username: username,
+            display_name: username,
+            full_name: username,
+            name: username
+        };
         result = await sb.auth.signUp({
             email,
             password,
-            options: { data: { username: username } }
+            options: { data: userMetaData }
         });
-        if (!result.error) showToast((typeof i18next !== 'undefined' && i18next.t('messages.reg_success')) || 'Регистрация успешна! Проверьте почту.', 'success');
+        if (!result.error) {
+            showToast((typeof i18next !== 'undefined' && i18next.t('messages.reg_success')) || 'Регистрация успешна! Проверьте почту.', 'success');
+            if (result.data?.user?.id) {
+                try {
+                    const table = typeof sb.from === 'function' ? sb.from('profiles') : null;
+                    if (table && typeof table.upsert === 'function') {
+                        await table.upsert({
+                            id: result.data.user.id,
+                            username: username,
+                            full_name: username
+                        }, { onConflict: 'id' });
+                    }
+                } catch (_) {}
+            }
+        }
     } else {
         result = await sb.auth.signInWithPassword({ email, password });
         if (!result.error) {
