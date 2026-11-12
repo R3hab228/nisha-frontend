@@ -49,6 +49,10 @@
     outline: none !important;
 }
 
+html {
+    scrollbar-gutter: stable;
+}
+
 body { 
     background-color: var(--bg-main); 
     color: var(--text-main); 
@@ -724,16 +728,18 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
    dropdowns, and terminal windows without JS animation hacks or layout thrashing.
    ========================================================================== */
 @supports (transition-behavior: allow-discrete) {
-    .modal-overlay {
+    /* Плавное открытие окон через @starting-style (CSS 2024 Baseline).
+       Transition вешается ИСКЛЮЧИТЕЛЬНО на открытое состояние (.modal-overlay.is-open).
+       Ни в коем случае НЕ добавляем transition: display allow-discrete на .modal-overlay,
+       так как при закрытии окна через JS (style.display = 'none') браузер задерживает скрытие
+       оверлея на 240ms, из-за чего удаление класса .closing вызывает повторный флеш (моргание) экрана! */
+    .modal-overlay.is-open {
         transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                    backdrop-filter 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                    display 0.24s allow-discrete,
-                    overlay 0.24s allow-discrete;
+                    backdrop-filter 0.24s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .modal-window {
+    .modal-overlay.is-open .modal-window {
         transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                    display 0.24s allow-discrete;
+                    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @starting-style {
         .modal-overlay.is-open {
@@ -746,10 +752,26 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
         }
     }
 
+    /* При закрытии (.closing) и в закрытом состоянии (:not(.is-open)):
+       полностью отключаем transitions и animation fadeInOverlay,
+       чтобы display: none применялся моментально без задержек и артефактов */
+    .modal-overlay.closing,
+    .modal-overlay:not(.is-open) {
+        transition: none !important;
+    }
+    .modal-overlay.closing .modal-window,
+    .modal-overlay:not(.is-open) .modal-window {
+        transition: none !important;
+    }
+    .modal-overlay:not(.is-open):not(.closing) {
+        animation: none !important;
+    }
+    .modal-overlay:not(.is-open):not(.closing) .modal-window {
+        animation: none !important;
+    }
+
     .terminal-modal-overlay {
-        transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                    display 0.24s allow-discrete,
-                    overlay 0.24s allow-discrete;
+        transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .terminal-modal-overlay .success-terminal-box {
         transition: opacity 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275),

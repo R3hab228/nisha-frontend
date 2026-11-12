@@ -353,6 +353,8 @@ function executeCloseModal(id, e) {
     modal._closeTimer = setTimeout(() => {
         modal._closeTimer = null;
         if (!modal.classList.contains('closing')) return;
+        modal.style.transition = 'none';
+        modal.style.animation = 'none';
         modal.style.display = 'none';
         modal.classList.remove('closing');
         modal.style.pointerEvents = '';
@@ -369,6 +371,7 @@ function executeCloseModal(id, e) {
         }
         modal.style.opacity = '';
         modal.style.transition = '';
+        modal.style.animation = '';
         modal.style.backgroundColor = '';
 
         if (modal._returnFocusElement && typeof modal._returnFocusElement.focus === 'function') {

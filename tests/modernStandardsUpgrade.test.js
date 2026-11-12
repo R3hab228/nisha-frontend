@@ -322,5 +322,17 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             expect(css).toContain('.cart-dropdown.active');
             expect(css).toContain('.live-search-dropdown');
         });
+
+        it('modal closing styles and teardown prevent screen flickering and layout shifts', () => {
+            const css = fs.readFileSync(path.resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('scrollbar-gutter: stable');
+            expect(css).toContain('.modal-overlay.closing');
+            expect(css).toContain('.modal-overlay:not(.is-open)');
+
+            const winJs = fs.readFileSync(path.resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            expect(winJs).toContain("modal.style.transition = 'none'");
+            expect(winJs).toContain("modal.style.animation = 'none'");
+            expect(winJs).toContain("modal.style.display = 'none'");
+        });
     });
 });
