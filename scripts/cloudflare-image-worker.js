@@ -10,6 +10,17 @@
  */
 
 const SUPABASE_ORIGIN = 'https://nmpuefxqtkhvtltdvllz.supabase.co';
+const ALLOWED_PATH_PREFIXES = ['/storage/v1/object/public/'];
+const ALLOWED_FORMATS = new Set(['avif', 'webp', 'jpeg', 'png', 'origin']);
+
+function resolveTargetFormat(url, request) {
+    const explicitFmt = (url.searchParams.get('fmt') || url.searchParams.get('format') || '').toLowerCase().trim();
+    if (explicitFmt && ALLOWED_FORMATS.has(explicitFmt)) {
+        return explicitFmt;
+    }
+    const accept = request.headers.get('Accept') || '';
+    return accept.includes('image/avif') ? 'avif' : 'webp';
+}
 
 export default {
     async fetch(request, env, ctx) {
@@ -31,23 +42,30 @@ export default {
         }
 
         const url = new URL(request.url);
+        if (!ALLOWED_PATH_PREFIXES.some(prefix => url.pathname.startsWith(prefix))) {
+            return new Response('Forbidden', { status: 403 });
+        }
+
         const targetUrl = new URL(url.pathname, SUPABASE_ORIGIN);
 
         // Parse query params for resizing
         const width = url.searchParams.get('w') || url.searchParams.get('width');
         const height = url.searchParams.get('h') || url.searchParams.get('height');
         const quality = url.searchParams.get('q') || url.searchParams.get('quality') || '85';
-        const format = url.searchParams.get('fmt') || url.searchParams.get('format') || 'webp';
+        const hasExplicitFormat = Boolean(url.searchParams.get('fmt') || url.searchParams.get('format'));
+        const format = resolveTargetFormat(url, request);
 
         const isImage = /\.(webp|jpe?g|png|avif)$/i.test(url.pathname);
-        const hasResizeParams = Boolean(width || height || quality !== '85' || format !== 'webp');
+        const hasResizeParams = Boolean(width || height || quality !== '85' || hasExplicitFormat || format === 'avif');
 
         // Cloudflare Image Resizing options
         if (isImage && (hasResizeParams || width)) {
             const cfOptions = {
+                cacheEverything: true,
+                cacheTtl: 2592000,
                 image: {
                     quality: Math.min(100, Math.max(20, Number.parseInt(quality, 10) || 85)),
-                    format: format === 'origin' ? undefined : (format || 'webp'),
+                    format: format === 'origin' ? undefined : format,
                     fit: 'scale-down',
                     metadata: 'none',
                 }
@@ -66,6 +84,7 @@ export default {
                     newHeaders.set('Access-Control-Allow-Origin', '*');
                     newHeaders.set('Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400, immutable');
                     newHeaders.set('Vary', 'Accept');
+                    newHeaders.set('X-Content-Type-Options', 'nosniff');
                     return new Response(response.body, {
                         status: response.status,
                         headers: newHeaders
@@ -79,11 +98,12 @@ export default {
 
         // Direct edge-cached proxy to Supabase Storage
         const cache = caches.default;
-        const cacheKey = new Request(targetUrl.toString(), request);
+        const fullTargetUrl = targetUrl.toString() + url.search;
+        const cacheKey = new Request(fullTargetUrl, request);
         let cachedResponse = await cache.match(cacheKey);
 
         if (!cachedResponse) {
-            const originResponse = await fetch(targetUrl.toString() + url.search, {
+            const originResponse = await fetch(fullTargetUrl, {
                 headers: request.headers,
                 cf: {
                     cacheTtl: 2592000,
@@ -93,6 +113,7 @@ export default {
 
             const newHeaders = new Headers(originResponse.headers);
             newHeaders.set('Access-Control-Allow-Origin', '*');
+            newHeaders.set('X-Content-Type-Options', 'nosniff');
             if (originResponse.ok) {
                 newHeaders.set('Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400, immutable');
             }
