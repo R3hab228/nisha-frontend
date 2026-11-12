@@ -2499,8 +2499,8 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     flex-wrap: wrap;
     justify-content: center;
     width: 100%;
-    row-gap: 14px;     /* РћС‚СЃС‚СѓРї РјРµР¶РґСѓ РІРµСЂС…РЅРµР№ Рё РЅРёР¶РЅРµР№ СЃС‚СЂРѕРєРѕР№ */
-    column-gap: 22px;  /* РћС‚СЃС‚СѓРї РјРµР¶РґСѓ РєРЅРѕРїРєР°РјРё РІ СЂСЏРґСѓ (РјРѕР¶РЅРѕ СѓРјРµРЅСЊС€РёС‚СЊ РґРѕ 16-20px) */
+    row-gap: 0;        /* Отступ между строками задан ниже через margin-top на 2-м ряду */
+    column-gap: 22px;  /* Отступ между кнопками в ряду */
 }
 
 .top-nav a {
@@ -2521,11 +2521,13 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     order: 2;
     flex-basis: 100%;
     height: 0;
-    margin-top: -14px;
+    margin: 0;
+    padding: 0;
     pointer-events: none;
 }
 .top-nav a:nth-child(n+4) {
     order: 3;
+    margin-top: 14px !important;
 }
 
     
