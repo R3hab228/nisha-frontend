@@ -73,7 +73,7 @@
             const lcpObserver = new PerformanceObserver((entryList) => {
                 const entries = entryList.getEntries();
                 if (entries.length > 0) {
-                    const lastEntry = (typeof entries.at === 'function') ? entries.at(-1) : entries[entries.length - 1];
+                    const lastEntry = entries.at(-1);
                     rumData.lcp = Math.round(lastEntry.startTime);
                 }
             });

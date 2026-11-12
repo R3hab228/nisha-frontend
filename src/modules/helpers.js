@@ -902,7 +902,7 @@ export function runMicrotask(fn) {
  */
 export function getLastItem(arr) {
     if (!arr || arr.length === 0) return undefined;
-    return typeof arr.at === 'function' ? arr.at(-1) : arr[arr.length - 1];
+    return arr.at(-1);
 }
 
 /**

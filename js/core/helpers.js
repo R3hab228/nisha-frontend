@@ -449,7 +449,7 @@ if (typeof globalThis !== 'undefined') globalThis.runMicrotask = globalThis.runM
 // --- MODERN ARRAY INDEXING UTILITIES (ES2022+ array.at) ---
 function getLastItem(arr) {
     if (!arr || arr.length === 0) return undefined;
-    return typeof arr.at === 'function' ? arr.at(-1) : arr[arr.length - 1];
+    return arr.at(-1);
 }
 window.getLastItem = getLastItem;
 if (typeof globalThis !== 'undefined') globalThis.getLastItem = globalThis.getLastItem || getLastItem;
