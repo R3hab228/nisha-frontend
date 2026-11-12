@@ -1171,9 +1171,11 @@ function openProductModal(item) {
     let statusPrefix = item.status === 'sold' ? '🔴 SOLD | ' : (item.status === 'reserved' ? '🟡 RESERVED | ' : '🟢 ');
     let ogTitle = `${statusPrefix}NISHA: ${item.brand} - ${item.name}`;
     const formattedOgPrice = (typeof formatPrice === 'function') ? formatPrice(item.price) : `${item.price} грн.`;
-    let ogDesc = `Размер: ${item.size} | Цена: ${formattedOgPrice} ${cleanDesc ? cleanDesc.slice(0, 150) : ''}`;
+    const truncatedDesc = cleanDesc ? (typeof window.safeTruncateText === 'function' ? window.safeTruncateText(cleanDesc, 150) : cleanDesc.slice(0, 150)) : '';
+    let ogDesc = `Размер: ${item.size} | Цена: ${formattedOgPrice} ${truncatedDesc}`;
     let ogImage = (item.images && item.images.length > 0) ? item.images.at(0) : 'https://www.nisha-store.shop/icon-512.png';
-    let ogUrl = `https://www.nisha-store.shop/?item=${encodeURIComponent(item.id)}`;
+    const safeItemId = typeof window.safeEncodeURIComponent === 'function' ? window.safeEncodeURIComponent(item.id) : encodeURIComponent(item.id);
+    let ogUrl = `https://www.nisha-store.shop/?item=${safeItemId}`;
 
     setMetaTag('og:title', ogTitle);
     setMetaTag('og:description', ogDesc);
@@ -1720,7 +1722,7 @@ async function submitQuestion(itemId) {
         return;
     }
     if (text.length > 100) {
-        text = text.slice(0, 100);
+        text = typeof window.safeTruncateText === 'function' ? window.safeTruncateText(text, 100) : text.slice(0, 100);
     }
 
     const today = new Date().toISOString().slice(0, 10);

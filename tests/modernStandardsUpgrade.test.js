@@ -335,4 +335,89 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             expect(winJs).toContain("modal.style.display = 'none'");
         });
     });
+
+    describe('11. ES2024 toWellFormed & isWellFormed', () => {
+        it('toWellFormed sanitizes lone surrogates and leaves well-formed strings untouched', () => {
+            expect(helpers.toWellFormed('Винтажная куртка')).toBe('Винтажная куртка');
+            expect(helpers.toWellFormed(null)).toBe('');
+            expect(helpers.toWellFormed(undefined)).toBe('');
+
+            const loneSurrogate = 'broken\uD800item';
+            expect(helpers.toWellFormed(loneSurrogate)).toBe('broken\uFFFDitem');
+        });
+
+        it('isWellFormed correctly detects ill-formed surrogate strings', () => {
+            expect(helpers.isWellFormed('Hello world')).toBe(true);
+            expect(helpers.isWellFormed('🇺🇦')).toBe(true);
+            expect(helpers.isWellFormed('test\uD800')).toBe(false);
+            expect(helpers.isWellFormed(null)).toBe(true);
+        });
+    });
+
+    describe('12. safeEncodeURIComponent (URIError Crash Immunity)', () => {
+        it('encodes valid URIs properly', () => {
+            expect(helpers.safeEncodeURIComponent('nike air max')).toBe('nike%20air%20max');
+            expect(helpers.safeEncodeURIComponent('🇺🇦')).toBe('%F0%9F%87%BA%F0%9F%87%A6');
+        });
+
+        it('never throws URIError on lone surrogates, converting them safely', () => {
+            expect(() => {
+                const res = helpers.safeEncodeURIComponent('bad\uD800string');
+                expect(res).toBe('bad%EF%BF%BDstring');
+            }).not.toThrow();
+        });
+    });
+
+    describe('13. Intl.Segmenter Grapheme-Safe Truncation & Counting', () => {
+        it('safeTruncateText does not cut compound emojis or flag sequences in half', () => {
+            const textWithFlags = 'Слава Україні 🇺🇦 и миру всем!';
+            const truncated = helpers.safeTruncateText(textWithFlags, 15, '...');
+            expect(truncated).toContain('🇺🇦');
+            expect(truncated.endsWith('...')).toBe(true);
+        });
+
+        it('safeTruncateText handles complex ZWJ emoji sequences safely', () => {
+            const text = 'Семья: 👨‍👩‍👧‍👦 супер!';
+            const truncated = helpers.safeTruncateText(text, 8, '...');
+            expect(truncated).toContain('👨‍👩‍👧‍👦');
+        });
+
+        it('getGraphemeCount counts user-perceived characters correctly', () => {
+            expect(helpers.getGraphemeCount('hello')).toBe(5);
+            expect('🇺🇦'.length).toBe(4);
+            expect(helpers.getGraphemeCount('🇺🇦')).toBe(1);
+            expect('👨‍👩‍👧‍👦'.length).toBe(11);
+            expect(helpers.getGraphemeCount('👨‍👩‍👧‍👦')).toBe(1);
+        });
+
+        it('system-features.js uses getGraphemeCount for proposal textarea character counter', () => {
+            const sysCode = fs.readFileSync(path.resolve(__dirname, '../js/ui/system-features.js'), 'utf8');
+            expect(sysCode).toContain('getGraphemeCount');
+        });
+
+        it('catalog.js, reviews.js, product.js, chat.js use safeTruncateText', () => {
+            const catCode = fs.readFileSync(path.resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const revCode = fs.readFileSync(path.resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
+            const prodCode = fs.readFileSync(path.resolve(__dirname, '../js/product/product.js'), 'utf8');
+            const chatCode = fs.readFileSync(path.resolve(__dirname, '../js/chat/chat.js'), 'utf8');
+
+            expect(catCode).toContain('safeTruncateText');
+            expect(revCode).toContain('safeTruncateText');
+            expect(prodCode).toContain('safeTruncateText');
+            expect(chatCode).toContain('safeTruncateText');
+        });
+    });
+
+    describe('14. Cooperative Multitasking (yieldToMain / scheduler.yield)', () => {
+        it('yieldToMain resolves without error', async () => {
+            await expect(helpers.yieldToMain()).resolves.toBeUndefined();
+        });
+
+        it('catalog.js renderNextBatch includes cooperative yielding during large bursts', () => {
+            const catCode = fs.readFileSync(path.resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            expect(catCode).toContain('window.yieldToMain()');
+            expect(catCode).toContain('(i - startIndex + 1) % 8 === 0');
+        });
+    });
+
 });

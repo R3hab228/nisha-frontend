@@ -547,7 +547,9 @@ function initReviewsRealtime(sb) {
                 const fallbackAuthor = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.author_fallback')) || 'Покупатель';
                 const author = rawName ? (rawName.startsWith('@') ? rawName : '@' + rawName) : fallbackAuthor;
                 const cleanText = (rev.text || '').replace(/\s+/g, ' ').trim();
-                const snippet = cleanText.length > 55 ? cleanText.slice(0, 52) + '...' : cleanText;
+                const snippet = typeof window.safeTruncateText === 'function'
+                    ? window.safeTruncateText(cleanText, 52, '...')
+                    : (cleanText.length > 55 ? cleanText.slice(0, 52) + '...' : cleanText);
                 const esc = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'));
                 const toastMsg = (typeof i18next !== 'undefined')
                     ? i18next.t('reviews_modal.new_review_from', { author: esc(author), snippet: esc(snippet), defaultValue: `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"` })

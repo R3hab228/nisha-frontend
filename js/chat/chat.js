@@ -541,7 +541,7 @@ async function submitSupportTicket() {
         return;
     }
     if (message.length > 100) {
-        message = message.slice(0, 100);
+        message = typeof window.safeTruncateText === 'function' ? window.safeTruncateText(message, 100) : message.slice(0, 100);
     }
 
     btn.style.pointerEvents = 'none';

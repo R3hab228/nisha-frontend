@@ -201,10 +201,11 @@ window.toCDN = window.toCDN || function(url, options = {}) {
     if (width || height || quality || format) {
         const sep = result.includes('?') ? '&' : '?';
         const params = [];
-        if (width) params.push(`w=${encodeURIComponent(width)}`);
-        if (height) params.push(`h=${encodeURIComponent(height)}`);
-        if (quality) params.push(`q=${encodeURIComponent(quality)}`);
-        if (format) params.push(`fmt=${encodeURIComponent(format)}`);
+        const _enc = (v) => (typeof window.safeEncodeURIComponent === 'function' ? window.safeEncodeURIComponent(v) : encodeURIComponent(v));
+        if (width) params.push(`w=${_enc(width)}`);
+        if (height) params.push(`h=${_enc(height)}`);
+        if (quality) params.push(`q=${_enc(quality)}`);
+        if (format) params.push(`fmt=${_enc(format)}`);
         result += sep + params.join('&');
     }
     return result;
@@ -945,7 +946,10 @@ async function safelySaveCatalogToStorage(items) {
             // Компактная версия: обрезаем description до 200 символов (достаточно для замеров в тултипах)
             const slim = items.map(item => {
                 if (!item.description || item.description.length <= 200) return item;
-                return { ...item, description: item.description.slice(0, 200) };
+                const truncated = typeof window.safeTruncateText === 'function'
+                    ? window.safeTruncateText(item.description, 200)
+                    : item.description.slice(0, 200);
+                return { ...item, description: truncated };
             });
             if (window.storage) window.storage.setJSON('nisha_cached_db', slim);
         } catch (slimErr) {
@@ -2921,6 +2925,10 @@ async function renderNextBatch(targetMobileCount = 0) {
                 vids.forEach(v => newVideoElements.push(v));
             }
         } catch (err) { console.error(err); }
+        // Periodically yield to main thread every 8 cards during large batch bursts (e.g. restoring 24-48 cards)
+        if ((i - startIndex + 1) % 8 === 0 && (endIndex - startIndex) > 12 && typeof window.yieldToMain === 'function') {
+            await window.yieldToMain();
+        }
     }
 
     grid.appendChild(fragment);

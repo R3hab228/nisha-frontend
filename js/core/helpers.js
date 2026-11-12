@@ -41,6 +41,103 @@ window.canParseURL = canParseURL;
 if (typeof globalThis !== 'undefined') globalThis.canParseURL = canParseURL;
 
 /**
+ * Modern String validator & sanitizer (ES2024 String.prototype.toWellFormed & isWellFormed)
+ * Guarantees no lone surrogates that cause URIError in encodeURIComponent
+ * @param {*} str
+ * @returns {string}
+ */
+function toWellFormed(str) {
+    if (str === null || str === undefined) return '';
+    const s = String(str);
+    if (typeof s.toWellFormed === 'function') {
+        return s.toWellFormed();
+    }
+    return s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '\uFFFD');
+}
+window.toWellFormed = toWellFormed;
+if (typeof globalThis !== 'undefined') globalThis.toWellFormed = toWellFormed;
+
+function isWellFormed(str) {
+    if (str === null || str === undefined) return true;
+    const s = String(str);
+    if (typeof s.isWellFormed === 'function') {
+        return s.isWellFormed();
+    }
+    return !(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(s));
+}
+window.isWellFormed = isWellFormed;
+if (typeof globalThis !== 'undefined') globalThis.isWellFormed = isWellFormed;
+
+/**
+ * Exception-free URI encoder using ES2024 toWellFormed
+ * @param {*} str
+ * @returns {string}
+ */
+function safeEncodeURIComponent(str) {
+    try {
+        return encodeURIComponent(toWellFormed(str));
+    } catch (_) {
+        return '';
+    }
+}
+window.safeEncodeURIComponent = safeEncodeURIComponent;
+if (typeof globalThis !== 'undefined') globalThis.safeEncodeURIComponent = safeEncodeURIComponent;
+
+/**
+ * Grapheme-safe text segmentation and truncation (Intl.Segmenter Baseline 2023/2024)
+ * Guarantees that compound emojis (e.g. 🇺🇦, 🔥, 👕, 👨‍👩‍👧‍👦) and accented characters are never severed
+ */
+let _cachedGraphemeSegmenter = null;
+function getGraphemeSegmenter(locale = 'uk') {
+    if (!_cachedGraphemeSegmenter && typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
+        try {
+            _cachedGraphemeSegmenter = new Intl.Segmenter(locale, { granularity: 'grapheme' });
+        } catch (_) {
+            _cachedGraphemeSegmenter = null;
+        }
+    }
+    return _cachedGraphemeSegmenter;
+}
+window.getGraphemeSegmenter = getGraphemeSegmenter;
+if (typeof globalThis !== 'undefined') globalThis.getGraphemeSegmenter = getGraphemeSegmenter;
+
+function safeTruncateText(text, maxGraphemes, suffix = '') {
+    if (!text) return '';
+    const str = toWellFormed(text);
+    if (maxGraphemes <= 0) return suffix;
+
+    const segmenter = getGraphemeSegmenter();
+    if (segmenter) {
+        try {
+            const segments = Array.from(segmenter.segment(str));
+            if (segments.length <= maxGraphemes) return str;
+            return segments.slice(0, maxGraphemes).map(s => s.segment).join('') + suffix;
+        } catch (_) {}
+    }
+    const chars = Array.from(str);
+    if (chars.length <= maxGraphemes) return str;
+    return chars.slice(0, maxGraphemes).join('') + suffix;
+}
+window.safeTruncateText = safeTruncateText;
+if (typeof globalThis !== 'undefined') globalThis.safeTruncateText = safeTruncateText;
+
+function getGraphemeCount(text) {
+    if (!text) return 0;
+    const str = toWellFormed(text);
+    const segmenter = getGraphemeSegmenter();
+    if (segmenter) {
+        try {
+            let count = 0;
+            for (const _ of segmenter.segment(str)) count++;
+            return count;
+        } catch (_) {}
+    }
+    return Array.from(str).length;
+}
+window.getGraphemeCount = getGraphemeCount;
+if (typeof globalThis !== 'undefined') globalThis.getGraphemeCount = getGraphemeCount;
+
+/**
  * Combines multiple AbortSignals into one (ES2024 AbortSignal.any with fallback)
  * @param {Array<AbortSignal|null|undefined>} signals
  * @returns {AbortSignal|null}

@@ -456,7 +456,7 @@ async function checkSession() {
                             showTerminalModal(
                                 'QUESTION_ANSWERED.LOG',
                                 `На ваш вопрос по товару опубликован ответ.<br><br>` +
-                                `<i>"${String(payload.new.answer || '').slice(0, 150)}"</i>`,
+                                `<i>"${typeof window.safeTruncateText === 'function' ? window.safeTruncateText(String(payload.new.answer || ''), 150) : String(payload.new.answer || '').slice(0, 150)}"</i>`,
                                 '[ ПОСМОТРЕТЬ ТОВАР ]',
                                 () => {
                                     if (payload.new.item_id && typeof window.openProductModalById === 'function') {

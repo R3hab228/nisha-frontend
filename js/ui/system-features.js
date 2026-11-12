@@ -198,7 +198,8 @@ function updateCharCount(textarea) {
     const label = document.getElementById('descLabel');
     if (!label) return;
     
-    const remaining = 250 - textarea.value.length;
+    const charCount = typeof window.getGraphemeCount === 'function' ? window.getGraphemeCount(textarea.value) : textarea.value.length;
+    const remaining = 250 - charCount;
     const originalText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
         ? i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' })
         : 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):';

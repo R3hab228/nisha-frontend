@@ -557,7 +557,7 @@ function getNovaPoshtaTrackingUrl(ttn, lang) {
     const cleanTtn = String(ttn || '').trim();
     if (!cleanTtn) return 'https://tracking.novaposhta.ua/';
     const currentLang = lang || ((typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk');
-    const encoded = encodeNovaPoshtaTtn(cleanTtn) || encodeURIComponent(cleanTtn);
+    const encoded = encodeNovaPoshtaTtn(cleanTtn) || (typeof window.safeEncodeURIComponent === 'function' ? window.safeEncodeURIComponent(cleanTtn) : encodeURIComponent(cleanTtn));
     return `https://tracking.novaposhta.ua/#/${currentLang}/${encoded}`;
 }
 window.getNovaPoshtaTrackingUrl = getNovaPoshtaTrackingUrl;
