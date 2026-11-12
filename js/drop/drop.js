@@ -184,62 +184,65 @@ window.openProposeModal = openProposeModal;
 async function compressImage(file) {
     if (!file || (file.type && file.type.startsWith('video/'))) return file;
 
-    return new Promise((resolve) => {
-        let settled = false;
-        const objectUrl = URL.createObjectURL(file);
-        const finish = (resultFile) => {
-            if (settled) return;
-            settled = true;
-            try { URL.revokeObjectURL(objectUrl); } catch (e) {}
-            resolve(resultFile || file);
-        };
+    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
+        ? Promise.withResolvers()
+        : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
 
-        const timeoutId = setTimeout(() => finish(file), 8000);
-        const img = new Image();
+    let settled = false;
+    const objectUrl = URL.createObjectURL(file);
+    const finish = (resultFile) => {
+        if (settled) return;
+        settled = true;
+        try { URL.revokeObjectURL(objectUrl); } catch (e) {}
+        resolve(resultFile || file);
+    };
 
-        img.onload = () => {
-            try {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                const MAX_SIZE = 1200; // Жмем до 1200px
+    const timeoutId = setTimeout(() => finish(file), 8000);
+    const img = new Image();
 
-                // Пропорционально уменьшаем размеры
-                if (width > height && width > MAX_SIZE) {
-                    height *= MAX_SIZE / width;
-                    width = MAX_SIZE;
-                } else if (height > MAX_SIZE) {
-                    width *= MAX_SIZE / height;
-                    height = MAX_SIZE;
-                }
+    img.onload = () => {
+        try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_SIZE = 1200; // Жмем до 1200px
 
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                canvas.toBlob((blob) => {
-                    clearTimeout(timeoutId);
-                    if (blob) {
-                        finish(new File([blob], file.name || 'photo.jpg', { type: 'image/jpeg' }));
-                    } else {
-                        finish(file);
-                    }
-                }, 'image/jpeg', 0.7);
-            } catch (e) {
-                clearTimeout(timeoutId);
-                finish(file);
+            // Пропорционально уменьшаем размеры
+            if (width > height && width > MAX_SIZE) {
+                height *= MAX_SIZE / width;
+                width = MAX_SIZE;
+            } else if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height;
+                height = MAX_SIZE;
             }
-        };
 
-        img.onerror = () => {
-            // Фолбек для форматов типа HEIC
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+                clearTimeout(timeoutId);
+                if (blob) {
+                    finish(new File([blob], file.name || 'photo.jpg', { type: 'image/jpeg' }));
+                } else {
+                    finish(file);
+                }
+            }, 'image/jpeg', 0.7);
+        } catch (e) {
             clearTimeout(timeoutId);
             finish(file);
-        };
+        }
+    };
 
-        img.src = objectUrl;
-    });
+    img.onerror = () => {
+        // Фолбек для форматов типа HEIC
+        clearTimeout(timeoutId);
+        finish(file);
+    };
+
+    img.src = objectUrl;
+    return promise;
 }
 window.compressImage = compressImage;
 

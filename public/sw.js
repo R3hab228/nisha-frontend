@@ -358,16 +358,20 @@ self.addEventListener('notificationclick', event => {
     if (targetUrl.startsWith('/')) {
         targetUrl = PROD_ORIGIN + (targetUrl === '/' ? '/' : targetUrl);
     } else {
-        try {
-            const parsed = new URL(targetUrl);
-            if (parsed.hostname.includes('vercel.app') || (parsed.hostname !== 'www.nisha-store.shop' && parsed.hostname !== 'nisha-store.shop')) {
-                parsed.protocol = 'https:';
-                parsed.hostname = 'www.nisha-store.shop';
-                parsed.port = '';
-                targetUrl = parsed.toString();
-            }
-        } catch(e) {
+        if (typeof URL !== 'undefined' && typeof URL.canParse === 'function' && !URL.canParse(targetUrl)) {
             targetUrl = PROD_ORIGIN + '/';
+        } else {
+            try {
+                const parsed = new URL(targetUrl);
+                if (parsed.hostname.includes('vercel.app') || (parsed.hostname !== 'www.nisha-store.shop' && parsed.hostname !== 'nisha-store.shop')) {
+                    parsed.protocol = 'https:';
+                    parsed.hostname = 'www.nisha-store.shop';
+                    parsed.port = '';
+                    targetUrl = parsed.toString();
+                }
+            } catch(e) {
+                targetUrl = PROD_ORIGIN + '/';
+            }
         }
     }
 

@@ -718,6 +718,77 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
     pointer-events: none !important;
 }
 
+/* ==========================================================================
+   MODERN CSS 2024: @starting-style & transition-behavior: allow-discrete
+   Provides buttery-smooth, hardware-accelerated entry transitions for Win95 modals,
+   dropdowns, and terminal windows without JS animation hacks or layout thrashing.
+   ========================================================================== */
+@supports (transition-behavior: allow-discrete) {
+    .modal-overlay {
+        transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    backdrop-filter 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    display 0.24s allow-discrete,
+                    overlay 0.24s allow-discrete;
+    }
+    .modal-window {
+        transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    display 0.24s allow-discrete;
+    }
+    @starting-style {
+        .modal-overlay.is-open {
+            opacity: 0;
+            backdrop-filter: blur(0px);
+        }
+        .modal-overlay.is-open .modal-window {
+            opacity: 0;
+            transform: scale(0.96) translateY(12px) translateZ(0);
+        }
+    }
+
+    .terminal-modal-overlay {
+        transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    display 0.24s allow-discrete,
+                    overlay 0.24s allow-discrete;
+    }
+    .terminal-modal-overlay .success-terminal-box {
+        transition: opacity 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                    transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @starting-style {
+        .terminal-modal-overlay {
+            opacity: 0;
+        }
+        .terminal-modal-overlay .success-terminal-box {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+    }
+
+    .cart-dropdown {
+        transition: opacity 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+                    transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+                    display 0.2s allow-discrete;
+    }
+    @starting-style {
+        .cart-dropdown.active {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+    }
+
+    .live-search-dropdown {
+        transition: opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    display 0.2s allow-discrete;
+    }
+    @starting-style {
+        .live-search-dropdown[style*="display: block"] {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+    }
+}
+
 .modal-header { background: #002244; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px inset var(--border-light); position: sticky; top: 0; z-index: 200 !important; flex-shrink: 0 !important; min-height: 48px; box-sizing: border-box; }
 .modal-title { color: #fff; font-weight: bold; font-family: var(--font-mono); font-size: 16px; letter-spacing: 1px;}
 .close-btn { background: var(--text-main); border: 2px outset #eee; color: #000; cursor: pointer; font-weight: bold; padding: 4px 10px; font-family: var(--font-main); font-size: 14px;}

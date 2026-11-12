@@ -164,4 +164,157 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             expect(helpers.getUserDisplayName(null, null)).toBe('User');
         });
     });
+
+    describe('6. URL.canParse (ES2024 URL validation & safe parsing)', () => {
+        it('validates absolute URLs correctly with canParseURL', () => {
+            expect(helpers.canParseURL('https://www.nisha-store.shop/catalog')).toBe(true);
+            expect(helpers.canParseURL('http://localhost:3000')).toBe(true);
+            expect(helpers.canParseURL('invalid://domain')).toBe(true);
+            expect(helpers.canParseURL('not a url at all')).toBe(false);
+            expect(helpers.canParseURL('')).toBe(false);
+            expect(helpers.canParseURL(null)).toBe(false);
+            expect(helpers.canParseURL(undefined)).toBe(false);
+        });
+
+        it('validates relative URLs when a base URL is provided', () => {
+            expect(helpers.canParseURL('/items/image.webp', 'https://www.nisha-store.shop')).toBe(true);
+            expect(helpers.canParseURL('catalog?brand=stussy', 'https://www.nisha-store.shop')).toBe(true);
+            expect(helpers.canParseURL('/path', 'not-a-valid-base')).toBe(false);
+        });
+
+        it('window.canParseURL and globalThis.canParseURL are exposed', () => {
+            expect(typeof globalThis.canParseURL).toBe('function');
+            expect(globalThis.canParseURL('https://www.nisha-store.shop')).toBe(true);
+        });
+
+        it('sw.js and pushService.js utilize URL.canParse safely', () => {
+            const swCode = fs.readFileSync(path.resolve(__dirname, '../sw.js'), 'utf8');
+            expect(swCode).toContain('URL.canParse');
+
+            const backendServerCode = fs.readFileSync(path.resolve(__dirname, '../../nisha-backend/server.js'), 'utf8');
+            expect(backendServerCode).toContain('URL.canParse(origin)');
+        });
+    });
+
+    describe('7. Promise.withResolvers (ES2024 deferred promise resolution)', () => {
+        it('Promise.withResolvers returns promise, resolve, and reject', () => {
+            expect(typeof Promise.withResolvers).toBe('function');
+            const resolvers = Promise.withResolvers();
+            expect(resolvers).toHaveProperty('promise');
+            expect(resolvers).toHaveProperty('resolve');
+            expect(resolvers).toHaveProperty('reject');
+            expect(typeof resolvers.resolve).toBe('function');
+            expect(typeof resolvers.reject).toBe('function');
+        });
+
+        it('resolves value asynchronously through resolve()', async () => {
+            const { promise, resolve } = Promise.withResolvers();
+            setTimeout(() => resolve('nisha_resolved_ok'), 10);
+            const val = await promise;
+            expect(val).toBe('nisha_resolved_ok');
+        });
+
+        it('rejects error properly through reject()', async () => {
+            const { promise, reject } = Promise.withResolvers();
+            setTimeout(() => reject(new Error('custom_rejection')), 10);
+            await expect(promise).rejects.toThrow('custom_rejection');
+        });
+
+        it('search-worker-client.js, web-locks.js and drop.js use Promise.withResolvers', () => {
+            const swcCode = fs.readFileSync(path.resolve(__dirname, '../js/core/search-worker-client.js'), 'utf8');
+            expect(swcCode).toContain('Promise.withResolvers');
+
+            const webLocksCode = fs.readFileSync(path.resolve(__dirname, '../js/core/web-locks.js'), 'utf8');
+            expect(webLocksCode).toContain('Promise.withResolvers');
+
+            const dropCode = fs.readFileSync(path.resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            expect(dropCode).toContain('Promise.withResolvers');
+        });
+    });
+
+    describe('8. AbortSignal.any & combineAbortSignals (ES2024 signal combination)', () => {
+        it('combineAbortSignals returns null on empty list', () => {
+            expect(helpers.combineAbortSignals([])).toBeNull();
+            expect(helpers.combineAbortSignals([null, undefined])).toBeNull();
+        });
+
+        it('combineAbortSignals returns original signal when only one valid signal passed', () => {
+            const ctrl = new AbortController();
+            expect(helpers.combineAbortSignals([ctrl.signal])).toBe(ctrl.signal);
+        });
+
+        it('aborts combined signal immediately when one of the inputs is already aborted', () => {
+            const ctrl1 = new AbortController();
+            const ctrl2 = new AbortController();
+            ctrl1.abort('early_abort');
+
+            const combined = helpers.combineAbortSignals([ctrl1.signal, ctrl2.signal]);
+            expect(combined.aborted).toBe(true);
+            expect(combined.reason).toBe('early_abort');
+        });
+
+        it('aborts combined signal when any component signal aborts dynamically', async () => {
+            const ctrl1 = new AbortController();
+            const ctrl2 = new AbortController();
+            const combined = helpers.combineAbortSignals([ctrl1.signal, ctrl2.signal]);
+
+            expect(combined.aborted).toBe(false);
+
+            const abortPromise = new Promise(resolve => {
+                combined.addEventListener('abort', () => resolve(combined.reason), { once: true });
+            });
+
+            ctrl2.abort('timeout_triggered');
+            const reason = await abortPromise;
+            expect(reason).toBe('timeout_triggered');
+            expect(combined.aborted).toBe(true);
+        });
+    });
+
+    describe('9. Native Set Operations (ES2025 difference, intersection, union, isSubsetOf)', () => {
+        const setA = new Set(['nike', 'stussy', 'carhartt', 'bape']);
+        const setB = new Set(['stussy', 'supreme', 'bape', 'palace']);
+
+        it('setDifference computes elements in A but not in B', () => {
+            const diff = helpers.setDifference(setA, setB);
+            expect(Array.from(diff).sort()).toEqual(['carhartt', 'nike']);
+            expect(helpers.setDifference(null, setB).size).toBe(0);
+            expect(helpers.setDifference(setA, null)).toEqual(setA);
+        });
+
+        it('setIntersection computes common elements between A and B', () => {
+            const inter = helpers.setIntersection(setA, setB);
+            expect(Array.from(inter).sort()).toEqual(['bape', 'stussy']);
+            expect(helpers.setIntersection(null, setB).size).toBe(0);
+            expect(helpers.setIntersection(setA, null).size).toBe(0);
+        });
+
+        it('setUnion combines all unique elements from A and B', () => {
+            const union = helpers.setUnion(setA, setB);
+            expect(Array.from(union).sort()).toEqual(['bape', 'carhartt', 'nike', 'palace', 'stussy', 'supreme']);
+            expect(helpers.setUnion(setA, null)).toEqual(setA);
+            expect(helpers.setUnion(null, setB)).toEqual(setB);
+        });
+
+        it('setIsSubsetOf correctly verifies subset relationships', () => {
+            const sub = new Set(['stussy', 'bape']);
+            expect(helpers.setIsSubsetOf(sub, setA)).toBe(true);
+            expect(helpers.setIsSubsetOf(setB, setA)).toBe(false);
+            expect(helpers.setIsSubsetOf(new Set(), setA)).toBe(true);
+            expect(helpers.setIsSubsetOf(setA, new Set())).toBe(false);
+        });
+    });
+
+    describe('10. Modern CSS @starting-style & transition-behavior: allow-discrete', () => {
+        it('style.css defines @supports (transition-behavior: allow-discrete)', () => {
+            const css = fs.readFileSync(path.resolve(__dirname, '../style.css'), 'utf8');
+            expect(css).toContain('@supports (transition-behavior: allow-discrete)');
+            expect(css).toContain('@starting-style');
+            expect(css).toContain('allow-discrete');
+            expect(css).toContain('.modal-overlay.is-open');
+            expect(css).toContain('.terminal-modal-overlay');
+            expect(css).toContain('.cart-dropdown.active');
+            expect(css).toContain('.live-search-dropdown');
+        });
+    });
 });

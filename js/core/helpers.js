@@ -2,6 +2,71 @@
 // NISHA CORE HELPERS (Утилиты, тосты, вибрация)
 // ==========================================
 
+// Polyfill Promise.withResolvers (ES2024) if not natively present
+if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function') {
+    Promise.withResolvers = function() {
+        let resolve, reject;
+        const promise = new Promise((res, rej) => {
+            resolve = res;
+            reject = rej;
+        });
+        return { promise, resolve, reject };
+    };
+}
+
+/**
+ * Modern URL validator (ES2024 URL.canParse with safe fallback)
+ * @param {string} url
+ * @param {string} [base]
+ * @returns {boolean}
+ */
+function canParseURL(url, base) {
+    if (!url || typeof url !== 'string') return false;
+    if (typeof URL !== 'undefined' && typeof URL.canParse === 'function') {
+        try {
+            return base !== undefined ? URL.canParse(url, base) : URL.canParse(url);
+        } catch (_) {
+            return false;
+        }
+    }
+    try {
+        if (base !== undefined) new URL(url, base);
+        else new URL(url);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+window.canParseURL = canParseURL;
+if (typeof globalThis !== 'undefined') globalThis.canParseURL = canParseURL;
+
+/**
+ * Combines multiple AbortSignals into one (ES2024 AbortSignal.any with fallback)
+ * @param {Array<AbortSignal|null|undefined>} signals
+ * @returns {AbortSignal|null}
+ */
+function combineAbortSignals(signals) {
+    const validSignals = (signals || []).filter(Boolean);
+    if (validSignals.length === 0) return null;
+    if (validSignals.length === 1) return validSignals[0];
+    if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.any === 'function') {
+        try {
+            return AbortSignal.any(validSignals);
+        } catch (_) {}
+    }
+    const controller = new AbortController();
+    for (const sig of validSignals) {
+        if (sig.aborted) {
+            controller.abort(sig.reason);
+            return controller.signal;
+        }
+        sig.addEventListener('abort', () => controller.abort(sig.reason), { once: true });
+    }
+    return controller.signal;
+}
+window.combineAbortSignals = combineAbortSignals;
+if (typeof globalThis !== 'undefined') globalThis.combineAbortSignals = combineAbortSignals;
+
 async function yieldToMain() {
     if (typeof globalThis.scheduler !== 'undefined' && typeof globalThis.scheduler.yield === 'function') {
         try {
@@ -10,21 +75,23 @@ async function yieldToMain() {
             // fallback if scheduler.yield rejects or is aborted
         }
     }
-    return new Promise(resolve => {
-        if (typeof MessageChannel !== 'undefined') {
-            const channel = new MessageChannel();
-            channel.port1.onmessage = () => {
-                try {
-                    channel.port1.close();
-                    channel.port2.close();
-                } catch (_) {}
-                resolve();
-            };
-            channel.port2.postMessage(null);
-        } else {
-            setTimeout(resolve, 0);
-        }
-    });
+    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
+        ? Promise.withResolvers()
+        : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+    if (typeof MessageChannel !== 'undefined') {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = () => {
+            try {
+                channel.port1.close();
+                channel.port2.close();
+            } catch (_) {}
+            resolve();
+        };
+        channel.port2.postMessage(null);
+    } else {
+        setTimeout(resolve, 0);
+    }
+    return promise;
 }
 window.yieldToMain = yieldToMain;
 
@@ -753,7 +820,7 @@ async function withWebLock(name, fn) {
 window.withWebLock = withWebLock;
 if (typeof globalThis !== 'undefined') globalThis.withWebLock = withWebLock;
 
-// --- ОПЕРАЦИИ НАД МНОЖЕСТВАМИ (SET.PROTOTYPE.DIFFERENCE / INTERSECTION) ---
+// --- ОПЕРАЦИИ НАД МНОЖЕСТВАМИ (ES2025 SET METHODS: DIFFERENCE, INTERSECTION, UNION, SUBSET) ---
 function setDifference(setA, setB) {
     if (!setA) return new Set();
     if (!setB) return new Set(setA);
@@ -768,6 +835,50 @@ function setDifference(setA, setB) {
 }
 window.setDifference = setDifference;
 if (typeof globalThis !== 'undefined') globalThis.setDifference = setDifference;
+
+function setIntersection(setA, setB) {
+    if (!setA || !setB) return new Set();
+    if (typeof setA.intersection === 'function') {
+        return setA.intersection(setB);
+    }
+    const inter = new Set();
+    for (const elem of setB) {
+        if (setA.has(elem)) inter.add(elem);
+    }
+    return inter;
+}
+window.setIntersection = setIntersection;
+if (typeof globalThis !== 'undefined') globalThis.setIntersection = setIntersection;
+
+function setUnion(setA, setB) {
+    if (!setA && !setB) return new Set();
+    if (!setA) return new Set(setB);
+    if (!setB) return new Set(setA);
+    if (typeof setA.union === 'function') {
+        return setA.union(setB);
+    }
+    const union = new Set(setA);
+    for (const elem of setB) {
+        union.add(elem);
+    }
+    return union;
+}
+window.setUnion = setUnion;
+if (typeof globalThis !== 'undefined') globalThis.setUnion = setUnion;
+
+function setIsSubsetOf(setA, setB) {
+    if (!setA) return true;
+    if (!setB) return setA.size === 0;
+    if (typeof setA.isSubsetOf === 'function') {
+        return setA.isSubsetOf(setB);
+    }
+    for (const elem of setA) {
+        if (!setB.has(elem)) return false;
+    }
+    return true;
+}
+window.setIsSubsetOf = setIsSubsetOf;
+if (typeof globalThis !== 'undefined') globalThis.setIsSubsetOf = setIsSubsetOf;
 // --- NATIVE POPOVER API & SCROLL-DRIVEN ANIMATIONS HELPER FACADE ---
 function isPopoverSupported() {
     return typeof HTMLElement !== 'undefined' &&
@@ -1427,43 +1538,65 @@ window.itemMatchesPrice = itemMatchesPrice;
 const _loadedExternalScripts = {};
 function loadExternalScript(src) {
     if (_loadedExternalScripts[src]) return _loadedExternalScripts[src];
-    _loadedExternalScripts[src] = new Promise((resolve, reject) => {
-        const existing = document.querySelector(`script[src="${src}"]`);
-        if (existing) {
-            resolve();
-            return;
-        }
-        const s = document.createElement('script');
-        s.src = src;
-        s.async = true;
-        s.onload = () => resolve();
-        s.onerror = (err) => {
-            delete _loadedExternalScripts[src];
-            reject(err);
-        };
-        document.head.appendChild(s);
-    });
-    return _loadedExternalScripts[src];
+    const { promise, resolve, reject } = (typeof Promise.withResolvers === 'function')
+        ? Promise.withResolvers()
+        : (() => { let res, rej; const p = new Promise((r, j) => { res = r; rej = j; }); return { promise: p, resolve: res, reject: rej }; })();
+    _loadedExternalScripts[src] = promise;
+    if (typeof document === 'undefined') {
+        resolve();
+        return promise;
+    }
+    const existing = document.querySelector ? document.querySelector(`script[src="${src}"]`) : null;
+    if (existing) {
+        resolve();
+        return promise;
+    }
+    const targetEl = document.head || document.body || document.documentElement;
+    if (!targetEl || typeof document.createElement !== 'function') {
+        resolve();
+        return promise;
+    }
+    const s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = (err) => {
+        delete _loadedExternalScripts[src];
+        reject(err);
+    };
+    targetEl.appendChild(s);
+    return promise;
 }
 window.loadExternalScript = loadExternalScript;
 
 const _loadedExternalStyles = {};
 function loadExternalStyle(href) {
     if (_loadedExternalStyles[href]) return _loadedExternalStyles[href];
-    _loadedExternalStyles[href] = new Promise((resolve) => {
-        const existing = document.querySelector(`link[href="${href}"]`);
-        if (existing) {
-            resolve();
-            return;
-        }
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = href;
-        link.onload = () => resolve();
-        link.onerror = () => resolve();
-        document.head.appendChild(link);
-    });
-    return _loadedExternalStyles[href];
+    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
+        ? Promise.withResolvers()
+        : (() => { let res; const p = new Promise(r => { res = r; }); return { promise: p, resolve: res }; })();
+    _loadedExternalStyles[href] = promise;
+    if (typeof document === 'undefined') {
+        resolve();
+        return promise;
+    }
+    const existing = document.querySelector ? document.querySelector(`link[href="${href}"]`) : null;
+    if (existing) {
+        resolve();
+        return promise;
+    }
+    const targetEl = document.head || document.body || document.documentElement;
+    if (!targetEl || typeof document.createElement !== 'function') {
+        resolve();
+        return promise;
+    }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.onload = () => resolve();
+    link.onerror = () => resolve();
+    targetEl.appendChild(link);
+    return promise;
 }
 window.loadExternalStyle = loadExternalStyle;
 
@@ -2364,6 +2497,11 @@ function sanitizeHtmlMediaUrl(rawUrl) {
         const trimmed = String(cleaned || '').trim();
         if (!trimmed) return null;
         const base = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'https://www.nisha-store.shop';
+        if (typeof canParseURL === 'function') {
+            if (!canParseURL(trimmed, base)) return null;
+        } else if (typeof URL !== 'undefined' && typeof URL.canParse === 'function') {
+            if (!URL.canParse(trimmed, base)) return null;
+        }
         const u = new URL(trimmed, base);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'data:') {
             return u.href;

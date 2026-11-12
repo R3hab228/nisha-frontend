@@ -129,23 +129,26 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
 
             // Если воркер доступен и готов — выполняем поиск в фоновом потоке
             if (worker && isWorkerReady) {
-                return new Promise((resolve) => {
-                    pendingRequests.set(reqId, { resolve, channel: 'live', reqId });
-                    worker.postMessage({
-                        type: 'SEARCH_LIVE',
-                        query,
-                        limit,
-                        requestId: reqId
-                    });
-
-                    // Таймаут на случай непредвиденного зависания воркера
-                    setTimeout(() => {
-                        if (pendingRequests.has(reqId)) {
-                            pendingRequests.delete(reqId);
-                            resolve(searchWorkerClient.fallbackLiveSearch(query, limit));
-                        }
-                    }, 400);
+                const { promise, resolve } = (typeof Promise.withResolvers === 'function')
+                    ? Promise.withResolvers()
+                    : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+                pendingRequests.set(reqId, { resolve, channel: 'live', reqId });
+                worker.postMessage({
+                    type: 'SEARCH_LIVE',
+                    query,
+                    limit,
+                    requestId: reqId
                 });
+
+                // Таймаут на случай непредвиденного зависания воркера
+                setTimeout(() => {
+                    if (pendingRequests.has(reqId)) {
+                        pendingRequests.delete(reqId);
+                        resolve(searchWorkerClient.fallbackLiveSearch(query, limit));
+                    }
+                }, 400);
+
+                return promise;
             }
 
             // Мгновенный синхронный fallback
@@ -158,22 +161,25 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             lastActiveRequestId.catalog = reqId;
 
             if (worker && isWorkerReady) {
-                return new Promise((resolve) => {
-                    pendingRequests.set(reqId, { resolve, channel: 'catalog', reqId });
-                    worker.postMessage({
-                        type: 'SEARCH_CATALOG',
-                        query,
-                        candidateIds,
-                        requestId: reqId
-                    });
-
-                    setTimeout(() => {
-                        if (pendingRequests.has(reqId)) {
-                            pendingRequests.delete(reqId);
-                            resolve(searchWorkerClient.fallbackCatalogSearch(query, candidateIds));
-                        }
-                    }, 400);
+                const { promise, resolve } = (typeof Promise.withResolvers === 'function')
+                    ? Promise.withResolvers()
+                    : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+                pendingRequests.set(reqId, { resolve, channel: 'catalog', reqId });
+                worker.postMessage({
+                    type: 'SEARCH_CATALOG',
+                    query,
+                    candidateIds,
+                    requestId: reqId
                 });
+
+                setTimeout(() => {
+                    if (pendingRequests.has(reqId)) {
+                        pendingRequests.delete(reqId);
+                        resolve(searchWorkerClient.fallbackCatalogSearch(query, candidateIds));
+                    }
+                }, 400);
+
+                return promise;
             }
 
             return Promise.resolve(searchWorkerClient.fallbackCatalogSearch(query, candidateIds));

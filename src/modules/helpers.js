@@ -18,6 +18,71 @@ export function isSpeculationRulesSupported() {
            HTMLScriptElement.supports('speculationrules');
 }
 
+// Polyfill Promise.withResolvers (ES2024) if not natively present
+if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function') {
+    Promise.withResolvers = function() {
+        let resolve, reject;
+        const promise = new Promise((res, rej) => {
+            resolve = res;
+            reject = rej;
+        });
+        return { promise, resolve, reject };
+    };
+}
+
+/**
+ * Modern URL validator (ES2024 URL.canParse with safe fallback)
+ * @param {string} url
+ * @param {string} [base]
+ * @returns {boolean}
+ */
+export function canParseURL(url, base) {
+    if (!url || typeof url !== 'string') return false;
+    if (typeof URL !== 'undefined' && typeof URL.canParse === 'function') {
+        try {
+            return base !== undefined ? URL.canParse(url, base) : URL.canParse(url);
+        } catch (_) {
+            return false;
+        }
+    }
+    try {
+        if (base !== undefined) new URL(url, base);
+        else new URL(url);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+if (typeof window !== 'undefined') window.canParseURL = canParseURL;
+if (typeof globalThis !== 'undefined') globalThis.canParseURL = canParseURL;
+
+/**
+ * Combines multiple AbortSignals into one (ES2024 AbortSignal.any with fallback)
+ * @param {Array<AbortSignal|null|undefined>} signals
+ * @returns {AbortSignal|null}
+ */
+export function combineAbortSignals(signals) {
+    const validSignals = (signals || []).filter(Boolean);
+    if (validSignals.length === 0) return null;
+    if (validSignals.length === 1) return validSignals[0];
+    if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.any === 'function') {
+        try {
+            return AbortSignal.any(validSignals);
+        } catch (_) {}
+    }
+    const controller = new AbortController();
+    for (const sig of validSignals) {
+        if (sig.aborted) {
+            controller.abort(sig.reason);
+            return controller.signal;
+        }
+        sig.addEventListener('abort', () => controller.abort(sig.reason), { once: true });
+    }
+    return controller.signal;
+}
+if (typeof window !== 'undefined') window.combineAbortSignals = combineAbortSignals;
+if (typeof globalThis !== 'undefined') globalThis.combineAbortSignals = combineAbortSignals;
+
 /**
  * Cooperative Task Scheduling (scheduler.yield() with fallback)
  * Yields execution to the browser main thread to process high-priority input, touch, and animations (Zero INP)
@@ -31,21 +96,23 @@ export async function yieldToMain() {
             // fallback if scheduler.yield rejects or is aborted
         }
     }
-    return new Promise(resolve => {
-        if (typeof MessageChannel !== 'undefined') {
-            const channel = new MessageChannel();
-            channel.port1.onmessage = () => {
-                try {
-                    channel.port1.close();
-                    channel.port2.close();
-                } catch (_) {}
-                resolve();
-            };
-            channel.port2.postMessage(null);
-        } else {
-            setTimeout(resolve, 0);
-        }
-    });
+    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
+        ? Promise.withResolvers()
+        : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+    if (typeof MessageChannel !== 'undefined') {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = () => {
+            try {
+                channel.port1.close();
+                channel.port2.close();
+            } catch (_) {}
+            resolve();
+        };
+        channel.port2.postMessage(null);
+    } else {
+        setTimeout(resolve, 0);
+    }
+    return promise;
 }
 
 /**
@@ -975,3 +1042,90 @@ export async function withWebLock(name, fn) {
     }
     return await fn();
 }
+
+/**
+ * Computes difference between sets (ES2025 Set.prototype.difference with fallback)
+ * @template T
+ * @param {Set<T>} setA
+ * @param {Set<T>} setB
+ * @returns {Set<T>}
+ */
+export function setDifference(setA, setB) {
+    if (!setA) return new Set();
+    if (!setB) return new Set(setA);
+    if (typeof setA.difference === 'function') {
+        return setA.difference(setB);
+    }
+    const diff = new Set();
+    for (const elem of setA) {
+        if (!setB.has(elem)) diff.add(elem);
+    }
+    return diff;
+}
+if (typeof window !== 'undefined') window.setDifference = setDifference;
+if (typeof globalThis !== 'undefined') globalThis.setDifference = setDifference;
+
+/**
+ * Computes intersection between sets (ES2025 Set.prototype.intersection with fallback)
+ * @template T
+ * @param {Set<T>} setA
+ * @param {Set<T>} setB
+ * @returns {Set<T>}
+ */
+export function setIntersection(setA, setB) {
+    if (!setA || !setB) return new Set();
+    if (typeof setA.intersection === 'function') {
+        return setA.intersection(setB);
+    }
+    const inter = new Set();
+    for (const elem of setB) {
+        if (setA.has(elem)) inter.add(elem);
+    }
+    return inter;
+}
+if (typeof window !== 'undefined') window.setIntersection = setIntersection;
+if (typeof globalThis !== 'undefined') globalThis.setIntersection = setIntersection;
+
+/**
+ * Computes union between sets (ES2025 Set.prototype.union with fallback)
+ * @template T
+ * @param {Set<T>} setA
+ * @param {Set<T>} setB
+ * @returns {Set<T>}
+ */
+export function setUnion(setA, setB) {
+    if (!setA && !setB) return new Set();
+    if (!setA) return new Set(setB);
+    if (!setB) return new Set(setA);
+    if (typeof setA.union === 'function') {
+        return setA.union(setB);
+    }
+    const union = new Set(setA);
+    for (const elem of setB) {
+        union.add(elem);
+    }
+    return union;
+}
+if (typeof window !== 'undefined') window.setUnion = setUnion;
+if (typeof globalThis !== 'undefined') globalThis.setUnion = setUnion;
+
+/**
+ * Checks if setA is a subset of setB (ES2025 Set.prototype.isSubsetOf with fallback)
+ * @template T
+ * @param {Set<T>} setA
+ * @param {Set<T>} setB
+ * @returns {boolean}
+ */
+export function setIsSubsetOf(setA, setB) {
+    if (!setA) return true;
+    if (!setB) return setA.size === 0;
+    if (typeof setA.isSubsetOf === 'function') {
+        return setA.isSubsetOf(setB);
+    }
+    for (const elem of setA) {
+        if (!setB.has(elem)) return false;
+    }
+    return true;
+}
+if (typeof window !== 'undefined') window.setIsSubsetOf = setIsSubsetOf;
+if (typeof globalThis !== 'undefined') globalThis.setIsSubsetOf = setIsSubsetOf;

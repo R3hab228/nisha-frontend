@@ -1986,9 +1986,11 @@ function applyFilters(immediate = false, preserveViewport = false) {
         _resolveApplyFilters();
         _resolveApplyFilters = null;
     }
-    return new Promise((resolve) => {
-        _resolveApplyFilters = resolve;
-        applyFiltersTimeout = setTimeout(async () => {
+    const { promise, resolve } = (typeof Promise.withResolvers === 'function')
+        ? Promise.withResolvers()
+        : (() => { let r; const p = new Promise(res => { r = res; }); return { promise: p, resolve: r }; })();
+    _resolveApplyFilters = resolve;
+    applyFiltersTimeout = setTimeout(async () => {
         try {
             const searchInput = document.getElementById('mainSearch');
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -2238,7 +2240,7 @@ function applyFilters(immediate = false, preserveViewport = false) {
             resolve();
         }
     }, delay);
-}); 
+    return promise;
 }
 window.applyFilters = applyFilters;
 
@@ -2362,6 +2364,11 @@ function sanitizeHtmlMediaUrl(rawUrl) {
         const trimmed = String(cleaned || '').trim();
         if (!trimmed) return null;
         const base = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'https://www.nisha-store.shop';
+        if (typeof canParseURL === 'function') {
+            if (!canParseURL(trimmed, base)) return null;
+        } else if (typeof URL !== 'undefined' && typeof URL.canParse === 'function') {
+            if (!URL.canParse(trimmed, base)) return null;
+        }
         const u = new URL(trimmed, base);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'data:') {
             return u.href;
