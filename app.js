@@ -161,7 +161,10 @@ if (!SUPABASE_ANON_KEY) {
                 fetch: (url, options) => {
                     // Используем CDN ТОЛЬКО для главного списка товаров (limit=1000). Точечные запросы идут напрямую!
                     if (typeof url === 'string' && url.includes('/rest/v1/items') && url.includes('limit=1000') && !url.includes('id=eq.') && (!options || options.method === 'GET' || !options.method)) {
-                        url = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'cdn.nisha-store.shop');
+                        const cdnUrl = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'cdn.nisha-store.shop');
+                        return fetch(cdnUrl, options)
+                            .then((res) => (res && res.ok ? res : fetch(url, options)))
+                            .catch(() => fetch(url, options));
                     }
                     return fetch(url, options);
                 }
