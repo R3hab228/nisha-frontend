@@ -62,7 +62,7 @@ function checkPendingBroadcast() {
 }
 window.checkPendingBroadcast = checkPendingBroadcast;
 
-window._pendingBroadcastIntervalId = setInterval(() => {
+function runPendingNotificationsTick() {
     if (document.hidden) return;
     const inFeed = isUserInProductFeed();
     if (pendingBroadcastQueue && inFeed) {
@@ -71,15 +71,28 @@ window._pendingBroadcastIntervalId = setInterval(() => {
     if (typeof checkPendingBargainNotification === 'function' && inFeed && (window.pendingBargainNotification || (window.pendingBargainNotifications && window.pendingBargainNotifications.length > 0))) {
         checkPendingBargainNotification();
     }
-}, 1500);
+}
+
+function startPendingBroadcastPolling() {
+    if (window._pendingBroadcastIntervalId || document.hidden) return;
+    window._pendingBroadcastIntervalId = setInterval(runPendingNotificationsTick, 1500);
+}
+
+function stopPendingBroadcastPolling() {
+    if (window._pendingBroadcastIntervalId) {
+        clearInterval(window._pendingBroadcastIntervalId);
+        window._pendingBroadcastIntervalId = null;
+    }
+}
+
+startPendingBroadcastPolling();
 
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-        const inFeed = isUserInProductFeed();
-        if (pendingBroadcastQueue && inFeed) checkPendingBroadcast();
-        if (typeof checkPendingBargainNotification === 'function' && inFeed && (window.pendingBargainNotification || (window.pendingBargainNotifications && window.pendingBargainNotifications.length > 0))) {
-            checkPendingBargainNotification();
-        }
+    if (document.hidden) {
+        stopPendingBroadcastPolling();
+    } else {
+        runPendingNotificationsTick();
+        startPendingBroadcastPolling();
     }
 });
 

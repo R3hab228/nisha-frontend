@@ -2556,22 +2556,23 @@ function initGridEventDelegation() {
         }
     });
 
-    // 2. Свайп и дабл-тап лайк на слайдере карточки
+    // 2. Свайп и дабл-тап лайк по карточке товара
     let isDraggingSlider = false;
     let startX = 0;
     let startY = 0;
     let clickTimer = null;
-    let lastClickedWrapper = null;
+    let lastClickedCard = null;
 
     grid.addEventListener('touchstart', (e) => {
-        const wrapper = e.target.closest('.card-slider-wrapper');
-        if (!wrapper) return;
-        activateCardSlides(wrapper);
-        const card = wrapper.closest('.item-card');
-        const cardId = card ? card.getAttribute('data-id') : null;
+        const card = e.target.closest('.item-card');
+        if (!card) return;
+        const cardId = card.getAttribute('data-id');
         if (cardId && typeof window.prewarmProductModal === "function") {
             window.prewarmProductModal(cardId, true);
         }
+        const wrapper = e.target.closest('.card-slider-wrapper');
+        if (!wrapper) return;
+        activateCardSlides(wrapper);
         isDraggingSlider = false;
         if (e.touches && e.touches[0]) {
             startX = e.touches[0].clientX;
@@ -2590,26 +2591,25 @@ function initGridEventDelegation() {
     }, { passive: true });
 
     grid.addEventListener('click', (e) => {
-        const wrapper = e.target.closest('.card-slider-wrapper');
-        if (!wrapper) return;
-        if (e.target.closest('.grid-slider-btn') || e.target.closest('.card-dots-container')) return;
-        if (isDraggingSlider) {
+        const card = e.target.closest('.item-card');
+        if (!card) return;
+        if (e.target.closest('.fav-star, .grid-cart-btn, .grid-slider-btn, .card-dots-container, [data-action]')) return;
+        if (isDraggingSlider && e.target.closest('.card-slider-wrapper')) {
             e.preventDefault();
             e.stopPropagation();
             return;
         }
 
-        const card = wrapper.closest('.item-card');
-        const itemId = card ? card.getAttribute('data-id') : null;
+        const itemId = card.getAttribute('data-id');
         if (!itemId) return;
 
         const DOUBLE_TAP_DELAY_MS = 260;
-        if (clickTimer === null || lastClickedWrapper !== wrapper) {
+        if (clickTimer === null || lastClickedCard !== card) {
             if (clickTimer) clearTimeout(clickTimer);
-            lastClickedWrapper = wrapper;
+            lastClickedCard = card;
             clickTimer = setTimeout(() => {
                 clickTimer = null;
-                lastClickedWrapper = null;
+                lastClickedCard = null;
                 if (typeof saveCurrentFeedScrollState === 'function') {
                     saveCurrentFeedScrollState(itemId);
                 }
@@ -2618,8 +2618,9 @@ function initGridEventDelegation() {
         } else {
             clearTimeout(clickTimer);
             clickTimer = null;
-            lastClickedWrapper = null;
-            handleDoubleTapLike(e, itemId, wrapper);
+            lastClickedCard = null;
+            const animContainer = card.querySelector('.card-slider-wrapper') || card;
+            handleDoubleTapLike(e, itemId, animContainer);
         }
     });
 }
@@ -2758,7 +2759,7 @@ function buildCardDOM(item, idx = 0) {
             </div>
             ${controlsHTML}
         </div>
-        <div class="item-info" data-action="open-product" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}">
+        <div class="item-info">
             <h3 class="item-title">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || '') : item.name}</h3>
             <div class="item-price">${priceHTML}</div>
             <div class="item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '') : item.size}</div>

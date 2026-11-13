@@ -139,4 +139,18 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(style).toContain('.toast { max-width: 200px; width: auto; padding: 5px 10px; gap: 6px; font-size: 10.5px; }');
         expect(helpers).toContain('class="toast-item-thumb"');
     });
+
+    it('12. background timers pause on visibilitychange and catalog double-tap covers full item-card', () => {
+        const i18n = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
+        const sys = readFileSync(resolve(__dirname, '../js/ui/system-features.js'), 'utf8');
+        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+
+        expect(i18n).toContain('function stopCursorBlink()');
+        expect(i18n).toContain('if (document.hidden)');
+        expect(i18n).toContain('window._searchTypewriterVisBound');
+        expect(sys).toContain('function startPendingBroadcastPolling()');
+        expect(sys).toContain('function stopPendingBroadcastPolling()');
+        expect(catalog).toContain("const card = e.target.closest('.item-card');");
+        expect(catalog).not.toContain('<div class="item-info" data-action="open-product"');
+    });
 });

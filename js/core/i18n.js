@@ -353,14 +353,23 @@ function startSearchTypewriter() {
     let isDeleting = false;
     let showCursor = true;
 
+    function stopCursorBlink() {
+        if (window.searchCursorBlinkInterval) {
+            clearInterval(window.searchCursorBlinkInterval);
+            window.searchCursorBlinkInterval = null;
+        }
+    }
+
     function typeLoop() {
         if (!document.getElementById('mainSearch')) return;
+        if (document.hidden) {
+            stopCursorBlink();
+            searchTypewriterInterval = null;
+            return;
+        }
         
         if (document.activeElement === searchInput || searchInput.value.length > 0) {
-            if (window.searchCursorBlinkInterval) {
-                clearInterval(window.searchCursorBlinkInterval);
-                window.searchCursorBlinkInterval = null;
-            }
+            stopCursorBlink();
             searchInput.placeholder = words[wordIndex];
             searchTypewriterInterval = setTimeout(typeLoop, 500);
             return;
@@ -388,10 +397,10 @@ function startSearchTypewriter() {
                 const maxBlinks = 4; // 4 * 0.6с = 2.4 секунды паузы перед удалением
                 
                 window.searchCursorBlinkInterval = setInterval(() => {
-                    if (document.activeElement === searchInput || searchInput.value.length > 0) {
-                        clearInterval(window.searchCursorBlinkInterval);
-                        window.searchCursorBlinkInterval = null;
-                        searchInput.placeholder = currentWord;
+                    if (document.hidden || document.activeElement === searchInput || searchInput.value.length > 0) {
+                        stopCursorBlink();
+                        if (!document.hidden) searchInput.placeholder = currentWord;
+                        else searchTypewriterInterval = null;
                         return;
                     }
                     showCursor = !showCursor;
@@ -399,8 +408,7 @@ function startSearchTypewriter() {
                     blinkCount++;
                     
                     if (blinkCount >= maxBlinks) {
-                        clearInterval(window.searchCursorBlinkInterval);
-                        window.searchCursorBlinkInterval = null;
+                        stopCursorBlink();
                         showCursor = true;
                         searchTypewriterInterval = setTimeout(typeLoop, 50);
                     }
@@ -409,6 +417,15 @@ function startSearchTypewriter() {
             }
             searchTypewriterInterval = setTimeout(typeLoop, 100);
         }
+    }
+
+    if (!window._searchTypewriterVisBound) {
+        window._searchTypewriterVisBound = true;
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && !window.searchCursorBlinkInterval && !searchTypewriterInterval && document.getElementById('mainSearch')) {
+                typeLoop();
+            }
+        });
     }
 
     typeLoop();
