@@ -2595,6 +2595,7 @@ function initGridEventDelegation() {
         const itemId = card ? card.getAttribute('data-id') : null;
         if (!itemId) return;
 
+        const DOUBLE_TAP_DELAY_MS = 260;
         if (clickTimer === null || lastClickedWrapper !== wrapper) {
             if (clickTimer) clearTimeout(clickTimer);
             lastClickedWrapper = wrapper;
@@ -2605,7 +2606,7 @@ function initGridEventDelegation() {
                     saveCurrentFeedScrollState(itemId);
                 }
                 if (typeof openProductModalById === 'function') openProductModalById(itemId);
-            }, 120);
+            }, DOUBLE_TAP_DELAY_MS);
         } else {
             clearTimeout(clickTimer);
             clickTimer = null;
@@ -3377,7 +3378,8 @@ window.handleDoubleTapLike = async function(event, itemId, container) {
     if (typeof triggerHaptic === 'function') triggerHaptic('heavy');
 
     const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
-    if (!userFavs.includes(itemId)) {
+    const isAlreadyFav = Array.isArray(userFavs) && userFavs.some(id => String(id) === String(itemId));
+    if (!isAlreadyFav) {
         if (typeof toggleFav === 'function') {
             await toggleFav(null, itemId);
         }

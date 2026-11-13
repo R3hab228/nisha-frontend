@@ -217,8 +217,12 @@ async function changeLanguage(lng) {
                 window.renderFilteredOrders();
             }
             
-            const msg = i18next.t('messages.lang_changed') + ' [' + normalized.toUpperCase() + ']';
-            if (typeof showToast === 'function') showToast(msg, 'success');
+            if (typeof window.showLanguageToast === 'function') {
+                window.showLanguageToast(normalized);
+            } else if (typeof showToast === 'function') {
+                const msg = i18next.t('messages.lang_changed') + ' [' + normalized.toUpperCase() + ']';
+                showToast(msg, 'success');
+            }
 
             // Если мобильное меню открыто/закрыто — переводим кнопку фильтров
             const sidebar = document.querySelector('.sidebar');

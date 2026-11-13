@@ -1627,9 +1627,10 @@ input[type="number"],
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
 
-/* СТИЛИ ОЧЕРЕДИ ТОСТОВ О НОВЫХ ТОВАРАХ И ИЗБРАННОМ */
+/* СТИЛИ ОЧЕРЕДИ ТОСТОВ О НОВЫХ ТОВАРАХ, ИЗБРАННОМ И ЯЗЫКЕ */
 .toast.toast-new-item,
-.toast.toast-fav-item {
+.toast.toast-fav-item,
+.toast.toast-lang-item {
     animation: slideInRight 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
     padding: 6px 12px;
     max-width: 240px;
@@ -1645,19 +1646,23 @@ input[type="number"],
     pointer-events: auto;
 }
 .toast.toast-new-item:hover,
-.toast.toast-fav-item:hover {
+.toast.toast-fav-item:hover,
+.toast.toast-lang-item:hover {
     transform: translateX(-3px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 255, 0, 0.25);
 }
 .toast.toast-new-item::before,
-.toast.toast-fav-item::before {
+.toast.toast-fav-item::before,
+.toast.toast-lang-item::before {
     display: none !important;
 }
 .toast.toast-new-item::after,
-.toast.toast-fav-item::after {
+.toast.toast-fav-item::after,
+.toast.toast-lang-item::after {
     animation: toastTimer 3.5s linear forwards;
 }
-.toast.toast-fav-item::after {
+.toast.toast-fav-item::after,
+.toast.toast-lang-item::after {
     animation: toastTimer 2.5s linear forwards;
 }
 .toast.toast-fav-item.toast-fav-removed {
@@ -1672,7 +1677,8 @@ input[type="number"],
     color: var(--accent-red);
 }
 .toast.toast-new-item.toast-leaving,
-.toast.toast-fav-item.toast-leaving {
+.toast.toast-fav-item.toast-leaving,
+.toast.toast-lang-item.toast-leaving {
     animation: slideOutRightSmooth 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
 }
 
@@ -1723,7 +1729,8 @@ input[type="number"],
 
 @media (max-width: 480px) {
     .toast.toast-new-item,
-    .toast.toast-fav-item {
+    .toast.toast-fav-item,
+    .toast.toast-lang-item {
         max-width: 200px;
         width: auto;
         padding: 5px 10px;

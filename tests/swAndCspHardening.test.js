@@ -98,7 +98,19 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(helpers).toContain("toast.className = `toast toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`");
         expect(profile).toContain('window.showFavoriteToast(itemObj, false, imgUrl)');
         expect(profile).toContain('window.showFavoriteToast(itemObj, true, imgUrl)');
-        expect(style).toContain('.toast.toast-new-item,\n.toast.toast-fav-item');
-        expect(style).toContain('.toast.toast-new-item,\n    .toast.toast-fav-item');
+        expect(style).toContain('.toast.toast-new-item,\n.toast.toast-fav-item,\n.toast.toast-lang-item');
+        expect(style).toContain('.toast.toast-new-item,\n    .toast.toast-fav-item,\n    .toast.toast-lang-item');
+    });
+
+    it('9. language change toast uses compact toast-lang-item sizing and catalog double-tap uses 260ms window', () => {
+        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const i18n = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
+        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+
+        expect(helpers).toContain('function showLanguageToast(');
+        expect(helpers).toContain("toast.className = 'toast toast-lang-item'");
+        expect(i18n).toContain('window.showLanguageToast(normalized)');
+        expect(catalog).toContain('const DOUBLE_TAP_DELAY_MS = 260;');
+        expect(catalog).toContain('userFavs.some(id => String(id) === String(itemId))');
     });
 });

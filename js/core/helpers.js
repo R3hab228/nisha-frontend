@@ -635,6 +635,54 @@ function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
 }
 window.showFavoriteToast = showFavoriteToast;
 
+let _activeLangToast = null;
+
+function showLanguageToast(langCode) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    if (_activeLangToast && _activeLangToast.parentNode) {
+        _activeLangToast.remove();
+        _activeLangToast = null;
+    }
+
+    const normalized = String(langCode || 'ua').trim().toUpperCase();
+    const tagText = `LANG [${normalized}]`;
+    const titleText = typeof i18next !== 'undefined'
+        ? i18next.t('messages.lang_changed', { defaultValue: 'Язык изменен' })
+        : 'Язык изменен';
+
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-lang-item';
+    _activeLangToast = toast;
+    toast.innerHTML = `
+        <div class="toast-item-content">
+            <div class="toast-item-tag">${safeToastEscape(tagText)}</div>
+            <div class="toast-item-title">${safeToastEscape(titleText)}</div>
+        </div>
+    `;
+    container.appendChild(toast);
+
+    let isDismissed = false;
+    const dismiss = () => {
+        if (isDismissed) return;
+        isDismissed = true;
+        if (_activeLangToast === toast) _activeLangToast = null;
+        toast.classList.add('toast-leaving');
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 300);
+    };
+
+    toast.onclick = (e) => {
+        if (e) e.stopPropagation();
+        dismiss();
+    };
+
+    setTimeout(dismiss, 2500);
+}
+window.showLanguageToast = showLanguageToast;
+
 // --- ОЧЕРЕДЬ ТОСТОВ О НОВЫХ ТОВАРАХ (МАКСИМУМ 2 ОДНОВРЕМЕННО + ПЛАВНАЯ СМЕНА) ---
 let _batchedNewItemsList = [];
 let _batchToastTimer = null;
