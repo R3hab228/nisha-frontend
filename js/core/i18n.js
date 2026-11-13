@@ -120,6 +120,17 @@ window.detectInitialSiteLang = detectInitialSiteLang;
 window.updateFooterLanguageUI = updateFooterLanguageUI;
 window.setLang = setLang;
 
+if (typeof document !== 'undefined') {
+    const syncInitialLangUI = () => {
+        updateFooterLanguageUI(detectInitialSiteLang());
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncInitialLangUI);
+    } else {
+        syncInitialLangUI();
+    }
+}
+
 if (typeof i18next !== 'undefined' && typeof i18next.on === 'function') {
     i18next.on('languageChanged', (lng) => {
         const norm = normalizeSiteLang(lng);

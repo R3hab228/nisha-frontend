@@ -3709,15 +3709,127 @@ window.openCart = function() {
     }
 };
 
+function closePaymentDropdown() {
+    const pd = document.getElementById('paymentDropdown');
+    const display = document.getElementById('paymentDisplay');
+    const arrow = document.getElementById('paymentArrow');
+    if (display) display.classList.remove('is-open');
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+    if (typeof window.hidePopoverSafe === 'function') {
+        window.hidePopoverSafe(pd);
+    } else if (pd && typeof pd.hidePopover === 'function' && pd.matches && pd.matches(':popover-open')) {
+        try { pd.hidePopover(); } catch (_) {}
+    }
+    if (pd && (pd.style.display === 'block' || pd.style.opacity === '1')) {
+        pd.style.opacity = '0';
+        pd.style.visibility = 'hidden';
+        pd.style.transform = 'translateY(-6px)';
+        setTimeout(() => {
+            const d = document.getElementById('paymentDisplay');
+            if (!d || !d.classList.contains('is-open')) {
+                pd.style.display = 'none';
+            }
+        }, 220);
+    }
+}
+window.closePaymentDropdown = closePaymentDropdown;
+
+function normalizePaymentMethodRu(val) {
+    const s = String(val || '').toLowerCase();
+    if (s.includes('200') || s.includes('налож') || s.includes('наклад') || s.includes('delivery') || s.includes('cod')) {
+        return 'Наложка (предоплата 200грн)';
+    }
+    return 'Полная предоплата';
+}
+window.normalizePaymentMethodRu = normalizePaymentMethodRu;
+
+function selectPaymentMethod(dbVal, displayLabel) {
+    const txt = document.getElementById('paymentSelectedText');
+    const input = document.getElementById('orderPaymentMethod');
+    const ruVal = normalizePaymentMethodRu(dbVal);
+    if (txt) {
+        txt.setAttribute('data-i18n', ruVal.includes('200') ? 'checkout.payment_cod' : 'checkout.payment_full');
+        txt.innerText = displayLabel || dbVal;
+    }
+    if (input) input.value = ruVal;
+    if (typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+    closePaymentDropdown();
+}
+window.selectPaymentMethod = selectPaymentMethod;
+
+function togglePaymentDropdown() {
+    const pd = document.getElementById('paymentDropdown');
+    const display = document.getElementById('paymentDisplay');
+    const arrow = document.getElementById('paymentArrow');
+    if (!pd) return;
+    const isOpen = (pd.matches && pd.matches(':popover-open')) || (pd.style.display === 'block' && pd.style.opacity === '1') || (display && display.classList.contains('is-open'));
+    if (isOpen) {
+        closePaymentDropdown();
+    } else {
+        const bd = document.getElementById('branchDropdown');
+        if (bd) bd.style.display = 'none';
+        const cd = document.getElementById('cityDropdown');
+        if (cd) cd.style.display = 'none';
+        if (display) display.classList.add('is-open');
+        if (typeof window.showPopoverSafe === 'function') {
+            window.showPopoverSafe(pd);
+        } else if (typeof pd.showPopover === 'function') {
+            try { pd.showPopover(); } catch (_) {}
+        }
+        if (display && pd.matches && pd.matches(':popover-open')) {
+            const rect = display.getBoundingClientRect();
+            pd.style.position = 'fixed';
+            pd.style.top = `${Math.round(rect.bottom)}px`;
+            pd.style.bottom = 'auto';
+            pd.style.left = `${Math.round(rect.left)}px`;
+            pd.style.width = `${Math.round(rect.width)}px`;
+            pd.style.margin = '0';
+        }
+        pd.style.display = 'block';
+        requestAnimationFrame(() => {
+            pd.style.opacity = '1';
+            pd.style.visibility = 'visible';
+            pd.style.transform = 'translateY(0)';
+            if (arrow) arrow.style.transform = 'rotate(180deg)';
+        });
+    }
+}
+window.togglePaymentDropdown = togglePaymentDropdown;
+
+function initPaymentPopoverSync() {
+    if (typeof document === 'undefined') return;
+    const pd = document.getElementById('paymentDropdown');
+    if (pd && !pd._popoverBound) {
+        pd._popoverBound = true;
+        pd.addEventListener('toggle', (evt) => {
+            if (evt.newState === 'closed') {
+                const display = document.getElementById('paymentDisplay');
+                const arrow = document.getElementById('paymentArrow');
+                if (display) display.classList.remove('is-open');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (checkoutModal && !checkoutModal._scrollDismissBound) {
+        checkoutModal._scrollDismissBound = true;
+        checkoutModal.addEventListener('scroll', () => {
+            if (typeof closePaymentDropdown === 'function') closePaymentDropdown();
+        }, { capture: true, passive: true });
+    }
+}
+
 if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             initCartHoverDesktop();
             initCartScrollIsolation();
+            initPaymentPopoverSync();
         });
     } else {
         initCartHoverDesktop();
         initCartScrollIsolation();
+        initPaymentPopoverSync();
     }
 }
 

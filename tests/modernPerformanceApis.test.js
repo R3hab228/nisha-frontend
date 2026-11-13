@@ -447,17 +447,16 @@ it('isPopoverOpenSafe accurately detects open state across popover, class and st
             expect(css).toContain('transform: translateY(0)');
         });
 
-        it('live-search.js and index.html register toggle listeners for Light Dismiss, cart uses smooth bottom sheet', () => {
+        it('live-search.js and cart.js register toggle listeners for Light Dismiss, cart uses smooth bottom sheet', () => {
             const cartJs = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
             const searchJs = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
-            const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
 
             expect(cartJs).toContain('function toggleCartDropdown');
             expect(cartJs).toContain('function closeCartDropdown');
             expect(searchJs).toContain("liveSearchDropEl.addEventListener('toggle'");
             expect(searchJs).toContain("evt.newState === 'closed'");
-            expect(html).toContain("pd.addEventListener('toggle'");
-            expect(html).toContain("evt.newState === 'closed'");
+            expect(cartJs).toContain("pd.addEventListener('toggle'");
+            expect(cartJs).toContain("evt.newState === 'closed'");
         });
     });
 

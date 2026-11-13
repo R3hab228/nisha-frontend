@@ -26,12 +26,12 @@ const STATIC_URLS = [
     '/cables.svg'
 ];
 
-// Оптимизированная пакетная очистка кэша без рекурсии с дебаунсом
-let _trimTimeout = null;
+// Оптимизированная пакетная очистка кэша без рекурсии с дебаунсом (независимо по имени кэша)
+const _trimTimeouts = new Map();
 function scheduleTrimCache(cacheName, maxItems = 150) {
-    if (_trimTimeout) return;
-    _trimTimeout = setTimeout(() => {
-        _trimTimeout = null;
+    if (_trimTimeouts.has(cacheName)) return;
+    const timerId = setTimeout(() => {
+        _trimTimeouts.delete(cacheName);
         caches.open(cacheName).then(cache => {
             cache.keys().then(keys => {
                 if (keys && keys.length > maxItems) {
@@ -41,6 +41,7 @@ function scheduleTrimCache(cacheName, maxItems = 150) {
             }).catch(() => {});
         }).catch(() => {});
     }, 4000);
+    _trimTimeouts.set(cacheName, timerId);
 }
 
 self.addEventListener('message', event => {
@@ -165,7 +166,11 @@ self.addEventListener('fetch', event => {
             fetch(event.request).then(networkResponse => {
                 if (networkResponse && networkResponse.status === 200) {
                     const responseToCache = networkResponse.clone();
-                    caches.open(API_CACHE).then(cache => cache.put(event.request, responseToCache));
+                    caches.open(API_CACHE).then(cache => {
+                        cache.put(event.request, responseToCache).then(() => {
+                            scheduleTrimCache(API_CACHE, 80);
+                        }).catch(() => {});
+                    }).catch(() => {});
                 }
                 return networkResponse;
             }).catch(() => {
@@ -229,24 +234,44 @@ self.addEventListener('fetch', event => {
                 // Пытаемся получить свежую версию из сети
                 const networkPromise = fetch(event.request);
                 
-                // Проверяем наличие в кэше на случай медленной сети / офлайна
-                const cachedResponse = await caches.match(event.request, { ignoreSearch: true });
+                // Проверяем наличие в кэше на случай медленной сети / офлайна (точное совпадение URL + query)
+                const cachedResponse = await caches.match(event.request);
+
+                const canCacheNetworkResponse = (res) => Boolean(res && res.status === 200 && (
+                    res.type === 'basic' ||
+                    (res.type === 'cors' && (
+                        url.hostname === 'cdn.jsdelivr.net' ||
+                        url.hostname === 'cdnjs.cloudflare.com' ||
+                        url.hostname === 'unpkg.com'
+                    ))
+                ));
 
                 let networkResponse;
                 if (cachedResponse) {
-                    // Если копия уже есть в кэше — даем сети до 3.5 сек, иначе плавно отдаем кэш без принудительного разрыва соединения
+                    // Если копия уже есть в кэше — даем сети до 1.4 сек, иначе отдаем кэш, а свежий ответ дописываем в фоне
                     const { promise: timeoutPromise, resolve: resolveTimeout } = Promise.withResolvers();
-                    const timeoutId = setTimeout(() => resolveTimeout(null), 3500);
-                    
+                    const timeoutId = setTimeout(() => resolveTimeout(null), 1400);
+                    let timedOut = false;
+
+                    const bgUpdatePromise = networkPromise.then(res => {
+                        clearTimeout(timeoutId);
+                        if (timedOut && canCacheNetworkResponse(res)) {
+                            const clone = res.clone();
+                            return caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+                        }
+                        return res;
+                    }).catch(() => null);
+
                     networkResponse = await Promise.race([
-                        networkPromise.then(res => {
-                            clearTimeout(timeoutId);
-                            return res;
-                        }).catch(() => null),
-                        timeoutPromise
+                        bgUpdatePromise,
+                        timeoutPromise.then(val => {
+                            timedOut = true;
+                            return val;
+                        })
                     ]);
 
                     if (!networkResponse) {
+                        bgUpdatePromise.catch(() => {});
                         return cachedResponse;
                     }
                 } else {
@@ -254,16 +279,7 @@ self.addEventListener('fetch', event => {
                     networkResponse = await networkPromise.catch(() => null);
                 }
 
-                const isAllowedToCache = networkResponse && networkResponse.status === 200 && (
-                    networkResponse.type === 'basic' || 
-                    (networkResponse.type === 'cors' && (
-                        url.hostname === 'cdn.jsdelivr.net' || 
-                        url.hostname === 'cdnjs.cloudflare.com' ||
-                        url.hostname === 'unpkg.com'
-                    ))
-                );
-
-                if (isAllowedToCache) {
+                if (canCacheNetworkResponse(networkResponse)) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache)).catch(() => {});
                 }
@@ -283,7 +299,7 @@ self.addEventListener('fetch', event => {
                 return Response.error();
             } catch (err) {
                 // Безопасный перехват любых сетевых отмен (AbortError) и офлайна без unhandled rejection
-                const cached = await caches.match(event.request, { ignoreSearch: true });
+                const cached = await caches.match(event.request);
                 if (cached) return cached;
                 if (event.request.mode === 'navigate') {
                     const fallback = await caches.match('/', { ignoreSearch: true });
