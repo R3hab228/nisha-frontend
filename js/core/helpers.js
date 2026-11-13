@@ -534,11 +534,13 @@ function attachToastLifecycle(toast, { duration = 2500, onDismiss = null } = {})
     const dismiss = () => {
         if (isDismissed) return;
         isDismissed = true;
+        isPaused = false;
         clearTimeout(dismissTimerId);
         dismissTimerId = null;
         if (typeof onDismiss === 'function') onDismiss();
-        if (toast.classList && typeof toast.classList.add === 'function') {
-            toast.classList.add('toast-leaving');
+        if (toast.classList) {
+            if (typeof toast.classList.remove === 'function') toast.classList.remove('toast-paused');
+            if (typeof toast.classList.add === 'function') toast.classList.add('toast-leaving');
         }
         setTimeout(() => {
             if (toast.parentNode && typeof toast.remove === 'function') toast.remove();
@@ -2329,14 +2331,13 @@ window.parseDeliveryAddress = parseDeliveryAddress;
 // ==========================================
 function handleDelegatedAction(e) {
     if (!e || !e.target || typeof e.target.closest !== 'function') return;
-    if (isToastClickShielded()) {
-        if (typeof e.preventDefault === 'function') e.preventDefault();
-        if (typeof e.stopPropagation === 'function') e.stopPropagation();
-        return;
-    }
     const actionEl = e.target.closest('[data-action]');
     const toastEl = e.target.closest('#toastContainer, .toast');
+    // Если клик идёт по самому тосту — не перехватываем его в capture-фазе, чтобы сработал toast.onclick
     if (toastEl && toastEl !== actionEl) {
+        return;
+    }
+    if (isToastClickShielded()) {
         if (typeof e.preventDefault === 'function') e.preventDefault();
         if (typeof e.stopPropagation === 'function') e.stopPropagation();
         return;
