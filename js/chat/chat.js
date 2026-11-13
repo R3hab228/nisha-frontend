@@ -583,6 +583,12 @@ async function submitSupportTicket() {
 window.submitSupportTicket = submitSupportTicket;
 
 // 3. Система личных ответов от поддержки (Realtime + Offline)
+function debugChatLog(...args) {
+    if (typeof window !== 'undefined' && window.__NISHA_DEBUG__) {
+        console.log(...args);
+    }
+}
+
 function initSupportRepliesSystem() {
     if (window._supportRepliesInitialized) return;
     const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
@@ -595,7 +601,7 @@ function initSupportRepliesSystem() {
     }
     window._supportRepliesInitialized = true;
 
-    console.log('[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:', fingerprint);
+    debugChatLog('[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:', fingerprint);
 
     function checkUnreadSupportReplies() {
         const activeSb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
@@ -607,7 +613,7 @@ function initSupportRepliesSystem() {
 
         const processReplies = (replies) => {
             if (replies && replies.length > 0) {
-                console.log(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
+                debugChatLog(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
                 replies.forEach(r => handleIncomingSupportReply(r, activeSb));
             }
         };
@@ -647,7 +653,7 @@ function initSupportRepliesSystem() {
                 table: 'support_replies',
                 filter: `client_id=eq.user_${userId}`
             }, payload => {
-                console.log('[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение (user) Online:', payload.new);
+                debugChatLog('[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение (user) Online:', payload.new);
                 handleIncomingSupportReply(payload.new, sb);
             })
             .subscribe();
@@ -669,7 +675,7 @@ function initSupportRepliesSystem() {
         });
 
         // 2. Слушаем новые сообщения в реальном времени (Realtime Online)
-        console.log('[СИСТЕМА ОТВЕТОВ] Подписка на Realtime включена.');
+        debugChatLog('[СИСТЕМА ОТВЕТОВ] Подписка на Realtime включена.');
         sb.channel('support-replies-channel')
             .on('postgres_changes', { 
                 event: 'INSERT', 
@@ -677,12 +683,12 @@ function initSupportRepliesSystem() {
                 table: 'support_replies', 
                 filter: `client_id=eq.${fingerprint}` 
             }, payload => {
-                console.log('[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение Online:', payload.new);
+                debugChatLog('[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение Online:', payload.new);
                 handleIncomingSupportReply(payload.new, sb);
             })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log('[СИСТЕМА ОТВЕТОВ] Успешно подключен к каналу!');
+                    debugChatLog('[СИСТЕМА ОТВЕТОВ] Успешно подключен к каналу!');
                 }
             });
 

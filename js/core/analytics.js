@@ -297,7 +297,7 @@
                 ttq._i[e] = [];
                 ttq._i[e]._u = r;
                 ttq._t = ttq._t || {};
-                ttq._t[e] = +new Date();
+                ttq._t[e] = Date.now();
                 ttq._o = ttq._o || {};
                 ttq._o[e] = n || {};
                 const s = document.createElement('script');

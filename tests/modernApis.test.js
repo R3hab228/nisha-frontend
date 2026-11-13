@@ -2270,9 +2270,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toMatch(/@media\s*print[\s\S]*?content-visibility:\s*visible\s*!important/);
         });
 
-        it('matches and ranks branches and postomats by number without false positives on weight limits', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
-            eval(cartCode);
+        it('matches and ranks branches and postomats by number without false positives on weight limits', async () => {
+            await import('../js/cart/cart.js');
 
             expect(typeof window.parseNPBranchQuery).toBe('function');
             expect(typeof window.filterAndSortBranches).toBe('function');
@@ -4110,8 +4109,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(restored).toEqual(testData);
 
             // 4. Cart NP storage integration checks
-            expect(cartCode).toContain('entry.compressed && typeof window.decompressJSON === \'function\'');
-            expect(cartCode).toContain('window.compressJSON(payload)');
+            const npStorageCode = readFileSync(resolve(import.meta.dirname, '../js/cart/npCacheStorage.js'), 'utf8');
+            expect(npStorageCode).toContain('entry.compressed && typeof window.decompressJSON === \'function\'');
+            expect(npStorageCode).toContain('window.compressJSON(payload)');
         });
     });
 });
