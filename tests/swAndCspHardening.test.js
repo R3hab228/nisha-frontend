@@ -162,7 +162,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(html).toContain('id=toastContainer aria-live=polite aria-atomic=false');
         expect(style).toContain('.toast:hover::after,\n.toast.toast-paused::after { animation-play-state: paused !important; }');
         expect(style).toMatch(/\.modal-overlay\s*\{[^}]*overscroll-behavior:\s*contain;/);
-        expect(style).toMatch(/\.sidebar\.active-mobile\s*\{[^}]*overscroll-behavior:\s*contain;/);
+        expect(style).toMatch(/\.sidebar\.active-mobile\s*\{[^}]*overscroll-behavior:\s*auto;\s*touch-action:\s*pan-y;/);
         expect(helpers).toContain("toast.setAttribute('role', isAlert ? 'alert' : 'status');");
         expect(helpers).toContain('function attachToastLifecycle(');
         expect(helpers).toContain('const pauseDismiss = () => {');
