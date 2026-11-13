@@ -177,4 +177,13 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(catalog).toContain('activateCardSlides(wrapper, true);');
         expect(catalog).toContain("secondImg.fetchPriority = 'high';");
     });
+
+    it('15. web-locks releases on pagehide without beforeunload and rum prefers userAgentData.platform', () => {
+        const webLocks = readFileSync(resolve(__dirname, '../js/core/web-locks.js'), 'utf8');
+        const rum = readFileSync(resolve(__dirname, '../js/core/rum.js'), 'utf8');
+
+        expect(webLocks).toContain("window.addEventListener('pagehide', resolve, { once: true });");
+        expect(webLocks).not.toContain('beforeunload');
+        expect(rum).toContain('navigator.userAgentData?.platform || navigator.platform');
+    });
 });

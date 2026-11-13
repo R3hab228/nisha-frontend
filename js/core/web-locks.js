@@ -104,10 +104,9 @@ function initLeaderElection() {
             console.info('[WebLocks] Tab elected as Leader (cross-tab coordination active)');
             _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
 
-            // Hold lock until tab closes, navigates away, or is hidden into bfcache
+            // Hold lock until tab closes, navigates away, or enters BFCache
             const { promise, resolve } = Promise.withResolvers();
             window.addEventListener('pagehide', resolve, { once: true });
-            window.addEventListener('beforeunload', resolve, { once: true });
             await promise;
 
             _isLeader = false;

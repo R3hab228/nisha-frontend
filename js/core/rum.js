@@ -29,7 +29,8 @@
     function detectDevice() {
         if (typeof navigator === 'undefined') return 'Desktop';
         const ua = navigator.userAgent || '';
-        if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+        const platform = navigator.userAgentData?.platform || navigator.platform || '';
+        if (/iPad|iPhone|iPod/.test(ua) || ((platform === 'MacIntel' || platform === 'macOS') && navigator.maxTouchPoints > 1)) {
             return 'iOS';
         }
         if (/Android/i.test(ua)) {
