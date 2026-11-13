@@ -2,6 +2,12 @@
 // NISHA PWA, SENTRY, PUSH & NETWORK MODULE
 // ==========================================
 
+function debugPwaLog(...args) {
+    if (typeof window !== 'undefined' && window.__NISHA_DEBUG__) {
+        console.log(...args);
+    }
+}
+
 // === 1. АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ САЙТА (SERVICE WORKER) ===
 const APP_BUILD_ID = (typeof __BUILD_ID__ !== 'undefined') ? __BUILD_ID__ : 'dev';
 const APP_SW_VERSION = 'nisha-cache-' + APP_BUILD_ID;
@@ -51,7 +57,7 @@ if ('serviceWorker' in navigator) {
         if (store) store.set('nisha_sw_current_bundle', APP_SW_VERSION);
 
         navigator.serviceWorker.register(SW_SCRIPT_URL, { updateViaCache: 'none' }).then(registration => {
-            console.log('[PWA] SW зарегистрирован');
+            debugPwaLog('[PWA] SW зарегистрирован');
             if (registration.navigationPreload) {
                 registration.navigationPreload.enable().catch(() => {});
             }
@@ -88,7 +94,7 @@ if ('serviceWorker' in navigator) {
                         if (store && store.get('nisha_sw_ack_version') === workerVersion) return;
 
                         updateModalShownInPage = true;
-                        console.log('[PWA] Найдено новое обновление:', workerVersion);
+                        debugPwaLog('[PWA] Найдено новое обновление:', workerVersion);
 
                         const triggerUpdateModal = () => {
                             const updTitle = (typeof i18next !== 'undefined' && i18next.t('pwa.update_title', { defaultValue: 'SYSTEM_UPDATE.EXE' })) || 'SYSTEM_UPDATE.EXE';
@@ -150,7 +156,7 @@ if ('serviceWorker' in navigator) {
                     }
                 };
             };
-        }).catch(err => console.log('[PWA] Ошибка SW: ', err));
+        }).catch(err => console.warn('[PWA] Ошибка SW: ', err));
     });
 }
 
@@ -519,7 +525,7 @@ function initSentryDeferred() {
                         /^moz-extension:\/\//i
                     ]
                 });
-                console.log('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
+                debugPwaLog('[ SENTRY ] СИСТЕМА МОНИТОРИНГА АКТИВНА.');
 
                 earlySentryCtrl.abort();
                 while (earlySentryErrors.length > 0) {
@@ -608,7 +614,7 @@ if (installBtn) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
-            console.log('Пользователь установил PWA');
+            debugPwaLog('Пользователь установил PWA');
             installBtn.style.display = 'none';
         }
         deferredPrompt = null;

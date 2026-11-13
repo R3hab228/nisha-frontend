@@ -41,31 +41,39 @@ function ensureTurnstileLoaded() {
         return Promise.resolve(null);
     }
 
+    const { promise, resolve } = typeof Promise.withResolvers === 'function'
+        ? Promise.withResolvers()
+        : (() => {
+            let res;
+            const p = new Promise((r) => { res = r; });
+            return { promise: p, resolve: res };
+        })();
+    _turnstileLoadPromise = promise;
+
     const existing = document.querySelector('script[src*="challenges.cloudflare.com/turnstile/v0/api.js"]');
     if (existing) {
-        _turnstileLoadPromise = new Promise((resolve) => {
-            if (typeof turnstile !== 'undefined') return resolve(turnstile);
+        if (typeof turnstile !== 'undefined') {
+            resolve(turnstile);
+        } else {
             existing.addEventListener('load', () => resolve(typeof turnstile !== 'undefined' ? turnstile : null), { once: true });
             existing.addEventListener('error', () => {
                 _turnstileLoadPromise = null;
                 resolve(null);
             }, { once: true });
-        });
+        }
         return _turnstileLoadPromise;
     }
 
-    _turnstileLoadPromise = new Promise((resolve) => {
-        const script = document.createElement('script');
-        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => resolve(typeof turnstile !== 'undefined' ? turnstile : null);
-        script.onerror = () => {
-            _turnstileLoadPromise = null;
-            resolve(null);
-        };
-        (document.head || document.documentElement).appendChild(script);
-    });
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve(typeof turnstile !== 'undefined' ? turnstile : null);
+    script.onerror = () => {
+        _turnstileLoadPromise = null;
+        resolve(null);
+    };
+    (document.head || document.documentElement).appendChild(script);
 
     return _turnstileLoadPromise;
 }

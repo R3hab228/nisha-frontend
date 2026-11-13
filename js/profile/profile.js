@@ -2228,11 +2228,11 @@ function initAuthListener() {
     if (!sb.auth || typeof sb.auth.onAuthStateChange !== 'function') return;
     sb.auth.onAuthStateChange(async (event, session) => {
         if (event === 'TOKEN_REFRESHED') {
-            console.log('[AUTH] Токен безопасности успешно продлен (Refresh Token).');
+            if (window.__NISHA_DEBUG__) console.log('[AUTH] Токен безопасности успешно продлен (Refresh Token).');
             currentUser = session.user;
             window.currentUser = currentUser;
         } else if (event === 'SIGNED_OUT') {
-            console.log('[AUTH] Выполнен выход из аккаунта.');
+            if (window.__NISHA_DEBUG__) console.log('[AUTH] Выполнен выход из аккаунта.');
             window.globalOrdersData = [];
             const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
             if (store) {

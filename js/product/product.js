@@ -835,7 +835,7 @@ function openProductModal(item) {
             let playPromise = vid.play();
             if (playPromise !== undefined) {
                 playPromise.catch(() => {
-                    console.log("Ожидание клика (политика браузера)");
+                    if (window.__NISHA_DEBUG__) console.log("Ожидание клика (политика браузера)");
                 });
             }
         });

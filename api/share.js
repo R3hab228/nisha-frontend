@@ -1,7 +1,61 @@
-// Кэш-щит от всплесков трафика (In-Memory Micro-Cache для Vercel Serverless)
-const shareHtmlCache = new Map();
+// Кэш-щит от всплесков трафика (In-Memory Bounded TTL Cache для Vercel Serverless)
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 минут
 const MAX_CACHE_ENTRIES = 250;
+
+class ShareTTLCache {
+  constructor(ttlMs, maxEntries) {
+    this.ttlMs = ttlMs;
+    this.maxEntries = maxEntries;
+    this.store = new Map();
+  }
+
+  get(key) {
+    const entry = this.store.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.timestamp >= this.ttlMs) {
+      this.store.delete(key);
+      return null;
+    }
+    return entry;
+  }
+
+  set(key, html) {
+    if (this.store.has(key)) this.store.delete(key);
+    while (this.store.size >= this.maxEntries) {
+      const oldestKey = this.store.keys().next().value;
+      if (oldestKey !== undefined) this.store.delete(oldestKey);
+      else break;
+    }
+    this.store.set(key, { html, timestamp: Date.now() });
+  }
+}
+
+const shareHtmlCache = new ShareTTLCache(CACHE_TTL_MS, MAX_CACHE_ENTRIES);
+
+const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://nmpuefxqtkhvtltdvllz.supabase.co').replace(/\/$/, '');
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcHVlZnhxdGtodnRsdGR2bGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MzQ2MzEsImV4cCI6MjA5NDUxMDYzMX0.SPspCdwRKd6Hu0Zx3Hhm-orTOpPdcigNWLiV1TTwLMo';
+
+function normalizeShareLang(rawLang) {
+  const lang = String(rawLang || '').trim().toLowerCase();
+  return (lang === 'ru' || lang === 'en') ? lang : 'ua';
+}
+
+function buildShareMeta(item, shareLang) {
+  const isSold = item.status === 'sold';
+  const rawBrand = item.brand ? item.brand.trim() : '';
+  const rawName = item.name ? item.name.trim() : '';
+  const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || 'Вінтажна річ';
+  const statusPrefix = isSold ? '[ПРОДАНО] ' : '';
+  const cleanTitle = (statusPrefix + fullItemTitle).slice(0, 48).trim();
+  const priceVal = item.price || 0;
+  const sizeVal = item.size || 'One size';
+  const rawMetaDesc = shareLang === 'en'
+    ? `${statusPrefix}Price: ${priceVal} UAH · Size: ${sizeVal}`
+    : shareLang === 'ru'
+      ? `${statusPrefix}Цена: ${priceVal} грн · Размер: ${sizeVal}`
+      : `${statusPrefix}Ціна: ${priceVal} грн · Розмір: ${sizeVal}`;
+  return { isSold, rawBrand, fullItemTitle, cleanTitle, rawMetaDesc };
+}
 
 module.exports = async function handler(req, res) {
   const id = req.query.id;
@@ -11,12 +65,11 @@ module.exports = async function handler(req, res) {
     return res.redirect('/');
   }
 
-  const rawLang = String(req.query.lang || '').trim().toLowerCase();
-  const shareLang = (rawLang === 'ru' || rawLang === 'en') ? rawLang : 'ua';
+  const shareLang = normalizeShareLang(req.query.lang);
   const cacheKey = `${id}:${shareLang}`;
 
   const cached = shareHtmlCache.get(cacheKey);
-  if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+  if (cached) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.setHeader('X-Cache-Shield', 'HIT');
@@ -24,11 +77,11 @@ module.exports = async function handler(req, res) {
   }
 
   const headers = {
-    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcHVlZnhxdGtodnRsdGR2bGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MzQ2MzEsImV4cCI6MjA5NDUxMDYzMX0.SPspCdwRKd6Hu0Zx3Hhm-orTOpPdcigNWLiV1TTwLMo',
-    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcHVlZnhxdGtodnRsdGR2bGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MzQ2MzEsImV4cCI6MjA5NDUxMDYzMX0.SPspCdwRKd6Hu0Zx3Hhm-orTOpPdcigNWLiV1TTwLMo'
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
   };
 
-  const supabaseUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/items?id=eq.' + id + '&select=name,price,brand,images,thumbnails,size,condition,description,status';
+  const supabaseUrl = `${SUPABASE_URL}/rest/v1/items?id=eq.${id}&select=name,price,brand,images,thumbnails,size,condition,description,status`;
   
   try {
     const dbRes = await fetch(supabaseUrl, { headers, signal: AbortSignal.timeout(4500) });
@@ -40,7 +93,7 @@ module.exports = async function handler(req, res) {
 
     // Фоллбек на архивные товары, если вещь уже выкуплена и отправлена в архив
     if (!item) {
-      const archiveUrl = 'https://nmpuefxqtkhvtltdvllz.supabase.co/rest/v1/archived_items?id=eq.' + id + '&select=name,price,brand,images,thumbnails,size,condition,description,status';
+      const archiveUrl = `${SUPABASE_URL}/rest/v1/archived_items?id=eq.${id}&select=name,price,brand,images,thumbnails,size,condition,description,status`;
       try {
         const archRes = await fetch(archiveUrl, { headers, signal: AbortSignal.timeout(3000) });
         if (archRes.ok) {
@@ -57,29 +110,15 @@ module.exports = async function handler(req, res) {
       return res.redirect('/?item=' + id);
     }
 
-    const isSold = item.status === 'sold';
     const escapeHTML = (str) => String(str || '')
         .replaceAll('&', '&amp;')
         .replaceAll('"', '&quot;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
-    const rawBrand = item.brand ? item.brand.trim() : '';
-    const rawName = item.name ? item.name.trim() : '';
-    const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || 'Вінтажна річ';
-    const statusPrefix = isSold ? '[ПРОДАНО] ' : '';
-
-    // Оптимальный заголовок до 55 символов для идеального Ahrefs / Google SEO
-    const cleanTitle = (statusPrefix + fullItemTitle).slice(0, 48).trim();
+    const { isSold, rawBrand, fullItemTitle, cleanTitle, rawMetaDesc } = buildShareMeta(item, shareLang);
     const title = escapeHTML(cleanTitle + ' | NISHA');
 
     const cleanItemDesc = String(item.description || '').replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
-    const priceVal = item.price || 0;
-    const sizeVal = item.size || 'One size';
-    const rawMetaDesc = shareLang === 'en'
-      ? `${statusPrefix}Price: ${priceVal} UAH · Size: ${sizeVal}`
-      : shareLang === 'ru'
-        ? `${statusPrefix}Цена: ${priceVal} грн · Размер: ${sizeVal}`
-        : `${statusPrefix}Ціна: ${priceVal} грн · Розмір: ${sizeVal}`;
     const description = escapeHTML(rawMetaDesc);
     const shareUrl = 'https://www.nisha-store.shop/share/' + id;
     
@@ -214,11 +253,7 @@ videoTags + '\n' +
 '</body>\n' +
 '</html>';
 
-    if (shareHtmlCache.size >= MAX_CACHE_ENTRIES) {
-      const oldestKey = shareHtmlCache.keys().next().value;
-      if (oldestKey) shareHtmlCache.delete(oldestKey);
-    }
-    shareHtmlCache.set(cacheKey, { html, timestamp: Date.now() });
+    shareHtmlCache.set(cacheKey, html);
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');

@@ -1138,17 +1138,23 @@ function sleep(ms, signal) {
     if (signal?.aborted) {
         return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
     }
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-            signal?.removeEventListener('abort', onAbort);
-            resolve();
-        }, ms);
-        function onAbort() {
-            clearTimeout(timer);
-            reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
-        }
-        signal?.addEventListener('abort', onAbort, { once: true });
-    });
+    const { promise, resolve, reject } = typeof Promise.withResolvers === 'function'
+        ? Promise.withResolvers()
+        : (() => {
+            let res, rej;
+            const p = new Promise((r, rj) => { res = r; rej = rj; });
+            return { promise: p, resolve: res, reject: rej };
+        })();
+    const timer = setTimeout(() => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+    }, ms);
+    function onAbort() {
+        clearTimeout(timer);
+        reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
+    }
+    signal?.addEventListener('abort', onAbort, { once: true });
+    return promise;
 }
 window.sleep = sleep;
 if (typeof globalThis !== 'undefined') globalThis.sleep = sleep;
