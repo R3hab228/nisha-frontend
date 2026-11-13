@@ -1092,6 +1092,9 @@ function openProductModal(item) {
                 window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
             }
             document.body.style.overflow = 'hidden';
+            if (typeof triggerModalTypewriter === 'function') {
+                triggerModalTypewriter(modalEl);
+            }
         }
     } else {
         if (modalEl) modalEl.style.pointerEvents = '';
