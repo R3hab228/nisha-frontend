@@ -2686,12 +2686,12 @@ function buildCardDOM(item, idx = 0) {
             const firstLoadAttr = (idx < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
             slidesStr += `
                 <div class="card-slide img-8bit-loading">
-                   <img class="card-slide-img" src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" ${firstLoadAttr} decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;">
+                   <img class="card-slide-img" src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" ${firstLoadAttr} decoding="async" alt="${slideAlt}">
                 </div>`;
         } else {
             slidesStr += `
                 <div class="card-slide">
-                   <img class="card-slide-img" data-src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" loading="lazy" decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;">
+                   <img class="card-slide-img" data-src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" loading="lazy" decoding="async" alt="${slideAlt}">
                 </div>`;
         }
         dotsStr += `<div class="card-dot ${thumbIdx === 0 ? 'active' : ''}"></div>`;

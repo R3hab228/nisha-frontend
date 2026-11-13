@@ -56,4 +56,14 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(catalog).not.toContain("link.innerHTML.split('<span')");
         expect(catalog).not.toContain("labelSpan.innerHTML.split('<span')");
     });
+
+    it('5. style.css moves card-slide-img styles out of catalog.js inline templates and trims unused will-change', () => {
+        const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+
+        expect(css).toContain('.card-slide-img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }');
+        expect(css).not.toContain('will-change: max-height, opacity;');
+        expect(css).not.toContain('will-change: opacity, backdrop-filter;');
+        expect(catalog).not.toContain('style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;"');
+    });
 });

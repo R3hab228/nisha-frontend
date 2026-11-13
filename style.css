@@ -665,7 +665,7 @@ label:hover .win95-cb:checked {
 
 .history-section { padding: 20px 30px; background: var(--bg-card); border-top: 2px dashed #333; display: none; margin-top: auto;}
 .history-title { color: var(--accent-green); font-family: var(--font-mono); font-size: 16px; margin: 0 0 15px 0; font-weight: bold; text-transform: uppercase;}
-.history-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; max-height: 250px; opacity: 1; transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.4s ease; will-change: max-height, opacity; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;}
+.history-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; max-height: 250px; opacity: 1; transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.4s ease; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;}
 .history-grid.collapsed { max-height: 0; opacity: 0; padding-bottom: 0; overflow: hidden; }
 .history-grid::-webkit-scrollbar { height: 6px; }
 .history-card { width: 140px; flex: 0 0 140px; background: #111; border: 1px solid #333; text-decoration: none; display: flex; flex-direction: column; transition: 0.1s; cursor: pointer; transform-style: preserve-3d; content-visibility: auto; contain-intrinsic-size: 140px 180px; }
@@ -695,13 +695,13 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .legal-info a { color: #888; text-decoration: underline; margin: 0 10px; cursor: pointer;}
 .legal-info a:hover { color: var(--text-main); }
 
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards; will-change: opacity, backdrop-filter; contain: layout paint; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards; contain: layout paint; }
 /* Ленивый рендеринг DOM: закрытые модалки полностью исключаются из дерева рендеринга браузера */
 .modal-overlay:not(.is-open):not([style*="display: flex"]):not([style*="display: block"]) { content-visibility: hidden; contain-intrinsic-size: 0 0; }
 .modal-overlay.is-open,
 .modal-overlay[style*="display: flex"],
-.modal-overlay[style*="display: block"] { content-visibility: visible !important; }
-.modal-window { background-color: #111; border: 2px outset var(--border-light); max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.8); overscroll-behavior: contain; animation: modalPopDesktop 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards; will-change: transform, opacity; transform: translateZ(0); contain: layout style; }
+.modal-overlay[style*="display: block"] { content-visibility: visible !important; will-change: opacity; }
+.modal-window { background-color: #111; border: 2px outset var(--border-light); max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.8); overscroll-behavior: contain; animation: modalPopDesktop 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform: translateZ(0); contain: layout style; }
 
 @keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(3px); } }
 @keyframes modalPopDesktop { from { opacity: 0; transform: scale(0.96) translateY(12px) translateZ(0); } to { opacity: 1; transform: scale(1) translateY(0) translateZ(0); } }
@@ -2182,7 +2182,7 @@ svg.driver-overlay,
 .card-slider-container { display: flex; width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
 .card-slider-container::-webkit-scrollbar { display: none; }
 .card-slide { flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; background-size: cover; background-position: center; position: relative; overflow: hidden; contain: layout paint; }
-.card-slide-img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.card-slide-img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
 .card-dots-container { position: absolute; bottom: 8px; left: 0; width: 100%; display: flex; justify-content: center; gap: 5px; pointer-events: none; z-index: 10; }
 .card-dot { width: 5px; height: 5px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; transition: transform 0.15s ease, background-color 0.15s ease; box-shadow: 0 0 2px rgba(0,0,0,0.8); }
 .card-dot.active { background: var(--accent-green); transform: scale(1.3); box-shadow: 0 0 5px var(--accent-green); }
@@ -2544,7 +2544,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
                     opacity 0.38s ease, 
                     padding 0.42s cubic-bezier(0.33, 1, 0.68, 1),
                     visibility 0.42s; 
-        visibility: hidden; background: #0a0a0a; will-change: max-height, opacity;
+        visibility: hidden; background: #0a0a0a;
     }
     .sidebar.active-mobile { 
         max-height: 900px;
