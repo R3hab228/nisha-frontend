@@ -567,6 +567,74 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
 }
 window.showToast = showToast;
 
+let _activeFavToast = null;
+
+function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    if (_activeFavToast && _activeFavToast.parentNode) {
+        _activeFavToast.remove();
+        _activeFavToast = null;
+    }
+
+    const tagText = typeof i18next !== 'undefined'
+        ? i18next.t(isAdded ? 'messages.fav_add' : 'messages.fav_remove', {
+            defaultValue: isAdded ? 'Добавлено в избранное' : 'Удалено из избранного'
+        })
+        : (isAdded ? 'Добавлено в избранное' : 'Удалено из избранного');
+
+    let titleText = '';
+    if (itemOrTitle && typeof itemOrTitle === 'object') {
+        const brand = itemOrTitle.brand ? `${String(itemOrTitle.brand).trim()} ` : '';
+        const name = String(itemOrTitle.name || '').trim();
+        titleText = `${brand}${name}`.trim();
+    } else if (typeof itemOrTitle === 'string') {
+        titleText = itemOrTitle.trim();
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`;
+    _activeFavToast = toast;
+
+    let html = '';
+    if (imgUrl && typeof imgUrl === 'string' && !/^\s*javascript:/i.test(imgUrl)) {
+        const cdnImg = (typeof window.toCDN === 'function') ? window.toCDN(imgUrl) : imgUrl;
+        const safeImgUrl = escapeAttr(cdnImg).replaceAll('(', '%28').replaceAll(')', '%29');
+        html += `<div class="toast-item-thumb" style="background-image: url('${safeImgUrl}');"></div>`;
+    }
+    html += `
+        <div class="toast-item-content">
+            <div class="toast-item-tag">${safeToastEscape(tagText)}</div>
+            ${titleText ? `<div class="toast-item-title">${safeToastEscape(titleText)}</div>` : ''}
+        </div>
+    `;
+    toast.innerHTML = html;
+    container.appendChild(toast);
+
+    let isDismissed = false;
+    const dismiss = () => {
+        if (isDismissed) return;
+        isDismissed = true;
+        if (_activeFavToast === toast) _activeFavToast = null;
+        toast.classList.add('toast-leaving');
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 300);
+    };
+
+    toast.onclick = (e) => {
+        if (e) e.stopPropagation();
+        if (isAdded && itemOrTitle && typeof itemOrTitle === 'object' && itemOrTitle.id && typeof window.openProductModalById === 'function') {
+            try { window.openProductModalById(itemOrTitle.id); } catch {}
+        }
+        dismiss();
+    };
+
+    setTimeout(dismiss, 2500);
+}
+window.showFavoriteToast = showFavoriteToast;
+
 // --- ОЧЕРЕДЬ ТОСТОВ О НОВЫХ ТОВАРАХ (МАКСИМУМ 2 ОДНОВРЕМЕННО + ПЛАВНАЯ СМЕНА) ---
 let _batchedNewItemsList = [];
 let _batchToastTimer = null;

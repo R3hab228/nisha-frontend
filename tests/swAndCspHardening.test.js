@@ -88,4 +88,17 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(cart).toContain('function resolveSwipeSurface(e)');
         expect(cart).toContain('cartSwipeCurrentX = cartSwipeStartX;');
     });
+
+    it('8. favorite add/remove toasts reuse compact toast-new-item sizing and layout', () => {
+        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const profile = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8').replace(/\r\n/g, '\n');
+
+        expect(helpers).toContain('function showFavoriteToast(');
+        expect(helpers).toContain("toast.className = `toast toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`");
+        expect(profile).toContain('window.showFavoriteToast(itemObj, false, imgUrl)');
+        expect(profile).toContain('window.showFavoriteToast(itemObj, true, imgUrl)');
+        expect(style).toContain('.toast.toast-new-item,\n.toast.toast-fav-item');
+        expect(style).toContain('.toast.toast-new-item,\n    .toast.toast-fav-item');
+    });
 });

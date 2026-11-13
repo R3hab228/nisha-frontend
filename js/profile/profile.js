@@ -2168,12 +2168,20 @@ async function executeToggleFav(itemId) {
         try {
             if (isFav) {
                 await sb.from('favorites').delete().match({ user_id: currentUser.id, item_id: itemId });
-                const msg = typeof i18next !== 'undefined' ? i18next.t('messages.fav_remove') : 'Удалено из избранного';
-                showToast(msg, 'success', imgUrl);
+                if (typeof window.showFavoriteToast === 'function') {
+                    window.showFavoriteToast(itemObj, false, imgUrl);
+                } else {
+                    const msg = typeof i18next !== 'undefined' ? i18next.t('messages.fav_remove') : 'Удалено из избранного';
+                    showToast(msg, 'success', imgUrl);
+                }
             } else {
                 await sb.from('favorites').insert([{ user_id: currentUser.id, item_id: itemId }]);
-                const msg = typeof i18next !== 'undefined' ? i18next.t('messages.fav_add') : 'Добавлено в избранное';
-                showToast(msg, 'success', imgUrl);
+                if (typeof window.showFavoriteToast === 'function') {
+                    window.showFavoriteToast(itemObj, true, imgUrl);
+                } else {
+                    const msg = typeof i18next !== 'undefined' ? i18next.t('messages.fav_add') : 'Добавлено в избранное';
+                    showToast(msg, 'success', imgUrl);
+                }
             }
         } catch (err) {
             console.error("Ошибка лайка:", err);
