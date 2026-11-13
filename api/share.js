@@ -11,7 +11,11 @@ module.exports = async function handler(req, res) {
     return res.redirect('/');
   }
 
-  const cached = shareHtmlCache.get(id);
+  const rawLang = String(req.query.lang || '').trim().toLowerCase();
+  const shareLang = (rawLang === 'ru' || rawLang === 'en') ? rawLang : 'ua';
+  const cacheKey = `${id}:${shareLang}`;
+
+  const cached = shareHtmlCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
@@ -69,8 +73,13 @@ module.exports = async function handler(req, res) {
     const title = escapeHTML(cleanTitle + ' | NISHA');
 
     const cleanItemDesc = String(item.description || '').replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
-    const descSnippet = cleanItemDesc ? ` ${cleanItemDesc.slice(0, 50)}.` : '';
-    const rawMetaDesc = `${statusPrefix}Купити ${fullItemTitle} в інтернет-магазині NISHA. Розмір: ${item.size || 'One size'}, стан: ${item.condition || '9/10'}, ціна: ${item.price || 0} грн.${descSnippet} Доставка Новою Поштою по Україні.`.slice(0, 155);
+    const priceVal = item.price || 0;
+    const sizeVal = item.size || 'One size';
+    const rawMetaDesc = shareLang === 'en'
+      ? `${statusPrefix}Price: ${priceVal} UAH · Size: ${sizeVal}`
+      : shareLang === 'ru'
+        ? `${statusPrefix}Цена: ${priceVal} грн · Размер: ${sizeVal}`
+        : `${statusPrefix}Ціна: ${priceVal} грн · Розмір: ${sizeVal}`;
     const description = escapeHTML(rawMetaDesc);
     const shareUrl = 'https://www.nisha-store.shop/share/' + id;
     
@@ -146,8 +155,9 @@ module.exports = async function handler(req, res) {
       }
     });
 
+    const htmlLang = shareLang === 'ua' ? 'uk' : shareLang;
     const html = '<!DOCTYPE html>\n' +
-'<html lang="uk">\n' +
+'<html lang="' + htmlLang + '">\n' +
 '<head>\n' +
 '<meta charset="UTF-8">\n' +
 '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
@@ -208,7 +218,7 @@ videoTags + '\n' +
       const oldestKey = shareHtmlCache.keys().next().value;
       if (oldestKey) shareHtmlCache.delete(oldestKey);
     }
-    shareHtmlCache.set(id, { html, timestamp: Date.now() });
+    shareHtmlCache.set(cacheKey, { html, timestamp: Date.now() });
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
