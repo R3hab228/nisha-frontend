@@ -1484,10 +1484,19 @@ window.initSliderSwipe = initSliderSwipe;
 function shareItem() {
     const active = window.currentOpenedItem || currentOpenedItem;
     if (!active) return;
-    
-    const shareUrl = `https://www.nisha-store.shop/share/${active.id}`;
+
+    const rawLang = window.currentSiteLang || (typeof i18next !== 'undefined' ? i18next.language : 'ua');
+    const activeLang = typeof normalizeSiteLang === 'function'
+        ? normalizeSiteLang(rawLang)
+        : (rawLang === 'ru' || rawLang === 'en' ? rawLang : 'ua');
+    const fallbackPrefix = activeLang === 'en' ? 'Check out:' : (activeLang === 'ru' ? 'Зацени:' : 'Заціни:');
+    const sharePrefix = typeof i18next !== 'undefined'
+        ? i18next.t('product.share_check_out', { defaultValue: fallbackPrefix })
+        : fallbackPrefix;
+
+    const shareUrl = `https://www.nisha-store.shop/share/${active.id}?lang=${activeLang}`;
     const shareTitle = `NISHA | ${active.brand} - ${active.name}`;
-    const shareText = `Зацени: ${active.brand} (${active.size}).`;
+    const shareText = `${sharePrefix} ${active.brand} (${active.size}).`;
 
     const successMsg = typeof i18next !== 'undefined' ? i18next.t('messages.link_copied', {defaultValue: 'Ссылка скопирована!'}) : 'Ссылка скопирована!';
 
