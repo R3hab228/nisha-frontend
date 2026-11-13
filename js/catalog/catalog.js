@@ -2613,6 +2613,11 @@ function initGridEventDelegation() {
     }, { passive: true });
 
     grid.addEventListener('click', (e) => {
+        if (e.target.closest('#toastContainer, .toast') || (typeof window !== 'undefined' && Date.now() < (window._nishaToastClickShieldUntil || 0))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
         const card = e.target.closest('.item-card');
         if (!card) return;
         if (e.target.closest('.fav-star, .grid-cart-btn, .grid-slider-btn, .card-dots-container, [data-action]')) return;

@@ -584,6 +584,16 @@ function attachToastLifecycle(toast, { duration = 2500, onDismiss = null } = {})
     return dismiss;
 }
 
+function armToastClickShield(ms = 420) {
+    if (typeof window !== 'undefined') {
+        window._nishaToastClickShieldUntil = Math.max(window._nishaToastClickShieldUntil || 0, Date.now() + ms);
+    }
+}
+
+function isToastClickShielded() {
+    return typeof window !== 'undefined' && Date.now() < (window._nishaToastClickShieldUntil || 0);
+}
+
 function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     const now = Date.now();
     if (message === lastToastMsg && (now - lastToastTime < 2500)) return;
@@ -599,14 +609,8 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
         toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
         toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
     }
-    if (onClick && typeof onClick === 'function') {
-        toast.style.cursor = 'pointer';
-        toast.style.pointerEvents = 'auto';
-        toast.onclick = (e) => {
-            e.stopPropagation();
-            try { onClick(); } catch(err) { console.warn(err); }
-        };
-    }
+    toast.style.cursor = 'pointer';
+    toast.style.pointerEvents = 'auto';
     
     // Если передали картинку — добавляем её слева от текста (с защитой от CSS/HTML инъекции)
     let html = '';
@@ -623,7 +627,18 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     
     toast.innerHTML = html;
     container.appendChild(toast);
-    attachToastLifecycle(toast, { duration: 2500 });
+    const dismiss = attachToastLifecycle(toast, { duration: 2500 });
+    toast.onclick = (e) => {
+        if (e) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        }
+        armToastClickShield();
+        if (onClick && typeof onClick === 'function') {
+            try { onClick(); } catch(err) { console.warn(err); }
+        }
+        dismiss();
+    };
 }
 window.showToast = showToast;
 
@@ -680,7 +695,11 @@ function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = n
     });
 
     toast.onclick = (e) => {
-        if (e) e.stopPropagation();
+        if (e) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        }
+        armToastClickShield();
         if (typeof onClick === 'function') {
             try { onClick(); } catch {}
         }
@@ -700,10 +719,7 @@ function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
         className: `toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`,
         tagText,
         titleText: extractCompactItemTitle(itemOrTitle),
-        imgUrl,
-        onClick: (isAdded && itemOrTitle && typeof itemOrTitle === 'object' && itemOrTitle.id && typeof window.openProductModalById === 'function')
-            ? () => window.openProductModalById(itemOrTitle.id)
-            : null
+        imgUrl
     });
 }
 window.showFavoriteToast = showFavoriteToast;
@@ -893,7 +909,12 @@ function _displayUnifiedNewItemToast(items) {
     };
 
     // Клик по тосту: если 1 вещь — открывает ее модалку, если несколько — плавно скроллит вверх к новинкам
-    toast.onclick = () => {
+    toast.onclick = (e) => {
+        if (e) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        }
+        armToastClickShield();
         if (isMulti) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else if (firstItem && typeof openProductModalById === 'function') {
@@ -2308,7 +2329,18 @@ window.parseDeliveryAddress = parseDeliveryAddress;
 // ==========================================
 function handleDelegatedAction(e) {
     if (!e || !e.target || typeof e.target.closest !== 'function') return;
+    if (isToastClickShielded()) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        return;
+    }
     const actionEl = e.target.closest('[data-action]');
+    const toastEl = e.target.closest('#toastContainer, .toast');
+    if (toastEl && toastEl !== actionEl) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        return;
+    }
     if (!actionEl) return;
     if (actionEl.disabled || (typeof actionEl.hasAttribute === 'function' && actionEl.hasAttribute('disabled'))) return;
 
