@@ -224,6 +224,6 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(catalogJs).toContain('const DOUBLE_TAP_DELAY_MS = 200;');
         expect(style).toContain('animation: modalPopDesktop 0.19s');
         expect(style).toContain('transition: opacity 0.19s cubic-bezier(0.16, 1, 0.3, 1)');
-        expect(style).toContain('animation: typing 1.2s steps(20, end)');
+        expect(style).toContain('animation: typing 1.2s steps(36, end)');
     });
 });
