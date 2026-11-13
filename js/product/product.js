@@ -1742,35 +1742,43 @@ async function submitQuestion(itemId) {
         itemName = active.name;
     }
 
-    try {
-        const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
-        const userDisplayName = typeof window.getUserDisplayName === 'function'
-            ? window.getUserDisplayName(currentUser, profile)
-            : (profile?.username || currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || (currentUser.email ? currentUser.email.split('@').at(0) : 'User'));
+    const runSubmitQuestion = async () => {
+        try {
+            const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+            const userDisplayName = typeof window.getUserDisplayName === 'function'
+                ? window.getUserDisplayName(currentUser, profile)
+                : (profile?.username || currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || (currentUser.email ? currentUser.email.split('@').at(0) : 'User'));
 
-        const data = await window.apiClient.post('/api/question', {
-            userId: currentUser.id,
-            email: currentUser.email || 'Неизвестно',
-            username: userDisplayName,
-            itemId: itemId,
-            itemName: itemName,
-            questionText: text
-        }, { timeout: 12000, retries: 1 });
+            const data = await window.apiClient.post('/api/question', {
+                userId: currentUser.id,
+                email: currentUser.email || 'Неизвестно',
+                username: userDisplayName,
+                itemId: itemId,
+                itemName: itemName,
+                questionText: text
+            }, { timeout: 12000, retries: 1 });
 
-        if (data && data.success) {
-            questionData.count += 1;
-            if (store) store.setJSON('nisha_questions', questionData);
-            input.value = '';
-            toggleQuestionForm(); 
-            const sentMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_success')) || 'Вопрос отправлен!';
-            showToast(sentMsg, 'success');
-        } else {
-            const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_send')) || 'Ошибка при отправке вопроса.';
-            showToast(sendErrMsg, 'error');
+            if (data && data.success) {
+                questionData.count += 1;
+                if (store) store.setJSON('nisha_questions', questionData);
+                input.value = '';
+                toggleQuestionForm(); 
+                const sentMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_success')) || 'Вопрос отправлен!';
+                showToast(sentMsg, 'success');
+            } else {
+                const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_send')) || 'Ошибка при отправке вопроса.';
+                showToast(sendErrMsg, 'error');
+            }
+        } catch (err) {
+            const connErrMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Ошибка соединения с сервером.';
+            showToast(connErrMsg, 'error');
         }
-    } catch (err) {
-        const connErrMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Ошибка соединения с сервером.';
-        showToast(connErrMsg, 'error');
+    };
+
+    if (typeof window.withButtonBusy === 'function') {
+        await window.withButtonBusy('[data-action="submit-question"]', runSubmitQuestion);
+    } else {
+        await runSubmitQuestion();
     }
 }
 window.submitQuestion = submitQuestion;

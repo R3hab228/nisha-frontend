@@ -186,4 +186,17 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(webLocks).not.toContain('beforeunload');
         expect(rum).toContain('navigator.userAgentData?.platform || navigator.platform');
     });
+
+    it('16. withButtonBusy protects question and review submit buttons against double clicks', () => {
+        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const product = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        const reviews = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
+
+        expect(helpers).toContain('async function withButtonBusy(');
+        expect(style).toContain('button.is-loading, .is-loading[disabled]');
+        expect(product).toContain("window.withButtonBusy('[data-action=\"submit-question\"]'");
+        expect(reviews).toContain("window.withButtonBusy('[data-action=\"submit-auto-review\"]'");
+        expect(reviews).toContain("window.withButtonBusy('#writeReviewModal .cart-checkout-btn'");
+    });
 });

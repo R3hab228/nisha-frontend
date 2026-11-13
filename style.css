@@ -2543,6 +2543,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
     }
     
     .btn-target::before, .btn-target::after { display: none !important; content: none !important; }
+button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important; pointer-events: none; }
     
     .toast-container { top: calc(15px + env(safe-area-inset-top, 0px)); right: calc(15px + env(safe-area-inset-right, 0px)); left: auto; align-items: flex-end; }
     .toast { max-width: 200px; width: auto; padding: 5px 10px; gap: 6px; font-size: 10.5px; }

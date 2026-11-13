@@ -773,6 +773,33 @@ function showReviewToast(tagText, titleText = '', imgUrl = null, onClick = null)
 }
 window.showReviewToast = showReviewToast;
 
+async function withButtonBusy(btnOrSelector, asyncFn, loadingLabel = '...') {
+    const btn = typeof btnOrSelector === 'string'
+        ? document.querySelector(btnOrSelector)
+        : btnOrSelector;
+    if (!btn) return asyncFn();
+    if (btn.dataset?.busy === '1' || btn.disabled) return undefined;
+
+    const prevHtml = btn.innerHTML;
+    const prevDisabled = Boolean(btn.disabled);
+    if (btn.dataset) btn.dataset.busy = '1';
+    btn.disabled = true;
+    if (typeof btn.setAttribute === 'function') btn.setAttribute('aria-busy', 'true');
+    if (btn.classList) btn.classList.add('is-loading');
+    if (loadingLabel) btn.textContent = loadingLabel;
+
+    try {
+        return await asyncFn();
+    } finally {
+        if (btn.dataset) delete btn.dataset.busy;
+        btn.disabled = prevDisabled;
+        if (typeof btn.removeAttribute === 'function') btn.removeAttribute('aria-busy');
+        if (btn.classList) btn.classList.remove('is-loading');
+        btn.innerHTML = prevHtml;
+    }
+}
+window.withButtonBusy = withButtonBusy;
+
 // --- ОЧЕРЕДЬ ТОСТОВ О НОВЫХ ТОВАРАХ (МАКСИМУМ 2 ОДНОВРЕМЕННО + ПЛАВНАЯ СМЕНА) ---
 let _batchedNewItemsList = [];
 let _batchToastTimer = null;

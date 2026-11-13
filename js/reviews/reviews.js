@@ -348,7 +348,7 @@ async function submitAutoReview() {
         : (profile?.username || activeUser?.user_metadata?.display_name || activeUser?.user_metadata?.username || activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User');
 
     window._isSubmittingAutoReview = true;
-    try {
+    const runAutoReviewSubmit = async () => {
         const payload = {
             user_name: uName,
             text: text,
@@ -386,6 +386,13 @@ async function submitAutoReview() {
             const errDetail = result.error ? (result.error.message || String(result.error)) : 'Не удалось сохранить отзыв';
             const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.err_send')) || 'Ошибка при отправке: ';
             showToast(sendErrMsg + errDetail, 'error');
+        }
+    };
+    try {
+        if (typeof window.withButtonBusy === 'function') {
+            await window.withButtonBusy('[data-action="submit-auto-review"]', runAutoReviewSubmit);
+        } else {
+            await runAutoReviewSubmit();
         }
     } finally {
         window._isSubmittingAutoReview = false;
@@ -456,19 +463,13 @@ async function submitManualReview() {
         return;
     }
 
-    const btn = document.querySelector('#writeReviewModal .cart-checkout-btn');
-    if (btn) {
-        btn.style.pointerEvents = 'none';
-        btn.innerText = '...';
-    }
-
     const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
     const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
     const uName = typeof getUserDisplayName === 'function'
         ? getUserDisplayName(activeUser, profile)
         : (profile?.username || activeUser?.user_metadata?.display_name || activeUser?.user_metadata?.username || activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User');
 
-    try {
+    const runManualReviewSubmit = async () => {
         const payload = {
             user_name: uName,
             text: text,
@@ -499,11 +500,12 @@ async function submitManualReview() {
             const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.err_send')) || 'Ошибка при отправке: ';
             showToast(sendErrMsg + errDetail, 'error');
         }
-    } finally {
-        if (btn) {
-            btn.style.pointerEvents = 'auto';
-            btn.innerText = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.send')) || 'ОТПРАВИТЬ';
-        }
+    };
+
+    if (typeof window.withButtonBusy === 'function') {
+        await window.withButtonBusy('#writeReviewModal .cart-checkout-btn', runManualReviewSubmit);
+    } else {
+        await runManualReviewSubmit();
     }
 }
 window.submitManualReview = submitManualReview;
