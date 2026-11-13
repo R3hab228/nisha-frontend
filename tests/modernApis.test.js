@@ -66,23 +66,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             writable: true
         });
 
-        // Evaluate helpers, store, product, orders in window context
-        const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-        eval(helpersCode);
-
+        // Load helpers, store, product, orders, drop, pwa-network as ES modules
+        await import('../js/core/helpers.js');
         await import('../js/core/store.js');
-
-        const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
-        eval(productCode);
-
-        const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
-        eval(ordersCode);
-
-        const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
-        eval(dropCode);
-
-        const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
-        eval(pwaCode);
+        await import('../js/product/product.js');
+        await import('../js/orders/orders.js');
+        await import('../js/drop/drop.js');
+        await import('../js/core/pwa-network.js');
     });
 
     beforeEach(() => {
@@ -646,7 +636,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     });
 
     describe('20. WAI-ARIA focus management & inert attribute on modals', () => {
-        it('blurs active descendant element inside modal before applying aria-hidden to satisfy W3C specification', () => {
+        it('blurs active descendant element inside modal before applying aria-hidden to satisfy W3C specification', async () => {
             const mockCloseBtn = {
                 blur: vi.fn(),
                 focus: vi.fn()
@@ -670,9 +660,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             globalThis.document.activeElement = mockCloseBtn;
             globalThis.document.getElementById = vi.fn(id => (id === 'testModal' ? mockModal : null));
-
-            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
-            eval(windowsCode);
+            await import('../js/ui/windows.js');
 
             vi.useFakeTimers();
             try {
@@ -764,7 +752,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     });
 
     describe('21. Click Bleed-Through & Ghost Click Prevention (Modal Overlay Shields)', () => {
-        it('blocks delegated background actions like add-to-cart when a modal is active or closing', () => {
+        it('blocks delegated background actions like add-to-cart when a modal is active or closing', async () => {
             const mockBgBtn = {
                 disabled: false,
                 hasAttribute: () => false,
@@ -796,9 +784,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 stopPropagation: vi.fn(),
                 stopImmediatePropagation: vi.fn()
             };
-
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-            eval(helpersCode);
+            await import('../js/core/helpers.js');
 
             window.handleDelegatedAction(mockEvent);
 
@@ -810,7 +796,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             globalThis.document.querySelectorAll = origQuerySelectorAll;
         });
 
-        it('stops propagation when closeModal is invoked with an event', () => {
+        it('stops propagation when closeModal is invoked with an event', async () => {
             const mockEvt = {
                 preventDefault: vi.fn(),
                 stopPropagation: vi.fn(),
@@ -829,9 +815,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const origQuerySelectorAll = globalThis.document.querySelectorAll;
             globalThis.document.getElementById = vi.fn(() => mockModal);
             globalThis.document.querySelectorAll = vi.fn(() => []);
-
-            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
-            eval(windowsCode);
+            await import('../js/ui/windows.js');
 
             window.closeModal('productModal', mockEvt);
 
@@ -845,9 +829,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     });
 
     describe('22. Safe Session Storage Facade (storage.session) with In-Memory Fallback', () => {
-        it('supports get, set, getJSON, setJSON, remove, has and clear', () => {
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-            eval(helpersCode);
+        it('supports get, set, getJSON, setJSON, remove, has and clear', async () => {
+            await import('../js/core/helpers.js');
 
             expect(window.storage).toBeDefined();
             expect(window.storage.session).toBeDefined();
@@ -871,7 +854,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(window.storage.session.has('test_json')).toBe(false);
         });
 
-        it('gracefully falls back to in-memory map when sessionStorage throws QuotaExceededError', () => {
+        it('gracefully falls back to in-memory map when sessionStorage throws QuotaExceededError', async () => {
             const throwingStore = {
                 getItem: () => { throw new Error('QuotaExceededError'); },
                 setItem: () => { throw new Error('QuotaExceededError'); },
@@ -881,9 +864,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             const origSessionStorage = globalThis.sessionStorage;
             globalThis.sessionStorage = throwingStore;
-
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-            eval(helpersCode);
+            await import('../js/core/helpers.js');
 
             // Must not throw even when storage throws
             expect(() => {
@@ -917,7 +898,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(htmlContent).toContain('id=saveDeliveryToProfileCheckbox');
         });
 
-        it('toggles delivery accordion collapsed state and updates button text', () => {
+        it('toggles delivery accordion collapsed state and updates button text', async () => {
             let isCollapsed = true;
             let isOpen = false;
             let text = '[ ДАННЫЕ ДОСТАВКИ ▼ ]';
@@ -955,11 +936,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 if (id === 'profileDeliveryToggleBtn') return mockBtn;
                 return null;
             });
-
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-            eval(helpersCode);
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-            eval(profileCode);
+            await import('../js/core/helpers.js');
+            await import('../js/profile/profile.js');
 
             // 1. Open
             window.toggleProfileDeliveryAccordion(false, mockBtn);
@@ -990,11 +968,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             const origGetElementById = globalThis.document.getElementById;
             globalThis.document.getElementById = vi.fn((id) => elements[id] || null);
-
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-            eval(helpersCode);
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-            eval(profileCode);
+            await import('../js/core/helpers.js');
+            await import('../js/profile/profile.js');
 
             window.userProfile = { full_name: '', delivery_address: '' };
             await window.saveDeliveryToProfile('Іванов Петро Олексійович', 'Київ, Відділення №25');
@@ -1032,11 +1007,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             const origGetElementById = globalThis.document.getElementById;
             globalThis.document.getElementById = vi.fn((id) => elements[id] || null);
-
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-            eval(helpersCode);
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-            eval(profileCode);
+            await import('../js/core/helpers.js');
+            await import('../js/profile/profile.js');
 
             // Mock apiClient for NP proxy
             window.apiClient = {
@@ -1087,10 +1059,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
 
         it('auto-capitalizes full name words, normalizes all-caps on blur, and shows [ СОХРАНЕНО ✓ ] on save', async () => {
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-            eval(helpersCode);
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-            eval(profileCode);
+            await import('../js/core/helpers.js');
+            await import('../js/profile/profile.js');
 
             // 1. Auto-capitalize full name words
             expect(window.formatFullNameWords('шевченко тарас григорович')).toBe('Шевченко Тарас Григорович');
@@ -1157,8 +1127,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('locks delivery fields into read-only state and toggles [ ИЗМЕНИТЬ ] / [ СОХРАНИТЬ ]', async () => {
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-            eval(profileCode);
+            await import('../js/profile/profile.js');
 
             const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
             expect(css).toContain('.profile-delivery-input.is-locked');
@@ -2178,7 +2147,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('totalPagesGuard');
         });
 
-        it('protects the proposal item-name field from browser autofill of the buyer full name using queueMicrotask and deferred timers', () => {
+        it('protects the proposal item-name field from browser autofill of the buyer full name using queueMicrotask and deferred timers', async () => {
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             expect(html).toMatch(/id=propName[^>]*name=prop_item_title/);
             expect(html).toMatch(/id=propName[^>]*autocomplete=off/);
@@ -2875,9 +2844,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 return rawMock;
             });
             window.matchMedia = vi.fn(() => ({ matches: false }));
-
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-            eval(helpersCode);
+            await import('../js/core/helpers.js');
 
             const res = window.safeViewTransition(() => {});
             expect(res).toBe(rawMock);
@@ -3066,8 +3033,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     describe('51. Telemetry Danger Rating & Error Severity Rubric (1-10 Scale)', () => {
         beforeAll(async () => {
             // Load pwa-network script into environment
-            const pwaCode = readFileSync(resolve(import.meta.dirname, '../js/core/pwa-network.js'), 'utf8');
-            eval(pwaCode);
+            await import('../js/core/pwa-network.js');
         });
 
         it('assigns 10/10 💀 for checkout, payment, and order creation failures', () => {

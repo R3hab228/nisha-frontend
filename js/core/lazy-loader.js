@@ -19,7 +19,7 @@ function registerLazyModuleBridge(loaderFn, methodNames) {
         const proxyStub = async function (...args) {
             await ensureLoaded();
             if (typeof window[fnName] === 'function' && window[fnName] !== proxyStub) {
-                return window[fnName].apply(this, args);
+                return Reflect.apply(window[fnName], this, args);
             }
         };
         window[fnName] = proxyStub;

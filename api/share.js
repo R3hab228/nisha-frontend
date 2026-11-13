@@ -108,7 +108,7 @@ module.exports = async function handler(req, res) {
             item.status = item.status || 'sold';
           }
         }
-      } catch (err) {}
+      } catch {}
     }
 
     if (!item) {

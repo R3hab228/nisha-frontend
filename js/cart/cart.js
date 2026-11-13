@@ -3420,7 +3420,7 @@ function closePaymentDropdown() {
     if (typeof window.hidePopoverSafe === 'function') {
         window.hidePopoverSafe(pd);
     } else if (pd && typeof pd.hidePopover === 'function' && pd.matches && pd.matches(':popover-open')) {
-        try { pd.hidePopover(); } catch (_) {}
+        try { pd.hidePopover(); } catch {}
     }
     resetPaymentDropdownStyles(pd);
 }
@@ -3466,7 +3466,7 @@ function togglePaymentDropdown() {
         if (typeof window.showPopoverSafe === 'function') {
             window.showPopoverSafe(pd);
         } else if (typeof pd.showPopover === 'function') {
-            try { pd.showPopover(); } catch (_) {}
+            try { pd.showPopover(); } catch {}
         }
         if (display && pd.matches && pd.matches(':popover-open')) {
             const rect = display.getBoundingClientRect();
