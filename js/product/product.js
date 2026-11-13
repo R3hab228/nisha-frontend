@@ -214,7 +214,9 @@ function prewarmProductModal(id, immediate = false) {
                         }
                         const img = new Image();
                         img.decoding = "async";
+                        img.fetchPriority = "high";
                         img.src = cdnUrl;
+                        if (typeof img.decode === "function") img.decode().catch(() => {});
                     }
                 }
             });
@@ -395,8 +397,10 @@ function openProductModal(item) {
         if (window._seenItemsSet) window._seenItemsSet.add(String(item.id));
     }
     
-    // Мгновенный прогрев PhotoSwipe в фоне для открытия зума за 0 мс
-    if (typeof ensurePhotoSwipe === 'function') ensurePhotoSwipe();
+    // Фоновый прогрев PhotoSwipe после открытия модалки, чтобы не задерживать первый кадр
+    setTimeout(() => {
+        if (typeof ensurePhotoSwipe === 'function') ensurePhotoSwipe();
+    }, 0);
 
     if (typeof window.stopLenis === 'function') window.stopLenis();
     else if (typeof lenis !== 'undefined') lenis.stop();
@@ -760,8 +764,14 @@ function openProductModal(item) {
                     const isFirst = (index === 0);
                     const isSecond = (index === 1);
                     const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
+                    const safeThumbBg = isFirst && currentThumb
+                        ? (typeof window.escapeAttr === 'function' ? window.escapeAttr(currentThumb) : String(currentThumb).replace(/'/g, '%27').replace(/"/g, '%22'))
+                            .replaceAll('(', '%28')
+                            .replaceAll(')', '%29')
+                        : '';
+                    const slideBgStyle = safeThumbBg ? `background:#000 url('${safeThumbBg}') center/contain no-repeat;` : 'background:#000;';
                     slidesHtml += `
-                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:#000;">
+                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; ${slideBgStyle}">
                             <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async" style="width:100%; height:100%; object-fit:contain; opacity:${isFirst ? '1' : '0'}; transition:opacity 0.2s ease-in-out;" 
                             >
                         </a>`;
@@ -1092,7 +1102,7 @@ function openProductModal(item) {
         }
     }
 
-    addToHistory(item);
+    setTimeout(() => addToHistory(item), 0);
 
     const modalWin = document.querySelector('#productModal .modal-window');
     if (modalWin) {

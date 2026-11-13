@@ -2576,6 +2576,15 @@ function initGridEventDelegation() {
     let clickTimer = null;
     let lastClickedCard = null;
 
+    grid.addEventListener('pointerdown', (e) => {
+        const card = e.target.closest('.item-card');
+        if (!card) return;
+        const cardId = card.getAttribute('data-id');
+        if (cardId && typeof window.prewarmProductModal === "function") {
+            window.prewarmProductModal(cardId, true);
+        }
+    }, { passive: true });
+
     grid.addEventListener('touchstart', (e) => {
         const card = e.target.closest('.item-card');
         if (!card) return;
@@ -2616,7 +2625,7 @@ function initGridEventDelegation() {
         const itemId = card.getAttribute('data-id');
         if (!itemId) return;
 
-        const DOUBLE_TAP_DELAY_MS = 260;
+        const DOUBLE_TAP_DELAY_MS = 200;
         if (clickTimer === null || lastClickedCard !== card) {
             if (clickTimer) clearTimeout(clickTimer);
             lastClickedCard = card;

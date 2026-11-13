@@ -102,7 +102,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(style).toContain('.toast.toast-new-item,\n    .toast.toast-fav-item,\n    .toast.toast-lang-item,\n    .toast.toast-cart-item,\n    .toast.toast-sale-item,\n    .toast.toast-review-item');
     });
 
-    it('9. language change toast uses compact toast-lang-item sizing and catalog double-tap uses 260ms window', () => {
+    it('9. language change toast uses compact toast-lang-item sizing and catalog double-tap uses 200ms window', () => {
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
         const i18n = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
         const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
@@ -110,7 +110,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(helpers).toContain('function showLanguageToast(');
         expect(helpers).toContain("className: 'toast-lang-item'");
         expect(i18n).toContain('window.showLanguageToast(normalized)');
-        expect(catalog).toContain('const DOUBLE_TAP_DELAY_MS = 260;');
+        expect(catalog).toContain('const DOUBLE_TAP_DELAY_MS = 200;');
         expect(catalog).toContain('userFavs.some(id => String(id) === String(itemId))');
     });
 
@@ -208,5 +208,21 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(windowsJs).toContain('window._preModalScrollY = null;');
         expect(windowsJs).toContain("if (document.documentElement && document.documentElement.style) document.documentElement.style.overflow = '';");
         expect(style).toContain('body:has(.modal-overlay[style*="display: flex"]:not(.closing)) #itemsGrid');
+    });
+
+    it('18. product modal opens fast with pointerdown prewarm decode, cached thumb placeholder, and 150ms entry transition', () => {
+        const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        const catalogJs = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+        expect(productJs).toContain('if (typeof img.decode === "function") img.decode().catch(() => {});');
+        expect(productJs).toContain("url('${safeThumbBg}') center/contain no-repeat");
+        expect(productJs).toContain('setTimeout(() => {');
+        expect(productJs).toContain('if (typeof ensurePhotoSwipe === \'function\') ensurePhotoSwipe();');
+        expect(productJs).toContain('setTimeout(() => addToHistory(item), 0);');
+        expect(catalogJs).toContain("grid.addEventListener('pointerdown'");
+        expect(catalogJs).toContain('const DOUBLE_TAP_DELAY_MS = 200;');
+        expect(style).toContain('animation: modalPopDesktop 0.15s');
+        expect(style).toContain('transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1)');
     });
 });
