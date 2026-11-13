@@ -3399,6 +3399,18 @@ window.openCart = function() {
     }
 };
 
+function resetPaymentDropdownStyles(pd) {
+    if (!pd) return;
+    pd.style.display = 'none';
+    pd.style.opacity = '0';
+    pd.style.visibility = 'hidden';
+    pd.style.transform = 'translateY(-6px)';
+    pd.style.position = 'absolute';
+    pd.style.top = '';
+    pd.style.left = '';
+    pd.style.width = '';
+}
+
 function closePaymentDropdown() {
     const pd = document.getElementById('paymentDropdown');
     const display = document.getElementById('paymentDisplay');
@@ -3410,17 +3422,7 @@ function closePaymentDropdown() {
     } else if (pd && typeof pd.hidePopover === 'function' && pd.matches && pd.matches(':popover-open')) {
         try { pd.hidePopover(); } catch (_) {}
     }
-    if (pd && (pd.style.display === 'block' || pd.style.opacity === '1')) {
-        pd.style.opacity = '0';
-        pd.style.visibility = 'hidden';
-        pd.style.transform = 'translateY(-6px)';
-        setTimeout(() => {
-            const d = document.getElementById('paymentDisplay');
-            if (!d || !d.classList.contains('is-open')) {
-                pd.style.display = 'none';
-            }
-        }, 220);
-    }
+    resetPaymentDropdownStyles(pd);
 }
 window.closePaymentDropdown = closePaymentDropdown;
 
@@ -3497,6 +3499,7 @@ function initPaymentPopoverSync() {
                 const arrow = document.getElementById('paymentArrow');
                 if (display) display.classList.remove('is-open');
                 if (arrow) arrow.style.transform = 'rotate(0deg)';
+                resetPaymentDropdownStyles(pd);
             }
         });
     }
