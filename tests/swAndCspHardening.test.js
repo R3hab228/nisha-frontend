@@ -136,7 +136,8 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8').replace(/\r\n/g, '\n');
 
         expect(style).toContain('.toast { background: rgba(10, 10, 10, 0.96); border: 1px solid var(--accent-green); color: #fff; padding: 6px 12px;');
-        expect(style).toContain('.toast { max-width: 200px; width: auto; padding: 5px 10px; gap: 6px; font-size: 10.5px; }');
+        expect(style).toContain('height: 46px;');
+        expect(style).toContain('.toast { max-width: 200px; width: auto; height: 40px; padding: 5px 10px; gap: 6px; font-size: 10.5px; }');
         expect(helpers).toContain('class="toast-item-thumb"');
     });
 

@@ -528,7 +528,7 @@ function openProductModal(item) {
             </div>
             <div id="questionFormContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 5px;">
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="questionInput" class="form-input" maxlength="100" placeholder="Ваш вопрос..." data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
+                    <input type="text" id="questionInput" class="form-input" maxlength="100" placeholder="${escHtml(typeof i18next !== 'undefined' ? i18next.t('product.ask_ph', {defaultValue: 'Ваш вопрос...'}) : 'Ваш вопрос...')}" data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
                     <button class="search-btn btn-target" data-action="submit-question" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${typeof i18next !== 'undefined' ? i18next.t('product.ask_send', {defaultValue: 'ОТПРАВИТЬ'}) : 'ОТПРАВИТЬ'}</button>
                 </div>
             </div>

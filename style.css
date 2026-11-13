@@ -1621,7 +1621,7 @@ input[type="number"],
 }
 
 .toast-container { position: fixed; top: calc(20px + env(safe-area-inset-top, 0px)); right: calc(20px + env(safe-area-inset-right, 0px)); z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none;}
-.toast { background: rgba(10, 10, 10, 0.96); border: 1px solid var(--accent-green); color: #fff; padding: 6px 12px; font-family: var(--font-mono); font-size: 11px; line-height: 1.25; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0,255,0,0.15); border-left: 3px solid var(--accent-green); border-radius: 3px; display: flex; align-items: center; gap: 8px; animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; max-width: 240px; width: auto; box-sizing: border-box; word-break: break-word; position: relative; overflow: hidden; pointer-events: auto; }
+.toast { background: rgba(10, 10, 10, 0.96); border: 1px solid var(--accent-green); color: #fff; padding: 6px 12px; font-family: var(--font-mono); font-size: 11px; line-height: 1.25; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0,255,0,0.15); border-left: 3px solid var(--accent-green); border-radius: 3px; display: flex; align-items: center; gap: 8px; animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; max-width: 240px; width: auto; height: 46px; box-sizing: border-box; word-break: break-word; position: relative; overflow: hidden; pointer-events: auto; }
 .toast.toast-leaving { animation: slideOutRightSmooth 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards !important; }
 .toast::after { content: ''; position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent-green); width: 100%; animation: toastTimer 2.5s linear forwards; }
 .toast:hover::after,
@@ -1745,6 +1745,10 @@ input[type="number"],
     letter-spacing: 0.5px;
     text-transform: uppercase;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
 }
 .toast-item-title {
     font-size: 11px;
@@ -1784,6 +1788,7 @@ input[type="number"],
     }
     .toast-item-tag {
         font-size: 9px;
+        max-width: 130px;
     }
 }
 
@@ -2552,7 +2557,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
 button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important; pointer-events: none; }
     
     .toast-container { top: calc(15px + env(safe-area-inset-top, 0px)); right: calc(15px + env(safe-area-inset-right, 0px)); left: auto; align-items: flex-end; }
-    .toast { max-width: 200px; width: auto; padding: 5px 10px; gap: 6px; font-size: 10.5px; }
+    .toast { max-width: 200px; width: auto; height: 40px; padding: 5px 10px; gap: 6px; font-size: 10.5px; }
     
     .header-top { 
         flex-direction: column; 
