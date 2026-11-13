@@ -286,11 +286,13 @@ function executeCloseModal(id, e) {
     });
     if (!hasOtherOpenModal()) {
         document.body.style.overflow = '';
+        if (document.documentElement && document.documentElement.style) document.documentElement.style.overflow = '';
         if (typeof window._preModalScrollY === 'number') {
             const curY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
             if (Math.abs(curY - window._preModalScrollY) > 5) {
                 window.scrollTo({ top: window._preModalScrollY, behavior: 'instant' });
             }
+            window._preModalScrollY = null;
         }
         if (typeof window.startLenis === 'function') window.startLenis();
         else if (typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') lenis.start();
@@ -375,7 +377,7 @@ function executeCloseModal(id, e) {
         modal.style.backgroundColor = '';
 
         if (modal._returnFocusElement && typeof modal._returnFocusElement.focus === 'function') {
-            try { modal._returnFocusElement.focus(); } catch {}
+            try { modal._returnFocusElement.focus({ preventScroll: true }); } catch {}
             modal._returnFocusElement = null;
         }
 
@@ -386,8 +388,7 @@ function executeCloseModal(id, e) {
 
         if (!hasOtherOpenModal()) {
             document.body.style.overflow = '';
-            if (typeof window.startLenis === 'function') window.startLenis();
-            else if (typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') lenis.start();
+            if (document.documentElement && document.documentElement.style) document.documentElement.style.overflow = '';
         }
 
         // Фоновые задачи (история и рассылки) запускаем безопасно в idle-потоке без фризов UI

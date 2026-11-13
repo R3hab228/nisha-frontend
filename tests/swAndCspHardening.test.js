@@ -199,4 +199,14 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(reviews).toContain("window.withButtonBusy('[data-action=\"submit-auto-review\"]'");
         expect(reviews).toContain("window.withButtonBusy('#writeReviewModal .cart-checkout-btn'");
     });
+
+    it('17. modal close unlocks scroll immediately without focus scroll jump or closing-phase grid restyle', () => {
+        const windowsJs = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+        expect(windowsJs).toContain('modal._returnFocusElement.focus({ preventScroll: true });');
+        expect(windowsJs).toContain('window._preModalScrollY = null;');
+        expect(windowsJs).toContain("if (document.documentElement && document.documentElement.style) document.documentElement.style.overflow = '';");
+        expect(style).toContain('body:has(.modal-overlay[style*="display: flex"]:not(.closing)) #itemsGrid');
+    });
 });

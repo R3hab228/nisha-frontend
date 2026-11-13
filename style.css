@@ -3687,8 +3687,8 @@ html.pwa-standalone body {
        фоновая сетка товаров и карточки избранного/каталога не должны захватываться в Top Layer браузера */
     body:has(.modal-overlay.is-open) #itemsGrid,
     body:has(.modal-overlay.is-open) .item-card,
-    body:has(.modal-overlay[style*="display: flex"]) #itemsGrid,
-    body:has(.modal-overlay[style*="display: flex"]) .item-card,
+    body:has(.modal-overlay[style*="display: flex"]:not(.closing)) #itemsGrid,
+    body:has(.modal-overlay[style*="display: flex"]:not(.closing)) .item-card,
     body:has(#ordersModal.is-open) #itemsGrid,
     body:has(#ordersModal.is-open) .item-card,
     body:has(#ordersModal[style*="display: flex"]) #itemsGrid,
