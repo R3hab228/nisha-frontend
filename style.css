@@ -695,7 +695,7 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .legal-info a { color: #888; text-decoration: underline; margin: 0 10px; cursor: pointer;}
 .legal-info a:hover { color: var(--text-main); }
 
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards; contain: layout paint; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards; contain: layout paint; overscroll-behavior: contain; }
 /* Ленивый рендеринг DOM: закрытые модалки полностью исключаются из дерева рендеринга браузера */
 .modal-overlay:not(.is-open):not([style*="display: flex"]):not([style*="display: block"]) { content-visibility: hidden; contain-intrinsic-size: 0 0; }
 .modal-overlay.is-open,
@@ -1617,6 +1617,8 @@ input[type="number"],
 .toast-container { position: fixed; top: calc(20px + env(safe-area-inset-top, 0px)); right: calc(20px + env(safe-area-inset-right, 0px)); z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none;}
 .toast { background: rgba(10, 10, 10, 0.96); border: 1px solid var(--accent-green); color: #fff; padding: 6px 12px; font-family: var(--font-mono); font-size: 11px; line-height: 1.25; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0,255,0,0.15); border-left: 3px solid var(--accent-green); border-radius: 3px; display: flex; align-items: center; gap: 8px; animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards, fadeOut 0.5s 2.5s forwards; max-width: 240px; width: auto; box-sizing: border-box; word-break: break-word; position: relative; overflow: hidden; pointer-events: auto; }
 .toast::after { content: ''; position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent-green); width: 100%; animation: toastTimer 2.5s linear forwards; }
+.toast:hover::after,
+.toast.toast-paused::after { animation-play-state: paused !important; }
 .toast.error::after { background: var(--accent-red); }
 .toast.info::after { background: var(--accent-yellow, #ffcc00); }
 .toast.warning::after { background: var(--accent-yellow, #ffcc00); }
@@ -2606,6 +2608,7 @@ body.search-lock { overflow: hidden !important; height: 100vh; }
         max-height: 900px;
         opacity: 1; visibility: visible; 
         padding-top: 15px; padding-bottom: 15px; 
+        overscroll-behavior: contain;
         transition: max-height 0.42s cubic-bezier(0.33, 1, 0.68, 1), 
                     opacity 0.38s ease, 
                     padding 0.42s cubic-bezier(0.33, 1, 0.68, 1); 

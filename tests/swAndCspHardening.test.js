@@ -153,4 +153,18 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(catalog).toContain("const card = e.target.closest('.item-card');");
         expect(catalog).not.toContain('<div class="item-info" data-action="open-product"');
     });
+
+    it('13. toasts support ARIA live status/alert, pause-on-hover/touch, and modals/sidebar contain overscroll', () => {
+        const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8').replace(/\r\n/g, '\n');
+        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+
+        expect(html).toContain('id=toastContainer aria-live=polite aria-atomic=false');
+        expect(style).toContain('.toast:hover::after,\n.toast.toast-paused::after { animation-play-state: paused !important; }');
+        expect(style).toMatch(/\.modal-overlay\s*\{[^}]*overscroll-behavior:\s*contain;/);
+        expect(style).toMatch(/\.sidebar\.active-mobile\s*\{[^}]*overscroll-behavior:\s*contain;/);
+        expect(helpers).toContain("toast.setAttribute('role', isAlert ? 'alert' : 'status');");
+        expect(helpers).toContain('const pauseDismiss = () => {');
+        expect(helpers).toContain('const resumeDismiss = () => {');
+    });
 });

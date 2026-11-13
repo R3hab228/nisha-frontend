@@ -535,6 +535,10 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
+    if (typeof toast.setAttribute === 'function') {
+        toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+        toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+    }
     if (onClick && typeof onClick === 'function') {
         toast.style.cursor = 'pointer';
         toast.style.pointerEvents = 'auto';
@@ -590,6 +594,11 @@ function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = n
 
     const toast = document.createElement('div');
     toast.className = `toast ${className}`;
+    const isAlert = /removed|error/i.test(className);
+    if (typeof toast.setAttribute === 'function') {
+        toast.setAttribute('role', isAlert ? 'alert' : 'status');
+        toast.setAttribute('aria-live', isAlert ? 'assertive' : 'polite');
+    }
     if (slot) _activeCompactToasts.set(slot, toast);
 
     let html = '';
@@ -608,15 +617,51 @@ function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = n
     container.appendChild(toast);
 
     let isDismissed = false;
+    let remainingMs = duration;
+    let timerStartedAt = Date.now();
+    let dismissTimerId = null;
+    let isPaused = false;
+
     const dismiss = () => {
         if (isDismissed) return;
         isDismissed = true;
+        clearTimeout(dismissTimerId);
+        dismissTimerId = null;
         if (slot && _activeCompactToasts.get(slot) === toast) _activeCompactToasts.delete(slot);
         toast.classList.add('toast-leaving');
         setTimeout(() => {
             if (toast.parentNode) toast.remove();
         }, 300);
     };
+
+    const scheduleDismiss = () => {
+        if (isDismissed || isPaused) return;
+        clearTimeout(dismissTimerId);
+        timerStartedAt = Date.now();
+        dismissTimerId = setTimeout(dismiss, Math.max(0, remainingMs));
+    };
+
+    const pauseDismiss = () => {
+        if (isDismissed || isPaused) return;
+        isPaused = true;
+        clearTimeout(dismissTimerId);
+        dismissTimerId = null;
+        remainingMs = Math.max(0, remainingMs - (Date.now() - timerStartedAt));
+        toast.classList.add('toast-paused');
+    };
+
+    const resumeDismiss = () => {
+        if (isDismissed || !isPaused) return;
+        isPaused = false;
+        toast.classList.remove('toast-paused');
+        scheduleDismiss();
+    };
+
+    toast.addEventListener('mouseenter', pauseDismiss);
+    toast.addEventListener('mouseleave', resumeDismiss);
+    toast.addEventListener('touchstart', pauseDismiss, { passive: true });
+    toast.addEventListener('touchend', resumeDismiss, { passive: true });
+    toast.addEventListener('touchcancel', resumeDismiss, { passive: true });
 
     toast.onclick = (e) => {
         if (e) e.stopPropagation();
@@ -626,7 +671,7 @@ function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = n
         dismiss();
     };
 
-    setTimeout(dismiss, duration);
+    scheduleDismiss();
 }
 
 function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
