@@ -6,7 +6,7 @@
 <meta name="description" content="NISHA — вінтажний одяг, взуття та аксесуари. Доставка Новою Поштою по всій Україні.">
 <link rel="canonical" href="https://www.nisha-store.shop/">
 <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
-<meta http-equiv=Content-Security-Policy content="default-src 'self' https: data: blob: 'unsafe-inline'; script-src 'self' 'unsafe-inline' blob: data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://challenges.cloudflare.com https://*.cloudflare.com https://static.cloudflareinsights.com https://www.clarity.ms https://scripts.clarity.ms https://analytics.tiktok.com https://*.tiktokw.us https://oauth.telegram.org https://telegram.org https://accounts.google.com https://apis.google.com https://browser.sentry-cdn.com https://vercel.live https://nisha-store.shop https://www.nisha-store.shop; worker-src 'self' blob: data:; child-src 'self' blob: data: https://challenges.cloudflare.com https://*.cloudflare.com https://oauth.telegram.org https://accounts.google.com; object-src 'none'; base-uri 'self'; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' data: blob: https://accounts.google.com https://get.geojs.io https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms https://*.cloudflare.com https://cloudflareinsights.com https://cdn.nisha-store.shop https://*.workers.dev https://analytics.tiktok.com https://*.tiktokw.us https://plausible.io https://*.posthog.com; frame-src https://oauth.telegram.org https://accounts.google.com https://www.google.com https://vercel.live/ https://challenges.cloudflare.com https://*.cloudflare.com;">
+<meta http-equiv=Content-Security-Policy content="default-src 'self' https: data: blob:; script-src 'self' 'inline-speculation-rules' blob: data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://challenges.cloudflare.com https://*.cloudflare.com https://static.cloudflareinsights.com https://www.clarity.ms https://scripts.clarity.ms https://analytics.tiktok.com https://*.tiktokw.us https://oauth.telegram.org https://telegram.org https://accounts.google.com https://apis.google.com https://browser.sentry-cdn.com https://vercel.live https://nisha-store.shop https://www.nisha-store.shop; worker-src 'self' blob: data:; child-src 'self' blob: data: https://challenges.cloudflare.com https://*.cloudflare.com https://oauth.telegram.org https://accounts.google.com; object-src 'none'; base-uri 'self'; style-src 'self' https: 'unsafe-inline'; font-src 'self' https: data:; img-src 'self' https: data: blob:; media-src 'self' https: blob:; connect-src 'self' data: blob: https://accounts.google.com https://get.geojs.io https://nisha-api.onrender.com https://api.novaposhta.ua wss://*.supabase.co https://*.supabase.co https://*.sentry.io https://lottie.host https://browser.sentry-cdn.com https://www.google-analytics.com https://analytics.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://*.clarity.ms https://*.cloudflare.com https://cloudflareinsights.com https://cdn.nisha-store.shop https://*.workers.dev https://analytics.tiktok.com https://*.tiktokw.us https://plausible.io https://*.posthog.com; frame-src https://oauth.telegram.org https://accounts.google.com https://www.google.com https://vercel.live/ https://challenges.cloudflare.com https://*.cloudflare.com;">
 <meta name=google-site-verification content=JeoGyai8Mik-tYQnacXcxAae-_8SnmN4HpOMr06dfRs>
 <meta name="google-site-verification" content="RBmdOx5kBNw4x4w5EVWfVZSUKfJCc6bHfpaJ_pEM_lk">
 <meta name="p:domain_verify" content="dfb357be536d5319e75fa993aaa051c7">
@@ -36,28 +36,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NISHA">
-<script>
-(function(){
-  try {
-    if (typeof window !== 'undefined' && !window._META) {
-      window._META = typeof Proxy === 'function' ? new Proxy({}, { get: function(o, p){ return o[p]; } }) : {};
-    }
-  } catch(e){}
-  try {
-    if (typeof window !== 'undefined' && typeof window.ethereum === 'undefined') {
-      const ethTarget = {};
-      window.ethereum = typeof Proxy === 'function' ? new Proxy(ethTarget, {
-        get: (t, p) => t[p],
-        set: (t, p, v) => { t[p] = v; return true; }
-      }) : ethTarget;
-    }
-  } catch(e){}
-  try {
-    const isStandalone = (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: minimal-ui)').matches)) || (typeof navigator !== 'undefined' && navigator.standalone === true) || (document.referrer && document.referrer.includes('android-app://'));
-    if (isStandalone && document.documentElement) document.documentElement.classList.add('pwa-standalone');
-  } catch(e){}
-})();
-</script>
+<script src="/early-init.js"></script>
 <script type="speculationrules">
 {
   "prerender": [
@@ -103,76 +82,6 @@
 <link rel=apple-touch-icon sizes=180x180 href="/icon-512.png?v=11">
 <link rel=icon type=image/png sizes=32x32 href="/icon.png?v=11">
 <link rel=manifest href="/manifest.json?v=11">
-<!-- Smart adaptive locale preloading (UA default / saved preference) -->
-<script>
-(function(){
-  try {
-    let l = (window.localStorage && (localStorage.getItem('nisha_lang') || localStorage.getItem('i18nextLng'))) || '';
-    if (!l) {
-      const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
-      l = nav.startsWith('ru') ? 'ru' : (nav.startsWith('en') ? 'en' : 'ua');
-    }
-    l = l.toLowerCase();
-    if (l.startsWith('ru')) l = 'ru';
-    else if (l.startsWith('en')) l = 'en';
-    else l = 'ua';
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'fetch';
-    link.href = `/locales/${l}.json`;
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
-  } catch(e) {}
-})();
-</script>
-
-<!-- Microsoft Clarity (Отложенная загрузка на 3 секунды без фризов) -->
-<script type="text/javascript">
-    function initClarityDeferred() {
-        if (window._clarityLoaded) return;
-        window._clarityLoaded = true;
-        (function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "ymals8sg94");
-    }
-    if ('requestIdleCallback' in window) {
-        setTimeout(function() { requestIdleCallback(initClarityDeferred, { timeout: 2500 }); }, 4500);
-    } else {
-        setTimeout(initClarityDeferred, 4500);
-    }
-</script>
-<!-- TikTok Pixel Code Start (Deferred for non-blocking FCP/LCP) -->
-<script>
-!function (w, d, t) {
-  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
-var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
-;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-  
-  ttq.page();
-  function initTikTokDeferred() {
-    if (w._tiktokLoaded) return;
-    w._tiktokLoaded = true;
-    ttq.load('DB0HAT3C77U5HCCK4S10');
-  }
-  if ('requestIdleCallback' in w) {
-    setTimeout(function() { requestIdleCallback(initTikTokDeferred, { timeout: 2000 }); }, 2500);
-  } else {
-    setTimeout(initTikTokDeferred, 2500);
-  }
-  function onFirstInteraction() {
-    initTikTokDeferred();
-    d.removeEventListener('click', onFirstInteraction);
-    d.removeEventListener('touchstart', onFirstInteraction);
-    w.removeEventListener('scroll', onFirstInteraction);
-  }
-  d.addEventListener('click', onFirstInteraction, { passive: true, once: true });
-  d.addEventListener('touchstart', onFirstInteraction, { passive: true, once: true });
-  w.addEventListener('scroll', onFirstInteraction, { passive: true, once: true });
-}(window, document, 'ttq');
-</script>
-<!-- TikTok Pixel Code End -->
 <!-- SEO Microdata -->
 <script type="application/ld+json">
 {
@@ -309,8 +218,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </header>
 <div class=search-section>
 <div class=search-wrapper>
-<form autocomplete=off onsubmit='event.preventDefault(),saveRecentSearch(document.getElementById("mainSearch").value.trim()),applyFilters(),closeSearch()' style=margin:0;padding:0;display:flex;width:100%>
-<input class=search-input id=mainSearch autocomplete=off autocorrect=off spellcheck=false placeholder="Поиск вещи..." data-i18n-ph="search.placeholder" oninput=handleLiveSearch() style=width:100%;padding-right:40px>
+<form autocomplete=off style=margin:0;padding:0;display:flex;width:100%>
+<input class=search-input id=mainSearch autocomplete=off autocorrect=off spellcheck=false placeholder="Поиск вещи..." data-i18n-ph="search.placeholder" style=width:100%;padding-right:40px>
 </form>
 <span id=clearSearchBtn class=clear-search-btn data-action="clear-search-input">✖</span>
 <div id=liveSearchDropdown class="live-search-dropdown no-pull" popover="auto" data-lenis-prevent data-no-pull></div>
@@ -336,28 +245,28 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <div class=price-values><span data-i18n=sidebar.from>ОТ</span> <span id=priceMinVal>0</span> <span data-i18n=sidebar.to>ДО</span> <span id=priceMaxVal>15000</span> <span data-i18n=sidebar.uah>грн</span></div>
 <div class=range-slider>
 <div class=range-fill id=rangeFill></div>
-<input type=range id=priceMin min=0 max=15000 step=100 value=0 oninput=updatePriceUI()>
-<input type=range id=priceMax min=0 max=15000 step=100 value=15000 oninput=updatePriceUI()>
+<input type=range id=priceMin min=0 max=15000 step=100 value=0>
+<input type=range id=priceMax min=0 max=15000 step=100 value=15000>
 </div>
 <div style="margin-top:20px;border-top:1px dashed #444;padding-top:10px"></div>
 <ul class="filter-list checkbox-list">
-<li><label><input type=checkbox class=size-cb value=S onchange=triggerFilterTransition()> <span data-i18n=sidebar.size_s>Размер S</span></label></li>
-<li><label><input type=checkbox class=size-cb value=M onchange=triggerFilterTransition()> <span data-i18n=sidebar.size_m>Размер M</span></label></li>
-<li><label><input type=checkbox class=size-cb value=L onchange=triggerFilterTransition()> <span data-i18n=sidebar.size_l>Размер L</span></label></li>
-<li><label><input type=checkbox class=size-cb value=XL onchange=triggerFilterTransition()> <span data-i18n=sidebar.size_xl>Размер XL / XXL</span></label></li>
+<li><label><input type=checkbox class=size-cb value=S> <span data-i18n=sidebar.size_s>Размер S</span></label></li>
+<li><label><input type=checkbox class=size-cb value=M> <span data-i18n=sidebar.size_m>Размер M</span></label></li>
+<li><label><input type=checkbox class=size-cb value=L> <span data-i18n=sidebar.size_l>Размер L</span></label></li>
+<li><label><input type=checkbox class=size-cb value=XL> <span data-i18n=sidebar.size_xl>Размер XL / XXL</span></label></li>
 <li style="margin-top:10px;border-top:1px dashed #444;padding-top:10px">
-<label><input type=checkbox class=size-cb value="40-42" onchange=triggerFilterTransition()> <span data-i18n=sidebar.shoes_1>Обувь (40 - 42)</span></label>
+<label><input type=checkbox class=size-cb value="40-42"> <span data-i18n=sidebar.shoes_1>Обувь (40 - 42)</span></label>
 </li>
-<li><label><input type=checkbox class=size-cb value="43-46" onchange=triggerFilterTransition()> <span data-i18n=sidebar.shoes_2>Обувь (43 - 46)</span></label></li>
+<li><label><input type=checkbox class=size-cb value="43-46"> <span data-i18n=sidebar.shoes_2>Обувь (43 - 46)</span></label></li>
 <li style="margin-top:15px;border-top:1px dashed #444;padding-top:15px">
 <label style="cursor:pointer">
-<input type=checkbox id=onlySaleCb onchange=triggerFilterTransition()>
+<input type=checkbox id=onlySaleCb>
 <span data-i18n=sidebar.only_sale style="color:var(--accent-red);font-weight:bold">% Только со скидкой</span>
 </label>
 </li>
 <li style="margin-top:8px">
 <label style="cursor:pointer">
-<input type=checkbox id=hideUnavailableCb onchange=triggerFilterTransition()>
+<input type=checkbox id=hideUnavailableCb>
 <span data-i18n=sidebar.hide_unavailable>Скрыть проданное/бронь</span>
 </label>
 </li>
@@ -739,13 +648,13 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 </div>
 <label data-i18n=checkout.city>Город (Новая Почта):</label>
 <div class=np-input-wrap style="position:relative; z-index:35;">
-<input id=orderCity name=nisha_order_city class=form-input placeholder=Київ... data-i18n-ph="checkout.city_ph" oninput=debouncedNPCitySearch(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+<input id=orderCity name=nisha_order_city class=form-input placeholder=Київ... data-i18n-ph="checkout.city_ph" autocomplete=off autocorrect=off spellcheck=false enterkeyhint="next" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
 <button type=button id=clearOrderCityBtn class=np-clear-btn data-action="clear-np-city" aria-label="Очистить город" tabindex=-1>✕</button>
 <div id=cityDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
 <label data-i18n=checkout.branch>Отделение или Почтомат:</label>
 <div class=np-input-wrap style="position:relative; z-index:30;">
-<input id=orderBranch name=nisha_order_branch class=form-input placeholder=Відділення... data-i18n-ph="checkout.branch_ph" onfocus="loadNPBranches('', true)" oninput=filterNPBranches(this.value) autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+<input id=orderBranch name=nisha_order_branch class=form-input placeholder=Відділення... data-i18n-ph="checkout.branch_ph" autocomplete=off autocorrect=off spellcheck=false enterkeyhint="done" style="padding-right:38px;" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
 <button type=button id=clearOrderBranchBtn class=np-clear-btn data-action="clear-np-branch" aria-label="Очистить отделение" tabindex=-1>✕</button>
 <div id=branchDropdown class="custom-dropdown no-pull" data-lenis-prevent data-no-pull></div>
 </div>
@@ -948,7 +857,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 <label data-i18n=propose.size_label>РАЗМЕР:</label>
 <input id=propSize name=prop_item_size class=form-input placeholder="Например: M или 42" autocomplete=off data-lpignore=true data-form-type=other data-i18n-ph=propose.size_place>
 <label id=descLabel data-i18n=propose.desc_label>ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
-<textarea id=propDesc class=form-input maxlength=250 style="height:85px;min-height:85px;resize:none" placeholder="Опиши состояние, нюансы..." data-i18n-ph=propose.desc_place oninput=updateCharCount(this)></textarea>
+<textarea id=propDesc class=form-input maxlength=250 style="height:85px;min-height:85px;resize:none" placeholder="Опиши состояние, нюансы..." data-i18n-ph=propose.desc_place></textarea>
 <label data-i18n=propose.cond_label>ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
 <input type=number id=propCond class=form-input placeholder=9 min=1 max=10 data-i18n-ph=propose.cond_place>
 <label id="propPriceLabel" class="prop-price-label" data-i18n="propose.price_label">ЖЕЛАЕМАЯ ЦЕНА (ГРН):</label>

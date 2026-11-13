@@ -33,7 +33,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate, max-age=0"
+          "value": "no-cache, must-revalidate, max-age=0"
         },
         {
           "key": "CDN-Cache-Control",
@@ -50,7 +50,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate, max-age=0"
+          "value": "no-cache, must-revalidate, max-age=0"
         },
         {
           "key": "CDN-Cache-Control",
@@ -67,7 +67,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate, max-age=0"
+          "value": "no-cache, must-revalidate, max-age=0"
         },
         {
           "key": "CDN-Cache-Control",

@@ -2040,7 +2040,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('loadNPBranches("", false)');
 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-            expect(html).toContain('onfocus="loadNPBranches(\'\', true)"');
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(helpersCode).toContain("window.loadNPBranches('', true)");
             expect(html).toContain('enterkeyhint="done"');
             expect(html).toContain('enterkeyhint="next"');
         });
@@ -2113,9 +2114,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('intercepts third-party web3/ethereum injected script crashes via safe window.ethereum stub and filters them in telemetry', () => {
-            const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-            expect(html).toContain('window.ethereum');
-            expect(html).toContain('window._META');
+            const earlyInit = readFileSync(resolve(__dirname, '../public/early-init.js'), 'utf8');
+            expect(earlyInit).toContain('window.ethereum');
+            expect(earlyInit).toContain('window._META');
 
             // Test execution of injected script assignment on stubbed environment
             const fakeWin = {};
@@ -2224,7 +2225,6 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
             expect(catalogCode).toContain('item.thumbnails.at(0)');
             expect(catalogCode).toContain('item.images.at(0)');
-            expect(catalogCode).toContain("link.innerHTML.split('<span').at(0).trim()");
 
             // Verify orders.js uses .at()
             const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
@@ -2920,9 +2920,11 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('card.style.setProperty(\'view-transition-name\', \'item-\' + safeId)');
 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-            expect(html).toContain('class=size-cb value=S onchange=triggerFilterTransition()');
-            expect(html).toContain('id=onlySaleCb onchange=triggerFilterTransition()');
-            expect(html).toContain('id=hideUnavailableCb onchange=triggerFilterTransition()');
+            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            expect(html).toContain('class=size-cb value=S');
+            expect(html).toContain('id=onlySaleCb');
+            expect(html).toContain('id=hideUnavailableCb');
+            expect(helpersCode).toContain('window.triggerFilterTransition()');
 
             const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
             expect(css).toContain('::view-transition-group(*)');

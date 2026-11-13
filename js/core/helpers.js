@@ -2969,3 +2969,80 @@ function safeViewTransition(updateFn) {
 }
 window.safeViewTransition = safeViewTransition;
 if (typeof globalThis !== 'undefined') globalThis.safeViewTransition = safeViewTransition;
+
+function bindFormAndFilterListeners() {
+    if (typeof document === 'undefined' || document._nishaFormFiltersBound) return;
+    document._nishaFormFiltersBound = true;
+
+    const searchForm = document.getElementById('mainSearch')?.closest('form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const searchEl = document.getElementById('mainSearch');
+            if (typeof window.saveRecentSearch === 'function' && searchEl) {
+                window.saveRecentSearch(searchEl.value.trim());
+            }
+            if (typeof window.applyFilters === 'function') window.applyFilters();
+            if (typeof window.closeSearch === 'function') window.closeSearch();
+        });
+    }
+
+    const mainSearch = document.getElementById('mainSearch');
+    if (mainSearch) {
+        mainSearch.addEventListener('input', () => {
+            if (typeof window.handleLiveSearch === 'function') window.handleLiveSearch();
+        });
+    }
+
+    const priceMin = document.getElementById('priceMin');
+    const priceMax = document.getElementById('priceMax');
+    [priceMin, priceMax].forEach(el => {
+        if (el) {
+            el.addEventListener('input', () => {
+                if (typeof window.updatePriceUI === 'function') window.updatePriceUI();
+            });
+        }
+    });
+
+    document.addEventListener('change', (e) => {
+        const target = e.target;
+        if (!target) return;
+        if (target.classList && target.classList.contains('size-cb') ||
+            target.id === 'onlySaleCb' ||
+            target.id === 'hideUnavailableCb') {
+            if (typeof window.triggerFilterTransition === 'function') window.triggerFilterTransition();
+        }
+    });
+
+    const orderCity = document.getElementById('orderCity');
+    if (orderCity) {
+        orderCity.addEventListener('input', () => {
+            if (typeof window.debouncedNPCitySearch === 'function') window.debouncedNPCitySearch(orderCity.value);
+        });
+    }
+
+    const orderBranch = document.getElementById('orderBranch');
+    if (orderBranch) {
+        orderBranch.addEventListener('focus', () => {
+            if (typeof window.loadNPBranches === 'function') window.loadNPBranches('', true);
+        });
+        orderBranch.addEventListener('input', () => {
+            if (typeof window.filterNPBranches === 'function') window.filterNPBranches(orderBranch.value);
+        });
+    }
+
+    const propDesc = document.getElementById('propDesc');
+    if (propDesc) {
+        propDesc.addEventListener('input', () => {
+            if (typeof window.updateCharCount === 'function') window.updateCharCount(propDesc);
+        });
+    }
+}
+
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindFormAndFilterListeners);
+    } else {
+        bindFormAndFilterListeners();
+    }
+}

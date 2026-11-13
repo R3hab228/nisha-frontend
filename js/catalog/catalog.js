@@ -1882,12 +1882,35 @@ function updateSidebarCounters() {
         });
     }
 
+    const setFilterCountBadge = (el, count) => {
+        if (!el) return;
+        let badge = el.querySelector('.filter-count-badge');
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'filter-count-badge';
+                el.appendChild(document.createTextNode(' '));
+                el.appendChild(badge);
+            }
+            const nextText = `(${count})`;
+            if (badge.textContent !== nextText) badge.textContent = nextText;
+        } else if (badge) {
+            if (badge.previousSibling && badge.previousSibling.nodeType === 3 && badge.previousSibling.textContent === ' ') {
+                badge.previousSibling.remove();
+            }
+            badge.remove();
+        }
+    };
+
     // 1. Категории
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(link => {
-        let baseText = link.innerHTML.split('<span').at(0).trim();
+        const badgeEl = link.querySelector('.filter-count-badge');
+        const baseText = (badgeEl
+            ? Array.from(link.childNodes).filter(n => n !== badgeEl).map(n => n.textContent).join('')
+            : link.textContent).trim();
         const dataCat = link.getAttribute('data-category');
         const onclickAttr = link.getAttribute('onclick') || '';
-        
+
         let catName = 'Все вещи';
         if (dataCat !== null) {
             catName = dataCat || 'Все вещи';
@@ -1909,11 +1932,7 @@ function updateSidebarCounters() {
         }
 
         const count = (typeof hasOwn === 'function' ? hasOwn(catCounts, catName) : Object.hasOwn(catCounts, catName)) ? catCounts[catName] : 0;
-        if (count > 0) {
-            link.innerHTML = `${baseText} <span class="filter-count-badge">(${count})</span>`;
-        } else {
-            link.innerHTML = baseText;
-        }
+        setFilterCountBadge(link, count);
 
         link.classList.remove('active-filter');
         if (curCat !== '' && catName === curCat) {
@@ -1923,25 +1942,39 @@ function updateSidebarCounters() {
         }
     });
 
-    // 2. Размеры (только для текущей категории)
+    // 2. Размеры (только для текущей категории — подсчет за один проход)
     const availableCategoryItems = availableItemsAll.filter(item => {
         if (curCat !== '' && item.category !== curCat) return false;
         return true;
     });
 
-    document.querySelectorAll('.size-cb').forEach(cb => {
+    const sizeCheckboxes = Array.from(document.querySelectorAll('.size-cb'));
+    const sizeCounts = new Map();
+    sizeCheckboxes.forEach(cb => {
+        if (cb.value && !sizeCounts.has(cb.value)) {
+            sizeCounts.set(cb.value, 0);
+        }
+    });
+
+    for (let i = 0; i < availableCategoryItems.length; i++) {
+        const item = availableCategoryItems[i];
+        for (const [sizeVal, currentCount] of sizeCounts.entries()) {
+            if (itemMatchesSizeFilter(item, sizeVal)) {
+                sizeCounts.set(sizeVal, currentCount + 1);
+            }
+        }
+    }
+
+    sizeCheckboxes.forEach(cb => {
         const labelSpan = cb.nextElementSibling;
         if (!labelSpan) return;
-        let baseText = labelSpan.innerHTML.split('<span').at(0).trim();
-        const sizeVal = cb.value;
-        const count = availableCategoryItems.filter(item => itemMatchesSizeFilter(item, sizeVal)).length;
+        const count = sizeCounts.get(cb.value) || 0;
+        setFilterCountBadge(labelSpan, count);
 
         if (count > 0) {
-            labelSpan.innerHTML = `${baseText} <span class="filter-count-badge">(${count})</span>`;
             cb.parentElement.style.opacity = '1';
             cb.disabled = false;
         } else {
-            labelSpan.innerHTML = baseText;
             cb.parentElement.style.opacity = '0.4';
             cb.disabled = true;
             cb.checked = false;

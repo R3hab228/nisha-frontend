@@ -12,6 +12,7 @@ const API_CACHE = 'nisha-api-v2';
 const STATIC_URLS = [
     '/',
     '/index.html',
+    '/early-init.js',
     '/manifest.json',
     '/locales.json',
     '/locales/ru.json',
