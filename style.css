@@ -1275,6 +1275,107 @@ input[type="number"],
 .status-отправлен, .status-Отправлен, .status-відправлено, .status-відправлений, .status-shipped { color: #00aaff; text-shadow: 0 0 8px rgba(0, 170, 255, 0.4); }
 .status-отменен, .status-Отменен, .status-скасовано, .status-cancelled { color: var(--accent-red); text-decoration: line-through; }
 
+.order-reservation-timer {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 9px 12px;
+    background: rgba(255, 204, 0, 0.06);
+    border: 1px dashed rgba(255, 204, 0, 0.35);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+}
+.order-reservation-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.order-reservation-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.order-reservation-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-yellow);
+    box-shadow: 0 0 6px rgba(255, 204, 0, 0.7);
+    flex-shrink: 0;
+    animation: pulse-red 1.6s infinite;
+}
+.order-reservation-label {
+    color: var(--accent-yellow);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.6px;
+}
+.order-reservation-hint {
+    color: #9a9a9a;
+    font-size: 11px;
+}
+.order-reservation-countdown {
+    color: var(--accent-yellow);
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 204, 0, 0.45);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 0.8px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.order-reservation-progress {
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.order-reservation-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-yellow), #ff9900);
+    transition: width 0.6s linear;
+}
+.order-reservation-timer.is-urgent {
+    background: rgba(255, 68, 0, 0.09);
+    border-color: rgba(255, 85, 0, 0.55);
+}
+.order-reservation-timer.is-urgent .order-reservation-dot {
+    background: #ff5500;
+    box-shadow: 0 0 8px rgba(255, 85, 0, 0.85);
+}
+.order-reservation-timer.is-urgent .order-reservation-label,
+.order-reservation-timer.is-urgent .order-reservation-countdown {
+    color: #ff6b35;
+    border-color: rgba(255, 85, 0, 0.6);
+}
+.order-reservation-timer.is-urgent .order-reservation-progress-fill {
+    background: linear-gradient(90deg, #ff3b30, #ff7b00);
+}
+.order-reservation-timer.is-expired {
+    background: rgba(255, 0, 0, 0.06);
+    border-color: rgba(255, 60, 60, 0.4);
+}
+.order-reservation-timer.is-expired .order-reservation-dot {
+    background: var(--accent-red);
+    animation: none;
+    box-shadow: none;
+}
+.order-reservation-timer.is-expired .order-reservation-label,
+.order-reservation-timer.is-expired .order-reservation-countdown {
+    color: #ff5c5c;
+    border-color: rgba(255, 60, 60, 0.45);
+}
+.order-reservation-timer.is-expired .order-reservation-progress-fill {
+    width: 0% !important;
+}
+
 .order-items-list { display: flex; flex-direction: column; gap: 10px; }
 .order-item-row { display: flex; gap: 15px; align-items: center; background: #111; padding: 10px; border: 1px solid #222; cursor: pointer; transition: 0.2s;}
 .order-item-row:hover { border-color: var(--accent-green); background: #1a1a1a;}
@@ -2897,6 +2998,20 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
     }
     .order-total {
         font-size: 16px; 
+    }
+    .order-reservation-timer {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    .order-reservation-top {
+        gap: 6px;
+    }
+    .order-reservation-hint {
+        display: none;
+    }
+    .order-reservation-countdown {
+        font-size: 12px;
+        padding: 2px 7px;
     }
 
     /* =================================================== */

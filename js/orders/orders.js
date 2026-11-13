@@ -8,6 +8,125 @@ if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCa
 
 const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
 const orderDateFormatter = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
+const ORDER_RESERVATION_DURATION_MS = 2 * 60 * 60 * 1000;
+const ORDER_RESERVATION_URGENT_MS = 30 * 60 * 1000;
+
+function isOrderReservationPending(order) {
+    if (!order || !order.created_at) return false;
+    if (getOrderTabBucket(order) !== 'accepted') return false;
+    const raw = String(order.status || '').trim().toLowerCase();
+    if (!raw || raw.includes('оплач') || raw.includes('paid')) return false;
+    return true;
+}
+
+function getOrderReservationExpiresAtMs(order) {
+    if (!order) return NaN;
+    const explicit = order.reserved_until ? Date.parse(order.reserved_until) : NaN;
+    if (Number.isFinite(explicit)) return explicit;
+    const createdMs = order.created_at ? Date.parse(order.created_at) : NaN;
+    return Number.isFinite(createdMs) ? createdMs + ORDER_RESERVATION_DURATION_MS : NaN;
+}
+
+function getOrderReservationRemainingMs(order, nowMs = Date.now()) {
+    if (!isOrderReservationPending(order)) return 0;
+    const expiresAtMs = getOrderReservationExpiresAtMs(order);
+    if (!Number.isFinite(expiresAtMs)) return 0;
+    return Math.max(0, expiresAtMs - nowMs);
+}
+
+function formatReservationCountdown(ms) {
+    const totalSec = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
+    const hrs = Math.floor(totalSec / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function stopOrderReservationTicker() {
+    if (typeof window !== 'undefined' && window._orderReservationTimerId) {
+        clearInterval(window._orderReservationTimerId);
+        window._orderReservationTimerId = null;
+    }
+}
+
+function updateOrderReservationTimers(nowMs = Date.now()) {
+    if (typeof document === 'undefined') return 0;
+    const ordersModal = document.getElementById('ordersModal');
+    if (ordersModal && (ordersModal.style.display === 'none' || (ordersModal.classList && ordersModal.classList.contains('closing')))) {
+        stopOrderReservationTicker();
+        return 0;
+    }
+    const nodes = document.querySelectorAll('.order-reservation-timer[data-expires-at]');
+    if (!nodes || nodes.length === 0) {
+        stopOrderReservationTicker();
+        return 0;
+    }
+    let activeCount = 0;
+    const expiredText = typeof i18next !== 'undefined'
+        ? i18next.t('orders_modal.reservation_expired', { defaultValue: 'ВРЕМЯ БРОНИ ИСТЕКЛО' })
+        : 'ВРЕМЯ БРОНИ ИСТЕКЛО';
+
+    nodes.forEach(el => {
+        const expiresAt = Number(el.getAttribute('data-expires-at'));
+        if (!Number.isFinite(expiresAt)) return;
+        const remaining = Math.max(0, expiresAt - nowMs);
+        const pct = Math.max(0, Math.min(100, (remaining / ORDER_RESERVATION_DURATION_MS) * 100));
+        const isExpired = remaining <= 0;
+        const isUrgent = !isExpired && remaining <= ORDER_RESERVATION_URGENT_MS;
+
+        if (el.classList) {
+            el.classList.toggle('is-urgent', isUrgent);
+            el.classList.toggle('is-expired', isExpired);
+        }
+
+        const countdownEl = el.querySelector('.order-reservation-countdown');
+        if (countdownEl) {
+            countdownEl.textContent = isExpired ? expiredText : formatReservationCountdown(remaining);
+        }
+        const fillEl = el.querySelector('.order-reservation-progress-fill');
+        if (fillEl && fillEl.style) {
+            fillEl.style.width = `${pct.toFixed(2)}%`;
+        }
+        if (!isExpired) activeCount += 1;
+    });
+
+    if (activeCount === 0) {
+        stopOrderReservationTicker();
+    }
+    return activeCount;
+}
+
+function startOrderReservationTicker() {
+    stopOrderReservationTicker();
+    if (typeof document !== 'undefined' && document.hidden) return;
+    if (typeof window !== 'undefined') {
+        window._orderReservationTimerId = setInterval(() => {
+            updateOrderReservationTimers();
+        }, 1000);
+        if (!window._orderReservationVisBound && typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+            window._orderReservationVisBound = true;
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopOrderReservationTicker();
+                } else {
+                    const active = updateOrderReservationTimers();
+                    if (active > 0) startOrderReservationTicker();
+                }
+            });
+        }
+    }
+}
+
+window.isOrderReservationPending = isOrderReservationPending;
+window.getOrderReservationRemainingMs = getOrderReservationRemainingMs;
+window.formatReservationCountdown = formatReservationCountdown;
+window.updateOrderReservationTimers = updateOrderReservationTimers;
+if (typeof globalThis !== 'undefined') {
+    globalThis.isOrderReservationPending = isOrderReservationPending;
+    globalThis.getOrderReservationRemainingMs = getOrderReservationRemainingMs;
+    globalThis.formatReservationCountdown = formatReservationCountdown;
+    globalThis.updateOrderReservationTimers = updateOrderReservationTimers;
+}
 
 function openOrdersModal() {
     if (typeof openModal === 'function') {
@@ -689,6 +808,7 @@ function renderFilteredOrders() {
     const filteredData = grouped[activeTab] || [];
 
     if (filteredData.length === 0) {
+        stopOrderReservationTicker();
         const emptyAccepted = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_accepted', {defaultValue: 'Нет активных заказов.'}) : 'Нет активных заказов.';
         const emptyShipped = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_shipped', {defaultValue: 'Нет отправленных посылок.'}) : 'Нет отправленных посылок.';
         const emptyCancelled = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_cancelled', {defaultValue: 'Нет отмененных заказов.'}) : 'Нет отмененных заказов.';
@@ -804,6 +924,43 @@ function renderFilteredOrders() {
         const totalPrefix = typeof i18next !== 'undefined' ? i18next.t('orders_modal.total_prefix', {defaultValue: 'ИТОГО:'}) : 'ИТОГО:';
         const formattedTotal = typeof window.formatPrice === 'function' ? window.formatPrice(order.total_sum) : `${order.total_sum} ${(typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн'}`;
 
+        let reservationTimerHtml = '';
+        if (isOrderReservationPending(order)) {
+            const expiresAtMs = getOrderReservationExpiresAtMs(order);
+            if (Number.isFinite(expiresAtMs)) {
+                const remainingMs = Math.max(0, expiresAtMs - Date.now());
+                const pct = Math.max(0, Math.min(100, (remainingMs / ORDER_RESERVATION_DURATION_MS) * 100));
+                const isExpired = remainingMs <= 0;
+                const isUrgent = !isExpired && remainingMs <= ORDER_RESERVATION_URGENT_MS;
+                const holdLabel = typeof i18next !== 'undefined'
+                    ? i18next.t('orders_modal.reservation_hold_label', { defaultValue: 'БРОНЬ НА ОПЛАТУ' })
+                    : 'БРОНЬ НА ОПЛАТУ';
+                const holdHint = typeof i18next !== 'undefined'
+                    ? i18next.t('orders_modal.reservation_hold_hint', { defaultValue: 'Автоотмена без оплаты через' })
+                    : 'Автоотмена без оплаты через';
+                const expiredLabel = typeof i18next !== 'undefined'
+                    ? i18next.t('orders_modal.reservation_expired', { defaultValue: 'ВРЕМЯ БРОНИ ИСТЕКЛО' })
+                    : 'ВРЕМЯ БРОНИ ИСТЕКЛО';
+                const countdownText = isExpired ? expiredLabel : formatReservationCountdown(remainingMs);
+                const stateClass = isExpired ? ' is-expired' : (isUrgent ? ' is-urgent' : '');
+
+                reservationTimerHtml = `
+                    <div class="order-reservation-timer${stateClass}" data-expires-at="${expiresAtMs}" role="status" aria-live="off">
+                        <div class="order-reservation-top">
+                            <div class="order-reservation-info">
+                                <span class="order-reservation-dot" aria-hidden="true"></span>
+                                <span class="order-reservation-label">${typeof window.escapeHtml === 'function' ? window.escapeHtml(holdLabel) : holdLabel}</span>
+                                <span class="order-reservation-hint">${typeof window.escapeHtml === 'function' ? window.escapeHtml(holdHint) : holdHint}</span>
+                            </div>
+                            <span class="order-reservation-countdown">${typeof window.escapeHtml === 'function' ? window.escapeHtml(countdownText) : countdownText}</span>
+                        </div>
+                        <div class="order-reservation-progress" aria-hidden="true">
+                            <div class="order-reservation-progress-fill" style="width: ${pct.toFixed(2)}%;"></div>
+                        </div>
+                    </div>`;
+            }
+        }
+
         listArea.innerHTML += `
             <div class="order-card">
                 <div class="order-header">
@@ -813,6 +970,7 @@ function renderFilteredOrders() {
                         return `<span class="order-status status-${typeof window.escapeAttr==='function'?window.escapeAttr(statusSlug):statusSlug}" data-raw-status="${typeof window.escapeAttr==='function'?window.escapeAttr(order.status || ''):order.status || ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(fmtStatus):fmtStatus}</span>`;
                     })()}
                 </div>
+                ${reservationTimerHtml}
                 <div class="order-items-list">${itemsHtml}</div>
                 ${reviewBtnHtml}
                 <div class="order-footer">
@@ -825,6 +983,11 @@ function renderFilteredOrders() {
     });
 
     ensureOrderImagesLoaded();
+    if (document.querySelector('.order-reservation-timer[data-expires-at]:not(.is-expired)')) {
+        startOrderReservationTicker();
+    } else {
+        stopOrderReservationTicker();
+    }
 
     // Отрисовка штрихкодов JsBarcode (с поддержкой Lazy Load)
     const drawBarcodes = () => {

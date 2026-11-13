@@ -262,7 +262,10 @@
       "leave_review": "Оставить отзыв",
       "review_left": "[✔] ОТЗЫВ ОСТАВЛЕН",
       "order_prefix": "ЗАКАЗ #",
-      "total_prefix": "ИТОГО:"
+      "total_prefix": "ИТОГО:",
+      "reservation_hold_label": "БРОНЬ НА ОПЛАТУ",
+      "reservation_hold_hint": "Автоотмена без оплаты через",
+      "reservation_expired": "ВРЕМЯ БРОНИ ИСТЕКЛО"
     },
     "reviews_modal": {
       "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",

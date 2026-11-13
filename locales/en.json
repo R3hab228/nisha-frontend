@@ -262,7 +262,10 @@
       "leave_review": "Leave review",
       "review_left": "[✔] REVIEW SUBMITTED",
       "order_prefix": "ORDER #",
-      "total_prefix": "TOTAL:"
+      "total_prefix": "TOTAL:",
+      "reservation_hold_label": "PAYMENT HOLD",
+      "reservation_hold_hint": "Auto-cancels if unpaid in",
+      "reservation_expired": "RESERVATION EXPIRED"
     },
     "reviews_modal": {
       "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
