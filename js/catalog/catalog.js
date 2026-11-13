@@ -1462,13 +1462,17 @@ function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
     updateCardDOM(item);
 
-    if (!fromBroadcast && typeof showToast === 'function') {
+    if (!fromBroadcast && (typeof window.showSaleToast === 'function' || typeof showToast === 'function')) {
         const numOldPrice = Number(oldPrice) || 0;
         const numNewPrice = Number(item.price) || 0;
         if ((!oldIsSale && item.is_sale) || (numOldPrice > 0 && numNewPrice > 0 && numOldPrice > numNewPrice)) {
             if (item.status === 'available') {
-                const salePref = (typeof i18next !== 'undefined' && i18next.t('messages.sale_prefix')) || '🔥 СКИДКА: ';
-                showToast(`${salePref}${item.name}`, 'success');
+                if (typeof window.showSaleToast === 'function') {
+                    window.showSaleToast(item);
+                } else {
+                    const salePref = (typeof i18next !== 'undefined' && i18next.t('messages.sale_prefix')) || '🔥 СКИДКА: ';
+                    showToast(`${salePref}${item.name}`, 'success');
+                }
             }
         }
         if (oldStatus !== 'sold' && item.status === 'sold') {
@@ -1686,11 +1690,15 @@ async function syncCriticalStatuses() {
                 }
 
                 // Уведомления пользователю
-                if (typeof showToast === 'function') {
+                if (typeof window.showSaleToast === 'function' || typeof showToast === 'function') {
                     if ((!oldIsSale && fresh.is_sale) || (oldPrice > fresh.price)) {
                         if (fresh.status === 'available') {
-                            const salePref = (typeof i18next !== 'undefined' && i18next.t('messages.sale_prefix')) || '🔥 СКИДКА: ';
-                showToast(`${salePref}${item.name}`, 'success');
+                            if (typeof window.showSaleToast === 'function') {
+                                window.showSaleToast(item);
+                            } else {
+                                const salePref = (typeof i18next !== 'undefined' && i18next.t('messages.sale_prefix')) || '🔥 СКИДКА: ';
+                                showToast(`${salePref}${item.name}`, 'success');
+                            }
                         }
                     }
                     if (oldStatus !== 'sold' && fresh.status === 'sold') {

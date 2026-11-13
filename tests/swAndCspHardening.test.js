@@ -95,11 +95,11 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8').replace(/\r\n/g, '\n');
 
         expect(helpers).toContain('function showFavoriteToast(');
-        expect(helpers).toContain("toast.className = `toast toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`");
+        expect(helpers).toContain("className: `toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`");
         expect(profile).toContain('window.showFavoriteToast(itemObj, false, imgUrl)');
         expect(profile).toContain('window.showFavoriteToast(itemObj, true, imgUrl)');
-        expect(style).toContain('.toast.toast-new-item,\n.toast.toast-fav-item,\n.toast.toast-lang-item');
-        expect(style).toContain('.toast.toast-new-item,\n    .toast.toast-fav-item,\n    .toast.toast-lang-item');
+        expect(style).toContain('.toast.toast-new-item,\n.toast.toast-fav-item,\n.toast.toast-lang-item,\n.toast.toast-cart-item,\n.toast.toast-sale-item,\n.toast.toast-review-item');
+        expect(style).toContain('.toast.toast-new-item,\n    .toast.toast-fav-item,\n    .toast.toast-lang-item,\n    .toast.toast-cart-item,\n    .toast.toast-sale-item,\n    .toast.toast-review-item');
     });
 
     it('9. language change toast uses compact toast-lang-item sizing and catalog double-tap uses 260ms window', () => {
@@ -108,9 +108,26 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
 
         expect(helpers).toContain('function showLanguageToast(');
-        expect(helpers).toContain("toast.className = 'toast toast-lang-item'");
+        expect(helpers).toContain("className: 'toast-lang-item'");
         expect(i18n).toContain('window.showLanguageToast(normalized)');
         expect(catalog).toContain('const DOUBLE_TAP_DELAY_MS = 260;');
         expect(catalog).toContain('userFavs.some(id => String(id) === String(itemId))');
+    });
+
+    it('10. cart add/remove, sale, and review toasts use unified compact toast helpers', () => {
+        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const cart = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const reviews = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
+
+        expect(helpers).toContain('function showCompactToast(');
+        expect(helpers).toContain('function showCartToast(');
+        expect(helpers).toContain('function showSaleToast(');
+        expect(helpers).toContain('function showReviewToast(');
+        expect(cart).toContain('window.showCartToast(item, true, getOptimizedImg(item))');
+        expect(cart).toContain('window.showCartToast(cartItem, true, getOptimizedImg(cartItem))');
+        expect(cart).toContain('window.showCartToast(removedItem, false, imgUrl)');
+        expect(catalog).toContain('window.showSaleToast(item)');
+        expect(reviews).toContain('window.showReviewToast(');
     });
 });

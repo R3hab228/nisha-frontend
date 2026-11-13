@@ -548,7 +548,11 @@ async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
     }
     
     updateCartUI();
-    showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success', getOptimizedImg(item));
+    if (typeof window.showCartToast === 'function') {
+        window.showCartToast(item, true, getOptimizedImg(item));
+    } else {
+        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success', getOptimizedImg(item));
+    }
     await syncCartToServer();
     });
 }
@@ -688,7 +692,11 @@ async function addToCartFromModal() {
     setActiveCart(currentCart);
     updateCartUI();
     if (typeof closeModal === 'function') closeModal('productModal');
-    showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success');
+    if (typeof window.showCartToast === 'function') {
+        window.showCartToast(cartItem, true, getOptimizedImg(cartItem));
+    } else {
+        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success');
+    }
     if (typeof window.warmupBackendServer === 'function') window.warmupBackendServer();
     await syncCartToServer();
     });
@@ -2287,7 +2295,11 @@ async function removeFromCart(index, event, rowElement) {
                 }
             }
             updateCartUI(); 
-            showToast(`${typeof i18next !== 'undefined' ? i18next.t('messages.cart_delete') : 'Удалено: '}${removedItem.name}`, 'error', imgUrl);
+            if (typeof window.showCartToast === 'function') {
+                window.showCartToast(removedItem, false, imgUrl);
+            } else {
+                showToast(`${typeof i18next !== 'undefined' ? i18next.t('messages.cart_delete') : 'Удалено: '}${removedItem.name}`, 'error', imgUrl);
+            }
             await syncCartToServer();
         } finally {
             removingCartIds.delete(removedId);

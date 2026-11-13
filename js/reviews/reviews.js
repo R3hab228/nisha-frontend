@@ -365,7 +365,12 @@ async function submitAutoReview() {
             window._myLastReviewText = text;
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
-            showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв опубликован! Спасибо.', 'success');
+            const reviewPublishedMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв опубликован! Спасибо.';
+            if (typeof window.showReviewToast === 'function') {
+                window.showReviewToast('⭐', reviewPublishedMsg);
+            } else {
+                showToast(reviewPublishedMsg, 'success');
+            }
             const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
             let reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
             if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
@@ -477,7 +482,12 @@ async function submitManualReview() {
             window._myLastReviewText = text;
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
-            showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв успешно опубликован!', 'success');
+            const reviewSuccessMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв успешно опубликован!';
+            if (typeof window.showReviewToast === 'function') {
+                window.showReviewToast('⭐', reviewSuccessMsg);
+            } else {
+                showToast(reviewSuccessMsg, 'success');
+            }
             closeModal('writeReviewModal');
             
             // Переоткрываем список отзывов, чтобы отобразился свежий отзыв
@@ -556,8 +566,12 @@ function initReviewsRealtime(sb) {
                     : `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"`;
 
                 // 1. Интерактивный пуш-тост на сайте с кликом для открытия модалки
-                if (typeof showToast === 'function') {
-                    const revImgCdn = (rev.item_image && typeof window.toCDN === 'function') ? window.toCDN(rev.item_image) : (rev.item_image || null);
+                const revImgCdn = (rev.item_image && typeof window.toCDN === 'function') ? window.toCDN(rev.item_image) : (rev.item_image || null);
+                if (typeof window.showReviewToast === 'function') {
+                    window.showReviewToast(`⭐ ${author}`, snippet, revImgCdn, () => {
+                        openReviewsModal();
+                    });
+                } else if (typeof showToast === 'function') {
                     showToast(toastMsg, 'success', revImgCdn, () => {
                         openReviewsModal();
                     });

@@ -567,35 +567,30 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
 }
 window.showToast = showToast;
 
-let _activeFavToast = null;
+const _activeCompactToasts = new Map();
 
-function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    if (_activeFavToast && _activeFavToast.parentNode) {
-        _activeFavToast.remove();
-        _activeFavToast = null;
-    }
-
-    const tagText = typeof i18next !== 'undefined'
-        ? i18next.t(isAdded ? 'messages.fav_add' : 'messages.fav_remove', {
-            defaultValue: isAdded ? 'Добавлено в избранное' : 'Удалено из избранного'
-        })
-        : (isAdded ? 'Добавлено в избранное' : 'Удалено из избранного');
-
-    let titleText = '';
+function extractCompactItemTitle(itemOrTitle) {
     if (itemOrTitle && typeof itemOrTitle === 'object') {
         const brand = itemOrTitle.brand ? `${String(itemOrTitle.brand).trim()} ` : '';
         const name = String(itemOrTitle.name || '').trim();
-        titleText = `${brand}${name}`.trim();
-    } else if (typeof itemOrTitle === 'string') {
-        titleText = itemOrTitle.trim();
+        return `${brand}${name}`.trim();
+    }
+    return typeof itemOrTitle === 'string' ? itemOrTitle.trim() : '';
+}
+
+function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = null, duration = 2500, onClick = null }) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    if (slot) {
+        const prev = _activeCompactToasts.get(slot);
+        if (prev && prev.parentNode) prev.remove();
+        _activeCompactToasts.delete(slot);
     }
 
     const toast = document.createElement('div');
-    toast.className = `toast toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`;
-    _activeFavToast = toast;
+    toast.className = `toast ${className}`;
+    if (slot) _activeCompactToasts.set(slot, toast);
 
     let html = '';
     if (imgUrl && typeof imgUrl === 'string' && !/^\s*javascript:/i.test(imgUrl)) {
@@ -616,7 +611,7 @@ function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
     const dismiss = () => {
         if (isDismissed) return;
         isDismissed = true;
-        if (_activeFavToast === toast) _activeFavToast = null;
+        if (slot && _activeCompactToasts.get(slot) === toast) _activeCompactToasts.delete(slot);
         toast.classList.add('toast-leaving');
         setTimeout(() => {
             if (toast.parentNode) toast.remove();
@@ -625,63 +620,99 @@ function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
 
     toast.onclick = (e) => {
         if (e) e.stopPropagation();
-        if (isAdded && itemOrTitle && typeof itemOrTitle === 'object' && itemOrTitle.id && typeof window.openProductModalById === 'function') {
-            try { window.openProductModalById(itemOrTitle.id); } catch {}
+        if (typeof onClick === 'function') {
+            try { onClick(); } catch {}
         }
         dismiss();
     };
 
-    setTimeout(dismiss, 2500);
+    setTimeout(dismiss, duration);
+}
+
+function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
+    const tagText = typeof i18next !== 'undefined'
+        ? i18next.t(isAdded ? 'messages.fav_add' : 'messages.fav_remove', {
+            defaultValue: isAdded ? 'Добавлено в избранное' : 'Удалено из избранного'
+        })
+        : (isAdded ? 'Добавлено в избранное' : 'Удалено из избранного');
+
+    showCompactToast({
+        slot: 'fav',
+        className: `toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`,
+        tagText,
+        titleText: extractCompactItemTitle(itemOrTitle),
+        imgUrl,
+        onClick: (isAdded && itemOrTitle && typeof itemOrTitle === 'object' && itemOrTitle.id && typeof window.openProductModalById === 'function')
+            ? () => window.openProductModalById(itemOrTitle.id)
+            : null
+    });
 }
 window.showFavoriteToast = showFavoriteToast;
 
-let _activeLangToast = null;
-
 function showLanguageToast(langCode) {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    if (_activeLangToast && _activeLangToast.parentNode) {
-        _activeLangToast.remove();
-        _activeLangToast = null;
-    }
-
     const normalized = String(langCode || 'ua').trim().toUpperCase();
-    const tagText = `LANG [${normalized}]`;
     const titleText = typeof i18next !== 'undefined'
         ? i18next.t('messages.lang_changed', { defaultValue: 'Язык изменен' })
         : 'Язык изменен';
 
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-lang-item';
-    _activeLangToast = toast;
-    toast.innerHTML = `
-        <div class="toast-item-content">
-            <div class="toast-item-tag">${safeToastEscape(tagText)}</div>
-            <div class="toast-item-title">${safeToastEscape(titleText)}</div>
-        </div>
-    `;
-    container.appendChild(toast);
-
-    let isDismissed = false;
-    const dismiss = () => {
-        if (isDismissed) return;
-        isDismissed = true;
-        if (_activeLangToast === toast) _activeLangToast = null;
-        toast.classList.add('toast-leaving');
-        setTimeout(() => {
-            if (toast.parentNode) toast.remove();
-        }, 300);
-    };
-
-    toast.onclick = (e) => {
-        if (e) e.stopPropagation();
-        dismiss();
-    };
-
-    setTimeout(dismiss, 2500);
+    showCompactToast({
+        slot: 'lang',
+        className: 'toast-lang-item',
+        tagText: `LANG [${normalized}]`,
+        titleText
+    });
 }
 window.showLanguageToast = showLanguageToast;
+
+function showCartToast(itemOrTitle, isAdded = true, imgUrl = null) {
+    const rawTag = typeof i18next !== 'undefined'
+        ? i18next.t(isAdded ? 'messages.cart_add' : 'messages.cart_delete', {
+            defaultValue: isAdded ? 'Добавлено в корзину!' : 'Удалено'
+        })
+        : (isAdded ? 'Добавлено в корзину!' : 'Удалено');
+
+    showCompactToast({
+        slot: 'cart',
+        className: `toast-cart-item${isAdded ? '' : ' toast-cart-removed'}`,
+        tagText: String(rawTag).replace(/[:\s]+$/, ''),
+        titleText: extractCompactItemTitle(itemOrTitle),
+        imgUrl
+    });
+}
+window.showCartToast = showCartToast;
+
+function showSaleToast(itemOrTitle, imgUrl = null) {
+    const rawTag = typeof i18next !== 'undefined'
+        ? i18next.t('messages.sale_prefix', { defaultValue: '🔥 СКИДКА' })
+        : '🔥 СКИДКА';
+    const thumbFallback = (itemOrTitle && typeof itemOrTitle === 'object')
+        ? (itemOrTitle.thumbnails?.[0] || itemOrTitle.images?.[0] || null)
+        : null;
+
+    showCompactToast({
+        slot: 'sale',
+        className: 'toast-sale-item',
+        tagText: String(rawTag).replace(/[:\s]+$/, ''),
+        titleText: extractCompactItemTitle(itemOrTitle),
+        imgUrl: imgUrl || thumbFallback,
+        onClick: (itemOrTitle && typeof itemOrTitle === 'object' && itemOrTitle.id && typeof window.openProductModalById === 'function')
+            ? () => window.openProductModalById(itemOrTitle.id)
+            : null
+    });
+}
+window.showSaleToast = showSaleToast;
+
+function showReviewToast(tagText, titleText = '', imgUrl = null, onClick = null) {
+    showCompactToast({
+        slot: 'review',
+        className: 'toast-review-item',
+        tagText: tagText || '⭐',
+        titleText,
+        imgUrl,
+        onClick
+    });
+}
+window.showReviewToast = showReviewToast;
 
 // --- ОЧЕРЕДЬ ТОСТОВ О НОВЫХ ТОВАРАХ (МАКСИМУМ 2 ОДНОВРЕМЕННО + ПЛАВНАЯ СМЕНА) ---
 let _batchedNewItemsList = [];
