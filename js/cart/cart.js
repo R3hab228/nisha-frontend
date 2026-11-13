@@ -2221,10 +2221,7 @@ function renderCartItems() {
             </div>
             <div class="swipe-surface" 
                  data-index="${index}"
-                 style="${rowStyle}"
-                 ontouchstart="handleSwipeStart(event)" 
-                 ontouchmove="handleSwipeMove(event)" 
-                 ontouchend="handleSwipeEnd(event)">
+                 style="${rowStyle}">
                 <div class="cart-item-img" style="background-image: url('${imgUrl}')"></div>
                 <div class="cart-item-info">
                     <div class="cart-item-name" title="${escCartHtml(item.name)}">${escCartHtml(item.name)}</div>
@@ -2243,6 +2240,12 @@ function renderCartItems() {
         `;
         list.appendChild(row);
     });
+    if (!list._swipeDelegatedBound) {
+        list._swipeDelegatedBound = true;
+        list.addEventListener('touchstart', (e) => window.handleSwipeStart(e), { passive: true });
+        list.addEventListener('touchmove', (e) => window.handleSwipeMove(e), { passive: true });
+        list.addEventListener('touchend', (e) => window.handleSwipeEnd(e), { passive: true });
+    }
 }
 window.renderCartItems = renderCartItems;
 
@@ -2302,68 +2305,82 @@ async function removeFromCart(index, event, rowElement) {
 window.removeFromCart = removeFromCart;
 
 // --- ИНТЕРАКТИВНЫЙ СВАЙП ДЛЯ КОРЗИНЫ (ВЫБРОСИТЬ ТОВАР) ---
+function resolveSwipeSurface(e) {
+    if (!e) return null;
+    if (e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.contains('swipe-surface')) {
+        return e.currentTarget;
+    }
+    return (e.target && typeof e.target.closest === 'function') ? e.target.closest('.swipe-surface') : null;
+}
+
 window.handleSwipeStart = function(e) {
+    const rowSurface = resolveSwipeSurface(e);
+    if (!rowSurface || !e.touches || !e.touches[0]) return;
     cartSwipeStartX = e.touches[0].clientX;
-    e.currentTarget.style.transition = 'none'; 
+    cartSwipeCurrentX = cartSwipeStartX;
+    rowSurface.style.transition = 'none';
 };
 
 window.handleSwipeMove = function(e) {
+    const rowSurface = resolveSwipeSurface(e);
+    if (!rowSurface || !e.touches || !e.touches[0]) return;
     cartSwipeCurrentX = e.touches[0].clientX;
-    let diff = cartSwipeStartX - cartSwipeCurrentX;
-    
-    if (diff > 0) {
-        let moveX = diff > 200 ? 200 + (diff - 200) * 0.2 : diff;
-        e.currentTarget.style.transform = `translateX(-${moveX}px)`;
-        
-        let surfaceOpacity = Math.max(0.2, 1 - (moveX / 200));
-        e.currentTarget.style.opacity = surfaceOpacity;
+    const diff = cartSwipeStartX - cartSwipeCurrentX;
 
-        const parentRow = e.currentTarget.closest('.cart-item-row');
+    if (diff > 0) {
+        const moveX = diff > 200 ? 200 + (diff - 200) * 0.2 : diff;
+        rowSurface.style.transform = `translateX(-${moveX}px)`;
+
+        const surfaceOpacity = Math.max(0.2, 1 - (moveX / 200));
+        rowSurface.style.opacity = surfaceOpacity;
+
+        const parentRow = rowSurface.closest('.cart-item-row');
         const trashIcon = parentRow ? parentRow.querySelector('.trash-icon') : null;
         const trashLid = parentRow ? parentRow.querySelector('.trash-lid') : null;
-        
+
         if (trashIcon && trashLid) {
-            let bgOpacity = Math.min(1, moveX / 80); 
+            const bgOpacity = Math.min(1, moveX / 80);
             trashIcon.style.opacity = bgOpacity;
 
             if (moveX > 50) {
-                let openAngle = Math.min(45, (moveX - 50) * 0.6);
+                const openAngle = Math.min(45, (moveX - 50) * 0.6);
                 trashLid.style.transform = `rotate(${openAngle}deg)`;
             } else {
-                trashLid.style.transform = `rotate(0deg)`;
+                trashLid.style.transform = 'rotate(0deg)';
             }
         }
     }
 };
 
 window.handleSwipeEnd = function(e) {
-    let diff = cartSwipeStartX - cartSwipeCurrentX;
-    const rowSurface = e.currentTarget;
+    const rowSurface = resolveSwipeSurface(e);
+    if (!rowSurface) return;
+    const diff = cartSwipeStartX - cartSwipeCurrentX;
     const parentRow = rowSurface.closest('.cart-item-row');
     const itemIndex = Number.parseInt(rowSurface.getAttribute('data-index'), 10);
-    
+
     rowSurface.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-    
+
     if (diff > 120) {
         if (typeof triggerHaptic === 'function') triggerHaptic('heavy');
-        rowSurface.style.transform = `translateX(-150%)`;
+        rowSurface.style.transform = 'translateX(-150%)';
         rowSurface.style.opacity = '0';
-        
+
         setTimeout(() => {
             removeFromCart(itemIndex, null, parentRow);
         }, 200);
     } else {
-        rowSurface.style.transform = `translateX(0px)`;
+        rowSurface.style.transform = 'translateX(0px)';
         rowSurface.style.opacity = '1';
-        
+
         if (parentRow) {
             const trashIcon = parentRow.querySelector('.trash-icon');
             const trashLid = parentRow.querySelector('.trash-lid');
             if (trashIcon) trashIcon.style.opacity = '0';
-            if (trashLid) trashLid.style.transform = `rotate(0deg)`;
+            if (trashLid) trashLid.style.transform = 'rotate(0deg)';
         }
     }
-    
+
     cartSwipeStartX = 0;
     cartSwipeCurrentX = 0;
 };

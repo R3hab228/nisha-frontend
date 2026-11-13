@@ -77,4 +77,15 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(product).toContain('<img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async"');
         expect(product).toContain('<img class="similar-slide-img" src="${sImg}" loading="lazy" decoding="async"');
     });
+
+    it('7. cart.js uses CSP-safe delegated touch listeners for swipe-to-delete instead of inline ontouch* attributes', () => {
+        const cart = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+
+        expect(cart).not.toContain('ontouchstart=');
+        expect(cart).not.toContain('ontouchmove=');
+        expect(cart).not.toContain('ontouchend=');
+        expect(cart).toContain('list._swipeDelegatedBound');
+        expect(cart).toContain('function resolveSwipeSurface(e)');
+        expect(cart).toContain('cartSwipeCurrentX = cartSwipeStartX;');
+    });
 });
