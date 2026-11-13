@@ -762,7 +762,7 @@ function openProductModal(item) {
                     const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
                     slidesHtml += `
                         <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:#000;">
-                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} style="width:100%; height:100%; object-fit:contain; opacity:${isFirst ? '1' : '0'}; transition:opacity 0.2s ease-in-out;" 
+                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async" style="width:100%; height:100%; object-fit:contain; opacity:${isFirst ? '1' : '0'}; transition:opacity 0.2s ease-in-out;" 
                             >
                         </a>`;
                 }
@@ -935,7 +935,7 @@ function openProductModal(item) {
                     if (sImg.endsWith('.mp4')) {
                         imageBlockHTML = `<video src="${sImg}#t=0.001" style="width:100%; height:100%; object-fit:cover; pointer-events:none; ${imageFilter} transition: 0.3s;" preload="metadata"></video>`;
                     } else {
-                        imageBlockHTML = `<img class="similar-slide-img" src="${sImg}" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block; ${imageFilter} transition: 0.3s;">`;
+                        imageBlockHTML = `<img class="similar-slide-img" src="${sImg}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block; ${imageFilter} transition: 0.3s;">`;
                     }
                 }
 

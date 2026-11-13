@@ -1739,32 +1739,34 @@ async function syncCriticalStatuses() {
 }
 window.syncCriticalStatuses = syncCriticalStatuses;
 
-// Периодический фоновый опрос и мгновенная синхронизация при возвращении в PWA / вкладку
+// Периодический фоновый опрос и мгновенная синхронизация при возвращении в PWA / вкладку (с дедупликацией)
 if (!window._catalogAutoSyncInitialized) {
     window._catalogAutoSyncInitialized = true;
+    let _lastForegroundSyncAt = 0;
+
+    const triggerForegroundSync = () => {
+        if (document.visibilityState !== 'visible') return;
+        const now = Date.now();
+        if (now - _lastForegroundSyncAt < 2500) return;
+        _lastForegroundSyncAt = now;
+        initCatalogRealtimeSubscription();
+        syncCriticalStatuses();
+        if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
+    };
+
     window._catalogSyncIntervalId = setInterval(() => {
-        if (document.visibilityState === 'visible') {
+        if (document.visibilityState === 'visible' && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
             syncCriticalStatuses();
         }
-    }, 7000); // Быстрый и легкий фоновый опрос каждые 7 секунд (гарантия авто-появления вещей в PWA)
+    }, 25000);
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            initCatalogRealtimeSubscription();
-            syncCriticalStatuses();
-            if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
+            triggerForegroundSync();
         }
     });
-    window.addEventListener('focus', () => {
-        initCatalogRealtimeSubscription();
-        syncCriticalStatuses();
-        if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
-    });
-    window.addEventListener('online', () => {
-        initCatalogRealtimeSubscription();
-        syncCriticalStatuses();
-        if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
-    });
+    window.addEventListener('focus', triggerForegroundSync);
+    window.addEventListener('online', triggerForegroundSync);
 }
 
 // Умное соответствие размеров (обувь и одежда)

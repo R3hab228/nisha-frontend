@@ -66,4 +66,15 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(css).not.toContain('will-change: opacity, backdrop-filter;');
         expect(catalog).not.toContain('style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;"');
     });
+
+    it('6. catalog.js deduplicates foreground sync events with cooldown and uses 25s polling; product.js uses async image decoding', () => {
+        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const product = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+
+        expect(catalog).toContain('const triggerForegroundSync = () =>');
+        expect(catalog).toContain('if (now - _lastForegroundSyncAt < 2500) return;');
+        expect(catalog).toContain('}, 25000);');
+        expect(product).toContain('<img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async"');
+        expect(product).toContain('<img class="similar-slide-img" src="${sImg}" loading="lazy" decoding="async"');
+    });
 });
