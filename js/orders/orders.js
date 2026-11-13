@@ -7,7 +7,13 @@ if (typeof window.currentOrderTab === 'undefined') window.currentOrderTab = 'acc
 if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCache = {};
 
 const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
-const orderDateFormatter = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
+
+function formatOrderDate(rawDate) {
+    const ms = typeof rawDate === 'number' ? rawDate : Date.parse(rawDate);
+    if (!Number.isFinite(ms)) return '';
+    const d = new Date(ms);
+    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+}
 
 function openOrdersModal() {
     if (typeof openModal === 'function') {
@@ -838,7 +844,7 @@ function renderFilteredOrders() {
 
     filteredData.forEach(order => {
         const orderDateMs = Date.parse(order.created_at);
-        const date = Number.isFinite(orderDateMs) ? orderDateFormatter.format(orderDateMs) : '';
+        const date = formatOrderDate(orderDateMs);
         let itemsHtml = '';
         if (order.items && Array.isArray(order.items)) {
             order.items.forEach(item => {
@@ -945,7 +951,10 @@ function renderFilteredOrders() {
         listArea.innerHTML += `
             <div class="order-card">
                 <div class="order-header">
-                    <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', {defaultValue: 'ЗАКАЗ #'}) : 'ЗАКАЗ #'}${order.id.split('-').at(0).toUpperCase()} <span style="color:#666; font-weight:normal;">(${date})</span></span>
+                    <div class="order-id-wrap">
+                        <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', {defaultValue: 'ЗАКАЗ #'}) : 'ЗАКАЗ #'}${order.id.split('-').at(0).toUpperCase()}</span>
+                        ${date ? `<span class="order-date">${date}</span>` : ''}
+                    </div>
                     ${(() => {
                         const fmtStatus = typeof window.formatOrderStatus === 'function' ? window.formatOrderStatus(order.status) : (order.status || '').toUpperCase();
                         return `<span class="order-status status-${typeof window.escapeAttr==='function'?window.escapeAttr(statusSlug):statusSlug}" data-raw-status="${typeof window.escapeAttr==='function'?window.escapeAttr(order.status || ''):order.status || ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(fmtStatus):fmtStatus}</span>`;

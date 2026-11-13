@@ -134,4 +134,13 @@ describe('Orders Modal Mobile Tab Swipe', () => {
 
         expect(globalThis.currentOrderTab).toBe('accepted');
     });
+
+    it('formats order date as DD.MM.YYYY and renders it under order-id in .order-id-wrap', () => {
+        const code = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+        expect(code).toContain('<div class="order-id-wrap">');
+        expect(code).toContain('<span class="order-date">${date}</span>');
+        const date = new Date(2026, 10, 13, 12, 0, 0).toISOString();
+        const res = new Function('d', `${code}; return formatOrderDate(d);`)(date);
+        expect(res).toBe('13.11.2026');
+    });
 });
