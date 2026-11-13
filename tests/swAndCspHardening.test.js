@@ -251,5 +251,6 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(windowsJs).toContain('overlay._swipeClosing = true;');
         expect(style).toContain('.modal-overlay.closing.swipe-closing');
         expect(style).toContain('touch-action: none;');
+        expect(style).toContain('border: 1px solid #555 !important; border-bottom: none !important;');
     });
 });
