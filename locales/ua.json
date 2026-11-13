@@ -262,10 +262,7 @@
       "leave_review": "Залишити відгук",
       "review_left": "[✔] ВІДГУК ЗАЛИШЕНО",
       "order_prefix": "ЗАМОВЛЕННЯ #",
-      "total_prefix": "РАЗОМ:",
-      "reservation_hold_label": "БРОНЬ НА ОПЛАТУ",
-      "reservation_hold_hint": "Автоскасування без оплати через",
-      "reservation_expired": "ЧАС БРОНІ ВИЙШОВ"
+      "total_prefix": "РАЗОМ:"
     },
     "reviews_modal": {
       "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",
