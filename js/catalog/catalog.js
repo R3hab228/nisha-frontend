@@ -2650,7 +2650,7 @@ function buildCardDOM(item, idx = 0) {
                     <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;"></video>
                 </div>`;
         } else if (thumbIdx === 0) {
-            const firstLoadAttr = (idx < 2) ? 'fetchpriority="high"' : 'loading="lazy"';
+            const firstLoadAttr = (idx < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
             slidesStr += `
                 <div class="card-slide img-8bit-loading">
                    <img class="card-slide-img" src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" ${firstLoadAttr} decoding="async" alt="${slideAlt}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.2s ease; pointer-events:none;">

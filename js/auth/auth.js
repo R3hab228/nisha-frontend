@@ -26,8 +26,50 @@ window.TURNSTILE_SITE_KEY = TURNSTILE_SITE_KEY;
 
 let turnstileOtpWidgetId = null;
 let turnstilePropWidgetId = null;
+let _turnstileLoadPromise = null;
 window._turnstileOtpToken = null;
 window._turnstilePropToken = null;
+
+function ensureTurnstileLoaded() {
+    if (typeof turnstile !== 'undefined') {
+        return Promise.resolve(turnstile);
+    }
+    if (_turnstileLoadPromise) {
+        return _turnstileLoadPromise;
+    }
+    if (typeof document === 'undefined') {
+        return Promise.resolve(null);
+    }
+
+    const existing = document.querySelector('script[src*="challenges.cloudflare.com/turnstile/v0/api.js"]');
+    if (existing) {
+        _turnstileLoadPromise = new Promise((resolve) => {
+            if (typeof turnstile !== 'undefined') return resolve(turnstile);
+            existing.addEventListener('load', () => resolve(typeof turnstile !== 'undefined' ? turnstile : null), { once: true });
+            existing.addEventListener('error', () => {
+                _turnstileLoadPromise = null;
+                resolve(null);
+            }, { once: true });
+        });
+        return _turnstileLoadPromise;
+    }
+
+    _turnstileLoadPromise = new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve(typeof turnstile !== 'undefined' ? turnstile : null);
+        script.onerror = () => {
+            _turnstileLoadPromise = null;
+            resolve(null);
+        };
+        (document.head || document.documentElement).appendChild(script);
+    });
+
+    return _turnstileLoadPromise;
+}
+window.ensureTurnstileLoaded = ensureTurnstileLoaded;
 
 function initTurnstileOtpWidget() {
     if (typeof turnstile === 'undefined') return;
@@ -82,16 +124,17 @@ function initTurnstilePropWidget() {
 window.initTurnstilePropWidget = initTurnstilePropWidget;
 
 function initTurnstileWidgets() {
-    if (typeof turnstile === 'undefined') {
-        if (!window._turnstileRetryCount) window._turnstileRetryCount = 0;
-        if (window._turnstileRetryCount < 6) {
-            window._turnstileRetryCount++;
-            setTimeout(initTurnstileWidgets, 500);
-        }
+    if (typeof turnstile !== 'undefined') {
+        initTurnstileOtpWidget();
+        initTurnstilePropWidget();
         return;
     }
-    initTurnstileOtpWidget();
-    initTurnstilePropWidget();
+    ensureTurnstileLoaded().then((ts) => {
+        if (ts || typeof turnstile !== 'undefined') {
+            initTurnstileOtpWidget();
+            initTurnstilePropWidget();
+        }
+    });
 }
 window.initTurnstileWidgets = initTurnstileWidgets;
 
