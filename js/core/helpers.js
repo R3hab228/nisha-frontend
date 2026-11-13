@@ -524,6 +524,66 @@ if (typeof globalThis !== 'undefined') globalThis.triggerHaptic = triggerHaptic;
 let lastToastMsg = '';
 let lastToastTime = 0;
 
+function attachToastLifecycle(toast, { duration = 2500, onDismiss = null } = {}) {
+    let isDismissed = false;
+    let remainingMs = duration;
+    let timerStartedAt = Date.now();
+    let dismissTimerId = null;
+    let isPaused = false;
+
+    const dismiss = () => {
+        if (isDismissed) return;
+        isDismissed = true;
+        clearTimeout(dismissTimerId);
+        dismissTimerId = null;
+        if (typeof onDismiss === 'function') onDismiss();
+        if (toast.classList && typeof toast.classList.add === 'function') {
+            toast.classList.add('toast-leaving');
+        }
+        setTimeout(() => {
+            if (toast.parentNode && typeof toast.remove === 'function') toast.remove();
+        }, 300);
+    };
+
+    const scheduleDismiss = () => {
+        if (isDismissed || isPaused) return;
+        clearTimeout(dismissTimerId);
+        timerStartedAt = Date.now();
+        dismissTimerId = setTimeout(dismiss, Math.max(0, remainingMs));
+    };
+
+    const pauseDismiss = () => {
+        if (isDismissed || isPaused) return;
+        isPaused = true;
+        clearTimeout(dismissTimerId);
+        dismissTimerId = null;
+        remainingMs = Math.max(0, remainingMs - (Date.now() - timerStartedAt));
+        if (toast.classList && typeof toast.classList.add === 'function') {
+            toast.classList.add('toast-paused');
+        }
+    };
+
+    const resumeDismiss = () => {
+        if (isDismissed || !isPaused) return;
+        isPaused = false;
+        if (toast.classList && typeof toast.classList.remove === 'function') {
+            toast.classList.remove('toast-paused');
+        }
+        scheduleDismiss();
+    };
+
+    if (typeof toast.addEventListener === 'function') {
+        toast.addEventListener('mouseenter', pauseDismiss);
+        toast.addEventListener('mouseleave', resumeDismiss);
+        toast.addEventListener('touchstart', pauseDismiss, { passive: true });
+        toast.addEventListener('touchend', resumeDismiss, { passive: true });
+        toast.addEventListener('touchcancel', resumeDismiss, { passive: true });
+    }
+
+    scheduleDismiss();
+    return dismiss;
+}
+
 function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     const now = Date.now();
     if (message === lastToastMsg && (now - lastToastTime < 2500)) return;
@@ -563,11 +623,7 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     
     toast.innerHTML = html;
     container.appendChild(toast);
-    
-    // 2500 миллисекунд (2.5 секунды) + 500мс на саму анимацию затухания
-    setTimeout(() => { 
-        toast.remove();
-    }, 3000);
+    attachToastLifecycle(toast, { duration: 2500 });
 }
 window.showToast = showToast;
 
@@ -616,52 +672,12 @@ function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = n
     toast.innerHTML = html;
     container.appendChild(toast);
 
-    let isDismissed = false;
-    let remainingMs = duration;
-    let timerStartedAt = Date.now();
-    let dismissTimerId = null;
-    let isPaused = false;
-
-    const dismiss = () => {
-        if (isDismissed) return;
-        isDismissed = true;
-        clearTimeout(dismissTimerId);
-        dismissTimerId = null;
-        if (slot && _activeCompactToasts.get(slot) === toast) _activeCompactToasts.delete(slot);
-        toast.classList.add('toast-leaving');
-        setTimeout(() => {
-            if (toast.parentNode) toast.remove();
-        }, 300);
-    };
-
-    const scheduleDismiss = () => {
-        if (isDismissed || isPaused) return;
-        clearTimeout(dismissTimerId);
-        timerStartedAt = Date.now();
-        dismissTimerId = setTimeout(dismiss, Math.max(0, remainingMs));
-    };
-
-    const pauseDismiss = () => {
-        if (isDismissed || isPaused) return;
-        isPaused = true;
-        clearTimeout(dismissTimerId);
-        dismissTimerId = null;
-        remainingMs = Math.max(0, remainingMs - (Date.now() - timerStartedAt));
-        toast.classList.add('toast-paused');
-    };
-
-    const resumeDismiss = () => {
-        if (isDismissed || !isPaused) return;
-        isPaused = false;
-        toast.classList.remove('toast-paused');
-        scheduleDismiss();
-    };
-
-    toast.addEventListener('mouseenter', pauseDismiss);
-    toast.addEventListener('mouseleave', resumeDismiss);
-    toast.addEventListener('touchstart', pauseDismiss, { passive: true });
-    toast.addEventListener('touchend', resumeDismiss, { passive: true });
-    toast.addEventListener('touchcancel', resumeDismiss, { passive: true });
+    const dismiss = attachToastLifecycle(toast, {
+        duration,
+        onDismiss: () => {
+            if (slot && _activeCompactToasts.get(slot) === toast) _activeCompactToasts.delete(slot);
+        }
+    });
 
     toast.onclick = (e) => {
         if (e) e.stopPropagation();
@@ -670,8 +686,6 @@ function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = n
         }
         dismiss();
     };
-
-    scheduleDismiss();
 }
 
 function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {

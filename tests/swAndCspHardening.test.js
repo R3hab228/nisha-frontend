@@ -164,7 +164,17 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(style).toMatch(/\.modal-overlay\s*\{[^}]*overscroll-behavior:\s*contain;/);
         expect(style).toMatch(/\.sidebar\.active-mobile\s*\{[^}]*overscroll-behavior:\s*contain;/);
         expect(helpers).toContain("toast.setAttribute('role', isAlert ? 'alert' : 'status');");
+        expect(helpers).toContain('function attachToastLifecycle(');
         expect(helpers).toContain('const pauseDismiss = () => {');
         expect(helpers).toContain('const resumeDismiss = () => {');
+        expect(style).toContain('.toast.toast-leaving { animation: slideOutRightSmooth 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards !important; }');
+    });
+
+    it('14. mobile touchstart prioritizes 2nd slide image fetchPriority in catalog cards', () => {
+        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+
+        expect(catalog).toContain('function activateCardSlides(target, prioritizeNext = false)');
+        expect(catalog).toContain('activateCardSlides(wrapper, true);');
+        expect(catalog).toContain("secondImg.fetchPriority = 'high';");
     });
 });
