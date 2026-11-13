@@ -2466,6 +2466,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('35. Checkout payment method dropdown arrow smoothly rotates 180deg when opened and resets to 0deg when closed', () => {
             const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+            const cartJs = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
             const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
 
             // 1. paymentDisplay must have paymentArrow container with SVG polygon arrow
@@ -2474,10 +2475,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(indexHtml).toContain('<polygon points="2,4 10,4 6,9"');
 
             // 2. togglePaymentDropdown and closePaymentDropdown must manage is-open and rotate(180deg)
-            expect(indexHtml).toContain("display.classList.add('is-open')");
-            expect(indexHtml).toContain("arrow.style.transform = 'rotate(180deg)'");
-            expect(indexHtml).toContain("display.classList.remove('is-open')");
-            expect(indexHtml).toContain("arrow.style.transform = 'rotate(0deg)'");
+            expect(cartJs).toContain("display.classList.add('is-open')");
+            expect(cartJs).toContain("arrow.style.transform = 'rotate(180deg)'");
+            expect(cartJs).toContain("display.classList.remove('is-open')");
+            expect(cartJs).toContain("arrow.style.transform = 'rotate(0deg)'");
 
             // 3. CSS must define smooth transition and rotation rules
             expect(css).toContain('.payment-arrow');
