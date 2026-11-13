@@ -36,6 +36,7 @@ function openOrdersModal() {
 
     const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
     const activeProfile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
+    bindOrdersTabSwipe();
 
     if (activeUser) {
         if (guestInputGroup) guestInputGroup.style.display = 'none';
@@ -201,6 +202,7 @@ async function fetchMyOrders() {
 
     const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
     const activeProfile = window.userProfile || (typeof userProfile !== 'undefined' ? userProfile : null);
+    bindOrdersTabSwipe();
 
     if (activeUser) {
         try {
@@ -633,6 +635,142 @@ function switchOrderTab(tabName) {
 }
 window.switchOrderTab = switchOrderTab;
 if (typeof globalThis !== 'undefined') globalThis.switchOrderTab = switchOrderTab;
+
+const ORDER_TAB_ORDER = ['accepted', 'shipped', 'cancelled'];
+
+/**
+ * Подключает плавный мобильный свайп влево/вправо для переключения вкладок
+ * («Принятые» ↔ «Отправлены» ↔ «Отменены») с жёсткой блокировкой оси и защитой от случайных свайпов.
+ */
+function bindOrdersTabSwipe() {
+    const listArea = document.getElementById('ordersListArea');
+    if (!listArea || listArea.dataset.swipeBound === '1') return;
+    listArea.dataset.swipeBound = '1';
+
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let lastDx = 0;
+    let axis = null; // null | 'x' | 'y'
+    let active = false;
+
+    const resetVisual = (animate = true) => {
+        if (!animate) {
+            listArea.style.transition = 'none';
+            listArea.style.transform = '';
+            return;
+        }
+        listArea.style.transition = 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1)';
+        listArea.style.transform = 'translate3d(0, 0, 0)';
+        const cleanup = () => {
+            listArea.style.transition = '';
+            listArea.style.transform = '';
+        };
+        listArea.addEventListener('transitionend', cleanup, { once: true });
+        setTimeout(cleanup, 220);
+    };
+
+    listArea.addEventListener('touchstart', (e) => {
+        active = false;
+        axis = null;
+        lastDx = 0;
+
+        if (!e.touches || e.touches.length !== 1) return;
+        const tabsEl = document.getElementById('ordersTabs');
+        if (!tabsEl || tabsEl.style.display === 'none') return;
+
+        const target = e.target;
+        if (target && typeof target.closest === 'function' && target.closest('input, textarea, select')) return;
+
+        const touch = e.touches[0];
+        const vw = window.innerWidth || document.documentElement.clientWidth || 375;
+        // Edge deadzone (20px) — не мешаем системному жесту "Назад" iOS/Android
+        if (touch.clientX < 20 || touch.clientX > vw - 20) return;
+
+        startX = touch.clientX;
+        startY = touch.clientY;
+        startTime = Date.now();
+        active = true;
+        listArea.style.transition = 'none';
+    }, { passive: true });
+
+    listArea.addEventListener('touchmove', (e) => {
+        if (!active || !e.touches || e.touches.length !== 1) return;
+
+        const touch = e.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (axis === null) {
+            if (Math.hypot(dx, dy) < 12) return;
+            // При вертикальном или диагональном скролле сразу блокируем ось Y до конца касания
+            if (absDy >= absDx * 0.85) {
+                axis = 'y';
+                return;
+            }
+            if (absDx > absDy * 1.4 && absDx >= 14) {
+                axis = 'x';
+            } else {
+                return;
+            }
+        }
+
+        if (axis !== 'x') return;
+
+        lastDx = dx;
+        const currentIdx = ORDER_TAB_ORDER.indexOf(window.currentOrderTab || 'accepted');
+        const nextIdx = dx < 0 ? currentIdx + 1 : currentIdx - 1;
+        const canSwitch = nextIdx >= 0 && nextIdx < ORDER_TAB_ORDER.length;
+
+        // Резиновый микро-сдвиг (100% GPU translate3d без перерисовок)
+        const factor = canSwitch ? 0.22 : 0.08;
+        const maxShift = canSwitch ? 28 : 10;
+        const shift = Math.max(-maxShift, Math.min(maxShift, dx * factor));
+        listArea.style.transform = `translate3d(${shift.toFixed(1)}px, 0, 0)`;
+    }, { passive: true });
+
+    const finishSwipe = (cancelled = false) => {
+        if (!active) return;
+        const wasHorizontal = axis === 'x';
+        const dx = lastDx;
+        const elapsed = Math.max(1, Date.now() - startTime);
+        active = false;
+        axis = null;
+        lastDx = 0;
+
+        if (!wasHorizontal || cancelled) {
+            if (listArea.style.transform) resetVisual(true);
+            else listArea.style.transition = '';
+            return;
+        }
+
+        const absDx = Math.abs(dx);
+        const velocity = absDx / elapsed; // px/ms
+        const passed = absDx >= 56 || (absDx >= 34 && velocity >= 0.35 && elapsed < 320);
+
+        if (passed) {
+            const currentIdx = ORDER_TAB_ORDER.indexOf(window.currentOrderTab || 'accepted');
+            const targetIdx = dx < 0 ? currentIdx + 1 : currentIdx - 1;
+            if (targetIdx >= 0 && targetIdx < ORDER_TAB_ORDER.length) {
+                resetVisual(false);
+                if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                    try { navigator.vibrate(10); } catch {}
+                }
+                switchOrderTab(ORDER_TAB_ORDER[targetIdx]);
+                return;
+            }
+        }
+
+        resetVisual(true);
+    };
+
+    listArea.addEventListener('touchend', () => finishSwipe(false), { passive: true });
+    listArea.addEventListener('touchcancel', () => finishSwipe(true), { passive: true });
+}
+window.bindOrdersTabSwipe = bindOrdersTabSwipe;
+if (typeof globalThis !== 'undefined') globalThis.bindOrdersTabSwipe = bindOrdersTabSwipe;
 
 function copyTTN(ttn, el) {
     if (!ttn) return;

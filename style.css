@@ -1250,6 +1250,8 @@ input[type="number"],
     min-height: 0;
     max-height: none;
     overflow-y: auto;
+    touch-action: pan-y;
+    overscroll-behavior-x: contain;
     display: flex;
     flex-direction: column;
     gap: 20px;
