@@ -334,17 +334,21 @@ function executeCloseModal(id, e) {
         try { document.activeElement.blur(); } catch {}
     }
 
+    const isSwipeClosing = Boolean(modal._swipeClosing);
     if (modal.classList && typeof modal.classList.remove === 'function') {
         modal.classList.remove('is-open');
     }
     modal.classList.add('closing');
+    if (isSwipeClosing) modal.classList.add('swipe-closing');
     modal.style.pointerEvents = 'none';
     modal.setAttribute('aria-hidden', 'true');
     const winClosing = modal.querySelector('.modal-window');
     if (winClosing) {
         winClosing.style.pointerEvents = '';
-        winClosing.style.transform = '';
-        winClosing.style.transition = '';
+        if (!isSwipeClosing) {
+            winClosing.style.transform = '';
+            winClosing.style.transition = '';
+        }
     }
     if (id === 'checkoutModal') {
         if (typeof window.hideNPDropdowns === 'function') window.hideNPDropdowns();
@@ -358,7 +362,8 @@ function executeCloseModal(id, e) {
         modal.style.transition = 'none';
         modal.style.animation = 'none';
         modal.style.display = 'none';
-        modal.classList.remove('closing');
+        modal.classList.remove('closing', 'swipe-closing');
+        modal._swipeClosing = false;
         modal.style.pointerEvents = '';
         modal.inert = true;
         modal.setAttribute('inert', '');
@@ -424,13 +429,18 @@ function attachMobileSwipeToWindow(overlay) {
     let startY = 0;
     let currentX = 0;
     let currentY = 0;
+    let lastY = 0;
+    let lastTime = 0;
+    let velocityY = 0;
     let isDragging = false;
     let canDrag = false;
     let isGalleryTouch = false;
+    let isHeaderTouch = false;
 
     modalWin.addEventListener('touchstart', (e) => {
         if (window.innerWidth > 900) return;
         if (e.touches && e.touches.length > 1) return;
+        if (overlay.classList && overlay.classList.contains('closing')) return;
         
         // ЗАЩИТА: Отключаем свайп окна при зуме в PhotoSwipe, вводе текста, открытых выпадающих списках НП или открытой клавиатуре
         if (document.body && document.body.classList && document.body.classList.contains('sort-lock') || 
@@ -462,11 +472,17 @@ function attachMobileSwipeToWindow(overlay) {
         startY = e.touches[0].clientY;
         currentX = startX;
         currentY = startY;
+        lastY = startY;
+        lastTime = Date.now();
+        velocityY = 0;
 
+        isHeaderTouch = Boolean(e.target && e.target.closest && e.target.closest('.modal-header'));
         isGalleryTouch = Boolean(e.target && e.target.closest && e.target.closest('.modal-gallery'));
-        canDrag = (modalWin.scrollTop <= 0); 
+        canDrag = isHeaderTouch || (modalWin.scrollTop <= 0);
         isDragging = false;
 
+        // Снимаем forwards-анимацию открытия, чтобы transform следовал за пальцем 1-в-1 без рывков
+        modalWin.style.animation = 'none';
         modalWin.style.transition = 'none';
         overlay.style.transition = 'none';
     }, { passive: true });
@@ -477,58 +493,72 @@ function attachMobileSwipeToWindow(overlay) {
 
         currentX = e.touches[0].clientX;
         currentY = e.touches[0].clientY;
+        const now = Date.now();
+        const dt = now - lastTime;
+        if (dt > 0) {
+            velocityY = (currentY - lastY) / dt;
+            lastY = currentY;
+            lastTime = now;
+        }
+
         const diffX = Math.abs(currentX - startX);
         const diffY = currentY - startY;
 
         // Если касание началось на галерее и жест горизонтальный — отдаем управление слайдеру фото
-        if (isGalleryTouch && diffX > diffY) {
+        if (!isDragging && isGalleryTouch && diffX > Math.max(6, Math.abs(diffY))) {
             canDrag = false;
-            isDragging = false;
-            modalWin.style.transform = 'translateY(0px)';
-            return;
-        }
-
-        // Если пользователь скроллит карточку вниз (палец идет вверх) или окно уже прокручено — не мешаем нативному скроллу
-        if (!isDragging && (diffY < -4 || modalWin.scrollTop > 0)) {
-            canDrag = false;
-            return;
-        }
-
-        // Плавное перетягивание шторки вниз (только с самого верха карточки и при вертикальном жесте)
-        if (diffY > 8 && diffY > diffX) {
-            isDragging = true;
-            if (e.cancelable && typeof e.preventDefault === 'function') e.preventDefault(); 
-            
-            requestAnimationFrame(() => {
-                if (!isDragging) return;
-                modalWin.style.transform = `translateY(${diffY}px)`;
-                let opacity = 1 - (diffY / (window.innerHeight * 0.7));
-                overlay.style.backgroundColor = `rgba(0, 0, 0, ${Math.max(0.15, opacity * 0.95)})`;
-            });
-        } else if (isDragging && diffY <= 0) {
-            isDragging = false;
             modalWin.style.transform = '';
+            return;
+        }
+
+        // Если пользователь скроллит карточку вниз (палец идет вверх) или окно уже прокручено не за шапку — не мешаем нативному скроллу
+        if (!isDragging && !isHeaderTouch && (diffY < -4 || modalWin.scrollTop > 0)) {
+            canDrag = false;
+            return;
+        }
+
+        // Плавное 1:1 перетягивание шторки за пальцем
+        const startThreshold = isHeaderTouch ? 4 : 6;
+        if (!isDragging && diffY > startThreshold && diffY > diffX * 1.1) {
+            isDragging = true;
+        }
+
+        if (isDragging) {
+            if (e.cancelable && typeof e.preventDefault === 'function') e.preventDefault();
+            const dragY = Math.max(0, diffY);
+            modalWin.style.transform = `translate3d(0, ${dragY}px, 0)`;
+            const progress = Math.min(1, dragY / Math.max(260, window.innerHeight * 0.55));
+            overlay.style.backgroundColor = `rgba(0, 0, 0, ${(0.85 * (1 - progress * 0.8)).toFixed(3)})`;
         }
     }, { passive: false });
 
     const handleTouchFinish = () => {
         if (window.innerWidth > 900) return;
-        
-        if (isDragging) {
-            const diffY = currentY - startY;
-            isDragging = false;
+        if (!isDragging) {
             canDrag = false;
-            
-            // Естественный порог 80px (или быстрый свайп) вместо жестких 150px
-            if (diffY > 80) { 
-                if (typeof triggerHaptic === 'function') triggerHaptic('light');
-                closeModal(overlay.id);
-            } else {
-                modalWin.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                overlay.style.transition = 'background-color 0.25s ease';
-                modalWin.style.transform = `translateY(0px)`;
-                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
-            }
+            return;
+        }
+
+        const diffY = Math.max(0, currentY - startY);
+        const shouldClose = diffY > 95 || (diffY > 36 && velocityY > 0.45);
+        isDragging = false;
+        canDrag = false;
+
+        if (shouldClose) {
+            if (typeof triggerHaptic === 'function') triggerHaptic('light');
+            modalWin.style.animation = 'none';
+            modalWin.style.transition = 'transform 0.18s cubic-bezier(0.22, 1, 0.36, 1)';
+            modalWin.style.transform = 'translate3d(0, 100%, 0)';
+            overlay.style.animation = 'none';
+            overlay.style.transition = 'opacity 0.18s ease';
+            overlay.style.opacity = '0';
+            overlay._swipeClosing = true;
+            closeModal(overlay.id);
+        } else {
+            modalWin.style.transition = 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)';
+            overlay.style.transition = 'background-color 0.22s ease';
+            modalWin.style.transform = 'translate3d(0, 0, 0)';
+            overlay.style.backgroundColor = '';
         }
     };
 

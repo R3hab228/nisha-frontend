@@ -721,6 +721,10 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .modal-overlay.closing * {
     pointer-events: none !important;
 }
+.modal-overlay.closing.swipe-closing,
+.modal-overlay.closing.swipe-closing .modal-window {
+    animation: none !important;
+}
 
 /* ==========================================================================
    MODERN CSS 2024: @starting-style & transition-behavior: allow-discrete
@@ -2705,6 +2709,7 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
         border-radius: 18px 18px 0 0 !important;
         padding: 12px 16px !important;
         min-height: 48px !important;
+        touch-action: none;
         flex-shrink: 0 !important;
         background: #002244 !important;
         position: sticky !important;

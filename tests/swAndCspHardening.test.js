@@ -240,4 +240,16 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(style).toContain('.item-views, .item-published');
         expect(style).toContain('justify-content: flex-start');
     });
+
+    it('20. mobile modal swipe-to-dismiss tracks finger 1:1 without animation override and glides out from release position', () => {
+        const windowsJs = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+
+        expect(windowsJs).toContain("modalWin.style.animation = 'none';");
+        expect(windowsJs).toContain('isHeaderTouch');
+        expect(windowsJs).toContain('translate3d(0, ${dragY}px, 0)');
+        expect(windowsJs).toContain('overlay._swipeClosing = true;');
+        expect(style).toContain('.modal-overlay.closing.swipe-closing');
+        expect(style).toContain('touch-action: none;');
+    });
 });
