@@ -535,6 +535,23 @@ function openProductModal(item) {
         `;
     }
 
+    // Дата публикации товара (ОПУБЛІКОВАНО: DD.MM.YYYY)
+    const publishedWrap = document.getElementById('modalItemPublishedWrap');
+    const publishedEl = document.getElementById('modalItemPublished');
+    if (publishedWrap && publishedEl) {
+        const rawPubDate = item.published_at || item.created_at;
+        const pubMs = rawPubDate ? Date.parse(rawPubDate) : NaN;
+        if (Number.isFinite(pubMs)) {
+            const d = new Date(pubMs);
+            const formattedPub = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+            publishedEl.textContent = formattedPub;
+            publishedWrap.style.display = 'flex';
+        } else {
+            publishedEl.textContent = '';
+            publishedWrap.style.display = 'none';
+        }
+    }
+
     // Защищенные просмотры товара (Anti-Spam)
     const viewCount = document.getElementById('modalItemViews');
     const sb = getSupabase();

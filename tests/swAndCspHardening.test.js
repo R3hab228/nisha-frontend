@@ -226,4 +226,22 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(style).toContain('transition: opacity 0.19s cubic-bezier(0.16, 1, 0.3, 1)');
         expect(style).toContain('animation: typing 1.2s steps(36, end)');
     });
+
+    it('19. product modal displays publish date aligned opposite views in unified muted mono style across locales', () => {
+        const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
+        const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const ru = JSON.parse(readFileSync(resolve(__dirname, '../locales/ru.json'), 'utf8'));
+        const ua = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
+        const en = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
+
+        expect(html).toContain('class=item-meta-row');
+        expect(html).toContain('id=modalItemPublishedWrap');
+        expect(html).toContain('data-i18n=product.published');
+        expect(productJs).toContain('item.published_at || item.created_at');
+        expect(style).toContain('.item-views, .item-published');
+        expect(ru.translation.product.published).toBe('ОПУБЛИКОВАНО:');
+        expect(ua.translation.product.published).toBe('ОПУБЛІКОВАНО:');
+        expect(en.translation.product.published).toBe('PUBLISHED:');
+    });
 });

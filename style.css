@@ -884,9 +884,11 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .thumb:hover:not(.active-thumb) { opacity: 0.8; filter: grayscale(0%); }
 
 .modal-info { width: 50%; display: flex; flex-direction: column; position: relative;}
-.price-views-row { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 20px;}
+.price-views-row { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 20px; width: 100%; }
 .modal-price { color: var(--accent-green); font-size: 36px; font-weight: bold; font-family: var(--font-mono); margin: 0; line-height: 1;}
-.item-views { color: #888; font-size: 13px; font-weight: bold; font-family: var(--font-mono); display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+.item-meta-row { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.item-views, .item-published { color: #888; font-size: 13px; font-weight: bold; font-family: var(--font-mono); display: flex; align-items: center; gap: 6px; }
+.item-published { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .modal-desc { color: #ddd; font-size: 14px; line-height: 1.6; margin-bottom: 20px; padding: 15px 0; border-top: 1px dashed #333; border-bottom: 1px dashed #333; font-family: var(--font-main);}
 
