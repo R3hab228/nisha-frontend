@@ -548,7 +548,7 @@ function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     let html = '';
     if (imgUrl && typeof imgUrl === 'string' && !/^\s*javascript:/i.test(imgUrl)) {
         const safeImgUrl = escapeAttr(imgUrl).replaceAll('(', '%28').replaceAll(')', '%29');
-        html += `<div style="width: 35px; height: 35px; background-image: url('${safeImgUrl}'); background-size: cover; background-position: center; border-radius: 4px; border: 1px solid #444; flex-shrink: 0;"></div>`;
+        html += `<div class="toast-item-thumb" style="background-image: url('${safeImgUrl}');"></div>`;
     }
     const rawMsgStr = String(message ?? '');
     const escFn = (typeof escapeHtml === 'function') ? escapeHtml : (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');

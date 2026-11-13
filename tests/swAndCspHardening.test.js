@@ -130,4 +130,13 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(catalog).toContain('window.showSaleToast(item)');
         expect(reviews).toContain('window.showReviewToast(');
     });
+
+    it('11. base .toast uses compact sizing globally on desktop and mobile', () => {
+        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8').replace(/\r\n/g, '\n');
+
+        expect(style).toContain('.toast { background: rgba(10, 10, 10, 0.96); border: 1px solid var(--accent-green); color: #fff; padding: 6px 12px;');
+        expect(style).toContain('.toast { max-width: 200px; width: auto; padding: 5px 10px; gap: 6px; font-size: 10.5px; }');
+        expect(helpers).toContain('class="toast-item-thumb"');
+    });
 });
