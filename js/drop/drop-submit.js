@@ -40,6 +40,19 @@ function updateProposalBeforeUnloadListener() {
     }
 }
 
+function resetProposalTurnstileWidget() {
+    if (typeof window !== 'undefined') {
+        window._turnstilePropToken = null;
+    }
+    const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined')
+        ? turnstilePropWidgetId
+        : (typeof window !== 'undefined' ? window.turnstilePropWidgetId : null);
+    const tsApi = getTurnstileApi();
+    if (tsApi && propWidgetId !== null && propWidgetId !== undefined && typeof tsApi.reset === 'function') {
+        try { tsApi.reset(propWidgetId); } catch {}
+    }
+}
+
 export async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
     let lastError = null;
     const sleepFn = resolveAction('sleep') || ((ms) => new Promise(r => setTimeout(r, ms)));
@@ -58,8 +71,16 @@ export async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
             const errText = await res.text().catch(() => '');
             lastError = new Error(`HTTP ${res.status}: ${errText}`);
             console.warn(`[PROPOSAL UPLOAD] Attempt ${attempt}/${maxAttempts} failed:`, lastError.message);
+            // Одноразовый Turnstile-токен и 4xx ошибки клиента не должны повторяться с тем же FormData
+            if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429) {
+                if (res.status === 403) resetProposalTurnstileWidget();
+                throw lastError;
+            }
         } catch (err) {
             lastError = err;
+            if (err && /^HTTP 4\d\d:/.test(err.message) && !/^HTTP (408|429):/.test(err.message)) {
+                throw err;
+            }
             console.warn(`[PROPOSAL UPLOAD] Network error on attempt ${attempt}/${maxAttempts}:`, err.message);
         }
         if (attempt < maxAttempts) {
@@ -315,6 +336,7 @@ export async function submitProposal() {
     }
     if (propToken) {
         _lastUsedPropToken = propToken;
+        resetProposalTurnstileWidget();
     }
 
     _isSubmittingProposal = true;
