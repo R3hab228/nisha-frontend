@@ -13,7 +13,7 @@ import {
 import {
     isItemMeasurementsTooltipVisible
 } from './measurements.js';
-import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 
 let itemsPageSize = typeof window !== 'undefined' && window.innerWidth <= 900 ? 12 : 15;
 let changePageTimeout = null;
@@ -69,9 +69,7 @@ export function buildStatusBadgeHtml(item) {
  * @returns {string}
  */
 export function buildCardPriceHtml(item, curr = 'грн') {
-    const formatPriceFn = (typeof window !== 'undefined' && typeof window.formatPrice === 'function')
-        ? window.formatPrice
-        : (val) => `${val} ${curr}`;
+    const formatPriceFn = resolveAction('formatPrice') || ((val) => `${val} ${curr}`);
 
     const savedBargain = readAcceptedBargain(item);
     if (savedBargain && savedBargain.acceptedPrice) {

@@ -18,7 +18,7 @@ import { syncCartToServer } from './cart-operations.js';
 import { _npNorm } from './novaposhta-helpers.js';
 import { ensureCityRef, ensureBranchRef } from './novaposhta-delivery.js';
 import { clearCheckoutDraft } from './checkout-form.js';
-import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 
 /**
  * Нормализует телефон к международному формату `+380...`.
@@ -102,7 +102,7 @@ export async function submitOrder() {
     const rawCity = document.getElementById('orderCity').value.trim();
     const rawBranch = document.getElementById('orderBranch').value.trim();
 
-    const sanitize = (typeof window.sanitizeText === 'function') ? window.sanitizeText : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const sanitize = resolveAction('sanitizeText') || ((s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
     const name = sanitize(cleanLettersName);
     const city = sanitize(rawCity);
     const branch = sanitize(rawBranch);

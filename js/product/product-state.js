@@ -2,7 +2,7 @@
 // NISHA PRODUCT SHARED STATE, SEO, PRE-WARM & SCORING MODULE
 // ==========================================
 
-import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 
 /** Shared mutable product modal state synchronized with window globals. */
 export const productState = {
@@ -572,7 +572,7 @@ export function updateProductSeoAndOg(item, cleanDesc) {
  * Resets OpenGraph tags and removes dynamic Product JSON-LD script when closing modal.
  */
 export function resetOpenGraphTags() {
-    const updater = (typeof window !== 'undefined' && typeof window.setMetaTag === 'function') ? window.setMetaTag : setMetaTag;
+    const updater = resolveAction('setMetaTag') || setMetaTag;
     updater('og:title', 'NISHA | Underground Store');
     updater('og:description', 'NISHA — винтажная одежда, обувь и аксессуары. Доставка Новой Почтой по всей Украине.');
     updater('og:image', 'https://www.nisha-store.shop/og-image.png');
