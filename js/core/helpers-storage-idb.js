@@ -3,6 +3,7 @@
 // Quota / Safari Incognito Guard + Async IndexedDB Key-Val Cache
 // ==========================================
 
+import { registerActions } from './action-registry.js';
 import { hasOwn } from './helpers-core-utils.js';
 
 const _memStorageFallback = {};
@@ -488,3 +489,12 @@ if (typeof window !== 'undefined') {
     window.idbGetAllKeys = idbGetAllKeys;
     window.idbClearNP = idbClearNP;
 }
+
+registerActions({
+    cleanStorageLimits,
+    idbGet,
+    idbSet,
+    idbDel,
+    idbGetAllKeys,
+    idbClearNP
+});

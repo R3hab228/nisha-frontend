@@ -34,8 +34,9 @@ export function getProfileScopeKey(isModal) {
  * @returns {Promise<any>}
  */
 async function readNpCache(cacheKey) {
-    if (typeof window !== 'undefined' && typeof window.getNPStorageAsync === 'function') {
-        return await window.getNPStorageAsync(cacheKey);
+    const getNpAsyncFn = getGlobalFn('getNPStorageAsync');
+    if (getNpAsyncFn) {
+        return await getNpAsyncFn(cacheKey);
     }
     const store = getStore();
     if (store && store.session) {
@@ -50,8 +51,9 @@ async function readNpCache(cacheKey) {
  * @param {any} payload
  */
 function writeNpCache(cacheKey, payload) {
-    if (typeof window !== 'undefined' && typeof window.setNPStorage === 'function') {
-        window.setNPStorage(cacheKey, payload);
+    const setNpFn = getGlobalFn('setNPStorage');
+    if (setNpFn) {
+        setNpFn(cacheKey, payload);
         return;
     }
     const store = getStore();
@@ -93,9 +95,7 @@ function bindDropdownOptionSelect(div, onSelect) {
     };
     div.onmousedown = handler;
     div.onclick = handler;
-    if (typeof window !== 'undefined' && typeof window.bindTouchTapSelect === 'function') {
-        window.bindTouchTapSelect(div, handler);
-    }
+    getGlobalFn('bindTouchTapSelect')?.(div, handler);
 }
 
 /**
@@ -177,9 +177,7 @@ export function renderProfileCityDropdown(isModal, data) {
     if (!dropdown || !cityInput) return;
 
     dropdown.innerHTML = '';
-    if (typeof window !== 'undefined' && typeof window.bindDropdownScrollDismissKeyboard === 'function') {
-        window.bindDropdownScrollDismissKeyboard(dropdown, `${prefix}DeliveryCity`);
-    }
+    getGlobalFn('bindDropdownScrollDismissKeyboard')?.(dropdown, `${prefix}DeliveryCity`);
     const addrs = (data && data.success && data.data && data.data[0] && Array.isArray(data.data[0].Addresses))
         ? data.data[0].Addresses
         : [];
@@ -221,9 +219,7 @@ export function renderProfileCityDropdown(isModal, data) {
         dropdown.appendChild(fragment);
     }
     dropdown.style.display = 'block';
-    if (isModal && typeof window !== 'undefined' && typeof window.scrollNPFieldIntoModalView === 'function') {
-        window.scrollNPFieldIntoModalView(cityInput);
-    }
+    if (isModal) getGlobalFn('scrollNPFieldIntoModalView')?.(cityInput);
 }
 
 /**
@@ -282,8 +278,8 @@ export async function loadProfileBranches(isModal, searchString = '') {
         return;
     }
 
-    if (isModal && branchInput && typeof window !== 'undefined' && typeof window.scrollNPFieldIntoModalView === 'function') {
-        window.scrollNPFieldIntoModalView(branchInput);
+    if (isModal && branchInput) {
+        getGlobalFn('scrollNPFieldIntoModalView')?.(branchInput);
     }
 
     const loadingBranchesMsg = tProfile('profile.loading_branches', '[ Загрузка отделений... ]');
@@ -302,11 +298,12 @@ export async function loadProfileBranches(isModal, searchString = '') {
     const cacheKey = `branches_${cityRef}_${rawTrimmed.toLowerCase()}`;
     let list = await readNpCache(cacheKey);
     // Если чекаут уже сохранил полный список отделений города в IndexedDB — фильтруем его на месте
-    if (!list && typeof window !== 'undefined' && typeof window.getNPStorageAsync === 'function') {
-        const allCityBranches = await window.getNPStorageAsync(`branchall_${cityRef}_`);
+    if (!list) {
+        const allCityBranches = await readNpCache(`branchall_${cityRef}_`);
         if (allCityBranches && Array.isArray(allCityBranches) && allCityBranches.length > 0) {
-            list = rawTrimmed && typeof window.filterAndSortBranches === 'function'
-                ? window.filterAndSortBranches(allCityBranches, rawTrimmed)
+            const filterBranchesFn = getGlobalFn('filterAndSortBranches');
+            list = rawTrimmed && filterBranchesFn
+                ? filterBranchesFn(allCityBranches, rawTrimmed)
                 : allCityBranches;
         }
     }
@@ -315,8 +312,9 @@ export async function loadProfileBranches(isModal, searchString = '') {
         try {
             const props = { CityRef: cityRef, Limit: '100' };
             if (rawTrimmed) {
-                const parsed = (typeof window !== 'undefined' && typeof window.parseNPBranchQuery === 'function')
-                    ? window.parseNPBranchQuery(rawTrimmed)
+                const parseQueryFn = getGlobalFn('parseNPBranchQuery');
+                const parsed = parseQueryFn
+                    ? parseQueryFn(rawTrimmed)
                     : null;
                 props.FindByString = (parsed && parsed.apiSearch)
                     ? parsed.apiSearch
@@ -344,8 +342,9 @@ export async function loadProfileBranches(isModal, searchString = '') {
                     TypeOfWarehouse: b.TypeOfWarehouse || '',
                     Number: b.Number ? String(b.Number) : ''
                 }));
-                if (rawTrimmed && typeof window !== 'undefined' && typeof window.filterAndSortBranches === 'function') {
-                    list = window.filterAndSortBranches(list, rawTrimmed);
+                const filterBranchesFn = getGlobalFn('filterAndSortBranches');
+                if (rawTrimmed && filterBranchesFn) {
+                    list = filterBranchesFn(list, rawTrimmed);
                 }
                 writeNpCache(cacheKey, list);
             } else {
@@ -357,8 +356,11 @@ export async function loadProfileBranches(isModal, searchString = '') {
             dropdown.innerHTML = `<div style="color:#ff6666;padding:8px">${branchesLoadErr}</div>`;
             return;
         }
-    } else if (rawTrimmed && typeof window !== 'undefined' && typeof window.filterAndSortBranches === 'function') {
-        list = window.filterAndSortBranches(list, rawTrimmed);
+    } else if (rawTrimmed) {
+        const filterBranchesFn = getGlobalFn('filterAndSortBranches');
+        if (filterBranchesFn) {
+            list = filterBranchesFn(list, rawTrimmed);
+        }
     }
 
     renderProfileBranchDropdown(isModal, list);
@@ -379,9 +381,7 @@ export function renderProfileBranchDropdown(isModal, list) {
     if (!dropdown || !branchInput) return;
 
     dropdown.innerHTML = '';
-    if (typeof window !== 'undefined' && typeof window.bindDropdownScrollDismissKeyboard === 'function') {
-        window.bindDropdownScrollDismissKeyboard(dropdown, `${prefix}DeliveryBranch`);
-    }
+    getGlobalFn('bindDropdownScrollDismissKeyboard')?.(dropdown, `${prefix}DeliveryBranch`);
     if (!list || list.length === 0) {
         const emptyLabel = typeof i18next !== 'undefined'
             ? i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })
@@ -438,8 +438,8 @@ export function initProfileDeliveryEvents() {
         const cityEl = document.getElementById(`${prefix}DeliveryCity`);
         const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
 
-        if (fnEl && typeof window !== 'undefined' && typeof window.attachFullNameAutoCapitalize === 'function') {
-            window.attachFullNameAutoCapitalize(fnEl);
+        if (fnEl) {
+            getGlobalFn('attachFullNameAutoCapitalize')?.(fnEl);
         }
         if (fnEl && typeof fnEl.addEventListener === 'function' && !fnEl._autofillShieldBound) {
             fnEl._autofillShieldBound = true;
@@ -750,9 +750,7 @@ export async function saveDeliveryToProfile(fullName, address, refs = {}) {
 
     renderProfileDelivery(fn, addr);
 
-    if (typeof window !== 'undefined' && typeof window.clearCheckoutDraft === 'function') {
-        window.clearCheckoutDraft();
-    }
+    getGlobalFn('clearCheckoutDraft')?.();
     const store = getStore();
     if (store) {
         store.remove('nisha_checkout_data');
@@ -772,9 +770,7 @@ export async function saveDeliveryToProfile(fullName, address, refs = {}) {
         }
     }
     // Адрес в профиле изменился — форма заказа при следующем открытии подставит его заново
-    if (typeof window !== 'undefined' && typeof window.resetCheckoutAddressState === 'function') {
-        window.resetCheckoutAddressState();
-    }
+    getGlobalFn('resetCheckoutAddressState')?.();
 
     const activeUser = profileState.currentUser;
     const sb = getSupabase();

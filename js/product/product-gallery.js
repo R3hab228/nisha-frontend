@@ -8,6 +8,7 @@ import {
     setActiveSlideIndex,
     toCDN
 } from './product-state.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Preloads the next/previous image slide when hovering slider controls.
@@ -181,7 +182,7 @@ export function renderModalSlider(item) {
                     const isSecond = (index === 1);
                     const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
                     const safeThumbBg = isFirst && currentThumb
-                        ? (typeof window.escapeAttr === 'function' ? window.escapeAttr(currentThumb) : String(currentThumb).replace(/'/g, '%27').replace(/"/g, '%22'))
+                        ? (hasAction('escapeAttr') ? invokeAction('escapeAttr', currentThumb) : String(currentThumb).replace(/'/g, '%27').replace(/"/g, '%22'))
                             .replaceAll('(', '%28')
                             .replaceAll(')', '%29')
                         : '';
@@ -330,9 +331,8 @@ export async function openProductPhotoZoom(targetSlideOrIndex) {
         if (typeof currPswpIndex === 'number' && items[currPswpIndex] && items[currPswpIndex].element) {
             const allSlides = Array.from(wrapper.querySelectorAll('.slide'));
             const fullSliderIdx = allSlides.indexOf(items[currPswpIndex].element);
-            const activeSetSlide = (typeof window.setSlide === 'function') ? window.setSlide : setSlide;
             if (fullSliderIdx >= 0 && getActiveSlideIndex() !== fullSliderIdx) {
-                activeSetSlide(fullSliderIdx);
+                setSlide(fullSliderIdx);
             }
         }
     };
@@ -410,6 +410,15 @@ export function initSliderSwipe() {
         }, 120);
     }, { passive: true });
 }
+
+registerActions({
+    preloadSlide,
+    moveSlide,
+    setSlide,
+    updateSlider,
+    openProductPhotoZoom,
+    initSliderSwipe
+});
 
 if (typeof window !== 'undefined') {
     window.preloadSlide = preloadSlide;

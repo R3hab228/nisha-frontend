@@ -3,6 +3,7 @@
 // ==========================================
 
 import { getCatalogStore } from './catalog-state.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Показывает информационную терминальную модалку по клику на бейдж товара.
@@ -112,8 +113,8 @@ export async function startOnboardingTour() {
 
     const checkAndRun = setInterval(() => {
         const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
-            return typeof window.isElementVisible === 'function'
-                ? window.isElementVisible(el)
+            return hasAction('isElementVisible')
+                ? invokeAction('isElementVisible', el)
                 : window.getComputedStyle(el).display === 'flex';
         });
 
@@ -179,6 +180,12 @@ export async function startOnboardingTour() {
         driverObj.drive();
     }, 500);
 }
+
+registerActions({
+    showBadgeInfo,
+    flushPendingBroadcast,
+    startOnboardingTour
+});
 
 if (typeof window !== 'undefined') {
     window.showBadgeInfo = showBadgeInfo;

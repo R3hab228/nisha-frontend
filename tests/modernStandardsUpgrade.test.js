@@ -420,7 +420,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
 
         it('catalog.js renderNextBatch and applyFilters include cooperative yielding with sequence guards against race conditions', () => {
             const catCode = readCatalogSource();
-            expect(catCode).toContain('window.yieldToMain()');
+            expect(catCode).toContain("invokeAction('yieldToMain')");
             expect(catCode).toContain('(i - startIndex + 1) % 8 === 0');
             expect(catCode).toContain('_applyFiltersSeq');
             expect(catCode).toContain('_renderBatchSeq');

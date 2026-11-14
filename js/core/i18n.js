@@ -2,6 +2,11 @@
 // NISHA I18N & LANGUAGE MODULE (Локализация и печатная машинка поиска)
 // ==========================================
 
+import { emitAppEvent, invokeAction, registerActions } from './action-registry.js';
+import { getSupabase } from './helpers-security-media.js';
+import { storage } from './helpers-storage-idb.js';
+import { showLanguageToast } from './helpers-toasts-modals.js';
+
 const NISHA_FLAGS = {
     ua: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E",
     ru: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E",
@@ -28,8 +33,7 @@ function getFlagUrlByLang(lang) {
 }
 
 function detectInitialSiteLang() {
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
-    let saved = store && typeof store.get === 'function' ? store.get('nisha_lang') : null;
+    let saved = storage && typeof storage.get === 'function' ? storage.get('nisha_lang') : null;
     if (!saved && typeof localStorage !== 'undefined') {
         try { saved = localStorage.getItem('nisha_lang'); } catch {}
     }
@@ -208,21 +212,17 @@ async function changeLanguage(lng) {
             updateFooterLanguageUI(normalized);
             
             // Мгновенно перерисовываем вообще ВСЕ цены и тексты на сайте
-            if (typeof applyFilters === 'function') applyFilters(); 
-            if (typeof renderCartItems === 'function') renderCartItems();
-            if (typeof updateCartUI === 'function') updateCartUI();
-            if (typeof renderHistory === 'function') renderHistory();
-            if (typeof window.updateOrderTabCounters === 'function') window.updateOrderTabCounters();
-            if (typeof window.renderFilteredOrders === 'function' && document.getElementById('ordersModal')?.style.display === 'flex') {
-                window.renderFilteredOrders();
+            invokeAction('applyFilters');
+            invokeAction('renderCartItems');
+            invokeAction('updateCartUI');
+            invokeAction('renderHistory');
+            invokeAction('updateOrderTabCounters');
+            if (document.getElementById('ordersModal')?.style.display === 'flex') {
+                invokeAction('renderFilteredOrders');
             }
-            
-            if (typeof window.showLanguageToast === 'function') {
-                window.showLanguageToast(normalized);
-            } else if (typeof showToast === 'function') {
-                const msg = i18next.t('messages.lang_changed') + ' [' + normalized.toUpperCase() + ']';
-                showToast(msg, 'success');
-            }
+            emitAppEvent('nisha:language-changed', { lang: normalized });
+
+            showLanguageToast(normalized);
 
             // Если мобильное меню открыто/закрыто — переводим кнопку фильтров
             const sidebar = document.querySelector('.sidebar');
@@ -236,7 +236,7 @@ async function changeLanguage(lng) {
             }
             
             const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
-            const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+            const sb = getSupabase();
             if (activeUser && sb) {
                 sb.from('profiles').update({ language: normalized }).eq('id', activeUser.id).then();
             }
@@ -318,17 +318,14 @@ function updateContentLanguage() {
     startSearchTypewriter();
 
     // Немедленно восстанавливаем красные индикаторы количества товаров в фильтрах и счетчики заказов после перевода
-    if (typeof updateSidebarCounters === 'function') {
-        updateSidebarCounters();
-    }
-    if (typeof window.updateOrderTabCounters === 'function') {
-        window.updateOrderTabCounters();
-    }
+    invokeAction('updateSidebarCounters');
+    invokeAction('updateOrderTabCounters');
     // Обновляем текст статусов в карточках заказов при переключении языка
     document.querySelectorAll('.order-status[data-raw-status]').forEach(el => {
         const raw = el.getAttribute('data-raw-status');
-        if (raw && typeof window.formatOrderStatus === 'function') {
-            el.textContent = window.formatOrderStatus(raw);
+        if (raw) {
+            const translated = invokeAction('formatOrderStatus', raw);
+            if (translated) el.textContent = translated;
         }
     });
 }
@@ -431,3 +428,12 @@ function startSearchTypewriter() {
     typeLoop();
 }
 window.startSearchTypewriter = startSearchTypewriter;
+
+registerActions({
+    setLang,
+    'set-lang': setLang,
+    changeLanguage,
+    updateContentLanguage,
+    updateFooterLanguageUI,
+    startSearchTypewriter
+});

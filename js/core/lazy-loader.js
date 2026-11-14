@@ -1,8 +1,11 @@
 // ==========================================
 // NISHA LAZY MODULE LOADER (Code Splitting Bridge)
+// Registers lazy chunk loaders directly into ActionRegistry (+ compat global bridge)
 // ==========================================
 
-function registerLazyModuleBridge(loaderFn, methodNames) {
+import { invokeAction, registerAction } from './action-registry.js';
+
+function registerLazyModuleBridge(loaderFn, methodEntries) {
     let modulePromise = null;
     const ensureLoaded = () => {
         if (!modulePromise) {
@@ -14,16 +17,32 @@ function registerLazyModuleBridge(loaderFn, methodNames) {
         return modulePromise;
     };
 
-    methodNames.forEach(fnName => {
-        if (typeof window[fnName] === 'function') return;
+    methodEntries.forEach(entry => {
+        const [fnName, ...actionAliases] = Array.isArray(entry) ? entry : [entry];
         const proxyStub = async function (...args) {
-            await ensureLoaded();
-            if (typeof window[fnName] === 'function' && window[fnName] !== proxyStub) {
-                return Reflect.apply(window[fnName], this, args);
+            const loadedMod = await ensureLoaded();
+            if (loadedMod && typeof loadedMod[fnName] === 'function') {
+                return Reflect.apply(loadedMod[fnName], this, args);
             }
+            const resolved = typeof window !== 'undefined' ? window[fnName] : globalThis[fnName];
+            if (typeof resolved === 'function' && resolved !== proxyStub) {
+                return Reflect.apply(resolved, this, args);
+            }
+            return invokeAction(fnName, ...args);
         };
-        window[fnName] = proxyStub;
-        if (typeof globalThis !== 'undefined') globalThis[fnName] = proxyStub;
+        proxyStub._isNishaLazyStub = true;
+
+        registerAction(fnName, proxyStub, { compatName: fnName, isLazyStub: true });
+        actionAliases.forEach(alias => {
+            registerAction(alias, proxyStub, { compatName: fnName, isLazyStub: true });
+        });
+
+        if (typeof window !== 'undefined' && typeof window[fnName] !== 'function') {
+            window[fnName] = proxyStub;
+        }
+        if (typeof globalThis !== 'undefined' && typeof globalThis[fnName] !== 'function') {
+            globalThis[fnName] = proxyStub;
+        }
     });
 
     return ensureLoaded;
@@ -32,15 +51,15 @@ function registerLazyModuleBridge(loaderFn, methodNames) {
 const loadDropModule = registerLazyModuleBridge(
     () => import('../drop/drop.js'),
     [
-        'openProposeModal',
+        ['openProposeModal', 'open-propose-modal'],
         'compressImage',
         'resetProposalForm',
         'handleNewProposalFiles',
         'renderProposalPreviews',
-        'submitProposal',
-        'openPropBargainInput',
-        'confirmPropBargainInput',
-        'hidePropBargainInput',
+        ['submitProposal', 'submit-proposal'],
+        ['openPropBargainInput', 'toggle-prop-bargain'],
+        ['confirmPropBargainInput', 'confirm-prop-bargain'],
+        ['hidePropBargainInput', 'cancel-prop-bargain'],
         'resetPropBargainState'
     ]
 );
@@ -48,15 +67,15 @@ const loadDropModule = registerLazyModuleBridge(
 const loadReviewsModule = registerLazyModuleBridge(
     () => import('../reviews/reviews.js'),
     [
-        'openReviewsModal',
-        'openReviewImage',
-        'scrollReviews',
+        ['openReviewsModal', 'open-reviews'],
+        ['openReviewImage', 'open-review-image'],
+        ['scrollReviews', 'scroll-reviews'],
         'equalizeReviewCardHeights',
-        'promptOrderReview',
-        'submitAutoReview',
-        'skipAutoReview',
+        ['promptOrderReview', 'prompt-order-review'],
+        ['submitAutoReview', 'submit-auto-review'],
+        ['skipAutoReview', 'skip-auto-review'],
         'writeReviewOnSite',
-        'submitManualReview',
+        ['submitManualReview', 'submit-manual-review'],
         'initReviewsRealtime'
     ]
 );
@@ -64,8 +83,8 @@ const loadReviewsModule = registerLazyModuleBridge(
 const loadChatModule = registerLazyModuleBridge(
     () => import('../chat/chat.js'),
     [
-        'openSupportModalWindow',
-        'submitSupportTicket',
+        ['openSupportModalWindow', 'open-support-modal'],
+        ['submitSupportTicket', 'submit-support-ticket'],
         'initSupportRepliesSystem',
         'checkUnreadSupportReplies'
     ]
@@ -74,10 +93,10 @@ const loadChatModule = registerLazyModuleBridge(
 const loadOrdersModule = registerLazyModuleBridge(
     () => import('../orders/orders.js'),
     [
-        'openOrdersModal',
-        'fetchMyOrders',
-        'switchOrderTab',
-        'copyTTN'
+        ['openOrdersModal', 'open-orders'],
+        ['fetchMyOrders', 'fetch-my-orders'],
+        ['switchOrderTab', 'switch-order-tab'],
+        ['copyTTN', 'copy-ttn']
     ]
 );
 
@@ -87,13 +106,14 @@ const preloadSecondaryModules = () => {
     loadReviewsModule();
     loadChatModule();
     loadOrdersModule();
-    if (typeof window.loadIMask === 'function') {
-        window.loadIMask().catch(() => {});
+    const imaskLoader = invokeAction('loadIMask');
+    if (imaskLoader && typeof imaskLoader.catch === 'function') {
+        imaskLoader.catch(() => {});
     }
 };
 
-if ('requestIdleCallback' in window) {
-    requestIdleCallback(preloadSecondaryModules, { timeout: 2000 });
+if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    window.requestIdleCallback(preloadSecondaryModules, { timeout: 2000 });
 } else {
     setTimeout(preloadSecondaryModules, 800);
 }

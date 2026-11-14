@@ -3,6 +3,8 @@
 // Centralized Reactive State Engine with Safe Storage Persistence
 // ==========================================
 
+import { emitAppEvent, invokeAction } from './action-registry.js';
+
 (function() {
     'use strict';
 
@@ -128,9 +130,7 @@
             }
         } catch (err) {
             console.warn(`[Store] Не удалось записать ${storageKey} в localStorage:`, err);
-            if (typeof window !== 'undefined' && typeof window.cleanStorageLimits === 'function') {
-                try { window.cleanStorageLimits(); } catch {}
-            }
+            try { invokeAction('cleanStorageLimits'); } catch {}
         } finally {
             isInternalStorageSync = false;
         }
@@ -502,25 +502,22 @@
 
     // Реактивное обновление window.cart и UI при любых изменениях корзины
     store.subscribe('cart', (newCart) => {
-        window.cart = newCart;
-        if (typeof window.updateCartUI === 'function') {
-            window.updateCartUI();
-        }
+        if (typeof window !== 'undefined') window.cart = newCart;
+        emitAppEvent('nisha:cart-changed', { cart: newCart });
+        invokeAction('updateCartUI');
     });
 
     // Реактивное обновление избранного
     store.subscribe('favorites', (newFavs) => {
-        window.favorites = newFavs;
-        if (typeof window.updateFavUI === 'function') {
-            window.updateFavUI();
-        }
+        if (typeof window !== 'undefined') window.favorites = newFavs;
+        emitAppEvent('nisha:favorites-changed', { favorites: newFavs });
+        invokeAction('updateFavUI');
     });
 
     // Реактивное обновление истории
-    store.subscribe('history', () => {
-        if (typeof window.renderHistory === 'function') {
-            window.renderHistory();
-        }
+    store.subscribe('history', (newHistory) => {
+        emitAppEvent('nisha:history-changed', { history: newHistory });
+        invokeAction('renderHistory');
     });
 
     // Экспорт в глобальную область видимости

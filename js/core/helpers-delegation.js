@@ -1,8 +1,10 @@
 // ==========================================
 // NISHA CORE HELPERS: GLOBAL EVENT DELEGATION & FORM LISTENERS
 // Handles [data-action], [data-hover-action], media load/error/canplay, scroll & inputs
+// Uses ActionRegistry (`Map`) instead of direct `window.*` coupling.
 // ==========================================
 
+import { invokeAction, invokeCompatAction, registerActions } from './action-registry.js';
 import { sanitizeHtmlMediaUrl } from './helpers-security-media.js';
 import { storage } from './helpers-storage-idb.js';
 import { isToastClickShielded, showToast } from './helpers-toasts-modals.js';
@@ -25,7 +27,7 @@ function hasActiveModalShield(actionEl) {
     return !parentModal || (parentModal.classList && typeof parentModal.classList.contains === 'function' && parentModal.classList.contains('closing')) || isShieldActive;
 }
 
-const SIMPLE_WINDOW_ACTION_MAP = {
+const SIMPLE_ACTION_MAP = {
     'dismiss-net-error': 'dismissNetError',
     'toggle-question-form': 'toggleQuestionForm',
     'submit-proposal': 'submitProposal',
@@ -93,63 +95,50 @@ export function handleDelegatedAction(e) {
     }
 
     const action = actionEl.getAttribute('data-action');
-    if (SIMPLE_WINDOW_ACTION_MAP[action]) {
-        const fnName = SIMPLE_WINDOW_ACTION_MAP[action];
-        if (typeof window !== 'undefined' && typeof window[fnName] === 'function') {
-            window[fnName]();
-        }
+    if (Object.hasOwn(SIMPLE_ACTION_MAP, action)) {
+        invokeCompatAction(action, SIMPLE_ACTION_MAP[action]);
         return;
     }
 
     switch (action) {
         case 'open-product': {
             const id = actionEl.getAttribute('data-id');
-            if (id && typeof window.openProductModalById === 'function') {
-                window.openProductModalById(id);
-            }
+            if (id) invokeCompatAction('open-product', 'openProductModalById', id);
             break;
         }
         case 'scroll-grid-slider': {
             const id = actionEl.getAttribute('data-id');
             const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
-            if (id && typeof window.scrollGridSlider === 'function') {
-                window.scrollGridSlider(e, id, dir);
-            }
+            if (id) invokeCompatAction('scroll-grid-slider', 'scrollGridSlider', e, id, dir);
             break;
         }
         case 'toggle-fav': {
             const id = actionEl.getAttribute('data-id');
-            if (id && typeof window.toggleFav === 'function') {
-                window.toggleFav(e, id);
-            }
+            if (id) invokeCompatAction('toggle-fav', 'toggleFav', e, id);
             break;
         }
         case 'add-to-cart': {
             const id = actionEl.getAttribute('data-id');
-            if (id && typeof window.addToCartWithAnimation === 'function') {
-                window.addToCartWithAnimation(id, actionEl, e);
-            }
+            if (id) invokeCompatAction('add-to-cart', 'addToCartWithAnimation', id, actionEl, e);
             break;
         }
         case 'change-page': {
             const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10);
-            if (!Number.isNaN(dir) && typeof window.changePage === 'function') {
-                window.changePage(dir);
-            }
+            if (!Number.isNaN(dir)) invokeCompatAction('change-page', 'changePage', dir);
             break;
         }
         case 'remove-from-cart': {
             const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
-            if (!Number.isNaN(idx) && typeof window.removeFromCart === 'function') {
+            if (!Number.isNaN(idx)) {
                 const rowEl = typeof actionEl.closest === 'function' ? actionEl.closest('.cart-item-row') : null;
-                window.removeFromCart(idx, e, rowEl);
+                invokeCompatAction('remove-from-cart', 'removeFromCart', idx, e, rowEl);
             }
             break;
         }
         case 'clear-search-history': {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             storage.remove('nisha_search_history');
-            if (typeof window.closeSearch === 'function') window.closeSearch();
+            invokeAction('closeSearch');
             break;
         }
         case 'apply-search-history': {
@@ -157,95 +146,89 @@ export function handleDelegatedAction(e) {
             const term = actionEl.getAttribute('data-term') || '';
             const input = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
             if (input) input.value = term;
-            if (typeof window.handleLiveSearch === 'function') window.handleLiveSearch();
+            invokeAction('handleLiveSearch');
             break;
         }
         case 'select-live-search-item': {
             const id = actionEl.getAttribute('data-id');
-            if (id && typeof window.openProductModalById === 'function') {
-                window.openProductModalById(id);
-            }
-            if (typeof window.closeSearch === 'function') window.closeSearch();
+            if (id) invokeCompatAction('open-product', 'openProductModalById', id);
+            invokeAction('closeSearch');
             break;
         }
         case 'toggle-qa-section': {
-            if (typeof window.toggleQASection === 'function') window.toggleQASection(actionEl);
+            invokeCompatAction('toggle-qa-section', 'toggleQASection', actionEl);
             break;
         }
         case 'submit-question': {
             const id = actionEl.getAttribute('data-id');
-            if (id && typeof window.submitQuestion === 'function') window.submitQuestion(id);
+            if (id) invokeCompatAction('submit-question', 'submitQuestion', id);
             break;
         }
         case 'set-slide': {
             const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
-            if (!Number.isNaN(idx) && typeof window.setSlide === 'function') window.setSlide(idx);
+            if (!Number.isNaN(idx)) invokeCompatAction('set-slide', 'setSlide', idx);
             break;
         }
         case 'show-badge-info': {
             const badge = actionEl.getAttribute('data-badge');
-            if (badge && typeof window.showBadgeInfo === 'function') window.showBadgeInfo(badge);
+            if (badge) invokeCompatAction('show-badge-info', 'showBadgeInfo', badge);
             break;
         }
         case 'remove-history-item': {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             const id = actionEl.getAttribute('data-id');
-            if (id && typeof window.removeHistoryItem === 'function') window.removeHistoryItem(e, id);
+            if (id) invokeCompatAction('remove-history-item', 'removeHistoryItem', e, id);
             break;
         }
         case 'remove-profile-phone': {
             const isModal = actionEl.getAttribute('data-modal') === '1';
-            if (typeof window.removeProfilePhone === 'function') window.removeProfilePhone(isModal);
+            invokeCompatAction('remove-profile-phone', 'removeProfilePhone', isModal);
             break;
         }
         case 'remove-profile-tg': {
             const isModal = actionEl.getAttribute('data-modal') === '1';
-            if (typeof window.removeProfileTg === 'function') window.removeProfileTg(isModal);
+            invokeCompatAction('remove-profile-tg', 'removeProfileTg', isModal);
             break;
         }
         case 'toggle-profile-delivery': {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             const isModal = actionEl.getAttribute('data-modal') === '1';
-            if (typeof window.toggleProfileDeliveryAccordion === 'function') {
-                window.toggleProfileDeliveryAccordion(isModal, actionEl);
-            }
+            invokeCompatAction('toggle-profile-delivery', 'toggleProfileDeliveryAccordion', isModal, actionEl);
             break;
         }
         case 'save-profile-delivery': {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             const isModal = actionEl.getAttribute('data-modal') === '1';
-            if (typeof window.saveProfileDeliveryFromForm === 'function') {
-                window.saveProfileDeliveryFromForm(isModal, actionEl);
-            }
+            invokeCompatAction('save-profile-delivery', 'saveProfileDeliveryFromForm', isModal, actionEl);
             break;
         }
         case 'verify-orders-phone': {
             const phone = actionEl.getAttribute('data-phone') || '';
             const orderPhoneEl = typeof document !== 'undefined' ? document.getElementById('orderPhone') : null;
             if (orderPhoneEl) orderPhoneEl.value = phone;
-            if (typeof window.generateAndSendOTP === 'function') window.generateAndSendOTP();
+            invokeCompatAction('generate-and-send-otp', 'generateAndSendOTP');
             break;
         }
         case 'copy-ttn': {
             const ttn = actionEl.getAttribute('data-ttn');
-            if (ttn && typeof window.copyTTN === 'function') window.copyTTN(ttn, actionEl);
+            if (ttn) invokeCompatAction('copy-ttn', 'copyTTN', ttn, actionEl);
             break;
         }
         case 'prompt-order-review': {
-            if (typeof window.closeModal === 'function') window.closeModal('ordersModal');
-            if (typeof window.promptOrderReview === 'function') {
-                window.promptOrderReview(
-                    actionEl.getAttribute('data-order-id') || '',
-                    actionEl.getAttribute('data-item-name') || '',
-                    actionEl.getAttribute('data-item-img') || '',
-                    actionEl.getAttribute('data-item-id') || ''
-                );
-            }
+            invokeAction('closeModal', 'ordersModal');
+            invokeCompatAction(
+                'prompt-order-review',
+                'promptOrderReview',
+                actionEl.getAttribute('data-order-id') || '',
+                actionEl.getAttribute('data-item-name') || '',
+                actionEl.getAttribute('data-item-img') || '',
+                actionEl.getAttribute('data-item-id') || ''
+            );
             break;
         }
         case 'open-review-image': {
             const img = actionEl.getAttribute('data-img');
-            if (img && typeof window.openReviewImage === 'function') window.openReviewImage(img);
+            if (img) invokeCompatAction('open-review-image', 'openReviewImage', img);
             break;
         }
         case 'close-modal': {
@@ -253,7 +236,7 @@ export function handleDelegatedAction(e) {
             if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             if (typeof e.preventDefault === 'function') e.preventDefault();
             const modalId = actionEl.getAttribute('data-modal-id');
-            if (modalId && typeof window.closeModal === 'function') window.closeModal(modalId, e);
+            if (modalId) invokeCompatAction('close-modal', 'closeModal', modalId, e);
             break;
         }
         case 'delete-proposal-photo': {
@@ -261,9 +244,7 @@ export function handleDelegatedAction(e) {
             if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             if (typeof e.preventDefault === 'function') e.preventDefault();
             const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
-            if (!Number.isNaN(idx) && typeof window.removeProposalFile === 'function') {
-                window.removeProposalFile(idx, actionEl);
-            }
+            if (!Number.isNaN(idx)) invokeCompatAction('delete-proposal-photo', 'removeProposalFile', idx, actionEl);
             break;
         }
         case 'preview-proposal-photo': {
@@ -271,9 +252,7 @@ export function handleDelegatedAction(e) {
             if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             if (typeof e.preventDefault === 'function') e.preventDefault();
             const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
-            if (!Number.isNaN(idx) && typeof window.openProposalPhotoByIndex === 'function') {
-                window.openProposalPhotoByIndex(idx, actionEl);
-            }
+            if (!Number.isNaN(idx)) invokeCompatAction('preview-proposal-photo', 'openProposalPhotoByIndex', idx, actionEl);
             break;
         }
         case 'trigger-prop-files': {
@@ -282,7 +261,7 @@ export function handleDelegatedAction(e) {
                     break;
                 }
             }
-            const filesCount = (window.currentProposalFiles && window.currentProposalFiles.length) || 0;
+            const filesCount = (globalThis.currentProposalFiles && globalThis.currentProposalFiles.length) || 0;
             if (filesCount >= 5) {
                 if (typeof showToast === 'function') {
                     showToast(typeof i18next !== 'undefined' ? i18next.t('messages.prop_max_files', { defaultValue: 'Максимум 5 фото/видео!' }) : 'Максимум 5 фото/видео!', 'error');
@@ -299,103 +278,99 @@ export function handleDelegatedAction(e) {
             break;
         }
         case 'email-prompt-backdrop': {
-            if (e.target === actionEl && typeof window.confirmEmailPrompt === 'function') {
-                window.confirmEmailPrompt(false);
-            }
+            if (e.target === actionEl) invokeCompatAction('confirm-email-prompt', 'confirmEmailPrompt', false);
             break;
         }
         case 'confirm-email-prompt': {
             const isYes = actionEl.getAttribute('data-confirm') === 'true';
-            if (typeof window.confirmEmailPrompt === 'function') window.confirmEmailPrompt(isYes);
+            invokeCompatAction('confirm-email-prompt', 'confirmEmailPrompt', isYes);
             break;
         }
         case 'navigate-home': {
-            window.location.href = '/';
+            if (typeof window !== 'undefined' && window.location) window.location.href = '/';
             break;
         }
         case 'submit-main-search': {
             const input = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
             const val = input ? input.value.trim() : '';
-            if (typeof window.saveRecentSearch === 'function') window.saveRecentSearch(val);
-            if (typeof window.applyFilters === 'function') window.applyFilters();
-            if (typeof window.closeSearch === 'function') window.closeSearch();
+            invokeAction('saveRecentSearch', val);
+            invokeAction('applyFilters');
+            invokeAction('closeSearch');
             break;
         }
         case 'set-category-filter': {
             const cat = actionEl.getAttribute('data-category') || '';
-            if (typeof window.setCategoryFilter === 'function') window.setCategoryFilter(cat, actionEl);
+            invokeCompatAction('set-category-filter', 'setCategoryFilter', cat, actionEl);
             break;
         }
         case 'toggle-password-visibility': {
             const inputId = actionEl.getAttribute('data-input-id');
-            if (inputId && typeof window.togglePasswordVisibility === 'function') {
-                window.togglePasswordVisibility(inputId, actionEl);
-            }
+            if (inputId) invokeCompatAction('toggle-password-visibility', 'togglePasswordVisibility', inputId, actionEl);
             break;
         }
         case 'handle-auth': {
             const mode = actionEl.getAttribute('data-auth-mode') || 'login';
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.handleAuth === 'function') window.handleAuth(mode, isModal);
+            invokeCompatAction('handle-auth', 'handleAuth', mode, isModal);
             break;
         }
         case 'toggle-reg-mode': {
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.toggleRegMode === 'function') window.toggleRegMode(isModal);
+            invokeCompatAction('toggle-reg-mode', 'toggleRegMode', isModal);
             break;
         }
         case 'forgot-password': {
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.handleForgotPassword === 'function') window.handleForgotPassword(isModal);
+            invokeCompatAction('forgot-password', 'handleForgotPassword', isModal);
             break;
         }
         case 'show-phone-input': {
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.showPhoneInput === 'function') window.showPhoneInput(isModal);
+            invokeCompatAction('show-phone-input', 'showPhoneInput', isModal);
             break;
         }
         case 'save-phone-input': {
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.savePhoneFromInput === 'function') window.savePhoneFromInput(isModal);
+            invokeCompatAction('save-phone-input', 'savePhoneFromInput', isModal);
             break;
         }
         case 'hide-phone-input': {
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.hidePhoneInput === 'function') window.hidePhoneInput(isModal);
+            invokeCompatAction('hide-phone-input', 'hidePhoneInput', isModal);
             break;
         }
         case 'show-tg-input': {
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.showTgInput === 'function') window.showTgInput(isModal);
+            invokeCompatAction('show-tg-input', 'showTgInput', isModal);
             break;
         }
         case 'save-tg-input': {
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.saveTgFromInput === 'function') window.saveTgFromInput(isModal);
+            invokeCompatAction('save-tg-input', 'saveTgFromInput', isModal);
             break;
         }
         case 'hide-tg-input': {
             const isModal = actionEl.getAttribute('data-is-modal') === 'true';
-            if (typeof window.hideTgInput === 'function') window.hideTgInput(isModal);
+            invokeCompatAction('hide-tg-input', 'hideTgInput', isModal);
             break;
         }
         case 'logout': {
             const closeTargetModal = actionEl.getAttribute('data-close-modal');
-            if (typeof window.logout === 'function') window.logout();
-            if (closeTargetModal && typeof window.closeModal === 'function') window.closeModal(closeTargetModal);
+            invokeCompatAction('logout', 'logout');
+            if (closeTargetModal) invokeAction('closeModal', closeTargetModal);
             break;
         }
         case 'sort-items': {
             const sort = actionEl.getAttribute('data-sort') || 'new';
-            if (typeof window.sortItems === 'function') window.sortItems(sort);
+            invokeCompatAction('sort-items', 'sortItems', sort);
             break;
         }
         case 'toggle-cart-dropdown': {
-            if (typeof window.toggleCartDropdown === 'function') window.toggleCartDropdown(e);
+            invokeCompatAction('toggle-cart-dropdown', 'toggleCartDropdown', e);
             break;
         }
         case 'close-cart-dropdown': {
-            if (typeof window.closeCartDropdown === 'function') window.closeCartDropdown(e);
+            invokeCompatAction('close-cart-dropdown', 'closeCartDropdown', e);
             break;
         }
         case 'toggle-footer-lang': {
@@ -405,52 +380,51 @@ export function handleDelegatedAction(e) {
         }
         case 'set-lang': {
             const lang = actionEl.getAttribute('data-lang');
-            if (lang && typeof window.setLang === 'function') window.setLang(lang);
+            if (lang) invokeCompatAction('set-lang', 'setLang', lang);
             break;
         }
         case 'move-slide': {
             const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
-            if (typeof window.moveSlide === 'function') window.moveSlide(dir);
+            invokeCompatAction('move-slide', 'moveSlide', dir);
             break;
         }
         case 'toggle-fav-from-modal': {
-            if (typeof window.toggleFavFromModal === 'function') window.toggleFavFromModal(e);
+            invokeCompatAction('toggle-fav-from-modal', 'toggleFavFromModal', e);
             break;
         }
         case 'toggle-accordion': {
-            if (typeof window.toggleAccordion === 'function') window.toggleAccordion(actionEl);
+            invokeCompatAction('toggle-accordion', 'toggleAccordion', actionEl);
             break;
         }
         case 'open-offer-price': {
-            if (typeof window.showInlineOfferPriceInput === 'function') {
-                window.showInlineOfferPriceInput();
-            } else if (typeof window.openOfferPriceModal === 'function') {
-                window.openOfferPriceModal();
+            const handled = invokeCompatAction('open-offer-price', 'showInlineOfferPriceInput');
+            if (handled === undefined) {
+                invokeAction('openOfferPriceModal');
             }
             break;
         }
         case 'clear-np-city': {
-            if (typeof window.clearNPCityInput === 'function') window.clearNPCityInput(e);
+            invokeCompatAction('clear-np-city', 'clearNPCityInput', e);
             break;
         }
         case 'clear-np-branch': {
-            if (typeof window.clearNPBranchInput === 'function') window.clearNPBranchInput(e);
+            invokeCompatAction('clear-np-branch', 'clearNPBranchInput', e);
             break;
         }
         case 'select-payment-method': {
             const method = actionEl.getAttribute('data-payment-method') || '';
             const text = actionEl.innerText || method;
-            if (typeof window.selectPaymentMethod === 'function') window.selectPaymentMethod(method, text);
+            invokeCompatAction('select-payment-method', 'selectPaymentMethod', method, text);
             break;
         }
         case 'switch-order-tab': {
             const tab = actionEl.getAttribute('data-tab') || 'accepted';
-            if (typeof window.switchOrderTab === 'function') window.switchOrderTab(tab);
+            invokeCompatAction('switch-order-tab', 'switchOrderTab', tab);
             break;
         }
         case 'scroll-reviews': {
             const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
-            if (typeof window.scrollReviews === 'function') window.scrollReviews(dir);
+            invokeCompatAction('scroll-reviews', 'scrollReviews', dir);
             break;
         }
     }
@@ -558,9 +532,7 @@ export function handleDelegatedScroll(e) {
     if (target.classList.contains('card-slider-container')) {
         const itemId = (typeof target.getAttribute === 'function' && target.getAttribute('data-item-id'))
             || (target.id && target.id.startsWith('slider-') ? target.id.slice(7) : '');
-        if (itemId && typeof window.updateCardDots === 'function') {
-            window.updateCardDots(target, itemId);
-        }
+        if (itemId) invokeAction('updateCardDots', target, itemId);
     }
 }
 if (typeof window !== 'undefined') window.handleDelegatedScroll = handleDelegatedScroll;
@@ -570,7 +542,8 @@ if (typeof window !== 'undefined') window.handleDelegatedScroll = handleDelegate
  */
 export function initActionDelegation() {
     if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return;
-    if (typeof window !== 'undefined' && window._nishaActionDelegationBound) return;
+    if (document._nishaActionDelegationBound || (typeof window !== 'undefined' && window._nishaActionDelegationBound)) return;
+    document._nishaActionDelegationBound = true;
     if (typeof window !== 'undefined') window._nishaActionDelegationBound = true;
 
     document.addEventListener('click', handleDelegatedAction, true);
@@ -584,9 +557,7 @@ export function initActionDelegation() {
         const trigger = e.target.closest('.live-search-item, [data-action="open-product"]');
         if (trigger) {
             const id = trigger.getAttribute('data-id');
-            if (id && typeof window.prewarmProductModal === 'function') {
-                window.prewarmProductModal(id, true);
-            }
+            if (id) invokeAction('prewarmProductModal', id, true);
         }
     }, { passive: true });
 
@@ -595,9 +566,7 @@ export function initActionDelegation() {
         const trigger = e.target.closest('.live-search-item, [data-action="open-product"]');
         if (trigger) {
             const id = trigger.getAttribute('data-id');
-            if (id && typeof window.prewarmProductModal === 'function') {
-                window.prewarmProductModal(id);
-            }
+            if (id) invokeAction('prewarmProductModal', id);
         }
         const hoverEl = e.target.closest('[data-hover-action]');
         if (!hoverEl) return;
@@ -607,13 +576,13 @@ export function initActionDelegation() {
         if (hoverAction === 'preload-grid-slide') {
             const id = hoverEl.getAttribute('data-id');
             const dir = Number.parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
-            if (id && typeof window.preloadGridSlide === 'function') window.preloadGridSlide(e, id, dir);
+            if (id) invokeCompatAction('preload-grid-slide', 'preloadGridSlide', e, id, dir);
         } else if (hoverAction === 'preload-slide') {
             const dir = Number.parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
-            if (typeof window.preloadSlide === 'function') window.preloadSlide(dir);
+            invokeCompatAction('preload-slide', 'preloadSlide', dir);
         } else if (hoverAction === 'similar-item-tooltip') {
             const id = hoverEl.getAttribute('data-id');
-            if (id && typeof window.showItemMeasurementsTooltip === 'function') window.showItemMeasurementsTooltip(id, e);
+            if (id) invokeCompatAction('similar-item-tooltip', 'showItemMeasurementsTooltip', id, e);
         } else if (hoverAction === 'review-link-hover') {
             hoverEl.style.textDecoration = 'underline';
             hoverEl.style.color = '#fff';
@@ -623,9 +592,7 @@ export function initActionDelegation() {
     document.addEventListener('mousemove', (e) => {
         if (!e.target || typeof e.target.closest !== 'function') return;
         const hoverEl = e.target.closest('[data-hover-action="similar-item-tooltip"]');
-        if (hoverEl && typeof window.moveItemMeasurementsTooltip === 'function') {
-            window.moveItemMeasurementsTooltip(e);
-        }
+        if (hoverEl) invokeAction('moveItemMeasurementsTooltip', e);
     });
 
     document.addEventListener('mouseout', (e) => {
@@ -636,7 +603,7 @@ export function initActionDelegation() {
 
         const hoverAction = hoverEl.getAttribute('data-hover-action');
         if (hoverAction === 'similar-item-tooltip') {
-            if (typeof window.hideItemMeasurementsTooltip === 'function') window.hideItemMeasurementsTooltip();
+            invokeAction('hideItemMeasurementsTooltip');
         } else if (hoverAction === 'review-link-hover') {
             hoverEl.style.textDecoration = 'none';
             hoverEl.style.color = 'var(--accent-green)';
@@ -657,18 +624,16 @@ export function bindFormAndFilterListeners() {
         searchForm.addEventListener('submit', (event) => {
             event.preventDefault();
             const searchEl = document.getElementById('mainSearch');
-            if (typeof window.saveRecentSearch === 'function' && searchEl) {
-                window.saveRecentSearch(searchEl.value.trim());
-            }
-            if (typeof window.applyFilters === 'function') window.applyFilters();
-            if (typeof window.closeSearch === 'function') window.closeSearch();
+            if (searchEl) invokeAction('saveRecentSearch', searchEl.value.trim());
+            invokeAction('applyFilters');
+            invokeAction('closeSearch');
         });
     }
 
     const mainSearch = typeof document.getElementById === 'function' ? document.getElementById('mainSearch') : null;
     if (mainSearch) {
         mainSearch.addEventListener('input', () => {
-            if (typeof window.handleLiveSearch === 'function') window.handleLiveSearch();
+            invokeAction('handleLiveSearch');
         });
     }
 
@@ -677,7 +642,7 @@ export function bindFormAndFilterListeners() {
     [priceMin, priceMax].forEach(el => {
         if (el) {
             el.addEventListener('input', () => {
-                if (typeof window.updatePriceUI === 'function') window.updatePriceUI();
+                invokeAction('updatePriceUI');
             });
         }
     });
@@ -689,7 +654,7 @@ export function bindFormAndFilterListeners() {
             if ((target.classList && target.classList.contains('size-cb')) ||
                 target.id === 'onlySaleCb' ||
                 target.id === 'hideUnavailableCb') {
-                if (typeof window.triggerFilterTransition === 'function') window.triggerFilterTransition();
+                invokeAction('triggerFilterTransition');
             }
         });
     }
@@ -697,24 +662,34 @@ export function bindFormAndFilterListeners() {
     const orderCity = typeof document.getElementById === 'function' ? document.getElementById('orderCity') : null;
     if (orderCity) {
         orderCity.addEventListener('input', () => {
-            if (typeof window.debouncedNPCitySearch === 'function') window.debouncedNPCitySearch(orderCity.value);
+            invokeAction('debouncedNPCitySearch', orderCity.value);
         });
     }
 
     const orderBranch = typeof document.getElementById === 'function' ? document.getElementById('orderBranch') : null;
     if (orderBranch) {
         orderBranch.addEventListener('focus', () => {
-            if (typeof window.loadNPBranches === 'function') window.loadNPBranches('', true);
+            invokeAction('loadNPBranches', '', true);
         });
         orderBranch.addEventListener('input', () => {
-            if (typeof window.filterNPBranches === 'function') window.filterNPBranches(orderBranch.value);
+            invokeAction('filterNPBranches', orderBranch.value);
         });
     }
 
     const propDesc = typeof document.getElementById === 'function' ? document.getElementById('propDesc') : null;
     if (propDesc) {
         propDesc.addEventListener('input', () => {
-            if (typeof window.updateCharCount === 'function') window.updateCharCount(propDesc);
+            invokeAction('updateCharCount', propDesc);
         });
     }
 }
+
+registerActions({
+    handleDelegatedAction,
+    handleDelegatedMediaLoad,
+    handleDelegatedMediaError,
+    handleDelegatedMediaCanPlay,
+    handleDelegatedScroll,
+    initActionDelegation,
+    bindFormAndFilterListeners
+});

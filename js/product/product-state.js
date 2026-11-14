@@ -2,6 +2,8 @@
 // NISHA PRODUCT SHARED STATE, SEO, PRE-WARM & SCORING MODULE
 // ==========================================
 
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+
 /** Shared mutable product modal state synchronized with window globals. */
 export const productState = {
     currentOpenedItem: (typeof window !== 'undefined' && window.currentOpenedItem) || null,
@@ -64,7 +66,7 @@ export function setActiveSlideIndex(index) {
  * @returns {string}
  */
 export function toCDN(u, opts) {
-    return (typeof window !== 'undefined' && typeof window.toCDN === 'function') ? window.toCDN(u, opts) : (u || '');
+    return hasAction('toCDN') ? invokeAction('toCDN', u, opts) : (u || '');
 }
 
 /**
@@ -97,7 +99,7 @@ export function getFingerprint() {
  */
 export function getSupabaseClient() {
     if (typeof getSupabase === 'function') return getSupabase();
-    if (typeof window !== 'undefined' && typeof window.getSupabase === 'function') return window.getSupabase();
+    if (hasAction('getSupabase')) return invokeAction('getSupabase');
     return (typeof window !== 'undefined' && window.supabaseClient) || null;
 }
 
@@ -107,7 +109,7 @@ export function getSupabaseClient() {
  */
 export function getCatalogItems() {
     if (typeof getCatalog === 'function') return getCatalog();
-    if (typeof window !== 'undefined' && typeof window.getCatalog === 'function') return window.getCatalog();
+    if (hasAction('getCatalog')) return invokeAction('getCatalog');
     return (typeof window !== 'undefined' && window.allItems) || [];
 }
 
@@ -124,8 +126,8 @@ export function getStore() {
  * @returns {object[]}
  */
 export function getActiveCartSafe() {
-    if (typeof window !== 'undefined' && typeof window.getActiveCart === 'function') {
-        return window.getActiveCart();
+    if (hasAction('getActiveCart')) {
+        return invokeAction('getActiveCart');
     }
     if (typeof getActiveCart === 'function') {
         return getActiveCart();
@@ -142,7 +144,7 @@ export function getActiveCartSafe() {
  * @returns {string}
  */
 export function getEscHtml(s) {
-    if (typeof window !== 'undefined' && typeof window.escapeHtml === 'function') return window.escapeHtml(s);
+    if (hasAction('escapeHtml')) return invokeAction('escapeHtml', s);
     return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
@@ -152,7 +154,7 @@ export function getEscHtml(s) {
  * @returns {string}
  */
 export function getEscAttr(s) {
-    if (typeof window !== 'undefined' && typeof window.escapeAttr === 'function') return window.escapeAttr(s);
+    if (hasAction('escapeAttr')) return invokeAction('escapeAttr', s);
     return String(s ?? '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll("'", '&#39;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
@@ -337,8 +339,8 @@ let _prewarmPendingId = null;
  * @returns {boolean}
  */
 export function isDataSaverActive() {
-    if (typeof window !== 'undefined' && typeof window.isSaveDataMode === 'function') {
-        return window.isSaveDataMode();
+    if (hasAction('isSaveDataMode')) {
+        return invokeAction('isSaveDataMode');
     }
     try {
         if (typeof navigator !== 'undefined' && navigator.connection) {
@@ -542,12 +544,12 @@ export function updateProductSeoAndOg(item, cleanDesc) {
     const ogTitle = `${statusPrefix}NISHA: ${item.brand} - ${item.name}`;
     const formattedOgPrice = (typeof formatPrice === 'function') ? formatPrice(item.price) : `${item.price} грн.`;
     const truncatedDesc = cleanDesc
-        ? ((typeof window !== 'undefined' && typeof window.safeTruncateText === 'function') ? window.safeTruncateText(cleanDesc, 150) : cleanDesc.slice(0, 150))
+        ? (hasAction('safeTruncateText') ? invokeAction('safeTruncateText', cleanDesc, 150) : cleanDesc.slice(0, 150))
         : '';
     const ogDesc = `Размер: ${item.size} | Цена: ${formattedOgPrice} ${truncatedDesc}`;
     const ogImage = (item.images && item.images.length > 0) ? item.images.at(0) : 'https://www.nisha-store.shop/icon-512.png';
-    const safeItemId = (typeof window !== 'undefined' && typeof window.safeEncodeURIComponent === 'function')
-        ? window.safeEncodeURIComponent(item.id)
+    const safeItemId = hasAction('safeEncodeURIComponent')
+        ? invokeAction('safeEncodeURIComponent', item.id)
         : encodeURIComponent(item.id);
     const ogUrl = `https://www.nisha-store.shop/?item=${safeItemId}`;
 
@@ -599,3 +601,12 @@ if (typeof window !== 'undefined') {
     window.setMetaTag = setMetaTag;
     window.resetOpenGraphTags = resetOpenGraphTags;
 }
+
+registerActions({
+    computeItemSimilarity,
+    prewarmProductModal,
+    cancelPrewarmProductModal,
+    prewarmItemDetails,
+    setMetaTag,
+    resetOpenGraphTags
+});

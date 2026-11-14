@@ -2,6 +2,7 @@
 // NISHA HYBRID CLIENT-SIDE ERROR TELEMETRY (SENTRY + TELEGRAM LOGGER)
 // ==========================================
 
+import { invokeAction, registerActions } from './action-registry.js';
 import { debugPwaLog } from './pwa-sw-versioning.js';
 
 const earlySentryErrors = [];
@@ -95,9 +96,9 @@ export function formatCleanLocation(rawPath, context = {}) {
     try {
         const withoutHash = String(raw).split('#').at(0).split('?').at(0);
         if (withoutHash.startsWith('http://') || withoutHash.startsWith('https://')) {
-            const canParse = (typeof window !== 'undefined' && typeof window.canParseURL === 'function')
-                ? window.canParseURL(withoutHash)
-                : (typeof URL !== 'undefined' && typeof URL.canParse === 'function' ? URL.canParse(withoutHash) : true);
+            const canParse = (typeof URL !== 'undefined' && typeof URL.canParse === 'function')
+                ? URL.canParse(withoutHash)
+                : true;
             if (canParse) {
                 const url = new URL(withoutHash);
                 return url.pathname || '/';
@@ -142,7 +143,7 @@ export function getReadableDevice() {
  */
 export function getAppMode() {
     if (typeof window === 'undefined') return '🌐 Веб-браузер';
-    if (typeof window.isPwaStandalone === 'function' && window.isPwaStandalone()) return '📱 PWA Standalone';
+    if (invokeAction('isPwaStandalone')) return '📱 PWA Standalone';
     if (window.Telegram?.WebApp?.initData || (typeof window.location !== 'undefined' && window.location.hash && window.location.hash.includes('tgWebAppData'))) {
         return '✈️ Telegram WebApp';
     }
@@ -287,9 +288,7 @@ export function sendTelegramErrorAlert(errorObj, context = {}) {
         details: cleanDetails
     });
 
-    const truncate = (str, len) => (typeof window !== 'undefined' && typeof window.safeTruncateText === 'function')
-        ? window.safeTruncateText(str, len)
-        : str.slice(0, len);
+    const truncate = (str, len) => invokeAction('safeTruncateText', str, len) || str.slice(0, len);
 
     const alertMessage =
         `⚠️ [NISHA CLIENT ERROR ALERT]\n` +
@@ -487,3 +486,8 @@ export function resetTelemetryTestState() {
     reportedErrorHashes.clear();
     earlySentryErrors.length = 0;
 }
+
+registerActions({
+    captureError,
+    sendTelegramErrorAlert
+});

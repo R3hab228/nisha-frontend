@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -57,7 +57,7 @@ function dispatchTouch(el, type, clientX, clientY) {
 describe('Orders Modal Mobile Tab Swipe', () => {
     let listArea;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         listArea = makeEl('ordersListArea', 'flex');
         const tabsEl = makeEl('ordersTabs', 'flex');
         const tabYellow = makeEl('tabYellow');
@@ -87,8 +87,8 @@ describe('Orders Modal Mobile Tab Swipe', () => {
             querySelectorAll: () => []
         };
 
-        const code = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
-        new Function(code)();
+        vi.resetModules();
+        await import('../js/orders/orders.js');
         globalThis.bindOrdersTabSwipe();
     });
 
@@ -135,12 +135,13 @@ describe('Orders Modal Mobile Tab Swipe', () => {
         expect(globalThis.currentOrderTab).toBe('accepted');
     });
 
-    it('formats order date as DD.MM.YYYY and renders it under order-id in .order-id-wrap', () => {
+    it('formats order date as DD.MM.YYYY and renders it under order-id in .order-id-wrap', async () => {
         const code = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
         expect(code).toContain('<div class="order-id-wrap">');
         expect(code).toContain('<span class="order-date">${date}</span>');
         const date = new Date(2026, 10, 13, 12, 0, 0).toISOString();
-        const res = new Function('d', `${code}; return formatOrderDate(d);`)(date);
+        const { invokeAction } = await import('../js/core/action-registry.js');
+        const res = invokeAction('formatOrderDate', date);
         expect(res).toBe('13.11.2026');
     });
 });

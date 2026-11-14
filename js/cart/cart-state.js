@@ -2,6 +2,8 @@
 // NISHA CART — SHARED STATE, LOCKS & HELPERS
 // ==========================================
 
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+
 const getInitialStorage = () => (typeof window !== 'undefined' && window.storage)
     || (typeof storage !== 'undefined' ? storage : null);
 
@@ -214,8 +216,8 @@ export function getSupabaseClient() {
  * @returns {Promise<T>}
  */
 export async function withCartLock(fn) {
-    if (typeof window !== 'undefined' && typeof window.withWebLock === 'function') {
-        return await window.withWebLock('nisha_cart_lock', fn);
+    if (hasAction('withWebLock')) {
+        return await invokeAction('withWebLock', 'nisha_cart_lock', fn);
     }
     if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
         try {
@@ -234,8 +236,8 @@ export async function withCartLock(fn) {
  * @returns {Promise<T>}
  */
 export async function withCheckoutLock(fn) {
-    if (typeof window !== 'undefined' && typeof window.withWebLock === 'function') {
-        return await window.withWebLock('nisha_checkout_lock', fn);
+    if (hasAction('withWebLock')) {
+        return await invokeAction('withWebLock', 'nisha_checkout_lock', fn);
     }
     if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
         try {
@@ -246,6 +248,15 @@ export async function withCheckoutLock(fn) {
     }
     return await fn();
 }
+
+registerActions({
+    getActiveCart,
+    setActiveCart,
+    withCartLock,
+    withCheckoutLock,
+    renderPromoCodeNotice,
+    clearDropdownInlineStyles
+});
 
 if (typeof window !== 'undefined') {
     window.getActiveCart = getActiveCart;

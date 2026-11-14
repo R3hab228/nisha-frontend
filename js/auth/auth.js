@@ -3,6 +3,7 @@
 // ==========================================
 
 import { store, storage, apiClient, showToast } from '../../src/modules/index.js';
+import { invokeAction, registerActions } from '../core/action-registry.js';
 
 // --- CLOUDFLARE TURNSTILE (CAPTCHA / BOT SHIELD) ---
 const locHost = (typeof window !== 'undefined' && window.location && window.location.hostname) || '';
@@ -572,11 +573,27 @@ document.addEventListener('visibilitychange', () => {
         if (typeof window._checkActiveOtp === 'function') {
             window._checkActiveOtp();
         }
-        if (typeof window.checkPendingPhoneVerification === 'function' && storage && storage.get('nisha_pending_otp_phone')) {
-            window.checkPendingPhoneVerification();
+        if (storage && storage.get('nisha_pending_otp_phone')) {
+            invokeAction('checkPendingPhoneVerification');
         }
-        if (typeof window.checkPendingTgVerification === 'function' && storage && storage.get('nisha_pending_otp_tg')) {
-            window.checkPendingTgVerification();
+        if (storage && storage.get('nisha_pending_otp_tg')) {
+            invokeAction('checkPendingTgVerification');
         }
     }
+});
+
+registerActions({
+    ensureTurnstileLoaded,
+    initTurnstileOtpWidget,
+    initTurnstilePropWidget,
+    initTurnstileWidgets,
+    getUserPhone,
+    getUserTg,
+    isPhoneMatchingVerified,
+    setOtpButtonSuccess,
+    setOtpButtonDefault,
+    updateProposeAndCheckoutFields,
+    getWin95HourglassHtml,
+    checkPhoneAuth,
+    generateAndSendOTP
 });

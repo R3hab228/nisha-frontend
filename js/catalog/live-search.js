@@ -1,4 +1,16 @@
 
+import {
+    storage,
+    escapeHtml,
+    escapeJsString,
+    formatPrice,
+    toCDN,
+    applyFilters,
+    showPopoverSafe,
+    hidePopoverSafe
+} from '../../src/modules/index.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+
 function isItemBargainEnabled(item) {
     if (!item || item.status === 'sold') return false;
     if (item.is_bargain === true || String(item.is_bargain) === 'true' || item.is_bargain === 1) return true;
@@ -11,17 +23,6 @@ window.isItemBargainEnabled = isItemBargainEnabled;
 // ==========================================
 // NISHA LIVE SEARCH & SEARCH HISTORY MODULE
 // ==========================================
-
-import {
-    storage,
-    escapeHtml,
-    escapeJsString,
-    formatPrice,
-    toCDN,
-    applyFilters,
-    showPopoverSafe,
-    hidePopoverSafe
-} from '../../src/modules/index.js';
 
 let searchDebounce;
 let currentLiveSearchSeq = 0;
@@ -106,11 +107,7 @@ window.positionLiveSearchDropdown = positionLiveSearchDropdown;
 
 function openSearchDropdown(dropdown) {
     if (!dropdown) return;
-    if (typeof showPopoverSafe === 'function') {
-        showPopoverSafe(dropdown);
-    } else if (typeof window.showPopoverSafe === 'function') {
-        window.showPopoverSafe(dropdown);
-    }
+    showPopoverSafe(dropdown);
     dropdown.style.display = 'block';
     positionLiveSearchDropdown(dropdown);
 }
@@ -137,7 +134,7 @@ function showSearchHistory() {
     dropdown.innerHTML = html;
     openSearchDropdown(dropdown);
     document.body.classList.add('search-lock');
-    if (typeof window.stopLenis === 'function') window.stopLenis();
+    if (hasAction('stopLenis')) invokeAction('stopLenis');
 }
 
 function handleLiveSearch() {
@@ -154,8 +151,7 @@ function handleLiveSearch() {
 
     if (searchTerm.length < 2) {
         if (dropdown) {
-            if (typeof hidePopoverSafe === 'function') hidePopoverSafe(dropdown);
-            else if (typeof window.hidePopoverSafe === 'function') window.hidePopoverSafe(dropdown);
+            hidePopoverSafe(dropdown);
             dropdown.style.display = 'none';
             dropdown.style.removeProperty('position');
             dropdown.style.removeProperty('top');
@@ -163,7 +159,7 @@ function handleLiveSearch() {
             dropdown.style.removeProperty('width');
         }
         document.body.classList.remove('search-lock');
-        if (typeof window.startLenis === 'function') window.startLenis();
+        if (hasAction('startLenis')) invokeAction('startLenis');
         return; 
     }
 
@@ -177,13 +173,16 @@ function handleLiveSearch() {
             } else {
                 const priceQuery = (typeof parsePriceSearchQuery === 'function')
                     ? parsePriceSearchQuery(cleanSearchTerm)
-                    : (typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanSearchTerm) : null);
-                const checkPriceFn = typeof itemMatchesPrice === 'function' ? itemMatchesPrice : window.itemMatchesPrice;
+                    : (hasAction('parsePriceSearchQuery') ? invokeAction('parsePriceSearchQuery', cleanSearchTerm) : null);
+                const canCheckPrice = typeof itemMatchesPrice === 'function' || hasAction('itemMatchesPrice');
+                const checkPriceFn = (itm, pq) => (typeof itemMatchesPrice === 'function'
+                    ? itemMatchesPrice(itm, pq)
+                    : invokeAction('itemMatchesPrice', itm, pq));
 
                 const collected = [];
                 const seenIds = new Set();
 
-                if (priceQuery && typeof checkPriceFn === 'function') {
+                if (priceQuery && canCheckPrice) {
                     const allItemsList = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
                     for (let i = 0; i < allItemsList.length; i++) {
                         const itm = allItemsList[i];
@@ -234,7 +233,7 @@ function handleLiveSearch() {
 
         if (results && results.length > 0) {
             document.body.classList.add('search-lock');
-            if (typeof window.stopLenis === 'function') window.stopLenis();
+            if (hasAction('stopLenis')) invokeAction('stopLenis');
             
             let html = '';
             results.forEach(result => {
@@ -278,9 +277,12 @@ function handleLiveSearch() {
 
                 const priceQuery = (typeof parsePriceSearchQuery === 'function')
                     ? parsePriceSearchQuery(cleanSearchTerm)
-                    : (typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanSearchTerm) : null);
-                const checkPriceFn = typeof itemMatchesPrice === 'function' ? itemMatchesPrice : window.itemMatchesPrice;
-                if (priceQuery && typeof checkPriceFn === 'function' && checkPriceFn(item, priceQuery)) {
+                    : (hasAction('parsePriceSearchQuery') ? invokeAction('parsePriceSearchQuery', cleanSearchTerm) : null);
+                const canCheckPrice = typeof itemMatchesPrice === 'function' || hasAction('itemMatchesPrice');
+                const checkPriceFn = (itm, pq) => (typeof itemMatchesPrice === 'function'
+                    ? itemMatchesPrice(itm, pq)
+                    : invokeAction('itemMatchesPrice', itm, pq));
+                if (priceQuery && canCheckPrice && checkPriceFn(item, priceQuery)) {
                     priceHtml = `<span style="color: var(--accent-green); text-shadow: 0 0 6px rgba(0,255,0,0.5); font-weight: bold;">★ ${priceHtml}</span>`;
                 }
 
@@ -304,7 +306,7 @@ function handleLiveSearch() {
 
             if (dropdown) {
                 if (html) {
-                    if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+                    if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
                     if (seq !== currentLiveSearchSeq) return;
                     if (searchInput.value.trim() !== searchTerm) return;
                     dropdown.innerHTML = html;
@@ -314,7 +316,7 @@ function handleLiveSearch() {
         dropdown.innerHTML = `<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ ${noMatchesText} ]</div>`;
                     openSearchDropdown(dropdown);
                     document.body.classList.remove('search-lock');
-                    if (typeof window.startLenis === 'function') window.startLenis();
+                    if (hasAction('startLenis')) invokeAction('startLenis');
                 }
             }
         } else if (dropdown) {
@@ -322,7 +324,7 @@ function handleLiveSearch() {
         dropdown.innerHTML = `<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ ${noMatchesText} ]</div>`;
             openSearchDropdown(dropdown);
             document.body.classList.remove('search-lock');
-            if (typeof window.startLenis === 'function') window.startLenis();
+            if (hasAction('startLenis')) invokeAction('startLenis');
         }
     }, 250);
 }
@@ -333,8 +335,7 @@ function closeSearch() {
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
     if (dropdown) {
-        if (typeof hidePopoverSafe === 'function') hidePopoverSafe(dropdown);
-        else if (typeof window.hidePopoverSafe === 'function') window.hidePopoverSafe(dropdown);
+        hidePopoverSafe(dropdown);
         dropdown.style.display = 'none';
         dropdown.style.removeProperty('position');
         dropdown.style.removeProperty('top');
@@ -345,7 +346,7 @@ function closeSearch() {
         dropdown.style.removeProperty('margin');
     }
     document.body.classList.remove('search-lock');
-    if (typeof window.startLenis === 'function') window.startLenis();
+    if (hasAction('startLenis')) invokeAction('startLenis');
     if (searchInput) searchInput.blur();
 }
 
@@ -353,6 +354,16 @@ window.saveRecentSearch = saveRecentSearch;
 window.showSearchHistory = showSearchHistory;
 window.handleLiveSearch = handleLiveSearch;
 window.closeSearch = closeSearch;
+
+registerActions({
+    saveRecentSearch,
+    showSearchHistory,
+    handleLiveSearch,
+    closeSearch,
+    invalidateLiveSearchFuse: window.invalidateLiveSearchFuse,
+    openSearchDropdown,
+    positionLiveSearchDropdown
+});
 
 // Слушатели строки главного поиска
 const mainSearchInput = document.getElementById('mainSearch');

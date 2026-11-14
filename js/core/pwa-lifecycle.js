@@ -2,6 +2,7 @@
 // NISHA PWA INSTALL PROMPT, BFCACHE, OFFLINE WIN95 & BATTERY ADAPTER
 // ==========================================
 
+import { invokeAction, registerActions } from './action-registry.js';
 import { debugPwaLog } from './pwa-sw-versioning.js';
 
 let deferredPrompt = null;
@@ -255,32 +256,20 @@ export function initPwaLifecycle() {
         if (event.persisted) {
             console.info('[BFCache] Страница мгновенно восстановлена из памяти браузера (0ms Instant Load)');
 
-            if (typeof window.updateCartUI === 'function') {
-                try { window.updateCartUI(); } catch {}
-            }
-            if (typeof window.updateAppBadge === 'function') {
-                try { window.updateAppBadge(); } catch {}
-            }
-            if (typeof window.renderFavoritesMarkers === 'function') {
-                try { window.renderFavoritesMarkers(); } catch {}
-            }
+            try { invokeAction('updateCartUI'); } catch {}
+            try { invokeAction('updateAppBadge'); } catch {}
+            try { invokeAction('renderFavoritesMarkers'); } catch {}
 
             const spinner = document.getElementById('loadingSpinner') || (document.querySelector && document.querySelector('.global-loading'));
             if (spinner) spinner.style.display = 'none';
 
-            if (typeof window.initLeaderElection === 'function') {
-                try { window.initLeaderElection(); } catch {}
-            }
-            if (typeof window.initCatalogRealtimeSubscription === 'function') {
-                try { window.initCatalogRealtimeSubscription(); } catch {}
-            }
-            if (typeof window.syncCriticalStatuses === 'function') {
-                try { window.syncCriticalStatuses(); } catch {}
-            }
+            try { invokeAction('initLeaderElection'); } catch {}
+            try { invokeAction('initCatalogRealtimeSubscription'); } catch {}
+            try { invokeAction('syncCriticalStatuses'); } catch {}
 
             const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
-            if (activeItem && typeof window.checkItemAvailability === 'function') {
-                try { await window.checkItemAvailability(activeItem.id); } catch {}
+            if (activeItem) {
+                try { await invokeAction('checkItemAvailability', activeItem.id); } catch {}
             }
         }
     }, { passive: true });
@@ -296,3 +285,8 @@ export function initPwaLifecycle() {
     window.addEventListener('offline', handleNetworkOffline);
     window.addEventListener('online', handleNetworkOnline);
 }
+
+registerActions({
+    dismissNetError,
+    'dismiss-net-error': dismissNetError
+});

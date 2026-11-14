@@ -2,6 +2,10 @@
 // NISHA PWA STANDALONE PULL-TO-REFRESH MODULE
 // ==========================================
 
+import { hasAction, invokeAction } from './action-registry.js';
+import { sleep } from './helpers-core-utils.js';
+import { isPopoverOpenSafe } from './helpers-pwa-browser.js';
+
 /**
  * Resolves localized pull-to-refresh labels with offline fallback.
  * @param {'refresh'|'refreshing'} key
@@ -129,8 +133,8 @@ export function initPwaPullToRefresh() {
     const MAX_PULL = 85;
 
     function isEligibleForPull() {
-        if (typeof window.isPwaStandalone === 'function') {
-            if (!window.isPwaStandalone()) return false;
+        if (hasAction('isPwaStandalone')) {
+            if (!invokeAction('isPwaStandalone')) return false;
         } else if (document.documentElement && document.documentElement.classList && !document.documentElement.classList.contains('pwa-standalone')) {
             const isMediaStandalone = (typeof window.matchMedia === 'function') && (
                 window.matchMedia('(display-mode: standalone)').matches ||
@@ -152,7 +156,7 @@ export function initPwaPullToRefresh() {
             (document.body && document.body.classList && document.body.classList.contains && document.body.classList.contains('search-lock')) ||
             (liveSearchDropdown && (
                 (typeof liveSearchDropdown.matches === 'function' && liveSearchDropdown.matches(':popover-open')) ||
-                (typeof window.isPopoverOpenSafe === 'function' && window.isPopoverOpenSafe(liveSearchDropdown)) ||
+                isPopoverOpenSafe(liveSearchDropdown) ||
                 (liveSearchDropdown.style && liveSearchDropdown.style.display === 'block') ||
                 (window.getComputedStyle && typeof window.getComputedStyle === 'function' && window.getComputedStyle(liveSearchDropdown) && window.getComputedStyle(liveSearchDropdown).display === 'block')
             ))
@@ -202,9 +206,7 @@ export function initPwaPullToRefresh() {
     async function triggerRefresh() {
         if (isRefreshing || !container) return;
         isRefreshing = true;
-        if (typeof window.clearSavedFeedScrollState === 'function') {
-            window.clearSavedFeedScrollState();
-        }
+        invokeAction('clearSavedFeedScrollState');
 
         container.classList.remove('is-ready', 'is-pulling');
         container.classList.add('is-refreshing', 'pwa-pull-spinning');
@@ -221,14 +223,10 @@ export function initPwaPullToRefresh() {
             arrowIcon.style.transform = '';
         }
 
-        const minDelay = typeof sleep === 'function'
-            ? sleep(550)
-            : new Promise(resolve => setTimeout(resolve, 550));
+        const minDelay = sleep(550);
         const refreshAction = (async () => {
             try {
-                if (typeof window.loadAllItems === 'function') {
-                    await window.loadAllItems();
-                }
+                await invokeAction('loadAllItems');
             } catch (err) {
                 console.warn('[PWA] Ошибка обновления каталога:', err);
             }
@@ -236,8 +234,7 @@ export function initPwaPullToRefresh() {
 
         await Promise.all([refreshAction, minDelay]);
 
-        if (typeof triggerHaptic === 'function') triggerHaptic('success');
-        else if (navigator.vibrate) navigator.vibrate(16);
+        invokeAction('triggerHaptic', 'success');
 
         container.style.transition = 'transform 0.26s ease-in, opacity 0.22s ease-in';
         container.style.transform = 'translateY(-100%)';

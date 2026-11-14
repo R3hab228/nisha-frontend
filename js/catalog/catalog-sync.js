@@ -5,6 +5,7 @@
 import { getCatalogStore, getSupabaseClient } from './catalog-state.js';
 import { updateCardDOM, insertNewItemCardSmoothly } from './catalog-grid.js';
 import { applyFilters, updateSidebarCounters } from './catalog-filters.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 const ITEM_FULL_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price';
 const ITEM_LEGACY_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable';
@@ -29,13 +30,13 @@ async function queryItemsWithBargainFallback(runQuery) {
 }
 
 function notifyItemStatusTransition(item, oldStatus, oldPrice, oldIsSale) {
-    if (typeof window.showSaleToast === 'function' || typeof showToast === 'function') {
+    if (hasAction('showSaleToast') || typeof showToast === 'function') {
         const numOldPrice = Number(oldPrice) || 0;
         const numNewPrice = Number(item.price) || 0;
         if ((!oldIsSale && item.is_sale) || (numOldPrice > 0 && numNewPrice > 0 && numOldPrice > numNewPrice)) {
             if (item.status === 'available') {
-                if (typeof window.showSaleToast === 'function') {
-                    window.showSaleToast(item);
+                if (hasAction('showSaleToast')) {
+                    invokeAction('showSaleToast', item);
                 } else {
                     const salePref = (typeof i18next !== 'undefined' && i18next.t('messages.sale_prefix')) || '🔥 СКИДКА: ';
                     showToast(`${salePref}${item.name}`, 'success');
@@ -61,9 +62,9 @@ export async function safelySaveCatalogToStorage(items) {
     if (!items || !Array.isArray(items) || items.length === 0) return;
 
     // 1. Первичное и надежное сохранение в IndexedDB
-    if (typeof window.idbSet === 'function') {
+    if (hasAction('idbSet')) {
         try {
-            const saved = await window.idbSet('nisha_cached_db', items);
+            const saved = await invokeAction('idbSet', 'nisha_cached_db', items);
             if (saved) {
                 if (window.storage) window.storage.remove('nisha_cached_db');
                 return;
@@ -81,8 +82,8 @@ export async function safelySaveCatalogToStorage(items) {
         try {
             const slim = items.map(item => {
                 if (!item.description || item.description.length <= 200) return item;
-                const truncated = typeof window.safeTruncateText === 'function'
-                    ? window.safeTruncateText(item.description, 200)
+                const truncated = hasAction('safeTruncateText')
+                    ? invokeAction('safeTruncateText', item.description, 200)
                     : item.description.slice(0, 200);
                 return { ...item, description: truncated };
             });
@@ -103,9 +104,9 @@ export async function loadAllItems() {
 
     // 1. МГНОВЕННАЯ ЗАГРУЗКА (Из IndexedDB с миграцией из localStorage)
     let cachedItems = null;
-    if (typeof window.idbGet === 'function') {
+    if (hasAction('idbGet')) {
         try {
-            cachedItems = await window.idbGet('nisha_cached_db');
+            cachedItems = await invokeAction('idbGet', 'nisha_cached_db');
         } catch {}
     }
 
@@ -113,8 +114,8 @@ export async function loadAllItems() {
         const store = getCatalogStore();
         cachedItems = store ? store.getJSON('nisha_cached_db', null) : null;
         if (cachedItems) {
-            if (typeof window.idbSet === 'function' && Array.isArray(cachedItems) && cachedItems.length > 0) {
-                window.idbSet('nisha_cached_db', cachedItems).then(() => {
+            if (hasAction('idbSet') && Array.isArray(cachedItems) && cachedItems.length > 0) {
+                invokeAction('idbSet', 'nisha_cached_db', cachedItems).then(() => {
                     if (window.storage) window.storage.remove('nisha_cached_db');
                 });
             }
@@ -131,7 +132,7 @@ export async function loadAllItems() {
             if (isCorrupted) {
                 console.warn('[КЭШ КАТАЛОГА] Обнаружены поврежденные данные без фото/описания, очищаем локальный кэш...');
                 cachedItems = null;
-                if (typeof window.idbDel === 'function') window.idbDel('nisha_cached_db');
+                if (hasAction('idbDel')) invokeAction('idbDel', 'nisha_cached_db');
                 if (window.storage) window.storage.remove('nisha_cached_db');
             } else {
                 window.allItems = cachedItems;
@@ -144,7 +145,7 @@ export async function loadAllItems() {
         } catch {
             console.error('Ошибка парсинга кэша');
             cachedItems = null;
-            if (typeof window.idbDel === 'function') window.idbDel('nisha_cached_db');
+            if (hasAction('idbDel')) invokeAction('idbDel', 'nisha_cached_db');
             if (window.storage) window.storage.remove('nisha_cached_db');
         }
     }
@@ -165,7 +166,7 @@ export async function loadAllItems() {
             if (typeof handleNetworkOffline === 'function') {
                 handleNetworkOffline();
             } else if (grid) {
-                const safeErrMsg = typeof window.escapeHtml === 'function' ? window.escapeHtml(error.message) : error.message;
+                const safeErrMsg = hasAction('escapeHtml') ? invokeAction('escapeHtml', error.message) : error.message;
                 grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${safeErrMsg} ]</div>`;
             }
         }
@@ -280,7 +281,7 @@ export async function loadAllItems() {
         }
         changedCardItems.forEach(item => updateCardDOM(item));
     }
-    if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
+    if (hasAction('syncUserBargains')) invokeAction('syncUserBargains');
 }
 
 /**
@@ -289,14 +290,14 @@ export async function loadAllItems() {
  * @param {string} [itemName]
  */
 export function removeSoldItemFromCart(itemId, itemName) {
-    const currentCart = (typeof window.getActiveCart === 'function')
-        ? window.getActiveCart()
+    const currentCart = hasAction('getActiveCart')
+        ? invokeAction('getActiveCart')
         : ((typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []));
     const cartIdx = currentCart.findIndex(c => c && String(c.id) === String(itemId));
     if (cartIdx !== -1) {
         currentCart.splice(cartIdx, 1);
-        if (typeof window.setActiveCart === 'function') {
-            window.setActiveCart(currentCart);
+        if (hasAction('setActiveCart')) {
+            invokeAction('setActiveCart', currentCart);
         } else if (typeof setActiveCart === 'function') {
             setActiveCart(currentCart);
         } else {
@@ -371,7 +372,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
         updateSidebarCounters();
         if (typeof renderHistory === 'function') renderHistory();
-        if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+        if (hasAction('invalidateFuseCache')) invokeAction('invalidateFuseCache');
         safelySaveCatalogToStorage(window.allItems);
         applyFilters(true, true);
 
@@ -399,8 +400,8 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
             window.allItems.unshift(fresh);
         }
         const sortDateDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
-        window.allItems = (typeof window.toSorted === 'function')
-            ? window.toSorted(window.allItems, sortDateDesc)
+        window.allItems = hasAction('toSorted')
+            ? invokeAction('toSorted', window.allItems, sortDateDesc)
             : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
 
         if (!fromBroadcast && isNewUnseen) {
@@ -413,7 +414,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
         insertNewItemCardSmoothly(fresh);
         updateSidebarCounters();
-        if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+        if (hasAction('invalidateFuseCache')) invokeAction('invalidateFuseCache');
         safelySaveCatalogToStorage(window.allItems);
 
         if (!fromBroadcast && _catalogBroadcastChannel) {
@@ -457,7 +458,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
     updateSidebarCounters();
     if (typeof renderHistory === 'function') renderHistory();
-    if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+    if (hasAction('invalidateFuseCache')) invokeAction('invalidateFuseCache');
     safelySaveCatalogToStorage(window.allItems);
 
     const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
@@ -536,8 +537,8 @@ export async function syncCriticalStatuses() {
             // 1. Очистка от удаленных из БД товаров (Set.prototype.difference)
             const deletedIds = (typeof currentIdSet.difference === 'function')
                 ? Array.from(currentIdSet.difference(freshIdSet))
-                : ((typeof window.setDifference === 'function')
-                    ? Array.from(window.setDifference(currentIdSet, freshIdSet))
+                : (hasAction('setDifference')
+                    ? Array.from(invokeAction('setDifference', currentIdSet, freshIdSet))
                     : window.allItems.filter(i => i && !freshIdSet.has(i.id)).map(i => i.id));
 
             if (deletedIds.length > 0) {
@@ -555,8 +556,8 @@ export async function syncCriticalStatuses() {
             // 2. Проверка новых товаров
             const newIds = (typeof freshIdSet.difference === 'function')
                 ? Array.from(freshIdSet.difference(currentIdSet))
-                : ((typeof window.setDifference === 'function')
-                    ? Array.from(window.setDifference(freshIdSet, currentIdSet))
+                : (hasAction('setDifference')
+                    ? Array.from(invokeAction('setDifference', freshIdSet, currentIdSet))
                     : data.filter(d => d && !currentIdSet.has(d.id)).map(d => d.id));
             if (newIds.length > 0) {
                 const { data: fullNewItems } = await queryItemsWithBargainFallback((cols) =>
@@ -577,8 +578,8 @@ export async function syncCriticalStatuses() {
                     });
 
                     const sortDateDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
-                    window.allItems = (typeof window.toSorted === 'function')
-                        ? window.toSorted(window.allItems, sortDateDesc)
+                    window.allItems = hasAction('toSorted')
+                        ? invokeAction('toSorted', window.allItems, sortDateDesc)
                         : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
 
                     freshNewArrivals.forEach(item => insertNewItemCardSmoothly(item));
@@ -668,7 +669,7 @@ export async function syncCriticalStatuses() {
                 }
                 updateSidebarCounters();
                 if (typeof renderHistory === 'function') renderHistory();
-                if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+                if (hasAction('invalidateFuseCache')) invokeAction('invalidateFuseCache');
                 applyFilters(true, true);
             } else if (anyCardUpdated) {
                 if (canSafelySaveCache) {
@@ -676,7 +677,7 @@ export async function syncCriticalStatuses() {
                 }
                 updateSidebarCounters();
                 if (typeof renderHistory === 'function') renderHistory();
-                if (typeof window.invalidateFuseCache === 'function') window.invalidateFuseCache();
+                if (hasAction('invalidateFuseCache')) invokeAction('invalidateFuseCache');
             }
         } catch (e) {
             console.warn('Sync error:', e);
@@ -685,8 +686,8 @@ export async function syncCriticalStatuses() {
         }
     };
 
-    if (typeof window.runWithLock === 'function') {
-        return window.runWithLock('nisha_critical_sync_lock', executeSync, { ifAvailable: true });
+    if (hasAction('runWithLock')) {
+        return invokeAction('runWithLock', 'nisha_critical_sync_lock', executeSync, { ifAvailable: true });
     }
     return executeSync();
 }
@@ -703,7 +704,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined' && !window.
         _lastForegroundSyncAt = now;
         initCatalogRealtimeSubscription();
         syncCriticalStatuses();
-        if (typeof window.syncUserBargains === 'function') window.syncUserBargains();
+        if (hasAction('syncUserBargains')) invokeAction('syncUserBargains');
     };
 
     window._catalogSyncIntervalId = setInterval(() => {
@@ -720,6 +721,14 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined' && !window.
     window.addEventListener('focus', triggerForegroundSync);
     window.addEventListener('online', triggerForegroundSync);
 }
+
+registerActions({
+    loadAllItems,
+    removeSoldItemFromCart,
+    handleRealtimeCatalogEvent,
+    initCatalogRealtimeSubscription,
+    syncCriticalStatuses
+});
 
 if (typeof window !== 'undefined') {
     window.loadAllItems = loadAllItems;

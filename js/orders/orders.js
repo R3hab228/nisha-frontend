@@ -2,11 +2,30 @@
 // NISHA MY ORDERS MODULE (Lazy Chunk: MY_ORDERS.EXE & JSBARCODE)
 // ==========================================
 
+import { registerActions, resolveAction } from '../core/action-registry.js';
+
 if (typeof window.globalOrdersData === 'undefined') window.globalOrdersData = [];
 if (typeof window.currentOrderTab === 'undefined') window.currentOrderTab = 'accepted'; // accepted, shipped, cancelled
 if (typeof window.orderItemsImageCache === 'undefined') window.orderItemsImageCache = {};
 
-const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
+const toCDN = (u) => {
+    const fn = resolveAction('toCDN');
+    return fn ? fn(u) : (u || '');
+};
+const escHtml = (v) => {
+    const fn = resolveAction('escapeHtml');
+    return fn ? fn(v) : String(v || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+};
+const escAttr = (v) => {
+    const fn = resolveAction('escapeAttr');
+    return fn ? fn(v) : String(v || '').replaceAll('"', '&quot;');
+};
+const fmtPrice = (v) => {
+    const fn = resolveAction('formatPrice');
+    if (fn) return fn(v);
+    const curr = (typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн';
+    return `${v} ${curr}`;
+};
 
 function formatOrderDate(rawDate) {
     const ms = typeof rawDate === 'number' ? rawDate : Date.parse(rawDate);
@@ -33,7 +52,8 @@ function openOrdersModal() {
         triggerModalTypewriter('ordersModal');
     }
 
-    if (typeof window.stopLenis === 'function') window.stopLenis();
+    const stopLenisFn = resolveAction('stopLenis');
+    if (stopLenisFn) stopLenisFn();
     else if (typeof lenis !== 'undefined') lenis.stop();
     
     const guestInputGroup = document.getElementById('guestOrderInputGroup');
@@ -47,12 +67,13 @@ function openOrdersModal() {
     if (activeUser) {
         if (guestInputGroup) guestInputGroup.style.display = 'none';
         
-        let dName = typeof getUserDisplayName === 'function'
-            ? getUserDisplayName(activeUser, activeProfile)
+        const displayNameFn = resolveAction('getUserDisplayName');
+        let dName = displayNameFn
+            ? displayNameFn(activeUser, activeProfile)
             : (activeProfile?.username || activeUser.user_metadata?.display_name || activeUser.user_metadata?.username || activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || activeUser.email.split('@').at(0));
         
         const grantedMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_granted', {defaultValue: 'Доступ разрешен'}) : 'Доступ разрешен';
-        const safeDName = typeof window.escapeHtml === 'function' ? window.escapeHtml(dName) : String(dName || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+        const safeDName = escHtml(dName);
         if (guestText) guestText.innerHTML = `${grantedMsg}: <span style="color:var(--accent-green); font-weight:bold;">@${safeDName}</span>`;
         updateOrderTabCounters();
         fetchMyOrders();
@@ -321,8 +342,9 @@ async function fetchMyOrders() {
                             if (added) {
                                 const orderValues = Array.from(orderMap.values());
                                 const sortOrdersDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
-                                window.globalOrdersData = (typeof window.toSorted === 'function')
-                                    ? window.toSorted(orderValues, sortOrdersDesc)
+                                const sortFn = resolveAction('toSorted');
+                                window.globalOrdersData = sortFn
+                                    ? sortFn(orderValues, sortOrdersDesc)
                                     : (typeof orderValues.toSorted === 'function'
                                         ? orderValues.toSorted(sortOrdersDesc)
                                         : [...orderValues].sort(sortOrdersDesc));
@@ -338,8 +360,9 @@ async function fetchMyOrders() {
 
             const initialOrderValues = Array.from(orderMap.values());
             const sortOrdersDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
-            window.globalOrdersData = (typeof window.toSorted === 'function')
-                ? window.toSorted(initialOrderValues, sortOrdersDesc)
+            const sortFn = resolveAction('toSorted');
+            window.globalOrdersData = sortFn
+                ? sortFn(initialOrderValues, sortOrdersDesc)
                 : (typeof initialOrderValues.toSorted === 'function'
                     ? initialOrderValues.toSorted(sortOrdersDesc)
                     : [...initialOrderValues].sort(sortOrdersDesc));
@@ -368,7 +391,7 @@ async function fetchMyOrders() {
             const deniedOtpMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_denied_otp', {defaultValue: '[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.'}) : '[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.';
             const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', {defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ'}) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
             listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">${deniedOtpMsg}</div>
-            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" data-action="verify-orders-phone" data-phone="${typeof window.escapeAttr === 'function' ? window.escapeAttr(phone) : phone}">${verifyBotMsg}</button>`;
+            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" data-action="verify-orders-phone" data-phone="${escAttr(phone)}">${verifyBotMsg}</button>`;
             return; 
         }
 
@@ -383,7 +406,7 @@ async function fetchMyOrders() {
     }
 
     if (fetchError && (!window.globalOrdersData || window.globalOrdersData.length === 0)) { 
-        const safeFetchErr = typeof window.escapeHtml === 'function' ? window.escapeHtml(fetchError.message) : fetchError.message;
+        const safeFetchErr = escHtml(fetchError.message);
         listArea.innerHTML = `<div style="color:red; text-align:center;">[ ОШИБКА: ${safeFetchErr} ]</div>`; 
         return; 
     }
@@ -464,9 +487,10 @@ function getOrderItemImage(item) {
     if (Array.isArray(catalog)) {
         const catalogItem = catalog.find(p => (item.id && p && p.id === item.id) || (item.name && p && p.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()));
         if (catalogItem) {
+            const optImgFn = resolveAction('getOptimizedImageUrl');
             let foundUrl = '';
-            if (typeof window.getOptimizedImageUrl === 'function') {
-                foundUrl = window.getOptimizedImageUrl(catalogItem, true);
+            if (optImgFn) {
+                foundUrl = optImgFn(catalogItem, true);
             } else if (typeof getOptimizedImageUrl === 'function') {
                 foundUrl = getOptimizedImageUrl(catalogItem, true);
             }
@@ -565,7 +589,8 @@ function getNovaPoshtaTrackingUrl(ttn, lang) {
     const cleanTtn = String(ttn || '').trim();
     if (!cleanTtn) return 'https://tracking.novaposhta.ua/';
     const currentLang = lang || ((typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk');
-    const encoded = encodeNovaPoshtaTtn(cleanTtn) || (typeof window.safeEncodeURIComponent === 'function' ? window.safeEncodeURIComponent(cleanTtn) : encodeURIComponent(cleanTtn));
+    const encFn = resolveAction('safeEncodeURIComponent');
+    const encoded = encodeNovaPoshtaTtn(cleanTtn) || (encFn ? encFn(cleanTtn) : encodeURIComponent(cleanTtn));
     return `https://tracking.novaposhta.ua/#/${currentLang}/${encoded}`;
 }
 window.getNovaPoshtaTrackingUrl = getNovaPoshtaTrackingUrl;
@@ -620,11 +645,10 @@ function switchOrderTab(tabName) {
         renderFilteredOrders();
     };
 
+    const viewTransitionFn = resolveAction('safeViewTransition') || (typeof safeViewTransition === 'function' ? safeViewTransition : null);
     let transitionResult;
-    if (typeof safeViewTransition === 'function') {
-        transitionResult = safeViewTransition(updateDom);
-    } else if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
-        transitionResult = window.safeViewTransition(updateDom);
+    if (viewTransitionFn) {
+        transitionResult = viewTransitionFn(updateDom);
     } else {
         transitionResult = updateDom();
     }
@@ -799,8 +823,9 @@ function copyTTN(ttn, el) {
         }
     };
 
-    if (typeof window.copyToClipboard === 'function') {
-        window.copyToClipboard(cleanTtn, successMsg).then(ok => {
+    const copyFn = resolveAction('copyToClipboard');
+    if (copyFn) {
+        copyFn(cleanTtn, successMsg).then(ok => {
             if (ok) animateCopiedIcon();
         });
     } else if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -849,15 +874,15 @@ function renderFilteredOrders() {
         if (order.items && Array.isArray(order.items)) {
             order.items.forEach(item => {
                 const itemImg = getOrderItemImage(item);
-                const safeImgUrl = typeof window.escapeHtml === 'function' ? window.escapeHtml(itemImg) : (itemImg || '').replaceAll('"', '&quot;');
+                const safeImgUrl = escHtml(itemImg);
                 const imgStyle = itemImg ? `background-image: url('${safeImgUrl}');` : '';
                 const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);
                 itemsHtml += `
-                    <div class="order-item-row" data-action="open-product" data-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" title="Открыть карточку товара">
-                        <div class="order-item-img" data-item-id="${typeof window.escapeAttr === 'function' ? window.escapeAttr(item.id) : item.id}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
+                    <div class="order-item-row" data-action="open-product" data-id="${escAttr(item.id)}" title="Открыть карточку товара">
+                        <div class="order-item-img" data-item-id="${escAttr(item.id)}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
                         <div class="order-item-details">
-                            <div class="order-item-name">${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.name || 'Товар') : item.name}</div>
-                            <div class="order-item-meta"><span>Размер: ${typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '—') : (item.size || '—')}</span><span class="order-item-price">${typeof window.formatPrice === 'function' ? window.formatPrice(itemPrice) : (itemPrice + ' грн')}</span></div>
+                            <div class="order-item-name">${escHtml(item.name || 'Товар')}</div>
+                            <div class="order-item-meta"><span>Размер: ${escHtml(item.size || '—')}</span><span class="order-item-price">${fmtPrice(itemPrice)}</span></div>
                         </div>
                     </div>`;
             });
@@ -875,15 +900,11 @@ function renderFilteredOrders() {
                     const labelPrefix = rawTtns.length > 1
                         ? ((typeof i18next !== 'undefined' ? i18next.t('orders_modal.parcel_prefix', {defaultValue: 'Посылка'}) : 'Посылка') + ` #${idx + 1} ТТН:`)
                         : 'ТТН:';
-                    const safeTtnAttr = typeof window.escapeAttr === 'function' ? window.escapeAttr(ttn) : ttn;
-                    const safeTtnHtml = typeof window.escapeHtml === 'function' ? window.escapeHtml(ttn) : ttn;
+                    const safeTtnAttr = escAttr(ttn);
+                    const safeTtnHtml = escHtml(ttn);
 
                     const trackingLang = (typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk';
-                    const npTrackingUrl = typeof window.getNovaPoshtaTrackingUrl === 'function'
-                        ? window.getNovaPoshtaTrackingUrl(ttn, trackingLang)
-                        : (typeof getNovaPoshtaTrackingUrl === 'function'
-                            ? getNovaPoshtaTrackingUrl(ttn, trackingLang)
-                            : `https://tracking.novaposhta.ua/#/${trackingLang}/${typeof window.safeEncodeURIComponent === 'function' ? window.safeEncodeURIComponent(String(ttn || '').trim()) : encodeURIComponent(String(ttn || '').trim())}`);
+                    const npTrackingUrl = getNovaPoshtaTrackingUrl(ttn, trackingLang);
 
                     return `<div class="order-ttn">
                              <div class="order-ttn-header">
@@ -927,7 +948,7 @@ function renderFilteredOrders() {
                 if (!reviewedOrders.includes(order.id)) {
                     reviewBtnHtml = `
                         <div style="margin-top: 10px; cursor: pointer; color: var(--accent-green); font-size: 12px; font-family: var(--font-main); text-align: center; transition: 0.2s;" 
-                             data-action="prompt-order-review" data-hover-action="review-link-hover" data-order-id="${typeof window.escapeAttr==='function'?window.escapeAttr(order.id):order.id}" data-item-name="${typeof window.escapeAttr==='function'?window.escapeAttr(safeName):safeName}" data-item-img="${typeof window.escapeAttr==='function'?window.escapeAttr(firstItemImg):firstItemImg}" data-item-id="${typeof window.escapeAttr==='function'?window.escapeAttr(firstItem.id):firstItem.id}"
+                             data-action="prompt-order-review" data-hover-action="review-link-hover" data-order-id="${escAttr(order.id)}" data-item-name="${escAttr(safeName)}" data-item-img="${escAttr(firstItemImg)}" data-item-id="${escAttr(firstItem.id)}"
                              role="button"
                              tabindex="0">
                             ${msgIcon} ${typeof i18next !== 'undefined' ? i18next.t('orders_modal.leave_review', {defaultValue: 'Оставить отзыв'}) : 'Оставить отзыв'}
@@ -946,7 +967,7 @@ function renderFilteredOrders() {
         const statusSlug = (order.status || '').toLowerCase().replace(/[\s_]+/g, '-');
         const ttnBlock = ttnHtml ? `<div class="order-ttns-wrapper">${ttnHtml}</div>` : '';
         const totalPrefix = typeof i18next !== 'undefined' ? i18next.t('orders_modal.total_prefix', {defaultValue: 'ИТОГО:'}) : 'ИТОГО:';
-        const formattedTotal = typeof window.formatPrice === 'function' ? window.formatPrice(order.total_sum) : `${order.total_sum} ${(typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн'}`;
+        const formattedTotal = fmtPrice(order.total_sum);
 
         listArea.innerHTML += `
             <div class="order-card">
@@ -956,8 +977,8 @@ function renderFilteredOrders() {
                         ${date ? `<span class="order-date">${date}</span>` : ''}
                     </div>
                     ${(() => {
-                        const fmtStatus = typeof window.formatOrderStatus === 'function' ? window.formatOrderStatus(order.status) : (order.status || '').toUpperCase();
-                        return `<span class="order-status status-${typeof window.escapeAttr==='function'?window.escapeAttr(statusSlug):statusSlug}" data-raw-status="${typeof window.escapeAttr==='function'?window.escapeAttr(order.status || ''):order.status || ''}">${typeof window.escapeHtml==='function'?window.escapeHtml(fmtStatus):fmtStatus}</span>`;
+                        const fmtStatus = formatOrderStatus(order.status);
+                        return `<span class="order-status status-${escAttr(statusSlug)}" data-raw-status="${escAttr(order.status || '')}">${escHtml(fmtStatus)}</span>`;
                     })()}
                 </div>
                 <div class="order-items-list">${itemsHtml}</div>
@@ -995,14 +1016,32 @@ function renderFilteredOrders() {
             drawBarcodes();
         }).catch(err => {
             console.warn('[JsBarcode] Local load failed, falling back to CDN:', err);
-            if (typeof loadExternalScript === 'function') {
-                loadExternalScript('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js').then(drawBarcodes).catch(() => {});
+            const extScriptFn = resolveAction('loadExternalScript') || (typeof loadExternalScript === 'function' ? loadExternalScript : null);
+            if (extScriptFn) {
+                extScriptFn('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js').then(drawBarcodes).catch(() => {});
             }
         });
     }
 }
 window.renderFilteredOrders = renderFilteredOrders;
 if (typeof globalThis !== 'undefined') globalThis.renderFilteredOrders = renderFilteredOrders;
+
+registerActions({
+    formatOrderDate,
+    openOrdersModal,
+    formatOrderStatus,
+    getOrderTabBucket,
+    updateOrderTabCounters,
+    fetchMyOrders,
+    getOrderItemImage,
+    ensureOrderImagesLoaded,
+    encodeNovaPoshtaTtn,
+    getNovaPoshtaTrackingUrl,
+    switchOrderTab,
+    bindOrdersTabSwipe,
+    copyTTN,
+    renderFilteredOrders
+});
 
 if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
     try { updateOrderTabCounters(); } catch {}

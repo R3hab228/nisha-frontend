@@ -2,6 +2,8 @@
 // NISHA CATALOG — CDN, MEDIA SANITIZATION & IMAGE PREFETCH
 // ==========================================
 
+import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+
 // Глобальный перехватчик URL для CDN
 if (typeof window !== 'undefined') {
     window.toCDN = window.toCDN || function(url, options = {}) {
@@ -20,7 +22,7 @@ if (typeof window !== 'undefined') {
         if (width || height || quality || format) {
             const sep = result.includes('?') ? '&' : '?';
             const params = [];
-            const _enc = (v) => (typeof window.safeEncodeURIComponent === 'function' ? window.safeEncodeURIComponent(v) : encodeURIComponent(v));
+            const _enc = (v) => (hasAction('safeEncodeURIComponent') ? invokeAction('safeEncodeURIComponent', v) : encodeURIComponent(v));
             if (width) params.push(`w=${_enc(width)}`);
             if (height) params.push(`h=${_enc(height)}`);
             if (quality) params.push(`q=${_enc(quality)}`);
@@ -38,8 +40,9 @@ if (typeof window !== 'undefined') {
  * @returns {string}
  */
 export function toCDN(url, options) {
-    return typeof window !== 'undefined' && typeof window.toCDN === 'function'
-        ? window.toCDN(url, options)
+    const cdnFn = resolveAction('toCDN');
+    return typeof cdnFn === 'function' && cdnFn !== toCDN
+        ? cdnFn(url, options)
         : (url || '');
 }
 
@@ -75,8 +78,8 @@ let _prefetchPendingId = null;
  * @param {string|number} id
  */
 export function prefetchItemImages(id) {
-    if (typeof window !== 'undefined' && typeof window.prewarmProductModal === 'function') {
-        window.prewarmProductModal(id);
+    if (hasAction('prewarmProductModal')) {
+        invokeAction('prewarmProductModal', id);
         return;
     }
     if (typeof window === 'undefined') return;
@@ -132,8 +135,9 @@ export function cancelPrefetchItemImages(id) {
  * @returns {string|null}
  */
 export function sanitizeHtmlMediaUrl(rawUrl) {
-    if (typeof window !== 'undefined' && typeof window.sanitizeHtmlMediaUrl === 'function') {
-        return window.sanitizeHtmlMediaUrl(rawUrl);
+    const sanitizeFn = resolveAction('sanitizeHtmlMediaUrl');
+    if (typeof sanitizeFn === 'function' && sanitizeFn !== sanitizeHtmlMediaUrl) {
+        return sanitizeFn(rawUrl);
     }
     if (!rawUrl || typeof rawUrl !== 'string') return null;
     try {
@@ -166,6 +170,13 @@ export function sanitizeHtmlMediaUrl(rawUrl) {
 export function isSafeMediaUrl(rawUrl) {
     return Boolean(sanitizeHtmlMediaUrl(rawUrl));
 }
+
+registerActions({
+    getOptimizedImageUrl,
+    prefetchItemImages,
+    cancelPrefetchItemImages,
+    isSafeMediaUrl
+});
 
 if (typeof window !== 'undefined') {
     window.getOptimizedImageUrl = getOptimizedImageUrl;

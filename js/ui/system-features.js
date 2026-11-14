@@ -25,7 +25,10 @@ import {
     generateShortId,
     initAnalytics,
     track,
-    startOnboardingTour
+    startOnboardingTour,
+    getGraphemeCount,
+    invokeAction,
+    registerActions
 } from '../../src/modules/index.js';
 
 let pendingBroadcastQueue = null;
@@ -121,7 +124,10 @@ function acceptRules() {
     }
     
     setTimeout(() => {
-        startOnboardingTour();
+        startOnboardingTour,
+    getGraphemeCount,
+    invokeAction,
+    registerActions();
     }, 450); 
 }
 window.acceptRules = acceptRules;
@@ -211,7 +217,7 @@ function updateCharCount(textarea) {
     const label = document.getElementById('descLabel');
     if (!label) return;
     
-    const charCount = typeof window.getGraphemeCount === 'function' ? window.getGraphemeCount(textarea.value) : textarea.value.length;
+    const charCount = getGraphemeCount(textarea.value);
     const remaining = 250 - charCount;
     const originalText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
         ? i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' })
@@ -266,13 +272,13 @@ document.addEventListener('keydown', function(e) {
 
         if (activeEl.id === 'promoInput') {
             e.preventDefault();
-            if (typeof window.applyPromoCode === 'function') window.applyPromoCode();
+            invokeAction('applyPromoCode');
             return;
         }
 
         if (activeEl.id === 'ordersSearchPhone') {
             e.preventDefault();
-            if (typeof window.fetchMyOrders === 'function') window.fetchMyOrders();
+            invokeAction('fetchMyOrders');
             return;
         }
 
@@ -346,26 +352,19 @@ document.addEventListener('keydown', function(e) {
         if (activeEl.tagName === 'INPUT') {
             if (activeEl.id === 'propMinBargainPrice') {
                 e.preventDefault();
-                if (typeof window.confirmPropBargainInput === 'function') {
-                    window.confirmPropBargainInput();
-                }
+                invokeAction('confirmPropBargainInput');
                 return;
             }
             if (activeEl.id === 'inlineBargainPriceInput') {
                 e.preventDefault();
-                if (typeof window.submitInlineBargainOffer === 'function') {
-                    window.submitInlineBargainOffer();
-                }
+                invokeAction('submitInlineBargainOffer');
                 return;
             }
             if (activeEl.id === 'bargainPriceInput') {
                 e.preventDefault();
-                if (typeof window.submitBargainOffer === 'function') {
-                    window.submitBargainOffer();
-                }
+                invokeAction('submitBargainOffer');
                 return;
             }
-
             e.preventDefault();
             const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields') || activeEl.closest('.modal-window');
             if (form) {
@@ -397,10 +396,20 @@ document.addEventListener('keydown', function(e) {
 
     const pModal = document.getElementById('productModal');
     if (pModal && (pModal.style.display === 'flex' || pModal.style.display === 'block')) {
-        if (e.key === 'ArrowLeft') {
-            if (typeof moveSlide === 'function') moveSlide(-1);
-        } else if (e.key === 'ArrowRight') {
-            if (typeof moveSlide === 'function') moveSlide(1);
-        }
+        if (e.key === 'ArrowLeft') invokeAction('moveSlide', -1);
+        else if (e.key === 'ArrowRight') invokeAction('moveSlide', 1);
     }
+});
+
+registerActions({
+    tryShowBroadcast,
+    checkPendingBroadcast,
+    checkRules,
+    showRulesModal,
+    'show-rules': showRulesModal,
+    acceptRules,
+    'accept-rules': acceptRules,
+    triggerEasterEgg,
+    initHitCounter,
+    updateCharCount
 });

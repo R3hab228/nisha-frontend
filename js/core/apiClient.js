@@ -8,6 +8,8 @@
 // - Ключи идемпотентности (Idempotency Key) для критических транзакций (заказы, предложки)
 // - Безопасный парсинг JSON без падений при HTML-страницах ошибок прокси/Cloudflare
 
+import { invokeAction, registerActions } from './action-registry.js';
+
 (function () {
     const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
     const DEFAULT_TIMEOUT_MS = 12000;
@@ -33,9 +35,7 @@
     function generateIdempotencyKey(prefix = 'req') {
         const rand = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
             ? crypto.randomUUID().replaceAll('-', '').slice(0, 10)
-            : (typeof window !== 'undefined' && typeof window.generateShortId === 'function'
-                ? window.generateShortId(8)
-                : Date.now().toString(36));
+            : (invokeAction('generateShortId', 8) || Date.now().toString(36));
         return `${prefix}_${Date.now()}_${rand}`;
     }
 
@@ -89,7 +89,7 @@
         // Автоматическая передача JWT токена текущей авторизованной сессии Supabase (защита от IDOR/BOLA)
         if (!headers.has('Authorization') && typeof window !== 'undefined') {
             try {
-                const sb = window._supabase || (typeof window.getSupabase === 'function' ? window.getSupabase() : null);
+                const sb = window._supabase || invokeAction('getSupabase');
                 if (sb && sb.auth && typeof sb.auth.getSession === 'function') {
                     const sess = await sb.auth.getSession();
                     const tok = sess && sess.data && sess.data.session && sess.data.session.access_token;
@@ -310,6 +310,10 @@
     window.apiClient = apiClient;
     window.apiRequest = request;
     window.warmupBackendServer = warmupBackendServer;
+    registerActions({
+        apiRequest: request,
+        warmupBackendServer
+    });
     if (typeof globalThis !== 'undefined') {
         globalThis.apiClient = apiClient;
         globalThis.apiRequest = request;

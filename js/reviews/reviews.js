@@ -2,7 +2,12 @@
 // NISHA REVIEWS MODULE (REVIEWS.TXT / EXE)
 // ==========================================
 
-const toCDN = (u) => (typeof window.toCDN === 'function' ? window.toCDN(u) : (u || ''));
+import { invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+
+const toCDN = (u) => {
+    const fn = resolveAction('toCDN');
+    return fn ? fn(u) : (u || '');
+};
 
 // Глобальная функция для открытия 1 картинки в PhotoSwipe
 async function openReviewImage(url) {
@@ -61,20 +66,23 @@ async function openReviewsModal() {
         }
         container.classList.remove('is-empty');
         
+        const sanitizeFn = resolveAction('sanitizeText');
+        const escHtmlFn = resolveAction('escapeHtml');
+        const escAttrFn = resolveAction('escapeAttr');
         let html = ''; 
         data.forEach(rev => {
             const revDateMs = Date.parse(rev.created_at);
             const date = Number.isFinite(revDateMs) ? reviewDateFormatter.format(revDateMs) : '';
-            const safeText = (typeof window.sanitizeText === 'function') ? window.sanitizeText(rev.text) : (rev.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-            const safeName = (typeof window.sanitizeText === 'function') ? window.sanitizeText(rev.user_name) : (rev.user_name || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const safeText = sanitizeFn ? sanitizeFn(rev.text) : (rev.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const safeName = sanitizeFn ? sanitizeFn(rev.user_name) : (rev.user_name || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
             
             const revImg = rev.item_image ? toCDN(rev.item_image) : '';
-            const safeRevImg = typeof window.escapeHtml === 'function' ? window.escapeHtml(revImg) : revImg.replaceAll('"', '&quot;');
+            const safeRevImg = escHtmlFn ? escHtmlFn(revImg) : revImg.replaceAll('"', '&quot;');
             const clickAction = revImg ? `data-action="open-review-image" data-img="${safeRevImg}"` : '';
             const imgHtml = revImg ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${safeRevImg}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
             
             const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
-            const safeItemIdAttr = typeof window.escapeAttr === 'function' ? window.escapeAttr(rev.item_id) : String(rev.item_id || '').replaceAll('"', '&quot;');
+            const safeItemIdAttr = escAttrFn ? escAttrFn(rev.item_id) : String(rev.item_id || '').replaceAll('"', '&quot;');
             const productLinkAction = rev.item_id ? `data-action="open-product" data-id="${safeItemIdAttr}" title="Открыть товар"` : '';
 
             html += `
@@ -206,7 +214,8 @@ window.addEventListener('resize', () => {
     resizeReviewCardRaf = window.requestAnimationFrame(() => {
         resizeReviewCardRaf = null;
         const modal = document.getElementById('reviewsModal');
-        if (modal && (typeof window.isElementVisible === 'function' ? window.isElementVisible(modal) : window.getComputedStyle(modal).display === 'flex')) {
+        const visFn = resolveAction('isElementVisible');
+        if (modal && (visFn ? visFn(modal) : window.getComputedStyle(modal).display === 'flex')) {
             equalizeReviewCardHeights();
         }
     });
@@ -366,8 +375,9 @@ async function submitAutoReview() {
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
             const reviewPublishedMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв опубликован! Спасибо.';
-            if (typeof window.showReviewToast === 'function') {
-                window.showReviewToast('⭐', reviewPublishedMsg);
+            const revToastFn = resolveAction('showReviewToast');
+            if (revToastFn) {
+                revToastFn('⭐', reviewPublishedMsg);
             } else {
                 showToast(reviewPublishedMsg, 'success');
             }
@@ -379,9 +389,7 @@ async function submitAutoReview() {
             }
             if (store) store.setJSON('nisha_reviewed_orders', reviewedOrders);
             closeModal('autoReviewModal');
-            if (typeof renderFilteredOrders === 'function') {
-                renderFilteredOrders();
-            }
+            invokeAction('renderFilteredOrders');
         } else {
             const errDetail = result.error ? (result.error.message || String(result.error)) : 'Не удалось сохранить отзыв';
             const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.err_send')) || 'Ошибка при отправке: ';
@@ -389,8 +397,9 @@ async function submitAutoReview() {
         }
     };
     try {
-        if (typeof window.withButtonBusy === 'function') {
-            await window.withButtonBusy('[data-action="submit-auto-review"]', runAutoReviewSubmit);
+        const busyFn = resolveAction('withButtonBusy');
+        if (busyFn) {
+            await busyFn('[data-action="submit-auto-review"]', runAutoReviewSubmit);
         } else {
             await runAutoReviewSubmit();
         }
@@ -484,8 +493,9 @@ async function submitManualReview() {
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
             const reviewSuccessMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв успешно опубликован!';
-            if (typeof window.showReviewToast === 'function') {
-                window.showReviewToast('⭐', reviewSuccessMsg);
+            const revToastFn = resolveAction('showReviewToast');
+            if (revToastFn) {
+                revToastFn('⭐', reviewSuccessMsg);
             } else {
                 showToast(reviewSuccessMsg, 'success');
             }
@@ -502,8 +512,9 @@ async function submitManualReview() {
         }
     };
 
-    if (typeof window.withButtonBusy === 'function') {
-        await window.withButtonBusy('#writeReviewModal .cart-checkout-btn', runManualReviewSubmit);
+    const busyFn = resolveAction('withButtonBusy');
+    if (busyFn) {
+        await busyFn('#writeReviewModal .cart-checkout-btn', runManualReviewSubmit);
     } else {
         await runManualReviewSubmit();
     }
@@ -539,7 +550,8 @@ function initReviewsRealtime(sb) {
 
                 // Если модальное окно отзывов сейчас открыто — мгновенно обновляем список
                 const modal = document.getElementById('reviewsModal');
-                if (modal && (typeof window.isElementVisible === 'function' ? window.isElementVisible(modal) : window.getComputedStyle(modal).display === 'flex')) {
+                const visFn = resolveAction('isElementVisible');
+                if (modal && (visFn ? visFn(modal) : window.getComputedStyle(modal).display === 'flex')) {
                     openReviewsModal();
                 }
 
@@ -559,18 +571,20 @@ function initReviewsRealtime(sb) {
                 const fallbackAuthor = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.author_fallback')) || 'Покупатель';
                 const author = rawName ? (rawName.startsWith('@') ? rawName : '@' + rawName) : fallbackAuthor;
                 const cleanText = (rev.text || '').replace(/\s+/g, ' ').trim();
-                const snippet = typeof window.safeTruncateText === 'function'
-                    ? window.safeTruncateText(cleanText, 52, '...')
+                const truncFn = resolveAction('safeTruncateText');
+                const snippet = truncFn
+                    ? truncFn(cleanText, 52, '...')
                     : (cleanText.length > 55 ? cleanText.slice(0, 52) + '...' : cleanText);
-                const esc = typeof window.escapeHtml === 'function' ? window.escapeHtml : (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'));
+                const esc = resolveAction('escapeHtml') || (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'));
                 const toastMsg = (typeof i18next !== 'undefined')
                     ? i18next.t('reviews_modal.new_review_from', { author: esc(author), snippet: esc(snippet), defaultValue: `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"` })
                     : `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"`;
 
                 // 1. Интерактивный пуш-тост на сайте с кликом для открытия модалки
-                const revImgCdn = (rev.item_image && typeof window.toCDN === 'function') ? window.toCDN(rev.item_image) : (rev.item_image || null);
-                if (typeof window.showReviewToast === 'function') {
-                    window.showReviewToast(`⭐ ${author}`, snippet, revImgCdn, () => {
+                const revImgCdn = rev.item_image ? toCDN(rev.item_image) : null;
+                const revToastFn = resolveAction('showReviewToast');
+                if (revToastFn) {
+                    revToastFn(`⭐ ${author}`, snippet, revImgCdn, () => {
                         openReviewsModal();
                     });
                 } else if (typeof showToast === 'function') {
@@ -584,8 +598,10 @@ function initReviewsRealtime(sb) {
                 }
 
                 // 2. Системный Web Push / Notification через Service Worker (для фона/блокировки экрана)
-                const isPwa = typeof window.isPwaStandalone === 'function' ? window.isPwaStandalone() : false;
-                const pwaInstalled = isPwa || (typeof window.checkIsPwaInstalled === 'function' ? window.checkIsPwaInstalled() : false);
+                const isStandaloneFn = resolveAction('isPwaStandalone');
+                const isInstalledFn = resolveAction('checkIsPwaInstalled');
+                const isPwa = isStandaloneFn ? isStandaloneFn() : false;
+                const pwaInstalled = isPwa || (isInstalledFn ? isInstalledFn() : false);
                 const canShowSysNotification = isPwa || !pwaInstalled;
 
                 if (canShowSysNotification && 'serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
@@ -595,7 +611,7 @@ function initReviewsRealtime(sb) {
                             : 'https://www.nisha-store.shop';
                         const notifBadge = `${origin}/badge.png?v=11`;
                         const notifIcon = (rev.item_image && rev.item_image.trim())
-                            ? ((typeof window.toCDN === 'function') ? window.toCDN(rev.item_image) : rev.item_image)
+                            ? toCDN(rev.item_image)
                             : `${origin}/icon-192.png?v=11`;
 
                         reg.showNotification('NISHA STORE | Новый отзыв ⭐', {
@@ -615,6 +631,20 @@ function initReviewsRealtime(sb) {
     }
 }
 window.initReviewsRealtime = initReviewsRealtime;
+
+registerActions({
+    openReviewImage,
+    openReviewsModal,
+    scrollReviews,
+    equalizeReviewCardHeights,
+    promptOrderReview,
+    sendReviewPayload,
+    submitAutoReview,
+    skipAutoReview,
+    writeReviewOnSite,
+    submitManualReview,
+    initReviewsRealtime
+});
 
 if (typeof window !== 'undefined' && window._supabase) {
     initReviewsRealtime(window._supabase);

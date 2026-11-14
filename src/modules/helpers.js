@@ -3,6 +3,8 @@
 // Safe, typed ES module exports for utilities & sanitization
 // ==========================================
 
+export * from '../../js/core/action-registry.js';
+
 /**
  * Rewrites Supabase asset URL to Worker CDN URL
  * @param {string} url

@@ -83,9 +83,9 @@ describe('Modern Performance APIs Suite', () => {
             const catalogCode = readCatalogSource();
             const searchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
 
-            expect(catalogCode).toContain("if (typeof window.yieldToMain === 'function') await window.yieldToMain()");
+            expect(catalogCode).toContain("if (hasAction('yieldToMain')) await invokeAction('yieldToMain')");
             expect(catalogCode).toContain('async function renderNextBatch');
-            expect(searchCode).toContain("if (typeof window.yieldToMain === 'function') await window.yieldToMain()");
+            expect(searchCode).toContain("if (hasAction('yieldToMain')) await invokeAction('yieldToMain')");
         });
 
         it('guards catalog infinite scroll against concurrency race conditions during yield', () => {
@@ -302,7 +302,7 @@ describe('Modern Performance APIs Suite', () => {
 
         it('catalog syncCriticalStatuses uses runWithLock with nisha_critical_sync_lock', () => {
             const catalogCode = readCatalogSource();
-            expect(catalogCode).toContain("window.runWithLock('nisha_critical_sync_lock', executeSync, { ifAvailable: true })");
+            expect(catalogCode).toContain("invokeAction('runWithLock', 'nisha_critical_sync_lock', executeSync, { ifAvailable: true })");
         });
     });
 

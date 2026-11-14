@@ -15,6 +15,7 @@ import {
     startOnboardingTour,
     handleNetworkOffline
 } from './src/modules/index.js';
+import { hasAction, invokeAction, registerActions } from './js/core/action-registry.js';
 
 console.log(`
       _   _ _____  _____ _    _          
@@ -62,17 +63,19 @@ if (window.innerWidth > 900) {
     }
 }
 
-window.stopLenis = function() {
+function stopLenis() {
     if (typeof lenis !== 'undefined' && lenis) {
         Object.getPrototypeOf(lenis).stop.call(lenis); 
     }
-};
+}
+window.stopLenis = stopLenis;
 
-window.startLenis = function() {
+function startLenis() {
     if (typeof lenis !== 'undefined' && lenis) {
         Object.getPrototypeOf(lenis).start.call(lenis); 
     }
-};
+}
+window.startLenis = startLenis;
 
 // ==========================================
 // 2. УМНЫЕ ПЛАВАЮЩИЕ КНОПКИ (ПРЕДЛОЖКА И ФИЛЬТРЫ)
@@ -172,7 +175,7 @@ if (!SUPABASE_ANON_KEY) {
         });
         window._supabase = _supabase;
         if (typeof globalThis !== 'undefined') globalThis._supabase = _supabase;
-        if (typeof window.initAuthListener === 'function') window.initAuthListener();
+        invokeAction('initAuthListener');
     }
 }
 
@@ -213,8 +216,8 @@ async function initApp() {
     if (appInitialized) return;
     appInitialized = true;
     document.body.classList.remove('search-lock'); 
-    if (typeof window.startLenis === 'function') window.startLenis();
-    if (typeof window.cleanStorageLimits === 'function') window.cleanStorageLimits();
+    startLenis();
+    invokeAction('cleanStorageLimits');
 
     if (!navigator.onLine) {
         setTimeout(handleNetworkOffline, 100);
@@ -548,19 +551,19 @@ async function initApp() {
         const openAction = urlParams.get('action');
         if (openAction === 'orders') {
             setTimeout(() => {
-                if (typeof window.openOrdersModal === 'function') window.openOrdersModal();
+                invokeAction('openOrdersModal');
             }, 500);
         } else if (openAction === 'reviews') {
             setTimeout(() => {
-                if (typeof window.openReviewsModal === 'function') window.openReviewsModal();
+                openReviewsModal();
             }, 500);
         } else if (openAction === 'review') {
             const orderId = urlParams.get('orderId');
             setTimeout(() => {
-                if (typeof window.promptOrderReview === 'function') {
-                    window.promptOrderReview(orderId || '');
-                } else if (typeof window.openReviewsModal === 'function') {
-                    window.openReviewsModal();
+                if (hasAction('promptOrderReview')) {
+                    invokeAction('promptOrderReview', orderId || '');
+                } else {
+                    openReviewsModal();
                 }
             }, 600);
         }
@@ -591,13 +594,9 @@ async function initApp() {
                 .subscribe();
 
             // Единая подписка на обновления каталога в реальном времени из catalog.js
-            if (typeof window.initCatalogRealtimeSubscription === 'function') {
-                window.initCatalogRealtimeSubscription();
-            }
+            invokeAction('initCatalogRealtimeSubscription');
 
-            if (typeof window.initReviewsRealtime === 'function') {
-                window.initReviewsRealtime(_supabase);
-            }
+            invokeAction('initReviewsRealtime', _supabase);
         }
         
         // Интеллектуальный скролл каталога для мобильных устройств
@@ -623,8 +622,8 @@ async function initApp() {
         if (typeof renderHistory === 'function') renderHistory();
         if (typeof initHitCounter === 'function') initHitCounter();
         if (typeof updateSidebarCounters === 'function') updateSidebarCounters();
-        if (typeof window.initLeaderElection === 'function') window.initLeaderElection();
-        if (typeof window.updateAppBadge === 'function') window.updateAppBadge();
+        invokeAction('initLeaderElection');
+        invokeAction('updateAppBadge');
         
         const activeUser = store.user;
         if (activeUser && activeUser.phone) {
@@ -643,6 +642,12 @@ async function initApp() {
         }
     }
 }
+
+registerActions({
+    stopLenis,
+    startLenis,
+    resetToMain
+});
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);

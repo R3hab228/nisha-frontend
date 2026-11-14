@@ -67,8 +67,7 @@ describe('Security Sanitization & XSS Shield', () => {
 
         try {
             // Load apiClient.js
-            const clientCode = readFileSync(resolve(__dirname, '../js/core/apiClient.js'), 'utf8');
-            eval(clientCode);
+            await import('../js/core/apiClient.js');
 
             await window.apiClient.post('/api/link-orders', { userId: 'u1', phone: '0991234567' });
 
@@ -196,9 +195,9 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(window.updateCardDots).toHaveBeenCalledWith(sliderEl, 'item-777');
     });
 
-    it('orders.js lazy chunk initializes and resolves order images and tab counters accurately', () => {
-        const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
-        eval(ordersCode);
+    it('orders.js lazy chunk initializes and resolves order images and tab counters accurately', async () => {
+        vi.resetModules();
+        await import('../js/orders/orders.js');
 
         expect(typeof window.openOrdersModal).toBe('function');
         expect(typeof window.updateOrderTabCounters).toBe('function');
@@ -307,7 +306,7 @@ describe('Security Sanitization & XSS Shield', () => {
         }
     });
 
-    it('isElementVisible uses inline styles and Element.checkVisibility without unnecessary getComputedStyle', () => {
+    it('isElementVisible uses inline styles and Element.checkVisibility without unnecessary getComputedStyle', async () => {
         const prevDoc = global.document;
         global.document = {
             readyState: 'complete',
@@ -316,8 +315,7 @@ describe('Security Sanitization & XSS Shield', () => {
             getElementById: () => null
         };
         try {
-            const winCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
-            eval(winCode);
+            await import('../js/ui/windows.js');
 
             expect(window.isElementVisible(null)).toBe(false);
             expect(window.isElementVisible({ style: { display: 'none' } })).toBe(false);

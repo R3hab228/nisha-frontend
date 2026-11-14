@@ -8,6 +8,7 @@ import {
     getSupabaseClient,
     getUser
 } from './product-state.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Expands or collapses the inline question submission form.
@@ -50,8 +51,8 @@ export async function submitQuestion(itemId) {
         return;
     }
     if (text.length > 100) {
-        text = (typeof window !== 'undefined' && typeof window.safeTruncateText === 'function')
-            ? window.safeTruncateText(text, 100)
+        text = hasAction('safeTruncateText')
+            ? invokeAction('safeTruncateText', text, 100)
             : text.slice(0, 100);
     }
 
@@ -75,8 +76,8 @@ export async function submitQuestion(itemId) {
     const runSubmitQuestion = async () => {
         try {
             const profile = (typeof userProfile !== 'undefined') ? userProfile : ((typeof window !== 'undefined' && window.userProfile) || null);
-            const userDisplayName = (typeof window !== 'undefined' && typeof window.getUserDisplayName === 'function')
-                ? window.getUserDisplayName(currentUser, profile)
+            const userDisplayName = hasAction('getUserDisplayName')
+                ? invokeAction('getUserDisplayName', currentUser, profile)
                 : (profile?.username || currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || (currentUser.email ? currentUser.email.split('@').at(0) : 'User'));
 
             const data = await window.apiClient.post('/api/question', {
@@ -105,8 +106,8 @@ export async function submitQuestion(itemId) {
         }
     };
 
-    if (typeof window !== 'undefined' && typeof window.withButtonBusy === 'function') {
-        await window.withButtonBusy('[data-action="submit-question"]', runSubmitQuestion);
+    if (hasAction('withButtonBusy')) {
+        await invokeAction('withButtonBusy', '[data-action="submit-question"]', runSubmitQuestion);
     } else {
         await runSubmitQuestion();
     }
@@ -134,8 +135,8 @@ export async function loadItemQuestions(itemId) {
         if (typeof list.replaceChildren === 'function') list.replaceChildren();
         else list.innerHTML = '';
 
-        const sanitize = (typeof window !== 'undefined' && typeof window.sanitizeText === 'function')
-            ? window.sanitizeText
+        const sanitize = hasAction('sanitizeText')
+            ? (s) => invokeAction('sanitizeText', s)
             : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
         let listHtml = '';
@@ -205,15 +206,25 @@ export function initProductQASubscription() {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'item_questions' }, payload => {
                 const active = getActiveOpenedItem();
                 if (active && payload.new && payload.new.item_id === active.id) {
-                    const loader = (typeof window !== 'undefined' && typeof window.loadItemQuestions === 'function')
-                        ? window.loadItemQuestions
-                        : loadItemQuestions;
-                    loader(active.id);
+                    if (hasAction('loadItemQuestions')) {
+                        invokeAction('loadItemQuestions', active.id);
+                    } else {
+                        loadItemQuestions(active.id);
+                    }
                 }
             })
             .subscribe();
     }
 }
+
+registerActions({
+    toggleQuestionForm,
+    submitQuestion,
+    loadItemQuestions,
+    toggleAccordion,
+    toggleQASection,
+    initProductQASubscription
+});
 
 if (typeof window !== 'undefined') {
     window.toggleQuestionForm = toggleQuestionForm;

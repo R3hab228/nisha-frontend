@@ -378,6 +378,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'catalog/catalog-filters.js',
                 'catalog/catalog-sync.js',
                 'catalog/catalog-ui-info.js',
+                'core/action-registry.js',
                 'core/helpers.js',
                 'core/helpers-core-utils.js',
                 'core/helpers-security-media.js',
@@ -529,6 +530,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'cart/checkout-form.js',
                 'cart/checkout-submit.js',
                 'core/store.js',
+                'core/action-registry.js',
                 'core/helpers.js',
                 'core/helpers-core-utils.js',
                 'core/helpers-security-media.js',
@@ -2087,7 +2089,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('window.setActiveCart = setActiveCart;');
 
             const productCode = readProductSource();
-            expect(productCode).toContain('window.getActiveCart');
+            expect(productCode).toContain("hasAction('getActiveCart')");
             expect(productCode).toContain('String(i.id) === String(item.id)');
         });
 
@@ -2104,7 +2106,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             const helpersCode = readHelpersSource();
-            expect(helpersCode).toContain("window.loadNPBranches('', true)");
+            expect(helpersCode).toContain("invokeAction('loadNPBranches', '', true)");
             expect(html).toContain('enterkeyhint="done"');
             expect(html).toContain('enterkeyhint="next"');
         });
@@ -2173,7 +2175,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('setTimeout(sanitizePromoField, 1500)');
 
             const profileCode = readProfileSource();
-            expect(profileCode).toContain('window.resetCheckoutAddressState');
+            expect(profileCode).toContain("getGlobalFn('resetCheckoutAddressState')");
         });
 
         it('intercepts third-party web3/ethereum injected script crashes via safe window.ethereum stub and filters them in telemetry', () => {
@@ -2900,7 +2902,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('integrates safeViewTransition into switchOrderTab for smooth tab switching', () => {
             const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
-            expect(ordersCode).toContain('safeViewTransition(updateDom)');
+            expect(ordersCode).toContain('viewTransitionFn(updateDom)');
             expect(ordersCode).toContain('window.currentOrderTab = tabName');
             expect(ordersCode).toContain('renderFilteredOrders()');
         });
@@ -2984,7 +2986,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(html).toContain('class=size-cb value=S');
             expect(html).toContain('id=onlySaleCb');
             expect(html).toContain('id=hideUnavailableCb');
-            expect(helpersCode).toContain('window.triggerFilterTransition()');
+            expect(helpersCode).toContain("invokeAction('triggerFilterTransition')");
 
             const css = readProjectCss();
             expect(css).toContain('::view-transition-group(*)');
@@ -3003,15 +3005,15 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('integrates prewarmProductModal into catalog grid mouseover, touchstart, and mouseout cancel', () => {
             const catalogCode = readCatalogSource();
-            expect(catalogCode).toContain('window.prewarmProductModal(id)');
-            expect(catalogCode).toContain('window.cancelPrewarmProductModal(leavingId)');
-            expect(catalogCode).toContain('window.prewarmProductModal(cardId, true)');
+            expect(catalogCode).toContain("invokeAction('prewarmProductModal', id)");
+            expect(catalogCode).toContain("invokeAction('cancelPrewarmProductModal', leavingId)");
+            expect(catalogCode).toContain("invokeAction('prewarmProductModal', cardId, true)");
         });
 
         it('integrates prewarmProductModal into live-search and open-product hover/touch delegation in helpers.js', () => {
             const helpersCode = readHelpersSource();
-            expect(helpersCode).toContain('window.prewarmProductModal(id, true)');
-            expect(helpersCode).toContain('window.prewarmProductModal(id)');
+            expect(helpersCode).toContain("invokeAction('prewarmProductModal', id, true)");
+            expect(helpersCode).toContain("invokeAction('prewarmProductModal', id)");
         });
 
         it('exports prewarmProductModal and cancelPrewarmProductModal from modular facade', () => {
@@ -3916,7 +3918,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('card-current-price" style="color: var(--accent-yellow, #ffd700)');
 
             // 2. Chat JS reactive updateCardDOM on accepted offer
-            expect(chatCode).toContain('window.updateCardDOM(match)');
+            expect(chatCode).toContain('updateCardFn(match)');
 
             // 3. Buyer contact prioritizes Telegram username and phone over email
             expect(productCode).toContain('function getBestBuyerContact');
@@ -3945,8 +3947,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(productCode).toContain('window.syncUserBargains = syncUserBargains');
 
             // 3. profile.js triggers syncUserBargains and user Realtime subscription on checkSession
-            expect(profileCode).toContain('window.syncUserBargains()');
-            expect(profileCode).toContain('window.subscribeUserRealtime(currentUser.id)');
+            expect(profileCode).toContain("getGlobalFn('syncUserBargains')?.()");
+            expect(profileCode).toContain("getGlobalFn('subscribeUserRealtime')?.(currentUser.id)");
 
             // 4. chat.js queries unread replies for user_<id> and subscribes to user channel
             expect(chatCode).toContain('user_${currentUid}');
@@ -3954,7 +3956,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(chatCode).toContain('window.subscribeUserRealtime = subscribeUserRealtime');
 
             // 5. catalog.js synchronizes bargains on catalog load and visibility/focus change
-            expect(catalogCode).toContain('if (typeof window.syncUserBargains === \'function\') window.syncUserBargains()');
+            expect(catalogCode).toContain("invokeAction('syncUserBargains')");
         });
 
         it('52. Audit fixes: drop proposal bargain toast fix, Backspace unhijacked, pending offer persisted across modal closes, and cart availability safe sold check', () => {
@@ -3966,7 +3968,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             // 1. Drop proposal silent reset (no false "торг выключен" toast)
             expect(dropCode).toContain('function hidePropBargainInput(silent = false)');
-            expect(dropCode).toContain('window.hidePropBargainInput(true)');
+            expect(dropCode).toContain('hidePropBargainInput(true)');
 
             // 2. Backspace is not intercepted in forms
             expect(sysCode).not.toContain("e.key === 'Backspace' && !e.shiftKey");
@@ -4020,9 +4022,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             // 1. Enter key in bargain inputs calls their dedicated confirm/submit actions instead of shifting focus
             expect(sysCode).toContain("activeEl.id === 'propMinBargainPrice'");
-            expect(sysCode).toContain("window.confirmPropBargainInput()");
+            expect(sysCode).toContain("invokeAction('confirmPropBargainInput')");
             expect(sysCode).toContain("activeEl.id === 'inlineBargainPriceInput'");
-            expect(sysCode).toContain("window.submitInlineBargainOffer()");
+            expect(sysCode).toContain("invokeAction('submitInlineBargainOffer')");
             expect(sysCode).toContain("el.closest('[style*=\"display:none\"]')");
 
             // 2. Proposal form gracefully switches back to desired price mode if submitted while in bargain mode without desired price
@@ -4131,7 +4133,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             delete globalThis.scheduler;
 
             // 4. Catalog applyFilters leverages cooperative yielding to prevent INP latency spikes
-            expect(catalogCode).toContain("if (typeof window.yieldToMain === 'function') await window.yieldToMain()");
+            expect(catalogCode).toContain("if (hasAction('yieldToMain')) await invokeAction('yieldToMain')");
         });
 
         it('57. Stable Product Card Grid and Native Compression Streams API (gzip/deflate)', async () => {
@@ -4178,8 +4180,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             // 4. Cart NP storage integration checks
             const npStorageCode = readFileSync(resolve(import.meta.dirname, '../js/cart/npCacheStorage.js'), 'utf8');
-            expect(npStorageCode).toContain('entry.compressed && typeof window.decompressJSON === \'function\'');
-            expect(npStorageCode).toContain('window.compressJSON(payload)');
+            expect(npStorageCode).toContain("entry.compressed && hasAction('decompressJSON')");
+            expect(npStorageCode).toContain("invokeAction('compressJSON', payload)");
         });
     });
 });

@@ -233,16 +233,19 @@ export function showContactInput(type, isModal = false) {
         };
         if (typeof IMask === 'function' && !IMask._isStub) {
             attachMask(IMask);
-        } else if (typeof window !== 'undefined' && typeof window.loadIMask === 'function') {
-            if (typeof IMask === 'function') attachMask(IMask);
-            window.loadIMask().then(attachMask);
-        } else if (typeof IMask !== 'undefined') {
-            attachMask(IMask);
+        } else {
+            const loadIMaskFn = getGlobalFn('loadIMask');
+            if (loadIMaskFn) {
+                if (typeof IMask === 'function') attachMask(IMask);
+                loadIMaskFn().then(attachMask);
+            } else if (typeof IMask !== 'undefined') {
+                attachMask(IMask);
+            }
         }
         input.focus();
         input.onkeydown = (e) => {
-            if (e.key === 'Enter') window.savePhoneFromInput(isModal);
-            if (e.key === 'Escape') window.hidePhoneInput(isModal);
+            if (e.key === 'Enter') getGlobalFn('savePhoneFromInput')?.(isModal);
+            if (e.key === 'Escape') getGlobalFn('hidePhoneInput')?.(isModal);
         };
     } else {
         if (!input.value || !input.value.trim() || input.value === '@') {
@@ -262,8 +265,8 @@ export function showContactInput(type, isModal = false) {
             input.value = val;
         };
         input.onkeydown = (e) => {
-            if (e.key === 'Enter') window.saveTgFromInput(isModal);
-            if (e.key === 'Escape') window.hideTgInput(isModal);
+            if (e.key === 'Enter') getGlobalFn('saveTgFromInput')?.(isModal);
+            if (e.key === 'Escape') getGlobalFn('hideTgInput')?.(isModal);
         };
     }
 }

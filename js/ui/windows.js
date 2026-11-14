@@ -2,6 +2,10 @@
 // NISHA UI WINDOWS & MODALS (Оконная система Win95)
 // ==========================================
 
+import { invokeAction, registerActions } from '../core/action-registry.js';
+import { isPopoverOpenSafe } from '../core/helpers-pwa-browser.js';
+import { showConfirmTerminalModal } from '../core/helpers-toasts-modals.js';
+
 // Быстрая проверка видимости DOM-элемента через inline-стили и нативный Element.checkVisibility()
 function isElementVisible(el) {
     if (!el) return false;
@@ -150,8 +154,7 @@ window.triggerModalTypewriter = triggerModalTypewriter;
 
 // 2. Универсальное открытие модального окна (с ленивой инициализацией)
 function openModal(id) {
-    if (typeof window.stopLenis === 'function') window.stopLenis();
-    else if (typeof lenis !== 'undefined' && lenis && typeof lenis.stop === 'function') lenis.stop();
+    invokeAction('stopLenis');
     const modal = document.getElementById(id);
     if (!modal) return;
 
@@ -221,8 +224,8 @@ function closeModal(id, e) {
         const isContactVisible = isElementVisible(contactWrap);
         const contactVal = document.getElementById('propContact')?.value.trim() || '';
         
-        const autoTg = (typeof getUserTg === 'function' ? getUserTg() : '').trim();
-        const autoPhone = (typeof getUserPhone === 'function' ? getUserPhone() : '').trim();
+        const autoTg = String(invokeAction('getUserTg') || '').trim();
+        const autoPhone = String(invokeAction('getUserPhone') || '').trim();
         const autoBoth = (autoTg && autoPhone) ? `${autoTg} | ${autoPhone}` : '';
         
         const isAutoContact = !isContactVisible || 
@@ -237,23 +240,21 @@ function closeModal(id, e) {
         
         // Если юзер ввел реальные данные — вызываем терминал подтверждения
         if (hasUnsavedData) {
-            if (typeof showConfirmTerminalModal === 'function') {
-                const title = (typeof i18next !== 'undefined' && i18next.t('propose.warning_loss_title', { defaultValue: 'WARNING_DATA_LOSS.SYS' })) || 'WARNING_DATA_LOSS.SYS';
-                const text = (typeof i18next !== 'undefined' && i18next.t('propose.warning_loss_text', { defaultValue: 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.' })) || 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.';
-                const closeBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' })) || '[ ЗАКРЫТЬ ]';
-                const cancelBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_cancel', { defaultValue: '[ ОТМЕНА ]' })) || '[ ОТМЕНА ]';
-                showConfirmTerminalModal(
-                    title, 
-                    text, 
-                    closeBtn, 
-                    cancelBtn, 
-                    () => { 
-                        if (typeof resetProposalForm === 'function') resetProposalForm(); 
-                        executeCloseModal(id, evt); 
-                    }
-                );
-                return;
-            }
+            const title = (typeof i18next !== 'undefined' && i18next.t('propose.warning_loss_title', { defaultValue: 'WARNING_DATA_LOSS.SYS' })) || 'WARNING_DATA_LOSS.SYS';
+            const text = (typeof i18next !== 'undefined' && i18next.t('propose.warning_loss_text', { defaultValue: 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.' })) || 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.';
+            const closeBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' })) || '[ ЗАКРЫТЬ ]';
+            const cancelBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_cancel', { defaultValue: '[ ОТМЕНА ]' })) || '[ ОТМЕНА ]';
+            showConfirmTerminalModal(
+                title, 
+                text, 
+                closeBtn, 
+                cancelBtn, 
+                () => { 
+                    invokeAction('resetProposalForm');
+                    executeCloseModal(id, evt); 
+                }
+            );
+            return;
         }
     }
     executeCloseModal(id, evt); // Если защищать не нужно — просто закрываем
@@ -269,8 +270,8 @@ function executeCloseModal(id, e) {
         if (typeof evt.stopImmediatePropagation === 'function') evt.stopImmediatePropagation();
     }
     if (id === 'checkoutModal' && window.otpPollInterval) clearInterval(window.otpPollInterval);
-    if (id === 'proposeModal' && typeof window.resetPropBargainState === 'function') {
-        window.resetPropBargainState();
+    if (id === 'proposeModal') {
+        invokeAction('resetPropBargainState');
     }
     const modal = document.getElementById(id);
     if (!modal) return;
@@ -294,8 +295,7 @@ function executeCloseModal(id, e) {
             }
             window._preModalScrollY = null;
         }
-        if (typeof window.startLenis === 'function') window.startLenis();
-        else if (typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') lenis.start();
+        invokeAction('startLenis');
     }
 
     // Мгновенная пауза любых видео в закрывающемся окне
@@ -319,7 +319,7 @@ function executeCloseModal(id, e) {
         if (mWin) {
             mWin.scrollTop = 0;
         }
-        if (typeof window.resetOpenGraphTags === 'function') window.resetOpenGraphTags();
+        invokeAction('resetOpenGraphTags');
         try {
             const u = new URL(window.location);
             if (u.searchParams.has('item')) {
@@ -351,8 +351,8 @@ function executeCloseModal(id, e) {
         }
     }
     if (id === 'checkoutModal') {
-        if (typeof window.hideNPDropdowns === 'function') window.hideNPDropdowns();
-        if (typeof window.closePaymentDropdown === 'function') window.closePaymentDropdown();
+        invokeAction('hideNPDropdowns');
+        invokeAction('closePaymentDropdown');
     }
     if (modal._closeTimer) clearTimeout(modal._closeTimer);
 
@@ -610,10 +610,8 @@ function ensureFieldVisibleInModal(targetEl) {
 
     // Если это поле Новой Почты (город/отделение) — сохраняем совместимость с NP-скроллером
     if (targetEl.id === 'orderCity' || targetEl.id === 'orderBranch' || (targetEl.classList && targetEl.classList.contains('np-input'))) {
-        if (typeof window.scrollNPFieldIntoModalView === 'function') {
-            window.scrollNPFieldIntoModalView(targetEl);
-            return;
-        }
+        invokeAction('scrollNPFieldIntoModalView', targetEl);
+        return;
     }
 
     const scrollContainer = (targetEl.closest && (targetEl.closest('.form-layout') || targetEl.closest('.modal-window'))) || null;
@@ -817,14 +815,29 @@ document.addEventListener('keydown', (e) => {
         const searchInput = document.getElementById('mainSearch');
         const isLiveSearchOpen = dropdown && (
             (typeof dropdown.matches === 'function' && dropdown.matches(':popover-open')) ||
-            (typeof window.isPopoverOpenSafe === 'function' && window.isPopoverOpenSafe(dropdown)) ||
+            isPopoverOpenSafe(dropdown) ||
             dropdown.style.display === 'block'
         );
         if (isLiveSearchOpen) {
-            if (typeof closeSearch === 'function') closeSearch();
+            invokeAction('closeSearch');
             if (searchInput) searchInput.blur();
         }
     }
+});
+
+registerActions({
+    isElementVisible,
+    isUserInProductFeed,
+    registerModalInitializer,
+    triggerModalTypewriter,
+    openModal,
+    closeModal,
+    'close-modal': closeModal,
+    executeCloseModal,
+    attachModalOverlayInteractions,
+    initMobileSwipe,
+    ensureFieldVisibleInModal,
+    initMobileKeyboardViewport
 });
 
 // Автозапуск при готовности DOM

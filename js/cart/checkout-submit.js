@@ -18,6 +18,7 @@ import { syncCartToServer } from './cart-operations.js';
 import { _npNorm } from './novaposhta-helpers.js';
 import { ensureCityRef, ensureBranchRef } from './novaposhta-delivery.js';
 import { clearCheckoutDraft } from './checkout-form.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Нормализует телефон к международному формату `+380...`.
@@ -70,7 +71,7 @@ export function highlightFieldError(inputEl) {
  */
 export async function submitOrder() {
     if (cartState.isOrderSubmitting) return;
-    if (typeof window !== 'undefined' && typeof window.triggerVibration === 'function') window.triggerVibration(150);
+    if (hasAction('triggerVibration')) invokeAction('triggerVibration', 150);
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== '') return;
 
@@ -546,15 +547,13 @@ export async function executeOrderFinal(emailToSave) {
                 if (typeof window.userProfile === 'object' && window.userProfile && !window.userProfile.phone && sb) {
                     window.userProfile.phone = phone;
                     sb.from('profiles').update({ phone: phone }).eq('id', user.id).then(() => {
-                        if (typeof window.renderProfilePhone === 'function') window.renderProfilePhone(phone);
+                        invokeAction('renderProfilePhone', phone);
                     }).catch(() => {});
                 }
 
                 if (shouldSaveToProfile) {
                     const combinedAddress = city && branch ? `${city}, ${branch}` : (city || branch);
-                    if (typeof window.saveDeliveryToProfile === 'function') {
-                        window.saveDeliveryToProfile(name, combinedAddress, { cityRef, branchRef });
-                    }
+                    invokeAction('saveDeliveryToProfile', name, combinedAddress, { cityRef, branchRef });
                 }
             }
 
@@ -581,7 +580,7 @@ export async function executeOrderFinal(emailToSave) {
                     const catItem = window.allItems.find(i => i && String(i.id) === String(ordered.id));
                     if (catItem) {
                         catItem.status = 'reserved';
-                        if (typeof window.updateCardDOM === 'function') window.updateCardDOM(catItem);
+                        invokeAction('updateCardDOM', catItem);
                     }
                     try {
                         sessionStorage.removeItem('accepted_bargain_' + ordered.id);
@@ -592,7 +591,7 @@ export async function executeOrderFinal(emailToSave) {
                         localStorage.removeItem('pending_bargain_' + ordered.id);
                     } catch {}
                 });
-                if (typeof window.updateSidebarCounters === 'function') window.updateSidebarCounters();
+                invokeAction('updateSidebarCounters');
                 if (typeof renderHistory === 'function') renderHistory();
             }
 
@@ -620,7 +619,7 @@ export async function executeOrderFinal(emailToSave) {
 
                 setTimeout(() => {
                     if (overlay) overlay.style.display = 'none';
-                    if (typeof window.loadAllItems === 'function') window.loadAllItems();
+                    invokeAction('loadAllItems');
                     btnSubmit.style.pointerEvents = 'auto';
                     btnSubmit.style.opacity = '1';
                     cartState.isOrderSubmitting = false;
@@ -629,18 +628,22 @@ export async function executeOrderFinal(emailToSave) {
 
         } catch (err) {
             cartState.isOrderSubmitting = false;
-            if (typeof window.captureError === 'function') {
-                window.captureError(err, { action: 'checkout_order_failed', city: city });
-            }
+            invokeAction('captureError', err, { action: 'checkout_order_failed', city: city });
             const orderErrPref = typeof i18next !== 'undefined' ? i18next.t('checkout.order_submit_err', { defaultValue: 'Ошибка при оформлении: ' }) : 'Ошибка при оформлении: ';
             showToast(orderErrPref + err.message, 'error');
             btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
             btnSubmit.style.pointerEvents = 'auto';
             btnSubmit.style.opacity = '1';
-            if (typeof window.loadAllItems === 'function') window.loadAllItems();
+            invokeAction('loadAllItems');
         }
     });
 }
+
+registerActions({
+    normalizeOrderPhone,
+    highlightFieldError,
+    submitOrder
+});
 
 if (typeof window !== 'undefined') {
     window.normalizeOrderPhone = normalizeOrderPhone;

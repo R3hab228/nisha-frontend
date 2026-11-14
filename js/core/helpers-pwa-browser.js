@@ -2,6 +2,7 @@
 // NISHA CORE HELPERS: NETWORK MODE, PWA BADGING, HAPTICS, POPOVER, SHARE & VIEW TRANSITIONS
 // ==========================================
 
+import { registerActions } from './action-registry.js';
 import { showToast } from './helpers-toasts-modals.js';
 
 /**
@@ -467,3 +468,18 @@ export function safeViewTransition(updateFn) {
 }
 if (typeof window !== 'undefined') window.safeViewTransition = safeViewTransition;
 if (typeof globalThis !== 'undefined') globalThis.safeViewTransition = safeViewTransition;
+
+registerActions({
+    isSaveDataMode,
+    updateAppBadge,
+    clearAppBadge,
+    triggerVibration,
+    triggerHaptic,
+    isPopoverOpenSafe,
+    showPopoverSafe,
+    hidePopoverSafe,
+    togglePopoverSafe,
+    copyToClipboard,
+    shareContent,
+    safeViewTransition
+});

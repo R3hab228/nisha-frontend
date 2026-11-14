@@ -13,6 +13,7 @@ import {
     getBargainOfferState,
     applyOfferButtonState
 } from './product-state.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 const BARGAIN_RATE_LIMIT_STORAGE_KEY = 'nisha_bargain_offers_history';
 const BARGAIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -586,9 +587,7 @@ export async function syncUserBargains() {
                 };
                 if (b.seen_popup) {
                     const offerKey = String(b.bargainId || ('accepted_' + b.itemId + '_' + b.acceptedPrice));
-                    if (typeof window !== 'undefined' && typeof window.markBargainPopupAsSeen === 'function') {
-                        window.markBargainPopupAsSeen(offerKey);
-                    }
+                    invokeAction('markBargainPopupAsSeen', offerKey);
                 }
                 try {
                     localStorage.setItem('accepted_bargain_' + b.itemId, JSON.stringify(payload));
@@ -619,16 +618,16 @@ export async function syncUserBargains() {
                     }
                 }
 
-                if (typeof window !== 'undefined' && typeof window.updateCardDOM === 'function' && Array.isArray(window.allItems)) {
+                if (hasAction('updateCardDOM') && Array.isArray(window.allItems)) {
                     const found = window.allItems.find(it => String(it.id) === String(b.itemId));
-                    if (found) window.updateCardDOM(found);
+                    if (found) invokeAction('updateCardDOM', found);
                 }
             });
 
             if (cartUpdated && Array.isArray(activeCart)) {
-                if (typeof window !== 'undefined' && typeof window.setActiveCart === 'function') window.setActiveCart(activeCart);
+                if (hasAction('setActiveCart')) invokeAction('setActiveCart', activeCart);
                 else if (typeof setActiveCart === 'function') setActiveCart(activeCart);
-                if (typeof window !== 'undefined' && typeof window.updateCartUI === 'function') window.updateCartUI();
+                if (hasAction('updateCartUI')) invokeAction('updateCartUI');
                 else if (typeof updateCartUI === 'function') updateCartUI();
             }
         }
@@ -636,6 +635,18 @@ export async function syncUserBargains() {
         console.warn('[SYNC BARGAINS] Error:', e);
     }
 }
+
+registerActions({
+    getBestBuyerContact,
+    checkClientBargainRateLimit,
+    recordClientBargainOffer,
+    openOfferPriceModal,
+    submitBargainOffer,
+    showInlineOfferPriceInput,
+    hideInlineOfferPriceInput,
+    submitInlineBargainOffer,
+    syncUserBargains
+});
 
 if (typeof window !== 'undefined') {
     window.getBestBuyerContact = getBestBuyerContact;

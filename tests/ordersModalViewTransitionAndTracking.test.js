@@ -81,7 +81,7 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
         it('strips view-transition-name from background elements before safeViewTransition', () => {
             expect(ordersCode).toContain("bgGrid.style.setProperty('view-transition-name', 'none', 'important')");
             expect(ordersCode).toContain("card.style.setProperty('view-transition-name', 'none', 'important')");
-            expect(ordersCode).toContain('safeViewTransition(updateDom)');
+            expect(ordersCode).toContain('viewTransitionFn(updateDom)');
             expect(ordersCode).toContain('restoreBgTransitions');
         });
 
@@ -241,7 +241,7 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
         it('i18n.js re-translates .order-status[data-raw-status] inside updateContentLanguage', () => {
             const i18nCode = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
             expect(i18nCode).toContain('.order-status[data-raw-status]');
-            expect(i18nCode).toContain('window.formatOrderStatus(raw)');
+            expect(i18nCode).toContain("invokeAction('formatOrderStatus', raw)");
         });
 
         it('style.css defines glowing badge styles for localized status slug classes', () => {

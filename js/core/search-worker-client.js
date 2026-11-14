@@ -4,6 +4,8 @@
 // ==========================================
 
 import SearchWorker from '../../src/workers/search.worker.js?worker';
+import { invokeAction, registerActions } from './action-registry.js';
+import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './helpers-search-address.js';
 
 (function() {
     'use strict';
@@ -187,16 +189,16 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             if (!query || !query.trim()) return [];
 
             const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
-            const priceQuery = typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanTerm) : null;
+            const priceQuery = parsePriceSearchQuery(cleanTerm);
             const collected = [];
             const seenIds = new Set();
 
             // 1. Поиск по цене
-            if (priceQuery && typeof window.itemMatchesPrice === 'function') {
+            if (priceQuery) {
                 for (let i = 0; i < items.length; i++) {
                     const item = items[i];
                     if (item && item.status === 'sold') continue;
-                    if (window.itemMatchesPrice(item, priceQuery)) {
+                    if (itemMatchesPrice(item, priceQuery)) {
                         if (!seenIds.has(item.id)) {
                             seenIds.add(item.id);
                             collected.push({
@@ -214,9 +216,7 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             // 2. Дополнение поиском через Fuse
             const fuse = getFallbackFuse(items);
             if (fuse && collected.length < limit) {
-                const queryVariants = (typeof window.expandSearchQuery === 'function')
-                    ? window.expandSearchQuery(cleanTerm)
-                    : [cleanTerm];
+                const queryVariants = expandSearchQuery(cleanTerm);
 
                 for (const variant of queryVariants) {
                     const subResults = fuse.search(variant);
@@ -245,19 +245,19 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             if (!query || !query.trim()) return candidateIds || [];
 
             const cleanTerm = query.replaceAll('#', '').trim().toLowerCase();
-            const priceQuery = typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanTerm) : null;
+            const priceQuery = parsePriceSearchQuery(cleanTerm);
             const candidateSet = candidateIds ? new Set(candidateIds) : null;
             const matchedIds = [];
             const seenIds = new Set();
 
             // 1. Поиск по цене
-            if (priceQuery && typeof window.itemMatchesPrice === 'function') {
+            if (priceQuery) {
                 for (let i = 0; i < items.length; i++) {
                     const item = items[i];
                     if (item && item.status === 'sold') continue;
                     const id = item.id;
                     if (!candidateSet || candidateSet.has(id)) {
-                        if (window.itemMatchesPrice(item, priceQuery)) {
+                        if (itemMatchesPrice(item, priceQuery)) {
                             if (!seenIds.has(id)) {
                                 seenIds.add(id);
                                 matchedIds.push(id);
@@ -270,9 +270,7 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
             // 2. Текстовый поиск через Fuse
             const fuse = getFallbackFuse(items);
             if (fuse) {
-                const queryVariants = (typeof window.expandSearchQuery === 'function')
-                    ? window.expandSearchQuery(cleanTerm)
-                    : [cleanTerm];
+                const queryVariants = expandSearchQuery(cleanTerm);
 
                 for (const variant of queryVariants) {
                     const results = fuse.search(variant);
@@ -302,15 +300,18 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
         }
     };
 
-    window.searchWorker = searchWorkerClient;
-    window.invalidateFuseCache = function() {
+    const invalidateFuseCacheFn = function() {
         searchWorkerClient.invalidateCache();
         if (window.allItems) {
             searchWorkerClient.setItems(window.allItems);
         }
-        if (typeof window.invalidateLiveSearchFuse === 'function') {
-            window.invalidateLiveSearchFuse();
-        }
+        invokeAction('invalidateLiveSearchFuse');
     };
+
+    window.searchWorker = searchWorkerClient;
+    window.invalidateFuseCache = invalidateFuseCacheFn;
+    registerActions({
+        invalidateFuseCache: invalidateFuseCacheFn
+    });
 
 })();

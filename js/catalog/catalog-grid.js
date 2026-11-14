@@ -11,11 +11,9 @@ import {
     cancelPrefetchItemImages
 } from './media-prefetch.js';
 import {
-    showItemMeasurementsTooltip,
-    moveItemMeasurementsTooltip,
-    isItemMeasurementsTooltipVisible,
-    hideItemMeasurementsTooltip
+    isItemMeasurementsTooltipVisible
 } from './measurements.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 let itemsPageSize = typeof window !== 'undefined' && window.innerWidth <= 900 ? 12 : 15;
 let changePageTimeout = null;
@@ -173,13 +171,13 @@ export function updateCardDOM(item) {
             }
             const sizeEl = card.querySelector('.item-size');
             if (sizeEl && item.size !== undefined) {
-                const safeSize = typeof window.escapeHtml === 'function' ? window.escapeHtml(item.size || '') : (item.size || '');
+                const safeSize = hasAction('escapeHtml') ? invokeAction('escapeHtml', item.size || '') : (item.size || '');
                 sizeEl.innerHTML = `<span data-i18n="grid.size_prefix">${sizePrefix}</span>${safeSize}`;
             }
             const footerEl = card.querySelector('.item-footer');
             if (footerEl && (item.brand !== undefined || item.condition !== undefined)) {
-                const safeBrand = typeof window.escapeHtml === 'function' ? window.escapeHtml(item.brand || '') : (item.brand || '');
-                const safeCond = typeof window.escapeHtml === 'function' ? window.escapeHtml(item.condition || '') : (item.condition || '');
+                const safeBrand = hasAction('escapeHtml') ? invokeAction('escapeHtml', item.brand || '') : (item.brand || '');
+                const safeCond = hasAction('escapeHtml') ? invokeAction('escapeHtml', item.condition || '') : (item.condition || '');
                 footerEl.innerHTML = `<span>${safeBrand}</span><span>${safeCond}</span>`;
             }
         });
@@ -210,7 +208,7 @@ export function updateCardDOM(item) {
         if (modalPriceEl) {
             const isHackedActive = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
             const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
-            modalPriceEl.innerText = (typeof window.formatPrice === 'function') ? window.formatPrice(finalPrice) : (finalPrice + ' ' + curr);
+            modalPriceEl.innerText = hasAction('formatPrice') ? invokeAction('formatPrice', finalPrice) : (finalPrice + ' ' + curr);
         }
     }
 }
@@ -219,8 +217,8 @@ export function updateCardDOM(item) {
 export const gridVideoObserver = (typeof IntersectionObserver !== 'undefined')
     ? new IntersectionObserver((entries) => {
         const conn = (typeof navigator !== 'undefined') ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
-        const isSaveData = (typeof window !== 'undefined' && typeof window.isSaveDataMode === 'function')
-            ? window.isSaveDataMode()
+        const isSaveData = hasAction('isSaveDataMode')
+            ? invokeAction('isSaveDataMode')
             : Boolean(conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g'));
 
         entries.forEach(entry => {
@@ -366,18 +364,14 @@ export function initGridEventDelegation() {
             currentTooltipCard = card;
             const id = card.getAttribute('data-id');
             if (id) {
-                if (typeof window.prewarmProductModal === 'function') window.prewarmProductModal(id);
+                if (hasAction('prewarmProductModal')) invokeAction('prewarmProductModal', id);
                 else prefetchItemImages(id);
             }
         }
 
         const isCartBtn = !!(e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]'));
         if (isCartBtn) {
-            if (typeof window.hideItemMeasurementsTooltip === 'function') {
-                window.hideItemMeasurementsTooltip();
-            } else {
-                hideItemMeasurementsTooltip();
-            }
+            invokeAction('hideItemMeasurementsTooltip');
             return;
         }
 
@@ -385,11 +379,7 @@ export function initGridEventDelegation() {
             const id = card.getAttribute('data-id');
             const item = window.allItems && window.allItems.find(i => String(i.id) === String(id));
             if (item) {
-                if (typeof window.showItemMeasurementsTooltip === 'function') {
-                    window.showItemMeasurementsTooltip(item, e);
-                } else {
-                    showItemMeasurementsTooltip(item, e);
-                }
+                invokeAction('showItemMeasurementsTooltip', item, e);
             }
         }
     });
@@ -399,11 +389,7 @@ export function initGridEventDelegation() {
         const isCartBtn = !!(e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]'));
         if (isCartBtn) {
             if (isItemMeasurementsTooltipVisible()) {
-                if (typeof window.hideItemMeasurementsTooltip === 'function') {
-                    window.hideItemMeasurementsTooltip();
-                } else {
-                    hideItemMeasurementsTooltip();
-                }
+                invokeAction('hideItemMeasurementsTooltip');
             }
             return;
         }
@@ -412,19 +398,11 @@ export function initGridEventDelegation() {
             const id = currentTooltipCard.getAttribute('data-id');
             const item = window.allItems && window.allItems.find(i => String(i.id) === String(id));
             if (item) {
-                if (typeof window.showItemMeasurementsTooltip === 'function') {
-                    window.showItemMeasurementsTooltip(item, e);
-                } else {
-                    showItemMeasurementsTooltip(item, e);
-                }
+                invokeAction('showItemMeasurementsTooltip', item, e);
             }
         }
 
-        if (typeof window.moveItemMeasurementsTooltip === 'function') {
-            window.moveItemMeasurementsTooltip(e);
-        } else {
-            moveItemMeasurementsTooltip(e);
-        }
+        invokeAction('moveItemMeasurementsTooltip', e);
     });
 
     grid.addEventListener('mouseout', (e) => {
@@ -432,25 +410,17 @@ export function initGridEventDelegation() {
         if (!e.relatedTarget || !currentTooltipCard.contains(e.relatedTarget)) {
             const leavingId = currentTooltipCard.getAttribute('data-id');
             if (leavingId) {
-                if (typeof window.cancelPrewarmProductModal === 'function') window.cancelPrewarmProductModal(leavingId);
-                if (typeof window.cancelPrefetchItemImages === 'function') window.cancelPrefetchItemImages(leavingId);
+                invokeAction('cancelPrewarmProductModal', leavingId);
+                if (hasAction('cancelPrefetchItemImages')) invokeAction('cancelPrefetchItemImages', leavingId);
                 else cancelPrefetchItemImages(leavingId);
             }
             currentTooltipCard = null;
-            if (typeof window.hideItemMeasurementsTooltip === 'function') {
-                window.hideItemMeasurementsTooltip();
-            } else {
-                hideItemMeasurementsTooltip();
-            }
+            invokeAction('hideItemMeasurementsTooltip');
         }
     });
 
     grid.addEventListener('click', () => {
-        if (typeof window.hideItemMeasurementsTooltip === 'function') {
-            window.hideItemMeasurementsTooltip();
-        } else {
-            hideItemMeasurementsTooltip();
-        }
+        invokeAction('hideItemMeasurementsTooltip');
     });
 
     // 2. Свайп и дабл-тап лайк по карточке товара
@@ -464,8 +434,8 @@ export function initGridEventDelegation() {
         const card = e.target.closest('.item-card');
         if (!card) return;
         const cardId = card.getAttribute('data-id');
-        if (cardId && typeof window.prewarmProductModal === 'function') {
-            window.prewarmProductModal(cardId, true);
+        if (cardId && hasAction('prewarmProductModal')) {
+            invokeAction('prewarmProductModal', cardId, true);
         }
     }, { passive: true });
 
@@ -473,8 +443,8 @@ export function initGridEventDelegation() {
         const card = e.target.closest('.item-card');
         if (!card) return;
         const cardId = card.getAttribute('data-id');
-        if (cardId && typeof window.prewarmProductModal === 'function') {
-            window.prewarmProductModal(cardId, true);
+        if (cardId && hasAction('prewarmProductModal')) {
+            invokeAction('prewarmProductModal', cardId, true);
         }
         const wrapper = e.target.closest('.card-slider-wrapper');
         if (!wrapper) return;
@@ -607,8 +577,8 @@ export function buildCardDOM(item, idx = 0) {
     }
 
     const priceHTML = buildCardPriceHtml(item, curr);
-    const escAttr = (v) => (typeof window.escapeAttr === 'function' ? window.escapeAttr(v) : v);
-    const escHtml = (v) => (typeof window.escapeHtml === 'function' ? window.escapeHtml(v) : v);
+    const escAttr = (v) => (hasAction('escapeAttr') ? invokeAction('escapeAttr', v) : v);
+    const escHtml = (v) => (hasAction('escapeHtml') ? invokeAction('escapeHtml', v) : v);
 
     let controlsHTML = '';
     if (thumbsArray.length > 1) {
@@ -836,9 +806,9 @@ export async function renderNextBatch(targetMobileCount = 0) {
             }
         } catch (err) { console.error(err); }
         // Periodically flush and yield to main thread every 8 cards during large multi-batch bursts
-        if ((i - startIndex + 1) % 8 === 0 && (endIndex - startIndex) > 15 && typeof window.yieldToMain === 'function') {
+        if ((i - startIndex + 1) % 8 === 0 && (endIndex - startIndex) > 15 && hasAction('yieldToMain')) {
             grid.appendChild(fragment);
-            await window.yieldToMain();
+            await invokeAction('yieldToMain');
             if (batchSeq !== _renderBatchSeq) return;
         }
     }
@@ -889,7 +859,7 @@ export async function renderNextBatch(targetMobileCount = 0) {
         }
     }
 
-    if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+    if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
     if (batchSeq !== _renderBatchSeq) return;
     grid.querySelectorAll('img.card-slide-img').forEach(img => {
         if (img.complete && img.naturalWidth > 0 && img.style.opacity !== '1') {
@@ -981,7 +951,7 @@ export function preloadGridSlide(event, itemId, direction) {
  * @param {HTMLElement} container
  */
 export async function handleDoubleTapLike(event, itemId, container) {
-    if (typeof triggerVibration === 'function') triggerVibration(150);
+    if (hasAction('triggerVibration')) invokeAction('triggerVibration', 150);
     if (event) { event.preventDefault(); event.stopPropagation(); }
 
     if (container) {
@@ -992,16 +962,30 @@ export async function handleDoubleTapLike(event, itemId, container) {
         setTimeout(() => star.remove(), 800);
     }
 
-    if (typeof triggerHaptic === 'function') triggerHaptic('heavy');
+    if (hasAction('triggerHaptic')) invokeAction('triggerHaptic', 'heavy');
 
     const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
     const isAlreadyFav = Array.isArray(userFavs) && userFavs.some(id => String(id) === String(itemId));
     if (!isAlreadyFav) {
-        if (typeof toggleFav === 'function') {
-            await toggleFav(null, itemId);
+        if (hasAction('toggleFav')) {
+            await invokeAction('toggleFav', null, itemId);
         }
     }
 }
+
+registerActions({
+    updateCardDOM,
+    changePage,
+    activateCardSlides,
+    buildCardDOM,
+    getCatalogItemComparator,
+    insertNewItemCardSmoothly,
+    renderNextBatch,
+    updateCardDots,
+    scrollGridSlider,
+    preloadGridSlide,
+    handleDoubleTapLike
+});
 
 if (typeof window !== 'undefined') {
     window.updateCardDOM = updateCardDOM;

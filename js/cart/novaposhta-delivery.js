@@ -23,6 +23,7 @@ import {
     hideNPDropdowns,
     calculateDeliveryCost
 } from './novaposhta-helpers.js';
+import { invokeAction, registerActions } from '../core/action-registry.js';
 
 let _branchLoadToken = 0;
 let _ensureBranchInFlight = null;
@@ -56,7 +57,7 @@ export function clearNPCityInput(e) {
     if (typeof window !== 'undefined') window.selectedSettlementRef = '';
     cartState.cachedBranches = [];
     updateNPClearButtons();
-    if (typeof window !== 'undefined' && typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+    invokeAction('saveCheckoutDraft');
 }
 
 /**
@@ -79,7 +80,7 @@ export function clearNPBranchInput(e) {
     }
     updateNPClearButtons();
     loadNPBranches('', true);
-    if (typeof window !== 'undefined' && typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+    invokeAction('saveCheckoutDraft');
 }
 
 /**
@@ -88,7 +89,7 @@ export function clearNPBranchInput(e) {
  */
 export function debouncedNPCitySearch(query) {
     if (cartState.citySearchTimeout) clearTimeout(cartState.citySearchTimeout);
-    if (typeof window !== 'undefined' && typeof window.closePaymentDropdown === 'function') window.closePaymentDropdown();
+    invokeAction('closePaymentDropdown');
     const bd = document.getElementById('branchDropdown');
     if (bd) bd.style.display = 'none';
 
@@ -162,7 +163,7 @@ export function renderCitySearchResults(data) {
                 cartState.cachedBranches = [];
                 updateNPClearButtons();
                 loadNPBranches('', false);
-                if (typeof window !== 'undefined' && typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+                invokeAction('saveCheckoutDraft');
             };
             div.onmousedown = selectCityItem;
             div.onclick = selectCityItem;
@@ -215,7 +216,7 @@ export async function searchNPCity(query) {
  * @param {string} query
  */
 export function filterNPBranches(query) {
-    if (typeof window !== 'undefined' && typeof window.closePaymentDropdown === 'function') window.closePaymentDropdown();
+    invokeAction('closePaymentDropdown');
     const cd = document.getElementById('cityDropdown');
     if (cd) cd.style.display = 'none';
 
@@ -310,7 +311,7 @@ export function matchAndSetBranchRef(branchText) {
     setSelectedBranchRefState(match.Ref);
     updateNPClearButtons();
     calculateDeliveryCost();
-    if (typeof window !== 'undefined' && typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+    invokeAction('saveCheckoutDraft');
     return true;
 }
 
@@ -370,7 +371,7 @@ export async function ensureBranchRef(branchText) {
                 if (branchInput && !branchInput.value.trim()) branchInput.value = m.Description;
                 updateNPClearButtons();
                 calculateDeliveryCost();
-                if (typeof window !== 'undefined' && typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+                invokeAction('saveCheckoutDraft');
                 return m.Ref;
             }
         }
@@ -435,7 +436,7 @@ export async function ensureBranchRef(branchText) {
                 }
                 updateNPClearButtons();
                 calculateDeliveryCost();
-                if (typeof window !== 'undefined' && typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+                invokeAction('saveCheckoutDraft');
                 return pick.Ref;
             }
             return '';
@@ -512,7 +513,7 @@ export async function ensureCityRef(opts = {}) {
             if (branchInput) branchInput.readOnly = false;
             updateNPClearButtons();
             if (!interactive) hideNPDropdowns();
-            if (typeof window !== 'undefined' && typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+            invokeAction('saveCheckoutDraft');
             return cityRefVal;
         } catch (e) {
             console.error('Не удалось определить город НП:', e);
@@ -535,7 +536,7 @@ export async function ensureCityRef(opts = {}) {
  * @returns {Promise<void>}
  */
 export async function loadNPBranches(searchString = '', showDropdown = false) {
-    if (typeof window !== 'undefined' && typeof window.closePaymentDropdown === 'function') window.closePaymentDropdown();
+    invokeAction('closePaymentDropdown');
     const cd = document.getElementById('cityDropdown');
     if (cd) cd.style.display = 'none';
 
@@ -780,7 +781,7 @@ export function renderBranches(branches) {
             dropdown.style.display = 'none';
             updateNPClearButtons();
             calculateDeliveryCost();
-            if (typeof window !== 'undefined' && typeof window.saveCheckoutDraft === 'function') window.saveCheckoutDraft();
+            invokeAction('saveCheckoutDraft');
         };
         div.onmousedown = selectBranchItem;
         div.onclick = selectBranchItem;
@@ -912,6 +913,20 @@ export async function autoDetectCity() {
         cityInput.placeholder = originalPlaceholder;
     }
 }
+
+registerActions({
+    clearNPCityInput,
+    clearNPBranchInput,
+    debouncedNPCitySearch,
+    searchNPCity,
+    filterNPBranches,
+    matchAndSetBranchRef,
+    ensureBranchRef,
+    ensureCityRef,
+    loadNPBranches,
+    renderBranches,
+    autoDetectCity
+});
 
 if (typeof window !== 'undefined') {
     window.clearNPCityInput = clearNPCityInput;

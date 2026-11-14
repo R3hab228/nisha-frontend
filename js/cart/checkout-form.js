@@ -26,6 +26,7 @@ import {
     loadNPBranches,
     autoDetectCity
 } from './novaposhta-delivery.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Защита поля промокода от автозаполнения браузера (Chrome подставлял туда ФИО).
@@ -163,8 +164,8 @@ export function closePaymentDropdown() {
     const arrow = document.getElementById('paymentArrow');
     if (display) display.classList.remove('is-open');
     if (arrow) arrow.style.transform = 'rotate(0deg)';
-    if (typeof window !== 'undefined' && typeof window.hidePopoverSafe === 'function') {
-        window.hidePopoverSafe(pd);
+    if (hasAction('hidePopoverSafe')) {
+        invokeAction('hidePopoverSafe', pd);
     } else if (pd && typeof pd.hidePopover === 'function' && pd.matches && pd.matches(':popover-open')) {
         try { pd.hidePopover(); } catch {}
     }
@@ -219,8 +220,8 @@ export function togglePaymentDropdown() {
         const cd = document.getElementById('cityDropdown');
         if (cd) cd.style.display = 'none';
         if (display) display.classList.add('is-open');
-        if (typeof window !== 'undefined' && typeof window.showPopoverSafe === 'function') {
-            window.showPopoverSafe(pd);
+        if (hasAction('showPopoverSafe')) {
+            invokeAction('showPopoverSafe', pd);
         } else if (typeof pd.showPopover === 'function') {
             try { pd.showPopover(); } catch {}
         }
@@ -410,7 +411,7 @@ export async function openCheckoutModal() {
         closeCartDropdown();
         hideNPDropdowns();
 
-        if (typeof window !== 'undefined' && typeof window.stopLenis === 'function') window.stopLenis();
+        if (hasAction('stopLenis')) invokeAction('stopLenis');
         else if (typeof lenis !== 'undefined') lenis.stop();
 
         if (typeof openModal === 'function') {
@@ -429,14 +430,14 @@ export async function openCheckoutModal() {
         if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackCheckoutStart === 'function') {
             window.analytics.trackCheckoutStart(currentCart);
         }
-        if (typeof window !== 'undefined' && typeof window.warmupBackendServer === 'function') window.warmupBackendServer(true);
+        if (hasAction('warmupBackendServer')) invokeAction('warmupBackendServer', true);
         if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
         if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
 
         const orderNameEl = document.getElementById('orderName');
         if (orderNameEl) {
-            if (typeof window !== 'undefined' && typeof window.attachFullNameAutoCapitalize === 'function') {
-                window.attachFullNameAutoCapitalize(orderNameEl);
+            if (hasAction('attachFullNameAutoCapitalize')) {
+                invokeAction('attachFullNameAutoCapitalize', orderNameEl);
             } else if (!orderNameEl._lettersOnlyBound) {
                 orderNameEl._lettersOnlyBound = true;
                 orderNameEl.addEventListener('input', function() {
@@ -497,7 +498,7 @@ export async function openCheckoutModal() {
 
         const parsed = (typeof parseDeliveryAddress === 'function')
             ? parseDeliveryAddress(profileAddress)
-            : ((typeof window !== 'undefined' && window.parseDeliveryAddress) ? window.parseDeliveryAddress(profileAddress) : null);
+            : (hasAction('parseDeliveryAddress') ? invokeAction('parseDeliveryAddress', profileAddress) : null);
         const pCity = (parsed && parsed.city) ? parsed.city : (profCityVal || profileAddress);
         const pBranch = (parsed && parsed.branch) ? parsed.branch : profBranchVal;
 
@@ -618,9 +619,7 @@ export async function openCheckoutModal() {
                 const cVal = document.getElementById('orderCity')?.value.trim();
                 if (cVal && cVal.length >= 2) {
                     branchInput.readOnly = false;
-                    if (typeof window !== 'undefined' && typeof window.scrollNPFieldIntoModalView === 'function') {
-                        window.scrollNPFieldIntoModalView(branchInput);
-                    }
+                    scrollNPFieldIntoModalView(branchInput);
                     const bd = document.getElementById('branchDropdown');
                     if (!bd || bd.style.display !== 'block') {
                         loadNPBranches('', true);
@@ -634,9 +633,7 @@ export async function openCheckoutModal() {
         if (cityInput && !cityInput._scrollBound) {
             cityInput._scrollBound = true;
             cityInput.addEventListener('focus', () => {
-                if (typeof window !== 'undefined' && typeof window.scrollNPFieldIntoModalView === 'function') {
-                    window.scrollNPFieldIntoModalView(cityInput);
-                }
+                scrollNPFieldIntoModalView(cityInput);
             });
         }
 
@@ -745,6 +742,19 @@ if (typeof document !== 'undefined') {
     document.addEventListener('mousedown', handleDropdownsOutsideClick);
     document.addEventListener('touchstart', handleDropdownsOutsideClick, { passive: true });
 }
+
+registerActions({
+    sanitizePromoField,
+    saveCheckoutDraft,
+    restoreCheckoutDraft,
+    clearCheckoutDraft,
+    closePaymentDropdown,
+    normalizePaymentMethodRu,
+    selectPaymentMethod,
+    togglePaymentDropdown,
+    applyPromoCode,
+    openCheckoutModal
+});
 
 if (typeof window !== 'undefined') {
     window.sanitizePromoField = sanitizePromoField;

@@ -43,7 +43,7 @@ describe('Propose Bargain Mobile Resilience & State Reset', () => {
 
     it('4. executeCloseModal in windows.js automatically resets propose bargain state on close', () => {
         expect(windowsCode).toContain("id === 'proposeModal'");
-        expect(windowsCode).toContain('window.resetPropBargainState()');
+        expect(windowsCode).toContain("invokeAction('resetPropBargainState')");
     });
 
     it('5. style.css guarantees flex-shrink: 0 and nowrap so [ ТОРГ ] is never squished on narrow screens', () => {

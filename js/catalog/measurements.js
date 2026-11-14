@@ -3,6 +3,7 @@
 // ==========================================
 
 import { getCurrentSiteLang } from './catalog-state.js';
+import { invokeAction, registerActions } from '../core/action-registry.js';
 
 const MEASUREMENT_NOTE_TRANSLATIONS = [
     {
@@ -583,7 +584,7 @@ export const showItemMeasurementsTooltip = function(itemOrId, e) {
     tooltip.style.display = 'block';
     tooltip.classList.add('visible');
     _isTooltipVisible = true;
-    window.moveItemMeasurementsTooltip(e);
+    invokeAction('moveItemMeasurementsTooltip', e);
 };
 
 /**
@@ -594,9 +595,7 @@ export const moveItemMeasurementsTooltip = function(e) {
     if (!e || !_isTooltipVisible) return;
     // Если курсор оказался над кнопкой корзины - прячем плашку замеров
     if (e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]')) {
-        if (typeof window.hideItemMeasurementsTooltip === 'function') {
-            window.hideItemMeasurementsTooltip();
-        }
+        invokeAction('hideItemMeasurementsTooltip');
         return;
     }
     const tooltip = getMeasurementsTooltip();
@@ -654,6 +653,13 @@ export const hideItemMeasurementsTooltip = function() {
     }
 };
 
+registerActions({
+    showItemMeasurementsTooltip,
+    moveItemMeasurementsTooltip,
+    isItemMeasurementsTooltipVisible,
+    hideItemMeasurementsTooltip
+});
+
 if (typeof window !== 'undefined') {
     window.normalizeMeasurementUnits = normalizeMeasurementUnits;
     window.formatMeasurementItem = formatMeasurementItem;
@@ -665,6 +671,6 @@ if (typeof window !== 'undefined') {
 
     // Прячем тултип при скролле страницы (без нагрузки на скролл, когда тултип закрыт)
     window.addEventListener('scroll', () => {
-        if (_isTooltipVisible) window.hideItemMeasurementsTooltip();
+        if (_isTooltipVisible) invokeAction('hideItemMeasurementsTooltip');
     }, { passive: true });
 }

@@ -102,8 +102,8 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
         expect(helpers).toContain('function showFavoriteToast(');
         expect(helpers).toContain("className: `toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`");
-        expect(profile).toContain('window.showFavoriteToast(itemObj, false, imgUrl)');
-        expect(profile).toContain('window.showFavoriteToast(itemObj, true, imgUrl)');
+        expect(profile).toContain('favToastDelFn(itemObj, false, imgUrl)');
+        expect(profile).toContain('favToastAddFn(itemObj, true, imgUrl)');
         expect(style).toContain('.toast.toast-new-item,\n.toast.toast-fav-item,\n.toast.toast-lang-item,\n.toast.toast-cart-item,\n.toast.toast-sale-item,\n.toast.toast-review-item');
         expect(style).toContain('.toast.toast-new-item,\n    .toast.toast-fav-item,\n    .toast.toast-lang-item,\n    .toast.toast-cart-item,\n    .toast.toast-sale-item,\n    .toast.toast-review-item');
     });
@@ -115,7 +115,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
         expect(helpers).toContain('function showLanguageToast(');
         expect(helpers).toContain("className: 'toast-lang-item'");
-        expect(i18n).toContain('window.showLanguageToast(normalized)');
+        expect(i18n).toContain('showLanguageToast(normalized)');
         expect(catalog).toContain('const DOUBLE_TAP_DELAY_MS = 200;');
         expect(catalog).toContain('userFavs.some(id => String(id) === String(itemId))');
     });
@@ -130,11 +130,11 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(helpers).toContain('function showCartToast(');
         expect(helpers).toContain('function showSaleToast(');
         expect(helpers).toContain('function showReviewToast(');
-        expect(cart).toContain('window.showCartToast(item, true, getOptimizedImg(item))');
-        expect(cart).toContain('window.showCartToast(cartItem, true, getOptimizedImg(cartItem))');
-        expect(cart).toContain('window.showCartToast(removedItem, false, imgUrl)');
-        expect(catalog).toContain('window.showSaleToast(item)');
-        expect(reviews).toContain('window.showReviewToast(');
+        expect(cart).toContain("invokeAction('showCartToast', item, true, getOptimizedImg(item))");
+        expect(cart).toContain("invokeAction('showCartToast', cartItem, true, getOptimizedImg(cartItem))");
+        expect(cart).toContain("invokeAction('showCartToast', removedItem, false, imgUrl)");
+        expect(catalog).toContain("invokeAction('showSaleToast', item)");
+        expect(reviews).toContain("resolveAction('showReviewToast')");
     });
 
     it('11. base .toast uses compact sizing globally on desktop and mobile', () => {
@@ -215,9 +215,9 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
         expect(helpers).toContain('async function withButtonBusy(');
         expect(style).toContain('button.is-loading, .is-loading[disabled]');
-        expect(product).toContain("window.withButtonBusy('[data-action=\"submit-question\"]'");
-        expect(reviews).toContain("window.withButtonBusy('[data-action=\"submit-auto-review\"]'");
-        expect(reviews).toContain("window.withButtonBusy('#writeReviewModal .cart-checkout-btn'");
+        expect(product).toContain("invokeAction('withButtonBusy', '[data-action=\"submit-question\"]'");
+        expect(reviews).toContain("busyFn('[data-action=\"submit-auto-review\"]'");
+        expect(reviews).toContain("busyFn('#writeReviewModal .cart-checkout-btn'");
     });
 
     it('17. modal close unlocks scroll immediately without focus scroll jump or closing-phase grid restyle', () => {

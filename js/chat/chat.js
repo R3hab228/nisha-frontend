@@ -1,4 +1,6 @@
 
+import { invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+
 // --- СИСТЕМА ЗАПОМИНАНИЯ ПОКАЗАННЫХ ОФФЕРОВ (ЧТОБЫ НЕ НАДОЕДАТЬ ПОЛЬЗОВАТЕЛЮ) ---
 const BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups';
 const SUPPORT_REPLY_SEEN_STORAGE_KEY = 'nisha_seen_support_reply_ids';
@@ -70,7 +72,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     const checkFeed = () => {
         if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
-        if (typeof window.isUserInProductFeed === 'function') return window.isUserInProductFeed();
+        const feedFn = resolveAction('isUserInProductFeed'); if (feedFn) return feedFn();
         return true;
     };
 
@@ -127,10 +129,11 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     }
 
     // Реактивно обновляем карточку товара прямо в ленте каталога
-    if (typeof window.updateCardDOM === 'function') {
+    const updateCardFn = resolveAction('updateCardDOM');
+    if (updateCardFn) {
         const all = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
         const match = all.find(i => String(i.id) === String(bargainData.itemId));
-        if (match) window.updateCardDOM(match);
+        if (match) updateCardFn(match);
     }
 
     const overlay = document.createElement('div');
@@ -220,12 +223,14 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     if (imgEl) {
         imgEl.addEventListener('click', () => {
             closeOverlay();
-            if (typeof window.openProductModalById === 'function') {
-                window.openProductModalById(bargainData.itemId);
-            } else if (typeof window.openProductModal === 'function') {
+            const openByIdFn = resolveAction('openProductModalById');
+            const openModalFn = resolveAction('openProductModal');
+            if (openByIdFn) {
+                openByIdFn(bargainData.itemId);
+            } else if (openModalFn) {
                 const all = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
                 const found = all.find(i => String(i.id) === String(bargainData.itemId));
-                if (found) window.openProductModal(found);
+                if (found) openModalFn(found);
             }
         }, { signal: modalCtrl.signal });
     }
@@ -233,12 +238,11 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     if (addBtn) {
         addBtn.addEventListener('click', async () => {
             if (typeof triggerHaptic === 'function') triggerHaptic('success');
-            if (typeof window.addToCartById === 'function') {
-                await window.addToCartById(bargainData.itemId, bargainData.acceptedPrice);
+            const addToCartFn = resolveAction('addToCartById');
+            if (addToCartFn) {
+                await addToCartFn(bargainData.itemId, bargainData.acceptedPrice);
             }
-            if (typeof window.openCart === 'function') {
-                window.openCart();
-            }
+            invokeAction('openCart');
             const addedToast = t('product.offer_added_toast', 'Товар додано в кошик за узгодженою ціною!');
             if (typeof showToast === 'function') showToast(addedToast, 'success');
             closeOverlay();
@@ -327,7 +331,7 @@ function checkPendingBargainNotification() {
 
     const checkFeed = () => {
         if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
-        if (typeof window.isUserInProductFeed === 'function') return window.isUserInProductFeed();
+        const feedFn = resolveAction('isUserInProductFeed'); if (feedFn) return feedFn();
         return true;
     };
 
@@ -409,24 +413,26 @@ function handleIncomingSupportReply(r, sbClient) {
             }
         }
 
-        if (typeof window.updateCardDOM === 'function') {
+        const updateCardFn = resolveAction('updateCardDOM');
+        if (updateCardFn) {
             const all = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
             const match = all.find(i => i && String(i.id) === String(parsed.itemId));
-            if (match) window.updateCardDOM(match);
+            if (match) updateCardFn(match);
         }
 
         try {
-            const activeCart = (typeof window.getActiveCart === 'function') ? window.getActiveCart() : ((typeof getActiveCart === 'function') ? getActiveCart() : null);
+            const getCartFn = resolveAction('getActiveCart') || (typeof getActiveCart === 'function' ? getActiveCart : null);
+            const activeCart = getCartFn ? getCartFn() : null;
             if (Array.isArray(activeCart)) {
                 const cartItem = activeCart.find(ci => ci && String(ci.id) === String(parsed.itemId));
                 if (cartItem && Number(cartItem.price) !== Number(parsed.acceptedPrice)) {
                     cartItem.originalPrice = Number(parsed.originalPrice || cartItem.originalPrice || cartItem.price);
                     cartItem.price = Number(parsed.acceptedPrice);
                     cartItem.bargainPrice = Number(parsed.acceptedPrice);
-                    if (typeof window.setActiveCart === 'function') window.setActiveCart(activeCart);
-                    else if (typeof setActiveCart === 'function') setActiveCart(activeCart);
-                    if (typeof window.updateCartUI === 'function') window.updateCartUI();
-                    else if (typeof updateCartUI === 'function') updateCartUI();
+                    const setCartFn = resolveAction('setActiveCart') || (typeof setActiveCart === 'function' ? setActiveCart : null);
+                    if (setCartFn) setCartFn(activeCart);
+                    const updCartFn = resolveAction('updateCartUI') || (typeof updateCartUI === 'function' ? updateCartUI : null);
+                    if (updCartFn) updCartFn();
                 }
             }
         } catch {}
@@ -439,7 +445,7 @@ function handleIncomingSupportReply(r, sbClient) {
 
         const checkFeed = () => {
             if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
-            if (typeof window.isUserInProductFeed === 'function') return window.isUserInProductFeed();
+            const feedFn = resolveAction('isUserInProductFeed'); if (feedFn) return feedFn();
             return true;
         };
 
@@ -480,7 +486,7 @@ function handleIncomingSupportReply(r, sbClient) {
 
         const checkFeed = () => {
             if (typeof isUserInProductFeed === 'function') return isUserInProductFeed();
-            if (typeof window.isUserInProductFeed === 'function') return window.isUserInProductFeed();
+            const feedFn = resolveAction('isUserInProductFeed'); if (feedFn) return feedFn();
             return true;
         };
 
@@ -494,7 +500,8 @@ function handleIncomingSupportReply(r, sbClient) {
         return;
     }
 
-    const safeAnswer = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(r.answer_text) : (typeof window.escapeHtml === 'function' ? window.escapeHtml(r.answer_text) : r.answer_text);
+    const escFn = resolveAction('escapeHtml');
+    const safeAnswer = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(r.answer_text) : (escFn ? escFn(r.answer_text) : r.answer_text);
     const replyTitle = (typeof i18next !== 'undefined' && i18next.t('support.reply_title', { defaultValue: 'Ответ от Поддержки:' })) || 'Ответ от Поддержки:';
     const replyReadBtn = (typeof i18next !== 'undefined' && i18next.t('support.reply_btn_read', { defaultValue: '[ ПРОЧИТАНО ]' })) || '[ ПРОЧИТАНО ]';
     showTerminalModal('INCOMING_MESSAGE.SYS', `<b>${replyTitle}</b><br><br>${safeAnswer}`, replyReadBtn, markAsRead);
@@ -506,7 +513,7 @@ function handleIncomingSupportReply(r, sbClient) {
 
 // 1. Открытие модального окна поддержки
 function openSupportModalWindow() {
-    if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
+    if (typeof lenis !== 'undefined') invokeAction('stopLenis');
     const input = document.getElementById('supportInput');
     if (input) input.value = ''; // Очищаем поле при открытии
     
@@ -541,7 +548,8 @@ async function submitSupportTicket() {
         return;
     }
     if (message.length > 100) {
-        message = typeof window.safeTruncateText === 'function' ? window.safeTruncateText(message, 100) : message.slice(0, 100);
+        const truncFn = resolveAction('safeTruncateText');
+        message = truncFn ? truncFn(message, 100) : message.slice(0, 100);
     }
 
     btn.style.pointerEvents = 'none';
@@ -668,9 +676,7 @@ function initSupportRepliesSystem() {
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 checkUnreadSupportReplies();
-                if (typeof window.syncUserBargains === 'function') {
-                    window.syncUserBargains();
-                }
+                invokeAction('syncUserBargains');
             }
         });
 
@@ -700,6 +706,18 @@ function initSupportRepliesSystem() {
     }
 }
 window.initSupportRepliesSystem = initSupportRepliesSystem;
+
+registerActions({
+    showBargainAcceptedModal,
+    syncBargainPopupSeenToServer,
+    queueBargainNotification,
+    checkPendingBargainNotification,
+    openSupportModalWindow,
+    submitSupportTicket,
+    checkUnreadSupportReplies,
+    subscribeUserRealtime,
+    initSupportRepliesSystem
+});
 
 // Автозапуск системы ответов после старта (с поддержкой ленивой подгрузки модуля)
 if (document.readyState === 'complete') {

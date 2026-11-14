@@ -9,6 +9,7 @@ import {
     setSelectedCityRefState,
     setSelectedBranchRefState
 } from './cart-state.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Нормализует название населённого пункта для сравнения.
@@ -300,8 +301,8 @@ export function filterAndSortBranches(list, rawQuery) {
         return a.idx - b.idx;
     };
 
-    const sortedScored = (typeof window !== 'undefined' && typeof window.toSorted === 'function')
-        ? window.toSorted(scored, sortBranchesFn)
+    const sortedScored = hasAction('toSorted')
+        ? invokeAction('toSorted', scored, sortBranchesFn)
         : (typeof scored.toSorted === 'function'
             ? scored.toSorted(sortBranchesFn)
             : [...scored].sort(sortBranchesFn));
@@ -400,6 +401,19 @@ export async function calculateDeliveryCost() {
         if (costVal) costVal.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.np_rates', { defaultValue: 'По тарифам НП' }) : 'По тарифам НП';
     }
 }
+
+registerActions({
+    updateNPClearButtons,
+    bindTouchTapSelect,
+    bindDropdownScrollDismissKeyboard,
+    scrollNPFieldIntoModalView,
+    extractBranchNumber,
+    parseNPBranchQuery,
+    filterAndSortBranches,
+    hideNPDropdowns,
+    resetCheckoutAddressState,
+    calculateDeliveryCost
+});
 
 if (typeof window !== 'undefined') {
     window.updateNPClearButtons = updateNPClearButtons;

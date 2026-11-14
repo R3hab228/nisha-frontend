@@ -2,6 +2,8 @@
 // NISHA DROP MODULE (Предложить вещь / DROP_ITEM.EXE)
 // ==========================================
 
+import { invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+
 // Глобальный массив для файлов предложки: объекты { file, url }
 let currentProposalFiles = [];
 window.currentProposalFiles = currentProposalFiles;
@@ -117,11 +119,9 @@ window.sanitizeProposalNameField = sanitizeProposalNameField;
 
 // 1. Открытие модального окна предложки
 function openProposeModal() {
-    if (typeof lenis !== 'undefined' && window.stopLenis) window.stopLenis();
-    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
-    if (typeof resetPropBargainState === 'function') {
-        resetPropBargainState();
-    }
+    if (typeof lenis !== 'undefined') invokeAction('stopLenis');
+    invokeAction('updateProposeAndCheckoutFields');
+    resetPropBargainState();
     const propNameEl = document.getElementById('propName');
     if (propNameEl) {
         delete propNameEl.dataset.userTyped;
@@ -250,8 +250,8 @@ function resetProposalForm() {
     window._propBargainMode = false;
     if (typeof resetPropBargainState === 'function') {
         resetPropBargainState();
-    } else if (typeof window.hidePropBargainInput === 'function') {
-        window.hidePropBargainInput(true);
+    } else {
+        hidePropBargainInput(true);
     }
     const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc', 'propMinBargainPrice'];
     fields.forEach(id => {
@@ -825,7 +825,8 @@ async function submitProposal() {
     }
     
     // Очистка от вредоносного кода
-    const sanitize = (typeof window.sanitizeText === 'function') ? window.sanitizeText : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const sanitizeFn = resolveAction('sanitizeText');
+    const sanitize = sanitizeFn ? sanitizeFn : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     const nameItem = sanitize(rawName); 
     const brand = sanitize(rawBrand);
     const size = sanitize(rawSize);
@@ -1055,3 +1056,21 @@ if (document.readyState === 'loading') {
 } else {
     initProposalListeners();
 }
+
+registerActions({
+    sanitizeProposalNameField,
+    openProposeModal,
+    compressImage,
+    resetProposalForm,
+    openPropBargainInput,
+    confirmPropBargainInput,
+    showBargainSavedToast,
+    hidePropBargainInput,
+    returnToDesiredPriceMode,
+    resetPropBargainState,
+    handleNewProposalFiles,
+    openProposalPhotoByIndex,
+    removeProposalFile,
+    renderProposalPreviews,
+    submitProposal
+});

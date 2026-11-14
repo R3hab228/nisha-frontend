@@ -12,6 +12,7 @@ import {
     getActiveCart,
     getSupabaseClient
 } from './cart-state.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Изоляция скролла списка корзины на ПК: скроллится только сам список корзины, а не весь сайт.
@@ -207,9 +208,9 @@ export function renderCartItems() {
     });
     if (!list._swipeDelegatedBound) {
         list._swipeDelegatedBound = true;
-        list.addEventListener('touchstart', (e) => window.handleSwipeStart(e), { passive: true });
-        list.addEventListener('touchmove', (e) => window.handleSwipeMove(e), { passive: true });
-        list.addEventListener('touchend', (e) => window.handleSwipeEnd(e), { passive: true });
+        list.addEventListener('touchstart', (e) => invokeAction('handleSwipeStart', e), { passive: true });
+        list.addEventListener('touchmove', (e) => invokeAction('handleSwipeMove', e), { passive: true });
+        list.addEventListener('touchend', (e) => invokeAction('handleSwipeEnd', e), { passive: true });
     }
 }
 
@@ -228,7 +229,7 @@ export function updateCartUI() {
         if (dropdown) {
             dropdown.classList.remove('active');
             clearDropdownInlineStyles(dropdown);
-            if (typeof window.hidePopoverSafe === 'function') window.hidePopoverSafe(dropdown);
+            if (hasAction('hidePopoverSafe')) invokeAction('hidePopoverSafe', dropdown);
             else if (typeof dropdown.hidePopover === 'function' && dropdown.matches && dropdown.matches(':popover-open')) { try { dropdown.hidePopover(); } catch {} }
         }
         if (fab) {
@@ -257,7 +258,7 @@ export function updateCartUI() {
 
     const countEl = document.getElementById('cartCount');
     if (countEl) countEl.innerText = currentCart.length;
-    if (typeof window.updateAppBadge === 'function') window.updateAppBadge(currentCart.length);
+    if (hasAction('updateAppBadge')) invokeAction('updateAppBadge', currentCart.length);
     let total = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
 
     const promoDiscount = window.currentPromoDiscount || cartState.currentPromoDiscount || 0;
@@ -436,9 +437,7 @@ if (typeof window !== 'undefined') {
             rowSurface.style.opacity = '0';
 
             setTimeout(() => {
-                if (typeof window.removeFromCart === 'function') {
-                    window.removeFromCart(itemIndex, null, parentRow);
-                }
+                invokeAction('removeFromCart', itemIndex, null, parentRow);
             }, 200);
         } else {
             rowSurface.style.transform = 'translateX(0px)';
@@ -475,4 +474,15 @@ if (typeof window !== 'undefined') {
             renderCartItems();
         }
     };
+
+    registerActions({
+        renderCartItems,
+        updateCartUI,
+        toggleCartDropdown,
+        closeCartDropdown,
+        handleSwipeStart: window.handleSwipeStart,
+        handleSwipeMove: window.handleSwipeMove,
+        handleSwipeEnd: window.handleSwipeEnd,
+        openCart: window.openCart
+    });
 }

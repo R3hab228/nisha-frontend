@@ -221,8 +221,8 @@ function syncOrderUpdateCachesAndCatalog(payload) {
     if (typeof document !== 'undefined') {
         const ordModal = document.getElementById('ordersModal');
         if (ordModal && ordModal.style.display === 'flex') {
-            if (typeof window.updateOrderTabCounters === 'function') window.updateOrderTabCounters();
-            if (typeof window.renderFilteredOrders === 'function') window.renderFilteredOrders();
+            getGlobalFn('updateOrderTabCounters')?.();
+            getGlobalFn('renderFilteredOrders')?.();
         }
     }
 
@@ -236,11 +236,11 @@ function syncOrderUpdateCachesAndCatalog(payload) {
             if (!catItem) return;
             if (isPaidOrShipped && catItem.status !== 'sold') {
                 catItem.status = 'sold';
-                if (typeof window.updateCardDOM === 'function') window.updateCardDOM(catItem);
-                if (typeof window.removeSoldItemFromCart === 'function') window.removeSoldItemFromCart(catItem.id, catItem.name);
+                getGlobalFn('updateCardDOM')?.(catItem);
+                getGlobalFn('removeSoldItemFromCart')?.(catItem.id, catItem.name);
             } else if (isCancelled && catItem.status !== 'available') {
                 catItem.status = 'available';
-                if (typeof window.updateCardDOM === 'function') window.updateCardDOM(catItem);
+                getGlobalFn('updateCardDOM')?.(catItem);
             }
         });
     }
@@ -271,8 +271,9 @@ export function subscribeOrderStatusUpdates(sb, userId) {
 
             // 1. Изменение статуса заказа (без эмодзи)
             if (newStatus && newStatus !== oldStatus) {
-                const formattedNewStatus = typeof window.formatOrderStatus === 'function'
-                    ? window.formatOrderStatus(newStatus)
+                const formatStatusFn = getGlobalFn('formatOrderStatus');
+                const formattedNewStatus = formatStatusFn
+                    ? formatStatusFn(newStatus)
                     : (newStatus || '').toUpperCase();
 
                 if (newStatus === 'Завершен') {
@@ -282,9 +283,7 @@ export function subscribeOrderStatusUpdates(sb, userId) {
                     const itemId = firstItem ? (firstItem.id || '') : '';
 
                     notifyToast(`Заказ #${shortId} получен. Оставьте отзыв о покупке!`, 'info', itemImg, () => {
-                        if (typeof window.promptOrderReview === 'function') {
-                            window.promptOrderReview(payload.new.id, itemName, itemImg, itemId);
-                        }
+                        getGlobalFn('promptOrderReview')?.(payload.new.id, itemName, itemImg, itemId);
                     });
 
                     if (terminalFn) {
@@ -294,9 +293,7 @@ export function subscribeOrderStatusUpdates(sb, userId) {
                             `Будем благодарны за отзыв о покупке на сайте.`,
                             '[ ОСТАВИТЬ ОТЗЫВ ]',
                             () => {
-                                if (typeof window.promptOrderReview === 'function') {
-                                    window.promptOrderReview(payload.new.id, itemName, itemImg, itemId);
-                                }
+                                getGlobalFn('promptOrderReview')?.(payload.new.id, itemName, itemImg, itemId);
                             }
                         );
                     }
@@ -311,7 +308,7 @@ export function subscribeOrderStatusUpdates(sb, userId) {
                             `${tProfile('profile.order_status_order', 'Заказ:')} #${shortId}<br>` +
                             `${tProfile('profile.order_status_new', 'Новый статус:')} <b style="color:var(--accent-green);">${formattedNewStatus}</b>`,
                             tProfile('profile.order_status_view', '[ ПОСМОТРЕТЬ ]'),
-                            () => { if (typeof window.openOrdersModal === 'function') window.openOrdersModal(); }
+                            () => { getGlobalFn('openOrdersModal')?.(); }
                         );
                     }
                 }
@@ -322,7 +319,7 @@ export function subscribeOrderStatusUpdates(sb, userId) {
             const oldTtn = payload.old ? payload.old.tracking_number : null;
             if (newTtn && newTtn !== oldTtn && !newTtn.startsWith('ОШИБКА')) {
                 notifyToast(`Заказ #${shortId}: добавлен номер ТТН ${newTtn}`, 'success', null, () => {
-                    if (typeof window.openOrdersModal === 'function') window.openOrdersModal();
+                    getGlobalFn('openOrdersModal')?.();
                 });
 
                 if (terminalFn) {
@@ -332,7 +329,7 @@ export function subscribeOrderStatusUpdates(sb, userId) {
                         `Номер ТТН Новой Почты: <b style="color:var(--accent-green);">${newTtn}</b>`,
                         '[ ОТСЛЕДИТЬ ]',
                         () => {
-                            if (typeof window.openOrdersModal === 'function') window.openOrdersModal();
+                            getGlobalFn('openOrdersModal')?.();
                         }
                     );
                 }
@@ -360,14 +357,15 @@ export function subscribeQaUpdates(sb, userId) {
         }, payload => {
             if (payload.new.answer && (!payload.old || !payload.old.answer)) {
                 notifyToast(tProfile('messages.qa_answered', 'Вам ответили на вопрос по товару!'), 'success', null, () => {
-                    if (payload.new.item_id && typeof window.openProductModalById === 'function') {
-                        window.openProductModalById(payload.new.item_id);
+                    if (payload.new.item_id) {
+                        getGlobalFn('openProductModalById')?.(payload.new.item_id);
                     }
                 });
 
                 if (terminalFn) {
-                    const safeSnippet = typeof window.safeTruncateText === 'function'
-                        ? window.safeTruncateText(String(payload.new.answer || ''), 150)
+                    const truncateFn = getGlobalFn('safeTruncateText');
+                    const safeSnippet = truncateFn
+                        ? truncateFn(String(payload.new.answer || ''), 150)
                         : String(payload.new.answer || '').slice(0, 150);
                     terminalFn(
                         'QUESTION_ANSWERED.LOG',
@@ -375,8 +373,8 @@ export function subscribeQaUpdates(sb, userId) {
                         `<i>"${safeSnippet}"</i>`,
                         '[ ПОСМОТРЕТЬ ТОВАР ]',
                         () => {
-                            if (payload.new.item_id && typeof window.openProductModalById === 'function') {
-                                window.openProductModalById(payload.new.item_id);
+                            if (payload.new.item_id) {
+                                getGlobalFn('openProductModalById')?.(payload.new.item_id);
                             }
                         }
                     );
@@ -553,15 +551,11 @@ export async function checkSession() {
         await loadFavorites();
         await syncProfileAbandonedCart(profileState.userProfile);
 
-        if (typeof window.subscribeUserRealtime === 'function' && currentUser?.id) {
-            window.subscribeUserRealtime(currentUser.id);
+        if (currentUser?.id) {
+            getGlobalFn('subscribeUserRealtime')?.(currentUser.id);
         }
-        if (typeof window.syncUserBargains === 'function') {
-            window.syncUserBargains();
-        }
-        if (typeof window.checkUnreadSupportReplies === 'function') {
-            window.checkUnreadSupportReplies();
-        }
+        getGlobalFn('syncUserBargains')?.();
+        getGlobalFn('checkUnreadSupportReplies')?.();
     } catch (err) {
         console.error('Ошибка в checkSession:', err);
     }

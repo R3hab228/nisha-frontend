@@ -2,6 +2,8 @@
 // NISHA WEB PUSH SUBSCRIPTION & PWA STANDALONE DEDUPLICATION MODULE
 // ==========================================
 
+import { registerActions } from './action-registry.js';
+
 let pushPrompted = false;
 let pushListenersBound = false;
 
@@ -291,3 +293,10 @@ export function initPwaPush() {
 export function resetPushPromptTestState() {
     pushPrompted = false;
 }
+
+registerActions({
+    isPwaStandalone,
+    checkIsPwaInstalled,
+    syncNotificationPermission,
+    subscribeUserToPush
+});

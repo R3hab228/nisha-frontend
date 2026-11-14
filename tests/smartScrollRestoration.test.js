@@ -171,13 +171,13 @@ describe('Smart Feed Scroll Restoration Engine', () => {
         const code = readProductSource();
 
         expect(code).toContain('window._preModalScrollY = window.scrollY');
-        expect(code).toContain('window.saveCurrentFeedScrollState(item.id)');
+        expect(code).toContain("invokeAction('saveCurrentFeedScrollState', item.id)");
     });
 
     it('6. pwa-network.js resets saved scroll on manual pull-to-refresh at feed top', () => {
         const code = readPwaNetworkSource();
 
-        expect(code).toContain('window.clearSavedFeedScrollState()');
+        expect(code).toContain("invokeAction('clearSavedFeedScrollState')");
     });
 
     it('7. index.html and style.css contain the feedScrollRestoredBadge element and styling', () => {

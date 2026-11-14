@@ -12,6 +12,7 @@ import {
     withCartLock
 } from './cart-state.js';
 import { updateCartUI, closeCartDropdown } from './cart-ui.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Синхронизирует корзину с сервером и сервисом брошенных корзин (Abandoned Cart Recovery).
@@ -117,8 +118,8 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
         }
 
         updateCartUI();
-        if (typeof window !== 'undefined' && typeof window.showCartToast === 'function') {
-            window.showCartToast(item, true, getOptimizedImg(item));
+        if (hasAction('showCartToast')) {
+            invokeAction('showCartToast', item, true, getOptimizedImg(item));
         } else {
             showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success', getOptimizedImg(item));
         }
@@ -146,7 +147,7 @@ export function addToCartWithAnimation(itemId, btnElement, event) {
     addToCartById(itemId);
 
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
-    if (typeof window !== 'undefined' && typeof window.warmupBackendServer === 'function') window.warmupBackendServer();
+    if (hasAction('warmupBackendServer')) invokeAction('warmupBackendServer');
 
     const cartIcon = document.getElementById('cartInfoWrapper');
     if (!cartIcon || !btnElement) return;
@@ -233,12 +234,12 @@ export async function addToCartFromModal() {
         setActiveCart(currentCart);
         updateCartUI();
         if (typeof closeModal === 'function') closeModal('productModal');
-        if (typeof window !== 'undefined' && typeof window.showCartToast === 'function') {
-            window.showCartToast(cartItem, true, getOptimizedImg(cartItem));
+        if (hasAction('showCartToast')) {
+            invokeAction('showCartToast', cartItem, true, getOptimizedImg(cartItem));
         } else {
             showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success');
         }
-        if (typeof window !== 'undefined' && typeof window.warmupBackendServer === 'function') window.warmupBackendServer();
+        if (hasAction('warmupBackendServer')) invokeAction('warmupBackendServer');
         await syncCartToServer();
     });
 }
@@ -285,8 +286,8 @@ export async function removeFromCart(index, event, rowElement) {
                 closeCartDropdown();
             }
             updateCartUI();
-            if (typeof window !== 'undefined' && typeof window.showCartToast === 'function') {
-                window.showCartToast(removedItem, false, imgUrl);
+            if (hasAction('showCartToast')) {
+                invokeAction('showCartToast', removedItem, false, imgUrl);
             } else {
                 showToast(`${typeof i18next !== 'undefined' ? i18next.t('messages.cart_delete') : 'Удалено: '}${removedItem.name}`, 'error', imgUrl);
             }
@@ -304,6 +305,14 @@ export async function removeFromCart(index, event, rowElement) {
         await lockedRemoval();
     }
 }
+
+registerActions({
+    syncCartToServer,
+    addToCartById,
+    addToCartWithAnimation,
+    addToCartFromModal,
+    removeFromCart
+});
 
 if (typeof window !== 'undefined') {
     window.syncCartToServer = syncCartToServer;

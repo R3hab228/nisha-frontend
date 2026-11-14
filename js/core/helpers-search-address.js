@@ -3,6 +3,7 @@
 // ==========================================
 
 import { hasOwn } from './helpers-core-utils.js';
+import { registerActions } from './action-registry.js';
 
 export const SEARCH_SYNONYMS = {
     'найк': 'nike', 'найки': 'nike', 'адидас': 'adidas', 'адики': 'adidas',
@@ -288,3 +289,11 @@ export function attachFullNameAutoCapitalize(input) {
     }
 }
 if (typeof window !== 'undefined') window.attachFullNameAutoCapitalize = attachFullNameAutoCapitalize;
+
+registerActions({
+    expandSearchQuery,
+    parsePriceSearchQuery,
+    itemMatchesPrice,
+    parseDeliveryAddress,
+    attachFullNameAutoCapitalize
+});

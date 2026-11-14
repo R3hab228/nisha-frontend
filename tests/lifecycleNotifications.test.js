@@ -11,11 +11,11 @@ describe('Store Life-Cycle Notifications (Status, TTN, Q&A, Reviews)', () => {
         const content = fs.readFileSync(appJsPath, 'utf8');
 
         expect(content).toContain("openAction === 'orders'");
-        expect(content).toContain('window.openOrdersModal()');
+        expect(content).toContain("invokeAction('openOrdersModal')");
         expect(content).toContain("openAction === 'reviews'");
-        expect(content).toContain('window.openReviewsModal()');
+        expect(content).toContain('openReviewsModal()');
         expect(content).toContain("openAction === 'review'");
-        expect(content).toContain('window.promptOrderReview(orderId');
+        expect(content).toContain("invokeAction('promptOrderReview', orderId");
     });
 
     it('profile.js handles order completion, TTN addition, and Q&A answers without emojis', () => {
@@ -24,7 +24,7 @@ describe('Store Life-Cycle Notifications (Status, TTN, Q&A, Reviews)', () => {
         // Check review prompt upon order completion
         expect(content).toContain("newStatus === 'Завершен'");
         expect(content).toContain('ORDER_COMPLETED.LOG');
-        expect(content).toContain('promptOrderReview(payload.new.id');
+        expect(content).toContain("getGlobalFn('promptOrderReview')?.(payload.new.id");
         expect(content).toContain('[ ОСТАВИТЬ ОТЗЫВ ]');
 
         // Check TTN addition notification
@@ -35,7 +35,7 @@ describe('Store Life-Cycle Notifications (Status, TTN, Q&A, Reviews)', () => {
         // Check Q&A answer notification
         expect(content).toContain('QUESTION_ANSWERED.LOG');
         expect(content).toContain('[ ПОСМОТРЕТЬ ТОВАР ]');
-        expect(content).toContain('openProductModalById(payload.new.item_id)');
+        expect(content).toContain("getGlobalFn('openProductModalById')?.(payload.new.item_id)");
 
         // Verify that notification strings in profile.js do not contain emojis
         const notificationSnippets = [

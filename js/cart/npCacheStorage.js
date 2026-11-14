@@ -1,6 +1,8 @@
 // ==========================================
 // КЭШ НОВОЙ ПОЧТЫ (IN-MEMORY L1 + INDEXEDDB L2 + SAFE FALLBACK)
 // ==========================================
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+
 export const NP_BRANCH_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 часа актуальности отделений
 export const NP_CITY_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 дней актуальности городов
 
@@ -50,16 +52,16 @@ export async function getNPStorageAsync(key) {
     }
 
     // 2. Проверяем L2 IndexedDB (основное надёжное хранилище без 5MB лимита)
-    if (typeof window.idbGet === 'function') {
+    if (hasAction('idbGet')) {
         try {
-            const entry = await window.idbGet('np_' + key);
+            const entry = await invokeAction('idbGet', 'np_' + key);
             if (entry && entry.ts && entry.data) {
                 const itemTtl = entry.ttl !== undefined ? entry.ttl : ttl;
                 if (Date.now() - entry.ts < itemTtl) {
                     let actualData = entry.data;
-                    if (entry.compressed && typeof window.decompressJSON === 'function') {
+                    if (entry.compressed && hasAction('decompressJSON')) {
                         try {
-                            actualData = await window.decompressJSON(entry.data);
+                            actualData = await invokeAction('decompressJSON', entry.data);
                         } catch (compErr) {
                             console.warn('[NP Cache] Decompress error fallback:', compErr);
                             actualData = null;
@@ -70,13 +72,13 @@ export async function getNPStorageAsync(key) {
                         npMemoryCache.set(key, { ts: entry.ts, ttl: itemTtl, data: actualData });
                         trimMemoryCacheIfNeeded();
                         return actualData;
-                    } else if (typeof window.idbDel === 'function') {
+                    } else if (hasAction('idbDel')) {
                         // Асинхронно удаляем поврежденную запись
-                        window.idbDel('np_' + key).catch(() => {});
+                        invokeAction('idbDel', 'np_' + key).catch(() => {});
                     }
-                } else if (typeof window.idbDel === 'function') {
+                } else if (hasAction('idbDel')) {
                     // Асинхронно удаляем устаревшую запись
-                    window.idbDel('np_' + key).catch(() => {});
+                    invokeAction('idbDel', 'np_' + key).catch(() => {});
                 }
             }
         } catch (e) {
@@ -143,21 +145,21 @@ export function setNPStorage(key, val, customTtl) {
     trimMemoryCacheIfNeeded();
 
     // 2. Сохраняем в L2 IndexedDB (основное надёжное хранилище для всех городов и отделений)
-    const hasIdb = typeof window.idbSet === 'function';
+    const hasIdb = hasAction('idbSet');
     if (hasIdb) {
-        const shouldCompress = typeof window.compressJSON === 'function' &&
-                               typeof window.isCompressionStreamSupported === 'function' &&
-                               window.isCompressionStreamSupported() &&
+        const shouldCompress = hasAction('compressJSON') &&
+                               hasAction('isCompressionStreamSupported') &&
+                               invokeAction('isCompressionStreamSupported') &&
                                Array.isArray(payload) && payload.length > 20;
 
         if (shouldCompress) {
-            window.compressJSON(payload).then(compressedBuffer => {
-                window.idbSet('np_' + key, { ts: Date.now(), ttl, data: compressedBuffer, compressed: true }).catch(() => {});
+            invokeAction('compressJSON', payload).then(compressedBuffer => {
+                invokeAction('idbSet', 'np_' + key, { ts: Date.now(), ttl, data: compressedBuffer, compressed: true }).catch(() => {});
             }).catch(() => {
-                window.idbSet('np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
+                invokeAction('idbSet', 'np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
             });
         } else {
-            window.idbSet('np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
+            invokeAction('idbSet', 'np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});
         }
     } else {
         // 3. Fallback в L3 sessionStorage только если IndexedDB недоступен
@@ -239,10 +241,10 @@ export async function cleanupStaleNPCache(forceAll = false) {
     // 3. Очистка L2 IndexedDB
     try {
         let keys = [];
-        if (typeof window.idbGetAllKeys === 'function') {
-            keys = await window.idbGetAllKeys();
-        } else if (typeof window.idbClearNP === 'function' && forceAll) {
-            await window.idbClearNP();
+        if (hasAction('idbGetAllKeys')) {
+            keys = await invokeAction('idbGetAllKeys');
+        } else if (hasAction('idbClearNP') && forceAll) {
+            await invokeAction('idbClearNP');
             return { deleted: 1, checked: 1, success: true };
         }
 
@@ -251,8 +253,8 @@ export async function cleanupStaleNPCache(forceAll = false) {
         for (const fullKey of npKeys) {
             checked++;
             if (forceAll) {
-                if (typeof window.idbDel === 'function') {
-                    await window.idbDel(fullKey);
+                if (hasAction('idbDel')) {
+                    await invokeAction('idbDel', fullKey);
                     deleted++;
                 }
                 continue;
@@ -261,15 +263,15 @@ export async function cleanupStaleNPCache(forceAll = false) {
             const rawKey = fullKey.replace(/^np_/, '');
             const defaultTtl = getNPDefaultTTL(rawKey);
 
-            if (typeof window.idbGet === 'function') {
-                const entry = await window.idbGet(fullKey);
+            if (hasAction('idbGet')) {
+                const entry = await invokeAction('idbGet', fullKey);
                 const isCorrupt = !entry || typeof entry !== 'object' || !entry.ts;
                 const isExpired = entry && entry.ts && (now - entry.ts >= (typeof entry.ttl === 'number' ? entry.ttl : defaultTtl));
                 const isTooOld = entry && entry.ts && (now - entry.ts >= NP_MAX_CACHE_AGE_MS);
 
                 if (isCorrupt || isExpired || isTooOld) {
-                    if (typeof window.idbDel === 'function') {
-                        await window.idbDel(fullKey);
+                    if (hasAction('idbDel')) {
+                        await invokeAction('idbDel', fullKey);
                         deleted++;
                     }
                 }
@@ -301,12 +303,20 @@ export async function clearNPCache(includeIdb = false) {
     if (includeIdb) {
         if (typeof cleanupStaleNPCache === 'function') {
             await cleanupStaleNPCache(true);
-        } else if (typeof window.idbClearNP === 'function') {
-            await window.idbClearNP();
+        } else if (hasAction('idbClearNP')) {
+            await invokeAction('idbClearNP');
         }
     }
 }
 window.clearNPCache = clearNPCache;
+
+registerActions({
+    slimBranches,
+    getNPStorageAsync,
+    setNPStorage,
+    cleanupStaleNPCache,
+    clearNPCache
+});
 
 /**
  * Автоматический запуск проверки устаревшего кэша в idle-время раз в 24 часа

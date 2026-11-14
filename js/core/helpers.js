@@ -6,6 +6,7 @@
 import { initNetworkAwareRendering } from './helpers-pwa-browser.js';
 import { initActionDelegation, bindFormAndFilterListeners } from './helpers-delegation.js';
 
+export * from './action-registry.js';
 export * from './helpers-core-utils.js';
 export * from './helpers-security-media.js';
 export * from './helpers-storage-idb.js';

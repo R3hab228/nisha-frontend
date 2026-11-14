@@ -3,6 +3,8 @@
 // Multi-tab synchronization, mutual exclusion & leader election
 // ==========================================
 
+import { registerActions } from './action-registry.js';
+
 let _isLeader = false;
 let _leaderAbortController = null;
 const _leaderCallbacks = new Set();
@@ -123,6 +125,13 @@ function initLeaderElection() {
     return leaderPromise;
 }
 window.initLeaderElection = initLeaderElection;
+
+registerActions({
+    runWithLock,
+    isWebLocksSupported,
+    isTabLeader,
+    initLeaderElection
+});
 
 // Auto-initialize leader election in browser environment
 if (typeof window !== 'undefined') {

@@ -3,6 +3,8 @@
 // ES2022-2025 Polyfills, String/URL safety, Scheduling, Sets, Price & DOM utils
 // ==========================================
 
+import { registerAction } from './action-registry.js';
+
 // Polyfill Promise.withResolvers (ES2024) if not natively present
 if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function') {
     Promise.withResolvers = function() {
@@ -18,6 +20,7 @@ if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function
 function exposeGlobal(name, value) {
     if (typeof window !== 'undefined') window[name] = value;
     if (typeof globalThis !== 'undefined') globalThis[name] = value;
+    if (typeof value === 'function') registerAction(name, value);
 }
 
 /**

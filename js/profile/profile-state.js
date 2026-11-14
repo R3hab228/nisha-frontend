@@ -2,6 +2,8 @@
 // NISHA PROFILE SHARED STATE & DEPENDENCY ACCESSORS
 // ==========================================
 
+import { registerAction, resolveAction } from '../core/action-registry.js';
+
 /**
  * Resolves safe localStorage/sessionStorage wrapper from window or global scope.
  * @returns {object|null}
@@ -83,8 +85,9 @@ function bindSyncedWindowStateProp(key) {
  * @returns {object|null}
  */
 export function getSupabase() {
-    if (typeof window !== 'undefined' && typeof window.getSupabase === 'function') {
-        const res = window.getSupabase();
+    const fn = resolveAction('getSupabase');
+    if (fn) {
+        const res = fn();
         if (res) return res;
     }
     return (typeof window !== 'undefined' && (window._supabase || window.supabaseClient)) || null;
@@ -106,9 +109,8 @@ export function getCatalog() {
  * @returns {string}
  */
 export function getHourglass(height = 14) {
-    if (typeof window !== 'undefined' && typeof window.getWin95HourglassHtml === 'function') {
-        return window.getWin95HourglassHtml(height);
-    }
+    const fn = resolveAction('getWin95HourglassHtml');
+    if (fn) return fn(height);
     if (typeof getWin95HourglassHtml === 'function') {
         return getWin95HourglassHtml(height);
     }
@@ -139,9 +141,7 @@ export function tProfile(key, fallback, vars = {}) {
  * @param {Function|null} [onClick=null]
  */
 export function notifyToast(msg, type = 'info', imgUrl = null, onClick = null) {
-    const fn = (typeof window !== 'undefined' && typeof window.showToast === 'function')
-        ? window.showToast
-        : (typeof showToast === 'function' ? showToast : null);
+    const fn = resolveAction('showToast') || (typeof showToast === 'function' ? showToast : null);
     if (!fn) return;
     if (onClick !== null) return fn(msg, type, imgUrl, onClick);
     if (imgUrl !== null) return fn(msg, type, imgUrl);
@@ -149,22 +149,24 @@ export function notifyToast(msg, type = 'info', imgUrl = null, onClick = null) {
 }
 
 /**
- * Resolves a global helper by name from window or global scope.
+ * Resolves a global or registered action helper by name.
  * @param {string} name
  * @returns {Function|null}
  */
 export function getGlobalFn(name) {
-    if (typeof window !== 'undefined' && typeof window[name] === 'function') return window[name];
+    const resolved = resolveAction(name);
+    if (resolved) return resolved;
     if (typeof globalThis !== 'undefined' && typeof globalThis[name] === 'function') return globalThis[name];
     return null;
 }
 
 /**
- * Exposes a function on window when running in a browser/DOM environment.
+ * Registers an action handler in the Action Registry and binds compatibility window alias.
  * @param {string} name
  * @param {Function} fn
  */
 export function bindWindowFn(name, fn) {
+    registerAction(name, fn);
     if (typeof window !== 'undefined') {
         window[name] = fn;
     }

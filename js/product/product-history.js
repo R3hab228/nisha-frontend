@@ -13,6 +13,7 @@ import {
     toCDN,
     computeItemSimilarity
 } from './product-state.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 /**
  * Shares currently opened product URL via native Web Share API or clipboard fallback.
@@ -38,15 +39,15 @@ export function shareItem() {
         ? i18next.t('messages.link_copied', { defaultValue: 'Ссылка скопирована!' })
         : 'Ссылка скопирована!';
 
-    if (typeof window !== 'undefined' && typeof window.shareContent === 'function') {
-        window.shareContent({
+    if (hasAction('shareContent')) {
+        invokeAction('shareContent', {
             title: shareTitle,
             text: shareText,
             url: shareUrl,
             fallbackMsg: successMsg
         });
-    } else if (typeof window !== 'undefined' && typeof window.copyToClipboard === 'function') {
-        window.copyToClipboard(shareUrl, successMsg);
+    } else if (hasAction('copyToClipboard')) {
+        invokeAction('copyToClipboard', shareUrl, successMsg);
     }
 }
 
@@ -83,8 +84,8 @@ export function renderSimilarItems(item) {
     }));
 
     const sortScoreFn = (a, b) => b.score - a.score;
-    const sortedCandidates = (typeof window !== 'undefined' && typeof window.toSorted === 'function')
-        ? window.toSorted(scoredCandidates, sortScoreFn)
+    const sortedCandidates = hasAction('toSorted')
+        ? invokeAction('toSorted', scoredCandidates, sortScoreFn)
         : (scoredCandidates.toSorted ? scoredCandidates.toSorted(sortScoreFn) : [...scoredCandidates].sort(sortScoreFn));
 
     const similar = sortedCandidates.slice(0, 6).map(c => c.item);
@@ -399,6 +400,14 @@ export function removeHistoryItem(event, itemId) {
 
     renderHistory();
 }
+
+registerActions({
+    shareItem,
+    addToHistory,
+    renderHistory,
+    toggleHistory,
+    removeHistoryItem
+});
 
 if (typeof window !== 'undefined') {
     window.shareItem = shareItem;

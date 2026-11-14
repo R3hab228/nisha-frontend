@@ -9,6 +9,7 @@ import {
     restoreFeedScrollPosition
 } from './scroll-restoration.js';
 import { renderNextBatch } from './catalog-grid.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 let applyFiltersTimeout = null;
 let _resolveApplyFilters = null;
@@ -18,8 +19,8 @@ function runCatalogViewTransition(updateDom) {
     if (typeof safeViewTransition === 'function') {
         return safeViewTransition(updateDom);
     }
-    if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
-        return window.safeViewTransition(updateDom);
+    if (hasAction('safeViewTransition')) {
+        return invokeAction('safeViewTransition', updateDom);
     }
     return updateDom();
 }
@@ -265,8 +266,8 @@ function getCatalogFuse(items) {
 export function invalidateFuseCache() {
     _catalogFuseCache = null;
     _catalogFuseItemsRef = null;
+    if (hasAction('invalidateLiveSearchFuse')) invokeAction('invalidateLiveSearchFuse');
     if (typeof window !== 'undefined') {
-        if (typeof window.invalidateLiveSearchFuse === 'function') window.invalidateLiveSearchFuse();
         if (window.searchWorker && typeof window.searchWorker.setItems === 'function' && Array.isArray(window.allItems)) {
             window.searchWorker.setItems(window.allItems);
         }
@@ -359,7 +360,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                 return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability && matchesSale;
             });
 
-            if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+            if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
             if (filterSeq !== _applyFiltersSeq) return;
 
             // 2. Умный поиск (Web Worker Fuse.js с поддержкой транслитерации и надежный fallback)
@@ -375,13 +376,16 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                     } else {
                         const priceQuery = (typeof parsePriceSearchQuery === 'function')
                             ? parsePriceSearchQuery(cleanSearchTerm)
-                            : (typeof window.parsePriceSearchQuery === 'function' ? window.parsePriceSearchQuery(cleanSearchTerm) : null);
-                        const checkPriceFn = typeof itemMatchesPrice === 'function' ? itemMatchesPrice : window.itemMatchesPrice;
+                            : (hasAction('parsePriceSearchQuery') ? invokeAction('parsePriceSearchQuery', cleanSearchTerm) : null);
+                        const canCheckPrice = typeof itemMatchesPrice === 'function' || hasAction('itemMatchesPrice');
+                        const checkPriceFn = (itm, pq) => (typeof itemMatchesPrice === 'function'
+                            ? itemMatchesPrice(itm, pq)
+                            : invokeAction('itemMatchesPrice', itm, pq));
 
                         const matchedIds = new Set();
                         const finalResults = [];
 
-                        if (priceQuery && typeof checkPriceFn === 'function') {
+                        if (priceQuery && canCheckPrice) {
                             window.filteredItems.forEach(item => {
                                 if (item && item.status !== 'sold' && checkPriceFn(item, priceQuery)) {
                                     if (!matchedIds.has(item.id)) {
@@ -423,7 +427,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                 }
             }
 
-            if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+            if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
             if (filterSeq !== _applyFiltersSeq) return;
 
             // 3. Сортировка
@@ -447,11 +451,11 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                     return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
                 };
 
-            window.filteredItems = (typeof window.toSorted === 'function')
-                ? window.toSorted(window.filteredItems, comparator)
+            window.filteredItems = hasAction('toSorted')
+                ? invokeAction('toSorted', window.filteredItems, comparator)
                 : (window.filteredItems.toSorted ? window.filteredItems.toSorted(comparator) : [...window.filteredItems].sort(comparator));
 
-            if (typeof window.yieldToMain === 'function') await window.yieldToMain();
+            if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
             if (filterSeq !== _applyFiltersSeq) return;
 
             // 4. СБРОС И РЕНДЕР (при preserveViewport сохраняем текущую страницу на ПК и число карточек на моб)
@@ -548,7 +552,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
         } catch (err) {
             console.error('ОШИБКА ФИЛЬТРАЦИИ:', err);
             if (grid) {
-                const safeRenderErr = typeof window.escapeHtml === 'function' ? window.escapeHtml(err.message) : err.message;
+                const safeRenderErr = hasAction('escapeHtml') ? invokeAction('escapeHtml', err.message) : err.message;
                 grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${safeRenderErr} ]</div>`;
                 grid.classList.remove('fade-out');
             }
@@ -689,20 +693,20 @@ export function clearSearchInput() {
         if (input) input.value = '';
         const clearBtn = document.getElementById('clearSearchBtn');
         if (clearBtn) clearBtn.style.display = 'none';
-        if (typeof window.closeSearch === 'function') {
-            window.closeSearch();
+        if (hasAction('closeSearch')) {
+            invokeAction('closeSearch');
         } else {
             const liveDropdown = document.getElementById('liveSearchDropdown');
             if (liveDropdown) {
-                if (typeof window.hidePopoverSafe === 'function') {
-                    window.hidePopoverSafe(liveDropdown);
+                if (hasAction('hidePopoverSafe')) {
+                    invokeAction('hidePopoverSafe', liveDropdown);
                 } else if (typeof liveDropdown.hidePopover === 'function' && liveDropdown.matches && liveDropdown.matches(':popover-open')) {
                     try { liveDropdown.hidePopover(); } catch {}
                 }
                 liveDropdown.style.display = 'none';
             }
             document.body.classList.remove('search-lock');
-            if (typeof window.startLenis === 'function') window.startLenis();
+            invokeAction('startLenis');
         }
         await applyFilters(true, false);
     };
@@ -828,11 +832,24 @@ export function toggleMobileSidebar() {
             }
         };
         sidebar.addEventListener('transitionend', onCloseEnd, { signal: closeCtrl.signal });
-        if (typeof checkPendingBroadcast === 'function') {
-            setTimeout(checkPendingBroadcast, 350);
+        if (hasAction('checkPendingBroadcast')) {
+            setTimeout(() => invokeAction('checkPendingBroadcast'), 350);
         }
     }
 }
+
+registerActions({
+    itemMatchesSizeFilter,
+    updateSidebarCounters,
+    invalidateFuseCache,
+    applyFilters,
+    sortItems,
+    triggerFilterTransition,
+    setCategoryFilter,
+    clearSearchInput,
+    updatePriceUI,
+    toggleMobileSidebar
+});
 
 if (typeof window !== 'undefined') {
     window.itemMatchesSizeFilter = itemMatchesSizeFilter;

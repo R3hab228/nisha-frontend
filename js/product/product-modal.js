@@ -23,6 +23,7 @@ import {
 import { renderModalSlider } from './product-gallery.js';
 import { addToHistory, renderSimilarItems } from './product-history.js';
 import { loadItemQuestions } from './product-qa.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
 function closeSecondaryOverlays() {
     if (typeof closeModal !== 'function') return;
@@ -138,9 +139,7 @@ function renderTrustBadges(item) {
  * @returns {Promise<void>}
  */
 export async function openProductModalById(itemId) {
-    if (typeof window !== 'undefined' && typeof window.hideItemMeasurementsTooltip === 'function') {
-        window.hideItemMeasurementsTooltip();
-    }
+    invokeAction('hideItemMeasurementsTooltip');
     const catalog = getCatalogItems();
     const item = catalog.find(i => String(i.id) === String(itemId));
 
@@ -259,7 +258,7 @@ export function openProductModal(item) {
         if (typeof ensurePhotoSwipe === 'function') ensurePhotoSwipe();
     }, 0);
 
-    if (typeof window !== 'undefined' && typeof window.stopLenis === 'function') window.stopLenis();
+    if (hasAction('stopLenis')) invokeAction('stopLenis');
     else if (typeof lenis !== 'undefined') lenis.stop();
 
     document.title = `NISHA | ${item.brand} - ${item.name}`;
@@ -396,7 +395,7 @@ export function openProductModal(item) {
             if (!viewedItems.includes(item.id)) {
                 let visitorId = getFingerprint();
                 if (!visitorId || visitorId.startsWith('guest_')) {
-                    visitorId = (store ? store.get('nisha_visitor_id') : null) || ('user_' + ((typeof window !== 'undefined' && typeof window.generateShortId === 'function') ? window.generateShortId(9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '').slice(0, 9) : Date.now().toString(36))));
+                    visitorId = (store ? store.get('nisha_visitor_id') : null) || ('user_' + (hasAction('generateShortId') ? invokeAction('generateShortId', 9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '').slice(0, 9) : Date.now().toString(36))));
                 }
                 const currentUser = getUser();
                 const viewerId = currentUser ? currentUser.id : visitorId;
@@ -412,9 +411,7 @@ export function openProductModal(item) {
                             const catItem = window.allItems.find(i => i && String(i.id) === String(item.id));
                             if (catItem) catItem.views_count = data;
                         }
-                        if (typeof window !== 'undefined' && typeof window.updateCardDOM === 'function') {
-                            window.updateCardDOM(item);
-                        }
+                        invokeAction('updateCardDOM', item);
                         viewedItems.push(item.id);
                         if (store) store.setJSON('nisha_added_views', viewedItems);
                     }
@@ -482,8 +479,8 @@ export function openProductModal(item) {
     );
 
     if (!isAlreadyOpen) {
-        if (item && item.id && typeof window !== 'undefined' && typeof window.saveCurrentFeedScrollState === 'function') {
-            window.saveCurrentFeedScrollState(item.id);
+        if (item && item.id) {
+            invokeAction('saveCurrentFeedScrollState', item.id);
         }
         if (typeof openModal === 'function') {
             openModal('productModal');
@@ -568,12 +565,18 @@ export async function toggleFavFromModal(event) {
     const modalStar = document.getElementById('modalFavStar');
     if (modalStar) modalStar.blur();
 
-    if (typeof window !== 'undefined' && typeof window.toggleFav === 'function') {
-        await window.toggleFav(event, active.id);
+    if (hasAction('toggleFav')) {
+        await invokeAction('toggleFav', event, active.id);
     } else if (typeof toggleFav === 'function') {
         await toggleFav(event, active.id);
     }
 }
+
+registerActions({
+    openProductModalById,
+    openProductModal,
+    toggleFavFromModal
+});
 
 if (typeof window !== 'undefined') {
     window.openProductModalById = openProductModalById;

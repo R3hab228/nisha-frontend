@@ -2,6 +2,7 @@
 // NISHA CORE HELPERS: CDN MEDIA, XSS SANITIZATION & LAZY RESOURCE LOADERS
 // ==========================================
 
+import { hasAction, invokeAction, registerActions } from './action-registry.js';
 import { canParseURL, safeEncodeURIComponent } from './helpers-core-utils.js';
 
 /**
@@ -205,17 +206,30 @@ if (typeof window !== 'undefined') window.getCatalog = getCatalog;
  * @returns {string}
  */
 export function getOptimizedImg(item, thumb = true) {
-    if (typeof window !== 'undefined' && typeof window.getOptimizedImageUrl === 'function') {
-        return window.getOptimizedImageUrl(item, thumb);
-    }
-    if (typeof getOptimizedImageUrl === 'function') {
-        return getOptimizedImageUrl(item, thumb);
+    if (hasAction('getOptimizedImageUrl')) {
+        return invokeAction('getOptimizedImageUrl', item, thumb);
     }
     return (item && item.images && item.images[0])
         ? toCDN(item.images[0])
         : '';
 }
 if (typeof window !== 'undefined') window.getOptimizedImg = getOptimizedImg;
+
+registerActions({
+    toCDN,
+    escapeHtml,
+    escapeAttr,
+    escapeJsString,
+    sanitizeText,
+    sanitizeHtmlMediaUrl,
+    isSafeMediaUrl,
+    getSupabase,
+    getCatalog,
+    getOptimizedImg,
+    loadExternalScript,
+    loadExternalStyle,
+    ensurePhotoSwipe
+});
 
 // --- LAZY EXTERNAL SCRIPT / STYLE LOADERS ---
 const _loadedExternalScripts = {};

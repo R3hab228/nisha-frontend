@@ -2,7 +2,8 @@
 // NISHA CORE HELPERS: TOASTS, BUTTON BUSY GUARD & TERMINAL MODALS
 // ==========================================
 
-import { escapeHtml, escapeAttr } from './helpers-security-media.js';
+import { hasAction, invokeAction, registerActions } from './action-registry.js';
+import { escapeAttr, escapeHtml, toCDN } from './helpers-security-media.js';
 
 let lastToastMsg = '';
 let lastToastTime = 0;
@@ -106,9 +107,7 @@ function buildToastThumbHtml(imgUrl, useCdn = false) {
     if (!imgUrl || typeof imgUrl !== 'string' || /^\s*javascript:/i.test(imgUrl)) {
         return '';
     }
-    const resolved = (useCdn && typeof window !== 'undefined' && typeof window.toCDN === 'function')
-        ? window.toCDN(imgUrl)
-        : imgUrl;
+    const resolved = useCdn ? toCDN(imgUrl) : imgUrl;
     const safeImgUrl = escapeAttr(resolved).replaceAll('(', '%28').replaceAll(')', '%29');
     return `<div class="toast-item-thumb" style="background-image: url('${safeImgUrl}');"></div>`;
 }
@@ -310,8 +309,8 @@ export function showSaleToast(itemOrTitle, imgUrl = null) {
         tagText: String(rawTag).replace(/[:\s]+$/, ''),
         titleText: extractCompactItemTitle(itemOrTitle),
         imgUrl: imgUrl || thumbFallback,
-        onClick: (itemOrTitle && typeof itemOrTitle === 'object' && itemOrTitle.id && typeof window !== 'undefined' && typeof window.openProductModalById === 'function')
-            ? () => window.openProductModalById(itemOrTitle.id)
+        onClick: (itemOrTitle && typeof itemOrTitle === 'object' && itemOrTitle.id && hasAction('openProductModalById'))
+            ? () => invokeAction('openProductModalById', itemOrTitle.id)
             : null
     });
 }
@@ -431,7 +430,7 @@ function _displayUnifiedNewItemToast(items) {
 
     let html = '';
     if (imgUrl) {
-        const cdnImg = (typeof window !== 'undefined' && typeof window.toCDN === 'function') ? window.toCDN(imgUrl) : imgUrl;
+        const cdnImg = toCDN(imgUrl);
         html += `<div class="toast-item-thumb" style="background-image: url('${safeToastEscape(cdnImg)}');"></div>`;
     }
     html += `
@@ -580,3 +579,16 @@ export function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancel
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOverlay(false); }, { signal: confirmCtrl.signal });
 }
 if (typeof window !== 'undefined') window.showConfirmTerminalModal = showConfirmTerminalModal;
+
+registerActions({
+    showToast,
+    showFavoriteToast,
+    showLanguageToast,
+    showCartToast,
+    showSaleToast,
+    showReviewToast,
+    withButtonBusy,
+    enqueueNewItemToast,
+    showTerminalModal,
+    showConfirmTerminalModal
+});

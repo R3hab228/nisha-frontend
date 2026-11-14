@@ -56,8 +56,8 @@ export async function loadFavorites() {
 
         if (window.showingOnlyFavs && typeof applyFilters === 'function') {
             applyFilters();
-        } else if (window.showingOnlyFavs && typeof window.applyFilters === 'function') {
-            window.applyFilters();
+        } else if (window.showingOnlyFavs) {
+            getGlobalFn('applyFilters')?.();
         }
     } else {
         updateFavBadge();
@@ -121,15 +121,17 @@ export async function executeToggleFav(itemId) {
         try {
             if (isFav) {
                 await sb.from('favorites').delete().match({ user_id: profileState.currentUser.id, item_id: itemId });
-                if (typeof window.showFavoriteToast === 'function') {
-                    window.showFavoriteToast(itemObj, false, imgUrl);
+                const favToastDelFn = getGlobalFn('showFavoriteToast');
+                if (favToastDelFn) {
+                    favToastDelFn(itemObj, false, imgUrl);
                 } else {
                     notifyToast(tProfile('messages.fav_remove', 'Удалено из избранного'), 'success', imgUrl);
                 }
             } else {
                 await sb.from('favorites').insert([{ user_id: profileState.currentUser.id, item_id: itemId }]);
-                if (typeof window.showFavoriteToast === 'function') {
-                    window.showFavoriteToast(itemObj, true, imgUrl);
+                const favToastAddFn = getGlobalFn('showFavoriteToast');
+                if (favToastAddFn) {
+                    favToastAddFn(itemObj, true, imgUrl);
                 } else {
                     notifyToast(tProfile('messages.fav_add', 'Добавлено в избранное'), 'success', imgUrl);
                 }
@@ -146,9 +148,7 @@ export async function executeToggleFav(itemId) {
  * @param {string|number} itemId
  */
 export async function toggleFav(event, itemId) {
-    if (typeof window !== 'undefined' && typeof window.triggerVibration === 'function') {
-        window.triggerVibration(150);
-    }
+    getGlobalFn('triggerVibration')?.(150);
     if (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -159,8 +159,9 @@ export async function toggleFav(event, itemId) {
         return;
     }
 
-    if (typeof window !== 'undefined' && typeof window.withWebLock === 'function') {
-        return await window.withWebLock('nisha_fav_lock', async () => executeToggleFav(itemId));
+    const lockFn = getGlobalFn('withWebLock');
+    if (lockFn) {
+        return await lockFn('nisha_fav_lock', async () => executeToggleFav(itemId));
     }
     return await executeToggleFav(itemId);
 }
