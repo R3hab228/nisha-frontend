@@ -87,6 +87,7 @@ export function moveSlide(step) {
     const nextIdx = (getActiveSlideIndex() + step + slides.length) % slides.length;
     setActiveSlideIndex(nextIdx);
     updateSlider();
+    if (hasAction('preloadSimilarItemsImages')) invokeAction('preloadSimilarItemsImages');
 }
 
 /**
@@ -99,6 +100,7 @@ export function setSlide(index, animated = true) {
     if (slides.length === 0) return;
     setActiveSlideIndex(index);
     updateSlider(animated);
+    if (hasAction('preloadSimilarItemsImages')) invokeAction('preloadSimilarItemsImages');
 
     const active = getActiveOpenedItem();
     if (active && active.images && active.images[index + 1]) {
@@ -382,6 +384,7 @@ export function initSliderSwipe() {
 
         if (diffX > 10) {
             window._isSliderSwiping = true;
+            if (hasAction('preloadSimilarItemsImages')) invokeAction('preloadSimilarItemsImages');
         }
 
         if (diffX > 10 && diffX > diffY) {

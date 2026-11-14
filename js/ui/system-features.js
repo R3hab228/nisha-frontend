@@ -109,7 +109,7 @@ function checkRules() {
         }, 550);
     }
 }
-window.checkRules = checkRules;
+
 
 function showRulesModal() { 
     openModal('rulesModal');
@@ -204,7 +204,7 @@ async function initHitCounter() {
         console.warn("Счетчик работает в оффлайн-режиме (Сервер спит или нет сети):", err.message);
     }
 }
-window.initHitCounter = initHitCounter;
+
 
 // === ЖИВОЙ СЧЕТЧИК СИМВОЛОВ ДЛЯ ПРЕДЛОЖКИ ===
 function updateCharCount(textarea) {

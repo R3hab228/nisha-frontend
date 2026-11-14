@@ -56,6 +56,8 @@ export function showBadgeInfo(type) {
     }
 }
 
+let _activeDriverTour = null;
+
 /**
  * Безопасный показ отложенного системного броадкаста.
  */
@@ -173,11 +175,11 @@ export async function startOnboardingTour() {
             onDestroyStarted: () => {
                 store.set('nisha_tour_done', 'true');
                 driverObj.destroy();
-                window._activeDriverTour = null;
+                _activeDriverTour = null;
                 flushPendingBroadcast();
             }
         });
-        window._activeDriverTour = driverObj;
+        _activeDriverTour = driverObj;
         driverObj.drive();
     }, 500);
 }
@@ -200,9 +202,9 @@ if (typeof window !== 'undefined') {
                 const s = getCatalogStore();
                 if (s && !s.get('nisha_tour_done')) {
                     s.set('nisha_tour_done', 'true');
-                    if (window._activeDriverTour) {
-                        try { window._activeDriverTour.destroy(); } catch {}
-                        window._activeDriverTour = null;
+                    if (_activeDriverTour) {
+                        try { _activeDriverTour.destroy(); } catch {}
+                        _activeDriverTour = null;
                     }
                     flushPendingBroadcast();
                 }

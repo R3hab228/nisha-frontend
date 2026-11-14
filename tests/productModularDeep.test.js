@@ -498,11 +498,32 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
         expect(stopProp).toHaveBeenCalled();
         expect(window.storage.getJSON('nisha_history', []).some(i => i.id === 'h-31')).toBe(false);
 
-        // Similar items render accepted bargain highlight
+        // Similar items exclude sold items unconditionally & render accepted bargain highlight
+        const soldSibling = {
+            id: 'h-sold-only',
+            brand: 'Nike',
+            category: 'Hoodie',
+            price: 1030,
+            status: 'sold',
+            views_count: 99,
+            images: ['https://cdn/sold.jpg']
+        };
+        window.allItems = [...items, soldSibling];
         sessionStorage.setItem('accepted_bargain_h-30', JSON.stringify({ acceptedPrice: 777, originalPrice: 1030 }));
         productMod.renderSimilarItems(items[31]);
         expect(simDesk.innerHTML).toContain('777 грн');
+        expect(simDesk.innerHTML).not.toContain('h-sold-only');
         expect(simMob.innerHTML).toContain('similar-item-card');
+
+        // Eager preload for similar items when user interacts with slides or scrolls modal
+        const loadedSrcs = [];
+        globalThis.Image = class MockPreloadImg {
+            set src(val) { loadedSrcs.push(val); }
+        };
+        const preloadedCount = productMod.preloadSimilarItemsImages();
+        expect(preloadedCount).toBeGreaterThan(0);
+        expect(loadedSrcs.length).toBe(preloadedCount);
+        expect(productMod.preloadSimilarItemsImages()).toBe(0); // deduped once warmed
 
         // Share localized prefix
         window.shareContent = vi.fn();

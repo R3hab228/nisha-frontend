@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readDropSource } from './helpers/readDropSource.js';
+import { readWindowsSource } from './helpers/readWindowsSource.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -13,7 +14,7 @@ describe('Propose Bargain Mobile Resilience & State Reset', () => {
 
     beforeEach(() => {
         dropCode = readDropSource();
-        windowsCode = fs.readFileSync(path.resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+        windowsCode = readWindowsSource();
         lazyCode = fs.readFileSync(path.resolve(__dirname, '../js/core/lazy-loader.js'), 'utf8');
         styleCss = readProjectCss();
         modularDropCode = fs.readFileSync(path.resolve(__dirname, '../src/modules/drop.js'), 'utf8');

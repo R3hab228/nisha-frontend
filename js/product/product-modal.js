@@ -21,7 +21,7 @@ import {
     updateProductSeoAndOg
 } from './product-state.js';
 import { renderModalSlider } from './product-gallery.js';
-import { addToHistory, renderSimilarItems } from './product-history.js';
+import { addToHistory, preloadSimilarItemsImages, renderSimilarItems } from './product-history.js';
 import { loadItemQuestions } from './product-qa.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getLenisInstance, isSiteHackedMode } from '../core/runtime-env.js';
@@ -526,6 +526,20 @@ export function openProductModal(item) {
     if (modalWin) {
         modalWin.style.pointerEvents = '';
         if (typeof modalWin.setAttribute === 'function') modalWin.setAttribute('data-lenis-prevent', 'true');
+        if (!modalWin._similarPreloadBound && typeof modalWin.addEventListener === 'function') {
+            modalWin._similarPreloadBound = true;
+            modalWin.addEventListener('scroll', () => {
+                if (modalWin.scrollTop > 0) {
+                    preloadSimilarItemsImages();
+                }
+            }, { passive: true });
+            modalWin.addEventListener('wheel', () => {
+                preloadSimilarItemsImages();
+            }, { passive: true });
+            modalWin.addEventListener('touchmove', () => {
+                preloadSimilarItemsImages();
+            }, { passive: true });
+        }
         if (isAlreadyOpen && modalWin.scrollTop > 20) {
             if (typeof modalWin.scrollTo === 'function') {
                 try {

@@ -645,7 +645,29 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
         expect(window.allItems.some(i => i.id === 'item-2')).toBe(true);
         expect(enqueueNewItemToast).toHaveBeenCalledTimes(1);
 
-        // 3. DELETE removes item and closes active modal if open
+        // 3. DELETE removes item smoothly without wiping #itemsGrid, closes active modal if open, and compensates scroll anchor
+        const feedGrid = createFakeEl('div');
+        feedGrid.id = 'itemsGrid';
+        feedGrid.innerHTML = 'PRESERVED_FEED';
+        elementsById.set('itemsGrid', feedGrid);
+
+        let anchorTop = 260;
+        const delFeedCard = createFakeEl('div');
+        delFeedCard.dataset = { id: 'item-2' };
+        delFeedCard.getAttribute = (k) => (k === 'data-id' ? 'item-2' : null);
+        delFeedCard.remove = vi.fn(() => {
+            // Removing card above anchor shifts surviving anchor card upward by 240px
+            anchorTop = 20;
+        });
+        const anchorFeedCard = createFakeEl('div');
+        anchorFeedCard.dataset = { id: 'item-keep' };
+        anchorFeedCard.isConnected = true;
+        anchorFeedCard.getBoundingClientRect = () => ({ top: anchorTop, bottom: anchorTop + 220 });
+        feedGrid.querySelectorAll = (sel) => (sel === '.item-card' ? [delFeedCard, anchorFeedCard] : []);
+        allQuerySelectors.set('.item-card[data-id="item-2"]', [delFeedCard]);
+        window.renderedCount = 2;
+        window.scrollBy = vi.fn();
+
         window.currentOpenedItem = { id: 'item-2' };
         catalogMod.handleRealtimeCatalogEvent({
             eventType: 'DELETE',
@@ -653,6 +675,10 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
         }, false);
         expect(window.allItems.some(i => i.id === 'item-2')).toBe(false);
         expect(closeModal).toHaveBeenCalledWith('productModal');
+        expect(delFeedCard.remove).toHaveBeenCalledTimes(1);
+        expect(feedGrid.innerHTML).toBe('PRESERVED_FEED');
+        expect(window.renderedCount).toBe(1);
+        expect(window.scrollBy).toHaveBeenCalledWith(0, -240);
     });
 
     it('10. catalog-ui-info.js showBadgeInfo handles drop, returnable, bargain min-price & flushPendingBroadcast', () => {

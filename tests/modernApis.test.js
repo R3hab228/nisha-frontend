@@ -8,6 +8,7 @@ import { readProfileSource } from './helpers/readProfileSource.js';
 import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
 import { readOrdersSource } from './helpers/readOrdersSource.js';
 import { readDropSource } from './helpers/readDropSource.js';
+import { readWindowsSource } from './helpers/readWindowsSource.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -2389,7 +2390,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('scrollIntoView');
             expect(cartCode).toContain('PointerEvent');
 
-            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            const windowsCode = readWindowsSource();
             expect(windowsCode).toContain('function initMobileKeyboardViewport');
             expect(windowsCode).toContain("e.target.closest('.custom-dropdown')");
             expect(windowsCode).toContain("e.target.closest('#branchDropdown')");
@@ -2446,7 +2447,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const css = readProjectCss();
             expect(css).toContain('transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);');
 
-            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            const windowsCode = readWindowsSource();
             expect(windowsCode).toContain('const isKeyboardOpen = kbDelta > 90 || (isInputFocused && kbDelta > 40);');
 
             const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
@@ -2615,7 +2616,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const ruJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ru.json'), 'utf8'));
             const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
-            const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            const windowsCode = readWindowsSource();
             const cartCode = readCartSource();
             const cssCode = readProjectCss();
 
@@ -3768,7 +3769,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('47. Search history threshold >= 4, clock icon removal, right-aligned clear button, and feed-only bargain notifications', () => {
             const liveSearchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
-            const winCode = readFileSync(resolve(import.meta.dirname, '../js/ui/windows.js'), 'utf8');
+            const winCode = readWindowsSource();
             const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
             const cssCode = readProjectCss();
             const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));

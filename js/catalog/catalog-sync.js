@@ -342,6 +342,73 @@ if (typeof BroadcastChannel !== 'undefined' && typeof window !== 'undefined' && 
 }
 
 /**
+ * Удаляет карточки товаров без перерисовки всей сетки и без резкого скачка скролла.
+ * Сохраняет позицию первого видимого surviving-элемента вьюпорта через scrollBy-компенсацию
+ * и при наличии View Transitions API плавно перестраивает соседние карточки.
+ * @param {Array<string|number>} deletedIds
+ */
+function removeCatalogCardsWithoutJerk(deletedIds) {
+    if (!Array.isArray(deletedIds) || deletedIds.length === 0 || typeof document === 'undefined') return;
+
+    const deletedIdSet = new Set(deletedIds.map(id => String(id)));
+    const grid = document.getElementById('itemsGrid');
+    let anchorCard = null;
+    let anchorTopBefore = 0;
+    let removedPrimaryCount = 0;
+
+    if (grid && typeof grid.querySelectorAll === 'function') {
+        const viewportH = typeof window !== 'undefined' && typeof window.innerHeight === 'number' ? window.innerHeight : 900;
+        const gridCards = Array.from(grid.querySelectorAll('.item-card'));
+        for (let i = 0; i < gridCards.length; i++) {
+            const card = gridCards[i];
+            const cardId = String(card?.dataset?.id ?? card?.getAttribute?.('data-id') ?? '');
+            if (deletedIdSet.has(cardId)) {
+                removedPrimaryCount++;
+                continue;
+            }
+            if (!anchorCard && typeof card.getBoundingClientRect === 'function') {
+                const rect = card.getBoundingClientRect();
+                if (rect && rect.bottom > 0 && rect.top < viewportH) {
+                    anchorCard = card;
+                    anchorTopBefore = rect.top;
+                }
+            }
+        }
+    }
+
+    const performDomRemoval = () => {
+        deletedIds.forEach(delId => {
+            document.querySelectorAll(`.item-card[data-id="${delId}"]`).forEach(card => {
+                if (typeof card.remove === 'function') card.remove();
+            });
+        });
+
+        if (typeof window !== 'undefined') {
+            if (typeof window.renderedCount === 'number' && removedPrimaryCount > 0) {
+                window.renderedCount = Math.max(0, window.renderedCount - removedPrimaryCount);
+            }
+            if (anchorCard && anchorCard.isConnected !== false && typeof anchorCard.getBoundingClientRect === 'function' && typeof window.scrollBy === 'function') {
+                const afterRect = anchorCard.getBoundingClientRect();
+                if (afterRect && typeof afterRect.top === 'number') {
+                    const deltaY = afterRect.top - anchorTopBefore;
+                    if (Math.abs(deltaY) >= 1) {
+                        window.scrollBy(0, deltaY);
+                    }
+                }
+            }
+        }
+    };
+
+    if (typeof safeViewTransition === 'function') {
+        safeViewTransition(performDomRemoval);
+    } else if (hasAction('safeViewTransition')) {
+        invokeAction('safeViewTransition', performDomRemoval);
+    } else {
+        performDomRemoval();
+    }
+}
+
+/**
  * Обрабатывает Realtime-события Supabase (INSERT / UPDATE / DELETE) без перезагрузки страницы.
  * @param {object} payload
  * @param {boolean} [fromBroadcast=false]
@@ -362,7 +429,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
             window.filteredItems = window.filteredItems.filter(i => String(i.id) !== String(delId));
         }
 
-        document.querySelectorAll(`.item-card[data-id="${delId}"]`).forEach(card => card.remove());
+        removeCatalogCardsWithoutJerk([delId]);
         removeSoldItemFromCart(delId);
 
         const countEl = document.getElementById('itemCount');
@@ -379,7 +446,9 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
         if (typeof renderHistory === 'function') renderHistory();
         if (hasAction('invalidateFuseCache')) invokeAction('invalidateFuseCache');
         safelySaveCatalogToStorage(window.allItems);
-        applyFilters(true, true);
+        if (Array.isArray(window.filteredItems) && window.filteredItems.length === 0) {
+            applyFilters(true, true);
+        }
 
         if (!fromBroadcast && _catalogBroadcastChannel) {
             try { _catalogBroadcastChannel.postMessage({ type: 'ITEM_DELETE', id: delId }); } catch {}
@@ -546,16 +615,29 @@ export async function syncCriticalStatuses() {
                     ? Array.from(invokeAction('setDifference', currentIdSet, freshIdSet))
                     : window.allItems.filter(i => i && !freshIdSet.has(i.id)).map(i => i.id));
 
+            let anyCardUpdated = false;
+
             if (deletedIds.length > 0) {
                 window.allItems = window.allItems.filter(i => freshIdSet.has(i.id));
                 if (Array.isArray(window.filteredItems)) {
                     window.filteredItems = window.filteredItems.filter(i => freshIdSet.has(i.id));
                 }
+                removeCatalogCardsWithoutJerk(deletedIds);
                 deletedIds.forEach(delId => {
-                    document.querySelectorAll(`.item-card[data-id="${delId}"]`).forEach(card => card.remove());
                     removeSoldItemFromCart(delId);
                 });
-                gridNeedsFullRefresh = true;
+                const countEl = document.getElementById('itemCount');
+                if (countEl && Array.isArray(window.filteredItems)) {
+                    countEl.innerText = window.filteredItems.length;
+                }
+                const activeModal = getRuntimeOpenedItem();
+                if (activeModal && deletedIds.some(d => String(d) === String(activeModal.id)) && typeof closeModal === 'function') {
+                    closeModal('productModal');
+                }
+                anyCardUpdated = true;
+                if (Array.isArray(window.filteredItems) && window.filteredItems.length === 0) {
+                    gridNeedsFullRefresh = true;
+                }
             }
 
             // 2. Проверка новых товаров
@@ -602,7 +684,6 @@ export async function syncCriticalStatuses() {
             // 3. Синхронизация статусов, бейджей (TOP/HOT/SALE/SOLD/RESERVED) и цен существующих товаров
             const freshMap = new Map();
             data.forEach(d => freshMap.set(d.id, d));
-            let anyCardUpdated = false;
             const nowTs = Date.now();
             const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
             const onlySale = document.getElementById('onlySaleCb')?.checked || false;

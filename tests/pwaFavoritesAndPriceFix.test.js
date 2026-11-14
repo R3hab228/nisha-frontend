@@ -3,6 +3,7 @@ import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
 import { readProfileSource } from './helpers/readProfileSource.js';
+import { readWindowsSource } from './helpers/readWindowsSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -158,7 +159,7 @@ describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixe
     });
 
     describe('5. Mobile Propose Form Viewport Stability & Anti-Jitter Keyboard Adaptation', () => {
-        const windowsJs = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf-8');
+        const windowsJs = readWindowsSource();
 
         it('sets stable full-height flex column layout on mobile for #proposeModal to prevent jumping', () => {
             expect(styleCss).toContain('#proposeModal .modal-window');

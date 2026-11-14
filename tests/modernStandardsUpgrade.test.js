@@ -6,6 +6,7 @@ import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
 import { readOrdersSource } from './helpers/readOrdersSource.js';
 import { readDropSource } from './helpers/readDropSource.js';
+import { readWindowsSource } from './helpers/readWindowsSource.js';
 import * as helpers from '../src/modules/helpers.js';
 import * as cart from '../src/modules/cart.js';
 import fs from 'node:fs';
@@ -336,7 +337,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             expect(css).toContain('.modal-overlay.closing');
             expect(css).toContain('.modal-overlay:not(.is-open)');
 
-            const winJs = fs.readFileSync(path.resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+            const winJs = readWindowsSource();
             expect(winJs).toContain("modal.style.transition = 'none'");
             expect(winJs).toContain("modal.style.animation = 'none'");
             expect(winJs).toContain("modal.style.display = 'none'");

@@ -15,6 +15,38 @@ import {
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
+const _preloadedSimilarUrls = new Set();
+let _pendingSimilarImgUrls = [];
+
+/**
+ * Eagerly preloads pending "Similar items" thumbnail images when the user starts
+ * scrolling the product card or swiping/changing photos inside the modal.
+ * @returns {number} Count of newly scheduled image preloads
+ */
+export function preloadSimilarItemsImages() {
+    if (typeof document !== 'undefined') {
+        document.querySelectorAll('.similar-slide-img[loading="lazy"]').forEach(imgEl => {
+            imgEl.loading = 'eager';
+            imgEl.setAttribute('loading', 'eager');
+        });
+    }
+    if (_pendingSimilarImgUrls.length === 0) return 0;
+
+    const urls = _pendingSimilarImgUrls.splice(0, _pendingSimilarImgUrls.length);
+    let started = 0;
+    urls.forEach(url => {
+        if (!url || _preloadedSimilarUrls.has(url)) return;
+        _preloadedSimilarUrls.add(url);
+        if (typeof Image === 'function') {
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = url;
+            started++;
+        }
+    });
+    return started;
+}
+
 /**
  * Shares currently opened product URL via native Web Share API or clipboard fallback.
  */
@@ -74,6 +106,7 @@ export function renderSimilarItems(item) {
 
     const candidates = catalog.filter(i => {
         if (i.id === item.id) return false;
+        if (i.status === 'sold') return false;
         if (hideUnavailable && i.status !== 'available') return false;
         return true;
     });
@@ -89,6 +122,7 @@ export function renderSimilarItems(item) {
         : (scoredCandidates.toSorted ? scoredCandidates.toSorted(sortScoreFn) : [...scoredCandidates].sort(sortScoreFn));
 
     const similar = sortedCandidates.slice(0, 6).map(c => c.item);
+    _pendingSimilarImgUrls = [];
     const store = getStore();
     const seenItemsIds = store ? store.getJSON('nisha_seen_items', []) : [];
 
@@ -96,6 +130,9 @@ export function renderSimilarItems(item) {
         let cardsHTML = '';
         similar.forEach(s => {
             const sImg = typeof getOptimizedImg === 'function' ? getOptimizedImg(s, true) : toCDN(s.thumbnails?.[0] || s.images?.[0], { isThumb: true });
+            if (sImg && !sImg.endsWith('.mp4') && !_preloadedSimilarUrls.has(sImg)) {
+                _pendingSimilarImgUrls.push(sImg);
+            }
             let miniBadgeHTML = '';
             const hasSale = s.is_sale;
             const hasHot = (s.views_count || 0) >= 25;
@@ -403,6 +440,7 @@ export function removeHistoryItem(event, itemId) {
 
 registerActions({
     shareItem,
+    preloadSimilarItemsImages,
     addToHistory,
     renderHistory,
     toggleHistory,

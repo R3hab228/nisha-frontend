@@ -3,6 +3,7 @@ import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
 import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
+import { readWindowsSource } from './helpers/readWindowsSource.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -158,8 +159,7 @@ describe('Smart Feed Scroll Restoration Engine', () => {
     });
 
     it('4. windows.js preserves and restores body scroll position across modal open and close', () => {
-        const winPath = path.resolve(process.cwd(), 'js/ui/windows.js');
-        const code = fs.readFileSync(winPath, 'utf8');
+        const code = readWindowsSource();
 
         // openModal captures scroll before locking
         expect(code).toContain('window._preModalScrollY = window.scrollY');

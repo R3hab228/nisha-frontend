@@ -4,6 +4,7 @@ import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
 import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
+import { readWindowsSource } from './helpers/readWindowsSource.js';
 import { readProfileSource } from './helpers/readProfileSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -221,7 +222,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('17. modal close unlocks scroll immediately without focus scroll jump or closing-phase grid restyle', () => {
-        const windowsJs = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+        const windowsJs = readWindowsSource();
         const style = readProjectCss();
 
         expect(windowsJs).toContain('modal._returnFocusElement.focus({ preventScroll: true });');
@@ -262,7 +263,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('20. mobile modal swipe-to-dismiss tracks finger 1:1 without animation override and glides out from release position', () => {
-        const windowsJs = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
+        const windowsJs = readWindowsSource();
         const style = readProjectCss();
 
         expect(windowsJs).toContain("modalWin.style.animation = 'none';");
