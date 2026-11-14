@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { readProfileSource } from './helpers/readProfileSource.js';
 
 describe('Store Life-Cycle Notifications (Status, TTN, Q&A, Reviews)', () => {
     const EMOJI_REGEX = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
@@ -18,8 +19,7 @@ describe('Store Life-Cycle Notifications (Status, TTN, Q&A, Reviews)', () => {
     });
 
     it('profile.js handles order completion, TTN addition, and Q&A answers without emojis', () => {
-        const profileJsPath = path.resolve(__dirname, '../js/profile/profile.js');
-        const content = fs.readFileSync(profileJsPath, 'utf8');
+        const content = readProfileSource();
 
         // Check review prompt upon order completion
         expect(content).toContain("newStatus === 'Завершен'");

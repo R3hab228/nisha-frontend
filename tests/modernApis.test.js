@@ -4,6 +4,7 @@ import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
 import { readHelpersSource } from './helpers/readHelpersSource.js';
+import { readProfileSource } from './helpers/readProfileSource.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -361,6 +362,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'product/product-bargain.js',
                 'product/product-modal.js',
                 'profile/profile.js',
+                'profile/profile-state.js',
+                'profile/profile-favorites.js',
+                'profile/profile-contacts.js',
+                'profile/profile-delivery.js',
+                'profile/profile-session.js',
+                'profile/profile-auth.js',
                 'catalog/catalog.js',
                 'catalog/catalog-state.js',
                 'catalog/scroll-restoration.js',
@@ -533,6 +540,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'product/product-bargain.js',
                 'product/product-modal.js',
                 'profile/profile.js',
+                'profile/profile-state.js',
+                'profile/profile-favorites.js',
+                'profile/profile-contacts.js',
+                'profile/profile-delivery.js',
+                'profile/profile-session.js',
+                'profile/profile-auth.js',
                 'reviews/reviews.js'
             ];
             for (const relPath of files) {
@@ -2146,7 +2159,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('function sanitizePromoField');
             expect(cartCode).toContain('setTimeout(sanitizePromoField, 1500)');
 
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            const profileCode = readProfileSource();
             expect(profileCode).toContain('window.resetCheckoutAddressState');
         });
 
@@ -2410,7 +2423,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('bindDropdownScrollDismissKeyboard');
             expect(cartCode).toContain('diffY > 24 && diffY > diffX');
 
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            const profileCode = readProfileSource();
             expect(profileCode).toContain("i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })");
 
             const css = readProjectCss();
@@ -2626,7 +2639,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             const reviewsCode = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
             const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+            const profileCode = readProfileSource();
             const catalogCode = readCatalogSource();
             const cartCode = readCartSource();
             const i18nCode = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
@@ -3906,8 +3919,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('51. Cross-device account synchronization for bargains (userId in offer payload, active bargains sync & Realtime multi-device support)', () => {
             const productCode = readProductSource();
-            const profileCode = readFileSync(resolve(import.meta.dirname, '../js/profile/profile.js'), 'utf8');
-            const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
+            const profileCode = readProfileSource();
+            const chatCode = readFileSync(resolve(__dirname, '../js/chat/chat.js'), 'utf8');
             const catalogCode = readCatalogSource();
 
             // 1. Offer payloads attach userId if user is logged in

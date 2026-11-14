@@ -4,6 +4,7 @@ import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
 import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
+import { readProfileSource } from './helpers/readProfileSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -96,7 +97,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('8. favorite add/remove toasts reuse compact toast-new-item sizing and layout', () => {
         const helpers = readHelpersSource();
-        const profile = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
+        const profile = readProfileSource();
         const style = readProjectCss().replace(/\r\n/g, '\n');
 
         expect(helpers).toContain('function showFavoriteToast(');

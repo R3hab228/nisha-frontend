@@ -241,7 +241,7 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(storage.has('nisha_test_key')).toBe(false);
     });
 
-    it('unified profile contacts render Phone and Telegram badges and action buttons accurately', () => {
+    it('unified profile contacts render Phone and Telegram badges and action buttons accurately', async () => {
         const els = {};
         const prevDoc = global.document;
         global.document = {
@@ -258,8 +258,8 @@ describe('Security Sanitization & XSS Shield', () => {
         window.addEventListener = window.addEventListener || vi.fn();
 
         try {
-            const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-            eval(profileCode);
+            vi.resetModules();
+            await import('../js/profile/profile.js');
 
             window.renderProfilePhone('+380991112233');
             expect(els['profilePhone'].innerHTML).toContain('+380991112233');

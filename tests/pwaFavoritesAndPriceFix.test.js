@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
+import { readProfileSource } from './helpers/readProfileSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -32,7 +33,7 @@ describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixe
     beforeAll(() => {
         styleCss = readProjectCss();
         catalogJs = readCatalogSource();
-        profileJs = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf-8');
+        profileJs = readProfileSource();
         appJs = readFileSync(resolve(__dirname, '../app.js'), 'utf-8');
     });
 
