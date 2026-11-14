@@ -57,21 +57,31 @@ function buildShareMeta(item, shareLang) {
   return { isSold, rawBrand, fullItemTitle, cleanTitle, rawMetaDesc };
 }
 
+function parseShareParams(req) {
+  const parsedUrl = new URL(req.url || '/', 'https://www.nisha-store.shop');
+  let id = parsedUrl.searchParams.get('id') || '';
+  if (!id && parsedUrl.pathname.startsWith('/share/')) {
+    id = parsedUrl.pathname.slice('/share/'.length).split('/')[0] || '';
+  }
+  const lang = parsedUrl.searchParams.get('lang') || '';
+  return { id, lang };
+}
+
 module.exports = async function handler(req, res) {
-  const id = req.query.id;
+  const { id, lang } = parseShareParams(req);
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
   if (!id || !uuidRegex.test(id)) {
     return res.redirect('/');
   }
 
-  const shareLang = normalizeShareLang(req.query.lang);
+  const shareLang = normalizeShareLang(lang);
   const cacheKey = `${id}:${shareLang}`;
 
   const cached = shareHtmlCache.get(cacheKey);
   if (cached) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
     res.setHeader('X-Cache-Shield', 'HIT');
     return res.status(200).send(cached.html);
   }
@@ -261,7 +271,7 @@ videoTags + '\n' +
     shareHtmlCache.set(cacheKey, html);
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
     res.setHeader('X-Cache-Shield', 'MISS');
     return res.status(200).send(html);
 
