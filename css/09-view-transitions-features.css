@@ -116,6 +116,21 @@
     ::view-transition-new(orders-list) {
         animation-name: vt-fade-in;
     }
+
+    ::view-transition-group(nisha-active-product) {
+        z-index: 1000001 !important;
+        animation-duration: 0.32s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    ::view-transition-old(nisha-active-product),
+    ::view-transition-new(nisha-active-product) {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        animation-duration: 0.28s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
 }
 
 @keyframes vt-fade-out {

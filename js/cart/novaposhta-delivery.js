@@ -560,6 +560,14 @@ export function renderBranches(branches) {
             updateNPClearButtons();
             calculateDeliveryCost();
             invokeAction('saveCheckoutDraft');
+            if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackDeliverySelected === 'function') {
+                const cityVal = document.getElementById('orderCity')?.value?.trim() || '';
+                window.analytics.trackDeliverySelected({
+                    city: cityVal,
+                    branch: desc,
+                    branchRef: branch.Ref || ''
+                });
+            }
         };
         div.onmousedown = selectBranchItem;
         div.onclick = selectBranchItem;

@@ -81,6 +81,12 @@
       "privacy_policy": "Privacy Policy",
       "refund_policy": "Returns and exchanges of quality goods are available within 14 days of purchase.",
       "install": "⬇ INSTALL APP",
+      "pwa_broadcast_title": "SYSTEM_BROADCAST.MSG",
+      "pwa_broadcast_desc": "Order confirmed! Install the <b>NISHA</b> app on your home screen to track your <b>Nova Poshta TTN</b> in 1 tap and get instant delivery updates.",
+      "pwa_broadcast_ios_hint": "Order confirmed! Tap <b>Share</b> (⬆️) at the bottom of your browser → <b>Add to Home Screen</b> to track your <b>Nova Poshta TTN</b> in 1 tap.",
+      "pwa_broadcast_install": "⬇ INSTALL",
+      "pwa_broadcast_later": "LATER",
+      "pwa_broadcast_ok": "GOT IT",
       "support_text": "Found a bug or have an idea? Email us:",
       "copyright": "© 2026 NISHA. All rights reserved."
     },

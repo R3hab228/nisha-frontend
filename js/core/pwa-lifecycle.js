@@ -4,10 +4,183 @@
 
 import { invokeAction, registerActions } from './action-registry.js';
 import { debugPwaLog } from './pwa-sw-versioning.js';
-import { getRuntimeSupabase, getRuntimeOpenedItem } from './runtime-env.js';
+import { getRuntimeSupabase, getRuntimeOpenedItem, getRuntimeStorage } from './runtime-env.js';
 
 let deferredPrompt = null;
 let lifecycleListenersBound = false;
+const PWA_INSTALLED_KEY = 'nisha_pwa_installed';
+const PWA_BROADCAST_DISMISSED_KEY = 'nisha_pwa_broadcast_dismissed_at';
+const PWA_BROADCAST_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Checks synchronously whether the app is already running as or recorded as an installed PWA.
+ * @returns {boolean}
+ */
+export function isPwaAlreadyInstalled() {
+    if (typeof window === 'undefined') return false;
+    try {
+        if (window.navigator && window.navigator.standalone === true) return true;
+        if (typeof window.matchMedia === 'function') {
+            if (
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+                window.matchMedia('(display-mode: minimal-ui)').matches
+            ) {
+                return true;
+            }
+        }
+        if (typeof document !== 'undefined' && typeof document.referrer === 'string' && document.referrer.startsWith('android-app://')) {
+            return true;
+        }
+        const store = getRuntimeStorage();
+        if (store && store.get(PWA_INSTALLED_KEY) === '1') return true;
+    } catch {}
+    return false;
+}
+
+function markPwaInstalled() {
+    try {
+        const store = getRuntimeStorage();
+        if (store) store.set(PWA_INSTALLED_KEY, '1');
+        const btn = typeof document !== 'undefined' ? document.getElementById('installAppBtn') : null;
+        if (btn) btn.style.display = 'none';
+    } catch {}
+}
+
+async function detectPwaInstalledAsync() {
+    if (isPwaAlreadyInstalled()) return true;
+    if (typeof navigator !== 'undefined' && typeof navigator.getInstalledRelatedApps === 'function') {
+        try {
+            const related = await navigator.getInstalledRelatedApps();
+            if (Array.isArray(related) && related.length > 0) {
+                markPwaInstalled();
+                return true;
+            }
+        } catch {}
+    }
+    return false;
+}
+
+function isIosSafariBrowser() {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent || '';
+    const isIos = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isCriOS = /CriOS|FxiOS|EdgiOS/i.test(ua);
+    return isIos && !isCriOS;
+}
+
+/**
+ * Shows a broadcast-styled PWA install prompt after a successful order,
+ * strictly skipping if the PWA is already installed or recently dismissed.
+ * @returns {Promise<boolean>}
+ */
+export async function maybeShowPostOrderPwaBroadcast() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+    if (await detectPwaInstalledAsync()) return false;
+
+    const store = getRuntimeStorage();
+    if (store) {
+        const dismissedAt = Number(store.get(PWA_BROADCAST_DISMISSED_KEY) || 0);
+        if (dismissedAt && (Date.now() - dismissedAt) < PWA_BROADCAST_COOLDOWN_MS) {
+            return false;
+        }
+    }
+
+    const t = (key, fallback) => {
+        if (typeof i18next !== 'undefined' && typeof i18next.t === 'function') {
+            const res = i18next.t(key, { defaultValue: fallback });
+            if (res && res !== key) return res;
+        }
+        return fallback;
+    };
+
+    const title = t('footer.pwa_broadcast_title', 'SYSTEM_BROADCAST.MSG');
+
+    if (deferredPrompt) {
+        const desc = t(
+            'footer.pwa_broadcast_desc',
+            'Заказ принят! Установите приложение <b>NISHA</b> на главный экран, чтобы в 1 клик отслеживать <b>ТТН Новой Почты</b> и получать уведомления о статусе посылки.'
+        );
+        const installLabel = t('footer.pwa_broadcast_install', '⬇ УСТАНОВИТЬ');
+        const laterLabel = t('footer.pwa_broadcast_later', 'ПОЗЖЕ');
+
+        document.querySelectorAll('.terminal-modal-overlay').forEach(el => el.remove());
+
+        const overlay = document.createElement('div');
+        overlay.className = 'terminal-modal-overlay pwa-broadcast-overlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;';
+
+        overlay.innerHTML = `
+            <div class="success-terminal-box">
+                <div class="success-title typewriter">${title}</div>
+                <div class="success-divider"></div>
+                <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${desc}</div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="cart-checkout-btn btn-target pwa-bc-install" style="flex: 2; padding: 14px;">${installLabel}</button>
+                    <button type="button" class="cart-checkout-btn btn-target pwa-bc-later" style="flex: 1; padding: 14px; background: #222; border-color: #444; color: #aaa;">${laterLabel}</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const ctrl = new AbortController();
+        const closeOverlay = (markDismissed = false) => {
+            ctrl.abort();
+            overlay.remove();
+            if (markDismissed && store) {
+                store.set(PWA_BROADCAST_DISMISSED_KEY, String(Date.now()));
+            }
+        };
+
+        overlay.querySelector('.pwa-bc-install').addEventListener('click', async () => {
+            const promptEvent = deferredPrompt;
+            closeOverlay(false);
+            if (!promptEvent) return;
+            try {
+                promptEvent.prompt();
+                const { outcome } = await promptEvent.userChoice;
+                deferredPrompt = null;
+                if (outcome === 'accepted') {
+                    markPwaInstalled();
+                    if (window.analytics && typeof window.analytics.track === 'function') {
+                        window.analytics.track('PWA Installed', { source: 'post_order_broadcast' });
+                    }
+                } else if (store) {
+                    store.set(PWA_BROADCAST_DISMISSED_KEY, String(Date.now()));
+                }
+            } catch {}
+        }, { signal: ctrl.signal });
+
+        overlay.querySelector('.pwa-bc-later').addEventListener('click', () => closeOverlay(true), { signal: ctrl.signal });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeOverlay(true);
+        }, { signal: ctrl.signal });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeOverlay(true);
+        }, { signal: ctrl.signal });
+
+        return true;
+    }
+
+    if (isIosSafariBrowser()) {
+        const iosDesc = t(
+            'footer.pwa_broadcast_ios_hint',
+            'Заказ принят! Нажмите <b>«Поделиться»</b> (⬆️) внизу браузера → <b>«На экран „Домой“»</b>, чтобы в 1 клик отслеживать <b>ТТН Новой Почты</b>.'
+        );
+        const okLabel = t('footer.pwa_broadcast_ok', 'ПОНЯТНО');
+        const markDismissed = () => {
+            if (store) store.set(PWA_BROADCAST_DISMISSED_KEY, String(Date.now()));
+        };
+        if (typeof window.tryShowBroadcast === 'function') {
+            window.tryShowBroadcast(title, iosDesc, okLabel, markDismissed);
+            return true;
+        }
+        invokeAction('showTerminalModal', title, iosDesc, okLabel, markDismissed);
+        return true;
+    }
+
+    return false;
+}
 
 /**
  * Creates the retro Win95 Error_NISHA.exe offline screen DOM node.
@@ -194,6 +367,9 @@ export function initPwaLifecycle() {
     window.handleNetworkOnline = handleNetworkOnline;
 
     const installBtn = document.getElementById('installAppBtn');
+    if (installBtn && isPwaAlreadyInstalled()) {
+        installBtn.style.display = 'none';
+    }
     if (installBtn && !installBtn._pwaInstallBound) {
         installBtn._pwaInstallBound = true;
         installBtn.addEventListener('click', async () => {
@@ -202,7 +378,7 @@ export function initPwaLifecycle() {
             const { outcome } = await deferredPrompt.userChoice;
             if (outcome === 'accepted') {
                 debugPwaLog('Пользователь установил PWA');
-                installBtn.style.display = 'none';
+                markPwaInstalled();
             }
             deferredPrompt = null;
         });
@@ -228,9 +404,19 @@ export function initPwaLifecycle() {
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
+        if (isPwaAlreadyInstalled()) {
+            deferredPrompt = null;
+            return;
+        }
         deferredPrompt = e;
         const btn = document.getElementById('installAppBtn');
         if (btn) btn.style.display = 'block';
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        markPwaInstalled();
+        debugPwaLog('PWA установлено (appinstalled)');
     });
 
     if (typeof document.addEventListener === 'function') {
@@ -288,5 +474,7 @@ export function initPwaLifecycle() {
 
 registerActions({
     dismissNetError,
-    'dismiss-net-error': dismissNetError
+    'dismiss-net-error': dismissNetError,
+    isPwaAlreadyInstalled,
+    maybeShowPostOrderPwaBroadcast
 });

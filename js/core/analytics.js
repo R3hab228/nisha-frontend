@@ -239,12 +239,36 @@
         });
     }
 
+    /**
+     * Выбор города/отделения Новой Почты (воронка: шаг доставки)
+     */
+    function trackDeliverySelected({ city = '', branch = '', branchRef = '' } = {}) {
+        track('Delivery Selected', {
+            city: String(city || ''),
+            branch: String(branch || ''),
+            branch_ref: String(branchRef || '')
+        });
+    }
+
+    /**
+     * Попытка нажатия "Подтвердить заказ" (до ответа сервера / валидация)
+     */
+    function trackCheckoutAttempt({ stage = 'submit_click', reason = '', itemsCount = 0 } = {}) {
+        track('Checkout Attempt', {
+            stage: String(stage || 'submit_click'),
+            reason: String(reason || ''),
+            items_count: Number(itemsCount) || 0
+        });
+    }
+
     const analyticsApi = {
         init,
         track,
         trackProductView,
         trackAddToCart,
         trackCheckoutStart,
+        trackDeliverySelected,
+        trackCheckoutAttempt,
         trackPurchase,
         trackProposalSubmitted,
         trackFavorite
