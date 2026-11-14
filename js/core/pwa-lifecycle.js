@@ -119,6 +119,7 @@ export async function maybeShowPostOrderPwaBroadcast() {
                     <button type="button" class="cart-checkout-btn btn-target pwa-bc-install" style="flex: 2; padding: 14px;">${installLabel}</button>
                     <button type="button" class="cart-checkout-btn btn-target pwa-bc-later" style="flex: 1; padding: 14px; background: #222; border-color: #444; color: #aaa;">${laterLabel}</button>
                 </div>
+                <div class="pwa-bc-status" style="margin-top: 12px; font-family: var(--font-mono); font-size: 12px; color: var(--accent-green, #00ff00); min-height: 16px;"></div>
             </div>
         `;
         document.body.appendChild(overlay);
@@ -135,6 +136,7 @@ export async function maybeShowPostOrderPwaBroadcast() {
 
         const installBtnEl = overlay.querySelector('.pwa-bc-install');
         const laterBtnEl = overlay.querySelector('.pwa-bc-later');
+        const statusEl = overlay.querySelector('.pwa-bc-status');
 
         installBtnEl.addEventListener('click', async () => {
             if (isInstalling) return;
@@ -203,11 +205,14 @@ export async function maybeShowPostOrderPwaBroadcast() {
                         installCompleted = true;
                         clearInterval(progressTimer);
                         setBars(TOTAL_BARS);
+                        if (statusEl) {
+                            statusEl.textContent = t('footer.pwa_broadcast_installed', 'PWA установлено');
+                        }
                         markPwaInstalled();
                         if (window.analytics && typeof window.analytics.track === 'function') {
                             window.analytics.track('PWA Installed', { source: 'post_order_broadcast' });
                         }
-                        setTimeout(() => closeOverlay(false), 380);
+                        setTimeout(() => closeOverlay(false), 850);
                     };
 
                     window.addEventListener('appinstalled', finishInstall, { once: true, signal: ctrl.signal });
