@@ -10,6 +10,7 @@ import {
     hidePopoverSafe
 } from '../../src/modules/index.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeCatalog } from '../core/runtime-env.js';
 
 function isItemBargainEnabled(item) {
     if (!item || item.status === 'sold') return false;
@@ -31,7 +32,7 @@ let cachedFuseItemsRef = null;
 function getLiveSearchFuse() {
     const FuseClass = window.Fuse || (typeof Fuse !== 'undefined' ? Fuse : null);
     if (!FuseClass) return null;
-    const items = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+    const items = getRuntimeCatalog();
     if (!cachedFuseInstance || cachedFuseItemsRef !== items) {
         cachedFuseItemsRef = items;
         const fuseOptions = {
@@ -181,7 +182,7 @@ function handleLiveSearch() {
                 const seenIds = new Set();
 
                 if (priceQuery && canCheckPrice) {
-                    const allItemsList = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+                    const allItemsList = getRuntimeCatalog();
                     for (let i = 0; i < allItemsList.length; i++) {
                         const itm = allItemsList[i];
                         if (!itm || itm.status === 'sold') continue;

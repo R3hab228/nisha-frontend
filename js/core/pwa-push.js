@@ -3,6 +3,7 @@
 // ==========================================
 
 import { registerActions } from './action-registry.js';
+import { getRuntimeUser } from './runtime-env.js';
 
 let pushPrompted = false;
 let pushListenersBound = false;
@@ -163,7 +164,7 @@ export async function subscribeUserToPush(registration, silent = false) {
                 window.store.set('pushSubEndpoint', targetSub.endpoint);
                 syncNotificationPermission();
             }
-            const activeUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || null);
+            const activeUser = getRuntimeUser();
             const fp = window.clientFingerprint || 'guest_' + Date.now();
             const payload = {
                 subscription: targetSub,

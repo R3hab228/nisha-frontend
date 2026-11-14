@@ -263,8 +263,8 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
         }
     });
 
-    it('1. Re-exports full public API from catalog.js and registers all expected window globals', () => {
-        const expectedWindowFns = [
+    it('1. Re-exports full public API from catalog.js and registers runtime window globals where still required', () => {
+        const expectedCatalogApi = [
             'getCurrentSiteLang',
             'saveCurrentFeedScrollState',
             'scheduleFeedScrollSave',
@@ -315,9 +315,37 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
             'startOnboardingTour'
         ];
 
+        const expectedWindowFns = [
+            'saveCurrentFeedScrollState',
+            'getSavedFeedScrollState',
+            'clearSavedFeedScrollState',
+            'restoreFeedScrollPosition',
+            'showScrollRestoredBadge',
+            'toCDN',
+            'isSafeMediaUrl',
+            'isItemMeasurementsTooltipVisible',
+            'hideItemMeasurementsTooltip',
+            'updateCardDOM',
+            'getCatalogItemComparator',
+            'insertNewItemCardSmoothly',
+            'changePage',
+            'updateCardDots',
+            'updateSidebarCounters',
+            'invalidateFuseCache',
+            'applyFilters',
+            'sortItems',
+            'setCategoryFilter',
+            'loadAllItems',
+            'removeSoldItemFromCart',
+            'initCatalogRealtimeSubscription',
+            'syncCriticalStatuses'
+        ];
+
+        for (const fnName of expectedCatalogApi) {
+            expect(typeof catalogMod[fnName]).toBe('function');
+        }
         for (const fnName of expectedWindowFns) {
             expect(typeof window[fnName]).toBe('function');
-            expect(typeof catalogMod[fnName]).toBe('function');
         }
         expect(history.scrollRestoration).toBe('manual');
     });

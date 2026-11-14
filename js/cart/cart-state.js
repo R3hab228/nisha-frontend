@@ -3,9 +3,9 @@
 // ==========================================
 
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeStorage, getRuntimeSupabase, getRuntimeUser } from '../core/runtime-env.js';
 
-const getInitialStorage = () => (typeof window !== 'undefined' && window.storage)
-    || (typeof storage !== 'undefined' ? storage : null);
+const getInitialStorage = () => getRuntimeStorage();
 
 if (typeof window !== 'undefined') {
     if (!window.cart) {
@@ -198,7 +198,7 @@ export function setActiveCart(newCart) {
  * @returns {any}
  */
 export function getCurrentUser() {
-    return (typeof window !== 'undefined' && window.currentUser) || (typeof currentUser !== 'undefined' ? currentUser : null);
+    return getRuntimeUser();
 }
 
 /**
@@ -206,7 +206,7 @@ export function getCurrentUser() {
  * @returns {any}
  */
 export function getSupabaseClient() {
-    return (typeof window !== 'undefined' && window._supabase) || (typeof _supabase !== 'undefined' ? _supabase : null);
+    return getRuntimeSupabase();
 }
 
 /**

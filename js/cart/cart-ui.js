@@ -168,15 +168,20 @@ export function renderCartItems() {
     `;
 
     currentCart.forEach((item, index) => {
-        const imgUrl = getOptimizedImg(item);
+        const rawImgUrl = String(getOptimizedImg(item) || '').trim();
+        const safeCssUrl = /^https?:\/\/|^\/(?!\/)/i.test(rawImgUrl)
+            ? rawImgUrl.replaceAll("'", '%27').replaceAll('"', '%22').replaceAll('(', '%28').replaceAll(')', '%29')
+            : '';
         const row = document.createElement('div');
         row.className = 'cart-item-row';
         const isSold = !!item._isSold;
+        const soldLabel = typeof i18next !== 'undefined' ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' }) : 'Товар уже куплен';
         const soldBadgeHtml = isSold
-            ? `<div class="cart-sold-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>${typeof i18next !== 'undefined' ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' }) : 'Товар уже куплен'}</span></div>`
+            ? `<div class="cart-sold-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>${escCartHtml(soldLabel)}</span></div>`
             : '';
         const rowStyle = isSold ? 'opacity: 0.8; border-left: 3px solid #ff4444;' : '';
         const sizePrefix = typeof i18next !== 'undefined' ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
+        const priceLabel = typeof formatPrice === 'function' ? formatPrice(item.price) : `${item.price} ${getCurrency()}`;
 
         row.innerHTML = `
             <div class="swipe-background">
@@ -188,18 +193,18 @@ export function renderCartItems() {
             <div class="swipe-surface" 
                  data-index="${index}"
                  style="${rowStyle}">
-                <div class="cart-item-img" style="background-image: url('${imgUrl}')"></div>
+                <div class="cart-item-img"${safeCssUrl ? ` style="background-image: url('${escCartHtml(safeCssUrl)}')"` : ''}></div>
                 <div class="cart-item-info">
                     <div class="cart-item-name" title="${escCartHtml(item.name)}">${escCartHtml(item.name)}</div>
                     ${(() => {
                     const rawSize = String(item.size || '').trim();
                     const cleanSize = rawSize ? rawSize.toUpperCase() : '-';
-                    return `<div class="cart-item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span><span class="size-val">${escCartHtml(cleanSize)}</span></div>`;
+                    return `<div class="cart-item-size"><span data-i18n="grid.size_prefix">${escCartHtml(sizePrefix)}</span><span class="size-val">${escCartHtml(cleanSize)}</span></div>`;
                 })()}
                     ${soldBadgeHtml}
                 </div>
                 <div class="cart-item-price-wrapper">
-                    <div class="cart-item-price">${typeof formatPrice === 'function' ? formatPrice(item.price) : `${item.price} ${getCurrency()}`}</div>
+                    <div class="cart-item-price">${escCartHtml(priceLabel)}</div>
                     <div class="cart-item-remove hide-on-mobile" data-action="remove-from-cart" data-index="${index}">×</div>
                 </div>
             </div>

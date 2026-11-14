@@ -3,6 +3,7 @@
 // ==========================================
 
 import { invokeAction, resolveAction } from '../core/action-registry.js';
+import { getLenisInstance, getRuntimeFingerprint, getRuntimeUser, getTurnstileApi } from '../core/runtime-env.js';
 import { getProposalFiles, sanitizeProposalNameField, setProposalFiles } from './drop-state.js';
 import {
     confirmPropBargainInput,
@@ -133,14 +134,15 @@ export function resetProposalForm() {
     }
 
     const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
-    if (typeof turnstile !== 'undefined' && propWidgetId !== null && propWidgetId !== undefined) {
-        try { turnstile.reset(propWidgetId); } catch {}
+    const tsApi = getTurnstileApi();
+    if (tsApi && propWidgetId !== null && propWidgetId !== undefined) {
+        try { tsApi.reset(propWidgetId); } catch {}
     }
     window._turnstilePropToken = null;
 }
 
 export function openProposeModal() {
-    if (typeof lenis !== 'undefined') invokeAction('stopLenis');
+    if (getLenisInstance()) invokeAction('stopLenis');
     invokeAction('updateProposeAndCheckoutFields');
     resetPropBargainState();
     const propNameEl = document.getElementById('propName');
@@ -306,7 +308,8 @@ export async function submitProposal() {
     window._lastProposalContact = contact;
 
     const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
-    let propToken = window._turnstilePropToken || (typeof turnstile !== 'undefined' && propWidgetId !== null && propWidgetId !== undefined ? turnstile.getResponse(propWidgetId) : null);
+    const tsApi = getTurnstileApi();
+    let propToken = window._turnstilePropToken || (tsApi && propWidgetId !== null && propWidgetId !== undefined ? tsApi.getResponse(propWidgetId) : null);
     if (propToken && propToken === _lastUsedPropToken) {
         propToken = null;
     }
@@ -327,8 +330,8 @@ export async function submitProposal() {
             compressedFiles.push(compressed);
         }
 
-        const activeUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || null);
-        const activeFp = (typeof clientFingerprint !== 'undefined' && clientFingerprint) ? clientFingerprint : (window.clientFingerprint || null);
+        const activeUser = getRuntimeUser();
+        const activeFp = getRuntimeFingerprint();
         const activeClientId = activeUser ? activeUser.id : (activeFp || 'guest_' + Date.now());
 
         const formData = new FormData();

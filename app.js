@@ -15,7 +15,8 @@ import {
     startOnboardingTour,
     handleNetworkOffline
 } from './src/modules/index.js';
-import { hasAction, invokeAction, registerActions } from './js/core/action-registry.js';
+import { emitAppEvent, hasAction, invokeAction, registerActions } from './js/core/action-registry.js';
+import { getRuntimeUser } from './js/core/runtime-env.js';
 
 console.log(`
       _   _ _____  _____ _    _          
@@ -64,13 +65,13 @@ if (window.innerWidth > 900) {
 }
 
 function stopLenis() {
-    if (typeof lenis !== 'undefined' && lenis) {
+    if (lenis) {
         Object.getPrototypeOf(lenis).stop.call(lenis); 
     }
 }
 
 function startLenis() {
-    if (typeof lenis !== 'undefined' && lenis) {
+    if (lenis) {
         Object.getPrototypeOf(lenis).start.call(lenis); 
     }
 }
@@ -174,6 +175,7 @@ if (!SUPABASE_ANON_KEY) {
         window._supabase = _supabase;
         if (typeof globalThis !== 'undefined') globalThis._supabase = _supabase;
         invokeAction('initAuthListener');
+        emitAppEvent('nisha:runtime-ready', { hasSupabase: true });
     }
 }
 
@@ -465,7 +467,7 @@ async function initApp() {
 
         // Надежная синхронизация отображения Избранного после завершения загрузки каталога и сессии
         if (window.showingOnlyFavs) {
-            const activeUser = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
+            const activeUser = getRuntimeUser();
             const favNav = document.getElementById('favNav');
             if (!activeUser) {
                 window.showingOnlyFavs = false;
@@ -577,10 +579,15 @@ async function initApp() {
 
                     let bHtml = '';
                     if (hasValidImg) {
-                        bHtml += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
+                        const rawImgUrl = bData.image_url.trim();
+                        const safeImgUrl = /^https?:\/\//i.test(rawImgUrl) ? rawImgUrl.replaceAll('"', '&quot;') : '';
+                        if (safeImgUrl) {
+                            bHtml += `<img src="${safeImgUrl}" alt="" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
+                        }
                     }
                     if (hasValidText) {
-                        bHtml += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replaceAll('\n', '<br>')}</div>`;
+                        const escFn = hasAction('escapeHtml') ? (s) => invokeAction('escapeHtml', s) : (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+                        bHtml += `<div style="font-size:14px; line-height:1.5;">${escFn(bData.message_text).replaceAll('\n', '<br>')}</div>`;
                     }
 
                     if (typeof tryShowBroadcast === 'function') {

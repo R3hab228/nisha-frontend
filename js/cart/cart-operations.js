@@ -13,6 +13,7 @@ import {
 } from './cart-state.js';
 import { updateCartUI, closeCartDropdown } from './cart-ui.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, isSiteHackedMode } from '../core/runtime-env.js';
 
 /**
  * Синхронизирует корзину с сервером и сервисом брошенных корзин (Abandoned Cart Recovery).
@@ -28,9 +29,7 @@ export async function syncCartToServer() {
     }
 
     if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.post === 'function') {
-        const fp = (typeof clientFingerprint !== 'undefined' && clientFingerprint)
-            ? clientFingerprint
-            : (window.clientFingerprint || (window.store && window.store.get ? window.store.get('clientFingerprint') : null));
+        const fp = (getRuntimeFingerprint() || (window.store && window.store.get ? window.store.get('clientFingerprint') : null));
 
         window.apiClient.post('/api/cart/sync', {
             cart: activeCart,
@@ -70,7 +69,7 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
             } catch {}
         }
 
-        const catalog = (typeof window !== 'undefined' && window.allItems) || (typeof allItems !== 'undefined' ? allItems : []);
+        const catalog = getRuntimeCatalog();
         const item = catalog.find(i => String(i.id) === String(itemId));
         if (!item) return;
 
@@ -99,7 +98,7 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
             cartItem.price = Math.round(Number(customPrice));
             cartItem.bargainPrice = Math.round(Number(customPrice));
         } else {
-            const hacked = (typeof window !== 'undefined' && window.isHacked) || (typeof isHacked !== 'undefined' && isHacked);
+            const hacked = isSiteHackedMode();
             if (hacked) {
                 cartItem.price = Math.floor(cartItem.price * 0.9);
             }
@@ -140,7 +139,7 @@ export function addToCartWithAnimation(itemId, btnElement, event) {
     if (now - cartState.lastCartActionTime < 350) return;
     cartState.lastCartActionTime = now;
 
-    const catalog = (typeof window !== 'undefined' && window.allItems) || (typeof allItems !== 'undefined' ? allItems : []);
+    const catalog = getRuntimeCatalog();
     const item = catalog.find(i => i.id === itemId);
     if (!item) return;
 
@@ -189,7 +188,7 @@ export async function addToCartFromModal() {
         if (now - cartState.lastCartActionTime < 350) return;
         cartState.lastCartActionTime = now;
 
-        const activeItem = (typeof window !== 'undefined' && window.currentOpenedItem) || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        const activeItem = getRuntimeOpenedItem();
         if (!activeItem) return;
 
         const currentCart = getActiveCart();
@@ -222,7 +221,7 @@ export async function addToCartFromModal() {
         const cartItem = (typeof deepClone === 'function')
             ? deepClone(activeItem)
             : ((typeof structuredClone === 'function') ? structuredClone(activeItem) : { ...activeItem });
-        const hacked = (typeof window !== 'undefined' && window.isHacked) || (typeof isHacked !== 'undefined' && isHacked);
+        const hacked = isSiteHackedMode();
         if (hacked) {
             cartItem.price = Math.floor(cartItem.price * 0.9);
         }

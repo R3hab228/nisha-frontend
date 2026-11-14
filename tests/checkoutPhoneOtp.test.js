@@ -26,6 +26,7 @@ class MockStorage {
 
 describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
     let elements = {};
+    let authMod;
 
     beforeAll(async () => {
         globalThis.Storage = MockStorage;
@@ -104,7 +105,7 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
         };
 
         await import('../js/core/store.js');
-        await import('../js/auth/auth.js');
+        authMod = await import('../js/auth/auth.js');
     });
 
     beforeEach(() => {
@@ -132,7 +133,7 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
     });
 
     it('matches phone numbers correctly regardless of format (+380, 0xx, spaces, dashes)', () => {
-        const { isPhoneMatchingVerified } = window;
+        const { isPhoneMatchingVerified } = authMod;
         expect(typeof isPhoneMatchingVerified).toBe('function');
 
         expect(isPhoneMatchingVerified('+380 (99) 123-45-67', '0991234567')).toBe(true);
@@ -162,7 +163,7 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
     });
 
     it('setOtpButtonSuccess sets the button into disabled Win95 success state with gray border and green text', () => {
-        const { setOtpButtonSuccess } = window;
+        const { setOtpButtonSuccess } = authMod;
         const btn = elements.btnGetOtp;
 
         setOtpButtonSuccess(btn);
@@ -178,7 +179,7 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
     });
 
     it('setOtpButtonDefault restores the active default button state', () => {
-        const { setOtpButtonSuccess, setOtpButtonDefault } = window;
+        const { setOtpButtonSuccess, setOtpButtonDefault } = authMod;
         const btn = elements.btnGetOtp;
 
         setOtpButtonSuccess(btn);

@@ -2,7 +2,6 @@
 // NISHA CATALOG — СЕТКА КАРТОЧЕК, ПАГИНАЦИЯ И ВЗАИМОДЕЙСТВИЯ
 // ==========================================
 
-import { getCatalogStore } from './catalog-state.js';
 import { saveCurrentFeedScrollState } from './scroll-restoration.js';
 import {
     toCDN,
@@ -13,91 +12,20 @@ import {
 import {
     isItemMeasurementsTooltipVisible
 } from './measurements.js';
-import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+import {
+    buildStatusBadgeHtml,
+    buildCardPriceHtml,
+    getSeenItemsSet,
+    buildCardDOM
+} from './catalog-card-markup.js';
+import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeOpenedItem, getRuntimeFavorites, isSiteHackedMode } from '../core/runtime-env.js';
+
+export { buildStatusBadgeHtml, buildCardPriceHtml, buildCardDOM };
 
 let itemsPageSize = typeof window !== 'undefined' && window.innerWidth <= 900 ? 12 : 15;
 let changePageTimeout = null;
 let _renderBatchSeq = 0;
-
-function readAcceptedBargain(item) {
-    try {
-        const rawB = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('accepted_bargain_' + item.id) : null)
-            || (typeof localStorage !== 'undefined' ? localStorage.getItem('accepted_bargain_' + item.id) : null);
-        return rawB ? JSON.parse(rawB) : null;
-    } catch {
-        return null;
-    }
-}
-
-/**
- * Генерирует HTML-разметку статус-бейджей карточки товара (SOLD, RESERVED, TOP, SALE, HOT).
- * @param {object} item
- * @returns {string}
- */
-export function buildStatusBadgeHtml(item) {
-    if (!item) return '';
-    if (item.status === 'sold') {
-        return '<div class="sold-badge">SOLD</div>';
-    }
-    if (item.status === 'reserved') {
-        return '<div class="reserved-badge">RESERVED</div>';
-    }
-
-    const hasSale = !!item.is_sale;
-    const hasHot = (item.views_count || 0) >= 25;
-    const isTop = item.is_top === true && item.top_until && Date.parse(item.top_until) > Date.now();
-    if (!hasSale && !hasHot && !isTop) return '';
-
-    const parts = [];
-    if (isTop) {
-        parts.push('<span class="status-item status-top"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> TOP</span>');
-    }
-    if (hasSale) {
-        parts.push('<span class="status-item status-sale">% SALE</span>');
-    }
-    if (hasHot) {
-        const chartSvg = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
-        parts.push(`<span class="status-item status-hot">${chartSvg} HOT</span>`);
-    }
-    return `<div class="system-status-bar">${parts.join('<div class="status-divider"></div>')}</div>`;
-}
-
-/**
- * Генерирует HTML-разметку цены карточки с учётом принятого торга или скидки.
- * @param {object} item
- * @param {string} [curr='грн']
- * @returns {string}
- */
-export function buildCardPriceHtml(item, curr = 'грн') {
-    const formatPriceFn = resolveAction('formatPrice') || ((val) => `${val} ${curr}`);
-
-    const savedBargain = readAcceptedBargain(item);
-    if (savedBargain && savedBargain.acceptedPrice) {
-        const fOldB = formatPriceFn(savedBargain.originalPrice || item.price);
-        const fAccB = formatPriceFn(savedBargain.acceptedPrice);
-        return `<span class="card-old-price" style="color: #777; text-decoration: line-through; margin-right: 6px;">${fOldB}</span><span class="card-current-price" style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${fAccB}</span>`;
-    }
-    if (item.is_sale && item.old_price) {
-        const fOld = formatPriceFn(item.old_price);
-        const fPrice = formatPriceFn(item.price);
-        return `<span class="card-old-price" style="color: #4a704a; text-decoration: line-through;">${fOld}</span><span class="card-current-price" style="color: var(--accent-green);">${fPrice}</span>`;
-    }
-    const fPrice = formatPriceFn(item.price);
-    return `<span class="card-current-price" style="color: var(--accent-green);">${fPrice}</span>`;
-}
-
-function getSeenItemsSet() {
-    if (!window._seenItemsSet) {
-        try {
-            const store = getCatalogStore();
-            const parsedSeen = store ? store.getJSON('nisha_seen_items', []) : [];
-            window._seenItemsSet = new Set(Array.isArray(parsedSeen) ? parsedSeen.map(String) : []);
-        } catch {
-            window._seenItemsSet = new Set();
-        }
-    }
-    return window._seenItemsSet;
-}
 
 function markCardImageLoaded(img) {
     if (!img) return;
@@ -182,7 +110,7 @@ export function updateCardDOM(item) {
     }
 
     // 4. Если этот товар открыт в детальной модалке (productModal)
-    const activeModal = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    const activeModal = getRuntimeOpenedItem();
     if (activeModal && String(activeModal.id) === String(item.id)) {
         Object.assign(activeModal, item);
         const modalCartBtn = document.getElementById('modalCartBtn');
@@ -204,7 +132,7 @@ export function updateCardDOM(item) {
             }
         }
         if (modalPriceEl) {
-            const isHackedActive = window.isHacked || (typeof isHacked !== 'undefined' && isHacked);
+            const isHackedActive = isSiteHackedMode();
             const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
             modalPriceEl.innerText = hasAction('formatPrice') ? invokeAction('formatPrice', finalPrice) : (finalPrice + ' ' + curr);
         }
@@ -500,112 +428,6 @@ export function initGridEventDelegation() {
             handleDoubleTapLike(e, itemId, animContainer);
         }
     });
-}
-
-/**
- * Создаёт DOM-элемент карточки товара для сетки каталога.
- * @param {object} item
- * @param {number} [idx=0]
- * @returns {HTMLElement|null}
- */
-export function buildCardDOM(item, idx = 0) {
-    if (!item || !item.id || typeof document === 'undefined') return null;
-    const itemIdStr = String(item.id);
-    const curr = (typeof getCurrency === 'function') ? getCurrency() : 'грн';
-    const sizePrefix = (typeof i18next !== 'undefined') ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
-    const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
-
-    const seenSet = getSeenItemsSet();
-    const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
-    const favSet = new Set(Array.isArray(userFavs) ? userFavs.map(String) : []);
-
-    const badgeHTML = buildStatusBadgeHtml(item);
-    const thumbsArray = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails : (item.images && item.images.length > 0 ? item.images : []);
-    let slidesStr = '';
-    let dotsStr = '';
-
-    const safeBrand = (item.brand || '').trim();
-    const safeName = (item.name || '').trim();
-    const baseAlt = [safeBrand, safeName].filter(Boolean).join(' ') || 'Винтажная одежда NISHA';
-    const cleanAlt = baseAlt
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
-
-    thumbsArray.forEach((thumbUrl, thumbIdx) => {
-        const rawVidUrl = (item.images && item.images[thumbIdx]) ? item.images[thumbIdx] : thumbUrl;
-        const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
-        const cdnThumb = toCDN(thumbUrl, { isThumb: true });
-        const cdnVidUrl = toCDN(rawVidUrl);
-        const slideAlt = cleanAlt + (thumbIdx > 0 ? ` - фото ${thumbIdx + 1}` : '');
-
-        if (isVid) {
-            slidesStr += `
-                <div class="card-slide ${thumbIdx === 0 ? 'img-8bit-loading' : ''}" style="background: #0a0a0a;">
-                    <video class="grid-lazy-video" src="${cdnVidUrl}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;"></video>
-                </div>`;
-        } else if (thumbIdx === 0) {
-            const firstLoadAttr = (idx < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
-            slidesStr += `
-                <div class="card-slide img-8bit-loading">
-                   <img class="card-slide-img" src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" ${firstLoadAttr} decoding="async" alt="${slideAlt}">
-                </div>`;
-        } else {
-            slidesStr += `
-                <div class="card-slide">
-                   <img class="card-slide-img" data-src="${cdnThumb}" data-fallback-src="${cdnVidUrl || ''}" loading="lazy" decoding="async" alt="${slideAlt}">
-                </div>`;
-        }
-        dotsStr += `<div class="card-dot ${thumbIdx === 0 ? 'active' : ''}"></div>`;
-    });
-
-    const starClass = favSet.has(itemIdStr) ? 'fav-star active' : 'fav-star';
-    const isUnseen = !seenSet.has(itemIdStr) && item.status === 'available';
-    const pulseClass = isUnseen ? 'unseen-pulse' : '';
-    const statusClass = item.status === 'sold' ? 'sold-out' : (item.status === 'reserved' ? 'reserved-item' : '');
-
-    const card = document.createElement('div');
-    card.className = ['item-card', statusClass, pulseClass].filter(Boolean).join(' ');
-    card.setAttribute('data-id', item.id);
-    if (item && item.id && card.style && typeof card.style.setProperty === 'function') {
-        const safeId = String(item.id).replace(/[^a-zA-Z0-9_-]/g, '_');
-        card.style.setProperty('view-transition-name', 'item-' + safeId);
-    }
-
-    const priceHTML = buildCardPriceHtml(item, curr);
-    const escAttr = (v) => (hasAction('escapeAttr') ? invokeAction('escapeAttr', v) : v);
-    const escHtml = (v) => (hasAction('escapeHtml') ? invokeAction('escapeHtml', v) : v);
-
-    let controlsHTML = '';
-    if (thumbsArray.length > 1) {
-        controlsHTML = `
-            <div class="grid-slider-btn prev" role="button" aria-label="Предыдущее фото" data-action="scroll-grid-slider" data-hover-action="preload-grid-slide" data-id="${escAttr(item.id)}" data-dir="-1">&#10094;</div>
-            <div class="grid-slider-btn next" role="button" aria-label="Следующее фото" data-action="scroll-grid-slider" data-hover-action="preload-grid-slide" data-id="${escAttr(item.id)}" data-dir="1">&#10095;</div>
-            <div class="card-dots-container" id="dots-${item.id}">${dotsStr}</div>
-        `;
-    }
-
-    card.innerHTML = `
-        ${badgeHTML}
-        <div class="${starClass}" role="button" aria-label="В избранное" data-action="toggle-fav" data-id="${escAttr(item.id)}">★</div>
-        <div class="card-slider-wrapper">
-            <div class="card-slider-container" id="slider-${item.id}" data-item-id="${escAttr(item.id)}">
-                ${slidesStr}
-            </div>
-            ${controlsHTML}
-        </div>
-        <div class="item-info">
-            <h3 class="item-title">${escHtml(item.name || '')}</h3>
-            <div class="item-price">${priceHTML}</div>
-            <div class="item-size"><span data-i18n="grid.size_prefix">${sizePrefix}</span>${escHtml(item.size || '')}</div>
-            <div class="item-footer"><span>${escHtml(item.brand || '')}</span><span>${escHtml(item.condition || '')}</span></div>
-        </div>
-        <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" data-action="add-to-cart" data-id="${escAttr(item.id)}">${addToCartText}</button>
-    `;
-
-    return card;
 }
 
 /**
@@ -962,7 +784,7 @@ export async function handleDoubleTapLike(event, itemId, container) {
 
     if (hasAction('triggerHaptic')) invokeAction('triggerHaptic', 'heavy');
 
-    const userFavs = (typeof favorites !== 'undefined') ? favorites : (window.favorites || []);
+    const userFavs = getRuntimeFavorites();
     const isAlreadyFav = Array.isArray(userFavs) && userFavs.some(id => String(id) === String(itemId));
     if (!isAlreadyFav) {
         if (hasAction('toggleFav')) {
@@ -989,13 +811,7 @@ registerActions({
 if (typeof window !== 'undefined') {
     window.updateCardDOM = updateCardDOM;
     window.changePage = changePage;
-    window.activateCardSlides = activateCardSlides;
-    window.buildCardDOM = buildCardDOM;
     window.getCatalogItemComparator = getCatalogItemComparator;
     window.insertNewItemCardSmoothly = insertNewItemCardSmoothly;
-    window.renderNextBatch = renderNextBatch;
     window.updateCardDots = updateCardDots;
-    window.scrollGridSlider = scrollGridSlider;
-    window.preloadGridSlide = preloadGridSlide;
-    window.handleDoubleTapLike = handleDoubleTapLike;
 }

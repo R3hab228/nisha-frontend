@@ -2,6 +2,8 @@
 // NISHA CATALOG — SHARED STATE & CORE ACCESSORS
 // ==========================================
 
+import { getRuntimeStorage, getRuntimeSupabase } from '../core/runtime-env.js';
+
 if (typeof window !== 'undefined') {
     if (!window.allItems) window.allItems = [];
     if (!window.filteredItems) window.filteredItems = [];
@@ -22,9 +24,7 @@ if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
  * @returns {any}
  */
 export function getCatalogStore() {
-    if (typeof window !== 'undefined' && window.storage) return window.storage;
-    if (typeof storage !== 'undefined') return storage;
-    return null;
+    return getRuntimeStorage();
 }
 
 /**
@@ -32,9 +32,7 @@ export function getCatalogStore() {
  * @returns {any}
  */
 export function getSupabaseClient() {
-    if (typeof window !== 'undefined' && window._supabase) return window._supabase;
-    if (typeof _supabase !== 'undefined') return _supabase;
-    return null;
+    return getRuntimeSupabase();
 }
 
 /**
@@ -48,8 +46,4 @@ export function getCurrentSiteLang() {
     if (l === 'uk') l = 'ua';
     if (!['ru', 'ua', 'en'].includes(l)) l = 'ua';
     return l;
-}
-
-if (typeof window !== 'undefined') {
-    window.getCurrentSiteLang = getCurrentSiteLang;
 }

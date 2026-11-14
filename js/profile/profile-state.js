@@ -3,15 +3,14 @@
 // ==========================================
 
 import { registerAction, resolveAction } from '../core/action-registry.js';
+import { getRuntimeCatalog, getRuntimeStorage, getRuntimeSupabase, tSafe } from '../core/runtime-env.js';
 
 /**
  * Resolves safe localStorage/sessionStorage wrapper from window or global scope.
  * @returns {object|null}
  */
 export function getStore() {
-    if (typeof window !== 'undefined' && window.storage) return window.storage;
-    if (typeof storage !== 'undefined') return storage;
-    return null;
+    return getRuntimeStorage();
 }
 
 /**
@@ -144,7 +143,7 @@ export function getSupabase() {
         const res = fn();
         if (res) return res;
     }
-    return (typeof window !== 'undefined' && (window._supabase || window.supabaseClient)) || null;
+    return getRuntimeSupabase() || (typeof window !== 'undefined' && window.supabaseClient) || null;
 }
 
 /**
@@ -152,9 +151,7 @@ export function getSupabase() {
  * @returns {any[]}
  */
 export function getCatalog() {
-    if (typeof window !== 'undefined' && Array.isArray(window.allItems)) return window.allItems;
-    if (typeof allItems !== 'undefined' && Array.isArray(allItems)) return allItems;
-    return [];
+    return getRuntimeCatalog();
 }
 
 /**
@@ -179,12 +176,7 @@ export function getHourglass(height = 14) {
  * @returns {string}
  */
 export function tProfile(key, fallback, vars = {}) {
-    const i18n = (typeof window !== 'undefined' && window.i18next) || (typeof i18next !== 'undefined' ? i18next : null);
-    if (i18n && typeof i18n.t === 'function') {
-        const translated = i18n.t(key, { defaultValue: fallback, ...vars });
-        if (translated !== undefined && translated !== null && translated !== '') return translated;
-    }
-    return fallback;
+    return tSafe(key, { defaultValue: fallback, ...vars }, fallback);
 }
 
 /**

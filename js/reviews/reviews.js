@@ -3,6 +3,9 @@
 // ==========================================
 
 import { invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+import { getRuntimeProfile, getRuntimeStorage, getRuntimeSupabase, getRuntimeUser } from '../core/runtime-env.js';
+
+const _failedReviewImages = new Set();
 
 const toCDN = (u) => {
     const fn = resolveAction('toCDN');
@@ -80,8 +83,9 @@ async function openReviewsModal() {
             
             const revImg = rev.item_image ? toCDN(rev.item_image) : '';
             const safeRevImg = escHtmlFn ? escHtmlFn(revImg) : revImg.replaceAll('"', '&quot;');
-            const clickAction = revImg ? `data-action="open-review-image" data-img="${safeRevImg}"` : '';
-            const imgHtml = revImg ? `<div ${clickAction} style="width: 45px; height: 45px; border-radius: 4px; border: 1px solid #333; background-image: url('${safeRevImg}'); background-size: cover; background-position: center; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото"></div>` : '';
+            const validImg = revImg && !_failedReviewImages.has(revImg) ? safeRevImg : '';
+            const clickAction = validImg ? `data-action="open-review-image" data-img="${validImg}"` : '';
+            const imgHtml = validImg ? `<img class="review-item-thumb" src="${validImg}" alt="" loading="lazy" decoding="async" ${clickAction} style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #333; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото">` : '';
             
             const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
             const safeItemIdAttr = escAttrFn ? escAttrFn(rev.item_id) : String(rev.item_id || '').replaceAll('"', '&quot;');
@@ -100,6 +104,16 @@ async function openReviewsModal() {
             </div>`;
         });
         container.innerHTML = html;
+        if (typeof container.querySelectorAll === 'function') {
+            container.querySelectorAll('.review-item-thumb').forEach((thumbImg) => {
+                thumbImg.addEventListener('error', () => {
+                    const failedSrc = thumbImg.getAttribute('data-img') || thumbImg.getAttribute('src');
+                    if (failedSrc) _failedReviewImages.add(failedSrc);
+                    thumbImg.remove();
+                    equalizeReviewCardHeights();
+                }, { once: true });
+            });
+        }
         equalizeReviewCardHeights();
     };
 
@@ -122,7 +136,7 @@ async function openReviewsModal() {
         </div>
     `;
     
-    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    const sb = getRuntimeSupabase();
     let data = null;
     let error = null;
 
@@ -223,7 +237,7 @@ window.addEventListener('resize', () => {
 // Умный сбор отзывов за полученные посылки
 function promptOrderReview(orderId, itemName, itemImage, itemId) {
     if (orderId) {
-        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const store = getRuntimeStorage();
         const reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
         if (Array.isArray(reviewedOrders) && reviewedOrders.includes(orderId)) {
             showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.already_left')) || 'Отзыв по этому заказу уже оставлен.', 'info');
@@ -292,12 +306,12 @@ async function sendReviewPayload(payload) {
     }
 
     // 2. Фолбэк на прямой Supabase инсерт
-    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    const sb = getRuntimeSupabase();
     if (!sb) {
         return { success: false, error: new Error('База данных временно недоступна') };
     }
 
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const activeUser = getRuntimeUser();
     const directPayload = {
         user_name: payload.user_name || payload.userName || 'User',
         text: payload.text,
@@ -335,7 +349,7 @@ async function submitAutoReview() {
     const itemId = document.getElementById('autoReviewItemId')?.value;
 
     if (orderId) {
-        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const store = getRuntimeStorage();
         const reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
         if (Array.isArray(reviewedOrders) && reviewedOrders.includes(orderId)) {
             showToast((typeof i18next !== 'undefined' && i18next.t('reviews_modal.already_left')) || 'Отзыв по этому заказу уже оставлен.', 'info');
@@ -349,8 +363,8 @@ async function submitAutoReview() {
         return;
     }
 
-    const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const profile = getRuntimeProfile();
+    const activeUser = getRuntimeUser();
     let uName = typeof getUserDisplayName === 'function'
         ? getUserDisplayName(activeUser, profile)
         : (profile?.username || activeUser?.user_metadata?.display_name || activeUser?.user_metadata?.username || activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User');
@@ -380,7 +394,7 @@ async function submitAutoReview() {
             } else {
                 showToast(reviewPublishedMsg, 'success');
             }
-            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const store = getRuntimeStorage();
             let reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
             if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
             if (orderId && !reviewedOrders.includes(orderId)) {
@@ -412,7 +426,7 @@ function skipAutoReview() {
     const orderId = document.getElementById('autoReviewOrderId')?.value;
     if (orderId) {
         try {
-            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const store = getRuntimeStorage();
             let dismissedOrders = store ? store.getJSON('nisha_dismissed_reviews', []) : [];
             if (!Array.isArray(dismissedOrders)) dismissedOrders = [];
             if (!dismissedOrders.includes(orderId)) dismissedOrders.push(orderId);
@@ -424,7 +438,7 @@ function skipAutoReview() {
 
 // Логика написания отзыва на сайте (кнопка из списка)
 function writeReviewOnSite() {
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const activeUser = getRuntimeUser();
     if (!activeUser) {
         const authMsg = (typeof i18next !== 'undefined') 
             ? i18next.t('messages.cart_error_auth', { defaultValue: 'Сначала войдите в систему!' }) 
@@ -468,8 +482,8 @@ async function submitManualReview() {
         return;
     }
 
-    const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const profile = getRuntimeProfile();
+    const activeUser = getRuntimeUser();
     const uName = typeof getUserDisplayName === 'function'
         ? getUserDisplayName(activeUser, profile)
         : (profile?.username || activeUser?.user_metadata?.display_name || activeUser?.user_metadata?.username || activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User');
@@ -522,7 +536,7 @@ async function submitManualReview() {
 let _reviewsRealtimeChannel = null;
 
 function initReviewsRealtime(sb) {
-    if (!sb) sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    if (!sb) sb = getRuntimeSupabase();
     if (!sb) return;
     if (_reviewsRealtimeChannel) return;
 

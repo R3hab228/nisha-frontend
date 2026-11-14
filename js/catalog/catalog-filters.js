@@ -10,6 +10,7 @@ import {
 } from './scroll-restoration.js';
 import { renderNextBatch } from './catalog-grid.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeFavorites, isSiteHackedMode } from '../core/runtime-env.js';
 
 let applyFiltersTimeout = null;
 let _resolveApplyFilters = null;
@@ -316,9 +317,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             const maxPrice = (Number.isFinite(rawMax) && rawMax > 0) ? rawMax : Infinity;
 
             const getSafePrice = (price) => Number.parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
-            let userFavs = (typeof favorites !== 'undefined' && Array.isArray(favorites) && favorites.length > 0)
-                ? favorites
-                : ((window.favorites && Array.isArray(window.favorites) && window.favorites.length > 0) ? window.favorites : null);
+            let userFavs = getRuntimeFavorites();
             if (!userFavs || userFavs.length === 0) {
                 const store = getCatalogStore();
                 const cachedFavs = (store && typeof store.getJSON === 'function') ? store.getJSON('nisha_cached_favorites', null) : null;
@@ -328,7 +327,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                 }
             }
             const favsSet = new Set(userFavs);
-            const hacked = (typeof isHacked !== 'undefined') ? isHacked : (window.isHacked || false);
+            const hacked = isSiteHackedMode();
             const curCat = window.currentCategory || '';
             const curBrand = window.currentBrand || '';
             const onlyFavs = window.showingOnlyFavs || false;
@@ -851,17 +850,9 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.itemMatchesSizeFilter = itemMatchesSizeFilter;
     window.updateSidebarCounters = updateSidebarCounters;
     window.invalidateFuseCache = invalidateFuseCache;
     window.applyFilters = applyFilters;
     window.sortItems = sortItems;
-    window.triggerFilterTransition = triggerFilterTransition;
     window.setCategoryFilter = setCategoryFilter;
-    window.clearSearchInput = clearSearchInput;
-    window.updatePriceUI = updatePriceUI;
-    window.toggleMobileSidebar = toggleMobileSidebar;
-}
-if (typeof globalThis !== 'undefined') {
-    globalThis.triggerFilterTransition = triggerFilterTransition;
 }

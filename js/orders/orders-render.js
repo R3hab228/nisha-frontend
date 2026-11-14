@@ -3,6 +3,7 @@
 // ==========================================
 
 import { resolveAction } from '../core/action-registry.js';
+import { getLenisInstance, getRuntimeProfile, getRuntimeUser } from '../core/runtime-env.js';
 import {
     escAttr,
     escHtml,
@@ -497,14 +498,17 @@ export function openOrdersModal() {
 
     const stopLenisFn = resolveAction('stopLenis');
     if (stopLenisFn) stopLenisFn();
-    else if (typeof lenis !== 'undefined') lenis.stop();
+    else {
+        const activeLenis = getLenisInstance();
+        if (activeLenis) activeLenis.stop();
+    }
 
     const guestInputGroup = document.getElementById('guestOrderInputGroup');
     const guestText = document.getElementById('guestOrderText');
     const listArea = document.getElementById('ordersListArea');
 
-    const activeUser = (typeof window !== 'undefined' && window.currentUser) || (typeof currentUser !== 'undefined' ? currentUser : null);
-    const activeProfile = (typeof window !== 'undefined' && window.userProfile) || (typeof userProfile !== 'undefined' ? userProfile : null);
+    const activeUser = getRuntimeUser();
+    const activeProfile = getRuntimeProfile();
     bindOrdersTabSwipe();
 
     if (activeUser) {

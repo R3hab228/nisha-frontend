@@ -2,6 +2,8 @@
 // NISHA PWA SERVICE WORKER & BUILD VERSIONING MODULE
 // ==========================================
 
+import { getRuntimeStorage } from './runtime-env.js';
+
 /**
  * Logs PWA debug diagnostics when __NISHA_DEBUG__ flag is enabled.
  * @param {...any} args
@@ -83,7 +85,7 @@ export function initServiceWorkerUpdates() {
     let updateModalShownInPage = false;
 
     const registerSw = () => {
-        const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        const store = getRuntimeStorage();
         if (store) store.set('nisha_sw_current_bundle', APP_SW_VERSION);
 
         navigator.serviceWorker.register(SW_SCRIPT_URL, { updateViaCache: 'none' }).then(registration => {

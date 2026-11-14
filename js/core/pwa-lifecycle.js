@@ -4,6 +4,7 @@
 
 import { invokeAction, registerActions } from './action-registry.js';
 import { debugPwaLog } from './pwa-sw-versioning.js';
+import { getRuntimeSupabase, getRuntimeOpenedItem } from './runtime-env.js';
 
 let deferredPrompt = null;
 let lifecycleListenersBound = false;
@@ -237,13 +238,13 @@ export function initPwaLifecycle() {
             if (document.hidden) {
                 document.title = 'Zzz... | NISHA';
             } else {
-                const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+                const activeItem = getRuntimeOpenedItem();
                 if (activeItem) {
                     document.title = `NISHA | ${activeItem.brand} - ${activeItem.name}`;
                 } else {
                     document.title = 'NISHA | Underground Store';
                 }
-                const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+                const sb = getRuntimeSupabase();
                 if (sb && typeof checkSession === 'function') {
                     await checkSession();
                 }
@@ -266,7 +267,7 @@ export function initPwaLifecycle() {
             try { invokeAction('initCatalogRealtimeSubscription'); } catch {}
             try { invokeAction('syncCriticalStatuses'); } catch {}
 
-            const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+            const activeItem = getRuntimeOpenedItem();
             if (activeItem) {
                 try { await invokeAction('checkItemAvailability', activeItem.id); } catch {}
             }

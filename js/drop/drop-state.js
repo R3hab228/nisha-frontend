@@ -2,6 +2,8 @@
 // NISHA DROP STATE & NAME AUTOFILL SANITIZER
 // ==========================================
 
+import { getRuntimeProfile, getRuntimeStorage } from '../core/runtime-env.js';
+
 function getReactiveStore() {
     if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
         return window.store;
@@ -43,9 +45,7 @@ if (typeof window !== 'undefined' && !Array.isArray(window.currentProposalFiles)
 }
 
 export function getStorage() {
-    if (typeof window !== 'undefined' && window.storage) return window.storage;
-    if (typeof storage !== 'undefined') return storage;
-    return null;
+    return getRuntimeStorage();
 }
 
 // Защита поля «Название вещи» от автозаполнения браузером ФИО покупателя (Chrome Autofill принимает поле за «имя»)
@@ -59,7 +59,7 @@ export function sanitizeProposalNameField() {
     const store = getStorage();
     let cachedDelivery = null;
     try { cachedDelivery = store ? store.getJSON('nisha_profile_delivery', null) : null; } catch {}
-    const prof = (typeof window !== 'undefined' && window.userProfile) || (typeof userProfile !== 'undefined' ? userProfile : null);
+    const prof = getRuntimeProfile();
 
     const knownNames = [
         prof?.full_name,

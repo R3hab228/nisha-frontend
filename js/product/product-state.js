@@ -3,6 +3,7 @@
 // ==========================================
 
 import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+import { getRuntimeFavorites, getRuntimeFingerprint, getRuntimeStorage, getRuntimeUser } from '../core/runtime-env.js';
 
 function getReactiveStore() {
     if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
@@ -93,7 +94,7 @@ export function toCDN(u, opts) {
  * @returns {any[]}
  */
 export function getFavs() {
-    return (typeof window !== 'undefined' && window.favorites) || (typeof favorites !== 'undefined' ? favorites : []);
+    return getRuntimeFavorites();
 }
 
 /**
@@ -101,7 +102,7 @@ export function getFavs() {
  * @returns {object|null}
  */
 export function getUser() {
-    return (typeof window !== 'undefined' && window.currentUser) || (typeof currentUser !== 'undefined' ? currentUser : null);
+    return getRuntimeUser();
 }
 
 /**
@@ -109,7 +110,7 @@ export function getUser() {
  * @returns {string}
  */
 export function getFingerprint() {
-    return (typeof window !== 'undefined' && window.clientFingerprint) || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : 'guest_' + Date.now());
+    return getRuntimeFingerprint() || ('guest_' + Date.now());
 }
 
 /**
@@ -137,7 +138,7 @@ export function getCatalogItems() {
  * @returns {object|null}
  */
 export function getStore() {
-    return (typeof window !== 'undefined' && window.storage) || (typeof storage !== 'undefined' ? storage : null);
+    return getRuntimeStorage();
 }
 
 /**

@@ -661,11 +661,6 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.normalizeMeasurementUnits = normalizeMeasurementUnits;
-    window.formatMeasurementItem = formatMeasurementItem;
-    window.extractItemMeasurements = extractItemMeasurements;
-    window.showItemMeasurementsTooltip = showItemMeasurementsTooltip;
-    window.moveItemMeasurementsTooltip = moveItemMeasurementsTooltip;
     window.isItemMeasurementsTooltipVisible = isItemMeasurementsTooltipVisible;
     window.hideItemMeasurementsTooltip = hideItemMeasurementsTooltip;
 

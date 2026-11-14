@@ -4,6 +4,7 @@
 
 import { getCatalogStore } from './catalog-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeOpenedItem } from '../core/runtime-env.js';
 
 /**
  * Показывает информационную терминальную модалку по клику на бейдж товара.
@@ -12,7 +13,7 @@ import { hasAction, invokeAction, registerActions } from '../core/action-registr
 export function showBadgeInfo(type) {
     let title = '';
     let text = '';
-    const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    const activeItem = getRuntimeOpenedItem();
 
     if (type === 'secure') {
         title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.secure_title', { defaultValue: 'SECURE_PAYMENT.EXE' }) : 'SECURE_PAYMENT.EXE';
@@ -188,10 +189,6 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.showBadgeInfo = showBadgeInfo;
-    window.flushPendingBroadcast = flushPendingBroadcast;
-    window.startOnboardingTour = startOnboardingTour;
-
     // Защита: если юзер при входе сразу начинает скроллить страницу — не показываем подсказки онбординга
     const _tourStore = getCatalogStore();
     if (!_tourStore || !_tourStore.get('nisha_tour_done')) {

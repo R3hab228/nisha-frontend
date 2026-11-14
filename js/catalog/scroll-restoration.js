@@ -176,7 +176,6 @@ export function restoreFeedScrollPosition(state) {
 
 if (typeof window !== 'undefined') {
     window.saveCurrentFeedScrollState = saveCurrentFeedScrollState;
-    window.scheduleFeedScrollSave = scheduleFeedScrollSave;
     window.getSavedFeedScrollState = getSavedFeedScrollState;
     window.clearSavedFeedScrollState = clearSavedFeedScrollState;
     window.restoreFeedScrollPosition = restoreFeedScrollPosition;

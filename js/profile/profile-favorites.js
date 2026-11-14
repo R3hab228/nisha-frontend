@@ -13,6 +13,7 @@ import {
     bindWindowFn,
     syncProfileFavoritesCounters
 } from './profile-state.js';
+import { getRuntimeOpenedItem } from '../core/runtime-env.js';
 
 let isTogglingFav = false; // Защита от двойного клика
 
@@ -96,8 +97,7 @@ export async function executeToggleFav(itemId) {
         }
 
         // Звезда в открытой модалке товара
-        const opened = (typeof window !== 'undefined' && window.currentOpenedItem)
-            || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        const opened = getRuntimeOpenedItem();
         if (opened && opened.id === itemId) {
             const modalStar = document.getElementById('modalFavStar');
             if (modalStar) {

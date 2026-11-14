@@ -1,5 +1,6 @@
 
-import { invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+import { invokeAction, onAppEvent, registerActions, resolveAction } from '../core/action-registry.js';
+import { getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint } from '../core/runtime-env.js';
 
 // --- СИСТЕМА ЗАПОМИНАНИЯ ПОКАЗАННЫХ ОФФЕРОВ (ЧТОБЫ НЕ НАДОЕДАТЬ ПОЛЬЗОВАТЕЛЮ) ---
 const BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups';
@@ -7,6 +8,8 @@ const SUPPORT_REPLY_SEEN_STORAGE_KEY = 'nisha_seen_support_reply_ids';
 const _shownSupportReplyIds = new Set();
 let _userSupportChannel = null;
 let _supportRepliesInitialized = false;
+let _supportInitRetries = 0;
+const MAX_SUPPORT_INIT_RETRIES = 6;
 
 function hasSeenBargainPopup(key) {
     if (!key) return false;
@@ -92,7 +95,11 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     document.querySelectorAll('.bargain-broadcast-overlay, .terminal-modal-overlay').forEach(el => el.remove());
 
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
-    const escHtml = (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const escHtml = (s) => String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+    const safeUrl = (u) => {
+        const str = String(u || '').trim();
+        return /^https?:\/\/|^\/(?!\/)/i.test(str) ? escHtml(str) : '';
+    };
 
     const titleText = t('product.offer_accepted_title', 'ВАША ЦІНА ПРИЙНЯТА!');
     const descText = t('product.offer_accepted_text', 'Ваша пропозиція прийнята на суму');
@@ -110,7 +117,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     } catch {}
 
     // 2. Обновляем кнопку предложения цены и цену на карточке товара, если открыт именно этот товар
-    const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+    const activeItem = getRuntimeOpenedItem();
     if (activeItem && String(activeItem.id) === String(bargainData.itemId)) {
         const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
         if (offerPriceBtn) {
@@ -125,14 +132,14 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         }
         const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
         if (priceEl) {
-            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${bargainData.originalPrice || activeItem.price} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${bargainData.acceptedPrice} грн</span>`;
+            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escHtml(bargainData.originalPrice || activeItem.price)} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escHtml(bargainData.acceptedPrice)} грн</span>`;
         }
     }
 
     // Реактивно обновляем карточку товара прямо в ленте каталога
     const updateCardFn = resolveAction('updateCardDOM');
     if (updateCardFn) {
-        const all = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+        const all = getRuntimeCatalog();
         const match = all.find(i => String(i.id) === String(bargainData.itemId));
         if (match) updateCardFn(match);
     }
@@ -144,20 +151,19 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     // Блокируем скролл ленты товаров, пока открыт броадкаст
     document.body.style.overflow = 'hidden';
-    if (window.lenis && typeof window.lenis.stop === 'function') {
-        window.lenis.stop();
-    } else if (typeof lenis !== 'undefined' && lenis && typeof lenis.stop === 'function') {
-        lenis.stop();
+    const activeLenisStop = getLenisInstance();
+    if (activeLenisStop && typeof activeLenisStop.stop === 'function') {
+        activeLenisStop.stop();
     }
 
     const safeName = escHtml(bargainData.itemName || 'Товар');
-    const safeImg = bargainData.itemImage ? escHtml(bargainData.itemImage) : '';
-    const newPrice = bargainData.acceptedPrice || '';
+    const safeImg = bargainData.itemImage ? safeUrl(bargainData.itemImage) : '';
+    const newPrice = escHtml(bargainData.acceptedPrice || '');
 
     overlay.innerHTML = `
         <div class="success-terminal-box" style="max-width: 420px; width: 90%; background: #0a0a0a; border: 1px solid #333; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.85); padding: 30px 24px; text-align: center;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <div class="success-title" style="color: var(--accent-green, #00ff66); font-family: var(--font-mono); font-size: 16px; font-weight: 700; margin: 0; letter-spacing: 0.5px; text-transform: uppercase;">${titleText}</div>
+                <div class="success-title" style="color: var(--accent-green, #00ff66); font-family: var(--font-mono); font-size: 16px; font-weight: 700; margin: 0; letter-spacing: 0.5px; text-transform: uppercase;">${escHtml(titleText)}</div>
                 <button class="close-bargain-x-btn" aria-label="Close" style="background: none; border: none; color: var(--accent-red, #ff3333); font-family: var(--font-mono); font-size: 18px; font-weight: bold; cursor: pointer; padding: 2px 6px; line-height: 1; transition: transform 0.15s ease, opacity 0.15s ease;">✕</button>
             </div>
             <div class="success-divider" style="margin-bottom: 18px;"></div>
@@ -170,11 +176,11 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
             <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">${safeName}</div>
             <div style="font-family: var(--font-main); font-size: 14px; color: #ddd; line-height: 1.6; margin-bottom: 22px;">
-                ${descText}: <b style="color: var(--accent-green, #00ff66); font-size: 16px; font-family: var(--font-mono);"><span class="bargain-price-val">${newPrice}</span> ${currencyText}</b>
+                ${escHtml(descText)}: <b style="color: var(--accent-green, #00ff66); font-size: 16px; font-family: var(--font-mono);"><span class="bargain-price-val">${newPrice}</span> ${escHtml(currencyText)}</b>
             </div>
 
             <button class="buy-tg-btn cart-add btn-target bargain-add-cart-btn" style="width: 100%; min-height: 52px; font-size: 16px; text-transform: uppercase; font-family: var(--font-main); font-weight: bold;">
-                ${buyBtnText}
+                ${escHtml(buyBtnText)}
             </button>
         </div>
     `;
@@ -195,10 +201,9 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         );
         if (!anyModalOpen) {
             document.body.style.overflow = '';
-            if (window.lenis && typeof window.lenis.start === 'function') {
-                window.lenis.start();
-            } else if (typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') {
-                lenis.start();
+            const activeLenisStart = getLenisInstance();
+            if (activeLenisStart && typeof activeLenisStart.start === 'function') {
+                activeLenisStart.start();
             }
         }
 
@@ -229,7 +234,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
             if (openByIdFn) {
                 openByIdFn(bargainData.itemId);
             } else if (openModalFn) {
-                const all = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+                const all = getRuntimeCatalog();
                 const found = all.find(i => String(i.id) === String(bargainData.itemId));
                 if (found) openModalFn(found);
             }
@@ -393,7 +398,7 @@ function handleIncomingSupportReply(r, sbClient) {
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
 
-        const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        const activeItem = getRuntimeOpenedItem();
         if (activeItem && String(activeItem.id) === String(parsed.itemId)) {
             const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
             if (offerPriceBtn) {
@@ -408,13 +413,14 @@ function handleIncomingSupportReply(r, sbClient) {
             }
             const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
             if (priceEl) {
-                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${parsed.originalPrice || activeItem.price} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${parsed.acceptedPrice} грн</span>`;
+                const escText = (v) => String(v ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escText(parsed.originalPrice || activeItem.price)} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escText(parsed.acceptedPrice)} грн</span>`;
             }
         }
 
         const updateCardFn = resolveAction('updateCardDOM');
         if (updateCardFn) {
-            const all = window.allItems || (typeof allItems !== 'undefined' ? allItems : []);
+            const all = getRuntimeCatalog();
             const match = all.find(i => i && String(i.id) === String(parsed.itemId));
             if (match) updateCardFn(match);
         }
@@ -468,7 +474,7 @@ function handleIncomingSupportReply(r, sbClient) {
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
 
-        const activeItem = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        const activeItem = getRuntimeOpenedItem();
         if (activeItem && String(activeItem.id) === String(parsed.itemId)) {
             const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
             if (offerPriceBtn) {
@@ -512,7 +518,7 @@ function handleIncomingSupportReply(r, sbClient) {
 
 // 1. Открытие модального окна поддержки
 function openSupportModalWindow() {
-    if (typeof lenis !== 'undefined') invokeAction('stopLenis');
+    if (getLenisInstance()) invokeAction('stopLenis');
     const input = document.getElementById('supportInput');
     if (input) input.value = ''; // Очищаем поле при открытии
     
@@ -555,11 +561,9 @@ async function submitSupportTicket() {
 
     const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
+    const activeUser = getRuntimeUser();
     const userContact = activeUser ? (activeUser.email || activeUser.phone || 'Аноним') : 'Гость';
-    const activeFingerprint = (typeof clientFingerprint !== 'undefined' && clientFingerprint) 
-        ? clientFingerprint 
-        : (window.clientFingerprint || 'guest_' + Date.now());
+    const activeFingerprint = getRuntimeFingerprint() || ('guest_' + Date.now());
 
     // Отправляем запрос на сервер в фоне с авто-повтором при сбое сети
     window.apiClient.post('/api/support', {
@@ -595,8 +599,8 @@ function debugChatLog(...args) {
 }
 
 function checkUnreadSupportReplies() {
-    const activeSb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
-    const activeFp = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : null);
+    const activeSb = getRuntimeSupabase();
+    const activeFp = getRuntimeFingerprint();
     const currentUid = (window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : null;
     if (!activeSb || (!activeFp && !currentUid)) return;
 
@@ -630,7 +634,7 @@ function checkUnreadSupportReplies() {
 }
 
 function subscribeUserRealtime(userId) {
-    const activeSb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    const activeSb = getRuntimeSupabase();
     if (!userId || !activeSb) return;
     const channelName = `support-replies-user-${userId}`;
     if (_userSupportChannel) {
@@ -652,15 +656,19 @@ window.subscribeUserRealtime = subscribeUserRealtime;
 
 function initSupportRepliesSystem() {
     if (_supportRepliesInitialized) return;
-    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
-    const fingerprint = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : null);
+    const sb = getRuntimeSupabase();
+    const fingerprint = getRuntimeFingerprint();
 
     if (!sb || !fingerprint) {
-        // Если Supabase или фингерпринт еще не готовы, пробуем повторить через 1 сек
-        setTimeout(initSupportRepliesSystem, 1000);
+        // Ожидаем событие готовности рантайма (с ограниченным резервным backoff при ленивой загрузке)
+        if (_supportInitRetries < MAX_SUPPORT_INIT_RETRIES) {
+            _supportInitRetries += 1;
+            setTimeout(initSupportRepliesSystem, 500 * _supportInitRetries);
+        }
         return;
     }
     _supportRepliesInitialized = true;
+    _supportInitRetries = 0;
 
     debugChatLog('[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:', fingerprint);
 
@@ -714,11 +722,23 @@ registerActions({
     initSupportRepliesSystem
 });
 
-// Автозапуск системы ответов после старта (с поддержкой ленивой подгрузки модуля)
-if (document.readyState === 'complete') {
-    setTimeout(initSupportRepliesSystem, 1500);
+onAppEvent('nisha:runtime-ready', () => {
+    if (!_supportRepliesInitialized) {
+        initSupportRepliesSystem();
+    }
+});
+
+// Автозапуск системы ответов после старта (событийно или в idle-окне при ленивой подгрузке)
+if (getRuntimeSupabase() && getRuntimeFingerprint()) {
+    initSupportRepliesSystem();
+} else if (document.readyState === 'complete') {
+    if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(() => initSupportRepliesSystem(), { timeout: 1500 });
+    } else {
+        setTimeout(initSupportRepliesSystem, 500);
+    }
 } else {
     window.addEventListener('load', () => {
-        setTimeout(initSupportRepliesSystem, 3000);
-    });
+        initSupportRepliesSystem();
+    }, { once: true });
 }

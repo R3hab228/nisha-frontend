@@ -24,6 +24,7 @@ import { renderModalSlider } from './product-gallery.js';
 import { addToHistory, renderSimilarItems } from './product-history.js';
 import { loadItemQuestions } from './product-qa.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getLenisInstance, isSiteHackedMode } from '../core/runtime-env.js';
 
 function closeSecondaryOverlays() {
     if (typeof closeModal !== 'function') return;
@@ -259,7 +260,10 @@ export function openProductModal(item) {
     }, 0);
 
     if (hasAction('stopLenis')) invokeAction('stopLenis');
-    else if (typeof lenis !== 'undefined') lenis.stop();
+    else {
+        const activeLenis = getLenisInstance();
+        if (activeLenis) activeLenis.stop();
+    }
 
     document.title = `NISHA | ${item.brand} - ${item.name}`;
 
@@ -283,7 +287,7 @@ export function openProductModal(item) {
         modalStar.classList.toggle('active', favs.includes(item.id));
     }
 
-    const isHackedActive = (typeof window !== 'undefined' && window.isHacked) || (typeof isHacked !== 'undefined' && isHacked);
+    const isHackedActive = isSiteHackedMode();
     const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
     const priceEl = document.getElementById('modalItemPrice');
     if (priceEl) {

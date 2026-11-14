@@ -3,6 +3,7 @@
 // ==========================================
 
 import { invokeAction, resolveAction } from '../core/action-registry.js';
+import { getRuntimeProfile, getRuntimeUser } from '../core/runtime-env.js';
 import {
     escAttr,
     escHtml,
@@ -157,8 +158,8 @@ export async function fetchMyOrders() {
     const sb = getSupabase();
     if (!sb) return;
 
-    const activeUser = (typeof window !== 'undefined' && window.currentUser) || (typeof currentUser !== 'undefined' ? currentUser : null);
-    const activeProfile = (typeof window !== 'undefined' && window.userProfile) || (typeof userProfile !== 'undefined' ? userProfile : null);
+    const activeUser = getRuntimeUser();
+    const activeProfile = getRuntimeProfile();
     invokeAction('bindOrdersTabSwipe');
 
     if (activeUser) {
@@ -249,7 +250,7 @@ export async function fetchMyOrders() {
                     : Promise.all(linkTasks.map(p => p.catch(() => null)));
 
                 settleHandler.then(async (results) => {
-                    const currentActiveUser = (typeof window !== 'undefined' && window.currentUser) || (typeof currentUser !== 'undefined' ? currentUser : null);
+                    const currentActiveUser = getRuntimeUser();
                     const newlyLinked = results.some(r => {
                         const val = r && r.status ? (r.status === 'fulfilled' ? r.value : null) : r;
                         return val && val.count > 0;

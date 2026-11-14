@@ -3,6 +3,7 @@
 // ==========================================
 
 import { invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeOpenedItem } from '../core/runtime-env.js';
 import { isPopoverOpenSafe } from '../core/helpers-pwa-browser.js';
 import { showConfirmTerminalModal } from '../core/helpers-toasts-modals.js';
 
@@ -41,7 +42,7 @@ function isUserInProductFeed() {
         // 2. СТРОГАЯ проверка карточки товара (productModal)
         const pModal = document.getElementById('productModal');
         if (isElementVisible(pModal)) return false;
-        if (window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' && currentOpenedItem)) {
+        if (getRuntimeOpenedItem()) {
             return false;
         }
 
@@ -305,9 +306,7 @@ function executeCloseModal(id, e) {
     if (id === 'productModal') {
         document.title = 'NISHA | Underground Store';
         window.currentOpenedItem = null;
-        if (typeof currentOpenedItem !== 'undefined') currentOpenedItem = null;
         window.currentSlide = 0;
-        if (typeof currentSlide !== 'undefined') currentSlide = 0;
         const sw = document.getElementById('sliderWrapper');
         if (sw && sw.style) {
             sw.style.transition = 'none';

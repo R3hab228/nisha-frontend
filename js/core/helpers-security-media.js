@@ -4,6 +4,7 @@
 
 import { hasAction, invokeAction, registerActions } from './action-registry.js';
 import { canParseURL, safeEncodeURIComponent } from './helpers-core-utils.js';
+import { getRuntimeCatalog, getRuntimeSupabase } from './runtime-env.js';
 
 /**
  * Rewrites Supabase Storage URLs to CDN and appends responsive image optimization query params.
@@ -182,9 +183,7 @@ if (typeof window !== 'undefined') window.isSafeMediaUrl = isSafeMediaUrl;
  * @returns {Object|null}
  */
 export function getSupabase() {
-    return (typeof window !== 'undefined' && window._supabase)
-        ? window._supabase
-        : (typeof _supabase !== 'undefined' ? _supabase : null);
+    return getRuntimeSupabase();
 }
 if (typeof window !== 'undefined') window.getSupabase = getSupabase;
 
@@ -193,9 +192,7 @@ if (typeof window !== 'undefined') window.getSupabase = getSupabase;
  * @returns {Array}
  */
 export function getCatalog() {
-    return (typeof window !== 'undefined' && window.allItems)
-        ? window.allItems
-        : (typeof allItems !== 'undefined' ? allItems : []);
+    return getRuntimeCatalog();
 }
 if (typeof window !== 'undefined') window.getCatalog = getCatalog;
 

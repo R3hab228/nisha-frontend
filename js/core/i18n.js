@@ -4,6 +4,7 @@
 
 import { emitAppEvent, invokeAction, registerActions } from './action-registry.js';
 import { getSupabase } from './helpers-security-media.js';
+import { getRuntimeStorage, getRuntimeUser } from './runtime-env.js';
 import { storage } from './helpers-storage-idb.js';
 import { showLanguageToast } from './helpers-toasts-modals.js';
 
@@ -88,7 +89,7 @@ function updateFooterLanguageUI(lang) {
 
 function setLang(lang) {
     const code = normalizeSiteLang(lang);
-    const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+    const store = getRuntimeStorage() || storage;
     if (store && typeof store.set === 'function') {
         store.set('nisha_lang', code);
         store.set('i18nextLng', code);
@@ -187,7 +188,7 @@ async function changeLanguage(lng) {
         await ensureLanguageLoaded(normalized);
         i18next.changeLanguage(normalized).then(() => {
             // ЖЕЛЕЗОБЕТОННОЕ сохранение через единый storage:
-            const store = window.storage || (typeof storage !== 'undefined' ? storage : null);
+            const store = getRuntimeStorage() || storage;
             if (store) {
                 store.set('nisha_lang', normalized); 
                 store.set('i18nextLng', normalized); 
@@ -223,7 +224,7 @@ async function changeLanguage(lng) {
                 }
             }
             
-            const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+            const activeUser = getRuntimeUser();
             const sb = getSupabase();
             if (activeUser && sb) {
                 sb.from('profiles').update({ language: normalized }).eq('id', activeUser.id).then();

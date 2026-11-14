@@ -316,12 +316,6 @@ registerActions({
     clearNPCache
 });
 
-if (typeof window !== 'undefined') {
-    window.slimBranches = slimBranches;
-    window.getNPStorage = getNPStorage;
-    window.cleanupStaleNPCache = cleanupStaleNPCache;
-}
-
 /**
  * Автоматический запуск проверки устаревшего кэша в idle-время раз в 24 часа
  */

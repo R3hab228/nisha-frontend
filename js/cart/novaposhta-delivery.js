@@ -929,6 +929,5 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.searchNPCity = searchNPCity;
     window.ensureBranchRef = ensureBranchRef;
 }

@@ -3,6 +3,7 @@
 // ==========================================
 
 import { resolveAction } from '../core/action-registry.js';
+import { getRuntimeStorage } from '../core/runtime-env.js';
 
 function getReactiveStore() {
     if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
@@ -76,9 +77,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function getStorage() {
-    if (typeof window !== 'undefined' && window.storage) return window.storage;
-    if (typeof storage !== 'undefined') return storage;
-    return null;
+    return getRuntimeStorage();
 }
 
 export function getSupabase() {

@@ -19,6 +19,7 @@ import { _npNorm } from './novaposhta-helpers.js';
 import { ensureCityRef, ensureBranchRef } from './novaposhta-delivery.js';
 import { clearCheckoutDraft } from './checkout-form.js';
 import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+import { getRuntimeUser, getRuntimeProfile, getRuntimeFingerprint, getRuntimeStorage } from '../core/runtime-env.js';
 
 /**
  * Нормализует телефон к международному формату `+380...`.
@@ -75,8 +76,8 @@ export async function submitOrder() {
     const botTrap = document.getElementById('botTrap');
     if (botTrap && botTrap.value !== '') return;
 
-    const activeUser = (typeof currentUser !== 'undefined') ? currentUser : (window.currentUser || null);
-    const activeProfile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+    const activeUser = getRuntimeUser();
+    const activeProfile = getRuntimeProfile();
     if (activeUser && activeProfile && activeProfile.phone && activeProfile.phone.trim()) {
         const ordPhone = document.getElementById('orderPhone');
         if (ordPhone) ordPhone.value = activeProfile.phone.trim();
@@ -169,7 +170,7 @@ export async function submitOrder() {
         return;
     }
 
-    const store = (typeof window !== 'undefined' && window.storage) || (typeof storage !== 'undefined' ? storage : null);
+    const store = getRuntimeStorage();
     const savedEmailPreference = store ? store.get('nisha_email_preference') : null;
 
     if (savedEmailPreference === 'skipped') {
@@ -247,7 +248,7 @@ export async function confirmEmailPrompt(wantsEmail) {
 
     const prompt = document.getElementById('emailPromptOverlay');
     const emailInput = document.getElementById('promptEmailInput');
-    const store = (typeof window !== 'undefined' && window.storage) || (typeof storage !== 'undefined' ? storage : null);
+    const store = getRuntimeStorage();
     let finalEmail = '';
 
     if (wantsEmail) {
@@ -393,7 +394,7 @@ export async function executeOrderFinal(emailToSave) {
 
             // 1. ОСНОВНОЙ ПУТЬ: Атомарное оформление через защищенный сервер (/api/create-order)
             try {
-                const activeClientId = (typeof clientFingerprint !== 'undefined' ? clientFingerprint : window.clientFingerprint) || (user ? user.id : null) || ('guest_' + Date.now());
+                const activeClientId = getRuntimeFingerprint() || (user ? user.id : null) || ('guest_' + Date.now());
                 const serverOrderRes = await window.apiClient.post('/api/create-order', {
                     userId: user ? user.id : null,
                     clientId: String(activeClientId),
@@ -533,7 +534,7 @@ export async function executeOrderFinal(emailToSave) {
                 });
             }
 
-            const store = (typeof window !== 'undefined' && window.storage) || (typeof storage !== 'undefined' ? storage : null);
+            const store = getRuntimeStorage();
             if (store) {
                 store.set('nisha_last_phone', phone);
                 store.set('nisha_last_order', Date.now());

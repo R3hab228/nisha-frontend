@@ -4,6 +4,7 @@
 
 import { store, storage, apiClient, showToast } from '../../src/modules/index.js';
 import { invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeSupabase, getTurnstileApi } from '../core/runtime-env.js';
 
 // --- CLOUDFLARE TURNSTILE (CAPTCHA / BOT SHIELD) ---
 const locHost = (typeof window !== 'undefined' && window.location && window.location.hostname) || '';
@@ -32,8 +33,9 @@ let _checkActiveOtp = null;
 window._turnstilePropToken = null;
 
 function ensureTurnstileLoaded() {
-    if (typeof turnstile !== 'undefined') {
-        return Promise.resolve(turnstile);
+    const existingTs = getTurnstileApi();
+    if (existingTs) {
+        return Promise.resolve(existingTs);
     }
     if (_turnstileLoadPromise) {
         return _turnstileLoadPromise;
@@ -53,10 +55,11 @@ function ensureTurnstileLoaded() {
 
     const existing = document.querySelector('script[src*="challenges.cloudflare.com/turnstile/v0/api.js"]');
     if (existing) {
-        if (typeof turnstile !== 'undefined') {
-            resolve(turnstile);
+        const tsApi = getTurnstileApi();
+        if (tsApi) {
+            resolve(tsApi);
         } else {
-            existing.addEventListener('load', () => resolve(typeof turnstile !== 'undefined' ? turnstile : null), { once: true });
+            existing.addEventListener('load', () => resolve(getTurnstileApi()), { once: true });
             existing.addEventListener('error', () => {
                 _turnstileLoadPromise = null;
                 resolve(null);
@@ -69,7 +72,7 @@ function ensureTurnstileLoaded() {
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
     script.async = true;
     script.defer = true;
-    script.onload = () => resolve(typeof turnstile !== 'undefined' ? turnstile : null);
+    script.onload = () => resolve(getTurnstileApi());
     script.onerror = () => {
         _turnstileLoadPromise = null;
         resolve(null);
@@ -81,11 +84,12 @@ function ensureTurnstileLoaded() {
 window.ensureTurnstileLoaded = ensureTurnstileLoaded;
 
 function initTurnstileOtpWidget() {
-    if (typeof turnstile === 'undefined') return;
+    const ts = getTurnstileApi();
+    if (!ts) return;
     const otpContainer = document.getElementById('turnstile-otp-container');
     if (otpContainer && turnstileOtpWidgetId === null) {
         try {
-            turnstileOtpWidgetId = turnstile.render('#turnstile-otp-container', {
+            turnstileOtpWidgetId = ts.render('#turnstile-otp-container', {
                 sitekey: TURNSTILE_SITE_KEY,
                 size: 'compact',
                 callback: function(token) {
@@ -105,11 +109,12 @@ function initTurnstileOtpWidget() {
 }
 
 function initTurnstilePropWidget() {
-    if (typeof turnstile === 'undefined') return;
+    const ts = getTurnstileApi();
+    if (!ts) return;
     const propContainer = document.getElementById('turnstile-prop-container');
     if (propContainer && turnstilePropWidgetId === null) {
         try {
-            turnstilePropWidgetId = turnstile.render('#turnstile-prop-container', {
+            turnstilePropWidgetId = ts.render('#turnstile-prop-container', {
                 sitekey: TURNSTILE_SITE_KEY,
                 size: 'compact',
                 callback: function(token) {
@@ -130,13 +135,13 @@ function initTurnstilePropWidget() {
 }
 
 function initTurnstileWidgets() {
-    if (typeof turnstile !== 'undefined') {
+    if (getTurnstileApi()) {
         initTurnstileOtpWidget();
         initTurnstilePropWidget();
         return;
     }
     ensureTurnstileLoaded().then((ts) => {
-        if (ts || typeof turnstile !== 'undefined') {
+        if (ts || getTurnstileApi()) {
             initTurnstileOtpWidget();
             initTurnstilePropWidget();
         }
@@ -173,7 +178,7 @@ function getUserTg() {
     return (storage ? storage.get('nisha_last_tg', '') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_last_tg') : '') || '').trim();
 }
 
-function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
+export function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
     if (!inputPhone || !verifiedPhone) return false;
     const cleanA = String(inputPhone).replace(/\D/g, '');
     const cleanB = String(verifiedPhone).replace(/\D/g, '');
@@ -185,7 +190,7 @@ function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
     return false;
 }
 
-function setOtpButtonSuccess(btnOtp) {
+export function setOtpButtonSuccess(btnOtp) {
     if (!btnOtp) return;
     const successText = typeof i18next !== 'undefined'
         ? i18next.t('checkout.btn_otp_success', { defaultValue: 'УСПЕХ ✓' })
@@ -203,7 +208,7 @@ function setOtpButtonSuccess(btnOtp) {
     btnOtp.innerHTML = `<span style="color:var(--accent-green, #00ff00); font-weight:bold; font-family:var(--font-mono); letter-spacing:0.5px;">${successText}</span>`;
 }
 
-function setOtpButtonDefault(btnOtp) {
+export function setOtpButtonDefault(btnOtp) {
     if (!btnOtp) return;
     const defaultText = typeof i18next !== 'undefined'
         ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' })
@@ -306,7 +311,7 @@ window.otpVerified = otpVerified;
 let otpInterval = null;
 
 async function checkPhoneAuth() {
-    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    const sb = getRuntimeSupabase();
     const btnSubmit = document.getElementById('btnSubmitOrder');
     const btnOtp = document.getElementById('btnGetOtp');
     const statusOtp = document.getElementById('otpStatus');
@@ -392,7 +397,7 @@ async function checkPhoneAuth() {
 window.checkPhoneAuth = checkPhoneAuth;
 
 async function generateAndSendOTP() {
-    const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
+    const sb = getRuntimeSupabase();
     const rawPhone = document.getElementById('orderPhone')?.value || '';
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
     
@@ -413,7 +418,8 @@ async function generateAndSendOTP() {
 
     // Токен Turnstile из памяти
     const widgetId = turnstileOtpWidgetId;
-    let turnToken = _turnstileOtpToken || (typeof turnstile !== 'undefined' && widgetId !== null && widgetId !== undefined ? turnstile.getResponse(widgetId) : null);
+    const tsApi = getTurnstileApi();
+    let turnToken = _turnstileOtpToken || (tsApi && widgetId !== null && widgetId !== undefined ? tsApi.getResponse(widgetId) : null);
     
     // Блокируем кнопку от двойных нажатий
     btnOtp.disabled = true;
@@ -426,8 +432,8 @@ async function generateAndSendOTP() {
             const vData = await apiClient.post('/api/verify-turnstile', { token: turnToken }, { timeout: 8000 });
             if (!vData || !vData.success) {
                 showToast(typeof i18next !== 'undefined' ? i18next.t('auth.turnstile_err', { defaultValue: 'Ошибка проверки безопасности Turnstile' }) : 'Ошибка проверки безопасности Turnstile', 'error');
-                if (typeof turnstile !== 'undefined' && widgetId !== null && widgetId !== undefined) {
-                    turnstile.reset(widgetId);
+                if (tsApi && widgetId !== null && widgetId !== undefined) {
+                    tsApi.reset(widgetId);
                 }
                 _turnstileOtpToken = null;
                 setOtpButtonDefault(btnOtp);
@@ -588,9 +594,3 @@ registerActions({
     checkPhoneAuth,
     generateAndSendOTP
 });
-
-if (typeof window !== 'undefined') {
-    window.isPhoneMatchingVerified = isPhoneMatchingVerified;
-    window.setOtpButtonSuccess = setOtpButtonSuccess;
-    window.setOtpButtonDefault = setOtpButtonDefault;
-}

@@ -180,8 +180,5 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.getOptimizedImageUrl = getOptimizedImageUrl;
-    window.prefetchItemImages = prefetchItemImages;
-    window.cancelPrefetchItemImages = cancelPrefetchItemImages;
     window.isSafeMediaUrl = isSafeMediaUrl;
 }

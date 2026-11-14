@@ -6,6 +6,7 @@ import { getCatalogStore, getSupabaseClient } from './catalog-state.js';
 import { updateCardDOM, insertNewItemCardSmoothly } from './catalog-grid.js';
 import { applyFilters, updateSidebarCounters } from './catalog-filters.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeProfile, getRuntimeOpenedItem } from '../core/runtime-env.js';
 
 const ITEM_FULL_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price';
 const ITEM_LEGACY_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable';
@@ -246,7 +247,7 @@ export async function loadAllItems() {
     }
 
     // 3. ИСТОРИЯ ПРОСМОТРОВ
-    const profile = (typeof userProfile !== 'undefined') ? userProfile : (window.userProfile || null);
+    const profile = getRuntimeProfile();
     if (profile && profile.viewed_history && profile.viewed_history.length > 0) {
         const dbHistory = [];
         profile.viewed_history.forEach(uuid => {
@@ -369,7 +370,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
             countEl.innerText = window.filteredItems.length;
         }
 
-        const activeModal = window.currentOpenedItem || (typeof currentOpenedItem !== 'undefined' ? currentOpenedItem : null);
+        const activeModal = getRuntimeOpenedItem();
         if (activeModal && String(activeModal.id) === String(delId) && typeof closeModal === 'function') {
             closeModal('productModal');
         }
@@ -738,7 +739,6 @@ registerActions({
 if (typeof window !== 'undefined') {
     window.loadAllItems = loadAllItems;
     window.removeSoldItemFromCart = removeSoldItemFromCart;
-    window.handleRealtimeCatalogEvent = handleRealtimeCatalogEvent;
     window.initCatalogRealtimeSubscription = initCatalogRealtimeSubscription;
     window.syncCriticalStatuses = syncCriticalStatuses;
 }

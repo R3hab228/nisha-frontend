@@ -43,6 +43,7 @@ class MockStorage {
 
 describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
     let mockIdbMap = new Map();
+    let cartExports;
 
     beforeAll(async () => {
         globalThis.Storage = MockStorage;
@@ -96,7 +97,7 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
         globalThis.window.apiClient = globalThis.apiClient;
 
         await import('../js/core/store.js');
-        await import('../js/cart/cart.js');
+        cartExports = await import('../js/cart/cart.js');
     });
 
     beforeEach(() => {
@@ -110,7 +111,7 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
     });
 
     it('slimBranches compresses verbose Nova Poshta API warehouse objects', () => {
-        const { slimBranches } = window;
+        const { slimBranches } = cartExports;
         expect(typeof slimBranches).toBe('function');
 
         const rawList = [
@@ -233,7 +234,7 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
     });
 
     it('searchNPCity uses getNPStorageAsync to return cached results from IndexedDB without API call', async () => {
-        const { searchNPCity, setNPStorage } = window;
+        const { searchNPCity, setNPStorage } = cartExports;
 
         const cachedKyiv = {
             success: true,
@@ -248,7 +249,7 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
     });
 
     it('getNPStorage checks TTL and returns null when in-memory entry is expired', () => {
-        const { setNPStorage, getNPStorage } = window;
+        const { setNPStorage, getNPStorage } = cartExports;
 
         setNPStorage('branchall_exp_sync', [{ Ref: 'r1', Description: 'D1' }], -1000); // negative TTL = already expired
         const res = getNPStorage('branchall_exp_sync');
@@ -256,7 +257,7 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
     });
 
     it('trims in-memory cache to prevent memory leaks when inserting over 150 items', () => {
-        const { setNPStorage, getNPStorage } = window;
+        const { setNPStorage, getNPStorage } = cartExports;
 
         for (let i = 0; i < 160; i++) {
             setNPStorage(`key_${i}`, { data: i });
@@ -279,7 +280,7 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
     });
 
     it('cleanupStaleNPCache sweeps expired and corrupt records while retaining fresh ones', async () => {
-        const { cleanupStaleNPCache, setNPStorage } = window;
+        const { cleanupStaleNPCache, setNPStorage } = cartExports;
         expect(typeof cleanupStaleNPCache).toBe('function');
 
         // Fresh item (1 hour old)
@@ -308,7 +309,7 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
     });
 
     it('clearNPCache purges all NP cache entries across IndexedDB, sessionStorage and memory', async () => {
-        const { setNPStorage, clearNPCache, getNPStorage } = window;
+        const { setNPStorage, clearNPCache, getNPStorage } = cartExports;
 
         setNPStorage('branchall_to_wipe1', [{ Ref: 'w1' }]);
         setNPStorage('city_to_wipe2', [{ Ref: 'w2' }]);

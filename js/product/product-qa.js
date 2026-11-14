@@ -9,6 +9,7 @@ import {
     getUser
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeProfile } from '../core/runtime-env.js';
 
 /**
  * Expands or collapses the inline question submission form.
@@ -75,7 +76,7 @@ export async function submitQuestion(itemId) {
 
     const runSubmitQuestion = async () => {
         try {
-            const profile = (typeof userProfile !== 'undefined') ? userProfile : ((typeof window !== 'undefined' && window.userProfile) || null);
+            const profile = getRuntimeProfile();
             const userDisplayName = hasAction('getUserDisplayName')
                 ? invokeAction('getUserDisplayName', currentUser, profile)
                 : (profile?.username || currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || (currentUser.email ? currentUser.email.split('@').at(0) : 'User'));
@@ -135,9 +136,15 @@ export async function loadItemQuestions(itemId) {
         if (typeof list.replaceChildren === 'function') list.replaceChildren();
         else list.innerHTML = '';
 
+        const escEntity = (s) => String(s ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
         const sanitize = hasAction('sanitizeText')
             ? (s) => invokeAction('sanitizeText', s)
-            : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            : escEntity;
 
         let listHtml = '';
         data.forEach(q => {

@@ -14,6 +14,7 @@ import {
     applyOfferButtonState
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { getRuntimeFingerprint } from '../core/runtime-env.js';
 
 const BARGAIN_RATE_LIMIT_STORAGE_KEY = 'nisha_bargain_offers_history';
 const BARGAIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -509,7 +510,7 @@ export function bindBargainKeyboardShortcuts() {
  */
 export async function syncUserBargains() {
     try {
-        const fp = (typeof window !== 'undefined' && window.clientFingerprint) || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : '');
+        const fp = (getRuntimeFingerprint() || '');
         const uid = (typeof window !== 'undefined' && window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : '';
         if (!fp && !uid) return;
 
