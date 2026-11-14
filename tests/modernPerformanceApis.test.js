@@ -13,6 +13,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vite
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
+import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -105,7 +106,7 @@ describe('Modern Performance APIs Suite', () => {
 
     describe('2. Back/Forward Cache (bfcache) + pageshow (event.persisted)', () => {
         it('pwa-network.js registers pageshow and pagehide lifecycle listeners for bfcache restoration', () => {
-            const pwaCode = readFileSync(resolve(import.meta.dirname, '../js/core/pwa-network.js'), 'utf8');
+            const pwaCode = readPwaNetworkSource();
             expect(pwaCode).toContain('window.addEventListener("pageshow"');
             expect(pwaCode).toContain('event.persisted');
             expect(pwaCode).toContain('[BFCache]');

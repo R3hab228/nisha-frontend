@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
 
 describe('Service Worker & PWA Cache Automation', () => {
     const rootSwPath = resolve(process.cwd(), 'sw.js');
@@ -46,7 +47,7 @@ describe('Service Worker & PWA Cache Automation', () => {
     it('pwa-network.js uses APP_BUILD_ID to form dynamic cache version and SW URL', () => {
         const pwaPath = resolve(process.cwd(), 'js', 'core', 'pwa-network.js');
         expect(existsSync(pwaPath)).toBe(true);
-        const pwaContent = readFileSync(pwaPath, 'utf8');
+        const pwaContent = readPwaNetworkSource();
 
         expect(pwaContent).toContain("const APP_BUILD_ID = (typeof __BUILD_ID__ !== 'undefined') ? __BUILD_ID__ : 'dev'");
         expect(pwaContent).toContain("const APP_SW_VERSION = 'nisha-cache-' + APP_BUILD_ID");

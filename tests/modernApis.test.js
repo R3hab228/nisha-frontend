@@ -5,6 +5,7 @@ import { readCartSource } from './helpers/readCartSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
 import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readProfileSource } from './helpers/readProfileSource.js';
+import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -384,7 +385,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'core/helpers-search-address.js',
                 'core/helpers-toasts-modals.js',
                 'core/helpers-pwa-browser.js',
-                'core/helpers-delegation.js'
+                'core/helpers-delegation.js',
+                'core/pwa-network.js',
+                'core/pwa-sw-versioning.js',
+                'core/pwa-telemetry.js',
+                'core/pwa-lifecycle.js',
+                'core/pwa-push.js',
+                'core/pwa-pull-refresh.js'
             ];
             for (const relPath of files) {
                 const code = readFileSync(resolve(__dirname, '../js', relPath), 'utf8');
@@ -530,6 +537,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'core/helpers-toasts-modals.js',
                 'core/helpers-pwa-browser.js',
                 'core/helpers-delegation.js',
+                'core/pwa-network.js',
+                'core/pwa-sw-versioning.js',
+                'core/pwa-telemetry.js',
+                'core/pwa-lifecycle.js',
+                'core/pwa-push.js',
+                'core/pwa-pull-refresh.js',
                 'drop/drop.js',
                 'orders/orders.js',
                 'product/product.js',
@@ -1906,7 +1919,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('includes Sentry fallback CDN in pwa-network.js for adblock resilience', () => {
-            const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+            const pwaCode = readPwaNetworkSource();
             expect(pwaCode).toContain('https://browser.sentry-cdn.com/8.38.0/bundle.min.js');
             expect(pwaCode).toContain('https://cdn.jsdelivr.net/npm/@sentry/browser@8.38.0/bundle.min.js');
         });
@@ -2193,7 +2206,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(helpersCode).toContain('db.onclose = () => { _dbPromise = null; };');
             expect(helpersCode).toContain('db.onversionchange');
 
-            const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+            const pwaCode = readPwaNetworkSource();
             expect(pwaCode).toContain('/database connection is closing/i');
             expect(pwaCode).toContain('/IDBDatabase/i');
         });
@@ -2937,7 +2950,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('identifies and ignores ViewTransition viewport abort errors in telemetry', () => {
-            const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+            const pwaCode = readPwaNetworkSource();
             expect(pwaCode).toContain('/Transition was aborted/i');
             expect(pwaCode).toContain('/Viewport size changed/i');
             expect(pwaCode).toContain('/ViewTransition/i');
@@ -2948,7 +2961,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('identifies and ignores cross-origin frame security errors in telemetry', () => {
-            const pwaCode = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf8');
+            const pwaCode = readPwaNetworkSource();
             expect(pwaCode).toContain('/Blocked a frame with origin/i');
             expect(pwaCode).toContain('/cross-origin frame/i');
             expect(pwaCode).toContain('/Protocols, domains, and ports must match/i');

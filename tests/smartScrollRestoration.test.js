@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
+import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -174,8 +175,7 @@ describe('Smart Feed Scroll Restoration Engine', () => {
     });
 
     it('6. pwa-network.js resets saved scroll on manual pull-to-refresh at feed top', () => {
-        const pwaPath = path.resolve(process.cwd(), 'js/core/pwa-network.js');
-        const code = fs.readFileSync(pwaPath, 'utf8');
+        const code = readPwaNetworkSource();
 
         expect(code).toContain('window.clearSavedFeedScrollState()');
     });

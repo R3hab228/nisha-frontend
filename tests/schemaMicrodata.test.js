@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readProductSource } from './helpers/readProductSource.js';
+import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -51,8 +52,7 @@ describe('JSON-LD & Schema.org Microdata Robustness', () => {
     });
 
     it('pwa-network.js filters out @context errors in IGNORED_ERROR_PATTERNS', () => {
-        const pwaNetworkPath = path.resolve(__dirname, '../js/core/pwa-network.js');
-        const pwaNetworkContent = fs.readFileSync(pwaNetworkPath, 'utf8');
+        const pwaNetworkContent = readPwaNetworkSource();
 
         expect(pwaNetworkContent).toContain('/@context/i');
     });
