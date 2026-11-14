@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
+import { readProductSource } from './helpers/readProductSource.js';
 import * as helpers from '../src/modules/helpers.js';
 import * as cart from '../src/modules/cart.js';
 import fs from 'node:fs';
@@ -401,7 +402,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         it('catalog.js, reviews.js, product.js, chat.js use safeTruncateText', () => {
             const catCode = readCatalogSource();
             const revCode = fs.readFileSync(path.resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
-            const prodCode = fs.readFileSync(path.resolve(__dirname, '../js/product/product.js'), 'utf8');
+            const prodCode = readProductSource();
             const chatCode = fs.readFileSync(path.resolve(__dirname, '../js/chat/chat.js'), 'utf8');
 
             expect(catCode).toContain('safeTruncateText');

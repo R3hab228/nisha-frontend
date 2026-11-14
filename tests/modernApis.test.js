@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from 'vite
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
+import { readProductSource } from './helpers/readProductSource.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -352,6 +353,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'cart/checkout-form.js',
                 'cart/checkout-submit.js',
                 'product/product.js',
+                'product/product-state.js',
+                'product/product-gallery.js',
+                'product/product-history.js',
+                'product/product-qa.js',
+                'product/product-bargain.js',
+                'product/product-modal.js',
                 'profile/profile.js',
                 'catalog/catalog.js',
                 'catalog/catalog-state.js',
@@ -503,6 +510,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'drop/drop.js',
                 'orders/orders.js',
                 'product/product.js',
+                'product/product-state.js',
+                'product/product-gallery.js',
+                'product/product-history.js',
+                'product/product-qa.js',
+                'product/product-bargain.js',
+                'product/product-modal.js',
                 'profile/profile.js',
                 'reviews/reviews.js'
             ];
@@ -2031,7 +2044,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain('window.getActiveCart = getActiveCart;');
             expect(cartCode).toContain('window.setActiveCart = setActiveCart;');
 
-            const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             expect(productCode).toContain('window.getActiveCart');
             expect(productCode).toContain('String(i.id) === String(item.id)');
         });
@@ -2241,7 +2254,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(ordersCode).toContain("order.id.split('-').at(0).toUpperCase()");
 
             // Verify product.js uses .at()
-            const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             expect(productCode).toContain('data.at(0)');
             expect(productCode).toContain('archData.at(0)');
 
@@ -2397,7 +2410,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('31. History items HOT badge arrow SVG and desktop PC seamless marquee banner', () => {
-            const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             // History badge must contain the HOT trending arrow SVG matching the feed
             expect(productCode).toContain('polyline points="23 6 13.5 15.5 8.5 10.5 1 18"');
             expect(productCode).toContain('polyline points="17 6 23 6 23 12"');
@@ -2938,7 +2951,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
     describe('31. Smart Product Modal Pre-warm & Speculative Data Preloading', () => {
         it('declares and exposes prewarmProductModal, cancelPrewarmProductModal, and _prewarmedItemDetails', () => {
-            const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             expect(productCode).toContain('function prewarmProductModal(id, immediate = false)');
             expect(productCode).toContain('function cancelPrewarmProductModal(id)');
             expect(productCode).toContain('window.prewarmProductModal = prewarmProductModal');
@@ -3195,7 +3208,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     describe('53. Secure Deal Shield Icon Checkmark', () => {
         it('renders shield with inner checkmark in index.html and js/product/product.js', () => {
             const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
-            const productJs = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productJs = readProductSource();
 
             expect(html).toContain('m9 12 2 2 4-4');
             expect(productJs).toContain('m9 12 2 2 4-4');
@@ -3398,7 +3411,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     describe('32. Catalog Performance: Date.parse() instead of new Date().getTime()', () => {
         it('verifies Date.parse() is used across catalog, product, orders, and reviews with zero .getTime()', () => {
             const catalogCode = readCatalogSource();
-            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             const ordersCode = readFileSync(resolve(import.meta.dirname, '../js/orders/orders.js'), 'utf8');
             const reviewsCode = readFileSync(resolve(import.meta.dirname, '../js/reviews/reviews.js'), 'utf8');
 
@@ -3666,7 +3679,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('46. Bargain offer broadcast styling, unclickable accepted/declined buttons, and cart brackets removal', () => {
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
-            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             const cssCode = readProjectCss();
             const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
             const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
@@ -3747,7 +3760,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('48. Proposal bargain toggle ([ + ТОРГ ]), validation >= 100 UAH, green gavel badge, and fallback', () => {
             const htmlCode = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
             const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
-            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             const catalogCode = readCatalogSource();
             const cssCode = readProjectCss();
             const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
@@ -3812,7 +3825,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('49. Offer modal deduplication / memory (localStorage nisha_shown_bargain_popups) and rate limiting (max 2 offers per 10 mins)', () => {
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
-            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             const rootLocales = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales.json'), 'utf8'));
             const pubLocales = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales.json'), 'utf8'));
             const pubRu = JSON.parse(readFileSync(resolve(import.meta.dirname, '../public/locales/ru.json'), 'utf8'));
@@ -3852,7 +3865,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('50. Feed strikethrough price, badge minimum bid text, description [ТОРГ] sanitization, and buyer TG/phone priority contact', () => {
             const catalogCode = readCatalogSource();
-            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
 
             // 1. Catalog feed renders strikethrough price and yellow agreed price when accepted bargain exists
@@ -3876,7 +3889,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('51. Cross-device account synchronization for bargains (userId in offer payload, active bargains sync & Realtime multi-device support)', () => {
-            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             const profileCode = readFileSync(resolve(import.meta.dirname, '../js/profile/profile.js'), 'utf8');
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
             const catalogCode = readCatalogSource();
@@ -3905,7 +3918,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('52. Audit fixes: drop proposal bargain toast fix, Backspace unhijacked, pending offer persisted across modal closes, and cart availability safe sold check', () => {
             const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
             const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
-            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             const cartCode = readCartSource();
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
 
@@ -3958,7 +3971,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('54. Deep Bargain System Audit: Enter key handlers, pointerEvents preservation, clean descriptions, badge i18n guard, queued popup seen-timing, and feed addToCart bargain price', () => {
             const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
             const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
-            const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
+            const productCode = readProductSource();
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
             const catalogCode = readCatalogSource();
             const cartCode = readCartSource();

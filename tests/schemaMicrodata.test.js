@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readProductSource } from './helpers/readProductSource.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -42,8 +43,7 @@ describe('JSON-LD & Schema.org Microdata Robustness', () => {
     });
 
     it('product.js uses textContent and standard https://schema.org', () => {
-        const productJsPath = path.resolve(__dirname, '../js/product/product.js');
-        const productJsContent = fs.readFileSync(productJsPath, 'utf8');
+        const productJsContent = readProductSource();
 
         expect(productJsContent).toContain('schemaScript.textContent = JSON.stringify(schemaData);');
         expect(productJsContent).not.toContain('schemaScript.innerText = JSON.stringify(schemaData);');

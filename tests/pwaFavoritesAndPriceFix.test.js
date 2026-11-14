@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
+import { readProductSource } from './helpers/readProductSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -120,7 +121,7 @@ describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixe
     });
 
     describe('4. History Section Windows 95 Close Button Styling & Touch Accessibility', () => {
-        const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf-8');
+        const productJs = readProductSource();
         const localesRu = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf-8')).ru.translation.history;
         const localesUa = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf-8')).ua.translation.history;
         const localesEn = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf-8')).en.translation.history;

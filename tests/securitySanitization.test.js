@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
+import { readProductSource } from './helpers/readProductSource.js';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -426,7 +427,7 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(helpersCode).not.toContain('window.showMeasurementSchemeModal');
 
         // 5. Verify product.js does NOT contain scheme functions
-        const productCode = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        const productCode = readProductSource();
         expect(productCode).not.toContain('function detectItemClothingType');
         expect(productCode).not.toContain('function parseItemMeasurementParams');
         expect(productCode).not.toContain('function generateMeasurementSchemeSvg');

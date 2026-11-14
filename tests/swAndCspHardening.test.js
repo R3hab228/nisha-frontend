@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
+import { readProductSource } from './helpers/readProductSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -72,7 +73,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('6. catalog.js deduplicates foreground sync events with cooldown and uses 25s polling; product.js uses async image decoding', () => {
         const catalog = readCatalogSource();
-        const product = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        const product = readProductSource();
 
         expect(catalog).toContain('const triggerForegroundSync = () =>');
         expect(catalog).toContain('if (now - _lastForegroundSyncAt < 2500) return;');
@@ -207,7 +208,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     it('16. withButtonBusy protects question and review submit buttons against double clicks', () => {
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
         const style = readProjectCss();
-        const product = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        const product = readProductSource();
         const reviews = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
 
         expect(helpers).toContain('async function withButtonBusy(');
@@ -228,7 +229,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('18. product modal opens smoothly at 190ms with pointerdown prewarm decode, cached thumb placeholder, and slower typewriter across modals', () => {
-        const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        const productJs = readProductSource();
         const catalogJs = readCatalogSource();
         const style = readProjectCss();
 
@@ -246,7 +247,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('19. product modal displays publish date next to views counter separated by a dot in unified muted mono style', () => {
         const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-        const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
+        const productJs = readProductSource();
         const style = readProjectCss();
 
         expect(html).toContain('class=item-meta-row');

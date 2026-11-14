@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
+import { readProductSource } from './helpers/readProductSource.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -166,8 +167,7 @@ describe('Smart Feed Scroll Restoration Engine', () => {
     });
 
     it('5. product.js captures clicked item and pre-modal scroll on card opening', () => {
-        const prodPath = path.resolve(process.cwd(), 'js/product/product.js');
-        const code = fs.readFileSync(prodPath, 'utf8');
+        const code = readProductSource();
 
         expect(code).toContain('window._preModalScrollY = window.scrollY');
         expect(code).toContain('window.saveCurrentFeedScrollState(item.id)');
