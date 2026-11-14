@@ -2344,6 +2344,9 @@ function handleDelegatedAction(e) {
     }
     if (!actionEl) return;
     if (actionEl.disabled || (typeof actionEl.hasAttribute === 'function' && actionEl.hasAttribute('disabled'))) return;
+    if (actionEl.tagName === 'A' && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+    }
 
     // ЗАЩИТА ОТ КЛИК-СКВОЗЬ (GHOST CLICKS / CLICK BLEED-THROUGH):
     // Если на странице открыто или анимирует закрытие модальное окно, блокируем клики по фоновым элементам

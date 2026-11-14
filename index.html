@@ -192,11 +192,11 @@
 <span class=typewriter>[ NISHA ]</span>
 </h1>
 <nav class=top-nav>
-<a href=javascript:void(0) data-action="reset-to-main" data-i18n=nav.home>ГЛАВНАЯ</a>
-<a href=javascript:void(0) data-action="filter-favorites" id=favNav><span data-i18n=nav.favorites>ИЗБРАННОЕ</span> <span id=favCountBadge>[0]</span></a>
-<a href=javascript:void(0) data-action="open-reviews" style=color:var(--accent-yellow) data-i18n=nav.reviews>ОТЗЫВЫ</a>
-<a href=javascript:void(0) data-action="open-orders" style=color:#0af data-i18n=nav.orders>МОИ ЗАКАЗЫ</a>
-<a href=javascript:void(0) data-action="open-profile" class=mobile-profile-link style=color:#f0f data-i18n=nav.profile>ПРОФИЛЬ</a>
+<a href="#" data-action="reset-to-main" data-i18n=nav.home>ГЛАВНАЯ</a>
+<a href="#" data-action="filter-favorites" id=favNav><span data-i18n=nav.favorites>ИЗБРАННОЕ</span> <span id=favCountBadge>[0]</span></a>
+<a href="#" data-action="open-reviews" style=color:var(--accent-yellow) data-i18n=nav.reviews>ОТЗЫВЫ</a>
+<a href="#" data-action="open-orders" style=color:#0af data-i18n=nav.orders>МОИ ЗАКАЗЫ</a>
+<a href="#" data-action="open-profile" class=mobile-profile-link style=color:#f0f data-i18n=nav.profile>ПРОФИЛЬ</a>
 </nav>
 </div>
 <div class=marquee-container role="region" aria-label="Announcement">
@@ -231,12 +231,12 @@
 <div class=filter-box>
 <div class=filter-title data-i18n=sidebar.categories>КАТЕГОРИИ</div>
 <ul class=filter-list>
-<li><a href=javascript:void(0) data-action="set-category-filter" data-category="" class=active-filter data-i18n=sidebar.all>[>] Все вещи</a></li>
-<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Верхняя одежда" data-i18n=sidebar.outerwear>[>] Верхняя одежда</a></li>
-<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Кофты и Свитера" data-i18n=sidebar.sweaters>[>] Кофты и Свитера</a></li>
-<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Штаны и Джинсы" data-i18n=sidebar.pants>[>] Штаны и Джинсы</a></li>
-<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Обувь" data-i18n=sidebar.shoes>[>] Обувь</a></li>
-<li><a href=javascript:void(0) data-action="set-category-filter" data-category="Аксессуары" data-i18n=sidebar.accs>[>] Аксессуары</a></li>
+<li><a href="#" data-action="set-category-filter" data-category="" class=active-filter data-i18n=sidebar.all>[>] Все вещи</a></li>
+<li><a href="#" data-action="set-category-filter" data-category="Верхняя одежда" data-i18n=sidebar.outerwear>[>] Верхняя одежда</a></li>
+<li><a href="#" data-action="set-category-filter" data-category="Кофты и Свитера" data-i18n=sidebar.sweaters>[>] Кофты и Свитера</a></li>
+<li><a href="#" data-action="set-category-filter" data-category="Штаны и Джинсы" data-i18n=sidebar.pants>[>] Штаны и Джинсы</a></li>
+<li><a href="#" data-action="set-category-filter" data-category="Обувь" data-i18n=sidebar.shoes>[>] Обувь</a></li>
+<li><a href="#" data-action="set-category-filter" data-category="Аксессуары" data-i18n=sidebar.accs>[>] Аксессуары</a></li>
 </ul>
 </div>
 <div class=filter-box>
@@ -294,7 +294,7 @@
 <img src=https://www.google.com/favicon.ico width=14> <span data-i18n=sidebar.google_id>GOOGLE ID</span>
 </button>
 <div id=authForgotPassWrap style="display:flex;justify-content:flex-end;margin:4px 2px 0 0;font-size:11px;font-family:var(--font-mono)">
-<a href="javascript:void(0)" class="forgot-password-link" data-action="forgot-password" data-is-modal="false" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
+<a href="#" class="forgot-password-link" data-action="forgot-password" data-is-modal="false" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
 </div>
 <button class="auth-btn btn-target" id=btnRegister data-action="handle-auth" data-auth-mode="register" data-is-modal="false" style=display:none;background:var(--accent-green);color:#000 data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
 <button class="auth-btn btn-target" id=btnBackLogin data-action="toggle-reg-mode" data-is-modal="false" style=display:none;background:#333;color:#fff data-i18n=sidebar.back>НАЗАД</button>
@@ -308,7 +308,7 @@
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.phone>НОМЕР ТЕЛЕФОНА:</div>
 <div style="margin-bottom:12px" id=profilePhoneContainer>
 <div style="color:#fff;font-size:13px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=profilePhone></div>
-<a href=javascript:void(0) data-action="show-phone-input" data-is-modal="false" id=profileAddPhoneBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
+<a href="#" data-action="show-phone-input" data-is-modal="false" id=profileAddPhoneBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
 <div id=profilePhoneInputWrap style="display:none;align-items:center;gap:6px;margin-top:4px">
 <input type=tel id=profilePhoneInput placeholder="+380..." style="background:#000;color:var(--accent-green);border:2px inset #555;padding:4px 8px;font-family:var(--font-mono);font-size:12px;width:145px;outline:none">
 <button data-action="save-phone-input" data-is-modal="false" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
@@ -318,7 +318,7 @@
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.tg>ТГ ЮЗ:</div>
 <div style="border-bottom:1px dashed #333;padding-bottom:12px;margin-bottom:12px" id=profileTgContainer>
 <div style="color:#fff;font-size:13px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=profileTg></div>
-<a href=javascript:void(0) data-action="show-tg-input" data-is-modal="false" id=profileAddTgBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
+<a href="#" data-action="show-tg-input" data-is-modal="false" id=profileAddTgBtn style="color:var(--accent-green);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
 <div id=profileTgInputWrap style="display:none;align-items:center;gap:6px;margin-top:4px">
 <input type=text id=profileTgInput placeholder="@username" style="background:#000;color:var(--accent-green);border:2px inset #555;padding:4px 8px;font-family:var(--font-mono);font-size:12px;width:145px;outline:none" autocomplete=off autocapitalize=none>
 <button data-action="save-tg-input" data-is-modal="false" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:12px;font-weight:bold;padding:3px 7px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
@@ -368,8 +368,8 @@
 <div class=sorting>
 <span><span data-i18n=sort.found>Найдено вещей:</span> <strong id=itemCount style=color:var(--accent-green)>0</strong></span>
 <span><span data-i18n=sort.sorting>Сортировка:</span>
-<a href=javascript:void(0) id=sort-new class=active-sort data-action="sort-items" data-sort="new" data-i18n=sort.new>Новые</a> |
-<a href=javascript:void(0) id=sort-cheap data-action="sort-items" data-sort="cheap" data-i18n=sort.cheap>Дешевые</a>
+<a href="#" id=sort-new class=active-sort data-action="sort-items" data-sort="new" data-i18n=sort.new>Новые</a> |
+<a href="#" id=sort-cheap data-action="sort-items" data-sort="cheap" data-i18n=sort.cheap>Дешевые</a>
 </span>
 </div>
 <div id=win95-net-error style="display:none;justify-content:center;padding:50px 10px;width:100%;box-sizing:border-box">
@@ -438,14 +438,14 @@
 <div class=legal-info>
 <p data-i18n=footer.legal_text>Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.</p>
 <div>
-<a href=javascript:void(0) data-action="show-rules" data-i18n=footer.privacy_policy>Політика конфіденційності</a>
+<a href="#" data-action="show-rules" data-i18n=footer.privacy_policy>Політика конфіденційності</a>
 </div>
 <button id=installAppBtn style="display:none;background:0 0;color:var(--accent-green);font-family:var(--font-mono);font-weight:700;font-size:14px;padding:15px 10px;border:none;cursor:pointer;margin:5px auto 10px auto;width:100%;text-align:center;text-transform:uppercase" data-i18n=footer.install>⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ</button>
 <p style=margin-top:10px;color:#555 data-i18n=footer.refund_policy>Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
 <div style="margin-top:15px;border-top:1px dashed #333;padding-top:15px;font-family:var(--font-mono);font-size:11px">
 <span style=color:var(--accent-red);font-weight:700>[ SUPPORT ]</span>
 <span style=color:#888 data-i18n=footer.support_text>Нашли баг или есть идея? Пишите:</span>
-<a href=javascript:void(0) data-action="open-support-modal" style=color:var(--accent-green);text-decoration:none;font-weight:700;margin-left:5px>nisha.store.ua@gmail.com</a>
+<a href="#" data-action="open-support-modal" style=color:var(--accent-green);text-decoration:none;font-weight:700;margin-left:5px>nisha.store.ua@gmail.com</a>
 </div>
 <p style=margin-top:15px;color:#444 data-i18n=footer.copyright>© 2026 NISHA. All rights reserved.</p>
 <div class=footer-lang-dropdown id=footerLangWrapper style="margin:20px auto 0 auto;display:inline-block">
@@ -454,9 +454,9 @@
 <span>[UA] ▼</span>
 </span>
 <div class=footer-lang-menu>
-<a href=javascript:void(0) data-action="set-lang" data-lang="ua" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> UA</a>
-<a href=javascript:void(0) data-action="set-lang" data-lang="ru" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> RU</a>
-<a href=javascript:void(0) data-action="set-lang" data-lang="en" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3CclipPath id='s'%3E%3Cpath d='M0,0 v18 h24 v-18 z'/%3E%3C/clipPath%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23fff' stroke-width='3' clip-path='url(%23s)'/%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23C8102E' stroke-width='1.5' clip-path='url(%23s)'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23C8102E' stroke-width='3'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> EN</a>
+<a href="#" data-action="set-lang" data-lang="ua" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='9' fill='%230057B7'/%3E%3Crect y='9' width='24' height='9' fill='%23FFD700'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> UA</a>
+<a href="#" data-action="set-lang" data-lang="ru" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3Crect width='24' height='6' fill='%23FFFFFF'/%3E%3Crect y='6' width='24' height='6' fill='%230039A6'/%3E%3Crect y='12' width='24' height='6' fill='%23D52B1E'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> RU</a>
+<a href="#" data-action="set-lang" data-lang="en" style=display:flex;align-items:center;gap:8px;justify-content:center><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3CclipPath id='s'%3E%3Cpath d='M0,0 v18 h24 v-18 z'/%3E%3C/clipPath%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23fff' stroke-width='3' clip-path='url(%23s)'/%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23C8102E' stroke-width='1.5' clip-path='url(%23s)'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23C8102E' stroke-width='3'/%3E%3C/svg%3E" width=20 height=15 style=border-radius:2px> EN</a>
 </div>
 </div>
 </div>
@@ -771,7 +771,7 @@
 <img src=https://www.google.com/favicon.ico width=18> <span data-i18n=sidebar.google_login>ВОЙТИ ЧЕРЕЗ GOOGLE</span>
 </button>
 <div id=modalAuthForgotPassWrap style="display:flex;justify-content:flex-end;margin:2px 2px 0 0;font-size:11px;font-family:var(--font-mono)">
-<a href="javascript:void(0)" class="forgot-password-link" data-action="forgot-password" data-is-modal="true" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
+<a href="#" class="forgot-password-link" data-action="forgot-password" data-is-modal="true" data-i18n=sidebar.forgot_password>Забыли пароль?</a>
 </div>
 <button class="cart-checkout-btn btn-target" id=modalBtnRegister data-action="handle-auth" data-auth-mode="register" data-is-modal="true" style=display:none;background:var(--accent-green);color:#000;width:100% data-i18n=sidebar.create>СОЗДАТЬ АККАУНТ</button>
 <button class="cart-checkout-btn btn-target" id=modalBtnBackLogin data-action="toggle-reg-mode" data-is-modal="true" style=display:none;background:#111;color:#fff;width:100%;border-color:#444 data-i18n=sidebar.back>НАЗАД</button>
@@ -786,7 +786,7 @@
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.phone>НОМЕР ТЕЛЕФОНА:</div>
 <div style="margin-bottom:15px" id=modalProfilePhoneContainer>
 <div style="color:#fff;font-size:14px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=modalProfilePhone></div>
-<a href=javascript:void(0) data-action="show-phone-input" data-is-modal="true" id=modalProfileAddPhoneBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
+<a href="#" data-action="show-phone-input" data-is-modal="true" id=modalProfileAddPhoneBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_phone>Добавить номер +</a>
 <div id=modalProfilePhoneInputWrap style="display:none;align-items:center;gap:8px;margin-top:6px">
 <input type=tel id=modalProfilePhoneInput placeholder="+380..." style="background:#000;color:var(--accent-green);border:2px inset #555;padding:6px 10px;font-family:var(--font-mono);font-size:13px;flex:1;max-width:175px;outline:none">
 <button data-action="save-phone-input" data-is-modal="true" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
@@ -796,7 +796,7 @@
 <div style=color:#666;font-size:11px;margin-bottom:5px data-i18n=profile.tg>ТГ ЮЗ:</div>
 <div style="border-bottom:1px dashed #333;padding-bottom:15px;margin-bottom:15px" id=modalProfileTgContainer>
 <div style="color:#fff;font-size:14px;font-weight:700;display:none;overflow:hidden;text-overflow:ellipsis" id=modalProfileTg></div>
-<a href=javascript:void(0) data-action="show-tg-input" data-is-modal="true" id=modalProfileAddTgBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
+<a href="#" data-action="show-tg-input" data-is-modal="true" id=modalProfileAddTgBtn style="color:var(--accent-green);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;display:inline-block;margin-top:2px" data-i18n=profile.add_tg>Добавить Telegram +</a>
 <div id=modalProfileTgInputWrap style="display:none;align-items:center;gap:8px;margin-top:6px">
 <input type=text id=modalProfileTgInput placeholder="@username" style="background:#000;color:var(--accent-green);border:2px inset #555;padding:6px 10px;font-family:var(--font-mono);font-size:13px;flex:1;max-width:175px;outline:none" autocomplete=off autocapitalize=none>
 <button data-action="save-tg-input" data-is-modal="true" title="Сохранить" data-i18n-title="common.save" class="win95-check-btn win95-save-btn" style="background:#2a2a2a;border:2px outset #777;color:var(--accent-green);font-family:var(--font-mono);font-size:14px;font-weight:bold;padding:5px 9px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 #000">✓</button>
