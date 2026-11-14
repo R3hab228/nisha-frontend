@@ -486,67 +486,30 @@ export function openProductModal(item) {
         if (item && item.id) {
             invokeAction('saveCurrentFeedScrollState', item.id);
         }
-
-        const openModalDom = () => {
-            if (typeof openModal === 'function') {
-                openModal('productModal');
-            } else if (modalEl) {
-                modalEl.inert = false;
-                modalEl.removeAttribute('inert');
-                modalEl.classList.remove('closing');
-                modalEl.style.pointerEvents = '';
-                modalEl.setAttribute('aria-hidden', 'false');
-                const win = modalEl.querySelector('.modal-window');
-                if (win) {
-                    win.style.pointerEvents = '';
-                    win.style.transform = '';
-                    win.style.opacity = '';
-                    win.style.transition = '';
-                    win.style.animation = '';
-                }
-                modalEl.style.display = 'flex';
-                if (!document.body.style.overflow || document.body.style.overflow !== 'hidden') {
-                    window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
-                }
-                document.body.style.overflow = 'hidden';
-                if (typeof triggerModalTypewriter === 'function') {
-                    triggerModalTypewriter(modalEl);
-                }
+        if (typeof openModal === 'function') {
+            openModal('productModal');
+        } else if (modalEl) {
+            modalEl.inert = false;
+            modalEl.removeAttribute('inert');
+            modalEl.classList.remove('closing');
+            modalEl.style.pointerEvents = '';
+            modalEl.setAttribute('aria-hidden', 'false');
+            const win = modalEl.querySelector('.modal-window');
+            if (win) {
+                win.style.pointerEvents = '';
+                win.style.transform = '';
+                win.style.opacity = '';
+                win.style.transition = '';
+                win.style.animation = '';
             }
-        };
-
-        const sourceCard = (item && item.id && typeof document !== 'undefined')
-            ? document.querySelector(`.item-card[data-id="${item.id}"]`)
-            : null;
-        const sourceMedia = sourceCard ? (sourceCard.querySelector('.item-img-wrapper, img') || sourceCard) : null;
-        const modalSlider = typeof document !== 'undefined' ? document.getElementById('sliderContainer') : null;
-        const reducedMotion = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-            ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-            : false;
-
-        if (!reducedMotion && sourceMedia && modalSlider && typeof document.startViewTransition === 'function') {
-            const cleanupVt = () => {
-                try { sourceMedia.style.removeProperty('view-transition-name'); } catch {}
-                try { modalSlider.style.removeProperty('view-transition-name'); } catch {}
-            };
-            try {
-                sourceMedia.style.setProperty('view-transition-name', 'nisha-active-product', 'important');
-                const transition = document.startViewTransition(() => {
-                    sourceMedia.style.removeProperty('view-transition-name');
-                    modalSlider.style.setProperty('view-transition-name', 'nisha-active-product', 'important');
-                    openModalDom();
-                });
-                if (transition && transition.finished && typeof transition.finished.finally === 'function') {
-                    transition.finished.finally(cleanupVt).catch(cleanupVt);
-                } else {
-                    setTimeout(cleanupVt, 400);
-                }
-            } catch {
-                cleanupVt();
-                openModalDom();
+            modalEl.style.display = 'flex';
+            if (!document.body.style.overflow || document.body.style.overflow !== 'hidden') {
+                window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
             }
-        } else {
-            openModalDom();
+            document.body.style.overflow = 'hidden';
+            if (typeof triggerModalTypewriter === 'function') {
+                triggerModalTypewriter(modalEl);
+            }
         }
     } else {
         if (modalEl) modalEl.style.pointerEvents = '';
