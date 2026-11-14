@@ -86,7 +86,7 @@ export const profileState = new Proxy(_localProfileState, {
         target[prop] = value;
         if (STORE_BACKED_KEYS.has(prop)) {
             const s = getAppStore();
-            if (s) {
+            if (s && s.get(prop) !== value) {
                 s.set(prop, value);
             }
         }

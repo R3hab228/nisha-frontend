@@ -564,9 +564,14 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         invokeAction('updateCartUI');
     });
 
-    // Реактивное обновление избранного
+    // Реактивное обновление избранного (не вызываем сеттер, если window.favorites уже проксируется в store)
     store.subscribe('favorites', (newFavs) => {
-        if (typeof window !== 'undefined') window.favorites = newFavs;
+        if (typeof window !== 'undefined') {
+            const favDesc = Object.getOwnPropertyDescriptor(window, 'favorites');
+            if (!favDesc || (!favDesc.set && favDesc.writable)) {
+                window.favorites = newFavs;
+            }
+        }
         emitAppEvent('nisha:favorites-changed', { favorites: newFavs });
         invokeAction('updateFavUI');
     });
