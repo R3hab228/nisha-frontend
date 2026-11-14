@@ -175,9 +175,9 @@ export function renderSimilarItems(item) {
         if (simCont) simCont.innerHTML = cardsHTML;
         if (simContDesktop) simContDesktop.innerHTML = cardsHTML;
 
-        if (typeof window !== 'undefined' && window.gridVideoObserver) {
+        if (hasAction('observeGridVideo')) {
             document.querySelectorAll('.similar-card-img-wrap video').forEach(v => {
-                window.gridVideoObserver.observe(v);
+                invokeAction('observeGridVideo', v);
             });
         }
     } else {
@@ -410,9 +410,6 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.shareItem = shareItem;
-    window.addToHistory = addToHistory;
     window.renderHistory = renderHistory;
-    window.toggleHistory = toggleHistory;
     window.removeHistoryItem = removeHistoryItem;
 }

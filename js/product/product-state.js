@@ -611,12 +611,9 @@ export function resetOpenGraphTags() {
 }
 
 if (typeof window !== 'undefined') {
-    window.computeItemSimilarity = computeItemSimilarity;
     window._prewarmedItemDetails = _prewarmedItemDetails;
     window._prewarmedImagesSet = _prewarmedImagesSet;
     window.prewarmProductModal = prewarmProductModal;
-    window.cancelPrewarmProductModal = cancelPrewarmProductModal;
-    window.prewarmItemDetails = prewarmItemDetails;
     window.setMetaTag = setMetaTag;
     window.resetOpenGraphTags = resetOpenGraphTags;
 }

@@ -646,8 +646,6 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.normalizeOrderPhone = normalizeOrderPhone;
-    window.highlightFieldError = highlightFieldError;
     window.submitOrder = submitOrder;
     window.executeOrderFinal = executeOrderFinal;
 }

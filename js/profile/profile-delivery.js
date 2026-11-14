@@ -15,6 +15,8 @@ import {
 let profileNpCityTimeout = null;
 let profileNpBranchTimeout = null;
 let outsideClickBound = false;
+let _isSavingProfileDelivery = false;
+let _deliveryLockTimer = null;
 
 export const profileSelectedCityRef = { desktop: '', modal: '' };
 export const profileSelectedBranchRef = { desktop: '', modal: '' };
@@ -579,7 +581,7 @@ export function renderProfileDelivery(fullName, address) {
 
     initProfileDeliveryEvents();
 
-    if (typeof window === 'undefined' || !window._isSavingProfileDelivery) {
+    if (!_isSavingProfileDelivery) {
         setProfileDeliveryLockState(Boolean(fn || addr));
     }
 
@@ -700,7 +702,7 @@ export async function saveProfileDeliveryFromForm(isModal, btn) {
     const cityRef = profileSelectedCityRef[scopeKey] || '';
     const branchRef = profileSelectedBranchRef[scopeKey] || '';
 
-    if (typeof window !== 'undefined') window._isSavingProfileDelivery = true;
+    _isSavingProfileDelivery = true;
     try {
         await saveDeliveryToProfile(fullName, address, { cityRef, branchRef });
         notifyToast(tProfile('profile.delivery_saved_toast', 'Данные доставки сохранены!'), 'success');
@@ -711,16 +713,14 @@ export async function saveProfileDeliveryFromForm(isModal, btn) {
             if (b.classList && typeof b.classList.add === 'function') b.classList.add('is-saved');
         });
 
-        if (typeof window !== 'undefined') {
-            if (window._deliveryLockTimer) clearTimeout(window._deliveryLockTimer);
-            window._deliveryLockTimer = setTimeout(() => {
-                setProfileDeliveryLockState(true);
-            }, 800);
-        }
+        if (_deliveryLockTimer) clearTimeout(_deliveryLockTimer);
+        _deliveryLockTimer = setTimeout(() => {
+            setProfileDeliveryLockState(true);
+        }, 800);
     } catch (e) {
         notifyToast(tProfile('profile.delivery_save_error', 'Ошибка сохранения данных: ') + (e.message || 'Сбой сети'), 'error');
     } finally {
-        if (typeof window !== 'undefined') window._isSavingProfileDelivery = false;
+        _isSavingProfileDelivery = false;
         saveBtns.forEach(b => {
             b.disabled = false;
             b.style.opacity = '1';

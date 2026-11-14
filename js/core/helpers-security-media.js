@@ -312,7 +312,7 @@ export function loadExternalStyle(href) {
     }
     return promise;
 }
-if (typeof window !== 'undefined') window.loadExternalStyle = loadExternalStyle;
+registerActions({ loadExternalStyle });
 
 let _photoSwipeInitPromise = null;
 

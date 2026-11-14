@@ -68,14 +68,12 @@ function stopLenis() {
         Object.getPrototypeOf(lenis).stop.call(lenis); 
     }
 }
-window.stopLenis = stopLenis;
 
 function startLenis() {
     if (typeof lenis !== 'undefined' && lenis) {
         Object.getPrototypeOf(lenis).start.call(lenis); 
     }
 }
-window.startLenis = startLenis;
 
 // ==========================================
 // 2. УМНЫЕ ПЛАВАЮЩИЕ КНОПКИ (ПРЕДЛОЖКА И ФИЛЬТРЫ)

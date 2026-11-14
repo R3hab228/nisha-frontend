@@ -581,5 +581,4 @@ registerActions({
 if (typeof window !== 'undefined') {
     window.openProductModalById = openProductModalById;
     window.openProductModal = openProductModal;
-    window.toggleFavFromModal = toggleFavFromModal;
 }

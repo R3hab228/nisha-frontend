@@ -267,10 +267,9 @@ export function invalidateFuseCache() {
     _catalogFuseCache = null;
     _catalogFuseItemsRef = null;
     if (hasAction('invalidateLiveSearchFuse')) invokeAction('invalidateLiveSearchFuse');
-    if (typeof window !== 'undefined') {
-        if (window.searchWorker && typeof window.searchWorker.setItems === 'function' && Array.isArray(window.allItems)) {
-            window.searchWorker.setItems(window.allItems);
-        }
+    const searchWorker = invokeAction('getSearchWorker');
+    if (searchWorker && typeof searchWorker.setItems === 'function' && Array.isArray(window.allItems)) {
+        searchWorker.setItems(window.allItems);
     }
 }
 
@@ -367,9 +366,10 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             if (searchTerm !== '') {
                 const cleanSearchTerm = searchTerm.replaceAll('#', '').trim();
                 if (cleanSearchTerm) {
-                    if (window.searchWorker && window.searchWorker.isReady()) {
+                    const searchWorker = invokeAction('getSearchWorker');
+                    if (searchWorker && searchWorker.isReady()) {
                         const candidateIds = window.filteredItems.map(i => i.id);
-                        const matchedIds = await window.searchWorker.searchCatalog(cleanSearchTerm, candidateIds);
+                        const matchedIds = await searchWorker.searchCatalog(cleanSearchTerm, candidateIds);
                         if (filterSeq !== _applyFiltersSeq) return;
                         const itemMap = new Map(window.filteredItems.map(i => [i.id, i]));
                         window.filteredItems = matchedIds.map(id => itemMap.get(id)).filter(Boolean);

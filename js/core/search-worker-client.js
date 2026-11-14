@@ -308,9 +308,9 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
         invokeAction('invalidateLiveSearchFuse');
     };
 
-    window.searchWorker = searchWorkerClient;
     window.invalidateFuseCache = invalidateFuseCacheFn;
     registerActions({
+        getSearchWorker: () => searchWorkerClient,
         invalidateFuseCache: invalidateFuseCacheFn
     });
 

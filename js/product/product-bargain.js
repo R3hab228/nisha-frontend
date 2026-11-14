@@ -649,13 +649,5 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.getBestBuyerContact = getBestBuyerContact;
-    window.checkClientBargainRateLimit = checkClientBargainRateLimit;
-    window.recordClientBargainOffer = recordClientBargainOffer;
-    window.openOfferPriceModal = openOfferPriceModal;
-    window.submitBargainOffer = submitBargainOffer;
-    window.showInlineOfferPriceInput = showInlineOfferPriceInput;
-    window.hideInlineOfferPriceInput = hideInlineOfferPriceInput;
-    window.submitInlineBargainOffer = submitInlineBargainOffer;
     window.syncUserBargains = syncUserBargains;
 }

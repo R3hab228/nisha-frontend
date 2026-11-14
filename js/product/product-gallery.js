@@ -10,6 +10,8 @@ import {
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 
+let _pswpLightbox = null;
+
 /**
  * Preloads the next/previous image slide when hovering slider controls.
  * @param {number} step
@@ -311,9 +313,9 @@ export async function openProductPhotoZoom(targetSlideOrIndex) {
 
     imageSlides.forEach(s => s.classList.remove('zoomed-in'));
 
-    if (window.pswpLightbox) {
-        try { window.pswpLightbox.destroy(); } catch {}
-        window.pswpLightbox = null;
+    if (_pswpLightbox) {
+        try { _pswpLightbox.destroy(); } catch {}
+        _pswpLightbox = null;
     }
 
     const lightbox = new window.PhotoSwipeLightbox({
@@ -340,7 +342,7 @@ export async function openProductPhotoZoom(targetSlideOrIndex) {
     lightbox.on('change', syncSliderIndex);
     lightbox.on('close', syncSliderIndex);
 
-    window.pswpLightbox = lightbox;
+    _pswpLightbox = lightbox;
     lightbox.init();
     lightbox.loadAndOpen(targetIndex);
 }
@@ -421,10 +423,5 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.preloadSlide = preloadSlide;
-    window.moveSlide = moveSlide;
-    window.setSlide = setSlide;
-    window.updateSlider = updateSlider;
     window.openProductPhotoZoom = openProductPhotoZoom;
-    window.initSliderSwipe = initSliderSwipe;
 }

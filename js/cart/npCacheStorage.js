@@ -34,7 +34,6 @@ export function slimBranches(list) {
         Number: b.Number ? String(b.Number) : ''
     }));
 }
-window.slimBranches = slimBranches;
 
 /**
  * Асинхронно получает данные из кэша: Memory L1 -> IndexedDB L2 -> Safe Fallback L3
@@ -122,7 +121,6 @@ export function getNPStorage(key) {
     } catch {}
     return null;
 }
-window.getNPStorage = getNPStorage;
 
 /**
  * Сохраняет данные Новой Почты в кэш: Memory L1 -> IndexedDB L2 -> Safe Fallback L3
@@ -283,7 +281,6 @@ export async function cleanupStaleNPCache(forceAll = false) {
 
     return { deleted, checked, success: true };
 }
-window.cleanupStaleNPCache = cleanupStaleNPCache;
 
 /**
  * Очищает кэш отделений и городов Новой Почты во всех уровнях хранилища
@@ -312,11 +309,18 @@ window.clearNPCache = clearNPCache;
 
 registerActions({
     slimBranches,
+    getNPStorage,
     getNPStorageAsync,
     setNPStorage,
     cleanupStaleNPCache,
     clearNPCache
 });
+
+if (typeof window !== 'undefined') {
+    window.slimBranches = slimBranches;
+    window.getNPStorage = getNPStorage;
+    window.cleanupStaleNPCache = cleanupStaleNPCache;
+}
 
 /**
  * Автоматический запуск проверки устаревшего кэша в idle-время раз в 24 часа

@@ -52,7 +52,6 @@ export function cleanStorageLimits() {
         console.warn('Storage cleanup notice:', e);
     }
 }
-if (typeof window !== 'undefined') window.cleanStorageLimits = cleanStorageLimits;
 
 function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
     const readRaw = (key) => {
@@ -198,11 +197,6 @@ export const safeStorage = {
 
 if (typeof window !== 'undefined') {
     window.storage = storage;
-    window.getStorageJSON = (key, defaultValue = null) => storage.getJSON(key, defaultValue);
-    window.setStorageJSON = (key, value) => storage.setJSON(key, value);
-    window.safeSetItem = safeSetItem;
-    window.safeGetItem = safeGetItem;
-    window.safeRemoveItem = safeRemoveItem;
     window.safeStorage = safeStorage;
 }
 if (typeof globalThis !== 'undefined') {

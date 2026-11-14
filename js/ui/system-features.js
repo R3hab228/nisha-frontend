@@ -8,7 +8,6 @@ export function isSpeculationRulesSupported() {
            typeof HTMLScriptElement.supports === 'function' &&
            HTMLScriptElement.supports('speculationrules');
 }
-window.isSpeculationRulesSupported = isSpeculationRulesSupported;
 
 import {
     storage,
@@ -63,7 +62,8 @@ function checkPendingBroadcast() {
         }
     }, 200);
 }
-window.checkPendingBroadcast = checkPendingBroadcast;
+
+let _pendingBroadcastIntervalId = null;
 
 function runPendingNotificationsTick() {
     if (document.hidden) return;
@@ -77,14 +77,14 @@ function runPendingNotificationsTick() {
 }
 
 function startPendingBroadcastPolling() {
-    if (window._pendingBroadcastIntervalId || document.hidden) return;
-    window._pendingBroadcastIntervalId = setInterval(runPendingNotificationsTick, 1500);
+    if (_pendingBroadcastIntervalId || document.hidden) return;
+    _pendingBroadcastIntervalId = setInterval(runPendingNotificationsTick, 1500);
 }
 
 function stopPendingBroadcastPolling() {
-    if (window._pendingBroadcastIntervalId) {
-        clearInterval(window._pendingBroadcastIntervalId);
-        window._pendingBroadcastIntervalId = null;
+    if (_pendingBroadcastIntervalId) {
+        clearInterval(_pendingBroadcastIntervalId);
+        _pendingBroadcastIntervalId = null;
     }
 }
 
@@ -114,7 +114,6 @@ window.checkRules = checkRules;
 function showRulesModal() { 
     openModal('rulesModal');
 }
-window.showRulesModal = showRulesModal;
 
 function acceptRules() {
     if (storage) storage.set('nisha_rules_accepted', 'true');
@@ -124,13 +123,9 @@ function acceptRules() {
     }
     
     setTimeout(() => {
-        startOnboardingTour,
-    getGraphemeCount,
-    invokeAction,
-    registerActions();
+        startOnboardingTour();
     }, 450); 
 }
-window.acceptRules = acceptRules;
 
 // === EASTER EGG ===
 function triggerEasterEgg() {
@@ -159,7 +154,6 @@ function triggerEasterEgg() {
     syncCartToServer();
     updateCartUI();
 }
-window.triggerEasterEgg = triggerEasterEgg;
 
 // === ПРИВАТНАЯ АНАЛИТИКА (PLAUSIBLE / POSTHOG) И ВИЗУАЛЬНЫЙ РЕТРО-СЧЕТЧИК WIN95 ===
 async function initHitCounter() {
@@ -226,7 +220,6 @@ function updateCharCount(textarea) {
     label.innerText = originalText.replace('250', remaining);
     label.style.color = remaining <= 0 ? 'var(--accent-red)' : 'var(--accent-green)';
 }
-window.updateCharCount = updateCharCount;
 
 // === ГОРЯЧИЕ КЛАВИШИ И НАВИГАЦИЯ С КЛАВИАТУРЫ ===
 let lastTextareaEnterTime = 0;

@@ -10,6 +10,8 @@
 (function initAnalyticsModule() {
     const DEFAULT_DOMAIN = 'nisha-store.shop';
     let _initialized = false;
+    let _clarityLoaded = false;
+    let _tiktokLoaded = false;
 
     // 1. Создаём неблокирующую очередь команд Plausible до загрузки внешнего скрипта
     if (typeof window !== 'undefined') {
@@ -250,7 +252,6 @@
 
     if (typeof window !== 'undefined') {
         window.analytics = analyticsApi;
-        window.trackEvent = track;
     }
     if (typeof globalThis !== 'undefined') {
         globalThis.analytics = analyticsApi;
@@ -260,8 +261,8 @@
     // Отложенная загрузка сторонних тегов (Microsoft Clarity + TikTok Pixel) вне index.html (для строгого CSP без unsafe-inline)
     if (typeof window !== 'undefined' && typeof document !== 'undefined' && !isLocalhost()) {
         const initClarityDeferred = () => {
-            if (window._clarityLoaded) return;
-            window._clarityLoaded = true;
+            if (_clarityLoaded) return;
+            _clarityLoaded = true;
             try {
                 window.clarity = window.clarity || function () { (window.clarity.q = window.clarity.q || []).push(arguments); };
                 const t = document.createElement('script');
@@ -310,8 +311,8 @@
             ttq.page();
 
             const initTikTokDeferred = () => {
-                if (window._tiktokLoaded) return;
-                window._tiktokLoaded = true;
+                if (_tiktokLoaded) return;
+                _tiktokLoaded = true;
                 ttq.load('DB0HAT3C77U5HCCK4S10');
             };
             if (typeof window.requestIdleCallback === 'function') {

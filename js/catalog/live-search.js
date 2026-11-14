@@ -18,7 +18,6 @@ function isItemBargainEnabled(item) {
     if (typeof item.description === 'string' && /(?:\[\s*(?:торг|bargain)|(?<![\p{L}\p{N}_])торг(?![\p{L}\p{N}_]))/iu.test(item.description)) return true;
     return false;
 }
-window.isItemBargainEnabled = isItemBargainEnabled;
 
 // ==========================================
 // NISHA LIVE SEARCH & SEARCH HISTORY MODULE
@@ -56,12 +55,12 @@ function getLiveSearchFuse() {
 const liveSearchMemoCache = new Map();
 const MAX_SEARCH_MEMO = 25;
 
-window.invalidateLiveSearchFuse = function() {
+function invalidateLiveSearchFuse() {
     cachedFuseInstance = null;
     cachedFuseItemsRef = null;
     liveSearchMemoCache.clear();
     currentLiveSearchSeq++;
-};
+}
 
 // Функция сохранения истории поиска (с защитой от квоты localStorage)
 function saveRecentSearch(term) {
@@ -103,7 +102,6 @@ function positionLiveSearchDropdown(dropdown) {
     dropdown.style.setProperty('max-height', `${maxHeight}px`, 'important');
     dropdown.style.setProperty('margin', '0', 'important');
 }
-window.positionLiveSearchDropdown = positionLiveSearchDropdown;
 
 function openSearchDropdown(dropdown) {
     if (!dropdown) return;
@@ -111,7 +109,6 @@ function openSearchDropdown(dropdown) {
     dropdown.style.display = 'block';
     positionLiveSearchDropdown(dropdown);
 }
-window.openSearchDropdown = openSearchDropdown;
 
 // Отображение истории поиска
 function showSearchHistory() {
@@ -168,8 +165,9 @@ function handleLiveSearch() {
         const cleanSearchTerm = searchTerm.replaceAll('#', '').trim().toLowerCase();
         let results = liveSearchMemoCache.get(cleanSearchTerm);
         if (!results) {
-            if (window.searchWorker && typeof window.searchWorker.searchLive === 'function') {
-                results = await window.searchWorker.searchLive(cleanSearchTerm, 8);
+            const searchWorker = invokeAction('getSearchWorker');
+            if (searchWorker && typeof searchWorker.searchLive === 'function') {
+                results = await searchWorker.searchLive(cleanSearchTerm, 8);
             } else {
                 const priceQuery = (typeof parsePriceSearchQuery === 'function')
                     ? parsePriceSearchQuery(cleanSearchTerm)
@@ -345,17 +343,12 @@ function closeSearch() {
     if (searchInput) searchInput.blur();
 }
 
-window.saveRecentSearch = saveRecentSearch;
-window.showSearchHistory = showSearchHistory;
-window.handleLiveSearch = handleLiveSearch;
-window.closeSearch = closeSearch;
-
 registerActions({
     saveRecentSearch,
     showSearchHistory,
     handleLiveSearch,
     closeSearch,
-    invalidateLiveSearchFuse: window.invalidateLiveSearchFuse,
+    invalidateLiveSearchFuse,
     openSearchDropdown,
     positionLiveSearchDropdown
 });
@@ -381,8 +374,8 @@ if (mainSearchInput) {
         mainSearchInput.placeholder = (typeof i18next !== 'undefined' && i18next.t('search.placeholder')) || 'Поиск...';
     });
     mainSearchInput.addEventListener('blur', () => {
-        if (mainSearchInput.value.length === 0 && typeof startSearchTypewriter === 'function') {
-            startSearchTypewriter();
+        if (mainSearchInput.value.length === 0) {
+            invokeAction('startSearchTypewriter');
         }
     });
 }

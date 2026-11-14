@@ -101,7 +101,7 @@ export async function startOnboardingTour() {
             startOnboardingTour();
         } catch (err) {
             console.warn('[Driver.js] Local load failed, falling back to CDN:', err);
-            if (typeof loadExternalStyle === 'function') loadExternalStyle('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css');
+            if (hasAction('loadExternalStyle')) invokeAction('loadExternalStyle', 'https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css');
             if (typeof loadExternalScript === 'function') {
                 loadExternalScript('https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js').then(() => {
                     startOnboardingTour();

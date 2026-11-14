@@ -85,13 +85,20 @@ export function attachToastLifecycle(toast, { duration = 2500, onDismiss = null 
     return dismiss;
 }
 
+const _toastClickShieldByDoc = new WeakMap();
+let _fallbackToastClickShieldUntil = 0;
+
 /**
  * Arms a temporary click shield after toast interaction to prevent ghost clicks underneath.
  * @param {number} [ms=420]
  */
 export function armToastClickShield(ms = 420) {
-    if (typeof window !== 'undefined') {
-        window._nishaToastClickShieldUntil = Math.max(window._nishaToastClickShieldUntil || 0, Date.now() + ms);
+    const until = Date.now() + ms;
+    if (typeof document !== 'undefined' && document && typeof document === 'object') {
+        const current = _toastClickShieldByDoc.get(document) || 0;
+        _toastClickShieldByDoc.set(document, Math.max(current, until));
+    } else {
+        _fallbackToastClickShieldUntil = Math.max(_fallbackToastClickShieldUntil, until);
     }
 }
 
@@ -100,7 +107,10 @@ export function armToastClickShield(ms = 420) {
  * @returns {boolean}
  */
 export function isToastClickShielded() {
-    return typeof window !== 'undefined' && Date.now() < (window._nishaToastClickShieldUntil || 0);
+    if (typeof document !== 'undefined' && document && typeof document === 'object') {
+        return Date.now() < (_toastClickShieldByDoc.get(document) || 0);
+    }
+    return Date.now() < _fallbackToastClickShieldUntil;
 }
 
 function buildToastThumbHtml(imgUrl, useCdn = false) {
@@ -590,5 +600,6 @@ registerActions({
     withButtonBusy,
     enqueueNewItemToast,
     showTerminalModal,
-    showConfirmTerminalModal
+    showConfirmTerminalModal,
+    isToastClickShielded
 });

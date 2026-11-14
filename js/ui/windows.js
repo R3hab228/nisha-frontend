@@ -102,7 +102,6 @@ function isUserInProductFeed() {
         return false;
     }
 }
-window.isUserInProductFeed = isUserInProductFeed;
 
 // Реестр функций ленивой гидратации модальных окон
 const _modalInitializers = new Map();
@@ -111,7 +110,6 @@ function registerModalInitializer(id, initFn) {
         _modalInitializers.set(id, initFn);
     }
 }
-window.registerModalInitializer = registerModalInitializer;
 
 function triggerModalInitializer(id) {
     const fn = _modalInitializers.get(id);
@@ -401,9 +399,7 @@ function executeCloseModal(id, e) {
             if (id === 'productModal' && typeof renderHistory === 'function') {
                 renderHistory();
             }
-            if (typeof checkPendingBroadcast === 'function') {
-                checkPendingBroadcast();
-            }
+            invokeAction('checkPendingBroadcast');
             if (typeof checkPendingBargainNotification === 'function') {
                 checkPendingBargainNotification();
             }
@@ -595,13 +591,11 @@ function attachModalOverlayInteractions(overlay) {
     // Подключение мобильного свайпа
     attachMobileSwipeToWindow(overlay);
 }
-window.attachModalOverlayInteractions = attachModalOverlayInteractions;
 
 function initMobileSwipe() {
     if (typeof document === 'undefined' || !document.querySelectorAll) return;
     document.querySelectorAll('.modal-overlay').forEach(attachMobileSwipeToWindow);
 }
-window.initMobileSwipe = initMobileSwipe;
 
 // 5b. Адаптация модальных окон и выпадающих списков под мобильную клавиатуру (VisualViewport API)
 // Плавное удержание активного поля в комфортной зоне видимости без подскакиваний и рывков
@@ -655,9 +649,11 @@ function ensureFieldVisibleInModal(targetEl) {
 window.ensureFieldVisibleInModal = ensureFieldVisibleInModal;
 if (typeof globalThis !== 'undefined') globalThis.ensureFieldVisibleInModal = ensureFieldVisibleInModal;
 
+let _mobileKbBound = false;
+
 function initMobileKeyboardViewport() {
-    if (typeof window === 'undefined' || typeof document === 'undefined' || window._mobileKbBound) return;
-    window._mobileKbBound = true;
+    if (typeof window === 'undefined' || typeof document === 'undefined' || _mobileKbBound) return;
+    _mobileKbBound = true;
 
     const root = document.documentElement;
     let baselineHeight = window.innerHeight || 0;
@@ -765,7 +761,6 @@ function initMobileKeyboardViewport() {
         });
     }
 }
-window.initMobileKeyboardViewport = initMobileKeyboardViewport;
 
 // 6. Инициализация клика по фону и защиты скролла
 function initWindowOverlayListeners() {

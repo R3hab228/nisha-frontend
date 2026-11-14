@@ -370,12 +370,8 @@ export function resolveSwipeSurface(e) {
 
 if (typeof window !== 'undefined') {
     window.initCartScrollIsolation = initCartScrollIsolation;
-    window.initCartHoverDesktop = initCartHoverDesktop;
-    window.checkCartItemsAvailability = checkCartItemsAvailability;
     window.renderCartItems = renderCartItems;
     window.updateCartUI = updateCartUI;
-    window.toggleCartDropdown = toggleCartDropdown;
-    window.closeCartDropdown = closeCartDropdown;
 
     let cartSwipeStartX = 0;
     let cartSwipeCurrentX = 0;

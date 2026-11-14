@@ -23,7 +23,6 @@ async function openReviewImage(url) {
     lightbox.init();
     lightbox.loadAndOpen(0);
 }
-window.openReviewImage = openReviewImage;
 
 // Оперативный кэш отзывов (TTL: 3 минуты) для мгновенного повторного открытия
 let reviewsCache = {
@@ -32,6 +31,9 @@ let reviewsCache = {
 };
 const REVIEWS_CACHE_TTL = 3 * 60 * 1000;
 const reviewDateFormatter = new Intl.DateTimeFormat('ru-RU');
+let _isSubmittingAutoReview = false;
+let _myLastReviewText = null;
+const _notifiedReviewIds = new Set();
 
 // Открытие модального окна со списком отзывов
 async function openReviewsModal() { 
@@ -163,7 +165,6 @@ async function openReviewsModal() {
     reviewsCache.timestamp = Date.now();
     renderReviewsData(data);
 }
-window.openReviewsModal = openReviewsModal;
 
 // Прокрутка слайдера отзывов стрелками
 function scrollReviews(direction) {
@@ -175,7 +176,6 @@ function scrollReviews(direction) {
     const scrollAmount = window.innerWidth > 900 ? (colWidth * 2) : colWidth;
     slider.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
 }
-window.scrollReviews = scrollReviews;
 
 // Автоматическое выравнивание высоты всех отзывов пиксель-в-пиксель
 function equalizeReviewCardHeights() {
@@ -206,7 +206,6 @@ function equalizeReviewCardHeights() {
         });
     });
 }
-window.equalizeReviewCardHeights = equalizeReviewCardHeights;
 
 let resizeReviewCardRaf = null;
 window.addEventListener('resize', () => {
@@ -328,7 +327,7 @@ window.sendReviewPayload = sendReviewPayload;
 
 // Отправка авто-отзыва по заказу
 async function submitAutoReview() {
-    if (window._isSubmittingAutoReview) return;
+    if (_isSubmittingAutoReview) return;
     const inputEl = document.getElementById('autoReviewInput');
     const text = inputEl ? inputEl.value.trim() : '';
     const orderId = document.getElementById('autoReviewOrderId')?.value;
@@ -356,7 +355,7 @@ async function submitAutoReview() {
         ? getUserDisplayName(activeUser, profile)
         : (profile?.username || activeUser?.user_metadata?.display_name || activeUser?.user_metadata?.username || activeUser?.user_metadata?.full_name || activeUser?.user_metadata?.name || activeUser?.email?.split('@')?.at(0) || 'User');
 
-    window._isSubmittingAutoReview = true;
+    _isSubmittingAutoReview = true;
     const runAutoReviewSubmit = async () => {
         const payload = {
             user_name: uName,
@@ -371,7 +370,7 @@ async function submitAutoReview() {
         const result = await sendReviewPayload(payload);
 
         if (result.success) {
-            window._myLastReviewText = text;
+            _myLastReviewText = text;
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
             const reviewPublishedMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв опубликован! Спасибо.';
@@ -404,10 +403,9 @@ async function submitAutoReview() {
             await runAutoReviewSubmit();
         }
     } finally {
-        window._isSubmittingAutoReview = false;
+        _isSubmittingAutoReview = false;
     }
 }
-window.submitAutoReview = submitAutoReview;
 
 // Пропуск авто-отзыва ("Позже")
 function skipAutoReview() {
@@ -423,7 +421,6 @@ function skipAutoReview() {
     }
     closeModal('autoReviewModal');
 }
-window.skipAutoReview = skipAutoReview;
 
 // Логика написания отзыва на сайте (кнопка из списка)
 function writeReviewOnSite() {
@@ -460,7 +457,6 @@ function writeReviewOnSite() {
         }
     }, 300);
 }
-window.writeReviewOnSite = writeReviewOnSite;
 
 // Отправка ручного отзыва
 async function submitManualReview() {
@@ -489,7 +485,7 @@ async function submitManualReview() {
         const result = await sendReviewPayload(payload);
 
         if (result.success) {
-            window._myLastReviewText = text;
+            _myLastReviewText = text;
             reviewsCache.data = null;
             reviewsCache.timestamp = 0;
             const reviewSuccessMsg = (typeof i18next !== 'undefined' && i18next.t('reviews_modal.success')) || 'Отзыв успешно опубликован!';
@@ -519,7 +515,6 @@ async function submitManualReview() {
         await runManualReviewSubmit();
     }
 }
-window.submitManualReview = submitManualReview;
 
 // ==========================================
 // REALTIME ПУШ-УВЕДОМЛЕНИЯ О НОВЫХ ОТЗЫВАХ
@@ -556,13 +551,12 @@ function initReviewsRealtime(sb) {
                 }
 
                 // Защита от дублей уведомлений
-                window._notifiedReviewIds = window._notifiedReviewIds || new Set();
-                if (rev.id && window._notifiedReviewIds.has(rev.id)) return;
-                if (rev.id) window._notifiedReviewIds.add(rev.id);
+                if (rev.id && _notifiedReviewIds.has(rev.id)) return;
+                if (rev.id) _notifiedReviewIds.add(rev.id);
 
                 // Если отзыв только что отправил текущий пользователь — он уже видел тост об успехе
-                if (window._myLastReviewText && rev.text && window._myLastReviewText.trim() === rev.text.trim()) {
-                    window._myLastReviewText = null;
+                if (_myLastReviewText && rev.text && _myLastReviewText.trim() === rev.text.trim()) {
+                    _myLastReviewText = null;
                     return;
                 }
 
@@ -630,7 +624,6 @@ function initReviewsRealtime(sb) {
         console.warn('Realtime reviews init error:', e);
     }
 }
-window.initReviewsRealtime = initReviewsRealtime;
 
 registerActions({
     openReviewImage,

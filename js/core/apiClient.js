@@ -308,7 +308,6 @@ import { invokeAction, registerActions } from './action-registry.js';
     };
 
     window.apiClient = apiClient;
-    window.apiRequest = request;
     window.warmupBackendServer = warmupBackendServer;
     registerActions({
         apiRequest: request,

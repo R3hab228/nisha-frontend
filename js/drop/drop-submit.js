@@ -20,6 +20,8 @@ import {
 // Очередь фоновой отправки предложки с авто-повтором при сбоях сети
 let proposalUploadChain = Promise.resolve();
 let activeProposalUploads = 0;
+let _lastUsedPropToken = null;
+let _isSubmittingProposal = false;
 
 function onProposalBeforeUnload(e) {
     if (activeProposalUploads > 0) {
@@ -199,7 +201,7 @@ export function openProposeModal() {
 
 export async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
-    if (!btn || window._isSubmittingProposal) return;
+    if (!btn || _isSubmittingProposal) return;
 
     const files = getProposalFiles().map(obj => obj.file).filter(Boolean);
 
@@ -211,9 +213,11 @@ export async function submitProposal() {
     const price = Number.parseInt(document.getElementById('propPrice')?.value, 10) || 0;
     let rawContact = (document.getElementById('propContact')?.value || '').trim();
 
-    if (!rawContact && typeof getUserPhone === 'function' && typeof getUserTg === 'function') {
-        const uPhone = getUserPhone();
-        const uTg = getUserTg();
+    if (!rawContact) {
+        const phoneFn = resolveAction('getUserPhone');
+        const tgFn = resolveAction('getUserTg');
+        const uPhone = typeof phoneFn === 'function' ? phoneFn() : '';
+        const uTg = typeof tgFn === 'function' ? tgFn() : '';
         if (uPhone && uTg) rawContact = `${uTg} | ${uPhone}`;
         else if (uTg) rawContact = uTg;
         else if (uPhone) rawContact = uPhone;
@@ -303,14 +307,14 @@ export async function submitProposal() {
 
     const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
     let propToken = window._turnstilePropToken || (typeof turnstile !== 'undefined' && propWidgetId !== null && propWidgetId !== undefined ? turnstile.getResponse(propWidgetId) : null);
-    if (propToken && propToken === window._lastUsedPropToken) {
+    if (propToken && propToken === _lastUsedPropToken) {
         propToken = null;
     }
     if (propToken) {
-        window._lastUsedPropToken = propToken;
+        _lastUsedPropToken = propToken;
     }
 
-    window._isSubmittingProposal = true;
+    _isSubmittingProposal = true;
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
 
@@ -367,7 +371,7 @@ export async function submitProposal() {
             : '[ ОТПРАВИТЬ ЗАЯВКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
-        window._isSubmittingProposal = false;
+        _isSubmittingProposal = false;
 
         if (typeof executeCloseModal === 'function') {
             executeCloseModal('proposeModal');
@@ -388,7 +392,7 @@ export async function submitProposal() {
         btn.innerText = typeof i18next !== 'undefined' ? i18next.t('propose.btn_retry', { defaultValue: '[ ПОВТОРИТЬ ПОПЫТКУ ]' }) : '[ ПОВТОРИТЬ ПОПЫТКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
-        window._isSubmittingProposal = false;
+        _isSubmittingProposal = false;
     }
 }
 

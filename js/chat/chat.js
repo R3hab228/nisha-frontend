@@ -4,6 +4,9 @@ import { invokeAction, registerActions, resolveAction } from '../core/action-reg
 // --- СИСТЕМА ЗАПОМИНАНИЯ ПОКАЗАННЫХ ОФФЕРОВ (ЧТОБЫ НЕ НАДОЕДАТЬ ПОЛЬЗОВАТЕЛЮ) ---
 const BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups';
 const SUPPORT_REPLY_SEEN_STORAGE_KEY = 'nisha_seen_support_reply_ids';
+const _shownSupportReplyIds = new Set();
+let _userSupportChannel = null;
+let _supportRepliesInitialized = false;
 
 function hasSeenBargainPopup(key) {
     if (!key) return false;
@@ -32,8 +35,7 @@ function markBargainPopupAsSeen(key) {
 
 function isSupportReplySeen(id) {
     if (!id) return false;
-    window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
-    if (window._shownSupportReplyIds.has(String(id))) return true;
+    if (_shownSupportReplyIds.has(String(id))) return true;
     try {
         const raw = localStorage.getItem(SUPPORT_REPLY_SEEN_STORAGE_KEY);
         if (raw) {
@@ -46,8 +48,7 @@ function isSupportReplySeen(id) {
 
 function markSupportReplyAsSeen(id) {
     if (!id) return;
-    window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
-    window._shownSupportReplyIds.add(String(id));
+    _shownSupportReplyIds.add(String(id));
     try {
         const raw = localStorage.getItem(SUPPORT_REPLY_SEEN_STORAGE_KEY);
         const list = raw ? JSON.parse(raw) : [];
@@ -261,7 +262,6 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         if (e.key === 'Escape') closeOverlay();
     }, { signal: modalCtrl.signal });
 }
-window.showBargainAcceptedModal = showBargainAcceptedModal;
 
 // Кросс-девайс синхронизация: помечаем попап как просмотренный на сервере, чтобы он больше не всплывал на других устройствах (ПК <-> Смартфон)
 async function syncBargainPopupSeenToServer(bargainData) {
@@ -309,7 +309,6 @@ async function syncBargainPopupSeenToServer(bargainData) {
         }
     } catch {}
 }
-window.syncBargainPopupSeenToServer = syncBargainPopupSeenToServer;
 
 window.pendingBargainNotifications = window.pendingBargainNotifications || [];
 
@@ -531,7 +530,6 @@ function openSupportModalWindow() {
         }
     }
 }
-window.openSupportModalWindow = openSupportModalWindow;
 
 // 2. Быстрая отправка тикета поддержки в фоне
 async function submitSupportTicket() {
@@ -588,7 +586,6 @@ async function submitSupportTicket() {
         input.value = '';
     }, 500);
 }
-window.submitSupportTicket = submitSupportTicket;
 
 // 3. Система личных ответов от поддержки (Realtime + Offline)
 function debugChatLog(...args) {
@@ -603,7 +600,6 @@ function checkUnreadSupportReplies() {
     const currentUid = (window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : null;
     if (!activeSb || (!activeFp && !currentUid)) return;
 
-    window._shownSupportReplyIds = window._shownSupportReplyIds || new Set();
 
     const processReplies = (replies) => {
         if (replies && replies.length > 0) {
@@ -632,16 +628,15 @@ function checkUnreadSupportReplies() {
             });
     }
 }
-window.checkUnreadSupportReplies = checkUnreadSupportReplies;
 
 function subscribeUserRealtime(userId) {
     const activeSb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
     if (!userId || !activeSb) return;
     const channelName = `support-replies-user-${userId}`;
-    if (window._userSupportChannel) {
-        try { activeSb.removeChannel(window._userSupportChannel); } catch {}
+    if (_userSupportChannel) {
+        try { activeSb.removeChannel(_userSupportChannel); } catch {}
     }
-    window._userSupportChannel = activeSb.channel(channelName)
+    _userSupportChannel = activeSb.channel(channelName)
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
@@ -656,7 +651,7 @@ function subscribeUserRealtime(userId) {
 window.subscribeUserRealtime = subscribeUserRealtime;
 
 function initSupportRepliesSystem() {
-    if (window._supportRepliesInitialized) return;
+    if (_supportRepliesInitialized) return;
     const sb = window._supabase || (typeof _supabase !== 'undefined' ? _supabase : null);
     const fingerprint = window.clientFingerprint || (typeof clientFingerprint !== 'undefined' ? clientFingerprint : null);
 
@@ -665,7 +660,7 @@ function initSupportRepliesSystem() {
         setTimeout(initSupportRepliesSystem, 1000);
         return;
     }
-    window._supportRepliesInitialized = true;
+    _supportRepliesInitialized = true;
 
     debugChatLog('[СИСТЕМА ОТВЕТОВ] Инициализация... Мой ID:', fingerprint);
 
@@ -706,7 +701,6 @@ function initSupportRepliesSystem() {
         console.error('[СИСТЕМА ОТВЕТОВ] Глобальная ошибка:', e);
     }
 }
-window.initSupportRepliesSystem = initSupportRepliesSystem;
 
 registerActions({
     showBargainAcceptedModal,

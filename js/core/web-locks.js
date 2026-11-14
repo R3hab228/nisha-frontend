@@ -18,7 +18,6 @@ function isWebLocksSupported() {
            'locks' in navigator &&
            typeof navigator.locks?.request === 'function';
 }
-window.isWebLocksSupported = isWebLocksSupported;
 
 /**
  * Checks whether current browser tab is the elected leader
@@ -27,7 +26,6 @@ window.isWebLocksSupported = isWebLocksSupported;
 function isTabLeader() {
     return _isLeader;
 }
-window.isTabLeader = isTabLeader;
 
 /**
  * Subscribes a callback to run when this tab is elected as the leader
@@ -42,7 +40,6 @@ function onLeaderElected(callback) {
     _leaderCallbacks.add(callback);
     return () => _leaderCallbacks.delete(callback);
 }
-window.onLeaderElected = onLeaderElected;
 
 /**
  * Runs an async task protected by an exclusive or shared Web Lock
@@ -75,7 +72,6 @@ async function runWithLock(lockName, taskFn, options = {}) {
     // Graceful fallback for environments without Web Locks API
     return await taskFn();
 }
-window.runWithLock = runWithLock;
 
 /**
  * Initiates leader election among open tabs of the store
@@ -124,12 +120,12 @@ function initLeaderElection() {
 
     return leaderPromise;
 }
-window.initLeaderElection = initLeaderElection;
 
 registerActions({
     runWithLock,
     isWebLocksSupported,
     isTabLeader,
+    onLeaderElected,
     initLeaderElection
 });
 

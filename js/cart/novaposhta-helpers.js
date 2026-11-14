@@ -416,14 +416,11 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.updateNPClearButtons = updateNPClearButtons;
     window.bindTouchTapSelect = bindTouchTapSelect;
     window.bindDropdownScrollDismissKeyboard = bindDropdownScrollDismissKeyboard;
     window.scrollNPFieldIntoModalView = scrollNPFieldIntoModalView;
     window.extractBranchNumber = extractBranchNumber;
     window.parseNPBranchQuery = parseNPBranchQuery;
     window.filterAndSortBranches = filterAndSortBranches;
-    window.hideNPDropdowns = hideNPDropdowns;
     window.resetCheckoutAddressState = resetCheckoutAddressState;
-    window.calculateDeliveryCost = calculateDeliveryCost;
 }

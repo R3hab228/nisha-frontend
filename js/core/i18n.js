@@ -13,12 +13,6 @@ const NISHA_FLAGS = {
     en: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18'%3E%3CclipPath id='s'%3E%3Cpath d='M0,0 v18 h24 v-18 z'/%3E%3C/clipPath%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23fff' stroke-width='3' clip-path='url(%23s)'/%3E%3Cpath d='M0,0 L24,18 M24,0 L0,18' stroke='%23C8102E' stroke-width='1.5' clip-path='url(%23s)'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M12,0 v18 M0,9 h24' stroke='%23C8102E' stroke-width='3'/%3E%3C/svg%3E"
 };
 
-const NISHA_EMOJI_FLAGS = {
-    ua: '🇺🇦',
-    ru: '🇷🇺',
-    en: '🇬🇧'
-};
-
 function normalizeSiteLang(lang) {
     if (!lang || typeof lang !== 'string') return 'ua';
     const clean = lang.trim().toLowerCase().substring(0, 2);
@@ -116,13 +110,8 @@ function setLang(lang) {
     }
 }
 
-window.NISHA_FLAGS = NISHA_FLAGS;
-window.NISHA_EMOJI_FLAGS = NISHA_EMOJI_FLAGS;
 window.normalizeSiteLang = normalizeSiteLang;
-window.getFlagUrlByLang = getFlagUrlByLang;
-window.detectInitialSiteLang = detectInitialSiteLang;
 window.updateFooterLanguageUI = updateFooterLanguageUI;
-window.setLang = setLang;
 
 if (typeof document !== 'undefined') {
     const syncInitialLangUI = () => {
@@ -143,6 +132,7 @@ if (typeof i18next !== 'undefined' && typeof i18next.on === 'function') {
 }
 
 let searchTypewriterInterval = null;
+let searchCursorBlinkInterval = null;
 let currentSearchLang = 'ua';
 
 function toggleLangDropdown(event) {
@@ -150,7 +140,6 @@ function toggleLangDropdown(event) {
     const dropdown = document.getElementById('langDropdown');
     if (dropdown) dropdown.classList.toggle('show');
 }
-window.toggleLangDropdown = toggleLangDropdown;
 
 document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('langDropdown');
@@ -191,7 +180,6 @@ async function ensureLanguageLoaded(lng) {
         console.error('[i18n] Fallback to /locales.json failed:', fbErr);
     }
 }
-window.ensureLanguageLoaded = ensureLanguageLoaded;
 
 async function changeLanguage(lng) {
     const normalized = normalizeSiteLang(lng);
@@ -351,9 +339,9 @@ function startSearchTypewriter() {
     let showCursor = true;
 
     function stopCursorBlink() {
-        if (window.searchCursorBlinkInterval) {
-            clearInterval(window.searchCursorBlinkInterval);
-            window.searchCursorBlinkInterval = null;
+        if (searchCursorBlinkInterval) {
+            clearInterval(searchCursorBlinkInterval);
+            searchCursorBlinkInterval = null;
         }
     }
 
@@ -393,7 +381,7 @@ function startSearchTypewriter() {
                 let blinkCount = 0;
                 const maxBlinks = 4; // 4 * 0.6с = 2.4 секунды паузы перед удалением
                 
-                window.searchCursorBlinkInterval = setInterval(() => {
+                searchCursorBlinkInterval = setInterval(() => {
                     if (document.hidden || document.activeElement === searchInput || searchInput.value.length > 0) {
                         stopCursorBlink();
                         if (!document.hidden) searchInput.placeholder = currentWord;
@@ -419,7 +407,7 @@ function startSearchTypewriter() {
     if (!window._searchTypewriterVisBound) {
         window._searchTypewriterVisBound = true;
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && !window.searchCursorBlinkInterval && !searchTypewriterInterval && document.getElementById('mainSearch')) {
+            if (!document.hidden && !searchCursorBlinkInterval && !searchTypewriterInterval && document.getElementById('mainSearch')) {
                 typeLoop();
             }
         });
@@ -427,9 +415,12 @@ function startSearchTypewriter() {
 
     typeLoop();
 }
-window.startSearchTypewriter = startSearchTypewriter;
 
 registerActions({
+    getFlagUrlByLang,
+    detectInitialSiteLang,
+    toggleLangDropdown,
+    ensureLanguageLoaded,
     setLang,
     'set-lang': setLang,
     changeLanguage,

@@ -465,7 +465,7 @@ export function initGridEventDelegation() {
     }, { passive: true });
 
     grid.addEventListener('click', (e) => {
-        if (e.target.closest('#toastContainer, .toast') || (typeof window !== 'undefined' && Date.now() < (window._nishaToastClickShieldUntil || 0))) {
+        if (e.target.closest('#toastContainer, .toast') || (hasAction('isToastClickShielded') && invokeAction('isToastClickShielded'))) {
             e.preventDefault();
             e.stopPropagation();
             return;
@@ -973,6 +973,7 @@ export async function handleDoubleTapLike(event, itemId, container) {
 
 registerActions({
     updateCardDOM,
+    observeGridVideo: (v) => { if (gridVideoObserver && v) gridVideoObserver.observe(v); },
     changePage,
     activateCardSlides,
     buildCardDOM,
@@ -987,7 +988,6 @@ registerActions({
 
 if (typeof window !== 'undefined') {
     window.updateCardDOM = updateCardDOM;
-    window.gridVideoObserver = gridVideoObserver;
     window.changePage = changePage;
     window.activateCardSlides = activateCardSlides;
     window.buildCardDOM = buildCardDOM;

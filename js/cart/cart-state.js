@@ -261,8 +261,5 @@ registerActions({
 if (typeof window !== 'undefined') {
     window.getActiveCart = getActiveCart;
     window.setActiveCart = setActiveCart;
-    window.withCartLock = withCartLock;
-    window.withCheckoutLock = withCheckoutLock;
     window.renderPromoCodeNotice = renderPromoCodeNotice;
-    window.clearDropdownInlineStyles = clearDropdownInlineStyles;
 }

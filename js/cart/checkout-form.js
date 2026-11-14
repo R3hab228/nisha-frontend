@@ -757,14 +757,5 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.sanitizePromoField = sanitizePromoField;
-    window.saveCheckoutDraft = saveCheckoutDraft;
-    window.restoreCheckoutDraft = restoreCheckoutDraft;
     window.clearCheckoutDraft = clearCheckoutDraft;
-    window.closePaymentDropdown = closePaymentDropdown;
-    window.normalizePaymentMethodRu = normalizePaymentMethodRu;
-    window.selectPaymentMethod = selectPaymentMethod;
-    window.togglePaymentDropdown = togglePaymentDropdown;
-    window.applyPromoCode = applyPromoCode;
-    window.openCheckoutModal = openCheckoutModal;
 }

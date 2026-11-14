@@ -318,6 +318,5 @@ if (typeof window !== 'undefined') {
     window.syncCartToServer = syncCartToServer;
     window.addToCartById = addToCartById;
     window.addToCartWithAnimation = addToCartWithAnimation;
-    window.addToCartFromModal = addToCartFromModal;
     window.removeFromCart = removeFromCart;
 }

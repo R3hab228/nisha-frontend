@@ -191,7 +191,6 @@ export function initPwaLifecycle() {
 
     window.handleNetworkOffline = handleNetworkOffline;
     window.handleNetworkOnline = handleNetworkOnline;
-    window.dismissNetError = dismissNetError;
 
     const installBtn = document.getElementById('installAppBtn');
     if (installBtn && !installBtn._pwaInstallBound) {

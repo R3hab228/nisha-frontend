@@ -136,8 +136,9 @@ export async function loadAllItems() {
                 if (window.storage) window.storage.remove('nisha_cached_db');
             } else {
                 window.allItems = cachedItems;
-                if (window.searchWorker && typeof window.searchWorker.setItems === 'function') {
-                    window.searchWorker.setItems(cachedItems);
+                const searchWorker = invokeAction('getSearchWorker');
+                if (searchWorker && typeof searchWorker.setItems === 'function') {
+                    searchWorker.setItems(cachedItems);
                 }
                 applyFilters(true);
                 updateSidebarCounters();
@@ -209,8 +210,9 @@ export async function loadAllItems() {
 
     if (hasValidImages) {
         window.allItems = data;
-        if (window.searchWorker && typeof window.searchWorker.setItems === 'function') {
-            window.searchWorker.setItems(data);
+        const searchWorker = invokeAction('getSearchWorker');
+        if (searchWorker && typeof searchWorker.setItems === 'function') {
+            searchWorker.setItems(data);
         }
         if (isStructureChanged || changedCardItems.length > 0 || !cachedItems) deferSave();
         updateSidebarCounters();
@@ -226,8 +228,9 @@ export async function loadAllItems() {
             }
         });
         window.allItems = data;
-        if (window.searchWorker && typeof window.searchWorker.setItems === 'function') {
-            window.searchWorker.setItems(data);
+        const searchWorker = invokeAction('getSearchWorker');
+        if (searchWorker && typeof searchWorker.setItems === 'function') {
+            searchWorker.setItems(data);
         }
         updateSidebarCounters();
         if (data[0] && Array.isArray(data[0].images) && data[0].images.length > 0) {
@@ -318,8 +321,9 @@ export function removeSoldItemFromCart(itemId, itemName) {
 
 // КРОСС-ВКЛАДОЧНЫЙ BROADCAST CHANNEL (МГНОВЕННАЯ СИНХРОНИЗАЦИЯ МЕЖДУ ВКЛАДКАМИ БРАУЗЕРА)
 let _catalogBroadcastChannel = null;
-if (typeof BroadcastChannel !== 'undefined' && typeof window !== 'undefined' && !window._nishaCatalogBcInit) {
-    window._nishaCatalogBcInit = true;
+let _nishaCatalogBcInit = false;
+if (typeof BroadcastChannel !== 'undefined' && typeof window !== 'undefined' && !_nishaCatalogBcInit) {
+    _nishaCatalogBcInit = true;
     try {
         _catalogBroadcastChannel = new BroadcastChannel('nisha_catalog_sync');
         _catalogBroadcastChannel.onmessage = (event) => {
@@ -693,8 +697,9 @@ export async function syncCriticalStatuses() {
 }
 
 // Периодический фоновый опрос и мгновенная синхронизация при возвращении в PWA / вкладку (с дедупликацией)
-if (typeof window !== 'undefined' && typeof document !== 'undefined' && !window._catalogAutoSyncInitialized) {
-    window._catalogAutoSyncInitialized = true;
+let _catalogAutoSyncInitialized = false;
+if (typeof window !== 'undefined' && typeof document !== 'undefined' && !_catalogAutoSyncInitialized) {
+    _catalogAutoSyncInitialized = true;
     let _lastForegroundSyncAt = 0;
 
     const triggerForegroundSync = () => {

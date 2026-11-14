@@ -929,15 +929,6 @@ registerActions({
 });
 
 if (typeof window !== 'undefined') {
-    window.clearNPCityInput = clearNPCityInput;
-    window.clearNPBranchInput = clearNPBranchInput;
-    window.debouncedNPCitySearch = debouncedNPCitySearch;
     window.searchNPCity = searchNPCity;
-    window.filterNPBranches = filterNPBranches;
-    window.matchAndSetBranchRef = matchAndSetBranchRef;
     window.ensureBranchRef = ensureBranchRef;
-    window.ensureCityRef = ensureCityRef;
-    window.loadNPBranches = loadNPBranches;
-    window.renderBranches = renderBranches;
-    window.autoDetectCity = autoDetectCity;
 }

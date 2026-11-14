@@ -122,7 +122,6 @@ export function triggerVibration(duration = 150) {
         try { navigator.vibrate(duration); } catch {}
     }
 }
-if (typeof window !== 'undefined') window.triggerVibration = triggerVibration;
 
 /**
  * Triggers Telegram WebApp HapticFeedback or mobile Vibration API feedback.

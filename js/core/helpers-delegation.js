@@ -542,9 +542,8 @@ if (typeof window !== 'undefined') window.handleDelegatedScroll = handleDelegate
  */
 export function initActionDelegation() {
     if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return;
-    if (document._nishaActionDelegationBound || (typeof window !== 'undefined' && window._nishaActionDelegationBound)) return;
+    if (document._nishaActionDelegationBound) return;
     document._nishaActionDelegationBound = true;
-    if (typeof window !== 'undefined') window._nishaActionDelegationBound = true;
 
     document.addEventListener('click', handleDelegatedAction, true);
     document.addEventListener('load', handleDelegatedMediaLoad, true);
@@ -610,7 +609,6 @@ export function initActionDelegation() {
         }
     });
 }
-if (typeof window !== 'undefined') window.initActionDelegation = initActionDelegation;
 
 /**
  * Binds input/submit/change handlers to search, filter checkboxes, Nova Poshta checkout fields & proposal counter.

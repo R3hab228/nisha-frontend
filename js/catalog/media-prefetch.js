@@ -4,6 +4,8 @@
 
 import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 
+const _prefetchedItems = new Set();
+
 // Глобальный перехватчик URL для CDN
 if (typeof window !== 'undefined') {
     window.toCDN = window.toCDN || function(url, options = {}) {
@@ -83,14 +85,13 @@ export function prefetchItemImages(id) {
         return;
     }
     if (typeof window === 'undefined') return;
-    if (!window._prefetchedItems) window._prefetchedItems = new Set();
-    if (window._prefetchedItems.has(id)) return;
+    if (_prefetchedItems.has(id)) return;
 
     clearTimeout(_prefetchDebounceTimer);
     _prefetchPendingId = id;
     _prefetchDebounceTimer = setTimeout(() => {
-        if (window._prefetchedItems.has(id)) return;
-        window._prefetchedItems.add(id);
+        if (_prefetchedItems.has(id)) return;
+        _prefetchedItems.add(id);
         const catalog = typeof getCatalog === 'function' ? getCatalog() : (window.allItems || []);
         const item = catalog.find(i => String(i.id) === String(id));
         if (item) {

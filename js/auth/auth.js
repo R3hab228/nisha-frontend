@@ -23,12 +23,12 @@ const isLocalhost = Boolean(
 const TURNSTILE_SITE_KEY = isLocalhost 
     ? '1x00000000000000000000AA' 
     : '0x4AAAAAAFPA7MSg5EklX3ye';
-window.TURNSTILE_SITE_KEY = TURNSTILE_SITE_KEY;
 
 let turnstileOtpWidgetId = null;
 let turnstilePropWidgetId = null;
 let _turnstileLoadPromise = null;
-window._turnstileOtpToken = null;
+let _turnstileOtpToken = null;
+let _checkActiveOtp = null;
 window._turnstilePropToken = null;
 
 function ensureTurnstileLoaded() {
@@ -89,22 +89,20 @@ function initTurnstileOtpWidget() {
                 sitekey: TURNSTILE_SITE_KEY,
                 size: 'compact',
                 callback: function(token) {
-                    window._turnstileOtpToken = token;
+                    _turnstileOtpToken = token;
                 },
                 'expired-callback': function() {
-                    window._turnstileOtpToken = null;
+                    _turnstileOtpToken = null;
                 },
                 'error-callback': function() {
-                    window._turnstileOtpToken = null;
+                    _turnstileOtpToken = null;
                 }
             });
-            window.turnstileOtpWidgetId = turnstileOtpWidgetId;
         } catch(e) {
             console.warn('[TURNSTILE OTP ERROR]', e);
         }
     }
 }
-window.initTurnstileOtpWidget = initTurnstileOtpWidget;
 
 function initTurnstilePropWidget() {
     if (typeof turnstile === 'undefined') return;
@@ -130,7 +128,6 @@ function initTurnstilePropWidget() {
         }
     }
 }
-window.initTurnstilePropWidget = initTurnstilePropWidget;
 
 function initTurnstileWidgets() {
     if (typeof turnstile !== 'undefined') {
@@ -175,7 +172,6 @@ function getUserTg() {
     }
     return (storage ? storage.get('nisha_last_tg', '') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_last_tg') : '') || '').trim();
 }
-window.getUserTg = getUserTg;
 
 function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
     if (!inputPhone || !verifiedPhone) return false;
@@ -188,7 +184,6 @@ function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
     }
     return false;
 }
-window.isPhoneMatchingVerified = isPhoneMatchingVerified;
 
 function setOtpButtonSuccess(btnOtp) {
     if (!btnOtp) return;
@@ -207,7 +202,6 @@ function setOtpButtonSuccess(btnOtp) {
     btnOtp.style.opacity = '1';
     btnOtp.innerHTML = `<span style="color:var(--accent-green, #00ff00); font-weight:bold; font-family:var(--font-mono); letter-spacing:0.5px;">${successText}</span>`;
 }
-window.setOtpButtonSuccess = setOtpButtonSuccess;
 
 function setOtpButtonDefault(btnOtp) {
     if (!btnOtp) return;
@@ -226,7 +220,6 @@ function setOtpButtonDefault(btnOtp) {
     btnOtp.style.opacity = '1';
     btnOtp.innerText = defaultText;
 }
-window.setOtpButtonDefault = setOtpButtonDefault;
 
 // Автоподстановка контактов в форму предложки и оформление заказа
 function updateProposeAndCheckoutFields() {
@@ -306,7 +299,6 @@ function getWin95HourglassHtml(height = 14) {
 <g class="hg-bot-sand"><rect x="6" y="18" width="3" height="2" fill="#fff" /></g>
 </svg>`;
 }
-window.getWin95HourglassHtml = getWin95HourglassHtml;
 
 // --- OTP ПОДТВЕРЖДЕНИЕ НОМЕРА ТЕЛЕФОНА (ЧЕКАУТ) ---
 let otpVerified = false;
@@ -420,8 +412,8 @@ async function generateAndSendOTP() {
     }
 
     // Токен Turnstile из памяти
-    const widgetId = (typeof turnstileOtpWidgetId !== 'undefined') ? turnstileOtpWidgetId : window.turnstileOtpWidgetId;
-    let turnToken = window._turnstileOtpToken || (typeof turnstile !== 'undefined' && widgetId !== null && widgetId !== undefined ? turnstile.getResponse(widgetId) : null);
+    const widgetId = turnstileOtpWidgetId;
+    let turnToken = _turnstileOtpToken || (typeof turnstile !== 'undefined' && widgetId !== null && widgetId !== undefined ? turnstile.getResponse(widgetId) : null);
     
     // Блокируем кнопку от двойных нажатий
     btnOtp.disabled = true;
@@ -437,7 +429,7 @@ async function generateAndSendOTP() {
                 if (typeof turnstile !== 'undefined' && widgetId !== null && widgetId !== undefined) {
                     turnstile.reset(widgetId);
                 }
-                window._turnstileOtpToken = null;
+                _turnstileOtpToken = null;
                 setOtpButtonDefault(btnOtp);
                 return;
             }
@@ -533,11 +525,11 @@ async function generateAndSendOTP() {
                 clearInterval(otpInterval);
                 otpInterval = null;
             }
-            window._checkActiveOtp = null;
+            _checkActiveOtp = null;
             checkPhoneAuth();
         }
     };
-    window._checkActiveOtp = doOtpCheck;
+    _checkActiveOtp = doOtpCheck;
 
     window.otpPollInterval = setInterval(async () => {
         if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
@@ -547,7 +539,7 @@ async function generateAndSendOTP() {
         if (pollAttempts >= maxPollAttempts) {
             clearInterval(window.otpPollInterval);
             window.otpPollInterval = null;
-            window._checkActiveOtp = null;
+            _checkActiveOtp = null;
             if (otpInterval) {
                 clearInterval(otpInterval);
                 otpInterval = null;
@@ -565,13 +557,12 @@ async function generateAndSendOTP() {
         await doOtpCheck();
     }, 2000);
 }
-window.generateAndSendOTP = generateAndSendOTP;
 
 // Мгновенная проверка OTP и восстановление таймера при возврате пользователя во вкладку
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-        if (typeof window._checkActiveOtp === 'function') {
-            window._checkActiveOtp();
+        if (typeof _checkActiveOtp === 'function') {
+            _checkActiveOtp();
         }
         if (storage && storage.get('nisha_pending_otp_phone')) {
             invokeAction('checkPendingPhoneVerification');
@@ -597,3 +588,9 @@ registerActions({
     checkPhoneAuth,
     generateAndSendOTP
 });
+
+if (typeof window !== 'undefined') {
+    window.isPhoneMatchingVerified = isPhoneMatchingVerified;
+    window.setOtpButtonSuccess = setOtpButtonSuccess;
+    window.setOtpButtonDefault = setOtpButtonDefault;
+}

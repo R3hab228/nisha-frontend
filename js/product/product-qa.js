@@ -197,11 +197,13 @@ export function toggleQASection(btn) {
 /**
  * Initializes Supabase Realtime subscription for live Q&A updates.
  */
+let _productQaSubInitialized = false;
+
 export function initProductQASubscription() {
-    if (typeof window !== 'undefined' && window._productQaSubInitialized) return;
+    if (_productQaSubInitialized) return;
     const sb = getSupabaseClient();
     if (sb && typeof sb.channel === 'function') {
-        if (typeof window !== 'undefined') window._productQaSubInitialized = true;
+        _productQaSubInitialized = true;
         sb.channel('public-qa-updates')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'item_questions' }, payload => {
                 const active = getActiveOpenedItem();
@@ -225,12 +227,3 @@ registerActions({
     toggleQASection,
     initProductQASubscription
 });
-
-if (typeof window !== 'undefined') {
-    window.toggleQuestionForm = toggleQuestionForm;
-    window.submitQuestion = submitQuestion;
-    window.loadItemQuestions = loadItemQuestions;
-    window.toggleAccordion = toggleAccordion;
-    window.toggleQASection = toggleQASection;
-    window.initProductQASubscription = initProductQASubscription;
-}
