@@ -124,6 +124,7 @@ export async function maybeShowPostOrderPwaBroadcast() {
         document.body.appendChild(overlay);
 
         const ctrl = new AbortController();
+        let isInstalling = false;
         const closeOverlay = (markDismissed = false) => {
             ctrl.abort();
             overlay.remove();
@@ -132,31 +133,112 @@ export async function maybeShowPostOrderPwaBroadcast() {
             }
         };
 
-        overlay.querySelector('.pwa-bc-install').addEventListener('click', async () => {
+        const installBtnEl = overlay.querySelector('.pwa-bc-install');
+        const laterBtnEl = overlay.querySelector('.pwa-bc-later');
+
+        installBtnEl.addEventListener('click', async () => {
+            if (isInstalling) return;
             const promptEvent = deferredPrompt;
-            closeOverlay(false);
-            if (!promptEvent) return;
+            if (!promptEvent) {
+                closeOverlay(false);
+                return;
+            }
+            isInstalling = true;
+
+            const TOTAL_BARS = 14;
+            const lockedHeight = installBtnEl.offsetHeight ? `${installBtnEl.offsetHeight}px` : '46px';
+            installBtnEl.disabled = true;
+            installBtnEl.style.height = lockedHeight;
+            installBtnEl.style.background = '#050505';
+            installBtnEl.style.borderStyle = 'inset';
+            installBtnEl.style.borderColor = '#555';
+            installBtnEl.style.padding = '5px';
+            installBtnEl.style.display = 'flex';
+            installBtnEl.style.alignItems = 'stretch';
+            installBtnEl.style.gap = '3px';
+            installBtnEl.style.cursor = 'default';
+            installBtnEl.innerHTML = Array.from({ length: TOTAL_BARS }, () => (
+                '<span class="pwa-bc-bar" style="flex:1;background:#141414;transition:background 0.12s ease,box-shadow 0.12s ease;"></span>'
+            )).join('');
+
+            if (laterBtnEl) {
+                laterBtnEl.style.pointerEvents = 'none';
+                laterBtnEl.style.opacity = '0.4';
+            }
+
+            const bars = Array.from(installBtnEl.querySelectorAll('.pwa-bc-bar'));
+            let currentBars = 0;
+            const setBars = (count) => {
+                const target = Math.max(0, Math.min(TOTAL_BARS, count));
+                for (let i = 0; i < bars.length; i++) {
+                    if (i < target) {
+                        bars[i].style.background = 'var(--accent-green, #00ff00)';
+                        bars[i].style.boxShadow = '0 0 6px rgba(0, 255, 0, 0.55)';
+                    } else {
+                        bars[i].style.background = '#141414';
+                        bars[i].style.boxShadow = 'none';
+                    }
+                }
+                currentBars = target;
+            };
+
+            // Этап 1: ожидание подтверждения в системном диалоге
+            setBars(2);
+            let progressTimer = setInterval(() => {
+                if (currentBars < 4) setBars(currentBars + 1);
+            }, 220);
+
             try {
                 promptEvent.prompt();
                 const { outcome } = await promptEvent.userChoice;
                 deferredPrompt = null;
+                clearInterval(progressTimer);
+
                 if (outcome === 'accepted') {
-                    markPwaInstalled();
-                    if (window.analytics && typeof window.analytics.track === 'function') {
-                        window.analytics.track('PWA Installed', { source: 'post_order_broadcast' });
+                    // Этап 2: реальная установка PWA и готовность Service Worker
+                    setBars(Math.max(currentBars, 6));
+                    let installCompleted = false;
+                    const finishInstall = () => {
+                        if (installCompleted) return;
+                        installCompleted = true;
+                        clearInterval(progressTimer);
+                        setBars(TOTAL_BARS);
+                        markPwaInstalled();
+                        if (window.analytics && typeof window.analytics.track === 'function') {
+                            window.analytics.track('PWA Installed', { source: 'post_order_broadcast' });
+                        }
+                        setTimeout(() => closeOverlay(false), 380);
+                    };
+
+                    window.addEventListener('appinstalled', finishInstall, { once: true, signal: ctrl.signal });
+                    if (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.ready) {
+                        navigator.serviceWorker.ready.then(() => {
+                            setTimeout(finishInstall, 450);
+                        }).catch(() => {});
                     }
-                } else if (store) {
-                    store.set(PWA_BROADCAST_DISMISSED_KEY, String(Date.now()));
+                    progressTimer = setInterval(() => {
+                        if (currentBars < TOTAL_BARS - 2) {
+                            setBars(currentBars + 1);
+                        }
+                    }, 180);
+                    setTimeout(finishInstall, 2200);
+                } else {
+                    closeOverlay(true);
                 }
-            } catch {}
+            } catch {
+                clearInterval(progressTimer);
+                closeOverlay(false);
+            }
         }, { signal: ctrl.signal });
 
-        overlay.querySelector('.pwa-bc-later').addEventListener('click', () => closeOverlay(true), { signal: ctrl.signal });
+        laterBtnEl.addEventListener('click', () => {
+            if (!isInstalling) closeOverlay(true);
+        }, { signal: ctrl.signal });
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeOverlay(true);
+            if (!isInstalling && e.target === overlay) closeOverlay(true);
         }, { signal: ctrl.signal });
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeOverlay(true);
+            if (!isInstalling && e.key === 'Escape') closeOverlay(true);
         }, { signal: ctrl.signal });
 
         return true;
