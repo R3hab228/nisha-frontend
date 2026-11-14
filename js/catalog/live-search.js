@@ -335,15 +335,10 @@ function closeSearch() {
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
     if (dropdown) {
+        // Не удаляем inline top/left/width/position во время закрытия,
+        // чтобы при дискретном переходе (overlay/display allow-discrete) меню плавно таяло на месте без скачка влево
         hidePopoverSafe(dropdown);
         dropdown.style.display = 'none';
-        dropdown.style.removeProperty('position');
-        dropdown.style.removeProperty('top');
-        dropdown.style.removeProperty('bottom');
-        dropdown.style.removeProperty('left');
-        dropdown.style.removeProperty('width');
-        dropdown.style.removeProperty('max-height');
-        dropdown.style.removeProperty('margin');
     }
     document.body.classList.remove('search-lock');
     if (hasAction('startLenis')) invokeAction('startLenis');

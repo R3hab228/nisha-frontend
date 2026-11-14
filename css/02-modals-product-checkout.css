@@ -108,9 +108,17 @@
 
     .live-search-dropdown {
         transition: opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    overlay 0.2s allow-discrete,
                     display 0.2s allow-discrete;
     }
+    .live-search-dropdown:not(:popover-open) {
+        opacity: 0;
+        transform: translateY(-4px);
+        pointer-events: none;
+    }
     @starting-style {
+        .live-search-dropdown:popover-open,
         .live-search-dropdown[style*="display: block"] {
             opacity: 0;
             transform: translateY(-4px);

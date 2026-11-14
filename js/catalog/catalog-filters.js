@@ -687,31 +687,30 @@ export function setCategoryFilter(cat, element) {
  * @returns {any}
  */
 export function clearSearchInput() {
-    const updateDom = async () => {
-        clearSavedFeedScrollState();
-        const input = document.getElementById('mainSearch');
-        if (input) input.value = '';
-        const clearBtn = document.getElementById('clearSearchBtn');
-        if (clearBtn) clearBtn.style.display = 'none';
-        if (hasAction('closeSearch')) {
-            invokeAction('closeSearch');
-        } else {
-            const liveDropdown = document.getElementById('liveSearchDropdown');
-            if (liveDropdown) {
-                if (hasAction('hidePopoverSafe')) {
-                    invokeAction('hidePopoverSafe', liveDropdown);
-                } else if (typeof liveDropdown.hidePopover === 'function' && liveDropdown.matches && liveDropdown.matches(':popover-open')) {
-                    try { liveDropdown.hidePopover(); } catch {}
-                }
-                liveDropdown.style.display = 'none';
-            }
-            document.body.classList.remove('search-lock');
-            invokeAction('startLenis');
-        }
-        await applyFilters(true, false);
-    };
+    clearSavedFeedScrollState();
+    const input = document.getElementById('mainSearch');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
 
-    return runCatalogViewTransition(updateDom);
+    // Закрываем дропдаун ДО запуска ViewTransition, чтобы старый кадр не захватывал открытый поповер
+    if (hasAction('closeSearch')) {
+        invokeAction('closeSearch');
+    } else {
+        const liveDropdown = document.getElementById('liveSearchDropdown');
+        if (liveDropdown) {
+            if (hasAction('hidePopoverSafe')) {
+                invokeAction('hidePopoverSafe', liveDropdown);
+            } else if (typeof liveDropdown.hidePopover === 'function' && liveDropdown.matches && liveDropdown.matches(':popover-open')) {
+                try { liveDropdown.hidePopover(); } catch {}
+            }
+            liveDropdown.style.display = 'none';
+        }
+        document.body.classList.remove('search-lock');
+        invokeAction('startLenis');
+    }
+
+    return runCatalogViewTransition(() => applyFilters(true, false));
 }
 
 /**
