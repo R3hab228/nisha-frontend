@@ -49,7 +49,10 @@ function registerLazyModuleBridge(loaderFn, methodEntries) {
 }
 
 const loadDropModule = registerLazyModuleBridge(
-    () => import('../drop/drop.js'),
+    () => Promise.all([
+        import('../drop/drop.js'),
+        typeof document !== 'undefined' ? import('../../css/lazy-drop-modal.css').catch(() => {}) : Promise.resolve()
+    ]).then(([mod]) => mod),
     [
         ['openProposeModal', 'open-propose-modal'],
         'compressImage',
@@ -91,7 +94,10 @@ const loadChatModule = registerLazyModuleBridge(
 );
 
 const loadOrdersModule = registerLazyModuleBridge(
-    () => import('../orders/orders.js'),
+    () => Promise.all([
+        import('../orders/orders.js'),
+        typeof document !== 'undefined' ? import('../../css/lazy-orders-modal.css').catch(() => {}) : Promise.resolve()
+    ]).then(([mod]) => mod),
     [
         ['openOrdersModal', 'open-orders'],
         ['fetchMyOrders', 'fetch-my-orders'],

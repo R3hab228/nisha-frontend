@@ -1,11 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { readOrdersSource } from './helpers/readOrdersSource.js';
 import { getNovaPoshtaTrackingUrl, encodeNovaPoshtaTtn, formatOrderStatus } from '../src/modules/orders.js';
 
 describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
-    const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+    const ordersCode = readOrdersSource();
     const styleCode = readProjectCss();
 
     describe('1. CSS View Transition Rules & Modal Isolation', () => {
@@ -40,11 +41,14 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
     });
 
     describe('2. Nova Poshta Direct Tracking Link Generation & Base64 Reverse Encoding', () => {
-        it('defines encodeNovaPoshtaTtn and getNovaPoshtaTrackingUrl in orders.js and exposes them on window', () => {
+        it('defines encodeNovaPoshtaTtn and getNovaPoshtaTrackingUrl in orders.js and exposes them on window', async () => {
             expect(ordersCode).toContain('function encodeNovaPoshtaTtn(ttn)');
-            expect(ordersCode).toContain('window.encodeNovaPoshtaTtn = encodeNovaPoshtaTtn');
+            expect(ordersCode).toContain('encodeNovaPoshtaTtn,');
             expect(ordersCode).toContain('function getNovaPoshtaTrackingUrl(ttn, lang)');
-            expect(ordersCode).toContain('window.getNovaPoshtaTrackingUrl = getNovaPoshtaTrackingUrl');
+            expect(ordersCode).toContain('getNovaPoshtaTrackingUrl,');
+            await import('../js/orders/orders.js');
+            expect(typeof window.encodeNovaPoshtaTtn).toBe('function');
+            expect(typeof window.getNovaPoshtaTrackingUrl).toBe('function');
         });
 
         it('generates direct tracking.novaposhta.ua hash routes instead of deprecated novaposhta.ua/tracking/?cargo_number', () => {
@@ -141,7 +145,7 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
 
     describe('3. Order Footer TTNs & Total Spacing Layout', () => {
         it('isolates multiple TTNs inside order-ttns-wrapper grid and places total on its own row', () => {
-            const freshOrdersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            const freshOrdersCode = readOrdersSource();
             const freshStyleCode = readProjectCss();
 
             expect(freshOrdersCode).toContain('class="order-ttns-wrapper"');
@@ -233,9 +237,11 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
             expect(window.formatOrderStatus('Отменен')).toBe('CANCELLED');
         });
 
-        it('orders.js attaches data-raw-status for dynamic re-translation on language switch', () => {
+        it('orders.js attaches data-raw-status for dynamic re-translation on language switch', async () => {
             expect(ordersCode).toContain('data-raw-status=');
-            expect(ordersCode).toContain('window.formatOrderStatus');
+            expect(ordersCode).toContain('formatOrderStatus,');
+            await import('../js/orders/orders.js');
+            expect(typeof window.formatOrderStatus).toBe('function');
         });
 
         it('i18n.js re-translates .order-status[data-raw-status] inside updateContentLanguage', () => {

@@ -14,6 +14,7 @@ import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
 import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
+import { readDropSource } from './helpers/readDropSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -116,7 +117,7 @@ describe('Modern Performance APIs Suite', () => {
         });
 
         it('drop.js avoids permanent beforeunload listeners to ensure 100% bfcache compliance', () => {
-            const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
             expect(dropCode).not.toContain("window.addEventListener('beforeunload', (e) => {\n    if (activeProposalUploads > 0)");
             expect(dropCode).toContain('updateProposalBeforeUnloadListener');
             expect(dropCode).toContain("window.removeEventListener('beforeunload', onProposalBeforeUnload)");

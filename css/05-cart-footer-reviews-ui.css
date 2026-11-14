@@ -379,49 +379,7 @@
 .fab-propose.cart-active { bottom: 120px; }
 .fab-propose.hidden-scroll { transform: translateY(150px) scale(0.5); opacity: 0; pointer-events: none; } body:has(.cart-dropdown.active) .fab-propose, .cart-panel.dropdown-open ~ .fab-propose, .cart-panel:has(.cart-dropdown.active) ~ .fab-propose { display: none !important; opacity: 0 !important; pointer-events: none !important; }
 
-.upload-dropzone { background: #0a0a0a; border: 2px dashed #444; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; border-radius: 4px; min-height: 80px; display: flex; align-items: center; justify-content: center; flex-direction: column;}
-.upload-dropzone:hover { border-color: var(--accent-green); background: #111; }
-.upload-dropzone.drag-active { border-color: var(--accent-green); background: rgba(0, 255, 0, 0.1); transform: scale(1.02); }
-.preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; width: 100%; justify-content: center;}
-.preview-img { 
-    width: 65px; height: 65px; background-size: cover; background-position: center; 
-    border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); 
-    position: relative; cursor: grab; 
-    /* РЈР”РђР›РР›Р transition, С‡С‚РѕР±С‹ РЅРµ Р»Р°РіР°Р»Рѕ! */
-    touch-action: none; 
-    user-select: none; 
-    -webkit-user-select: none; 
-    -webkit-touch-callout: none; 
-}
-.preview-img:active { cursor: grabbing; }
-.preview-del-btn {
-    position: absolute;
-    top: -6px;
-    left: -6px;
-    background: var(--accent-red);
-    color: #fff;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 10px;
-    cursor: pointer;
-    z-index: 10;
-    font-family: var(--font-mono);
-    border: 1px solid #000;
-    transition: transform 0.15s ease;
-}
-.preview-del-btn:hover {
-    transform: scale(1.2);
-}
-
-/* РђРЅРёРјР°С†РёРё РґР»СЏ РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ (Drag and Drop) */
-.sortable-ghost { opacity: 0.3; background: #111; border: 2px dashed var(--accent-green) !important; }
-.sortable-drag { cursor: grabbing !important; box-shadow: 0 15px 25px rgba(0,255,0,0.4) !important; transform: scale(1.15); z-index: 99999 !important; opacity: 0.9; }
-/* Р¤РРљРЎ РљРћРћР Р”РРќРђРў Р”Р›РЇ РўР•Р›Р•Р¤РћРќРћР’: */
-.sortable-fallback { opacity: 1 !important; pointer-events: none !important; z-index: 99999 !important; }
+/* Drop upload dropzone & preview styles moved to css/lazy-drop-modal.css */
 
 .driver-popover { background-color: #0a0a0a !important; color: #fff !important; border: 2px dashed var(--accent-green) !important; font-family: var(--font-mono) !important; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2) !important; border-radius: 0 !important; z-index: 100000 !important; padding: 15px !important; max-width: min(300px, calc(100vw - 24px)) !important; }
 .driver-popover-title, header.driver-popover-title { font-size: 16px !important; color: var(--accent-green) !important; text-transform: uppercase; background: transparent !important; border: none !important; padding: 0 24px 0 0 !important; margin: 0 !important; line-height: 1.4 !important; }
@@ -465,18 +423,7 @@ svg.driver-overlay,
 
 body.search-lock { overflow: hidden !important; height: 100vh; }
 
-.orders-tabs { display: flex; justify-content: space-between; border-bottom: 2px solid #222; margin: 0 20px 10px 20px; padding-bottom: 0; }
-.order-tab { background: none; border: none; color: #555; font-family: var(--font-mono); font-size: 13px; font-weight: bold; cursor: pointer; padding: 10px 0; position: relative; transition: color 0.4s ease; outline: none; flex: 1; }
-.order-tab:hover { color: #888; }
-.order-tab.active { color: #fff; }
-.order-tab::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: transparent; opacity: 0; transition: opacity 0.4s ease, box-shadow 0.4s ease; }
-.order-tab.active::after { opacity: 1; }
-.order-tab.tab-yellow.active::after { background: var(--accent-yellow); box-shadow: 0 0 8px rgba(255, 204, 0, 0.4); }
-.order-tab.tab-blue.active::after { background: #00aaff; box-shadow: 0 0 8px rgba(0, 170, 255, 0.4); }
-.order-tab.tab-red.active::after { background: var(--accent-red); box-shadow: 0 0 8px rgba(255, 0, 0, 0.4); }
-
-.order-card-anim { animation: orderFadeIn 0.4s ease-out forwards; }
-@keyframes orderFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* Order tabs & card animation moved to css/lazy-orders-modal.css */
 
 .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
 .password-wrapper .auth-input, .password-wrapper .form-input { width: 100%; padding-right: 40px !important; }

@@ -4,6 +4,8 @@ import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
 import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
+import { readOrdersSource } from './helpers/readOrdersSource.js';
+import { readDropSource } from './helpers/readDropSource.js';
 import * as helpers from '../src/modules/helpers.js';
 import * as cart from '../src/modules/cart.js';
 import fs from 'node:fs';
@@ -52,7 +54,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         });
 
         it('orders.js uses toReversed and rum.js uses at(-1)', () => {
-            const ordersCode = fs.readFileSync(path.resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            const ordersCode = readOrdersSource();
             expect(ordersCode).toContain('toReversed');
 
             const rumCode = fs.readFileSync(path.resolve(__dirname, '../js/core/rum.js'), 'utf8');
@@ -238,7 +240,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             const webLocksCode = fs.readFileSync(path.resolve(__dirname, '../js/core/web-locks.js'), 'utf8');
             expect(webLocksCode).toContain('Promise.withResolvers');
 
-            const dropCode = fs.readFileSync(path.resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
             expect(dropCode).toContain('Promise.withResolvers');
         });
     });

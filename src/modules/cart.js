@@ -3,6 +3,7 @@
 // Safe, typed ES module exports for cart operations
 // ==========================================
 
+import { callAction, callAsyncAction } from './_facade.js';
 import { getStore } from './store.js';
 
 /**
@@ -10,14 +11,10 @@ import { getStore } from './store.js';
  * @returns {any[]}
  */
 export function getActiveCart() {
-    if (typeof window !== 'undefined' && typeof window.getActiveCart === 'function') {
-        return window.getActiveCart();
-    }
-    const s = getStore();
-    if (s && Array.isArray(s.cart)) {
-        return s.cart;
-    }
-    return [];
+    return callAction('getActiveCart', [], () => {
+        const s = getStore();
+        return (s && Array.isArray(s.cart)) ? s.cart : [];
+    });
 }
 
 /**
@@ -25,13 +22,10 @@ export function getActiveCart() {
  * @param {any[]} cart
  */
 export function setActiveCart(cart) {
-    if (typeof window !== 'undefined' && typeof window.setActiveCart === 'function') {
-        return window.setActiveCart(cart);
-    }
-    const s = getStore();
-    if (s) {
-        s.cart = cart;
-    }
+    return callAction('setActiveCart', [cart], (nextCart) => {
+        const s = getStore();
+        if (s) s.cart = nextCart;
+    });
 }
 
 /**
@@ -40,10 +34,8 @@ export function setActiveCart(cart) {
  * @param {string} [size='']
  * @param {any} [options={}]
  */
-export async function addToCartById(id, size = '', options = {}) {
-    if (typeof window !== 'undefined' && typeof window.addToCartById === 'function') {
-        return window.addToCartById(id, size, options);
-    }
+export function addToCartById(id, size = '', options = {}) {
+    return callAsyncAction('addToCartById', [id, size, options]);
 }
 
 /**
@@ -51,10 +43,8 @@ export async function addToCartById(id, size = '', options = {}) {
  * @param {string|number} id
  * @param {MouseEvent|TouchEvent} [event]
  */
-export async function addToCartWithAnimation(id, event) {
-    if (typeof window !== 'undefined' && typeof window.addToCartWithAnimation === 'function') {
-        return window.addToCartWithAnimation(id, event);
-    }
+export function addToCartWithAnimation(id, event) {
+    return callAsyncAction('addToCartWithAnimation', [id, event]);
 }
 
 /**
@@ -63,27 +53,21 @@ export async function addToCartWithAnimation(id, event) {
  * @param {string} [size]
  */
 export function removeFromCart(id, size) {
-    if (typeof window !== 'undefined' && typeof window.removeFromCart === 'function') {
-        return window.removeFromCart(id, size);
-    }
+    return callAction('removeFromCart', [id, size]);
 }
 
 /**
  * Opens cart drawer
  */
 export function openCart() {
-    if (typeof window !== 'undefined' && typeof window.openCart === 'function') {
-        return window.openCart();
-    }
+    return callAction('openCart');
 }
 
 /**
  * Opens checkout modal dialog
  */
 export function openCheckoutModal() {
-    if (typeof window !== 'undefined' && typeof window.openCheckoutModal === 'function') {
-        return window.openCheckoutModal();
-    }
+    return callAction('openCheckoutModal');
 }
 
 /**
@@ -91,10 +75,8 @@ export function openCheckoutModal() {
  * @param {FormData|Record<string, any>} formData
  * @returns {Promise<any>}
  */
-export async function submitOrder(formData) {
-    if (typeof window !== 'undefined' && typeof window.submitOrder === 'function') {
-        return window.submitOrder(formData);
-    }
+export function submitOrder(formData) {
+    return callAsyncAction('submitOrder', [formData]);
 }
 
 /**
@@ -102,29 +84,23 @@ export async function submitOrder(formData) {
  * @param {string} code
  * @returns {Promise<any>}
  */
-export async function applyPromoCode(code) {
-    if (typeof window !== 'undefined' && typeof window.applyPromoCode === 'function') {
-        return window.applyPromoCode(code);
-    }
+export function applyPromoCode(code) {
+    return callAsyncAction('applyPromoCode', [code]);
 }
 
 /**
  * Synchronizes cart state to server
  * @returns {Promise<void>}
  */
-export async function syncCartToServer() {
-    if (typeof window !== 'undefined' && typeof window.syncCartToServer === 'function') {
-        return window.syncCartToServer();
-    }
+export function syncCartToServer() {
+    return callAsyncAction('syncCartToServer');
 }
 
 /**
  * Updates cart badges, counts and total price in DOM
  */
 export function updateCartUI() {
-    if (typeof window !== 'undefined' && typeof window.updateCartUI === 'function') {
-        return window.updateCartUI();
-    }
+    return callAction('updateCartUI');
 }
 
 /**
@@ -132,11 +108,8 @@ export function updateCartUI() {
  * @param {string} key
  * @returns {Promise<any>}
  */
-export async function getNPStorageAsync(key) {
-    if (typeof window !== 'undefined' && typeof window.getNPStorageAsync === 'function') {
-        return window.getNPStorageAsync(key);
-    }
-    return null;
+export function getNPStorageAsync(key) {
+    return callAsyncAction('getNPStorageAsync', [key], () => null);
 }
 
 /**
@@ -145,10 +118,7 @@ export async function getNPStorageAsync(key) {
  * @returns {any}
  */
 export function getNPStorage(key) {
-    if (typeof window !== 'undefined' && typeof window.getNPStorage === 'function') {
-        return window.getNPStorage(key);
-    }
-    return null;
+    return callAction('getNPStorage', [key], () => null);
 }
 
 /**
@@ -158,19 +128,15 @@ export function getNPStorage(key) {
  * @param {number} [ttl]
  */
 export function setNPStorage(key, val, ttl) {
-    if (typeof window !== 'undefined' && typeof window.setNPStorage === 'function') {
-        return window.setNPStorage(key, val, ttl);
-    }
+    return callAction('setNPStorage', [key, val, ttl]);
 }
 
 /**
  * Clears Nova Poshta caches across memory, IndexedDB and sessionStorage
  * @returns {Promise<void>}
  */
-export async function clearNPCache() {
-    if (typeof window !== 'undefined' && typeof window.clearNPCache === 'function') {
-        return window.clearNPCache();
-    }
+export function clearNPCache() {
+    return callAsyncAction('clearNPCache');
 }
 
 /**
@@ -178,11 +144,12 @@ export async function clearNPCache() {
  * @param {boolean} [forceAll=false]
  * @returns {Promise<{ deleted: number, checked: number, success: boolean }>}
  */
-export async function cleanupStaleNPCache(forceAll = false) {
-    if (typeof window !== 'undefined' && typeof window.cleanupStaleNPCache === 'function') {
-        return window.cleanupStaleNPCache(forceAll);
-    }
-    return { deleted: 0, checked: 0, success: true };
+export function cleanupStaleNPCache(forceAll = false) {
+    return callAsyncAction('cleanupStaleNPCache', [forceAll], () => ({
+        deleted: 0,
+        checked: 0,
+        success: true
+    }));
 }
 
 /**
@@ -191,16 +158,26 @@ export async function cleanupStaleNPCache(forceAll = false) {
  * @returns {any[]}
  */
 export function slimBranches(list) {
-    if (typeof window !== 'undefined' && typeof window.slimBranches === 'function') {
-        return window.slimBranches(list);
+    return callAction('slimBranches', [list], (branches) => {
+        if (!Array.isArray(branches)) return [];
+        return branches.map(b => ({
+            Ref: b.Ref,
+            Description: b.Description || '',
+            TypeOfWarehouse: b.TypeOfWarehouse || '',
+            Number: b.Number ? String(b.Number) : ''
+        }));
+    });
+}
+
+async function runWithNativeLock(lockName, fn) {
+    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        try {
+            return await navigator.locks.request(lockName, fn);
+        } catch (_) {
+            return await fn();
+        }
     }
-    if (!Array.isArray(list)) return [];
-    return list.map(b => ({
-        Ref: b.Ref,
-        Description: b.Description || '',
-        TypeOfWarehouse: b.TypeOfWarehouse || '',
-        Number: b.Number ? String(b.Number) : ''
-    }));
+    return await fn();
 }
 
 /**
@@ -209,18 +186,8 @@ export function slimBranches(list) {
  * @param {() => Promise<T>|T} fn
  * @returns {Promise<T>}
  */
-export async function withCartLock(fn) {
-    if (typeof window !== 'undefined' && typeof window.withCartLock === 'function') {
-        return window.withCartLock(fn);
-    }
-    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
-        try {
-            return await navigator.locks.request('nisha_cart_lock', fn);
-        } catch (_) {
-            return await fn();
-        }
-    }
-    return await fn();
+export function withCartLock(fn) {
+    return callAsyncAction('withCartLock', [fn], (taskFn) => runWithNativeLock('nisha_cart_lock', taskFn));
 }
 
 /**
@@ -229,16 +196,6 @@ export async function withCartLock(fn) {
  * @param {() => Promise<T>|T} fn
  * @returns {Promise<T>}
  */
-export async function withCheckoutLock(fn) {
-    if (typeof window !== 'undefined' && typeof window.withCheckoutLock === 'function') {
-        return window.withCheckoutLock(fn);
-    }
-    if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
-        try {
-            return await navigator.locks.request('nisha_checkout_lock', fn);
-        } catch (_) {
-            return await fn();
-        }
-    }
-    return await fn();
+export function withCheckoutLock(fn) {
+    return callAsyncAction('withCheckoutLock', [fn], (taskFn) => runWithNativeLock('nisha_checkout_lock', taskFn));
 }

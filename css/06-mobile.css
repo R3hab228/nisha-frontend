@@ -210,61 +210,8 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
         pointer-events: none !important;
         animation: slideDownMobile 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
-    #ordersModal .modal-window {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: 78dvh !important;
-        min-height: min(480px, 78dvh) !important;
-        max-height: 84dvh !important;
-        display: flex !important;
-        flex-direction: column !important;
-        overflow: hidden !important;
-    }
-    #ordersModal #ordersListArea {
-        flex: 1 1 auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
-        padding: 15px !important;
-    }
     .modal-content { padding: 15px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); flex-direction: column; gap: 15px; }
     .form-layout { padding: 15px; padding-bottom: calc(25px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; }
-    #proposeModal .modal-window {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: 92dvh !important;
-        min-height: min(560px, 92dvh) !important;
-        max-height: 94dvh !important;
-        display: flex !important;
-        flex-direction: column !important;
-        overflow: hidden !important;
-    }
-    #proposeModal .form-layout {
-        flex: 1 1 auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-y: contain;
-        padding: 15px !important;
-        padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important;
-    }
-    #proposeModal #propDesc,
-    #proposeModal textarea {
-        min-height: 85px !important;
-        height: 85px !important;
-        flex-shrink: 0 !important;
-    }
-    .prop-bargain-toggle-btn {
-        min-width: 85px;
-        padding: 0 10px;
-        font-size: 12px;
-        flex-shrink: 0 !important;
-    }
-    .prop-bargain-confirm-btn {
-        flex-shrink: 0 !important;
-    }
     html.keyboard-open .modal-overlay {
         height: var(--vv-height, 100dvh) !important;
         top: 0 !important;
@@ -276,15 +223,6 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
         max-height: var(--vv-height, 100dvh) !important;
         min-height: 0 !important;
         transition: none !important;
-    }
-    html.keyboard-open #proposeModal .modal-window {
-        height: 100% !important;
-        max-height: 100% !important;
-        min-height: 0 !important;
-        transition: none !important;
-    }
-    html.keyboard-open #proposeModal .form-layout {
-        padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)) !important;
     }
     html.keyboard-open .custom-dropdown {
         max-height: 180px !important;
@@ -374,26 +312,6 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
     
     .lang-switcher-wrapper { bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important; right: calc(15px + env(safe-area-inset-right, 0px)) !important; z-index: 9999; }
     .lang-switcher-btn { width: 40px; height: 40px; font-size: 18px; }
-
-    /* --- РљСЂР°СЃРёРІС‹Р№ РїРѕРґРІР°Р» Р·Р°РєР°Р·Р° РЅР° РјРѕР±РёР»РєРµ --- */
-    .order-footer {
-        gap: 10px; 
-        padding-top: 10px;
-    }
-    .order-ttns-wrapper {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .order-ttn {
-        width: 100%;
-        font-size: 12px; 
-    }
-    .order-total-row {
-        padding-top: 8px;
-    }
-    .order-total {
-        font-size: 16px; 
-    }
 
     /* =================================================== */
     /* РЎРќРРњРђР•Рњ РќРђР“Р РЈР—РљРЈ РЎ РџР РћР¦Р•РЎРЎРћР Рђ (РЈР‘РР РђР•Рњ 3D РЎР›РћР)     */

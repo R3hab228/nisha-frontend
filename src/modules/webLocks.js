@@ -3,6 +3,8 @@
 // Safe, typed ES module exports for multi-tab coordination
 // ==========================================
 
+import { callAction } from './_facade.js';
+
 let _isLeader = false;
 let _leaderAbortController = null;
 const _leaderCallbacks = new Set();
@@ -12,12 +14,11 @@ const _leaderCallbacks = new Set();
  * @returns {boolean}
  */
 export function isWebLocksSupported() {
-    if (typeof window !== 'undefined' && typeof window.isWebLocksSupported === 'function') {
-        return window.isWebLocksSupported();
-    }
-    return typeof navigator !== 'undefined' &&
-           'locks' in navigator &&
-           typeof navigator.locks?.request === 'function';
+    return callAction('isWebLocksSupported', [], () => (
+        typeof navigator !== 'undefined' &&
+        'locks' in navigator &&
+        typeof navigator.locks?.request === 'function'
+    ));
 }
 
 /**
@@ -25,10 +26,7 @@ export function isWebLocksSupported() {
  * @returns {boolean}
  */
 export function isTabLeader() {
-    if (typeof window !== 'undefined' && typeof window.isTabLeader === 'function') {
-        return window.isTabLeader();
-    }
-    return _isLeader;
+    return callAction('isTabLeader', [], () => _isLeader);
 }
 
 /**
@@ -37,15 +35,14 @@ export function isTabLeader() {
  * @returns {() => void} Unsubscribe function
  */
 export function onLeaderElected(callback) {
-    if (typeof window !== 'undefined' && typeof window.onLeaderElected === 'function') {
-        return window.onLeaderElected(callback);
-    }
-    if (typeof callback !== 'function') return () => {};
-    if (_isLeader) {
-        try { callback(); } catch (e) { console.error('[WebLocks] Leader callback error:', e); }
-    }
-    _leaderCallbacks.add(callback);
-    return () => _leaderCallbacks.delete(callback);
+    return callAction('onLeaderElected', [callback], (cb) => {
+        if (typeof cb !== 'function') return () => {};
+        if (_isLeader) {
+            try { cb(); } catch (e) { console.error('[WebLocks] Leader callback error:', e); }
+        }
+        _leaderCallbacks.add(cb);
+        return () => _leaderCallbacks.delete(cb);
+    });
 }
 
 /**
@@ -59,26 +56,25 @@ export function onLeaderElected(callback) {
  * @returns {Promise<any>}
  */
 export async function runWithLock(lockName, taskFn, options = {}) {
-    if (typeof window !== 'undefined' && typeof window.runWithLock === 'function') {
-        return window.runWithLock(lockName, taskFn, options);
-    }
-    if (typeof taskFn !== 'function') return null;
-    const { ifAvailable = true, mode = 'exclusive' } = options;
+    return callAction('runWithLock', [lockName, taskFn, options], async (name, fn, opts = {}) => {
+        if (typeof fn !== 'function') return null;
+        const { ifAvailable = true, mode = 'exclusive' } = opts;
 
-    if (isWebLocksSupported()) {
-        try {
-            return await navigator.locks.request(lockName, { mode, ifAvailable }, async (lock) => {
-                if (ifAvailable && !lock) {
-                    return null;
-                }
-                return await taskFn();
-            });
-        } catch (err) {
-            return await taskFn();
+        if (isWebLocksSupported()) {
+            try {
+                return await navigator.locks.request(name, { mode, ifAvailable }, async (lock) => {
+                    if (ifAvailable && !lock) {
+                        return null;
+                    }
+                    return await fn();
+                });
+            } catch (_) {
+                return await fn();
+            }
         }
-    }
 
-    return await taskFn();
+        return await fn();
+    });
 }
 
 /**
@@ -86,50 +82,46 @@ export async function runWithLock(lockName, taskFn, options = {}) {
  * @returns {Promise<boolean>}
  */
 export function initLeaderElection() {
-    if (typeof window !== 'undefined' && typeof window.initLeaderElection === 'function') {
-        return window.initLeaderElection();
-    }
-
-    if (!isWebLocksSupported()) {
-        _isLeader = true;
-        _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
-        return Promise.resolve(true);
-    }
-
-    if (_leaderAbortController) {
-        return Promise.resolve(_isLeader);
-    }
-
-    _leaderAbortController = new AbortController();
-
-    const leaderPromise = navigator.locks.request(
-        'nisha_tab_leader',
-        { mode: 'exclusive', signal: _leaderAbortController.signal },
-        async () => {
+    return callAction('initLeaderElection', [], () => {
+        if (!isWebLocksSupported()) {
             _isLeader = true;
             _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
+            return Promise.resolve(true);
+        }
 
-            const { promise, resolve } = Promise.withResolvers();
-            if (typeof window !== 'undefined') {
-                window.addEventListener('pagehide', resolve, { once: true });
-                window.addEventListener('beforeunload', resolve, { once: true });
-            } else {
-                resolve();
+        if (_leaderAbortController) {
+            return Promise.resolve(_isLeader);
+        }
+
+        _leaderAbortController = new AbortController();
+
+        return navigator.locks.request(
+            'nisha_tab_leader',
+            { mode: 'exclusive', signal: _leaderAbortController.signal },
+            async () => {
+                _isLeader = true;
+                _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
+
+                const { promise, resolve } = Promise.withResolvers();
+                if (typeof window !== 'undefined') {
+                    window.addEventListener('pagehide', resolve, { once: true });
+                    window.addEventListener('beforeunload', resolve, { once: true });
+                } else {
+                    resolve();
+                }
+                await promise;
+
+                _isLeader = false;
             }
-            await promise;
-
+        ).catch(err => {
+            if (err && err.name !== 'AbortError') {
+                console.debug('[WebLocks] Tab is follower or election standby:', err.message);
+            }
+        }).finally(() => {
             _isLeader = false;
-        }
-    ).catch(err => {
-        if (err && err.name !== 'AbortError') {
-            console.debug('[WebLocks] Tab is follower or election standby:', err.message);
-        }
-    }).finally(() => {
-        _isLeader = false;
-        _leaderAbortController = null;
+            _leaderAbortController = null;
+        });
     });
-
-    return leaderPromise;
 }
 
 export default {

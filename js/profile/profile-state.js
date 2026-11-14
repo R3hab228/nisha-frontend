@@ -27,8 +27,30 @@ function resolveInitialFavorites() {
     return Array.isArray(winFavs) ? winFavs : [];
 }
 
+/**
+ * Resolves central reactive store instance when initialized.
+ * @returns {object|null}
+ */
+export function getAppStore() {
+    if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
+        return window.store;
+    }
+    if (typeof globalThis !== 'undefined' && globalThis.store && typeof globalThis.store.get === 'function' && typeof globalThis.store.set === 'function') {
+        return globalThis.store;
+    }
+    return null;
+}
+
+const STORE_BACKED_KEYS = new Set([
+    'currentUser',
+    'userProfile',
+    'favorites',
+    'globalOrdersData',
+    'currentOrderTab'
+]);
+
 /** Shared mutable profile, auth, favorites, orders, and realtime state. */
-export const profileState = {
+const _localProfileState = {
     currentUser: (typeof window !== 'undefined' && typeof window.currentUser !== 'undefined') ? window.currentUser : null,
     userProfile: (typeof window !== 'undefined' && typeof window.userProfile !== 'undefined') ? window.userProfile : null,
     favorites: resolveInitialFavorites(),
@@ -39,6 +61,38 @@ export const profileState = {
     orderStatusChannel: (typeof window !== 'undefined' && typeof window.orderStatusChannel !== 'undefined') ? window.orderStatusChannel : null,
     qaUpdatesChannel: (typeof window !== 'undefined' && typeof window.qaUpdatesChannel !== 'undefined') ? window.qaUpdatesChannel : null
 };
+
+// Seed store with any cached favorites if store has none yet
+const _initStore = getAppStore();
+if (_initStore && Array.isArray(_localProfileState.favorites) && _localProfileState.favorites.length > 0) {
+    const storeFavs = _initStore.get('favorites');
+    if (!Array.isArray(storeFavs) || storeFavs.length === 0) {
+        _initStore.set('favorites', _localProfileState.favorites);
+    }
+}
+
+export const profileState = new Proxy(_localProfileState, {
+    get(target, prop) {
+        if (STORE_BACKED_KEYS.has(prop)) {
+            const s = getAppStore();
+            if (s) {
+                const val = s.get(prop);
+                if (val !== undefined) return val;
+            }
+        }
+        return target[prop];
+    },
+    set(target, prop, value) {
+        target[prop] = value;
+        if (STORE_BACKED_KEYS.has(prop)) {
+            const s = getAppStore();
+            if (s) {
+                s.set(prop, value);
+            }
+        }
+        return true;
+    }
+});
 
 /**
  * Installs configurable getter/setter proxies on window so legacy callers, external modules,

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readOrdersSource } from './helpers/readOrdersSource.js';
 
 function makeEl(id, initialDisplay = 'flex') {
     const listeners = {};
@@ -136,7 +135,7 @@ describe('Orders Modal Mobile Tab Swipe', () => {
     });
 
     it('formats order date as DD.MM.YYYY and renders it under order-id in .order-id-wrap', async () => {
-        const code = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+        const code = readOrdersSource();
         expect(code).toContain('<div class="order-id-wrap">');
         expect(code).toContain('<span class="order-date">${date}</span>');
         const date = new Date(2026, 10, 13, 12, 0, 0).toISOString();

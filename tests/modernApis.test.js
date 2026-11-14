@@ -6,6 +6,8 @@ import { readProductSource } from './helpers/readProductSource.js';
 import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readProfileSource } from './helpers/readProfileSource.js';
 import { readPwaNetworkSource } from './helpers/readPwaNetworkSource.js';
+import { readOrdersSource } from './helpers/readOrdersSource.js';
+import { readDropSource } from './helpers/readDropSource.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -2247,7 +2249,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             expect(html).toMatch(/id=propName[^>]*name=prop_item_title/);
             expect(html).toMatch(/id=propName[^>]*autocomplete=off/);
-            const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
             expect(dropCode).toContain('function sanitizeProposalNameField');
             expect(dropCode).toContain('queueMicrotask(sanitizeProposalNameField)');
             expect(dropCode).toContain('[150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms))');
@@ -2269,7 +2271,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(order).toEqual(['microtask', 'macrotask']);
 
             // Ensure no legacy setTimeout(..., 0) exists in js/drop/drop.js
-            const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
             expect(dropCode).not.toMatch(/setTimeout\s*\([^,)]+,\s*0\s*\)/);
             expect(dropCode).not.toContain('[0,');
         });
@@ -2282,7 +2284,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(helpersCode).toContain('arr.at(0)');
 
             // Verify drop.js uses .at()
-            const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
             expect(dropCode).toContain('files.at(targetIndex)');
             expect(dropCode).toContain('removed.at(0)');
 
@@ -2292,10 +2294,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('item.images.at(0)');
 
             // Verify orders.js uses .at()
-            const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            const ordersCode = readOrdersSource();
             expect(ordersCode).toContain("activeUser.email.split('@').at(0)");
             expect(ordersCode).toContain('order.items.at(0)');
-            expect(ordersCode).toContain("order.id.split('-').at(0).toUpperCase()");
+            expect(ordersCode).toContain("String(order.id || '').split('-').at(0).toUpperCase()");
 
             // Verify product.js uses .at()
             const productCode = readProductSource();
@@ -2601,7 +2603,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('38. Proposal photos preview: cleanly removed 6-dot drag icon overlay from thumbnails', () => {
-            const dropCode = readFileSync(resolve(__dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
 
             // Must not contain the 6 dots drag icon
             expect(dropCode).not.toContain('dragIcon');
@@ -2653,7 +2655,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             const reviewsCode = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
-            const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            const ordersCode = readOrdersSource();
             const profileCode = readProfileSource();
             const catalogCode = readCatalogSource();
             const cartCode = readCartSource();
@@ -2901,7 +2903,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('integrates safeViewTransition into switchOrderTab for smooth tab switching', () => {
-            const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
+            const ordersCode = readOrdersSource();
             expect(ordersCode).toContain('viewTransitionFn(updateDom)');
             expect(ordersCode).toContain('window.currentOrderTab = tabName');
             expect(ordersCode).toContain('renderFilteredOrders()');
@@ -3456,7 +3458,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('verifies Date.parse() is used across catalog, product, orders, and reviews with zero .getTime()', () => {
             const catalogCode = readCatalogSource();
             const productCode = readProductSource();
-            const ordersCode = readFileSync(resolve(import.meta.dirname, '../js/orders/orders.js'), 'utf8');
+            const ordersCode = readOrdersSource();
             const reviewsCode = readFileSync(resolve(import.meta.dirname, '../js/reviews/reviews.js'), 'utf8');
 
             // 1. Zero .getTime() in all 4 modules
@@ -3803,7 +3805,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('48. Proposal bargain toggle ([ + ТОРГ ]), validation >= 100 UAH, green gavel badge, and fallback', () => {
             const htmlCode = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
-            const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
             const productCode = readProductSource();
             const catalogCode = readCatalogSource();
             const cssCode = readProjectCss();
@@ -3960,7 +3962,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('52. Audit fixes: drop proposal bargain toast fix, Backspace unhijacked, pending offer persisted across modal closes, and cart availability safe sold check', () => {
-            const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
             const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
             const productCode = readProductSource();
             const cartCode = readCartSource();
@@ -4014,7 +4016,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('54. Deep Bargain System Audit: Enter key handlers, pointerEvents preservation, clean descriptions, badge i18n guard, queued popup seen-timing, and feed addToCart bargain price', () => {
             const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
-            const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
+            const dropCode = readDropSource();
             const productCode = readProductSource();
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
             const catalogCode = readCatalogSource();

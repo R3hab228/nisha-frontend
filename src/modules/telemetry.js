@@ -3,16 +3,17 @@
 // Safe, typed ES module exports for client error logging & PWA
 // ==========================================
 
+import { callAction, callAsyncAction } from './_facade.js';
+
 /**
  * Captures error and dispatches telemetry event / logs to console
  * @param {Error|string|any} err
  * @param {Record<string, any>} [context={}]
  */
 export function captureError(err, context = {}) {
-    if (typeof window !== 'undefined' && typeof window.captureError === 'function') {
-        return window.captureError(err, context);
-    }
-    console.error('[Telemetry]', err, context);
+    return callAction('captureError', [err, context], (e, ctx) => {
+        console.error('[Telemetry]', e, ctx);
+    });
 }
 
 /**
@@ -36,10 +37,7 @@ export function getTelemetryInfo() {
  * @returns {boolean}
  */
 export function isPwaStandalone() {
-    if (typeof window !== 'undefined' && typeof window.isPwaStandalone === 'function') {
-        return window.isPwaStandalone();
-    }
-    return false;
+    return callAction('isPwaStandalone', [], () => false);
 }
 
 /**
@@ -47,59 +45,44 @@ export function isPwaStandalone() {
  * @returns {boolean}
  */
 export function checkIsPwaInstalled() {
-    if (typeof window !== 'undefined' && typeof window.checkIsPwaInstalled === 'function') {
-        return window.checkIsPwaInstalled();
-    }
-    return false;
+    return callAction('checkIsPwaInstalled', [], () => false);
 }
 
 /**
  * Subscribes user to Web Push notifications
  * @returns {Promise<any>}
  */
-export async function subscribeUserToPush() {
-    if (typeof window !== 'undefined' && typeof window.subscribeUserToPush === 'function') {
-        return window.subscribeUserToPush();
-    }
-    return null;
+export function subscribeUserToPush() {
+    return callAsyncAction('subscribeUserToPush', [], () => null);
 }
 
 /**
  * Synchronizes notification permissions with system
  * @returns {Promise<string>}
  */
-export async function syncNotificationPermission() {
-    if (typeof window !== 'undefined' && typeof window.syncNotificationPermission === 'function') {
-        return window.syncNotificationPermission();
-    }
-    return 'default';
+export function syncNotificationPermission() {
+    return callAsyncAction('syncNotificationPermission', [], () => 'default');
 }
 
 /**
  * Handles offline network state
  */
 export function handleNetworkOffline() {
-    if (typeof window !== 'undefined' && typeof window.handleNetworkOffline === 'function') {
-        return window.handleNetworkOffline();
-    }
+    return callAction('handleNetworkOffline');
 }
 
 /**
  * Handles online network recovery state
  */
 export function handleNetworkOnline() {
-    if (typeof window !== 'undefined' && typeof window.handleNetworkOnline === 'function') {
-        return window.handleNetworkOnline();
-    }
+    return callAction('handleNetworkOnline');
 }
 
 /**
  * Dismisses network error banner
  */
 export function dismissNetError() {
-    if (typeof window !== 'undefined' && typeof window.dismissNetError === 'function') {
-        return window.dismissNetError();
-    }
+    return callAction('dismissNetError');
 }
 
 /**
@@ -107,9 +90,7 @@ export function dismissNetError() {
  * @param {HTMLElement} [container]
  */
 export function initPwaPullToRefresh(container) {
-    if (typeof window !== 'undefined' && typeof window.initPwaPullToRefresh === 'function') {
-        return window.initPwaPullToRefresh(container);
-    }
+    return callAction('initPwaPullToRefresh', [container]);
 }
 
 /**
@@ -118,10 +99,12 @@ export function initPwaPullToRefresh(container) {
  * @returns {{ score: number, level: string, emoji: string, reason: string }}
  */
 export function evaluateTelemetrySeverity(params = {}) {
-    if (typeof window !== 'undefined' && typeof window.evaluateClientErrorSeverity === 'function') {
-        return window.evaluateClientErrorSeverity(params);
-    }
-    return { score: 4, level: 'Средняя', emoji: '🟡', reason: 'Некритичное предупреждение интерфейса' };
+    return callAction('evaluateClientErrorSeverity', [params], () => ({
+        score: 4,
+        level: 'Средняя',
+        emoji: '🟡',
+        reason: 'Некритичное предупреждение интерфейса'
+    }));
 }
 
 /**
@@ -129,10 +112,15 @@ export function evaluateTelemetrySeverity(params = {}) {
  * @returns {Record<string, any>}
  */
 export function getRumMetrics() {
-    if (typeof window !== 'undefined' && typeof window.getRumMetrics === 'function') {
-        return window.getRumMetrics();
-    }
-    return { lcp: null, inp: null, cls: 0, ttfb: null, device: 'Desktop', connection: 'unknown', url: '/' };
+    return callAction('getRumMetrics', [], () => ({
+        lcp: null,
+        inp: null,
+        cls: 0,
+        ttfb: null,
+        device: 'Desktop',
+        connection: 'unknown',
+        url: '/'
+    }));
 }
 
 /**

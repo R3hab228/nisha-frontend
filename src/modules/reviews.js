@@ -3,25 +3,23 @@
 // Safe, typed ES module exports for customer reviews & feedback
 // ==========================================
 
+import { callAction, callAsyncAction } from './_facade.js';
+
 /**
  * Opens individual review photo in PhotoSwipe lightbox
  * @param {string} url
  * @returns {Promise<void>}
  */
-export async function openReviewImage(url) {
-    if (typeof window !== 'undefined' && typeof window.openReviewImage === 'function') {
-        return window.openReviewImage(url);
-    }
+export function openReviewImage(url) {
+    return callAsyncAction('openReviewImage', [url]);
 }
 
 /**
  * Opens customer reviews modal dialog and loads latest reviews
  * @returns {Promise<void>}
  */
-export async function openReviewsModal() {
-    if (typeof window !== 'undefined' && typeof window.openReviewsModal === 'function') {
-        return window.openReviewsModal();
-    }
+export function openReviewsModal() {
+    return callAsyncAction('openReviewsModal');
 }
 
 /**
@@ -29,18 +27,14 @@ export async function openReviewsModal() {
  * @param {number} direction
  */
 export function scrollReviews(direction) {
-    if (typeof window !== 'undefined' && typeof window.scrollReviews === 'function') {
-        return window.scrollReviews(direction);
-    }
+    return callAction('scrollReviews', [direction]);
 }
 
 /**
  * Normalizes heights across all rendered review cards
  */
 export function equalizeReviewCardHeights() {
-    if (typeof window !== 'undefined' && typeof window.equalizeReviewCardHeights === 'function') {
-        return window.equalizeReviewCardHeights();
-    }
+    return callAction('equalizeReviewCardHeights');
 }
 
 /**
@@ -51,9 +45,7 @@ export function equalizeReviewCardHeights() {
  * @param {string|number} [itemId]
  */
 export function promptOrderReview(orderId, itemName, itemImage, itemId) {
-    if (typeof window !== 'undefined' && typeof window.promptOrderReview === 'function') {
-        return window.promptOrderReview(orderId, itemName, itemImage, itemId);
-    }
+    return callAction('promptOrderReview', [orderId, itemName, itemImage, itemId]);
 }
 
 /**
@@ -61,49 +53,41 @@ export function promptOrderReview(orderId, itemName, itemImage, itemId) {
  * @param {Record<string, any>} payload
  * @returns {Promise<{ success: boolean, data?: any, error?: any }>}
  */
-export async function sendReviewPayload(payload) {
-    if (typeof window !== 'undefined' && typeof window.sendReviewPayload === 'function') {
-        return window.sendReviewPayload(payload);
-    }
-    return { success: false, error: new Error('Runtime environment not available') };
+export function sendReviewPayload(payload) {
+    return callAsyncAction('sendReviewPayload', [payload], () => ({
+        success: false,
+        error: new Error('Runtime environment not available')
+    }));
 }
 
 /**
  * Submits auto-review for delivered package
  * @returns {Promise<void>}
  */
-export async function submitAutoReview() {
-    if (typeof window !== 'undefined' && typeof window.submitAutoReview === 'function') {
-        return window.submitAutoReview();
-    }
+export function submitAutoReview() {
+    return callAsyncAction('submitAutoReview');
 }
 
 /**
  * Skips review prompt and marks order review as dismissed
  */
 export function skipAutoReview() {
-    if (typeof window !== 'undefined' && typeof window.skipAutoReview === 'function') {
-        return window.skipAutoReview();
-    }
+    return callAction('skipAutoReview');
 }
 
 /**
  * Navigates to write manual review dialog
  */
 export function writeReviewOnSite() {
-    if (typeof window !== 'undefined' && typeof window.writeReviewOnSite === 'function') {
-        return window.writeReviewOnSite();
-    }
+    return callAction('writeReviewOnSite');
 }
 
 /**
  * Submits manual customer review
  * @returns {Promise<void>}
  */
-export async function submitManualReview() {
-    if (typeof window !== 'undefined' && typeof window.submitManualReview === 'function') {
-        return window.submitManualReview();
-    }
+export function submitManualReview() {
+    return callAsyncAction('submitManualReview');
 }
 
 /**
@@ -111,7 +95,5 @@ export async function submitManualReview() {
  * @param {any} [sb]
  */
 export function initReviewsRealtime(sb) {
-    if (typeof window !== 'undefined' && typeof window.initReviewsRealtime === 'function') {
-        return window.initReviewsRealtime(sb);
-    }
+    return callAction('initReviewsRealtime', [sb]);
 }

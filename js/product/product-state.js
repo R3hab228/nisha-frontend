@@ -4,7 +4,17 @@
 
 import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 
-/** Shared mutable product modal state synchronized with window globals. */
+function getReactiveStore() {
+    if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
+        return window.store;
+    }
+    if (typeof globalThis !== 'undefined' && globalThis.store && typeof globalThis.store.get === 'function' && typeof globalThis.store.set === 'function') {
+        return globalThis.store;
+    }
+    return null;
+}
+
+/** Shared mutable product modal state synchronized with reactive store & window globals. */
 export const productState = {
     currentOpenedItem: (typeof window !== 'undefined' && window.currentOpenedItem) || null,
     currentSlide: (typeof window !== 'undefined' && typeof window.currentSlide === 'number') ? window.currentSlide : 0,
@@ -16,10 +26,15 @@ if (typeof window !== 'undefined' && typeof window.currentOpenedItem === 'undefi
 }
 
 /**
- * Returns the currently active product item from window or shared state.
+ * Returns the currently active product item from reactive store, window, or shared state.
  * @returns {object|null}
  */
 export function getActiveOpenedItem() {
+    const s = getReactiveStore();
+    if (s) {
+        const fromStore = s.get('currentOpenedItem');
+        if (fromStore) return fromStore;
+    }
     if (typeof window !== 'undefined' && window.currentOpenedItem) {
         return window.currentOpenedItem;
     }
@@ -27,13 +42,17 @@ export function getActiveOpenedItem() {
 }
 
 /**
- * Sets the active product item in both shared state and window global.
+ * Sets the active product item in reactive store, shared state, and window global.
  * @param {object|null} item
  */
 export function setActiveOpenedItem(item) {
-    productState.currentOpenedItem = item || null;
-    if (typeof window !== 'undefined') {
-        window.currentOpenedItem = item || null;
+    const next = item || null;
+    productState.currentOpenedItem = next;
+    const s = getReactiveStore();
+    if (s) {
+        s.set('currentOpenedItem', next);
+    } else if (typeof window !== 'undefined') {
+        window.currentOpenedItem = next;
     }
 }
 

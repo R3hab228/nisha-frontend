@@ -63,9 +63,17 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         favorites: { default: () => [], type: 'raw' },
         allItems: { default: () => [], type: 'raw' },
         filteredItems: { default: () => [], type: 'raw' },
+        renderedCount: { default: 0, type: 'number' },
         currentCategory: { default: '', type: 'string' },
+        currentBrand: { default: '', type: 'string' },
         searchQuery: { default: '', type: 'string' },
         showingFavs: { default: false, type: 'boolean' },
+        showingOnlyFavs: { default: false, type: 'boolean' },
+        otpVerified: { default: false, type: 'boolean' },
+        globalOrdersData: { default: () => [], type: 'raw' },
+        currentOrderTab: { default: 'accepted', type: 'string' },
+        currentOpenedItem: { default: null, type: 'raw' },
+        currentProposalFiles: { default: () => [], type: 'raw' },
         currentPromoDiscount: { default: 0, type: 'number' },
         appliedPromoCode: { default: '', type: 'string' }
     };
@@ -193,6 +201,12 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
             }
 
             this._state[key] = value;
+            // Держим алиасы showingFavs <-> showingOnlyFavs синхронизированными
+            if (key === 'showingOnlyFavs') {
+                this._state.showingFavs = Boolean(value);
+            } else if (key === 'showingFavs') {
+                this._state.showingOnlyFavs = Boolean(value);
+            }
             const schema = Object.hasOwn(SCHEMAS, key) ? SCHEMAS[key] : null;
 
             // Сохранение в localStorage, если ключ персистентный
@@ -450,12 +464,10 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
             // Алиасы
             if (prop === 'user') {
                 target.set('currentUser', value);
-                if (typeof window !== 'undefined') window.currentUser = value;
                 return true;
             }
             if (prop === 'profile') {
                 target.set('userProfile', value);
-                if (typeof window !== 'undefined') window.userProfile = value;
                 return true;
             }
 
@@ -489,15 +501,60 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
     }
 
     // 10. КРОСС-ВКЛАДОЧНАЯ СИНХРОНИЗАЦИЯ (STORAGE EVENT)
-    window.addEventListener('storage', (e) => {
-        if (e.storageArea !== localStorage || !e.key) return;
-        if (storageKeyToStateKey.has(e.key)) {
-            const stateKey = storageKeyToStateKey.get(e.key);
-            storeInstance._syncFromExternalStorage(stateKey, e.newValue);
-        }
-    });
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+        window.addEventListener('storage', (e) => {
+            if (e.storageArea !== localStorage || !e.key) return;
+            if (storageKeyToStateKey.has(e.key)) {
+                const stateKey = storageKeyToStateKey.get(e.key);
+                storeInstance._syncFromExternalStorage(stateKey, e.newValue);
+            }
+        });
+    }
 
-    // 11. АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ С ГЛОБАЛЬНЫМИ ПЕРЕМЕННЫМИ ПРИЛОЖЕНИЯ
+    // 11. РЕАКТИВНАЯ СИНХРОНИЗАЦИЯ RUNTIME-СОСТОЯНИЯ ПРИЛОЖЕНИЯ С WINDOW COMPAT LAYER
+    const RUNTIME_WINDOW_STATE_KEYS = [
+        'currentUser',
+        'userProfile',
+        'allItems',
+        'filteredItems',
+        'renderedCount',
+        'currentCategory',
+        'currentBrand',
+        'showingOnlyFavs',
+        'otpVerified',
+        'globalOrdersData',
+        'currentOrderTab',
+        'currentOpenedItem',
+        'currentProposalFiles'
+    ];
+
+    function bindRuntimeWindowState() {
+        if (typeof window === 'undefined') return;
+        RUNTIME_WINDOW_STATE_KEYS.forEach((key) => {
+            const existingDesc = Object.getOwnPropertyDescriptor(window, key);
+            if (existingDesc && !existingDesc.configurable) return;
+            // Захватываем возможное начальное значение, заданное до инициализации стора
+            if (Object.hasOwn(window, key) && window[key] !== undefined) {
+                storeInstance._state[key] = window[key];
+                if (key === 'showingOnlyFavs') {
+                    storeInstance._state.showingFavs = Boolean(window[key]);
+                }
+            }
+            Object.defineProperty(window, key, {
+                enumerable: true,
+                configurable: true,
+                get() {
+                    return store.get(key);
+                },
+                set(nextValue) {
+                    store.set(key, nextValue);
+                }
+            });
+        });
+    }
+
+    bindRuntimeWindowState();
+
     window.cart = store.get('cart');
 
     // Реактивное обновление window.cart и UI при любых изменениях корзины

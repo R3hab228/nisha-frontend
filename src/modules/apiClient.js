@@ -3,6 +3,8 @@
 // Safe, typed ES module exports for backend communication
 // ==========================================
 
+import { callAsyncAction } from './_facade.js';
+
 /**
  * Returns active protected apiClient instance
  * @returns {any}
@@ -38,15 +40,14 @@ export const apiClient = new Proxy({}, {
  * @param {boolean} [force=false]
  * @returns {Promise<any>}
  */
-export async function warmupBackendServer(force = false) {
-    if (typeof window !== 'undefined' && typeof window.warmupBackendServer === 'function') {
-        return window.warmupBackendServer(force);
-    }
-    const client = getApiClient();
-    if (client && typeof client.warmup === 'function') {
-        return client.warmup(force);
-    }
-    return null;
+export function warmupBackendServer(force = false) {
+    return callAsyncAction('warmupBackendServer', [force], (f) => {
+        const client = getApiClient();
+        if (client && typeof client.warmup === 'function') {
+            return client.warmup(f);
+        }
+        return null;
+    });
 }
 
 /**

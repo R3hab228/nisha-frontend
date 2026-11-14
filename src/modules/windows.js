@@ -1,45 +1,46 @@
-/**
- * Triggers typewriter animation on modal title elements (1-to-1 with ITEM_INFO.EXE)
- * @param {HTMLElement|string} modalOrId
- */
-export function triggerModalTypewriter(modalOrId) {
-    if (typeof window !== 'undefined' && typeof window.triggerModalTypewriter === 'function') {
-        return window.triggerModalTypewriter(modalOrId);
-    }
-    if (!modalOrId) return;
-    const modal = typeof modalOrId === 'string'
-        ? (typeof document !== 'undefined' && document.getElementById ? document.getElementById(modalOrId) : null)
-        : modalOrId;
-    if (!modal) return;
-
-    const twElements = [];
-    if (modal.classList && typeof modal.classList.contains === 'function' && modal.classList.contains('typewriter')) {
-        twElements.push(modal);
-    } else if (typeof modal.querySelectorAll === 'function') {
-        try {
-            modal.querySelectorAll('.typewriter').forEach(el => twElements.push(el));
-        } catch {}
-    } else if (typeof modal.querySelector === 'function') {
-        try {
-            const single = modal.querySelector('.typewriter');
-            if (single) twElements.push(single);
-        } catch {}
-    }
-
-    twElements.forEach(tw => {
-        if (!tw || !tw.style) return;
-        tw.style.animation = 'none';
-        void tw.offsetHeight;
-        tw.style.animation = '';
-    });
-}
-
 // ==========================================
 // NISHA STORE - MODULAR WINDOWS & MODALS FACADE
 // Safe, typed ES module exports for modal dialogs & drawers
 // ==========================================
 
+import { callAction } from './_facade.js';
+
 const _modularModalInits = new Map();
+
+/**
+ * Triggers typewriter animation on modal title elements (1-to-1 with ITEM_INFO.EXE)
+ * @param {HTMLElement|string} modalOrId
+ */
+export function triggerModalTypewriter(modalOrId) {
+    return callAction('triggerModalTypewriter', [modalOrId], (target) => {
+        if (!target) return;
+        const modal = typeof target === 'string'
+            ? (typeof document !== 'undefined' && document.getElementById ? document.getElementById(target) : null)
+            : target;
+        if (!modal) return;
+
+        const twElements = [];
+        if (modal.classList && typeof modal.classList.contains === 'function' && modal.classList.contains('typewriter')) {
+            twElements.push(modal);
+        } else if (typeof modal.querySelectorAll === 'function') {
+            try {
+                modal.querySelectorAll('.typewriter').forEach(el => twElements.push(el));
+            } catch {}
+        } else if (typeof modal.querySelector === 'function') {
+            try {
+                const single = modal.querySelector('.typewriter');
+                if (single) twElements.push(single);
+            } catch {}
+        }
+
+        twElements.forEach(tw => {
+            if (!tw || !tw.style) return;
+            tw.style.animation = 'none';
+            void tw.offsetHeight;
+            tw.style.animation = '';
+        });
+    });
+}
 
 /**
  * Opens modal dialog by container ID
@@ -47,25 +48,24 @@ const _modularModalInits = new Map();
  * @param {any} [options]
  */
 export function openModal(modalId, options) {
-    if (typeof window !== 'undefined' && typeof window.openModal === 'function') {
-        return window.openModal(modalId, options);
-    }
-    const initFn = _modularModalInits.get(modalId);
-    if (typeof initFn === 'function') {
-        _modularModalInits.delete(modalId);
-        try { initFn(); } catch {}
-    }
-    if (typeof document !== 'undefined' && typeof document.getElementById === 'function') {
-        const el = document.getElementById(modalId);
-        if (el) {
-            if (el.classList && typeof el.classList.add === 'function') el.classList.add('is-open');
-            if (el.style) {
-                el.style.display = 'flex';
-                el.style.pointerEvents = '';
-            }
-            triggerModalTypewriter(el);
+    return callAction('openModal', [modalId, options], (id) => {
+        const initFn = _modularModalInits.get(id);
+        if (typeof initFn === 'function') {
+            _modularModalInits.delete(id);
+            try { initFn(); } catch {}
         }
-    }
+        if (typeof document !== 'undefined' && typeof document.getElementById === 'function') {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.classList && typeof el.classList.add === 'function') el.classList.add('is-open');
+                if (el.style) {
+                    el.style.display = 'flex';
+                    el.style.pointerEvents = '';
+                }
+                triggerModalTypewriter(el);
+            }
+        }
+    });
 }
 
 /**
@@ -73,10 +73,7 @@ export function openModal(modalId, options) {
  * @param {string} [modalId]
  */
 export function closeModal(modalId) {
-    if (typeof window !== 'undefined' && typeof window.closeModal === 'function') {
-        return window.closeModal(modalId);
-    }
-    return executeCloseModal(modalId);
+    return callAction('closeModal', [modalId], (id) => executeCloseModal(id));
 }
 
 /**
@@ -84,16 +81,15 @@ export function closeModal(modalId) {
  * @param {string} modalId
  */
 export function executeCloseModal(modalId) {
-    if (typeof window !== 'undefined' && typeof window.executeCloseModal === 'function') {
-        return window.executeCloseModal(modalId);
-    }
-    if (typeof document !== 'undefined' && typeof document.getElementById === 'function') {
-        const el = document.getElementById(modalId);
-        if (el) {
-            if (el.classList && typeof el.classList.remove === 'function') el.classList.remove('is-open');
-            if (el.style) el.style.display = 'none';
+    return callAction('executeCloseModal', [modalId], (id) => {
+        if (typeof document !== 'undefined' && typeof document.getElementById === 'function') {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.classList && typeof el.classList.remove === 'function') el.classList.remove('is-open');
+                if (el.style) el.style.display = 'none';
+            }
         }
-    }
+    });
 }
 
 /**
@@ -102,22 +98,18 @@ export function executeCloseModal(modalId) {
  * @param {() => void} initFn
  */
 export function registerModalInitializer(modalId, initFn) {
-    if (typeof window !== 'undefined' && typeof window.registerModalInitializer === 'function') {
-        return window.registerModalInitializer(modalId, initFn);
-    }
-    if (typeof initFn === 'function') {
-        _modularModalInits.set(modalId, initFn);
-    }
+    return callAction('registerModalInitializer', [modalId, initFn], (id, fn) => {
+        if (typeof fn === 'function') {
+            _modularModalInits.set(id, fn);
+        }
+    });
 }
-
 
 /**
  * Opens support chat dialog
  */
 export function openSupportModalWindow() {
-    if (typeof window !== 'undefined' && typeof window.openSupportModalWindow === 'function') {
-        return window.openSupportModalWindow();
-    }
+    return callAction('openSupportModalWindow');
 }
 
 /**
@@ -126,10 +118,7 @@ export function openSupportModalWindow() {
  * @returns {boolean}
  */
 export function isElementVisible(element) {
-    if (typeof window !== 'undefined' && typeof window.isElementVisible === 'function') {
-        return window.isElementVisible(element);
-    }
-    return false;
+    return callAction('isElementVisible', [element], () => false);
 }
 
 /**
@@ -137,10 +126,7 @@ export function isElementVisible(element) {
  * @returns {boolean}
  */
 export function isUserInProductFeed() {
-    if (typeof window !== 'undefined' && typeof window.isUserInProductFeed === 'function') {
-        return window.isUserInProductFeed();
-    }
-    return false;
+    return callAction('isUserInProductFeed', [], () => false);
 }
 
 /**
@@ -151,9 +137,7 @@ export function isUserInProductFeed() {
  * @param {(() => void)|null} [onConfirm=null]
  */
 export function showTerminalModal(title, text, type = 'info', onConfirm = null) {
-    if (typeof window !== 'undefined' && typeof window.showTerminalModal === 'function') {
-        return window.showTerminalModal(title, text, type, onConfirm);
-    }
+    return callAction('showTerminalModal', [title, text, type, onConfirm]);
 }
 
 /**
@@ -164,27 +148,20 @@ export function showTerminalModal(title, text, type = 'info', onConfirm = null) 
  * @param {(() => void)|null} [onCancel=null]
  */
 export function showConfirmTerminalModal(title, text, onConfirm = null, onCancel = null) {
-    if (typeof window !== 'undefined' && typeof window.showConfirmTerminalModal === 'function') {
-        return window.showConfirmTerminalModal(title, text, onConfirm, onCancel);
-    }
+    return callAction('showConfirmTerminalModal', [title, text, onConfirm, onCancel]);
 }
-
 
 /**
  * Ensures active input field remains visible without bounce or layout jump
  * @param {HTMLElement} targetEl
  */
 export function ensureFieldVisibleInModal(targetEl) {
-    if (typeof window !== 'undefined' && typeof window.ensureFieldVisibleInModal === 'function') {
-        return window.ensureFieldVisibleInModal(targetEl);
-    }
+    return callAction('ensureFieldVisibleInModal', [targetEl]);
 }
 
 /**
  * Initializes mobile keyboard viewport adaptation
  */
 export function initMobileKeyboardViewport() {
-    if (typeof window !== 'undefined' && typeof window.initMobileKeyboardViewport === 'function') {
-        return window.initMobileKeyboardViewport();
-    }
+    return callAction('initMobileKeyboardViewport');
 }

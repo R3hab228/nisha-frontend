@@ -3,6 +3,7 @@
 // Safe, typed ES module exports for utilities & sanitization
 // ==========================================
 
+import { callAction, callAsyncAction, resolveAction } from './_facade.js';
 export * from '../../js/core/action-registry.js';
 
 /**
@@ -382,52 +383,47 @@ export async function decompressJSON(data, format = 'gzip') {
 }
 
 export function toCDN(url, options = {}) {
-    if (typeof window !== 'undefined' && typeof window.toCDN === 'function') {
-        return window.toCDN(url, options);
-    }
-    if (!url || typeof url !== 'string') return '';
-    let result = url.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://cdn.nisha-store.shop');
-    if (!options || typeof options !== 'object' || Object.keys(options).length === 0) {
+    return callAction('toCDN', [url, options], (rawUrl, opts = {}) => {
+        if (!rawUrl || typeof rawUrl !== 'string') return '';
+        let result = rawUrl.replace('https://nmpuefxqtkhvtltdvllz.supabase.co', 'https://cdn.nisha-store.shop');
+        if (!opts || typeof opts !== 'object' || Object.keys(opts).length === 0) {
+            return result;
+        }
+        if (result.endsWith('.mp4') || result.endsWith('.webm') || result.endsWith('.svg')) {
+            return result;
+        }
+        const isThumb = opts.isThumb === true || (typeof opts.width === 'number' && opts.width <= 480);
+        if (isThumb && result.includes('/items-images/item_') && !result.includes('/items-images/thumb_item_')) {
+            result = result.replace('/items-images/item_', '/items-images/thumb_item_');
+        }
+        const width = opts.width || opts.w;
+        const height = opts.height || opts.h;
+        const quality = opts.quality || opts.q;
+        const format = opts.format || opts.fmt;
+        if (width || height || quality || format) {
+            const sep = result.includes('?') ? '&' : '?';
+            const params = [];
+            if (width) params.push(`w=${safeEncodeURIComponent(width)}`);
+            if (height) params.push(`h=${safeEncodeURIComponent(height)}`);
+            if (quality) params.push(`q=${safeEncodeURIComponent(quality)}`);
+            if (format) params.push(`fmt=${safeEncodeURIComponent(format)}`);
+            result += sep + params.join('&');
+        }
         return result;
-    }
-    if (result.endsWith('.mp4') || result.endsWith('.webm') || result.endsWith('.svg')) {
-        return result;
-    }
-    const isThumb = options.isThumb === true || (typeof options.width === 'number' && options.width <= 480);
-    if (isThumb && result.includes('/items-images/item_') && !result.includes('/items-images/thumb_item_')) {
-        result = result.replace('/items-images/item_', '/items-images/thumb_item_');
-    }
-    const width = options.width || options.w;
-    const height = options.height || options.h;
-    const quality = options.quality || options.q;
-    const format = options.format || options.fmt;
-    if (width || height || quality || format) {
-        const sep = result.includes('?') ? '&' : '?';
-        const params = [];
-        if (width) params.push(`w=${safeEncodeURIComponent(width)}`);
-        if (height) params.push(`h=${safeEncodeURIComponent(height)}`);
-        if (quality) params.push(`q=${safeEncodeURIComponent(quality)}`);
-        if (format) params.push(`fmt=${safeEncodeURIComponent(format)}`);
-        result += sep + params.join('&');
-    }
-    return result;
+    });
 }
 
 export function getOptimizedCDNImageUrl(url, options = {}) {
-    if (typeof window !== 'undefined' && typeof window.getOptimizedCDNImageUrl === 'function') {
-        return window.getOptimizedCDNImageUrl(url, options);
-    }
-    return toCDN(url, options);
+    return callAction('getOptimizedCDNImageUrl', [url, options], (u, o) => toCDN(u, o));
 }
 
 export function getImageSrcSet(url, widths = [320, 480, 768]) {
-    if (typeof window !== 'undefined' && typeof window.getImageSrcSet === 'function') {
-        return window.getImageSrcSet(url, widths);
-    }
-    if (!url || typeof url !== 'string' || url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.svg')) return '';
-    return widths
-        .map(w => `${toCDN(url, { width: w, quality: 85, format: 'webp' })} ${w}w`)
-        .join(', ');
+    return callAction('getImageSrcSet', [url, widths], (u, ws = [320, 480, 768]) => {
+        if (!u || typeof u !== 'string' || u.endsWith('.mp4') || u.endsWith('.webm') || u.endsWith('.svg')) return '';
+        return ws
+            .map(w => `${toCDN(u, { width: w, quality: 85, format: 'webp' })} ${w}w`)
+            .join(', ');
+    });
 }
 
 /**
@@ -436,16 +432,15 @@ export function getImageSrcSet(url, widths = [320, 480, 768]) {
  * @returns {string}
  */
 export function escapeHtml(str) {
-    if (typeof window !== 'undefined' && typeof window.escapeHtml === 'function') {
-        return window.escapeHtml(str);
-    }
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
+    return callAction('escapeHtml', [str], (val) => {
+        if (val === null || val === undefined) return '';
+        return String(val)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    });
 }
 
 /**
@@ -463,18 +458,17 @@ export function escapeAttr(str) {
  * @returns {string}
  */
 export function escapeJsString(str) {
-    if (typeof window !== 'undefined' && typeof window.escapeJsString === 'function') {
-        return window.escapeJsString(str);
-    }
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replaceAll('\\', '\\\\')
-        .replaceAll("'", "\\'")
-        .replaceAll('"', '\\"')
-        .replaceAll('<', '\\x3c')
-        .replaceAll('>', '\\x3e')
-        .replaceAll('\n', '\\n')
-        .replaceAll('\r', '\\r');
+    return callAction('escapeJsString', [str], (val) => {
+        if (val === null || val === undefined) return '';
+        return String(val)
+            .replaceAll('\\', '\\\\')
+            .replaceAll("'", "\\'")
+            .replaceAll('"', '\\"')
+            .replaceAll('<', '\\x3c')
+            .replaceAll('>', '\\x3e')
+            .replaceAll('\n', '\\n')
+            .replaceAll('\r', '\\r');
+    });
 }
 
 /**
@@ -483,10 +477,7 @@ export function escapeJsString(str) {
  * @returns {string}
  */
 export function sanitizeText(str) {
-    if (typeof window !== 'undefined' && typeof window.sanitizeText === 'function') {
-        return window.sanitizeText(str);
-    }
-    return escapeHtml(str);
+    return callAction('sanitizeText', [str], (val) => escapeHtml(val));
 }
 
 /**
@@ -494,11 +485,11 @@ export function sanitizeText(str) {
  * @param {number} [duration=150]
  */
 export function triggerVibration(duration = 150) {
-    if (typeof window !== 'undefined' && typeof window.triggerVibration === 'function') {
-        window.triggerVibration(duration);
-    } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try { navigator.vibrate(duration); } catch {}
-    }
+    return callAction('triggerVibration', [duration], (ms) => {
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            try { navigator.vibrate(ms); } catch {}
+        }
+    });
 }
 
 /**
@@ -506,9 +497,7 @@ export function triggerVibration(duration = 150) {
  * @param {'light'|'medium'|'heavy'|'success'|'error'} [type='light']
  */
 export function triggerHaptic(type = 'light') {
-    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') {
-        window.triggerHaptic(type);
-    }
+    return callAction('triggerHaptic', [type]);
 }
 
 /**
@@ -519,9 +508,7 @@ export function triggerHaptic(type = 'light') {
  * @param {(() => void)|null} [onClick=null]
  */
 export function showToast(message, type = 'success', imgUrl = null, onClick = null) {
-    if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
-        return window.showToast(message, type, imgUrl, onClick);
-    }
+    return callAction('showToast', [message, type, imgUrl, onClick]);
 }
 
 /**
@@ -529,10 +516,7 @@ export function showToast(message, type = 'success', imgUrl = null, onClick = nu
  * @returns {string}
  */
 export function getCurrency() {
-    if (typeof window !== 'undefined' && typeof window.getCurrency === 'function') {
-        return window.getCurrency();
-    }
-    return '₴';
+    return callAction('getCurrency', [], () => '₴');
 }
 
 /**
@@ -552,23 +536,22 @@ const cachedPriceNumberFormatter = (typeof Intl !== 'undefined' && typeof Intl.N
  * @returns {string}
  */
 export function formatPrice(price, currencyOrOptions = '₴') {
-    if (typeof window !== 'undefined' && typeof window.formatPrice === 'function') {
-        return window.formatPrice(price, currencyOrOptions);
-    }
-    const cleanNum = typeof price === 'number'
-        ? price
-        : Number(String(price || 0).replace(/[^\d.-]/g, '')) || 0;
-    const rounded = Math.round(cleanNum);
-    const formatted = cachedPriceNumberFormatter
-        ? cachedPriceNumberFormatter.format(rounded)
-        : rounded.toLocaleString('en-US', { maximumFractionDigits: 0 });
-    if (currencyOrOptions && typeof currencyOrOptions === 'object') {
-        const curr = getCurrency();
-        if (currencyOrOptions.currencyOnly) return curr;
-        if (currencyOrOptions.numberOnly) return formatted;
-        return `${formatted}\u00A0${curr}`;
-    }
-    return `${formatted} ${currencyOrOptions}`;
+    return callAction('formatPrice', [price, currencyOrOptions], (rawPrice, currOrOpts = '₴') => {
+        const cleanNum = typeof rawPrice === 'number'
+            ? rawPrice
+            : Number(String(rawPrice || 0).replace(/[^\d.-]/g, '')) || 0;
+        const rounded = Math.round(cleanNum);
+        const formatted = cachedPriceNumberFormatter
+            ? cachedPriceNumberFormatter.format(rounded)
+            : rounded.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        if (currOrOpts && typeof currOrOpts === 'object') {
+            const curr = getCurrency();
+            if (currOrOpts.currencyOnly) return curr;
+            if (currOrOpts.numberOnly) return formatted;
+            return `${formatted}\u00A0${curr}`;
+        }
+        return `${formatted} ${currOrOpts}`;
+    });
 }
 
 /**
@@ -579,10 +562,7 @@ export function formatPrice(price, currencyOrOptions = '₴') {
  * @returns {number}
  */
 export function clamp(val, min, max) {
-    if (typeof window !== 'undefined' && typeof window.clamp === 'function') {
-        return window.clamp(val, min, max);
-    }
-    return Math.min(Math.max(val, min), max);
+    return callAction('clamp', [val, min, max], (v, lo, hi) => Math.min(Math.max(v, lo), hi));
 }
 
 /**
@@ -594,8 +574,9 @@ export function generateShortId(prefix = 'id') {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return `${prefix}_${crypto.randomUUID().replaceAll('-', '').slice(0, 8)}`;
     }
-    if (typeof window !== 'undefined' && typeof window.generateShortId === 'function') {
-        return `${prefix}_${window.generateShortId(8)}`;
+    const customGen = resolveAction('generateShortId', 'generateShortId');
+    if (typeof customGen === 'function') {
+        return `${prefix}_${customGen(8)}`;
     }
     return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -607,14 +588,13 @@ export function generateShortId(prefix = 'id') {
  * @returns {T}
  */
 export function deepClone(obj) {
-    if (typeof window !== 'undefined' && typeof window.deepClone === 'function') {
-        return window.deepClone(obj);
-    }
-    try {
-        return structuredClone(obj);
-    } catch (_) {
-        return obj;
-    }
+    return callAction('deepClone', [obj], (val) => {
+        try {
+            return structuredClone(val);
+        } catch (_) {
+            return val;
+        }
+    });
 }
 
 /**
@@ -622,17 +602,16 @@ export function deepClone(obj) {
  * @param {string} text
  * @returns {Promise<boolean>}
  */
-export async function copyToClipboard(text) {
-    if (typeof window !== 'undefined' && typeof window.copyToClipboard === 'function') {
-        return window.copyToClipboard(text);
-    }
-    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-        try {
-            await navigator.clipboard.writeText(text);
-            return true;
-        } catch {}
-    }
-    return false;
+export function copyToClipboard(text) {
+    return callAsyncAction('copyToClipboard', [text], async (str) => {
+        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(str);
+                return true;
+            } catch {}
+        }
+        return false;
+    });
 }
 
 /**
@@ -640,11 +619,8 @@ export async function copyToClipboard(text) {
  * @param {{ title?: string, text?: string, url?: string }} data
  * @returns {Promise<boolean>}
  */
-export async function shareContent(data) {
-    if (typeof window !== 'undefined' && typeof window.shareContent === 'function') {
-        return window.shareContent(data);
-    }
-    return false;
+export function shareContent(data) {
+    return callAsyncAction('shareContent', [data], () => false);
 }
 
 /**
@@ -705,9 +681,8 @@ export const safeStorage = new Proxy({}, {
  * @returns {boolean}
  */
 export function isViewTransitionAbortError(err) {
-    if (typeof window !== 'undefined' && typeof window.isViewTransitionAbortError === 'function') {
-        return window.isViewTransitionAbortError(err);
-    }
+    const fn = resolveAction('isViewTransitionAbortError', 'isViewTransitionAbortError');
+    if (typeof fn === 'function') return fn(err);
     if (!err) return false;
     const msg = String(err.message || err.reason || err);
     const name = String(err.name || '');
@@ -727,9 +702,8 @@ export function isViewTransitionAbortError(err) {
  * @returns {{ finished: Promise<any>, ready: Promise<any>, updateCallbackDone: Promise<any>, skipTransition: () => void }}
  */
 export function safeViewTransition(updateFn) {
-    if (typeof window !== 'undefined' && typeof window.safeViewTransition === 'function') {
-        return window.safeViewTransition(updateFn);
-    }
+    const fn = resolveAction('safeViewTransition', 'safeViewTransition');
+    if (typeof fn === 'function') return fn(updateFn);
     if (typeof updateFn !== 'function') {
         return {
             finished: Promise.resolve(),
@@ -764,9 +738,8 @@ export function safeViewTransition(updateFn) {
  * @returns {{ city: string, branch: string }}
  */
 export function parseDeliveryAddress(addr) {
-    if (typeof window !== 'undefined' && typeof window.parseDeliveryAddress === 'function') {
-        return window.parseDeliveryAddress(addr);
-    }
+    const fn = resolveAction('parseDeliveryAddress', 'parseDeliveryAddress');
+    if (typeof fn === 'function') return fn(addr);
     if (!addr || typeof addr !== 'string') return { city: '', branch: '' };
     const str = addr.trim();
     if (!str) return { city: '', branch: '' };
@@ -802,9 +775,8 @@ export function parseDeliveryAddress(addr) {
  * @returns {{ type: 'exact'|'max'|'min'|'range', price?: number, min?: number, max?: number }|null}
  */
 export function parsePriceSearchQuery(query) {
-    if (typeof window !== 'undefined' && typeof window.parsePriceSearchQuery === 'function') {
-        return window.parsePriceSearchQuery(query);
-    }
+    const fn = resolveAction('parsePriceSearchQuery', 'parsePriceSearchQuery');
+    if (typeof fn === 'function') return fn(query);
     if (!query || typeof query !== 'string') return null;
     const clean = query.trim().toLowerCase();
 
@@ -851,9 +823,8 @@ export function parsePriceSearchQuery(query) {
  * @returns {boolean}
  */
 export function itemMatchesPrice(item, priceQuery) {
-    if (typeof window !== 'undefined' && typeof window.itemMatchesPrice === 'function') {
-        return window.itemMatchesPrice(item, priceQuery);
-    }
+    const fn = resolveAction('itemMatchesPrice', 'itemMatchesPrice');
+    if (typeof fn === 'function') return fn(item, priceQuery);
     if (!item || !priceQuery) return false;
     const rawPrice = item.price;
     const price = typeof rawPrice === 'number' ? rawPrice : (Number.parseInt(String(rawPrice || '').replace(/[^\d]/g, ''), 10) || 0);
@@ -882,8 +853,9 @@ export function itemMatchesPrice(item, priceQuery) {
  */
 export function runMicrotask(fn) {
     if (typeof fn !== 'function') return;
-    if (typeof window !== 'undefined' && typeof window.runMicrotask === 'function') {
-        window.runMicrotask(fn);
+    const custom = resolveAction('runMicrotask', 'runMicrotask');
+    if (typeof custom === 'function') {
+        custom(fn);
         return;
     }
     if (typeof queueMicrotask === 'function') {
@@ -925,9 +897,8 @@ export function getFirstItem(arr) {
  * @returns {string}
  */
 export function getUserDisplayName(user, profile) {
-    if (typeof window !== 'undefined' && typeof window.getUserDisplayName === 'function') {
-        return window.getUserDisplayName(user, profile);
-    }
+    const fn = resolveAction('getUserDisplayName', 'getUserDisplayName');
+    if (typeof fn === 'function') return fn(user, profile);
     const profName = (profile?.username || profile?.display_name || profile?.full_name || '').trim();
     if (profName && profName !== 'User') return profName;
     const meta = user?.user_metadata || {};
@@ -1121,9 +1092,8 @@ export function hasOwn(obj, prop) {
  * @returns {Promise<void>}
  */
 export function sleep(ms, signal) {
-    if (typeof window !== 'undefined' && typeof window.sleep === 'function') {
-        return window.sleep(ms, signal);
-    }
+    const fn = resolveAction('sleep', 'sleep');
+    if (typeof fn === 'function') return fn(ms, signal);
     if (signal?.aborted) {
         return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
     }

@@ -3,6 +3,7 @@
 // Safe, typed ES module exports for multi-language support
 // ==========================================
 
+import { callAction, callAsyncAction } from './_facade.js';
 import { getStore } from './store.js';
 
 export const NISHA_FLAGS = {
@@ -23,14 +24,13 @@ export const NISHA_EMOJI_FLAGS = {
  * @returns {'ua'|'ru'|'en'}
  */
 export function normalizeSiteLang(lang) {
-    if (typeof window !== 'undefined' && typeof window.normalizeSiteLang === 'function') {
-        return window.normalizeSiteLang(lang);
-    }
-    if (!lang || typeof lang !== 'string') return 'ua';
-    const clean = lang.trim().toLowerCase().substring(0, 2);
-    if (clean === 'ru') return 'ru';
-    if (clean === 'en') return 'en';
-    return 'ua';
+    return callAction('normalizeSiteLang', [lang], (rawLang) => {
+        if (!rawLang || typeof rawLang !== 'string') return 'ua';
+        const clean = rawLang.trim().toLowerCase().substring(0, 2);
+        if (clean === 'ru') return 'ru';
+        if (clean === 'en') return 'en';
+        return 'ua';
+    });
 }
 
 /**
@@ -39,11 +39,10 @@ export function normalizeSiteLang(lang) {
  * @returns {string}
  */
 export function getFlagUrlByLang(lang) {
-    if (typeof window !== 'undefined' && typeof window.getFlagUrlByLang === 'function') {
-        return window.getFlagUrlByLang(lang);
-    }
-    const code = normalizeSiteLang(lang);
-    return NISHA_FLAGS[code] || NISHA_FLAGS.ua;
+    return callAction('getFlagUrlByLang', [lang], (rawLang) => {
+        const code = normalizeSiteLang(rawLang);
+        return NISHA_FLAGS[code] || NISHA_FLAGS.ua;
+    });
 }
 
 /**
@@ -51,18 +50,17 @@ export function getFlagUrlByLang(lang) {
  * @returns {'ua'|'ru'|'en'}
  */
 export function detectInitialSiteLang() {
-    if (typeof window !== 'undefined' && typeof window.detectInitialSiteLang === 'function') {
-        return window.detectInitialSiteLang();
-    }
-    const s = getStore();
-    if (s && s.lang) return normalizeSiteLang(s.lang);
-    if (typeof navigator !== 'undefined') {
-        const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
-        if (nav.startsWith('ru')) return 'ru';
-        if (nav.startsWith('en')) return 'en';
-        if (nav.startsWith('uk')) return 'ua';
-    }
-    return 'ua';
+    return callAction('detectInitialSiteLang', [], () => {
+        const s = getStore();
+        if (s && s.lang) return normalizeSiteLang(s.lang);
+        if (typeof navigator !== 'undefined') {
+            const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+            if (nav.startsWith('ru')) return 'ru';
+            if (nav.startsWith('en')) return 'en';
+            if (nav.startsWith('uk')) return 'ua';
+        }
+        return 'ua';
+    });
 }
 
 /**
@@ -70,44 +68,43 @@ export function detectInitialSiteLang() {
  * @param {string} [lang]
  */
 export function updateFooterLanguageUI(lang) {
-    if (typeof window !== 'undefined' && typeof window.updateFooterLanguageUI === 'function') {
-        return window.updateFooterLanguageUI(lang);
-    }
-    const code = normalizeSiteLang(lang);
-    const upper = code.toUpperCase();
-    const flagUrl = getFlagUrlByLang(code);
+    return callAction('updateFooterLanguageUI', [lang], (rawLang) => {
+        const code = normalizeSiteLang(rawLang);
+        const upper = code.toUpperCase();
+        const flagUrl = getFlagUrlByLang(code);
 
-    if (typeof document === 'undefined') return;
+        if (typeof document === 'undefined') return;
 
-    const flagImg = document.getElementById('currentFlagImg');
-    if (flagImg) {
-        flagImg.src = flagUrl;
-        flagImg.alt = upper;
-    }
-
-    const labelFooter = document.getElementById('currentLangLabelFooter');
-    if (labelFooter) {
-        const span = labelFooter.querySelector('span');
-        if (span) {
-            span.textContent = `[${upper}] ▼`;
+        const flagImg = document.getElementById('currentFlagImg');
+        if (flagImg) {
+            flagImg.src = flagUrl;
+            flagImg.alt = upper;
         }
-    }
 
-    const menuLinks = document.querySelectorAll('.footer-lang-menu a[data-lang]');
-    menuLinks.forEach(link => {
-        const itemLang = normalizeSiteLang(link.getAttribute('data-lang'));
-        if (itemLang === code) {
-            link.classList.add('active');
-            link.setAttribute('aria-selected', 'true');
-        } else {
-            link.classList.remove('active');
-            link.setAttribute('aria-selected', 'false');
+        const labelFooter = document.getElementById('currentLangLabelFooter');
+        if (labelFooter) {
+            const span = labelFooter.querySelector('span');
+            if (span) {
+                span.textContent = `[${upper}] ▼`;
+            }
+        }
+
+        const menuLinks = document.querySelectorAll('.footer-lang-menu a[data-lang]');
+        menuLinks.forEach(link => {
+            const itemLang = normalizeSiteLang(link.getAttribute('data-lang'));
+            if (itemLang === code) {
+                link.classList.add('active');
+                link.setAttribute('aria-selected', 'true');
+            } else {
+                link.classList.remove('active');
+                link.setAttribute('aria-selected', 'false');
+            }
+        });
+
+        if (document.documentElement) {
+            document.documentElement.lang = (code === 'ua' ? 'uk' : code);
         }
     });
-
-    if (document.documentElement) {
-        document.documentElement.lang = (code === 'ua' ? 'uk' : code);
-    }
 }
 
 /**
@@ -115,15 +112,14 @@ export function updateFooterLanguageUI(lang) {
  * @returns {string}
  */
 export function getCurrentSiteLang() {
-    if (typeof window !== 'undefined' && typeof window.getCurrentSiteLang === 'function') {
-        return window.getCurrentSiteLang();
-    }
-    const s = getStore();
-    if (s && s.lang) return s.lang;
-    if (typeof window !== 'undefined' && window.i18next && window.i18next.language) {
-        return window.i18next.language;
-    }
-    return 'ua';
+    return callAction('getCurrentSiteLang', [], () => {
+        const s = getStore();
+        if (s && s.lang) return s.lang;
+        if (typeof window !== 'undefined' && window.i18next && window.i18next.language) {
+            return window.i18next.language;
+        }
+        return 'ua';
+    });
 }
 
 /**
@@ -131,14 +127,11 @@ export function getCurrentSiteLang() {
  * @param {string} lng
  * @returns {Promise<void>}
  */
-export async function changeLanguage(lng) {
-    if (typeof window !== 'undefined' && typeof window.changeLanguage === 'function') {
-        return window.changeLanguage(lng);
-    }
-    const s = getStore();
-    if (s) {
-        s.lang = lng;
-    }
+export function changeLanguage(lng) {
+    return callAsyncAction('changeLanguage', [lng], (langCode) => {
+        const s = getStore();
+        if (s) s.lang = langCode;
+    });
 }
 
 /**
@@ -146,10 +139,8 @@ export async function changeLanguage(lng) {
  * @param {string} lng
  * @returns {Promise<void>}
  */
-export async function ensureLanguageLoaded(lng) {
-    if (typeof window !== 'undefined' && typeof window.ensureLanguageLoaded === 'function') {
-        return window.ensureLanguageLoaded(lng);
-    }
+export function ensureLanguageLoaded(lng) {
+    return callAsyncAction('ensureLanguageLoaded', [lng]);
 }
 
 /**
@@ -157,9 +148,7 @@ export async function ensureLanguageLoaded(lng) {
  * @param {Event} [event]
  */
 export function toggleLangDropdown(event) {
-    if (typeof window !== 'undefined' && typeof window.toggleLangDropdown === 'function') {
-        return window.toggleLangDropdown(event);
-    }
+    return callAction('toggleLangDropdown', [event]);
 }
 
 /**
@@ -167,9 +156,7 @@ export function toggleLangDropdown(event) {
  * @param {HTMLElement|Document} [root=document]
  */
 export function updateContentLanguage(root) {
-    if (typeof window !== 'undefined' && typeof window.updateContentLanguage === 'function') {
-        return window.updateContentLanguage(root);
-    }
+    return callAction('updateContentLanguage', [root]);
 }
 
 /**

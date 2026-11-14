@@ -1,0 +1,322 @@
+/* ==========================================
+   LAZY MODAL STYLES: DROP / PROPOSE (#proposeModal)
+   Loaded on-demand with js/drop/drop.js
+   ========================================== */
+
+.upload-dropzone { background: #0a0a0a; border: 2px dashed #444; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; border-radius: 4px; min-height: 80px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+.upload-dropzone:hover { border-color: var(--accent-green); background: #111; }
+.upload-dropzone.drag-active { border-color: var(--accent-green); background: rgba(0, 255, 0, 0.1); transform: scale(1.02); }
+.preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; width: 100%; justify-content: center; }
+.preview-img {
+    width: 65px; height: 65px; background-size: cover; background-position: center;
+    border: 1px solid #555; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    position: relative; cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+.preview-img:active { cursor: grabbing; }
+.preview-del-btn {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    background: var(--accent-red);
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 10px;
+    cursor: pointer;
+    z-index: 10;
+    font-family: var(--font-mono);
+    border: 1px solid #000;
+    transition: transform 0.15s ease;
+}
+.preview-del-btn:hover {
+    transform: scale(1.2);
+}
+
+.sortable-ghost { opacity: 0.3; background: #111; border: 2px dashed var(--accent-green) !important; }
+.sortable-drag { cursor: grabbing !important; box-shadow: 0 15px 25px rgba(0,255,0,0.4) !important; transform: scale(1.15); z-index: 99999 !important; opacity: 0.9; }
+.sortable-fallback { opacity: 1 !important; pointer-events: none !important; z-index: 99999 !important; }
+
+/* --- ПРЕДЛОЖКА: СТРОКА ЦЕНЫ И ТОРГА ([ ТОРГ ] & МИНИМАЛЬНАЯ СТАВКА) --- */
+.prop-price-label {
+    display: block;
+    color: var(--accent-green, #00ff66);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    transition: opacity 0.16s cubic-bezier(0.4, 0, 0.2, 1), transform 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prop-price-label.label-animating {
+    opacity: 0;
+    transform: translateY(-3px);
+}
+
+.prop-price-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 14px;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
+}
+
+.prop-price-input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.prop-price-input-wrapper .form-input.prop-short-input {
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    margin-bottom: 0;
+    box-sizing: border-box;
+}
+
+.prop-min-bargain-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.prop-min-bargain-box .prop-min-bargain-input {
+    padding-right: 38px;
+}
+
+/* Красный крестик отмены торга внутри инпута */
+.prop-bargain-cancel-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--accent-red, #ff3333);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    z-index: 2;
+}
+.prop-bargain-cancel-btn:hover {
+    transform: translateY(-50%) scale(1.2);
+    opacity: 0.85;
+}
+
+/* Кнопка [ ТОРГ ] на одном уровне с инпутом */
+.prop-bargain-toggle-btn {
+    height: 44px;
+    min-height: 44px;
+    min-width: 95px;
+    flex-shrink: 0 !important;
+    padding: 0 16px;
+    background: #000;
+    color: var(--accent-green, #00ff66);
+    border: 2px inset var(--border-light, #555);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prop-bargain-toggle-btn:hover {
+    border-color: var(--accent-green, #00ff66);
+    background: rgba(0, 255, 102, 0.05);
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.25);
+    transform: translateY(-1px);
+}
+.prop-bargain-toggle-btn:active {
+    transform: translateY(1px);
+}
+.prop-bargain-toggle-btn.active {
+    border-color: var(--accent-green, #00ff66);
+    color: var(--accent-green, #00ff66);
+    background: rgba(0, 255, 102, 0.08);
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.35);
+}
+
+/* Кнопка на черном фоне с зеленой галочкой */
+.prop-bargain-confirm-btn {
+    height: 44px;
+    min-height: 44px;
+    width: 48px;
+    min-width: 48px;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    background: #000;
+    border: 2px inset var(--border-light, #555);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prop-bargain-confirm-btn::before,
+.prop-bargain-confirm-btn::after {
+    display: none !important;
+    content: none !important;
+}
+.prop-bargain-confirm-btn:hover {
+    border-color: var(--accent-green, #00ff66);
+    background: #0a0a0a;
+    box-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+    transform: scale(1.05);
+}
+.prop-bargain-confirm-btn:active {
+    transform: scale(0.95);
+}
+.prop-bargain-confirm-btn svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+    stroke: var(--accent-green, #00ff66) !important;
+    filter: drop-shadow(0 0 6px rgba(0, 255, 102, 0.8));
+    transition: transform 0.16s ease;
+}
+.prop-bargain-confirm-btn:hover svg {
+    transform: scale(1.15);
+}
+
+/* Компактный тост «СОХРАНЕНО: ТОРГ» по размерам и верстке как «Новые вещи» */
+.toast.toast-bargain-saved {
+    animation: slideInRight 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    padding: 6px 12px;
+    max-width: 240px;
+    width: auto;
+    gap: 8px;
+    border-radius: 3px;
+    background: rgba(10, 10, 10, 0.96);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 255, 0, 0.2);
+    border: 1px solid var(--accent-green);
+    border-left: 3px solid var(--accent-green);
+    cursor: default;
+    pointer-events: auto;
+}
+.toast.toast-bargain-saved:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 255, 0, 0.3);
+}
+.toast.toast-bargain-saved::before {
+    display: none !important;
+}
+.toast.toast-bargain-saved::after {
+    animation: toastTimer 3.2s linear forwards;
+}
+.toast.toast-bargain-saved.toast-leaving {
+    animation: slideOutRightSmooth 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+.toast-bargain-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border: 1px solid var(--accent-green);
+    border-radius: 2px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+.toast-bargain-icon svg {
+    display: block;
+    filter: drop-shadow(0 0 4px rgba(0, 255, 102, 0.8));
+}
+@media (max-width: 480px) {
+    .toast.toast-bargain-saved {
+        max-width: 200px;
+        width: auto;
+        padding: 5px 10px;
+        gap: 6px;
+    }
+    .toast-bargain-icon {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* Плавные переходы для комфорта глаз */
+.prop-short-input.anim-switch,
+.prop-min-bargain-box.anim-switch,
+.prop-bargain-toggle-btn.anim-switch,
+.prop-bargain-confirm-btn.anim-switch {
+    animation: propInputSwitch 0.2s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+@keyframes propInputSwitch {
+    0% {
+        opacity: 0;
+        transform: translateY(3px) scale(0.99);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 900px) {
+    #proposeModal .modal-window {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 92dvh !important;
+        min-height: min(560px, 92dvh) !important;
+        max-height: 94dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+    #proposeModal .form-layout {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+        padding: 15px !important;
+        padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    #proposeModal #propDesc,
+    #proposeModal textarea {
+        min-height: 85px !important;
+        height: 85px !important;
+        flex-shrink: 0 !important;
+    }
+    .prop-bargain-toggle-btn {
+        min-width: 85px;
+        padding: 0 10px;
+        font-size: 12px;
+        flex-shrink: 0 !important;
+    }
+    .prop-bargain-confirm-btn {
+        flex-shrink: 0 !important;
+    }
+    html.keyboard-open #proposeModal .modal-window {
+        height: 100% !important;
+        max-height: 100% !important;
+        min-height: 0 !important;
+        transition: none !important;
+    }
+    html.keyboard-open #proposeModal .form-layout {
+        padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+}

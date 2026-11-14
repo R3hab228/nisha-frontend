@@ -3,11 +3,18 @@
 // Safe, typed ES module exports for product card, slider & questions
 // ==========================================
 
+import { callAction, callAsyncAction } from './_facade.js';
+import { getStore } from './store.js';
+
 /**
  * Returns currently opened item object or null
  * @returns {any}
  */
 export function getCurrentOpenedItem() {
+    const s = getStore();
+    if (s && s.currentOpenedItem) {
+        return s.currentOpenedItem;
+    }
     if (typeof window !== 'undefined' && window.currentOpenedItem) {
         return window.currentOpenedItem;
     }
@@ -19,9 +26,7 @@ export function getCurrentOpenedItem() {
  * @param {any} item
  */
 export function openProductModal(item) {
-    if (typeof window !== 'undefined' && typeof window.openProductModal === 'function') {
-        return window.openProductModal(item);
-    }
+    return callAction('openProductModal', [item]);
 }
 
 /**
@@ -29,19 +34,15 @@ export function openProductModal(item) {
  * @param {string|number} id
  * @returns {Promise<any>}
  */
-export async function openProductModalById(id) {
-    if (typeof window !== 'undefined' && typeof window.openProductModalById === 'function') {
-        return window.openProductModalById(id);
-    }
+export function openProductModalById(id) {
+    return callAsyncAction('openProductModalById', [id]);
 }
 
 /**
  * Closes product modal dialog
  */
 export function closeProductModal() {
-    if (typeof window !== 'undefined' && typeof window.closeModal === 'function') {
-        return window.closeModal('productModal');
-    }
+    return callAction('closeModal', ['productModal']);
 }
 
 /**
@@ -49,9 +50,7 @@ export function closeProductModal() {
  * @param {number} direction
  */
 export function moveSlide(direction) {
-    if (typeof window !== 'undefined' && typeof window.moveSlide === 'function') {
-        return window.moveSlide(direction);
-    }
+    return callAction('moveSlide', [direction]);
 }
 
 /**
@@ -59,9 +58,7 @@ export function moveSlide(direction) {
  * @param {number} index
  */
 export function setSlide(index) {
-    if (typeof window !== 'undefined' && typeof window.setSlide === 'function') {
-        return window.setSlide(index);
-    }
+    return callAction('setSlide', [index]);
 }
 
 /**
@@ -69,9 +66,7 @@ export function setSlide(index) {
  * @param {number} [index=0]
  */
 export function openProductPhotoZoom(index = 0) {
-    if (typeof window !== 'undefined' && typeof window.openProductPhotoZoom === 'function') {
-        return window.openProductPhotoZoom(index);
-    }
+    return callAction('openProductPhotoZoom', [index]);
 }
 
 /**
@@ -79,20 +74,15 @@ export function openProductPhotoZoom(index = 0) {
  * @param {string|number} [id]
  * @returns {Promise<boolean>}
  */
-export async function shareItem(id) {
-    if (typeof window !== 'undefined' && typeof window.shareItem === 'function') {
-        return window.shareItem(id);
-    }
-    return false;
+export function shareItem(id) {
+    return callAsyncAction('shareItem', [id], () => false);
 }
 
 /**
  * Toggles product favorite state from inside product modal
  */
 export function toggleFavFromModal() {
-    if (typeof window !== 'undefined' && typeof window.toggleFavFromModal === 'function') {
-        return window.toggleFavFromModal();
-    }
+    return callAction('toggleFavFromModal');
 }
 
 /**
@@ -100,18 +90,14 @@ export function toggleFavFromModal() {
  * @param {any} item
  */
 export function addToHistory(item) {
-    if (typeof window !== 'undefined' && typeof window.addToHistory === 'function') {
-        return window.addToHistory(item);
-    }
+    return callAction('addToHistory', [item]);
 }
 
 /**
  * Renders browse history drawer DOM
  */
 export function renderHistory() {
-    if (typeof window !== 'undefined' && typeof window.renderHistory === 'function') {
-        return window.renderHistory();
-    }
+    return callAction('renderHistory');
 }
 
 /**
@@ -119,9 +105,7 @@ export function renderHistory() {
  * @param {string|number} id
  */
 export function removeHistoryItem(id) {
-    if (typeof window !== 'undefined' && typeof window.removeHistoryItem === 'function') {
-        return window.removeHistoryItem(id);
-    }
+    return callAction('removeHistoryItem', [id]);
 }
 
 /**
@@ -129,10 +113,8 @@ export function removeHistoryItem(id) {
  * @param {string|number} id
  * @returns {Promise<any>}
  */
-export async function submitQuestion(id) {
-    if (typeof window !== 'undefined' && typeof window.submitQuestion === 'function') {
-        return window.submitQuestion(id);
-    }
+export function submitQuestion(id) {
+    return callAsyncAction('submitQuestion', [id]);
 }
 
 /**
@@ -140,11 +122,8 @@ export async function submitQuestion(id) {
  * @param {string|number} id
  * @returns {Promise<any[]>}
  */
-export async function loadItemQuestions(id) {
-    if (typeof window !== 'undefined' && typeof window.loadItemQuestions === 'function') {
-        return window.loadItemQuestions(id);
-    }
-    return [];
+export function loadItemQuestions(id) {
+    return callAsyncAction('loadItemQuestions', [id], () => []);
 }
 
 /**
@@ -153,9 +132,7 @@ export async function loadItemQuestions(id) {
  * @param {boolean} [immediate=false]
  */
 export function prewarmProductModal(id, immediate = false) {
-    if (typeof window !== 'undefined' && typeof window.prewarmProductModal === 'function') {
-        return window.prewarmProductModal(id, immediate);
-    }
+    return callAction('prewarmProductModal', [id, immediate]);
 }
 
 /**
@@ -163,7 +140,5 @@ export function prewarmProductModal(id, immediate = false) {
  * @param {string|number} id
  */
 export function cancelPrewarmProductModal(id) {
-    if (typeof window !== 'undefined' && typeof window.cancelPrewarmProductModal === 'function') {
-        return window.cancelPrewarmProductModal(id);
-    }
+    return callAction('cancelPrewarmProductModal', [id]);
 }
