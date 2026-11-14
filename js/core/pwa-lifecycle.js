@@ -126,6 +126,7 @@ export async function maybeShowPostOrderPwaBroadcast() {
 
         const ctrl = new AbortController();
         let isInstalling = false;
+        let isInstallDone = false;
         const closeOverlay = (markDismissed = false) => {
             ctrl.abort();
             overlay.remove();
@@ -203,16 +204,24 @@ export async function maybeShowPostOrderPwaBroadcast() {
                     const finishInstall = () => {
                         if (installCompleted) return;
                         installCompleted = true;
+                        isInstallDone = true;
                         clearInterval(progressTimer);
                         setBars(TOTAL_BARS);
                         if (statusEl) {
                             statusEl.textContent = t('footer.pwa_broadcast_installed', 'PWA установлено');
                         }
+                        if (laterBtnEl) {
+                            laterBtnEl.textContent = t('footer.pwa_broadcast_close', 'ЗАКРЫТЬ');
+                            laterBtnEl.style.pointerEvents = 'auto';
+                            laterBtnEl.style.opacity = '1';
+                            laterBtnEl.style.color = '#fff';
+                            laterBtnEl.style.borderColor = '#777';
+                        }
                         markPwaInstalled();
                         if (window.analytics && typeof window.analytics.track === 'function') {
                             window.analytics.track('PWA Installed', { source: 'post_order_broadcast' });
                         }
-                        setTimeout(() => closeOverlay(false), 850);
+                        setTimeout(() => closeOverlay(false), 1500);
                     };
 
                     window.addEventListener('appinstalled', finishInstall, { once: true, signal: ctrl.signal });
@@ -238,12 +247,19 @@ export async function maybeShowPostOrderPwaBroadcast() {
 
         laterBtnEl.addEventListener('click', () => {
             if (!isInstalling) closeOverlay(true);
+            else if (isInstallDone) closeOverlay(false);
         }, { signal: ctrl.signal });
         overlay.addEventListener('click', (e) => {
-            if (!isInstalling && e.target === overlay) closeOverlay(true);
+            if (e.target === overlay) {
+                if (!isInstalling) closeOverlay(true);
+                else if (isInstallDone) closeOverlay(false);
+            }
         }, { signal: ctrl.signal });
         document.addEventListener('keydown', (e) => {
-            if (!isInstalling && e.key === 'Escape') closeOverlay(true);
+            if (e.key === 'Escape') {
+                if (!isInstalling) closeOverlay(true);
+                else if (isInstallDone) closeOverlay(false);
+            }
         }, { signal: ctrl.signal });
 
         return true;
