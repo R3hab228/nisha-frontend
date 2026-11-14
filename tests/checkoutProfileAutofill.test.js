@@ -2,13 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseDeliveryAddress } from '../src/modules/helpers.js';
+import { readCartSource } from './helpers/readCartSource.js';
 
 describe('Checkout Profile Delivery Autofill & Ref Resolution', () => {
     let cartCode;
     let profileCode;
 
     beforeEach(() => {
-        cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf-8');
+        cartCode = readCartSource();
         profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf-8');
     });
 

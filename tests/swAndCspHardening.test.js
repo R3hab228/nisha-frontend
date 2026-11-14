@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
+import { readCartSource } from './helpers/readCartSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -81,7 +82,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('7. cart.js uses CSP-safe delegated touch listeners for swipe-to-delete instead of inline ontouch* attributes', () => {
-        const cart = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+        const cart = readCartSource();
 
         expect(cart).not.toContain('ontouchstart=');
         expect(cart).not.toContain('ontouchmove=');
@@ -118,7 +119,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('10. cart add/remove, sale, and review toasts use unified compact toast helpers', () => {
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-        const cart = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+        const cart = readCartSource();
         const catalog = readCatalogSource();
         const reviews = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
 

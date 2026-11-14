@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
+import { readCartSource } from './helpers/readCartSource.js';
 import * as helpers from '../src/modules/helpers.js';
 import * as cart from '../src/modules/cart.js';
 import fs from 'node:fs';
@@ -128,7 +129,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         });
 
         it('cart operations are protected with withCartLock and withCheckoutLock', () => {
-            const cartCode = fs.readFileSync(path.resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('withCartLock');
             expect(cartCode).toContain('withCheckoutLock');
             expect(cartCode).toContain('nisha_cart_lock');

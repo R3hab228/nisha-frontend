@@ -12,6 +12,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
+import { readCartSource } from './helpers/readCartSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -450,7 +451,7 @@ it('isPopoverOpenSafe accurately detects open state across popover, class and st
         });
 
         it('live-search.js and cart.js register toggle listeners for Light Dismiss, cart uses smooth bottom sheet', () => {
-            const cartJs = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartJs = readCartSource();
             const searchJs = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
 
             expect(cartJs).toContain('function toggleCartDropdown');

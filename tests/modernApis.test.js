@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
+import { readCartSource } from './helpers/readCartSource.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -343,6 +344,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('contains no residual var declarations across primary js files', () => {
             const files = [
                 'cart/cart.js',
+                'cart/cart-state.js',
+                'cart/cart-ui.js',
+                'cart/cart-operations.js',
+                'cart/novaposhta-helpers.js',
+                'cart/novaposhta-delivery.js',
+                'cart/checkout-form.js',
+                'cart/checkout-submit.js',
                 'product/product.js',
                 'profile/profile.js',
                 'catalog/catalog.js',
@@ -484,6 +492,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'catalog/catalog-ui-info.js',
                 'catalog/live-search.js',
                 'cart/cart.js',
+                'cart/cart-state.js',
+                'cart/cart-ui.js',
+                'cart/cart-operations.js',
+                'cart/novaposhta-helpers.js',
+                'cart/novaposhta-delivery.js',
+                'cart/checkout-form.js',
+                'cart/checkout-submit.js',
                 'core/store.js',
                 'drop/drop.js',
                 'orders/orders.js',
@@ -1982,7 +1997,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
     describe('31. Strict Nova Poshta Branch & City Validation and Mobile Touch Selection', () => {
         it('binds both onmousedown and onclick for touchscreen mobile branch selection in cart.js', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('div.onmousedown = selectBranchItem;');
             expect(cartCode).toContain('div.onclick = selectBranchItem;');
             expect(cartCode).toContain('div.onmousedown = selectCityItem;');
@@ -1990,7 +2005,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('strictly blocks order submission in executeOrderFinal and confirmEmailPrompt if city or branch is missing', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('if (!city || !cityRef)');
             expect(cartCode).toContain('if (!branch || !branchRef)');
             expect(cartCode).toContain('isOrderSubmitting = false;');
@@ -1998,21 +2013,21 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('prevents fallback to direct Supabase RPC when server returns 400 validation error', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('errMsg.includes(\'отделение\')');
             expect(cartCode).toContain('errMsg.includes(\'город\')');
             expect(cartCode).toContain('errMsg.includes(\'проверки данных\')');
         });
 
         it('normalizes city prefixes including г./гор./город and matches MainDescription in ensureCityRef', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('г\\.|гор\\.|город');
             expect(cartCode).toContain('_npStripPrefix(a.MainDescription) === wantedName');
             expect(cartCode).toContain('cleanTyped');
         });
 
         it('exposes window.getActiveCart and window.setActiveCart for cross-module reliability', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('window.getActiveCart = getActiveCart;');
             expect(cartCode).toContain('window.setActiveCart = setActiveCart;');
 
@@ -2022,15 +2037,15 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('auto-unlocks branch input and pre-caches branches upon city detection or saved draft', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('window.selectedSettlementRef = cityObj.Ref || \'\'');
             expect(cartCode).toContain('branchInput._unlockBound');
         });
 
         it('defaults showDropdown to false in loadNPBranches to prevent auto-opening dropdown on checkout load', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
-            expect(cartCode).toContain('async function loadNPBranches(searchString = "", showDropdown = false)');
-            expect(cartCode).toContain('loadNPBranches("", false)');
+            const cartCode = readCartSource();
+            expect(cartCode).toMatch(/async function loadNPBranches\(searchString\s*=\s*["']{2},\s*showDropdown\s*=\s*false\)/);
+            expect(cartCode).toMatch(/loadNPBranches\(["']{2},\s*false\)/);
 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
@@ -2040,7 +2055,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('binds keydown Enter handler on branch and city inputs to dismiss dropdown and blur mobile keyboard', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('branchInput._enterBound');
             expect(cartCode).toContain('cityInput._enterBound');
             expect(cartCode).toContain('e.key === \'Enter\'');
@@ -2049,10 +2064,10 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('optimizes dropdown DOM rendering with MAX_RENDERED_BRANCHES limit and instant in-memory filtering', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('const MAX_RENDERED_BRANCHES = 50;');
             expect(cartCode).toContain('Math.min(branches.length, MAX_RENDERED_BRANCHES)');
-            expect(cartCode).toContain('npBranchCache[cityRef + "_"]');
+            expect(cartCode).toMatch(/npBranchCache\[cityRef \+ ["']_["']\]/);
         });
 
         it('parses complex addresses with region commas and branch markers using parseDeliveryAddress', () => {
@@ -2076,8 +2091,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('applies profile delivery address in checkout without ever auto-opening city/branch lists', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
-            expect(cartCode).toContain('Адрес из профиля пользователя');
+            const cartCode = readCartSource();
+            expect(cartCode).toContain('profileFullName');
             expect(cartCode).toContain('function matchAndSetBranchRef');
             expect(cartCode).toContain('function hideNPDropdowns');
             expect(cartCode).toContain('async function ensureCityRef(opts = {})');
@@ -2088,8 +2103,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('does not let GeoIP overwrite the city and never opens the city list from autoDetectCity', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
-            expect(cartCode).toContain('GeoIP не должен перетирать выбор');
+            const cartCode = readCartSource();
+            expect(cartCode).toContain("if (cityInput.value.trim() !== ''");
             expect(cartCode).toContain('ensureCityRef().then(() => hideNPDropdowns())');
             expect(cartCode).not.toContain('searchNPCity(detectedCity)');
         });
@@ -2098,7 +2113,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             expect(html).toMatch(/id=promoInput[^>]*autocomplete=off/);
             expect(html).toMatch(/id=promoInput[^>]*name=promo_code/);
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('function sanitizePromoField');
             expect(cartCode).toContain('setTimeout(sanitizePromoField, 1500)');
 
@@ -2307,7 +2322,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('provides touch tap selection, keyboard viewport adaptation, and clear buttons for NP fields', () => {
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('function bindTouchTapSelect');
             expect(cartCode).toContain('function scrollNPFieldIntoModalView');
             expect(cartCode).toContain('function clearNPBranchInput');
@@ -2360,7 +2375,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(getNP(enJson).not_found).toBe('Not found');
             expect(getNP(publicEn).branch_empty).toBe('Not found');
 
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain("i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })");
             expect(cartCode).toContain("i18next.t('np.searching'");
             expect(cartCode).toContain('bindDropdownScrollDismissKeyboard');
@@ -2458,7 +2473,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('35. Checkout payment method dropdown arrow smoothly rotates 180deg when opened and resets to 0deg when closed', () => {
             const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-            const cartJs = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartJs = readCartSource();
             const css = readProjectCss();
 
             // 1. paymentDisplay must have paymentArrow container with SVG polygon arrow
@@ -2542,7 +2557,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
             const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             const cssCode = readProjectCss();
 
             // 1. Unsaved data warning modal localized in RU, UA, EN
@@ -2584,7 +2599,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
             const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
             const catalogCode = readCatalogSource();
-            const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             const i18nCode = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
 
             // 1. Customer support ("Служба поддержки") localized in RU, UA, EN
@@ -3531,14 +3546,22 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     });
 
     describe('34. Minimalist Promo Code Notifications & Dynamic Percentage Savings', () => {
+        const extractRenderPromoNotice = (cartCode) => {
+            const start = cartCode.indexOf('export function renderPromoCodeNotice');
+            const fnStart = start !== -1 ? start : cartCode.indexOf('function renderPromoCodeNotice');
+            const fnEnd = cartCode.indexOf('export function clearDropdownInlineStyles', fnStart);
+            const rawSlice = (fnEnd !== -1 ? cartCode.slice(fnStart, fnEnd) : cartCode.slice(fnStart)).replace(/^export\s+/gm, '');
+            return rawSlice;
+        };
+
         it('renders percentage promo with percentage tag and calculated order discount in UAH', () => {
-            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).toContain('function renderPromoCodeNotice');
             expect(cartCode).toContain('window.renderPromoCodeNotice = renderPromoCodeNotice');
 
             // Evaluate renderPromoCodeNotice in sandbox
             const sandboxFn = new Function('i18next', 'formatPrice', 'getCurrency', `
-                ${cartCode.slice(cartCode.indexOf('function renderPromoCodeNotice'), cartCode.indexOf('window.renderPromoCodeNotice = renderPromoCodeNotice'))}
+                ${extractRenderPromoNotice(cartCode)}
                 return renderPromoCodeNotice;
             `);
 
@@ -3570,9 +3593,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('renders fixed promo with clean order discount without duplicate lines', () => {
-            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             const sandboxFn = new Function('i18next', 'formatPrice', 'getCurrency', `
-                ${cartCode.slice(cartCode.indexOf('function renderPromoCodeNotice'), cartCode.indexOf('window.renderPromoCodeNotice = renderPromoCodeNotice'))}
+                ${extractRenderPromoNotice(cartCode)}
                 return renderPromoCodeNotice;
             `);
 
@@ -3603,9 +3626,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('renders error and warning notifications cleanly with proper [!] icons', () => {
-            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             const sandboxFn = new Function('i18next', 'formatPrice', 'getCurrency', `
-                ${cartCode.slice(cartCode.indexOf('function renderPromoCodeNotice'), cartCode.indexOf('window.renderPromoCodeNotice = renderPromoCodeNotice'))}
+                ${extractRenderPromoNotice(cartCode)}
                 return renderPromoCodeNotice;
             `);
 
@@ -3637,7 +3660,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toMatch(/\.promo-msg:empty\s*\{[^}]*display:\s*none/);
 
             // 4. Zero legacy inline promo styling in cart.js
-            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             expect(cartCode).not.toContain('<span style="color: var(--accent-green);">[✔]');
         });
 
@@ -3883,7 +3906,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
             const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
-            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
 
             // 1. Drop proposal silent reset (no false "торг выключен" toast)
@@ -3905,7 +3928,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('53. Desktop cart hover: clearDropdownInlineStyles, no sticky inline opacity/visibility, bridge pseudo-element, and desktop hover refresh', () => {
-            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
             const cssCode = readProjectCss();
 
             // 1. clearDropdownInlineStyles exists and cleans all inline blocking properties
@@ -3922,7 +3945,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 3. Desktop hover refresh listener initCartHoverDesktop is defined and auto-bound
             expect(cartCode).toContain('function initCartHoverDesktop()');
             expect(cartCode).toContain("infoWrapper.addEventListener('mouseenter'");
-            expect(cartCode).toContain("if (typeof renderCartItems === 'function') renderCartItems()");
+            expect(cartCode).toContain('renderCartItems()');
 
             // 4. CSS contains bridge pseudo-element and !important for desktop hover
             expect(cssCode).toContain('.cart-dropdown::before');
@@ -3938,7 +3961,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
             const catalogCode = readCatalogSource();
-            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
 
             // 1. Enter key in bargain inputs calls their dedicated confirm/submit actions instead of shifting focus
             expect(sysCode).toContain("activeEl.id === 'propMinBargainPrice'");
@@ -4060,7 +4083,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const cssCode = readProjectCss();
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
             const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
-            const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
+            const cartCode = readCartSource();
 
             // 1. Stable responsive catalog grid without subgrid distortion
             expect(cssCode).toContain('.items-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }');

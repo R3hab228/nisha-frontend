@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import fs from 'node:fs';
-import path from 'node:path';
+import { readCartSource } from './helpers/readCartSource.js';
 
 describe('Abandoned Cart Recovery — Frontend Sync', () => {
     it('cart.js implements syncCartToServer dispatching /api/cart/sync with userId and deviceId', () => {
-        const cartJsPath = path.resolve(__dirname, '../js/cart/cart.js');
-        const content = fs.readFileSync(cartJsPath, 'utf8');
+        const content = readCartSource();
 
         // Check syncCartToServer exists and sends to /api/cart/sync
         expect(content).toContain('async function syncCartToServer()');
@@ -16,8 +14,7 @@ describe('Abandoned Cart Recovery — Frontend Sync', () => {
     });
 
     it('syncCartToServer is invoked upon adding items, removing items, and checkout completion', () => {
-        const cartJsPath = path.resolve(__dirname, '../js/cart/cart.js');
-        const content = fs.readFileSync(cartJsPath, 'utf8');
+        const content = readCartSource();
 
         // Check addToCart calls syncCartToServer
         expect(content).toContain('await syncCartToServer()');
