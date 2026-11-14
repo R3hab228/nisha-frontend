@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { getNovaPoshtaTrackingUrl, encodeNovaPoshtaTtn, formatOrderStatus } from '../src/modules/orders.js';
 
 describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
     const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
-    const styleCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+    const styleCode = readProjectCss();
 
     describe('1. CSS View Transition Rules & Modal Isolation', () => {
         it('isolates #itemsGrid and .item-card from view transitions when any modal or ordersModal is open', () => {
@@ -141,7 +142,7 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
     describe('3. Order Footer TTNs & Total Spacing Layout', () => {
         it('isolates multiple TTNs inside order-ttns-wrapper grid and places total on its own row', () => {
             const freshOrdersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
-            const freshStyleCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const freshStyleCode = readProjectCss();
 
             expect(freshOrdersCode).toContain('class="order-ttns-wrapper"');
             expect(freshOrdersCode).toContain('class="order-total-row"');

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -16,7 +17,7 @@ function extractMediaBlock(css, mediaRegex) {
 }
 
 describe('Mobile Catalog Rendering Performance (style.css)', () => {
-    const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+    const css = readProjectCss();
     const mobileCss = extractMediaBlock(css, /@media\s*\(max-width:\s*900px\)\s*\{/);
 
     it('isolates catalog grid and cards with CSS containment on mobile viewports', () => {

@@ -1,0 +1,362 @@
+/* ========================================== */
+/* РђРќРРњРђР¦РРЇ Р”Р’РћР™РќРћР“Рћ РўРђРџРђ (DOUBLE TAP TO LIKE) */
+/* ========================================== */
+.double-tap-star-anim {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    color: var(--accent-red);
+    font-size: 90px;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none; /* Р§С‚РѕР±С‹ РєР»РёРєРё РїСЂРѕС…РѕРґРёР»Рё СЃРєРІРѕР·СЊ РЅРµС‘ */
+    text-shadow: 0 0 30px rgba(255, 0, 0, 0.9);
+    animation: popStar 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popStar {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    20% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    40% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+/* --- РђР”РђРџРўРР’РќР«Р• РџР›РђРЁРљР SOLD/RESERVED Р”Р›РЇ РўР•Р›Р•Р¤РћРќРђ --- */
+    .sold-badge, .reserved-badge {
+        font-size: 16px !important; /* РЈРјРµРЅСЊС€Р°РµРј С€СЂРёС„С‚, С‡С‚РѕР±С‹ РІР»РµР· */
+        letter-spacing: 2px !important;
+        padding: 5px !important;
+        width: 90%; /* РџР»Р°С€РєР° РЅРµ Р±СѓРґРµС‚ С€РёСЂРµ СЃР°РјРѕР№ РєР°СЂС‚РѕС‡РєРё */
+        text-align: center;
+        box-sizing: border-box;
+        /* Р’РѕР·РІСЂР°С‰Р°РµРј С†РµРЅС‚СЂРёСЂРѕРІР°РЅРёРµ Рё РЅР°РєР»РѕРЅ, РЅРѕ Р±РµР· С‚СЏР¶РµР»РѕРіРѕ 3D (translateZ) */
+        transform: translate(-50%, -50%) rotate(-15deg) !important; 
+        white-space: nowrap; /* Р—Р°РїСЂРµС‰Р°РµРј РїРµСЂРµРЅРѕСЃ РЅР° РІС‚РѕСЂСѓСЋ СЃС‚СЂРѕРєСѓ */
+    }
+
+
+
+
+
+/* Touch-устройства: отключаем sticky-hover свечение и фильтры яркости на карточках каталога */
+@media (hover: none), (pointer: coarse) {
+    .item-card:hover { border-color: var(--border-color); box-shadow: none; }
+    .item-card.unseen-pulse:hover { border-color: rgba(220, 20, 60, 0.72); box-shadow: none; }
+    .item-card:hover .mock-image { filter: none; }
+    .grid-cart-btn:hover { filter: none; }
+}
+
+.search-input, #mainSearch, .brand-search-input,
+.form-input, .auth-input, .profile-delivery-input,
+input, textarea {
+    caret-color: var(--accent-green);
+}
+
+/* Кастомные SVG-курсоры применяем только на устройствах с точным указателем (мышь/трекпад) */
+@media (hover: hover) and (pointer: fine) {
+/* RED ARROW EVERYWHERE (Overriding default pointer) */
+body, html, .modal-overlay, a, button, select, label, .clickable, [onclick], [data-action], 
+.slider-btn, .custom-summary, .buy-tg-btn, .offer-price-btn, .share-btn, .badge-item, 
+.order-item-row, .accept-btn, .cart-close-mobile, .cart-item-remove, 
+.grid-cart-btn, #currentLangLabelFooter, .clear-search-btn, .np-clear-btn, .reviews-nav button, 
+.fab-propose, .upload-dropzone, .order-tab, .eye-icon, .search-history-item, 
+.search-history-clear, .history-item-remove, .grid-slider-btn,
+.search-wrapper, .search-section,
+.live-search-dropdown, .live-search-item, .live-search-item *,
+.live-search-img, .live-search-info, .live-search-title, .live-search-price, .live-search-reserved-badge {
+    cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCAyIEw0IDIyIEwxMCAxNiBMMTUgMjQgTDE4IDIyIEwxMyAxNSBMMjAgMTUgWicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==") 0 0, auto !important;
+}
+
+/* CUSTOM RED I-BEAM TEXT CURSOR (⌶) FOR SEARCH & TEXT INPUTS */
+.search-input, #mainSearch, .brand-search-input,
+.form-input, .auth-input, .profile-delivery-input,
+input, textarea {
+    cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNyA0aDEwIE0xMiA0djE2IE03IDIwaDEwJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzQnIHN0cm9rZS1saW5lY2FwPSdzcXVhcmUnLz48cGF0aCBkPSdNNyA0aDEwIE0xMiA0djE2IE03IDIwaDEwJyBzdHJva2U9J3JlZCcgc3Ryb2tlLXdpZHRoPScyJyBzdHJva2UtbGluZWNhcD0nc3F1YXJlJy8+PC9zdmc+") 12 12, text !important;
+}
+
+/* RED HAND FOR PHOTOS ONLY */
+.card-slider-wrapper, .card-slide, .card-slider-container, .thumb, .preview-img, .preview-img:active, .slide, .pswp__img, .sortable-drag {
+    cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyOCcgaGVpZ2h0PScyOCcgdmlld0JveD0nMCAwIDI4IDI4Jz48cGF0aCBkPSdNOSAxMS41VjNhMiAyIDAgMCAxIDQgMHY1aDFhMiAyIDAgMCAxIDIgMS41aDFhMiAyIDAgMCAxIDIgMS41aDFhMiAyIDAgMCAxIDEgM3Y0YTcgNyAwIDAgMS03IDdIOWE3IDcgMCAwIDEtNS0zLjVMMi41IDE5YTIgMiAwIDAgMSAyLTNsNC41IDEuNVYxMS41eicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg=="), pointer !important;
+}
+}
+
+
+
+
+/* RED ARROW FOR SCROLLBARS (DESKTOP ONLY) */
+@media (min-width: 901px) {
+/* RED ARROW FOR SCROLLBARS */
+::-webkit-scrollbar,
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+    cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCAyIEw0IDIyIEwxMCAxNiBMMTUgMjQgTDE4IDIyIEwxMyAxNSBMMjAgMTUgWicgZmlsbD0ncmVkJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==") 0 0, auto !important;
+}
+}
+
+
+
+
+
+@keyframes liveSearchFadeIn {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+
+
+
+
+
+
+/* WIN95 CHECKMARK BUTTON */
+.win95-check-btn {
+    transition: 0.05s;
+    user-select: none;
+}
+.win95-check-btn:hover {
+    border-color: #aaa !important;
+}
+.win95-check-btn:active {
+    border-style: inset !important;
+    background: #111 !important;
+    transform: translate(1px, 1px);
+}
+
+/* WIN95 LOADING HOURGLASS */
+.win95-loading-hourglass {
+    height: 14px;
+    width: auto;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    display: inline-block;
+    vertical-align: middle;
+    animation: win95HourglassFlip 2.4s infinite ease-in-out;
+}
+
+@keyframes win95HourglassFlip {
+    0%, 40% { transform: rotate(0deg); }
+    50%, 90% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* WIN95 ANIMATED PIXEL HOURGLASS (AUTHENTIC RETRO LOADER) */
+.win95-pixel-hourglass {
+    display: inline-block;
+    vertical-align: middle;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    animation: hgFlip 2.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    shape-rendering: crispEdges;
+}
+
+@keyframes hgFlip {
+    0%, 75% { transform: rotate(0deg); }
+    86%, 100% { transform: rotate(180deg); }
+}
+
+.hg-stream {
+    animation: hgStreamFade 2.8s infinite steps(1);
+}
+@keyframes hgStreamFade {
+    0%, 72% { opacity: 1; }
+    72.1%, 100% { opacity: 0; }
+}
+
+.hg-drop-1 {
+    animation: hgDrop1 0.22s infinite linear;
+}
+@keyframes hgDrop1 {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(3px); }
+}
+
+.hg-drop-2 {
+    animation: hgDrop2 0.22s infinite linear;
+    animation-delay: 0.11s;
+}
+@keyframes hgDrop2 {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(3px); }
+}
+
+.hg-top-1 { animation: hgTop1 2.8s infinite steps(1); }
+@keyframes hgTop1 { 0%, 12% { opacity: 1; } 12.1%, 100% { opacity: 0; } }
+
+.hg-top-2 { animation: hgTop2 2.8s infinite steps(1); }
+@keyframes hgTop2 { 0%, 24% { opacity: 1; } 24.1%, 100% { opacity: 0; } }
+
+.hg-top-3 { animation: hgTop3 2.8s infinite steps(1); }
+@keyframes hgTop3 { 0%, 36% { opacity: 1; } 36.1%, 100% { opacity: 0; } }
+
+.hg-top-4 { animation: hgTop4 2.8s infinite steps(1); }
+@keyframes hgTop4 { 0%, 48% { opacity: 1; } 48.1%, 100% { opacity: 0; } }
+
+.hg-top-5 { animation: hgTop5 2.8s infinite steps(1); }
+@keyframes hgTop5 { 0%, 60% { opacity: 1; } 60.1%, 100% { opacity: 0; } }
+
+.hg-top-6 { animation: hgTop6 2.8s infinite steps(1); }
+@keyframes hgTop6 { 0%, 72% { opacity: 1; } 72.1%, 100% { opacity: 0; } }
+
+.hg-bot-1 { animation: hgBot1 2.8s infinite steps(1); }
+@keyframes hgBot1 { 0%, 12% { opacity: 0; } 12.1%, 100% { opacity: 1; } }
+
+.hg-bot-2 { animation: hgBot2 2.8s infinite steps(1); }
+@keyframes hgBot2 { 0%, 24% { opacity: 0; } 24.1%, 100% { opacity: 1; } }
+
+.hg-bot-3 { animation: hgBot3 2.8s infinite steps(1); }
+@keyframes hgBot3 { 0%, 36% { opacity: 0; } 36.1%, 100% { opacity: 1; } }
+
+.hg-bot-4 { animation: hgBot4 2.8s infinite steps(1); }
+@keyframes hgBot4 { 0%, 48% { opacity: 0; } 48.1%, 100% { opacity: 1; } }
+
+.hg-bot-5 { animation: hgBot5 2.8s infinite steps(1); }
+@keyframes hgBot5 { 0%, 60% { opacity: 0; } 60.1%, 100% { opacity: 1; } }
+
+.hg-bot-6 { animation: hgBot6 2.8s infinite steps(1); }
+@keyframes hgBot6 { 0%, 72% { opacity: 0; } 72.1%, 100% { opacity: 1; } }
+
+/* --- ПЛАШКА ЗАМЕРОВ У КУРСОРА (ТОЛЬКО ПК) --- */
+.measurements-tooltip {
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    z-index: 100000 !important;
+    pointer-events: none !important;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--accent-green);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.9), 0 0 14px rgba(0, 255, 0, 0.2);
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    min-width: 170px;
+    max-width: 320px;
+    width: max-content;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+}
+
+.measurements-tooltip.visible {
+    display: block !important;
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Прячем плашку замеров при наведении на кнопку корзины на ПК */
+body:has(.grid-cart-btn:hover, [data-action="add-to-cart"]:hover) .measurements-tooltip {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.measurements-tooltip-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-yellow);
+    margin-bottom: 8px;
+    letter-spacing: 1.5px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+    padding-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.measurements-tooltip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.measurements-tooltip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: #eee;
+    line-height: 1.35;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.measurements-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent-red);
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(255, 0, 0, 0.85);
+    display: inline-block;
+    margin-top: 5px;
+}
+
+.measurements-text {
+    font-family: var(--font-mono);
+    color: #e0e0e0;
+}
+
+/* --- АВТОМАТИЧЕСКИЙ РЕЖИМ ЭНЕРГОСБЕРЕЖЕНИЯ И ТУРБО-ПЛАВНОСТИ (LOW POWER MODE) --- */
+@media (prefers-reduced-motion: reduce) {
+    .cart-panel, .modal-overlay, .slider-btn, .photo-counter, .measurements-tooltip, .cart-dropdown, .terminal-modal-overlay, #orderSuccessOverlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    .pulsing-dot,
+    .item-card,
+    .item-card.unseen-pulse,
+    .skeleton-card::after,
+    .img-8bit-loading::after { animation: none !important; }
+    .item-card.unseen-pulse { border-color: rgba(220, 20, 60, 0.72); }
+    .item-card { transition: none !important; box-shadow: none !important; }
+}
+
+html.low-power-mode .cart-panel,
+html.low-power-mode .modal-overlay,
+html.low-power-mode .slider-btn,
+html.low-power-mode .photo-counter,
+html.low-power-mode .measurements-tooltip,
+html.low-power-mode .cart-dropdown,
+html.low-power-mode .terminal-modal-overlay,
+html.low-power-mode #orderSuccessOverlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+html.low-power-mode .item-card {
+    transition: none !important;
+    box-shadow: none !important;
+    animation: none !important;
+}
+
+html.low-power-mode .item-card.unseen-pulse {
+    animation: none !important;
+    border-color: rgba(220, 20, 60, 0.72);
+}
+
+html.low-power-mode .pulsing-dot,
+html.low-power-mode .skeleton-card::after,
+html.low-power-mode .img-8bit-loading::after {
+    animation: none !important;
+}
+
+/* Подсветка ошибок валидации в форме заказа (Чекаут) */
+.input-field-error {
+    border: 2px solid var(--accent-red) !important;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.45) !important;
+    animation: fieldErrorShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes fieldErrorShake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+    40%, 60% { transform: translate3d(3px, 0, 0); }
+}
+
+

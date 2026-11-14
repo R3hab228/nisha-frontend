@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import * as helpers from '../src/modules/helpers.js';
 import * as cart from '../src/modules/cart.js';
 import fs from 'node:fs';
@@ -313,7 +314,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
 
     describe('10. Modern CSS @starting-style & transition-behavior: allow-discrete', () => {
         it('style.css defines @supports (transition-behavior: allow-discrete)', () => {
-            const css = fs.readFileSync(path.resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('@supports (transition-behavior: allow-discrete)');
             expect(css).toContain('@starting-style');
             expect(css).toContain('allow-discrete');
@@ -324,7 +325,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         });
 
         it('modal closing styles and teardown prevent screen flickering and layout shifts', () => {
-            const css = fs.readFileSync(path.resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('scrollbar-gutter: stable');
             expect(css).toContain('.modal-overlay.closing');
             expect(css).toContain('.modal-overlay:not(.is-open)');

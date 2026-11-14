@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -9,7 +10,7 @@ describe('PWA Quick Action Cart Drawer, FAB Propose Hiding & Notification Permis
     let swJs;
 
     beforeAll(() => {
-        styleCss = readFileSync(resolve(__dirname, '../style.css'), 'utf-8');
+        styleCss = readProjectCss();
         cartJs = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf-8');
         pwaJs = readFileSync(resolve(__dirname, '../js/core/pwa-network.js'), 'utf-8');
         swJs = readFileSync(resolve(__dirname, '../sw.js'), 'utf-8');

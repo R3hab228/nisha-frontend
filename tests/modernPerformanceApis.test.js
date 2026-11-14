@@ -10,6 +10,7 @@
 // 6. Live Search Bargain Badge ([ТОРГ])
 // ==========================================
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -175,7 +176,7 @@ describe('Modern Performance APIs Suite', () => {
         });
 
         it('style.css contains dedicated .save-data-active optimizations', () => {
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             expect(cssCode).toContain('html.save-data-active');
             expect(cssCode).toContain('backdrop-filter: none !important');
             expect(cssCode).toContain('grid-lazy-video');
@@ -311,7 +312,7 @@ describe('Modern Performance APIs Suite', () => {
         });
 
         it('style.css defines .live-search-bargain-badge with no green border, transparent bg and glowing text', () => {
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             expect(cssCode).toContain('.live-search-bargain-badge');
             expect(cssCode).toContain('top: 12px');
             expect(cssCode).toContain('right: 12px');
@@ -435,7 +436,7 @@ it('isPopoverOpenSafe accurately detects open state across popover, class and st
         });
 
         it('style.css defines universal [popover] UA reset and :popover-open styling', () => {
-            const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('[popover] {');
             expect(css).toContain('margin: unset;');
             expect(css).toContain('[popover]::backdrop {');
@@ -486,7 +487,7 @@ it('isPopoverOpenSafe accurately detects open state across popover, class and st
         });
 
         it('style.css defines @supports (animation-timeline: scroll()) with header elevation and prevents feed dimming', () => {
-            const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('@supports (animation-timeline: scroll())');
             expect(css).toContain('animation-timeline: scroll(root block);');
             expect(css).toContain('animation: headerScrollElevation');
@@ -496,7 +497,7 @@ it('isPopoverOpenSafe accurately detects open state across popover, class and st
         });
 
         it('style.css guarantees reduced motion and low-power-mode disable scroll animations', () => {
-            const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('@media (prefers-reduced-motion: reduce)');
             expect(css).toContain('html.low-power-mode header:not(.driver-popover-title)');
             expect(css).toContain('animation: none !important;');

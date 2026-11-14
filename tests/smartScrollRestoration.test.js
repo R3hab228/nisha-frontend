@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -181,7 +182,7 @@ describe('Smart Feed Scroll Restoration Engine', () => {
 
     it('7. index.html and style.css contain the feedScrollRestoredBadge element and styling', () => {
         const html = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf8');
-        const css = fs.readFileSync(path.resolve(process.cwd(), 'style.css'), 'utf8');
+        const css = readProjectCss();
 
         expect(html).toContain('id="feedScrollRestoredBadge"');
         expect(html).toContain('data-i18n="pwa.scroll_restored"');

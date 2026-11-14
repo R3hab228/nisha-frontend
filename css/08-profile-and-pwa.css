@@ -1,0 +1,373 @@
+/* ==========================================
+   PROFILE DELIVERY ACCORDION (Win95 Retro Style)
+   ========================================== */
+.profile-delivery-section {
+    margin-top: 14px;
+    border-top: 1px dashed #333;
+    padding-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.profile-delivery-btn {
+    width: 100%;
+    background: #0d0d0d;
+    color: var(--accent-green);
+    border: 1px outset #444;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0;
+    padding: 6px 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap !important;
+    box-sizing: border-box;
+    box-shadow: 1px 1px 0 #000;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.profile-delivery-btn-text {
+    white-space: nowrap !important;
+    display: inline-block;
+    letter-spacing: 0;
+}
+.profile-delivery-btn:hover {
+    background: #141414;
+    border-color: var(--accent-green);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.25);
+}
+.profile-delivery-btn:active {
+    border-style: inset;
+    transform: translateY(1px);
+}
+.profile-delivery-btn.is-open {
+    background: rgba(0, 255, 102, 0.08);
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+}
+.profile-delivery-collapse {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+    opacity: 1;
+}
+.profile-delivery-collapse.collapsed {
+    grid-template-rows: 0fr;
+    opacity: 0;
+}
+.profile-delivery-collapse > div {
+    min-height: 0;
+    overflow: hidden;
+}
+.profile-delivery-collapse.is-expanded,
+.profile-delivery-collapse.is-expanded > div {
+    overflow: visible;
+}
+.profile-delivery-body {
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.profile-delivery-label {
+    color: #888;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+.profile-delivery-input {
+    background: #000 !important;
+    color: var(--accent-green) !important;
+    border: 2px inset #555 !important;
+    font-family: var(--font-mono) !important;
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    border-radius: 0 !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.profile-delivery-input:focus {
+    border-color: var(--accent-green) !important;
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.3) !important;
+}
+.profile-delivery-save-btn {
+    background: #111;
+    color: var(--accent-green);
+    border: 2px outset #555;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 5px 12px;
+    cursor: pointer;
+    line-height: 1.2;
+    text-transform: uppercase;
+    box-shadow: 1px 1px 0 #000;
+    transition: all 0.2s ease;
+    align-self: flex-end;
+}
+.profile-delivery-save-btn:hover {
+    background: var(--accent-green);
+    color: #000;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+}
+.profile-delivery-save-btn:active {
+    border-style: inset;
+}
+
+/* Выпадающий список Новой Почты в профиле (Win95 Retro-Cyber) */
+.profile-np-wrap {
+    position: relative;
+    width: 100%;
+}
+.profile-np-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    width: 100%;
+    background: #0d0d0d !important;
+    border: 1px solid var(--accent-green) !important;
+    border-top: none !important;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.95);
+    overscroll-behavior: contain;
+}
+.profile-np-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+.profile-np-dropdown::-webkit-scrollbar-track {
+    background: #000;
+}
+.profile-np-dropdown::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 0;
+}
+.profile-np-dropdown::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-green);
+}
+.profile-np-dropdown div {
+    padding: 7px 9px;
+    cursor: pointer;
+    border-bottom: 1px solid #1a1a1a;
+    color: #ccc;
+    line-height: 1.35;
+    transition: background 0.15s ease, color 0.15s ease;
+    word-break: break-word;
+    font-size: 11px;
+    font-family: var(--font-mono);
+}
+.profile-np-dropdown div:hover {
+    background: #181818;
+    color: var(--accent-green);
+}
+.profile-np-dropdown div:last-child {
+    border-bottom: none;
+}
+.profile-np-item-postomat {
+    color: #00d4ff !important;
+}
+.profile-np-item-postomat:hover {
+    background: rgba(0, 212, 255, 0.12) !important;
+    color: #fff !important;
+}
+
+.profile-delivery-save-btn.is-saved {
+    background: rgba(0, 255, 102, 0.15) !important;
+    border-color: var(--accent-green) !important;
+    color: #fff !important;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.4) !important;
+}
+/* Заблокированные поля доставки в режиме просмотра */
+.profile-delivery-input.is-locked {
+    background: #080808 !important;
+    color: #66aa66 !important;
+    border-color: #2b2b2b !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    user-select: text !important;
+}
+
+/* Кнопка [ ИЗМЕНИТЬ ] */
+.profile-delivery-save-btn.is-edit-mode {
+    background: #141414 !important;
+    color: #ffd700 !important;
+    border-color: #555 !important;
+    box-shadow: 1px 1px 0 #000;
+}
+.profile-delivery-save-btn.is-edit-mode:hover {
+    background: #202020 !important;
+    color: #fff !important;
+    border-color: #ffd700 !important;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.35) !important;
+}
+
+/* --- PWA STANDALONE SAFE-AREA & BOTTOM BAR ADAPTATION --- */
+@media all and (display-mode: standalone), (display-mode: fullscreen) {
+    .modal-window {
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    }
+    .modal-content {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .buy-share-row {
+        bottom: calc(-1px + env(safe-area-inset-bottom, 0px)) !important;
+        margin-bottom: 0 !important;
+    }
+    .cart-panel {
+        padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+}
+
+html.pwa-standalone .modal-window {
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}
+html.pwa-standalone .modal-content {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+}
+html.pwa-standalone .buy-share-row {
+    bottom: calc(-1px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-bottom: 0 !important;
+}
+html.pwa-standalone .cart-panel {
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* --- PWA STANDALONE PULL-TO-REFRESH (UNDERGROUND RETRO TERMINAL STYLE) --- */
+.pwa-pull-refresh {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    z-index: 10005;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    transform: translateY(-100%);
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+html.pwa-standalone .pwa-pull-refresh {
+    display: flex;
+}
+
+@media all and (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+    html,
+    body {
+        overscroll-behavior-y: none !important;
+    }
+    .pwa-pull-refresh {
+        display: flex;
+    }
+}
+
+html.pwa-standalone,
+html.pwa-standalone body {
+    overscroll-behavior-y: none !important;
+}
+
+/* NISHA Authentic Underground Terminal Box */
+.pwa-pull-capsule,
+.pwa-pull-terminal-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #000000;
+    color: var(--text-main, #c0c0c0);
+    border: 1px solid #333333;
+    border-left: 3px solid var(--border-light, #555555);
+    padding: 6px 12px;
+    font-family: var(--font-mono, 'Courier New', Courier, monospace);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0px #000000, 0 4px 12px rgba(0, 0, 0, 0.9);
+    border-radius: 0px !important;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.pwa-pull-bracket {
+    color: var(--accent-green, #00ff00);
+    font-weight: 900;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.pwa-pull-cursor {
+    display: inline-block;
+    width: 6px;
+    height: 11px;
+    background-color: var(--accent-green, #00ff00);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink-caret 0.8s step-end infinite;
+}
+
+.pwa-pull-refresh.is-ready .pwa-pull-capsule,
+.pwa-pull-refresh.is-ready .pwa-pull-terminal-box {
+    background: #050505;
+    border-color: var(--accent-green, #00ff00);
+    border-left: 3px solid var(--accent-green, #00ff00);
+    color: var(--accent-green, #00ff00);
+    box-shadow: 2px 2px 0px #000000, 0 0 14px rgba(0, 255, 0, 0.45);
+    text-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+}
+
+.pwa-pull-refresh.is-refreshing .pwa-pull-capsule,
+.pwa-pull-refresh.is-refreshing .pwa-pull-terminal-box {
+    background: #050505;
+    border-color: var(--accent-green, #00ff00);
+    border-left: 3px solid var(--accent-green, #00ff00);
+    color: var(--accent-green, #00ff00);
+    box-shadow: 2px 2px 0px #000000, 0 0 16px rgba(0, 255, 0, 0.5);
+    text-shadow: 0 0 8px rgba(0, 255, 0, 0.7);
+}
+
+.pwa-pull-arrow {
+    display: block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: var(--accent-green, #00ff00);
+    transform-origin: center center;
+}
+
+.pwa-pull-refresh.pwa-pull-spinning .pwa-pull-arrow {
+    animation: pwaSpin 0.65s linear infinite;
+}
+
+@keyframes pwaSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.pwa-pull-text {
+    display: inline-block;
+    line-height: 1;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    font-family: var(--font-mono, 'Courier New', Courier, monospace);
+    font-weight: 700;
+}
+
+

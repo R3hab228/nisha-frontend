@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -1103,7 +1104,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('verifies Win95 retro-checkbox, clean labels without [x], and white-space nowrap on delivery button', () => {
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             const ruJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ru.json'), 'utf8'));
             const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
@@ -1129,7 +1130,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('locks delivery fields into read-only state and toggles [ ИЗМЕНИТЬ ] / [ СОХРАНИТЬ ]', async () => {
             await import('../js/profile/profile.js');
 
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('.profile-delivery-input.is-locked');
             expect(css).toContain('pointer-events: none !important');
             expect(css).toContain('.profile-delivery-save-btn.is-edit-mode');
@@ -1411,7 +1412,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('configures .offline-sticky-banner CSS with top: 0 and sticky positioning', () => {
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             const bannerCssMatch = css.match(/\.offline-sticky-banner\s*\{([^}]+)\}/);
             expect(bannerCssMatch).not.toBeNull();
             const rules = bannerCssMatch[1];
@@ -1573,7 +1574,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
     describe('27. PWA Standalone Bottom Bezel Safe Area & Silent Offline Sticky Banner', () => {
         it('buy-share-row balances lower bottom placement on web while elevating for PWA standalone', () => {
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('.buy-share-row');
             expect(css).toContain('bottom: calc(-20px + env(safe-area-inset-bottom, 0px))');
             expect(css).toContain('html.pwa-standalone .buy-share-row');
@@ -1629,7 +1630,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('validates CSS scoping to standalone PWA and keyframe spin animation in style.css', () => {
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('.pwa-pull-refresh');
             expect(css).toContain('html.pwa-standalone .pwa-pull-refresh');
             expect(css).toContain('.pwa-pull-capsule');
@@ -1942,7 +1943,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('verifies smooth new arrival animation in style.css and live insertion logic in catalog.js', () => {
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('@keyframes itemCardNewArrival');
             expect(css).toContain('.item-card.item-card-new-arrival');
             expect(css).toContain('cubic-bezier');
@@ -2215,7 +2216,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('implements hardware virtual scrolling via content-visibility: auto and contain-intrinsic-size across long feeds', () => {
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
 
             // Product card feed virtualization
             expect(css).toMatch(/\.item-card\s*\{[^}]*content-visibility:\s*auto/);
@@ -2296,7 +2297,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(windowsCode).toContain("e.target.closest('.custom-dropdown')");
             expect(windowsCode).toContain("e.target.closest('#branchDropdown')");
 
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('html.keyboard-open .modal-overlay');
             expect(css).toContain('.np-clear-btn');
             expect(css).toContain('flex-shrink: 0 !important');
@@ -2345,7 +2346,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
             expect(profileCode).toContain("i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })");
 
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);');
 
             const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
@@ -2366,7 +2367,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(productCode).toContain('${chartSvg} HOT');
 
             // CSS must provide custom sizing for history-status-bar
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('.history-status-bar');
             expect(css).toContain('animation: marquee-scroll 45s linear infinite;');
 
@@ -2377,7 +2378,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('32. Search input custom I-beam cursor and search results dropdown custom pointer on PC desktop', () => {
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('.search-input');
             expect(css).toContain('caret-color: var(--accent-green)');
             // Ensure .search-input has the custom I-beam cursor with hotspot 12 12, text
@@ -2393,7 +2394,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const clientCode = readFileSync(resolve(__dirname, '../js/core/search-worker-client.js'), 'utf8');
             const liveSearchCode = readFileSync(resolve(__dirname, '../js/catalog/live-search.js'), 'utf8');
             const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
 
             // 1. Worker and client must skip sold items in searchLive and searchCatalog
             expect(workerCode).toContain("if (r.item && r.item.status === 'sold') continue;");
@@ -2421,7 +2422,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('34. Sidebar categories list displays all items cleanly without unnecessary scrollbar on PC', () => {
             const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
 
             // Categories list in sidebar must not be constrained by scrollable-list or overflow-y scroll container
             const categoriesBox = indexHtml.match(/sidebar\.categories[\s\S]*?<\/ul>/);
@@ -2435,7 +2436,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('35. Checkout payment method dropdown arrow smoothly rotates 180deg when opened and resets to 0deg when closed', () => {
             const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
             const cartJs = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
 
             // 1. paymentDisplay must have paymentArrow container with SVG polygon arrow
             expect(indexHtml).toContain('id="paymentArrow"');
@@ -2456,7 +2457,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('36. City and branch clear buttons (✕) are red and turn bright red on hover/active, not green', () => {
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
 
             // 1. .np-clear-btn must use red accent for clear action
             expect(css).toMatch(/\.np-clear-btn\s*\{[^}]*color:\s*var\(--accent-red\)/);
@@ -2519,7 +2520,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
             const windowsCode = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
             const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
-            const cssCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
 
             // 1. Unsaved data warning modal localized in RU, UA, EN
             expect(ruJson.translation.propose.warning_loss_text).toContain('несохраненные данные');
@@ -2629,7 +2630,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     describe('49. PC Measurements Tooltip Hiding on Cart Button Hover', () => {
         it('suppresses and hides measurements tooltip when hovering or moving over the cart button', () => {
             const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
-            const cssCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
 
             // 1. Verify CSS :has rule exists and hides tooltip with maximum priority
             expect(cssCode).toContain('body:has(.grid-cart-btn:hover, [data-action="add-to-cart"]:hover) .measurements-tooltip');
@@ -2819,7 +2820,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('declares scoped view-transition CSS rules for catalog-grid and orders-list', () => {
-            const cssCode = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             expect(cssCode).toContain('view-transition-name: catalog-grid');
             expect(cssCode).toContain('view-transition-name: orders-list');
             expect(cssCode).toContain('@media (prefers-reduced-motion: reduce)');
@@ -2892,7 +2893,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(html).toContain('id=hideUnavailableCb');
             expect(helpersCode).toContain('window.triggerFilterTransition()');
 
-            const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
             expect(css).toContain('::view-transition-group(*)');
         });
     });
@@ -3167,7 +3168,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
     describe('54. Propose Modal Keyboard Navigation & Number Input Spinner Suppression', () => {
         it('hides number input spin buttons across WebKit and Gecko in style.css', () => {
-            const styleCss = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const styleCss = readProjectCss();
             expect(styleCss).toMatch(/input\[type=["']?number["']?\]::-webkit-inner-spin-button/);
             expect(styleCss).toMatch(/input\[type=["']?number["']?\]::-webkit-outer-spin-button/);
             expect(styleCss).toMatch(/-webkit-appearance:\s*none\s*!important/);
@@ -3599,7 +3600,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('enforces minimalist CSS styles with zero background glow or text shadow in style.css', () => {
-            const css = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const css = readProjectCss();
 
             // 1. promo-notice must have box-shadow: none !important and text-shadow: none !important
             expect(css).toMatch(/\.promo-notice\s*\{[^}]*box-shadow:\s*none\s*!important/);
@@ -3620,7 +3621,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('46. Bargain offer broadcast styling, unclickable accepted/declined buttons, and cart brackets removal', () => {
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
             const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/en.json'), 'utf8'));
@@ -3664,7 +3665,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
             const winCode = readFileSync(resolve(import.meta.dirname, '../js/ui/windows.js'), 'utf8');
             const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
             const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/en.json'), 'utf8'));
@@ -3702,7 +3703,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
             const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
             const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/en.json'), 'utf8'));
@@ -3882,7 +3883,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('53. Desktop cart hover: clearDropdownInlineStyles, no sticky inline opacity/visibility, bridge pseudo-element, and desktop hover refresh', () => {
             const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
 
             // 1. clearDropdownInlineStyles exists and cleans all inline blocking properties
             expect(cartCode).toContain('function clearDropdownInlineStyles(el)');
@@ -3950,7 +3951,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const indexHtml = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
             const returnPolicyHtml = readFileSync(resolve(import.meta.dirname, '../return-policy.html'), 'utf8');
             const notFoundHtml = readFileSync(resolve(import.meta.dirname, '../404.html'), 'utf8');
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             const sysCode = readFileSync(resolve(import.meta.dirname, '../js/ui/system-features.js'), 'utf8');
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
 
@@ -3990,7 +3991,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('56. Cooperative Task Scheduling scheduler.yield() and Clean Modal Overlay Transitions (No Black Blink)', async () => {
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
             const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
             const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
@@ -4033,7 +4034,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('57. Stable Product Card Grid and Native Compression Streams API (gzip/deflate)', async () => {
-            const cssCode = readFileSync(resolve(import.meta.dirname, '../style.css'), 'utf8');
+            const cssCode = readProjectCss();
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
             const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
             const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');

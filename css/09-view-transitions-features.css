@@ -1,0 +1,614 @@
+/* ==========================================
+   VIEW TRANSITIONS API (Изолированные плавные переходы без дергания страницы)
+   ========================================== */
+:root {
+    view-transition-name: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    /* Полное отключение перехода для root страницы, чтобы сайт не прыгал и не масштабировался */
+    ::view-transition-group(root),
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none !important;
+    }
+
+    #itemsGrid {
+        view-transition-name: catalog-grid;
+    }
+
+    #ordersListArea {
+        view-transition-name: orders-list;
+    }
+
+    /* Изоляция View Transitions от модальных окон: когда открыто любое модальное окно (включая заказы),
+       фоновая сетка товаров и карточки избранного/каталога не должны захватываться в Top Layer браузера */
+    body:has(.modal-overlay.is-open) #itemsGrid,
+    body:has(.modal-overlay.is-open) .item-card,
+    body:has(.modal-overlay[style*="display: flex"]:not(.closing)) #itemsGrid,
+    body:has(.modal-overlay[style*="display: flex"]:not(.closing)) .item-card,
+    body:has(#ordersModal.is-open) #itemsGrid,
+    body:has(#ordersModal.is-open) .item-card,
+    body:has(#ordersModal[style*="display: flex"]) #itemsGrid,
+    body:has(#ordersModal[style*="display: flex"]) .item-card,
+    body:has(#ordersModal:not([style*="display: none"])) #itemsGrid,
+    body:has(#ordersModal:not([style*="display: none"])) .item-card {
+        view-transition-name: none !important;
+    }
+
+    /* Контейнеры списков фиксированы — не прыгают по высоте при изменении числа карточек */
+    ::view-transition-group(catalog-grid),
+    ::view-transition-group(orders-list) {
+        animation: none !important;
+    }
+
+    ::view-transition-group(orders-list) {
+        z-index: 1000000 !important;
+    }
+
+    /* При переключении вкладок старое содержимое не должно висеть полупрозрачным призраком:
+       старый снимок мгновенно скрывается, а новое содержимое плавно появляется */
+    ::view-transition-old(orders-list) {
+        display: none !important;
+        animation: none !important;
+    }
+
+    ::view-transition-new(orders-list) {
+        animation: vt-orders-fade-in 0.14s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    @keyframes vt-orders-fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(3px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Плавное перемещение карточек товаров при сортировке и фильтрации (FLIP) */
+    ::view-transition-group(*) {
+        animation-duration: 0.35s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Чистое растворение уходящих и появление новых карточек через opacity (БЕЗ scale-дерганий) */
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation-duration: 0.28s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        mix-blend-mode: normal;
+    }
+
+    ::view-transition-old(*) {
+        animation-name: vt-fade-out;
+    }
+
+    ::view-transition-new(*) {
+        animation-name: vt-fade-in;
+    }
+
+    ::view-transition-old(catalog-grid),
+    ::view-transition-new(catalog-grid),
+    ::view-transition-old(orders-list),
+    ::view-transition-new(orders-list) {
+        animation-duration: 0.25s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        mix-blend-mode: normal;
+    }
+
+    ::view-transition-old(catalog-grid),
+    ::view-transition-old(orders-list) {
+        animation-name: vt-fade-out;
+    }
+
+    ::view-transition-new(catalog-grid),
+    ::view-transition-new(orders-list) {
+        animation-name: vt-fade-in;
+    }
+}
+
+@keyframes vt-fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes vt-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* --- TOUCH / COARSE POINTER SCROLLBAR HIDING --- */
+@media (pointer: coarse) {
+    ::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+    }
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-thumb,
+    ::-webkit-scrollbar-corner {
+        display: none !important;
+        background: transparent !important;
+    }
+    .modal-window,
+    .modal-overlay,
+    .modal-content,
+    #ordersListArea,
+    .custom-dropdown,
+    .live-search-dropdown,
+    .rules-content,
+    .cart-dropdown-list,
+    .success-terminal-box {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+    .modal-window::-webkit-scrollbar,
+    .modal-overlay::-webkit-scrollbar,
+    .modal-content::-webkit-scrollbar,
+    #ordersListArea::-webkit-scrollbar,
+    .custom-dropdown::-webkit-scrollbar,
+    .live-search-dropdown::-webkit-scrollbar,
+    .rules-content::-webkit-scrollbar,
+    .cart-dropdown-list::-webkit-scrollbar,
+    .success-terminal-box::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+}
+
+/* ПЕЧАТЬ И ЭКСПОРТ (отключение виртуализации скролла для полной отрисовки всех страниц) */
+@media print {
+    .item-card,
+    .order-card,
+    .review-card-ui,
+    .history-card,
+    .similar-item-card,
+    .live-search-item {
+        content-visibility: visible !important;
+    }
+}
+
+/* --- ПРЕДЛОЖКА: СТРОКА ЦЕНЫ И ТОРГА ([ ТОРГ ] & МИНИМАЛЬНАЯ СТАВКА) --- */
+.prop-price-label {
+    display: block;
+    color: var(--accent-green, #00ff66);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    transition: opacity 0.16s cubic-bezier(0.4, 0, 0.2, 1), transform 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prop-price-label.label-animating {
+    opacity: 0;
+    transform: translateY(-3px);
+}
+
+.prop-price-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 14px;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
+}
+
+.prop-price-input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.prop-price-input-wrapper .form-input.prop-short-input {
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    margin-bottom: 0;
+    box-sizing: border-box;
+}
+
+.prop-min-bargain-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.prop-min-bargain-box .prop-min-bargain-input {
+    padding-right: 38px;
+}
+
+/* Красный крестик отмены торга внутри инпута */
+.prop-bargain-cancel-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--accent-red, #ff3333);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    z-index: 2;
+}
+.prop-bargain-cancel-btn:hover {
+    transform: translateY(-50%) scale(1.2);
+    opacity: 0.85;
+}
+
+/* Кнопка [ ТОРГ ] на одном уровне с инпутом */
+.prop-bargain-toggle-btn {
+    height: 44px;
+    min-height: 44px;
+    min-width: 95px;
+    flex-shrink: 0 !important;
+    padding: 0 16px;
+    background: #000;
+    color: var(--accent-green, #00ff66);
+    border: 2px inset var(--border-light, #555);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prop-bargain-toggle-btn:hover {
+    border-color: var(--accent-green, #00ff66);
+    background: rgba(0, 255, 102, 0.05);
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.25);
+    transform: translateY(-1px);
+}
+.prop-bargain-toggle-btn:active {
+    transform: translateY(1px);
+}
+.prop-bargain-toggle-btn.active {
+    border-color: var(--accent-green, #00ff66);
+    color: var(--accent-green, #00ff66);
+    background: rgba(0, 255, 102, 0.08);
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.35);
+}
+
+/* Кнопка на черном фоне с зеленой галочкой */
+.prop-bargain-confirm-btn {
+    height: 44px;
+    min-height: 44px;
+    width: 48px;
+    min-width: 48px;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    background: #000;
+    border: 2px inset var(--border-light, #555);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prop-bargain-confirm-btn::before,
+.prop-bargain-confirm-btn::after {
+    display: none !important;
+    content: none !important;
+}
+.prop-bargain-confirm-btn:hover {
+    border-color: var(--accent-green, #00ff66);
+    background: #0a0a0a;
+    box-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+    transform: scale(1.05);
+}
+.prop-bargain-confirm-btn:active {
+    transform: scale(0.95);
+}
+.prop-bargain-confirm-btn svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+    stroke: var(--accent-green, #00ff66) !important;
+    filter: drop-shadow(0 0 6px rgba(0, 255, 102, 0.8));
+    transition: transform 0.16s ease;
+}
+.prop-bargain-confirm-btn:hover svg {
+    transform: scale(1.15);
+}
+
+/* Компактный тост «СОХРАНЕНО: ТОРГ» по размерам и верстке как «Новые вещи» */
+.toast.toast-bargain-saved {
+    animation: slideInRight 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    padding: 6px 12px;
+    max-width: 240px;
+    width: auto;
+    gap: 8px;
+    border-radius: 3px;
+    background: rgba(10, 10, 10, 0.96);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 255, 0, 0.2);
+    border: 1px solid var(--accent-green);
+    border-left: 3px solid var(--accent-green);
+    cursor: default;
+    pointer-events: auto;
+}
+.toast.toast-bargain-saved:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 255, 0, 0.3);
+}
+.toast.toast-bargain-saved::before {
+    display: none !important;
+}
+.toast.toast-bargain-saved::after {
+    animation: toastTimer 3.2s linear forwards;
+}
+.toast.toast-bargain-saved.toast-leaving {
+    animation: slideOutRightSmooth 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+.toast-bargain-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border: 1px solid var(--accent-green);
+    border-radius: 2px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+.toast-bargain-icon svg {
+    display: block;
+    filter: drop-shadow(0 0 4px rgba(0, 255, 102, 0.8));
+}
+@media (max-width: 480px) {
+    .toast.toast-bargain-saved {
+        max-width: 200px;
+        width: auto;
+        padding: 5px 10px;
+        gap: 6px;
+    }
+    .toast-bargain-icon {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* Плавные переходы для комфорта глаз */
+.prop-short-input.anim-switch,
+.prop-min-bargain-box.anim-switch,
+.prop-bargain-toggle-btn.anim-switch,
+.prop-bargain-confirm-btn.anim-switch {
+    animation: propInputSwitch 0.2s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+@keyframes propInputSwitch {
+    0% {
+        opacity: 0;
+        transform: translateY(3px) scale(0.99);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* SMART SCROLL RESTORATION HUD BADGE */
+.feed-scroll-restored-badge {
+    position: fixed;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translate(-50%, 30px);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1800;
+    background: rgba(0, 10, 26, 0.94);
+    border: 1px solid var(--accent-green);
+    color: var(--accent-green);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 255, 0, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(6px);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+.feed-scroll-restored-badge.is-visible {
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+.feed-scroll-restored-badge .feed-scroll-icon {
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    animation: feedScrollSpin 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes feedScrollSpin {
+    from { transform: rotate(-180deg); opacity: 0; }
+    to { transform: rotate(0deg); opacity: 1; }
+}
+
+
+
+
+/* ==========================================
+   NETWORK-AWARE RENDERING & SAVE-DATA (navigator.connection.saveData)
+   ========================================== */
+html.save-data-active * {
+    text-shadow: none !important;
+}
+html.save-data-active .glass-effect,
+html.save-data-active .modal-overlay {
+    backdrop-filter: none !important;
+    background: rgba(10, 10, 10, 0.96) !important;
+}
+html.save-data-active .grid-lazy-video {
+    display: none !important;
+}
+
+
+/* ==========================================
+   NATIVE POPOVER API & TOP LAYER RESET
+   ========================================== */
+[popover] {
+    margin: unset;
+    padding: unset;
+    color: unset;
+}
+[popover]::backdrop {
+    background: transparent;
+}
+
+/* Popover state styling for Live Search */
+.search-wrapper {
+    anchor-name: --nisha-search-wrapper;
+}
+#liveSearchDropdown {
+    background: #0a0a0a !important;
+    background-color: #0a0a0a !important;
+    border: 2px solid var(--accent-green) !important;
+    border-top: none !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95) !important;
+    max-height: 50vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+}
+#liveSearchDropdown[popover] {
+    position-anchor: --nisha-search-wrapper;
+    top: anchor(bottom) !important;
+    bottom: auto !important;
+    left: anchor(left) !important;
+    width: anchor-size(width) !important;
+    position-try-fallbacks: none !important;
+    position-try: none !important;
+    margin: 0 !important;
+    background: #0a0a0a !important;
+    background-color: #0a0a0a !important;
+    border: 2px solid var(--accent-green) !important;
+    border-top: none !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95) !important;
+}
+#liveSearchDropdown:popover-open {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    top: anchor(bottom) !important;
+    bottom: auto !important;
+    position-try-fallbacks: none !important;
+    position-try: none !important;
+    background: #0a0a0a !important;
+    background-color: #0a0a0a !important;
+    border: 2px solid var(--accent-green) !important;
+    border-top: none !important;
+}
+html.keyboard-open #liveSearchDropdown {
+    top: anchor(bottom) !important;
+    bottom: auto !important;
+    position-try-fallbacks: none !important;
+    position-try: none !important;
+}
+
+/* Popover state styling for Checkout Payment selector */
+#paymentDropdown {
+    background: #111111 !important;
+    background-color: #111111 !important;
+    border: 1px solid var(--accent-green) !important;
+    border-top: none !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9) !important;
+    max-height: 220px !important;
+    overflow-y: auto !important;
+}
+#paymentDropdown[popover] {
+    background: #111111 !important;
+    background-color: #111111 !important;
+    border: 1px solid var(--accent-green) !important;
+    border-top: none !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9) !important;
+    bottom: auto !important;
+    margin: 0 !important;
+}
+#paymentDropdown:popover-open {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    background: #111111 !important;
+    background-color: #111111 !important;
+    border: 1px solid var(--accent-green) !important;
+    border-top: none !important;
+    bottom: auto !important;
+}
+
+
+
+/* ==========================================
+   CSS SCROLL-DRIVEN ANIMATIONS
+   (animation-timeline: scroll() and view())
+   ========================================== */
+@supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+        header:not(.driver-popover-title) {
+            animation: headerScrollElevation linear both;
+            animation-timeline: scroll(root block);
+            animation-range: 0px 160px;
+        }
+        @keyframes headerScrollElevation {
+            from {
+                box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+                border-bottom-color: var(--border-light);
+            }
+            to {
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), 0 2px 10px rgba(0, 255, 102, 0.15);
+                border-bottom-color: var(--accent-green);
+            }
+        }
+    }
+}
+
+/* Ensure catalog items always stay 100% visible and bright with no scroll dimming */
+.item-card {
+    opacity: 1 !important;
+}
+
+/* Reduced Motion and Low Power Mode safety */
+@media (prefers-reduced-motion: reduce) {
+    header:not(.driver-popover-title) {
+        animation: none !important;
+    }
+}
+
+html.low-power-mode header:not(.driver-popover-title) {
+    animation: none !important;
+}

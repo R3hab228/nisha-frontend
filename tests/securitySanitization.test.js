@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -380,7 +381,7 @@ describe('Security Sanitization & XSS Shield', () => {
     });
 
     it('isolates Driver.js onboarding popover header and footer from global site header/footer CSS rules', () => {
-        const cssContent = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const cssContent = readProjectCss();
         expect(cssContent).toContain('header:not(.driver-popover-title)');
         expect(cssContent).toContain('footer:not(.driver-popover-footer)');
         expect(cssContent).toContain('header.driver-popover-title');
@@ -415,7 +416,7 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(locales.en.translation.product.measure_scheme_btn).toBeUndefined();
 
         // 3. Verify CSS does NOT contain scheme classes
-        const cssContent = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const cssContent = readProjectCss();
         expect(cssContent).not.toContain('.measure-scheme-btn');
 
         // 4. Verify helpers.js does NOT contain scheme action

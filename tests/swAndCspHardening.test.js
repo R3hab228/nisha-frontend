@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readProjectCss } from './helpers/readProjectCss.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -58,7 +59,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('5. style.css moves card-slide-img styles out of catalog.js inline templates and trims unused will-change', () => {
-        const css = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const css = readProjectCss();
         const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
 
         expect(css).toContain('.card-slide-img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }');
@@ -92,7 +93,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     it('8. favorite add/remove toasts reuse compact toast-new-item sizing and layout', () => {
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
         const profile = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8').replace(/\r\n/g, '\n');
+        const style = readProjectCss().replace(/\r\n/g, '\n');
 
         expect(helpers).toContain('function showFavoriteToast(');
         expect(helpers).toContain("className: `toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`");
@@ -133,12 +134,25 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('11. base .toast uses compact sizing globally on desktop and mobile', () => {
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8').replace(/\r\n/g, '\n');
+        const style = readProjectCss().replace(/\r\n/g, '\n');
 
         expect(style).toContain('.toast { background: rgba(10, 10, 10, 0.96); border: 1px solid var(--accent-green); color: #fff; padding: 6px 12px;');
         expect(style).toContain('height: 46px;');
         expect(style).toContain('.toast { max-width: 200px; width: auto; height: 40px; padding: 5px 10px; gap: 6px; font-size: 10.5px; }');
         expect(helpers).toContain('class="toast-item-thumb"');
+    });
+
+    it('11b. modular CSS architecture imports all css/ modules cleanly with balanced braces', () => {
+        const entry = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const imports = [...entry.matchAll(/@import\s+['"](\.\/css\/[^'"]+)['"]\s*;/g)].map(m => m[1]);
+        expect(imports.length).toBeGreaterThanOrEqual(9);
+        for (const rel of imports) {
+            const modCss = readFileSync(resolve(__dirname, '..', rel), 'utf8');
+            const opens = (modCss.match(/\{/g) || []).length;
+            const closes = (modCss.match(/\}/g) || []).length;
+            expect(opens).toBe(closes);
+            expect(opens).toBeGreaterThan(0);
+        }
     });
 
     it('12. background timers pause on visibilitychange and catalog double-tap covers full item-card', () => {
@@ -157,7 +171,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('13. toasts support ARIA live status/alert, pause-on-hover/touch, and modals/sidebar contain overscroll', () => {
         const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8').replace(/\r\n/g, '\n');
+        const style = readProjectCss().replace(/\r\n/g, '\n');
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
 
         expect(html).toContain('id=toastContainer aria-live=polite aria-atomic=false');
@@ -190,7 +204,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('16. withButtonBusy protects question and review submit buttons against double clicks', () => {
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const style = readProjectCss();
         const product = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
         const reviews = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
 
@@ -203,7 +217,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('17. modal close unlocks scroll immediately without focus scroll jump or closing-phase grid restyle', () => {
         const windowsJs = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
-        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const style = readProjectCss();
 
         expect(windowsJs).toContain('modal._returnFocusElement.focus({ preventScroll: true });');
         expect(windowsJs).toContain('window._preModalScrollY = null;');
@@ -214,7 +228,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     it('18. product modal opens smoothly at 190ms with pointerdown prewarm decode, cached thumb placeholder, and slower typewriter across modals', () => {
         const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
         const catalogJs = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
-        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const style = readProjectCss();
 
         expect(productJs).toContain('if (typeof img.decode === "function") img.decode().catch(() => {});');
         expect(productJs).toContain("url('${safeThumbBg}') center/contain no-repeat");
@@ -231,7 +245,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     it('19. product modal displays publish date next to views counter separated by a dot in unified muted mono style', () => {
         const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
         const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
-        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const style = readProjectCss();
 
         expect(html).toContain('class=item-meta-row');
         expect(html).toContain('id=modalItemPublishedWrap');
@@ -244,7 +258,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('20. mobile modal swipe-to-dismiss tracks finger 1:1 without animation override and glides out from release position', () => {
         const windowsJs = readFileSync(resolve(__dirname, '../js/ui/windows.js'), 'utf8');
-        const style = readFileSync(resolve(__dirname, '../style.css'), 'utf8');
+        const style = readProjectCss();
 
         expect(windowsJs).toContain("modalWin.style.animation = 'none';");
         expect(windowsJs).toContain('isHeaderTouch');
