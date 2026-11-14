@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
+import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -389,7 +390,7 @@ describe('Security Sanitization & XSS Shield', () => {
     });
 
     it('catalog.js wires Supabase Realtime postgres_changes on items and updates badges (TOP, HOT, SALE, SOLD, RESERVED) without reload', () => {
-        const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalogCode = readCatalogSource();
         expect(catalogCode).toContain("sb.channel('public-items-live-feed')");
         expect(catalogCode).toContain("table: 'items'");
         expect(catalogCode).toContain('function handleRealtimeCatalogEvent');

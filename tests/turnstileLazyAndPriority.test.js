@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -18,7 +19,7 @@ describe('Lazy Turnstile & Above-the-fold Priority', () => {
     });
 
     it('marks first 4 catalog cards with fetchpriority="high" in js/catalog/catalog.js', () => {
-        const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalogCode = readCatalogSource();
         expect(catalogCode).toContain("const firstLoadAttr = (idx < 4) ? 'fetchpriority=\"high\"' : 'loading=\"lazy\"';");
     });
 });

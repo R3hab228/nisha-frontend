@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
+import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -340,7 +341,21 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
     describe('7. Absence of legacy var declarations in js/ source files', () => {
         it('contains no residual var declarations across primary js files', () => {
-            const files = ['cart/cart.js', 'product/product.js', 'profile/profile.js', 'catalog/catalog.js', 'core/helpers.js'];
+            const files = [
+                'cart/cart.js',
+                'product/product.js',
+                'profile/profile.js',
+                'catalog/catalog.js',
+                'catalog/catalog-state.js',
+                'catalog/scroll-restoration.js',
+                'catalog/media-prefetch.js',
+                'catalog/measurements.js',
+                'catalog/catalog-grid.js',
+                'catalog/catalog-filters.js',
+                'catalog/catalog-sync.js',
+                'catalog/catalog-ui-info.js',
+                'core/helpers.js'
+            ];
             for (const relPath of files) {
                 const code = readFileSync(resolve(__dirname, '../js', relPath), 'utf8');
                 const varMatch = code.match(/^\s*var\s+[a-zA-Z0-9_$]+/gm);
@@ -459,6 +474,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('ensures no global isNaN calls remain in js source files', () => {
             const files = [
                 'catalog/catalog.js',
+                'catalog/catalog-state.js',
+                'catalog/scroll-restoration.js',
+                'catalog/media-prefetch.js',
+                'catalog/measurements.js',
+                'catalog/catalog-grid.js',
+                'catalog/catalog-filters.js',
+                'catalog/catalog-sync.js',
+                'catalog/catalog-ui-info.js',
                 'catalog/live-search.js',
                 'cart/cart.js',
                 'core/store.js',
@@ -1948,7 +1971,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(css).toContain('.item-card.item-card-new-arrival');
             expect(css).toContain('cubic-bezier');
 
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('function insertNewItemCardSmoothly');
             expect(catalogCode).toContain('card.classList.add(\'item-card-new-arrival\')');
             expect(catalogCode).toContain('window.insertNewItemCardSmoothly = insertNewItemCardSmoothly');
@@ -2129,7 +2152,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('inserts new realtime items below pinned TOP items using the same comparator as applyFilters', () => {
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('function getCatalogItemComparator');
             expect(catalogCode).toContain('window.getCatalogItemComparator = getCatalogItemComparator');
             expect(catalogCode).toContain('list.findIndex(existing => cmp(item, existing) < 0)');
@@ -2140,7 +2163,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('re-renders the catalog when crossing the 900px breakpoint so desktop never stays stuck on 12 items without pagination', () => {
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('initCatalogBreakpointWatcher');
             expect(catalogCode).toContain('window._catalogRenderedAsMobile = isMobile');
             expect(catalogCode).toContain("window.addEventListener('resize', scheduleCheck");
@@ -2192,7 +2215,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(dropCode).toContain('removed.at(0)');
 
             // Verify catalog.js uses .at()
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('item.thumbnails.at(0)');
             expect(catalogCode).toContain('item.images.at(0)');
 
@@ -2393,7 +2416,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const workerCode = readFileSync(resolve(__dirname, '../src/workers/search.worker.js'), 'utf8');
             const clientCode = readFileSync(resolve(__dirname, '../js/core/search-worker-client.js'), 'utf8');
             const liveSearchCode = readFileSync(resolve(__dirname, '../js/catalog/live-search.js'), 'utf8');
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             const css = readProjectCss();
 
             // 1. Worker and client must skip sold items in searchLive and searchCatalog
@@ -2478,7 +2501,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const uaJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/ua.json'), 'utf8'));
             const enJson = JSON.parse(readFileSync(resolve(__dirname, '../locales/en.json'), 'utf8'));
             const allLocales = JSON.parse(readFileSync(resolve(__dirname, '../locales.json'), 'utf8'));
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
 
             // 1. RU dictionary
             expect(ruJson.translation.pagination.page).toBe('СТРАНИЦА');
@@ -2560,7 +2583,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const reviewsCode = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
             const ordersCode = readFileSync(resolve(__dirname, '../js/orders/orders.js'), 'utf8');
             const profileCode = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             const cartCode = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
             const i18nCode = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
 
@@ -2629,7 +2652,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     })
     describe('49. PC Measurements Tooltip Hiding on Cart Button Hover', () => {
         it('suppresses and hides measurements tooltip when hovering or moving over the cart button', () => {
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             const cssCode = readProjectCss();
 
             // 1. Verify CSS :has rule exists and hides tooltip with maximum priority
@@ -2645,8 +2668,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('window.hideItemMeasurementsTooltip');
 
             // 3. Verify guards inside showItemMeasurementsTooltip and moveItemMeasurementsTooltip
-            expect(catalogCode).toMatch(/window\.showItemMeasurementsTooltip\s*=\s*function[\s\S]*?grid-cart-btn/);
-            expect(catalogCode).toMatch(/window\.moveItemMeasurementsTooltip\s*=\s*function[\s\S]*?grid-cart-btn/);
+            expect(catalogCode).toMatch(/export const showItemMeasurementsTooltip\s*=\s*function[\s\S]*?grid-cart-btn/);
+            expect(catalogCode).toMatch(/export const moveItemMeasurementsTooltip\s*=\s*function[\s\S]*?grid-cart-btn/);
 
             // 4. Test button detection logic
             const cartBtn = {
@@ -2813,7 +2836,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('integrates safeViewTransition into catalog setCategoryFilter and clearSearchInput', () => {
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('function setCategoryFilter(cat, element)');
             expect(catalogCode).toContain('safeViewTransition(updateDom)');
             expect(catalogCode).toContain('function clearSearchInput()');
@@ -2875,14 +2898,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('integrates safeViewTransition into sortItems for smooth FLIP card re-ordering', () => {
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('function sortItems(type)');
             expect(catalogCode).toContain('safeViewTransition(updateDom)');
             expect(catalogCode).toContain('await applyFilters(true, false)');
         });
 
         it('provides triggerFilterTransition and assigns view-transition-name to catalog item cards', () => {
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('function triggerFilterTransition()');
             expect(catalogCode).toContain('card.style.setProperty(\'view-transition-name\', \'item-\' + safeId)');
 
@@ -2909,7 +2932,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('integrates prewarmProductModal into catalog grid mouseover, touchstart, and mouseout cancel', () => {
-            const catalogCode = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('window.prewarmProductModal(id)');
             expect(catalogCode).toContain('window.cancelPrewarmProductModal(leavingId)');
             expect(catalogCode).toContain('window.prewarmProductModal(cardId, true)');
@@ -3312,7 +3335,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const workerCode = readFileSync(resolve(import.meta.dirname, '../src/workers/search.worker.js'), 'utf8');
             const clientCode = readFileSync(resolve(import.meta.dirname, '../js/core/search-worker-client.js'), 'utf8');
             const liveSearchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
 
             // 1. Worker and client must parse price queries and check itemMatchesPrice
             expect(workerCode).toContain('function parsePriceSearchQuery');
@@ -3359,7 +3382,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
     describe('32. Catalog Performance: Date.parse() instead of new Date().getTime()', () => {
         it('verifies Date.parse() is used across catalog, product, orders, and reviews with zero .getTime()', () => {
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
             const ordersCode = readFileSync(resolve(import.meta.dirname, '../js/orders/orders.js'), 'utf8');
             const reviewsCode = readFileSync(resolve(import.meta.dirname, '../js/reviews/reviews.js'), 'utf8');
@@ -3702,7 +3725,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const htmlCode = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
             const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             const cssCode = readProjectCss();
             const ruJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ru.json'), 'utf8'));
             const uaJson = JSON.parse(readFileSync(resolve(import.meta.dirname, '../locales/ua.json'), 'utf8'));
@@ -3805,7 +3828,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('50. Feed strikethrough price, badge minimum bid text, description [ТОРГ] sanitization, and buyer TG/phone priority contact', () => {
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
 
@@ -3833,7 +3856,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
             const profileCode = readFileSync(resolve(import.meta.dirname, '../js/profile/profile.js'), 'utf8');
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
 
             // 1. Offer payloads attach userId if user is logged in
             expect(productCode).toContain('userId: currentUid');
@@ -3914,7 +3937,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const dropCode = readFileSync(resolve(import.meta.dirname, '../js/drop/drop.js'), 'utf8');
             const productCode = readFileSync(resolve(import.meta.dirname, '../js/product/product.js'), 'utf8');
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             const cartCode = readFileSync(resolve(import.meta.dirname, '../js/cart/cart.js'), 'utf8');
 
             // 1. Enter key in bargain inputs calls their dedicated confirm/submit actions instead of shifting focus
@@ -3994,7 +4017,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const cssCode = readProjectCss();
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
             const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
 
             // 1. Clean modal overlay transitions: zero conflicting allow-discrete on modal-overlay to prevent black flash
             expect(cssCode).not.toContain('display 0.28s allow-discrete');

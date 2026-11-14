@@ -11,6 +11,7 @@
 // ==========================================
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
+import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -77,7 +78,7 @@ describe('Modern Performance APIs Suite', () => {
         });
 
         it('yieldToMain is integrated in catalog renderNextBatch and live search', () => {
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             const searchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
 
             expect(catalogCode).toContain("if (typeof window.yieldToMain === 'function') await window.yieldToMain()");
@@ -87,7 +88,7 @@ describe('Modern Performance APIs Suite', () => {
 
         it('guards catalog infinite scroll against concurrency race conditions during yield', () => {
             const appCode = readFileSync(resolve(import.meta.dirname, '../app.js'), 'utf8');
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
 
             expect(appCode).toContain('await renderNextBatch()');
             expect(appCode).toContain('isBatchLoading = false');
@@ -298,7 +299,7 @@ describe('Modern Performance APIs Suite', () => {
         });
 
         it('catalog syncCriticalStatuses uses runWithLock with nisha_critical_sync_lock', () => {
-            const catalogCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain("window.runWithLock('nisha_critical_sync_lock', executeSync, { ifAvailable: true })");
         });
     });

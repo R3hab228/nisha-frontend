@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
+import { readCatalogSource } from './helpers/readCatalogSource.js';
 import * as helpers from '../src/modules/helpers.js';
 import * as cart from '../src/modules/cart.js';
 import fs from 'node:fs';
@@ -195,7 +196,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             const publicSwCode = fs.readFileSync(path.resolve(__dirname, '../public/sw.js'), 'utf8');
             expect(publicSwCode).toContain('URL.canParse');
 
-            const catalogCode = fs.readFileSync(path.resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('URL.canParse');
 
             const helpersCode = fs.readFileSync(path.resolve(__dirname, '../js/core/helpers.js'), 'utf8');
@@ -397,7 +398,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         });
 
         it('catalog.js, reviews.js, product.js, chat.js use safeTruncateText', () => {
-            const catCode = fs.readFileSync(path.resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catCode = readCatalogSource();
             const revCode = fs.readFileSync(path.resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
             const prodCode = fs.readFileSync(path.resolve(__dirname, '../js/product/product.js'), 'utf8');
             const chatCode = fs.readFileSync(path.resolve(__dirname, '../js/chat/chat.js'), 'utf8');
@@ -415,7 +416,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         });
 
         it('catalog.js renderNextBatch and applyFilters include cooperative yielding with sequence guards against race conditions', () => {
-            const catCode = fs.readFileSync(path.resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+            const catCode = readCatalogSource();
             expect(catCode).toContain('window.yieldToMain()');
             expect(catCode).toContain('(i - startIndex + 1) % 8 === 0');
             expect(catCode).toContain('_applyFiltersSeq');

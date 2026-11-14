@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
+import { readCatalogSource } from './helpers/readCatalogSource.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -25,8 +26,7 @@ describe('Smart Feed Scroll Restoration Engine', () => {
     });
 
     it('1. Verifies SmartFeedScrollRestoration functions are exposed on window in catalog.js', () => {
-        const catalogPath = path.resolve(process.cwd(), 'js/catalog/catalog.js');
-        const code = fs.readFileSync(catalogPath, 'utf8');
+        const code = readCatalogSource();
 
         expect(code).toContain('window.saveCurrentFeedScrollState = saveCurrentFeedScrollState');
         expect(code).toContain('window.getSavedFeedScrollState = getSavedFeedScrollState');

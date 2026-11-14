@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
+import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -51,7 +52,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('4. catalog.js updateSidebarCounters updates badges via textContent and single-pass sizeCounts Map', () => {
-        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalog = readCatalogSource();
         expect(catalog).toContain('const setFilterCountBadge = (el, count) =>');
         expect(catalog).toContain('const sizeCounts = new Map()');
         expect(catalog).not.toContain("link.innerHTML.split('<span')");
@@ -60,7 +61,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('5. style.css moves card-slide-img styles out of catalog.js inline templates and trims unused will-change', () => {
         const css = readProjectCss();
-        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalog = readCatalogSource();
 
         expect(css).toContain('.card-slide-img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }');
         expect(css).not.toContain('will-change: max-height, opacity;');
@@ -69,7 +70,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('6. catalog.js deduplicates foreground sync events with cooldown and uses 25s polling; product.js uses async image decoding', () => {
-        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalog = readCatalogSource();
         const product = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
 
         expect(catalog).toContain('const triggerForegroundSync = () =>');
@@ -106,7 +107,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     it('9. language change toast uses compact toast-lang-item sizing and catalog double-tap uses 200ms window', () => {
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
         const i18n = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
-        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalog = readCatalogSource();
 
         expect(helpers).toContain('function showLanguageToast(');
         expect(helpers).toContain("className: 'toast-lang-item'");
@@ -118,7 +119,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     it('10. cart add/remove, sale, and review toasts use unified compact toast helpers', () => {
         const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
         const cart = readFileSync(resolve(__dirname, '../js/cart/cart.js'), 'utf8');
-        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalog = readCatalogSource();
         const reviews = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
 
         expect(helpers).toContain('function showCompactToast(');
@@ -158,7 +159,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     it('12. background timers pause on visibilitychange and catalog double-tap covers full item-card', () => {
         const i18n = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
         const sys = readFileSync(resolve(__dirname, '../js/ui/system-features.js'), 'utf8');
-        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalog = readCatalogSource();
 
         expect(i18n).toContain('function stopCursorBlink()');
         expect(i18n).toContain('if (document.hidden)');
@@ -186,7 +187,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('14. mobile touchstart prioritizes 2nd slide image fetchPriority in catalog cards', () => {
-        const catalog = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalog = readCatalogSource();
 
         expect(catalog).toContain('function activateCardSlides(target, prioritizeNext = false)');
         expect(catalog).toContain('activateCardSlides(wrapper, true);');
@@ -227,7 +228,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
 
     it('18. product modal opens smoothly at 190ms with pointerdown prewarm decode, cached thumb placeholder, and slower typewriter across modals', () => {
         const productJs = readFileSync(resolve(__dirname, '../js/product/product.js'), 'utf8');
-        const catalogJs = readFileSync(resolve(__dirname, '../js/catalog/catalog.js'), 'utf8');
+        const catalogJs = readCatalogSource();
         const style = readProjectCss();
 
         expect(productJs).toContain('if (typeof img.decode === "function") img.decode().catch(() => {});');
