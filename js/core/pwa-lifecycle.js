@@ -70,16 +70,18 @@ function isIosSafariBrowser() {
 }
 
 /**
- * Shows a broadcast-styled PWA install prompt after a successful order,
+ * Shows a broadcast-styled PWA install prompt after a successful order (or on manual footer button click),
  * strictly skipping if the PWA is already installed or recently dismissed.
+ * @param {object} [options]
+ * @param {boolean} [options.skipCooldown=false]
  * @returns {Promise<boolean>}
  */
-export async function maybeShowPostOrderPwaBroadcast() {
+export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = {}) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return false;
     if (await detectPwaInstalledAsync()) return false;
 
     const store = getRuntimeStorage();
-    if (store) {
+    if (store && !skipCooldown) {
         const dismissedAt = Number(store.get(PWA_BROADCAST_DISMISSED_KEY) || 0);
         if (dismissedAt && (Date.now() - dismissedAt) < PWA_BROADCAST_COOLDOWN_MS) {
             return false;
@@ -475,15 +477,8 @@ export function initPwaLifecycle() {
     }
     if (installBtn && !installBtn._pwaInstallBound) {
         installBtn._pwaInstallBound = true;
-        installBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                debugPwaLog('Пользователь установил PWA');
-                markPwaInstalled();
-            }
-            deferredPrompt = null;
+        installBtn.addEventListener('click', () => {
+            maybeShowPostOrderPwaBroadcast({ skipCooldown: true });
         });
     }
 
