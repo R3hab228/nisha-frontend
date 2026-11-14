@@ -3,6 +3,7 @@ import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
+import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -369,7 +370,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'catalog/catalog-filters.js',
                 'catalog/catalog-sync.js',
                 'catalog/catalog-ui-info.js',
-                'core/helpers.js'
+                'core/helpers.js',
+                'core/helpers-core-utils.js',
+                'core/helpers-security-media.js',
+                'core/helpers-storage-idb.js',
+                'core/helpers-search-address.js',
+                'core/helpers-toasts-modals.js',
+                'core/helpers-pwa-browser.js',
+                'core/helpers-delegation.js'
             ];
             for (const relPath of files) {
                 const code = readFileSync(resolve(__dirname, '../js', relPath), 'utf8');
@@ -507,6 +515,14 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 'cart/checkout-form.js',
                 'cart/checkout-submit.js',
                 'core/store.js',
+                'core/helpers.js',
+                'core/helpers-core-utils.js',
+                'core/helpers-security-media.js',
+                'core/helpers-storage-idb.js',
+                'core/helpers-search-address.js',
+                'core/helpers-toasts-modals.js',
+                'core/helpers-pwa-browser.js',
+                'core/helpers-delegation.js',
                 'drop/drop.js',
                 'orders/orders.js',
                 'product/product.js',
@@ -2061,7 +2077,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toMatch(/loadNPBranches\(["']{2},\s*false\)/);
 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain("window.loadNPBranches('', true)");
             expect(html).toContain('enterkeyhint="done"');
             expect(html).toContain('enterkeyhint="next"');
@@ -2083,13 +2099,13 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toMatch(/npBranchCache\[cityRef \+ ["']_["']\]/);
         });
 
-        it('parses complex addresses with region commas and branch markers using parseDeliveryAddress', () => {
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        it('parses complex addresses with region commas and branch markers using parseDeliveryAddress', async () => {
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain('function parseDeliveryAddress');
             expect(helpersCode).toContain('markerMatch');
 
-            // Evaluate parseDeliveryAddress logic directly
-            const fn = new Function(`${helpersCode}; return parseDeliveryAddress;`)();
+            // Evaluate parseDeliveryAddress logic directly from modular ES entrypoint
+            const { parseDeliveryAddress: fn } = await import('../js/core/helpers.js');
             const res1 = fn('м. Кривий Ріг, Дніпропетровська обл., Відділення №25');
             expect(res1.city).toBe('м. Кривий Ріг, Дніпропетровська обл.');
             expect(res1.branch).toBe('Відділення №25');
@@ -2160,7 +2176,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('guards IDBDatabase operations against closing connections and ignores connection closure in telemetry', () => {
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain('db.onclose = () => { _dbPromise = null; };');
             expect(helpersCode).toContain('db.onversionchange');
 
@@ -2211,15 +2227,15 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('replaces legacy setTimeout 0 with modern queueMicrotask / runMicrotask without timer clamps', async () => {
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain('function runMicrotask');
             expect(helpersCode).toContain('queueMicrotask(fn)');
 
             // Verify microtask executes before macrotask (setTimeout 0)
             const order = [];
-            eval(helpersCode);
+            const { runMicrotask } = await import('../js/core/helpers.js');
             setTimeout(() => order.push('macrotask'), 0);
-            window.runMicrotask(() => order.push('microtask'));
+            runMicrotask(() => order.push('microtask'));
 
             await new Promise(r => setTimeout(r, 10));
             expect(order).toEqual(['microtask', 'macrotask']);
@@ -2231,7 +2247,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('implements modern ES2022+ array.at(-1) and array.at(0) for safe element and split access', () => {
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain('function getLastItem');
             expect(helpersCode).toContain('arr.at(-1)');
             expect(helpersCode).toContain('function getFirstItem');
@@ -2769,7 +2785,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
     describe('29. Modern View Transitions API for Smooth Tab & Page Navigation', () => {
         it('exports and exposes window.safeViewTransition globally', () => {
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain('function safeViewTransition(updateFn)');
             expect(helpersCode).toContain('window.safeViewTransition = safeViewTransition');
             expect(typeof window.safeViewTransition).toBe('function');
@@ -2913,7 +2929,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(pwaCode).toContain('/Viewport size changed/i');
             expect(pwaCode).toContain('/ViewTransition/i');
 
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain('function isViewTransitionAbortError(err)');
             expect(helpersCode).toContain('/Viewport size changed/i');
         });
@@ -2938,7 +2954,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('card.style.setProperty(\'view-transition-name\', \'item-\' + safeId)');
 
             const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(html).toContain('class=size-cb value=S');
             expect(html).toContain('id=onlySaleCb');
             expect(html).toContain('id=hideUnavailableCb');
@@ -2967,7 +2983,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         });
 
         it('integrates prewarmProductModal into live-search and open-product hover/touch delegation in helpers.js', () => {
-            const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain('window.prewarmProductModal(id, true)');
             expect(helpersCode).toContain('window.prewarmProductModal(id)');
         });
@@ -4052,7 +4068,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('56. Cooperative Task Scheduling scheduler.yield() and Clean Modal Overlay Transitions (No Black Blink)', async () => {
             const cssCode = readProjectCss();
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
-            const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
+            const coreHelpersCode = readHelpersSource();
             const catalogCode = readCatalogSource();
 
             // 1. Clean modal overlay transitions: zero conflicting allow-discrete on modal-overlay to prevent black flash
@@ -4095,7 +4111,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
         it('57. Stable Product Card Grid and Native Compression Streams API (gzip/deflate)', async () => {
             const cssCode = readProjectCss();
             const helpersCode = readFileSync(resolve(import.meta.dirname, '../src/modules/helpers.js'), 'utf8');
-            const coreHelpersCode = readFileSync(resolve(import.meta.dirname, '../js/core/helpers.js'), 'utf8');
+            const coreHelpersCode = readHelpersSource();
             const cartCode = readCartSource();
 
             // 1. Stable responsive catalog grid without subgrid distortion

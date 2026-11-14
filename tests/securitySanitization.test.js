@@ -2,15 +2,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
+import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 describe('Security Sanitization & XSS Shield', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
         // Execute helpers.js in a clean window context
         global.window = global.window || {};
-        const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
-        eval(helpersCode);
+        const helpersMod = await import('../js/core/helpers.js');
+        Object.assign(global.window, helpersMod);
     });
 
     it('escapeHtml escapes dangerous HTML characters (<, >, ", \', &)', () => {
@@ -422,7 +423,7 @@ describe('Security Sanitization & XSS Shield', () => {
         expect(cssContent).not.toContain('.measure-scheme-btn');
 
         // 4. Verify helpers.js does NOT contain scheme action
-        const helpersCode = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const helpersCode = readHelpersSource();
         expect(helpersCode).not.toContain("case 'open-measure-scheme':");
         expect(helpersCode).not.toContain('window.showMeasurementSchemeModal');
 

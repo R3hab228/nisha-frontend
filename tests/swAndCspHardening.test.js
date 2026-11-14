@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
+import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -94,7 +95,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('8. favorite add/remove toasts reuse compact toast-new-item sizing and layout', () => {
-        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const helpers = readHelpersSource();
         const profile = readFileSync(resolve(__dirname, '../js/profile/profile.js'), 'utf8');
         const style = readProjectCss().replace(/\r\n/g, '\n');
 
@@ -107,7 +108,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('9. language change toast uses compact toast-lang-item sizing and catalog double-tap uses 200ms window', () => {
-        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const helpers = readHelpersSource();
         const i18n = readFileSync(resolve(__dirname, '../js/core/i18n.js'), 'utf8');
         const catalog = readCatalogSource();
 
@@ -119,7 +120,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('10. cart add/remove, sale, and review toasts use unified compact toast helpers', () => {
-        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const helpers = readHelpersSource();
         const cart = readCartSource();
         const catalog = readCatalogSource();
         const reviews = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');
@@ -136,7 +137,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('11. base .toast uses compact sizing globally on desktop and mobile', () => {
-        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const helpers = readHelpersSource();
         const style = readProjectCss().replace(/\r\n/g, '\n');
 
         expect(style).toContain('.toast { background: rgba(10, 10, 10, 0.96); border: 1px solid var(--accent-green); color: #fff; padding: 6px 12px;');
@@ -175,7 +176,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     it('13. toasts support ARIA live status/alert, pause-on-hover/touch, and modals/sidebar contain overscroll', () => {
         const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
         const style = readProjectCss().replace(/\r\n/g, '\n');
-        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const helpers = readHelpersSource();
 
         expect(html).toContain('id=toastContainer aria-live=polite aria-atomic=false');
         expect(style).toContain('.toast:hover::after,\n.toast.toast-paused::after { animation-play-state: paused !important; }');
@@ -206,7 +207,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
     });
 
     it('16. withButtonBusy protects question and review submit buttons against double clicks', () => {
-        const helpers = readFileSync(resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+        const helpers = readHelpersSource();
         const style = readProjectCss();
         const product = readProductSource();
         const reviews = readFileSync(resolve(__dirname, '../js/reviews/reviews.js'), 'utf8');

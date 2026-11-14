@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { readProjectCss } from './helpers/readProjectCss.js';
 import { readCatalogSource } from './helpers/readCatalogSource.js';
 import { readCartSource } from './helpers/readCartSource.js';
+import { readHelpersSource } from './helpers/readHelpersSource.js';
 import { readProductSource } from './helpers/readProductSource.js';
 import * as helpers from '../src/modules/helpers.js';
 import * as cart from '../src/modules/cart.js';
@@ -18,7 +19,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         });
 
         it('js/core/helpers.js defines cachedPriceNumberFormatter singleton', () => {
-            const code = fs.readFileSync(path.resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const code = readHelpersSource();
             expect(code).toContain('cachedPriceNumberFormatter');
             expect(code).toContain("new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })");
         });
@@ -80,7 +81,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         });
 
         it('expandSearchQuery in helpers.js and search.worker.js uses Object.hasOwn / hasOwn to prevent prototype chain crashes', () => {
-            const helpersCode = fs.readFileSync(path.resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             const workerCode = fs.readFileSync(path.resolve(__dirname, '../src/workers/search.worker.js'), 'utf8');
             expect(helpersCode).toContain('hasOwn(SEARCH_SYNONYMS, clean)');
             expect(helpersCode).toContain('hasOwn(SEARCH_SYNONYMS, w)');
@@ -201,7 +202,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
             const catalogCode = readCatalogSource();
             expect(catalogCode).toContain('URL.canParse');
 
-            const helpersCode = fs.readFileSync(path.resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersCode = readHelpersSource();
             expect(helpersCode).toContain('URL.canParse');
         });
     });
@@ -427,7 +428,7 @@ describe('Modern Standards Upgrade (Intl, ES2023 Arrays, Object.hasOwn, Web Lock
         });
 
         it('toCDN in helpers.js and tracking URLs in orders.js use safeEncodeURIComponent without raw islands', () => {
-            const helpersJs = fs.readFileSync(path.resolve(__dirname, '../js/core/helpers.js'), 'utf8');
+            const helpersJs = readHelpersSource();
             const helpersMod = fs.readFileSync(path.resolve(__dirname, '../src/modules/helpers.js'), 'utf8');
             const ordersMod = fs.readFileSync(path.resolve(__dirname, '../src/modules/orders.js'), 'utf8');
 
