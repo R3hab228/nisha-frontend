@@ -132,6 +132,7 @@ export function resetProposalForm() {
     const currentProposalFiles = getProposalFiles();
     if (Array.isArray(currentProposalFiles)) {
         currentProposalFiles.forEach(item => {
+            if (item) item._cancelled = true;
             if (item && item.url) {
                 try { URL.revokeObjectURL(item.url); } catch {}
             }
@@ -226,7 +227,8 @@ export async function submitProposal() {
     const btn = document.getElementById('btnSubmitProp');
     if (!btn || _isSubmittingProposal) return;
 
-    const files = getProposalFiles().map(obj => obj.file).filter(Boolean);
+    const proposalItems = getProposalFiles().filter(obj => obj && obj.file);
+    const files = proposalItems.map(obj => obj.file);
 
     const rawName = (document.getElementById('propName')?.value || '').trim();
     const rawBrand = (document.getElementById('propBrand')?.value || '').trim();
@@ -344,24 +346,39 @@ export async function submitProposal() {
     btn.style.opacity = '0.7';
 
     try {
-        const compressText = typeof i18next !== 'undefined' ? i18next.t('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' }) : 'СЖАТИЕ ФОТО';
-        let compressedDone = 0;
-        btn.innerText = `[ ${compressText}: 0/${files.length} ]`;
+        let compressedFiles;
+        const allPrecompressed = proposalItems.every(item => Boolean(item.compressedFile));
+        if (allPrecompressed) {
+            compressedFiles = proposalItems.map(item => item.compressedFile);
+        } else {
+            const compressText = typeof i18next !== 'undefined' ? i18next.t('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' }) : 'СЖАТИЕ ФОТО';
+            let compressedDone = proposalItems.filter(item => Boolean(item.compressedFile)).length;
+            btn.innerText = `[ ${compressText}: ${compressedDone}/${proposalItems.length} ]`;
 
-        const compressedFiles = new Array(files.length);
-        const COMPRESS_CONCURRENCY = 3;
-        let nextIndex = 0;
-        const compressWorker = async () => {
-            while (nextIndex < files.length) {
-                const idx = nextIndex++;
-                compressedFiles[idx] = await compressImage(files.at(idx));
-                compressedDone++;
-                btn.innerText = `[ ${compressText}: ${compressedDone}/${files.length} ]`;
-            }
-        };
-        await Promise.all(
-            Array.from({ length: Math.min(COMPRESS_CONCURRENCY, files.length) }, compressWorker)
-        );
+            compressedFiles = new Array(proposalItems.length);
+            const COMPRESS_CONCURRENCY = 3;
+            let nextIndex = 0;
+            const compressWorker = async () => {
+                while (nextIndex < proposalItems.length) {
+                    const idx = nextIndex++;
+                    const item = proposalItems.at(idx);
+                    if (item.compressedFile) {
+                        compressedFiles[idx] = item.compressedFile;
+                        continue;
+                    }
+                    const result = item.compressedPromise
+                        ? await item.compressedPromise
+                        : await compressImage(item.file);
+                    item.compressedFile = result;
+                    compressedFiles[idx] = result;
+                    compressedDone++;
+                    btn.innerText = `[ ${compressText}: ${compressedDone}/${proposalItems.length} ]`;
+                }
+            };
+            await Promise.all(
+                Array.from({ length: Math.min(COMPRESS_CONCURRENCY, proposalItems.length) }, compressWorker)
+            );
+        }
 
         const activeUser = getRuntimeUser();
         const activeFp = getRuntimeFingerprint();
@@ -388,7 +405,7 @@ export async function submitProposal() {
 
         compressedFiles.forEach((file, index) => {
             const isVid = (file && file.type && file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(file?.name || '');
-            const ext = isVid ? 'mp4' : 'jpg';
+            const ext = isVid ? 'mp4' : (file?.type === 'image/webp' ? 'webp' : 'jpg');
             formData.append('images', file, `prop_${index}.${ext}`);
         });
 

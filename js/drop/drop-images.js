@@ -5,8 +5,63 @@
 import { getProposalFiles, setProposalFiles } from './drop-state.js';
 
 let proposalSortable = null;
+const BG_COMPRESS_CONCURRENCY = 2;
+const bgCompressQueue = [];
+let bgCompressActive = 0;
 
-// Сжатие фото (легкое для памяти телефонов + защита от зависания)
+function pumpBackgroundCompression() {
+    while (bgCompressActive < BG_COMPRESS_CONCURRENCY && bgCompressQueue.length > 0) {
+        const job = bgCompressQueue.shift();
+        if (!job || job.item._cancelled) {
+            if (job) job.resolve(job.item?.file || null);
+            continue;
+        }
+        bgCompressActive++;
+        Promise.resolve()
+            .then(() => compressImage(job.item.file))
+            .then((compressed) => {
+                if (!job.item._cancelled) {
+                    job.item.compressedFile = compressed;
+                }
+                job.resolve(compressed);
+            })
+            .catch(() => {
+                job.resolve(job.item.file);
+            })
+            .finally(() => {
+                bgCompressActive = Math.max(0, bgCompressActive - 1);
+                // Даем браузеру отрисовать кадр/обработать ввод текста между сжатиями
+                setTimeout(pumpBackgroundCompression, 16);
+            });
+    }
+}
+
+function scheduleBackgroundCompression(itemObj) {
+    if (!itemObj || !itemObj.file) return null;
+    const isVid = (itemObj.file.type && itemObj.file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(itemObj.file.name || '');
+    if (isVid) {
+        itemObj.compressedFile = itemObj.file;
+        return Promise.resolve(itemObj.file);
+    }
+    const { promise, resolve } = Promise.withResolvers();
+    itemObj.compressedPromise = promise;
+    bgCompressQueue.push({ item: itemObj, resolve });
+    // Запускаем после отрисовки превьюшек, чтобы интерфейс не дергался при выборе фото
+    setTimeout(pumpBackgroundCompression, 30);
+    return promise;
+}
+
+function canvasToBlobAsync(canvas, mimeType, quality) {
+    return new Promise((resolve) => {
+        try {
+            canvas.toBlob((blob) => resolve(blob || null), mimeType, quality);
+        } catch {
+            resolve(null);
+        }
+    });
+}
+
+// Сжатие фото (асинхронное декодирование + WebP 1000px с фолбэком в JPEG без фризов UI)
 export async function compressImage(file) {
     if (!file || (file.type && file.type.startsWith('video/'))) return file;
 
@@ -24,38 +79,62 @@ export async function compressImage(file) {
     const timeoutId = setTimeout(() => finish(file), 8000);
     const img = new Image();
 
-    img.onload = () => {
+    const processLoadedImage = async () => {
+        if (settled) return;
         try {
+            if (typeof img.decode === 'function') {
+                await img.decode().catch(() => {});
+            }
+            if (settled) return;
+
             const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            const MAX_SIZE = 1200;
+            let width = img.naturalWidth || img.width;
+            let height = img.naturalHeight || img.height;
+            const MAX_SIZE = 1000;
 
             if (width > height && width > MAX_SIZE) {
-                height *= MAX_SIZE / width;
+                height = Math.round(height * (MAX_SIZE / width));
                 width = MAX_SIZE;
             } else if (height > MAX_SIZE) {
-                width *= MAX_SIZE / height;
+                width = Math.round(width * (MAX_SIZE / height));
                 height = MAX_SIZE;
             }
 
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = Math.max(1, width);
+            canvas.height = Math.max(1, height);
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob((blob) => {
+            if (!ctx) {
                 clearTimeout(timeoutId);
-                if (blob) {
-                    finish(new File([blob], file.name || 'photo.jpg', { type: 'image/jpeg' }));
-                } else {
-                    finish(file);
-                }
-            }, 'image/jpeg', 0.7);
-        } catch (e) {
+                finish(file);
+                return;
+            }
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            // Пробуем WebP (на 25-35% легче при том же качестве), при неподдержке — JPEG
+            let blob = await canvasToBlobAsync(canvas, 'image/webp', 0.8);
+            let outType = 'image/webp';
+            let outExt = 'webp';
+            if (!blob || (blob.type && blob.type !== 'image/webp')) {
+                blob = await canvasToBlobAsync(canvas, 'image/jpeg', 0.75);
+                outType = 'image/jpeg';
+                outExt = 'jpg';
+            }
+
+            clearTimeout(timeoutId);
+            if (blob) {
+                const baseName = (file.name || 'photo').replace(/\.[^.]+$/, '');
+                finish(new File([blob], `${baseName}.${outExt}`, { type: outType }));
+            } else {
+                finish(file);
+            }
+        } catch {
             clearTimeout(timeoutId);
             finish(file);
         }
+    };
+
+    img.onload = () => {
+        void processLoadedImage();
     };
 
     img.onerror = () => {
@@ -103,6 +182,7 @@ export function handleNewProposalFiles(newFiles) {
             };
             probe.src = itemObj.url;
         }
+        scheduleBackgroundCompression(itemObj);
         filesList.push(itemObj);
     });
 
@@ -162,8 +242,11 @@ export function removeProposalFile(index, element = null) {
     const files = [...getProposalFiles()];
     if (typeof targetIndex !== 'number' || targetIndex < 0 || targetIndex >= files.length) return;
     const removed = files.splice(targetIndex, 1);
-    if (removed && removed.length > 0 && removed.at(0)?.url) {
-        try { URL.revokeObjectURL(removed.at(0).url); } catch {}
+    if (removed && removed.length > 0 && removed.at(0)) {
+        removed.at(0)._cancelled = true;
+        if (removed.at(0).url) {
+            try { URL.revokeObjectURL(removed.at(0).url); } catch {}
+        }
     }
     setProposalFiles(files);
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
