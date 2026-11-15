@@ -344,13 +344,24 @@ export async function submitProposal() {
     btn.style.opacity = '0.7';
 
     try {
-        const compressedFiles = [];
-        for (let i = 0; i < files.length; i++) {
-            const compressText = typeof i18next !== 'undefined' ? i18next.t('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' }) : 'СЖАТИЕ ФОТО';
-            btn.innerText = `[ ${compressText}: ${i + 1}/${files.length} ]`;
-            const compressed = await compressImage(files.at(i));
-            compressedFiles.push(compressed);
-        }
+        const compressText = typeof i18next !== 'undefined' ? i18next.t('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' }) : 'СЖАТИЕ ФОТО';
+        let compressedDone = 0;
+        btn.innerText = `[ ${compressText}: 0/${files.length} ]`;
+
+        const compressedFiles = new Array(files.length);
+        const COMPRESS_CONCURRENCY = 3;
+        let nextIndex = 0;
+        const compressWorker = async () => {
+            while (nextIndex < files.length) {
+                const idx = nextIndex++;
+                compressedFiles[idx] = await compressImage(files.at(idx));
+                compressedDone++;
+                btn.innerText = `[ ${compressText}: ${compressedDone}/${files.length} ]`;
+            }
+        };
+        await Promise.all(
+            Array.from({ length: Math.min(COMPRESS_CONCURRENCY, files.length) }, compressWorker)
+        );
 
         const activeUser = getRuntimeUser();
         const activeFp = getRuntimeFingerprint();
