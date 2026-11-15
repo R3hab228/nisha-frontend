@@ -249,7 +249,12 @@ export function openOfferPriceModal() {
         thumbEl.alt = activeItem.name || 'Товар';
     }
     if (nameEl) nameEl.innerText = activeItem.name || 'Товар';
-    if (priceEl) priceEl.innerText = `${activeItem.price || 0} грн`;
+    if (priceEl) {
+        const curPrice = activeItem.price || 0;
+        priceEl.innerText = (typeof formatPrice === 'function')
+            ? formatPrice(curPrice)
+            : `${Number(curPrice).toLocaleString('en-US', { maximumFractionDigits: 0 })} ${typeof getCurrency === 'function' ? getCurrency() : 'грн'}`;
+    }
 
     if (priceInput) {
         priceInput.value = '';
