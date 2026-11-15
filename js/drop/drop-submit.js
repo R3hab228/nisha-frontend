@@ -342,6 +342,7 @@ export async function submitProposal() {
     }
 
     _isSubmittingProposal = true;
+    if (typeof window !== 'undefined') window._isSubmittingProposal = true;
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.7';
 
@@ -438,6 +439,7 @@ export async function submitProposal() {
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
         _isSubmittingProposal = false;
+        if (typeof window !== 'undefined') window._isSubmittingProposal = false;
 
         if (typeof executeCloseModal === 'function') {
             executeCloseModal('proposeModal');
@@ -459,6 +461,7 @@ export async function submitProposal() {
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
         _isSubmittingProposal = false;
+        if (typeof window !== 'undefined') window._isSubmittingProposal = false;
     }
 }
 

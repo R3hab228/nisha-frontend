@@ -225,6 +225,16 @@ function closeModal(id, e) {
         if (typeof evt.stopImmediatePropagation === 'function') evt.stopImmediatePropagation();
     }
     if (id === 'proposeModal') {
+        if (typeof window !== 'undefined' && window._isSubmittingProposal) {
+            const waitMsg = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+                ? i18next.t('propose.wait_uploading', { defaultValue: '⏳ Заявка отправляется на сервер, подождите пару секунд...' })
+                : '⏳ Заявка отправляется на сервер, подождите пару секунд...';
+            if (typeof showToast === 'function') showToast(waitMsg, 'info');
+            return;
+        }
+        if (typeof document !== 'undefined' && document.querySelector('.confirm-modal-overlay')) {
+            return;
+        }
         const filesCount = (window.currentProposalFiles && window.currentProposalFiles.length) || document.getElementById('propFiles')?.files?.length || 0;
         const name = document.getElementById('propName')?.value.trim() || '';
         const brand = document.getElementById('propBrand')?.value.trim() || '';
