@@ -531,6 +531,9 @@ async function initApp() {
             } catch(e) { console.warn("Ошибка загрузки рассылки", e); }
         }, 3000);
 
+        // Запускаем счетчик посетителей сразу (не дожидаясь конца всех await в initApp)
+        invokeAction('initHitCounter');
+
         // Тихий фоновый прогрев бэкенда
         const pingBackend = () => {
             try {
@@ -625,7 +628,7 @@ async function initApp() {
         if (scrollTrigger) observer.observe(scrollTrigger);
 
         if (typeof renderHistory === 'function') renderHistory();
-        if (typeof initHitCounter === 'function') initHitCounter();
+        invokeAction('initHitCounter');
         if (typeof updateSidebarCounters === 'function') updateSidebarCounters();
         invokeAction('initLeaderElection');
         invokeAction('updateAppBadge');

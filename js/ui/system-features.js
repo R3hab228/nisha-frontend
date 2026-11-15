@@ -156,7 +156,10 @@ function triggerEasterEgg() {
 }
 
 // === ПРИВАТНАЯ АНАЛИТИКА (PLAUSIBLE / POSTHOG) И ВИЗУАЛЬНЫЙ РЕТРО-СЧЕТЧИК WIN95 ===
+let _hitCounterStarted = false;
 async function initHitCounter() {
+    if (_hitCounterStarted) return;
+    _hitCounterStarted = true;
     initAnalytics();
 
     const counterEl = document.getElementById('hitCounterValue');
@@ -181,7 +184,7 @@ async function initHitCounter() {
         if (!counterEl) return;
 
         const cachedCount = (storage ? storage.get('nisha_last_hit_count', '0') : '0') || '0';
-        counterEl.innerText = String(cachedCount).padStart(5, '0').split('').join(' ');
+        if (Number(cachedCount) > 0) counterEl.innerText = String(cachedCount).padStart(5, '0').split('').join(' ');
 
         const data = await apiClient.post('/api/hit', {
             date: todayDate,
@@ -406,3 +409,4 @@ registerActions({
     initHitCounter,
     updateCharCount
 });
+if (typeof window !== 'undefined') window.initHitCounter = initHitCounter;
