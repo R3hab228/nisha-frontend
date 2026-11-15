@@ -6,3 +6,5 @@ dist
 .lighthouseci
 test-results
 playwright-report
+.env.sentry-build-plugin
+.env*.local

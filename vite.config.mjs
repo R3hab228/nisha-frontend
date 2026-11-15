@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 function resolveCommitHash() {
   if (process.env.VERCEL_GIT_COMMIT_SHA) {
@@ -22,6 +23,7 @@ function resolveCommitHash() {
 // и всегда прослеживаются до конкретного коммита.
 const COMMIT_HASH = resolveCommitHash() || 'build';
 const BUILD_ID = `${COMMIT_HASH}-${Date.now().toString(36)}`;
+const SENTRY_RELEASE = `nisha-store@${COMMIT_HASH}`;
 
 // Подставляет BUILD_ID в готовый dist/sw.js и синхронизирует корневой sw.js
 function swBuildIdPlugin() {
@@ -68,11 +70,29 @@ export default defineConfig({
   },
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),
+    __SENTRY_RELEASE__: JSON.stringify(SENTRY_RELEASE),
   },
-  plugins: [swBuildIdPlugin()],
+  plugins: [
+    swBuildIdPlugin(),
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG || 'nisha-store-6w',
+            project: process.env.SENTRY_PROJECT || 'node',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            release: { name: SENTRY_RELEASE },
+            sourcemaps: {
+              filesToDeleteAfterUpload: ['./dist/**/*.map'],
+            },
+            telemetry: false,
+          }),
+        ]
+      : []),
+  ],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    sourcemap: process.env.SENTRY_AUTH_TOKEN ? 'hidden' : false,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       input: {

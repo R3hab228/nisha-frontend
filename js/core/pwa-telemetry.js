@@ -347,7 +347,7 @@ export function initSentryDeferred() {
             try {
                 Sentry.init({
                     dsn: 'https://13d63555c1c64605be8f9659af548581@o4511428929323008.ingest.de.sentry.io/4511428931682384',
-                    release: 'nisha-store@1.0.0',
+                    release: typeof __SENTRY_RELEASE__ !== 'undefined' ? __SENTRY_RELEASE__ : 'nisha-store@1.0.0',
                     environment: (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) ? 'development' : 'production',
                     sampleRate: 1.0,
                     tracesSampleRate: 0.1,

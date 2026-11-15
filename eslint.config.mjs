@@ -42,7 +42,8 @@ export default [
                 Telegram: 'readonly',
                 _supabase: 'readonly',
                 createClient: 'readonly',
-                __BUILD_ID__: 'readonly'
+                __BUILD_ID__: 'readonly',
+                __SENTRY_RELEASE__: 'readonly'
             },
         },
         rules: {
