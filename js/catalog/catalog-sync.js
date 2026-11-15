@@ -201,12 +201,10 @@ export async function loadAllItems() {
         (Array.isArray(data[0].thumbnails) && data[0].thumbnails.length > 0)
     );
 
-    const deferSave = () => {
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => safelySaveCatalogToStorage(data), { timeout: 2500 });
-        } else {
-            setTimeout(() => safelySaveCatalogToStorage(data), 1500);
-        }
+    const saveCatalogNow = () => {
+        try {
+            safelySaveCatalogToStorage(data);
+        } catch {}
     };
 
     if (hasValidImages) {
@@ -215,7 +213,7 @@ export async function loadAllItems() {
         if (searchWorker && typeof searchWorker.setItems === 'function') {
             searchWorker.setItems(data);
         }
-        if (isStructureChanged || changedCardItems.length > 0 || !cachedItems) deferSave();
+        if (isStructureChanged || changedCardItems.length > 0 || !cachedItems) saveCatalogNow();
         updateSidebarCounters();
     } else if (data && data.length > 0) {
         console.warn('[КАТАЛОГ] Сервер или SW вернул ответ без фото, сохраняем существующие изображения...');
@@ -235,8 +233,17 @@ export async function loadAllItems() {
         }
         updateSidebarCounters();
         if (data[0] && Array.isArray(data[0].images) && data[0].images.length > 0) {
-            deferSave();
+            saveCatalogNow();
         }
+    } else if (Array.isArray(data) && data.length === 0) {
+        window.allItems = [];
+        const searchWorker = invokeAction('getSearchWorker');
+        if (searchWorker && typeof searchWorker.setItems === 'function') {
+            searchWorker.setItems([]);
+        }
+        if (hasAction('idbDel')) invokeAction('idbDel', 'nisha_cached_db');
+        if (window.storage) window.storage.remove('nisha_cached_db');
+        updateSidebarCounters();
     }
 
     // Инициализируем множество уже известных товаров, чтобы не спамить тостом на вещи первой загрузки
@@ -445,6 +452,10 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
         updateSidebarCounters();
         if (typeof renderHistory === 'function') renderHistory();
         if (hasAction('invalidateFuseCache')) invokeAction('invalidateFuseCache');
+        const searchWorker = invokeAction('getSearchWorker');
+        if (searchWorker && typeof searchWorker.setItems === 'function') {
+            searchWorker.setItems(window.allItems);
+        }
         safelySaveCatalogToStorage(window.allItems);
         if (Array.isArray(window.filteredItems) && window.filteredItems.length === 0) {
             applyFilters(true, true);
@@ -551,9 +562,12 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 }
 
 let _catalogRealtimeChannel = null;
+let _realtimeReconnectTimer = null;
+let _realtimeReconnectAttempt = 0;
+let _realtimeHadDisconnect = false;
 
 /**
- * Подключает Realtime-канал Supabase `public-items-live-feed`.
+ * Подключает Realtime-канал Supabase `public-items-live-feed` с авто-переподключением.
  */
 export function initCatalogRealtimeSubscription() {
     const sb = getSupabaseClient();
@@ -566,16 +580,42 @@ export function initCatalogRealtimeSubscription() {
         _catalogRealtimeChannel = null;
     }
 
+    if (_realtimeReconnectTimer) {
+        clearTimeout(_realtimeReconnectTimer);
+        _realtimeReconnectTimer = null;
+    }
+
     try {
-        _catalogRealtimeChannel = sb.channel('public-items-live-feed')
+        const channel = sb.channel('public-items-live-feed')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (payload) => {
                 handleRealtimeCatalogEvent(payload, false);
             })
             .subscribe((status) => {
-                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-                    _catalogRealtimeChannel = null;
+                if (status === 'SUBSCRIBED') {
+                    _realtimeReconnectAttempt = 0;
+                    if (_realtimeHadDisconnect) {
+                        _realtimeHadDisconnect = false;
+                        syncCriticalStatuses();
+                    }
+                } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+                    _realtimeHadDisconnect = true;
+                    if (_catalogRealtimeChannel === channel) {
+                        try { sb.removeChannel(channel); } catch {}
+                        _catalogRealtimeChannel = null;
+                    }
+                    if (!_realtimeReconnectTimer && (typeof document === 'undefined' || document.visibilityState === 'visible')) {
+                        const delay = Math.min(1500 * (2 ** _realtimeReconnectAttempt), 12000);
+                        _realtimeReconnectAttempt = Math.min(_realtimeReconnectAttempt + 1, 4);
+                        _realtimeReconnectTimer = setTimeout(() => {
+                            _realtimeReconnectTimer = null;
+                            if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+                                initCatalogRealtimeSubscription();
+                            }
+                        }, delay);
+                    }
                 }
             });
+        _catalogRealtimeChannel = channel;
     } catch {
         _catalogRealtimeChannel = null;
     }
@@ -672,6 +712,7 @@ export async function syncCriticalStatuses() {
                     freshNewArrivals.forEach(item => insertNewItemCardSmoothly(item));
 
                     if (freshNewArrivals.length > 0) {
+                        anyCardUpdated = true;
                         if (typeof enqueueNewItemToast === 'function') {
                             enqueueNewItemToast(freshNewArrivals);
                         } else if (typeof showToast === 'function') {
