@@ -435,6 +435,29 @@ export function removeHistoryItem(event, itemId) {
         }).eq('id', currentUser.id).then();
     }
 
+    const targetCard = (event && event.target && typeof event.target.closest === 'function'
+        ? event.target.closest('.history-card')
+        : null)
+        || (typeof document !== 'undefined'
+            ? Array.from(document.querySelectorAll('#historyGrid .history-card')).find(el => el.getAttribute('data-id') === String(itemId))
+            : null);
+
+    if (targetCard) {
+        targetCard.style.pointerEvents = 'none';
+        targetCard.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+        targetCard.style.opacity = '0';
+        targetCard.style.transform = 'scale(0.88)';
+        setTimeout(() => {
+            targetCard.remove();
+            const remaining = document.querySelectorAll('#historyGrid .history-card').length;
+            if (hist.length === 0 || remaining === 0) {
+                const section = document.getElementById('historySection');
+                if (section) section.style.display = 'none';
+            }
+        }, 220);
+        return;
+    }
+
     renderHistory();
 }
 
