@@ -381,7 +381,20 @@ export async function submitProposal() {
             formData.append('images', file, `prop_${index}.${ext}`);
         });
 
-        enqueueProposalUpload(formData);
+        const uploadingText = typeof i18next !== 'undefined'
+            ? i18next.t('propose.uploading', { defaultValue: 'ОТПРАВКА НА СЕРВЕР...' })
+            : 'ОТПРАВКА НА СЕРВЕР...';
+        btn.innerText = `[ ${uploadingText} ]`;
+
+        activeProposalUploads++;
+        updateProposalBeforeUnloadListener();
+        try {
+            await sendProposalFormDataWithRetry(formData, 3);
+        } finally {
+            activeProposalUploads = Math.max(0, activeProposalUploads - 1);
+            updateProposalBeforeUnloadListener();
+        }
+
         if (window.analytics && typeof window.analytics.trackProposalSubmitted === 'function') {
             window.analytics.trackProposalSubmitted({
                 brand,
