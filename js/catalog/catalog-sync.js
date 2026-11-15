@@ -576,8 +576,9 @@ export function initCatalogRealtimeSubscription() {
     if (_catalogRealtimeChannel) {
         const state = _catalogRealtimeChannel.state;
         if (state === 'joined' || state === 'joining') return;
-        try { sb.removeChannel(_catalogRealtimeChannel); } catch {}
+        const staleChannel = _catalogRealtimeChannel;
         _catalogRealtimeChannel = null;
+        try { sb.removeChannel(staleChannel); } catch {}
     }
 
     if (_realtimeReconnectTimer) {
@@ -586,6 +587,7 @@ export function initCatalogRealtimeSubscription() {
     }
 
     try {
+        let isTearingDown = false;
         const channel = sb.channel('public-items-live-feed')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (payload) => {
                 handleRealtimeCatalogEvent(payload, false);
@@ -598,10 +600,14 @@ export function initCatalogRealtimeSubscription() {
                         syncCriticalStatuses();
                     }
                 } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+                    if (isTearingDown) return;
+                    isTearingDown = true;
                     _realtimeHadDisconnect = true;
                     if (_catalogRealtimeChannel === channel) {
-                        try { sb.removeChannel(channel); } catch {}
                         _catalogRealtimeChannel = null;
+                    }
+                    if (status !== 'CLOSED') {
+                        try { sb.removeChannel(channel); } catch {}
                     }
                     if (!_realtimeReconnectTimer && (typeof document === 'undefined' || document.visibilityState === 'visible')) {
                         const delay = Math.min(1500 * (2 ** _realtimeReconnectAttempt), 12000);
@@ -615,7 +621,9 @@ export function initCatalogRealtimeSubscription() {
                     }
                 }
             });
-        _catalogRealtimeChannel = channel;
+        if (!isTearingDown) {
+            _catalogRealtimeChannel = channel;
+        }
     } catch {
         _catalogRealtimeChannel = null;
     }
