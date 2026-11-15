@@ -41,4 +41,37 @@
         link.crossOrigin = 'anonymous';
         document.head.appendChild(link);
     } catch (e) {}
+    try {
+        var CHUNK_RELOAD_KEY = 'nisha_chunk_reload_at';
+        var tryRecoverStaleChunk = function () {
+            try {
+                if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+                var now = Date.now();
+                var last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || '0');
+                if (last && (now - last) < 15000) return;
+                sessionStorage.setItem(CHUNK_RELOAD_KEY, String(now));
+                window.location.reload();
+            } catch (e) {}
+        };
+        window.addEventListener('vite:preloadError', function (event) {
+            if (event && typeof event.preventDefault === 'function') event.preventDefault();
+            tryRecoverStaleChunk();
+        });
+        window.addEventListener('error', function (event) {
+            var target = event && event.target;
+            if (!target || target === window) return;
+            var tag = target.tagName;
+            var url = (tag === 'SCRIPT' ? target.src : (tag === 'LINK' ? target.href : '')) || '';
+            if (/\/assets\/[^?#]+\.(?:js|css)(?:[?#]|$)/i.test(url)) {
+                tryRecoverStaleChunk();
+            }
+        }, true);
+        window.addEventListener('unhandledrejection', function (event) {
+            var reason = event && event.reason;
+            var msg = reason && (reason.message || String(reason));
+            if (msg && /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(msg)) {
+                tryRecoverStaleChunk();
+            }
+        });
+    } catch (e) {}
 })();
