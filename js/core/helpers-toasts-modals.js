@@ -568,9 +568,9 @@ export function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancel
             <div class="success-title typewriter" style="color: var(--accent-yellow);">${title}</div>
             <div class="success-divider" style="background: repeating-linear-gradient(90deg, var(--accent-yellow), var(--accent-yellow) 5px, transparent 5px, transparent 10px);"></div>
             <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${htmlText}</div>
-            <div style="display: flex; gap: 10px;">
-                <button class="cart-checkout-btn btn-target confirm-yes" style="flex: 1; background: var(--accent-red); border-color: var(--accent-red); color: #fff;">${confirmBtnText}</button>
-                <button class="cart-checkout-btn btn-target confirm-no" style="flex: 1; background: #333; border-color: #555; color: #fff;">${cancelBtnText}</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="cart-checkout-btn btn-target confirm-yes" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding-left: 12px; padding-right: 12px; background: var(--accent-red); border-color: var(--accent-red); color: #fff;">${confirmBtnText}</button>
+                <button class="cart-checkout-btn btn-target confirm-no" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding-left: 12px; padding-right: 12px; background: #333; border-color: #555; color: #fff;">${cancelBtnText}</button>
             </div>
         </div>
     `;
