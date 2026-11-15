@@ -253,8 +253,10 @@ export function openOfferPriceModal() {
 
     if (priceInput) {
         priceInput.value = '';
-        const suggestedOffer = Math.max(1, Math.round((activeItem.price || 1000) * 0.85));
-        priceInput.placeholder = String(suggestedOffer);
+        const { itemMinBargain } = parseItemBargainInfo(activeItem);
+        const minOffer = itemMinBargain || 100;
+        priceInput.min = String(minOffer);
+        priceInput.placeholder = String(minOffer);
     }
     if (contactInput) {
         contactInput.value = getBestBuyerContact();
@@ -360,8 +362,10 @@ export function showInlineOfferPriceInput() {
         return;
     }
 
-    const suggested = Math.max(1, Math.round((activeItem.price || 1000) * 0.85));
-    input.placeholder = _t('product.offer_your_price_ph', `Наприклад, ${suggested}`);
+    const { itemMinBargain } = parseItemBargainInfo(activeItem);
+    const minOffer = itemMinBargain || 100;
+    input.min = String(minOffer);
+    input.placeholder = String(minOffer);
     input.value = '';
 
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
