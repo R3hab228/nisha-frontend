@@ -50,6 +50,7 @@ const SIMPLE_ACTION_MAP = {
     'accept-rules': 'acceptRules',
     'add-to-cart-from-modal': 'addToCartFromModal',
     'cancel-offer-price': 'hideInlineOfferPriceInput',
+    'submit-bargain-offer': 'submitBargainOffer',
     'toggle-prop-bargain': 'openPropBargainInput',
     'confirm-prop-bargain': 'confirmPropBargainInput',
     'cancel-prop-bargain': 'hidePropBargainInput',

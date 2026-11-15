@@ -140,6 +140,8 @@
       "offer_accepted_text": "Ваше предложение принято на сумму",
       "offer_buy_btn": "В КОРЗИНУ",
       "offer_invalid_price": "Укажите корректную цену меньше текущей!",
+      "offer_enter_price": "Укажите цену!",
+      "offer_min_bid_ph": "Минимальная ставка: {{min}}",
       "offer_added_toast": "Товар добавлен в корзину по согласованной цене!",
       "offer_pending": "[ ПРЕДЛОЖЕНИЕ ОТПРАВЛЕНО ✓ ]",
       "offer_accepted_btn": "ПРЕДЛОЖЕНИЕ ПРИНЯТО ✓",

@@ -134,7 +134,14 @@ function validateBargainSubmission(activeItem, offeredPrice) {
     }
 
     const currentPrice = Number(activeItem.price) || 0;
-    if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice < 100 || offeredPrice >= currentPrice) {
+    if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice <= 0) {
+        return {
+            ok: false,
+            focusInput: true,
+            message: _t('product.offer_enter_price', 'Вкажіть ціну!')
+        };
+    }
+    if (offeredPrice < 100 || offeredPrice >= currentPrice) {
         return {
             ok: false,
             focusInput: true,
@@ -261,7 +268,7 @@ export function openOfferPriceModal() {
         const { itemMinBargain } = parseItemBargainInfo(activeItem);
         const minOffer = itemMinBargain || 100;
         priceInput.min = String(minOffer);
-        priceInput.placeholder = String(minOffer);
+        priceInput.placeholder = _t('product.offer_min_bid_ph', 'Мінімальна ставка: {{min}}').replace('{{min}}', minOffer);
     }
     if (contactInput) {
         contactInput.value = getBestBuyerContact();
@@ -299,14 +306,30 @@ export async function submitBargainOffer() {
     const validation = validateBargainSubmission(activeItem, offeredPrice);
     if (!validation.ok) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        return showToast(validation.message, 'error');
+        showToast(validation.message, 'error');
+        if (validation.focusInput && priceInput && typeof priceInput.focus === 'function') {
+            priceInput.focus();
+        }
+        return;
     }
 
     const contact = contactInput ? contactInput.value.trim() : '';
     productState.isSubmittingBargainOffer = true;
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="inline-btn-spinner" aria-hidden="true" style="margin-right:8px"></span>' + _t('product.offer_sending', '[ ВІДПРАВКА... ]');
+        submitBtn.style.pointerEvents = 'none';
+        submitBtn.style.position = 'relative';
+        submitBtn.style.overflow = 'hidden';
+        submitBtn.style.color = '#000';
+        const sendingLabel = _t('product.offer_sending', '[ ВІДПРАВКА... ]');
+        submitBtn.innerHTML = `
+            <span style="position: relative; z-index: 2;">${sendingLabel}</span>
+            <div id="bargainBtnProgressBar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: #fff; z-index: 1; transition: width 3s cubic-bezier(0.1, 0.7, 1.0, 0.1);"></div>
+        `;
+        setTimeout(() => {
+            const bar = document.getElementById('bargainBtnProgressBar');
+            if (bar) bar.style.width = '90%';
+        }, 50);
     }
 
     try {
@@ -321,6 +344,11 @@ export async function submitBargainOffer() {
         }
         if (bargainResponse && bargainResponse.success === false) {
             throw new Error(bargainResponse.message || 'Ошибка отправки предложения');
+        }
+        const bar = document.getElementById('bargainBtnProgressBar');
+        if (bar) {
+            bar.style.transition = 'width 0.15s ease-out';
+            bar.style.width = '100%';
         }
         recordClientBargainOffer();
         markPendingBargainLocally(activeItem.id, offeredPrice);
@@ -341,6 +369,10 @@ export async function submitBargainOffer() {
         productState.isSubmittingBargainOffer = false;
         if (submitBtn) {
             submitBtn.disabled = false;
+            submitBtn.style.pointerEvents = 'auto';
+            submitBtn.style.position = '';
+            submitBtn.style.overflow = '';
+            submitBtn.style.color = '';
             submitBtn.innerText = _t('product.offer_send_btn', '[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]');
         }
     }
@@ -370,7 +402,7 @@ export function showInlineOfferPriceInput() {
     const { itemMinBargain } = parseItemBargainInfo(activeItem);
     const minOffer = itemMinBargain || 100;
     input.min = String(minOffer);
-    input.placeholder = String(minOffer);
+    input.placeholder = _t('product.offer_min_bid_ph', 'Мінімальна ставка: {{min}}').replace('{{min}}', minOffer);
     input.value = '';
 
     if (typeof triggerHaptic === 'function') triggerHaptic('light');

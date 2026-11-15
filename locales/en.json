@@ -140,6 +140,8 @@
       "offer_accepted_text": "Your offer has been accepted for the amount of",
       "offer_buy_btn": "ADD TO CART",
       "offer_invalid_price": "Enter a valid price lower than current price!",
+      "offer_enter_price": "Enter a price!",
+      "offer_min_bid_ph": "Minimum bid: {{min}}",
       "offer_added_toast": "Item added to cart at agreed price!",
       "offer_pending": "[ OFFER SENT ✓ ]",
       "offer_accepted_btn": "OFFER ACCEPTED ✓",

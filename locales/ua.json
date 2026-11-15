@@ -140,6 +140,8 @@
       "offer_accepted_text": "Ваша пропозиція прийнята на суму",
       "offer_buy_btn": "В КОШИК",
       "offer_invalid_price": "Вкажіть коректну ціну меншу за поточну!",
+      "offer_enter_price": "Вкажіть ціну!",
+      "offer_min_bid_ph": "Мінімальна ставка: {{min}}",
       "offer_added_toast": "Товар додано в кошик за узгодженою ціною!",
       "offer_pending": "[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]",
       "offer_accepted_btn": "ПРОПОЗИЦІЮ ПРИЙНЯТО ✓",

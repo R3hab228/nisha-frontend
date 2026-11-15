@@ -5,8 +5,8 @@
 import { hasAction, invokeAction, registerActions } from './action-registry.js';
 import { escapeAttr, escapeHtml, toCDN } from './helpers-security-media.js';
 
-let lastToastMsg = '';
 let lastToastTime = 0;
+let activeToastState = null;
 
 /**
  * Escapes toast message strings via HTML escaping.
@@ -82,6 +82,11 @@ export function attachToastLifecycle(toast, { duration = 2500, onDismiss = null 
     }
 
     scheduleDismiss();
+    dismiss.reset = () => {
+        if (isDismissed || isPaused) return;
+        remainingMs = duration;
+        scheduleDismiss();
+    };
     return dismiss;
 }
 
@@ -149,8 +154,27 @@ function bindToastDismissClick(toast, onClick, dismiss, logError = false) {
  */
 export function showToast(message, type = 'success', imgUrl = null, onClick = null) {
     const now = Date.now();
-    if (message === lastToastMsg && (now - lastToastTime < 2500)) return;
-    lastToastMsg = message;
+    const rawMsgStr = String(message ?? '');
+
+    if (
+        activeToastState &&
+        activeToastState.message === rawMsgStr &&
+        activeToastState.type === type &&
+        activeToastState.toast &&
+        activeToastState.toast.parentNode &&
+        !(activeToastState.toast.classList && typeof activeToastState.toast.classList.contains === 'function' && activeToastState.toast.classList.contains('toast-leaving')) &&
+        (now - lastToastTime < 2500)
+    ) {
+        lastToastTime = now;
+        activeToastState.count += 1;
+        if (activeToastState.msgEl) {
+            activeToastState.msgEl.innerHTML = `<span class="toast-repeat-badge" style="color:var(--accent-yellow,#ffd700);font-weight:bold;margin-right:6px">x${activeToastState.count}</span>${activeToastState.safeMsgHtml}`;
+        }
+        if (activeToastState.dismiss && typeof activeToastState.dismiss.reset === 'function') {
+            activeToastState.dismiss.reset();
+        }
+        return;
+    }
     lastToastTime = now;
 
     if (typeof document === 'undefined') return;
@@ -167,15 +191,23 @@ export function showToast(message, type = 'success', imgUrl = null, onClick = nu
     toast.style.pointerEvents = 'auto';
 
     let html = buildToastThumbHtml(imgUrl, false);
-    const rawMsgStr = String(message ?? '');
     const safeMsgHtml = (typeof window !== 'undefined' && window.DOMPurify && typeof window.DOMPurify.sanitize === 'function')
         ? window.DOMPurify.sanitize(rawMsgStr)
         : escapeHtml(rawMsgStr).replace(/\bon\w+\s*=/gi, 'data-blocked=');
-    html += `<div>${safeMsgHtml}</div>`;
+    html += `<div class="toast-msg-body">${safeMsgHtml}</div>`;
 
     toast.innerHTML = html;
     container.appendChild(toast);
-    const dismiss = attachToastLifecycle(toast, { duration: 2500 });
+    const msgEl = (typeof toast.querySelector === 'function') ? toast.querySelector('.toast-msg-body') : null;
+    const currentState = { message: rawMsgStr, type, count: 1, toast, msgEl, safeMsgHtml, dismiss: null };
+    const dismiss = attachToastLifecycle(toast, {
+        duration: 2500,
+        onDismiss: () => {
+            if (activeToastState === currentState) activeToastState = null;
+        }
+    });
+    currentState.dismiss = dismiss;
+    activeToastState = currentState;
     bindToastDismissClick(toast, onClick, dismiss, true);
 }
 if (typeof window !== 'undefined') window.showToast = showToast;
