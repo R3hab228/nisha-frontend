@@ -16,6 +16,7 @@ import {
     toggleMobileSidebar
 } from './catalog-sidebar-ui.js';
 import { renderNextBatch } from './catalog-grid.js';
+import { isItemBargainEnabled } from './catalog-card-markup.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeFavorites, isSiteHackedMode } from '../core/runtime-env.js';
 
@@ -183,6 +184,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
             const checkedSizes = typeof document !== 'undefined' ? Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => cb.value) : [];
             const onlySale = typeof document !== 'undefined' && document.getElementById('onlySaleCb') ? document.getElementById('onlySaleCb').checked : false;
+            const onlyBargain = typeof document !== 'undefined' && document.getElementById('onlyBargainCb') ? document.getElementById('onlyBargainCb').checked : false;
             const hideUnavailable = typeof document !== 'undefined' && document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
 
             const minInput = typeof document !== 'undefined' ? document.getElementById('priceMin') : null;
@@ -215,9 +217,10 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                 const isFav = favsSet.has(item.id);
                 const matchesAvailability = (!hideUnavailable && (searchTerm === '' || item.status !== 'sold')) || item.status === 'available';
                 const matchesSale = !onlySale || !!item.is_sale;
+                const matchesBargain = !onlyBargain || isItemBargainEnabled(item);
 
                 if (onlyFavs) {
-                    return isFav && matchesAvailability && matchesSale;
+                    return isFav && matchesAvailability && matchesSale && matchesBargain;
                 }
 
                 const itemCategory = item.category || '';
@@ -231,7 +234,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                 const itemFinalPrice = hacked ? Math.floor(getSafePrice(item.price) * 0.9) : getSafePrice(item.price);
                 const matchesPrice = itemFinalPrice >= minPrice && itemFinalPrice <= maxPrice;
 
-                return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability && matchesSale;
+                return matchesCategory && matchesBrand && matchesSize && matchesPrice && matchesAvailability && matchesSale && matchesBargain;
             });
 
             if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
@@ -394,6 +397,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                     if (curCat) url.searchParams.set('cat', curCat); else url.searchParams.delete('cat');
                     if (searchTerm) url.searchParams.set('q', searchTerm); else url.searchParams.delete('q');
                     if (onlySale) url.searchParams.set('sale', '1'); else url.searchParams.delete('sale');
+                    if (onlyBargain) url.searchParams.set('bargain', '1'); else url.searchParams.delete('bargain');
                     window.history.replaceState(null, '', url);
                 } catch {}
             }

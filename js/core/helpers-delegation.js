@@ -651,6 +651,7 @@ export function bindFormAndFilterListeners() {
             if (!target) return;
             if ((target.classList && target.classList.contains('size-cb')) ||
                 target.id === 'onlySaleCb' ||
+                target.id === 'onlyBargainCb' ||
                 target.id === 'hideUnavailableCb') {
                 invokeAction('triggerFilterTransition');
             }

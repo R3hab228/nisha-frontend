@@ -3,6 +3,7 @@
 // ==========================================
 
 import { clearSavedFeedScrollState } from './scroll-restoration.js';
+import { isItemBargainEnabled } from './catalog-card-markup.js';
 import { hasAction, invokeAction } from '../core/action-registry.js';
 
 let priceTimeout = null;
@@ -29,10 +30,12 @@ export function updateSidebarCounters() {
     if (typeof document === 'undefined' || !window.allItems || window.allItems.length === 0) return;
     const curCat = window.currentCategory || '';
     const onlySale = document.getElementById('onlySaleCb') ? document.getElementById('onlySaleCb').checked : false;
+    const onlyBargain = document.getElementById('onlyBargainCb') ? document.getElementById('onlyBargainCb').checked : false;
 
     const availableItemsAll = window.allItems.filter(i => {
         if (!i || i.status !== 'available') return false;
         if (onlySale && !i.is_sale) return false;
+        if (onlyBargain && !isItemBargainEnabled(i)) return false;
         return true;
     });
 

@@ -2,7 +2,7 @@
 // NISHA CATALOG — ПАГИНАЦИЯ, БАТЧИНГ, КОМПАРАТОР И ВИДЕО-ПЛЕЕР СЕТКИ
 // ==========================================
 
-import { buildCardDOM, getSeenItemsSet } from './catalog-card-markup.js';
+import { buildCardDOM, getSeenItemsSet, isItemBargainEnabled } from './catalog-card-markup.js';
 import { hasAction, invokeAction } from '../core/action-registry.js';
 
 let itemsPageSize = typeof window !== 'undefined' && window.innerWidth <= 900 ? 12 : 15;
@@ -143,11 +143,13 @@ export function insertNewItemCardSmoothly(item) {
     const searchInput = document.getElementById('mainSearch');
     const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
     const onlySale = document.getElementById('onlySaleCb')?.checked || false;
+    const onlyBargain = document.getElementById('onlyBargainCb')?.checked || false;
     const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
 
     if (curCat && item.category !== curCat) return;
     if (curBrand && (!item.brand || !item.brand.toLowerCase().includes(curBrand.toLowerCase()))) return;
     if (onlySale && !item.is_sale) return;
+    if (onlyBargain && !isItemBargainEnabled(item)) return;
     if (hideUnavailable && item.status !== 'available') return;
     if (searchTerm) {
         const nameMatch = item.name && item.name.toLowerCase().includes(searchTerm);

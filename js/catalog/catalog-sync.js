@@ -4,6 +4,7 @@
 
 import { getCatalogStore, getSupabaseClient } from './catalog-state.js';
 import { updateCardDOM, insertNewItemCardSmoothly } from './catalog-grid.js';
+import { isItemBargainEnabled } from './catalog-card-markup.js';
 import { applyFilters, updateSidebarCounters } from './catalog-filters.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeProfile, getRuntimeOpenedItem } from '../core/runtime-env.js';
@@ -521,6 +522,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
     const statusChanged = item.status !== fresh.status;
     const saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
+    const bargainChanged = isItemBargainEnabled(item) !== isItemBargainEnabled(fresh);
     const categoryChanged = fresh.category !== undefined && item.category !== fresh.category;
     const sizeChanged = fresh.size !== undefined && item.size !== fresh.size;
 
@@ -548,9 +550,11 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
     const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
     const onlySale = document.getElementById('onlySaleCb')?.checked || false;
+    const onlyBargain = document.getElementById('onlyBargainCb')?.checked || false;
     const needsGridResortOrRefilter = topChanged || categoryChanged || sizeChanged ||
                                       (hideUnavailable && statusChanged) ||
-                                      (onlySale && saleChanged);
+                                      (onlySale && saleChanged) ||
+                                      (onlyBargain && bargainChanged);
 
     if (needsGridResortOrRefilter) {
         applyFilters(true, true);
@@ -736,6 +740,7 @@ export async function syncCriticalStatuses() {
             const nowTs = Date.now();
             const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
             const onlySale = document.getElementById('onlySaleCb')?.checked || false;
+            const onlyBargain = document.getElementById('onlyBargainCb')?.checked || false;
 
             window.allItems.forEach(item => {
                 const fresh = freshMap.get(item.id);
@@ -750,6 +755,7 @@ export async function syncCriticalStatuses() {
 
                 const statusChanged = item.status !== fresh.status;
                 const saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
+                const bargainChanged = isItemBargainEnabled(item) !== isItemBargainEnabled(fresh);
                 const priceChanged = item.price !== fresh.price;
                 const wasHot = (item.views_count || 0) >= 25;
                 const nowHot = (fresh.views_count || 0) >= 25;
@@ -764,7 +770,7 @@ export async function syncCriticalStatuses() {
                     item.views_count = fresh.views_count;
                 }
 
-                if (topChanged || statusChanged || saleChanged || priceChanged || hotChanged || metaChanged) {
+                if (topChanged || statusChanged || saleChanged || bargainChanged || priceChanged || hotChanged || metaChanged) {
                     const oldStatus = item.status;
                     const oldPrice = item.price;
                     const oldIsSale = item.is_sale;
@@ -774,6 +780,9 @@ export async function syncCriticalStatuses() {
                     item.status = fresh.status;
                     item.is_sale = fresh.is_sale;
                     item.old_price = fresh.old_price;
+                    if (fresh.is_bargain !== undefined) item.is_bargain = fresh.is_bargain;
+                    if (fresh.min_bargain_price !== undefined) item.min_bargain_price = fresh.min_bargain_price;
+                    if (fresh.description !== undefined && fresh.description !== null) item.description = fresh.description;
                     item.price = fresh.price;
                     item.views_count = fresh.views_count;
                     if (fresh.name) item.name = fresh.name;
@@ -785,7 +794,7 @@ export async function syncCriticalStatuses() {
                     updateCardDOM(item);
                     anyCardUpdated = true;
 
-                    if (topChanged || (hideUnavailable && statusChanged) || (onlySale && saleChanged)) {
+                    if (topChanged || (hideUnavailable && statusChanged) || (onlySale && saleChanged) || (onlyBargain && bargainChanged)) {
                         gridNeedsFullRefresh = true;
                     }
 

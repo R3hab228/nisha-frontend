@@ -196,6 +196,8 @@ function resetToMain() {
     document.querySelectorAll('.size-cb').forEach(cb => cb.checked = false);
     const saleCb = document.getElementById('onlySaleCb');
     if (saleCb) saleCb.checked = false;
+    const bargainCb = document.getElementById('onlyBargainCb');
+    if (bargainCb) bargainCb.checked = false;
     
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
@@ -286,6 +288,12 @@ async function initApp() {
         if (saleParam === '1' || saleParam === 'true') {
             const saleCb = document.getElementById('onlySaleCb');
             if (saleCb) saleCb.checked = true;
+        }
+
+        const bargainParam = urlParams.get('bargain');
+        if (bargainParam === '1' || bargainParam === 'true') {
+            const bargainCb = document.getElementById('onlyBargainCb');
+            if (bargainCb) bargainCb.checked = true;
         }
 
         // 2. Мгновенный запуск каталога, сессии и словарей локализации параллельно
