@@ -93,7 +93,6 @@ export async function executeToggleFav(itemId) {
         const gridStar = document.querySelector(`.item-card[data-id="${itemId}"] .fav-star`);
         if (gridStar) {
             gridStar.classList.toggle('active', !isFav);
-            gridStar.style.color = !isFav ? 'var(--accent-red)' : '#444';
         }
 
         // Звезда в открытой модалке товара
@@ -102,7 +101,6 @@ export async function executeToggleFav(itemId) {
             const modalStar = document.getElementById('modalFavStar');
             if (modalStar) {
                 modalStar.classList.toggle('active', !isFav);
-                modalStar.style.color = !isFav ? 'var(--accent-red)' : '#444';
             }
         }
     }

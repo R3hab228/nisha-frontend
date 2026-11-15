@@ -284,7 +284,8 @@ export function openProductModal(item) {
     const modalStar = document.getElementById('modalFavStar');
     const favs = getFavs();
     if (modalStar) {
-        modalStar.classList.toggle('active', favs.includes(item.id));
+        modalStar.style.removeProperty('color');
+        modalStar.classList.toggle('active', favs.some(id => String(id) === String(item.id)));
     }
 
     const isHackedActive = isSiteHackedMode();
