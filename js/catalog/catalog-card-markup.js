@@ -40,7 +40,18 @@ export function readAcceptedBargain(item) {
 }
 
 /**
- * Генерирует HTML-разметку статус-бейджей карточки товара (SOLD, RESERVED, TOP, SALE, HOT).
+ * Проверяет, включён ли торг на товаре (по флагам БД или тегу [ТОРГ] в описании).
+ * @param {object} item
+ * @returns {boolean}
+ */
+export function isItemBargainEnabled(item) {
+    if (!item) return false;
+    if (item.is_bargain || item.min_bargain_price) return true;
+    return typeof item.description === 'string' && /\[ТОРГ(?:\b|:)/i.test(item.description);
+}
+
+/**
+ * Генерирует HTML-разметку статус-бейджей карточки товара (SOLD, RESERVED, TOP, SALE, HOT, BID).
  * @param {object} item
  * @returns {string}
  */
@@ -56,7 +67,8 @@ export function buildStatusBadgeHtml(item) {
     const hasSale = !!item.is_sale;
     const hasHot = (item.views_count || 0) >= 25;
     const isTop = item.is_top === true && item.top_until && Date.parse(item.top_until) > Date.now();
-    if (!hasSale && !hasHot && !isTop) return '';
+    const hasBargain = isItemBargainEnabled(item);
+    if (!hasSale && !hasHot && !isTop && !hasBargain) return '';
 
     const parts = [];
     if (isTop) {
@@ -68,6 +80,10 @@ export function buildStatusBadgeHtml(item) {
     if (hasHot) {
         const chartSvg = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
         parts.push(`<span class="status-item status-hot">${chartSvg} HOT</span>`);
+    }
+    if (hasBargain) {
+        const gavelSvg = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/></svg>';
+        parts.push(`<span class="status-item status-bid">${gavelSvg} BID</span>`);
     }
     return `<div class="system-status-bar">${parts.join('<div class="status-divider"></div>')}</div>`;
 }

@@ -534,6 +534,7 @@ label:hover .win95-cb:checked {
 .status-sale { color: #cc0000; }
 .status-hot { color: #0044cc; }
 .status-top { color: #cc00ff; }
+.status-bid { color: #007a1f; }
 .status-divider { width: 1px; height: 10px; background: #888; }
 .old-price { text-decoration: line-through; color: var(--text-muted); font-size: 13px; margin-right: 8px; font-weight: normal; }
 .hacked-price-tag { color: var(--accent-green); font-size: 12px; border: 1px solid var(--accent-green); padding: 1px 4px; margin-left: 5px; animation: pulse 1s infinite;}
