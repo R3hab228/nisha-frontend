@@ -185,10 +185,23 @@ export function renderCartItems() {
 
         row.innerHTML = `
             <div class="swipe-background">
-                <svg class="trash-icon" viewBox="0 0 24 24">
-                    <path class="trash-lid" d="M3 6h18 M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    <path class="trash-base" d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6 M10 11v6 M14 11v6"></path>
-                </svg>
+                <div class="shredder-wrap">
+                    <svg class="shredder-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <g class="shredder-paper">
+                            <path d="M7 2h10v6H7z"></path>
+                            <line x1="9.5" y1="4.5" x2="14.5" y2="4.5"></line>
+                        </g>
+                        <path class="shredder-body" d="M4 8h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"></path>
+                        <line x1="6" y1="11.5" x2="18" y2="11.5"></line>
+                        <g class="shredder-strips">
+                            <line x1="7.5" y1="15" x2="7.5" y2="21"></line>
+                            <line x1="10.5" y1="15" x2="10.5" y2="22"></line>
+                            <line x1="13.5" y1="15" x2="13.5" y2="21"></line>
+                            <line x1="16.5" y1="15" x2="16.5" y2="22"></line>
+                        </g>
+                    </svg>
+                    <span class="shredder-label">[ SHRED ]</span>
+                </div>
             </div>
             <div class="swipe-surface" 
                  data-index="${index}"
@@ -380,12 +393,14 @@ if (typeof window !== 'undefined') {
 
     let cartSwipeStartX = 0;
     let cartSwipeCurrentX = 0;
+    let cartSwipeArmed = false;
 
     window.handleSwipeStart = function(e) {
         const rowSurface = resolveSwipeSurface(e);
         if (!rowSurface || !e.touches || !e.touches[0]) return;
         cartSwipeStartX = e.touches[0].clientX;
         cartSwipeCurrentX = cartSwipeStartX;
+        cartSwipeArmed = false;
         cartState.cartSwipeStartX = cartSwipeStartX;
         cartState.cartSwipeCurrentX = cartSwipeCurrentX;
         rowSurface.style.transition = 'none';
@@ -406,19 +421,33 @@ if (typeof window !== 'undefined') {
             rowSurface.style.opacity = surfaceOpacity;
 
             const parentRow = rowSurface.closest('.cart-item-row');
-            const trashIcon = parentRow ? parentRow.querySelector('.trash-icon') : null;
-            const trashLid = parentRow ? parentRow.querySelector('.trash-lid') : null;
+            const swipeBg = parentRow ? parentRow.querySelector('.swipe-background') : null;
+            const shredderWrap = parentRow ? parentRow.querySelector('.shredder-wrap') : null;
+            const shredderPaper = parentRow ? parentRow.querySelector('.shredder-paper') : null;
+            const shredderStrips = parentRow ? parentRow.querySelector('.shredder-strips') : null;
+            const legacyIcon = parentRow ? parentRow.querySelector('.trash-icon') : null;
+            const legacyLid = parentRow ? parentRow.querySelector('.trash-lid') : null;
 
-            if (trashIcon && trashLid) {
-                const bgOpacity = Math.min(1, moveX / 80);
-                trashIcon.style.opacity = bgOpacity;
-
-                if (moveX > 50) {
-                    const openAngle = Math.min(45, (moveX - 50) * 0.6);
-                    trashLid.style.transform = `rotate(${openAngle}deg)`;
-                } else {
-                    trashLid.style.transform = 'rotate(0deg)';
-                }
+            const bgOpacity = Math.min(1, moveX / 75);
+            const isArmed = diff > 120;
+            if (isArmed !== cartSwipeArmed) {
+                cartSwipeArmed = isArmed;
+                if (isArmed && typeof triggerHaptic === 'function') triggerHaptic('light');
+            }
+            if (swipeBg && swipeBg.classList) {
+                swipeBg.classList.toggle('shred-armed', isArmed);
+            }
+            if (shredderWrap) {
+                shredderWrap.style.opacity = String(bgOpacity);
+            }
+            if (shredderPaper && shredderStrips) {
+                const feedShift = moveX > 35 ? Math.min(3.5, (moveX - 35) * 0.035) : 0;
+                shredderPaper.style.transform = `translateY(${feedShift}px)`;
+                shredderStrips.style.transform = `translateY(${feedShift * 0.9}px)`;
+            } else if (legacyIcon && legacyLid) {
+                legacyIcon.style.opacity = bgOpacity;
+                const openAngle = moveX > 50 ? Math.min(45, (moveX - 50) * 0.6) : 0;
+                legacyLid.style.transform = `rotate(${openAngle}deg)`;
             }
         }
     };
@@ -445,15 +474,24 @@ if (typeof window !== 'undefined') {
             rowSurface.style.opacity = '1';
 
             if (parentRow) {
-                const trashIcon = parentRow.querySelector('.trash-icon');
-                const trashLid = parentRow.querySelector('.trash-lid');
-                if (trashIcon) trashIcon.style.opacity = '0';
-                if (trashLid) trashLid.style.transform = 'rotate(0deg)';
+                const swipeBg = parentRow.querySelector('.swipe-background');
+                const shredderWrap = parentRow.querySelector('.shredder-wrap');
+                const shredderPaper = parentRow.querySelector('.shredder-paper');
+                const shredderStrips = parentRow.querySelector('.shredder-strips');
+                const legacyIcon = parentRow.querySelector('.trash-icon');
+                const legacyLid = parentRow.querySelector('.trash-lid');
+                if (swipeBg && swipeBg.classList) swipeBg.classList.remove('shred-armed');
+                if (shredderWrap) shredderWrap.style.opacity = '0';
+                if (shredderPaper) shredderPaper.style.transform = 'translateY(0px)';
+                if (shredderStrips) shredderStrips.style.transform = 'translateY(0px)';
+                if (legacyIcon) legacyIcon.style.opacity = '0';
+                if (legacyLid) legacyLid.style.transform = 'rotate(0deg)';
             }
         }
 
         cartSwipeStartX = 0;
         cartSwipeCurrentX = 0;
+        cartSwipeArmed = false;
         cartState.cartSwipeStartX = 0;
         cartState.cartSwipeCurrentX = 0;
     };
