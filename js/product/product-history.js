@@ -17,6 +17,7 @@ import { hasAction, invokeAction, registerActions } from '../core/action-registr
 
 const _preloadedSimilarUrls = new Set();
 let _pendingSimilarImgUrls = [];
+let _suppressHistoryRender = false;
 
 /**
  * Eagerly preloads pending "Similar items" thumbnail images when the user starts
@@ -254,6 +255,7 @@ export function addToHistory(item) {
  * Renders the viewing history grid and syncs viewed item IDs with Supabase profile.
  */
 export function renderHistory() {
+    if (_suppressHistoryRender) return;
     const store = getStore();
     let hist = store ? store.getJSON('nisha_history', []) : [];
     const container = document.getElementById('historyGrid');
@@ -422,10 +424,25 @@ export function toggleHistory() {
 export function removeHistoryItem(event, itemId) {
     if (event) event.stopPropagation();
 
+    const targetCard = (event && event.target && typeof event.target.closest === 'function'
+        ? event.target.closest('.history-card')
+        : null)
+        || (typeof document !== 'undefined'
+            ? Array.from(document.querySelectorAll('#historyGrid .history-card')).find(el => el.getAttribute('data-id') === String(itemId))
+            : null);
+
     const store = getStore();
     let hist = store ? store.getJSON('nisha_history', []) : [];
     hist = hist.filter(item => item.id !== itemId);
-    if (store) store.setJSON('nisha_history', hist);
+
+    if (store) {
+        if (targetCard) _suppressHistoryRender = true;
+        try {
+            store.setJSON('nisha_history', hist);
+        } finally {
+            _suppressHistoryRender = false;
+        }
+    }
 
     const currentUser = getUser();
     const sb = getSupabaseClient();
@@ -434,13 +451,6 @@ export function removeHistoryItem(event, itemId) {
             viewed_history: hist.map(h => h.id)
         }).eq('id', currentUser.id).then();
     }
-
-    const targetCard = (event && event.target && typeof event.target.closest === 'function'
-        ? event.target.closest('.history-card')
-        : null)
-        || (typeof document !== 'undefined'
-            ? Array.from(document.querySelectorAll('#historyGrid .history-card')).find(el => el.getAttribute('data-id') === String(itemId))
-            : null);
 
     if (targetCard) {
         targetCard.style.pointerEvents = 'none';
