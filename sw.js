@@ -142,15 +142,25 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // --- ХЭШИРОВАННЫЕ АССЕТЫ VITE (/assets/) (Cache-First) ---
+    // --- ХЭШИРОВАННЫЕ АССЕТЫ VITE (/assets/) (Cache-First с защитой от MIME poisoning) ---
     if (url.pathname.startsWith('/assets/')) {
+        const isValidAssetMime = (res) => {
+            if (!res || res.status !== 200) return false;
+            const ct = (res.headers.get('content-type') || '').toLowerCase();
+            if (url.pathname.endsWith('.css')) return ct.includes('text/css');
+            if (url.pathname.endsWith('.js') || url.pathname.endsWith('.mjs')) return ct.includes('javascript');
+            return !ct.includes('text/html');
+        };
         event.respondWith(
             caches.match(event.request).then(cached => {
-                if (cached) return cached;
+                if (cached && isValidAssetMime(cached)) return cached;
+                if (cached) {
+                    caches.open(CACHE_NAME).then(cache => cache.delete(event.request)).catch(() => {});
+                }
                 return fetch(event.request).then(networkResponse => {
-                    if (networkResponse && networkResponse.status === 200) {
+                    if (isValidAssetMime(networkResponse)) {
                         const responseToCache = networkResponse.clone();
-                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache)).catch(() => {});
                     }
                     return networkResponse;
                 });
