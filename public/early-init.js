@@ -62,9 +62,30 @@
             if (!target || target === window) return;
             var tag = target.tagName;
             var url = (tag === 'SCRIPT' ? target.src : (tag === 'LINK' ? target.href : '')) || '';
-            if (/\/assets\/[^?#]+\.(?:js|css)(?:[?#]|$)/i.test(url)) {
-                tryRecoverStaleChunk();
+            if (!/\/assets\/[^?#]+\.(?:js|css)(?:[?#]|$)/i.test(url)) return;
+
+            if (tag === 'LINK' && target.rel === 'stylesheet') {
+                if (target.dataset && target.dataset.retried) return;
+                try {
+                    if (target.dataset) target.dataset.retried = '1';
+                    var cleanHref = url.split('?')[0];
+                    if (typeof caches !== 'undefined' && caches && typeof caches.keys === 'function') {
+                        caches.keys().then(function (keys) {
+                            keys.forEach(function (k) {
+                                caches.open(k).then(function (c) { c.delete(cleanHref); }).catch(function () {});
+                            });
+                        }).catch(function () {});
+                    }
+                    var fallbackLink = document.createElement('link');
+                    fallbackLink.rel = 'stylesheet';
+                    fallbackLink.href = cleanHref + '?cb=' + Date.now();
+                    if (fallbackLink.dataset) fallbackLink.dataset.retried = '1';
+                    document.head.appendChild(fallbackLink);
+                } catch (e) {}
+                return;
             }
+
+            tryRecoverStaleChunk();
         }, true);
         window.addEventListener('unhandledrejection', function (event) {
             var reason = event && event.reason;
