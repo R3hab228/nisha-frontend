@@ -23,6 +23,7 @@ import {
 import { renderModalSlider } from './product-gallery.js';
 import { addToHistory, preloadSimilarItemsImages, renderSimilarItems } from './product-history.js';
 import { loadItemQuestions } from './product-qa.js';
+import { parseItemMeasurements, renderMeasurementsTableHtml } from './product-measurements.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getLenisInstance, isSiteHackedMode } from '../core/runtime-env.js';
 
@@ -37,9 +38,12 @@ function closeSecondaryOverlays() {
 function renderModalDescriptionContent(item, qaPart = '') {
     const defaultDesc = 'Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.';
     const rawDesc = item.description ? String(item.description) : defaultDesc;
-    const cleanDesc = rawDesc.replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
-    const descText = (cleanDesc || defaultDesc).replaceAll('\r', '').replaceAll('\n', '<br>');
-    const safeDescHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : getEscHtml(descText);
+    const { measurements, cleanText } = parseItemMeasurements(rawDesc);
+    const bodyText = (cleanText || (measurements.length > 0 ? '' : defaultDesc)).replaceAll('\r', '').replaceAll('\n', '<br>');
+    const safeDescHtml = bodyText
+        ? `<div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(bodyText) : getEscHtml(bodyText)}</div>`
+        : '';
+    const measurementsHtml = renderMeasurementsTableHtml(measurements, getEscHtml);
     const sizeTitle = typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР';
     const brandTitle = typeof i18next !== 'undefined' ? i18next.t('product.brand') : 'БРЕНД';
 
@@ -52,7 +56,8 @@ function renderModalDescriptionContent(item, qaPart = '') {
             <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${brandTitle}</span></strong> 
             <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${getEscHtml(item.brand)}</span>
         </div>
-        <div style="color: #aaa; font-size: 13px;">${safeDescHtml}</div>
+        ${safeDescHtml}
+        ${measurementsHtml}
     ` + qaPart;
 }
 

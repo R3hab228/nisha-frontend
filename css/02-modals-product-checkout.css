@@ -206,6 +206,15 @@
 .item-published { white-space: nowrap; font-variant-numeric: tabular-nums; gap: 8px; }
 
 .modal-desc { color: #ddd; font-size: 14px; line-height: 1.6; margin-bottom: 20px; padding: 15px 0; border-top: 1px dashed #333; border-bottom: 1px dashed #333; font-family: var(--font-main);}
+.product-measurements-box { margin-top: 14px; padding: 10px 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid #262626; border-left: 2px solid var(--accent-green); }
+.product-measurements-title { font-family: var(--font-mono); font-size: 11px; font-weight: bold; color: var(--accent-green); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 8px; }
+.product-measurements-list { display: flex; flex-direction: column; gap: 5px; }
+.product-measurement-row { display: flex; align-items: baseline; gap: 6px; font-family: var(--font-mono); font-size: 12px; line-height: 1.45; }
+.product-measurement-label { color: #ccc; flex-shrink: 0; }
+.product-measurement-qual { color: #777; font-size: 11px; }
+.product-measurement-dots { flex: 1; min-width: 16px; border-bottom: 1px dotted #444; transform: translateY(-3px); }
+.product-measurement-value { color: #fff; font-weight: bold; flex-shrink: 0; white-space: nowrap; }
+.product-measurement-value span { color: #999; font-weight: normal; font-size: 11px; }
 
 .condition-container { margin: 0 0 20px 0; font-family: var(--font-mono); }
 .condition-text { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 8px; text-transform: uppercase;}
