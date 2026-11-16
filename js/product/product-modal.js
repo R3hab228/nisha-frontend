@@ -183,7 +183,6 @@ export async function openProductModalById(itemId) {
             }
 
             if (fullItem.description) {
-                const cleanFullDesc = String(fullItem.description).replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
                 const descContainer = document.querySelector('.modal-desc');
                 if (descContainer) {
                     const qaMarker = '<!-- Блок Вопросов и Ответов (Q&A) -->';
@@ -191,20 +190,7 @@ export async function openProductModalById(itemId) {
                         ? descContainer.innerHTML.indexOf(qaMarker)
                         : descContainer.innerHTML.indexOf('<div id="qaWrapper"');
                     const qaPart = qaIndex !== -1 ? descContainer.innerHTML.substring(qaIndex) : '';
-                    const descText = cleanFullDesc ? cleanFullDesc.replaceAll('\n', '<br>') : '<span style="color:#666;">[ Описание отсутствует ]</span>';
-                    const sizeTitle = typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР';
-                    const brandTitle = typeof i18next !== 'undefined' ? i18next.t('product.brand') : 'БРЕНД';
-                    descContainer.innerHTML = `
-                        <div style="margin-bottom: 5px;">
-                            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.size">${sizeTitle}</span></strong> 
-                            <span id="modalItemSizeDesc" style="color: #ccc; margin-left: 5px;">${getEscHtml(fullItem.size)}</span>
-                        </div>
-                        <div style="margin-bottom: 15px;">
-                            <strong style="color: #fff; font-family: var(--font-mono);"><span data-i18n="product.brand">${brandTitle}</span></strong> 
-                            <span id="modalItemBrand" style="color: #ccc; margin-left: 5px; text-transform: uppercase;">${getEscHtml(fullItem.brand)}</span>
-                        </div>
-                        <div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(descText) : getEscHtml(descText)}</div>
-                    ` + qaPart;
+                    descContainer.innerHTML = renderModalDescriptionContent(mergedItem, qaPart);
                 }
             }
         }

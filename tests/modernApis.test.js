@@ -4035,7 +4035,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(dropCode).toContain('if (!window._propBargainMode && typeof openPropBargainInput === \'function\') openPropBargainInput()');
 
             // 3. Product modal strips [ТОРГ: ...] in both openProductModal and openProductModalById, and preserves disabled pointerEvents
-            expect(productCode).toContain("const cleanFullDesc = String(fullItem.description).replace(/\\s*\\[ТОРГ:?[^\\]]*\\]/gi, '').trim()");
+            expect(productCode).toContain('renderModalDescriptionContent(mergedItem, qaPart)');
+            expect(productCode).toContain(".replace(/\\s*\\[ТОРГ:?[^\\]]*\\]/gi, '').trim()");
             expect(productCode).toContain("btn.style.pointerEvents = btn.disabled ? 'none' : 'auto'");
             expect(productCode).toContain('data-min-bargain="${itemMinBargain}"');
             expect(productCode).toContain("b.status === 'pending' || (!b.acceptedPrice && b.offeredPrice)");
