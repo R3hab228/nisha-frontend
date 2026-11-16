@@ -535,11 +535,46 @@ function selectSupportTopic(topicEl) {
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 }
 
+const SUPPORT_MAX_LENGTH = 500;
+
+function updateSupportCharCounter() {
+    const input = document.getElementById('supportInput');
+    const counter = document.getElementById('supportCharCounter');
+    if (!input || !counter) return;
+    const len = input.value.length;
+    counter.textContent = `${len} / ${SUPPORT_MAX_LENGTH}`;
+    counter.classList.toggle('near-limit', len >= 450 && len < SUPPORT_MAX_LENGTH);
+    counter.classList.toggle('at-limit', len >= SUPPORT_MAX_LENGTH);
+}
+
+function collectSupportBugContext() {
+    if (typeof navigator === 'undefined' || typeof window === 'undefined') return null;
+    const ua = String(navigator.userAgent || '');
+    let os = 'Desktop';
+    if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
+    else if (/android/i.test(ua)) os = 'Android';
+    const isStandalone = (typeof document !== 'undefined' && document.documentElement?.classList.contains('pwa-standalone')) ||
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    const device = `${os}${isStandalone ? ' (PWA)' : ''}`;
+    const lang = (typeof i18next !== 'undefined' && i18next.language)
+        ? String(i18next.language).slice(0, 10)
+        : String(document?.documentElement?.lang || 'ua').slice(0, 10);
+    const url = `${window.location.pathname || '/'}${window.location.search || ''}`.slice(0, 300);
+    return { device, lang, url };
+}
+
 // 1. Открытие модального окна поддержки
 function openSupportModalWindow() {
     if (getLenisInstance()) invokeAction('stopLenis');
     const input = document.getElementById('supportInput');
-    if (input) input.value = ''; // Очищаем поле при открытии
+    if (input) {
+        input.value = ''; // Очищаем поле при открытии
+        if (!input._supportCounterBound) {
+            input._supportCounterBound = true;
+            input.addEventListener('input', updateSupportCharCounter);
+        }
+    }
+    updateSupportCharCounter();
     resetSupportTopicChips();
     
     if (typeof openModal === 'function') {
@@ -571,9 +606,9 @@ async function submitSupportTicket() {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         return;
     }
-    if (message.length > 100) {
+    if (message.length > SUPPORT_MAX_LENGTH) {
         const truncFn = resolveAction('safeTruncateText');
-        message = truncFn ? truncFn(message, 100) : message.slice(0, 100);
+        message = truncFn ? truncFn(message, SUPPORT_MAX_LENGTH) : message.slice(0, SUPPORT_MAX_LENGTH);
     }
 
     btn.style.pointerEvents = 'none';
@@ -586,13 +621,15 @@ async function submitSupportTicket() {
     const activeFingerprint = getRuntimeFingerprint() || ('guest_' + Date.now());
     const activeChip = document.querySelector('#supportTopicChips .support-topic-chip.active');
     const selectedTopic = activeChip ? (activeChip.getAttribute('data-topic') || '') : '';
+    const bugMeta = selectedTopic === 'БАГ' ? collectSupportBugContext() : null;
 
     // Отправляем запрос на сервер в фоне с авто-повтором при сбое сети
     window.apiClient.post('/api/support', {
         contact: userContact,
         message: safeText,
         clientId: activeFingerprint,
-        topic: selectedTopic
+        topic: selectedTopic,
+        ...(bugMeta ? { meta: bugMeta } : {})
     }, { timeout: 10000, retries: 2 }).catch(e => console.log('Фоновая отправка в саппорт не удалась: ', e));
 
     // Моментальный отклик интерфейса
@@ -611,6 +648,7 @@ async function submitSupportTicket() {
         btn.style.pointerEvents = 'auto';
         btn.innerText = typeof i18next !== 'undefined' ? i18next.t('support.submit', { defaultValue: 'ОТПРАВИТЬ СИГНАЛ' }) : 'ОТПРАВИТЬ СИГНАЛ';
         input.value = '';
+        updateSupportCharCounter();
     }, 500);
 }
 
