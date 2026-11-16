@@ -542,7 +542,7 @@ function updateSupportCharCounter() {
     const counter = document.getElementById('supportCharCounter');
     if (!input || !counter) return;
     const len = input.value.length;
-    counter.textContent = `${len} / ${SUPPORT_MAX_LENGTH}`;
+    counter.textContent = `${len}/${SUPPORT_MAX_LENGTH}`;
     counter.classList.toggle('near-limit', len >= 450 && len < SUPPORT_MAX_LENGTH);
     counter.classList.toggle('at-limit', len >= SUPPORT_MAX_LENGTH);
 }

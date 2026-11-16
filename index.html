@@ -934,8 +934,10 @@
 </div>
 <div class=form-layout>
 <p style=margin:0;color:#aaa;font-size:13px;font-family:var(--font-main) data-i18n="support.desc">Опиши проблему, идею или баг. Сообщение улетит напрямую разработчику.</p>
-<textarea id=supportInput class=form-input maxlength=500 style=height:120px;resize:none;text-align:left data-i18n="[placeholder]support.placeholder" placeholder="Начни печатать..."></textarea>
-<div id=supportCharCounter class=support-char-counter aria-live=polite>0 / 500</div>
+<div class=support-input-wrap>
+<textarea id=supportInput class="form-input support-textarea" maxlength=500 data-i18n="[placeholder]support.placeholder" placeholder="Начни печатать..."></textarea>
+<div id=supportCharCounter class=support-char-counter aria-live=polite>0/500</div>
+</div>
 <div class=support-topics-row id=supportTopicChips role=group aria-label="Тема обращения">
 <button type=button class=support-topic-chip data-action=select-support-topic data-topic="БАГ" data-i18n="support.topic_bug">[ БАГ ]</button>
 <button type=button class=support-topic-chip data-action=select-support-topic data-topic="ЗАКАЗ / ТТН" data-i18n="support.topic_order">[ ЗАКАЗ / ТТН ]</button>
