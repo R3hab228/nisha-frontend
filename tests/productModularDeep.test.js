@@ -749,7 +749,10 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
         await Promise.resolve();
         expect(rpcSpy).toHaveBeenCalledWith('increment_item_views', expect.objectContaining({ p_item_uuid: 'p-99' }));
         expect(viewsEl.innerText).toBe(42);
-        expect(descBlock.innerHTML).toContain('Chest 62cm');
+        expect(descBlock.innerHTML).toContain('Full detailed');
+        expect(descBlock.innerHTML).toContain('product-measurements-box');
+        expect(descBlock.innerHTML).toContain('product.meas_chest');
+        expect(descBlock.innerHTML).toContain('62');
         expect(descBlock.innerHTML).not.toContain('[ТОРГ');
     });
 });

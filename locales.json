@@ -164,7 +164,10 @@
         "meas_height": "Высота",
         "meas_qual_from_shoulder": "от плеча",
         "meas_qual_from_seam": "от шва",
-        "meas_qual_from_neck": "от горла"
+        "meas_qual_from_neck": "от горла",
+        "meas_neck_width": "Ширина выреза",
+        "meas_half_measure": "Полуобхват",
+        "meas_rise": "Посадка"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -683,7 +686,10 @@
         "meas_height": "Висота",
         "meas_qual_from_shoulder": "від плеча",
         "meas_qual_from_seam": "від шва",
-        "meas_qual_from_neck": "від горла"
+        "meas_qual_from_neck": "від горла",
+        "meas_neck_width": "Ширина выреза",
+        "meas_half_measure": "Полуобхват",
+        "meas_rise": "Посадка"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -1202,7 +1208,10 @@
         "meas_height": "Height",
         "meas_qual_from_shoulder": "from shoulder",
         "meas_qual_from_seam": "from seam",
-        "meas_qual_from_neck": "from neck"
+        "meas_qual_from_neck": "from neck",
+        "meas_neck_width": "Neck width",
+        "meas_half_measure": "Half-measure",
+        "meas_rise": "Rise"
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",

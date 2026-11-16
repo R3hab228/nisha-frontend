@@ -7,15 +7,16 @@ const _measurementParseCache = new Map();
 
 /**
  * Canonical measurement term definitions ordered from longest/most-specific phrases
- * to shortest so compound labels (e.g. "ширина в талії", "рукав від плеча") match
- * before generic ones ("ширина", "рукав").
+ * to shortest so compound labels match before generic ones.
  * @type {Array<{ pattern: string, key: string, qualifier?: string }>}
  */
 const MEASUREMENT_PATTERNS = [
     // Leg opening
     { pattern: 'ширина штанины снизу (выход)', key: 'leg_opening' },
     { pattern: 'ширина штанины внизу (выход)', key: 'leg_opening' },
-    { pattern: 'ширина штанини внизу (вихід)', key: 'leg_opening' },
+    { pattern: 'ширина штанины внизу (вихід)', key: 'leg_opening' },
+    { pattern: 'ширина штанины на выходе', key: 'leg_opening' },
+    { pattern: 'ширина штанини на виході', key: 'leg_opening' },
     { pattern: 'ширина штанины снизу', key: 'leg_opening' },
     { pattern: 'ширина штанины внизу', key: 'leg_opening' },
     { pattern: 'ширина штанини внизу', key: 'leg_opening' },
@@ -27,6 +28,9 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'довжина рукава від плеча', key: 'sleeve', qualifier: 'from_shoulder' },
     { pattern: 'длина рукава от плеча', key: 'sleeve', qualifier: 'from_shoulder' },
     { pattern: 'длинна рукава от плеча', key: 'sleeve', qualifier: 'from_shoulder' },
+    { pattern: 'рукава від плечей', key: 'sleeve', qualifier: 'from_shoulder' },
+    { pattern: 'рукава от плеч', key: 'sleeve', qualifier: 'from_shoulder' },
+    { pattern: 'рукава от плеча', key: 'sleeve', qualifier: 'from_shoulder' },
     { pattern: 'довжина рукава від горла', key: 'sleeve', qualifier: 'from_neck' },
     { pattern: 'длина рукава от горла', key: 'sleeve', qualifier: 'from_neck' },
     { pattern: 'довжина рукава від шва', key: 'sleeve', qualifier: 'from_seam' },
@@ -34,6 +38,8 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'длинна рукава от шва', key: 'sleeve', qualifier: 'from_seam' },
     { pattern: 'рукав від плеча', key: 'sleeve', qualifier: 'from_shoulder' },
     { pattern: 'рукав от плеча', key: 'sleeve', qualifier: 'from_shoulder' },
+    { pattern: 'рукав з плечем', key: 'sleeve', qualifier: 'from_shoulder' },
+    { pattern: 'рукав с плечом', key: 'sleeve', qualifier: 'from_shoulder' },
     { pattern: 'рукав від горла', key: 'sleeve', qualifier: 'from_neck' },
     { pattern: 'рукав от горла', key: 'sleeve', qualifier: 'from_neck' },
     { pattern: 'рукав від шва', key: 'sleeve', qualifier: 'from_seam' },
@@ -45,6 +51,8 @@ const MEASUREMENT_PATTERNS = [
     // Waist & half-waist
     { pattern: 'ширина в талії (найвужче місце)', key: 'waist' },
     { pattern: 'ширина в талии (самое узкое место)', key: 'waist' },
+    { pattern: 'полуобхват по поясу', key: 'half_waist' },
+    { pattern: 'напівобхват по поясу', key: 'half_waist' },
     { pattern: 'полуобхват талии', key: 'waist' },
     { pattern: 'напівобхват талії', key: 'waist' },
     { pattern: 'півобхват талії', key: 'waist' },
@@ -53,11 +61,17 @@ const MEASUREMENT_PATTERNS = [
 
     // Chest
     { pattern: 'а в грудях (напівобхват під пахвами)', key: 'chest' },
+    { pattern: 'ширина в грудях (напівобхват під пахвами)', key: 'chest' },
+    { pattern: 'ширина (полуобхват груди)', key: 'chest' },
+    { pattern: 'ширина (полуобхват грудей)', key: 'chest' },
     { pattern: 'напівобхват під пахвами', key: 'chest' },
     { pattern: 'полуобхват грудей', key: 'chest' },
     { pattern: 'полуобхват груди', key: 'chest' },
     { pattern: 'півобхват грудей', key: 'chest' },
     { pattern: 'напівобхват грудей', key: 'chest' },
+    { pattern: 'груди (півобхват)', key: 'chest' },
+    { pattern: 'груди (полуобхват)', key: 'chest' },
+    { pattern: 'грудь (полуобхват)', key: 'chest' },
     { pattern: 'ширина по пахвах', key: 'chest' },
     { pattern: 'ширина в грудях', key: 'chest' },
     { pattern: 'грудь( пол обхват)', key: 'chest' },
@@ -78,14 +92,28 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'полуобхват бедер', key: 'hips' },
     { pattern: 'напівобхват стегон', key: 'hips' },
     { pattern: 'півобхват стегон', key: 'hips' },
+    { pattern: 'ширина в бёдрах', key: 'hips' },
+    { pattern: 'ширина в бедрах', key: 'hips' },
+    { pattern: 'ширина у стегнах', key: 'hips' },
 
     // Length
     { pattern: 'довжина по спинці', key: 'length' },
     { pattern: 'длина по спинке', key: 'length' },
     { pattern: 'довжина від плеча', key: 'length' },
     { pattern: 'длина от плеча', key: 'length' },
+    { pattern: 'длина от пояса', key: 'length' },
+    { pattern: 'довжина від пояса', key: 'length' },
+    { pattern: 'длина до угла', key: 'length' },
+    { pattern: 'общая длина', key: 'length' },
+    { pattern: 'загальна довжина', key: 'length' },
+    { pattern: 'довжина куртки', key: 'length' },
+    { pattern: 'длина куртки', key: 'length' },
+    { pattern: 'довжина виробу', key: 'length' },
+    { pattern: 'длина изделия', key: 'length' },
 
-    // Inseam, elastic, wrist, generic width
+    // Inseam, elastic, wrist, neckline, generic width
+    { pattern: 'по внутреннему шву', key: 'inseam' },
+    { pattern: 'по внутрішньому шву', key: 'inseam' },
     { pattern: 'внутренний шов', key: 'inseam' },
     { pattern: 'внутрішній крок', key: 'inseam' },
     { pattern: 'внутрішній шов', key: 'inseam' },
@@ -95,10 +123,16 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'ширина полуобхват', key: 'width' },
     { pattern: 'ширина напівобхват', key: 'width' },
     { pattern: 'ширина резинки', key: 'elastic_width' },
+    { pattern: 'ширина вирізу', key: 'neck_width' },
+    { pattern: 'ширина выреза', key: 'neck_width' },
 
     // Single-word terms
     { pattern: 'полупояс', key: 'half_waist' },
     { pattern: 'напівпояс', key: 'half_waist' },
+    { pattern: 'полуобхват', key: 'half_measure' },
+    { pattern: 'напівобхват', key: 'half_measure' },
+    { pattern: 'посадка', key: 'rise' },
+    { pattern: 'rise', key: 'rise' },
     { pattern: 'half waist', key: 'half_waist' },
     { pattern: 'shoulders', key: 'shoulders' },
     { pattern: 'длинна', key: 'length' },
@@ -123,6 +157,8 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'бедра', key: 'hips' },
     { pattern: 'стегна', key: 'hips' },
     { pattern: 'hips', key: 'hips' },
+    { pattern: 'ляжка', key: 'thigh' },
+    { pattern: 'ляшка', key: 'thigh' },
     { pattern: 'ляха', key: 'thigh' },
     { pattern: 'стегно', key: 'thigh' },
     { pattern: 'бедро', key: 'thigh' },
@@ -149,11 +185,17 @@ function escapeRegExp(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Precompiled single-pass regex over known terms (fast, linear, no nested quantifiers)
+const WORD_CHAR_CLASS = 'а-яА-ЯёЁіІїЇєЄґҐa-zA-Z0-9_';
 const TERMS_ALTERNATION = MEASUREMENT_PATTERNS.map(p => escapeRegExp(p.pattern)).join('|');
 const PATTERN_LOOKUP = new Map(MEASUREMENT_PATTERNS.map(p => [p.pattern, p]));
+
+// Note: uses explicit Cyrillic+Latin boundary instead of JS \b (which treats Cyrillic as \W)
 const MEASUREMENT_LINE_RE = new RegExp(
-    `(^|[\\s,.;(\\[])(${TERMS_ALTERNATION})(?:\\s*[:\\u2014\\u2013\\-]?\\s*)(\\d{1,3}(?:[.,]\\d{1,2})?)(?:\\s*(?:см|cm)\\b)?`,
+    `(^|[^${WORD_CHAR_CLASS}])(${TERMS_ALTERNATION})(?:[\\s:=\\u2014\\u2013\\-~≈•]+)?(\\d{1,3}(?:[.,]\\d{1,2})?)(?:\\s*(?:см|cm)(?![${WORD_CHAR_CLASS}]))?`,
+    'gi'
+);
+const INSOLE_PREFIX_RE = new RegExp(
+    `(^|[^${WORD_CHAR_CLASS}])(\\d{1,2}(?:[.,]\\d{1,2})?)\\s*(?:см|cm)?\\s+(стелька|устілка|insole)(?![${WORD_CHAR_CLASS}])`,
     'gi'
 );
 
@@ -174,6 +216,9 @@ const DEFAULT_LABELS = {
     meas_inseam: 'Шаговый шов',
     meas_insole: 'Стелька',
     meas_elastic_width: 'Ширина резинки',
+    meas_neck_width: 'Ширина выреза',
+    meas_half_measure: 'Полуобхват',
+    meas_rise: 'Посадка',
     meas_wrist: 'Запястье',
     meas_height: 'Высота',
     meas_qual_from_shoulder: 'от плеча',
@@ -190,6 +235,28 @@ const _t = (key) => {
 };
 
 /**
+ * Normalizes invisible bidi/zero-width Unicode marks commonly inserted by mobile
+ * keyboards/messengers (which otherwise break whitespace & boundary detection).
+ * @param {string} raw
+ * @returns {string}
+ */
+function normalizeSourceText(raw) {
+    return String(raw || '')
+        .replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, '')
+        .replace(/\u00A0/g, ' ')
+        .replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '')
+        .trim();
+}
+
+function setBoundedCache(key, value) {
+    if (_measurementParseCache.size >= MEASUREMENT_CACHE_LIMIT) {
+        const firstKey = _measurementParseCache.keys().next().value;
+        _measurementParseCache.delete(firstKey);
+    }
+    _measurementParseCache.set(key, value);
+}
+
+/**
  * Parses measurement pairs from a raw product description string and returns
  * normalized measurement objects plus the remaining narrative description.
  * Uses an O(1) bounded cache so repeated modal opens never stall the UI.
@@ -197,7 +264,7 @@ const _t = (key) => {
  * @returns {{ measurements: Array<{ key: string, qualifier: string|null, value: string }>, cleanText: string }}
  */
 export function parseItemMeasurements(rawDescription) {
-    const source = String(rawDescription || '').replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
+    const source = normalizeSourceText(rawDescription);
     if (!source) return { measurements: [], cleanText: '' };
 
     const cached = _measurementParseCache.get(source);
@@ -212,7 +279,13 @@ export function parseItemMeasurements(rawDescription) {
         const prefix = match[1] || '';
         const termRaw = match[2];
         const valueRaw = match[3];
-        const startIdx = match.index + prefix.length;
+        let startIdx = match.index + prefix.length;
+        // Consume leading '--' list bullets immediately adjacent to the term
+        if (prefix === '-' && startIdx >= 2 && source.slice(startIdx - 2, startIdx) === '--') {
+            startIdx -= 2;
+        } else if (prefix === '-' && startIdx >= 1) {
+            startIdx -= 1;
+        }
         const endIdx = match.index + match[0].length;
 
         // Ignore ratings like "9/10" or prices/years right after the number
@@ -237,41 +310,54 @@ export function parseItemMeasurements(rawDescription) {
         matchedSpans.push([startIdx, endIdx]);
     }
 
-    const hasExplicitHeader = /(?:^|[\s.])(?:основные\s+замеры|основні\s+заміри|замеры|заміри|measurements)\s*:/i.test(source);
-    if (found.length < 2 && !(found.length === 1 && hasExplicitHeader)) {
-        const result = { measurements: [], cleanText: source };
-        if (_measurementParseCache.size >= MEASUREMENT_CACHE_LIMIT) {
-            const firstKey = _measurementParseCache.keys().next().value;
-            _measurementParseCache.delete(firstKey);
+    // Check reversed "<number> см стелька" pattern if insole wasn't matched already
+    if (!found.some(m => m.key === 'insole')) {
+        INSOLE_PREFIX_RE.lastIndex = 0;
+        let inMatch;
+        while ((inMatch = INSOLE_PREFIX_RE.exec(source)) !== null) {
+            const prefix = inMatch[1] || '';
+            const val = Number.parseFloat(inMatch[2].replace(',', '.'));
+            if (Number.isFinite(val) && val >= 15 && val <= 36) {
+                found.push({ key: 'insole', qualifier: null, value: inMatch[2].replace(',', '.') });
+                matchedSpans.push([inMatch.index + prefix.length, inMatch.index + inMatch[0].length]);
+            }
         }
-        _measurementParseCache.set(source, result);
+    }
+
+    const hasExplicitHeader = /(?:^|[\s.])(?:основные\s+замеры|основні\s+заміри|замеры|заміри|measurements)\s*(?::|\r?\n|$)/i.test(source);
+    const hasInsoleOnly = found.length === 1 && found[0].key === 'insole';
+    if (found.length < 2 && !hasInsoleOnly && !(found.length === 1 && hasExplicitHeader)) {
+        const result = { measurements: [], cleanText: source };
+        setBoundedCache(source, result);
         return result;
     }
 
-    // Build clean narrative text without the extracted measurement spans
+    // Sort spans ascending and build clean narrative text without extracted measurements
+    matchedSpans.sort((a, b) => a[0] - b[0]);
     let rebuilt = '';
     let cursor = 0;
     for (const [s, e] of matchedSpans) {
+        if (s < cursor) continue;
         rebuilt += source.slice(cursor, s);
         cursor = e;
     }
     rebuilt += source.slice(cursor);
 
     const cleanText = rebuilt
+        .replace(/(?:основные\s+замеры|основні\s+заміри|замеры|заміри|measurements)\s*:?[ \t]*(?=\r?\n|$)/gi, '')
         .replace(/(?:основные\s+замеры|основні\s+заміри|замеры|заміри|measurements)\s*:\s*/gi, '')
         .replace(/\(\s*\)/g, '')
-        .replace(/[ \t]*[,;—–-]+\s*(?=\r?\n|$|\.)/g, '')
-        .replace(/^\s*[,;—–.\-]+\s*/gm, '')
+        .replace(/[ \t]*[•·]+(?=[ \t]*(?:\r?\n|$|[•·]))/g, '')
+        .replace(/[ \t]*[,;—–\-]+(?=[ \t]*(?:\r?\n|$|\.|,))/g, '')
+        .replace(/^\s*[,;—–\-•·]+\s*/gm, '')
+        .replace(/([.!?])[ \t]*,+(?:[ \t]*[.,])*|[ \t]*,+[ \t]*(?=\r?\n|$)/g, '$1')
+        .replace(/\s+[.,]+(?=\r?\n|$)/g, '')
         .replace(/[ \t]{2,}/g, ' ')
-        .replace(/(?:\r?\n){3,}/g, '\n\n')
+        .replace(/(?:[ \t]*\r?\n){3,}/g, '\n\n')
         .trim();
 
     const result = { measurements: found, cleanText };
-    if (_measurementParseCache.size >= MEASUREMENT_CACHE_LIMIT) {
-        const firstKey = _measurementParseCache.keys().next().value;
-        _measurementParseCache.delete(firstKey);
-    }
-    _measurementParseCache.set(source, result);
+    setBoundedCache(source, result);
     return result;
 }
 

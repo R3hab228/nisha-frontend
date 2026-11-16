@@ -162,7 +162,10 @@
       "meas_height": "Высота",
       "meas_qual_from_shoulder": "от плеча",
       "meas_qual_from_seam": "от шва",
-      "meas_qual_from_neck": "от горла"
+      "meas_qual_from_neck": "от горла",
+      "meas_neck_width": "Ширина выреза",
+      "meas_half_measure": "Полуобхват",
+      "meas_rise": "Посадка"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
