@@ -478,7 +478,11 @@
       "sending": "[ ОТПРАВКА... ]",
       "success_sent": "Сообщение успешно доставлено админу!",
       "reply_title": "Ответ от Поддержки:",
-      "reply_btn_read": "[ ПРОЧИТАНО ]"
+      "reply_btn_read": "[ ПРОЧИТАНО ]",
+      "topic_bug": "[ БАГ ]",
+      "topic_order": "[ ЗАКАЗ / ТТН ]",
+      "topic_bargain": "[ ПРЕДЛОЖКА / ТОРГ ]",
+      "topic_idea": "[ ИДЕЯ ]"
     },
     "pwa": {
       "refresh": "ОБНОВИТЬ",

@@ -516,11 +516,31 @@ function handleIncomingSupportReply(r, sbClient) {
 // NISHA CHAT & SUPPORT MODULE (SUPPORT_TICKET.EXE & Realtime)
 // ==========================================
 
+function resetSupportTopicChips() {
+    const chips = document.querySelectorAll('#supportTopicChips .support-topic-chip');
+    chips.forEach(chip => {
+        chip.classList.remove('active');
+        chip.setAttribute('aria-pressed', 'false');
+    });
+}
+
+function selectSupportTopic(topicEl) {
+    if (!topicEl) return;
+    const wasActive = topicEl.classList.contains('active');
+    resetSupportTopicChips();
+    if (!wasActive) {
+        topicEl.classList.add('active');
+        topicEl.setAttribute('aria-pressed', 'true');
+    }
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+}
+
 // 1. Открытие модального окна поддержки
 function openSupportModalWindow() {
     if (getLenisInstance()) invokeAction('stopLenis');
     const input = document.getElementById('supportInput');
     if (input) input.value = ''; // Очищаем поле при открытии
+    resetSupportTopicChips();
     
     if (typeof openModal === 'function') {
         openModal('supportModal');
@@ -564,12 +584,15 @@ async function submitSupportTicket() {
     const activeUser = getRuntimeUser();
     const userContact = activeUser ? (activeUser.email || activeUser.phone || 'Аноним') : 'Гость';
     const activeFingerprint = getRuntimeFingerprint() || ('guest_' + Date.now());
+    const activeChip = document.querySelector('#supportTopicChips .support-topic-chip.active');
+    const selectedTopic = activeChip ? (activeChip.getAttribute('data-topic') || '') : '';
 
     // Отправляем запрос на сервер в фоне с авто-повтором при сбое сети
     window.apiClient.post('/api/support', {
         contact: userContact,
         message: safeText,
-        clientId: activeFingerprint
+        clientId: activeFingerprint,
+        topic: selectedTopic
     }, { timeout: 10000, retries: 2 }).catch(e => console.log('Фоновая отправка в саппорт не удалась: ', e));
 
     // Моментальный отклик интерфейса
@@ -716,6 +739,7 @@ registerActions({
     queueBargainNotification,
     checkPendingBargainNotification,
     openSupportModalWindow,
+    selectSupportTopic,
     submitSupportTicket,
     checkUnreadSupportReplies,
     subscribeUserRealtime,

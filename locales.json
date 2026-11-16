@@ -485,7 +485,11 @@
         "sending": "[ ОТПРАВКА... ]",
         "success_sent": "Сообщение успешно доставлено админу!",
         "reply_title": "Ответ от Поддержки:",
-        "reply_btn_read": "[ ПРОЧИТАНО ]"
+        "reply_btn_read": "[ ПРОЧИТАНО ]",
+        "topic_bug": "[ БАГ ]",
+        "topic_order": "[ ЗАКАЗ / ТТН ]",
+        "topic_bargain": "[ ПРЕДЛОЖКА / ТОРГ ]",
+        "topic_idea": "[ ИДЕЯ ]"
       },
       "pwa": {
         "refresh": "ОБНОВИТЬ",
@@ -1007,7 +1011,11 @@
         "sending": "[ НАДСИЛАННЯ... ]",
         "success_sent": "Повідомлення успішно доставлено адміну!",
         "reply_title": "Відповідь від Підтримки:",
-        "reply_btn_read": "[ ПРОЧИТАНО ]"
+        "reply_btn_read": "[ ПРОЧИТАНО ]",
+        "topic_bug": "[ БАГ ]",
+        "topic_order": "[ ЗАМОВЛЕННЯ / ТТН ]",
+        "topic_bargain": "[ ПРЕДЛОЖКА / ТОРГ ]",
+        "topic_idea": "[ ІДЕЯ ]"
       },
       "pwa": {
         "refresh": "ОНОВИТИ",
@@ -1529,7 +1537,11 @@
         "sending": "[ SENDING... ]",
         "success_sent": "Message successfully delivered to admin!",
         "reply_title": "Support Reply:",
-        "reply_btn_read": "[ READ ]"
+        "reply_btn_read": "[ READ ]",
+        "topic_bug": "[ BUG ]",
+        "topic_order": "[ ORDER / TRACKING ]",
+        "topic_bargain": "[ DROP / BARGAIN ]",
+        "topic_idea": "[ IDEA ]"
       },
       "pwa": {
         "refresh": "REFRESH",

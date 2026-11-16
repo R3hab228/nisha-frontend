@@ -418,6 +418,10 @@ export function handleDelegatedAction(e) {
             invokeCompatAction('select-payment-method', 'selectPaymentMethod', method, text);
             break;
         }
+        case 'select-support-topic': {
+            invokeCompatAction('select-support-topic', 'selectSupportTopic', actionEl);
+            break;
+        }
         case 'switch-order-tab': {
             const tab = actionEl.getAttribute('data-tab') || 'accepted';
             invokeCompatAction('switch-order-tab', 'switchOrderTab', tab);

@@ -485,7 +485,11 @@
       "sending": "[ SENDING... ]",
       "success_sent": "Message successfully delivered to admin!",
       "reply_title": "Support Reply:",
-      "reply_btn_read": "[ READ ]"
+      "reply_btn_read": "[ READ ]",
+      "topic_bug": "[ BUG ]",
+      "topic_order": "[ ORDER / TRACKING ]",
+      "topic_bargain": "[ DROP / BARGAIN ]",
+      "topic_idea": "[ IDEA ]"
     },
     "pwa": {
       "refresh": "REFRESH",
