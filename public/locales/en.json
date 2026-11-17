@@ -380,7 +380,7 @@
       "size_label": "SIZE AND MEASUREMENTS:",
       "size_place": "E.g.: M (Length 70, Chest 55)",
       "desc_label": "DESCRIPTION & DEFECTS (UP TO 250 CHARS):",
-      "desc_place": "Describe condition, flaws...",
+      "desc_place": "Describe condition, flaws & measurements (Length 70, Chest 55)...",
       "cond_label": "CONDITION RATING (1 - 10):",
       "cond_place": "9",
       "price_label": "DESIRED PRICE (UAH):",
