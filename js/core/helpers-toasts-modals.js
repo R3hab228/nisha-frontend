@@ -622,6 +622,87 @@ export function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancel
 }
 if (typeof window !== 'undefined') window.showConfirmTerminalModal = showConfirmTerminalModal;
 
+/**
+ * Displays a broadcast-styled terminal prompt modal with a text/email input.
+ * Resolves to the entered string or `null` if dismissed/cancelled.
+ * @param {{ title?: string, message?: string, placeholder?: string, defaultValue?: string, inputType?: string, confirmBtnText?: string, cancelBtnText?: string }} [options={}]
+ * @returns {Promise<string|null>}
+ */
+export function showPromptTerminalModal({
+    title = 'SYSTEM_INPUT.EXE',
+    message = '',
+    placeholder = '',
+    defaultValue = '',
+    inputType = 'text',
+    confirmBtnText = '[ OK ]',
+    cancelBtnText = '[ ОТМЕНА ]'
+} = {}) {
+    if (typeof document === 'undefined') return Promise.resolve(null);
+    document.querySelectorAll('.prompt-terminal-overlay').forEach(el => el.remove());
+
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'bargain-broadcast-overlay terminal-modal-overlay prompt-terminal-overlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.58); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 100000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;';
+
+        const safeTitle = safeToastEscape(title);
+        const safeMsg = safeToastEscape(message);
+        const safePh = escapeAttr(placeholder);
+        const safeDef = escapeAttr(defaultValue);
+        const safeType = escapeAttr(inputType);
+        const safeConfirm = safeToastEscape(confirmBtnText);
+        const safeCancel = safeToastEscape(cancelBtnText);
+
+        overlay.innerHTML = `
+            <div class="success-terminal-box" style="animation: none; transform: scale(1); opacity: 1;">
+                <div class="success-title typewriter">${safeTitle}</div>
+                <div class="success-divider"></div>
+                ${safeMsg ? `<div class="success-text" style="margin-bottom: 14px; color: #ddd; text-align: left;">${safeMsg}</div>` : ''}
+                <input type="${safeType}" class="form-input prompt-terminal-input" value="${safeDef}" placeholder="${safePh}" autocomplete="email" style="margin-bottom: 16px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="cart-checkout-btn btn-target prompt-confirm" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding: 12px;">${safeConfirm}</button>
+                    <button type="button" class="cart-checkout-btn btn-target prompt-cancel" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding: 12px; background: #222; border-color: #555; color: #ccc;">${safeCancel}</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const inputEl = overlay.querySelector('.prompt-terminal-input');
+        const ctrl = new AbortController();
+        let settled = false;
+
+        const finish = (value) => {
+            if (settled) return;
+            settled = true;
+            ctrl.abort();
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            overlay.remove();
+            resolve(value);
+        };
+
+        overlay.querySelector('.prompt-confirm').addEventListener('click', () => finish(inputEl ? inputEl.value : ''), { signal: ctrl.signal });
+        overlay.querySelector('.prompt-cancel').addEventListener('click', () => finish(null), { signal: ctrl.signal });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) finish(null); }, { signal: ctrl.signal });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') finish(null);
+        }, { signal: ctrl.signal });
+        if (inputEl) {
+            inputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    finish(inputEl.value);
+                }
+            }, { signal: ctrl.signal });
+            setTimeout(() => {
+                if (!settled && typeof inputEl.focus === 'function') inputEl.focus();
+            }, 30);
+        }
+    });
+}
+if (typeof window !== 'undefined') window.showPromptTerminalModal = showPromptTerminalModal;
+
 registerActions({
     showToast,
     showFavoriteToast,
@@ -633,5 +714,6 @@ registerActions({
     enqueueNewItemToast,
     showTerminalModal,
     showConfirmTerminalModal,
+    showPromptTerminalModal,
     isToastClickShielded
 });
