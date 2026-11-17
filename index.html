@@ -684,9 +684,9 @@
             </svg>
         </span>
     </div>
-    <div id="paymentDropdown" class="custom-dropdown" popover="auto" style="display:none; position:absolute; width:100%; z-index:200; border-top:1px solid var(--accent-green); opacity:0; visibility:hidden; transform:translateY(-6px); transition:opacity 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.22s;">
-        <div style="padding:12px; cursor:pointer; border-bottom:1px solid #333;" data-i18n="checkout.payment_full" data-action="select-payment-method" data-payment-method="Полная предоплата">Полная предоплата</div>
-        <div style="padding:12px; cursor:pointer;" data-i18n="checkout.payment_cod" data-action="select-payment-method" data-payment-method="Наложка (предоплата 200грн)">Наложка (предоплата 200грн)</div>
+    <div id="paymentDropdown" class="custom-dropdown payment-dropdown" popover="auto" style="display:none; position:absolute; width:100%; z-index:200; opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s;">
+        <div class="payment-dropdown-option is-selected" data-i18n="checkout.payment_full" data-action="select-payment-method" data-payment-method="Полная предоплата">Полная предоплата</div>
+        <div class="payment-dropdown-option" data-i18n="checkout.payment_cod" data-action="select-payment-method" data-payment-method="Наложка (предоплата 200грн)">Наложка (предоплата 200грн)</div>
     </div>
     <input type="hidden" id="orderPaymentMethod" value="Полная предоплата">
 </div>

@@ -172,6 +172,20 @@ export function normalizePaymentMethodRu(val) {
 }
 
 /**
+ * Синхронизирует класс .is-selected на пунктах #paymentDropdown с выбранным способом оплаты.
+ * @param {string} selectedVal
+ */
+function syncPaymentDropdownSelectedState(selectedVal) {
+    const pd = document.getElementById('paymentDropdown');
+    if (!pd || typeof pd.querySelectorAll !== 'function') return;
+    const normalized = normalizePaymentMethodRu(selectedVal);
+    pd.querySelectorAll('.payment-dropdown-option').forEach(opt => {
+        const optVal = normalizePaymentMethodRu(opt.getAttribute('data-payment-method') || '');
+        opt.classList.toggle('is-selected', optVal === normalized);
+    });
+}
+
+/**
  * Выбирает способ оплаты и сохраняет выбор в черновик заказа.
  * @param {string} dbVal
  * @param {string} [displayLabel]
@@ -185,6 +199,7 @@ export function selectPaymentMethod(dbVal, displayLabel) {
         txt.innerText = displayLabel || dbVal;
     }
     if (input) input.value = ruVal;
+    syncPaymentDropdownSelectedState(ruVal);
     saveCheckoutDraft();
     closePaymentDropdown();
 }
@@ -201,6 +216,8 @@ export function togglePaymentDropdown() {
     if (isOpen) {
         closePaymentDropdown();
     } else {
+        const currentInput = document.getElementById('orderPaymentMethod');
+        syncPaymentDropdownSelectedState(currentInput ? currentInput.value : '');
         const bd = document.getElementById('branchDropdown');
         if (bd) bd.style.display = 'none';
         const cd = document.getElementById('cityDropdown');
@@ -214,11 +231,13 @@ export function togglePaymentDropdown() {
         if (display && pd.matches && pd.matches(':popover-open')) {
             const rect = display.getBoundingClientRect();
             pd.style.position = 'fixed';
-            pd.style.top = `${Math.round(rect.bottom)}px`;
+            pd.style.top = `${Math.round(rect.bottom + 4)}px`;
             pd.style.bottom = 'auto';
             pd.style.left = `${Math.round(rect.left)}px`;
             pd.style.width = `${Math.round(rect.width)}px`;
             pd.style.margin = '0';
+        } else {
+            pd.style.top = 'calc(100% + 4px)';
         }
         pd.style.display = 'block';
         requestAnimationFrame(() => {

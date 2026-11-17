@@ -332,20 +332,19 @@ html.keyboard-open #liveSearchDropdown {
 
 /* Popover state styling for Checkout Payment selector */
 #paymentDropdown {
-    background: #111111 !important;
-    background-color: #111111 !important;
+    background: #050505 !important;
+    background-color: #050505 !important;
     border: 1px solid var(--accent-green) !important;
-    border-top: none !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9) !important;
-    max-height: 220px !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.94), 0 0 14px rgba(0, 255, 0, 0.14) !important;
+    max-height: 235px !important;
     overflow-y: auto !important;
+    overscroll-behavior: contain;
 }
 #paymentDropdown[popover] {
-    background: #111111 !important;
-    background-color: #111111 !important;
+    background: #050505 !important;
+    background-color: #050505 !important;
     border: 1px solid var(--accent-green) !important;
-    border-top: none !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.94), 0 0 14px rgba(0, 255, 0, 0.14) !important;
     bottom: auto !important;
     margin: 0 !important;
 }
@@ -354,11 +353,50 @@ html.keyboard-open #liveSearchDropdown {
     opacity: 1 !important;
     visibility: visible !important;
     transform: translateY(0) !important;
-    background: #111111 !important;
-    background-color: #111111 !important;
+    background: #050505 !important;
+    background-color: #050505 !important;
     border: 1px solid var(--accent-green) !important;
-    border-top: none !important;
     bottom: auto !important;
+}
+.payment-dropdown-option {
+    padding: 11px 12px;
+    min-height: 40px;
+    color: #ddd;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    border-bottom: 1px dashed #222;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.payment-dropdown-option:last-child {
+    border-bottom: none;
+}
+.payment-dropdown-option:hover,
+.payment-dropdown-option:focus-visible {
+    background: rgba(0, 255, 0, 0.08);
+    color: var(--accent-green);
+    outline: none;
+}
+.payment-dropdown-option.is-selected {
+    background: rgba(0, 255, 0, 0.12);
+    color: var(--accent-green);
+    font-weight: 700;
+}
+.payment-dropdown-option.is-selected::after {
+    content: '✓';
+    color: var(--accent-green);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+#paymentDisplay.is-open {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.25);
 }
 
 
