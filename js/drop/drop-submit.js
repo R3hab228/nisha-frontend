@@ -156,6 +156,7 @@ export function resetProposalForm() {
         }
     });
     syncPropSizeOptionsByCategory('');
+    document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => w.classList.remove('is-open'));
 
     const filesInput = document.getElementById('propFiles');
     if (filesInput) filesInput.value = '';
@@ -514,6 +515,25 @@ export function initProposalListeners() {
         });
     }
 
+    const bindPropSelectArrow = (selectEl) => {
+        if (!selectEl || selectEl._propArrowBound) return;
+        selectEl._propArrowBound = true;
+        const wrap = selectEl.closest ? selectEl.closest('.prop-select-wrap') : null;
+        if (!wrap) return;
+        const closeArrow = () => wrap.classList.remove('is-open');
+        selectEl.addEventListener('mousedown', () => wrap.classList.toggle('is-open'));
+        selectEl.addEventListener('touchstart', () => wrap.classList.add('is-open'), { passive: true });
+        selectEl.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                wrap.classList.add('is-open');
+            } else if (e.key === 'Escape' || e.key === 'Tab') {
+                closeArrow();
+            }
+        });
+        selectEl.addEventListener('change', closeArrow);
+        selectEl.addEventListener('blur', closeArrow);
+    };
+
     const catSelect = document.getElementById('propCategory');
     if (catSelect && !catSelect._propCatBound) {
         catSelect._propCatBound = true;
@@ -521,6 +541,8 @@ export function initProposalListeners() {
             syncPropSizeOptionsByCategory(this.value);
         });
     }
+    bindPropSelectArrow(catSelect);
+    bindPropSelectArrow(document.getElementById('propSize'));
 
     const fileInput = document.getElementById('propFiles');
     if (fileInput && !fileInput._propBound) {

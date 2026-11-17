@@ -868,6 +868,7 @@
 <div class="prop-cat-size-row">
 <div class="prop-cat-col">
 <label for="propCategory" data-i18n="propose.category_label">КАТЕГОРИЯ:</label>
+<div class="prop-select-wrap">
 <select id="propCategory" name="prop_item_category" class="form-input prop-select" aria-label="Категория">
 <option value="" data-i18n="propose.category_place">Выберите категорию...</option>
 <option value="Верхняя одежда" data-i18n="propose.cat_outerwear">Верхняя одежда</option>
@@ -876,9 +877,12 @@
 <option value="Обувь" data-i18n="propose.cat_shoes">Обувь</option>
 <option value="Аксессуары" data-i18n="propose.cat_accs">Аксессуары</option>
 </select>
+<span class="prop-select-arrow" aria-hidden="true"></span>
+</div>
 </div>
 <div class="prop-size-col">
 <label for="propSize" data-i18n="propose.size_short_label">РАЗМЕР:</label>
+<div class="prop-select-wrap">
 <select id="propSize" name="prop_item_size" class="form-input prop-select prop-size-select" aria-label="Размер">
 <option value="">—</option>
 <option value="XS">XS</option>
@@ -889,6 +893,8 @@
 <option value="XXL">XXL</option>
 <option value="One Size">One Size</option>
 </select>
+<span class="prop-select-arrow" aria-hidden="true"></span>
+</div>
 </div>
 </div>
 <label id=descLabel data-i18n=propose.desc_label>ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
