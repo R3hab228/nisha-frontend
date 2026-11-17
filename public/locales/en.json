@@ -380,7 +380,7 @@
       "size_label": "SIZE AND MEASUREMENTS:",
       "size_place": "E.g.: M (Length 70, Chest 55)",
       "desc_label": "DESCRIPTION & DEFECTS (UP TO 250 CHARS):",
-      "desc_place": "Describe condition, flaws...",
+      "desc_place": "Describe condition, flaws & measurements (Length 70, Chest 55)...",
       "cond_label": "CONDITION RATING (1 - 10):",
       "cond_place": "9",
       "price_label": "DESIRED PRICE (UAH):",
@@ -412,7 +412,15 @@
       "bargain_ph": "Min. bargain bid (UAH)...",
       "err_bargain_min": "Minimum bargain price must be at least 100 UAH!",
       "err_bargain_less_price": "Minimum bargain price must be less than requested price!",
-      "err_confirm_bargain": "Please confirm bargain with the checkmark [ ✓ ]!"
+      "err_confirm_bargain": "Please confirm bargain with the checkmark [ ✓ ]!",
+      "category_label": "CATEGORY:",
+      "category_place": "Select category...",
+      "size_short_label": "SIZE:",
+      "cat_outerwear": "Outerwear",
+      "cat_sweaters": "Sweaters & Hoodies",
+      "cat_pants": "Pants & Jeans",
+      "cat_shoes": "Shoes",
+      "cat_accs": "Accessories"
     },
     "email_prompt": {
       "desc": "Send receipts and delivery statuses (Waybill) to your E-mail?",

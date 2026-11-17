@@ -109,6 +109,36 @@ export function enqueueProposalUpload(formData) {
     return proposalUploadChain;
 }
 
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
+const SHOE_SIZES = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'];
+const ACCESSORY_SIZES = ['One Size', 'XS', 'S', 'M', 'L', 'XL'];
+
+export function syncPropSizeOptionsByCategory(category) {
+    const sizeSelect = document.getElementById('propSize');
+    if (!sizeSelect || sizeSelect.tagName !== 'SELECT') return;
+
+    let options = CLOTHING_SIZES;
+    if (category === 'Обувь') options = SHOE_SIZES;
+    else if (category === 'Аксессуары') options = ACCESSORY_SIZES;
+
+    const prevValue = sizeSelect.value;
+    sizeSelect.innerHTML = '';
+
+    const placeholderOpt = document.createElement('option');
+    placeholderOpt.value = '';
+    placeholderOpt.textContent = '—';
+    sizeSelect.appendChild(placeholderOpt);
+
+    options.forEach(sz => {
+        const opt = document.createElement('option');
+        opt.value = sz;
+        opt.textContent = sz;
+        sizeSelect.appendChild(opt);
+    });
+
+    sizeSelect.value = options.includes(prevValue) ? prevValue : '';
+}
+
 export function resetProposalForm() {
     window._propBargainEnabled = false;
     window._propBargainMode = false;
@@ -117,7 +147,7 @@ export function resetProposalForm() {
     } else {
         hidePropBargainInput(true);
     }
-    const fields = ['propBrand', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc', 'propMinBargainPrice'];
+    const fields = ['propBrand', 'propCategory', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc', 'propMinBargainPrice'];
     fields.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -125,6 +155,8 @@ export function resetProposalForm() {
             if (id === 'propName') delete el.dataset.userTyped;
         }
     });
+    syncPropSizeOptionsByCategory('');
+    document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => w.classList.remove('is-open'));
 
     const filesInput = document.getElementById('propFiles');
     if (filesInput) filesInput.value = '';
@@ -232,6 +264,8 @@ export async function submitProposal() {
 
     const rawName = (document.getElementById('propName')?.value || '').trim();
     const rawBrand = (document.getElementById('propBrand')?.value || '').trim();
+    const categoryEl = document.getElementById('propCategory');
+    const rawCategory = (categoryEl?.value || '').trim();
     const rawSize = (document.getElementById('propSize')?.value || '').trim();
     const rawDesc = (document.getElementById('propDesc')?.value || '').trim();
     const cond = Number.parseInt(document.getElementById('propCond')?.value, 10);
@@ -255,6 +289,7 @@ export async function submitProposal() {
     const sanitize = sanitizeFn ? sanitizeFn : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     const nameItem = sanitize(rawName);
     const brand = sanitize(rawBrand);
+    const category = sanitize(rawCategory);
     const size = sanitize(rawSize);
     const desc = sanitize(rawDesc);
     const contact = sanitize(rawContact);
@@ -293,7 +328,7 @@ export async function submitProposal() {
         return;
     }
 
-    if (!files.length || !nameItem || !brand || !size || !desc || Number.isNaN(cond) || Number.isNaN(price) || price <= 0 || !contact) {
+    if (!files.length || !nameItem || !brand || (categoryEl && !category) || !size || !desc || Number.isNaN(cond) || Number.isNaN(price) || price <= 0 || !contact) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const fillAllMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_fill_all')) || 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!';
         showToast(fillAllMsg, 'error');
@@ -388,7 +423,7 @@ export async function submitProposal() {
         const formData = new FormData();
         formData.append('name', nameItem);
         formData.append('brand', brand);
-        formData.append('measurements', size);
+        formData.append('measurements', category ? `${category} | ${size}` : size);
         formData.append('condition', cond);
         formData.append('price', price);
         let finalDesc = desc;
@@ -479,6 +514,35 @@ export function initProposalListeners() {
             }
         });
     }
+
+    const bindPropSelectArrow = (selectEl) => {
+        if (!selectEl || selectEl._propArrowBound) return;
+        selectEl._propArrowBound = true;
+        const wrap = selectEl.closest ? selectEl.closest('.prop-select-wrap') : null;
+        if (!wrap) return;
+        const closeArrow = () => wrap.classList.remove('is-open');
+        selectEl.addEventListener('mousedown', () => wrap.classList.toggle('is-open'));
+        selectEl.addEventListener('touchstart', () => wrap.classList.add('is-open'), { passive: true });
+        selectEl.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                wrap.classList.add('is-open');
+            } else if (e.key === 'Escape' || e.key === 'Tab') {
+                closeArrow();
+            }
+        });
+        selectEl.addEventListener('change', closeArrow);
+        selectEl.addEventListener('blur', closeArrow);
+    };
+
+    const catSelect = document.getElementById('propCategory');
+    if (catSelect && !catSelect._propCatBound) {
+        catSelect._propCatBound = true;
+        catSelect.addEventListener('change', function () {
+            syncPropSizeOptionsByCategory(this.value);
+        });
+    }
+    bindPropSelectArrow(catSelect);
+    bindPropSelectArrow(document.getElementById('propSize'));
 
     const fileInput = document.getElementById('propFiles');
     if (fileInput && !fileInput._propBound) {
