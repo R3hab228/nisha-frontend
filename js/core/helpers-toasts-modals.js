@@ -439,6 +439,59 @@ export function enqueueNewItemToast(itemOrItems) {
 }
 if (typeof window !== 'undefined') window.enqueueNewItemToast = enqueueNewItemToast;
 
+/**
+ * Resolves CLDR plural category ('one' | 'few' | 'many') for ru/uk/en counts.
+ * @param {number} count
+ * @param {string} [lang='ru']
+ * @returns {'one'|'few'|'many'}
+ */
+export function getPluralCategory(count, lang = 'ru') {
+    const n = Math.abs(Math.trunc(Number(count) || 0));
+    const normLang = String(lang || 'ru').toLowerCase().slice(0, 2);
+
+    if (normLang === 'en') {
+        return n === 1 ? 'one' : 'many';
+    }
+
+    const intlLocale = normLang === 'ua' ? 'uk' : normLang;
+    if (typeof Intl !== 'undefined' && typeof Intl.PluralRules === 'function') {
+        try {
+            const cat = new Intl.PluralRules(intlLocale).select(n);
+            if (cat === 'one' || cat === 'few' || cat === 'many') return cat;
+        } catch {}
+    }
+
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'one';
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'few';
+    return 'many';
+}
+
+/**
+ * Formats localized new-items count toast text with accurate pluralization.
+ * @param {number} count
+ * @returns {string}
+ */
+export function formatNewItemsCountText(count) {
+    const n = Math.max(0, Math.trunc(Number(count) || 0));
+    const hasI18n = typeof i18next !== 'undefined' && typeof i18next.t === 'function';
+    const lang = (hasI18n && (i18next.resolvedLanguage || i18next.language)) || 'ru';
+    const form = getPluralCategory(n, lang);
+
+    const ruFallbacks = {
+        one: `+${n} новая вещь в каталоге`,
+        few: `+${n} новые вещи в каталоге`,
+        many: `+${n} новых вещей в каталоге`
+    };
+
+    if (!hasI18n) return ruFallbacks[form];
+    return i18next.t(`messages.new_items_count_${form}`, {
+        count: n,
+        defaultValue: ruFallbacks[form]
+    });
+}
+
 function _displayUnifiedNewItemToast(items) {
     if (typeof document === 'undefined') return;
     const container = document.getElementById('toastContainer');
@@ -458,9 +511,7 @@ function _displayUnifiedNewItemToast(items) {
 
     let titleText = '';
     if (isMulti) {
-        titleText = typeof i18next !== 'undefined'
-            ? i18next.t('messages.new_items_count', { count: items.length, defaultValue: `+${items.length} новых вещей в каталоге` })
-            : `+${items.length} новых вещей в каталоге`;
+        titleText = formatNewItemsCountText(items.length);
     } else {
         const brandPart = firstItem.brand ? `${safeToastEscape(firstItem.brand)} — ` : '';
         const fallbackName = typeof i18next !== 'undefined'

@@ -669,4 +669,26 @@ describe('Modular Core Helpers Deep Suite (js/core/helpers*.js)', () => {
         expect(goodImg.dataset.fb).toBe('1');
         expect(goodImg.src).toContain('fallback.jpg');
     });
+
+    it('9. helpers-toasts-modals.js pluralizes new items toast accurately for ru, ua, and en', () => {
+        expect(toastsModals.getPluralCategory(1, 'ru')).toBe('one');
+        expect(toastsModals.getPluralCategory(2, 'ru')).toBe('few');
+        expect(toastsModals.getPluralCategory(4, 'ru')).toBe('few');
+        expect(toastsModals.getPluralCategory(5, 'ru')).toBe('many');
+        expect(toastsModals.getPluralCategory(11, 'ru')).toBe('many');
+        expect(toastsModals.getPluralCategory(12, 'ru')).toBe('many');
+        expect(toastsModals.getPluralCategory(21, 'ru')).toBe('one');
+        expect(toastsModals.getPluralCategory(22, 'ru')).toBe('few');
+
+        expect(toastsModals.getPluralCategory(2, 'ua')).toBe('few');
+        expect(toastsModals.getPluralCategory(5, 'ua')).toBe('many');
+        expect(toastsModals.getPluralCategory(1, 'en')).toBe('one');
+        expect(toastsModals.getPluralCategory(2, 'en')).toBe('many');
+
+        expect(toastsModals.formatNewItemsCountText(1)).toBe('+1 новая вещь в каталоге');
+        expect(toastsModals.formatNewItemsCountText(2)).toBe('+2 новые вещи в каталоге');
+        expect(toastsModals.formatNewItemsCountText(5)).toBe('+5 новых вещей в каталоге');
+        expect(toastsModals.formatNewItemsCountText(12)).toBe('+12 новых вещей в каталоге');
+        expect(toastsModals.formatNewItemsCountText(22)).toBe('+22 новые вещи в каталоге');
+    });
 });

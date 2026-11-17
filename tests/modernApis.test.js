@@ -2037,7 +2037,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const tag = toasts[0].querySelector('.toast-item-tag');
             const title = toasts[0].querySelector('.toast-item-title');
             expect(tag.textContent).toBe('Новые Вещи!!!');
-            expect(title.textContent).toBe('+3 новых вещей в каталоге');
+            expect(title.textContent).toBe('+3 новые вещи в каталоге');
         });
 
         it('verifies smooth new arrival animation in style.css and live insertion logic in catalog.js', () => {
