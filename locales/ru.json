@@ -224,7 +224,16 @@
       "cart_synced": "Корзины синхронизированы",
       "auth_required": "Сначала авторизуйтесь!",
       "item_sold_removed": "Товар \"{{name}}\" уже купили, он удален из корзины.",
-      "secret_discount_applied": "Секретная скидка -10% активирована"
+      "secret_discount_applied": "Секретная скидка -10% активирована",
+      "recovery_new_pass_desc": "Введите новый пароль для вашего аккаунта (минимум 6 символов):",
+      "new_password_placeholder": "Новый пароль",
+      "confirm_password_placeholder": "Повторите новый пароль",
+      "password_too_short": "Пароль должен содержать минимум 6 символов",
+      "passwords_mismatch": "Пароли не совпадают",
+      "password_updated": "Пароль успешно обновлен!",
+      "password_update_error": "Ошибка обновления пароля: ",
+      "btn_save_password": "СОХРАНИТЬ",
+      "saving": "СОХРАНЕНИЕ..."
     },
     "checkout": {
       "desc": "Заполните данные для отправки. Бронь 2 часа.",

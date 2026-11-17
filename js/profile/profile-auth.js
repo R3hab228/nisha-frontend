@@ -287,7 +287,192 @@ export function togglePasswordVisibility(inputId, iconElement) {
 bindWindowFn('togglePasswordVisibility', togglePasswordVisibility);
 
 /**
- * Subscribes to Supabase auth state lifecycle events (TOKEN_REFRESHED, SIGNED_OUT, SIGNED_IN).
+ * Escapes HTML special characters for safe template interpolation.
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeRecoveryHtml(str) {
+    const escapeFn = getGlobalFn('escapeHtml');
+    if (escapeFn) return escapeFn(String(str ?? ''));
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
+ * Opens a terminal-styled modal to set a new password after Supabase PASSWORD_RECOVERY event.
+ * @returns {Promise<boolean>} Resolves true if password was updated, false if cancelled/unavailable.
+ */
+export function showPasswordRecoveryModal() {
+    if (
+        typeof document === 'undefined' ||
+        !document.body ||
+        typeof document.createElement !== 'function' ||
+        typeof document.body.appendChild !== 'function'
+    ) {
+        return Promise.resolve(false);
+    }
+    const sb = getSupabase();
+    if (!sb || !sb.auth || typeof sb.auth.updateUser !== 'function') return Promise.resolve(false);
+
+    if (document.querySelector('.password-recovery-overlay')) {
+        return Promise.resolve(false);
+    }
+
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'bargain-broadcast-overlay terminal-modal-overlay password-recovery-overlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.58); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 100000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;';
+
+        const descText = escapeRecoveryHtml(tProfile('messages.recovery_new_pass_desc', 'Введите новый пароль для вашего аккаунта (минимум 6 символов):'));
+        const newPassPh = escapeRecoveryHtml(tProfile('messages.new_password_placeholder', 'Новый пароль'));
+        const confirmPassPh = escapeRecoveryHtml(tProfile('messages.confirm_password_placeholder', 'Повторите новый пароль'));
+        const saveBtnText = escapeRecoveryHtml(tProfile('messages.btn_save_password', 'СОХРАНИТЬ'));
+        const cancelBtnText = escapeRecoveryHtml(tProfile('propose.btn_cancel', '[ ОТМЕНА ]'));
+
+        const eyeSvg = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle><line class="eye-slash" x1="2" y1="2" x2="22" y2="22"></line></svg>';
+
+        overlay.innerHTML = `
+            <form class="success-terminal-box password-recovery-form" style="animation: none; transform: scale(1); opacity: 1;" novalidate>
+                <div class="success-title typewriter">NEW_PASSWORD.EXE</div>
+                <div class="success-divider"></div>
+                <div class="success-text" style="margin-bottom: 14px; color: #ddd; text-align: left;">${descText}</div>
+                <div class="password-wrapper" style="margin-bottom: 12px;">
+                    <input type="password" id="recoveryNewPassword" class="form-input" placeholder="${newPassPh}" autocomplete="new-password" style="margin-bottom: 0; padding-right: 42px;">
+                    <div class="eye-icon" data-action="toggle-password-visibility" data-input-id="recoveryNewPassword" style="right: 12px;">${eyeSvg}</div>
+                </div>
+                <div class="password-wrapper" style="margin-bottom: 10px;">
+                    <input type="password" id="recoveryConfirmPassword" class="form-input" placeholder="${confirmPassPh}" autocomplete="new-password" style="margin-bottom: 0; padding-right: 42px;">
+                    <div class="eye-icon" data-action="toggle-password-visibility" data-input-id="recoveryConfirmPassword" style="right: 12px;">${eyeSvg}</div>
+                </div>
+                <div id="recoveryPassError" style="display: none; color: #ff4d4d; font-size: 12px; margin-bottom: 12px; text-align: left;"></div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px;">
+                    <button type="submit" class="cart-checkout-btn btn-target recovery-submit" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding: 12px;">[ ${saveBtnText} ]</button>
+                    <button type="button" class="cart-checkout-btn btn-target recovery-cancel" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding: 12px; background: #222; border-color: #555; color: #ccc;">${cancelBtnText}</button>
+                </div>
+            </form>
+        `;
+        document.body.appendChild(overlay);
+
+        const formEl = overlay.querySelector('.password-recovery-form');
+        const newPassInput = overlay.querySelector('#recoveryNewPassword');
+        const confirmPassInput = overlay.querySelector('#recoveryConfirmPassword');
+        const errorEl = overlay.querySelector('#recoveryPassError');
+        const submitBtn = overlay.querySelector('.recovery-submit');
+        const cancelBtn = overlay.querySelector('.recovery-cancel');
+        const ctrl = new AbortController();
+        let settled = false;
+        let submitting = false;
+
+        const showInlineError = (msg) => {
+            if (!errorEl) return;
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        };
+
+        const finish = (updated) => {
+            if (settled) return;
+            settled = true;
+            ctrl.abort();
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            overlay.remove();
+            resolve(updated);
+        };
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => finish(false), { signal: ctrl.signal });
+        }
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay && !submitting) finish(false);
+        }, { signal: ctrl.signal });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !submitting) finish(false);
+        }, { signal: ctrl.signal });
+
+        if (formEl) {
+            formEl.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (submitting) return;
+
+                const newPassword = newPassInput ? newPassInput.value : '';
+                const confirmPassword = confirmPassInput ? confirmPassInput.value : '';
+
+                if (errorEl) errorEl.style.display = 'none';
+
+                if (newPassword.length < 6) {
+                    const msg = tProfile('messages.password_too_short', 'Пароль должен содержать минимум 6 символов');
+                    showInlineError(msg);
+                    notifyToast(msg, 'error');
+                    if (newPassInput) newPassInput.focus();
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    const msg = tProfile('messages.passwords_mismatch', 'Пароли не совпадают');
+                    showInlineError(msg);
+                    notifyToast(msg, 'error');
+                    if (confirmPassInput) confirmPassInput.focus();
+                    return;
+                }
+
+                submitting = true;
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = `[ ${tProfile('messages.saving', 'СОХРАНЕНИЕ...')} ]`;
+                }
+
+                try {
+                    const { error } = await sb.auth.updateUser({ password: newPassword });
+                    if (error) {
+                        const errMsg = tProfile('messages.password_update_error', 'Ошибка обновления пароля: ') + error.message;
+                        showInlineError(errMsg);
+                        notifyToast(errMsg, 'error');
+                        submitting = false;
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = `[ ${tProfile('messages.btn_save_password', 'СОХРАНИТЬ')} ]`;
+                        }
+                        return;
+                    }
+
+                    if (typeof window !== 'undefined' && window.history?.replaceState && window.location?.hash) {
+                        const hash = window.location.hash;
+                        if (hash.includes('type=recovery') || hash.includes('access_token=')) {
+                            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                        }
+                    }
+
+                    notifyToast(tProfile('messages.password_updated', 'Пароль успешно обновлен!'), 'success');
+                    finish(true);
+                } catch {
+                    const errMsg = tProfile('messages.password_update_error', 'Ошибка обновления пароля: ') + 'Network error';
+                    showInlineError(errMsg);
+                    notifyToast(errMsg, 'error');
+                    submitting = false;
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = `[ ${tProfile('messages.btn_save_password', 'СОХРАНИТЬ')} ]`;
+                    }
+                }
+            }, { signal: ctrl.signal });
+        }
+
+        if (newPassInput) {
+            setTimeout(() => {
+                if (!settled && typeof newPassInput.focus === 'function') newPassInput.focus();
+            }, 30);
+        }
+    });
+}
+bindWindowFn('showPasswordRecoveryModal', showPasswordRecoveryModal);
+
+/**
+ * Subscribes to Supabase auth state lifecycle events (TOKEN_REFRESHED, SIGNED_OUT, SIGNED_IN, PASSWORD_RECOVERY).
  */
 export function initAuthListener() {
     const sb = getSupabase();
@@ -308,6 +493,11 @@ export function initAuthListener() {
             resetSignedOutProfileUI();
         } else if (event === 'SIGNED_IN') {
             if (!profileState.currentUser) await checkSession();
+        } else if (event === 'PASSWORD_RECOVERY') {
+            if (session?.user && !profileState.currentUser) {
+                await checkSession();
+            }
+            showPasswordRecoveryModal();
         }
     });
 }

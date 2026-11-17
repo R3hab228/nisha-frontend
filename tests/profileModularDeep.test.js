@@ -335,6 +335,62 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         expect(profileState.currentUser.id).toBe('u-refreshed');
         await authCb('SIGNED_OUT', null);
         expect(profileState.currentUser).toBeNull();
+
+        // Auth listener handles PASSWORD_RECOVERY cleanly even without full DOM
+        await expect(authCb('PASSWORD_RECOVERY', { user: { id: 'u-recovery' } })).resolves.not.toThrow();
+
+        // Full password recovery modal flow with DOM elements
+        const { showPasswordRecoveryModal } = await import('../js/profile/profile-auth.js');
+        const recoveryNodes = {
+            '.password-recovery-form': createFakeEl('recoveryForm'),
+            '#recoveryNewPassword': createFakeEl('recoveryNewPassword'),
+            '#recoveryConfirmPassword': createFakeEl('recoveryConfirmPassword'),
+            '#recoveryPassError': createFakeEl('recoveryPassError'),
+            '.recovery-submit': createFakeEl('recoverySubmit'),
+            '.recovery-cancel': createFakeEl('recoveryCancel')
+        };
+        const createdOverlay = createFakeEl('recoveryOverlay');
+        createdOverlay.querySelector = (sel) => recoveryNodes[sel] || null;
+        createdOverlay.remove = vi.fn();
+
+        const prevCreateEl = globalThis.document.createElement;
+        const prevAppend = globalThis.document.body.appendChild;
+        const prevQuerySel = globalThis.document.querySelector;
+        globalThis.document.createElement = vi.fn(() => createdOverlay);
+        globalThis.document.body.appendChild = vi.fn();
+        globalThis.document.querySelector = vi.fn(() => null);
+
+        mockSupabase.auth.updateUser.mockClear();
+        mockToast.mockClear();
+
+        const modalPromise = showPasswordRecoveryModal();
+
+        // Too short password
+        recoveryNodes['#recoveryNewPassword'].value = '123';
+        recoveryNodes['#recoveryConfirmPassword'].value = '123';
+        recoveryNodes['.password-recovery-form'].dispatchEvent({ type: 'submit', preventDefault: vi.fn() });
+        expect(mockSupabase.auth.updateUser).not.toHaveBeenCalled();
+        expect(recoveryNodes['#recoveryPassError'].style.display).toBe('block');
+
+        // Mismatched passwords
+        recoveryNodes['#recoveryNewPassword'].value = 'newpass123';
+        recoveryNodes['#recoveryConfirmPassword'].value = 'otherpass123';
+        recoveryNodes['.password-recovery-form'].dispatchEvent({ type: 'submit', preventDefault: vi.fn() });
+        expect(mockSupabase.auth.updateUser).not.toHaveBeenCalled();
+        expect(recoveryNodes['#recoveryPassError'].style.display).toBe('block');
+
+        // Valid matching passwords
+        recoveryNodes['#recoveryNewPassword'].value = 'newpass123';
+        recoveryNodes['#recoveryConfirmPassword'].value = 'newpass123';
+        recoveryNodes['.password-recovery-form'].dispatchEvent({ type: 'submit', preventDefault: vi.fn() });
+        await expect(modalPromise).resolves.toBe(true);
+        expect(mockSupabase.auth.updateUser).toHaveBeenCalledWith({ password: 'newpass123' });
+        expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('Пароль успешно обновлен'), 'success');
+        expect(createdOverlay.remove).toHaveBeenCalled();
+
+        globalThis.document.createElement = prevCreateEl;
+        globalThis.document.body.appendChild = prevAppend;
+        globalThis.document.querySelector = prevQuerySel;
     });
 
     it('4. profile-contacts.js validates phone/TG, blocks blacklisted numbers, enforces 10s cooldown & resolves dual OTP', async () => {

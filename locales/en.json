@@ -224,7 +224,16 @@
       "cart_synced": "Carts synchronized",
       "auth_required": "Please sign in first!",
       "item_sold_removed": "Item \"{{name}}\" has been sold and removed from cart.",
-      "secret_discount_applied": "Secret 10% discount activated"
+      "secret_discount_applied": "Secret 10% discount activated",
+      "recovery_new_pass_desc": "Enter a new password for your account (minimum 6 characters):",
+      "new_password_placeholder": "New password",
+      "confirm_password_placeholder": "Confirm new password",
+      "password_too_short": "Password must be at least 6 characters",
+      "passwords_mismatch": "Passwords do not match",
+      "password_updated": "Password updated successfully!",
+      "password_update_error": "Password update error: ",
+      "btn_save_password": "SAVE",
+      "saving": "SAVING..."
     },
     "checkout": {
       "desc": "Fill in shipping details. Reserved for 2 hours.",
