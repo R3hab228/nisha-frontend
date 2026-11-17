@@ -142,6 +142,7 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
     .item-card { contain: layout style paint; transition: none; will-change: auto; touch-action: manipulation; }
     .item-card.unseen-pulse { animation: none; border-color: rgba(220, 20, 60, 0.72); }
     .item-card.skeleton-card { contain: layout style paint; }
+    .item-card.skeleton-card:nth-child(n+7) { display: none; }
     .skeleton-card::after { will-change: transform; }
     .item-card .fav-star,
     .item-card .system-status-bar,
