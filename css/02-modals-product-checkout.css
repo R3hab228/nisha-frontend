@@ -529,7 +529,7 @@ input[type="number"],
     justify-content: center;
     width: 14px;
     height: 14px;
-    color: #666;
+    color: var(--accent-green);
     transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.2s ease;
     transform-origin: 50% 50%;
     will-change: transform;
@@ -539,8 +539,8 @@ input[type="number"],
 }
 .payment-arrow svg {
     display: block;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
 }
 #paymentDisplay:hover .payment-arrow {
     color: var(--accent-green);

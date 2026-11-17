@@ -2539,7 +2539,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 1. paymentDisplay must have paymentArrow container with SVG polygon arrow
             expect(indexHtml).toContain('id="paymentArrow"');
             expect(indexHtml).toContain('class="payment-arrow"');
-            expect(indexHtml).toContain('<polygon points="2,4 10,4 6,9"');
+            expect(indexHtml).toContain('<polyline points="6 9 12 15 18 9"');
 
             // 2. togglePaymentDropdown and closePaymentDropdown must manage is-open and rotate(180deg)
             expect(cartJs).toContain("display.classList.add('is-open')");
