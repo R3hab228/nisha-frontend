@@ -124,4 +124,12 @@
             }
         });
     } catch (e) {}
+    try {
+        var locHash = (window.location && window.location.hash) || '';
+        var locSearch = (window.location && window.location.search) || '';
+        if (/(?:^|[#&?])type=recovery(?:&|$)/i.test(locHash) || /(?:^|[&?])type=recovery(?:&|$)/i.test(locSearch)) {
+            window.__NISHA_PASSWORD_RECOVERY_PENDING__ = true;
+            try { sessionStorage.setItem('nisha_pw_recovery_pending', '1'); } catch (e) {}
+        }
+    } catch (e) {}
 })();

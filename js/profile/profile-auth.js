@@ -472,11 +472,52 @@ export function showPasswordRecoveryModal() {
 bindWindowFn('showPasswordRecoveryModal', showPasswordRecoveryModal);
 
 /**
- * Subscribes to Supabase auth state lifecycle events (TOKEN_REFRESHED, SIGNED_OUT, SIGNED_IN, PASSWORD_RECOVERY).
+ * Checks and consumes any pending password recovery flag captured before Supabase SDK consumed URL params.
+ * @returns {boolean}
+ */
+function hasPendingPasswordRecoveryFlag() {
+    if (typeof window === 'undefined') return false;
+    if (window.__NISHA_PASSWORD_RECOVERY_PENDING__) return true;
+    try {
+        if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('nisha_pw_recovery_pending') === '1') {
+            return true;
+        }
+    } catch {}
+    const locHash = (window.location && window.location.hash) || '';
+    const locSearch = (window.location && window.location.search) || '';
+    return /(?:^|[#&?])type=recovery(?:&|$)/i.test(locHash) || /(?:^|[&?])type=recovery(?:&|$)/i.test(locSearch);
+}
+
+/**
+ * Clears pending password recovery flags once handled or cancelled.
+ */
+function clearPendingPasswordRecoveryFlag() {
+    if (typeof window !== 'undefined') {
+        window.__NISHA_PASSWORD_RECOVERY_PENDING__ = false;
+    }
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem('nisha_pw_recovery_pending');
+        }
+    } catch {}
+}
+
+/**
+ * Subscribes to Supabase auth state lifecycle events (TOKEN_REFRESHED, SIGNED_OUT, SIGNED_IN, INITIAL_SESSION, PASSWORD_RECOVERY).
  */
 export function initAuthListener() {
     const sb = getSupabase();
     if (!sb || !sb.auth || typeof sb.auth.onAuthStateChange !== 'function') return;
+    if (sb.auth._nishaAuthListenerBound) return;
+    sb.auth._nishaAuthListenerBound = true;
+
+    const triggerPasswordRecoveryFlow = async (session) => {
+        clearPendingPasswordRecoveryFlag();
+        if (session?.user && !profileState.currentUser) {
+            await checkSession();
+        }
+        showPasswordRecoveryModal();
+    };
 
     sb.auth.onAuthStateChange(async (event, session) => {
         if (event === 'TOKEN_REFRESHED') {
@@ -484,6 +525,7 @@ export function initAuthListener() {
             profileState.currentUser = session.user;
         } else if (event === 'SIGNED_OUT') {
             if (window.__NISHA_DEBUG__) console.log('[AUTH] Выполнен выход из аккаунта.');
+            clearPendingPasswordRecoveryFlag();
             profileState.globalOrdersData = [];
             const store = getStore();
             if (store) {
@@ -491,14 +533,30 @@ export function initAuthListener() {
                 store.remove('nisha_cached_favorites');
             }
             resetSignedOutProfileUI();
-        } else if (event === 'SIGNED_IN') {
-            if (!profileState.currentUser) await checkSession();
         } else if (event === 'PASSWORD_RECOVERY') {
-            if (session?.user && !profileState.currentUser) {
+            await triggerPasswordRecoveryFlow(session);
+        } else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+            if (session?.user && hasPendingPasswordRecoveryFlag()) {
+                await triggerPasswordRecoveryFlow(session);
+                return;
+            }
+            if (event === 'SIGNED_IN' && !profileState.currentUser) {
                 await checkSession();
             }
-            showPasswordRecoveryModal();
         }
     });
+
+    // Fallback: if PASSWORD_RECOVERY already fired before listener bound, check active session + pending flag
+    if (hasPendingPasswordRecoveryFlag() && typeof sb.auth.getSession === 'function') {
+        Promise.resolve(sb.auth.getSession())
+            .then((res) => {
+                const session = res?.data?.session;
+                if (session?.user && hasPendingPasswordRecoveryFlag()) {
+                    return triggerPasswordRecoveryFlow(session);
+                }
+                return undefined;
+            })
+            .catch(() => {});
+    }
 }
 bindWindowFn('initAuthListener', initAuthListener);

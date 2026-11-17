@@ -339,6 +339,11 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         // Auth listener handles PASSWORD_RECOVERY cleanly even without full DOM
         await expect(authCb('PASSWORD_RECOVERY', { user: { id: 'u-recovery' } })).resolves.not.toThrow();
 
+        // Auth listener also handles INITIAL_SESSION when early-init captured type=recovery before SDK initialized
+        globalThis.window.__NISHA_PASSWORD_RECOVERY_PENDING__ = true;
+        await expect(authCb('INITIAL_SESSION', { user: { id: 'u-recovery-init' } })).resolves.not.toThrow();
+        expect(globalThis.window.__NISHA_PASSWORD_RECOVERY_PENDING__).toBe(false);
+
         // Full password recovery modal flow with DOM elements
         const { showPasswordRecoveryModal } = await import('../js/profile/profile-auth.js');
         const recoveryNodes = {
