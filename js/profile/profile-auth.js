@@ -146,10 +146,23 @@ export async function handleForgotPassword(isModal = false) {
 
     if (!email) {
         const promptText = tProfile('messages.forgot_prompt', 'Введите ваш Email для восстановления доступа к аккаунту:');
-        const promptFn = getGlobalFn('prompt');
-        const userPrompt = promptFn ? promptFn(promptText) : null;
+        const terminalPromptFn = getGlobalFn('showPromptTerminalModal');
+        let userPrompt = null;
+        if (terminalPromptFn) {
+            userPrompt = await terminalPromptFn({
+                title: 'PASSWORD_RECOVERY.EXE',
+                message: promptText,
+                placeholder: 'you@example.com',
+                inputType: 'email',
+                confirmBtnText: `[ ${tProfile('product.ask_send', 'ОТПРАВИТЬ')} ]`,
+                cancelBtnText: tProfile('propose.btn_cancel', '[ ОТМЕНА ]')
+            });
+        } else {
+            const promptFn = getGlobalFn('prompt');
+            userPrompt = promptFn ? promptFn(promptText) : null;
+        }
         if (userPrompt === null) return;
-        email = userPrompt.trim();
+        email = String(userPrompt).trim();
     }
 
     if (!email) {
