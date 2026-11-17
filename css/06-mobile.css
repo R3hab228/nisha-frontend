@@ -40,7 +40,7 @@
 button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important; pointer-events: none; }
     
     .toast-container { top: calc(15px + env(safe-area-inset-top, 0px)); right: calc(15px + env(safe-area-inset-right, 0px)); left: auto; align-items: flex-end; }
-    .toast { max-width: 200px; width: auto; height: 40px; padding: 5px 10px; gap: 6px; font-size: 10.5px; }
+    .toast { max-width: min(270px, calc(100vw - 30px)); width: auto; min-height: 40px; height: auto; padding: 7px 10px; gap: 6px; font-size: 10.5px; }
     
     .header-top { 
         flex-direction: column; 
