@@ -137,6 +137,160 @@ export function syncPropSizeOptionsByCategory(category) {
     });
 
     sizeSelect.value = options.includes(prevValue) ? prevValue : '';
+    refreshCustomPropSelect(sizeSelect);
+}
+
+/**
+ * Refreshes custom terminal select trigger label and dropdown options from the native <select>.
+ * @param {HTMLSelectElement|null} selectEl
+ */
+export function refreshCustomPropSelect(selectEl) {
+    if (!selectEl || typeof selectEl.closest !== 'function') return;
+    const wrap = selectEl.closest('.prop-select-wrap');
+    if (!wrap || typeof wrap.querySelector !== 'function') return;
+
+    const trigger = wrap.querySelector('.prop-custom-trigger');
+    const triggerText = wrap.querySelector('.prop-custom-trigger-text');
+    const dropdown = wrap.querySelector('.prop-custom-dropdown');
+    if (!trigger || !triggerText || !dropdown) return;
+
+    const options = Array.from(selectEl.options || []);
+    const selectedOpt = options.find(opt => opt.value === selectEl.value) || options[0];
+    const currentLabel = selectedOpt ? selectedOpt.textContent : '';
+    triggerText.textContent = currentLabel;
+    trigger.classList.toggle('is-placeholder', !selectEl.value);
+
+    dropdown.innerHTML = '';
+    options.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'prop-custom-option';
+        btn.setAttribute('role', 'option');
+        btn.dataset.value = opt.value;
+        const isSelected = opt.value === selectEl.value;
+        btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        if (isSelected) btn.classList.add('is-selected');
+        if (!opt.value) btn.classList.add('is-placeholder-opt');
+
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = opt.textContent;
+        btn.appendChild(labelSpan);
+
+        if (isSelected) {
+            const checkSpan = document.createElement('span');
+            checkSpan.className = 'prop-custom-option-check';
+            checkSpan.textContent = '✓';
+            btn.appendChild(checkSpan);
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const changed = selectEl.value !== opt.value;
+            selectEl.value = opt.value;
+            wrap.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+            refreshCustomPropSelect(selectEl);
+            if (changed) {
+                selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        dropdown.appendChild(btn);
+    });
+}
+
+/**
+ * Enhances a native <select> inside .prop-select-wrap with a custom terminal-styled dropdown
+ * so mobile and desktop both render the NISHA dark/green UI instead of OS native popups.
+ * @param {HTMLSelectElement|null} selectEl
+ */
+export function initCustomPropSelect(selectEl) {
+    if (!selectEl || typeof selectEl.closest !== 'function' || typeof document.createElement !== 'function') return;
+    const wrap = selectEl.closest('.prop-select-wrap');
+    if (!wrap || typeof wrap.querySelector !== 'function') return;
+
+    if (!wrap.querySelector('.prop-custom-trigger')) {
+        selectEl.classList.add('prop-native-select-hidden');
+        selectEl.tabIndex = -1;
+        selectEl.setAttribute('aria-hidden', 'true');
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'form-input prop-select prop-custom-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+        if (selectEl.getAttribute('aria-label')) {
+            trigger.setAttribute('aria-label', selectEl.getAttribute('aria-label'));
+        }
+
+        const triggerText = document.createElement('span');
+        triggerText.className = 'prop-custom-trigger-text';
+        trigger.appendChild(triggerText);
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'prop-custom-dropdown';
+        dropdown.setAttribute('role', 'listbox');
+
+        const arrow = wrap.querySelector('.prop-select-arrow');
+        if (arrow) {
+            wrap.insertBefore(trigger, arrow);
+        } else {
+            wrap.appendChild(trigger);
+        }
+        wrap.appendChild(dropdown);
+
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const willOpen = !wrap.classList.contains('is-open');
+            document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => {
+                w.classList.remove('is-open');
+                const t = w.querySelector('.prop-custom-trigger');
+                if (t) t.setAttribute('aria-expanded', 'false');
+            });
+            if (willOpen) {
+                refreshCustomPropSelect(selectEl);
+                wrap.classList.add('is-open');
+                trigger.setAttribute('aria-expanded', 'true');
+            }
+        });
+
+        trigger.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                wrap.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    if (!selectEl._customPropBound) {
+        selectEl._customPropBound = true;
+        selectEl.addEventListener('change', () => refreshCustomPropSelect(selectEl));
+    }
+
+    if (typeof document !== 'undefined' && !window._propCustomSelectOutsideBound) {
+        window._propCustomSelectOutsideBound = true;
+        document.addEventListener('click', (e) => {
+            if (e.target && typeof e.target.closest === 'function' && e.target.closest('.prop-select-wrap')) return;
+            document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => {
+                w.classList.remove('is-open');
+                const t = w.querySelector('.prop-custom-trigger');
+                if (t) t.setAttribute('aria-expanded', 'false');
+            });
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => {
+                    w.classList.remove('is-open');
+                    const t = w.querySelector('.prop-custom-trigger');
+                    if (t) t.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+    }
+
+    refreshCustomPropSelect(selectEl);
 }
 
 export function resetProposalForm() {
@@ -156,7 +310,12 @@ export function resetProposalForm() {
         }
     });
     syncPropSizeOptionsByCategory('');
-    document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => w.classList.remove('is-open'));
+    refreshCustomPropSelect(document.getElementById('propCategory'));
+    document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => {
+        w.classList.remove('is-open');
+        const t = w.querySelector('.prop-custom-trigger');
+        if (t) t.setAttribute('aria-expanded', 'false');
+    });
 
     const filesInput = document.getElementById('propFiles');
     if (filesInput) filesInput.value = '';
@@ -515,34 +674,26 @@ export function initProposalListeners() {
         });
     }
 
-    const bindPropSelectArrow = (selectEl) => {
-        if (!selectEl || selectEl._propArrowBound) return;
-        selectEl._propArrowBound = true;
-        const wrap = selectEl.closest ? selectEl.closest('.prop-select-wrap') : null;
-        if (!wrap) return;
-        const closeArrow = () => wrap.classList.remove('is-open');
-        selectEl.addEventListener('mousedown', () => wrap.classList.toggle('is-open'));
-        selectEl.addEventListener('touchstart', () => wrap.classList.add('is-open'), { passive: true });
-        selectEl.addEventListener('keydown', (e) => {
-            if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                wrap.classList.add('is-open');
-            } else if (e.key === 'Escape' || e.key === 'Tab') {
-                closeArrow();
-            }
-        });
-        selectEl.addEventListener('change', closeArrow);
-        selectEl.addEventListener('blur', closeArrow);
-    };
-
     const catSelect = document.getElementById('propCategory');
+    const sizeSelect = document.getElementById('propSize');
     if (catSelect && !catSelect._propCatBound) {
         catSelect._propCatBound = true;
         catSelect.addEventListener('change', function () {
             syncPropSizeOptionsByCategory(this.value);
         });
     }
-    bindPropSelectArrow(catSelect);
-    bindPropSelectArrow(document.getElementById('propSize'));
+    initCustomPropSelect(catSelect);
+    initCustomPropSelect(sizeSelect);
+
+    if (typeof i18next !== 'undefined' && typeof i18next.on === 'function' && !window._propCustomSelectI18nBound) {
+        window._propCustomSelectI18nBound = true;
+        i18next.on('languageChanged', () => {
+            setTimeout(() => {
+                refreshCustomPropSelect(document.getElementById('propCategory'));
+                refreshCustomPropSelect(document.getElementById('propSize'));
+            }, 0);
+        });
+    }
 
     const fileInput = document.getElementById('propFiles');
     if (fileInput && !fileInput._propBound) {
