@@ -212,7 +212,12 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 255, 0, 0.25);
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    white-space: nowrap;
+    box-sizing: border-box;
     backdrop-filter: blur(6px);
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
 }
@@ -224,7 +229,20 @@
     font-size: 14px;
     line-height: 1;
     display: inline-block;
+    flex-shrink: 0;
     animation: feedScrollSpin 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (max-width: 600px) {
+    .feed-scroll-restored-badge {
+        bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        font-size: 10px;
+        letter-spacing: 0.4px;
+        padding: 6px 11px;
+        gap: 6px;
+    }
+    .feed-scroll-restored-badge .feed-scroll-icon {
+        font-size: 12px;
+    }
 }
 @keyframes feedScrollSpin {
     from { transform: rotate(-180deg); opacity: 0; }
