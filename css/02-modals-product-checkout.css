@@ -417,6 +417,30 @@
 .form-input { background: #000; color: #fff; border: 2px inset var(--border-light); padding: 12px; font-family: var(--font-main); font-size: 15px; outline: none; width: 100%; box-sizing: border-box; transition: 0.2s;}
 .form-input:focus { border-color: var(--accent-green); box-shadow: 0 0 8px rgba(0, 255, 0, 0.2); }
 .form-input::placeholder { color: #555; }
+.form-input:-webkit-autofill,
+.form-input:-webkit-autofill:hover,
+.form-input:-webkit-autofill:focus,
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #000 inset !important;
+    box-shadow: 0 0 0 1000px #000 inset !important;
+    -webkit-text-fill-color: #fff !important;
+    caret-color: #fff;
+    transition: background-color 9999s ease-out 0s;
+}
+.profile-phone-input {
+    padding: 6px 10px;
+    font-size: 13px;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 230px;
+}
+#profilePhoneInput.profile-phone-input {
+    padding: 4px 8px;
+    font-size: 12px;
+    max-width: none;
+}
 .form-input.input-valid { border-color: var(--accent-green) !important; box-shadow: 0 0 8px rgba(0, 255, 0, 0.35) !important; }
 .form-input.input-invalid { border-color: var(--accent-red) !important; box-shadow: 0 0 8px rgba(255, 0, 0, 0.35) !important; }
 
