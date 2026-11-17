@@ -238,6 +238,7 @@ function closeModal(id, e) {
         const filesCount = (window.currentProposalFiles && window.currentProposalFiles.length) || document.getElementById('propFiles')?.files?.length || 0;
         const name = document.getElementById('propName')?.value.trim() || '';
         const brand = document.getElementById('propBrand')?.value.trim() || '';
+        const category = document.getElementById('propCategory')?.value.trim() || '';
         const size = document.getElementById('propSize')?.value.trim() || '';
         const desc = document.getElementById('propDesc')?.value.trim() || '';
         const cond = document.getElementById('propCond')?.value.trim() || '';
@@ -260,7 +261,7 @@ function closeModal(id, e) {
                               (window._lastProposalContact && contactVal === window._lastProposalContact);
                               
         const hasCustomContact = isContactVisible && !isAutoContact;
-        const hasUnsavedData = filesCount > 0 || name !== '' || brand !== '' || size !== '' || desc !== '' || cond !== '' || price !== '' || hasCustomContact;
+        const hasUnsavedData = filesCount > 0 || name !== '' || brand !== '' || category !== '' || size !== '' || desc !== '' || cond !== '' || price !== '' || hasCustomContact;
         
         // Если юзер ввел реальные данные — вызываем терминал подтверждения
         if (hasUnsavedData) {

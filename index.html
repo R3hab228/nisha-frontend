@@ -865,8 +865,32 @@
 <input id=propName name=prop_item_title class=form-input placeholder="Например: Худи на зипке..." autocomplete=off autocorrect=off spellcheck=false data-lpignore=true data-form-type=other data-i18n-ph=propose.name_place>
 <label data-i18n=propose.brand_label>БРЕНД (Если есть):</label>
 <input id=propBrand name=prop_item_brand class=form-input placeholder="Например: Nike, Carhartt..." autocomplete=off data-lpignore=true data-form-type=other data-i18n-ph=propose.brand_place>
-<label data-i18n=propose.size_label>РАЗМЕР:</label>
-<input id=propSize name=prop_item_size class=form-input placeholder="Например: M или 42" autocomplete=off data-lpignore=true data-form-type=other data-i18n-ph=propose.size_place>
+<div class="prop-cat-size-row">
+<div class="prop-cat-col">
+<label for="propCategory" data-i18n="propose.category_label">КАТЕГОРИЯ:</label>
+<select id="propCategory" name="prop_item_category" class="form-input prop-select" aria-label="Категория">
+<option value="" data-i18n="propose.category_place">Выберите категорию...</option>
+<option value="Верхняя одежда" data-i18n="propose.cat_outerwear">Верхняя одежда</option>
+<option value="Кофты и Свитера" data-i18n="propose.cat_sweaters">Кофты и Свитера</option>
+<option value="Штаны и Джинсы" data-i18n="propose.cat_pants">Штаны и Джинсы</option>
+<option value="Обувь" data-i18n="propose.cat_shoes">Обувь</option>
+<option value="Аксессуары" data-i18n="propose.cat_accs">Аксессуары</option>
+</select>
+</div>
+<div class="prop-size-col">
+<label for="propSize" data-i18n="propose.size_short_label">РАЗМЕР:</label>
+<select id="propSize" name="prop_item_size" class="form-input prop-select prop-size-select" aria-label="Размер">
+<option value="">—</option>
+<option value="XS">XS</option>
+<option value="S">S</option>
+<option value="M">M</option>
+<option value="L">L</option>
+<option value="XL">XL</option>
+<option value="XXL">XXL</option>
+<option value="One Size">One Size</option>
+</select>
+</div>
+</div>
 <label id=descLabel data-i18n=propose.desc_label>ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):</label>
 <textarea id=propDesc class=form-input maxlength=250 style="height:85px;min-height:85px;resize:none" placeholder="Опиши состояние, нюансы..." data-i18n-ph=propose.desc_place></textarea>
 <label data-i18n=propose.cond_label>ОЦЕНКА СОСТОЯНИЯ (1 - 10):</label>
