@@ -101,4 +101,20 @@ describe('Service Worker & PWA Cache Automation', () => {
             expect(imageBlock?.[1]).toContain("'cdn.nisha-store.shop'");
         }
     });
+
+    it('sw.js defers skipWaiting until explicit SKIP_WAITING message and bypasses stale cache on reload', () => {
+        const content = readFileSync(rootSwPath, 'utf8');
+        const installBlock = content.match(/self\.addEventListener\('install',\s*event\s*=>\s*\{([\s\S]*?)\n\}\);/);
+        expect(installBlock?.[1]).not.toContain('self.skipWaiting()');
+        expect(content).toContain("if (event.data.type === 'SKIP_WAITING')");
+        expect(content).toContain("event.request.cache !== 'reload'");
+    });
+
+    it('early-init.js clears nisha-cache-* before stale-chunk reload and handles CSS fallback failure', () => {
+        const earlyInitPath = resolve(process.cwd(), 'public/early-init.js');
+        const content = readFileSync(earlyInitPath, 'utf8');
+        expect(content).toContain("k.indexOf('nisha-cache-') === 0");
+        expect(content).toContain('fallbackLink.onerror');
+        expect(content).toContain('Unable to preload CSS');
+    });
 });

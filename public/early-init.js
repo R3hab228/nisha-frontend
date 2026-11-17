@@ -43,6 +43,25 @@
     } catch (e) {}
     try {
         var CHUNK_RELOAD_KEY = 'nisha_chunk_reload_at';
+        var clearHtmlCaches = function () {
+            try {
+                if (typeof caches === 'undefined' || !caches || typeof caches.keys !== 'function') {
+                    return Promise.resolve();
+                }
+                return Promise.race([
+                    caches.keys().then(function (keys) {
+                        return Promise.all(
+                            keys
+                                .filter(function (k) { return k.indexOf('nisha-cache-') === 0; })
+                                .map(function (k) { return caches.delete(k); })
+                        );
+                    }),
+                    new Promise(function (resolve) { setTimeout(resolve, 300); })
+                ]).catch(function () {});
+            } catch (e) {
+                return Promise.resolve();
+            }
+        };
         var tryRecoverStaleChunk = function () {
             try {
                 if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
@@ -50,7 +69,9 @@
                 var last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || '0');
                 if (last && (now - last) < 15000) return;
                 sessionStorage.setItem(CHUNK_RELOAD_KEY, String(now));
-                window.location.reload();
+                clearHtmlCaches().then(function () {
+                    window.location.reload();
+                });
             } catch (e) {}
         };
         window.addEventListener('vite:preloadError', function (event) {
@@ -65,7 +86,10 @@
             if (!/\/assets\/[^?#]+\.(?:js|css)(?:[?#]|$)/i.test(url)) return;
 
             if (tag === 'LINK' && target.rel === 'stylesheet') {
-                if (target.dataset && target.dataset.retried) return;
+                if (target.dataset && target.dataset.retried) {
+                    tryRecoverStaleChunk();
+                    return;
+                }
                 try {
                     if (target.dataset) target.dataset.retried = '1';
                     var cleanHref = url.split('?')[0];
@@ -80,8 +104,13 @@
                     fallbackLink.rel = 'stylesheet';
                     fallbackLink.href = cleanHref + '?cb=' + Date.now();
                     if (fallbackLink.dataset) fallbackLink.dataset.retried = '1';
+                    fallbackLink.onerror = function () {
+                        tryRecoverStaleChunk();
+                    };
                     document.head.appendChild(fallbackLink);
-                } catch (e) {}
+                } catch (e) {
+                    tryRecoverStaleChunk();
+                }
                 return;
             }
 
@@ -90,7 +119,7 @@
         window.addEventListener('unhandledrejection', function (event) {
             var reason = event && event.reason;
             var msg = reason && (reason.message || String(reason));
-            if (msg && /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(msg)) {
+            if (msg && /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS/i.test(msg)) {
                 tryRecoverStaleChunk();
             }
         });

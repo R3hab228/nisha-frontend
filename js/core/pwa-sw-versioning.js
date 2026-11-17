@@ -96,85 +96,98 @@ export function initServiceWorkerUpdates() {
 
             registration.update().catch(() => {});
 
+            const handleInstalledWorker = async (worker) => {
+                if (!worker || !hadControllerAtBoot || !navigator.serviceWorker.controller) return;
+                if (updateModalShownInPage || APP_BUILD_ID === 'dev') return;
+
+                try {
+                    const isReloaded = (store && store.session)
+                        ? (store.session.get('nisha_sw_update_reloaded') === '1')
+                        : (typeof sessionStorage !== 'undefined' ? (sessionStorage.getItem('nisha_sw_update_reloaded') === '1') : false);
+                    if (isReloaded) return;
+                    const lastUpdateTs = Number.parseInt(store ? store.get('nisha_sw_updated_ts', '0') : '0', 10);
+                    if (lastUpdateTs && (Date.now() - lastUpdateTs) < 10 * 60 * 1000) return;
+                } catch {}
+
+                const workerVersion = await queryServiceWorkerVersion(worker);
+                if (!workerVersion || workerVersion === APP_SW_VERSION) {
+                    if (store) store.set('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
+                    return;
+                }
+
+                if (store && store.get('nisha_sw_ack_version') === workerVersion) return;
+
+                updateModalShownInPage = true;
+                debugPwaLog('[PWA] Найдено новое обновление:', workerVersion);
+
+                const triggerUpdateModal = () => {
+                    const i18n = typeof i18next !== 'undefined' ? i18next : null;
+                    const updTitle = (i18n && i18n.t('pwa.update_title', { defaultValue: 'SYSTEM_UPDATE.EXE' })) || 'SYSTEM_UPDATE.EXE';
+                    const updText = (i18n && i18n.t('pwa.update_text', { defaultValue: 'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.' })) || 'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.';
+                    const updBtn = (i18n && i18n.t('pwa.btn_update', { defaultValue: '[ ОБНОВИТЬ СЕЙЧАС ]' })) || '[ ОБНОВИТЬ СЕЙЧАС ]';
+                    if (typeof showTerminalModal !== 'function') return;
+                    showTerminalModal(
+                        updTitle,
+                        updText,
+                        updBtn,
+                        async () => {
+                            try {
+                                if (store && store.session) store.session.set('nisha_sw_update_reloaded', '1');
+                                else if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_sw_update_reloaded', '1');
+                                if (store) {
+                                    store.set('nisha_sw_updated_ts', String(Date.now()));
+                                    store.set('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
+                                }
+                            } catch {}
+
+                            try {
+                                if (registration.waiting) {
+                                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                                if (worker) {
+                                    worker.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                            } catch {}
+
+                            try {
+                                if ('caches' in window) {
+                                    const names = await caches.keys();
+                                    await Promise.all(
+                                        names
+                                            .filter(name => name.startsWith('nisha-cache-'))
+                                            .map(name => caches.delete(name))
+                                    );
+                                }
+                            } catch {}
+
+                            window.location.reload();
+                        }
+                    );
+                };
+
+                if (isUserBusyWithOrder()) {
+                    const checkInterval = setInterval(() => {
+                        if (!isUserBusyWithOrder()) {
+                            clearInterval(checkInterval);
+                            setTimeout(triggerUpdateModal, 2500);
+                        }
+                    }, 2000);
+                } else {
+                    triggerUpdateModal();
+                }
+            };
+
+            if (registration.waiting) {
+                handleInstalledWorker(registration.waiting);
+            }
+
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
                 if (!installingWorker) return;
 
                 installingWorker.onstatechange = async () => {
-                    if (installingWorker.state === 'installed' && hadControllerAtBoot && navigator.serviceWorker.controller) {
-                        if (updateModalShownInPage || APP_BUILD_ID === 'dev') return;
-
-                        try {
-                            const isReloaded = (store && store.session)
-                                ? (store.session.get('nisha_sw_update_reloaded') === '1')
-                                : (typeof sessionStorage !== 'undefined' ? (sessionStorage.getItem('nisha_sw_update_reloaded') === '1') : false);
-                            if (isReloaded) return;
-                            const lastUpdateTs = Number.parseInt(store ? store.get('nisha_sw_updated_ts', '0') : '0', 10);
-                            if (lastUpdateTs && (Date.now() - lastUpdateTs) < 10 * 60 * 1000) return;
-                        } catch {}
-
-                        const workerVersion = await queryServiceWorkerVersion(installingWorker);
-                        if (!workerVersion || workerVersion === APP_SW_VERSION) {
-                            if (store) store.set('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
-                            return;
-                        }
-
-                        if (store && store.get('nisha_sw_ack_version') === workerVersion) return;
-
-                        updateModalShownInPage = true;
-                        debugPwaLog('[PWA] Найдено новое обновление:', workerVersion);
-
-                        const triggerUpdateModal = () => {
-                            const i18n = typeof i18next !== 'undefined' ? i18next : null;
-                            const updTitle = (i18n && i18n.t('pwa.update_title', { defaultValue: 'SYSTEM_UPDATE.EXE' })) || 'SYSTEM_UPDATE.EXE';
-                            const updText = (i18n && i18n.t('pwa.update_text', { defaultValue: 'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.' })) || 'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.';
-                            const updBtn = (i18n && i18n.t('pwa.btn_update', { defaultValue: '[ ОБНОВИТЬ СЕЙЧАС ]' })) || '[ ОБНОВИТЬ СЕЙЧАС ]';
-                            if (typeof showTerminalModal !== 'function') return;
-                            showTerminalModal(
-                                updTitle,
-                                updText,
-                                updBtn,
-                                async () => {
-                                    try {
-                                        if (store && store.session) store.session.set('nisha_sw_update_reloaded', '1');
-                                        else if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_sw_update_reloaded', '1');
-                                        if (store) {
-                                            store.set('nisha_sw_updated_ts', String(Date.now()));
-                                            store.set('nisha_sw_ack_version', workerVersion || APP_SW_VERSION);
-                                        }
-                                    } catch {}
-
-                                    try {
-                                        if (registration.waiting) {
-                                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                                        }
-                                        if (installingWorker) {
-                                            installingWorker.postMessage({ type: 'SKIP_WAITING' });
-                                        }
-                                    } catch {}
-
-                                    try {
-                                        if ('caches' in window) {
-                                            const names = await caches.keys();
-                                            await Promise.all(names.map(name => caches.delete(name)));
-                                        }
-                                    } catch {}
-
-                                    window.location.reload();
-                                }
-                            );
-                        };
-
-                        if (isUserBusyWithOrder()) {
-                            const checkInterval = setInterval(() => {
-                                if (!isUserBusyWithOrder()) {
-                                    clearInterval(checkInterval);
-                                    setTimeout(triggerUpdateModal, 2500);
-                                }
-                            }, 2000);
-                        } else {
-                            triggerUpdateModal();
-                        }
+                    if (installingWorker.state === 'installed') {
+                        await handleInstalledWorker(installingWorker);
                     }
                 };
             };

@@ -55,7 +55,6 @@ self.addEventListener('message', event => {
 });
 
 self.addEventListener('install', event => {
-    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             return Promise.allSettled(
@@ -258,7 +257,7 @@ self.addEventListener('fetch', event => {
                 ));
 
                 let networkResponse;
-                if (cachedResponse) {
+                if (cachedResponse && event.request.cache !== 'reload') {
                     // Если копия уже есть в кэше — даем сети до 1.4 сек, иначе отдаем кэш, а свежий ответ дописываем в фоне
                     const { promise: timeoutPromise, resolve: resolveTimeout } = Promise.withResolvers();
                     const timeoutId = setTimeout(() => resolveTimeout(null), 1400);
