@@ -134,7 +134,6 @@ function renderOrdersErrorCard(listArea, { code = 'SYSTEM_ERROR.LOG', messageHtm
     listArea.innerHTML = `
         <div class="orders-error-card" role="alert">
             <div class="orders-error-header">
-                <span class="orders-error-dot" aria-hidden="true"></span>
                 <span>[ ${escHtml(code)} ]</span>
             </div>
             <div class="orders-error-body">${messageHtml}</div>
@@ -361,8 +360,14 @@ export async function fetchMyOrders() {
         const phoneInput = document.getElementById('ordersSearchPhone');
         const enteredPhone = phoneInput ? phoneInput.value.replace(/[^\d+]/g, '') : '';
 
+        let displayMsg = cleanMsg || rawErr;
         let actionHtml = '';
         if (isAccessDenied) {
+            if (/OTP|профил|профіл|не подтвержден|не підтверджено/i.test(rawErr)) {
+                displayMsg = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+                    ? i18next.t('orders_modal.err_otp_unverified', { defaultValue: cleanMsg || rawErr })
+                    : (cleanMsg || rawErr);
+            }
             if (enteredPhone && enteredPhone.length >= 10) {
                 const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' }) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
                 actionHtml = `<button type="button" class="cart-checkout-btn btn-target" data-action="verify-orders-phone" data-phone="${escAttr(enteredPhone)}">[ ${escHtml(verifyBotMsg)} ]</button>`;
@@ -374,7 +379,7 @@ export async function fetchMyOrders() {
 
         renderOrdersErrorCard(listArea, {
             code: isAccessDenied ? 'ACCESS_DENIED.SYS' : 'SYSTEM_ERROR.LOG',
-            messageHtml: escHtml(cleanMsg || rawErr),
+            messageHtml: escHtml(displayMsg),
             actionHtml
         });
         return;

@@ -303,6 +303,7 @@
       "loading_db": "[ LOADING DATABASE... ]",
       "err_no_phone": "[ NO PHONE NUMBER ENTERED ]",
       "access_denied_otp": "[ ACCESS DENIED ]<br><br>Please verify ownership of this phone number first.",
+      "err_otp_unverified": "Phone number is not verified via OTP or profile",
       "verify_bot_btn": "VERIFY NUMBER IN TELEGRAM BOT",
       "ttn_copied": "Tracking number copied: ",
       "empty_accepted": "No active orders.",
