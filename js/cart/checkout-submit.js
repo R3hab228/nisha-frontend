@@ -19,7 +19,7 @@ import { _npNorm } from './novaposhta-helpers.js';
 import { ensureCityRef, ensureBranchRef } from './novaposhta-delivery.js';
 import { clearCheckoutDraft } from './checkout-form.js';
 import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
-import { getRuntimeUser, getRuntimeProfile, getRuntimeFingerprint, getRuntimeStorage } from '../core/runtime-env.js';
+import { getRuntimeUser, getRuntimeProfile, getRuntimeFingerprint, getRuntimeStorage, getRuntimeSiteLang } from '../core/runtime-env.js';
 
 /**
  * Нормализует телефон к международному формату `+380...`.
@@ -426,7 +426,8 @@ export async function executeOrderFinal(emailToSave) {
                     itemIds: orderItemIds,
                     promocode: activePromo,
                     paymentMethod: paymentMethod,
-                    saveToProfile: shouldSaveToProfile
+                    saveToProfile: shouldSaveToProfile,
+                    lang: getRuntimeSiteLang()
                 }, {
                     idempotencyKey: idempotencyKey,
                     timeout: 15000,

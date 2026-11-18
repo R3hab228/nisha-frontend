@@ -14,7 +14,7 @@ import {
     applyOfferButtonState
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeFingerprint } from '../core/runtime-env.js';
+import { getRuntimeFingerprint, getRuntimeSiteLang } from '../core/runtime-env.js';
 
 const BARGAIN_RATE_LIMIT_STORAGE_KEY = 'nisha_bargain_offers_history';
 const BARGAIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -190,7 +190,8 @@ function buildBargainPayload(activeItem, offeredPrice, contact) {
         offeredPrice,
         contact,
         clientId: String(fingerprint),
-        userId: currentUid
+        userId: currentUid,
+        lang: getRuntimeSiteLang()
     };
 }
 

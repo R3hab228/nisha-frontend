@@ -3,7 +3,7 @@
 // ==========================================
 
 import { invokeAction, resolveAction } from '../core/action-registry.js';
-import { getLenisInstance, getRuntimeFingerprint, getRuntimeUser, getTurnstileApi } from '../core/runtime-env.js';
+import { getLenisInstance, getRuntimeFingerprint, getRuntimeUser, getTurnstileApi, getRuntimeSiteLang } from '../core/runtime-env.js';
 import { getProposalFiles, sanitizeProposalNameField, setProposalFiles } from './drop-state.js';
 import {
     confirmPropBargainInput,
@@ -596,6 +596,7 @@ export async function submitProposal() {
         }
         formData.append('contact', contact);
         formData.append('clientId', activeClientId);
+        formData.append('lang', getRuntimeSiteLang());
         if (propToken) formData.append('turnstileToken', propToken);
 
         compressedFiles.forEach((file, index) => {

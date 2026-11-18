@@ -3,7 +3,7 @@
 // ==========================================
 
 import { registerActions } from './action-registry.js';
-import { getRuntimeUser } from './runtime-env.js';
+import { getRuntimeUser, getRuntimeFingerprint, getRuntimeSiteLang, getRuntimeStorage } from './runtime-env.js';
 
 let pushPrompted = false;
 let pushListenersBound = false;
@@ -173,6 +173,7 @@ export async function subscribeUserToPush(registration, silent = false) {
                 clientId: fp,
                 clientType: isPwa ? 'pwa' : 'web',
                 isPwa: isPwa,
+                lang: getRuntimeSiteLang(),
                 origin: (typeof window !== 'undefined' && window.location) ? window.location.origin : 'https://www.nisha-store.shop'
             };
             await window.apiClient.post('/api/subscribe', payload, { timeout: 10000, retries: 1 });
@@ -247,6 +248,31 @@ export function initPwaPush() {
 
     if (pushListenersBound) return;
     pushListenersBound = true;
+
+    const i18n = (typeof window !== 'undefined' && window.i18next) || (typeof i18next !== 'undefined' ? i18next : null);
+    if (i18n && typeof i18n.on === 'function') {
+        let lastSyncedPushLang = getRuntimeSiteLang();
+        i18n.on('languageChanged', () => {
+            const nextLang = getRuntimeSiteLang();
+            if (nextLang === lastSyncedPushLang) return;
+            lastSyncedPushLang = nextLang;
+
+            if (typeof window === 'undefined' || !window.apiClient || typeof window.apiClient.post !== 'function') return;
+            const activeUser = getRuntimeUser();
+            const fp = getRuntimeFingerprint();
+            const store = getRuntimeStorage();
+            const endpoint = (store && typeof store.get === 'function') ? store.get('pushSubEndpoint', '') : '';
+            if (!activeUser && !fp && !endpoint) return;
+
+            window.apiClient.post('/api/push/sync-lang', {
+                lang: nextLang,
+                userId: activeUser ? activeUser.id : null,
+                deviceId: fp || null,
+                clientId: fp || null,
+                endpoint: endpoint || null
+            }, { timeout: 6000, retries: 0 }).catch(() => {});
+        });
+    }
 
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
         window.addEventListener('appinstalled', async () => {

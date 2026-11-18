@@ -9,7 +9,7 @@ import {
     getUser
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeProfile } from '../core/runtime-env.js';
+import { getRuntimeProfile, getRuntimeSiteLang } from '../core/runtime-env.js';
 
 /**
  * Expands or collapses the inline question submission form.
@@ -87,7 +87,8 @@ export async function submitQuestion(itemId) {
                 username: userDisplayName,
                 itemId,
                 itemName,
-                questionText: text
+                questionText: text,
+                lang: getRuntimeSiteLang()
             }, { timeout: 12000, retries: 1 });
 
             if (data && data.success) {

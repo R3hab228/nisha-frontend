@@ -90,3 +90,44 @@ export function tSafe(key, optionsOrFallback = '', fallback = '') {
     }
     return String(defaultText ?? '');
 }
+
+/**
+ * Resolves the active UI language normalized to 'ua' | 'ru' | 'en'.
+ * @returns {'ua'|'ru'|'en'}
+ */
+export function getRuntimeSiteLang() {
+    const normalize = (val) => {
+        const clean = String(val || '').trim().toLowerCase();
+        if (!clean) return null;
+        if (clean === 'ua' || clean === 'uk' || clean.startsWith('uk-') || clean.startsWith('ua-')) return 'ua';
+        if (clean === 'ru' || clean.startsWith('ru-')) return 'ru';
+        if (clean === 'en' || clean.startsWith('en-')) return 'en';
+        return null;
+    };
+
+    const i18n = readRuntimeProp('i18next');
+    if (i18n && i18n.language) {
+        const l = normalize(i18n.language);
+        if (l) return l;
+    }
+
+    const store = getRuntimeStorage();
+    if (store && typeof store.get === 'function') {
+        const l = normalize(store.get('nisha_lang', ''));
+        if (l) return l;
+    }
+
+    try {
+        if (typeof localStorage !== 'undefined') {
+            const l = normalize(localStorage.getItem('nisha_lang'));
+            if (l) return l;
+        }
+    } catch {}
+
+    if (typeof document !== 'undefined' && document.documentElement) {
+        const l = normalize(document.documentElement.lang);
+        if (l) return l;
+    }
+
+    return 'ua';
+}

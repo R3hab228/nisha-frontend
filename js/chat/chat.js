@@ -1,6 +1,6 @@
 
 import { invokeAction, onAppEvent, registerActions, resolveAction } from '../core/action-registry.js';
-import { getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint } from '../core/runtime-env.js';
+import { getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang } from '../core/runtime-env.js';
 
 // --- СИСТЕМА ЗАПОМИНАНИЯ ПОКАЗАННЫХ ОФФЕРОВ (ЧТОБЫ НЕ НАДОЕДАТЬ ПОЛЬЗОВАТЕЛЮ) ---
 const BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups';
@@ -631,6 +631,7 @@ async function submitSupportTicket() {
         message: safeText,
         clientId: activeFingerprint,
         topic: selectedTopic,
+        lang: getRuntimeSiteLang(),
         ...(bugMeta ? { meta: bugMeta } : {})
     }, { timeout: 10000, retries: 2 }).catch(e => console.log('Фоновая отправка в саппорт не удалась: ', e));
 
