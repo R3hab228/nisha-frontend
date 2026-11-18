@@ -135,6 +135,7 @@ if (typeof i18next !== 'undefined' && typeof i18next.on === 'function') {
 let searchTypewriterInterval = null;
 let searchCursorBlinkInterval = null;
 let currentSearchLang = 'ua';
+let _typewriterRunId = 0;
 
 function toggleLangDropdown(event) {
     if (event) event.stopPropagation();
@@ -321,19 +322,46 @@ function updateContentLanguage() {
 }
 window.updateContentLanguage = updateContentLanguage;
 
+function resolveActiveSearchLang() {
+    if (typeof i18next !== 'undefined' && i18next.isInitialized) {
+        const i18nLang = i18next.resolvedLanguage || i18next.language;
+        if (i18nLang) return normalizeSiteLang(i18nLang);
+    }
+    const stored = storage && typeof storage.get === 'function' ? storage.get('nisha_lang') : null;
+    if (stored) return normalizeSiteLang(stored);
+    if (typeof localStorage !== 'undefined') {
+        try {
+            const ls = localStorage.getItem('nisha_lang');
+            if (ls) return normalizeSiteLang(ls);
+        } catch {}
+    }
+    return normalizeSiteLang(currentSearchLang || 'ua');
+}
+
 function startSearchTypewriter() {
     const searchInput = document.getElementById('mainSearch');
     if (!searchInput) return;
 
-    if (searchTypewriterInterval) clearTimeout(searchTypewriterInterval);
-    if (window.searchCursorBlinkInterval) clearInterval(window.searchCursorBlinkInterval);
+    _typewriterRunId += 1;
+    const runId = _typewriterRunId;
+
+    if (searchTypewriterInterval) {
+        clearTimeout(searchTypewriterInterval);
+        searchTypewriterInterval = null;
+    }
+    if (searchCursorBlinkInterval) {
+        clearInterval(searchCursorBlinkInterval);
+        searchCursorBlinkInterval = null;
+    }
+
+    currentSearchLang = resolveActiveSearchLang();
 
     const translatedWords = {
         'ua': ['Пошук речей...'],
         'ru': ['Поиск вещи...'],
         'en': ['Search items...']
     };
-    
+
     const words = Object.hasOwn(translatedWords, currentSearchLang) ? translatedWords[currentSearchLang] : translatedWords['ua'];
     let wordIndex = 0;
     let charIndex = 0;
@@ -348,16 +376,18 @@ function startSearchTypewriter() {
     }
 
     function typeLoop() {
-        if (!document.getElementById('mainSearch')) return;
+        if (runId !== _typewriterRunId) return;
+        const activeInput = document.getElementById('mainSearch');
+        if (!activeInput) return;
         if (document.hidden) {
             stopCursorBlink();
             searchTypewriterInterval = null;
             return;
         }
-        
-        if (document.activeElement === searchInput || searchInput.value.length > 0) {
+
+        if (document.activeElement === activeInput || activeInput.value.length > 0) {
             stopCursorBlink();
-            searchInput.placeholder = words[wordIndex];
+            activeInput.placeholder = words[wordIndex];
             searchTypewriterInterval = setTimeout(typeLoop, 500);
             return;
         }
@@ -366,43 +396,48 @@ function startSearchTypewriter() {
 
         if (isDeleting) {
             charIndex--;
-            searchInput.placeholder = currentWord.substring(0, charIndex) + '|';
+            activeInput.placeholder = currentWord.substring(0, charIndex) + '|';
             if (charIndex === 0) {
                 isDeleting = false;
                 wordIndex = (wordIndex + 1) % words.length;
                 searchTypewriterInterval = setTimeout(typeLoop, 500);
                 return;
             }
-            searchTypewriterInterval = setTimeout(typeLoop, 50);
+            searchTypewriterInterval = setTimeout(typeLoop, 55);
         } else {
             charIndex++;
-            searchInput.placeholder = currentWord.substring(0, charIndex) + '|';
-            
+            activeInput.placeholder = currentWord.substring(0, charIndex) + '|';
+
             if (charIndex === currentWord.length) {
                 isDeleting = true;
                 let blinkCount = 0;
                 const maxBlinks = 4; // 4 * 0.6с = 2.4 секунды паузы перед удалением
-                
+
+                stopCursorBlink();
                 searchCursorBlinkInterval = setInterval(() => {
-                    if (document.hidden || document.activeElement === searchInput || searchInput.value.length > 0) {
+                    if (runId !== _typewriterRunId) {
                         stopCursorBlink();
-                        if (!document.hidden) searchInput.placeholder = currentWord;
+                        return;
+                    }
+                    if (document.hidden || document.activeElement === activeInput || activeInput.value.length > 0) {
+                        stopCursorBlink();
+                        if (!document.hidden) activeInput.placeholder = currentWord;
                         else searchTypewriterInterval = null;
                         return;
                     }
                     showCursor = !showCursor;
-                    searchInput.placeholder = currentWord + (showCursor ? '|' : '');
+                    activeInput.placeholder = currentWord + (showCursor ? '|' : '');
                     blinkCount++;
-                    
+
                     if (blinkCount >= maxBlinks) {
                         stopCursorBlink();
                         showCursor = true;
-                        searchTypewriterInterval = setTimeout(typeLoop, 50);
+                        searchTypewriterInterval = setTimeout(typeLoop, 60);
                     }
                 }, 600);
                 return;
             }
-            searchTypewriterInterval = setTimeout(typeLoop, 100);
+            searchTypewriterInterval = setTimeout(typeLoop, 115);
         }
     }
 
@@ -410,7 +445,7 @@ function startSearchTypewriter() {
         window._searchTypewriterVisBound = true;
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && !searchCursorBlinkInterval && !searchTypewriterInterval && document.getElementById('mainSearch')) {
-                typeLoop();
+                startSearchTypewriter();
             }
         });
     }

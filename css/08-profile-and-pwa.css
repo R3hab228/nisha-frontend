@@ -395,8 +395,9 @@ html.pwa-standalone body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 74px;
-    padding: 4px 10px;
+    width: 86px;
+    padding: 4px 6px;
+    box-sizing: border-box;
     background: #0d0d0d;
     border: 1px outset #444;
     box-shadow: 1px 1px 0 #000;
@@ -409,12 +410,12 @@ html.pwa-standalone body {
     user-select: none;
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
-    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+    transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
 }
 
 .profile-sfx-row--modal .profile-sfx-toggle {
-    min-width: 82px;
-    padding: 5px 12px;
+    width: 96px;
+    padding: 5px 8px;
     font-size: 12px;
 }
 
@@ -425,7 +426,6 @@ html.pwa-standalone body {
 
 .profile-sfx-toggle:active {
     border-style: inset;
-    transform: translateY(1px);
 }
 
 .profile-sfx-state {
@@ -449,16 +449,6 @@ html.pwa-standalone body {
 
 .profile-sfx-toggle.is-off {
     color: var(--accent-red, #ff3333);
-}
-
-.profile-sfx-toggle.is-switching {
-    animation: sfxTogglePop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes sfxTogglePop {
-    0% { transform: translateY(1px) scale(0.96); }
-    60% { transform: translateY(0) scale(1.02); }
-    100% { transform: translateY(0) scale(1); }
 }
 
 
