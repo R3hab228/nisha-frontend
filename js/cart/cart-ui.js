@@ -406,8 +406,7 @@ if (typeof window !== 'undefined') {
             const moveX = diff > 200 ? 200 + (diff - 200) * 0.2 : diff;
             rowSurface.style.transform = `translateX(-${moveX}px)`;
 
-            const surfaceOpacity = Math.max(0.2, 1 - (moveX / 200));
-            rowSurface.style.opacity = surfaceOpacity;
+            rowSurface.style.opacity = '1';
 
             const parentRow = rowSurface.closest('.cart-item-row');
             const swipeBg = parentRow ? parentRow.querySelector('.swipe-background') : null;

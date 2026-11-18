@@ -51,8 +51,8 @@
 .cart-item-row:last-child { border-bottom: none; }
 .cart-item-row.removing { max-height: 0; opacity: 0; padding: 0 !important; border-bottom: none !important; }
 
-.swipe-background { position: absolute; top: 0; right: 0; width: 100%; height: 100%; background: rgba(18, 0, 5, 0.96); display: flex; align-items: center; justify-content: flex-end; padding-right: 22px; z-index: 1; transition: background 0.16s ease; box-sizing: border-box; }
-.swipe-background.armed { background: rgba(48, 0, 12, 0.98); }
+.swipe-background { position: absolute; top: 0; right: 0; width: 100%; height: 100%; background: linear-gradient(90deg, #000a1a 0%, rgba(90, 0, 14, 0.35) 55%, rgba(255, 0, 51, 0.22) 100%); display: flex; align-items: center; justify-content: flex-end; padding-right: 22px; z-index: 1; transition: background 0.18s ease, box-shadow 0.18s ease; box-sizing: border-box; }
+.swipe-background.armed { background: linear-gradient(90deg, #000a1a 0%, rgba(140, 0, 22, 0.55) 45%, rgba(255, 0, 51, 0.38) 100%); box-shadow: inset -3px 0 0 var(--accent-red); }
 .swipe-cross-wrap { display: inline-flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.85); transition: opacity 0.12s linear, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), filter 0.18s ease; }
 .swipe-background.armed .swipe-cross-wrap { transform: scale(1.12); filter: drop-shadow(0 0 8px rgba(255, 0, 51, 0.65)); }
 .swipe-cross-icon { width: 22px; height: 22px; stroke: var(--accent-red); stroke-width: 2.4; stroke-linecap: square; fill: none; }
