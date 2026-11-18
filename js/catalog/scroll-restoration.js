@@ -120,6 +120,9 @@ export function showScrollRestoredBadge() {
     if (!badge) return;
 
     if (_scrollRestoredBadgeTimeout) clearTimeout(_scrollRestoredBadgeTimeout);
+    const cartPanel = document.getElementById('cartPanel') || document.querySelector('.cart-panel');
+    const isCartActive = Boolean(cartPanel && cartPanel.classList && cartPanel.classList.contains('active'));
+    badge.classList.toggle('cart-active', isCartActive);
     badge.classList.add('is-visible');
 
     const onScrollHide = () => {
