@@ -125,6 +125,7 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
             </div>
         `;
         document.body.appendChild(overlay);
+        invokeAction('playNotifySound', { kind: 'broadcast' });
 
         const ctrl = new AbortController();
         let isInstalling = false;
@@ -280,6 +281,7 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
             window.tryShowBroadcast(title, iosDesc, okLabel, markDismissed);
             return true;
         }
+        invokeAction('playNotifySound', { kind: 'broadcast' });
         invokeAction('showTerminalModal', title, iosDesc, okLabel, markDismissed);
         return true;
     }

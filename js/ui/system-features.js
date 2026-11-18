@@ -39,6 +39,7 @@ function tryShowBroadcast(title, htmlText, btnText, callback) {
     }
     const inFeed = isUserInProductFeed();
     if (inFeed) {
+        invokeAction('playNotifySound', { kind: 'broadcast' });
         showTerminalModal(title, htmlText, btnText, callback);
         pendingBroadcastQueue = null;
     } else {
@@ -55,6 +56,7 @@ function checkPendingBroadcast() {
             const { title, htmlText, btnText, callback } = pendingBroadcastQueue;
             pendingBroadcastQueue = null;
             if (htmlText && htmlText !== 'null' && (typeof htmlText !== 'string' || htmlText.trim())) {
+                invokeAction('playNotifySound', { kind: 'broadcast' });
                 showTerminalModal(title, htmlText, btnText, callback);
             } else if (callback) {
                 callback();

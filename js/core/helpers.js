@@ -14,6 +14,7 @@ export * from './helpers-search-address.js';
 export * from './helpers-toasts-modals.js';
 export * from './helpers-pwa-browser.js';
 export * from './helpers-delegation.js';
+export * from './sound-effects.js';
 
 if (typeof window !== 'undefined') {
     initNetworkAwareRendering();

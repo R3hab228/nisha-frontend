@@ -2,6 +2,7 @@
 // NISHA PWA SERVICE WORKER & BUILD VERSIONING MODULE
 // ==========================================
 
+import { invokeAction } from './action-registry.js';
 import { getRuntimeStorage } from './runtime-env.js';
 
 /**
@@ -126,6 +127,7 @@ export function initServiceWorkerUpdates() {
                     const updText = (i18n && i18n.t('pwa.update_text', { defaultValue: 'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.' })) || 'Выпущена новая версия сайта (исправление багов, новые фичи).<br><br>Рекомендуем обновить страницу.';
                     const updBtn = (i18n && i18n.t('pwa.btn_update', { defaultValue: '[ ОБНОВИТЬ СЕЙЧАС ]' })) || '[ ОБНОВИТЬ СЕЙЧАС ]';
                     if (typeof showTerminalModal !== 'function') return;
+                    invokeAction('playNotifySound', { kind: 'broadcast' });
                     showTerminalModal(
                         updTitle,
                         updText,

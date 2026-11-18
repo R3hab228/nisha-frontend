@@ -146,6 +146,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     const overlay = document.createElement('div');
     overlay.className = 'bargain-broadcast-overlay terminal-modal-overlay';
+    invokeAction('playNotifySound', { kind: 'broadcast' });
     // Прозрачный фон без затемнения сайта и запрет скролла страницы
     overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; z-index: 10001; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; touch-action: none; overscroll-behavior: contain;";
 

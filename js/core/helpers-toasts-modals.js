@@ -4,6 +4,7 @@
 
 import { hasAction, invokeAction, registerActions } from './action-registry.js';
 import { escapeAttr, escapeHtml, toCDN } from './helpers-security-media.js';
+import { playNotifySound } from './sound-effects.js';
 
 let lastToastTime = 0;
 let activeToastState = null;
@@ -198,6 +199,7 @@ export function showToast(message, type = 'success', imgUrl = null, onClick = nu
 
     toast.innerHTML = html;
     container.appendChild(toast);
+    playNotifySound({ kind: 'toast' }).catch(() => {});
     const msgEl = (typeof toast.querySelector === 'function') ? toast.querySelector('.toast-msg-body') : null;
     const currentState = { message: rawMsgStr, type, count: 1, toast, msgEl, safeMsgHtml, dismiss: null };
     const dismiss = attachToastLifecycle(toast, {
@@ -256,6 +258,7 @@ export function showCompactToast({ slot, className, tagText, titleText = '', img
     `;
     toast.innerHTML = html;
     container.appendChild(toast);
+    playNotifySound({ kind: 'toast' }).catch(() => {});
 
     const dismiss = attachToastLifecycle(toast, {
         duration,
@@ -573,6 +576,7 @@ function _displayUnifiedNewItemToast(items) {
     }, dismiss, false);
 
     container.appendChild(toast);
+    playNotifySound({ kind: 'toast' }).catch(() => {});
     timerId = setTimeout(() => dismiss(false), 3800);
     _activeUnifiedToast = { toast, dismiss };
 }
