@@ -1153,6 +1153,15 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             );
             expect(elements.profileDeliveryBranchDropdown.style.display).toBe('block');
 
+            // Test exact numeric postomat search ('40032') ranks exact match first
+            const { filterAndSortBranches } = await import('../js/cart/novaposhta-helpers.js');
+            const ranked = filterAndSortBranches([
+                { Ref: 'p-40001', Description: 'Поштомат "Нова Пошта" №40001: вул. А, 1', Number: '40001' },
+                { Ref: 'p-40010', Description: 'Поштомат "Нова Пошта" №40010: вул. Б, 2', Number: '40010' },
+                { Ref: 'p-40032', Description: 'Поштомат "Нова Пошта" №40032: вул. В, 3', Number: '40032' }
+            ], '40032');
+            expect(ranked.map(b => b.Ref)).toEqual(['p-40032']);
+
             globalThis.document.getElementById = origGetElementById;
         });
 

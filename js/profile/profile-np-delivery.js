@@ -8,9 +8,14 @@ import {
     getGlobalFn,
     bindWindowFn
 } from './profile-state.js';
+import {
+    filterAndSortBranches,
+    parseNPBranchQuery
+} from '../cart/novaposhta-helpers.js';
 
 export const profileSelectedCityRef = { desktop: '', modal: '' };
 export const profileSelectedBranchRef = { desktop: '', modal: '' };
+const profileBranchRequestSeq = { desktop: 0, modal: 0 };
 
 /**
  * Returns storage/ref scope key for desktop sidebar vs profile modal.
@@ -265,6 +270,8 @@ export async function resolveProfileCityRef(isModal) {
 export async function loadProfileBranches(isModal, searchString = '') {
     if (typeof document === 'undefined') return;
     const prefix = isModal ? 'modalProfile' : 'profile';
+    const scopeKey = getProfileScopeKey(isModal);
+    const reqSeq = ++profileBranchRequestSeq[scopeKey];
     const dropdown = document.getElementById(`${prefix}DeliveryBranchDropdown`);
     const cityInput = document.getElementById(`${prefix}DeliveryCity`);
     const branchInput = document.getElementById(`${prefix}DeliveryBranch`);
@@ -284,6 +291,7 @@ export async function loadProfileBranches(isModal, searchString = '') {
     renderDropdownStatus(dropdown, loadingBranchesMsg, '#888');
 
     const cityRef = await resolveProfileCityRef(isModal);
+    if (profileBranchRequestSeq[scopeKey] !== reqSeq) return;
     if (!cityRef) {
         const chooseCityFromList = tProfile('profile.choose_city_from_list', '[ Выберите город из списка выше ]');
         renderDropdownStatus(dropdown, chooseCityFromList, '#888');
@@ -291,16 +299,23 @@ export async function loadProfileBranches(isModal, searchString = '') {
     }
 
     const rawTrimmed = (searchString || '').trim();
+    const filterBranchesFn = getGlobalFn('filterAndSortBranches') || filterAndSortBranches;
+    const parseQueryFn = getGlobalFn('parseNPBranchQuery') || parseNPBranchQuery;
+    const parsed = rawTrimmed ? parseQueryFn(rawTrimmed) : null;
     const cacheKey = `branches_${cityRef}_${rawTrimmed.toLowerCase()}`;
     let list = await readNpCache(cacheKey);
+    if (profileBranchRequestSeq[scopeKey] !== reqSeq) return;
     // Если чекаут уже сохранил полный список отделений города в IndexedDB — фильтруем его на месте
     if (!list) {
         const allCityBranches = await readNpCache(`branchall_${cityRef}_`);
+        if (profileBranchRequestSeq[scopeKey] !== reqSeq) return;
         if (allCityBranches && Array.isArray(allCityBranches) && allCityBranches.length > 0) {
-            const filterBranchesFn = getGlobalFn('filterAndSortBranches');
-            list = rawTrimmed && filterBranchesFn
+            const localFiltered = rawTrimmed
                 ? filterBranchesFn(allCityBranches, rawTrimmed)
                 : allCityBranches;
+            if (localFiltered && localFiltered.length > 0) {
+                list = localFiltered;
+            }
         }
     }
 
@@ -308,10 +323,6 @@ export async function loadProfileBranches(isModal, searchString = '') {
         try {
             const props = { CityRef: cityRef, Limit: '100' };
             if (rawTrimmed) {
-                const parseQueryFn = getGlobalFn('parseNPBranchQuery');
-                const parsed = parseQueryFn
-                    ? parseQueryFn(rawTrimmed)
-                    : null;
                 props.FindByString = (parsed && parsed.apiSearch)
                     ? parsed.apiSearch
                     : (/^[№#]?\s*\d+$/.test(rawTrimmed) ? '№' + rawTrimmed.replace(/^[№#]\s*/, '') : rawTrimmed);
@@ -321,6 +332,16 @@ export async function loadProfileBranches(isModal, searchString = '') {
                 calledMethod: 'getWarehouses',
                 methodProperties: props
             }, { timeout: 10000, dedupe: true });
+            if (profileBranchRequestSeq[scopeKey] !== reqSeq) return;
+
+            if (rawTrimmed && (!data || !Array.isArray(data.data) || data.data.length === 0) && parsed && parsed.isPureNumber && parsed.number) {
+                data = await window.apiClient.post('/api/np-proxy', {
+                    modelName: 'Address',
+                    calledMethod: 'getWarehouses',
+                    methodProperties: { CityRef: cityRef, Limit: '50', WarehouseId: parsed.number }
+                }, { timeout: 10000, dedupe: true });
+                if (profileBranchRequestSeq[scopeKey] !== reqSeq) return;
+            }
 
             if (rawTrimmed && (!data || !Array.isArray(data.data) || data.data.length === 0) && props.FindByString !== rawTrimmed) {
                 props.FindByString = rawTrimmed;
@@ -329,6 +350,7 @@ export async function loadProfileBranches(isModal, searchString = '') {
                     calledMethod: 'getWarehouses',
                     methodProperties: props
                 }, { timeout: 10000, dedupe: true });
+                if (profileBranchRequestSeq[scopeKey] !== reqSeq) return;
             }
 
             if (data && data.success && Array.isArray(data.data)) {
@@ -338,8 +360,7 @@ export async function loadProfileBranches(isModal, searchString = '') {
                     TypeOfWarehouse: b.TypeOfWarehouse || '',
                     Number: b.Number ? String(b.Number) : ''
                 }));
-                const filterBranchesFn = getGlobalFn('filterAndSortBranches');
-                if (rawTrimmed && filterBranchesFn) {
+                if (rawTrimmed) {
                     list = filterBranchesFn(list, rawTrimmed);
                 }
                 writeNpCache(cacheKey, list);
@@ -347,18 +368,17 @@ export async function loadProfileBranches(isModal, searchString = '') {
                 list = [];
             }
         } catch (e) {
+            if (profileBranchRequestSeq[scopeKey] !== reqSeq) return;
             console.error('Ошибка загрузки отделений в профиле:', e);
             const branchesLoadErr = tProfile('profile.branches_load_error', '[ Сбой загрузки отделений ]');
             renderDropdownStatus(dropdown, branchesLoadErr, '#ff6666', false);
             return;
         }
     } else if (rawTrimmed) {
-        const filterBranchesFn = getGlobalFn('filterAndSortBranches');
-        if (filterBranchesFn) {
-            list = filterBranchesFn(list, rawTrimmed);
-        }
+        list = filterBranchesFn(list, rawTrimmed);
     }
 
+    if (profileBranchRequestSeq[scopeKey] !== reqSeq) return;
     renderProfileBranchDropdown(isModal, list);
 }
 bindWindowFn('loadProfileBranches', loadProfileBranches);
