@@ -371,24 +371,20 @@ html.pwa-standalone body {
 }
 
 /* ==========================================
-   PROFILE SFX SOUND TOGGLE (No Emojis / Clean Retro LED)
+   PROFILE SFX SOUND TOGGLE (Win95 Terminal Style)
    ========================================== */
 .profile-sfx-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed #2b2b2b;
     gap: 10px;
 }
 
 .profile-sfx-label {
     color: #888;
     font-size: 12px;
-    font-family: var(--font-mono, 'Courier New', Courier, monospace);
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
+    font-family: var(--font-main);
 }
 
 .profile-sfx-row--modal .profile-sfx-label {
@@ -399,100 +395,70 @@ html.pwa-standalone body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    min-width: 78px;
-    padding: 4px 11px;
-    background: #0a0a0a;
-    border: 1px solid #444;
-    border-radius: 2px;
+    min-width: 74px;
+    padding: 4px 10px;
+    background: #0d0d0d;
+    border: 1px outset #444;
+    box-shadow: 1px 1px 0 #000;
     font-family: var(--font-mono, 'Courier New', Courier, monospace);
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
     cursor: pointer;
     user-select: none;
+    white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
-    transition:
-        color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-        border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-        background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-        box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.14s ease;
+    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
 }
 
 .profile-sfx-row--modal .profile-sfx-toggle {
-    min-width: 88px;
-    padding: 6px 13px;
+    min-width: 82px;
+    padding: 5px 12px;
     font-size: 12px;
 }
 
-.profile-sfx-toggle:active {
-    transform: scale(0.95);
+.profile-sfx-toggle:hover {
+    background: #161616;
+    border-color: #666;
 }
 
-.profile-sfx-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    transition:
-        background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-        box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+.profile-sfx-toggle:active {
+    border-style: inset;
+    transform: translateY(1px);
 }
 
 .profile-sfx-state {
     display: inline-block;
-    line-height: 1;
+    line-height: 1.1;
+}
+
+.profile-sfx-state::before {
+    content: '[ ';
+    opacity: 0.7;
+}
+
+.profile-sfx-state::after {
+    content: ' ]';
+    opacity: 0.7;
 }
 
 .profile-sfx-toggle.is-on {
     color: var(--accent-green, #00ff00);
-    border-color: rgba(0, 255, 0, 0.65);
-    background: rgba(0, 255, 0, 0.08);
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.14);
-}
-
-.profile-sfx-toggle.is-on:hover {
-    background: rgba(0, 255, 0, 0.14);
-    border-color: var(--accent-green, #00ff00);
-    box-shadow: 0 0 14px rgba(0, 255, 0, 0.24);
-}
-
-.profile-sfx-toggle.is-on .profile-sfx-dot {
-    background: var(--accent-green, #00ff00);
-    box-shadow: 0 0 8px rgba(0, 255, 0, 0.9);
-    transform: scale(1);
 }
 
 .profile-sfx-toggle.is-off {
     color: var(--accent-red, #ff3333);
-    border-color: rgba(255, 51, 51, 0.65);
-    background: rgba(255, 51, 51, 0.08);
-    box-shadow: 0 0 10px rgba(255, 51, 51, 0.14);
-}
-
-.profile-sfx-toggle.is-off:hover {
-    background: rgba(255, 51, 51, 0.14);
-    border-color: var(--accent-red, #ff3333);
-    box-shadow: 0 0 14px rgba(255, 51, 51, 0.24);
-}
-
-.profile-sfx-toggle.is-off .profile-sfx-dot {
-    background: var(--accent-red, #ff3333);
-    box-shadow: 0 0 8px rgba(255, 51, 51, 0.85);
-    transform: scale(0.85);
 }
 
 .profile-sfx-toggle.is-switching {
-    animation: sfxTogglePop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: sfxTogglePop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes sfxTogglePop {
-    0% { transform: scale(0.93); }
-    55% { transform: scale(1.04); }
-    100% { transform: scale(1); }
+    0% { transform: translateY(1px) scale(0.96); }
+    60% { transform: translateY(0) scale(1.02); }
+    100% { transform: translateY(0) scale(1); }
 }
 
 
