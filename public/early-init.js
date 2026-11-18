@@ -123,6 +123,11 @@
                 tryRecoverStaleChunk();
             }
         });
+        setTimeout(function () {
+            if (!window.__nishaAppBooted && typeof navigator !== 'undefined' && navigator.onLine !== false) {
+                tryRecoverStaleChunk();
+            }
+        }, 5000);
     } catch (e) {}
     try {
         var locHash = (window.location && window.location.hash) || '';

@@ -686,7 +686,11 @@ registerActions({
 });
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
+    document.addEventListener('DOMContentLoaded', () => {
+        window.__nishaAppBooted = true;
+        initApp();
+    });
 } else {
+    window.__nishaAppBooted = true;
     initApp();
 }
