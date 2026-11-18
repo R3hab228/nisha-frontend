@@ -3,7 +3,7 @@
 // ==========================================
 
 import { invokeAction, resolveAction } from '../core/action-registry.js';
-import { getRuntimeProfile, getRuntimeUser } from '../core/runtime-env.js';
+import { getRuntimeProfile, getRuntimeSiteLang, getRuntimeUser } from '../core/runtime-env.js';
 import {
     escAttr,
     escHtml,
@@ -364,9 +364,16 @@ export async function fetchMyOrders() {
         let actionHtml = '';
         if (isAccessDenied) {
             if (/OTP|профил|профіл|не подтвержден|не підтверджено/i.test(rawErr)) {
+                const lang = getRuntimeSiteLang();
+                const otpErrFallbacks = {
+                    ua: 'Номер телефону не підтверджено через OTP або профіль',
+                    ru: 'Номер телефона не подтвержден через OTP или профиль',
+                    en: 'Phone number is not verified via OTP or profile'
+                };
+                const localizedDefault = otpErrFallbacks[lang] || otpErrFallbacks.ua;
                 displayMsg = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-                    ? i18next.t('orders_modal.err_otp_unverified', { defaultValue: cleanMsg || rawErr })
-                    : (cleanMsg || rawErr);
+                    ? i18next.t('orders_modal.err_otp_unverified', { defaultValue: localizedDefault })
+                    : localizedDefault;
             }
             if (enteredPhone && enteredPhone.length >= 10) {
                 const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' }) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
