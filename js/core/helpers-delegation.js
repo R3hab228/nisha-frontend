@@ -154,8 +154,8 @@ export function handleDelegatedAction(e) {
         }
         case 'select-live-search-item': {
             const id = actionEl.getAttribute('data-id');
+            invokeAction('closeSearch', { immediate: true });
             if (id) invokeCompatAction('open-product', 'openProductModalById', id);
-            invokeAction('closeSearch');
             break;
         }
         case 'toggle-qa-section': {

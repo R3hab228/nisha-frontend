@@ -328,16 +328,25 @@ function handleLiveSearch() {
     }, 250);
 }
 
-function closeSearch() {
+function closeSearch(options = {}) {
     clearTimeout(searchDebounce);
     currentLiveSearchSeq++;
+    const immediate = Boolean(options && options.immediate);
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
     if (dropdown) {
-        // Не удаляем inline top/left/width/position во время закрытия,
-        // чтобы при дискретном переходе (overlay/display allow-discrete) меню плавно таяло на месте без скачка влево
-        hidePopoverSafe(dropdown);
-        dropdown.style.display = 'none';
+        if (immediate) {
+            dropdown.style.transition = 'none';
+            hidePopoverSafe(dropdown);
+            dropdown.style.display = 'none';
+            void dropdown.offsetHeight;
+            dropdown.style.transition = '';
+        } else {
+            // Не удаляем inline top/left/width/position во время закрытия,
+            // чтобы при дискретном переходе (overlay/display allow-discrete) меню плавно таяло на месте без скачка влево
+            hidePopoverSafe(dropdown);
+            dropdown.style.display = 'none';
+        }
     }
     document.body.classList.remove('search-lock');
     if (hasAction('startLenis')) invokeAction('startLenis');
