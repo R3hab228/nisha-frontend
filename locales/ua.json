@@ -313,7 +313,13 @@
       "leave_review": "Залишити відгук",
       "review_left": "[✔] ВІДГУК ЗАЛИШЕНО",
       "order_prefix": "ЗАМОВЛЕННЯ #",
-      "total_prefix": "РАЗОМ:"
+      "total_prefix": "РАЗОМ:",
+      "status_cancelled": "СКАСОВАНО",
+      "status_completed": "ЗАВЕРШЕНО",
+      "status_shipped": "ВІДПРАВЛЕНО",
+      "status_paid": "ОПЛАЧЕНО",
+      "status_accepted": "ПРИЙНЯТО",
+      "status_processing": "В ОБРОБЦІ"
     },
     "reviews_modal": {
       "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",

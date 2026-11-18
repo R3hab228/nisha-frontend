@@ -313,7 +313,13 @@
       "leave_review": "Оставить отзыв",
       "review_left": "[✔] ОТЗЫВ ОСТАВЛЕН",
       "order_prefix": "ЗАКАЗ #",
-      "total_prefix": "ИТОГО:"
+      "total_prefix": "ИТОГО:",
+      "status_cancelled": "ОТМЕНЕН",
+      "status_completed": "ЗАВЕРШЕН",
+      "status_shipped": "ОТПРАВЛЕН",
+      "status_paid": "ОПЛАЧЕН",
+      "status_accepted": "ПРИНЯТ",
+      "status_processing": "В ОБРАБОТКЕ"
     },
     "reviews_modal": {
       "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",

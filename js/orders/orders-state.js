@@ -3,7 +3,7 @@
 // ==========================================
 
 import { resolveAction } from '../core/action-registry.js';
-import { getRuntimeStorage } from '../core/runtime-env.js';
+import { getRuntimeSiteLang, getRuntimeStorage } from '../core/runtime-env.js';
 
 function getReactiveStore() {
     if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
@@ -121,29 +121,46 @@ export function formatOrderDate(rawDate) {
     return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
 }
 
+const ORDER_STATUS_FALLBACKS = Object.freeze({
+    status_cancelled: { ua: 'СКАСОВАНО', ru: 'ОТМЕНЕН', en: 'CANCELLED' },
+    status_completed: { ua: 'ЗАВЕРШЕНО', ru: 'ЗАВЕРШЕН', en: 'COMPLETED' },
+    status_shipped: { ua: 'ВІДПРАВЛЕНО', ru: 'ОТПРАВЛЕН', en: 'SHIPPED' },
+    status_paid: { ua: 'ОПЛАЧЕНО', ru: 'ОПЛАЧЕН', en: 'PAID' },
+    status_accepted: { ua: 'ПРИЙНЯТО', ru: 'ПРИНЯТ', en: 'ACCEPTED' },
+    status_processing: { ua: 'В ОБРОБЦІ', ru: 'В ОБРАБОТКЕ', en: 'PROCESSING' }
+});
+
 // Локализация статусов заказов для всех поддерживаемых языков (RU, UA, EN)
 export function formatOrderStatus(rawStatus) {
     if (!rawStatus) return '';
     const s = String(rawStatus).trim().toLowerCase();
-    const tr = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+    const lang = getRuntimeSiteLang();
+    const tr = (statusKey) => {
+        const map = ORDER_STATUS_FALLBACKS[statusKey] || {};
+        const def = map[lang] || map.ua || '';
+        const text = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+            ? i18next.t(`orders_modal.${statusKey}`, { defaultValue: def })
+            : def;
+        return String(text || def).toUpperCase();
+    };
 
     if (s.includes('отмен') || s.includes('скас') || s.includes('cancel') || s.includes('возврат') || s.includes('поверн')) {
-        return tr('orders_modal.status_cancelled', 'ОТМЕНЕН').toUpperCase();
+        return tr('status_cancelled');
     }
     if (s.includes('заверш') || s.includes('выполнен') || s.includes('получен') || s.includes('доставлен') || s.includes('complet') || s.includes('deliver')) {
-        return tr('orders_modal.status_completed', 'ЗАВЕРШЕН').toUpperCase();
+        return tr('status_completed');
     }
     if (s.includes('отправ') || s.includes('відправ') || s.includes('ship')) {
-        return tr('orders_modal.status_shipped', 'ОТПРАВЛЕН').toUpperCase();
+        return tr('status_shipped');
     }
     if (s.includes('оплач') || s.includes('paid')) {
-        return tr('orders_modal.status_paid', 'ОПЛАЧЕН').toUpperCase();
+        return tr('status_paid');
     }
     if (s.includes('принят') || s.includes('прийнят') || s.includes('accept')) {
-        return tr('orders_modal.status_accepted', 'ПРИНЯТ').toUpperCase();
+        return tr('status_accepted');
     }
     if (s.includes('обработ') || s.includes('оброб') || s.includes('process') || s.includes('нов')) {
-        return tr('orders_modal.status_processing', 'В ОБРАБОТКЕ').toUpperCase();
+        return tr('status_processing');
     }
 
     return String(rawStatus).toUpperCase();
@@ -152,10 +169,14 @@ export function formatOrderStatus(rawStatus) {
 // Вспомогательная группировка заказов по статусам для вкладок (через Object.groupBy)
 export function getOrderTabBucket(order) {
     const s = (order?.status || '').toLowerCase();
-    if (s.includes('принят') || s.includes('оплачен') || s.includes('обработке') || s.includes('processing') || s.includes('новый')) {
+    if (
+        s.includes('принят') || s.includes('прийнят') || s.includes('accept') ||
+        s.includes('оплачен') || s.includes('оплач') || s.includes('paid') ||
+        s.includes('обработ') || s.includes('оброб') || s.includes('processing') || s.includes('новый') || s.includes('нов')
+    ) {
         return 'accepted';
     }
-    if (s.includes('отправлен') || s.includes('завершен')) {
+    if (s.includes('отправлен') || s.includes('відправ') || s.includes('ship') || s.includes('завершен') || s.includes('complet')) {
         return 'shipped';
     }
     if (s.includes('отменен') || s.includes('возврат')) {

@@ -313,7 +313,13 @@
       "leave_review": "Leave review",
       "review_left": "[✔] REVIEW SUBMITTED",
       "order_prefix": "ORDER #",
-      "total_prefix": "TOTAL:"
+      "total_prefix": "TOTAL:",
+      "status_cancelled": "CANCELLED",
+      "status_completed": "COMPLETED",
+      "status_shipped": "SHIPPED",
+      "status_paid": "PAID",
+      "status_accepted": "ACCEPTED",
+      "status_processing": "PROCESSING"
     },
     "reviews_modal": {
       "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
