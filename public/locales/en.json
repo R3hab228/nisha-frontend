@@ -282,6 +282,7 @@
       "loading_db": "[ LOADING DATABASE... ]",
       "err_no_phone": "[ NO PHONE NUMBER ENTERED ]",
       "access_denied_otp": "[ ACCESS DENIED ]<br><br>Please verify ownership of this phone number first.",
+      "err_otp_unverified": "Phone number is not verified via OTP or profile",
       "verify_bot_btn": "VERIFY NUMBER IN TELEGRAM BOT",
       "ttn_copied": "Tracking number copied: ",
       "empty_accepted": "No active orders.",
@@ -291,7 +292,13 @@
       "leave_review": "Leave review",
       "review_left": "[✔] REVIEW SUBMITTED",
       "order_prefix": "ORDER #",
-      "total_prefix": "TOTAL:"
+      "total_prefix": "TOTAL:",
+      "status_cancelled": "CANCELLED",
+      "status_completed": "COMPLETED",
+      "status_shipped": "SHIPPED",
+      "status_paid": "PAID",
+      "status_accepted": "ACCEPTED",
+      "status_processing": "PROCESSING"
     },
     "reviews_modal": {
       "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
@@ -372,7 +379,7 @@
       "safe_3": "3. If a client rejects the item due to hidden defects or it being a replica, <b>you pay for two-way shipping</b>.",
       "safe_4": "4. One of the photos MUST include a piece of paper with your nickname and date.",
       "media_label": "PHOTO / VIDEO (UP TO 5):",
-      "media_click": "📸 Click to select files",
+      "media_click": "Click to select files",
       "name_label": "ITEM NAME:",
       "name_place": "E.g.: Zip Hoodie, Puffer Jacket...",
       "brand_label": "BRAND AND MODEL:",
