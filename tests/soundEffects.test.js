@@ -79,8 +79,45 @@ describe('Adaptive Windows 98 Full Sound Pack & Mastering Engine', () => {
             matchMedia: vi.fn(() => ({ matches: true }))
         });
         vi.stubGlobal('navigator', { maxTouchPoints: 5 });
-        const mobileToastGain = computeAdaptiveOutputGain({ sound: 'notify', kind: 'toast', bufferRms: 0.125 });
+        const mobileToastGain = computeAdaptiveOutputGain({ sound: 'notify', kind: 'toast', bufferRms: 0.125, now: new Date(2026, 10, 18, 14, 0) });
         expect(mobileToastGain).toBeGreaterThan(toastGain);
+    });
+
+    it('automatically attenuates all sound gains by ~33% during local night hours (23:00–08:00)', async () => {
+        vi.stubGlobal('window', {
+            matchMedia: vi.fn(() => ({ matches: false }))
+        });
+        vi.stubGlobal('navigator', { maxTouchPoints: 0 });
+        vi.stubGlobal('document', { hidden: false });
+
+        const { isNightQuietHours, computeAdaptiveOutputGain } = await import('../js/core/sound-effects.js');
+
+        const dayMorning = new Date(2026, 10, 18, 8, 0);
+        const dayAfternoon = new Date(2026, 10, 18, 14, 30);
+        const dayLate = new Date(2026, 10, 18, 22, 59);
+        const nightStart = new Date(2026, 10, 18, 23, 0);
+        const nightMidnight = new Date(2026, 10, 18, 0, 15);
+        const nightDawn = new Date(2026, 10, 18, 7, 59);
+
+        expect(isNightQuietHours(dayMorning)).toBe(false);
+        expect(isNightQuietHours(dayAfternoon)).toBe(false);
+        expect(isNightQuietHours(dayLate)).toBe(false);
+        expect(isNightQuietHours(nightStart)).toBe(true);
+        expect(isNightQuietHours(nightMidnight)).toBe(true);
+        expect(isNightQuietHours(nightDawn)).toBe(true);
+
+        const dayNotify = computeAdaptiveOutputGain({ sound: 'notify', kind: 'toast', bufferRms: 0.125, now: dayAfternoon });
+        const nightNotify = computeAdaptiveOutputGain({ sound: 'notify', kind: 'toast', bufferRms: 0.125, now: nightStart });
+        expect(nightNotify).toBeCloseTo(dayNotify * 0.67, 2);
+
+        const dayTada = computeAdaptiveOutputGain({ sound: 'tada', kind: 'celebrate', bufferRms: 0.13, now: dayAfternoon });
+        const nightTada = computeAdaptiveOutputGain({ sound: 'tada', kind: 'celebrate', bufferRms: 0.13, now: nightMidnight });
+        expect(nightTada).toBeCloseTo(dayTada * 0.67, 2);
+
+        const dayMenu = computeAdaptiveOutputGain({ sound: 'menu', kind: 'ui', bufferRms: 0.08, now: dayAfternoon });
+        const nightMenu = computeAdaptiveOutputGain({ sound: 'menu', kind: 'ui', bufferRms: 0.08, now: nightDawn });
+        expect(nightMenu).toBeLessThan(dayMenu);
+        expect(nightMenu).toBeCloseTo(dayMenu * 0.67, 2);
     });
 
     it('enforces priority lock (tada blocks notify toast, start does not block tada), cooldown, and mute/hidden guards', async () => {

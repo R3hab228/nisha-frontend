@@ -8,6 +8,9 @@ import { getRuntimeStorage } from './runtime-env.js';
 const SFX_STORAGE_KEY = 'nisha_sfx_enabled';
 const TARGET_BUFFER_RMS = 0.125; // ~ -18 dBFS target loudness
 const PENDING_TTL_MS = 4000;
+const NIGHT_MODE_START_HOUR = 23;
+const NIGHT_MODE_END_HOUR = 8;
+const NIGHT_MODE_GAIN_MULTIPLIER = 0.67; // -33% volume during 23:00–07:59 local time
 
 export const SOUND_PROFILES = Object.freeze({
     start: {
@@ -197,14 +200,25 @@ export function computeBufferRms(buffer) {
 }
 
 /**
+ * Returns true during local night quiet hours (23:00–07:59 inclusive).
+ * @param {Date} [date=new Date()]
+ * @returns {boolean}
+ */
+export function isNightQuietHours(date = new Date()) {
+    const d = (date instanceof Date && !Number.isNaN(date.getTime())) ? date : new Date();
+    const hour = d.getHours();
+    return hour >= NIGHT_MODE_START_HOUR || hour < NIGHT_MODE_END_HOUR;
+}
+
+/**
  * Computes comfortable, non-harsh gain calibrated by sound profile, device speaker profile,
- * buffer RMS loudness, and network/battery constraints.
+ * buffer RMS loudness, local night quiet hours (23:00–08:00), and network/battery constraints.
  * Note: browsers cannot read OS hardware volume sliders, so we combine per-sound RMS normalization
  * with a Web Audio DynamicsCompressor limiter to keep small phone speakers audible and loud speakers safe.
- * @param {{ sound?: string, kind?: 'toast'|'broadcast'|'alert'|'success'|'celebrate'|'ui', bufferRms?: number }} [opts={}]
+ * @param {{ sound?: string, kind?: 'toast'|'broadcast'|'alert'|'success'|'celebrate'|'ui', bufferRms?: number, now?: Date }} [opts={}]
  * @returns {number}
  */
-export function computeAdaptiveOutputGain({ sound = 'notify', kind = 'toast', bufferRms } = {}) {
+export function computeAdaptiveOutputGain({ sound = 'notify', kind = 'toast', bufferRms, now } = {}) {
     const prof = resolveSoundProfile(sound);
     let isMobileSpeaker = false;
 
@@ -226,12 +240,18 @@ export function computeAdaptiveOutputGain({ sound = 'notify', kind = 'toast', bu
         baseGain *= 0.9;
     }
 
+    const nightMode = isNightQuietHours(now);
+    if (nightMode) {
+        baseGain *= NIGHT_MODE_GAIN_MULTIPLIER;
+    }
+
     const targetRms = prof.targetRms || TARGET_BUFFER_RMS;
     const safeRms = Math.max(0.02, Math.min(0.5, Number(bufferRms) || targetRms));
     const rmsCompensation = Math.max(0.55, Math.min(1.65, targetRms / safeRms));
     const finalGain = baseGain * rmsCompensation;
+    const minGain = nightMode ? 0.035 : 0.05;
 
-    return Math.max(0.05, Math.min(0.54, Number(finalGain.toFixed(3))));
+    return Math.max(minGain, Math.min(0.54, Number(finalGain.toFixed(3))));
 }
 
 function getOrCreateAudioContext() {
