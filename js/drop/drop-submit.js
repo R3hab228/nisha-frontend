@@ -645,6 +645,7 @@ export async function submitProposal() {
             const okTitle = (typeof i18next !== 'undefined' && i18next.t('propose.success_title', { defaultValue: 'SYSTEM_OK.LOG' })) || 'SYSTEM_OK.LOG';
             const okText = (typeof i18next !== 'undefined' && i18next.t('propose.success_text', { defaultValue: 'Заявка успешно отправлена.' })) || 'Заявка успешно отправлена.';
             const okBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' })) || '[ ЗАКРЫТЬ ]';
+            invokeAction('playSound', 'tada', { kind: 'celebrate' });
             showTerminalModal(okTitle, okText, okBtn, null);
         }, 100);
     } catch (err) {

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { existsSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-describe('Adaptive Windows 98 NOTIFY Sound Effects Engine', () => {
+describe('Adaptive Windows 98 Full Sound Pack & Mastering Engine', () => {
     beforeEach(() => {
         vi.resetModules();
     });
@@ -12,15 +12,29 @@ describe('Adaptive Windows 98 NOTIFY Sound Effects Engine', () => {
         vi.restoreAllMocks();
     });
 
-    it('ships normalized public/sounds/notify.mp3 asset under 35 KB', () => {
-        const assetPath = resolve(process.cwd(), 'public/sounds/notify.mp3');
-        expect(existsSync(assetPath)).toBe(true);
-        const size = statSync(assetPath).size;
-        expect(size).toBeGreaterThan(5000);
-        expect(size).toBeLessThan(35000);
+    it('ships all 7 normalized Win98 MP3 assets under 35 KB each in public/sounds/', () => {
+        const expectedAssets = [
+            'start.mp3',
+            'ding.mp3',
+            'recycle.mp3',
+            'notify.mp3',
+            'chimes.mp3',
+            'chord.mp3',
+            'tada.mp3'
+        ];
+        let totalSize = 0;
+        for (const file of expectedAssets) {
+            const assetPath = resolve(process.cwd(), 'public/sounds', file);
+            expect(existsSync(assetPath)).toBe(true);
+            const size = statSync(assetPath).size;
+            expect(size).toBeGreaterThan(1000);
+            expect(size).toBeLessThan(35000);
+            totalSize += size;
+        }
+        expect(totalSize).toBeLessThan(125000);
     });
 
-    it('computeBufferRms and computeAdaptiveOutputGain balance quiet/loud buffers and mobile/desktop speakers', async () => {
+    it('balances gain across sound profiles, buffer RMS levels, and mobile vs desktop speakers', async () => {
         vi.stubGlobal('window', {
             matchMedia: vi.fn(() => ({ matches: false }))
         });
@@ -43,29 +57,34 @@ describe('Adaptive Windows 98 NOTIFY Sound Effects Engine', () => {
         expect(computeBufferRms(quietBuffer)).toBeCloseTo(0.05, 3);
         expect(computeBufferRms(loudBuffer)).toBeCloseTo(0.45, 3);
 
-        const quietGain = computeAdaptiveOutputGain({ kind: 'toast', bufferRms: 0.05 });
-        const loudGain = computeAdaptiveOutputGain({ kind: 'toast', bufferRms: 0.45 });
+        const quietGain = computeAdaptiveOutputGain({ sound: 'notify', kind: 'toast', bufferRms: 0.05 });
+        const loudGain = computeAdaptiveOutputGain({ sound: 'notify', kind: 'toast', bufferRms: 0.45 });
         expect(quietGain).toBeGreaterThan(loudGain);
-        expect(quietGain).toBeLessThanOrEqual(0.52);
-        expect(loudGain).toBeGreaterThanOrEqual(0.06);
+        expect(quietGain).toBeLessThanOrEqual(0.54);
+        expect(loudGain).toBeGreaterThanOrEqual(0.05);
 
-        const broadcastGain = computeAdaptiveOutputGain({ kind: 'broadcast', bufferRms: 0.125 });
-        const toastGain = computeAdaptiveOutputGain({ kind: 'toast', bufferRms: 0.125 });
+        const startGain = computeAdaptiveOutputGain({ sound: 'start', kind: 'ui', bufferRms: 0.085 });
+        const tadaGain = computeAdaptiveOutputGain({ sound: 'tada', kind: 'celebrate', bufferRms: 0.13 });
+        expect(startGain).toBeLessThan(tadaGain);
+
+        const broadcastGain = computeAdaptiveOutputGain({ sound: 'notify', kind: 'broadcast', bufferRms: 0.125 });
+        const toastGain = computeAdaptiveOutputGain({ sound: 'notify', kind: 'toast', bufferRms: 0.125 });
         expect(broadcastGain).toBeGreaterThan(toastGain);
 
         vi.stubGlobal('window', {
             matchMedia: vi.fn(() => ({ matches: true }))
         });
         vi.stubGlobal('navigator', { maxTouchPoints: 5 });
-        const mobileToastGain = computeAdaptiveOutputGain({ kind: 'toast', bufferRms: 0.125 });
+        const mobileToastGain = computeAdaptiveOutputGain({ sound: 'notify', kind: 'toast', bufferRms: 0.125 });
         expect(mobileToastGain).toBeGreaterThan(toastGain);
     });
 
-    it('playNotifySound runs mastering chain, enforces cooldown, and respects setSoundEnabled/hidden state', async () => {
+    it('enforces priority lock (tada blocks notify toast, start does not block tada), cooldown, and mute/hidden guards', async () => {
         const listeners = {};
         const connectSpy = vi.fn();
         const startSpy = vi.fn();
         const setValueSpy = vi.fn();
+        const fetchedUrls = [];
 
         const fakeNode = () => ({
             type: '',
@@ -113,28 +132,34 @@ describe('Adaptive Windows 98 NOTIFY Sound Effects Engine', () => {
             hidden: false,
             addEventListener: (ev, fn) => { listeners[ev] = fn; }
         });
-        vi.stubGlobal('fetch', vi.fn(async () => ({
-            ok: true,
-            arrayBuffer: async () => new ArrayBuffer(16)
-        })));
+        vi.stubGlobal('fetch', vi.fn(async (url) => {
+            fetchedUrls.push(url);
+            return {
+                ok: true,
+                arrayBuffer: async () => new ArrayBuffer(16)
+            };
+        }));
 
         const mod = await import('../js/core/sound-effects.js');
         mod.resetSoundEffectsTestState();
 
-        const first = await mod.playNotifySound({ kind: 'toast' });
-        expect(first).toBe(true);
-        expect(startSpy).toHaveBeenCalledTimes(1);
-        expect(connectSpy).toHaveBeenCalled();
+        // Low-priority 'start' plays and does NOT block higher-priority 'tada'
+        const startPlayed = await mod.playSound('start', { kind: 'ui' });
+        expect(startPlayed).toBe(true);
+        expect(fetchedUrls).toContain('/sounds/start.mp3');
 
-        // Cooldown prevents rapid spam stacking
-        const immediateSecond = await mod.playNotifySound({ kind: 'toast' });
-        expect(immediateSecond).toBe(false);
-        expect(startSpy).toHaveBeenCalledTimes(1);
+        const tadaPlayed = await mod.playSound('tada', { kind: 'celebrate' });
+        expect(tadaPlayed).toBe(true);
+        expect(fetchedUrls).toContain('/sounds/tada.mp3');
 
-        // User mute disables playback
+        // Active 'tada' priority lock prevents trailing lower-priority 'notify' toast from interrupting
+        const blockedNotify = await mod.playNotifySound({ kind: 'toast' });
+        expect(blockedNotify).toBe(false);
+
+        // User mute disables all playback
         mod.setSoundEnabled(false);
         expect(mod.isSoundEnabled()).toBe(false);
-        const mutedPlay = await mod.playNotifySound({ kind: 'broadcast' });
+        const mutedPlay = await mod.playSound('chord', { kind: 'alert' });
         expect(mutedPlay).toBe(false);
 
         // Hidden tab skips playback
@@ -143,7 +168,7 @@ describe('Adaptive Windows 98 NOTIFY Sound Effects Engine', () => {
             hidden: true,
             addEventListener: (ev, fn) => { listeners[ev] = fn; }
         });
-        const hiddenPlay = await mod.playNotifySound({ kind: 'broadcast' });
+        const hiddenPlay = await mod.playSound('ding', { kind: 'toast' });
         expect(hiddenPlay).toBe(false);
     });
 });

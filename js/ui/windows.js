@@ -171,6 +171,7 @@ function openModal(id) {
     invokeAction('stopLenis');
     const modal = document.getElementById(id);
     if (!modal) return;
+    invokeAction('playSound', 'start', { kind: 'ui' });
 
     // Ленивая привязка интерактивных слушателей и жестов к открываемому окну
     if (typeof attachModalOverlayInteractions === 'function') {

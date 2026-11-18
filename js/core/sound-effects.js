@@ -1,22 +1,99 @@
 // ==========================================
-// NISHA SOUND EFFECTS ENGINE (ADAPTIVE MASTERING & PLAYBACK)
+// NISHA SOUND EFFECTS ENGINE (WIN98 FULL PACK + ADAPTIVE MASTERING)
 // ==========================================
 
 import { registerActions } from './action-registry.js';
 import { getRuntimeStorage } from './runtime-env.js';
 
-const NOTIFY_SOUND_URL = '/sounds/notify.mp3';
 const SFX_STORAGE_KEY = 'nisha_sfx_enabled';
 const TARGET_BUFFER_RMS = 0.125; // ~ -18 dBFS target loudness
-const PLAY_COOLDOWN_MS = 450;
 const PENDING_TTL_MS = 4000;
 
+export const SOUND_PROFILES = Object.freeze({
+    start: {
+        url: '/sounds/start.mp3',
+        baseDesktop: 0.14,
+        baseMobile: 0.19,
+        priority: 1,
+        cooldownMs: 140,
+        targetRms: 0.085,
+        lockLowerMs: 0
+    },
+    ding: {
+        url: '/sounds/ding.mp3',
+        baseDesktop: 0.24,
+        baseMobile: 0.30,
+        priority: 2,
+        cooldownMs: 320,
+        targetRms: 0.125,
+        lockLowerMs: 450
+    },
+    recycle: {
+        url: '/sounds/recycle.mp3',
+        baseDesktop: 0.25,
+        baseMobile: 0.32,
+        priority: 2,
+        cooldownMs: 350,
+        targetRms: 0.11,
+        lockLowerMs: 450
+    },
+    notify: {
+        url: '/sounds/notify.mp3',
+        baseDesktop: 0.25,
+        baseMobile: 0.31,
+        priority: 1,
+        cooldownMs: 450,
+        targetRms: 0.125,
+        lockLowerMs: 0
+    },
+    chimes: {
+        url: '/sounds/chimes.mp3',
+        baseDesktop: 0.28,
+        baseMobile: 0.35,
+        priority: 3,
+        cooldownMs: 650,
+        targetRms: 0.12,
+        lockLowerMs: 950
+    },
+    chord: {
+        url: '/sounds/chord.mp3',
+        baseDesktop: 0.23,
+        baseMobile: 0.29,
+        priority: 3,
+        cooldownMs: 500,
+        targetRms: 0.12,
+        lockLowerMs: 750
+    },
+    tada: {
+        url: '/sounds/tada.mp3',
+        baseDesktop: 0.32,
+        baseMobile: 0.39,
+        priority: 4,
+        cooldownMs: 1200,
+        targetRms: 0.13,
+        lockLowerMs: 1450
+    }
+});
+
 let _audioCtx = null;
-let _notifyBuffer = null;
-let _bufferPromise = null;
+const _bufferCache = new Map();
+const _bufferPromises = new Map();
+const _lastPlayedBySound = new Map();
 let _unlockListenersBound = false;
-let _lastPlayedAt = 0;
+let _warmupStarted = false;
+let _higherPriorityLock = { priority: 0, until: 0 };
 let _pendingPlay = null;
+
+/**
+ * Resolves sound profile safely, falling back to `notify`.
+ * @param {string} name
+ * @returns {{ key: string, url: string, baseDesktop: number, baseMobile: number, priority: number, cooldownMs: number, targetRms: number, lockLowerMs: number }}
+ */
+function resolveSoundProfile(name) {
+    const key = String(name || 'notify').toLowerCase();
+    const prof = Object.hasOwn(SOUND_PROFILES, key) ? SOUND_PROFILES[key] : SOUND_PROFILES.notify;
+    return { key: Object.hasOwn(SOUND_PROFILES, key) ? key : 'notify', ...prof };
+}
 
 /**
  * Checks whether sound effects are enabled by user preference.
@@ -84,15 +161,16 @@ export function computeBufferRms(buffer) {
 }
 
 /**
- * Computes comfortable, non-harsh gain calibrated by device profile, notification kind,
+ * Computes comfortable, non-harsh gain calibrated by sound profile, device speaker profile,
  * buffer RMS loudness, and network/battery constraints.
- * Note: browsers cannot read OS hardware volume sliders, so we combine RMS normalization
- * with a Web Audio DynamicsCompressor limiter to keep small speakers audible and loud speakers safe.
- * @param {{ kind?: 'toast'|'broadcast', bufferRms?: number }} [opts={}]
+ * Note: browsers cannot read OS hardware volume sliders, so we combine per-sound RMS normalization
+ * with a Web Audio DynamicsCompressor limiter to keep small phone speakers audible and loud speakers safe.
+ * @param {{ sound?: string, kind?: 'toast'|'broadcast'|'alert'|'success'|'celebrate'|'ui', bufferRms?: number }} [opts={}]
  * @returns {number}
  */
-export function computeAdaptiveOutputGain({ kind = 'toast', bufferRms = TARGET_BUFFER_RMS } = {}) {
-    let baseGain = kind === 'broadcast' ? 0.34 : 0.25;
+export function computeAdaptiveOutputGain({ sound = 'notify', kind = 'toast', bufferRms } = {}) {
+    const prof = resolveSoundProfile(sound);
+    let isMobileSpeaker = false;
 
     if (typeof window !== 'undefined') {
         const isCoarsePointer = Boolean(
@@ -100,22 +178,24 @@ export function computeAdaptiveOutputGain({ kind = 'toast', bufferRms = TARGET_B
             typeof window.matchMedia === 'function' &&
             window.matchMedia('(pointer: coarse)').matches
         );
-        const isTouchDevice = isCoarsePointer || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints || 0) > 0);
-        if (isTouchDevice) {
-            // Mobile phone speakers have smaller drivers than desktop speakers/headphones
-            baseGain *= 1.24;
-        }
+        isMobileSpeaker = isCoarsePointer || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints || 0) > 0);
+    }
+
+    let baseGain = isMobileSpeaker ? prof.baseMobile : prof.baseDesktop;
+    if (prof.key === 'notify' && kind === 'broadcast') {
+        baseGain = isMobileSpeaker ? 0.40 : 0.34;
     }
 
     if (typeof navigator !== 'undefined' && navigator.connection && navigator.connection.saveData) {
         baseGain *= 0.9;
     }
 
-    const safeRms = Math.max(0.02, Math.min(0.5, Number(bufferRms) || TARGET_BUFFER_RMS));
-    const rmsCompensation = Math.max(0.55, Math.min(1.65, TARGET_BUFFER_RMS / safeRms));
+    const targetRms = prof.targetRms || TARGET_BUFFER_RMS;
+    const safeRms = Math.max(0.02, Math.min(0.5, Number(bufferRms) || targetRms));
+    const rmsCompensation = Math.max(0.55, Math.min(1.65, targetRms / safeRms));
     const finalGain = baseGain * rmsCompensation;
 
-    return Math.max(0.06, Math.min(0.52, Number(finalGain.toFixed(3))));
+    return Math.max(0.05, Math.min(0.54, Number(finalGain.toFixed(3))));
 }
 
 function getOrCreateAudioContext() {
@@ -131,27 +211,44 @@ function getOrCreateAudioContext() {
     return _audioCtx;
 }
 
-async function loadNotifyBuffer(ctx) {
-    if (_notifyBuffer) return _notifyBuffer;
-    if (_bufferPromise) return _bufferPromise;
+async function loadSoundBuffer(ctx, soundName) {
+    const prof = resolveSoundProfile(soundName);
+    if (_bufferCache.has(prof.key)) return _bufferCache.get(prof.key);
+    if (_bufferPromises.has(prof.key)) return _bufferPromises.get(prof.key);
     if (!ctx || typeof fetch !== 'function' || typeof ctx.decodeAudioData !== 'function') return null;
 
-    _bufferPromise = fetch(NOTIFY_SOUND_URL, { cache: 'force-cache' })
+    const promise = fetch(prof.url, { cache: 'force-cache' })
         .then((res) => (res && res.ok ? res.arrayBuffer() : null))
         .then((arr) => (arr ? ctx.decodeAudioData(arr) : null))
         .then((decoded) => {
-            if (decoded) _notifyBuffer = decoded;
+            if (decoded) _bufferCache.set(prof.key, decoded);
             return decoded || null;
         })
         .catch(() => null)
         .finally(() => {
-            _bufferPromise = null;
+            _bufferPromises.delete(prof.key);
         });
 
-    return _bufferPromise;
+    _bufferPromises.set(prof.key, promise);
+    return promise;
 }
 
-function playBufferWithMastering(ctx, buffer, kind) {
+function warmUpCoreSounds(ctx) {
+    if (_warmupStarted || !ctx || typeof setTimeout !== 'function') return;
+    if (typeof navigator !== 'undefined' && navigator.connection && navigator.connection.saveData) return;
+    _warmupStarted = true;
+
+    const order = ['start', 'ding', 'notify', 'recycle', 'chord', 'chimes', 'tada'];
+    order.forEach((key, idx) => {
+        setTimeout(() => {
+            if (ctx.state === 'running') {
+                loadSoundBuffer(ctx, key).catch(() => {});
+            }
+        }, idx * 140);
+    });
+}
+
+function playBufferWithMastering(ctx, buffer, soundName, kind) {
     if (!ctx || !buffer || typeof ctx.createBufferSource !== 'function') return false;
     try {
         const source = ctx.createBufferSource();
@@ -159,7 +256,7 @@ function playBufferWithMastering(ctx, buffer, kind) {
 
         const gainNode = ctx.createGain();
         const rms = computeBufferRms(buffer);
-        const targetGain = computeAdaptiveOutputGain({ kind, bufferRms: rms });
+        const targetGain = computeAdaptiveOutputGain({ sound: soundName, kind, bufferRms: rms });
         gainNode.gain.setValueAtTime(targetGain, ctx.currentTime);
 
         let chainTail = source;
@@ -172,7 +269,7 @@ function playBufferWithMastering(ctx, buffer, kind) {
             const presenceSoftener = ctx.createBiquadFilter();
             presenceSoftener.type = 'highshelf';
             presenceSoftener.frequency.setValueAtTime(6800, ctx.currentTime);
-            presenceSoftener.gain.setValueAtTime(-2.5, ctx.currentTime);
+            presenceSoftener.gain.setValueAtTime(soundName === 'start' ? -3.5 : -2.5, ctx.currentTime);
 
             chainTail.connect(highpass);
             highpass.connect(presenceSoftener);
@@ -200,11 +297,12 @@ function playBufferWithMastering(ctx, buffer, kind) {
     }
 }
 
-function playFallbackHtmlAudio(kind) {
+function playFallbackHtmlAudio(soundName, kind) {
     if (typeof Audio !== 'function') return false;
+    const prof = resolveSoundProfile(soundName);
     try {
-        const audio = new Audio(NOTIFY_SOUND_URL);
-        audio.volume = computeAdaptiveOutputGain({ kind, bufferRms: TARGET_BUFFER_RMS });
+        const audio = new Audio(prof.url);
+        audio.volume = computeAdaptiveOutputGain({ sound: prof.key, kind, bufferRms: prof.targetRms });
         const playRes = audio.play();
         if (playRes && typeof playRes.catch === 'function') {
             playRes.catch(() => {});
@@ -212,6 +310,23 @@ function playFallbackHtmlAudio(kind) {
         return true;
     } catch {
         return false;
+    }
+}
+
+function resolveEffectivePriority(profile, kind) {
+    if (profile.key === 'notify' && kind === 'broadcast') return 3;
+    return profile.priority;
+}
+
+function markPlaybackTimestamps(profile, kind, now) {
+    _lastPlayedBySound.set(profile.key, now);
+    const effectivePriority = resolveEffectivePriority(profile, kind);
+    const lockMs = (profile.key === 'notify' && kind === 'broadcast') ? 950 : profile.lockLowerMs;
+    if (lockMs > 0) {
+        const lockUntil = now + lockMs;
+        if (effectivePriority >= _higherPriorityLock.priority || now >= _higherPriorityLock.until) {
+            _higherPriorityLock = { priority: effectivePriority, until: lockUntil };
+        }
     }
 }
 
@@ -229,17 +344,22 @@ function bindAudioUnlockListeners() {
             } catch {}
         }
 
-        // Pre-warm decoded buffer on first gesture for zero-latency future toasts
-        loadNotifyBuffer(ctx).then((buf) => {
-            if (_pendingPlay && buf && ctx.state === 'running') {
-                const pending = _pendingPlay;
-                _pendingPlay = null;
-                if (Date.now() - pending.queuedAt <= PENDING_TTL_MS) {
-                    _lastPlayedAt = Date.now();
-                    playBufferWithMastering(ctx, buf, pending.kind);
+        if (ctx.state === 'running') {
+            warmUpCoreSounds(ctx);
+        }
+
+        if (_pendingPlay) {
+            const pending = _pendingPlay;
+            _pendingPlay = null;
+            if (Date.now() - pending.queuedAt <= PENDING_TTL_MS && ctx.state === 'running') {
+                const prof = resolveSoundProfile(pending.sound);
+                const buf = await loadSoundBuffer(ctx, prof.key);
+                if (buf) {
+                    markPlaybackTimestamps(prof, pending.kind, Date.now());
+                    playBufferWithMastering(ctx, buf, prof.key, pending.kind);
                 }
             }
-        }).catch(() => {});
+        }
     };
 
     const opts = { capture: true, passive: true };
@@ -248,24 +368,33 @@ function bindAudioUnlockListeners() {
 }
 
 /**
- * Plays the Windows 98 NOTIFY sound effect with adaptive leveling, compression limiter,
- * anti-spam cooldown, and autoplay-gesture deferral.
- * @param {{ kind?: 'toast'|'broadcast' }} [options={}]
+ * Plays any registered Win98 sound effect (`start`, `ding`, `recycle`, `notify`, `chimes`, `chord`, `tada`)
+ * with adaptive RMS leveling, DynamicsCompressor limiting, priority lock, and autoplay deferral.
+ * @param {'start'|'ding'|'recycle'|'notify'|'chimes'|'chord'|'tada'} [soundName='notify']
+ * @param {{ kind?: 'toast'|'broadcast'|'alert'|'success'|'celebrate'|'ui' }} [options={}]
  * @returns {Promise<boolean>}
  */
-export async function playNotifySound({ kind = 'toast' } = {}) {
+export async function playSound(soundName = 'notify', { kind = 'toast' } = {}) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return false;
     if (document.hidden || !isSoundEnabled()) return false;
 
+    const prof = resolveSoundProfile(soundName);
+    const effectivePriority = resolveEffectivePriority(prof, kind);
     const now = Date.now();
-    if (now - _lastPlayedAt < PLAY_COOLDOWN_MS) return false;
+
+    if (now < _higherPriorityLock.until && effectivePriority < _higherPriorityLock.priority) {
+        return false;
+    }
+
+    const lastSame = _lastPlayedBySound.get(prof.key) || 0;
+    if (now - lastSame < prof.cooldownMs) return false;
 
     bindAudioUnlockListeners();
 
     const ctx = getOrCreateAudioContext();
     if (!ctx) {
-        _lastPlayedAt = now;
-        return playFallbackHtmlAudio(kind);
+        markPlaybackTimestamps(prof, kind, now);
+        return playFallbackHtmlAudio(prof.key, kind);
     }
 
     if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
@@ -275,19 +404,32 @@ export async function playNotifySound({ kind = 'toast' } = {}) {
     }
 
     if (ctx.state !== 'running') {
-        _pendingPlay = { kind, queuedAt: now };
-        loadNotifyBuffer(ctx).catch(() => {});
+        if (!_pendingPlay || effectivePriority >= resolveEffectivePriority(resolveSoundProfile(_pendingPlay.sound), _pendingPlay.kind)) {
+            _pendingPlay = { sound: prof.key, kind, queuedAt: now };
+        }
+        loadSoundBuffer(ctx, prof.key).catch(() => {});
         return false;
     }
 
-    const buffer = await loadNotifyBuffer(ctx);
+    warmUpCoreSounds(ctx);
+
+    const buffer = await loadSoundBuffer(ctx, prof.key);
     if (!buffer) {
-        _lastPlayedAt = Date.now();
-        return playFallbackHtmlAudio(kind);
+        markPlaybackTimestamps(prof, kind, Date.now());
+        return playFallbackHtmlAudio(prof.key, kind);
     }
 
-    _lastPlayedAt = Date.now();
-    return playBufferWithMastering(ctx, buffer, kind);
+    markPlaybackTimestamps(prof, kind, Date.now());
+    return playBufferWithMastering(ctx, buffer, prof.key, kind);
+}
+
+/**
+ * Plays the Windows 98 NOTIFY sound effect (convenience alias for `playSound('notify', options)`).
+ * @param {{ kind?: 'toast'|'broadcast' }} [options={}]
+ * @returns {Promise<boolean>}
+ */
+export function playNotifySound(options = {}) {
+    return playSound('notify', options);
 }
 
 /**
@@ -295,10 +437,12 @@ export async function playNotifySound({ kind = 'toast' } = {}) {
  */
 export function resetSoundEffectsTestState() {
     _audioCtx = null;
-    _notifyBuffer = null;
-    _bufferPromise = null;
+    _bufferCache.clear();
+    _bufferPromises.clear();
+    _lastPlayedBySound.clear();
     _unlockListenersBound = false;
-    _lastPlayedAt = 0;
+    _warmupStarted = false;
+    _higherPriorityLock = { priority: 0, until: 0 };
     _pendingPlay = null;
 }
 
@@ -307,10 +451,12 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof window !== 'undefined') {
+    window.playSound = playSound;
     window.playNotifySound = playNotifySound;
 }
 
 registerActions({
+    playSound,
     playNotifySound,
     isSoundEnabled,
     setSoundEnabled

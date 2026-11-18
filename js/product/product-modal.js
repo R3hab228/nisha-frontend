@@ -481,6 +481,7 @@ export function openProductModal(item) {
         if (typeof openModal === 'function') {
             openModal('productModal');
         } else if (modalEl) {
+            invokeAction('playSound', 'start', { kind: 'ui' });
             modalEl.inert = false;
             modalEl.removeAttribute('inert');
             modalEl.classList.remove('closing');
@@ -504,6 +505,7 @@ export function openProductModal(item) {
             }
         }
     } else {
+        invokeAction('playSound', 'start', { kind: 'ui' });
         if (modalEl) modalEl.style.pointerEvents = '';
         const win = modalEl ? modalEl.querySelector('.modal-window') : null;
         if (win) win.style.pointerEvents = '';

@@ -634,6 +634,7 @@ export async function executeOrderFinal(emailToSave) {
                     overlay.style.display = 'flex';
                     if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(overlay);
                 }
+                invokeAction('playSound', 'tada', { kind: 'celebrate' });
 
                 setTimeout(() => {
                     if (overlay) overlay.style.display = 'none';

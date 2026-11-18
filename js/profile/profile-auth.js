@@ -108,6 +108,8 @@ export async function handleAuth(action, isModal = false) {
     } else {
         result = await sb.auth.signInWithPassword({ email, password });
         if (!result.error) {
+            const playFn = getGlobalFn('playSound');
+            if (playFn) playFn('chimes', { kind: 'success' }).catch(() => {});
             notifyToast(tProfile('messages.login_success', 'Вход выполнен успешно!'), 'success');
         }
     }
@@ -447,6 +449,8 @@ export function showPasswordRecoveryModal() {
                         }
                     }
 
+                    const playFn = getGlobalFn('playSound');
+                    if (playFn) playFn('chimes', { kind: 'success' }).catch(() => {});
                     notifyToast(tProfile('messages.password_updated', 'Пароль успешно обновлен!'), 'success');
                     finish(true);
                 } catch {

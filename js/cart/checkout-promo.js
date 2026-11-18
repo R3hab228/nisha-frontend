@@ -317,6 +317,7 @@ export async function applyPromoCode() {
                 window.currentPromoFixed = data.is_fixed ? (data.fixed_amount || data.saved_money) : null;
             }
             updateCartUI();
+            invokeAction('playSound', 'chimes', { kind: 'success' });
         } else {
             cartState.currentPromoDiscount = 0;
             cartState.appliedPromoCode = '';
@@ -337,6 +338,7 @@ export async function applyPromoCode() {
                 });
             }
             updateCartUI();
+            invokeAction('playSound', 'chord', { kind: 'alert' });
         }
     } catch (err) {
         if (err && (err.name === 'AbortError' || err.isTimeout)) {
@@ -355,6 +357,7 @@ export async function applyPromoCode() {
                     message: errMsg
                 });
             }
+            invokeAction('playSound', 'chord', { kind: 'alert' });
         }
         updateCartUI();
     }

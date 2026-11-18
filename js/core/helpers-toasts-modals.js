@@ -4,7 +4,7 @@
 
 import { hasAction, invokeAction, registerActions } from './action-registry.js';
 import { escapeAttr, escapeHtml, toCDN } from './helpers-security-media.js';
-import { playNotifySound } from './sound-effects.js';
+import { playNotifySound, playSound } from './sound-effects.js';
 
 let lastToastTime = 0;
 let activeToastState = null;
@@ -199,7 +199,11 @@ export function showToast(message, type = 'success', imgUrl = null, onClick = nu
 
     toast.innerHTML = html;
     container.appendChild(toast);
-    playNotifySound({ kind: 'toast' }).catch(() => {});
+    if (type === 'error') {
+        playSound('chord', { kind: 'alert' }).catch(() => {});
+    } else {
+        playNotifySound({ kind: 'toast' }).catch(() => {});
+    }
     const msgEl = (typeof toast.querySelector === 'function') ? toast.querySelector('.toast-msg-body') : null;
     const currentState = { message: rawMsgStr, type, count: 1, toast, msgEl, safeMsgHtml, dismiss: null };
     const dismiss = attachToastLifecycle(toast, {
@@ -227,9 +231,9 @@ function extractCompactItemTitle(itemOrTitle) {
 
 /**
  * Renders a slot-deduplicated compact item/action toast notification.
- * @param {{ slot?: string, className: string, tagText: string, titleText?: string, imgUrl?: string|null, duration?: number, onClick?: Function|null }} opts
+ * @param {{ slot?: string, className: string, tagText: string, titleText?: string, imgUrl?: string|null, duration?: number, onClick?: Function|null, sound?: string }} opts
  */
-export function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = null, duration = 2500, onClick = null }) {
+export function showCompactToast({ slot, className, tagText, titleText = '', imgUrl = null, duration = 2500, onClick = null, sound = '' }) {
     if (typeof document === 'undefined') return;
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -258,7 +262,9 @@ export function showCompactToast({ slot, className, tagText, titleText = '', img
     `;
     toast.innerHTML = html;
     container.appendChild(toast);
-    playNotifySound({ kind: 'toast' }).catch(() => {});
+    const resolvedSound = sound || (isAlert ? 'chord' : 'notify');
+    const resolvedKind = resolvedSound === 'chord' ? 'alert' : 'toast';
+    playSound(resolvedSound, { kind: resolvedKind }).catch(() => {});
 
     const dismiss = attachToastLifecycle(toast, {
         duration,
@@ -288,7 +294,8 @@ export function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
         className: `toast-fav-item${isAdded ? '' : ' toast-fav-removed'}`,
         tagText,
         titleText: extractCompactItemTitle(itemOrTitle),
-        imgUrl
+        imgUrl,
+        sound: isAdded ? 'ding' : 'start'
     });
 }
 if (typeof window !== 'undefined') window.showFavoriteToast = showFavoriteToast;
@@ -330,7 +337,8 @@ export function showCartToast(itemOrTitle, isAdded = true, imgUrl = null) {
         className: `toast-cart-item${isAdded ? '' : ' toast-cart-removed'}`,
         tagText: String(rawTag).replace(/[:\s]+$/, ''),
         titleText: extractCompactItemTitle(itemOrTitle),
-        imgUrl
+        imgUrl,
+        sound: isAdded ? 'ding' : 'recycle'
     });
 }
 if (typeof window !== 'undefined') window.showCartToast = showCartToast;
