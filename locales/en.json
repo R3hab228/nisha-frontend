@@ -336,6 +336,7 @@
       "err_send": "Error submitting review: ",
       "db_error": "DATABASE CONNECTION ERROR",
       "new_review_from": "⭐ New review from {{author}}: \"{{snippet}}\"",
+      "new_review_notif": "NISHA STORE | New review ⭐",
       "author_fallback": "Customer"
     },
     "profile": {

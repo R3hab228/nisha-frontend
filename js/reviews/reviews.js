@@ -622,7 +622,10 @@ function initReviewsRealtime(sb) {
                             ? toCDN(rev.item_image)
                             : `${origin}/icon-192.png?v=11`;
 
-                        reg.showNotification('NISHA STORE | Новый отзыв ⭐', {
+                        const notifTitle = (typeof i18next !== 'undefined')
+                            ? i18next.t('reviews_modal.new_review_notif', { defaultValue: 'NISHA STORE | Новый отзыв ⭐' })
+                            : 'NISHA STORE | Новый отзыв ⭐';
+                        reg.showNotification(notifTitle, {
                             body: `${author}: "${snippet}"`,
                             icon: notifIcon,
                             badge: notifBadge,

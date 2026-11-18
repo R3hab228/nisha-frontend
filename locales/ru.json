@@ -336,6 +336,7 @@
       "err_send": "Ошибка при отправке: ",
       "db_error": "ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ",
       "new_review_from": "⭐ Новый отзыв от {{author}}: \"{{snippet}}\"",
+      "new_review_notif": "NISHA STORE | Новый отзыв ⭐",
       "author_fallback": "Покупатель"
     },
     "profile": {
