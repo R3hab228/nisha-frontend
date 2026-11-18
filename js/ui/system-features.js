@@ -231,13 +231,13 @@ let lastTextareaEnterTime = 0;
 let lastTextareaTarget = null;
 
 document.addEventListener('keydown', function(e) {
-    const isCtrlK = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K');
-    const isSlash = e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey;
+    const isCtrlK = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K' || e.code === 'KeyK');
+    const isSlash = (e.key === '/' || (e.code === 'Slash' && !e.shiftKey)) && !e.ctrlKey && !e.metaKey && !e.altKey;
 
     if (isCtrlK || isSlash) {
         const activeEl = document.activeElement;
         const tag = activeEl ? activeEl.tagName : '';
-        const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || (activeEl && activeEl.isContentEditable);
+        const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (activeEl && activeEl.isContentEditable);
 
         if (!(isSlash && isEditing)) {
             const hasOpenModal = document.querySelector('.modal-overlay[style*="display: flex"], .modal-overlay[style*="display: block"]');
@@ -248,7 +248,7 @@ document.addEventListener('keydown', function(e) {
                     if (hasOpenModal && typeof closeModal === 'function') {
                         if (hasOpenModal.id === 'productModal') closeModal('productModal');
                     }
-                    searchInput.focus();
+                    invokeAction('playSound', 'menu', { kind: 'ui' }); searchInput.focus();
                     searchInput.select();
                     const rect = searchInput.getBoundingClientRect();
                     if (rect.top < 0 || rect.bottom > window.innerHeight) {
