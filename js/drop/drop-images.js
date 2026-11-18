@@ -257,6 +257,9 @@ export function removeProposalFile(index, element = null) {
 export function renderProposalPreviews() {
     const container = document.getElementById('propPreviewContainer');
     const placeholder = document.getElementById('propPlaceholder');
+    if (placeholder && placeholder.textContent && placeholder.textContent.includes('📸')) {
+        placeholder.textContent = placeholder.textContent.replace(/📸\s*/g, '').trim();
+    }
     if (!container) return;
 
     if (typeof container.replaceChildren === 'function') container.replaceChildren();
