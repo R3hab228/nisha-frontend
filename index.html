@@ -364,6 +364,13 @@
 <span style=color:#888;font-size:12px data-i18n=profile.saved>СОХРАНЕНО:</span>
 <span style="color:var(--accent-red);font-size:16px;font-weight:700;text-shadow:0 0 10px rgba(255,0,0,.4)">★ <span id=profileLikesCount>0</span></span>
 </div>
+<div class=profile-sfx-row>
+<span class=profile-sfx-label data-i18n=profile.sound_label>ЗВУК:</span>
+<button type=button id=profileSoundToggleBtn class="profile-sfx-toggle is-on btn-target" data-action=toggle-sound aria-pressed=true>
+<span class=profile-sfx-dot aria-hidden=true></span>
+<span class=profile-sfx-state data-i18n=profile.sound_on>ВКЛ</span>
+</button>
+</div>
 </div>
 <button class="auth-btn btn-target" data-action="logout" style=background:#333;color:#fff;margin-top:10px data-i18n=sidebar.logout>ВЫЙТИ</button>
 </div>
@@ -845,6 +852,13 @@
 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
 <span style=color:#888;font-size:13px data-i18n=profile.saved>СОХРАНЕНО:</span>
 <span style="color:var(--accent-red);font-size:18px;font-weight:700;text-shadow:0 0 15px rgba(255,0,0,.4)">★ <span id=modalProfileLikesCount>0</span></span>
+</div>
+<div class="profile-sfx-row profile-sfx-row--modal">
+<span class=profile-sfx-label data-i18n=profile.sound_label>ЗВУК:</span>
+<button type=button id=modalProfileSoundToggleBtn class="profile-sfx-toggle is-on btn-target" data-action=toggle-sound aria-pressed=true>
+<span class=profile-sfx-dot aria-hidden=true></span>
+<span class=profile-sfx-state data-i18n=profile.sound_on>ВКЛ</span>
+</button>
 </div>
 </div>
 <button class=cart-checkout-btn data-action="logout" data-close-modal="profileModal" style=background:#333;color:#fff;margin-top:25px;width:100%;border-color:#555;text-transform:uppercase data-i18n=profile.logout>[ ВЫЙТИ ИЗ СИСТЕМЫ ]</button>

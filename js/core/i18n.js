@@ -317,6 +317,7 @@ function updateContentLanguage() {
             if (translated) el.textContent = translated;
         }
     });
+    invokeAction('syncSoundToggleUI');
 }
 window.updateContentLanguage = updateContentLanguage;
 

@@ -62,7 +62,8 @@ const SIMPLE_ACTION_MAP = {
     'submit-order': 'submitOrder',
     'fetch-my-orders': 'fetchMyOrders',
     'open-propose-modal': 'openProposeModal',
-    'retry-load-items': 'loadAllItems'
+    'retry-load-items': 'loadAllItems',
+    'toggle-sound': 'toggleSoundEnabled'
 };
 
 /**

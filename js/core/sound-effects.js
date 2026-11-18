@@ -433,6 +433,79 @@ export function playNotifySound(options = {}) {
 }
 
 /**
+ * Resolves localized ON/OFF label for the profile sound toggle with storage fallback.
+ * @param {boolean} enabled
+ * @returns {string}
+ */
+function resolveSoundToggleText(enabled) {
+    const key = enabled ? 'profile.sound_on' : 'profile.sound_off';
+    const hasI18n = typeof i18next !== 'undefined' && typeof i18next.t === 'function';
+    if (hasI18n) {
+        const tr = i18next.t(key);
+        if (tr && tr !== key) return tr;
+    }
+    const store = getRuntimeStorage();
+    let lang = (store && typeof store.get === 'function') ? store.get('nisha_lang', '') : '';
+    if (!lang && typeof localStorage !== 'undefined') {
+        try { lang = localStorage.getItem('nisha_lang') || ''; } catch {}
+    }
+    const norm = String(lang || 'ua').toLowerCase().slice(0, 2);
+    if (norm === 'ru') return enabled ? 'ВКЛ' : 'ВЫКЛ';
+    if (norm === 'en') return enabled ? 'ON' : 'OFF';
+    return enabled ? 'УВІМК' : 'ВИМК';
+}
+
+/**
+ * Synchronizes all profile sound toggle buttons (sidebar & modal) with current state & language.
+ * @param {boolean} [animate=false]
+ */
+export function syncSoundToggleUI(animate = false) {
+    if (typeof document === 'undefined' || typeof document.getElementById !== 'function') return;
+    const enabled = isSoundEnabled();
+    const labelText = resolveSoundToggleText(enabled);
+    const i18nKey = enabled ? 'profile.sound_on' : 'profile.sound_off';
+
+    ['profileSoundToggleBtn', 'modalProfileSoundToggleBtn'].forEach((btnId) => {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        if (btn.classList) {
+            btn.classList.toggle('is-on', enabled);
+            btn.classList.toggle('is-off', !enabled);
+            if (animate) {
+                btn.classList.remove('is-switching');
+                void btn.offsetWidth;
+                btn.classList.add('is-switching');
+                setTimeout(() => btn.classList && btn.classList.remove('is-switching'), 300);
+            }
+        }
+        if (typeof btn.setAttribute === 'function') {
+            btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+        }
+        const stateEl = typeof btn.querySelector === 'function' ? btn.querySelector('.profile-sfx-state') : null;
+        if (stateEl) {
+            stateEl.textContent = labelText;
+            if (typeof stateEl.setAttribute === 'function') {
+                stateEl.setAttribute('data-i18n', i18nKey);
+            }
+        }
+    });
+}
+
+/**
+ * Toggles sound effects ON/OFF, updates UI buttons with smooth LED animation, and plays confirmation ding on enable.
+ * @returns {boolean} New enabled state
+ */
+export function toggleSoundEnabled() {
+    const next = !isSoundEnabled();
+    setSoundEnabled(next);
+    syncSoundToggleUI(true);
+    if (next) {
+        playSound('ding', { kind: 'toast' }).catch(() => {});
+    }
+    return next;
+}
+
+/**
  * Resets internal audio state (for deterministic unit testing).
  */
 export function resetSoundEffectsTestState() {
@@ -448,16 +521,25 @@ export function resetSoundEffectsTestState() {
 
 if (typeof document !== 'undefined') {
     bindAudioUnlockListeners();
+    if (document.readyState === 'loading' && typeof document.addEventListener === 'function') {
+        document.addEventListener('DOMContentLoaded', () => syncSoundToggleUI(false));
+    } else {
+        syncSoundToggleUI(false);
+    }
 }
 
 if (typeof window !== 'undefined') {
     window.playSound = playSound;
     window.playNotifySound = playNotifySound;
+    window.toggleSoundEnabled = toggleSoundEnabled;
+    window.syncSoundToggleUI = syncSoundToggleUI;
 }
 
 registerActions({
     playSound,
     playNotifySound,
     isSoundEnabled,
-    setSoundEnabled
+    setSoundEnabled,
+    toggleSoundEnabled,
+    syncSoundToggleUI
 });

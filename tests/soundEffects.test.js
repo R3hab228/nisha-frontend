@@ -171,4 +171,74 @@ describe('Adaptive Windows 98 Full Sound Pack & Mastering Engine', () => {
         const hiddenPlay = await mod.playSound('ding', { kind: 'toast' });
         expect(hiddenPlay).toBe(false);
     });
+
+    it('toggleSoundEnabled and syncSoundToggleUI keep sidebar & modal toggles localized and synchronized', async () => {
+        const storageData = new Map([['nisha_lang', 'ua']]);
+        const makeBtn = () => {
+            const stateEl = { textContent: '', attrs: {}, setAttribute(k, v) { this.attrs[k] = v; } };
+            const classes = new Set(['is-on']);
+            return {
+                classList: {
+                    toggle: (cls, force) => (force ? classes.add(cls) : classes.delete(cls)),
+                    add: (cls) => classes.add(cls),
+                    remove: (cls) => classes.delete(cls),
+                    contains: (cls) => classes.has(cls)
+                },
+                attrs: {},
+                setAttribute(k, v) { this.attrs[k] = v; },
+                querySelector: (sel) => (sel === '.profile-sfx-state' ? stateEl : null),
+                offsetWidth: 10,
+                _stateEl: stateEl,
+                _classes: classes
+            };
+        };
+
+        const sidebarBtn = makeBtn();
+        const modalBtn = makeBtn();
+
+        vi.stubGlobal('window', {
+            storage: {
+                get: (k, d) => (storageData.has(k) ? storageData.get(k) : d),
+                set: (k, v) => storageData.set(k, String(v))
+            }
+        });
+        vi.stubGlobal('navigator', { maxTouchPoints: 0 });
+        vi.stubGlobal('document', {
+            hidden: false,
+            readyState: 'complete',
+            getElementById: (id) => (id === 'profileSoundToggleBtn' ? sidebarBtn : (id === 'modalProfileSoundToggleBtn' ? modalBtn : null))
+        });
+
+        const mod = await import('../js/core/sound-effects.js');
+        mod.resetSoundEffectsTestState();
+
+        // Initial UA ON state
+        mod.syncSoundToggleUI(false);
+        expect(sidebarBtn._classes.has('is-on')).toBe(true);
+        expect(sidebarBtn._stateEl.textContent).toBe('УВІМК');
+        expect(modalBtn._stateEl.textContent).toBe('УВІМК');
+
+        // Toggle OFF -> switches to red is-off & ВИМК
+        const nextOff = mod.toggleSoundEnabled();
+        expect(nextOff).toBe(false);
+        expect(sidebarBtn._classes.has('is-off')).toBe(true);
+        expect(sidebarBtn.attrs['aria-pressed']).toBe('false');
+        expect(sidebarBtn._stateEl.textContent).toBe('ВИМК');
+        expect(modalBtn._stateEl.textContent).toBe('ВИМК');
+
+        // Language change to RU / EN updates button text while preserving OFF state
+        storageData.set('nisha_lang', 'ru');
+        mod.syncSoundToggleUI(false);
+        expect(sidebarBtn._stateEl.textContent).toBe('ВЫКЛ');
+
+        storageData.set('nisha_lang', 'en');
+        mod.syncSoundToggleUI(false);
+        expect(modalBtn._stateEl.textContent).toBe('OFF');
+
+        // Toggle back ON -> green is-on & ON
+        const nextOn = mod.toggleSoundEnabled();
+        expect(nextOn).toBe(true);
+        expect(sidebarBtn._classes.has('is-on')).toBe(true);
+        expect(modalBtn._stateEl.textContent).toBe('ON');
+    });
 });
