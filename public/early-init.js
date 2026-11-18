@@ -131,5 +131,10 @@
             window.__NISHA_PASSWORD_RECOVERY_PENDING__ = true;
             try { sessionStorage.setItem('nisha_pw_recovery_pending', '1'); } catch (e) {}
         }
+        if (locSearch && locSearch.indexOf('_sw_upd=') !== -1 && window.history && typeof window.history.replaceState === 'function') {
+            var cleanedUrl = new URL(window.location.href);
+            cleanedUrl.searchParams.delete('_sw_upd');
+            window.history.replaceState(null, '', cleanedUrl.pathname + cleanedUrl.search + cleanedUrl.hash);
+        }
     } catch (e) {}
 })();

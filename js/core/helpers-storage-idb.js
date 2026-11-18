@@ -279,6 +279,18 @@ function getIDBDatabase() {
             resolve(null);
             return _dbPromise;
         }
+        let settled = false;
+        const safeResolve = (val) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(openTimeoutId);
+            resolve(val);
+        };
+        const openTimeoutId = setTimeout(() => {
+            console.warn('[IDB] Open timed out, falling back cleanly');
+            _dbPromise = null;
+            safeResolve(null);
+        }, 1200);
         try {
             const req = idbApi.open(DB_NAME, 1);
             req.onupgradeneeded = (e) => {
@@ -294,23 +306,27 @@ function getIDBDatabase() {
                     try { db.close(); } catch {}
                     _dbPromise = null;
                 };
-                resolve(db);
+                safeResolve(db);
+            };
+            req.onblocked = () => {
+                _dbPromise = null;
+                safeResolve(null);
             };
             req.onerror = () => {
                 console.warn('[IDB] Failed to open IndexedDB:', req.error);
                 _dbPromise = null;
-                resolve(null);
+                safeResolve(null);
             };
         } catch {
             _dbPromise = null;
-            resolve(null);
+            safeResolve(null);
         }
     }
     return _dbPromise;
 }
 
 /**
- * Reads a value from IndexedDB by key, returning null on errors or missing entries.
+ * Reads a value from IndexedDB by key, returning null on errors, timeouts, or missing entries.
  * @param {string} key
  * @returns {Promise<*>}
  */
@@ -319,17 +335,25 @@ export async function idbGet(key) {
         const db = await getIDBDatabase();
         if (!db) return null;
         const { promise, resolve } = Promise.withResolvers();
+        let settled = false;
+        const safeResolve = (val) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(readTimeoutId);
+            resolve(val);
+        };
+        const readTimeoutId = setTimeout(() => safeResolve(null), 900);
         try {
             const tx = db.transaction(STORE_NAME, 'readonly');
-            tx.onerror = () => resolve(null);
-            tx.onabort = () => resolve(null);
+            tx.onerror = () => safeResolve(null);
+            tx.onabort = () => safeResolve(null);
             const store = tx.objectStore(STORE_NAME);
             const req = store.get(key);
-            req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
-            req.onerror = () => resolve(null);
+            req.onsuccess = () => safeResolve(req.result !== undefined ? req.result : null);
+            req.onerror = () => safeResolve(null);
         } catch {
             _dbPromise = null;
-            resolve(null);
+            safeResolve(null);
         }
         return promise;
     } catch {

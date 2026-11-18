@@ -104,11 +104,14 @@ export async function loadAllItems() {
     const grid = typeof document !== 'undefined' ? document.getElementById('itemsGrid') : null;
     const sb = getSupabaseClient();
 
-    // 1. МГНОВЕННАЯ ЗАГРУЗКА (Из IndexedDB с миграцией из localStorage)
+    // 1. МГНОВЕННАЯ ЗАГРУЗКА (Из IndexedDB с жестким лимитом ожидания 850мс, чтобы не тормозить сеть)
     let cachedItems = null;
     if (hasAction('idbGet')) {
         try {
-            cachedItems = await invokeAction('idbGet', 'nisha_cached_db');
+            cachedItems = await Promise.race([
+                invokeAction('idbGet', 'nisha_cached_db'),
+                new Promise((resolve) => setTimeout(() => resolve(null), 850))
+            ]);
         } catch {}
     }
 
@@ -156,21 +159,30 @@ export async function loadAllItems() {
     if (!sb) return;
     initCatalogRealtimeSubscription();
 
-    // 2. ФОНОВЫЙ ЗАПРОС К БД
-    const { data, error } = await queryItemsWithBargainFallback((cols) =>
-        sb.from('items')
-            .select(cols)
-            .limit(1000)
-            .order('created_at', { ascending: false })
-    );
+    // 2. ФОНОВЫЙ ЗАПРОС К БД (с защитой от сетевых обрывов и некорректных прокси-ответов)
+    let data = null;
+    let error = null;
+    try {
+        const res = await queryItemsWithBargainFallback((cols) =>
+            sb.from('items')
+                .select(cols)
+                .limit(1000)
+                .order('created_at', { ascending: false })
+        );
+        data = res?.data || null;
+        error = res?.error || null;
+    } catch (fetchErr) {
+        error = fetchErr || new Error('Network error');
+    }
 
-    if (error) {
-        if (window.allItems.length === 0) {
+    if (error || !Array.isArray(data)) {
+        if (!Array.isArray(window.allItems) || window.allItems.length === 0) {
             if (typeof handleNetworkOffline === 'function') {
                 handleNetworkOffline();
             } else if (grid) {
-                const safeErrMsg = hasAction('escapeHtml') ? invokeAction('escapeHtml', error.message) : error.message;
-                grid.innerHTML = `<div style="color:red; padding:20px; grid-column: 1/-1;">[ ОШИБКА БД: ${safeErrMsg} ]</div>`;
+                const rawMsg = error?.message ? String(error.message) : 'Ошибка загрузки каталога';
+                const safeErrMsg = hasAction('escapeHtml') ? invokeAction('escapeHtml', rawMsg) : rawMsg;
+                grid.innerHTML = `<div style="color:#ccc; text-align:center; padding:32px 16px; grid-column:1/-1; font-family:var(--font-mono);"><div style="color:var(--accent-red); margin-bottom:14px;">[ ОШИБКА БД: ${safeErrMsg} ]</div><button type="button" class="cart-checkout-btn btn-target" data-action="retry-load-items" style="max-width:260px; margin:0 auto;">[ ПОВТОРИТЬ ЗАГРУЗКУ ]</button></div>`;
             }
         }
         return;

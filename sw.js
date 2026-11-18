@@ -257,7 +257,7 @@ self.addEventListener('fetch', event => {
                 ));
 
                 let networkResponse;
-                if (cachedResponse && event.request.cache !== 'reload') {
+                if (cachedResponse && event.request.cache !== 'reload' && !url.searchParams.has('_sw_upd')) {
                     // Если копия уже есть в кэше — даем сети до 1.4 сек, иначе отдаем кэш, а свежий ответ дописываем в фоне
                     const { promise: timeoutPromise, resolve: resolveTimeout } = Promise.withResolvers();
                     const timeoutId = setTimeout(() => resolveTimeout(null), 1400);

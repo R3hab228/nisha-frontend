@@ -265,6 +265,55 @@ describe('Modular PWA, Telemetry, Lifecycle, Push & Pull-to-Refresh Deep Suite (
             })
         };
         expect(await queryServiceWorkerVersion(liveWorker)).toBe('nisha-cache-build-999');
+
+        // performServiceWorkerUpdateReload awaits SKIP_WAITING -> controllerchange and navigates with cache-bust param
+        const { performServiceWorkerUpdateReload } = await import('../js/core/pwa-sw-versioning.js');
+        const swListeners = {};
+        const prevNavSw = globalThis.navigator?.serviceWorker;
+        const prevLoc = globalThis.window?.location;
+        const prevCaches = globalThis.caches;
+
+        const waitingWorker = {
+            postMessage: vi.fn(() => {
+                setTimeout(() => {
+                    if (typeof swListeners.controllerchange === 'function') {
+                        swListeners.controllerchange();
+                    }
+                }, 10);
+            })
+        };
+        const replaceSpy = vi.fn();
+        globalThis.caches = {
+            keys: vi.fn(async () => ['nisha-cache-old', 'nisha-images-v1']),
+            delete: vi.fn(async () => true)
+        };
+        Object.defineProperty(globalThis.navigator, 'serviceWorker', {
+            configurable: true,
+            value: {
+                addEventListener: (ev, fn) => { swListeners[ev] = fn; }
+            }
+        });
+        Object.defineProperty(globalThis.window, 'location', {
+            configurable: true,
+            value: { href: 'https://www.nisha-store.shop/', replace: replaceSpy, reload: vi.fn() }
+        });
+
+        const reloadPromise = performServiceWorkerUpdateReload({ registration: { waiting: waitingWorker } });
+        await vi.advanceTimersByTimeAsync(100);
+        await reloadPromise;
+
+        expect(globalThis.caches.delete).toHaveBeenCalledWith('nisha-cache-old');
+        expect(globalThis.caches.delete).not.toHaveBeenCalledWith('nisha-images-v1');
+        expect(waitingWorker.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+        expect(replaceSpy).toHaveBeenCalledWith(expect.stringMatching(/https:\/\/www\.nisha-store\.shop\/\?_sw_upd=\d+/));
+
+        if (prevNavSw !== undefined) {
+            Object.defineProperty(globalThis.navigator, 'serviceWorker', { configurable: true, value: prevNavSw });
+        }
+        if (prevLoc !== undefined) {
+            Object.defineProperty(globalThis.window, 'location', { configurable: true, value: prevLoc });
+        }
+        globalThis.caches = prevCaches;
     });
 
     it('3. pwa-telemetry.js sanitizes secrets, scores severity, deduplicates alerts & falls back Sentry CDN', async () => {

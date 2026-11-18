@@ -74,6 +74,79 @@ function isUserBusyWithOrder() {
 }
 
 /**
+ * Cleanly switches waiting Service Worker, clears stale HTML/chunk caches (keeping image/API caches),
+ * waits briefly for controller handoff, and performs a cache-busted navigation so the fresh bundle loads cleanly.
+ * @param {{ registration?: ServiceWorkerRegistration|null, worker?: ServiceWorker|null }} [opts={}]
+ * @returns {Promise<void>}
+ */
+export async function performServiceWorkerUpdateReload({ registration = null, worker = null } = {}) {
+    if (typeof window === 'undefined') return;
+
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem('nisha_chunk_reload_at');
+        }
+    } catch {}
+
+    let didNavigate = false;
+    const navigateFresh = () => {
+        if (didNavigate) return;
+        didNavigate = true;
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('_sw_upd', String(Date.now()));
+            if (typeof window.location.replace === 'function') {
+                window.location.replace(url.toString());
+                return;
+            }
+        } catch {}
+        if (typeof window.location.reload === 'function') {
+            window.location.reload();
+        }
+    };
+
+    try {
+        if ('caches' in window && typeof caches.keys === 'function') {
+            await Promise.race([
+                caches.keys().then((names) =>
+                    Promise.all(
+                        names
+                            .filter(name => name.startsWith('nisha-cache-'))
+                            .map(name => caches.delete(name))
+                    )
+                ),
+                new Promise(resolve => setTimeout(resolve, 400))
+            ]);
+        }
+    } catch {}
+
+    const targetWorker = (registration && registration.waiting) || worker || null;
+    const hasSwContainer = typeof navigator !== 'undefined' && navigator.serviceWorker;
+
+    if (targetWorker && hasSwContainer && typeof navigator.serviceWorker.addEventListener === 'function') {
+        const controllerReadyPromise = new Promise((resolve) => {
+            const fallbackTimer = setTimeout(resolve, 750);
+            const onControllerChange = () => {
+                clearTimeout(fallbackTimer);
+                resolve();
+            };
+            navigator.serviceWorker.addEventListener('controllerchange', onControllerChange, { once: true });
+            try {
+                targetWorker.postMessage({ type: 'SKIP_WAITING' });
+            } catch {
+                clearTimeout(fallbackTimer);
+                resolve();
+            }
+        });
+        await controllerReadyPromise;
+    } else if (targetWorker) {
+        try { targetWorker.postMessage({ type: 'SKIP_WAITING' }); } catch {}
+    }
+
+    navigateFresh();
+}
+
+/**
  * Registers Service Worker, enables Navigation Preload, and prompts user cleanly on new versions.
  */
 export function initServiceWorkerUpdates() {
@@ -142,27 +215,7 @@ export function initServiceWorkerUpdates() {
                                 }
                             } catch {}
 
-                            try {
-                                if (registration.waiting) {
-                                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                                }
-                                if (worker) {
-                                    worker.postMessage({ type: 'SKIP_WAITING' });
-                                }
-                            } catch {}
-
-                            try {
-                                if ('caches' in window) {
-                                    const names = await caches.keys();
-                                    await Promise.all(
-                                        names
-                                            .filter(name => name.startsWith('nisha-cache-'))
-                                            .map(name => caches.delete(name))
-                                    );
-                                }
-                            } catch {}
-
-                            window.location.reload();
+                            await performServiceWorkerUpdateReload({ registration, worker });
                         }
                     );
                 };

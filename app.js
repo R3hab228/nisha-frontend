@@ -158,17 +158,27 @@ if (!SUPABASE_ANON_KEY) {
     if (!clientCreator) {
         console.error("ОШИБКА: createClient не найден. База данных недоступна.");
     } else {
+        const fetchWithTimeout = (targetUrl, opts, ms) => {
+            if (typeof AbortController !== 'function' || (opts && opts.signal)) {
+                return fetch(targetUrl, opts);
+            }
+            const ctrl = new AbortController();
+            const timerId = setTimeout(() => ctrl.abort(), ms);
+            return fetch(targetUrl, { ...(opts || {}), signal: ctrl.signal })
+                .finally(() => clearTimeout(timerId));
+        };
+
         _supabase = clientCreator(SUPABASE_URL, SUPABASE_ANON_KEY, {
             global: {
                 fetch: (url, options) => {
                     // Используем CDN ТОЛЬКО для главного списка товаров (limit=1000). Точечные запросы идут напрямую!
                     if (typeof url === 'string' && url.includes('/rest/v1/items') && url.includes('limit=1000') && !url.includes('id=eq.') && (!options || options.method === 'GET' || !options.method)) {
                         const cdnUrl = url.replace('nmpuefxqtkhvtltdvllz.supabase.co', 'cdn.nisha-store.shop');
-                        return fetch(cdnUrl, options)
-                            .then((res) => (res && res.ok ? res : fetch(url, options)))
-                            .catch(() => fetch(url, options));
+                        return fetchWithTimeout(cdnUrl, options, 4500)
+                            .then((res) => (res && res.ok ? res : fetchWithTimeout(url, options, 12000)))
+                            .catch(() => fetchWithTimeout(url, options, 12000));
                     }
-                    return fetch(url, options);
+                    return fetchWithTimeout(url, options, 15000);
                 }
             }
         });
@@ -298,6 +308,16 @@ async function initApp() {
 
         // 2. Мгновенный запуск каталога, сессии и словарей локализации параллельно
         const itemsPromise = loadAllItems();
+        setTimeout(() => {
+            try {
+                const grid = document.getElementById('itemsGrid');
+                const stillSkeleton = Boolean(grid && grid.querySelector('.skeleton-card'));
+                if (stillSkeleton && (!Array.isArray(window.allItems) || window.allItems.length === 0)) {
+                    console.warn('[КАТАЛОГ] Watchdog: каталог не отрисовался за 6.5с, запускаем повторную загрузку...');
+                    loadAllItems();
+                }
+            } catch {}
+        }, 6500);
         const sessionPromise = (_supabase && typeof checkSession === 'function') ? checkSession() : Promise.resolve();
 
         const langPromise = (async () => {

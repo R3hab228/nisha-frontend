@@ -61,7 +61,8 @@ const SIMPLE_ACTION_MAP = {
     'apply-promo-code': 'applyPromoCode',
     'submit-order': 'submitOrder',
     'fetch-my-orders': 'fetchMyOrders',
-    'open-propose-modal': 'openProposeModal'
+    'open-propose-modal': 'openProposeModal',
+    'retry-load-items': 'loadAllItems'
 };
 
 /**
