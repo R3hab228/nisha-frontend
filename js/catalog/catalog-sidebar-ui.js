@@ -236,6 +236,7 @@ export function toggleMobileSidebar() {
     if (!sidebar || !btn) return;
 
     const isOpen = sidebar.classList.contains('active-mobile');
+    invokeAction('playSound', isOpen ? 'minimize' : 'menu', { kind: 'ui' });
 
     const hideText = (typeof i18next !== 'undefined') ? i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' }) : '[-] СКРЫТЬ ФИЛЬТРЫ';
     const showText = (typeof i18next !== 'undefined') ? i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' }) : '[+] ПОКАЗАТЬ ФИЛЬТРЫ';

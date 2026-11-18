@@ -306,6 +306,8 @@ function executeCloseModal(id, e) {
     if (modal.classList.contains('closing')) return;
     if (modal.style.display === 'none' && !modal.style.opacity) return;
 
+    invokeAction('playSound', 'minimize', { kind: 'ui' });
+
     // Мгновенная разблокировка скролла (только если нет других открытых модальных окон)
     const hasOtherOpenModal = () => Array.from(document.querySelectorAll('.modal-overlay')).some(m => {
         if (m === modal || m.classList.contains('closing')) return false;

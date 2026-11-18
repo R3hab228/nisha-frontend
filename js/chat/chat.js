@@ -510,6 +510,7 @@ function handleIncomingSupportReply(r, sbClient) {
     const safeAnswer = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(r.answer_text) : (escFn ? escFn(r.answer_text) : r.answer_text);
     const replyTitle = (typeof i18next !== 'undefined' && i18next.t('support.reply_title', { defaultValue: 'Ответ от Поддержки:' })) || 'Ответ от Поддержки:';
     const replyReadBtn = (typeof i18next !== 'undefined' && i18next.t('support.reply_btn_read', { defaultValue: '[ ПРОЧИТАНО ]' })) || '[ ПРОЧИТАНО ]';
+    invokeAction('playSound', 'balloon', { kind: 'broadcast' });
     showTerminalModal('INCOMING_MESSAGE.SYS', `<b>${replyTitle}</b><br><br>${safeAnswer}`, replyReadBtn, markAsRead);
 }
 

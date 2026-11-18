@@ -72,6 +72,42 @@ export const SOUND_PROFILES = Object.freeze({
         cooldownMs: 1200,
         targetRms: 0.13,
         lockLowerMs: 1450
+    },
+    menu: {
+        url: '/sounds/menu.mp3',
+        baseDesktop: 0.11,
+        baseMobile: 0.16,
+        priority: 1,
+        cooldownMs: 110,
+        targetRms: 0.08,
+        lockLowerMs: 0
+    },
+    minimize: {
+        url: '/sounds/minimize.mp3',
+        baseDesktop: 0.17,
+        baseMobile: 0.23,
+        priority: 1,
+        cooldownMs: 160,
+        targetRms: 0.10,
+        lockLowerMs: 0
+    },
+    balloon: {
+        url: '/sounds/balloon.mp3',
+        baseDesktop: 0.22,
+        baseMobile: 0.28,
+        priority: 2,
+        cooldownMs: 420,
+        targetRms: 0.12,
+        lockLowerMs: 350
+    },
+    logoff: {
+        url: '/sounds/logoff.mp3',
+        baseDesktop: 0.26,
+        baseMobile: 0.33,
+        priority: 3,
+        cooldownMs: 900,
+        targetRms: 0.12,
+        lockLowerMs: 900
     }
 });
 
@@ -238,7 +274,7 @@ function warmUpCoreSounds(ctx) {
     if (typeof navigator !== 'undefined' && navigator.connection && navigator.connection.saveData) return;
     _warmupStarted = true;
 
-    const order = ['start', 'ding', 'notify', 'recycle', 'chord', 'chimes', 'tada'];
+    const order = ['start', 'ding', 'notify', 'recycle', 'chord', 'chimes', 'tada', 'menu', 'minimize', 'balloon', 'logoff'];
     order.forEach((key, idx) => {
         setTimeout(() => {
             if (ctx.state === 'running') {
@@ -269,7 +305,7 @@ function playBufferWithMastering(ctx, buffer, soundName, kind) {
             const presenceSoftener = ctx.createBiquadFilter();
             presenceSoftener.type = 'highshelf';
             presenceSoftener.frequency.setValueAtTime(6800, ctx.currentTime);
-            presenceSoftener.gain.setValueAtTime(soundName === 'start' ? -3.5 : -2.5, ctx.currentTime);
+            presenceSoftener.gain.setValueAtTime((soundName === 'start' || soundName === 'menu') ? -3.5 : -2.5, ctx.currentTime);
 
             chainTail.connect(highpass);
             highpass.connect(presenceSoftener);

@@ -204,6 +204,8 @@ export async function logout() {
     if (sb) {
         await sb.auth.signOut();
     }
+    const playFn = getGlobalFn('playSound');
+    if (playFn) playFn('logoff', { kind: 'ui' });
     notifyToast(tProfile('messages.logout', 'Вы вышли из системы'), 'success');
 
     if (typeof window !== 'undefined') {

@@ -12,7 +12,7 @@ describe('Adaptive Windows 98 Full Sound Pack & Mastering Engine', () => {
         vi.restoreAllMocks();
     });
 
-    it('ships all 7 normalized Win98 MP3 assets under 35 KB each in public/sounds/', () => {
+    it('ships all 11 normalized Win98/XP MP3 assets under 35 KB each in public/sounds/', () => {
         const expectedAssets = [
             'start.mp3',
             'ding.mp3',
@@ -20,7 +20,11 @@ describe('Adaptive Windows 98 Full Sound Pack & Mastering Engine', () => {
             'notify.mp3',
             'chimes.mp3',
             'chord.mp3',
-            'tada.mp3'
+            'tada.mp3',
+            'menu.mp3',
+            'minimize.mp3',
+            'balloon.mp3',
+            'logoff.mp3'
         ];
         let totalSize = 0;
         for (const file of expectedAssets) {
@@ -31,7 +35,7 @@ describe('Adaptive Windows 98 Full Sound Pack & Mastering Engine', () => {
             expect(size).toBeLessThan(35000);
             totalSize += size;
         }
-        expect(totalSize).toBeLessThan(125000);
+        expect(totalSize).toBeLessThan(175000);
     });
 
     it('balances gain across sound profiles, buffer RMS levels, and mobile vs desktop speakers', async () => {

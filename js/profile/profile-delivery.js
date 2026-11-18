@@ -244,6 +244,8 @@ export function toggleProfileDeliveryAccordion(isModal, btn) {
     if (!collapseEl) return;
 
     const isCollapsed = collapseEl.classList.toggle('collapsed');
+    const playFn = getGlobalFn('playSound');
+    if (playFn) playFn(isCollapsed ? 'minimize' : 'menu', { kind: 'ui' });
 
     if (!isCollapsed) {
         if (typeof collapseEl.classList.remove === 'function') collapseEl.classList.remove('is-expanded');

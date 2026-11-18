@@ -478,6 +478,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
  * @returns {any}
  */
 export function sortItems(type) {
+    invokeAction('playSound', 'menu', { kind: 'ui' });
     const updateDom = async () => {
         const sortNew = document.getElementById('sort-new');
         const sortCheap = document.getElementById('sort-cheap');
@@ -530,6 +531,7 @@ export function sortItems(type) {
  * @returns {any}
  */
 export function triggerFilterTransition() {
+    invokeAction('playSound', 'menu', { kind: 'ui' });
     const updateDom = async () => {
         await applyFilters(true, false);
     };
@@ -543,6 +545,7 @@ export function triggerFilterTransition() {
  * @returns {any}
  */
 export function setCategoryFilter(cat, element) {
+    invokeAction('playSound', 'menu', { kind: 'ui' });
     const updateDom = async () => {
         document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
         if (element) {
