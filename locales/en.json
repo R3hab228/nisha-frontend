@@ -222,6 +222,8 @@
       "new_items_count_one": "+{{count}} new item in catalog",
       "new_items_count_few": "+{{count}} new items in catalog",
       "new_items_count_many": "+{{count}} new items in catalog",
+      "sound_enabled": "Sound enabled",
+      "sound_disabled": "Sound disabled",
       "new_item_fallback": "New item",
       "cart_restored": "Cart restored",
       "cart_synced": "Carts synchronized",

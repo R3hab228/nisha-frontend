@@ -2,7 +2,7 @@
 // NISHA SOUND EFFECTS ENGINE (WIN98 FULL PACK + ADAPTIVE MASTERING)
 // ==========================================
 
-import { registerActions } from './action-registry.js';
+import { hasAction, invokeAction, registerActions } from './action-registry.js';
 import { getRuntimeStorage } from './runtime-env.js';
 
 const SFX_STORAGE_KEY = 'nisha_sfx_enabled';
@@ -499,7 +499,9 @@ export function toggleSoundEnabled() {
     const next = !isSoundEnabled();
     setSoundEnabled(next);
     syncSoundToggleUI(true);
-    if (next) {
+    if (hasAction('showSoundToast')) {
+        invokeAction('showSoundToast', next);
+    } else if (next) {
         playSound('ding', { kind: 'toast' }).catch(() => {});
     }
     return next;

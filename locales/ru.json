@@ -222,6 +222,8 @@
       "new_items_count_one": "+{{count}} новая вещь в каталоге",
       "new_items_count_few": "+{{count}} новые вещи в каталоге",
       "new_items_count_many": "+{{count}} новых вещей в каталоге",
+      "sound_enabled": "Звук включен",
+      "sound_disabled": "Звук выключен",
       "new_item_fallback": "Новая вещь",
       "cart_restored": "Корзина восстановлена",
       "cart_synced": "Корзины синхронизированы",

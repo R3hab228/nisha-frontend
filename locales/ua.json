@@ -222,6 +222,8 @@
       "new_items_count_one": "+{{count}} нова річ у каталозі",
       "new_items_count_few": "+{{count}} нові речі у каталозі",
       "new_items_count_many": "+{{count}} нових речей у каталозі",
+      "sound_enabled": "Звук увімкнено",
+      "sound_disabled": "Звук вимкнено",
       "new_item_fallback": "Нова річ",
       "cart_restored": "Кошик відновлено",
       "cart_synced": "Кошики синхронізовано",

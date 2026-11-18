@@ -262,9 +262,11 @@ export function showCompactToast({ slot, className, tagText, titleText = '', img
     `;
     toast.innerHTML = html;
     container.appendChild(toast);
-    const resolvedSound = sound || (isAlert ? 'chord' : 'notify');
-    const resolvedKind = resolvedSound === 'chord' ? 'alert' : 'toast';
-    playSound(resolvedSound, { kind: resolvedKind }).catch(() => {});
+    if (sound !== 'silent') {
+        const resolvedSound = sound || (isAlert ? 'chord' : 'notify');
+        const resolvedKind = resolvedSound === 'chord' ? 'alert' : 'toast';
+        playSound(resolvedSound, { kind: resolvedKind }).catch(() => {});
+    }
 
     const dismiss = attachToastLifecycle(toast, {
         duration,
@@ -318,6 +320,42 @@ export function showLanguageToast(langCode) {
     });
 }
 if (typeof window !== 'undefined') window.showLanguageToast = showLanguageToast;
+
+/**
+ * Shows compact sound toggle notification toast matching compact language/fav toast sizing.
+ * @param {boolean} enabled
+ */
+export function showSoundToast(enabled) {
+    const isOn = Boolean(enabled);
+    const hasI18n = typeof i18next !== 'undefined' && typeof i18next.t === 'function';
+    const rawLang = (hasI18n && (i18next.resolvedLanguage || i18next.language))
+        || (typeof localStorage !== 'undefined' ? (localStorage.getItem('nisha_lang') || '') : '')
+        || 'ua';
+    const lang = String(rawLang).toLowerCase().slice(0, 2);
+
+    const fallbackTag = lang === 'ru'
+        ? (isOn ? 'ВКЛ' : 'ВЫКЛ')
+        : (lang === 'en' ? (isOn ? 'ON' : 'OFF') : (isOn ? 'УВІМК' : 'ВИМК'));
+    const fallbackTitle = lang === 'ru'
+        ? (isOn ? 'Звук включен' : 'Звук выключен')
+        : (lang === 'en' ? (isOn ? 'Sound enabled' : 'Sound disabled') : (isOn ? 'Звук увімкнено' : 'Звук вимкнено'));
+
+    const tagState = hasI18n
+        ? i18next.t(isOn ? 'profile.sound_on' : 'profile.sound_off', { defaultValue: fallbackTag })
+        : fallbackTag;
+    const titleText = hasI18n
+        ? i18next.t(isOn ? 'messages.sound_enabled' : 'messages.sound_disabled', { defaultValue: fallbackTitle })
+        : fallbackTitle;
+
+    showCompactToast({
+        slot: 'sound',
+        className: isOn ? 'toast-sound-item' : 'toast-sound-item toast-sound-off',
+        tagText: `SFX [${String(tagState).toUpperCase()}]`,
+        titleText,
+        sound: isOn ? 'ding' : 'silent'
+    });
+}
+if (typeof window !== 'undefined') window.showSoundToast = showSoundToast;
 
 /**
  * Shows compact cart add/remove notification toast.
@@ -770,6 +808,7 @@ registerActions({
     showToast,
     showFavoriteToast,
     showLanguageToast,
+    showSoundToast,
     showCartToast,
     showSaleToast,
     showReviewToast,
