@@ -129,6 +129,20 @@ export async function ensureOrderImagesLoaded() {
     }
 }
 
+function renderOrdersErrorCard(listArea, { code = 'SYSTEM_ERROR.LOG', messageHtml = '', actionHtml = '' } = {}) {
+    if (!listArea) return;
+    listArea.innerHTML = `
+        <div class="orders-error-card" role="alert">
+            <div class="orders-error-header">
+                <span class="orders-error-dot" aria-hidden="true"></span>
+                <span>[ ${escHtml(code)} ]</span>
+            </div>
+            <div class="orders-error-body">${messageHtml}</div>
+            ${actionHtml ? `<div class="orders-error-actions">${actionHtml}</div>` : ''}
+        </div>
+    `;
+}
+
 export async function fetchMyOrders() {
     const listArea = document.getElementById('ordersListArea');
     const tabsContainer = document.getElementById('ordersTabs');
@@ -317,10 +331,13 @@ export async function fetchMyOrders() {
         const { data: vResult } = await sb.rpc('check_otp_verified', { p_phone: phone });
         const otpCheck = vResult ? [{ is_verified: true }] : [];
         if (!otpCheck || otpCheck.length === 0 || !otpCheck.at(0).is_verified) {
-            const deniedOtpMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_denied_otp', { defaultValue: '[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.' }) : '[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.';
+            const deniedOtpMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_denied_otp', { defaultValue: 'Сначала подтвердите, что это ваш номер телефона.' }) : 'Сначала подтвердите, что это ваш номер телефона.';
             const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' }) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
-            listArea.innerHTML = `<div style="text-align:center; color:var(--accent-red); font-family: monospace; padding: 20px;">${deniedOtpMsg}</div>
-            <button class="cart-checkout-btn btn-target" style="margin: 0 auto; display: block;" data-action="verify-orders-phone" data-phone="${escAttr(phone)}">${verifyBotMsg}</button>`;
+            renderOrdersErrorCard(listArea, {
+                code: 'ACCESS_DENIED.SYS',
+                messageHtml: deniedOtpMsg,
+                actionHtml: `<button type="button" class="cart-checkout-btn btn-target" data-action="verify-orders-phone" data-phone="${escAttr(phone)}">[ ${escHtml(verifyBotMsg)} ]</button>`
+            });
             return;
         }
 
@@ -338,8 +355,28 @@ export async function fetchMyOrders() {
     const latestOrders = getOrdersData();
 
     if (fetchError && (!latestOrders || latestOrders.length === 0)) {
-        const safeFetchErr = escHtml(fetchError.message);
-        listArea.innerHTML = `<div style="color:red; text-align:center;">[ ОШИБКА: ${safeFetchErr} ]</div>`;
+        const rawErr = String(fetchError.message || 'Unknown error');
+        const isAccessDenied = /ACCESS_DENIED|OTP|не подтвержден|не підтверджено/i.test(rawErr);
+        const cleanMsg = rawErr.replace(/^\s*ACCESS_DENIED\s*:\s*/i, '').trim();
+        const phoneInput = document.getElementById('ordersSearchPhone');
+        const enteredPhone = phoneInput ? phoneInput.value.replace(/[^\d+]/g, '') : '';
+
+        let actionHtml = '';
+        if (isAccessDenied) {
+            if (enteredPhone && enteredPhone.length >= 10) {
+                const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' }) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
+                actionHtml = `<button type="button" class="cart-checkout-btn btn-target" data-action="verify-orders-phone" data-phone="${escAttr(enteredPhone)}">[ ${escHtml(verifyBotMsg)} ]</button>`;
+            } else {
+                const openProfileMsg = typeof i18next !== 'undefined' ? i18next.t('profile.title', { defaultValue: 'ПРОФИЛЬ' }) : 'ПРОФИЛЬ';
+                actionHtml = `<button type="button" class="cart-checkout-btn btn-target" data-action="open-profile">[ ${escHtml(openProfileMsg)} ]</button>`;
+            }
+        }
+
+        renderOrdersErrorCard(listArea, {
+            code: isAccessDenied ? 'ACCESS_DENIED.SYS' : 'SYSTEM_ERROR.LOG',
+            messageHtml: escHtml(cleanMsg || rawErr),
+            actionHtml
+        });
         return;
     }
 
