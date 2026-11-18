@@ -185,22 +185,11 @@ export function renderCartItems() {
 
         row.innerHTML = `
             <div class="swipe-background">
-                <div class="shredder-wrap">
-                    <svg class="shredder-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <g class="shredder-paper">
-                            <path d="M7 2h10v6H7z"></path>
-                            <line x1="9.5" y1="4.5" x2="14.5" y2="4.5"></line>
-                        </g>
-                        <path class="shredder-body" d="M4 8h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"></path>
-                        <line x1="6" y1="11.5" x2="18" y2="11.5"></line>
-                        <g class="shredder-strips">
-                            <line x1="7.5" y1="15" x2="7.5" y2="21"></line>
-                            <line x1="10.5" y1="15" x2="10.5" y2="22"></line>
-                            <line x1="13.5" y1="15" x2="13.5" y2="21"></line>
-                            <line x1="16.5" y1="15" x2="16.5" y2="22"></line>
-                        </g>
+                <div class="swipe-cross-wrap">
+                    <svg class="swipe-cross-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
                     </svg>
-                    <span class="shredder-label">[ SHRED ]</span>
                 </div>
             </div>
             <div class="swipe-surface" 
@@ -422,11 +411,7 @@ if (typeof window !== 'undefined') {
 
             const parentRow = rowSurface.closest('.cart-item-row');
             const swipeBg = parentRow ? parentRow.querySelector('.swipe-background') : null;
-            const shredderWrap = parentRow ? parentRow.querySelector('.shredder-wrap') : null;
-            const shredderPaper = parentRow ? parentRow.querySelector('.shredder-paper') : null;
-            const shredderStrips = parentRow ? parentRow.querySelector('.shredder-strips') : null;
-            const legacyIcon = parentRow ? parentRow.querySelector('.trash-icon') : null;
-            const legacyLid = parentRow ? parentRow.querySelector('.trash-lid') : null;
+            const crossWrap = parentRow ? parentRow.querySelector('.swipe-cross-wrap') : null;
 
             const bgOpacity = Math.min(1, moveX / 75);
             const isArmed = diff > 120;
@@ -435,19 +420,10 @@ if (typeof window !== 'undefined') {
                 if (isArmed && typeof triggerHaptic === 'function') triggerHaptic('light');
             }
             if (swipeBg && swipeBg.classList) {
-                swipeBg.classList.toggle('shred-armed', isArmed);
+                swipeBg.classList.toggle('armed', isArmed);
             }
-            if (shredderWrap) {
-                shredderWrap.style.opacity = String(bgOpacity);
-            }
-            if (shredderPaper && shredderStrips) {
-                const feedShift = moveX > 35 ? Math.min(3.5, (moveX - 35) * 0.035) : 0;
-                shredderPaper.style.transform = `translateY(${feedShift}px)`;
-                shredderStrips.style.transform = `translateY(${feedShift * 0.9}px)`;
-            } else if (legacyIcon && legacyLid) {
-                legacyIcon.style.opacity = bgOpacity;
-                const openAngle = moveX > 50 ? Math.min(45, (moveX - 50) * 0.6) : 0;
-                legacyLid.style.transform = `rotate(${openAngle}deg)`;
+            if (crossWrap) {
+                crossWrap.style.opacity = String(bgOpacity);
             }
         }
     };
@@ -475,17 +451,9 @@ if (typeof window !== 'undefined') {
 
             if (parentRow) {
                 const swipeBg = parentRow.querySelector('.swipe-background');
-                const shredderWrap = parentRow.querySelector('.shredder-wrap');
-                const shredderPaper = parentRow.querySelector('.shredder-paper');
-                const shredderStrips = parentRow.querySelector('.shredder-strips');
-                const legacyIcon = parentRow.querySelector('.trash-icon');
-                const legacyLid = parentRow.querySelector('.trash-lid');
-                if (swipeBg && swipeBg.classList) swipeBg.classList.remove('shred-armed');
-                if (shredderWrap) shredderWrap.style.opacity = '0';
-                if (shredderPaper) shredderPaper.style.transform = 'translateY(0px)';
-                if (shredderStrips) shredderStrips.style.transform = 'translateY(0px)';
-                if (legacyIcon) legacyIcon.style.opacity = '0';
-                if (legacyLid) legacyLid.style.transform = 'rotate(0deg)';
+                const crossWrap = parentRow.querySelector('.swipe-cross-wrap');
+                if (swipeBg && swipeBg.classList) swipeBg.classList.remove('armed');
+                if (crossWrap) crossWrap.style.opacity = '0';
             }
         }
 
