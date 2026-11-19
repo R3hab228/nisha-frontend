@@ -295,7 +295,14 @@ function executeCloseModal(id, e) {
         if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
         if (typeof evt.stopImmediatePropagation === 'function') evt.stopImmediatePropagation();
     }
-    if (id === 'checkoutModal' && window.otpPollInterval) clearInterval(window.otpPollInterval);
+    if (id === 'checkoutModal') {
+        invokeAction('stopOtpPolling');
+        if (window.otpPollInterval) {
+            clearTimeout(window.otpPollInterval);
+            clearInterval(window.otpPollInterval);
+            window.otpPollInterval = null;
+        }
+    }
     if (id === 'proposeModal') {
         invokeAction('resetPropBargainState');
     }
@@ -410,9 +417,13 @@ function executeCloseModal(id, e) {
             modal._returnFocusElement = null;
         }
 
-        if (id === 'checkoutModal' && window.otpPollInterval) {
-            clearInterval(window.otpPollInterval);
-            window.otpPollInterval = null;
+        if (id === 'checkoutModal') {
+            invokeAction('stopOtpPolling');
+            if (window.otpPollInterval) {
+                clearTimeout(window.otpPollInterval);
+                clearInterval(window.otpPollInterval);
+                window.otpPollInterval = null;
+            }
         }
 
         if (!hasOtherOpenModal()) {

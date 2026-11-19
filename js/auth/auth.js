@@ -205,7 +205,7 @@ export function setOtpButtonSuccess(btnOtp) {
     btnOtp.style.borderColor = '#777';
     btnOtp.style.borderStyle = 'outset';
     btnOtp.style.opacity = '1';
-    btnOtp.innerHTML = `<span style="color:var(--accent-green, #00ff00); font-weight:bold; font-family:var(--font-mono); letter-spacing:0.5px;">${successText}</span>`;
+    btnOtp.innerHTML = `<span class="otp-btn-success-label">${successText}</span>`;
 }
 
 export function setOtpButtonDefault(btnOtp) {
@@ -309,6 +309,29 @@ function getWin95HourglassHtml(height = 14) {
 let otpVerified = false;
 window.otpVerified = otpVerified;
 let otpInterval = null;
+let _otpPollSessionToken = 0;
+let _otpCheckInFlight = null;
+
+function stopOtpCountdown() {
+    if (otpInterval) {
+        clearInterval(otpInterval);
+        otpInterval = null;
+    }
+}
+
+export function stopOtpPolling() {
+    _otpPollSessionToken++;
+    _otpCheckInFlight = null;
+    _checkActiveOtp = null;
+    if (typeof window !== 'undefined' && window.otpPollInterval) {
+        clearTimeout(window.otpPollInterval);
+        clearInterval(window.otpPollInterval);
+        window.otpPollInterval = null;
+    }
+}
+if (typeof window !== 'undefined') {
+    window.stopOtpPolling = stopOtpPolling;
+}
 
 async function checkPhoneAuth() {
     const sb = getRuntimeSupabase();
@@ -451,7 +474,7 @@ async function generateAndSendOTP() {
     if (blacklisted && blacklisted.length > 0) {
         const statusEl = document.getElementById('otpStatus');
         const secBlockedText = typeof i18next !== 'undefined' ? i18next.t('profile.security_blocked', { defaultValue: '[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН' }) : '[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.';
-        if (statusEl) statusEl.innerHTML = `<span style='color:red; font-weight:bold;'>${secBlockedText}</span>`;
+        if (statusEl) statusEl.innerHTML = `<span class="otp-status-blocked">${secBlockedText}</span>`;
         showToast(typeof i18next !== 'undefined' ? i18next.t('auth.access_denied', { defaultValue: 'Доступ запрещен' }) : 'Доступ запрещен', 'error');
         setOtpButtonDefault(btnOtp);
         return; 
@@ -513,55 +536,74 @@ async function generateAndSendOTP() {
         statusEl.innerHTML = botPromptText + ' ' + getWin95HourglassHtml(14);
     }
     
-    // 6. Опрос базы данных каждые 2 секунды с таймаутом безопасности 2.5 минуты
-    if (window.otpPollInterval) clearInterval(window.otpPollInterval);
+    // 6. Сериализованный опрос базы данных каждые 2 секунды без наложения запросов (таймаут 2.5 минуты)
+    stopOtpPolling();
 
-    let pollAttempts = 0;
-    const maxPollAttempts = 75; // 75 * 2с = 150 сек (2.5 минуты)
+    const pollSession = ++_otpPollSessionToken;
+    const pollDeadline = Date.now() + 150 * 1000;
+    const POLL_INTERVAL_MS = 2000;
 
-    const doOtpCheck = async () => {
-        if (!window.otpPollInterval && pollAttempts > 0) return;
-        const { data: isVerified } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
-        if (isVerified) {
-            if (window.otpPollInterval) {
-                clearInterval(window.otpPollInterval);
-                window.otpPollInterval = null;
-            }
-            if (otpInterval) {
-                clearInterval(otpInterval);
-                otpInterval = null;
-            }
-            _checkActiveOtp = null;
-            checkPhoneAuth();
+    const doOtpCheck = () => {
+        if (pollSession !== _otpPollSessionToken || !window.otpPollInterval) {
+            return Promise.resolve(false);
         }
+        if (_otpCheckInFlight) {
+            return _otpCheckInFlight;
+        }
+
+        _otpCheckInFlight = (async () => {
+            try {
+                const { data: isVerified, error: rpcErr } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
+                if (pollSession !== _otpPollSessionToken) return false;
+                if (!rpcErr && isVerified) {
+                    stopOtpPolling();
+                    stopOtpCountdown();
+                    checkPhoneAuth();
+                    return true;
+                }
+            } catch (pollErr) {
+                console.warn('[OTP POLL] Ошибка проверки статуса:', pollErr);
+            } finally {
+                _otpCheckInFlight = null;
+            }
+            return false;
+        })();
+
+        return _otpCheckInFlight;
     };
     _checkActiveOtp = doOtpCheck;
 
-    window.otpPollInterval = setInterval(async () => {
-        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
-            return; // Пропускаем опрос при скрытой вкладке для экономии ресурсов
-        }
-        pollAttempts++;
-        if (pollAttempts >= maxPollAttempts) {
-            clearInterval(window.otpPollInterval);
-            window.otpPollInterval = null;
-            _checkActiveOtp = null;
-            if (otpInterval) {
-                clearInterval(otpInterval);
-                otpInterval = null;
-            }
-            if (btnOtp) {
-                setOtpButtonDefault(btnOtp);
-            }
-            if (statusEl) {
-                const expiredMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.otp_expired') : 'Время ожидания подтверждения истекло. Запросите код снова.';
-                statusEl.innerHTML = `<span style="color:var(--accent-red);">${expiredMsg}</span>`;
-            }
-            return;
-        }
+    const scheduleNextPoll = () => {
+        if (pollSession !== _otpPollSessionToken) return;
+        window.otpPollInterval = setTimeout(async () => {
+            if (pollSession !== _otpPollSessionToken || !window.otpPollInterval) return;
 
-        await doOtpCheck();
-    }, 2000);
+            if (Date.now() >= pollDeadline) {
+                stopOtpPolling();
+                stopOtpCountdown();
+                if (btnOtp) {
+                    setOtpButtonDefault(btnOtp);
+                }
+                if (statusEl) {
+                    const expiredMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.otp_expired') : 'Время ожидания подтверждения истекло. Запросите код снова.';
+                    statusEl.innerHTML = `<span class="otp-status-expired">${expiredMsg}</span>`;
+                }
+                return;
+            }
+
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+                scheduleNextPoll();
+                return; // Пропускаем опрос при скрытой вкладке для экономии ресурсов
+            }
+
+            const verified = await doOtpCheck();
+            if (!verified && pollSession === _otpPollSessionToken && window.otpPollInterval) {
+                scheduleNextPoll();
+            }
+        }, POLL_INTERVAL_MS);
+    };
+
+    scheduleNextPoll();
 }
 
 // Мгновенная проверка OTP и восстановление таймера при возврате пользователя во вкладку
@@ -592,5 +634,6 @@ registerActions({
     updateProposeAndCheckoutFields,
     getWin95HourglassHtml,
     checkPhoneAuth,
-    generateAndSendOTP
+    generateAndSendOTP,
+    stopOtpPolling
 });

@@ -114,7 +114,7 @@ export function filterNPBranches(query) {
         const searchingLabel = typeof i18next !== 'undefined'
             ? i18next.t('np.searching', { defaultValue: 'Ищем отделение в базе Новой Почты...' })
             : 'Ищем отделение в базе Новой Почты...';
-        dropdown.innerHTML = `<div style="color:#aaa; padding:12px; font-style: italic;">${searchingLabel}</div>`;
+        dropdown.innerHTML = `<div class="np-dropdown-status">${searchingLabel}</div>`;
         dropdown.style.display = 'block';
     }
 
@@ -371,7 +371,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
     const myToken = ++_branchLoadToken;
     if (showDropdown) {
         const loadBranchText = typeof i18next !== 'undefined' ? i18next.t('checkout.loading_branches', { defaultValue: 'Завантаження відділень...' }) : 'Завантаження відділень...';
-        dropdown.innerHTML = `<div style="color:#aaa; padding:12px; font-style: italic;">${loadBranchText}</div>`;
+        dropdown.innerHTML = `<div class="np-dropdown-status">${loadBranchText}</div>`;
         dropdown.style.display = 'block';
     }
 
@@ -481,7 +481,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
                 : 'Не найдено';
             if (input && !input.value) input.placeholder = emptyLabel;
             if (showDropdown) {
-                dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">[ ${emptyLabel} ]</div>`;
+                dropdown.innerHTML = `<div class="np-dropdown-error">[ ${emptyLabel} ]</div>`;
                 dropdown.style.display = 'block';
             }
         }
@@ -493,7 +493,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
             : 'Ошибка загрузки отделений';
         if (input && !input.value) input.placeholder = errLabel;
         if (showDropdown) {
-            dropdown.innerHTML = `<div style="color:#ff6666; padding:12px; font-family:var(--font-mono); font-size:12px;">[ ${errLabel} ]</div>`;
+            dropdown.innerHTML = `<div class="np-dropdown-error">[ ${errLabel} ]</div>`;
             dropdown.style.display = 'block';
         }
     }

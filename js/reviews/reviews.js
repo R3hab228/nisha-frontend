@@ -85,22 +85,22 @@ async function openReviewsModal() {
             const safeRevImg = escHtmlFn ? escHtmlFn(revImg) : revImg.replaceAll('"', '&quot;');
             const validImg = revImg && !_failedReviewImages.has(revImg) ? safeRevImg : '';
             const clickAction = validImg ? `data-action="open-review-image" data-img="${validImg}"` : '';
-            const imgHtml = validImg ? `<img class="review-item-thumb" src="${validImg}" alt="" loading="lazy" decoding="async" ${clickAction} style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #333; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in;" title="Увеличить фото">` : '';
+            const imgHtml = validImg ? `<img class="review-item-thumb" src="${validImg}" alt="" loading="lazy" decoding="async" ${clickAction} title="Увеличить фото">` : '';
             
-            const productLinkStyle = rev.item_id ? `cursor: pointer; text-decoration: underline; text-decoration-style: dashed;` : '';
+            const nameClass = rev.item_id ? 'review-name review-name--linked' : 'review-name';
             const safeItemIdAttr = escAttrFn ? escAttrFn(rev.item_id) : String(rev.item_id || '').replaceAll('"', '&quot;');
             const productLinkAction = rev.item_id ? `data-action="open-product" data-id="${safeItemIdAttr}" title="Открыть товар"` : '';
 
             html += `
             <div class="review-card-ui">
-                <div class="review-head" style="align-items: flex-start; justify-content: space-between; display: flex;">
-                    <div style="display: flex; flex-direction: column;">
-                        <span class="review-name" ${productLinkAction} style="color: #fff; font-weight: bold; font-family: var(--font-main); font-size: 14px; ${productLinkStyle}">@${safeName}</span>
-                        <div class="review-date" style="text-align: left; margin-top: 4px; color: #555; font-size: 11px; font-family: var(--font-mono);">${date}</div>
+                <div class="review-head">
+                    <div class="review-head-meta">
+                        <span class="${nameClass}" ${productLinkAction}>@${safeName}</span>
+                        <div class="review-date">${date}</div>
                     </div>
                     ${imgHtml}
                 </div>
-                <div class="review-text-body" style="margin-top: 10px; color: #ccc; font-size: 13px; line-height: 1.5; font-style: italic;">${safeText}</div>
+                <div class="review-text-body">${safeText}</div>
             </div>`;
         });
         container.innerHTML = html;
@@ -168,7 +168,7 @@ async function openReviewsModal() {
             container.classList.remove('is-loading');
             container.classList.add('is-empty');
             const dbErr = typeof i18next !== 'undefined' ? i18next.t('reviews_modal.db_error', { defaultValue: 'ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ' }) : 'ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ';
-            container.innerHTML = `<div class="reviews-empty-box" style="color: var(--accent-red); border-color: rgba(255,0,0,0.3);">[ ${dbErr} ]</div>`;
+            container.innerHTML = `<div class="reviews-empty-box reviews-empty-box--error">[ ${dbErr} ]</div>`;
             return;
         }
         renderReviewsData([]);

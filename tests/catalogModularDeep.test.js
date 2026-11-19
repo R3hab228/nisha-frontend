@@ -508,7 +508,7 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
         const bargainHtml = catalogMod.buildCardPriceHtml({ id: 'i-9', price: 2000, is_sale: true, old_price: 2500 });
         expect(bargainHtml).toContain('2000 грн');
         expect(bargainHtml).toContain('1500 грн');
-        expect(bargainHtml).toContain('var(--accent-yellow');
+        expect(bargainHtml).toContain('card-current-price--bargain');
 
         // Comparator puts active TOP items strictly above non-TOP even if cheaper/newer
         const topItem = { id: '1', is_top: true, top_until: future, price: 5000, created_at: '2025-01-01T00:00:00Z' };

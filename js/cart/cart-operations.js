@@ -14,6 +14,7 @@ import {
 import { updateCartUI, closeCartDropdown } from './cart-ui.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, isSiteHackedMode } from '../core/runtime-env.js';
+import { getAcceptedBargain } from '../core/bargain-storage.js';
 
 /**
  * Синхронизирует корзину с сервером и сервисом брошенных корзин (Abandoned Cart Recovery).
@@ -58,15 +59,10 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
         }
 
         if (customPrice === null) {
-            try {
-                const rawBargain = sessionStorage.getItem('accepted_bargain_' + itemId) || localStorage.getItem('accepted_bargain_' + itemId);
-                if (rawBargain) {
-                    const parsedBargain = JSON.parse(rawBargain);
-                    if (parsedBargain && parsedBargain.acceptedPrice) {
-                        customPrice = Number(parsedBargain.acceptedPrice);
-                    }
-                }
-            } catch {}
+            const parsedBargain = getAcceptedBargain(itemId);
+            if (parsedBargain && parsedBargain.acceptedPrice) {
+                customPrice = Number(parsedBargain.acceptedPrice);
+            }
         }
 
         const catalog = getRuntimeCatalog();
@@ -194,13 +190,7 @@ export async function addToCartFromModal() {
         const currentCart = getActiveCart();
         const existingIndex = currentCart.findIndex(i => String(i.id) === String(activeItem.id));
 
-        let parsedBargain = null;
-        try {
-            const rawBargain = sessionStorage.getItem('accepted_bargain_' + activeItem.id) || localStorage.getItem('accepted_bargain_' + activeItem.id);
-            if (rawBargain) {
-                parsedBargain = JSON.parse(rawBargain);
-            }
-        } catch {}
+        const parsedBargain = getAcceptedBargain(activeItem.id);
 
         if (existingIndex !== -1) {
             if (parsedBargain && parsedBargain.acceptedPrice && currentCart[existingIndex].price !== Number(parsedBargain.acceptedPrice)) {

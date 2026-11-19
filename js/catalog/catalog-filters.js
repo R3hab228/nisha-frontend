@@ -374,7 +374,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
 
             if (window.filteredItems.length === 0) {
                 const noItemsMsg = typeof i18next !== 'undefined' ? i18next.t('search.no_items', { defaultValue: 'ТОВАРОВ НЕ НАЙДЕНО' }) : 'ТОВАРОВ НЕ НАЙДЕНО';
-                if (grid) grid.innerHTML = `<div style="color: #666; font-family: monospace; padding: 30px; grid-column: 1/-1; text-align:center;">[ ${noItemsMsg} ]</div>`;
+                if (grid) grid.innerHTML = `<div class="catalog-empty-state">[ ${noItemsMsg} ]</div>`;
             } else {
                 let targetMobileCount = 0;
                 if (preserveViewport) {
@@ -424,15 +424,19 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             updateSidebarCounters();
 
             if (grid) {
-                requestAnimationFrame(() => {
-                    setTimeout(() => grid.classList.remove('fade-out'), 50);
-                });
+                if (typeof requestAnimationFrame === 'function') {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => grid.classList.remove('fade-out'));
+                    });
+                } else {
+                    grid.classList.remove('fade-out');
+                }
             }
         } catch (err) {
             console.error('ОШИБКА ФИЛЬТРАЦИИ:', err);
             if (grid) {
                 const safeRenderErr = hasAction('escapeHtml') ? invokeAction('escapeHtml', err.message) : err.message;
-                grid.innerHTML = `<div style="color:red; grid-column:1/-1; padding:20px; text-align:center;">[ ОШИБКА РЕНДЕРА: ${safeRenderErr} ]</div>`;
+                grid.innerHTML = `<div class="catalog-error-state">[ ОШИБКА РЕНДЕРА: ${safeRenderErr} ]</div>`;
                 grid.classList.remove('fade-out');
             }
         } finally {
@@ -490,13 +494,47 @@ export function sortItems(type) {
 
         const countEl = document.getElementById('itemCount');
         if (countEl) {
-            countEl.style.transition = '0.3s';
+            if (countEl._sortFlashCtrl) {
+                try { countEl._sortFlashCtrl.abort(); } catch {}
+            }
+            const flashCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            countEl._sortFlashCtrl = flashCtrl;
+
+            countEl.style.transition = 'opacity 0.3s ease, color 0.3s ease';
             countEl.style.opacity = '0.2';
             countEl.style.color = 'var(--accent-yellow)';
-            setTimeout(() => {
+
+            let fallbackTimer = null;
+            const restoreCountStyle = () => {
+                if (fallbackTimer) {
+                    clearTimeout(fallbackTimer);
+                    fallbackTimer = null;
+                }
+                if (flashCtrl?.signal.aborted) return;
+                if (flashCtrl) flashCtrl.abort();
+                if (countEl._sortFlashCtrl === flashCtrl) countEl._sortFlashCtrl = null;
                 countEl.style.opacity = '1';
                 countEl.style.color = 'var(--accent-green)';
-            }, 300);
+            };
+
+            if (typeof countEl.addEventListener === 'function') {
+                countEl.addEventListener(
+                    'transitionend',
+                    (ev) => {
+                        if (!ev || ev.target === countEl) restoreCountStyle();
+                    },
+                    flashCtrl ? { once: true, signal: flashCtrl.signal } : { once: true }
+                );
+            }
+            if (flashCtrl) {
+                flashCtrl.signal.addEventListener('abort', () => {
+                    if (fallbackTimer) {
+                        clearTimeout(fallbackTimer);
+                        fallbackTimer = null;
+                    }
+                }, { once: true });
+            }
+            fallbackTimer = setTimeout(restoreCountStyle, 320);
         }
 
         await applyFilters(true, false);
@@ -517,7 +555,15 @@ export function sortItems(type) {
         if (tr && typeof tr.finished?.then === 'function') {
             tr.finished.then(onFinish).catch(() => {});
         } else {
-            setTimeout(onFinish, 450);
+            const grid = typeof document !== 'undefined' ? document.getElementById('itemsGrid') : null;
+            const activeAnims = grid && typeof grid.getAnimations === 'function' ? grid.getAnimations() : [];
+            if (activeAnims.length > 0) {
+                Promise.allSettled(activeAnims.map(a => a.finished)).then(onFinish);
+            } else if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => requestAnimationFrame(onFinish));
+            } else {
+                onFinish();
+            }
         }
     };
 

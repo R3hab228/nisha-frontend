@@ -51,17 +51,56 @@ import { invokeAction, registerActions } from './action-registry.js';
     }
 
     function createTimeoutSignal(timeoutMs, externalSignal) {
-        const timeoutSig = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : null;
+        const hasNativeTimeout = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function';
+        let timeoutSig = null;
+        let fallbackTimer = null;
+        let timedOut = false;
+
+        if (timeoutMs > 0) {
+            if (hasNativeTimeout) {
+                timeoutSig = AbortSignal.timeout(timeoutMs);
+            } else if (typeof AbortController !== 'undefined') {
+                const fallbackCtrl = new AbortController();
+                fallbackTimer = setTimeout(() => {
+                    timedOut = true;
+                    const err = new Error('Превышено время ожидания ответа от сервера');
+                    err.name = 'TimeoutError';
+                    fallbackCtrl.abort(err);
+                }, timeoutMs);
+                timeoutSig = fallbackCtrl.signal;
+            }
+        }
+
         let signal;
         if (externalSignal && timeoutSig) {
-            signal = AbortSignal.any([externalSignal, timeoutSig]);
+            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.any === 'function') {
+                signal = AbortSignal.any([externalSignal, timeoutSig]);
+            } else if (typeof AbortController !== 'undefined') {
+                const combinedCtrl = new AbortController();
+                const forward = (src) => {
+                    if (!combinedCtrl.signal.aborted) combinedCtrl.abort(src.reason);
+                };
+                if (externalSignal.aborted) forward(externalSignal);
+                else externalSignal.addEventListener('abort', () => forward(externalSignal), { once: true });
+                if (timeoutSig.aborted) forward(timeoutSig);
+                else timeoutSig.addEventListener('abort', () => forward(timeoutSig), { once: true });
+                signal = combinedCtrl.signal;
+            } else {
+                signal = externalSignal;
+            }
         } else {
             signal = externalSignal || timeoutSig || undefined;
         }
+
         return {
             signal,
-            isTimedOut: () => Boolean(timeoutSig?.aborted),
-            cleanup: () => {}
+            isTimedOut: () => timedOut || Boolean(timeoutSig?.aborted),
+            cleanup: () => {
+                if (fallbackTimer) {
+                    clearTimeout(fallbackTimer);
+                    fallbackTimer = null;
+                }
+            }
         };
     }
 
@@ -152,7 +191,7 @@ import { invokeAction, registerActions } from './action-registry.js';
                     throw err;
                 }
 
-                if (isTimedOut()) {
+                if (isTimedOut() || err?.name === 'TimeoutError') {
                     const timeoutErr = new Error('Превышено время ожидания ответа от сервера');
                     timeoutErr.name = 'AbortError';
                     timeoutErr.isTimeout = true;

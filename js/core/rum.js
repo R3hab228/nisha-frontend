@@ -54,13 +54,6 @@
             const navEntries = performance.getEntriesByType('navigation');
             if (navEntries && navEntries.length > 0 && Number.isFinite(navEntries[0].responseStart) && navEntries[0].responseStart > 0) {
                 rumData.ttfb = Math.round(navEntries[0].responseStart);
-                return;
-            }
-            if (performance.timing && performance.timing.responseStart && performance.timing.requestStart) {
-                const diff = performance.timing.responseStart - performance.timing.requestStart;
-                if (diff >= 0 && diff < 60000) {
-                    rumData.ttfb = Math.round(diff);
-                }
             }
         } catch {}
     }

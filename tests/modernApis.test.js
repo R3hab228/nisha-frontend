@@ -2184,7 +2184,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(html).toMatch(/id=promoInput[^>]*name=promo_code/);
             const cartCode = readCartSource();
             expect(cartCode).toContain('function sanitizePromoField');
-            expect(cartCode).toContain('setTimeout(sanitizePromoField, 1500)');
+            expect(cartCode).toContain("promoEl.addEventListener('animationstart', sanitizePromoField)");
+            expect(cartCode).toContain('const runPostOpenSync = () =>');
 
             const profileCode = readProfileSource();
             expect(profileCode).toContain("getGlobalFn('resetCheckoutAddressState')");
@@ -3925,9 +3926,9 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const chatCode = readFileSync(resolve(import.meta.dirname, '../js/chat/chat.js'), 'utf8');
 
             // 1. Catalog feed renders strikethrough price and yellow agreed price when accepted bargain exists
-            expect(catalogCode).toContain("sessionStorage.getItem('accepted_bargain_' + item.id)");
-            expect(catalogCode).toContain("localStorage.getItem('accepted_bargain_' + item.id)");
-            expect(catalogCode).toContain('card-current-price" style="color: var(--accent-yellow, #ffd700)');
+            expect(catalogCode).toContain('getAcceptedBargain(item.id)');
+            expect(catalogCode).toContain('card-current-price--bargain');
+            expect(readProjectCss()).toContain('.item-price .card-current-price--bargain');
 
             // 2. Chat JS reactive updateCardDOM on accepted offer
             expect(chatCode).toContain('updateCardFn(match)');
@@ -3988,7 +3989,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             // 3. Pending bargain state is persisted in localStorage & modal restores pending status
             expect(productCode).toContain('pending_bargain_');
             expect(productCode).toContain('isPendingBargain');
-            expect(chatCode).toContain('pending_bargain_');
+            expect(chatCode).toContain('setAcceptedBargain(');
+            expect(chatCode).toContain('setBargainDeclined(');
             expect(cartCode).toContain('pending_bargain_');
 
             // 4. Cart availability check only marks item as sold when found in DB with status === 'sold'
@@ -4060,7 +4062,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(catalogCode).toContain('text = baseBargainText + minText');
 
             // 6. Adding item to cart from catalog feed automatically applies accepted bargain price if present
-            expect(cartCode).toContain("const rawBargain = sessionStorage.getItem('accepted_bargain_' + itemId) || localStorage.getItem('accepted_bargain_' + itemId)");
+            expect(cartCode).toContain('const parsedBargain = getAcceptedBargain(itemId)');
         });
 
         it('55. Modern Standards: Speculation Rules API (<script type="speculationrules">) and OKLCH Wide-Gamut Color Space (Display P3)', () => {

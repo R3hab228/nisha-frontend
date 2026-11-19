@@ -15,6 +15,7 @@ import {
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeFingerprint, getRuntimeSiteLang } from '../core/runtime-env.js';
+import { getAcceptedBargain, isBargainDeclined, setAcceptedBargain, setPendingBargain } from '../core/bargain-storage.js';
 
 const BARGAIN_RATE_LIMIT_STORAGE_KEY = 'nisha_bargain_offers_history';
 const BARGAIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -201,11 +202,7 @@ function buildBargainPayload(activeItem, offeredPrice, contact) {
  * @param {number} offeredPrice
  */
 function markPendingBargainLocally(itemId, offeredPrice) {
-    try {
-        const pData = { itemId: String(itemId), offeredPrice, timestamp: Date.now() };
-        sessionStorage.setItem('pending_bargain_' + itemId, JSON.stringify(pData));
-        localStorage.setItem('pending_bargain_' + itemId, JSON.stringify(pData));
-    } catch {}
+    setPendingBargain(itemId, { itemId: String(itemId), offeredPrice, timestamp: Date.now() });
     applyOfferButtonState(document.getElementById('modalOfferPriceBtn'), 'pending');
 }
 
@@ -592,24 +589,20 @@ export async function syncUserBargains() {
                 if (!b || !b.itemId) return;
 
                 if (b.status === 'pending' || (!b.acceptedPrice && b.offeredPrice)) {
-                    try {
-                        const hasAccepted = localStorage.getItem('accepted_bargain_' + b.itemId) || sessionStorage.getItem('accepted_bargain_' + b.itemId);
-                        const hasDeclined = localStorage.getItem('declined_bargain_' + b.itemId) || sessionStorage.getItem('declined_bargain_' + b.itemId);
-                        if (!hasAccepted && !hasDeclined) {
-                            const pData = {
-                                itemId: String(b.itemId),
-                                offeredPrice: b.offeredPrice,
-                                timestamp: b.timestamp ? Date.parse(b.timestamp) || Date.now() : Date.now()
-                            };
-                            localStorage.setItem('pending_bargain_' + b.itemId, JSON.stringify(pData));
-                            sessionStorage.setItem('pending_bargain_' + b.itemId, JSON.stringify(pData));
-                        }
-                    } catch {}
+                    const hasAccepted = Boolean(getAcceptedBargain(b.itemId));
+                    const hasDeclined = isBargainDeclined(b.itemId);
+                    if (!hasAccepted && !hasDeclined) {
+                        setPendingBargain(b.itemId, {
+                            itemId: String(b.itemId),
+                            offeredPrice: b.offeredPrice,
+                            timestamp: b.timestamp ? Date.parse(b.timestamp) || Date.now() : Date.now()
+                        });
+                    }
 
                     const activeItem = getActiveOpenedItem();
                     if (activeItem && String(activeItem.id) === String(b.itemId)) {
                         const offerBtn = document.getElementById('modalOfferPriceBtn');
-                        if (offerBtn && !localStorage.getItem('accepted_bargain_' + b.itemId)) {
+                        if (offerBtn && !getAcceptedBargain(b.itemId)) {
                             applyOfferButtonState(offerBtn, 'pending');
                         }
                     }
@@ -632,14 +625,7 @@ export async function syncUserBargains() {
                     const offerKey = String(b.bargainId || ('accepted_' + b.itemId + '_' + b.acceptedPrice));
                     invokeAction('markBargainPopupAsSeen', offerKey);
                 }
-                try {
-                    localStorage.setItem('accepted_bargain_' + b.itemId, JSON.stringify(payload));
-                    sessionStorage.setItem('accepted_bargain_' + b.itemId, JSON.stringify(payload));
-                    localStorage.removeItem('declined_bargain_' + b.itemId);
-                    sessionStorage.removeItem('declined_bargain_' + b.itemId);
-                    localStorage.removeItem('pending_bargain_' + b.itemId);
-                    sessionStorage.removeItem('pending_bargain_' + b.itemId);
-                } catch {}
+                setAcceptedBargain(b.itemId, payload);
 
                 if (Array.isArray(activeCart)) {
                     const cartItem = activeCart.find(ci => ci && String(ci.id) === String(b.itemId));

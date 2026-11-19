@@ -4,6 +4,7 @@
 
 import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 import { getRuntimeFavorites, getRuntimeFingerprint, getRuntimeStorage, getRuntimeUser } from '../core/runtime-env.js';
+import { getAcceptedBargain, getPendingBargain, isBargainDeclined } from '../core/bargain-storage.js';
 
 function getReactiveStore() {
     if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
@@ -202,33 +203,18 @@ export function getBargainOfferState(itemId) {
     let isPendingBargain = false;
     let acceptedData = null;
 
-    try {
-        const sId = String(itemId);
-        if (sessionStorage.getItem('declined_bargain_' + sId) || localStorage.getItem('declined_bargain_' + sId)) {
-            isDeclinedBargain = true;
-        } else {
-            const savedAcc = sessionStorage.getItem('accepted_bargain_' + sId) || localStorage.getItem('accepted_bargain_' + sId);
-            if (savedAcc) {
-                const parsed = JSON.parse(savedAcc);
-                if (parsed && parsed.acceptedPrice) {
-                    isAcceptedBargain = true;
-                    acceptedData = parsed;
-                }
-            }
-            if (!isAcceptedBargain) {
-                const savedPend = sessionStorage.getItem('pending_bargain_' + sId) || localStorage.getItem('pending_bargain_' + sId);
-                if (savedPend) {
-                    const parsedPend = JSON.parse(savedPend);
-                    if (parsedPend && (Date.now() - (parsedPend.timestamp || 0) < 24 * 60 * 60 * 1000)) {
-                        isPendingBargain = true;
-                    } else {
-                        sessionStorage.removeItem('pending_bargain_' + sId);
-                        localStorage.removeItem('pending_bargain_' + sId);
-                    }
-                }
-            }
+    if (isBargainDeclined(itemId)) {
+        isDeclinedBargain = true;
+    } else {
+        const savedAcc = getAcceptedBargain(itemId);
+        if (savedAcc && savedAcc.acceptedPrice) {
+            isAcceptedBargain = true;
+            acceptedData = savedAcc;
         }
-    } catch {}
+        if (!isAcceptedBargain && getPendingBargain(itemId)) {
+            isPendingBargain = true;
+        }
+    }
 
     return { isAcceptedBargain, isDeclinedBargain, isPendingBargain, acceptedData };
 }

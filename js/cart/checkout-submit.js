@@ -20,6 +20,7 @@ import { ensureCityRef, ensureBranchRef } from './novaposhta-delivery.js';
 import { clearCheckoutDraft } from './checkout-form.js';
 import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 import { getRuntimeUser, getRuntimeProfile, getRuntimeFingerprint, getRuntimeStorage, getRuntimeSiteLang } from '../core/runtime-env.js';
+import { clearAllBargainState } from '../core/bargain-storage.js';
 
 /**
  * Нормализует телефон к международному формату `+380...`.
@@ -315,14 +316,17 @@ export async function executeOrderFinal(emailToSave) {
         btnSubmit.style.overflow = 'hidden';
         btnSubmit.style.color = '#000';
         btnSubmit.innerHTML = `
-            <span style="position: relative; z-index: 2;">[ ОБРАБОТКА ДАННЫХ... ]</span>
-            <div id="btnProgressBar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: #fff; z-index: 1; transition: width 3s cubic-bezier(0.1, 0.7, 1.0, 0.1);"></div>
+            <span class="checkout-submit-label">[ ОБРАБОТКА ДАННЫХ... ]</span>
+            <div id="btnProgressBar" class="checkout-submit-progress"></div>
         `;
 
-        setTimeout(() => {
+        const scheduleBarStart = typeof requestAnimationFrame === 'function'
+            ? requestAnimationFrame
+            : (cb) => setTimeout(cb, 0);
+        scheduleBarStart(() => {
             const bar = document.getElementById('btnProgressBar');
             if (bar) bar.style.width = '90%';
-        }, 50);
+        });
 
         const rawName = document.getElementById('orderName').value.trim();
         const name = rawName.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '').trim();
@@ -601,14 +605,7 @@ export async function executeOrderFinal(emailToSave) {
                         catItem.status = 'reserved';
                         invokeAction('updateCardDOM', catItem);
                     }
-                    try {
-                        sessionStorage.removeItem('accepted_bargain_' + ordered.id);
-                        localStorage.removeItem('accepted_bargain_' + ordered.id);
-                        sessionStorage.removeItem('declined_bargain_' + ordered.id);
-                        localStorage.removeItem('declined_bargain_' + ordered.id);
-                        sessionStorage.removeItem('pending_bargain_' + ordered.id);
-                        localStorage.removeItem('pending_bargain_' + ordered.id);
-                    } catch {}
+                    clearAllBargainState(ordered.id);
                 });
                 invokeAction('updateSidebarCounters');
                 if (typeof renderHistory === 'function') renderHistory();

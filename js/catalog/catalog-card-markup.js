@@ -6,6 +6,7 @@ import { getCatalogStore } from './catalog-state.js';
 import { toCDN } from './media-prefetch.js';
 import { hasAction, invokeAction, resolveAction } from '../core/action-registry.js';
 import { getRuntimeFavorites } from '../core/runtime-env.js';
+import { getAcceptedBargain } from '../core/bargain-storage.js';
 
 function fallbackEscHtml(str) {
     return String(str ?? '')
@@ -30,13 +31,8 @@ function escCardAttr(v) {
  * @returns {object|null}
  */
 export function readAcceptedBargain(item) {
-    try {
-        const rawB = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('accepted_bargain_' + item.id) : null)
-            || (typeof localStorage !== 'undefined' ? localStorage.getItem('accepted_bargain_' + item.id) : null);
-        return rawB ? JSON.parse(rawB) : null;
-    } catch {
-        return null;
-    }
+    if (!item || item.id === undefined || item.id === null) return null;
+    return getAcceptedBargain(item.id);
 }
 
 /**
@@ -101,15 +97,15 @@ export function buildCardPriceHtml(item, curr = 'грн') {
     if (savedBargain && savedBargain.acceptedPrice) {
         const fOldB = formatPriceFn(savedBargain.originalPrice || item.price);
         const fAccB = formatPriceFn(savedBargain.acceptedPrice);
-        return `<span class="card-old-price" style="color: #777; text-decoration: line-through; margin-right: 6px;">${fOldB}</span><span class="card-current-price" style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${fAccB}</span>`;
+        return `<span class="card-old-price card-old-price--bargain">${fOldB}</span><span class="card-current-price card-current-price--bargain">${fAccB}</span>`;
     }
     if (item.is_sale && item.old_price) {
         const fOld = formatPriceFn(item.old_price);
         const fPrice = formatPriceFn(item.price);
-        return `<span class="card-old-price" style="color: #4a704a; text-decoration: line-through;">${fOld}</span><span class="card-current-price" style="color: var(--accent-green);">${fPrice}</span>`;
+        return `<span class="card-old-price card-old-price--sale">${fOld}</span><span class="card-current-price card-current-price--sale">${fPrice}</span>`;
     }
     const fPrice = formatPriceFn(item.price);
-    return `<span class="card-current-price" style="color: var(--accent-green);">${fPrice}</span>`;
+    return `<span class="card-current-price">${fPrice}</span>`;
 }
 
 /**
@@ -165,8 +161,8 @@ export function buildCardDOM(item, idx = 0) {
 
         if (isVid) {
             slidesStr += `
-                <div class="card-slide ${thumbIdx === 0 ? 'img-8bit-loading' : ''}" style="background: #0a0a0a;">
-                    <video class="grid-lazy-video" src="${escCardAttr(cdnVidUrl)}#t=0.001" muted loop playsinline preload="none" style="width:100%; height:100%; object-fit:cover; pointer-events:none; opacity:0;"></video>
+                <div class="card-slide card-slide--video ${thumbIdx === 0 ? 'img-8bit-loading' : ''}">
+                    <video class="grid-lazy-video" src="${escCardAttr(cdnVidUrl)}#t=0.001" muted loop playsinline preload="none"></video>
                 </div>`;
         } else if (thumbIdx === 0) {
             const firstLoadAttr = (idx < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
@@ -223,7 +219,7 @@ export function buildCardDOM(item, idx = 0) {
             <div class="item-size"><span data-i18n="grid.size_prefix">${escCardHtml(sizePrefix)}</span>${escCardHtml(item.size || '')}</div>
             <div class="item-footer"><span>${escCardHtml(item.brand || '')}</span><span>${escCardHtml(item.condition || '')}</span></div>
         </div>
-        <button class="grid-cart-btn" data-i18n="product.add_to_cart" style="${item.status === 'sold' ? 'display:none;' : ''}" data-action="add-to-cart" data-id="${safeItemIdAttr}">${escCardHtml(addToCartText)}</button>
+        <button class="grid-cart-btn${item.status === 'sold' ? ' grid-cart-btn--hidden' : ''}" data-i18n="product.add_to_cart" data-action="add-to-cart" data-id="${safeItemIdAttr}">${escCardHtml(addToCartText)}</button>
     `;
 
     return card;

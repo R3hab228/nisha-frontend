@@ -64,7 +64,8 @@ async function detectPwaInstalledAsync() {
 function isIosSafariBrowser() {
     if (typeof navigator === 'undefined') return false;
     const ua = navigator.userAgent || '';
-    const isIos = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const platform = navigator.userAgentData?.platform || navigator.platform || '';
+    const isIos = /iPad|iPhone|iPod/i.test(ua) || ((platform === 'MacIntel' || platform === 'macOS') && navigator.maxTouchPoints > 1);
     const isCriOS = /CriOS|FxiOS|EdgiOS/i.test(ua);
     return isIos && !isCriOS;
 }

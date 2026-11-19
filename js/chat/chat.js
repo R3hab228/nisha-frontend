@@ -1,6 +1,7 @@
 
 import { invokeAction, onAppEvent, registerActions, resolveAction } from '../core/action-registry.js';
 import { getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang } from '../core/runtime-env.js';
+import { setAcceptedBargain, setBargainDeclined } from '../core/bargain-storage.js';
 
 // --- СИСТЕМА ЗАПОМИНАНИЯ ПОКАЗАННЫХ ОФФЕРОВ (ЧТОБЫ НЕ НАДОЕДАТЬ ПОЛЬЗОВАТЕЛЮ) ---
 const BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups';
@@ -107,14 +108,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     const currencyText = (typeof getCurrency === 'function' ? getCurrency() : (typeof i18next !== 'undefined' ? i18next.t('currency', { defaultValue: 'грн' }) : 'грн')).trim();
 
     // 1. Сохраняем состояние принятого торга для текущего товара
-    try {
-        sessionStorage.setItem('accepted_bargain_' + bargainData.itemId, JSON.stringify(bargainData));
-        localStorage.setItem('accepted_bargain_' + bargainData.itemId, JSON.stringify(bargainData));
-        sessionStorage.removeItem('declined_bargain_' + bargainData.itemId);
-        localStorage.removeItem('declined_bargain_' + bargainData.itemId);
-        sessionStorage.removeItem('pending_bargain_' + bargainData.itemId);
-        localStorage.removeItem('pending_bargain_' + bargainData.itemId);
-    } catch {}
+    setAcceptedBargain(bargainData.itemId, bargainData);
 
     // 2. Обновляем кнопку предложения цены и цену на карточке товара, если открыт именно этот товар
     const activeItem = getRuntimeOpenedItem();
@@ -388,14 +382,7 @@ function handleIncomingSupportReply(r, sbClient) {
     }
 
     if (parsed && parsed.type === 'BARGAIN_ACCEPTED') {
-        try {
-            sessionStorage.setItem('accepted_bargain_' + parsed.itemId, JSON.stringify(parsed));
-            localStorage.setItem('accepted_bargain_' + parsed.itemId, JSON.stringify(parsed));
-            sessionStorage.removeItem('declined_bargain_' + parsed.itemId);
-            localStorage.removeItem('declined_bargain_' + parsed.itemId);
-            sessionStorage.removeItem('pending_bargain_' + parsed.itemId);
-            localStorage.removeItem('pending_bargain_' + parsed.itemId);
-        } catch {}
+        setAcceptedBargain(parsed.itemId, parsed);
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
 
@@ -464,14 +451,7 @@ function handleIncomingSupportReply(r, sbClient) {
     }
 
     if (parsed && parsed.type === 'BARGAIN_DECLINED') {
-        try {
-            sessionStorage.setItem('declined_bargain_' + parsed.itemId, 'true');
-            localStorage.setItem('declined_bargain_' + parsed.itemId, 'true');
-            sessionStorage.removeItem('accepted_bargain_' + parsed.itemId);
-            localStorage.removeItem('accepted_bargain_' + parsed.itemId);
-            sessionStorage.removeItem('pending_bargain_' + parsed.itemId);
-            localStorage.removeItem('pending_bargain_' + parsed.itemId);
-        } catch {}
+        setBargainDeclined(parsed.itemId);
 
         const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
 

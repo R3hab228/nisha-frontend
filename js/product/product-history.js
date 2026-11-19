@@ -15,6 +15,7 @@ import {
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { isItemBargainEnabled } from '../catalog/catalog-card-markup.js';
+import { getAcceptedBargain } from '../core/bargain-storage.js';
 
 const _preloadedSimilarUrls = new Set();
 let _pendingSimilarImgUrls = [];
@@ -163,16 +164,11 @@ export function renderSimilarItems(item) {
                 const formattedOld = (typeof formatPrice === 'function') ? formatPrice(s.old_price, { numberOnly: true }) : s.old_price;
                 miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${formattedOld}</span><span style="color: var(--accent-green);">${formattedSimilarPrice}</span>`;
             }
-            try {
-                const rawSimBargain = sessionStorage.getItem('accepted_bargain_' + s.id) || localStorage.getItem('accepted_bargain_' + s.id);
-                if (rawSimBargain && s.status === 'available') {
-                    const simBargain = JSON.parse(rawSimBargain);
-                    if (simBargain && simBargain.acceptedPrice) {
-                        const origSimPrice = simBargain.originalPrice || s.price;
-                        miniPriceHTML = `<span style="color: #777; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${origSimPrice} ${curr}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${simBargain.acceptedPrice} ${curr}</span>`;
-                    }
-                }
-            } catch {}
+            const simBargain = s.status === 'available' ? getAcceptedBargain(s.id) : null;
+            if (simBargain && simBargain.acceptedPrice) {
+                const origSimPrice = simBargain.originalPrice || s.price;
+                miniPriceHTML = `<span class="history-old-price history-old-price--bargain">${origSimPrice} ${curr}</span><span class="history-current-price--bargain">${simBargain.acceptedPrice} ${curr}</span>`;
+            }
 
             const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
             const unseenClass = isUnseen ? 'is-unseen' : '';

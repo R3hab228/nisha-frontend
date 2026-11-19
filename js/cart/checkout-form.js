@@ -169,10 +169,14 @@ export async function openCheckoutModal() {
         });
 
         const promoEl = document.getElementById('promoInput');
-        if (promoEl && !promoEl._guardBound) {
+        if (promoEl && !promoEl._guardBound && typeof promoEl.addEventListener === 'function') {
             promoEl._guardBound = true;
             promoEl.addEventListener('change', sanitizePromoField);
             promoEl.addEventListener('focus', sanitizePromoField);
+            promoEl.addEventListener('animationstart', sanitizePromoField);
+            promoEl.addEventListener('input', () => {
+                if (document.activeElement !== promoEl) sanitizePromoField();
+            });
         }
 
         hideNPDropdowns();
@@ -298,12 +302,23 @@ export async function openCheckoutModal() {
             nameInput._lastExplicitValue = nameInput.value.trim();
         }
 
+        const runPostOpenSync = () => {
+            sanitizePromoField();
+            updateNPClearButtons();
+            hideNPDropdowns();
+        };
         sanitizePromoField();
         updateNPClearButtons();
-        setTimeout(sanitizePromoField, 400);
-        setTimeout(updateNPClearButtons, 400);
-        setTimeout(sanitizePromoField, 1500);
-        setTimeout(hideNPDropdowns, 600);
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(runPostOpenSync);
+        }
+        if (cartState._postOpenAutofillTimer) {
+            clearTimeout(cartState._postOpenAutofillTimer);
+        }
+        cartState._postOpenAutofillTimer = setTimeout(() => {
+            cartState._postOpenAutofillTimer = null;
+            runPostOpenSync();
+        }, 450);
 
         if (branchInput && !branchInput._unlockBound) {
             branchInput._unlockBound = true;
