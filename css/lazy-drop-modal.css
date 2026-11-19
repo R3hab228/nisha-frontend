@@ -187,7 +187,6 @@
     max-height: 235px;
     overflow-y: auto;
     overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
 }
 
 .prop-size-col .prop-custom-dropdown {
@@ -518,7 +517,6 @@
         min-height: 0 !important;
         max-height: none !important;
         overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: contain;
         padding: 15px !important;
         padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important;

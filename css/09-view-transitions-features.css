@@ -305,7 +305,6 @@ html.save-data-active .grid-lazy-video {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95) !important;
     max-height: 50vh !important;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: contain !important;
 }
 #liveSearchDropdown[popover] {

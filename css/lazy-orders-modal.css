@@ -8,6 +8,7 @@
     max-width: 92vw;
     height: 600px;
     max-height: calc(100vh - 60px);
+    max-height: calc(100dvh - 60px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -262,7 +263,6 @@
         min-height: 0 !important;
         max-height: none !important;
         overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
         padding: 15px !important;
     }
     .order-footer {
