@@ -510,20 +510,52 @@ async function initApp() {
             }
         }
 
-        const buildBroadcastContent = (bData) => {
+        const resolveBroadcastImageUrls = (rawUrl) => {
+            if (!rawUrl || typeof rawUrl !== 'string') return { primary: '', fallback: '' };
+            const trimmed = rawUrl.trim();
+            if (!/^https?:\/\//i.test(trimmed)) return { primary: '', fallback: '' };
+            const cdnUrl = typeof window.toCDN === 'function' ? window.toCDN(trimmed) : trimmed;
+            const safePrimary = /^https?:\/\//i.test(cdnUrl) ? cdnUrl.replaceAll('"', '&quot;') : '';
+            const safeFallback = trimmed !== cdnUrl ? trimmed.replaceAll('"', '&quot;') : '';
+            return { primary: safePrimary, fallback: safeFallback };
+        };
+
+        const preloadImageWithTimeout = (url, timeoutMs = 1400) => {
+            if (!url || typeof Image === 'undefined') return Promise.resolve(false);
+            return new Promise((resolve) => {
+                let settled = false;
+                const done = (ok) => {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
+                    resolve(ok);
+                };
+                const timer = setTimeout(() => done(false), timeoutMs);
+                const img = new Image();
+                img.decoding = 'async';
+                img.onload = () => {
+                    if (typeof img.decode === 'function') {
+                        img.decode().catch(() => {}).finally(() => done(true));
+                    } else {
+                        done(true);
+                    }
+                };
+                img.onerror = () => done(false);
+                img.src = url;
+            });
+        };
+
+        const buildBroadcastContent = (bData, resolvedImgOverride = '') => {
             if (!bData) return '';
             const hasValidText = bData.message_text && typeof bData.message_text === 'string' && bData.message_text.trim() && bData.message_text.trim() !== 'null';
-            const hasValidImg = bData.image_url && typeof bData.image_url === 'string' && bData.image_url.trim();
+            const { primary, fallback } = resolveBroadcastImageUrls(bData.image_url);
+            const imgSrc = resolvedImgOverride || primary || fallback;
+            const hasValidImg = Boolean(imgSrc);
             if (!hasValidText && !hasValidImg) return '';
 
             let html = '';
             if (hasValidImg) {
-                const rawImgUrl = bData.image_url.trim();
-                const cdnUrl = typeof window.toCDN === 'function' ? window.toCDN(rawImgUrl) : rawImgUrl;
-                const safeImgUrl = /^https?:\/\//i.test(cdnUrl) ? cdnUrl.replaceAll('"', '&quot;') : '';
-                if (safeImgUrl) {
-                    html += `<img src="${safeImgUrl}" alt="" style="width:100%; max-height:240px; object-fit:contain; background:#000; border-radius:4px; border:1px solid #333; margin-bottom:15px; display:block;">`;
-                }
+                html += `<img src="${imgSrc}" alt="" decoding="async" style="width:100%; max-height:min(320px, 46dvh); object-fit:contain; background:#050505; border-radius:4px; border:1px solid #333; margin-bottom:14px; display:block;">`;
             }
             if (hasValidText) {
                 const escFn = hasAction('escapeHtml')
@@ -543,9 +575,24 @@ async function initApp() {
             }
         };
 
-        const dispatchSiteBroadcast = (bData, { respectOnboardingTour = false } = {}) => {
-            const broadcastContent = buildBroadcastContent(bData);
-            const markAsSeen = createMarkBroadcastSeen(bData && bData.id);
+        const _dispatchedBroadcastIds = new Set();
+
+        const dispatchSiteBroadcast = async (bData, { respectOnboardingTour = false } = {}) => {
+            if (!bData || !bData.id || _dispatchedBroadcastIds.has(bData.id)) return;
+            _dispatchedBroadcastIds.add(bData.id);
+
+            const { primary, fallback } = resolveBroadcastImageUrls(bData.image_url);
+            let resolvedImg = primary || fallback;
+            if (primary) {
+                const primaryOk = await preloadImageWithTimeout(primary, 1400);
+                if (!primaryOk && fallback) {
+                    const fallbackOk = await preloadImageWithTimeout(fallback, 1200);
+                    if (fallbackOk) resolvedImg = fallback;
+                }
+            }
+
+            const broadcastContent = buildBroadcastContent(bData, resolvedImg);
+            const markAsSeen = createMarkBroadcastSeen(bData.id);
             if (!broadcastContent) {
                 markAsSeen();
                 return;
@@ -563,10 +610,15 @@ async function initApp() {
             }
         };
 
-        // Проверка рассылок от админа
-        setTimeout(async () => {
+        let _lastBroadcastCheckAt = 0;
+        let _isCheckingBroadcast = false;
+        const checkLatestSiteBroadcast = async ({ force = false, respectOnboardingTour = false } = {}) => {
+            if (!_supabase || _isCheckingBroadcast) return;
+            const now = Date.now();
+            if (!force && (now - _lastBroadcastCheckAt) < 10000) return;
+            _lastBroadcastCheckAt = now;
+            _isCheckingBroadcast = true;
             try {
-                if (!_supabase) return;
                 const { data: broadcasts, error: broadcastErr } = await _supabase
                     .from('site_broadcasts')
                     .select('id, message_text, image_url')
@@ -585,11 +637,31 @@ async function initApp() {
                     const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
 
                     if (!hasSeen) {
-                        dispatchSiteBroadcast(bData, { respectOnboardingTour: true });
+                        await dispatchSiteBroadcast(bData, { respectOnboardingTour });
                     }
                 }
-            } catch (e) { console.warn('Ошибка загрузки рассылки', e); }
-        }, 2500);
+            } catch (e) {
+                console.warn('Ошибка загрузки рассылки', e);
+            } finally {
+                _isCheckingBroadcast = false;
+            }
+        };
+
+        // Первичная проверка рассылок и обновление при возврате на вкладку (если Realtime в фоне уснул)
+        setTimeout(() => {
+            checkLatestSiteBroadcast({ force: true, respectOnboardingTour: true });
+        }, 1200);
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                checkLatestSiteBroadcast({ respectOnboardingTour: false });
+            }
+        });
+        window.addEventListener('pageshow', (ev) => {
+            if (ev && ev.persisted) {
+                checkLatestSiteBroadcast({ force: true, respectOnboardingTour: false });
+            }
+        });
 
         // Запускаем счетчик посетителей сразу (не дожидаясь конца всех await в initApp)
         invokeAction('initHitCounter');

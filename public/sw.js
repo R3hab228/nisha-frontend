@@ -170,7 +170,7 @@ self.addEventListener('fetch', event => {
 
     // --- ПЕРЕХВАТ SUPABASE API ДЛЯ ОФЛАЙНА (ТОЛЬКО ПУБЛИЧНЫЙ КАТАЛОГ, БЕЗ ПРОФИЛЕЙ И ЗАКАЗОВ) ---
     const isSupabaseRestApi = (url.hostname.endsWith('.supabase.co') || url.hostname === 'cdn.nisha-store.shop' || url.hostname.endsWith('.workers.dev')) &&
-        (url.pathname.includes('/rest/v1/items') || url.pathname.includes('/rest/v1/reviews') || url.pathname.includes('/rest/v1/site_broadcasts') || url.pathname.includes('/rest/v1/item_questions'));
+        (url.pathname.includes('/rest/v1/items') || url.pathname.includes('/rest/v1/reviews') || url.pathname.includes('/rest/v1/item_questions'));
     if (isSupabaseRestApi) {
         event.respondWith(
             fetch(event.request).then(networkResponse => {
