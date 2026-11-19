@@ -463,13 +463,13 @@ export async function checkSession() {
             setProfileAuthFormsVisible(true);
             const profNameEl = document.getElementById('profileName');
             const profEmailEl = document.getElementById('profileEmail');
-            if (profNameEl) profNameEl.innerText = uName;
-            if (profEmailEl) profEmailEl.innerText = uEmail;
+            if (profNameEl) profNameEl.textContent = uName;
+            if (profEmailEl) profEmailEl.textContent = uEmail;
 
             const mProfNameEl = document.getElementById('modalProfileName');
             const mProfEmailEl = document.getElementById('modalProfileEmail');
-            if (mProfNameEl) mProfNameEl.innerText = uName;
-            if (mProfEmailEl) mProfEmailEl.innerText = uEmail;
+            if (mProfNameEl) mProfNameEl.textContent = uName;
+            if (mProfEmailEl) mProfEmailEl.textContent = uEmail;
         }
 
         const store = getStore();

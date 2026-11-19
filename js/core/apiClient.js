@@ -10,8 +10,7 @@
 
 import { invokeAction, registerActions } from './action-registry.js';
 
-(function () {
-    const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
+const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
     const DEFAULT_TIMEOUT_MS = 12000;
     const UPLOAD_TIMEOUT_MS = 45000;
     const RETRYABLE_STATUSES = new Set([408, 429, 502, 503, 504]);
@@ -366,4 +365,3 @@ import { invokeAction, registerActions } from './action-registry.js';
             setTimeout(() => warmupBackendServer(), 2000);
         }
     }
-})();

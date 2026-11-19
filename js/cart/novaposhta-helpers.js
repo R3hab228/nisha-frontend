@@ -380,7 +380,7 @@ export async function calculateDeliveryCost() {
     const costInfo = document.getElementById('deliveryCostInfo');
     const costVal = document.getElementById('calcCostVal');
     if (costInfo) costInfo.style.display = 'block';
-    if (costVal) costVal.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.calc_pending', { defaultValue: 'Рассчитываем...' }) : 'Рассчитываем...';
+    if (costVal) costVal.textContent = typeof i18next !== 'undefined' ? i18next.t('checkout.calc_pending', { defaultValue: 'Рассчитываем...' }) : 'Рассчитываем...';
 
     const totalCost = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
 
@@ -392,13 +392,13 @@ export async function calculateDeliveryCost() {
 
         if (data && data.success) {
             const uahText = (typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн';
-            if (costVal) costVal.innerText = data.cost + ' ' + uahText;
+            if (costVal) costVal.textContent = data.cost + ' ' + uahText;
         } else {
-            if (costVal) costVal.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.np_rates', { defaultValue: 'По тарифам НП' }) : 'По тарифам НП';
+            if (costVal) costVal.textContent = typeof i18next !== 'undefined' ? i18next.t('checkout.np_rates', { defaultValue: 'По тарифам НП' }) : 'По тарифам НП';
         }
     } catch (e) {
         console.error('Ошибка расчета НП', e);
-        if (costVal) costVal.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.np_rates', { defaultValue: 'По тарифам НП' }) : 'По тарифам НП';
+        if (costVal) costVal.textContent = typeof i18next !== 'undefined' ? i18next.t('checkout.np_rates', { defaultValue: 'По тарифам НП' }) : 'По тарифам НП';
     }
 }
 

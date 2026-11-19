@@ -132,13 +132,13 @@ export function updateCardDOM(item) {
                 const isInCart = userCart.some(i => String(i.id) === String(item.id));
                 const inCartText = (typeof i18next !== 'undefined') ? i18next.t('product.in_cart', { defaultValue: 'В КОРЗИНЕ' }) : 'В КОРЗИНЕ';
                 const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
-                modalCartBtn.innerText = isInCart ? inCartText : addToCartText;
+                modalCartBtn.textContent = isInCart ? inCartText : addToCartText;
             }
         }
         if (modalPriceEl) {
             const isHackedActive = isSiteHackedMode();
             const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
-            modalPriceEl.innerText = hasAction('formatPrice') ? invokeAction('formatPrice', finalPrice) : (finalPrice + ' ' + curr);
+            modalPriceEl.textContent = hasAction('formatPrice') ? invokeAction('formatPrice', finalPrice) : (finalPrice + ' ' + curr);
         }
     }
 }
@@ -435,7 +435,7 @@ export async function handleDoubleTapLike(event, itemId, container) {
     if (container) {
         const star = document.createElement('div');
         star.className = 'double-tap-star-anim';
-        star.innerText = '★';
+        star.textContent = '★';
         container.appendChild(star);
         setTimeout(() => star.remove(), 800);
     }

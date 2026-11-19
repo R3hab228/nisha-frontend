@@ -24,7 +24,7 @@ export function updateFavBadge() {
     if (typeof document === 'undefined') return;
     const badge = document.getElementById('favCountBadge');
     const favs = Array.isArray(profileState.favorites) ? profileState.favorites : [];
-    if (badge) badge.innerText = `[${favs.length}]`;
+    if (badge) badge.textContent = `[${favs.length}]`;
 }
 bindWindowFn('updateFavBadge', updateFavBadge);
 

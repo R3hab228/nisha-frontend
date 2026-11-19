@@ -1014,8 +1014,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
                 }
             };
             const mockTextSpan = {
-                set innerText(val) { text = val; },
-                get innerText() { return text; }
+                set textContent(val) { text = val; },
+                get textContent() { return text; }
             };
             const mockBtn = {
                 classList: {
@@ -1182,7 +1182,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
             // 3. Save button visual feedback
             const mockBtn = {
-                innerText: '[ СОХРАНИТЬ ]',
+                textContent: '[ СОХРАНИТЬ ]',
                 classList: {
                     add: vi.fn(),
                     remove: vi.fn()
@@ -1203,7 +1203,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             window.userProfile = {};
             await window.saveProfileDeliveryFromForm(false, mockBtn);
 
-            expect(mockBtn.innerText).toBe('[ СОХРАНЕНО ✓ ]');
+            expect(mockBtn.textContent).toBe('[ СОХРАНЕНО ✓ ]');
             expect(mockBtn.classList.add).toHaveBeenCalledWith('is-saved');
 
             globalThis.document.getElementById = origGetElementById;
@@ -1271,7 +1271,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const cityEl = makeMockInput('Львів');
             const branchEl = makeMockInput('Відділення №5');
             const saveBtn = {
-                innerText: '[ СОХРАНИТЬ ]',
+                textContent: '[ СОХРАНИТЬ ]',
                 attributes: { 'data-mode': 'save' },
                 classList: {
                     _classes: new Set(),
@@ -1313,7 +1313,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(branchEl.readOnly).toBe(true);
             expect(fnEl.classList.contains('is-locked')).toBe(true);
             expect(fnEl.attributes['tabindex']).toBe('-1');
-            expect(saveBtn.innerText).toBe('[ ИЗМЕНИТЬ ]');
+            expect(saveBtn.textContent).toBe('[ ИЗМЕНИТЬ ]');
             expect(saveBtn.attributes['data-mode']).toBe('edit');
             expect(saveBtn.classList.contains('is-edit-mode')).toBe(true);
 
@@ -1324,7 +1324,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(branchEl.readOnly).toBe(false);
             expect(fnEl.classList.contains('is-locked')).toBe(false);
             expect(fnEl.attributes['tabindex']).toBeUndefined();
-            expect(saveBtn.innerText).toBe('[ СОХРАНИТЬ ]');
+            expect(saveBtn.textContent).toBe('[ СОХРАНИТЬ ]');
             expect(saveBtn.attributes['data-mode']).toBe('save');
             expect(saveBtn.classList.contains('is-edit-mode')).toBe(false);
             expect(fnEl.focus).toHaveBeenCalled();
@@ -1704,7 +1704,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const toastSpy = vi.fn();
             window.showToast = toastSpy;
 
-            const bannerEl = { classList: { add: vi.fn(), remove: vi.fn(), contains: vi.fn(() => true) }, innerText: '' };
+            const bannerEl = { classList: { add: vi.fn(), remove: vi.fn(), contains: vi.fn(() => true) }, textContent: '' };
             const gridEl = { querySelectorAll: vi.fn(() => [{ classList: { contains: () => false } }]), classList: { add: vi.fn(), remove: vi.fn() } };
 
             document.getElementById = vi.fn((id) => {
@@ -2065,12 +2065,12 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
     });
 
     describe('31. Strict Nova Poshta Branch & City Validation and Mobile Touch Selection', () => {
-        it('binds both onmousedown and onclick for touchscreen mobile branch selection in cart.js', () => {
+        it('binds both mousedown and click listeners for touchscreen mobile branch selection in cart.js', () => {
             const cartCode = readCartSource();
-            expect(cartCode).toContain('div.onmousedown = selectBranchItem;');
-            expect(cartCode).toContain('div.onclick = selectBranchItem;');
-            expect(cartCode).toContain('div.onmousedown = selectCityItem;');
-            expect(cartCode).toContain('div.onclick = selectCityItem;');
+            expect(cartCode).toContain("div.addEventListener('mousedown', selectBranchItem);");
+            expect(cartCode).toContain("div.addEventListener('click', selectBranchItem);");
+            expect(cartCode).toContain("div.addEventListener('mousedown', selectCityItem);");
+            expect(cartCode).toContain("div.addEventListener('click', selectCityItem);");
         });
 
         it('strictly blocks order submission in executeOrderFinal and confirmEmailPrompt if city or branch is missing', () => {

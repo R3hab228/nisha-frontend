@@ -183,14 +183,14 @@ export function insertNewItemCardSmoothly(item) {
             if (renderedNew) renderedNew.classList.add('item-card-new-arrival');
         }
         const countElDesktop = document.getElementById('itemCount');
-        if (countElDesktop) countElDesktop.innerText = list.length;
+        if (countElDesktop) countElDesktop.textContent = list.length;
         return;
     }
 
     const alreadyRenderedAll = (window.renderedCount || 0) >= prevLen;
     if (!(insertIdx < (window.renderedCount || 0) || alreadyRenderedAll)) {
         const countElMobile = document.getElementById('itemCount');
-        if (countElMobile) countElMobile.innerText = list.length;
+        if (countElMobile) countElMobile.textContent = list.length;
         return;
     }
 
@@ -223,7 +223,7 @@ export function insertNewItemCardSmoothly(item) {
 
     const countEl = document.getElementById('itemCount');
     if (countEl && Array.isArray(window.filteredItems)) {
-        countEl.innerText = window.filteredItems.length;
+        countEl.textContent = window.filteredItems.length;
     }
 }
 

@@ -260,7 +260,7 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
     if (itemIdInput) itemIdInput.value = itemId || '';
 
     const nameEl = document.getElementById('autoReviewName');
-    if (nameEl) nameEl.innerText = itemName;
+    if (nameEl) nameEl.textContent = itemName;
 
     const previewEl = document.getElementById('autoReviewImg');
     if (previewEl) previewEl.style.backgroundImage = resolvedImg ? `url('${resolvedImg}')` : 'none';

@@ -63,7 +63,7 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
             btnGetOtp: {
                 id: 'btnGetOtp',
                 disabled: false,
-                innerText: 'Подтвердить',
+                textContent: 'Подтвердить',
                 innerHTML: 'Подтвердить',
                 style: {},
                 classList: {
@@ -120,7 +120,7 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
         elements.orderPhone.dataset = {};
 
         elements.btnGetOtp.disabled = false;
-        elements.btnGetOtp.innerText = 'Подтвердить';
+        elements.btnGetOtp.textContent = 'Подтвердить';
         elements.btnGetOtp.innerHTML = 'Подтвердить';
         elements.btnGetOtp.style = {};
         elements.btnGetOtp.classList._classes = new Set(['search-btn']);
@@ -189,7 +189,7 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
         expect(btn.classList.contains('btn-otp-success')).toBe(false);
         expect(btn.disabled).toBe(false);
         expect(btn.style.pointerEvents).toBe('auto');
-        expect(btn.innerText).toBe('Подтвердить');
+        expect(btn.textContent).toBe('Подтвердить');
         expect(btn['data-i18n']).toBe('checkout.btn_otp');
     });
 

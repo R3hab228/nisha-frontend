@@ -10,8 +10,7 @@
 // - Device Category (iOS, Android, Desktop) & Connection Type
 // Zero overhead: uses native PerformanceObserver with buffered: true
 
-(function () {
-    const rumData = {
+const rumData = {
         lcp: null,
         inp: null,
         cls: 0,
@@ -251,4 +250,3 @@
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = rumApi;
     }
-})();

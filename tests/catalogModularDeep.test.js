@@ -27,7 +27,6 @@ function createFakeEl(tagName = 'div') {
         tagName: tagName.toUpperCase(),
         id: '',
         innerHTML: '',
-        innerText: '',
         textContent: '',
         value: '',
         checked: false,
@@ -567,7 +566,7 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
 
         await catalogMod.applyFilters(true, false);
         expect(window.filteredItems.map(i => i.id)).toEqual(['a1']);
-        expect(countEl.innerText).toBe(1);
+        expect(countEl.textContent).toBe(1);
         expect(grid.children.some(c => c.getAttribute('data-id') === 'a1')).toBe(true);
         expect(history.replaceState).toHaveBeenCalled();
 
@@ -763,8 +762,8 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
         // Moving priceMin past priceMax clamps minInput to maxVal - 100 (4700)
         catalogMod.updatePriceUI({ target: { id: 'priceMin' } });
         expect(Number(minInput.value)).toBe(4700);
-        expect(minLabel.innerText).toBe(4700);
-        expect(maxLabel.innerText).toBe(4800);
+        expect(minLabel.textContent).toBe(4700);
+        expect(maxLabel.textContent).toBe(4800);
         expect(rangeFill.style.left).toBe(`${(4700 / 15000) * 100}%`);
 
         // Toggle mobile sidebar open -> hides FAB and sets active-mobile class
@@ -779,13 +778,13 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
 
         catalogMod.toggleMobileSidebar();
         expect(sidebar.classList.contains('active-mobile')).toBe(true);
-        expect(btn.innerText).toBe('[-] СКРЫТЬ ФИЛЬТРЫ');
+        expect(btn.textContent).toBe('[-] СКРЫТЬ ФИЛЬТРЫ');
         expect(fab.style.display).toBe('none');
 
         // Toggle closed -> restores FAB and button label
         catalogMod.toggleMobileSidebar();
         expect(sidebar.classList.contains('active-mobile')).toBe(false);
-        expect(btn.innerText).toBe('[+] ПОКАЗАТЬ ФИЛЬТРЫ');
+        expect(btn.textContent).toBe('[+] ПОКАЗАТЬ ФИЛЬТРЫ');
         expect(fab.style.display).toBe('flex');
     });
 

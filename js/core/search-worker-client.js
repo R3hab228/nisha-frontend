@@ -7,9 +7,6 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
 import { invokeAction, registerActions } from './action-registry.js';
 import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './helpers-search-address.js';
 
-(function() {
-    'use strict';
-
     let worker = null;
     let isWorkerReady = false;
     let requestIdCounter = 0;
@@ -313,5 +310,3 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
         getSearchWorker: () => searchWorkerClient,
         invalidateFuseCache: invalidateFuseCacheFn
     });
-
-})();

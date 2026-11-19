@@ -219,9 +219,9 @@ async function changeLanguage(lng) {
             const btn = document.getElementById('mobileFilterBtn');
             if (btn && sidebar) {
                 if (sidebar.classList.contains('active-mobile')) {
-                    btn.innerText = i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' });
+                    btn.textContent = i18next.t('mobile.hide_filters', { defaultValue: '[-] СКРЫТЬ ФИЛЬТРЫ' });
                 } else {
-                    btn.innerText = i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' });
+                    btn.textContent = i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' });
                 }
             }
             
@@ -295,11 +295,11 @@ function updateContentLanguage() {
         if (rawVal.includes('200') || rawVal.includes('налож') || rawVal.includes('наклад') || rawVal.includes('delivery') || rawVal.includes('cod')) {
             paymentMethodInput.value = 'Наложка (предоплата 200грн)';
             paymentSelectedText.setAttribute('data-i18n', 'checkout.payment_cod');
-            paymentSelectedText.innerText = i18next.t('checkout.payment_cod');
+            paymentSelectedText.textContent = i18next.t('checkout.payment_cod');
         } else {
             paymentMethodInput.value = 'Полная предоплата';
             paymentSelectedText.setAttribute('data-i18n', 'checkout.payment_full');
-            paymentSelectedText.innerText = i18next.t('checkout.payment_full');
+            paymentSelectedText.textContent = i18next.t('checkout.payment_full');
         }
     }
 

@@ -20,7 +20,7 @@ export function openPropBargainInput() {
             const minBidText = (typeof i18next !== 'undefined')
                 ? i18next.t('propose.min_bid_label', { defaultValue: 'МИНИМАЛЬНАЯ СТАВКА (ГРН) :' })
                 : 'МИНИМАЛЬНАЯ СТАВКА (ГРН) :';
-            label.innerText = minBidText;
+            label.textContent = minBidText;
             label.setAttribute('data-i18n', 'propose.min_bid_label');
             label.classList.remove('label-animating');
         }, 110);
@@ -81,10 +81,12 @@ export function showBargainSavedToast(minBid) {
     };
 
     const timer = setTimeout(dismiss, 3200);
-    toast.onclick = () => {
-        clearTimeout(timer);
-        dismiss();
-    };
+    if (typeof toast.addEventListener === 'function') {
+        toast.addEventListener('click', () => {
+            clearTimeout(timer);
+            dismiss();
+        });
+    }
 }
 
 export function returnToDesiredPriceMode(hasBargain = false) {
@@ -102,7 +104,7 @@ export function returnToDesiredPriceMode(hasBargain = false) {
             const priceLabelText = (typeof i18next !== 'undefined')
                 ? i18next.t('propose.price_label', { defaultValue: 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):' })
                 : 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):';
-            label.innerText = priceLabelText;
+            label.textContent = priceLabelText;
             label.setAttribute('data-i18n', 'propose.price_label');
             label.classList.remove('label-animating');
         }, 110);
@@ -128,13 +130,13 @@ export function returnToDesiredPriceMode(hasBargain = false) {
             const activeText = (typeof i18next !== 'undefined')
                 ? i18next.t('propose.btn_bargain_active', { defaultValue: '[ ТОРГ ✓ ]' })
                 : '[ ТОРГ ✓ ]';
-            btnToggle.innerText = activeText;
+            btnToggle.textContent = activeText;
         } else {
             btnToggle.classList.remove('active');
             const defText = (typeof i18next !== 'undefined')
                 ? i18next.t('propose.btn_bargain', { defaultValue: '[ ТОРГ ]' })
                 : '[ ТОРГ ]';
-            btnToggle.innerText = defText;
+            btnToggle.textContent = defText;
         }
     }
 }
@@ -213,7 +215,7 @@ export function resetPropBargainState() {
         const priceLabelText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
             ? i18next.t('propose.price_label', { defaultValue: 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):' })
             : 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):';
-        label.innerText = priceLabelText;
+        label.textContent = priceLabelText;
         label.setAttribute('data-i18n', 'propose.price_label');
     }
     if (minBox) minBox.style.display = 'none';
@@ -226,13 +228,13 @@ export function resetPropBargainState() {
             const activeText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
                 ? i18next.t('propose.btn_bargain_active', { defaultValue: '[ ТОРГ ✓ ]' })
                 : '[ ТОРГ ✓ ]';
-            btnToggle.innerText = activeText;
+            btnToggle.textContent = activeText;
         } else {
             btnToggle.classList.remove('active');
             const defText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
                 ? i18next.t('propose.btn_bargain', { defaultValue: '[ ТОРГ ]' })
                 : '[ ТОРГ ]';
-            btnToggle.innerText = defText;
+            btnToggle.textContent = defText;
         }
     }
 }

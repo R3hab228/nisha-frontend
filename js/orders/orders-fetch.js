@@ -120,7 +120,7 @@ export async function ensureOrderImagesLoaded() {
                 const resolved = getOrderItemImage({ id: itId });
                 if (resolved) {
                     el.style.backgroundImage = `url('${resolved}')`;
-                    el.innerText = '';
+                    el.textContent = '';
                 }
             });
         }

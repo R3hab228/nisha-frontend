@@ -129,7 +129,8 @@ function buildToastThumbHtml(imgUrl, useCdn = false) {
 }
 
 function bindToastDismissClick(toast, onClick, dismiss, logError = false) {
-    toast.onclick = (e) => {
+    if (typeof toast.addEventListener !== 'function') return;
+    toast.addEventListener('click', (e) => {
         if (e) {
             if (typeof e.preventDefault === 'function') e.preventDefault();
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -143,7 +144,7 @@ function bindToastDismissClick(toast, onClick, dismiss, logError = false) {
             }
         }
         dismiss();
-    };
+    });
 }
 
 /**

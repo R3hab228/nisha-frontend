@@ -253,10 +253,10 @@ export function openOfferPriceModal() {
         if (safeThumb) thumbEl.src = safeThumb;
         thumbEl.alt = activeItem.name || 'Товар';
     }
-    if (nameEl) nameEl.innerText = activeItem.name || 'Товар';
+    if (nameEl) nameEl.textContent = activeItem.name || 'Товар';
     if (priceEl) {
         const curPrice = activeItem.price || 0;
-        priceEl.innerText = (typeof formatPrice === 'function')
+        priceEl.textContent = (typeof formatPrice === 'function')
             ? formatPrice(curPrice)
             : `${Number(curPrice).toLocaleString('en-US', { maximumFractionDigits: 0 })} ${typeof getCurrency === 'function' ? getCurrency() : 'грн'}`;
     }
@@ -273,7 +273,7 @@ export function openOfferPriceModal() {
     }
     if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerText = _t('product.offer_send_btn', '[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]');
+        submitBtn.textContent = _t('product.offer_send_btn', '[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]');
     }
 
     if (typeof openModal === 'function') {
@@ -371,7 +371,7 @@ export async function submitBargainOffer() {
             submitBtn.style.position = '';
             submitBtn.style.overflow = '';
             submitBtn.style.color = '';
-            submitBtn.innerText = _t('product.offer_send_btn', '[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]');
+            submitBtn.textContent = _t('product.offer_send_btn', '[ НАДІСЛАТИ ПРОПОЗИЦІЮ ]');
         }
     }
 }

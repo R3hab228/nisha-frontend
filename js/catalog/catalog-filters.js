@@ -369,7 +369,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
 
             const countEl = typeof document !== 'undefined' ? document.getElementById('itemCount') : null;
             if (countEl) {
-                countEl.innerText = window.filteredItems.length;
+                countEl.textContent = window.filteredItems.length;
             }
 
             if (window.filteredItems.length === 0) {
@@ -450,7 +450,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
 }
 
 // Автоматическая перерисовка каталога при смене режима экрана (ПК <-> мобильный, брейкпоинт 900px)
-(function initCatalogBreakpointWatcher() {
+function initCatalogBreakpointWatcher() {
     if (typeof window === 'undefined') return;
     let resizeTimer = null;
     const checkBreakpoint = () => {
@@ -474,7 +474,8 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             if (typeof mq.addEventListener === 'function') mq.addEventListener('change', scheduleCheck);
         } catch {}
     }
-})();
+}
+initCatalogBreakpointWatcher();
 
 /**
  * Сортировка товаров (`new` | `cheap`) с плавной анимацией View Transitions API.

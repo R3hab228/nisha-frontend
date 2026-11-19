@@ -86,7 +86,7 @@ describe('Nova Poshta Multi-Tier IndexedDB & In-Memory Cache', () => {
             getElementById: vi.fn((id) => elements[id] || null),
             querySelector: vi.fn(() => null),
             querySelectorAll: vi.fn(() => []),
-            createElement: vi.fn(() => ({ className: '', innerText: '', style: {} })),
+            createElement: vi.fn(() => ({ className: '', textContent: '', style: {} })),
             addEventListener: vi.fn(),
             removeEventListener: vi.fn()
         };

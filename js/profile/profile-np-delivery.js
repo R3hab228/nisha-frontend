@@ -99,8 +99,10 @@ function bindDropdownOptionSelect(div, onSelect) {
         setTimeout(() => { selectedOnce = false; }, 300);
         onSelect();
     };
-    div.onmousedown = handler;
-    div.onclick = handler;
+    if (typeof div.addEventListener === 'function') {
+        div.addEventListener('mousedown', handler);
+        div.addEventListener('click', handler);
+    }
     getGlobalFn('bindTouchTapSelect')?.(div, handler);
 }
 

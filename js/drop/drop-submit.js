@@ -340,7 +340,7 @@ export function resetProposalForm() {
     }
     const descLabel = document.getElementById('descLabel');
     if (descLabel) {
-        descLabel.innerText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+        descLabel.textContent = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
             ? i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' })
             : 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):';
         descLabel.style.color = '';
@@ -548,7 +548,7 @@ export async function submitProposal() {
         } else {
             const compressText = typeof i18next !== 'undefined' ? i18next.t('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' }) : 'СЖАТИЕ ФОТО';
             let compressedDone = proposalItems.filter(item => Boolean(item.compressedFile)).length;
-            btn.innerText = `[ ${compressText}: ${compressedDone}/${proposalItems.length} ]`;
+            btn.textContent = `[ ${compressText}: ${compressedDone}/${proposalItems.length} ]`;
 
             compressedFiles = new Array(proposalItems.length);
             const COMPRESS_CONCURRENCY = 3;
@@ -567,7 +567,7 @@ export async function submitProposal() {
                     item.compressedFile = result;
                     compressedFiles[idx] = result;
                     compressedDone++;
-                    btn.innerText = `[ ${compressText}: ${compressedDone}/${proposalItems.length} ]`;
+                    btn.textContent = `[ ${compressText}: ${compressedDone}/${proposalItems.length} ]`;
                 }
             };
             await Promise.all(
@@ -608,7 +608,7 @@ export async function submitProposal() {
         const uploadingText = typeof i18next !== 'undefined'
             ? i18next.t('propose.uploading', { defaultValue: 'ОТПРАВКА НА СЕРВЕР...' })
             : 'ОТПРАВКА НА СЕРВЕР...';
-        btn.innerText = `[ ${uploadingText} ]`;
+        btn.textContent = `[ ${uploadingText} ]`;
 
         activeProposalUploads++;
         updateProposalBeforeUnloadListener();
@@ -628,7 +628,7 @@ export async function submitProposal() {
         }
 
         resetProposalForm();
-        btn.innerText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+        btn.textContent = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
             ? i18next.t('propose.btn_submit', { defaultValue: '[ ОТПРАВИТЬ ЗАЯВКУ ]' })
             : '[ ОТПРАВИТЬ ЗАЯВКУ ]';
         btn.style.pointerEvents = 'auto';
@@ -653,7 +653,7 @@ export async function submitProposal() {
         console.error(err);
         const serverErrPref = typeof i18next !== 'undefined' ? i18next.t('propose.err_server', { defaultValue: 'Сбой сервера: ' }) : 'Сбой сервера: ';
         showToast(serverErrPref + err.message, 'error');
-        btn.innerText = typeof i18next !== 'undefined' ? i18next.t('propose.btn_retry', { defaultValue: '[ ПОВТОРИТЬ ПОПЫТКУ ]' }) : '[ ПОВТОРИТЬ ПОПЫТКУ ]';
+        btn.textContent = typeof i18next !== 'undefined' ? i18next.t('propose.btn_retry', { defaultValue: '[ ПОВТОРИТЬ ПОПЫТКУ ]' }) : '[ ПОВТОРИТЬ ПОПЫТКУ ]';
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
         _isSubmittingProposal = false;

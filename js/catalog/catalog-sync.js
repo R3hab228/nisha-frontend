@@ -454,7 +454,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
         const countEl = document.getElementById('itemCount');
         if (countEl && Array.isArray(window.filteredItems)) {
-            countEl.innerText = window.filteredItems.length;
+            countEl.textContent = window.filteredItems.length;
         }
 
         const activeModal = getRuntimeOpenedItem();
@@ -692,7 +692,7 @@ export async function syncCriticalStatuses() {
                 });
                 const countEl = document.getElementById('itemCount');
                 if (countEl && Array.isArray(window.filteredItems)) {
-                    countEl.innerText = window.filteredItems.length;
+                    countEl.textContent = window.filteredItems.length;
                 }
                 const activeModal = getRuntimeOpenedItem();
                 if (activeModal && deletedIds.some(d => String(d) === String(activeModal.id)) && typeof closeModal === 'function') {

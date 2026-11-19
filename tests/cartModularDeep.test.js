@@ -365,8 +365,8 @@ describe('Modular Cart, Nova Poshta & Checkout Deep Suite (js/cart/*.js)', () =>
         await cartMod.addToCartById('c-1');
         expect(cartMod.getActiveCart()).toHaveLength(1);
         expect(cartMod.getActiveCart()[0].price).toBe(820);
-        expect(countEl.innerText).toBe('1');
-        expect(totalEl.innerText).toBe('820 грн');
+        expect(countEl.textContent).toBe('1');
+        expect(totalEl.textContent).toBe('820 грн');
         expect(window.apiClient.post).toHaveBeenCalledWith(
             '/api/cart/sync',
             expect.objectContaining({ cart: expect.any(Array) }),
@@ -376,7 +376,7 @@ describe('Modular Cart, Nova Poshta & Checkout Deep Suite (js/cart/*.js)', () =>
         // Calling addToCartById with an updated bargain rate updates item price instead of rejecting duplicate
         await cartMod.addToCartById('c-1', 750);
         expect(cartMod.getActiveCart()[0].price).toBe(750);
-        expect(totalEl.innerText).toBe('750 грн');
+        expect(totalEl.textContent).toBe('750 грн');
 
         // Duplicate without price change shows toast error
         sessionStorage.removeItem('accepted_bargain_c-1');
@@ -425,7 +425,7 @@ describe('Modular Cart, Nova Poshta & Checkout Deep Suite (js/cart/*.js)', () =>
 
         cartMod.updateCartUI();
         // Fixed discount is clamped to total - 1 (so final price = 1 грн, never <= 0)
-        expect(totalEl.innerText).toBe('1 грн');
+        expect(totalEl.textContent).toBe('1 грн');
         expect(msgEl.innerHTML).toContain('-149 грн');
 
         const renderedRowHtml = listEl.children.map(c => c.innerHTML).join('');
@@ -494,7 +494,7 @@ describe('Modular Cart, Nova Poshta & Checkout Deep Suite (js/cart/*.js)', () =>
 
         await cartMod.calculateDeliveryCost();
         expect(deliveryBox.style.display).toBe('block');
-        expect(costVal.innerText).toBe('85 грн');
+        expect(costVal.textContent).toBe('85 грн');
     });
 
     it('6. novaposhta-delivery.js resolves city/branch refs silently, caches IDB, cancels stale race loads & avoids GeoIP overwrite', async () => {
@@ -603,7 +603,7 @@ describe('Modular Cart, Nova Poshta & Checkout Deep Suite (js/cart/*.js)', () =>
 
         // openCheckoutModal removes sold items from cart and aborts opening checkout modal
         const checkoutBtn = createFakeEl('button');
-        checkoutBtn.innerText = 'ОФОРМИТЬ';
+        checkoutBtn.textContent = 'ОФОРМИТЬ';
         allQuerySelectors.set('.cart-panel .cart-checkout-btn', [checkoutBtn]);
         elementsById.set('cartPanel', createFakeEl('div'));
         elementsById.set('cartCount', createFakeEl('span'));

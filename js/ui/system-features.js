@@ -186,7 +186,7 @@ async function initHitCounter() {
         if (!counterEl) return;
 
         const cachedCount = (storage ? storage.get('nisha_last_hit_count', '0') : '0') || '0';
-        if (Number(cachedCount) > 0) counterEl.innerText = String(cachedCount).padStart(5, '0').split('').join(' ');
+        if (Number(cachedCount) > 0) counterEl.textContent = String(cachedCount).padStart(5, '0').split('').join(' ');
 
         const data = await apiClient.post('/api/hit', {
             date: todayDate,
@@ -203,7 +203,7 @@ async function initHitCounter() {
             }
             
             const strCount = data.count.toString().padStart(5, '0');
-            counterEl.innerText = strCount.split('').join(' ');
+            counterEl.textContent = strCount.split('').join(' ');
         }
     } catch (err) {
         console.warn("Счетчик работает в оффлайн-режиме (Сервер спит или нет сети):", err.message);
@@ -222,7 +222,7 @@ function updateCharCount(textarea) {
         ? i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' })
         : 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):';
     
-    label.innerText = originalText.replace('250', remaining);
+    label.textContent = originalText.replace('250', remaining);
     label.style.color = remaining <= 0 ? 'var(--accent-red)' : 'var(--accent-green)';
 }
 

@@ -291,24 +291,28 @@ export function renderProposalPreviews() {
             delBtn.setAttribute('data-index', index);
             delBtn.setAttribute('title', 'Удалить');
 
-            delBtn.onclick = (e) => {
-                if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-                }
-                removeProposalFile(index, delBtn);
-            };
+            if (typeof delBtn.addEventListener === 'function') {
+                delBtn.addEventListener('click', (e) => {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                    }
+                    removeProposalFile(index, delBtn);
+                });
+            }
             img.appendChild(delBtn);
 
-            img.onclick = async (e) => {
-                if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-                }
-                openProposalPhotoByIndex(index, img);
-            };
+            if (typeof img.addEventListener === 'function') {
+                img.addEventListener('click', async (e) => {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                    }
+                    openProposalPhotoByIndex(index, img);
+                });
+            }
 
             container.appendChild(img);
         });

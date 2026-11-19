@@ -42,7 +42,6 @@ function createMockNode() {
     return {
         className: '',
         innerHTML: '',
-        innerText: '',
         textContent: '',
         value: '',
         placeholder: '',

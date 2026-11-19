@@ -5,9 +5,6 @@
 
 import { emitAppEvent, invokeAction } from './action-registry.js';
 
-(function() {
-    'use strict';
-
     // 1. СХЕМЫ ВСЕХ СВОЙСТВ СОСТОЯНИЯ С АВТОМАТИЧЕСКИМ МАППИНГОМ НА LOCALSTORAGE
     const SCHEMAS = {
         // Корзина и чекаут
@@ -589,5 +586,3 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         globalThis.store = store;
         globalThis.appStore = store;
     }
-
-})();

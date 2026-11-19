@@ -246,8 +246,8 @@ export function syncProfileFavoritesCounters(nextFavorites) {
     }
     if (typeof document !== 'undefined') {
         const pCount = document.getElementById('profileLikesCount');
-        if (pCount) pCount.innerText = list.length;
+        if (pCount) pCount.textContent = list.length;
         const mCount = document.getElementById('modalProfileLikesCount');
-        if (mCount) mCount.innerText = list.length;
+        if (mCount) mCount.textContent = list.length;
     }
 }

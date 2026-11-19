@@ -28,7 +28,6 @@ function createFakeEl(tagName = 'div') {
         href: '',
         src: '',
         alt: '',
-        innerText: '',
         textContent: '',
         _innerHTML: '',
         checked: false,
@@ -417,11 +416,11 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
 
         expect(wrapper.innerHTML).toContain('modal-video-player');
         expect(wrapper.innerHTML).toContain('fetchpriority="high" loading="eager"');
-        expect(counter.innerText).toBe('1 / 3');
+        expect(counter.textContent).toBe('1 / 3');
         expect(th1.classList.contains('active-thumb')).toBe(true);
 
         productMod.moveSlide(1);
-        expect(counter.innerText).toBe('2 / 3');
+        expect(counter.textContent).toBe('2 / 3');
         expect(vid.play).toHaveBeenCalled();
         expect(th2.classList.contains('active-thumb')).toBe(true);
 
@@ -432,7 +431,7 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
         sliderContainer.dispatchEvent({ type: 'touchmove', cancelable: true, preventDefault: vi.fn(), touches: [{ clientX: 140, clientY: 105 }] });
         sliderContainer.dispatchEvent({ type: 'touchend' });
         expect(window._isSliderSwiping).toBe(true);
-        expect(counter.innerText).toBe('2 / 3');
+        expect(counter.textContent).toBe('2 / 3');
         expect(vid.pause).toHaveBeenCalledTimes(2); // paused on initial renderModalSlider + setSlide(0, false)
 
         // PhotoSwipe ignores video slide in dataSource
@@ -735,10 +734,10 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
 
         await productMod.openProductModalById('p-99');
 
-        expect(titleEl.innerText).toBe('Nike ACG Anorak');
-        expect(priceEl.innerText).toBe('2000 грн');
+        expect(titleEl.textContent).toBe('Nike ACG Anorak');
+        expect(priceEl.textContent).toBe('2000 грн');
         expect(pubEl.textContent).toBe('15.10.2026');
-        expect(cartBtn.innerText).toBe('В КОРЗИНЕ');
+        expect(cartBtn.textContent).toBe('В КОРЗИНЕ');
         expect(badges.innerHTML).toContain('1600');
         expect(window.saveCurrentFeedScrollState).toHaveBeenCalledWith('p-99');
         expect(openModal).toHaveBeenCalledWith('productModal');
@@ -748,7 +747,7 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
         await Promise.resolve();
         await Promise.resolve();
         expect(rpcSpy).toHaveBeenCalledWith('increment_item_views', expect.objectContaining({ p_item_uuid: 'p-99' }));
-        expect(viewsEl.innerText).toBe(42);
+        expect(viewsEl.textContent).toBe(42);
         expect(descBlock.innerHTML).toContain('Full detailed');
         expect(descBlock.innerHTML).toContain('product-measurements-box');
         expect(descBlock.innerHTML).toContain('product.meas_chest');

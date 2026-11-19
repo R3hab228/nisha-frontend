@@ -223,7 +223,7 @@ export function setOtpButtonDefault(btnOtp) {
     btnOtp.style.borderColor = '#eee';
     btnOtp.style.borderStyle = 'outset';
     btnOtp.style.opacity = '1';
-    btnOtp.innerText = defaultText;
+    btnOtp.textContent = defaultText;
 }
 
 // Автоподстановка контактов в форму предложки и оформление заказа
@@ -446,7 +446,7 @@ async function generateAndSendOTP() {
     
     // Блокируем кнопку от двойных нажатий
     btnOtp.disabled = true;
-    btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('auth.db_connecting', { defaultValue: 'Связь с БД...' }) : 'Связь с БД...';
+    btnOtp.textContent = typeof i18next !== 'undefined' ? i18next.t('auth.db_connecting', { defaultValue: 'Связь с БД...' }) : 'Связь с БД...';
     btnOtp.style.opacity = '0.5';
 
     // Верификация капчи на бэкенде
@@ -493,7 +493,7 @@ async function generateAndSendOTP() {
     const updateOtpBtnText = () => {
         const remaining = Math.max(0, Math.ceil((otpEndTime - Date.now()) / 1000));
         if (remaining > 0) {
-            btnOtp.innerText = typeof i18next !== 'undefined' ? i18next.t('auth.wait_sec', { sec: remaining, defaultValue: `Ждите ${remaining}с` }) : `Ждите ${remaining}с`;
+            btnOtp.textContent = typeof i18next !== 'undefined' ? i18next.t('auth.wait_sec', { sec: remaining, defaultValue: `Ждите ${remaining}с` }) : `Ждите ${remaining}с`;
             return false;
         } else {
             if (otpInterval) {

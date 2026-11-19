@@ -264,7 +264,7 @@ export function updateCartUI() {
     }
 
     const countEl = document.getElementById('cartCount');
-    if (countEl) countEl.innerText = currentCart.length;
+    if (countEl) countEl.textContent = currentCart.length;
     if (hasAction('updateAppBadge')) invokeAction('updateAppBadge', currentCart.length);
     let total = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
 
@@ -294,7 +294,7 @@ export function updateCartUI() {
     }
 
     const totalEl = document.getElementById('cartTotal');
-    if (totalEl) totalEl.innerText = (typeof formatPrice === 'function') ? formatPrice(total) : (total + ' ' + getCurrency());
+    if (totalEl) totalEl.textContent = (typeof formatPrice === 'function') ? formatPrice(total) : (total + ' ' + getCurrency());
 
     renderCartItems();
 }

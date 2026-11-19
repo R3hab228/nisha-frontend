@@ -505,7 +505,7 @@ describe('Modular Core Helpers Deep Suite (js/core/helpers*.js)', () => {
         expect(favToasts).toHaveLength(1);
         expect(favToasts[0].innerHTML).toContain('Stussy Hoodie');
 
-        favToasts[0].onclick({ preventDefault: vi.fn(), stopPropagation: vi.fn() });
+        favToasts[0].dispatchEvent({ type: 'click', preventDefault: vi.fn(), stopPropagation: vi.fn() });
         expect(toastsModals.isToastClickShielded()).toBe(true);
         vi.advanceTimersByTime(300);
 

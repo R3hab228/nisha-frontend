@@ -29,7 +29,6 @@ function createFakeEl(id = '', tag = 'div') {
         tagName: tag.toUpperCase(),
         type: 'text',
         value: '',
-        innerText: '',
         textContent: '',
         _innerHTML: '',
         disabled: false,
@@ -456,7 +455,7 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         contacts.showContactInput('tg', true);
         const mTgInput = document.getElementById('modalProfileTgInput');
         mTgInput.value = 'https://t.me/archive_drop';
-        mTgInput.oninput();
+        mTgInput.dispatchEvent({ type: 'input' });
         expect(mTgInput.value).toBe('@archive_drop');
 
         await contacts.removeProfileContact('tg');
@@ -500,7 +499,7 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         expect(cityDrop.children.length).toBe(1);
 
         // Select city option -> auto-resolves branch list via branchall cache
-        cityDrop.children[0].onclick({ preventDefault: vi.fn() });
+        cityDrop.children[0].dispatchEvent({ type: 'click', preventDefault: vi.fn() });
         await vi.advanceTimersByTimeAsync(10);
         expect(delivery.profileSelectedCityRef.desktop).toBe('city-lviv-ref');
 
@@ -509,7 +508,7 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         expect(branchDrop.children[1].className).toBe('profile-np-item-postomat');
 
         // Select postomat & save delivery form
-        branchDrop.children[1].onclick({ preventDefault: vi.fn() });
+        branchDrop.children[1].dispatchEvent({ type: 'click', preventDefault: vi.fn() });
         document.getElementById('profileDeliveryFullName').value = 'Петренко Іван';
         await delivery.saveProfileDeliveryFromForm(false);
 
@@ -521,7 +520,7 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         // Fast-forward lock timer -> enters read-only [ ИЗМЕНИТЬ ] state
         await vi.advanceTimersByTimeAsync(850);
         expect(document.getElementById('profileDeliveryFullName').readOnly).toBe(true);
-        expect(document.getElementById('profileDeliverySaveBtn').innerText).toBe('[ ИЗМЕНИТЬ ]');
+        expect(document.getElementById('profileDeliverySaveBtn').textContent).toBe('[ ИЗМЕНИТЬ ]');
     });
 
     it('6. profile-session.js handles legacy schema fallback, cart merge, username healing & Realtime notifications', async () => {
@@ -643,7 +642,7 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         expect(modalStar.classList.contains('active')).toBe(true);
         expect(globalThis.analytics.trackFavorite).toHaveBeenCalledWith('item-42', true);
         expect(globalThis.showFavoriteToast).toHaveBeenCalledWith(globalThis.allItems[0], true, null);
-        expect(document.getElementById('favCountBadge').innerText).toBe('[1]');
+        expect(document.getElementById('favCountBadge').textContent).toBe('[1]');
 
         // Double-click inside 300ms window is suppressed
         await favs.toggleFav(null, 'item-42');

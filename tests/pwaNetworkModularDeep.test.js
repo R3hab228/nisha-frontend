@@ -27,7 +27,6 @@ function createFakeEl(id = '', tag = 'div') {
     const el = {
         id,
         tagName: tag.toUpperCase(),
-        innerText: '',
         textContent: '',
         _innerHTML: '',
         children: [],

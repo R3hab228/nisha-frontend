@@ -116,7 +116,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
         if (offerPriceBtn) {
             const acceptedBtnText = t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
-            offerPriceBtn.innerText = acceptedBtnText;
+            offerPriceBtn.textContent = acceptedBtnText;
             offerPriceBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
             offerPriceBtn.style.color = 'var(--accent-yellow, #ffd700)';
             offerPriceBtn.style.boxShadow = 'none';
@@ -391,7 +391,7 @@ function handleIncomingSupportReply(r, sbClient) {
             const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
             if (offerPriceBtn) {
                 const acceptedBtnText = t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
-                offerPriceBtn.innerText = acceptedBtnText;
+                offerPriceBtn.textContent = acceptedBtnText;
                 offerPriceBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
                 offerPriceBtn.style.color = 'var(--accent-yellow, #ffd700)';
                 offerPriceBtn.style.boxShadow = 'none';
@@ -460,7 +460,7 @@ function handleIncomingSupportReply(r, sbClient) {
             const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
             if (offerPriceBtn) {
                 const declinedBtnText = t('product.offer_declined_btn', 'ПРОПОЗИЦІЮ ВІДХИЛЕНО');
-                offerPriceBtn.innerText = declinedBtnText;
+                offerPriceBtn.textContent = declinedBtnText;
                 offerPriceBtn.style.borderColor = 'var(--accent-red, #ff3333)';
                 offerPriceBtn.style.color = 'var(--accent-red, #ff3333)';
                 offerPriceBtn.style.boxShadow = 'none';
@@ -594,7 +594,7 @@ async function submitSupportTicket() {
     }
 
     btn.style.pointerEvents = 'none';
-    btn.innerText = (typeof i18next !== 'undefined' && i18next.t('support.sending', { defaultValue: '[ ОТПРАВКА... ]' })) || '[ ОТПРАВКА... ]';
+    btn.textContent = (typeof i18next !== 'undefined' && i18next.t('support.sending', { defaultValue: '[ ОТПРАВКА... ]' })) || '[ ОТПРАВКА... ]';
 
     const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
@@ -629,7 +629,7 @@ async function submitSupportTicket() {
     // Возвращаем кнопку в исходное состояние
     setTimeout(() => {
         btn.style.pointerEvents = 'auto';
-        btn.innerText = typeof i18next !== 'undefined' ? i18next.t('support.submit', { defaultValue: 'ОТПРАВИТЬ СИГНАЛ' }) : 'ОТПРАВИТЬ СИГНАЛ';
+        btn.textContent = typeof i18next !== 'undefined' ? i18next.t('support.submit', { defaultValue: 'ОТПРАВИТЬ СИГНАЛ' }) : 'ОТПРАВИТЬ СИГНАЛ';
         input.value = '';
         updateSupportCharCounter();
     }, 500);

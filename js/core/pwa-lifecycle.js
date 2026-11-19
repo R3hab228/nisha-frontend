@@ -369,7 +369,7 @@ export function handleNetworkOffline() {
     if (hasCards) {
         if (offlineBanner) {
             if (typeof i18next !== 'undefined') {
-                offlineBanner.innerText = i18next.t('checkout.offline_banner');
+                offlineBanner.textContent = i18next.t('checkout.offline_banner');
             }
             offlineBanner.classList.add('active');
         }

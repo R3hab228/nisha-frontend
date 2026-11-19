@@ -56,7 +56,7 @@ export function updateSlider(animated = true) {
     const counter = document.getElementById('photoCounter');
     const total = document.querySelectorAll('.slide').length;
     if (counter) {
-        counter.innerText = `${current + 1} / ${total}`;
+        counter.textContent = `${current + 1} / ${total}`;
     }
 
     const thumbs = document.querySelectorAll('.thumb');

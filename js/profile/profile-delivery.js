@@ -163,7 +163,7 @@ export function setProfileDeliveryLockState(locked) {
             }
             const saveText = tProfile('profile.delivery_save', '[ СОХРАНИТЬ ]');
             const editText = tProfile('profile.delivery_edit', '[ ИЗМЕНИТЬ ]');
-            btn.innerText = locked ? editText : saveText;
+            btn.textContent = locked ? editText : saveText;
             setElementClassFlag(btn, 'is-edit-mode', Boolean(locked));
             if (btn.classList && typeof btn.classList.remove === 'function') {
                 btn.classList.remove('is-saved');
@@ -271,9 +271,9 @@ export function toggleProfileDeliveryAccordion(isModal, btn) {
         const openText = tProfile('profile.delivery_btn_open', '[ ДАННЫЕ ДОСТАВКИ ▲ ]');
         const closedText = tProfile('profile.delivery_btn', '[ ДАННЫЕ ДОСТАВКИ ▼ ]');
         if (textSpan) {
-            textSpan.innerText = isCollapsed ? closedText : openText;
+            textSpan.textContent = isCollapsed ? closedText : openText;
         } else {
-            toggleBtn.innerText = isCollapsed ? closedText : openText;
+            toggleBtn.textContent = isCollapsed ? closedText : openText;
         }
     }
 }
@@ -340,7 +340,7 @@ export async function saveProfileDeliveryFromForm(isModal, btn) {
 
         const savedText = tProfile('profile.delivery_saved_btn', '[ СОХРАНЕНО ✓ ]');
         saveBtns.forEach(b => {
-            b.innerText = savedText;
+            b.textContent = savedText;
             if (b.classList && typeof b.classList.add === 'function') b.classList.add('is-saved');
         });
 

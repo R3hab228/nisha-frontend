@@ -103,7 +103,7 @@ export function renderCitySearchResults(data) {
         data.data[0].Addresses.forEach(city => {
             const div = document.createElement('div');
             div.className = 'city-item';
-            div.innerText = city.Present;
+            div.textContent = city.Present;
 
             let selectedOnce = false;
             const selectCityItem = (e) => {
@@ -135,8 +135,10 @@ export function renderCitySearchResults(data) {
                 invokeAction('loadNPBranches', '', false);
                 invokeAction('saveCheckoutDraft');
             };
-            div.onmousedown = selectCityItem;
-            div.onclick = selectCityItem;
+            if (typeof div.addEventListener === 'function') {
+                div.addEventListener('mousedown', selectCityItem);
+                div.addEventListener('click', selectCityItem);
+            }
             div._selectItem = selectCityItem;
             bindTouchTapSelect(div, selectCityItem);
             dropdown.appendChild(div);

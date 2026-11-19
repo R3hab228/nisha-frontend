@@ -259,7 +259,7 @@ export function openProductModal(item) {
     document.title = `NISHA | ${item.brand} - ${item.name}`;
 
     const titleEl = document.getElementById('modalItemTitle');
-    if (titleEl) titleEl.innerText = item.name;
+    if (titleEl) titleEl.textContent = item.name;
 
     if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackProductView === 'function') {
         window.analytics.trackProductView(item);
@@ -283,7 +283,7 @@ export function openProductModal(item) {
     const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
     const priceEl = document.getElementById('modalItemPrice');
     if (priceEl) {
-        priceEl.innerText = (typeof formatPrice === 'function')
+        priceEl.textContent = (typeof formatPrice === 'function')
             ? formatPrice(finalPrice)
             : (finalPrice + ' ' + (typeof getCurrency === 'function' ? getCurrency() : 'грн'));
     }
@@ -297,10 +297,10 @@ export function openProductModal(item) {
     } catch {}
 
     const sizeDescEl = document.getElementById('modalItemSizeDesc');
-    if (sizeDescEl) sizeDescEl.innerText = item.size;
+    if (sizeDescEl) sizeDescEl.textContent = item.size;
 
     const brandEl = document.getElementById('modalItemBrand');
-    if (brandEl) brandEl.innerText = item.brand;
+    if (brandEl) brandEl.textContent = item.brand;
 
     const condStr = item.condition || '9 / 10';
     const condMatch = condStr.match(/(\d+)/);
@@ -310,7 +310,7 @@ export function openProductModal(item) {
     if (condFill) condFill.style.width = (condNum * 10) + '%';
 
     const condText = document.getElementById('modalItemCond');
-    if (condText) condText.innerText = condStr;
+    if (condText) condText.textContent = condStr;
 
     if (condFill && condText) {
         let condColor = 'var(--accent-green)';
@@ -382,7 +382,7 @@ export function openProductModal(item) {
     const viewCount = document.getElementById('modalItemViews');
     const sb = getSupabaseClient();
     if (viewCount) {
-        viewCount.innerText = item.views_count || 0;
+        viewCount.textContent = item.views_count || 0;
 
         if (sb) {
             const store = getStore();
@@ -401,7 +401,7 @@ export function openProductModal(item) {
                     p_viewer_id: viewerId
                 }).then(({ data, error }) => {
                     if (!error && data !== null) {
-                        viewCount.innerText = data;
+                        viewCount.textContent = data;
                         item.views_count = data;
                         if (typeof window !== 'undefined' && Array.isArray(window.allItems)) {
                             const catItem = window.allItems.find(i => i && String(i.id) === String(item.id));
@@ -426,7 +426,7 @@ export function openProductModal(item) {
             const isInCart = userCart.some(i => i && String(i.id) === String(item.id));
             const inCartText = (typeof i18next !== 'undefined') ? i18next.t('product.in_cart', { defaultValue: 'В КОРЗИНЕ' }) : 'В КОРЗИНЕ';
             const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
-            cartBtn.innerText = isInCart ? inCartText : addToCartText;
+            cartBtn.textContent = isInCart ? inCartText : addToCartText;
         }
     }
 

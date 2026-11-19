@@ -71,7 +71,7 @@ export function resetContactSaveButtons(type) {
     const selector = `#profile${cfg.cap}InputWrap .win95-save-btn, #modalProfile${cfg.cap}InputWrap .win95-save-btn`;
     document.querySelectorAll(selector).forEach(b => {
         b.disabled = false;
-        b.innerText = '✓';
+        b.textContent = '✓';
     });
 }
 
@@ -218,7 +218,7 @@ export function showContactInput(type, isModal = false) {
         saveBtn.innerHTML = getHourglass(14);
     } else if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.innerText = '✓';
+        saveBtn.textContent = '✓';
     }
 
     if (btn) btn.style.display = 'none';
@@ -242,11 +242,19 @@ export function showContactInput(type, isModal = false) {
                 attachMask(IMask);
             }
         }
+        if (input._contactEditCtrl) {
+            try { input._contactEditCtrl.abort(); } catch {}
+        }
+        const phoneEditCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        input._contactEditCtrl = phoneEditCtrl;
+
         input.focus();
-        input.onkeydown = (e) => {
-            if (e.key === 'Enter') getGlobalFn('savePhoneFromInput')?.(isModal);
-            if (e.key === 'Escape') getGlobalFn('hidePhoneInput')?.(isModal);
-        };
+        if (typeof input.addEventListener === 'function') {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') getGlobalFn('savePhoneFromInput')?.(isModal);
+                if (e.key === 'Escape') getGlobalFn('hidePhoneInput')?.(isModal);
+            }, phoneEditCtrl ? { signal: phoneEditCtrl.signal } : undefined);
+        }
     } else {
         if (!input.value || !input.value.trim() || input.value === '@') {
             input.value = '@';
@@ -259,15 +267,24 @@ export function showContactInput(type, isModal = false) {
             input.setSelectionRange(len, len);
         }
 
-        input.oninput = () => {
-            let val = input.value.replace(/^(https?:\/\/)?(www\.)?t\.me\//i, '@').replace(/[^a-zA-Z0-9_@]/g, '');
-            val = '@' + val.replaceAll('@', '');
-            input.value = val;
-        };
-        input.onkeydown = (e) => {
-            if (e.key === 'Enter') getGlobalFn('saveTgFromInput')?.(isModal);
-            if (e.key === 'Escape') getGlobalFn('hideTgInput')?.(isModal);
-        };
+        if (input._contactEditCtrl) {
+            try { input._contactEditCtrl.abort(); } catch {}
+        }
+        const tgEditCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        input._contactEditCtrl = tgEditCtrl;
+        const listenerOpts = tgEditCtrl ? { signal: tgEditCtrl.signal } : undefined;
+
+        if (typeof input.addEventListener === 'function') {
+            input.addEventListener('input', () => {
+                let val = input.value.replace(/^(https?:\/\/)?(www\.)?t\.me\//i, '@').replace(/[^a-zA-Z0-9_@]/g, '');
+                val = '@' + val.replaceAll('@', '');
+                input.value = val;
+            }, listenerOpts);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') getGlobalFn('saveTgFromInput')?.(isModal);
+                if (e.key === 'Escape') getGlobalFn('hideTgInput')?.(isModal);
+            }, listenerOpts);
+        }
     }
 }
 bindWindowFn('showPhoneInput', (isModal = false) => showContactInput('phone', isModal));
@@ -578,7 +595,7 @@ export async function saveContactFromInput(type, isModal = false) {
             notifyToast(tProfile('profile.otp_server_err', 'Ошибка сервера при генерации кода'), 'error');
             if (saveBtn) {
                 saveBtn.disabled = false;
-                saveBtn.innerText = '✓';
+                saveBtn.textContent = '✓';
             }
             return;
         }

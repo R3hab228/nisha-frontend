@@ -416,7 +416,7 @@ export function handleDelegatedAction(e) {
         }
         case 'select-payment-method': {
             const method = actionEl.getAttribute('data-payment-method') || '';
-            const text = actionEl.innerText || method;
+            const text = actionEl.textContent || method;
             invokeCompatAction('select-payment-method', 'selectPaymentMethod', method, text);
             break;
         }

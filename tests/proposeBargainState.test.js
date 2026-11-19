@@ -86,7 +86,7 @@ describe('Propose Bargain Mobile Resilience & State Reset', () => {
                 },
                 setAttribute: vi.fn(),
                 removeAttribute: vi.fn(),
-                innerText: ''
+                textContent: ''
             };
         };
 
@@ -121,13 +121,13 @@ describe('Propose Bargain Mobile Resilience & State Reset', () => {
         expect(elements.btnConfirmPropBargain.style.display).toBe('none');
         expect(elements.propPrice.style.display).toBe('block');
         expect(elements.propMinBargainBox.style.display).toBe('none');
-        expect(elements.btnTogglePropBargain.innerText).toBe('[ ТОРГ ]');
+        expect(elements.btnTogglePropBargain.textContent).toBe('[ ТОРГ ]');
         expect(elements.btnTogglePropBargain.classList.contains('active')).toBe(false);
 
         // Test with bargain confirmed
         global.window._propBargainEnabled = true;
         resetFn();
-        expect(elements.btnTogglePropBargain.innerText).toBe('[ ТОРГ ✓ ]');
+        expect(elements.btnTogglePropBargain.textContent).toBe('[ ТОРГ ✓ ]');
         expect(elements.btnTogglePropBargain.classList.contains('active')).toBe(true);
     });
 });

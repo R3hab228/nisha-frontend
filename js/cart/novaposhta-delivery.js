@@ -569,8 +569,10 @@ export function renderBranches(branches) {
                 });
             }
         };
-        div.onmousedown = selectBranchItem;
-        div.onclick = selectBranchItem;
+        if (typeof div.addEventListener === 'function') {
+            div.addEventListener('mousedown', selectBranchItem);
+            div.addEventListener('click', selectBranchItem);
+        }
         div._selectItem = selectBranchItem;
         bindTouchTapSelect(div, selectBranchItem);
         fragment.appendChild(div);

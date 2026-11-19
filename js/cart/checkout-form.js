@@ -62,8 +62,8 @@ export async function openCheckoutModal() {
     if (!btn) return;
 
     cartState.isCheckoutOpening = true;
-    const originalText = btn.innerText;
-    btn.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.checking_stock', { defaultValue: '[ ПРОВЕРКА НАЛИЧИЯ... ]' }) : '[ ПРОВЕРКА НАЛИЧИЯ... ]';
+    const originalText = btn.textContent;
+    btn.textContent = typeof i18next !== 'undefined' ? i18next.t('checkout.checking_stock', { defaultValue: '[ ПРОВЕРКА НАЛИЧИЯ... ]' }) : '[ ПРОВЕРКА НАЛИЧИЯ... ]';
     btn.style.pointerEvents = 'none';
 
     try {
@@ -94,13 +94,13 @@ export async function openCheckoutModal() {
             setActiveCart(currentCart);
             await syncCartToServer();
             updateCartUI();
-            btn.innerText = originalText;
+            btn.textContent = originalText;
             btn.style.pointerEvents = 'auto';
             if (currentCart.length === 0) closeCartDropdown();
             return;
         }
 
-        btn.innerText = originalText;
+        btn.textContent = originalText;
         btn.style.pointerEvents = 'auto';
 
         closeCartDropdown();

@@ -232,7 +232,7 @@ export function applyOfferButtonState(offerPriceBtn, state, labelOverride) {
         : def;
 
     if (state === 'declined') {
-        offerPriceBtn.innerText = labelOverride || t('product.offer_declined_btn', 'ПРОПОЗИЦІЮ ВІДХИЛЕНО');
+        offerPriceBtn.textContent = labelOverride || t('product.offer_declined_btn', 'ПРОПОЗИЦІЮ ВІДХИЛЕНО');
         offerPriceBtn.style.borderColor = 'var(--accent-red, #ff3333)';
         offerPriceBtn.style.color = 'var(--accent-red, #ff3333)';
         offerPriceBtn.style.pointerEvents = 'none';
@@ -242,7 +242,7 @@ export function applyOfferButtonState(offerPriceBtn, state, labelOverride) {
         return;
     }
     if (state === 'accepted') {
-        offerPriceBtn.innerText = labelOverride || t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
+        offerPriceBtn.textContent = labelOverride || t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
         offerPriceBtn.style.borderColor = 'var(--accent-yellow, #ffd700)';
         offerPriceBtn.style.color = 'var(--accent-yellow, #ffd700)';
         offerPriceBtn.style.pointerEvents = 'none';
@@ -252,7 +252,7 @@ export function applyOfferButtonState(offerPriceBtn, state, labelOverride) {
         return;
     }
     if (state === 'pending') {
-        offerPriceBtn.innerText = labelOverride || t('product.offer_pending', '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]');
+        offerPriceBtn.textContent = labelOverride || t('product.offer_pending', '[ ПРОПОЗИЦІЮ НАДІСЛАНО ✓ ]');
         offerPriceBtn.style.borderColor = 'var(--accent-green, #00ff66)';
         offerPriceBtn.style.color = 'var(--accent-green, #00ff66)';
         offerPriceBtn.style.pointerEvents = 'none';
@@ -262,7 +262,7 @@ export function applyOfferButtonState(offerPriceBtn, state, labelOverride) {
         return;
     }
 
-    offerPriceBtn.innerText = labelOverride || t('product.offer_price', '[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]');
+    offerPriceBtn.textContent = labelOverride || t('product.offer_price', '[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]');
     offerPriceBtn.style.borderColor = '#333';
     offerPriceBtn.style.color = 'var(--accent-green, #00ff66)';
     offerPriceBtn.style.pointerEvents = 'auto';

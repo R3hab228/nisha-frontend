@@ -209,8 +209,8 @@ export function updatePriceUI(e) {
 
     const minLabel = document.getElementById('priceMinVal');
     const maxLabel = document.getElementById('priceMaxVal');
-    if (minLabel) minLabel.innerText = minVal;
-    if (maxLabel) maxLabel.innerText = maxVal;
+    if (minLabel) minLabel.textContent = minVal;
+    if (maxLabel) maxLabel.textContent = maxVal;
 
     const percentMin = (minVal / 15000) * 100;
     const percentMax = (maxVal / 15000) * 100;
@@ -242,7 +242,7 @@ export function toggleMobileSidebar() {
     const showText = (typeof i18next !== 'undefined') ? i18next.t('mobile.show_filters', { defaultValue: '[+] ПОКАЗАТЬ ФИЛЬТРЫ' }) : '[+] ПОКАЗАТЬ ФИЛЬТРЫ';
 
     if (!isOpen) {
-        btn.innerText = hideText;
+        btn.textContent = hideText;
         btn.style.borderColor = 'var(--accent-red)';
         btn.style.color = 'var(--accent-red)';
         btn.style.background = '#111';
@@ -273,7 +273,7 @@ export function toggleMobileSidebar() {
         sidebar.addEventListener('transitionend', onOpenEnd, { signal: openCtrl.signal });
         updateSidebarCounters();
     } else {
-        btn.innerText = showText;
+        btn.textContent = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
         btn.style.background = '#050505';

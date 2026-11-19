@@ -43,7 +43,7 @@ export function saveCheckoutDraft() {
             cityRef: (typeof window !== 'undefined' && window.selectedCityRef) || cartState.selectedCityRef || '',
             branchRef: (typeof window !== 'undefined' && window.selectedBranchRef) || cartState.selectedBranchRef || '',
             paymentMethod: document.getElementById('orderPaymentMethod')?.value || '',
-            paymentSelectedText: document.getElementById('paymentSelectedText')?.innerText || ''
+            paymentSelectedText: document.getElementById('paymentSelectedText')?.textContent || ''
         };
         const store = getRuntimeStorage();
         if (store && store.session) {
@@ -98,10 +98,10 @@ export function restoreCheckoutDraft() {
             const txtEl = document.getElementById('paymentSelectedText');
             if (txtEl) {
                 txtEl.setAttribute('data-i18n', isCod ? 'checkout.payment_cod' : 'checkout.payment_full');
-                txtEl.innerText = typeof i18next !== 'undefined' ? i18next.t(isCod ? 'checkout.payment_cod' : 'checkout.payment_full') : (draft.paymentSelectedText || document.getElementById('orderPaymentMethod').value);
+                txtEl.textContent = typeof i18next !== 'undefined' ? i18next.t(isCod ? 'checkout.payment_cod' : 'checkout.payment_full') : (draft.paymentSelectedText || document.getElementById('orderPaymentMethod').value);
             }
         } else if (draft.paymentSelectedText && document.getElementById('paymentSelectedText')) {
-            document.getElementById('paymentSelectedText').innerText = draft.paymentSelectedText;
+            document.getElementById('paymentSelectedText').textContent = draft.paymentSelectedText;
         }
 
         if (draft.cityRef) setSelectedCityRefState(draft.cityRef);
@@ -196,7 +196,7 @@ export function selectPaymentMethod(dbVal, displayLabel) {
     const ruVal = normalizePaymentMethodRu(dbVal);
     if (txt) {
         txt.setAttribute('data-i18n', ruVal.includes('200') ? 'checkout.payment_cod' : 'checkout.payment_full');
-        txt.innerText = displayLabel || dbVal;
+        txt.textContent = displayLabel || dbVal;
     }
     if (input) input.value = ruVal;
     syncPaymentDropdownSelectedState(ruVal);
@@ -288,7 +288,7 @@ export async function applyPromoCode() {
 
     if (!input) return;
 
-    if (btn) btn.innerText = '...';
+    if (btn) btn.textContent = '...';
 
     const currentCart = getActiveCart();
     const originalTotal = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
@@ -362,5 +362,5 @@ export async function applyPromoCode() {
         updateCartUI();
     }
 
-    if (btn) btn.innerText = typeof i18next !== 'undefined' ? i18next.t('checkout.apply') : 'ПРИМЕНИТЬ';
+    if (btn) btn.textContent = typeof i18next !== 'undefined' ? i18next.t('checkout.apply') : 'ПРИМЕНИТЬ';
 }
