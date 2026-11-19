@@ -445,29 +445,37 @@ export function prewarmProductModal(id, immediate = false) {
             }
         }
 
-        // 3. Предзагрузка первых двух полноразмерных фото в кэш браузера (если не Save-Data)
+        // 3. Предзагрузка первых двух полноразмерных фото и миниатюр галереи в кэш браузера (если не Save-Data)
         if (item && !isDataSaverActive()) {
+            const preloadMedia = (rawUrl, opts = {}, priority = 'auto') => {
+                if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.endsWith('.mp4')) return;
+                const cdnUrl = typeof toCDN === 'function' ? toCDN(rawUrl, opts) : rawUrl;
+                if (!cdnUrl || _prewarmedImagesSet.has(cdnUrl)) return;
+                _prewarmedImagesSet.add(cdnUrl);
+                if (_prewarmedImagesSet.size > 100) {
+                    const first = _prewarmedImagesSet.values().next().value;
+                    _prewarmedImagesSet.delete(first);
+                }
+                const img = new Image();
+                img.decoding = 'async';
+                img.fetchPriority = priority;
+                img.src = cdnUrl;
+                if (typeof img.decode === "function") img.decode().catch(() => {});
+            };
+
             const mediaList = (Array.isArray(item.images) && item.images.length > 0)
                 ? item.images
                 : (Array.isArray(item.thumbnails) ? item.thumbnails : []);
 
-            mediaList.slice(0, 2).forEach(url => {
-                if (url && typeof url === 'string' && !url.endsWith('.mp4')) {
-                    const cdnUrl = typeof toCDN === 'function' ? toCDN(url) : url;
-                    if (!_prewarmedImagesSet.has(cdnUrl)) {
-                        _prewarmedImagesSet.add(cdnUrl);
-                        if (_prewarmedImagesSet.size > 100) {
-                            const first = _prewarmedImagesSet.values().next().value;
-                            _prewarmedImagesSet.delete(first);
-                        }
-                        const img = new Image();
-                        img.decoding = 'async';
-                        img.fetchPriority = 'high';
-                        img.src = cdnUrl;
-                        if (typeof img.decode === "function") img.decode().catch(() => {});
-                    }
-                }
+            mediaList.slice(0, 2).forEach((url, idx) => {
+                preloadMedia(url, {}, idx === 0 ? 'high' : 'auto');
             });
+
+            if (Array.isArray(item.thumbnails)) {
+                item.thumbnails.slice(0, 5).forEach(thumbUrl => {
+                    preloadMedia(thumbUrl, { isThumb: true }, 'low');
+                });
+            }
         }
     };
 

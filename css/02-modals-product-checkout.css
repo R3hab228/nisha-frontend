@@ -41,17 +41,17 @@
        так как при закрытии окна через JS (style.display = 'none') браузер задерживает скрытие
        оверлея на 240ms, из-за чего удаление класса .closing вызывает повторный флеш (моргание) экрана! */
     .modal-overlay.is-open {
-        transition: opacity 0.19s cubic-bezier(0.16, 1, 0.3, 1),
-                    backdrop-filter 0.19s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: none;
+        transition: opacity 0.19s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .modal-overlay.is-open .modal-window {
+        animation: none;
         transition: opacity 0.19s cubic-bezier(0.16, 1, 0.3, 1),
                     transform 0.19s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @starting-style {
         .modal-overlay.is-open {
             opacity: 0;
-            backdrop-filter: blur(0px);
         }
         .modal-overlay.is-open .modal-window {
             opacity: 0;

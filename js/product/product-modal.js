@@ -182,7 +182,7 @@ export async function openProductModalById(itemId) {
                 if (offerPriceBtn) offerPriceBtn.style.display = nowHasBargain ? 'block' : 'none';
             }
 
-            if (fullItem.description) {
+            if (fullItem.description && String(active.description || '') !== String(fullItem.description || '')) {
                 const descContainer = document.querySelector('.modal-desc');
                 if (descContainer) {
                     const qaMarker = '<!-- Блок Вопросов и Ответов (Q&A) -->';

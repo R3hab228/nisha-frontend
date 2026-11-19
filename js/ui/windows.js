@@ -136,7 +136,7 @@ function triggerModalInitializer(id) {
 }
 
 // Перезапуск анимации печатной машинки заголовка с мигающим квадратным курсором (1-в-1 как в ITEM_INFO.EXE)
-function triggerModalTypewriter(modalOrId) {
+function triggerModalTypewriter(modalOrId, { skipReflow = false } = {}) {
     if (!modalOrId) return;
     const modal = typeof modalOrId === 'string'
         ? (typeof document !== 'undefined' && document.getElementById ? document.getElementById(modalOrId) : null)
@@ -159,8 +159,10 @@ function triggerModalTypewriter(modalOrId) {
 
     twElements.forEach(tw => {
         if (!tw || !tw.style) return;
-        tw.style.animation = 'none';
-        void tw.offsetHeight; // форсируем перерасчет стилей для перезапуска CSS-анимации
+        if (!skipReflow) {
+            tw.style.animation = 'none';
+            void tw.offsetHeight; // форсируем перерасчет стилей для перезапуска CSS-анимации
+        }
         tw.style.animation = '';
     });
 }
@@ -210,10 +212,11 @@ function openModal(id) {
     if (!document.body.style.overflow || document.body.style.overflow !== 'hidden') {
         window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
     }
+    const wasVisible = modal.style.display === 'flex' || modal.style.display === 'block';
     modal.style.display = 'flex';
     if (win) win.scrollTop = 0;
     document.body.style.overflow = 'hidden';
-    triggerModalTypewriter(modal);
+    triggerModalTypewriter(modal, { skipReflow: !wasVisible });
 }
 window.openModal = openModal;
 

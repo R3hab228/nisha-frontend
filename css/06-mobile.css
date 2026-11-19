@@ -193,6 +193,20 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
         box-sizing: border-box;
         transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
     }
+    @supports (transition-behavior: allow-discrete) {
+        .modal-overlay.is-open .modal-window {
+            animation: none;
+            transition: opacity 0.19s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.19s cubic-bezier(0.16, 1, 0.3, 1),
+                        max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+        }
+        @starting-style {
+            .modal-overlay.is-open .modal-window {
+                opacity: 0;
+                transform: translateY(28px) translateZ(0);
+            }
+        }
+    }
     .modal-header {
         border-radius: 19px 19px 0 0 !important;
         padding: 12px 16px !important;

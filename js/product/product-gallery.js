@@ -190,10 +190,13 @@ export function renderModalSlider(item) {
                             .replaceAll('(', '%28')
                             .replaceAll(')', '%29')
                         : '';
-                    const slideBgStyle = safeThumbBg ? `background:#000 url('${safeThumbBg}') center/contain no-repeat;` : 'background:#000;';
+                    const thumbBackdropHtml = safeThumbBg
+                        ? `<span class="slide-thumb-backdrop" aria-hidden="true" style="position:absolute; inset:0; background:#000 url('${safeThumbBg}') center/contain no-repeat; filter:blur(14px) brightness(0.4); transform:scale(1.06); pointer-events:none; transition:opacity 0.16s ease-out;"></span>`
+                        : '';
                     slidesHtml += `
-                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; ${slideBgStyle}">
-                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async" style="width:100%; height:100%; object-fit:contain; opacity:${isFirst ? '1' : '0'}; transition:opacity 0.2s ease-in-out;">
+                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide${isFirst ? ' img-8bit-loading' : ''}" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:#000;">
+                            ${thumbBackdropHtml}
+                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async" style="position:relative; z-index:1; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.16s ease-out;">
                         </a>`;
                 }
 
@@ -202,12 +205,15 @@ export function renderModalSlider(item) {
 
             wrapper.innerHTML = slidesHtml;
             wrapper.querySelectorAll('img.modal-slide-img').forEach(img => {
-                if (img.complete && img.naturalWidth > 0 && img.style.opacity !== '1') {
+                if (img.complete && img.naturalWidth > 0) {
+                    img.style.transition = 'none';
                     img.style.opacity = '1';
                     if (img.parentElement) {
                         img.parentElement.setAttribute('data-pswp-width', img.naturalWidth);
                         img.parentElement.setAttribute('data-pswp-height', img.naturalHeight);
-                        img.parentElement.classList.remove('skeleton');
+                        img.parentElement.classList.remove('skeleton', 'img-8bit-loading');
+                        const backdrop = img.parentElement.querySelector ? img.parentElement.querySelector('.slide-thumb-backdrop') : null;
+                        if (backdrop) backdrop.remove();
                     }
                 }
             });
