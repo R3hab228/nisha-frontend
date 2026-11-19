@@ -691,4 +691,90 @@ describe('Modular Core Helpers Deep Suite (js/core/helpers*.js)', () => {
         expect(toastsModals.formatNewItemsCountText(12)).toBe('+12 новых вещей в каталоге');
         expect(toastsModals.formatNewItemsCountText(22)).toBe('+22 новые вещи в каталоге');
     });
+
+    it('10. helpers-toasts-modals.js showTerminalModal supports persistent broadcasts and opens PhotoSwipe without dismissing modal', async () => {
+        const { registerActions } = await import('../js/core/action-registry.js');
+        const gallerySpy = vi.fn();
+        registerActions({ openPhotoSwipeGallery: gallerySpy });
+
+        const docListenersMap = new Map();
+        const origDoc = globalThis.document;
+        const origCreateEl = origDoc.createElement;
+        const origAddListener = origDoc.addEventListener;
+        const origDispatch = origDoc.dispatchEvent;
+
+        const fakeTiles = ['p1.webp', 'p2.webp', 'p3.webp'].map((file, idx) => {
+            const t = createFakeElement('a');
+            t.className = 'broadcast-media-item';
+            t.setAttribute('href', `https://cdn.nisha-store.shop/${file}`);
+            t.setAttribute('data-pswp-index', String(idx));
+            t.setAttribute('data-pswp-width', String(800 + idx * 100));
+            t.setAttribute('data-pswp-height', String(1000 + idx * 50));
+            return t;
+        });
+        const fakeBtn = createFakeElement('button');
+        fakeBtn.className = 'cart-checkout-btn btn-target';
+
+        origDoc.addEventListener = (ev, fn) => {
+            if (!docListenersMap.has(ev)) docListenersMap.set(ev, []);
+            docListenersMap.get(ev).push(fn);
+        };
+        origDoc.dispatchEvent = (evt) => {
+            const list = docListenersMap.get(evt?.type || evt) || [];
+            list.forEach(fn => fn(evt));
+            return true;
+        };
+        origDoc.createElement = (tag) => {
+            const el = origCreateEl(tag);
+            const origQs = el.querySelector.bind(el);
+            const origQsa = el.querySelectorAll.bind(el);
+            el.querySelector = (sel) => {
+                if (sel === '.cart-checkout-btn' || sel === 'button') return fakeBtn;
+                return origQs(sel);
+            };
+            el.querySelectorAll = (sel) => {
+                if (sel === '.broadcast-media-item') return fakeTiles;
+                return origQsa(sel);
+            };
+            el.contains = (node) => fakeTiles.includes(node);
+            return el;
+        };
+
+        try {
+            const onAck = vi.fn();
+            const mosaicHtml = '<div class="broadcast-media-grid" data-count="3">mosaic</div>';
+            toastsModals.showTerminalModal('SYSTEM_BROADCAST.MSG', mosaicHtml, '[ ПОНЯТНО ]', onAck, { persistent: true });
+
+            const overlay = origDoc.querySelectorAll('.terminal-modal-overlay')[0];
+            expect(overlay).toBeDefined();
+
+            // Backdrop click & Escape must NOT dismiss persistent broadcast
+            overlay.dispatchEvent({ type: 'click', target: overlay, preventDefault: vi.fn(), stopPropagation: vi.fn() });
+            origDoc.dispatchEvent({ type: 'keydown', key: 'Escape' });
+            expect(origDoc.querySelectorAll('.terminal-modal-overlay')).toHaveLength(1);
+            expect(onAck).not.toHaveBeenCalled();
+
+            // Clicking 2nd photo opens PhotoSwipe at index 1 and keeps broadcast overlay open
+            overlay.dispatchEvent({
+                type: 'click',
+                target: fakeTiles[1],
+                preventDefault: vi.fn(),
+                stopPropagation: vi.fn()
+            });
+            expect(gallerySpy).toHaveBeenCalledTimes(1);
+            expect(gallerySpy.mock.calls[0][0]).toHaveLength(3);
+            expect(gallerySpy.mock.calls[0][1]).toBe(1);
+            expect(origDoc.querySelectorAll('.terminal-modal-overlay')).toHaveLength(1);
+            expect(onAck).not.toHaveBeenCalled();
+
+            // Explicit click on [ ПОНЯТНО ] closes overlay and invokes callback
+            fakeBtn.click();
+            expect(origDoc.querySelectorAll('.terminal-modal-overlay')).toHaveLength(0);
+            expect(onAck).toHaveBeenCalledTimes(1);
+        } finally {
+            origDoc.createElement = origCreateEl;
+            origDoc.addEventListener = origAddListener;
+            origDoc.dispatchEvent = origDispatch;
+        }
+    });
 });

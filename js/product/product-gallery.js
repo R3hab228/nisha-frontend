@@ -273,6 +273,44 @@ export function renderModalSlider(item) {
     }
 }
 
+function createPhotoSwipeLightboxInstance(items) {
+    return new window.PhotoSwipeLightbox({
+        dataSource: items,
+        showHideAnimationType: 'fade',
+        zoomAnimationDuration: 200,
+        bgOpacity: 0.9,
+        closeOnVerticalDrag: true,
+        wheelToZoom: true,
+        pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
+    });
+}
+
+/**
+ * Opens fullscreen PhotoSwipe gallery for arbitrary image items list (reused by broadcast media mosaic).
+ * @param {Array<{src:string, msrc?:string, width?:number, height?:number, element?:HTMLElement}>} items
+ * @param {number} [startIndex=0]
+ * @returns {Promise<void>}
+ */
+export async function openPhotoSwipeGallery(items, startIndex = 0) {
+    if (!Array.isArray(items) || items.length === 0) return;
+    if (typeof ensurePhotoSwipe === 'function') {
+        await ensurePhotoSwipe();
+    }
+    if (!window.PhotoSwipeLightbox) return;
+
+    const safeIndex = Math.max(0, Math.min(Number(startIndex) || 0, items.length - 1));
+
+    if (_pswpLightbox) {
+        try { _pswpLightbox.destroy(); } catch {}
+        _pswpLightbox = null;
+    }
+
+    const lightbox = createPhotoSwipeLightboxInstance(items);
+    _pswpLightbox = lightbox;
+    lightbox.init();
+    lightbox.loadAndOpen(safeIndex);
+}
+
 /**
  * Opens fullscreen PhotoSwipe gallery at the specified slide or active index.
  * @param {number|HTMLElement} [targetSlideOrIndex]
@@ -326,15 +364,7 @@ export async function openProductPhotoZoom(targetSlideOrIndex) {
         _pswpLightbox = null;
     }
 
-    const lightbox = new window.PhotoSwipeLightbox({
-        dataSource: items,
-        showHideAnimationType: 'fade',
-        zoomAnimationDuration: 200,
-        bgOpacity: 0.9,
-        closeOnVerticalDrag: true,
-        wheelToZoom: true,
-        pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
-    });
+    const lightbox = createPhotoSwipeLightboxInstance(items);
 
     const syncSliderIndex = () => {
         const currPswpIndex = lightbox.pswp && lightbox.pswp.currIndex;
@@ -428,9 +458,11 @@ registerActions({
     setSlide,
     updateSlider,
     openProductPhotoZoom,
+    openPhotoSwipeGallery,
     initSliderSwipe
 });
 
 if (typeof window !== 'undefined') {
     window.openProductPhotoZoom = openProductPhotoZoom;
+    window.openPhotoSwipeGallery = openPhotoSwipeGallery;
 }

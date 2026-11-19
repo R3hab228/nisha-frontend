@@ -32,18 +32,23 @@ import {
 
 let pendingBroadcastQueue = null;
 
-function tryShowBroadcast(title, htmlText, btnText, callback) {
+function tryShowBroadcast(title, htmlText, btnText, callback, options = {}) {
     if (!htmlText || htmlText === 'null' || (typeof htmlText === 'string' && !htmlText.trim())) {
         if (callback) callback();
         return;
     }
+    const resolvedOptions = {
+        persistent: (options && typeof options.persistent === 'boolean')
+            ? options.persistent
+            : title === 'SYSTEM_BROADCAST.MSG'
+    };
     const inFeed = isUserInProductFeed();
     if (inFeed) {
         invokeAction('playNotifySound', { kind: 'broadcast' });
-        showTerminalModal(title, htmlText, btnText, callback);
+        showTerminalModal(title, htmlText, btnText, callback, resolvedOptions);
         pendingBroadcastQueue = null;
     } else {
-        pendingBroadcastQueue = { title, htmlText, btnText, callback };
+        pendingBroadcastQueue = { title, htmlText, btnText, callback, options: resolvedOptions };
     }
 }
 window.tryShowBroadcast = tryShowBroadcast;
@@ -53,11 +58,11 @@ function checkPendingBroadcast() {
     setTimeout(() => {
         const inFeed = isUserInProductFeed();
         if (pendingBroadcastQueue && inFeed) {
-            const { title, htmlText, btnText, callback } = pendingBroadcastQueue;
+            const { title, htmlText, btnText, callback, options } = pendingBroadcastQueue;
             pendingBroadcastQueue = null;
             if (htmlText && htmlText !== 'null' && (typeof htmlText !== 'string' || htmlText.trim())) {
                 invokeAction('playNotifySound', { kind: 'broadcast' });
-                showTerminalModal(title, htmlText, btnText, callback);
+                showTerminalModal(title, htmlText, btnText, callback, options || { persistent: title === 'SYSTEM_BROADCAST.MSG' });
             } else if (callback) {
                 callback();
             }

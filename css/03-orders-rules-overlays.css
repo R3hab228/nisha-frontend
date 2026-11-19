@@ -3,6 +3,7 @@
 /* ==========================================
    PHOTOSWIPE CUSTOM CONTROLS
    ========================================== */
+.pswp { z-index: 20000 !important; }
 .pswp__img { object-fit: contain; }
 
 /* Крестик закрытия — красный */

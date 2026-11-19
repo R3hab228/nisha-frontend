@@ -634,8 +634,9 @@ function _displayUnifiedNewItemToast(items) {
  * @param {string} htmlText
  * @param {string} btnText
  * @param {Function} [callback]
+ * @param {{ persistent?: boolean }} [options={}]
  */
-export function showTerminalModal(title, htmlText, btnText, callback) {
+export function showTerminalModal(title, htmlText, btnText, callback, options = {}) {
     if (!htmlText || htmlText === 'null' || (typeof htmlText === 'string' && !htmlText.trim())) {
         if (callback) callback();
         return;
@@ -643,6 +644,7 @@ export function showTerminalModal(title, htmlText, btnText, callback) {
     if (typeof document === 'undefined') return;
     document.querySelectorAll('.terminal-modal-overlay').forEach(el => el.remove());
 
+    const isPersistent = Boolean(options && options.persistent);
     const isMeasureModal = title && title.includes('MEASURE_SYSTEM');
     const titleClass = isMeasureModal ? 'success-title measure-sys-title' : 'success-title typewriter';
     const boxExtraClass = isMeasureModal ? 'measure-terminal-box' : '';
@@ -662,7 +664,7 @@ export function showTerminalModal(title, htmlText, btnText, callback) {
 
     document.body.appendChild(overlay);
 
-    const btn = overlay.querySelector('button');
+    const btn = overlay.querySelector('.cart-checkout-btn') || overlay.querySelector('button');
     const modalCtrl = new AbortController();
     const closeOverlay = () => {
         modalCtrl.abort();
@@ -673,13 +675,54 @@ export function showTerminalModal(title, htmlText, btnText, callback) {
         if (callback) callback();
     };
 
-    btn.addEventListener('click', closeOverlay, { signal: modalCtrl.signal });
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeOverlay();
-    }, { signal: modalCtrl.signal });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeOverlay();
-    }, { signal: modalCtrl.signal });
+    const mediaTiles = overlay.querySelectorAll ? Array.from(overlay.querySelectorAll('.broadcast-media-item')) : [];
+    if (mediaTiles.length > 0) {
+        overlay.addEventListener('click', (e) => {
+            const tile = e.target && typeof e.target.closest === 'function' ? e.target.closest('.broadcast-media-item') : null;
+            if (!tile || !overlay.contains(tile)) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            const items = mediaTiles.map((el) => {
+                const imgEl = el.querySelector ? el.querySelector('img') : null;
+                const parsedW = Number.parseInt(el.getAttribute('data-pswp-width') || (imgEl && imgEl.naturalWidth) || 0, 10);
+                const parsedH = Number.parseInt(el.getAttribute('data-pswp-height') || (imgEl && imgEl.naturalHeight) || 0, 10);
+                const src = el.getAttribute('href') || (imgEl && (imgEl.currentSrc || imgEl.src)) || '';
+                const msrc = (imgEl && (imgEl.currentSrc || imgEl.src)) || src;
+                return {
+                    src,
+                    msrc,
+                    width: parsedW > 0 ? parsedW : 1200,
+                    height: parsedH > 0 ? parsedH : 1200,
+                    element: el
+                };
+            }).filter(it => Boolean(it.src));
+
+            const clickedIdx = Math.max(0, mediaTiles.indexOf(tile));
+            if (items.length === 0) return;
+            if (hasAction('openPhotoSwipeGallery')) {
+                invokeAction('openPhotoSwipeGallery', items, clickedIdx);
+            } else if (typeof window !== 'undefined' && typeof window.openPhotoSwipeGallery === 'function') {
+                window.openPhotoSwipeGallery(items, clickedIdx);
+            }
+        }, { signal: modalCtrl.signal });
+    }
+
+    if (btn) {
+        btn.addEventListener('click', closeOverlay, { signal: modalCtrl.signal });
+    }
+    if (!isPersistent) {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay && !(document.querySelector && document.querySelector('.pswp--open'))) {
+                closeOverlay();
+            }
+        }, { signal: modalCtrl.signal });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !(document.querySelector && document.querySelector('.pswp--open'))) {
+                closeOverlay();
+            }
+        }, { signal: modalCtrl.signal });
+    }
 }
 if (typeof window !== 'undefined') window.showTerminalModal = showTerminalModal;
 

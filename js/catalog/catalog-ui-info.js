@@ -76,7 +76,9 @@ export function flushPendingBroadcast() {
     if (!bHtml || bHtml === 'null' || (typeof bHtml === 'string' && !bHtml.trim())) return;
 
     setTimeout(() => {
-        const closeBtnText = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close')) || '[ ЗАКРЫТЬ ]';
+        const closeBtnText = customMarkSeen
+            ? ((typeof i18next !== 'undefined' && i18next.t('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' })) || '[ ПОНЯТНО ]')
+            : ((typeof i18next !== 'undefined' && i18next.t('propose.btn_close')) || '[ ЗАКРЫТЬ ]');
         showBroadcastFn('SYSTEM_BROADCAST.MSG', bHtml, closeBtnText, () => {
             if (customMarkSeen) {
                 customMarkSeen();

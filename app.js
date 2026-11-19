@@ -520,24 +520,44 @@ async function initApp() {
             return { primary: safePrimary, fallback: safeFallback };
         };
 
-        const preloadImageWithTimeout = (url, timeoutMs = 1400) => {
-            if (!url || typeof Image === 'undefined') return Promise.resolve(false);
+        const resolveBroadcastImageList = (bData) => {
+            if (!bData) return [];
+            const rawList = Array.isArray(bData.image_urls) && bData.image_urls.length > 0
+                ? bData.image_urls
+                : (bData.image_url ? [bData.image_url] : []);
+            const seen = new Set();
+            const result = [];
+            for (const rawUrl of rawList) {
+                if (result.length >= 3) break;
+                const pair = resolveBroadcastImageUrls(rawUrl);
+                const key = pair.primary || pair.fallback;
+                if (!key || seen.has(key)) continue;
+                seen.add(key);
+                result.push(pair);
+            }
+            return result;
+        };
+
+        const preloadImageWithTimeout = (url, timeoutMs = 1600) => {
+            if (!url || typeof Image === 'undefined') return Promise.resolve({ ok: false, width: 0, height: 0 });
             return new Promise((resolve) => {
                 let settled = false;
-                const done = (ok) => {
+                const done = (ok, width = 0, height = 0) => {
                     if (settled) return;
                     settled = true;
                     clearTimeout(timer);
-                    resolve(ok);
+                    resolve({ ok, width, height });
                 };
                 const timer = setTimeout(() => done(false), timeoutMs);
                 const img = new Image();
                 img.decoding = 'async';
                 img.onload = () => {
+                    const w = Number(img.naturalWidth) || 0;
+                    const h = Number(img.naturalHeight) || 0;
                     if (typeof img.decode === 'function') {
-                        img.decode().catch(() => {}).finally(() => done(true));
+                        img.decode().catch(() => {}).finally(() => done(true, w, h));
                     } else {
-                        done(true);
+                        done(true, w, h);
                     }
                 };
                 img.onerror = () => done(false);
@@ -545,17 +565,24 @@ async function initApp() {
             });
         };
 
-        const buildBroadcastContent = (bData, resolvedImgOverride = '') => {
+        const buildBroadcastContent = (bData, resolvedImages = []) => {
             if (!bData) return '';
             const hasValidText = bData.message_text && typeof bData.message_text === 'string' && bData.message_text.trim() && bData.message_text.trim() !== 'null';
-            const { primary, fallback } = resolveBroadcastImageUrls(bData.image_url);
-            const imgSrc = resolvedImgOverride || primary || fallback;
-            const hasValidImg = Boolean(imgSrc);
-            if (!hasValidText && !hasValidImg) return '';
+            const imgs = Array.isArray(resolvedImages) && resolvedImages.length > 0
+                ? resolvedImages
+                : resolveBroadcastImageList(bData).map(p => ({ src: p.primary || p.fallback, width: 1200, height: 1200 }));
+            const validImgs = imgs.filter(it => it && it.src).slice(0, 3);
+            if (!hasValidText && validImgs.length === 0) return '';
 
             let html = '';
-            if (hasValidImg) {
-                html += `<img src="${imgSrc}" alt="" decoding="async" style="width:100%; max-height:min(320px, 46dvh); object-fit:contain; background:#050505; border-radius:4px; border:1px solid #333; margin-bottom:14px; display:block;">`;
+            if (validImgs.length > 0) {
+                const zoomSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>';
+                const tilesHtml = validImgs.map((it, idx) => {
+                    const w = it.width > 0 ? it.width : 1200;
+                    const h = it.height > 0 ? it.height : 1200;
+                    return `<a href="${it.src}" class="broadcast-media-item" data-pswp-index="${idx}" data-pswp-width="${w}" data-pswp-height="${h}" target="_blank" rel="noopener"><img src="${it.src}" alt="" decoding="async"><span class="broadcast-media-zoom-hint">${zoomSvg}</span></a>`;
+                }).join('');
+                html += `<div class="broadcast-media-grid" data-count="${validImgs.length}">${tilesHtml}</div>`;
             }
             if (hasValidText) {
                 const escFn = hasAction('escapeHtml')
@@ -581,17 +608,24 @@ async function initApp() {
             if (!bData || !bData.id || _dispatchedBroadcastIds.has(bData.id)) return;
             _dispatchedBroadcastIds.add(bData.id);
 
-            const { primary, fallback } = resolveBroadcastImageUrls(bData.image_url);
-            let resolvedImg = primary || fallback;
-            if (primary) {
-                const primaryOk = await preloadImageWithTimeout(primary, 1400);
-                if (!primaryOk && fallback) {
-                    const fallbackOk = await preloadImageWithTimeout(fallback, 1200);
-                    if (fallbackOk) resolvedImg = fallback;
+            const imagePairs = resolveBroadcastImageList(bData);
+            const resolvedImages = await Promise.all(imagePairs.map(async (pair) => {
+                if (pair.primary) {
+                    const primaryRes = await preloadImageWithTimeout(pair.primary, 1600);
+                    if (primaryRes.ok) {
+                        return { src: pair.primary, width: primaryRes.width || 1200, height: primaryRes.height || 1200 };
+                    }
+                    if (pair.fallback) {
+                        const fallbackRes = await preloadImageWithTimeout(pair.fallback, 1400);
+                        if (fallbackRes.ok) {
+                            return { src: pair.fallback, width: fallbackRes.width || 1200, height: fallbackRes.height || 1200 };
+                        }
+                    }
                 }
-            }
+                return { src: pair.primary || pair.fallback, width: 1200, height: 1200 };
+            }));
 
-            const broadcastContent = buildBroadcastContent(bData, resolvedImg);
+            const broadcastContent = buildBroadcastContent(bData, resolvedImages);
             const markAsSeen = createMarkBroadcastSeen(bData.id);
             if (!broadcastContent) {
                 markAsSeen();
@@ -600,9 +634,12 @@ async function initApp() {
             const showBroadcastFn = (typeof window.tryShowBroadcast === 'function')
                 ? window.tryShowBroadcast
                 : (typeof tryShowBroadcast === 'function' ? tryShowBroadcast : (hasAction('tryShowBroadcast') ? (...args) => invokeAction('tryShowBroadcast', ...args) : null));
+            const okBtnLabel = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+                ? i18next.t('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' })
+                : '[ ПОНЯТНО ]';
             const tourDone = !respectOnboardingTour || Boolean(store && store.get('nisha_tour_done'));
             if (tourDone && showBroadcastFn) {
-                showBroadcastFn('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
+                showBroadcastFn('SYSTEM_BROADCAST.MSG', broadcastContent, okBtnLabel, markAsSeen, { persistent: true });
             } else {
                 window.pendingBroadcastHtml = broadcastContent;
                 window.pendingBroadcastId = bData.id;
@@ -621,7 +658,7 @@ async function initApp() {
             try {
                 const { data: broadcasts, error: broadcastErr } = await _supabase
                     .from('site_broadcasts')
-                    .select('id, message_text, image_url')
+                    .select('id, message_text, image_url, image_urls')
                     .order('created_at', { ascending: false })
                     .limit(1);
                 if (broadcastErr) {
