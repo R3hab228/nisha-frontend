@@ -3,20 +3,24 @@
 // ==========================================
 // Единый неблокирующий сервис продуктовой аналитики и воронки продаж:
 // - Работает без сторонних cookies (GDPR-friendly, не требует cookie-баннеров)
-// - Использует first-party проксирование через Vercel (/js/pa.js -> plausible.io) для обхода AdBlock / Brave
+// - Использует актуальный асинхронный скрипт Plausible (pa-IsJtnQu_ZBbpTLtjSuhRq.js)
 // - Поддерживает Plausible Analytics, PostHog и синхронную передачу e-commerce событий в TikTok Pixel (ttq)
-// - Загружается отложенно через requestIdleCallback (0 мс влияния на LCP / TBT)
+// - Загружается без блокировки рендера (async / requestIdleCallback, 0 мс влияния на LCP / TBT)
 
 (function initAnalyticsModule() {
     const DEFAULT_DOMAIN = 'nisha-store.shop';
+    const DEFAULT_PLAUSIBLE_SCRIPT_SRC = 'https://plausible.io/js/pa-IsJtnQu_ZBbpTLtjSuhRq.js';
     let _initialized = false;
     let _clarityLoaded = false;
     let _tiktokLoaded = false;
 
-    // 1. Создаём неблокирующую очередь команд Plausible до загрузки внешнего скрипта
+    // 1. Создаём неблокирующую очередь команд Plausible и init-конфиг до загрузки внешнего скрипта
     if (typeof window !== 'undefined') {
         window.plausible = window.plausible || function () {
             (window.plausible.q = window.plausible.q || []).push(arguments);
+        };
+        window.plausible.init = window.plausible.init || function (i) {
+            window.plausible.o = i || {};
         };
     }
 
@@ -24,8 +28,7 @@
         const env = (typeof window !== 'undefined' && window.ENV) ? window.ENV : {};
         return {
             domain: env.PLAUSIBLE_DOMAIN || DEFAULT_DOMAIN,
-            scriptSrc: env.PLAUSIBLE_SCRIPT_SRC || '/js/pa.js',
-            apiEndpoint: env.PLAUSIBLE_API_ENDPOINT || '/api/pa-event',
+            scriptSrc: env.PLAUSIBLE_SCRIPT_SRC || DEFAULT_PLAUSIBLE_SCRIPT_SRC,
             posthogKey: env.POSTHOG_KEY || '',
             posthogHost: env.POSTHOG_HOST || 'https://eu.i.posthog.com'
         };
@@ -38,7 +41,7 @@
     }
 
     /**
-     * Отложенная загрузка легковесного скрипта Plausible (и опционально PostHog)
+     * Отложенная загрузка / проверка скрипта Plausible (и опционально PostHog)
      */
     function init() {
         if (_initialized || typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -51,12 +54,17 @@
                 // В локальной разработке или тестах не инжектируем внешние теги, оставляя очередь window.plausible.q
                 if (isLocalhost() && !(window.ENV && window.ENV.FORCE_ANALYTICS)) return;
 
-                if (!document.querySelector('script[data-nisha-analytics="plausible"]')) {
+                if (typeof window.plausible === 'function' && typeof window.plausible.init === 'function' && !window.plausible.o) {
+                    window.plausible.init();
+                }
+
+                const hasPlausibleScript = Boolean(
+                    document.querySelector('script[data-nisha-analytics="plausible"], script[src*="plausible.io/js/pa-"]')
+                );
+                if (!hasPlausibleScript) {
                     const s = document.createElement('script');
-                    s.defer = true;
+                    s.async = true;
                     s.src = cfg.scriptSrc;
-                    s.setAttribute('data-domain', cfg.domain);
-                    s.setAttribute('data-api', cfg.apiEndpoint);
                     s.setAttribute('data-nisha-analytics', 'plausible');
                     s.onerror = () => {}; // Тихий фоллбэк при блокировке или оффлайне
                     if (document.head) document.head.appendChild(s);

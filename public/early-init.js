@@ -14,6 +14,13 @@
         }
     } catch (e) {}
     try {
+        if (typeof window !== 'undefined') {
+            window.plausible = window.plausible || function () { (window.plausible.q = window.plausible.q || []).push(arguments); };
+            window.plausible.init = window.plausible.init || function (i) { window.plausible.o = i || {}; };
+            if (!window.plausible.o) window.plausible.init();
+        }
+    } catch (e) {}
+    try {
         const isStandalone = (window.matchMedia && (
             window.matchMedia('(display-mode: standalone)').matches ||
             window.matchMedia('(display-mode: fullscreen)').matches ||

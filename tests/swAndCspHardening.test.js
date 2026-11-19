@@ -37,7 +37,10 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(csp).toContain("'inline-speculation-rules'");
         expect(csp).not.toMatch(/script-src[^;]*\shttps:\s/);
         expect(csp).not.toMatch(/worker-src[^;]*\shttps:/);
+        expect(csp).toMatch(/script-src[^;]*https:\/\/plausible\.io/);
 
+        expect(html).toContain('<script async src="https://plausible.io/js/pa-IsJtnQu_ZBbpTLtjSuhRq.js"></script>');
+        expect(html).not.toContain('window.plausible=window.plausible');
         expect(html).not.toContain('<link rel=preconnect href=https://cdn.jsdelivr.net');
         expect(html).toContain('<link rel=dns-prefetch href=https://cdn.jsdelivr.net>');
         expect(html).toContain('<script src="/early-init.js"></script>');

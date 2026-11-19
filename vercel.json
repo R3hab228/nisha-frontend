@@ -125,14 +125,6 @@
   ],
   "rewrites": [
     {
-      "source": "/js/pa.js",
-      "destination": "https://plausible.io/js/script.js"
-    },
-    {
-      "source": "/api/pa-event",
-      "destination": "https://plausible.io/api/event"
-    },
-    {
       "source": "/return-policy",
       "destination": "/return-policy.html"
     },
