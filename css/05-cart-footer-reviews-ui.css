@@ -444,7 +444,7 @@
 .review-head-meta { display: flex; flex-direction: column; }
 .review-name { color: #fff; font-weight: bold; font-family: var(--font-main); font-size: 14px; }
 .review-name--linked { cursor: pointer; text-decoration: underline; text-decoration-style: dashed; }
-.review-text-body { margin-top: 10px; color: #ccc; font-size: 13px; line-height: 1.5; font-style: italic; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.review-text-body { margin-top: 10px; color: #ccc; font-size: 13px; line-height: 1.5; font-style: italic; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
 .review-date { color: #555; font-size: 11px; font-family: var(--font-mono); text-align: left; margin-top: 4px;}
 .review-item-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #333; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,255,0,0.1); cursor: zoom-in; }
 .reviews-empty-box--error { color: var(--accent-red); border-color: rgba(255, 0, 0, 0.3); }

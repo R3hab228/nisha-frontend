@@ -128,7 +128,6 @@ input, textarea {
     height: 14px;
     width: auto;
     image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
     display: inline-block;
     vertical-align: middle;

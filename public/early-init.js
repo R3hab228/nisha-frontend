@@ -49,8 +49,8 @@
         document.head.appendChild(link);
     } catch (e) {}
     try {
-        var CHUNK_RELOAD_KEY = 'nisha_chunk_reload_at';
-        var clearHtmlCaches = function () {
+        const CHUNK_RELOAD_KEY = 'nisha_chunk_reload_at';
+        const clearHtmlCaches = function () {
             try {
                 if (typeof caches === 'undefined' || !caches || typeof caches.keys !== 'function') {
                     return Promise.resolve();
@@ -69,11 +69,11 @@
                 return Promise.resolve();
             }
         };
-        var tryRecoverStaleChunk = function () {
+        const tryRecoverStaleChunk = function () {
             try {
                 if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-                var now = Date.now();
-                var last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || '0');
+                const now = Date.now();
+                const last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || '0');
                 if (last && (now - last) < 15000) return;
                 sessionStorage.setItem(CHUNK_RELOAD_KEY, String(now));
                 clearHtmlCaches().then(function () {
@@ -86,10 +86,10 @@
             tryRecoverStaleChunk();
         });
         window.addEventListener('error', function (event) {
-            var target = event && event.target;
+            const target = event && event.target;
             if (!target || target === window) return;
-            var tag = target.tagName;
-            var url = (tag === 'SCRIPT' ? target.src : (tag === 'LINK' ? target.href : '')) || '';
+            const tag = target.tagName;
+            const url = (tag === 'SCRIPT' ? target.src : (tag === 'LINK' ? target.href : '')) || '';
             if (!/\/assets\/[^?#]+\.(?:js|css)(?:[?#]|$)/i.test(url)) return;
 
             if (tag === 'LINK' && target.rel === 'stylesheet') {
@@ -99,7 +99,7 @@
                 }
                 try {
                     if (target.dataset) target.dataset.retried = '1';
-                    var cleanHref = url.split('?')[0];
+                    const cleanHref = url.split('?')[0];
                     if (typeof caches !== 'undefined' && caches && typeof caches.keys === 'function') {
                         caches.keys().then(function (keys) {
                             keys.forEach(function (k) {
@@ -107,7 +107,7 @@
                             });
                         }).catch(function () {});
                     }
-                    var fallbackLink = document.createElement('link');
+                    const fallbackLink = document.createElement('link');
                     fallbackLink.rel = 'stylesheet';
                     fallbackLink.href = cleanHref + '?cb=' + Date.now();
                     if (fallbackLink.dataset) fallbackLink.dataset.retried = '1';
@@ -124,8 +124,8 @@
             tryRecoverStaleChunk();
         }, true);
         window.addEventListener('unhandledrejection', function (event) {
-            var reason = event && event.reason;
-            var msg = reason && (reason.message || String(reason));
+            const reason = event && event.reason;
+            const msg = reason && (reason.message || String(reason));
             if (msg && /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS/i.test(msg)) {
                 tryRecoverStaleChunk();
             }
@@ -137,14 +137,14 @@
         }, 5000);
     } catch (e) {}
     try {
-        var locHash = (window.location && window.location.hash) || '';
-        var locSearch = (window.location && window.location.search) || '';
+        const locHash = (window.location && window.location.hash) || '';
+        const locSearch = (window.location && window.location.search) || '';
         if (/(?:^|[#&?])type=recovery(?:&|$)/i.test(locHash) || /(?:^|[&?])type=recovery(?:&|$)/i.test(locSearch)) {
             window.__NISHA_PASSWORD_RECOVERY_PENDING__ = true;
             try { sessionStorage.setItem('nisha_pw_recovery_pending', '1'); } catch (e) {}
         }
-        if (locSearch && locSearch.indexOf('_sw_upd=') !== -1 && window.history && typeof window.history.replaceState === 'function') {
-            var cleanedUrl = new URL(window.location.href);
+        if (locSearch && locSearch.includes('_sw_upd=') && window.history && typeof window.history.replaceState === 'function') {
+            const cleanedUrl = new URL(window.location.href);
             cleanedUrl.searchParams.delete('_sw_upd');
             window.history.replaceState(null, '', cleanedUrl.pathname + cleanedUrl.search + cleanedUrl.hash);
         }

@@ -255,7 +255,6 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 .checkbox-list input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
-    -moz-appearance: none;
     width: 20px;
     height: 16px;
     background-color: transparent;
@@ -313,7 +312,6 @@ h1 { color: var(--accent-green); font-family: var(--font-mono); font-size: 2.5em
 .win95-cb {
     appearance: none;
     -webkit-appearance: none;
-    -moz-appearance: none;
     width: 20px;
     height: 16px;
     background-color: transparent;
@@ -543,7 +541,7 @@ label:hover .win95-cb:checked {
 .item-card:hover .mock-image { filter: brightness(1.1); }
 
 .item-info { padding: 10px 12px; display: flex; flex-direction: column; flex-grow: 1; transform: translateZ(10px);}
-.item-title { color: var(--text-main); font-size: 14px; margin: 0 0 6px 0; line-height: 1.3; height: 38px; font-weight: bold; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;}
+.item-title { color: var(--text-main); font-size: 14px; margin: 0 0 6px 0; line-height: 1.3; height: 38px; font-weight: bold; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;}
 .item-price { 
     color: var(--accent-green); 
     font-size: 18px; 
