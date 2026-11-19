@@ -62,18 +62,27 @@ let _activeDriverTour = null;
  * Безопасный показ отложенного системного броадкаста.
  */
 export function flushPendingBroadcast() {
-    if (!window.pendingBroadcastHtml || typeof tryShowBroadcast !== 'function') return;
+    const showBroadcastFn = (typeof window !== 'undefined' && typeof window.tryShowBroadcast === 'function')
+        ? window.tryShowBroadcast
+        : (typeof tryShowBroadcast === 'function' ? tryShowBroadcast : (hasAction('tryShowBroadcast') ? (...args) => invokeAction('tryShowBroadcast', ...args) : null));
+    if (!window.pendingBroadcastHtml || !showBroadcastFn) return;
     const bHtml = window.pendingBroadcastHtml;
     const bId = window.pendingBroadcastId;
+    const customMarkSeen = typeof window.pendingBroadcastMarkSeen === 'function' ? window.pendingBroadcastMarkSeen : null;
     window.pendingBroadcastHtml = null;
     window.pendingBroadcastId = null;
+    window.pendingBroadcastMarkSeen = null;
 
     if (!bHtml || bHtml === 'null' || (typeof bHtml === 'string' && !bHtml.trim())) return;
 
     setTimeout(() => {
         const closeBtnText = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close')) || '[ ЗАКРЫТЬ ]';
-        tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, closeBtnText, () => {
-            if (bId && window.storage) window.storage.set('nisha_last_broadcast', bId);
+        showBroadcastFn('SYSTEM_BROADCAST.MSG', bHtml, closeBtnText, () => {
+            if (customMarkSeen) {
+                customMarkSeen();
+            } else if (bId && window.storage) {
+                window.storage.set('nisha_last_broadcast', bId);
+            }
         });
     }, 3000);
 }

@@ -510,12 +510,73 @@ async function initApp() {
             }
         }
 
+        const buildBroadcastContent = (bData) => {
+            if (!bData) return '';
+            const hasValidText = bData.message_text && typeof bData.message_text === 'string' && bData.message_text.trim() && bData.message_text.trim() !== 'null';
+            const hasValidImg = bData.image_url && typeof bData.image_url === 'string' && bData.image_url.trim();
+            if (!hasValidText && !hasValidImg) return '';
+
+            let html = '';
+            if (hasValidImg) {
+                const rawImgUrl = bData.image_url.trim();
+                const cdnUrl = typeof window.toCDN === 'function' ? window.toCDN(rawImgUrl) : rawImgUrl;
+                const safeImgUrl = /^https?:\/\//i.test(cdnUrl) ? cdnUrl.replaceAll('"', '&quot;') : '';
+                if (safeImgUrl) {
+                    html += `<img src="${safeImgUrl}" alt="" style="width:100%; max-height:240px; object-fit:contain; background:#000; border-radius:4px; border:1px solid #333; margin-bottom:15px; display:block;">`;
+                }
+            }
+            if (hasValidText) {
+                const escFn = hasAction('escapeHtml')
+                    ? (s) => invokeAction('escapeHtml', s)
+                    : (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+                html += `<div style="font-size:14px; line-height:1.5;">${escFn(bData.message_text).replaceAll('\n', '<br>')}</div>`;
+            }
+            return html;
+        };
+
+        const createMarkBroadcastSeen = (bId) => () => {
+            if (!bId) return;
+            if (storage && typeof storage.set === 'function') storage.set('nisha_last_broadcast', bId);
+            const activeUser = store.user;
+            if (activeUser && _supabase) {
+                _supabase.from('profiles').update({ last_broadcast_id: bId }).eq('id', activeUser.id).then();
+            }
+        };
+
+        const dispatchSiteBroadcast = (bData, { respectOnboardingTour = false } = {}) => {
+            const broadcastContent = buildBroadcastContent(bData);
+            const markAsSeen = createMarkBroadcastSeen(bData && bData.id);
+            if (!broadcastContent) {
+                markAsSeen();
+                return;
+            }
+            const showBroadcastFn = (typeof window.tryShowBroadcast === 'function')
+                ? window.tryShowBroadcast
+                : (typeof tryShowBroadcast === 'function' ? tryShowBroadcast : (hasAction('tryShowBroadcast') ? (...args) => invokeAction('tryShowBroadcast', ...args) : null));
+            const tourDone = !respectOnboardingTour || Boolean(store && store.get('nisha_tour_done'));
+            if (tourDone && showBroadcastFn) {
+                showBroadcastFn('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
+            } else {
+                window.pendingBroadcastHtml = broadcastContent;
+                window.pendingBroadcastId = bData.id;
+                window.pendingBroadcastMarkSeen = markAsSeen;
+            }
+        };
+
         // Проверка рассылок от админа
         setTimeout(async () => {
             try {
                 if (!_supabase) return;
-                const { data: broadcasts } = await _supabase.from('site_broadcasts').select('id, message_text, image_url').order('created_at', { ascending: false }).limit(1);
-                
+                const { data: broadcasts, error: broadcastErr } = await _supabase
+                    .from('site_broadcasts')
+                    .select('id, message_text, image_url')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (broadcastErr) {
+                    console.warn('Ошибка загрузки рассылки', broadcastErr);
+                    return;
+                }
+
                 if (broadcasts && broadcasts.length > 0) {
                     const bData = broadcasts.at(0);
                     const localSeenId = (storage && typeof storage.get === 'function') ? storage.get('nisha_last_broadcast') : null;
@@ -524,40 +585,11 @@ async function initApp() {
                     const hasSeen = (localSeenId === bData.id) || (dbSeenId === bData.id);
 
                     if (!hasSeen) {
-                        const hasValidText = bData.message_text && typeof bData.message_text === 'string' && bData.message_text.trim() && bData.message_text.trim() !== 'null';
-                        const hasValidImg = bData.image_url && typeof bData.image_url === 'string' && bData.image_url.trim();
-
-                        const markAsSeen = () => {
-                            if (storage && typeof storage.set === 'function') storage.set('nisha_last_broadcast', bData.id);
-                            const activeUser = store.user;
-                            if (activeUser && _supabase) {
-                                _supabase.from('profiles').update({ last_broadcast_id: bData.id }).eq('id', activeUser.id).then();
-                            }
-                        };
-
-                        if (!hasValidText && !hasValidImg) {
-                            markAsSeen();
-                            return;
-                        }
-
-                        let broadcastContent = '';
-                        if (hasValidImg) {
-                            broadcastContent += `<img src="${bData.image_url}" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
-                        }
-                        if (hasValidText) {
-                            broadcastContent += `<div style="font-size:14px; line-height:1.5;">${bData.message_text.replaceAll('\n', '<br>')}</div>`;
-                        }
-
-                        if (store && store.get('nisha_tour_done') && typeof tryShowBroadcast === 'function') {
-                            tryShowBroadcast('SYSTEM_BROADCAST.MSG', broadcastContent, '[ ЗАКРЫТЬ ]', markAsSeen);
-                        } else {
-                            window.pendingBroadcastHtml = broadcastContent;
-                            window.pendingBroadcastId = bData.id;
-                        }
+                        dispatchSiteBroadcast(bData, { respectOnboardingTour: true });
                     }
                 }
-            } catch(e) { console.warn("Ошибка загрузки рассылки", e); }
-        }, 3000);
+            } catch (e) { console.warn('Ошибка загрузки рассылки', e); }
+        }, 2500);
 
         // Запускаем счетчик посетителей сразу (не дожидаясь конца всех await в initApp)
         invokeAction('initHitCounter');
@@ -604,28 +636,7 @@ async function initApp() {
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'site_broadcasts' }, payload => {
                     const bData = payload.new;
                     if (!bData) return;
-                    const hasValidText = bData.message_text && typeof bData.message_text === 'string' && bData.message_text.trim() && bData.message_text.trim() !== 'null';
-                    const hasValidImg = bData.image_url && typeof bData.image_url === 'string' && bData.image_url.trim();
-                    if (!hasValidText && !hasValidImg) return;
-
-                    let bHtml = '';
-                    if (hasValidImg) {
-                        const rawImgUrl = bData.image_url.trim();
-                        const safeImgUrl = /^https?:\/\//i.test(rawImgUrl) ? rawImgUrl.replaceAll('"', '&quot;') : '';
-                        if (safeImgUrl) {
-                            bHtml += `<img src="${safeImgUrl}" alt="" style="width:100%; max-height:200px; object-fit:cover; border-radius:4px; border:1px solid #333; margin-bottom:15px;">`;
-                        }
-                    }
-                    if (hasValidText) {
-                        const escFn = hasAction('escapeHtml') ? (s) => invokeAction('escapeHtml', s) : (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-                        bHtml += `<div style="font-size:14px; line-height:1.5;">${escFn(bData.message_text).replaceAll('\n', '<br>')}</div>`;
-                    }
-
-                    if (typeof tryShowBroadcast === 'function') {
-                        tryShowBroadcast('SYSTEM_BROADCAST.MSG', bHtml, '[ ЗАКРЫТЬ ]', () => {
-                            if (storage && typeof storage.set === 'function') storage.set('nisha_last_broadcast', bData.id);
-                        });
-                    }
+                    dispatchSiteBroadcast(bData, { respectOnboardingTour: false });
                 })
                 .subscribe();
 
