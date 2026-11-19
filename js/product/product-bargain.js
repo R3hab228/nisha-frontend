@@ -376,6 +376,15 @@ export async function submitBargainOffer() {
     }
 }
 
+let _inlineOfferToggleTimer = null;
+
+function clearInlineOfferToggleTimer() {
+    if (_inlineOfferToggleTimer !== null) {
+        clearTimeout(_inlineOfferToggleTimer);
+        _inlineOfferToggleTimer = null;
+    }
+}
+
 /**
  * Transitions the modal offer button into inline numeric price input mode.
  */
@@ -405,11 +414,13 @@ export function showInlineOfferPriceInput() {
 
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
+    clearInlineOfferToggleTimer();
     btn.style.opacity = '0';
     btn.style.transform = 'translateY(-4px)';
     btn.style.pointerEvents = 'none';
 
-    setTimeout(() => {
+    _inlineOfferToggleTimer = setTimeout(() => {
+        _inlineOfferToggleTimer = null;
         btn.style.display = 'none';
         row.style.display = 'flex';
         row.style.opacity = '0';
@@ -418,7 +429,7 @@ export function showInlineOfferPriceInput() {
         row.classList.add('visible');
         row.style.opacity = '1';
         row.style.transform = 'translateY(0)';
-        input.focus();
+        if (typeof input.focus === 'function') input.focus();
     }, 110);
 }
 
@@ -433,11 +444,18 @@ export function hideInlineOfferPriceInput() {
 
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
+    clearInlineOfferToggleTimer();
+    if (input) {
+        if (typeof input.blur === 'function') input.blur();
+        input.value = '';
+    }
+
     row.classList.remove('visible');
     row.style.opacity = '0';
     row.style.transform = 'translateY(4px)';
 
-    setTimeout(() => {
+    _inlineOfferToggleTimer = setTimeout(() => {
+        _inlineOfferToggleTimer = null;
         row.style.display = 'none';
         btn.style.display = 'flex';
         btn.style.opacity = '0';
@@ -446,7 +464,6 @@ export function hideInlineOfferPriceInput() {
         btn.style.opacity = '1';
         btn.style.transform = 'translateY(0)';
         btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
-        if (input) input.value = '';
     }, 110);
 }
 

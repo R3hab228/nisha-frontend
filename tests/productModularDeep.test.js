@@ -754,4 +754,44 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
         expect(descBlock.innerHTML).toContain('62');
         expect(descBlock.innerHTML).not.toContain('[ТОРГ');
     });
+
+    it('8. product-bargain.js showInlineOfferPriceInput / hideInlineOfferPriceInput cleanly restores offer button on X cancel', async () => {
+        vi.useFakeTimers();
+        const btn = createFakeEl('button');
+        btn.disabled = false;
+        const row = createFakeEl('div');
+        row.style.display = 'none';
+        const input = createFakeEl('input');
+        input.blur = vi.fn();
+
+        globalThis.currentOpenedItem = { id: 'item-bargain-x', price: 1000, description: '[ТОРГ: от 540]' };
+        globalThis.document = {
+            getElementById: (id) => {
+                if (id === 'modalOfferPriceBtn') return btn;
+                if (id === 'offerPriceInputRow') return row;
+                if (id === 'inlineBargainPriceInput') return input;
+                return null;
+            }
+        };
+
+        productMod.showInlineOfferPriceInput();
+        vi.advanceTimersByTime(120);
+        expect(btn.style.display).toBe('none');
+        expect(row.style.display).toBe('flex');
+        expect(row.classList.contains('visible')).toBe(true);
+
+        input.value = '600';
+        productMod.hideInlineOfferPriceInput();
+        vi.advanceTimersByTime(120);
+
+        expect(input.blur).toHaveBeenCalledTimes(1);
+        expect(input.value).toBe('');
+        expect(row.style.display).toBe('none');
+        expect(row.classList.contains('visible')).toBe(false);
+        expect(btn.style.display).toBe('flex');
+        expect(btn.style.opacity).toBe('1');
+        expect(btn.style.pointerEvents).toBe('auto');
+
+        vi.useRealTimers();
+    });
 });
