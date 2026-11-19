@@ -113,7 +113,6 @@ describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixe
 
         it('.modal-window on mobile includes scrollbar-width: none !important', () => {
             expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.modal-window\s*\{[^}]*scrollbar-width:\s*none\s*!important/);
-            expect(styleCss).toMatch(/@media\s*\(max-width:\s*900px\)[\s\S]*?\.modal-window\s*\{[^}]*-ms-overflow-style:\s*none\s*!important/);
         });
 
         it('@media (pointer: coarse) suppresses scrollbars across all touch devices and modals', () => {

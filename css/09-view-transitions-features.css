@@ -161,7 +161,6 @@
     .cart-dropdown-list,
     .success-terminal-box {
         scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
     }
     .modal-window::-webkit-scrollbar,
     .modal-overlay::-webkit-scrollbar,

@@ -17,7 +17,6 @@
     }
     * {
         scrollbar-width: none;
-        -ms-overflow-style: none;
     }
     html { -webkit-text-size-adjust: 100%; } 
     h1 { font-size: 2em; max-width: 70%; }
@@ -188,7 +187,6 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
         border: 1px solid #555 !important; border-bottom: none !important;
         overflow-y: auto !important;
         scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
         animation: slideUpMobile 0.19s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         will-change: transform; overscroll-behavior-y: none;
         padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
