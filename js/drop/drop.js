@@ -7,7 +7,11 @@ import { registerActions } from '../core/action-registry.js';
 if (typeof document !== 'undefined') {
     import('../../css/lazy-drop-modal.css').catch(() => {});
 }
-import { initProposalNameGuard, sanitizeProposalNameField } from './drop-state.js';
+import {
+    hasPrivateMeasurementsDodge,
+    initProposalNameGuard,
+    sanitizeProposalNameField
+} from './drop-state.js';
 import {
     confirmPropBargainInput,
     hidePropBargainInput,
@@ -36,6 +40,7 @@ export * from './drop-images.js';
 export * from './drop-submit.js';
 
 const DROP_EXPORTS = {
+    hasPrivateMeasurementsDodge,
     sanitizeProposalNameField,
     openProposeModal,
     compressImage,

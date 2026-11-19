@@ -429,6 +429,7 @@
       "err_fill_all": "Please fill in absolutely all fields!",
       "err_max_files": "Maximum 5 photos/videos!",
       "err_cond_range": "Condition rating must be from 1 to 10!",
+      "err_measurements_dm": "No \"DM for measurements\" — enter exact measurements in the description!",
       "err_network": "Error submitting proposal to server. Check your connection and try again.",
       "compressing": "COMPRESSING PHOTO",
       "err_server": "Server failure: ",

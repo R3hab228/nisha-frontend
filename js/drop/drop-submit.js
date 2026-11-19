@@ -4,7 +4,12 @@
 
 import { invokeAction, resolveAction } from '../core/action-registry.js';
 import { getLenisInstance, getRuntimeFingerprint, getRuntimeUser, getTurnstileApi, getRuntimeSiteLang } from '../core/runtime-env.js';
-import { getProposalFiles, sanitizeProposalNameField, setProposalFiles } from './drop-state.js';
+import {
+    getProposalFiles,
+    hasPrivateMeasurementsDodge,
+    sanitizeProposalNameField,
+    setProposalFiles
+} from './drop-state.js';
 import {
     confirmPropBargainInput,
     hidePropBargainInput,
@@ -495,8 +500,19 @@ export async function submitProposal() {
     }
 
     if (cond < 1 || cond > 10) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
         const condMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_cond_range')) || 'Оценка состояния от 1 до 10!';
         showToast(condMsg, 'error');
+        return;
+    }
+
+    if (hasPrivateMeasurementsDodge(rawDesc) || hasPrivateMeasurementsDodge(rawName)) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        const measurementsDmMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_measurements_dm'))
+            || 'Замеры в ЛС запрещены — укажите замеры цифрами прямо в описании!';
+        showToast(measurementsDmMsg, 'error');
+        const descEl = document.getElementById('propDesc');
+        if (descEl && typeof descEl.focus === 'function') descEl.focus();
         return;
     }
 

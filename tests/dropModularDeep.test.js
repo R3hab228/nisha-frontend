@@ -20,6 +20,7 @@ import '../js/core/store.js';
 import { hasAction, resolveAction } from '../js/core/action-registry.js';
 import {
     getProposalFiles,
+    hasPrivateMeasurementsDodge,
     setProposalFiles,
     sanitizeProposalNameField
 } from '../js/drop/drop-state.js';
@@ -197,5 +198,75 @@ describe('Modular Drop / Propose Suite (js/drop/drop-*.js)', () => {
         resetPropBargainState();
         expect(els.btnTogglePropBargain.classList.contains('active')).toBe(false);
         delete window.showToast;
+    });
+
+    it('6. Blocks "measurements in DM/PP/direct" across RU/UA/EN with error toast & focus, while allowing numeric measurements', async () => {
+        const dodges = [
+            'Состояние 9/10, замеры в лс',
+            'Замеры скину в личку или директ',
+            'По замерам уточняйте в тг',
+            'Замеры по запросу',
+            'Стан ідеал, заміри в пп',
+            'Заміри кину у приват або дірект',
+            'Заміри за запитом, пишіть у особисті',
+            'zamery v ls',
+            'Condition 9/10, measurements in DM',
+            'DM me for sizing',
+            'Measurements upon request',
+            'Ask in PM for dimensions'
+        ];
+        dodges.forEach(text => {
+            expect(hasPrivateMeasurementsDodge(text)).toBe(true);
+        });
+
+        const validDescriptions = [
+            'Состояние 9/10, длина 70, грудь 55, плечи 48, рукав 62',
+            'Заміри: довжина 68 см, груди 54 см, стан ідеал',
+            'Condition 9/10. Measurements: length 71cm, pit to pit 56cm. Crisp print.',
+            'Замеры: 72x58. Если есть вопросы по состоянию, спрашивайте.'
+        ];
+        validDescriptions.forEach(text => {
+            expect(hasPrivateMeasurementsDodge(text)).toBe(false);
+        });
+
+        const els = {
+            btnSubmitProp: createMockNode(),
+            propName: createMockNode(),
+            propBrand: createMockNode(),
+            propCategory: createMockNode(),
+            propSize: createMockNode(),
+            propDesc: createMockNode(),
+            propCond: createMockNode(),
+            propPrice: createMockNode(),
+            propContact: createMockNode(),
+            propMinBargainPrice: createMockNode()
+        };
+        els.propName.value = 'Carhartt Detroit J97';
+        els.propBrand.value = 'Carhartt';
+        els.propCategory.value = 'Верхняя одежда';
+        els.propSize.value = 'L';
+        els.propDesc.value = 'Отличная куртка, замеры в лс';
+        els.propCond.value = '9';
+        els.propPrice.value = '4500';
+        els.propContact.value = '@seller_test';
+
+        globalThis.document = {
+            getElementById: (id) => els[id] || null
+        };
+        setProposalFiles([{ file: { name: 'photo.jpg', size: 1024 }, url: 'blob:p1' }]);
+        const showToastSpy = vi.fn();
+        window.showToast = showToastSpy;
+        globalThis.showToast = showToastSpy;
+
+        const { submitProposal } = await import('../js/drop/drop-submit.js');
+        await submitProposal();
+
+        expect(showToastSpy).toHaveBeenCalledWith(
+            expect.any(String),
+            'error'
+        );
+        expect(els.propDesc.focus).toHaveBeenCalledTimes(1);
+        delete window.showToast;
+        delete globalThis.showToast;
     });
 });
