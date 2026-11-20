@@ -4,6 +4,7 @@
 
 import { invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 import { getRuntimeProfile, getRuntimeStorage, getRuntimeSupabase, getRuntimeUser } from '../core/runtime-env.js';
+import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
 const _failedReviewImages = new Set();
 
@@ -21,8 +22,12 @@ async function openReviewImage(url) {
     const cdnUrl = toCDN(url);
     const lightbox = new window.PhotoSwipeLightbox({
         dataSource: [{ src: cdnUrl, width: 1000, height: 1000 }],
+        showHideAnimationType: 'fade',
+        showAnimationDuration: 200,
+        hideAnimationDuration: 200,
         pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
     });
+    bindPhotoSwipeBackGesture(lightbox);
     lightbox.init();
     lightbox.loadAndOpen(0);
 }

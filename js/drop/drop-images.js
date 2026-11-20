@@ -3,6 +3,7 @@
 // ==========================================
 
 import { getProposalFiles, setProposalFiles } from './drop-state.js';
+import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
 let proposalSortable = null;
 const BG_COMPRESS_CONCURRENCY = 2;
@@ -221,8 +222,12 @@ export async function openProposalPhotoByIndex(index, element = null) {
                 width: f.width || 1200,
                 height: f.height || 1200
             })),
+            showHideAnimationType: 'fade',
+            showAnimationDuration: 200,
+            hideAnimationDuration: 200,
             pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
         });
+        bindPhotoSwipeBackGesture(pswp);
         pswp.init();
         pswp.loadAndOpen(clickedIndex);
     }

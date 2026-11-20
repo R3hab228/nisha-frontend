@@ -11,6 +11,7 @@ import {
 } from '../../src/modules/index.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeCatalog } from '../core/runtime-env.js';
+import { pushBackLayer, removeBackLayerFromUI } from '../ui/back-gesture.js';
 
 function isItemBargainEnabled(item) {
     if (!item || item.status === 'sold') return false;
@@ -109,6 +110,12 @@ function openSearchDropdown(dropdown) {
     showPopoverSafe(dropdown);
     dropdown.style.display = 'block';
     positionLiveSearchDropdown(dropdown);
+    pushBackLayer({
+        key: 'search:main',
+        type: 'search',
+        id: 'main',
+        onBackClose: () => closeSearch({ fromBackGesture: true })
+    });
 }
 
 // Отображение истории поиска
@@ -332,6 +339,9 @@ function closeSearch(options = {}) {
     clearTimeout(searchDebounce);
     currentLiveSearchSeq++;
     const immediate = Boolean(options && options.immediate);
+    if (!options || !options.fromBackGesture) {
+        removeBackLayerFromUI('search:main');
+    }
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
     if (dropdown) {

@@ -13,6 +13,10 @@ import {
     ensureFieldVisibleInModal,
     initMobileKeyboardViewport
 } from './windows-mobile-viewport.js';
+import {
+    pushBackLayer,
+    removeBackLayerFromUI
+} from './back-gesture.js';
 
 export {
     attachMobileSwipeToWindow,
@@ -217,11 +221,19 @@ function openModal(id) {
     if (win) win.scrollTop = 0;
     document.body.style.overflow = 'hidden';
     triggerModalTypewriter(modal, { skipReflow: !wasVisible });
+    if (id !== 'rulesModal') {
+        pushBackLayer({
+            key: `modal:${id}`,
+            type: 'modal',
+            id,
+            onBackClose: () => closeModal(id, null, { fromBackGesture: true })
+        });
+    }
 }
 window.openModal = openModal;
 
 // 3. Закрытие модального окна по крестику (с защитой данных)
-function closeModal(id, e) { 
+function closeModal(id, e, options = {}) { 
     const evt = e || (typeof window !== 'undefined' ? window.event : null);
     if (evt) {
         if (typeof evt.preventDefault === 'function') evt.preventDefault();
@@ -234,6 +246,14 @@ function closeModal(id, e) {
                 ? i18next.t('propose.wait_uploading', { defaultValue: '⏳ Заявка отправляется на сервер, подождите пару секунд...' })
                 : '⏳ Заявка отправляется на сервер, подождите пару секунд...';
             if (typeof showToast === 'function') showToast(waitMsg, 'info');
+            if (options && options.fromBackGesture) {
+                pushBackLayer({
+                    key: `modal:${id}`,
+                    type: 'modal',
+                    id,
+                    onBackClose: () => closeModal(id, null, { fromBackGesture: true })
+                });
+            }
             return;
         }
         if (typeof document !== 'undefined' && document.querySelector('.confirm-modal-overlay')) {
@@ -269,6 +289,14 @@ function closeModal(id, e) {
         
         // Если юзер ввел реальные данные — вызываем терминал подтверждения
         if (hasUnsavedData) {
+            if (options && options.fromBackGesture) {
+                pushBackLayer({
+                    key: `modal:${id}`,
+                    type: 'modal',
+                    id,
+                    onBackClose: () => closeModal(id, null, { fromBackGesture: true })
+                });
+            }
             const title = (typeof i18next !== 'undefined' && i18next.t('propose.warning_loss_title', { defaultValue: 'WARNING_DATA_LOSS.SYS' })) || 'WARNING_DATA_LOSS.SYS';
             const text = (typeof i18next !== 'undefined' && i18next.t('propose.warning_loss_text', { defaultValue: 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.' })) || 'У вас есть несохраненные данные. Если вы закроете окно, форма полностью очистится.';
             const closeBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' })) || '[ ЗАКРЫТЬ ]';
@@ -279,19 +307,35 @@ function closeModal(id, e) {
                 closeBtn, 
                 cancelBtn, 
                 () => { 
+                    removeBackLayerFromUI(`confirm:${id}`);
                     invokeAction('resetProposalForm');
                     executeCloseModal(id, evt); 
                 }
             );
+            const confirmOverlay = typeof document !== 'undefined' ? document.querySelector('.confirm-modal-overlay') : null;
+            if (confirmOverlay) {
+                pushBackLayer({
+                    key: `confirm:${id}`,
+                    type: 'confirm',
+                    id,
+                    onBackClose: () => {
+                        const cur = document.querySelector('.confirm-modal-overlay');
+                        if (cur) cur.remove();
+                    }
+                });
+            }
             return;
         }
     }
-    executeCloseModal(id, evt); // Если защищать не нужно — просто закрываем
+    executeCloseModal(id, evt, options); // Если защищать не нужно — просто закрываем
 }
 window.closeModal = closeModal;
 
 // 4. Исполнение плавного закрытия окна с анимацией
-function executeCloseModal(id, e) {
+function executeCloseModal(id, e, options = {}) {
+    if (!options || !options.fromBackGesture) {
+        removeBackLayerFromUI(`modal:${id}`);
+    }
     const evt = e || (typeof window !== 'undefined' ? window.event : null);
     if (evt) {
         if (typeof evt.preventDefault === 'function') evt.preventDefault();
@@ -358,7 +402,8 @@ function executeCloseModal(id, e) {
             const u = new URL(window.location);
             if (u.searchParams.has('item')) {
                 u.searchParams.delete('item');
-                window.history.replaceState(null, '', u.pathname + u.search);
+                const curState = (window.history && window.history.state !== undefined) ? window.history.state : null;
+                window.history.replaceState(curState, '', u.pathname + u.search);
             }
         } catch {}
     }

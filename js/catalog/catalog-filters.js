@@ -398,7 +398,8 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                     if (searchTerm) url.searchParams.set('q', searchTerm); else url.searchParams.delete('q');
                     if (onlySale) url.searchParams.set('sale', '1'); else url.searchParams.delete('sale');
                     if (onlyBargain) url.searchParams.set('bargain', '1'); else url.searchParams.delete('bargain');
-                    window.history.replaceState(null, '', url);
+                    const curState = (window.history && window.history.state !== undefined) ? window.history.state : null;
+                    window.history.replaceState(curState, '', url);
                 } catch {}
             }
 

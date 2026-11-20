@@ -558,7 +558,8 @@ export function openProductModal(item) {
     const url = new URL(window.location);
     if (url.searchParams.has('item')) {
         url.searchParams.delete('item');
-        window.history.replaceState(null, '', url.pathname + url.search);
+        const curState = (window.history && window.history.state !== undefined) ? window.history.state : null;
+        window.history.replaceState(curState, '', url.pathname + url.search);
     }
 
     if (sb) loadItemQuestions(item.id);

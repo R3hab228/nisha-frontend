@@ -9,6 +9,7 @@ import {
     toCDN
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
 let _pswpLightbox = null;
 
@@ -274,15 +275,19 @@ export function renderModalSlider(item) {
 }
 
 function createPhotoSwipeLightboxInstance(items) {
-    return new window.PhotoSwipeLightbox({
+    const lightbox = new window.PhotoSwipeLightbox({
         dataSource: items,
         showHideAnimationType: 'fade',
+        showAnimationDuration: 200,
+        hideAnimationDuration: 200,
         zoomAnimationDuration: 200,
         bgOpacity: 0.9,
         closeOnVerticalDrag: true,
         wheelToZoom: true,
         pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
     });
+    bindPhotoSwipeBackGesture(lightbox);
+    return lightbox;
 }
 
 /**

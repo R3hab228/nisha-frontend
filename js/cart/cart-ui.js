@@ -13,6 +13,7 @@ import {
     getSupabaseClient
 } from './cart-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { pushBackLayer, removeBackLayerFromUI } from '../ui/back-gesture.js';
 
 /**
  * Изоляция скролла списка корзины на ПК: скроллится только сам список корзины, а не весь сайт.
@@ -320,6 +321,14 @@ export function toggleCartDropdown(e) {
             if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(dropdown);
             checkCartItemsAvailability();
             renderCartItems();
+            pushBackLayer({
+                key: 'cart:main',
+                type: 'cart',
+                id: 'main',
+                onBackClose: () => closeCartDropdown(null, { fromBackGesture: true })
+            });
+        } else {
+            removeBackLayerFromUI('cart:main');
         }
         if (fab) {
             if (isActive) {
@@ -339,8 +348,11 @@ export function toggleCartDropdown(e) {
  * Закрывает выпадающую шторку корзины и восстанавливает FAB.
  * @param {Event} [e]
  */
-export function closeCartDropdown(e) {
+export function closeCartDropdown(e, options = {}) {
     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (!options || !options.fromBackGesture) {
+        removeBackLayerFromUI('cart:main');
+    }
     const dropdown = document.getElementById('cartDropdown');
     const panel = document.getElementById('cartPanel');
     const fab = document.querySelector('.fab-propose');

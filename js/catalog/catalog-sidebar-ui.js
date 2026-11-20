@@ -5,6 +5,7 @@
 import { clearSavedFeedScrollState } from './scroll-restoration.js';
 import { isItemBargainEnabled } from './catalog-card-markup.js';
 import { hasAction, invokeAction } from '../core/action-registry.js';
+import { pushBackLayer, removeBackLayerFromUI } from '../ui/back-gesture.js';
 
 let priceTimeout = null;
 
@@ -227,7 +228,7 @@ export function updatePriceUI(e) {
 /**
  * Плавно раскрывает и сворачивает мобильное меню фильтров (`.sidebar`).
  */
-export function toggleMobileSidebar() {
+export function toggleMobileSidebar(_e, options = {}) {
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
     const sidebar = document.querySelector('.sidebar');
@@ -272,7 +273,21 @@ export function toggleMobileSidebar() {
         };
         sidebar.addEventListener('transitionend', onOpenEnd, { signal: openCtrl.signal });
         updateSidebarCounters();
+        pushBackLayer({
+            key: 'sidebar:main',
+            type: 'sidebar',
+            id: 'main',
+            onBackClose: () => {
+                const curSidebar = document.querySelector('.sidebar');
+                if (curSidebar && curSidebar.classList.contains('active-mobile')) {
+                    toggleMobileSidebar(null, { fromBackGesture: true });
+                }
+            }
+        });
     } else {
+        if (!options || !options.fromBackGesture) {
+            removeBackLayerFromUI('sidebar:main');
+        }
         btn.textContent = showText;
         btn.style.borderColor = '#444';
         btn.style.color = 'var(--accent-green)';
