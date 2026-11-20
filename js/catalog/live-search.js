@@ -2,7 +2,7 @@
 import {
     storage,
     escapeHtml,
-    escapeJsString,
+    sanitizeCssMediaUrl,
     formatPrice,
     toCDN,
     applyFilters,
@@ -255,7 +255,11 @@ function handleLiveSearch() {
                 const reservedBadgeHtml = isReserved ? '<div class="live-search-reserved-badge">RESERVED</div>' : '';
                 const rawImg = (item.thumbnails && item.thumbnails.length > 0) ? item.thumbnails[0] : ((item.images && item.images[0]) ? item.images[0] : '');
                 const img = toCDN(rawImg);
-                const safeImg = escapeJsString(img);
+                const safeImg = typeof sanitizeCssMediaUrl === 'function'
+                    ? sanitizeCssMediaUrl(img)
+                    : (/^https?:\/\/|^\/(?!\/)/i.test(String(img || '').trim())
+                        ? escapeHtml(String(img).trim()).replaceAll('\\', '%5C').replaceAll('(', '%28').replaceAll(')', '%29')
+                        : '');
                 const rawItemName = String(item.name || '');
                 
                 let highlightedName = escapeHtml(rawItemName);
@@ -301,7 +305,7 @@ function handleLiveSearch() {
 
                 html += `
                     <div class="live-search-item ${isReserved ? 'reserved-item' : ''}" data-action="select-live-search-item" data-id="${escapeHtml(item.id)}">
-                        <div class="live-search-img" style="background-image: url('${safeImg}')">${reservedBadgeHtml}</div>
+                        <div class="live-search-img"${safeImg ? ` style="background-image: url('${safeImg}')"` : ''}>${reservedBadgeHtml}</div>
                         <div class="live-search-info">
                             <span class="live-search-title">${highlightedName}</span>
                             <span class="live-search-price">${priceHtml}</span>

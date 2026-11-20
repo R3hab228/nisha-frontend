@@ -337,8 +337,13 @@ export function renderFilteredOrders() {
         const date = formatOrderDate(orderDateMs);
         const itemsHtml = (Array.isArray(order.items) ? order.items : []).map(item => {
             const itemImg = getOrderItemImage(item);
-            const safeImgUrl = escHtml(itemImg);
-            const imgStyle = itemImg ? `background-image: url('${safeImgUrl}');` : '';
+            const sanitizeCssFn = resolveAction('sanitizeCssMediaUrl');
+            const safeImgUrl = sanitizeCssFn
+                ? sanitizeCssFn(itemImg)
+                : (/^https?:\/\/|^\/(?!\/)/i.test(String(itemImg || '').trim())
+                    ? escAttr(String(itemImg).trim()).replaceAll('\\', '%5C').replaceAll('(', '%28').replaceAll(')', '%29')
+                    : '');
+            const imgStyle = safeImgUrl ? `background-image: url('${safeImgUrl}');` : '';
             const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);
             return `
                     <div class="order-item-row" data-action="open-product" data-id="${escAttr(item.id)}" title="Открыть карточку товара">

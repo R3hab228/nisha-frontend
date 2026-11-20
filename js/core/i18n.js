@@ -249,7 +249,9 @@ function updateContentLanguage() {
         } else {
             const trans = i18next.t(key);
             if (trans && trans !== key) {
-                el.innerHTML = trans;
+                el.innerHTML = (typeof window !== 'undefined' && window.DOMPurify && typeof window.DOMPurify.sanitize === 'function')
+                    ? window.DOMPurify.sanitize(trans)
+                    : trans;
             }
         }
     });

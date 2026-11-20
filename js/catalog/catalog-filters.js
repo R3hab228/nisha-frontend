@@ -16,7 +16,7 @@ import {
     toggleMobileSidebar
 } from './catalog-sidebar-ui.js';
 import { renderNextBatch } from './catalog-grid.js';
-import { isItemBargainEnabled } from './catalog-card-markup.js';
+import { isItemBargainEnabled, escCardHtml } from './catalog-card-markup.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeFavorites, isSiteHackedMode } from '../core/runtime-env.js';
 
@@ -436,7 +436,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
         } catch (err) {
             console.error('ОШИБКА ФИЛЬТРАЦИИ:', err);
             if (grid) {
-                const safeRenderErr = hasAction('escapeHtml') ? invokeAction('escapeHtml', err.message) : err.message;
+                const safeRenderErr = escCardHtml(err?.message || 'Unknown error');
                 grid.innerHTML = `<div class="catalog-error-state">[ ОШИБКА РЕНДЕРА: ${safeRenderErr} ]</div>`;
                 grid.classList.remove('fade-out');
             }

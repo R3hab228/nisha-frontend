@@ -4,7 +4,7 @@
 
 import { getCatalogStore, getSupabaseClient } from './catalog-state.js';
 import { updateCardDOM, insertNewItemCardSmoothly } from './catalog-grid.js';
-import { isItemBargainEnabled } from './catalog-card-markup.js';
+import { isItemBargainEnabled, escCardHtml } from './catalog-card-markup.js';
 import { applyFilters, updateSidebarCounters } from './catalog-filters.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeProfile, getRuntimeOpenedItem } from '../core/runtime-env.js';
@@ -181,7 +181,7 @@ export async function loadAllItems() {
                 handleNetworkOffline();
             } else if (grid) {
                 const rawMsg = error?.message ? String(error.message) : 'Ошибка загрузки каталога';
-                const safeErrMsg = hasAction('escapeHtml') ? invokeAction('escapeHtml', rawMsg) : rawMsg;
+                const safeErrMsg = escCardHtml(rawMsg);
                 grid.innerHTML = `<div style="color:#ccc; text-align:center; padding:32px 16px; grid-column:1/-1; font-family:var(--font-mono);"><div style="color:var(--accent-red); margin-bottom:14px;">[ ОШИБКА БД: ${safeErrMsg} ]</div><button type="button" class="cart-checkout-btn btn-target" data-action="retry-load-items" style="max-width:260px; margin:0 auto;">[ ПОВТОРИТЬ ЗАГРУЗКУ ]</button></div>`;
             }
         }

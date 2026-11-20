@@ -481,6 +481,23 @@ export function sanitizeText(str) {
 }
 
 /**
+ * Validates and encodes a URL for safe use inside CSS url('...')
+ * @param {string} rawUrl
+ * @returns {string}
+ */
+export function sanitizeCssMediaUrl(rawUrl) {
+    return callAction('sanitizeCssMediaUrl', [rawUrl], (val) => {
+        if (!val || typeof val !== 'string') return '';
+        const trimmed = val.trim();
+        if (!/^https?:\/\/|^\/(?!\/)/i.test(trimmed)) return '';
+        return escapeAttr(trimmed)
+            .replaceAll('\\', '%5C')
+            .replaceAll('(', '%28')
+            .replaceAll(')', '%29');
+    });
+}
+
+/**
  * Triggers physical vibration on supported mobile devices
  * @param {number} [duration=150]
  */
@@ -578,7 +595,13 @@ export function generateShortId(prefix = 'id') {
     if (typeof customGen === 'function') {
         return `${prefix}_${customGen(8)}`;
     }
-    return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(6);
+        crypto.getRandomValues(bytes);
+        const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+        return `${prefix}_${hex.slice(0, 8)}`;
+    }
+    return `${prefix}_${Date.now().toString(36)}`;
 }
 
 /**

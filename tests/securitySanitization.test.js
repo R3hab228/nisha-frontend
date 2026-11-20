@@ -455,4 +455,33 @@ describe('Security Sanitization & XSS Shield', () => {
             global.document = prevDoc;
         }
     });
+
+    it('sanitizeText escapes HTML tags and sanitizeCssMediaUrl neutralizes CSS url() breakout vectors', async () => {
+        const { sanitizeText, sanitizeCssMediaUrl, generateShortId } = window;
+        expect(typeof sanitizeText).toBe('function');
+        expect(typeof sanitizeCssMediaUrl).toBe('function');
+        expect(typeof generateShortId).toBe('function');
+
+        expect(sanitizeText('<b>bold</b> <a href="https://evil.test">click</a>')).toBe(
+            '&lt;b&gt;bold&lt;/b&gt; &lt;a href=&quot;https://evil.test&quot;&gt;click&lt;/a&gt;'
+        );
+        expect(sanitizeCssMediaUrl('javascript:alert(1)')).toBe('');
+        expect(sanitizeCssMediaUrl('data:text/html,<script>alert(1)</script>')).toBe('');
+
+        const cssSafe = sanitizeCssMediaUrl("https://cdn.nisha-store.shop/img(1)'?q=\\x");
+        expect(cssSafe).toContain('%281%29');
+        expect(cssSafe).toContain('%27');
+        expect(cssSafe).toContain('%5C');
+        expect(cssSafe).not.toContain("'");
+        expect(cssSafe).not.toContain('\\');
+        expect(cssSafe).not.toContain('(');
+        expect(cssSafe).not.toContain(')');
+
+        const coreId = generateShortId(10);
+        expect(coreId).toMatch(/^[a-z0-9]{10}$/);
+
+        const { generateShortId: generatePrefixedShortId } = await import('../src/modules/helpers.js');
+        const prefixedId = generatePrefixedShortId('nisha');
+        expect(prefixedId).toMatch(/^nisha_[a-z0-9]+$/);
+    });
 });

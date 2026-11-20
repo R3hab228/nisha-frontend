@@ -125,17 +125,13 @@ export function escapeJsString(str) {
 if (typeof window !== 'undefined') window.escapeJsString = escapeJsString;
 
 /**
- * Sanitizes rich/plain user text using DOMPurify when present, else HTML-escaping.
+ * Sanitizes plain user text into HTML-escaped output (zero HTML tags allowed).
  * @param {*} value
  * @returns {string}
  */
 export function sanitizeText(value) {
     if (value == null) return '';
-    const str = String(value);
-    if (typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
-        return DOMPurify.sanitize(str);
-    }
-    return escapeHtml(str);
+    return escapeHtml(String(value));
 }
 if (typeof window !== 'undefined') window.sanitizeText = sanitizeText;
 if (typeof globalThis !== 'undefined') globalThis.sanitizeText = sanitizeText;
@@ -179,6 +175,30 @@ export function isSafeMediaUrl(rawUrl) {
 if (typeof window !== 'undefined') window.isSafeMediaUrl = isSafeMediaUrl;
 
 /**
+ * Validates and encodes a media URL specifically for safe inclusion inside CSS url('...').
+ * Rejects non-http(s)/relative protocols (e.g. data:, javascript:, vbscript:) and encodes parens/quotes.
+ * @param {string} rawUrl
+ * @returns {string}
+ */
+export function sanitizeCssMediaUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return '';
+    const trimmed = rawUrl.trim();
+    if (!/^https?:\/\/|^\/(?!\/)/i.test(trimmed)) return '';
+    const safeHref = sanitizeHtmlMediaUrl(trimmed);
+    if (!safeHref || !/^https?:\/\//i.test(safeHref)) return '';
+    return escapeAttr(
+        safeHref
+            .replaceAll('\\', '%5C')
+            .replaceAll("'", '%27')
+            .replaceAll('"', '%22')
+            .replaceAll('(', '%28')
+            .replaceAll(')', '%29')
+    );
+}
+if (typeof window !== 'undefined') window.sanitizeCssMediaUrl = sanitizeCssMediaUrl;
+if (typeof globalThis !== 'undefined') globalThis.sanitizeCssMediaUrl = sanitizeCssMediaUrl;
+
+/**
  * Safe getter for active Supabase client.
  * @returns {Object|null}
  */
@@ -219,6 +239,7 @@ registerActions({
     escapeJsString,
     sanitizeText,
     sanitizeHtmlMediaUrl,
+    sanitizeCssMediaUrl,
     isSafeMediaUrl,
     getSupabase,
     getCatalog,

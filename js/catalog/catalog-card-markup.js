@@ -17,7 +17,7 @@ function fallbackEscHtml(str) {
         .replaceAll("'", '&#39;');
 }
 
-function escCardHtml(v) {
+export function escCardHtml(v) {
     return hasAction('escapeHtml') ? invokeAction('escapeHtml', v) : fallbackEscHtml(v);
 }
 

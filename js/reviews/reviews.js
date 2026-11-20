@@ -588,7 +588,7 @@ function initReviewsRealtime(sb) {
                 const snippet = truncFn
                     ? truncFn(cleanText, 52, '...')
                     : (cleanText.length > 55 ? cleanText.slice(0, 52) + '...' : cleanText);
-                const esc = resolveAction('escapeHtml') || (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'));
+                const esc = resolveAction('escapeHtml') || (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'));
                 const toastMsg = (typeof i18next !== 'undefined')
                     ? i18next.t('reviews_modal.new_review_from', { author: esc(author), snippet: esc(snippet), defaultValue: `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"` })
                     : `⭐ Новый отзыв от ${esc(author)}: "${esc(snippet)}"`;

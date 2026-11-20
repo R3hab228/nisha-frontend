@@ -15,7 +15,8 @@ import {
 import {
     buildStatusBadgeHtml,
     buildCardPriceHtml,
-    buildCardDOM
+    buildCardDOM,
+    escCardHtml
 } from './catalog-card-markup.js';
 import {
     markCardImageLoaded,
@@ -101,13 +102,13 @@ export function updateCardDOM(item) {
             }
             const sizeEl = card.querySelector('.item-size');
             if (sizeEl && item.size !== undefined) {
-                const safeSize = hasAction('escapeHtml') ? invokeAction('escapeHtml', item.size || '') : (item.size || '');
-                sizeEl.innerHTML = `<span data-i18n="grid.size_prefix">${sizePrefix}</span>${safeSize}`;
+                const safeSize = escCardHtml(item.size || '');
+                sizeEl.innerHTML = `<span data-i18n="grid.size_prefix">${escCardHtml(sizePrefix)}</span>${safeSize}`;
             }
             const footerEl = card.querySelector('.item-footer');
             if (footerEl && (item.brand !== undefined || item.condition !== undefined)) {
-                const safeBrand = hasAction('escapeHtml') ? invokeAction('escapeHtml', item.brand || '') : (item.brand || '');
-                const safeCond = hasAction('escapeHtml') ? invokeAction('escapeHtml', item.condition || '') : (item.condition || '');
+                const safeBrand = escCardHtml(item.brand || '');
+                const safeCond = escCardHtml(item.condition || '');
                 footerEl.innerHTML = `<span>${safeBrand}</span><span>${safeCond}</span>`;
             }
         });

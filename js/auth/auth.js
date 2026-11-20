@@ -527,7 +527,7 @@ async function generateAndSendOTP() {
     if (/android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
         window.location.href = tgLink;
     } else {
-        window.open(tgLink, '_blank');
+        window.open(tgLink, '_blank', 'noopener,noreferrer');
     }
     
     const statusEl = document.getElementById('otpStatus');
