@@ -67,9 +67,7 @@ describe('Mobile Back Gesture & Overlay History Stack (js/ui/back-gesture.js)', 
         expect(getActiveBackLayerKeys()).toEqual([]);
     });
 
-    it('cancels redundant history.back when switching overlays in the same tick (cart -> checkout)', () => {
-        vi.useFakeTimers();
-
+    it('cancels redundant history.back when switching overlays in the same tick (cart -> checkout)', async () => {
         pushBackLayer({ key: 'cart:main', type: 'cart', id: 'main', onBackClose: vi.fn() });
         expect(pushStateSpy).toHaveBeenCalledTimes(1);
 
@@ -77,14 +75,14 @@ describe('Mobile Back Gesture & Overlay History Stack (js/ui/back-gesture.js)', 
         removeBackLayerFromUI('cart:main');
         pushBackLayer({ key: 'modal:checkoutModal', type: 'modal', id: 'checkoutModal', onBackClose: vi.fn() });
 
-        vi.advanceTimersByTime(50);
+        await Promise.resolve();
         expect(backSpy).not.toHaveBeenCalled();
         expect(goSpy).not.toHaveBeenCalled();
         expect(getActiveBackLayerKeys()).toEqual(['modal:checkoutModal']);
 
         // Manual UI close via X button rolls back the single synthetic history step
         removeBackLayerFromUI('modal:checkoutModal');
-        vi.advanceTimersByTime(50);
+        await Promise.resolve();
         expect(backSpy).toHaveBeenCalledTimes(1);
     });
 });

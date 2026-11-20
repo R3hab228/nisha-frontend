@@ -8,8 +8,9 @@
 const _backStack = [];
 let _pushedDepth = 0;
 let _ignorePopstateCount = 0;
-let _ignoreResetTimer = null;
-let _reconcileTimer = null;
+let _ignoreResetGen = 0;
+let _reconcilePending = false;
+let _reconcileGen = 0;
 let _popstateListenerBound = false;
 
 function hasUsableHistoryApi() {
@@ -22,18 +23,20 @@ function hasUsableHistoryApi() {
 }
 
 function scheduleIgnoreResetFallback() {
-    if (_ignoreResetTimer !== null) clearTimeout(_ignoreResetTimer);
-    _ignoreResetTimer = setTimeout(() => {
-        _ignoreResetTimer = null;
-        _ignorePopstateCount = 0;
-    }, 180);
+    const gen = ++_ignoreResetGen;
+    if (typeof requestAnimationFrame !== 'function') return;
+    requestAnimationFrame(() => {
+        if (gen !== _ignoreResetGen) return;
+        requestAnimationFrame(() => {
+            if (gen !== _ignoreResetGen) return;
+            _ignorePopstateCount = 0;
+        });
+    });
 }
 
 function cancelReconcileTimer() {
-    if (_reconcileTimer !== null) {
-        clearTimeout(_reconcileTimer);
-        _reconcileTimer = null;
-    }
+    _reconcileGen += 1;
+    _reconcilePending = false;
 }
 
 function pushSyntheticHistoryEntry(targetDepth) {
@@ -51,9 +54,12 @@ function pushSyntheticHistoryEntry(targetDepth) {
 }
 
 function scheduleHistoryPopReconcile() {
-    cancelReconcileTimer();
-    _reconcileTimer = setTimeout(() => {
-        _reconcileTimer = null;
+    if (_reconcilePending) return;
+    _reconcilePending = true;
+    const gen = ++_reconcileGen;
+    queueMicrotask(() => {
+        if (gen !== _reconcileGen) return;
+        _reconcilePending = false;
         if (_pushedDepth > _backStack.length && hasUsableHistoryApi()) {
             const delta = _backStack.length - _pushedDepth; // negative integer
             _pushedDepth = _backStack.length;
@@ -69,7 +75,7 @@ function scheduleHistoryPopReconcile() {
                 _ignorePopstateCount = Math.max(0, _ignorePopstateCount - 1);
             }
         }
-    }, 24);
+    });
 }
 
 export function initBackGestureNavigation() {
@@ -197,11 +203,8 @@ export function _resetBackGestureStateForTests() {
     _backStack.length = 0;
     _pushedDepth = 0;
     _ignorePopstateCount = 0;
+    _ignoreResetGen += 1;
     cancelReconcileTimer();
-    if (_ignoreResetTimer !== null) {
-        clearTimeout(_ignoreResetTimer);
-        _ignoreResetTimer = null;
-    }
 }
 
 initBackGestureNavigation();
