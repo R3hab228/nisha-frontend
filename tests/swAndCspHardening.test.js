@@ -243,7 +243,7 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(productJs).toContain("url('${safeThumbBg}') center/contain no-repeat");
         expect(productJs).toContain('setTimeout(() => {');
         expect(productJs).toContain('if (typeof ensurePhotoSwipe === \'function\') ensurePhotoSwipe();');
-        expect(productJs).toContain('setTimeout(() => addToHistory(item), 0);');
+        expect(productJs).toContain('queueMicrotask(() => addToHistory(item));');
         expect(catalogJs).toContain("grid.addEventListener('pointerdown'");
         expect(catalogJs).toContain('const DOUBLE_TAP_DELAY_MS = 200;');
         expect(style).toContain('animation: modalPopDesktop 0.19s');

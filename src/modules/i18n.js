@@ -26,7 +26,7 @@ export const NISHA_EMOJI_FLAGS = {
 export function normalizeSiteLang(lang) {
     return callAction('normalizeSiteLang', [lang], (rawLang) => {
         if (!rawLang || typeof rawLang !== 'string') return 'ua';
-        const clean = rawLang.trim().toLowerCase().substring(0, 2);
+        const clean = rawLang.trim().toLowerCase().slice(0, 2);
         if (clean === 'ru') return 'ru';
         if (clean === 'en') return 'en';
         return 'ua';

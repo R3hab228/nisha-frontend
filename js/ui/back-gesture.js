@@ -134,9 +134,8 @@ export function removeBackLayerFromUI(key) {
 export function handleBackPopstate() {
     if (_ignorePopstateCount > 0) {
         _ignorePopstateCount -= 1;
-        if (_ignorePopstateCount === 0 && _ignoreResetTimer !== null) {
-            clearTimeout(_ignoreResetTimer);
-            _ignoreResetTimer = null;
+        if (_ignorePopstateCount === 0) {
+            _ignoreResetGen += 1;
         }
         return;
     }

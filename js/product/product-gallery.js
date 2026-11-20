@@ -239,7 +239,7 @@ export function renderModalSlider(item) {
         });
     }
 
-    setTimeout(() => {
+    const playModalVideosAfterPaint = () => {
         if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
         const modalVideos = document.querySelectorAll('#sliderWrapper video.modal-video-player');
         modalVideos.forEach(vid => {
@@ -253,7 +253,12 @@ export function renderModalSlider(item) {
                 });
             }
         });
-    }, 100);
+    };
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => requestAnimationFrame(playModalVideosAfterPaint));
+    } else {
+        queueMicrotask(playModalVideosAfterPaint);
+    }
 
     if (typeof ensurePhotoSwipe === 'function') {
         ensurePhotoSwipe().catch(() => {});

@@ -198,7 +198,7 @@ export function updatePriceUI(e) {
     if (minVal >= maxVal) {
         const activeTargetId = e?.target?.id
             || (typeof document !== 'undefined' ? document.activeElement?.id : '')
-            || (typeof window !== 'undefined' && window.event ? window.event.target?.id : '');
+            || '';
         if (activeTargetId === 'priceMin') {
             minInput.value = maxVal - 100;
             minVal = maxVal - 100;

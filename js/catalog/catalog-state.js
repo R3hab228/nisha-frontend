@@ -42,7 +42,7 @@ export function getSupabaseClient() {
 export function getCurrentSiteLang() {
     const store = getCatalogStore();
     let l = store ? (store.get('nisha_lang') || store.get('i18nextLng') || 'ua') : 'ua';
-    l = String(l).substring(0, 2).toLowerCase();
+    l = String(l).slice(0, 2).toLowerCase();
     if (l === 'uk') l = 'ua';
     if (!['ru', 'ua', 'en'].includes(l)) l = 'ua';
     return l;

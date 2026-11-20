@@ -360,7 +360,7 @@ export function handleDelegatedAction(e) {
         case 'logout': {
             const closeTargetModal = actionEl.getAttribute('data-close-modal');
             invokeCompatAction('logout', 'logout');
-            if (closeTargetModal) invokeAction('closeModal', closeTargetModal);
+            if (closeTargetModal) invokeAction('closeModal', closeTargetModal, e);
             break;
         }
         case 'sort-items': {
@@ -648,8 +648,8 @@ export function bindFormAndFilterListeners() {
     const priceMax = typeof document.getElementById === 'function' ? document.getElementById('priceMax') : null;
     [priceMin, priceMax].forEach(el => {
         if (el) {
-            el.addEventListener('input', () => {
-                invokeAction('updatePriceUI');
+            el.addEventListener('input', (e) => {
+                invokeAction('updatePriceUI', e);
             });
         }
     });

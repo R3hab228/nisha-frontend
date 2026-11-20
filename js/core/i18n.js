@@ -16,7 +16,7 @@ const NISHA_FLAGS = {
 
 function normalizeSiteLang(lang) {
     if (!lang || typeof lang !== 'string') return 'ua';
-    const clean = lang.trim().toLowerCase().substring(0, 2);
+    const clean = lang.trim().toLowerCase().slice(0, 2);
     if (clean === 'ru') return 'ru';
     if (clean === 'en') return 'en';
     return 'ua';
@@ -396,7 +396,7 @@ function startSearchTypewriter() {
 
         if (isDeleting) {
             charIndex--;
-            activeInput.placeholder = currentWord.substring(0, charIndex) + '|';
+            activeInput.placeholder = currentWord.slice(0, charIndex) + '|';
             if (charIndex === 0) {
                 isDeleting = false;
                 wordIndex = (wordIndex + 1) % words.length;
@@ -406,7 +406,7 @@ function startSearchTypewriter() {
             searchTypewriterInterval = setTimeout(typeLoop, 55);
         } else {
             charIndex++;
-            activeInput.placeholder = currentWord.substring(0, charIndex) + '|';
+            activeInput.placeholder = currentWord.slice(0, charIndex) + '|';
 
             if (charIndex === currentWord.length) {
                 isDeleting = true;

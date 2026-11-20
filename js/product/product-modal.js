@@ -189,7 +189,7 @@ export async function openProductModalById(itemId) {
                     const qaIndex = descContainer.innerHTML.includes(qaMarker)
                         ? descContainer.innerHTML.indexOf(qaMarker)
                         : descContainer.innerHTML.indexOf('<div id="qaWrapper"');
-                    const qaPart = qaIndex !== -1 ? descContainer.innerHTML.substring(qaIndex) : '';
+                    const qaPart = qaIndex !== -1 ? descContainer.innerHTML.slice(qaIndex) : '';
                     descContainer.innerHTML = renderModalDescriptionContent(mergedItem, qaPart);
                 }
             }
@@ -514,7 +514,11 @@ export function openProductModal(item) {
         }
     }
 
-    setTimeout(() => addToHistory(item), 0);
+    if (typeof queueMicrotask === 'function') {
+        queueMicrotask(() => addToHistory(item));
+    } else {
+        Promise.resolve().then(() => addToHistory(item));
+    }
 
     const modalWin = document.querySelector('#productModal .modal-window');
     if (modalWin) {

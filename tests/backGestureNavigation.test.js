@@ -84,5 +84,9 @@ describe('Mobile Back Gesture & Overlay History Stack (js/ui/back-gesture.js)', 
         removeBackLayerFromUI('modal:checkoutModal');
         await Promise.resolve();
         expect(backSpy).toHaveBeenCalledTimes(1);
+
+        // Synthetic popstate fired by history.back() is safely ignored without closing remaining layers
+        expect(() => handleBackPopstate()).not.toThrow();
+        expect(getActiveBackLayerKeys()).toEqual([]);
     });
 });

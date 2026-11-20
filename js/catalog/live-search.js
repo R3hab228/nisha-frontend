@@ -265,11 +265,11 @@ function handleLiveSearch() {
                         let tempName = '';
                         let lastIdx = 0;
                         nameMatch.indices.forEach(([start, end]) => {
-                            tempName += escapeHtml(rawItemName.substring(lastIdx, start));
-                            tempName += `<span style="color: var(--accent-green); background: rgba(0,255,0,0.1);">${escapeHtml(rawItemName.substring(start, end + 1))}</span>`;
+                            tempName += escapeHtml(rawItemName.slice(lastIdx, start));
+                            tempName += `<span style="color: var(--accent-green); background: rgba(0,255,0,0.1);">${escapeHtml(rawItemName.slice(start, end + 1))}</span>`;
                             lastIdx = end + 1;
                         });
-                        tempName += escapeHtml(rawItemName.substring(lastIdx));
+                        tempName += escapeHtml(rawItemName.slice(lastIdx));
                         highlightedName = tempName;
                     }
                 }

@@ -234,7 +234,7 @@ window.openModal = openModal;
 
 // 3. Закрытие модального окна по крестику (с защитой данных)
 function closeModal(id, e, options = {}) { 
-    const evt = e || (typeof window !== 'undefined' ? window.event : null);
+    const evt = e || null;
     if (evt) {
         if (typeof evt.preventDefault === 'function') evt.preventDefault();
         if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
@@ -336,7 +336,7 @@ function executeCloseModal(id, e, options = {}) {
     if (!options || !options.fromBackGesture) {
         removeBackLayerFromUI(`modal:${id}`);
     }
-    const evt = e || (typeof window !== 'undefined' ? window.event : null);
+    const evt = e || null;
     if (evt) {
         if (typeof evt.preventDefault === 'function') evt.preventDefault();
         if (typeof evt.stopPropagation === 'function') evt.stopPropagation();

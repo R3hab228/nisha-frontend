@@ -159,13 +159,13 @@ if (!SUPABASE_ANON_KEY) {
         console.error("ОШИБКА: createClient не найден. База данных недоступна.");
     } else {
         const fetchWithTimeout = (targetUrl, opts, ms) => {
-            if (typeof AbortController !== 'function' || (opts && opts.signal)) {
+            if (opts && opts.signal) {
                 return fetch(targetUrl, opts);
             }
-            const ctrl = new AbortController();
-            const timerId = setTimeout(() => ctrl.abort(), ms);
-            return fetch(targetUrl, { ...(opts || {}), signal: ctrl.signal })
-                .finally(() => clearTimeout(timerId));
+            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+                return fetch(targetUrl, { ...(opts || {}), signal: AbortSignal.timeout(ms) });
+            }
+            return fetch(targetUrl, opts);
         };
 
         _supabase = clientCreator(SUPABASE_URL, SUPABASE_ANON_KEY, {
