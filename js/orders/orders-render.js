@@ -472,7 +472,7 @@ export function renderFilteredOrders() {
             console.warn('[JsBarcode] Local load failed, falling back to CDN:', err);
             const extScriptFn = resolveAction('loadExternalScript') || (typeof loadExternalScript === 'function' ? loadExternalScript : null);
             if (extScriptFn) {
-                extScriptFn('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js').then(drawBarcodes).catch(() => {});
+                extScriptFn('https://cdn.jsdelivr.net/npm/jsbarcode@3.12.3/dist/JsBarcode.all.min.js').then(drawBarcodes).catch(() => {});
             }
         });
     }

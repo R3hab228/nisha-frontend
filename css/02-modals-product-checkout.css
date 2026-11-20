@@ -1,4 +1,4 @@
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.19s cubic-bezier(0.16, 1, 0.3, 1) forwards; contain: layout paint; overscroll-behavior: contain; }
+.modal-overlay { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); animation: fadeInOverlay 0.19s cubic-bezier(0.16, 1, 0.3, 1) forwards; contain: layout paint; overscroll-behavior: contain; }
 /* Ленивый рендеринг DOM: закрытые модалки полностью исключаются из дерева рендеринга браузера */
 .modal-overlay:not(.is-open):not([style*="display: flex"]):not([style*="display: block"]) { content-visibility: hidden; contain-intrinsic-size: 0 0; }
 .modal-overlay.is-open,

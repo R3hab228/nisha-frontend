@@ -1934,7 +1934,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
 
         it('includes Sentry fallback CDN in pwa-network.js for adblock resilience', () => {
             const pwaCode = readPwaNetworkSource();
-            expect(pwaCode).toContain('https://browser.sentry-cdn.com/8.38.0/bundle.min.js');
+            expect(pwaCode).toContain('https://browser.sentry-cdn.com/11.15.0/bundle.min.js');
             expect(pwaCode).toContain('https://cdn.jsdelivr.net/npm/@sentry/browser@8.38.0/bundle.min.js');
         });
     });

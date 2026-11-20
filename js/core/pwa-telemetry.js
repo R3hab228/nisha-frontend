@@ -400,7 +400,7 @@ export function initSentryDeferred() {
 
     if (typeof Sentry === 'undefined') {
         if (typeof loadExternalScript === 'function') {
-            loadExternalScript('https://browser.sentry-cdn.com/8.38.0/bundle.min.js')
+            loadExternalScript('https://browser.sentry-cdn.com/11.15.0/bundle.min.js')
                 .then(setupSentry)
                 .catch(() => {
                     // Fallback на jsdelivr CDN, если sentry-cdn заблокирован адблоком

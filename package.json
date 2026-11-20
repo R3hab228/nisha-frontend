@@ -38,7 +38,7 @@
     "dompurify": "^3.4.17",
     "driver.js": "^1.10.1",
     "fuse.js": "^7.5.0",
-    "i18next": "^26.4.7",
+    "i18next": "^27.2.2",
     "i18next-browser-languagedetector": "^8.2.1",
     "imask": "^7.6.1",
     "jsbarcode": "^3.12.3",

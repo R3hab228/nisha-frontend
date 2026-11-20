@@ -377,11 +377,77 @@ export async function submitBargainOffer() {
 }
 
 let _inlineOfferToggleTimer = null;
+let _inlineOfferActiveAnim = null;
+let _inlineOfferToggleGen = 0;
 
 function clearInlineOfferToggleTimer() {
+    _inlineOfferToggleGen += 1;
     if (_inlineOfferToggleTimer !== null) {
         clearTimeout(_inlineOfferToggleTimer);
         _inlineOfferToggleTimer = null;
+    }
+    if (_inlineOfferActiveAnim) {
+        try { _inlineOfferActiveAnim.cancel(); } catch {}
+        _inlineOfferActiveAnim = null;
+    }
+}
+
+/**
+ * Runs a 110ms fade-out on `outEl` via Web Animations API (or timer fallback in mocks), then invokes `onSwapped`.
+ * @param {HTMLElement} outEl
+ * @param {string} outTranslateY
+ * @param {Function} onSwapped
+ */
+function runInlineOfferOutTransition(outEl, outTranslateY, onSwapped) {
+    clearInlineOfferToggleTimer();
+    const gen = _inlineOfferToggleGen;
+    outEl.style.opacity = '0';
+    outEl.style.transform = `translateY(${outTranslateY})`;
+
+    if (typeof outEl.animate === 'function') {
+        try {
+            const anim = outEl.animate(
+                [
+                    { opacity: 1, transform: 'translateY(0)' },
+                    { opacity: 0, transform: `translateY(${outTranslateY})` }
+                ],
+                { duration: 110, easing: 'ease' }
+            );
+            _inlineOfferActiveAnim = anim;
+            Promise.resolve(anim.finished).catch(() => {}).finally(() => {
+                if (gen !== _inlineOfferToggleGen) return;
+                _inlineOfferActiveAnim = null;
+                onSwapped();
+            });
+            return;
+        } catch {}
+    }
+
+    _inlineOfferToggleTimer = setTimeout(() => {
+        _inlineOfferToggleTimer = null;
+        if (gen !== _inlineOfferToggleGen) return;
+        onSwapped();
+    }, 110);
+}
+
+/**
+ * Animates `inEl` cleanly into view after display toggle.
+ * @param {HTMLElement} inEl
+ * @param {string} startTranslateY
+ */
+function animateInlineOfferIn(inEl, startTranslateY) {
+    inEl.style.opacity = '1';
+    inEl.style.transform = 'translateY(0)';
+    if (typeof inEl.animate === 'function') {
+        try {
+            _inlineOfferActiveAnim = inEl.animate(
+                [
+                    { opacity: 0, transform: `translateY(${startTranslateY})` },
+                    { opacity: 1, transform: 'translateY(0)' }
+                ],
+                { duration: 110, easing: 'ease' }
+            );
+        } catch {}
     }
 }
 
@@ -414,23 +480,14 @@ export function showInlineOfferPriceInput() {
 
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
-    clearInlineOfferToggleTimer();
-    btn.style.opacity = '0';
-    btn.style.transform = 'translateY(-4px)';
     btn.style.pointerEvents = 'none';
-
-    _inlineOfferToggleTimer = setTimeout(() => {
-        _inlineOfferToggleTimer = null;
+    runInlineOfferOutTransition(btn, '-4px', () => {
         btn.style.display = 'none';
         row.style.display = 'flex';
-        row.style.opacity = '0';
-        row.style.transform = 'translateY(4px)';
-        void row.offsetWidth;
         row.classList.add('visible');
-        row.style.opacity = '1';
-        row.style.transform = 'translateY(0)';
+        animateInlineOfferIn(row, '4px');
         if (typeof input.focus === 'function') input.focus();
-    }, 110);
+    });
 }
 
 /**
@@ -444,27 +501,18 @@ export function hideInlineOfferPriceInput() {
 
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
-    clearInlineOfferToggleTimer();
     if (input) {
         if (typeof input.blur === 'function') input.blur();
         input.value = '';
     }
 
     row.classList.remove('visible');
-    row.style.opacity = '0';
-    row.style.transform = 'translateY(4px)';
-
-    _inlineOfferToggleTimer = setTimeout(() => {
-        _inlineOfferToggleTimer = null;
+    runInlineOfferOutTransition(row, '4px', () => {
         row.style.display = 'none';
         btn.style.display = 'flex';
-        btn.style.opacity = '0';
-        btn.style.transform = 'translateY(-4px)';
-        void btn.offsetWidth;
-        btn.style.opacity = '1';
-        btn.style.transform = 'translateY(0)';
+        animateInlineOfferIn(btn, '-4px');
         btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
-    }, 110);
+    });
 }
 
 /**

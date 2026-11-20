@@ -793,6 +793,23 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
         expect(btn.style.opacity).toBe('1');
         expect(btn.style.pointerEvents).toBe('auto');
 
+        // Also verify Web Animations API path when element.animate() is supported
+        const makeWaapi = (el) => {
+            el.animate = vi.fn(() => ({ finished: Promise.resolve(), cancel: vi.fn() }));
+        };
+        makeWaapi(btn);
+        makeWaapi(row);
+        productMod.showInlineOfferPriceInput();
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(btn.animate).toHaveBeenCalled();
+        expect(row.style.display).toBe('flex');
+        productMod.hideInlineOfferPriceInput();
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(row.animate).toHaveBeenCalled();
+        expect(btn.style.display).toBe('flex');
+
         vi.useRealTimers();
     });
 });

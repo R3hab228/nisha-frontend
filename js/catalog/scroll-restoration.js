@@ -6,6 +6,7 @@ const FEED_SCROLL_STORAGE_KEY = 'nisha_feed_scroll_v1';
 let _saveScrollRafId = null;
 let _saveScrollTimeout = null;
 let _scrollRestoredBadgeTimeout = null;
+let _scrollBadgeCtrl = null;
 
 /**
  * Проверяет, открыта ли в данный момент любая модалка.
@@ -120,21 +121,22 @@ export function showScrollRestoredBadge() {
     if (!badge) return;
 
     if (_scrollRestoredBadgeTimeout) clearTimeout(_scrollRestoredBadgeTimeout);
+    if (_scrollBadgeCtrl) _scrollBadgeCtrl.abort();
     const cartPanel = document.getElementById('cartPanel') || document.querySelector('.cart-panel');
     const isCartActive = Boolean(cartPanel && cartPanel.classList && cartPanel.classList.contains('active'));
     badge.classList.toggle('cart-active', isCartActive);
     badge.classList.add('is-visible');
 
-    const onScrollHide = () => {
+    _scrollBadgeCtrl = new AbortController();
+    const badgeCtrl = _scrollBadgeCtrl;
+    const hideBadge = () => {
+        if (_scrollBadgeCtrl === badgeCtrl) _scrollBadgeCtrl = null;
+        badgeCtrl.abort();
         badge.classList.remove('is-visible');
-        window.removeEventListener('scroll', onScrollHide);
     };
-    window.addEventListener('scroll', onScrollHide, { passive: true, once: true });
+    window.addEventListener('scroll', hideBadge, { passive: true, signal: badgeCtrl.signal });
 
-    _scrollRestoredBadgeTimeout = setTimeout(() => {
-        badge.classList.remove('is-visible');
-        window.removeEventListener('scroll', onScrollHide);
-    }, 2200);
+    _scrollRestoredBadgeTimeout = setTimeout(hideBadge, 2200);
 }
 
 /**

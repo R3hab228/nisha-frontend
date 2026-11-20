@@ -350,7 +350,7 @@ describe('Modular PWA, Telemetry, Lifecycle, Push & Pull-to-Refresh Deep Suite (
         telemetry.recordEarlySentryError({ error: new Error('Early boot boom'), filename: 'app.js' });
         await vi.advanceTimersByTimeAsync(20);
 
-        expect(globalThis.loadExternalScript).toHaveBeenNthCalledWith(1, 'https://browser.sentry-cdn.com/8.38.0/bundle.min.js');
+        expect(globalThis.loadExternalScript).toHaveBeenNthCalledWith(1, 'https://browser.sentry-cdn.com/11.15.0/bundle.min.js');
         expect(globalThis.loadExternalScript).toHaveBeenNthCalledWith(2, 'https://cdn.jsdelivr.net/npm/@sentry/browser@8.38.0/bundle.min.js');
         expect(origSentry.init).toHaveBeenCalledTimes(1);
         expect(origSentry.captureException).toHaveBeenCalledTimes(1);

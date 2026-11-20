@@ -352,15 +352,14 @@
             } else {
                 setTimeout(initTikTokDeferred, 2500);
             }
+            const firstInteractCtrl = new AbortController();
             const onFirstInteraction = () => {
+                firstInteractCtrl.abort();
                 initTikTokDeferred();
-                document.removeEventListener('click', onFirstInteraction);
-                document.removeEventListener('touchstart', onFirstInteraction);
-                window.removeEventListener('scroll', onFirstInteraction);
             };
-            document.addEventListener('click', onFirstInteraction, { passive: true, once: true });
-            document.addEventListener('touchstart', onFirstInteraction, { passive: true, once: true });
-            window.addEventListener('scroll', onFirstInteraction, { passive: true, once: true });
+            document.addEventListener('click', onFirstInteraction, { passive: true, signal: firstInteractCtrl.signal });
+            document.addEventListener('touchstart', onFirstInteraction, { passive: true, signal: firstInteractCtrl.signal });
+            window.addEventListener('scroll', onFirstInteraction, { passive: true, signal: firstInteractCtrl.signal });
         } catch {}
     }
 })();
