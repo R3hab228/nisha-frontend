@@ -240,10 +240,12 @@ export function renderModalSlider(item) {
     }
 
     setTimeout(() => {
+        if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
         const modalVideos = document.querySelectorAll('#sliderWrapper video.modal-video-player');
         modalVideos.forEach(vid => {
+            if (!vid || typeof vid.play !== 'function') return;
             const playPromise = vid.play();
-            if (playPromise !== undefined) {
+            if (playPromise !== undefined && typeof playPromise.catch === 'function') {
                 playPromise.catch(() => {
                     if (typeof window !== 'undefined' && window.__NISHA_DEBUG__) {
                         console.log('Ожидание клика (политика браузера)');

@@ -771,7 +771,8 @@ describe('Modular Product, Gallery, History, Q&A & Bargain Deep Suite (js/produc
                 if (id === 'offerPriceInputRow') return row;
                 if (id === 'inlineBargainPriceInput') return input;
                 return null;
-            }
+            },
+            querySelectorAll: () => []
         };
 
         productMod.showInlineOfferPriceInput();
