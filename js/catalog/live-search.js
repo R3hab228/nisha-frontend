@@ -344,6 +344,14 @@ function closeSearch(options = {}) {
     }
     const dropdown = document.getElementById('liveSearchDropdown');
     const searchInput = document.getElementById('mainSearch');
+    const isDropdownOpen = Boolean(dropdown && (
+        (typeof dropdown.matches === 'function' && dropdown.matches(':popover-open')) ||
+        (dropdown.style && dropdown.style.display === 'block')
+    ));
+    const wasSearchLocked = Boolean(document.body && document.body.classList && document.body.classList.contains('search-lock'));
+    if (!isDropdownOpen && !wasSearchLocked) {
+        return;
+    }
     if (dropdown) {
         if (immediate) {
             dropdown.style.transition = 'none';
@@ -359,7 +367,10 @@ function closeSearch(options = {}) {
         }
     }
     document.body.classList.remove('search-lock');
-    if (hasAction('startLenis')) invokeAction('startLenis');
+    const hasOpenModal = typeof document.querySelectorAll === 'function' && Array.from(document.querySelectorAll('.modal-overlay')).some(m => (
+        m && !m.classList?.contains('closing') && (m.style?.display === 'flex' || m.style?.display === 'block')
+    ));
+    if (!hasOpenModal && hasAction('startLenis')) invokeAction('startLenis');
     if (searchInput) searchInput.blur();
 }
 

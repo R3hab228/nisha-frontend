@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
     _resetBackGestureStateForTests,
     bindPhotoSwipeBackGesture,
@@ -88,5 +90,19 @@ describe('Mobile Back Gesture & Overlay History Stack (js/ui/back-gesture.js)', 
         // Synthetic popstate fired by history.back() is safely ignored without closing remaining layers
         expect(() => handleBackPopstate()).not.toThrow();
         expect(getActiveBackLayerKeys()).toEqual([]);
+    });
+
+    it('guards confirm layer cancellation, Escape propagation on inline bargain, and search click Lenis lock', () => {
+        const windowsCode = readFileSync(resolve(import.meta.dirname, '../js/ui/windows.js'), 'utf8');
+        const bargainCode = readFileSync(resolve(import.meta.dirname, '../js/product/product-bargain.js'), 'utf8');
+        const searchCode = readFileSync(resolve(import.meta.dirname, '../js/catalog/live-search.js'), 'utf8');
+
+        expect(windowsCode).toContain('cur._nishaDismiss(false, { fromBackGesture: true });');
+        expect(windowsCode).toContain('if (topTerm._nishaPersistent) return;');
+        expect(windowsCode).toContain('topTerm._nishaDismiss(false);');
+        expect(bargainCode).toContain('e.stopImmediatePropagation()');
+        expect(bargainCode).toContain('{ capture: true }');
+        expect(searchCode).toContain('if (!isDropdownOpen && !wasSearchLocked)');
+        expect(searchCode).toContain('if (!hasOpenModal && hasAction(\'startLenis\')) invokeAction(\'startLenis\');');
     });
 });

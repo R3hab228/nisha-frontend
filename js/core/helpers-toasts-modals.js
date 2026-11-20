@@ -674,6 +674,12 @@ export function showTerminalModal(title, htmlText, btnText, callback, options = 
         overlay.remove();
         if (callback) callback();
     };
+    overlay._nishaPersistent = isPersistent;
+    overlay._nishaDismiss = () => {
+        if (!isPersistent && !(document.querySelector && document.querySelector('.pswp--open'))) {
+            closeOverlay();
+        }
+    };
 
     const mediaTiles = overlay.querySelectorAll ? Array.from(overlay.querySelectorAll('.broadcast-media-item')) : [];
     if (mediaTiles.length > 0) {
@@ -733,8 +739,9 @@ if (typeof window !== 'undefined') window.showTerminalModal = showTerminalModal;
  * @param {string} confirmBtnText
  * @param {string} cancelBtnText
  * @param {Function} [onConfirm]
+ * @param {Function} [onCancel]
  */
-export function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancelBtnText, onConfirm) {
+export function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancelBtnText, onConfirm, onCancel) {
     if (typeof document === 'undefined') return;
     const overlay = document.createElement('div');
     overlay.className = 'terminal-modal-overlay confirm-modal-overlay';
@@ -754,11 +761,19 @@ export function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancel
     document.body.appendChild(overlay);
 
     const confirmCtrl = new AbortController();
-    const closeOverlay = (confirmed = false) => {
+    let settled = false;
+    const closeOverlay = (confirmed = false, dismissOptions = {}) => {
+        if (settled) return;
+        settled = true;
         confirmCtrl.abort();
         overlay.remove();
-        if (confirmed && onConfirm) onConfirm();
+        if (confirmed) {
+            if (onConfirm) onConfirm();
+        } else if (onCancel) {
+            onCancel(dismissOptions);
+        }
     };
+    overlay._nishaDismiss = (confirmed = false, dismissOptions = {}) => closeOverlay(Boolean(confirmed), dismissOptions);
 
     overlay.querySelector('.confirm-yes').addEventListener('click', () => closeOverlay(true), { signal: confirmCtrl.signal });
     overlay.querySelector('.confirm-no').addEventListener('click', () => closeOverlay(false), { signal: confirmCtrl.signal });
@@ -826,9 +841,10 @@ export function showPromptTerminalModal({
             overlay.remove();
             resolve(value);
         };
+        overlay._nishaDismiss = () => finish(null);
 
-        overlay.querySelector('.prompt-confirm').addEventListener('click', () => finish(inputEl ? inputEl.value : ''), { signal: ctrl.signal });
-        overlay.querySelector('.prompt-cancel').addEventListener('click', () => finish(null), { signal: ctrl.signal });
+        overlay.querySelector('.prompt-confirm')?.addEventListener('click', () => finish(inputEl ? inputEl.value : ''), { signal: ctrl.signal });
+        overlay.querySelector('.prompt-cancel')?.addEventListener('click', () => finish(null), { signal: ctrl.signal });
         overlay.addEventListener('click', (e) => { if (e.target === overlay) finish(null); }, { signal: ctrl.signal });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') finish(null);

@@ -114,6 +114,12 @@ function createFakeElement(tagName = 'div') {
             if (selector === '.confirm-no') {
                 return { addEventListener: (ev, cb) => { if (ev === 'click') this._onConfirmNo = cb; }, click: () => this._onConfirmNo?.() };
             }
+            if (selector === '.prompt-confirm') {
+                return { addEventListener: (ev, cb) => { if (ev === 'click') this._onPromptConfirm = cb; }, click: () => this._onPromptConfirm?.() };
+            }
+            if (selector === '.prompt-cancel') {
+                return { addEventListener: (ev, cb) => { if (ev === 'click') this._onPromptCancel = cb; }, click: () => this._onPromptCancel?.() };
+            }
             return null;
         },
         querySelectorAll(selector) {
@@ -546,6 +552,22 @@ describe('Modular Core Helpers Deep Suite (js/core/helpers*.js)', () => {
         expect(confirmOverlay).toBeTruthy();
         confirmOverlay.querySelector('.confirm-yes').click();
         expect(onConfirm).toHaveBeenCalledTimes(1);
+
+        const onConfirm2 = vi.fn();
+        const onCancel2 = vi.fn();
+        toastsModals.showConfirmTerminalModal('CONFIRM?', '<p>Sure?</p>', 'YES', 'NO', onConfirm2, onCancel2);
+        const confirmOverlay2 = document.querySelectorAll('.confirm-modal-overlay')[0];
+        expect(confirmOverlay2).toBeTruthy();
+        confirmOverlay2._nishaDismiss(false, { fromBackGesture: false });
+        expect(onConfirm2).not.toHaveBeenCalled();
+        expect(onCancel2).toHaveBeenCalledWith({ fromBackGesture: false });
+        expect(document.querySelectorAll('.confirm-modal-overlay')).toHaveLength(0);
+
+        const promptPromise = toastsModals.showPromptTerminalModal({ title: 'EMAIL', message: 'Enter' });
+        const promptOverlay = document.querySelectorAll('.prompt-terminal-overlay')[0];
+        expect(promptOverlay).toBeTruthy();
+        promptOverlay._nishaDismiss();
+        await expect(promptPromise).resolves.toBeNull();
     });
 
     it('7. helpers-pwa-browser.js handles Save-Data listener, Badging, Popover API, Clipboard/Share & View Transitions', async () => {

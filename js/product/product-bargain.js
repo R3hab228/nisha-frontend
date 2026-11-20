@@ -552,12 +552,14 @@ export function bindBargainKeyboardShortcuts() {
 
         if (e.key === 'Escape') {
             e.preventDefault();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
             hideInlineOfferPriceInput();
         } else if (e.key === 'Enter' && (document.activeElement === input || e.target === input)) {
             e.preventDefault();
             submitInlineBargainOffer();
         }
-    });
+    }, { capture: true });
 }
 
 /**

@@ -310,6 +310,11 @@ function closeModal(id, e, options = {}) {
                     removeBackLayerFromUI(`confirm:${id}`);
                     invokeAction('resetProposalForm');
                     executeCloseModal(id, evt); 
+                },
+                (dismissOpts) => {
+                    if (!dismissOpts || !dismissOpts.fromBackGesture) {
+                        removeBackLayerFromUI(`confirm:${id}`);
+                    }
                 }
             );
             const confirmOverlay = typeof document !== 'undefined' ? document.querySelector('.confirm-modal-overlay') : null;
@@ -320,7 +325,12 @@ function closeModal(id, e, options = {}) {
                     id,
                     onBackClose: () => {
                         const cur = document.querySelector('.confirm-modal-overlay');
-                        if (cur) cur.remove();
+                        if (!cur) return;
+                        if (typeof cur._nishaDismiss === 'function') {
+                            cur._nishaDismiss(false, { fromBackGesture: true });
+                        } else {
+                            cur.remove();
+                        }
                     }
                 });
             }
@@ -519,7 +529,12 @@ document.addEventListener('keydown', (e) => {
         // 1. Закрытие терминальных окон подтверждения или алертов
         const topTerm = Array.from(document.querySelectorAll('.confirm-modal-overlay, .terminal-modal-overlay, #confirmTerminalModal, #customTerminalAlert')).findLast(isElementVisible);
         if (topTerm) {
-            topTerm.remove();
+            if (topTerm._nishaPersistent) return;
+            if (typeof topTerm._nishaDismiss === 'function') {
+                topTerm._nishaDismiss(false);
+            } else {
+                topTerm.remove();
+            }
             return;
         }
 
