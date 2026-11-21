@@ -709,8 +709,14 @@ export async function syncUserBargains() {
                     applyOfferButtonState(document.getElementById('modalOfferPriceBtn'), 'accepted');
                     const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
                     if (priceEl) {
-                        const cur = (typeof getCurrency === 'function' ? getCurrency() : 'грн').trim();
-                        priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${b.originalPrice || activeItem.price} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${b.acceptedPrice} ${cur}</span>`;
+                        const accNum = Number(b.acceptedPrice);
+                        if (Number.isFinite(accNum) && accNum > 0) {
+                            const origNum = Number(b.originalPrice ?? activeItem.price);
+                            const safeOrig = Number.isFinite(origNum) ? origNum : 0;
+                            const rawCur = (typeof getCurrency === 'function' ? getCurrency() : 'грн').trim();
+                            const cur = hasAction('escapeHtml') ? invokeAction('escapeHtml', rawCur) : rawCur.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+                            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${safeOrig} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accNum} ${cur}</span>`;
+                        }
                     }
                 }
 
