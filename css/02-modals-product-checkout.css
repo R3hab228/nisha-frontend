@@ -311,9 +311,10 @@
 .badge-item:hover { border-left-color: var(--accent-green); background: #111; transform: translateY(-2px); }
 .badge-item.danger-badge { border-left-color: var(--accent-red); }
 .badge-item.danger-badge:hover { background: rgba(255,0,0,0.05); border-left-color: var(--accent-red); }
-.badge-item.danger-badge .badge-icon { color: var(--accent-red); background: transparent; padding: 0; display: flex; }
+.badge-item.danger-badge .badge-icon { color: var(--accent-red); }
 .badge-item.danger-badge .badge-text { color: var(--accent-red); }
-.badge-icon { font-size: 14px; font-family: var(--font-mono); font-weight: bold; color: var(--accent-green); background: transparent; padding: 0; }
+.badge-icon { display: inline-flex; align-items: center; justify-content: flex-start; height: 20px; line-height: 1; font-size: 14px; font-family: var(--font-mono); font-weight: bold; color: var(--accent-green); background: transparent; padding: 0; flex-shrink: 0; }
+.badge-icon svg { display: block; width: 18px; height: 18px; }
 .badge-text { font-size: 10px; color: #888; font-family: var(--font-main); font-weight: bold; text-transform: uppercase; line-height: 1.3; }
 
 /* ==========================================

@@ -80,14 +80,14 @@ function renderTrustBadges(item) {
         const returnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
         refundBadgeHTML = `
             <div class="badge-item" data-action="show-badge-info" data-badge="refund_yes">
-                <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${returnSvg}</span> 
+                <span class="badge-icon">${returnSvg}</span> 
                 <span class="badge-text" data-i18n="product.badge_refund">${typeof i18next !== 'undefined' ? i18next.t('product.badge_refund') : 'ВОЗВРАТ 14 ДНЕЙ'}</span>
             </div>`;
     } else {
         const noReturnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
         refundBadgeHTML = `
             <div class="badge-item" data-action="show-badge-info" data-badge="refund_no">
-                <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${noReturnSvg}</span> 
+                <span class="badge-icon">${noReturnSvg}</span> 
                 <span class="badge-text" data-i18n="product.badge_norefund">${typeof i18next !== 'undefined' ? i18next.t('product.badge_norefund') : 'БЕЗ ВОЗВРАТА'}</span>
             </div>`;
     }
@@ -118,7 +118,7 @@ function renderTrustBadges(item) {
         const badgeI18nAttr = itemMinBargain ? `data-min-bargain="${itemMinBargain}"` : 'data-i18n="product.badge_bargain"';
         deliveryOrBargainBadgeHTML = `
             <div class="badge-item" data-action="show-badge-info" data-badge="bargain">
-                <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${gavelSvg}</span>
+                <span class="badge-icon">${gavelSvg}</span>
                 <span class="badge-text" ${badgeI18nAttr}>${bargainText}</span>
             </div>`;
     } else {
@@ -131,7 +131,7 @@ function renderTrustBadges(item) {
 
     badgesContainer.innerHTML = `
         <div class="badge-item" data-action="show-badge-info" data-badge="secure">
-            <span class="badge-icon" style="background: transparent; padding: 0; display: flex;">${secureSvg}</span> 
+            <span class="badge-icon">${secureSvg}</span> 
             <span class="badge-text" data-i18n="product.badge_orig">${typeof i18next !== 'undefined' ? i18next.t('product.badge_orig') : '100% ОРИГИНАЛ'}</span>
         </div>
         ${deliveryOrBargainBadgeHTML}
