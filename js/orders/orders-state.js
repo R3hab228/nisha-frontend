@@ -125,6 +125,12 @@ export function setOrdersData(nextList) {
     const safeList = hiddenSet.size > 0
         ? rawList.filter(o => o && !hiddenSet.has(String(o.id)))
         : rawList;
+    if (selectedOrderIds.size > 0) {
+        const visibleIds = new Set(safeList.map(o => String(o?.id)));
+        for (const selId of selectedOrderIds) {
+            if (!visibleIds.has(selId)) selectedOrderIds.delete(selId);
+        }
+    }
     const s = getReactiveStore();
     if (s) {
         s.set('globalOrdersData', safeList);

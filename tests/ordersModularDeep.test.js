@@ -332,7 +332,7 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             ordersListArea: listArea,
             ordersTabsContainer: tabsContainer,
             ordersDeleteSelectedBtn: { hidden: true, style: {}, classList: { toggle: () => {} }, setAttribute: () => {} },
-            ordersDeleteSelectedCount: { textContent: '0' },
+            ordersDeleteCount: { textContent: '0' },
             tabCountAccepted: countEl,
             tabCountShipped: { textContent: '0' },
             tabCountCancelled: { textContent: '0' }
@@ -393,10 +393,13 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             expect(() => deleteSelectedOrders()).not.toThrow();
             expect(getOrdersData()).toEqual([]);
 
-            // 3. fetchMyOrders hydrates user_metadata + reconciles GET /api/orders/hidden asynchronously
+            // 3. fetchMyOrders ignores foreign-user cache, hydrates user_metadata, reconciles GET /api/orders/hidden, and prunes stale selection
             const userC = { id: 'uid-gamma', user_metadata: { hidden_order_ids: ['ord-c-hidden'] } };
             window.currentUser = userC;
             store.set('currentUser', userC);
+            localStorage.setItem('nisha_cached_orders', JSON.stringify([
+                { id: 'ord-foreign-user', user_id: 'uid-other', status: 'Принят', created_at: '2026-11-20T11:00:00.000Z', items: [] }
+            ]));
 
             const makeOrderQuery = (rows) => {
                 const q = {
@@ -412,24 +415,33 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             };
             window.supabaseClient = {
                 from: () => makeOrderQuery([
-                    { id: 'ord-c-hidden', status: 'Принят', created_at: '2026-11-20T10:00:00.000Z', items: [] },
-                    { id: 'ord-c-remote-hidden', status: 'Принят', created_at: '2026-11-20T09:00:00.000Z', items: [] },
-                    { id: 'ord-c-visible', status: 'Принят', created_at: '2026-11-20T08:00:00.000Z', items: [] }
+                    { id: 'ord-c-hidden', user_id: 'uid-gamma', status: 'Принят', created_at: '2026-11-20T10:00:00.000Z', items: [] },
+                    { id: 'ord-c-remote-hidden', user_id: 'uid-gamma', status: 'Принят', created_at: '2026-11-20T09:00:00.000Z', items: [] },
+                    { id: 'ord-c-visible', user_id: 'uid-gamma', status: 'Принят', created_at: '2026-11-20T08:00:00.000Z', items: [] }
                 ])
             };
+            let resolveRemoteHidden;
+            const remoteHiddenPromise = new Promise((resolve) => { resolveRemoteHidden = resolve; });
             window.apiClient = {
-                get: vi.fn().mockResolvedValue({
-                    success: true,
-                    hiddenOrderIds: ['ord-c-hidden', 'ord-c-remote-hidden']
-                })
+                get: vi.fn().mockReturnValue(remoteHiddenPromise)
             };
 
             await fetchMyOrders();
+            expect(getOrdersData().map(o => o.id)).toEqual(['ord-c-remote-hidden', 'ord-c-visible']);
+            toggleOrderSelection('ord-c-remote-hidden', true);
+            expect(getSelectedOrderIds()).toEqual(['ord-c-remote-hidden']);
+
             expect(window.apiClient.get).toHaveBeenCalledWith('/api/orders/hidden', { timeout: 6000 });
+            resolveRemoteHidden({
+                success: true,
+                hiddenOrderIds: ['ord-c-hidden', 'ord-c-remote-hidden']
+            });
             await Promise.resolve();
             await Promise.resolve();
 
             expect(getOrdersData().map(o => o.id)).toEqual(['ord-c-visible']);
+            expect(getSelectedOrderIds()).toEqual([]);
+            expect(elements.ordersDeleteCount.textContent).toBe('0');
             expect(mergeRemoteHiddenOrderIds(['ord-c-remote-hidden'])).toBe(false);
             expect(JSON.parse(localStorage.getItem('nisha_hidden_orders_uid-gamma'))).toEqual([
                 'ord-c-hidden',

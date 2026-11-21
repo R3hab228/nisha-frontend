@@ -150,16 +150,22 @@ export async function fetchMyOrders() {
     if (!listArea) return;
 
     const store = getStorage();
+    const initialUser = getRuntimeUser();
     let currentOrders = getOrdersData();
 
     if (!currentOrders || currentOrders.length === 0) {
         const cached = store ? store.getJSON('nisha_cached_orders', []) : [];
-        if (Array.isArray(cached) && cached.length > 0) {
-            setOrdersData(cached);
-            currentOrders = cached;
-            if (tabsContainer) tabsContainer.style.display = 'flex';
-            invokeAction('updateOrderTabCounters');
-            invokeAction('renderFilteredOrders');
+        const scopedCached = Array.isArray(cached)
+            ? cached.filter(co => co && (!initialUser || !co.user_id || String(co.user_id) === String(initialUser.id)))
+            : [];
+        if (scopedCached.length > 0) {
+            setOrdersData(scopedCached);
+            currentOrders = getOrdersData();
+            if (currentOrders.length > 0) {
+                if (tabsContainer) tabsContainer.style.display = 'flex';
+                invokeAction('updateOrderTabCounters');
+                invokeAction('renderFilteredOrders');
+            }
         }
     }
 
@@ -245,7 +251,7 @@ export async function fetchMyOrders() {
 
             if (Array.isArray(cachedLocal)) {
                 cachedLocal.forEach(co => {
-                    if (co && co.id && !orderMap.has(co.id)) {
+                    if (co && co.id && (!co.user_id || String(co.user_id) === String(activeUser.id)) && !orderMap.has(co.id)) {
                         orderMap.set(co.id, co);
                     }
                 });
@@ -290,7 +296,8 @@ export async function fetchMyOrders() {
                                         ? orderValues.toSorted(sortOrdersDesc)
                                         : [...orderValues].sort(sortOrdersDesc));
                                 setOrdersData(sortedOrders);
-                                try { if (store) store.setJSON('nisha_cached_orders', sortedOrders); } catch {}
+                                const visibleAfterLink = getOrdersData();
+                                try { if (store) store.setJSON('nisha_cached_orders', visibleAfterLink); } catch {}
                                 invokeAction('updateOrderTabCounters');
                                 ensureOrderImagesLoaded();
                                 invokeAction('renderFilteredOrders');
@@ -335,6 +342,7 @@ export async function fetchMyOrders() {
                         const afterList = getOrdersData();
 
                         if (changed || afterList.length !== beforeList.length) {
+                            invokeAction('syncOrdersSelectionToolbar');
                             invokeAction('updateOrderTabCounters');
                             invokeAction('renderFilteredOrders');
                         }

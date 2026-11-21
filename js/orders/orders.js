@@ -30,6 +30,7 @@ import {
     openOrdersModal,
     renderFilteredOrders,
     switchOrderTab,
+    syncOrdersSelectionToolbar,
     updateOrderTabCounters
 } from './orders-render.js';
 
@@ -56,6 +57,7 @@ const ORDER_EXPORTS = {
     toggleOrderSelection,
     deleteSelectedOrders,
     copyTTN,
+    syncOrdersSelectionToolbar,
     renderFilteredOrders
 };
 
