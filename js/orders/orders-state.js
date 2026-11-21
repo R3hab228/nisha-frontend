@@ -29,22 +29,51 @@ export function getOrdersData() {
 
 const HIDDEN_ORDERS_STORAGE_KEY = 'nisha_hidden_orders_v1';
 
-export function getHiddenOrderIds() {
+function readOrderJsonStorage(key, fallback) {
     const store = getRuntimeStorage();
     if (store && typeof store.getJSON === 'function') {
-        const list = store.getJSON(HIDDEN_ORDERS_STORAGE_KEY, []);
-        return new Set(Array.isArray(list) ? list.map(String) : []);
+        return store.getJSON(key, fallback);
     }
-    return new Set();
+    if (typeof localStorage !== 'undefined') {
+        try {
+            const raw = localStorage.getItem(key);
+            if (raw !== null) return JSON.parse(raw);
+        } catch {}
+    }
+    return fallback;
+}
+
+function writeOrderJsonStorage(key, value) {
+    const store = getRuntimeStorage();
+    if (store && typeof store.setJSON === 'function') {
+        store.setJSON(key, value);
+        return;
+    }
+    if (typeof localStorage !== 'undefined') {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch {}
+    }
+}
+
+export function getHiddenOrderIds() {
+    const list = readOrderJsonStorage(HIDDEN_ORDERS_STORAGE_KEY, []);
+    return new Set(Array.isArray(list) ? list.map(String) : []);
 }
 
 export function hideOrderIds(ids) {
     const list = Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
     if (list.length === 0) return;
-    const merged = Array.from(new Set([...getHiddenOrderIds(), ...list]));
-    const store = getRuntimeStorage();
-    if (store && typeof store.setJSON === 'function') {
-        store.setJSON(HIDDEN_ORDERS_STORAGE_KEY, merged);
+    const merged = Array.from(new Set([...getHiddenOrderIds(), ...list])).slice(-200);
+    writeOrderJsonStorage(HIDDEN_ORDERS_STORAGE_KEY, merged);
+}
+
+export function pruneCachedOrdersByIds(ids) {
+    const selectedSet = new Set(Array.isArray(ids) ? ids.map(String) : []);
+    if (selectedSet.size === 0) return;
+    const cached = readOrderJsonStorage('nisha_cached_orders', null);
+    if (Array.isArray(cached) && cached.length > 0) {
+        writeOrderJsonStorage('nisha_cached_orders', cached.filter(o => o && !selectedSet.has(String(o.id))));
     }
 }
 

@@ -20,6 +20,7 @@ import {
     hasSelectedOrders,
     hideOrderIds,
     isOrderSelected,
+    pruneCachedOrdersByIds,
     setCurrentOrderTab,
     setOrdersData,
     toggleOrderSelection
@@ -290,7 +291,14 @@ export function syncOrdersSelectionToolbar() {
     if (!btn) return;
     const isVisible = selectedCount > 0;
     btn.hidden = !isVisible;
-    btn.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+    if (typeof btn.setAttribute === 'function') {
+        btn.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+        const label = typeof i18next !== 'undefined'
+            ? i18next.t('orders_modal.delete_selected_title', { defaultValue: 'Видалити вибрані замовлення' })
+            : 'Видалити вибрані замовлення';
+        btn.setAttribute('title', label);
+        btn.setAttribute('aria-label', label);
+    }
     if (btn.classList) btn.classList.toggle('is-visible', isVisible);
 }
 
@@ -300,6 +308,7 @@ export function deleteSelectedOrders() {
 
     const selectedSet = new Set(selectedIds);
     hideOrderIds(selectedIds);
+    pruneCachedOrdersByIds(selectedIds);
     clearOrderSelection();
 
     const remaining = getOrdersData().filter(o => o && !selectedSet.has(String(o.id)));
@@ -320,7 +329,11 @@ export function deleteSelectedOrders() {
 
     const toastFn = resolveAction('showToast') || (typeof showToast === 'function' ? showToast : null);
     if (toastFn) {
-        toastFn(`Удалено заказов: ${selectedIds.length}`, 'success');
+        const defaultMsg = `Видалено замовлень: ${selectedIds.length}`;
+        const msg = typeof i18next !== 'undefined'
+            ? i18next.t('orders_modal.deleted_selected', { count: selectedIds.length, defaultValue: defaultMsg })
+            : defaultMsg;
+        toastFn(msg, 'success');
     }
 }
 
@@ -413,7 +426,7 @@ export function bindOrdersLongPressSelection() {
     listArea.addEventListener('contextmenu', (e) => {
         const target = e.target;
         const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
-        if (card && (longPressFired || Date.now() < suppressNextClickUntil || hasSelectedOrders())) {
+        if (card && (pressedCard !== null || longPressFired || Date.now() < suppressNextClickUntil || hasSelectedOrders())) {
             e.preventDefault();
         }
     });
@@ -693,6 +706,7 @@ export function openOrdersModal() {
 
     const activeUser = getRuntimeUser();
     const activeProfile = getRuntimeProfile();
+    clearOrderSelection();
     bindOrdersTabSwipe();
     bindOrdersLongPressSelection();
     syncOrdersSelectionToolbar();

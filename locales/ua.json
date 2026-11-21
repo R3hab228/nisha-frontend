@@ -319,7 +319,9 @@
       "status_shipped": "ВІДПРАВЛЕНО",
       "status_paid": "ОПЛАЧЕНО",
       "status_accepted": "ПРИЙНЯТО",
-      "status_processing": "В ОБРОБЦІ"
+      "status_processing": "В ОБРОБЦІ",
+      "delete_selected_title": "Видалити вибрані замовлення",
+      "deleted_selected": "Видалено замовлень: {{count}}"
     },
     "reviews_modal": {
       "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",

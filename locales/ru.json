@@ -319,7 +319,9 @@
       "status_shipped": "ОТПРАВЛЕН",
       "status_paid": "ОПЛАЧЕН",
       "status_accepted": "ПРИНЯТ",
-      "status_processing": "В ОБРАБОТКЕ"
+      "status_processing": "В ОБРАБОТКЕ",
+      "delete_selected_title": "Удалить выбранные заказы",
+      "deleted_selected": "Удалено заказов: {{count}}"
     },
     "reviews_modal": {
       "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",

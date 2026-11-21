@@ -319,7 +319,9 @@
       "status_shipped": "SHIPPED",
       "status_paid": "PAID",
       "status_accepted": "ACCEPTED",
-      "status_processing": "PROCESSING"
+      "status_processing": "PROCESSING",
+      "delete_selected_title": "Delete selected orders",
+      "deleted_selected": "Deleted orders: {{count}}"
     },
     "reviews_modal": {
       "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",

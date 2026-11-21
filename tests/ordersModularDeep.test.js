@@ -261,6 +261,13 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             await vi.advanceTimersByTimeAsync(500);
             expect(isOrderSelected('ord-acc-1')).toBe(false);
 
+            // 1b. Android Chrome contextmenu during hold (~400ms) is prevented before timer fires
+            const ctxPrevent = vi.fn();
+            listArea.dispatchEvent({ type: 'pointerdown', pointerId: 9, pointerType: 'touch', isPrimary: true, clientX: 50, clientY: 50, target: scrollTarget });
+            listArea.dispatchEvent({ type: 'contextmenu', target: scrollTarget, preventDefault: ctxPrevent });
+            expect(ctxPrevent).toHaveBeenCalled();
+            listArea.dispatchEvent({ type: 'pointercancel', pointerId: 9 });
+
             // 2. Holding 450ms activates bottom-left green corner and shows delete trash button
             listArea.dispatchEvent({ type: 'pointerdown', pointerId: 2, pointerType: 'touch', isPrimary: true, clientX: 50, clientY: 50, target: scrollTarget });
             await vi.advanceTimersByTimeAsync(460);
@@ -284,14 +291,25 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             expect(getSelectedOrderIds()).toEqual(['ord-acc-1', 'ord-ship-2']);
             expect(deleteCountEl.textContent).toBe('2');
 
-            // 5. Clicking trash button hides selected orders and resets toolbar
+            // 5. Clicking trash button hides selected orders, prunes cached orders, and resets toolbar
+            localStorage.setItem('nisha_cached_orders', JSON.stringify([
+                { id: 'ord-acc-1' },
+                { id: 'ord-ship-2' },
+                { id: 'ord-can-3' }
+            ]));
             deleteSelectedOrders();
             expect(getSelectedOrderIds()).toEqual([]);
             expect(deleteBtn.hidden).toBe(true);
             expect(getOrdersData().map(o => o.id)).toEqual(['ord-can-3']);
+            expect(JSON.parse(localStorage.getItem('nisha_cached_orders')).map(o => o.id)).toEqual(['ord-can-3']);
+
+            // 6. Re-fetching orders afterwards keeps deleted orders hidden
+            setOrdersData([{ id: 'ord-acc-1' }, { id: 'ord-can-3' }]);
+            expect(getOrdersData().map(o => o.id)).toEqual(['ord-can-3']);
         } finally {
             clearOrderSelection();
             localStorage.removeItem('nisha_hidden_orders_v1');
+            localStorage.removeItem('nisha_cached_orders');
             vi.useRealTimers();
         }
     });
