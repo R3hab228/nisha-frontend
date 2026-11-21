@@ -8,11 +8,14 @@ if (typeof document !== 'undefined') {
     import('../../css/lazy-orders-modal.css').catch(() => {});
 }
 import {
+    clearOrderSelection,
     encodeNovaPoshtaTtn,
     formatOrderDate,
     formatOrderStatus,
     getNovaPoshtaTrackingUrl,
-    getOrderTabBucket
+    getOrderTabBucket,
+    getSelectedOrderIds,
+    toggleOrderSelection
 } from './orders-state.js';
 import {
     ensureOrderImagesLoaded,
@@ -20,6 +23,7 @@ import {
     getOrderItemImage
 } from './orders-fetch.js';
 import {
+    bindOrdersLongPressSelection,
     bindOrdersTabSwipe,
     copyTTN,
     openOrdersModal,
@@ -45,6 +49,10 @@ const ORDER_EXPORTS = {
     getNovaPoshtaTrackingUrl,
     switchOrderTab,
     bindOrdersTabSwipe,
+    bindOrdersLongPressSelection,
+    clearOrderSelection,
+    getSelectedOrderIds,
+    toggleOrderSelection,
     copyTTN,
     renderFilteredOrders
 };

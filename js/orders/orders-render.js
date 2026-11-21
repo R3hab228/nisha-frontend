@@ -15,7 +15,10 @@ import {
     getOrderTabBucket,
     getOrdersData,
     getStorage,
-    setCurrentOrderTab
+    hasSelectedOrders,
+    isOrderSelected,
+    setCurrentOrderTab,
+    toggleOrderSelection
 } from './orders-state.js';
 import { ensureOrderImagesLoaded, fetchMyOrders, getOrderItemImage } from './orders-fetch.js';
 
@@ -265,6 +268,130 @@ export function bindOrdersTabSwipe() {
     listArea.addEventListener('touchcancel', () => finishSwipe(true), { passive: true });
 }
 
+const ORDER_LONG_PRESS_MS = 450;
+const ORDER_MOVE_TOLERANCE_PX = 10;
+
+function syncOrderCardSelectionDOM(cardEl, selected) {
+    if (!cardEl || !cardEl.classList) return;
+    cardEl.classList.toggle('is-selected', Boolean(selected));
+    cardEl.setAttribute('aria-selected', selected ? 'true' : 'false');
+}
+
+function triggerOrderSelectFeedback(selected) {
+    const hapticFn = resolveAction('triggerHaptic');
+    if (hapticFn) hapticFn(selected ? 'medium' : 'light');
+    else if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        try { navigator.vibrate(selected ? 18 : 8); } catch {}
+    }
+    const soundFn = resolveAction('playSound');
+    if (soundFn) {
+        Promise.resolve(soundFn(selected ? 'menu' : 'minimize', { kind: 'ui' })).catch(() => {});
+    }
+}
+
+/**
+ * Привязывает современный long-press жест (Pointer Events) для выделения карточек заказов
+ * во вкладках Принятые / Отправленные / Отмененные.
+ */
+export function bindOrdersLongPressSelection() {
+    const listArea = document.getElementById('ordersListArea');
+    if (!listArea || !listArea.dataset || listArea.dataset.selectionBound === '1') return;
+    listArea.dataset.selectionBound = '1';
+
+    let pressTimer = null;
+    let activePointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let pressedCard = null;
+    let longPressFired = false;
+    let suppressNextClickUntil = 0;
+
+    const clearPressTimer = () => {
+        if (pressTimer !== null) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+        }
+        activePointerId = null;
+        pressedCard = null;
+    };
+
+    listArea.addEventListener('pointerdown', (e) => {
+        if (e.isPrimary === false) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+        const target = e.target;
+        const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
+        if (!card) return;
+        const orderId = card.dataset ? card.dataset.orderId : card.getAttribute?.('data-order-id');
+        if (!orderId) return;
+
+        clearPressTimer();
+        activePointerId = e.pointerId;
+        startX = Number(e.clientX) || 0;
+        startY = Number(e.clientY) || 0;
+        pressedCard = card;
+        longPressFired = false;
+
+        pressTimer = setTimeout(() => {
+            pressTimer = null;
+            if (!pressedCard) return;
+            const currentTab = getCurrentOrderTab();
+            if (!ORDER_TAB_ORDER.includes(currentTab)) return;
+
+            longPressFired = true;
+            suppressNextClickUntil = Date.now() + 550;
+            const nextSelected = toggleOrderSelection(orderId);
+            syncOrderCardSelectionDOM(pressedCard, nextSelected);
+            triggerOrderSelectFeedback(nextSelected);
+        }, ORDER_LONG_PRESS_MS);
+    }, { passive: true });
+
+    listArea.addEventListener('pointermove', (e) => {
+        if (pressTimer === null || e.pointerId !== activePointerId) return;
+        const dx = (Number(e.clientX) || 0) - startX;
+        const dy = (Number(e.clientY) || 0) - startY;
+        if (Math.hypot(dx, dy) > ORDER_MOVE_TOLERANCE_PX) {
+            clearPressTimer();
+        }
+    }, { passive: true });
+
+    const cancelPress = (e) => {
+        if (e && activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
+        clearPressTimer();
+    };
+    listArea.addEventListener('pointerup', cancelPress, { passive: true });
+    listArea.addEventListener('pointercancel', cancelPress, { passive: true });
+
+    listArea.addEventListener('contextmenu', (e) => {
+        const target = e.target;
+        const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
+        if (card && (longPressFired || Date.now() < suppressNextClickUntil || hasSelectedOrders())) {
+            e.preventDefault();
+        }
+    });
+
+    listArea.addEventListener('click', (e) => {
+        if (longPressFired || Date.now() < suppressNextClickUntil) {
+            longPressFired = false;
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        if (!hasSelectedOrders()) return;
+        const target = e.target;
+        const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
+        if (!card) return;
+        const orderId = card.dataset ? card.dataset.orderId : card.getAttribute?.('data-order-id');
+        if (!orderId) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        const nextSelected = toggleOrderSelection(orderId);
+        syncOrderCardSelectionDOM(card, nextSelected);
+        triggerOrderSelectFeedback(nextSelected);
+    }, true);
+}
+
 export function copyTTN(ttn, el) {
     if (!ttn) return;
     const cleanTtn = String(ttn).trim();
@@ -429,9 +556,16 @@ export function renderFilteredOrders() {
         const totalPrefix = typeof i18next !== 'undefined' ? i18next.t('orders_modal.total_prefix', { defaultValue: 'ИТОГО:' }) : 'ИТОГО:';
         const formattedTotal = fmtPrice(order.total_sum);
         const fmtStatus = formatOrderStatus(order.status);
+        const isSelected = isOrderSelected(order.id);
+        const selectedClass = isSelected ? ' is-selected' : '';
 
         return `
-            <div class="order-card">
+            <div class="order-card${selectedClass}" data-order-id="${escAttr(order.id)}" aria-selected="${isSelected ? 'true' : 'false'}">
+                <div class="order-select-badge" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
                 <div class="order-header">
                     <div class="order-id-wrap">
                         <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', { defaultValue: 'ЗАКАЗ #' }) : 'ЗАКАЗ #'}${String(order.id || '').split('-').at(0).toUpperCase()}</span>
@@ -515,6 +649,7 @@ export function openOrdersModal() {
     const activeUser = getRuntimeUser();
     const activeProfile = getRuntimeProfile();
     bindOrdersTabSwipe();
+    bindOrdersLongPressSelection();
 
     if (activeUser) {
         if (guestInputGroup) guestInputGroup.style.display = 'none';

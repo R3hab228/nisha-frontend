@@ -26,12 +26,17 @@ import {
     getOrderTabBucket,
     formatOrderStatus,
     encodeNovaPoshtaTtn,
-    getNovaPoshtaTrackingUrl
+    getNovaPoshtaTrackingUrl,
+    clearOrderSelection,
+    getSelectedOrderIds,
+    isOrderSelected,
+    toggleOrderSelection
 } from '../js/orders/orders-state.js';
 import {
     updateOrderTabCounters,
     switchOrderTab,
-    renderFilteredOrders
+    renderFilteredOrders,
+    bindOrdersLongPressSelection
 } from '../js/orders/orders-render.js';
 import '../js/orders/orders.js';
 
@@ -169,5 +174,101 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
         expect(tabButtons[0].innerHTML).toContain('(15)');
         expect(tabButtons[1].innerHTML).toContain('(0)');
         expect(tabButtons[0].classList.contains('active')).toBe(true);
+    });
+
+    it('5. Supports long-press pointer gesture for green-circle selection across accepted, shipped & cancelled tabs', async () => {
+        vi.useFakeTimers();
+        clearOrderSelection();
+
+        const listeners = {};
+        const createCardMock = (orderId) => {
+            const cls = new Set();
+            const attrs = { 'data-order-id': orderId };
+            const card = {
+                dataset: { orderId },
+                classList: {
+                    add: (c) => cls.add(c),
+                    remove: (c) => cls.delete(c),
+                    toggle: (c, force) => (force === undefined ? (cls.has(c) ? cls.delete(c) : cls.add(c)) : (force ? cls.add(c) : cls.delete(c))),
+                    contains: (c) => cls.has(c)
+                },
+                getAttribute: (k) => attrs[k] ?? null,
+                setAttribute: (k, v) => { attrs[k] = String(v); }
+            };
+            card.closest = (sel) => (sel === '.order-card' ? card : null);
+            return card;
+        };
+
+        const card1 = createCardMock('ord-acc-1');
+        const card2 = createCardMock('ord-ship-2');
+        const listArea = {
+            dataset: {},
+            innerHTML: '',
+            style: {},
+            addEventListener: (type, fn) => {
+                if (!listeners[type]) listeners[type] = [];
+                listeners[type].push(fn);
+            },
+            dispatchEvent: (ev) => {
+                for (const fn of (listeners[ev.type] || [])) fn(ev);
+            }
+        };
+
+        globalThis.document = {
+            getElementById: (id) => (id === 'ordersListArea' ? listArea : null),
+            querySelector: () => null,
+            querySelectorAll: () => []
+        };
+
+        try {
+            // Render accepted, shipped, and cancelled orders -> verify badge markup present
+            setOrdersData([
+                { id: 'ord-acc-1', status: 'Принят', total_sum: 1000, created_at: '2026-11-10T10:00:00Z', items: [] },
+                { id: 'ord-ship-2', status: 'Отправлен', total_sum: 2000, created_at: '2026-11-10T10:00:00Z', items: [] },
+                { id: 'ord-can-3', status: 'Отменен', total_sum: 3000, created_at: '2026-11-10T10:00:00Z', items: [] }
+            ]);
+            for (const tab of ['accepted', 'shipped', 'cancelled']) {
+                setCurrentOrderTab(tab);
+                renderFilteredOrders();
+                expect(listArea.innerHTML).toContain('order-select-badge');
+            }
+
+            setCurrentOrderTab('accepted');
+            bindOrdersLongPressSelection();
+
+            // 1. Movement > 10px cancels long press (scroll protection)
+            const scrollTarget = { closest: () => card1 };
+            listArea.dispatchEvent({ type: 'pointerdown', pointerId: 1, pointerType: 'touch', isPrimary: true, clientX: 50, clientY: 50, target: scrollTarget });
+            listArea.dispatchEvent({ type: 'pointermove', pointerId: 1, clientX: 50, clientY: 75 });
+            await vi.advanceTimersByTimeAsync(500);
+            expect(isOrderSelected('ord-acc-1')).toBe(false);
+
+            // 2. Holding 450ms activates green-circle selection
+            listArea.dispatchEvent({ type: 'pointerdown', pointerId: 2, pointerType: 'touch', isPrimary: true, clientX: 50, clientY: 50, target: scrollTarget });
+            await vi.advanceTimersByTimeAsync(460);
+            expect(isOrderSelected('ord-acc-1')).toBe(true);
+            expect(card1.classList.contains('is-selected')).toBe(true);
+
+            // 3. Follow-up synthetic click from finger release is suppressed
+            const preventDefaultSpy = vi.fn();
+            const stopPropSpy = vi.fn();
+            listArea.dispatchEvent({ type: 'click', target: scrollTarget, preventDefault: preventDefaultSpy, stopPropagation: stopPropSpy });
+            expect(preventDefaultSpy).toHaveBeenCalled();
+            expect(isOrderSelected('ord-acc-1')).toBe(true);
+
+            // 4. Subsequent tap toggles another card while in selection mode
+            await vi.advanceTimersByTimeAsync(600);
+            const card2Target = { closest: () => card2 };
+            listArea.dispatchEvent({ type: 'click', target: card2Target, preventDefault: vi.fn(), stopPropagation: vi.fn() });
+            expect(getSelectedOrderIds()).toEqual(['ord-acc-1', 'ord-ship-2']);
+
+            // 5. Deselecting both exits selection cleanly
+            toggleOrderSelection('ord-acc-1', false);
+            toggleOrderSelection('ord-ship-2', false);
+            expect(getSelectedOrderIds()).toEqual([]);
+        } finally {
+            clearOrderSelection();
+            vi.useRealTimers();
+        }
     });
 });

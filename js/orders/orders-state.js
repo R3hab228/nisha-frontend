@@ -205,3 +205,34 @@ export function getNovaPoshtaTrackingUrl(ttn, lang) {
     const encoded = encodeNovaPoshtaTtn(cleanTtn) || (encFn ? encFn(cleanTtn) : encodeURIComponent(cleanTtn));
     return `https://tracking.novaposhta.ua/#/${currentLang}/${encoded}`;
 }
+
+const selectedOrderIds = new Set();
+
+export function getSelectedOrderIds() {
+    return Array.from(selectedOrderIds);
+}
+
+export function isOrderSelected(orderId) {
+    if (orderId === undefined || orderId === null || orderId === '') return false;
+    return selectedOrderIds.has(String(orderId));
+}
+
+export function hasSelectedOrders() {
+    return selectedOrderIds.size > 0;
+}
+
+export function toggleOrderSelection(orderId, force) {
+    if (orderId === undefined || orderId === null || orderId === '') return false;
+    const key = String(orderId);
+    const shouldSelect = typeof force === 'boolean' ? force : !selectedOrderIds.has(key);
+    if (shouldSelect) {
+        selectedOrderIds.add(key);
+    } else {
+        selectedOrderIds.delete(key);
+    }
+    return shouldSelect;
+}
+
+export function clearOrderSelection() {
+    selectedOrderIds.clear();
+}
