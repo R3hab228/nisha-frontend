@@ -3,7 +3,7 @@
 // ==========================================
 
 import { resolveAction } from '../core/action-registry.js';
-import { getRuntimeSiteLang, getRuntimeStorage } from '../core/runtime-env.js';
+import { getRuntimeSiteLang, getRuntimeStorage, getRuntimeUser } from '../core/runtime-env.js';
 
 function getReactiveStore() {
     if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
@@ -28,6 +28,31 @@ export function getOrdersData() {
 }
 
 const HIDDEN_ORDERS_STORAGE_KEY = 'nisha_hidden_orders_v1';
+
+function getHiddenOrdersStorageKey() {
+    const activeUser = getRuntimeUser();
+    const uid = activeUser && activeUser.id ? String(activeUser.id).trim() : '';
+    return uid ? `nisha_hidden_orders_${uid}` : HIDDEN_ORDERS_STORAGE_KEY;
+}
+
+function normalizeOrderIdList(list) {
+    if (!Array.isArray(list) || list.length === 0) return [];
+    const seen = new Set();
+    for (const rawId of list) {
+        const clean = rawId === undefined || rawId === null ? '' : String(rawId).trim();
+        if (clean) seen.add(clean);
+    }
+    return Array.from(seen).slice(-200);
+}
+
+function syncActiveUserHiddenMetadata(mergedIds) {
+    const activeUser = getRuntimeUser();
+    if (!activeUser || typeof activeUser !== 'object') return;
+    if (!activeUser.user_metadata || typeof activeUser.user_metadata !== 'object') {
+        activeUser.user_metadata = {};
+    }
+    activeUser.user_metadata.hidden_order_ids = mergedIds;
+}
 
 function readOrderJsonStorage(key, fallback) {
     const store = getRuntimeStorage();
@@ -57,15 +82,32 @@ function writeOrderJsonStorage(key, value) {
 }
 
 export function getHiddenOrderIds() {
-    const list = readOrderJsonStorage(HIDDEN_ORDERS_STORAGE_KEY, []);
-    return new Set(Array.isArray(list) ? list.map(String) : []);
+    const localList = readOrderJsonStorage(getHiddenOrdersStorageKey(), []);
+    const activeUser = getRuntimeUser();
+    const remoteList = activeUser?.user_metadata?.hidden_order_ids;
+    return new Set([
+        ...normalizeOrderIdList(localList),
+        ...normalizeOrderIdList(remoteList)
+    ]);
+}
+
+function mergeAndPersistHiddenOrderIds(ids) {
+    const incoming = normalizeOrderIdList(ids);
+    if (incoming.length === 0) return { changed: false, merged: Array.from(getHiddenOrderIds()) };
+    const existingSet = getHiddenOrderIds();
+    const changed = incoming.some((id) => !existingSet.has(id));
+    const merged = normalizeOrderIdList([...existingSet, ...incoming]);
+    writeOrderJsonStorage(getHiddenOrdersStorageKey(), merged);
+    syncActiveUserHiddenMetadata(merged);
+    return { changed, merged };
 }
 
 export function hideOrderIds(ids) {
-    const list = Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
-    if (list.length === 0) return;
-    const merged = Array.from(new Set([...getHiddenOrderIds(), ...list])).slice(-200);
-    writeOrderJsonStorage(HIDDEN_ORDERS_STORAGE_KEY, merged);
+    mergeAndPersistHiddenOrderIds(ids);
+}
+
+export function mergeRemoteHiddenOrderIds(ids) {
+    return mergeAndPersistHiddenOrderIds(ids).changed;
 }
 
 export function pruneCachedOrdersByIds(ids) {

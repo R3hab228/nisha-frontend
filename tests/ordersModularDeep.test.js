@@ -30,8 +30,12 @@ import {
     clearOrderSelection,
     getSelectedOrderIds,
     isOrderSelected,
-    toggleOrderSelection
+    toggleOrderSelection,
+    getHiddenOrderIds,
+    hideOrderIds,
+    mergeRemoteHiddenOrderIds
 } from '../js/orders/orders-state.js';
+import { fetchMyOrders } from '../js/orders/orders-fetch.js';
 import {
     updateOrderTabCounters,
     switchOrderTab,
@@ -311,6 +315,138 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             localStorage.removeItem('nisha_hidden_orders_v1');
             localStorage.removeItem('nisha_cached_orders');
             vi.useRealTimers();
+        }
+    });
+
+    it('6. Cross-device soft-hide sync isolates storage per user, hydrates user_metadata, calls /api/orders/hide, and reconciles GET /api/orders/hidden', async () => {
+        const prevDoc = globalThis.document;
+        const prevUser = window.currentUser;
+        const prevApiClient = window.apiClient;
+        const prevSupabase = window.supabaseClient;
+        const prevStoreUser = store.get('currentUser');
+
+        const listArea = { innerHTML: '', dataset: {}, addEventListener: () => {} };
+        const tabsContainer = { style: { display: 'none' } };
+        const countEl = { textContent: '0' };
+        const elements = {
+            ordersListArea: listArea,
+            ordersTabsContainer: tabsContainer,
+            ordersDeleteSelectedBtn: { hidden: true, style: {}, classList: { toggle: () => {} }, setAttribute: () => {} },
+            ordersDeleteSelectedCount: { textContent: '0' },
+            tabCountAccepted: countEl,
+            tabCountShipped: { textContent: '0' },
+            tabCountCancelled: { textContent: '0' }
+        };
+        globalThis.document = {
+            getElementById: (id) => elements[id] || null,
+            querySelector: () => null,
+            querySelectorAll: () => []
+        };
+
+        try {
+            // 1. Per-user key isolation & user_metadata hydration
+            const userA = { id: 'uid-alpha', user_metadata: { hidden_order_ids: ['ord-meta-1'] } };
+            window.currentUser = userA;
+            store.set('currentUser', userA);
+            hideOrderIds(['ord-a-1']);
+
+            expect(getHiddenOrderIds().has('ord-meta-1')).toBe(true);
+            expect(getHiddenOrderIds().has('ord-a-1')).toBe(true);
+            expect(JSON.parse(localStorage.getItem('nisha_hidden_orders_uid-alpha'))).toEqual(['ord-meta-1', 'ord-a-1']);
+
+            const userB = { id: 'uid-beta', user_metadata: { hidden_order_ids: ['ord-b-meta'] } };
+            window.currentUser = userB;
+            store.set('currentUser', userB);
+            expect(getHiddenOrderIds().has('ord-a-1')).toBe(false);
+            expect(getHiddenOrderIds().has('ord-b-meta')).toBe(true);
+
+            // Switch back to User A and verify orders from User B are not leaked
+            window.currentUser = userA;
+            store.set('currentUser', userA);
+            setOrdersData([
+                { id: 'ord-meta-1', status: 'Принят' },
+                { id: 'ord-a-1', status: 'Принят' },
+                { id: 'ord-keep-1', status: 'Принят' },
+                { id: 'ord-remote-new', status: 'Принят' }
+            ]);
+            expect(getOrdersData().map(o => o.id)).toEqual(['ord-keep-1', 'ord-remote-new']);
+
+            // 2. deleteSelectedOrders sends background POST /api/orders/hide & merges result (and tolerates network error)
+            const postMock = vi.fn().mockResolvedValueOnce({
+                success: true,
+                hiddenOrderIds: ['ord-meta-1', 'ord-a-1', 'ord-keep-1', 'ord-from-other-tab']
+            });
+            window.apiClient = { post: postMock, get: vi.fn() };
+            toggleOrderSelection('ord-keep-1', true);
+            deleteSelectedOrders();
+
+            expect(postMock).toHaveBeenCalledWith('/api/orders/hide', { orderIds: ['ord-keep-1'] }, { timeout: 8000 });
+            await Promise.resolve();
+            await Promise.resolve();
+            expect(getHiddenOrderIds().has('ord-from-other-tab')).toBe(true);
+            expect(userA.user_metadata.hidden_order_ids).toContain('ord-from-other-tab');
+
+            // Offline tolerance: rejected POST never throws
+            window.apiClient.post = vi.fn().mockRejectedValueOnce(new Error('Offline'));
+            setOrdersData([{ id: 'ord-offline-1', status: 'Принят' }]);
+            toggleOrderSelection('ord-offline-1', true);
+            expect(() => deleteSelectedOrders()).not.toThrow();
+            expect(getOrdersData()).toEqual([]);
+
+            // 3. fetchMyOrders hydrates user_metadata + reconciles GET /api/orders/hidden asynchronously
+            const userC = { id: 'uid-gamma', user_metadata: { hidden_order_ids: ['ord-c-hidden'] } };
+            window.currentUser = userC;
+            store.set('currentUser', userC);
+
+            const makeOrderQuery = (rows) => {
+                const q = {
+                    select: () => q,
+                    eq: () => q,
+                    in: () => q,
+                    is: () => q,
+                    limit: () => q,
+                    maybeSingle: () => Promise.resolve({ data: null, error: null }),
+                    order: () => Promise.resolve({ data: rows, error: null })
+                };
+                return q;
+            };
+            window.supabaseClient = {
+                from: () => makeOrderQuery([
+                    { id: 'ord-c-hidden', status: 'Принят', created_at: '2026-11-20T10:00:00.000Z', items: [] },
+                    { id: 'ord-c-remote-hidden', status: 'Принят', created_at: '2026-11-20T09:00:00.000Z', items: [] },
+                    { id: 'ord-c-visible', status: 'Принят', created_at: '2026-11-20T08:00:00.000Z', items: [] }
+                ])
+            };
+            window.apiClient = {
+                get: vi.fn().mockResolvedValue({
+                    success: true,
+                    hiddenOrderIds: ['ord-c-hidden', 'ord-c-remote-hidden']
+                })
+            };
+
+            await fetchMyOrders();
+            expect(window.apiClient.get).toHaveBeenCalledWith('/api/orders/hidden', { timeout: 6000 });
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(getOrdersData().map(o => o.id)).toEqual(['ord-c-visible']);
+            expect(mergeRemoteHiddenOrderIds(['ord-c-remote-hidden'])).toBe(false);
+            expect(JSON.parse(localStorage.getItem('nisha_hidden_orders_uid-gamma'))).toEqual([
+                'ord-c-hidden',
+                'ord-c-remote-hidden'
+            ]);
+        } finally {
+            clearOrderSelection();
+            globalThis.document = prevDoc;
+            window.currentUser = prevUser;
+            store.set('currentUser', prevStoreUser ?? null);
+            window.apiClient = prevApiClient;
+            window.supabaseClient = prevSupabase;
+            localStorage.removeItem('nisha_hidden_orders_uid-alpha');
+            localStorage.removeItem('nisha_hidden_orders_uid-beta');
+            localStorage.removeItem('nisha_hidden_orders_uid-gamma');
+            localStorage.removeItem('nisha_hidden_orders_v1');
+            localStorage.removeItem('nisha_cached_orders');
         }
     });
 });

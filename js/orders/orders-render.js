@@ -20,6 +20,7 @@ import {
     hasSelectedOrders,
     hideOrderIds,
     isOrderSelected,
+    mergeRemoteHiddenOrderIds,
     pruneCachedOrdersByIds,
     setCurrentOrderTab,
     setOrdersData,
@@ -310,6 +311,21 @@ export function deleteSelectedOrders() {
     hideOrderIds(selectedIds);
     pruneCachedOrdersByIds(selectedIds);
     clearOrderSelection();
+
+    const activeUser = getRuntimeUser();
+    const apiClient = typeof window !== 'undefined' ? window.apiClient : null;
+    if (activeUser && activeUser.id && apiClient && typeof apiClient.post === 'function') {
+        const syncUserId = activeUser.id;
+        Promise.resolve(apiClient.post('/api/orders/hide', { orderIds: selectedIds }, { timeout: 8000 }))
+            .then((res) => {
+                const currentUser = getRuntimeUser();
+                if (currentUser && String(currentUser.id) !== String(syncUserId)) return;
+                if (Array.isArray(res?.hiddenOrderIds)) {
+                    mergeRemoteHiddenOrderIds(res.hiddenOrderIds);
+                }
+            })
+            .catch(() => {});
+    }
 
     const remaining = getOrdersData().filter(o => o && !selectedSet.has(String(o.id)));
     setOrdersData(remaining);

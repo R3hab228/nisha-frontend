@@ -11,6 +11,8 @@ import {
     getOrdersData,
     getStorage,
     getSupabase,
+    mergeRemoteHiddenOrderIds,
+    pruneCachedOrdersByIds,
     setOrdersData,
     toCDN
 } from './orders-state.js';
@@ -306,9 +308,38 @@ export async function fetchMyOrders() {
                 : (typeof initialOrderValues.toSorted === 'function'
                     ? initialOrderValues.toSorted(sortOrdersDesc)
                     : [...initialOrderValues].sort(sortOrdersDesc));
+            if (Array.isArray(activeUser.user_metadata?.hidden_order_ids) && activeUser.user_metadata.hidden_order_ids.length > 0) {
+                mergeRemoteHiddenOrderIds(activeUser.user_metadata.hidden_order_ids);
+            }
             setOrdersData(nextOrders);
-            if (nextOrders.length > 0) {
-                try { if (store) store.setJSON('nisha_cached_orders', nextOrders); } catch {}
+            const visibleOrders = getOrdersData();
+            if (visibleOrders.length > 0) {
+                try { if (store) store.setJSON('nisha_cached_orders', visibleOrders); } catch {}
+            } else if (nextOrders.length > 0) {
+                try { if (store) store.setJSON('nisha_cached_orders', []); } catch {}
+            }
+
+            const apiClient = typeof window !== 'undefined' ? window.apiClient : null;
+            if (apiClient && typeof apiClient.get === 'function') {
+                const syncUserId = activeUser.id;
+                Promise.resolve(apiClient.get('/api/orders/hidden', { timeout: 6000 }))
+                    .then((res) => {
+                        const currentUser = getRuntimeUser();
+                        if (!currentUser || String(currentUser.id) !== String(syncUserId)) return;
+                        if (!Array.isArray(res?.hiddenOrderIds) || res.hiddenOrderIds.length === 0) return;
+
+                        const changed = mergeRemoteHiddenOrderIds(res.hiddenOrderIds);
+                        pruneCachedOrdersByIds(res.hiddenOrderIds);
+                        const beforeList = getOrdersData();
+                        setOrdersData(beforeList);
+                        const afterList = getOrdersData();
+
+                        if (changed || afterList.length !== beforeList.length) {
+                            invokeAction('updateOrderTabCounters');
+                            invokeAction('renderFilteredOrders');
+                        }
+                    })
+                    .catch(() => {});
             }
         } catch (e) {
             fetchError = e;
