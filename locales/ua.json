@@ -63,7 +63,8 @@
       "hide_filters": "[-] ПРИХОВАТИ ФІЛЬТРИ"
     },
     "history": {
-      "title": "HISTORY.LOG // ВИ НЕЩОДАВНО ДИВИЛИСЯ:"
+      "title": "HISTORY.LOG // ВИ НЕЩОДАВНО ДИВИЛИСЯ:",
+      "remove_item": "Видалити з історії"
     },
     "cart": {
       "in_cart": "У КОШИКУ:",
@@ -82,6 +83,8 @@
       "privacy_policy": "Політика конфіденційності",
       "refund_policy": "Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.",
       "install": "⬇ ВСТАНОВИТИ ДОДАТОК",
+      "support_text": "Знайшли баг чи є ідея? Пишіть:",
+      "copyright": "© 2026 NISHA. All rights reserved.",
       "pwa_broadcast_title": "SYSTEM_BROADCAST.MSG",
       "pwa_broadcast_desc": "Замовлення прийнято! Встановіть додаток <b>NISHA</b> на головний екран, щоб в 1 клік відстежувати <b>ТТН Нової Пошти</b> та отримувати сповіщення про статус посилки.",
       "pwa_broadcast_ios_hint": "Замовлення прийнято! Натисніть <b>«Поділитися»</b> (⬆️) внизу браузера → <b>«На початковий екран»</b>, щоб в 1 клік відстежувати <b>ТТН Нової Пошти</b>.",
@@ -89,9 +92,7 @@
       "pwa_broadcast_later": "ПІЗНІШЕ",
       "pwa_broadcast_ok": "ЗРОЗУМІЛО",
       "pwa_broadcast_installed": "PWA встановлено",
-      "pwa_broadcast_close": "ЗАКРИТИ",
-      "support_text": "Знайшли баг чи є ідея? Пишіть:",
-      "copyright": "© 2026 NISHA. All rights reserved."
+      "pwa_broadcast_close": "ЗАКРИТИ"
     },
     "product": {
       "size": "РОЗМІР:",
@@ -123,7 +124,6 @@
       "err_not_found": "Товар не знайдено",
       "fav": "Обране",
       "share": "Поділитися",
-      "share_check_out": "Заціни:",
       "no_photo": "НЕМАЄ ФОТО",
       "offer_price": "[ ЗАПРОПОНУВАТИ СВОЮ ЦІНУ ]",
       "offer_modal_title": "BARGAIN_OFFER.EXE",
@@ -148,7 +148,9 @@
       "offer_declined_btn": "ПРОПОЗИЦІЮ ВІДХИЛЕНО",
       "badge_bargain": "Є ТОРГ",
       "offer_below_min": "Мінімальна ціна для пропозиції: {{min}} грн!",
-      "offer_disabled": "Для цього товару торг не передбачено!",
+      "offer_min_100": "Мінімальна ціна для пропозиції: 100 грн!",
+      "offer_rate_limit": "Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.",
+      "offer_cart_updated": "Ціну в кошику оновлено за узгодженою ставкою!",
       "measurements_title": "ЗАМІРИ:",
       "meas_cm": "см",
       "meas_length": "Довжина",
@@ -172,7 +174,9 @@
       "meas_qual_from_neck": "від горла",
       "meas_neck_width": "Ширина выреза",
       "meas_half_measure": "Полуобхват",
-      "meas_rise": "Посадка"
+      "meas_rise": "Посадка",
+      "offer_disabled": "Для цього товару торг не передбачено!",
+      "share_check_out": "Заціни:"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
@@ -219,17 +223,17 @@
       "reservation_expired": "Бронь закінчилась: ",
       "back_in_stock": " знову в наявності!",
       "new_items_count": "+{{count}} нових речей у каталозі",
-      "new_items_count_one": "+{{count}} нова річ у каталозі",
-      "new_items_count_few": "+{{count}} нові речі у каталозі",
-      "new_items_count_many": "+{{count}} нових речей у каталозі",
-      "sound_enabled": "Звук увімкнено",
-      "sound_disabled": "Звук вимкнено",
       "new_item_fallback": "Нова річ",
       "cart_restored": "Кошик відновлено",
       "cart_synced": "Кошики синхронізовано",
       "auth_required": "Спочатку авторизуйтесь!",
       "item_sold_removed": "Товар \"{{name}}\" вже придбали, його видалено з кошика.",
       "secret_discount_applied": "Секретна знижка -10% активована",
+      "new_items_count_one": "+{{count}} нова річ у каталозі",
+      "new_items_count_few": "+{{count}} нові речі у каталозі",
+      "new_items_count_many": "+{{count}} нових речей у каталозі",
+      "sound_enabled": "Звук увімкнено",
+      "sound_disabled": "Звук вимкнено",
       "recovery_new_pass_desc": "Введіть новий пароль для вашого акаунта (мінімум 6 символів):",
       "new_password_placeholder": "Новий пароль",
       "confirm_password_placeholder": "Повторіть новий пароль",
@@ -303,7 +307,6 @@
       "loading_db": "[ ЗАВАНТАЖЕННЯ БАЗИ ДАНИХ... ]",
       "err_no_phone": "[ НОМЕР НЕ ВВЕДЕНО ]",
       "access_denied_otp": "[ ДОСТУП ЗАБОРОНЕНО ]<br><br>Спочатку підтвердіть, що це ваш номер.",
-      "err_otp_unverified": "Номер телефону не підтверджено через OTP або профіль",
       "verify_bot_btn": "ПІДТВЕРДИТИ НОМЕР У БОТІ",
       "ttn_copied": "ТТН скопійовано: ",
       "empty_accepted": "Немає активних замовлень.",
@@ -314,12 +317,13 @@
       "review_left": "[✔] ВІДГУК ЗАЛИШЕНО",
       "order_prefix": "ЗАМОВЛЕННЯ #",
       "total_prefix": "РАЗОМ:",
-      "status_cancelled": "СКАСОВАНО",
-      "status_completed": "ЗАВЕРШЕНО",
+      "status_processing": "В ОБРОБЦІ",
       "status_shipped": "ВІДПРАВЛЕНО",
+      "status_completed": "ЗАВЕРШЕНО",
+      "status_cancelled": "СКАСОВАНО",
       "status_paid": "ОПЛАЧЕНО",
       "status_accepted": "ПРИЙНЯТО",
-      "status_processing": "В ОБРОБЦІ",
+      "err_otp_unverified": "Номер телефону не підтверджено через OTP або профіль",
       "delete_selected_title": "Видалити вибрані замовлення",
       "deleted_selected": "Видалено замовлень: {{count}}"
     },
@@ -338,8 +342,8 @@
       "err_send": "Помилка при надсиланні: ",
       "db_error": "ПОМИЛКА ПІДКЛЮЧЕННЯ ДО БАЗИ",
       "new_review_from": "⭐ Новий відгук від {{author}}: \"{{snippet}}\"",
-      "new_review_notif": "NISHA STORE | Новий відгук ⭐",
-      "author_fallback": "Покупець"
+      "author_fallback": "Покупець",
+      "new_review_notif": "NISHA STORE | Новий відгук ⭐"
     },
     "profile": {
       "google_login": "УВІЙТИ ЧЕРЕЗ GOOGLE",
@@ -367,9 +371,6 @@
       "delivery_branch": "ВІДДІЛЕННЯ АБО ПОШТОМАТ:",
       "delivery_saved_btn": "[ ЗБЕРЕЖЕНО ✓ ]",
       "delivery_edit": "[ ЗМІНИТИ ]",
-      "sound_label": "ЗВУК:",
-      "sound_on": "УВІМК",
-      "sound_off": "ВИМК",
       "order_status_title": "УВАГА! Статус вашого замовлення змінився.",
       "order_status_order": "Замовлення:",
       "order_status_new": "Новий статус:",
@@ -396,7 +397,10 @@
       "remove_title_tg": "Видалити Telegram",
       "removed_toast_tg": "Telegram видалено!",
       "timeout_toast_tg": "Час очікування підтвердження Telegram минув",
-      "both_verified": "Номер та Telegram підтверджені!"
+      "both_verified": "Номер та Telegram підтверджені!",
+      "sound_label": "ЗВУК:",
+      "sound_on": "УВІМК",
+      "sound_off": "ВИМК"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",
@@ -431,7 +435,6 @@
       "err_fill_all": "Будь ласка, заповніть АБСОЛЮТНО ВСІ поля!",
       "err_max_files": "Максимум 5 фото/відео!",
       "err_cond_range": "Оцінка стану від 1 до 10!",
-      "err_measurements_dm": "Заміри в ПП заборонені — вкажіть заміри цифрами прямо в описі!",
       "err_network": "Помилка надсилання речі на сервер. Перевірте інтернет та спробуйте ще раз.",
       "compressing": "СТИСНЕННЯ ФОТО",
       "err_server": "Збій сервера: ",
@@ -447,7 +450,6 @@
       "bargain_ph": "Мін. ставка торга (грн)...",
       "err_bargain_min": "Мінімальна ціна торга має бути від 100 грн!",
       "err_bargain_less_price": "Мінімальна ціна торга має бути меншою за бажану ціну!",
-      "err_confirm_bargain": "Підтвердіть торг натисканням на галочку [ ✓ ]!",
       "category_label": "КАТЕГОРІЯ:",
       "category_place": "Оберіть категорію...",
       "size_short_label": "РОЗМІР:",
@@ -455,7 +457,9 @@
       "cat_sweaters": "Кофти та Светри",
       "cat_pants": "Штани та Джинси",
       "cat_shoes": "Взуття",
-      "cat_accs": "Аксесуари"
+      "cat_accs": "Аксесуари",
+      "err_confirm_bargain": "Підтвердіть торг натисканням на галочку [ ✓ ]!",
+      "err_measurements_dm": "Заміри в ПП заборонені — вкажіть заміри цифрами прямо в описі!"
     },
     "email_prompt": {
       "desc": "Відправляти вам чеки та статуси доставки (ТТН) на E-mail?",

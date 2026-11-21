@@ -50,4 +50,18 @@ describe('i18n Locale Completeness (ua / ru / en)', () => {
             expect(emptyKeys).toEqual([]);
         }
     });
+
+    it('keeps locales/*.json, public/locales/*.json, locales.json, and public/locales.json 100% synchronized', () => {
+        const publicLocalesDir = path.resolve(import.meta.dirname, '../public/locales');
+        const rootBundle = JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, '../locales.json'), 'utf8'));
+        const publicBundle = JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, '../public/locales.json'), 'utf8'));
+
+        expect(publicBundle).toEqual(rootBundle);
+
+        for (const [lang, expectedData] of [['ua', ua], ['ru', ru], ['en', en]]) {
+            const pubSingle = JSON.parse(fs.readFileSync(path.join(publicLocalesDir, `${lang}.json`), 'utf8'));
+            expect(pubSingle).toEqual(expectedData);
+            expect(rootBundle[lang]).toEqual(expectedData);
+        }
+    });
 });

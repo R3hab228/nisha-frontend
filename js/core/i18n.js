@@ -228,7 +228,7 @@ async function changeLanguage(lng) {
             const activeUser = getRuntimeUser();
             const sb = getSupabase();
             if (activeUser && sb) {
-                sb.from('profiles').update({ language: normalized }).eq('id', activeUser.id).then();
+                Promise.resolve(sb.from('profiles').update({ language: normalized }).eq('id', activeUser.id)).catch(() => {});
             }
         });
     }

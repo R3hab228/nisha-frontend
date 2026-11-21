@@ -63,7 +63,8 @@
       "hide_filters": "[-] HIDE FILTERS"
     },
     "history": {
-      "title": "HISTORY.LOG // RECENTLY VIEWED:"
+      "title": "HISTORY.LOG // RECENTLY VIEWED:",
+      "remove_item": "Remove from history"
     },
     "cart": {
       "in_cart": "IN CART:",
@@ -82,6 +83,8 @@
       "privacy_policy": "Privacy Policy",
       "refund_policy": "Returns and exchanges of quality goods are available within 14 days of purchase.",
       "install": "⬇ INSTALL APP",
+      "support_text": "Found a bug or have an idea? Email us:",
+      "copyright": "© 2026 NISHA. All rights reserved.",
       "pwa_broadcast_title": "SYSTEM_BROADCAST.MSG",
       "pwa_broadcast_desc": "Order confirmed! Install the <b>NISHA</b> app on your home screen to track your <b>Nova Poshta TTN</b> in 1 tap and get instant delivery updates.",
       "pwa_broadcast_ios_hint": "Order confirmed! Tap <b>Share</b> (⬆️) at the bottom of your browser → <b>Add to Home Screen</b> to track your <b>Nova Poshta TTN</b> in 1 tap.",
@@ -89,9 +92,7 @@
       "pwa_broadcast_later": "LATER",
       "pwa_broadcast_ok": "GOT IT",
       "pwa_broadcast_installed": "PWA installed",
-      "pwa_broadcast_close": "CLOSE",
-      "support_text": "Found a bug or have an idea? Email us:",
-      "copyright": "© 2026 NISHA. All rights reserved."
+      "pwa_broadcast_close": "CLOSE"
     },
     "product": {
       "size": "SIZE:",
@@ -123,7 +124,6 @@
       "err_not_found": "Item not found",
       "fav": "Favorites",
       "share": "Share",
-      "share_check_out": "Check out:",
       "no_photo": "NO PHOTO",
       "offer_price": "[ MAKE AN OFFER ]",
       "offer_modal_title": "BARGAIN_OFFER.EXE",
@@ -148,7 +148,9 @@
       "offer_declined_btn": "OFFER DECLINED",
       "badge_bargain": "BARGAIN",
       "offer_below_min": "Minimum offer price: {{min}} UAH!",
-      "offer_disabled": "Bargaining is not available for this item!",
+      "offer_min_100": "Minimum offer price is 100 UAH!",
+      "offer_rate_limit": "Maximum 2 offers per 10 minutes. Please wait {{min}} min.",
+      "offer_cart_updated": "Cart price updated to agreed offer!",
       "measurements_title": "MEASUREMENTS:",
       "meas_cm": "cm",
       "meas_length": "Length",
@@ -172,7 +174,9 @@
       "meas_qual_from_neck": "from neck",
       "meas_neck_width": "Neck width",
       "meas_half_measure": "Half-measure",
-      "meas_rise": "Rise"
+      "meas_rise": "Rise",
+      "offer_disabled": "Bargaining is not available for this item!",
+      "share_check_out": "Check out:"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
@@ -219,17 +223,17 @@
       "reservation_expired": "Reservation expired: ",
       "back_in_stock": " back in stock!",
       "new_items_count": "+{{count}} new items in catalog",
-      "new_items_count_one": "+{{count}} new item in catalog",
-      "new_items_count_few": "+{{count}} new items in catalog",
-      "new_items_count_many": "+{{count}} new items in catalog",
-      "sound_enabled": "Sound enabled",
-      "sound_disabled": "Sound disabled",
       "new_item_fallback": "New item",
       "cart_restored": "Cart restored",
       "cart_synced": "Carts synchronized",
       "auth_required": "Please sign in first!",
       "item_sold_removed": "Item \"{{name}}\" has been sold and removed from cart.",
       "secret_discount_applied": "Secret 10% discount activated",
+      "new_items_count_one": "+{{count}} new item in catalog",
+      "new_items_count_few": "+{{count}} new items in catalog",
+      "new_items_count_many": "+{{count}} new items in catalog",
+      "sound_enabled": "Sound enabled",
+      "sound_disabled": "Sound disabled",
       "recovery_new_pass_desc": "Enter a new password for your account (minimum 6 characters):",
       "new_password_placeholder": "New password",
       "confirm_password_placeholder": "Confirm new password",
@@ -303,7 +307,6 @@
       "loading_db": "[ LOADING DATABASE... ]",
       "err_no_phone": "[ NO PHONE NUMBER ENTERED ]",
       "access_denied_otp": "[ ACCESS DENIED ]<br><br>Please verify ownership of this phone number first.",
-      "err_otp_unverified": "Phone number is not verified via OTP or profile",
       "verify_bot_btn": "VERIFY NUMBER IN TELEGRAM BOT",
       "ttn_copied": "Tracking number copied: ",
       "empty_accepted": "No active orders.",
@@ -314,12 +317,13 @@
       "review_left": "[✔] REVIEW SUBMITTED",
       "order_prefix": "ORDER #",
       "total_prefix": "TOTAL:",
-      "status_cancelled": "CANCELLED",
-      "status_completed": "COMPLETED",
+      "status_processing": "IN PROCESSING",
       "status_shipped": "SHIPPED",
+      "status_completed": "COMPLETED",
+      "status_cancelled": "CANCELLED",
       "status_paid": "PAID",
       "status_accepted": "ACCEPTED",
-      "status_processing": "PROCESSING",
+      "err_otp_unverified": "Phone number is not verified via OTP or profile",
       "delete_selected_title": "Delete selected orders",
       "deleted_selected": "Deleted orders: {{count}}"
     },
@@ -338,8 +342,8 @@
       "err_send": "Error submitting review: ",
       "db_error": "DATABASE CONNECTION ERROR",
       "new_review_from": "⭐ New review from {{author}}: \"{{snippet}}\"",
-      "new_review_notif": "NISHA STORE | New review ⭐",
-      "author_fallback": "Customer"
+      "author_fallback": "Customer",
+      "new_review_notif": "NISHA STORE | New review ⭐"
     },
     "profile": {
       "google_login": "SIGN IN WITH GOOGLE",
@@ -367,9 +371,6 @@
       "delivery_branch": "BRANCH OR POSTOMAT:",
       "delivery_saved_btn": "[ SAVED ✓ ]",
       "delivery_edit": "[ EDIT ]",
-      "sound_label": "SOUND:",
-      "sound_on": "ON",
-      "sound_off": "OFF",
       "order_status_title": "ATTENTION! Your order status has updated.",
       "order_status_order": "Order:",
       "order_status_new": "New status:",
@@ -396,7 +397,10 @@
       "remove_title_tg": "Remove Telegram",
       "removed_toast_tg": "Telegram removed!",
       "timeout_toast_tg": "Telegram verification timed out",
-      "both_verified": "Phone and Telegram verified!"
+      "both_verified": "Phone and Telegram verified!",
+      "sound_label": "SOUND:",
+      "sound_on": "ON",
+      "sound_off": "OFF"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",
@@ -431,7 +435,6 @@
       "err_fill_all": "Please fill in absolutely all fields!",
       "err_max_files": "Maximum 5 photos/videos!",
       "err_cond_range": "Condition rating must be from 1 to 10!",
-      "err_measurements_dm": "No \"DM for measurements\" — enter exact measurements in the description!",
       "err_network": "Error submitting proposal to server. Check your connection and try again.",
       "compressing": "COMPRESSING PHOTO",
       "err_server": "Server failure: ",
@@ -447,7 +450,6 @@
       "bargain_ph": "Min. bargain bid (UAH)...",
       "err_bargain_min": "Minimum bargain price must be at least 100 UAH!",
       "err_bargain_less_price": "Minimum bargain price must be less than requested price!",
-      "err_confirm_bargain": "Please confirm bargain with the checkmark [ ✓ ]!",
       "category_label": "CATEGORY:",
       "category_place": "Select category...",
       "size_short_label": "SIZE:",
@@ -455,7 +457,9 @@
       "cat_sweaters": "Sweaters & Hoodies",
       "cat_pants": "Pants & Jeans",
       "cat_shoes": "Shoes",
-      "cat_accs": "Accessories"
+      "cat_accs": "Accessories",
+      "err_confirm_bargain": "Please confirm bargain with the checkmark [ ✓ ]!",
+      "err_measurements_dm": "No \"DM for measurements\" — enter exact measurements in the description!"
     },
     "email_prompt": {
       "desc": "Send receipts and delivery statuses (Waybill) to your E-mail?",

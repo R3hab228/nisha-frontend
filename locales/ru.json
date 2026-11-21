@@ -63,7 +63,8 @@
       "hide_filters": "[-] СКРЫТЬ ФИЛЬТРЫ"
     },
     "history": {
-      "title": "HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:"
+      "title": "HISTORY.LOG // ВЫ НЕДАВНО СМОТРЕЛИ:",
+      "remove_item": "Удалить из истории"
     },
     "cart": {
       "in_cart": "В КОРЗИНЕ:",
@@ -82,6 +83,8 @@
       "privacy_policy": "Политика конфиденциальности",
       "refund_policy": "Возврат и обмен товара надлежащего качества осуществляется в течение 14 дней с момента покупки.",
       "install": "⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ",
+      "support_text": "Нашли баг или есть идея? Пишите:",
+      "copyright": "© 2026 NISHA. All rights reserved.",
       "pwa_broadcast_title": "SYSTEM_BROADCAST.MSG",
       "pwa_broadcast_desc": "Заказ принят! Установите приложение <b>NISHA</b> на главный экран, чтобы в 1 клик отслеживать <b>ТТН Новой Почты</b> и получать уведомления о статусе посылки.",
       "pwa_broadcast_ios_hint": "Заказ принят! Нажмите <b>«Поделиться»</b> (⬆️) внизу браузера → <b>«На экран „Домой“»</b>, чтобы в 1 клик отслеживать <b>ТТН Новой Почты</b>.",
@@ -89,9 +92,7 @@
       "pwa_broadcast_later": "ПОЗЖЕ",
       "pwa_broadcast_ok": "ПОНЯТНО",
       "pwa_broadcast_installed": "PWA установлено",
-      "pwa_broadcast_close": "ЗАКРЫТЬ",
-      "support_text": "Нашли баг или есть идея? Пишите:",
-      "copyright": "© 2026 NISHA. All rights reserved."
+      "pwa_broadcast_close": "ЗАКРЫТЬ"
     },
     "product": {
       "size": "РАЗМЕР:",
@@ -123,7 +124,6 @@
       "err_not_found": "Товар не найден",
       "fav": "Избранное",
       "share": "Поделиться",
-      "share_check_out": "Зацени:",
       "no_photo": "НЕТ ФОТО",
       "offer_price": "[ ПРЕДЛОЖИТЬ СВОЮ ЦЕНУ ]",
       "offer_modal_title": "BARGAIN_OFFER.EXE",
@@ -148,7 +148,9 @@
       "offer_declined_btn": "ПРЕДЛОЖЕНИЕ ОТКЛОНЕНО",
       "badge_bargain": "ЕСТЬ ТОРГ",
       "offer_below_min": "Минимальная цена предложения: {{min}} грн!",
-      "offer_disabled": "Для этого товара торг не предусмотрен!",
+      "offer_min_100": "Минимальная цена предложения: 100 грн!",
+      "offer_rate_limit": "Максимум 2 предложения за 10 минут. Пожалуйста, подождите ещё {{min}} мин.",
+      "offer_cart_updated": "Цена в корзине обновлена по согласованной ставке!",
       "measurements_title": "ЗАМЕРЫ:",
       "meas_cm": "см",
       "meas_length": "Длина",
@@ -172,7 +174,9 @@
       "meas_qual_from_neck": "от горла",
       "meas_neck_width": "Ширина выреза",
       "meas_half_measure": "Полуобхват",
-      "meas_rise": "Посадка"
+      "meas_rise": "Посадка",
+      "offer_disabled": "Для этого товара торг не предусмотрен!",
+      "share_check_out": "Зацени:"
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
@@ -219,17 +223,17 @@
       "reservation_expired": "Бронь истекла: ",
       "back_in_stock": " снова в наличии!",
       "new_items_count": "+{{count}} новых вещей в каталоге",
-      "new_items_count_one": "+{{count}} новая вещь в каталоге",
-      "new_items_count_few": "+{{count}} новые вещи в каталоге",
-      "new_items_count_many": "+{{count}} новых вещей в каталоге",
-      "sound_enabled": "Звук включен",
-      "sound_disabled": "Звук выключен",
       "new_item_fallback": "Новая вещь",
       "cart_restored": "Корзина восстановлена",
       "cart_synced": "Корзины синхронизированы",
       "auth_required": "Сначала авторизуйтесь!",
       "item_sold_removed": "Товар \"{{name}}\" уже купили, он удален из корзины.",
       "secret_discount_applied": "Секретная скидка -10% активирована",
+      "new_items_count_one": "+{{count}} новая вещь в каталоге",
+      "new_items_count_few": "+{{count}} новые вещи в каталоге",
+      "new_items_count_many": "+{{count}} новых вещей в каталоге",
+      "sound_enabled": "Звук включен",
+      "sound_disabled": "Звук выключен",
       "recovery_new_pass_desc": "Введите новый пароль для вашего аккаунта (минимум 6 символов):",
       "new_password_placeholder": "Новый пароль",
       "confirm_password_placeholder": "Повторите новый пароль",
@@ -303,7 +307,6 @@
       "loading_db": "[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]",
       "err_no_phone": "[ НОМЕР НЕ ВВЕДЕН ]",
       "access_denied_otp": "[ ДОСТУП ЗАПРЕЩЕН ]<br><br>Сначала подтвердите, что это ваш номер.",
-      "err_otp_unverified": "Номер телефона не подтвержден через OTP или профиль",
       "verify_bot_btn": "ПОДТВЕРДИТЬ НОМЕР В БОТЕ",
       "ttn_copied": "ТТН скопирован: ",
       "empty_accepted": "Нет активных заказов.",
@@ -314,12 +317,13 @@
       "review_left": "[✔] ОТЗЫВ ОСТАВЛЕН",
       "order_prefix": "ЗАКАЗ #",
       "total_prefix": "ИТОГО:",
-      "status_cancelled": "ОТМЕНЕН",
-      "status_completed": "ЗАВЕРШЕН",
+      "status_processing": "В ОБРАБОТКЕ",
       "status_shipped": "ОТПРАВЛЕН",
+      "status_completed": "ЗАВЕРШЕН",
+      "status_cancelled": "ОТМЕНЕН",
       "status_paid": "ОПЛАЧЕН",
       "status_accepted": "ПРИНЯТ",
-      "status_processing": "В ОБРАБОТКЕ",
+      "err_otp_unverified": "Номер телефона не подтвержден через OTP или профиль",
       "delete_selected_title": "Удалить выбранные заказы",
       "deleted_selected": "Удалено заказов: {{count}}"
     },
@@ -338,8 +342,8 @@
       "err_send": "Ошибка при отправке: ",
       "db_error": "ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ",
       "new_review_from": "⭐ Новый отзыв от {{author}}: \"{{snippet}}\"",
-      "new_review_notif": "NISHA STORE | Новый отзыв ⭐",
-      "author_fallback": "Покупатель"
+      "author_fallback": "Покупатель",
+      "new_review_notif": "NISHA STORE | Новый отзыв ⭐"
     },
     "profile": {
       "google_login": "ВОЙТИ ЧЕРЕЗ GOOGLE",
@@ -367,9 +371,6 @@
       "delivery_branch": "ОТДЕЛЕНИЕ ИЛИ ПОЧТОМАТ:",
       "delivery_saved_btn": "[ СОХРАНЕНО ✓ ]",
       "delivery_edit": "[ ИЗМЕНИТЬ ]",
-      "sound_label": "ЗВУК:",
-      "sound_on": "ВКЛ",
-      "sound_off": "ВЫКЛ",
       "order_status_title": "ВНИМАНИЕ! Статус вашего заказа изменился.",
       "order_status_order": "Заказ:",
       "order_status_new": "Новый статус:",
@@ -396,7 +397,10 @@
       "remove_title_tg": "Удалить Telegram",
       "removed_toast_tg": "Telegram удален!",
       "timeout_toast_tg": "Время ожидания подтверждения Telegram истекло",
-      "both_verified": "Номер и Telegram подтверждены!"
+      "both_verified": "Номер и Telegram подтверждены!",
+      "sound_label": "ЗВУК:",
+      "sound_on": "ВКЛ",
+      "sound_off": "ВЫКЛ"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",
@@ -431,7 +435,6 @@
       "err_fill_all": "Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!",
       "err_max_files": "Максимум 5 фото/видео!",
       "err_cond_range": "Оценка состояния от 1 до 10!",
-      "err_measurements_dm": "Замеры в ЛС запрещены — укажите замеры цифрами прямо в описании!",
       "err_network": "Ошибка отправки вещи на сервер. Проверьте интернет и попробуйте еще раз.",
       "compressing": "СЖАТИЕ ФОТО",
       "err_server": "Сбой сервера: ",
@@ -447,7 +450,6 @@
       "bargain_ph": "Мин. ставка торга (грн)...",
       "err_bargain_min": "Минимальная цена торга должна быть не менее 100 грн!",
       "err_bargain_less_price": "Минимальная цена торга должна быть меньше желаемой цены!",
-      "err_confirm_bargain": "Подтвердите торг нажатием на галочку [ ✓ ]!",
       "category_label": "КАТЕГОРИЯ:",
       "category_place": "Выберите категорию...",
       "size_short_label": "РАЗМЕР:",
@@ -455,7 +457,9 @@
       "cat_sweaters": "Кофты и Свитера",
       "cat_pants": "Штаны и Джинсы",
       "cat_shoes": "Обувь",
-      "cat_accs": "Аксессуары"
+      "cat_accs": "Аксессуары",
+      "err_confirm_bargain": "Подтвердите торг нажатием на галочку [ ✓ ]!",
+      "err_measurements_dm": "Замеры в ЛС запрещены — укажите замеры цифрами прямо в описании!"
     },
     "email_prompt": {
       "desc": "Отправлять вам чеки и статусы доставки (ТТН) на E-mail?",

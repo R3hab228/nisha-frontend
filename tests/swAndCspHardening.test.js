@@ -277,4 +277,18 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(style).toContain('touch-action: none;');
         expect(style).toContain('border: 1px solid #555 !important; border-bottom: none !important;');
     });
+
+    it('21. sw.js bypasses non-public Supabase auth/orders requests, external _blank links carry rel=noopener noreferrer, and app.js avoids raw error innerHTML', () => {
+        const publicSw = readFileSync(resolve(__dirname, '../public/sw.js'), 'utf8');
+        const returnHtml = readFileSync(resolve(__dirname, '../return-policy.html'), 'utf8');
+        const galleryJs = readFileSync(resolve(__dirname, '../js/product/product-gallery.js'), 'utf8');
+        const appJs = readFileSync(resolve(__dirname, '../app.js'), 'utf8');
+
+        expect(publicSw).toContain("url.hostname === 'supabase.co' || url.hostname.endsWith('.supabase.co')");
+        expect(returnHtml).toContain('rel="noopener noreferrer"');
+        expect(galleryJs).toContain('target="_blank" rel="noopener noreferrer"');
+        expect(galleryJs).toContain('function escapeCssUrl(');
+        expect(appJs).not.toContain('${err.message}');
+        expect(appJs).toContain('errBox.textContent = `[ СИСТЕМНАЯ ОШИБКА: ${err?.message || \'Unknown error\'} ]`;');
+    });
 });

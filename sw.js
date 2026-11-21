@@ -225,6 +225,11 @@ self.addEventListener('fetch', event => {
         return; 
     }
 
+    // Приватные запросы Supabase (auth, профили, заказы, RPC) не перехватываем и не кэшируем в SW
+    if (url.hostname === 'supabase.co' || url.hostname.endsWith('.supabase.co')) {
+        return;
+    }
+
     // --- ОСНОВНЫЕ ФАЙЛЫ САЙТА (Network-First с поддержкой Navigation Preload и fallback на кэш при офлайне) ---
     event.respondWith(
         (async () => {

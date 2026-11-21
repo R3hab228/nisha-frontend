@@ -13,6 +13,16 @@ import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
 let _pswpLightbox = null;
 
+function escapeCssUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return '';
+    const escaped = hasAction('escapeAttr')
+        ? invokeAction('escapeAttr', rawUrl)
+        : rawUrl.replace(/'/g, '%27').replace(/"/g, '%22');
+    return String(escaped)
+        .replaceAll('(', '%28')
+        .replaceAll(')', '%29');
+}
+
 /**
  * Preloads the next/previous image slide when hovering slider controls.
  * @param {number} step
@@ -186,22 +196,20 @@ export function renderModalSlider(item) {
                     const isFirst = (index === 0);
                     const isSecond = (index === 1);
                     const loadAttr = isFirst ? 'fetchpriority="high" loading="eager"' : (isSecond ? 'loading="eager"' : 'loading="lazy"');
-                    const safeThumbBg = isFirst && currentThumb
-                        ? (hasAction('escapeAttr') ? invokeAction('escapeAttr', currentThumb) : String(currentThumb).replace(/'/g, '%27').replace(/"/g, '%22'))
-                            .replaceAll('(', '%28')
-                            .replaceAll(')', '%29')
-                        : '';
+                    const safeThumbBg = isFirst && currentThumb ? escapeCssUrl(currentThumb) : '';
                     const thumbBackdropHtml = safeThumbBg
                         ? `<span class="slide-thumb-backdrop" aria-hidden="true" style="position:absolute; inset:0; background:#000 url('${safeThumbBg}') center/contain no-repeat; filter:blur(14px) brightness(0.4); transform:scale(1.06); pointer-events:none; transition:opacity 0.16s ease-out;"></span>`
                         : '';
+                    const safeSlideHref = hasAction('escapeAttr') ? invokeAction('escapeAttr', cdnUrl) : cdnUrl;
                     slidesHtml += `
-                        <a href="${cdnUrl}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" class="slide${isFirst ? ' img-8bit-loading' : ''}" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:#000;">
+                        <a href="${safeSlideHref}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" rel="noopener noreferrer" class="slide${isFirst ? ' img-8bit-loading' : ''}" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:#000;">
                             ${thumbBackdropHtml}
                             <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async" style="position:relative; z-index:1; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.16s ease-out;">
                         </a>`;
                 }
 
-                thumbsHtml += `<div class="thumb" style="background-image:url('${currentThumb}'); position:relative;" data-action="set-slide" data-index="${index}">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
+                const safeThumbCss = escapeCssUrl(currentThumb);
+                thumbsHtml += `<div class="thumb" style="${safeThumbCss ? `background-image:url('${safeThumbCss}'); ` : ''}position:relative;" data-action="set-slide" data-index="${index}">${isVideo ? '<span style="position:absolute; font-size:24px; color:#fff; text-shadow:0 0 5px #000; left:50%; top:50%; transform:translate(-50%, -50%);">▶</span>' : ''}</div>`;
             });
 
             wrapper.innerHTML = slidesHtml;

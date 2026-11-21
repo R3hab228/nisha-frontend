@@ -260,13 +260,18 @@ async function initApp() {
             setTimeout(() => { openReviewsModal(); }, 250);
         }
 
-        if (sessionStorage.getItem('nisha_showing_favs') === 'true') {
+        let showingFavs = false;
+        let savedCat = urlParams.get('cat') || null;
+        try {
+            showingFavs = sessionStorage.getItem('nisha_showing_favs') === 'true';
+            if (!savedCat) savedCat = sessionStorage.getItem('nisha_last_category');
+        } catch {}
+
+        if (showingFavs) {
             window.showingOnlyFavs = true;
             const favNav = document.getElementById('favNav');
             if (favNav) favNav.style.color = '#fff';
         }
-
-        const savedCat = urlParams.get('cat') || sessionStorage.getItem('nisha_last_category');
         const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
         catLinks.forEach(el => el.classList.remove('active-filter'));
 
@@ -794,7 +799,14 @@ async function initApp() {
         console.error("ОШИБКА ИНИЦИАЛИЗАЦИИ ПРИЛОЖЕНИЯ:", err);
         const grid = document.getElementById('itemsGrid');
         if (grid) {
-            grid.innerHTML = `<div style="color:red; text-align:center; padding:40px; grid-column:1/-1;">[ СИСТЕМНАЯ ОШИБКА: ${err.message} ]</div>`;
+            const errBox = document.createElement('div');
+            errBox.style.cssText = 'color:red; text-align:center; padding:40px; grid-column:1/-1;';
+            errBox.textContent = `[ СИСТЕМНАЯ ОШИБКА: ${err?.message || 'Unknown error'} ]`;
+            if (typeof grid.replaceChildren === 'function') grid.replaceChildren(errBox);
+            else {
+                grid.innerHTML = '';
+                grid.appendChild(errBox);
+            }
         }
     }
 }
