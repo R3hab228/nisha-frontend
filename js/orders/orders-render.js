@@ -341,7 +341,7 @@ export function renderFilteredOrders() {
             const safeImgUrl = sanitizeCssFn
                 ? sanitizeCssFn(itemImg)
                 : (/^https?:\/\/|^\/(?!\/)/i.test(String(itemImg || '').trim())
-                    ? escAttr(String(itemImg).trim()).replaceAll('\\', '%5C').replaceAll('(', '%28').replaceAll(')', '%29')
+                    ? escAttr(String(itemImg).trim().replaceAll('\\', '%5C').replaceAll("'", '%27').replaceAll('"', '%22').replaceAll('(', '%28').replaceAll(')', '%29'))
                     : '');
             const imgStyle = safeImgUrl ? `background-image: url('${safeImgUrl}');` : '';
             const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);

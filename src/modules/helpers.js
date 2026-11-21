@@ -490,10 +490,14 @@ export function sanitizeCssMediaUrl(rawUrl) {
         if (!val || typeof val !== 'string') return '';
         const trimmed = val.trim();
         if (!/^https?:\/\/|^\/(?!\/)/i.test(trimmed)) return '';
-        return escapeAttr(trimmed)
-            .replaceAll('\\', '%5C')
-            .replaceAll('(', '%28')
-            .replaceAll(')', '%29');
+        return escapeAttr(
+            trimmed
+                .replaceAll('\\', '%5C')
+                .replaceAll("'", '%27')
+                .replaceAll('"', '%22')
+                .replaceAll('(', '%28')
+                .replaceAll(')', '%29')
+        );
     });
 }
 

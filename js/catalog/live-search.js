@@ -258,7 +258,7 @@ function handleLiveSearch() {
                 const safeImg = typeof sanitizeCssMediaUrl === 'function'
                     ? sanitizeCssMediaUrl(img)
                     : (/^https?:\/\/|^\/(?!\/)/i.test(String(img || '').trim())
-                        ? escapeHtml(String(img).trim()).replaceAll('\\', '%5C').replaceAll('(', '%28').replaceAll(')', '%29')
+                        ? escapeHtml(String(img).trim().replaceAll('\\', '%5C').replaceAll("'", '%27').replaceAll('"', '%22').replaceAll('(', '%28').replaceAll(')', '%29'))
                         : '');
                 const rawItemName = String(item.name || '');
                 
