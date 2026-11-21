@@ -104,13 +104,10 @@ export function openTelegramBotDeepLink(tgLink) {
     if (typeof window === 'undefined') return;
     const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent.toLowerCase() : '';
     const isMobile = /android|iphone|ipad|ipod/i.test(ua);
-    if (isMobile) {
+    if (isMobile || typeof window.open !== 'function') {
         window.location.href = tgLink;
     } else {
-        const win = typeof window.open === 'function' ? window.open(tgLink, '_blank') : null;
-        if (!win || win.closed || typeof win.closed === 'undefined') {
-            window.location.href = tgLink;
-        }
+        window.open(tgLink, '_blank', 'noopener,noreferrer');
     }
 }
 

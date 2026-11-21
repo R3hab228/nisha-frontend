@@ -438,7 +438,8 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         await contacts.saveContactFromInput('phone', false);
         expect(globalThis.open).toHaveBeenCalledWith(
             expect.stringContaining('t.me/nisha_store1_bot?start=otp_user-otp-1_380991112233'),
-            '_blank'
+            '_blank',
+            'noopener,noreferrer'
         );
 
         // Cooldown prevents immediate retry

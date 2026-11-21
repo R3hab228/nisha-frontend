@@ -290,9 +290,12 @@ export function openProductModal(item) {
 
     try {
         const { acceptedData } = getBargainOfferState(item.id);
-        if (acceptedData && acceptedData.acceptedPrice && priceEl) {
-            const cur = (typeof getCurrency === 'function' ? getCurrency() : 'грн').trim();
-            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${acceptedData.originalPrice || item.price} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${acceptedData.acceptedPrice} ${cur}</span>`;
+        const accPriceNum = Number(acceptedData && acceptedData.acceptedPrice);
+        if (acceptedData && Number.isFinite(accPriceNum) && accPriceNum > 0 && priceEl) {
+            const origPriceNum = Number(acceptedData.originalPrice ?? item.price);
+            const safeOrig = Number.isFinite(origPriceNum) ? origPriceNum : 0;
+            const cur = getEscHtml((typeof getCurrency === 'function' ? getCurrency() : 'грн').trim());
+            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${safeOrig} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accPriceNum} ${cur}</span>`;
         }
     } catch {}
 
