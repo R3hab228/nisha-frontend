@@ -27,8 +27,33 @@ export function getOrdersData() {
     return [];
 }
 
+const HIDDEN_ORDERS_STORAGE_KEY = 'nisha_hidden_orders_v1';
+
+export function getHiddenOrderIds() {
+    const store = getRuntimeStorage();
+    if (store && typeof store.getJSON === 'function') {
+        const list = store.getJSON(HIDDEN_ORDERS_STORAGE_KEY, []);
+        return new Set(Array.isArray(list) ? list.map(String) : []);
+    }
+    return new Set();
+}
+
+export function hideOrderIds(ids) {
+    const list = Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
+    if (list.length === 0) return;
+    const merged = Array.from(new Set([...getHiddenOrderIds(), ...list]));
+    const store = getRuntimeStorage();
+    if (store && typeof store.setJSON === 'function') {
+        store.setJSON(HIDDEN_ORDERS_STORAGE_KEY, merged);
+    }
+}
+
 export function setOrdersData(nextList) {
-    const safeList = Array.isArray(nextList) ? nextList : [];
+    const hiddenSet = getHiddenOrderIds();
+    const rawList = Array.isArray(nextList) ? nextList : [];
+    const safeList = hiddenSet.size > 0
+        ? rawList.filter(o => o && !hiddenSet.has(String(o.id)))
+        : rawList;
     const s = getReactiveStore();
     if (s) {
         s.set('globalOrdersData', safeList);

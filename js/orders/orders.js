@@ -26,6 +26,7 @@ import {
     bindOrdersLongPressSelection,
     bindOrdersTabSwipe,
     copyTTN,
+    deleteSelectedOrders,
     openOrdersModal,
     renderFilteredOrders,
     switchOrderTab,
@@ -53,6 +54,7 @@ const ORDER_EXPORTS = {
     clearOrderSelection,
     getSelectedOrderIds,
     toggleOrderSelection,
+    deleteSelectedOrders,
     copyTTN,
     renderFilteredOrders
 };

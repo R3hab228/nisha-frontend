@@ -5,6 +5,7 @@
 import { resolveAction } from '../core/action-registry.js';
 import { getLenisInstance, getRuntimeProfile, getRuntimeUser } from '../core/runtime-env.js';
 import {
+    clearOrderSelection,
     escAttr,
     escHtml,
     fmtPrice,
@@ -14,10 +15,13 @@ import {
     getNovaPoshtaTrackingUrl,
     getOrderTabBucket,
     getOrdersData,
+    getSelectedOrderIds,
     getStorage,
     hasSelectedOrders,
+    hideOrderIds,
     isOrderSelected,
     setCurrentOrderTab,
+    setOrdersData,
     toggleOrderSelection
 } from './orders-state.js';
 import { ensureOrderImagesLoaded, fetchMyOrders, getOrderItemImage } from './orders-fetch.js';
@@ -277,6 +281,49 @@ function syncOrderCardSelectionDOM(cardEl, selected) {
     cardEl.setAttribute('aria-selected', selected ? 'true' : 'false');
 }
 
+export function syncOrdersSelectionToolbar() {
+    if (typeof document === 'undefined') return;
+    const btn = document.getElementById('ordersDeleteSelectedBtn');
+    const countEl = document.getElementById('ordersDeleteCount');
+    const selectedCount = getSelectedOrderIds().length;
+    if (countEl) countEl.textContent = String(selectedCount);
+    if (!btn) return;
+    const isVisible = selectedCount > 0;
+    btn.hidden = !isVisible;
+    btn.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+    if (btn.classList) btn.classList.toggle('is-visible', isVisible);
+}
+
+export function deleteSelectedOrders() {
+    const selectedIds = getSelectedOrderIds();
+    if (selectedIds.length === 0) return;
+
+    const selectedSet = new Set(selectedIds);
+    hideOrderIds(selectedIds);
+    clearOrderSelection();
+
+    const remaining = getOrdersData().filter(o => o && !selectedSet.has(String(o.id)));
+    setOrdersData(remaining);
+
+    const hapticFn = resolveAction('triggerHaptic');
+    if (hapticFn) hapticFn('success');
+    const soundFn = resolveAction('playSound');
+    if (soundFn) Promise.resolve(soundFn('recycle', { kind: 'ui' })).catch(() => {});
+
+    syncOrdersSelectionToolbar();
+    updateOrderTabCounters();
+
+    const runUpdate = () => renderFilteredOrders();
+    const vtFn = resolveAction('safeViewTransition') || (typeof safeViewTransition === 'function' ? safeViewTransition : null);
+    if (vtFn) vtFn(runUpdate);
+    else runUpdate();
+
+    const toastFn = resolveAction('showToast') || (typeof showToast === 'function' ? showToast : null);
+    if (toastFn) {
+        toastFn(`Удалено заказов: ${selectedIds.length}`, 'success');
+    }
+}
+
 function triggerOrderSelectFeedback(selected) {
     const hapticFn = resolveAction('triggerHaptic');
     if (hapticFn) hapticFn(selected ? 'medium' : 'light');
@@ -342,6 +389,7 @@ export function bindOrdersLongPressSelection() {
             suppressNextClickUntil = Date.now() + 550;
             const nextSelected = toggleOrderSelection(orderId);
             syncOrderCardSelectionDOM(pressedCard, nextSelected);
+            syncOrdersSelectionToolbar();
             triggerOrderSelectFeedback(nextSelected);
         }, ORDER_LONG_PRESS_MS);
     }, { passive: true });
@@ -388,6 +436,7 @@ export function bindOrdersLongPressSelection() {
         e.stopPropagation();
         const nextSelected = toggleOrderSelection(orderId);
         syncOrderCardSelectionDOM(card, nextSelected);
+        syncOrdersSelectionToolbar();
         triggerOrderSelectFeedback(nextSelected);
     }, true);
 }
@@ -561,11 +610,7 @@ export function renderFilteredOrders() {
 
         return `
             <div class="order-card${selectedClass}" data-order-id="${escAttr(order.id)}" aria-selected="${isSelected ? 'true' : 'false'}">
-                <div class="order-select-badge" aria-hidden="true">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                </div>
+                <span class="order-select-corner" aria-hidden="true"></span>
                 <div class="order-header">
                     <div class="order-id-wrap">
                         <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', { defaultValue: 'ЗАКАЗ #' }) : 'ЗАКАЗ #'}${String(order.id || '').split('-').at(0).toUpperCase()}</span>
@@ -650,6 +695,7 @@ export function openOrdersModal() {
     const activeProfile = getRuntimeProfile();
     bindOrdersTabSwipe();
     bindOrdersLongPressSelection();
+    syncOrdersSelectionToolbar();
 
     if (activeUser) {
         if (guestInputGroup) guestInputGroup.style.display = 'none';

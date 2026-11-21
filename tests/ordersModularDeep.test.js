@@ -36,7 +36,8 @@ import {
     updateOrderTabCounters,
     switchOrderTab,
     renderFilteredOrders,
-    bindOrdersLongPressSelection
+    bindOrdersLongPressSelection,
+    deleteSelectedOrders
 } from '../js/orders/orders-render.js';
 import '../js/orders/orders.js';
 
@@ -214,14 +215,31 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             }
         };
 
+        const deleteBtn = {
+            hidden: true,
+            attrs: {},
+            classes: new Set(),
+            classList: {
+                toggle: (c, f) => (f ? deleteBtn.classes.add(c) : deleteBtn.classes.delete(c)),
+                contains: (c) => deleteBtn.classes.has(c)
+            },
+            setAttribute: (k, v) => { deleteBtn.attrs[k] = v; }
+        };
+        const deleteCountEl = { textContent: '0' };
+
         globalThis.document = {
-            getElementById: (id) => (id === 'ordersListArea' ? listArea : null),
+            getElementById: (id) => {
+                if (id === 'ordersListArea') return listArea;
+                if (id === 'ordersDeleteSelectedBtn') return deleteBtn;
+                if (id === 'ordersDeleteCount') return deleteCountEl;
+                return null;
+            },
             querySelector: () => null,
             querySelectorAll: () => []
         };
 
         try {
-            // Render accepted, shipped, and cancelled orders -> verify badge markup present
+            // Render accepted, shipped, and cancelled orders -> verify green corner markup present
             setOrdersData([
                 { id: 'ord-acc-1', status: 'Принят', total_sum: 1000, created_at: '2026-11-10T10:00:00Z', items: [] },
                 { id: 'ord-ship-2', status: 'Отправлен', total_sum: 2000, created_at: '2026-11-10T10:00:00Z', items: [] },
@@ -230,7 +248,7 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             for (const tab of ['accepted', 'shipped', 'cancelled']) {
                 setCurrentOrderTab(tab);
                 renderFilteredOrders();
-                expect(listArea.innerHTML).toContain('order-select-badge');
+                expect(listArea.innerHTML).toContain('order-select-corner');
             }
 
             setCurrentOrderTab('accepted');
@@ -243,11 +261,14 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             await vi.advanceTimersByTimeAsync(500);
             expect(isOrderSelected('ord-acc-1')).toBe(false);
 
-            // 2. Holding 450ms activates green-circle selection
+            // 2. Holding 450ms activates bottom-left green corner and shows delete trash button
             listArea.dispatchEvent({ type: 'pointerdown', pointerId: 2, pointerType: 'touch', isPrimary: true, clientX: 50, clientY: 50, target: scrollTarget });
             await vi.advanceTimersByTimeAsync(460);
             expect(isOrderSelected('ord-acc-1')).toBe(true);
             expect(card1.classList.contains('is-selected')).toBe(true);
+            expect(deleteBtn.hidden).toBe(false);
+            expect(deleteBtn.classList.contains('is-visible')).toBe(true);
+            expect(deleteCountEl.textContent).toBe('1');
 
             // 3. Follow-up synthetic click from finger release is suppressed
             const preventDefaultSpy = vi.fn();
@@ -261,13 +282,16 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
             const card2Target = { closest: () => card2 };
             listArea.dispatchEvent({ type: 'click', target: card2Target, preventDefault: vi.fn(), stopPropagation: vi.fn() });
             expect(getSelectedOrderIds()).toEqual(['ord-acc-1', 'ord-ship-2']);
+            expect(deleteCountEl.textContent).toBe('2');
 
-            // 5. Deselecting both exits selection cleanly
-            toggleOrderSelection('ord-acc-1', false);
-            toggleOrderSelection('ord-ship-2', false);
+            // 5. Clicking trash button hides selected orders and resets toolbar
+            deleteSelectedOrders();
             expect(getSelectedOrderIds()).toEqual([]);
+            expect(deleteBtn.hidden).toBe(true);
+            expect(getOrdersData().map(o => o.id)).toEqual(['ord-can-3']);
         } finally {
             clearOrderSelection();
+            localStorage.removeItem('nisha_hidden_orders_v1');
             vi.useRealTimers();
         }
     });

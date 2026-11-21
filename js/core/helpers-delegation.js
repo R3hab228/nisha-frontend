@@ -61,6 +61,7 @@ const SIMPLE_ACTION_MAP = {
     'apply-promo-code': 'applyPromoCode',
     'submit-order': 'submitOrder',
     'fetch-my-orders': 'fetchMyOrders',
+    'delete-selected-orders': 'deleteSelectedOrders',
     'open-propose-modal': 'openProposeModal',
     'retry-load-items': 'loadAllItems',
     'toggle-sound': 'toggleSoundEnabled'

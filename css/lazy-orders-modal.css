@@ -22,6 +22,52 @@
     flex-shrink: 0;
 }
 
+.orders-auth-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 28px;
+}
+
+.orders-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    background: #140505;
+    color: var(--accent-red);
+    border: 1px solid var(--accent-red);
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.16);
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 0.18s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, color 0.15s ease;
+}
+
+.orders-delete-btn[hidden] {
+    display: none;
+}
+
+.orders-delete-btn.is-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.orders-delete-btn:hover {
+    background: var(--accent-red);
+    color: #000;
+}
+
+.orders-delete-btn:active {
+    transform: scale(0.95);
+}
+
 #ordersModal #ordersTabs {
     flex-shrink: 0;
 }
@@ -80,32 +126,29 @@
     box-shadow: 0 0 0 1px rgba(0, 255, 0, 0.28), 0 6px 20px rgba(0, 255, 0, 0.12);
 }
 
-.order-select-badge {
+.order-select-corner {
     position: absolute;
-    bottom: 11px;
-    left: 15px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #08120a;
-    color: var(--accent-green);
-    border: 1.5px solid var(--accent-green);
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    bottom: 0;
+    left: 0;
+    width: 22px;
+    height: 22px;
+    background: var(--accent-green);
+    clip-path: polygon(0 0, 0 100%, 100% 100%);
+    filter: drop-shadow(0 0 6px rgba(0, 255, 0, 0.55));
     z-index: 5;
     pointer-events: none;
     opacity: 0;
-    transform: scale(0.45);
-    transition: opacity 0.18s ease, transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(0.4);
+    transform-origin: bottom left;
+    transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.order-card.is-selected .order-select-badge {
+.order-card.is-selected .order-select-corner {
     opacity: 1;
     transform: scale(1);
 }
 @media (prefers-reduced-motion: reduce) {
-    .order-select-badge { transition: opacity 0.12s ease; }
+    .order-select-corner,
+    .orders-delete-btn { transition: opacity 0.12s ease; }
 }
 .order-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 1px dashed #333; padding-bottom: 10px; font-family: var(--font-mono); font-size: 13px; }
 .order-id-wrap { display: flex; flex-direction: column; gap: 3px; min-width: 0; }

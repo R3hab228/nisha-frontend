@@ -724,7 +724,19 @@
 <button class=close-btn data-action=close-modal data-modal-id=ordersModal aria-label="Закрыть окно">X</button>
 </div>
 <div class=form-layout id=ordersAuthSection style="border-bottom:1px dashed #333;padding-bottom:15px">
+<div class="orders-auth-header-row">
 <p id=guestOrderText style=margin:0;font-size:13px;color:#aaa data-i18n=orders_modal.desc>Введите номер телефона, указанный при заказе, чтобы отследить статус.</p>
+<button type="button" id="ordersDeleteSelectedBtn" class="orders-delete-btn" data-action="delete-selected-orders" hidden aria-hidden="true" title="Удалить выбранные заказы">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<polyline points="3 6 5 6 21 6"></polyline>
+<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+<path d="M10 11v6"></path>
+<path d="M14 11v6"></path>
+<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+</svg>
+<span class="orders-delete-count" id="ordersDeleteCount">0</span>
+</button>
+</div>
 <div id=guestOrderInputGroup style=display:flex;gap:10px;margin-top:10px>
 <input type=tel id=ordersSearchPhone class=form-input placeholder=+380... inputmode=numeric>
 <button class="search-btn btn-target" data-action="fetch-my-orders" data-i18n=orders_modal.btn>НАЙТИ</button>
