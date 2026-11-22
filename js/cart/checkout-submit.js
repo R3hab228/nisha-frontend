@@ -204,88 +204,8 @@ export async function submitOrder() {
         return await executeOrderFinal(user.email);
     }
 
-    const prompt = document.getElementById('emailPromptOverlay');
-    const emailInput = document.getElementById('promptEmailInput');
-    if (prompt && emailInput) {
-        emailInput.value = '';
-        prompt.style.display = 'flex';
-        if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(prompt);
-    } else {
-        await executeOrderFinal('');
-    }
+    return await executeOrderFinal('');
 }
-
-/**
- * Подтверждение диалога E-mail перед финальной отправкой заказа.
- * @param {boolean} wantsEmail
- * @returns {Promise<void>}
- */
-export async function confirmEmailPrompt(wantsEmail) {
-    if (cartState.isOrderSubmitting) return;
-
-    const branchInput = document.getElementById('orderBranch');
-    const cityInput = document.getElementById('orderCity');
-    const branch = branchInput ? branchInput.value.trim() : '';
-    const city = cityInput ? cityInput.value.trim() : '';
-
-    let cityRef = (typeof window !== 'undefined' && window.selectedCityRef) || cartState.selectedCityRef;
-    if (!cityRef && city) {
-        try { cityRef = await ensureCityRef(); } catch {}
-        if (!cityRef && city.length >= 2) {
-            cityRef = 'city_auto_' + _npNorm(city);
-            setSelectedCityRefState(cityRef);
-        }
-    }
-
-    if (!city || !cityRef) {
-        const prompt = document.getElementById('emailPromptOverlay');
-        if (prompt) prompt.style.display = 'none';
-        highlightFieldError(cityInput);
-        const chooseCityMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_from_dropdown', { defaultValue: 'Выберите Город строго из выпадающего списка!' }) : 'Выберите Город строго из выпадающего списка!';
-        showToast(chooseCityMsg, 'error');
-        return;
-    }
-
-    let branchRef = (typeof window !== 'undefined' && window.selectedBranchRef) || cartState.selectedBranchRef;
-    if (!branchRef && branch) {
-        try { branchRef = await ensureBranchRef(branch); } catch {}
-        if (!branchRef && branch.length >= 2) {
-            branchRef = 'branch_auto_' + _npNorm(branch);
-            setSelectedBranchRefState(branchRef);
-        }
-    }
-
-    if (!branch || !branchRef) {
-        const prompt = document.getElementById('emailPromptOverlay');
-        if (prompt) prompt.style.display = 'none';
-        highlightFieldError(branchInput);
-        const chooseBranchMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_branch_from_dropdown', { defaultValue: 'Выберите Отделение или Поштомат из выпадающего списка!' }) : 'Выберите Отделение или Поштомат из выпадающего списка!';
-        showToast(chooseBranchMsg, 'error');
-        return;
-    }
-
-    const prompt = document.getElementById('emailPromptOverlay');
-    const emailInput = document.getElementById('promptEmailInput');
-    const store = getRuntimeStorage();
-    let finalEmail = '';
-
-    if (wantsEmail) {
-        finalEmail = emailInput ? emailInput.value.trim() : '';
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(finalEmail)) {
-            const enterEmailMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.enter_valid_email', { defaultValue: 'Введите корректный E-mail!' }) : 'Введите корректный E-mail!';
-            showToast(enterEmailMsg, 'error');
-            return;
-        }
-        if (store) store.set('nisha_email_preference', finalEmail);
-    } else {
-        if (store) store.set('nisha_email_preference', 'skipped');
-    }
-
-    if (prompt) prompt.style.display = 'none';
-    await executeOrderFinal(finalEmail);
-}
-if (typeof window !== 'undefined') window.confirmEmailPrompt = confirmEmailPrompt;
 
 /**
  * Атомарное создание заказа через backend API с безопасным RPC-фоллбэком.

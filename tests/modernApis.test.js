@@ -2073,7 +2073,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(cartCode).toContain("div.addEventListener('click', selectCityItem);");
         });
 
-        it('strictly blocks order submission in executeOrderFinal and confirmEmailPrompt if city or branch is missing', () => {
+        it('strictly blocks order submission in submitOrder and executeOrderFinal if city or branch is missing', () => {
             const cartCode = readCartSource();
             expect(cartCode).toContain('if (!city || !cityRef)');
             expect(cartCode).toContain('if (!branch || !branchRef)');

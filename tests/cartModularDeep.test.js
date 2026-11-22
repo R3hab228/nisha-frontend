@@ -308,11 +308,12 @@ describe('Modular Cart, Nova Poshta & Checkout Deep Suite (js/cart/*.js)', () =>
             'sanitizePromoField', 'saveCheckoutDraft', 'restoreCheckoutDraft', 'clearCheckoutDraft',
             'closePaymentDropdown', 'normalizePaymentMethodRu', 'selectPaymentMethod', 'togglePaymentDropdown',
             'applyPromoCode', 'openCheckoutModal',
-            'normalizeOrderPhone', 'highlightFieldError', 'submitOrder', 'confirmEmailPrompt', 'executeOrderFinal'
+            'normalizeOrderPhone', 'highlightFieldError', 'submitOrder', 'executeOrderFinal'
         ];
         for (const fn of expectedExports) {
             expect(cartMod[fn]).toBeDefined();
         }
+        expect(cartMod.confirmEmailPrompt).toBeUndefined();
         expect(window.addToCartById).toBe(cartMod.addToCartById);
         expect(window.submitOrder).toBe(cartMod.submitOrder);
         expect(window.executeOrderFinal).toBe(cartMod.executeOrderFinal);

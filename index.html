@@ -159,20 +159,6 @@
 </div>
 </div>
 </div>
-<div id=emailPromptOverlay data-action="email-prompt-backdrop" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:9999;justify-content:center;align-items:center;flex-direction:column;padding:15px;box-sizing:border-box">
-<div class=success-terminal-box style=opacity:1;transform:scale(1);animation:none>
-<div class="success-title typewriter" id=emailPromptTitle style=color:#0af>NOTIFICATIONS.SYS</div>
-<div class=success-divider style="background:repeating-linear-gradient(90deg,#0af,#0af 5px,transparent 5px,transparent 10px)"></div>
-<div class=success-text style=margin-bottom:15px data-i18n=email_prompt.desc>
-Отправлять вам чеки и статусы доставки (ТТН) на E-mail?
-</div>
-<input type=email id=promptEmailInput class=form-input placeholder=your@email.com style=margin-bottom:15px;text-align:center;border-color:#0af>
-<div style=display:flex;gap:10px>
-<button id=btnEmailYes data-action="confirm-email-prompt" data-confirm="true" style="flex:1;padding:10px;font-size:13px;background:#0af;color:#000;font-family:var(--font-mono);font-weight:700;border:2px outset #fff;cursor:pointer;text-transform:uppercase" data-i18n=email_prompt.yes>[ ДА ]</button>
-<button id=btnEmailSkip data-action="confirm-email-prompt" data-confirm="false" style="flex:1;padding:10px;font-size:13px;background:#333;border:2px outset #555;color:#fff;font-family:var(--font-mono);font-weight:700;cursor:pointer;text-transform:uppercase;white-space:nowrap" data-i18n=email_prompt.skip>[ ПРОПУСТИТЬ ]</button>
-</div>
-</div>
-</div>
 
 <div id="pwaPullRefresh" class="pwa-pull-refresh" aria-hidden="true">
 <div class="pwa-pull-capsule pwa-pull-terminal-box">

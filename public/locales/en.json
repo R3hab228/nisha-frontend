@@ -283,7 +283,6 @@
       "choose_city_from_dropdown": "Please select City strictly from the dropdown!",
       "choose_branch_from_dropdown": "Please select Branch or Locker from the dropdown!",
       "choose_city_branch_from_dropdown": "Please select City and Branch from the dropdown!",
-      "enter_valid_email": "Please enter a valid email!",
       "order_submit_err": "Order submission error: ",
       "geo_searching": "Detecting location...",
       "promo_warming": "Server is warming up, please click \"Apply\" again",
@@ -460,11 +459,6 @@
       "cat_accs": "Accessories",
       "err_confirm_bargain": "Please confirm bargain with the checkmark [ ✓ ]!",
       "err_measurements_dm": "No \"DM for measurements\" — enter exact measurements in the description!"
-    },
-    "email_prompt": {
-      "desc": "Send receipts and delivery statuses (Waybill) to your E-mail?",
-      "yes": "[ YES ]",
-      "skip": "[ SKIP ]"
     },
     "success_modal": {
       "desc1": "Items successfully reserved.",

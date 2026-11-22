@@ -24,13 +24,11 @@ describe('Checkout Profile Delivery Autofill & Ref Resolution', () => {
         expect(cartCode).toContain('branch_auto_');
     });
 
-    it('resolves cityRef and branchRef dynamically in confirmEmailPrompt and executeOrderFinal', () => {
-        expect(cartCode).toContain('function confirmEmailPrompt');
+    it('resolves cityRef and branchRef dynamically in submitOrder and executeOrderFinal without emailPromptOverlay', () => {
+        expect(cartCode).toContain('function submitOrder');
         expect(cartCode).toContain('function executeOrderFinal');
-        // Both routines include dynamic ref resolution before strict check
-        const confirmEmailPart = cartCode.slice(cartCode.indexOf('async function confirmEmailPrompt'), cartCode.indexOf('window.confirmEmailPrompt'));
-        expect(confirmEmailPart).toContain('await ensureCityRef()');
-        expect(confirmEmailPart).toContain('await ensureBranchRef(branch)');
+        expect(cartCode).not.toContain('confirmEmailPrompt');
+        expect(cartCode).not.toContain('emailPromptOverlay');
 
         const execFinalPart = cartCode.slice(cartCode.indexOf('async function executeOrderFinal'), cartCode.indexOf('// 1. ОСНОВНОЙ ПУТЬ'));
         expect(execFinalPart).toContain('await ensureCityRef()');

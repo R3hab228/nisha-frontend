@@ -538,15 +538,10 @@ document.addEventListener('keydown', (e) => {
             return;
         }
 
-        // 2. Оверлеи успеха или подсказки email
+        // 2. Оверлей успешного заказа
         const orderSuccess = document.getElementById('orderSuccessOverlay');
         if (isElementVisible(orderSuccess)) {
             orderSuccess.style.display = 'none';
-            return;
-        }
-        const emailPrompt = document.getElementById('emailPromptOverlay');
-        if (isElementVisible(emailPrompt)) {
-            emailPrompt.style.display = 'none';
             return;
         }
 

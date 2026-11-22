@@ -18,10 +18,7 @@ function hasActiveModalShield(actionEl) {
         return disp === 'flex' || disp === 'block';
     });
     const successOverlay = typeof document.getElementById === 'function' ? document.getElementById('orderSuccessOverlay') : null;
-    const isSuccessActive = successOverlay && (successOverlay.style ? (successOverlay.style.display === 'flex' || successOverlay.style.display === 'block') : false);
-    const emailPrompt = typeof document.getElementById === 'function' ? document.getElementById('emailPromptOverlay') : null;
-    const isEmailPromptActive = emailPrompt && (emailPrompt.style ? (emailPrompt.style.display === 'flex' || emailPrompt.style.display === 'block') : false);
-    const isShieldActive = isSuccessActive || isEmailPromptActive;
+    const isShieldActive = Boolean(successOverlay && (successOverlay.style ? (successOverlay.style.display === 'flex' || successOverlay.style.display === 'block') : false));
     if (!hasActiveModal && !isShieldActive) return false;
     const parentModal = actionEl.closest('.modal-overlay');
     return !parentModal || (parentModal.classList && typeof parentModal.classList.contains === 'function' && parentModal.classList.contains('closing')) || isShieldActive;
@@ -279,15 +276,6 @@ export function handleDelegatedAction(e) {
         case 'close-order-success': {
             const overlay = typeof document !== 'undefined' ? document.getElementById('orderSuccessOverlay') : null;
             if (overlay) overlay.style.display = 'none';
-            break;
-        }
-        case 'email-prompt-backdrop': {
-            if (e.target === actionEl) invokeCompatAction('confirm-email-prompt', 'confirmEmailPrompt', false);
-            break;
-        }
-        case 'confirm-email-prompt': {
-            const isYes = actionEl.getAttribute('data-confirm') === 'true';
-            invokeCompatAction('confirm-email-prompt', 'confirmEmailPrompt', isYes);
             break;
         }
         case 'navigate-home': {
