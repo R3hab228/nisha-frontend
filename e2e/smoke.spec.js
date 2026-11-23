@@ -114,4 +114,54 @@ test.describe('NISHA STORE — Production Smoke E2E', () => {
         expect(metrics.row1Count).toBe(3);
         expect(metrics.row2Count).toBe(2);
     });
+
+    test('critical funnel: active filter chips -> lazy product modal -> cart -> lazy Nova Poshta checkout', async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('nisha_rules_accepted', 'true');
+            localStorage.setItem('nisha_tour_completed', 'true');
+            localStorage.setItem('nisha_lang', 'ua');
+        });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+        const firstCard = page.locator('#itemsGrid .item-card:not(.skeleton-card)').first();
+        await expect(firstCard).toBeVisible({ timeout: 15000 });
+
+        // 1. Active filter chips: enable "Only Sale" or search -> chip appears -> click removes it
+        const searchInput = page.locator('#mainSearch');
+        await searchInput.fill('nike');
+        await page.waitForTimeout(350);
+
+        const searchChip = page.locator('#activeFiltersBar .filter-chip[data-filter-type="search"]');
+        await expect(searchChip).toBeVisible({ timeout: 5000 });
+        await expect(page.locator('#activeFiltersBar .filter-chip-reset')).toHaveCount(0);
+
+        await searchChip.click();
+        await expect(page.locator('#activeFiltersBar')).toBeHidden({ timeout: 5000 });
+        await expect(searchInput).toHaveValue('');
+
+        // 2. Open product modal (verifies lazy `app-product` chunk loads cleanly)
+        const targetCard = page.locator('#itemsGrid .item-card:not(.skeleton-card):not(.sold-out):not(.reserved-item)').first();
+        await expect(targetCard).toBeVisible({ timeout: 10000 });
+        await targetCard.locator('.card-slider-wrapper').click();
+
+        const productModal = page.locator('#productModal');
+        await expect(productModal).toBeVisible({ timeout: 8000 });
+        await expect(page.locator('#modalTitle')).not.toHaveText('', { timeout: 5000 });
+
+        // 3. Add item to cart from modal -> open checkout (verifies lazy `app-checkout` chunk + Nova Poshta inputs)
+        const modalAddBtn = page.locator('#modalAddToCartBtn');
+        await expect(modalAddBtn).toBeVisible({ timeout: 5000 });
+        await modalAddBtn.click();
+        await expect(page.locator('#cartCount')).toHaveText(/[1-9]/, { timeout: 5000 });
+
+        // Close product modal and open checkout
+        await page.keyboard.press('Escape');
+        await expect(productModal).toBeHidden({ timeout: 5000 });
+
+        await page.evaluate(() => window.openCheckoutModal && window.openCheckoutModal());
+        const checkoutModal = page.locator('#checkoutModal');
+        await expect(checkoutModal).toBeVisible({ timeout: 8000 });
+        await expect(page.locator('#orderCity')).toBeVisible({ timeout: 5000 });
+        await expect(page.locator('#orderBranch')).toBeVisible({ timeout: 5000 });
+    });
 });

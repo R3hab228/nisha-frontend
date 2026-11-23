@@ -203,8 +203,21 @@ export function initGridEventDelegation() {
     if (!grid || _gridDelegationInitialized) return;
     _gridDelegationInitialized = true;
 
-    // 1. Тултип замеров и предзагрузка картинок на десктопе
+    // 1. Тултип замеров и предзагрузка картинок + lazy-чанка app-product на десктопе (с hover-intent 65ms)
     let currentTooltipCard = null;
+    let hoverIntentTimer = null;
+
+    const triggerCardPrefetch = (id, immediate = false) => {
+        if (!id) return;
+        const conn = typeof navigator !== 'undefined' ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
+        if (!immediate && conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g')) {
+            return;
+        }
+        prefetchItemImages(id);
+        if (hasAction('prewarmProductModal')) {
+            invokeAction('prewarmProductModal', id, immediate);
+        }
+    };
 
     grid.addEventListener('mouseover', (e) => {
         const card = e.target.closest('.item-card');
@@ -213,10 +226,15 @@ export function initGridEventDelegation() {
 
         if (card !== currentTooltipCard) {
             currentTooltipCard = card;
+            if (hoverIntentTimer) clearTimeout(hoverIntentTimer);
             const id = card.getAttribute('data-id');
             if (id) {
-                if (hasAction('prewarmProductModal')) invokeAction('prewarmProductModal', id);
-                else prefetchItemImages(id);
+                hoverIntentTimer = setTimeout(() => {
+                    hoverIntentTimer = null;
+                    if (currentTooltipCard === card) {
+                        triggerCardPrefetch(id, false);
+                    }
+                }, 65);
             }
         }
 
@@ -259,6 +277,10 @@ export function initGridEventDelegation() {
     grid.addEventListener('mouseout', (e) => {
         if (!currentTooltipCard) return;
         if (!e.relatedTarget || !currentTooltipCard.contains(e.relatedTarget)) {
+            if (hoverIntentTimer) {
+                clearTimeout(hoverIntentTimer);
+                hoverIntentTimer = null;
+            }
             const leavingId = currentTooltipCard.getAttribute('data-id');
             if (leavingId) {
                 invokeAction('cancelPrewarmProductModal', leavingId);
@@ -285,8 +307,11 @@ export function initGridEventDelegation() {
         const card = e.target.closest('.item-card');
         if (!card) return;
         const cardId = card.getAttribute('data-id');
-        if (cardId && hasAction('prewarmProductModal')) {
-            invokeAction('prewarmProductModal', cardId, true);
+        if (cardId) {
+            prefetchItemImages(cardId);
+            if (hasAction('prewarmProductModal')) {
+                invokeAction('prewarmProductModal', cardId, true);
+            }
         }
     }, { passive: true });
 
@@ -294,8 +319,11 @@ export function initGridEventDelegation() {
         const card = e.target.closest('.item-card');
         if (!card) return;
         const cardId = card.getAttribute('data-id');
-        if (cardId && hasAction('prewarmProductModal')) {
-            invokeAction('prewarmProductModal', cardId, true);
+        if (cardId) {
+            prefetchItemImages(cardId);
+            if (hasAction('prewarmProductModal')) {
+                invokeAction('prewarmProductModal', cardId, true);
+            }
         }
         const wrapper = e.target.closest('.card-slider-wrapper');
         if (!wrapper) return;

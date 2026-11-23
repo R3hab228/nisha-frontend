@@ -151,6 +151,18 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Ранний неблокирующий prefetch только активного языка (~18 КБ вместо 65 КБ всех 3 языков),
+// стартует параллельно с инициализацией остальных модулей до DOMContentLoaded.
+if (typeof window !== 'undefined' && typeof fetch === 'function' && !window.__nishaEarlyLocaleFetch) {
+    try {
+        const earlyLang = detectInitialSiteLang();
+        const earlyPromise = fetch(`/locales/${earlyLang}.json`)
+            .then((res) => (res && res.ok ? res.json() : null))
+            .catch(() => null);
+        window.__nishaEarlyLocaleFetch = { lang: earlyLang, promise: earlyPromise };
+    } catch {}
+}
+
 // Ленивая подгрузка языковых словарей (экономит 67% трафика)
 async function ensureLanguageLoaded(lng) {
     if (typeof i18next === 'undefined') return;

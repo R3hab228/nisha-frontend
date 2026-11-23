@@ -383,9 +383,18 @@ async function initApp() {
                     let langResources = {};
                     let loadSuccess = false;
                     try {
-                        const locRes = await fetch(`/locales/${savedLng}.json`);
-                        if (locRes.ok) {
-                            const singleData = await locRes.json();
+                        const early = typeof window !== 'undefined' ? window.__nishaEarlyLocaleFetch : null;
+                        let singleData = null;
+                        if (early && early.lang === savedLng && early.promise) {
+                            singleData = await early.promise;
+                        }
+                        if (!singleData) {
+                            const locRes = await fetch(`/locales/${savedLng}.json`);
+                            if (locRes.ok) {
+                                singleData = await locRes.json();
+                            }
+                        }
+                        if (singleData) {
                             langResources[savedLng] = singleData.translation ? singleData : { translation: singleData };
                             loadSuccess = true;
                         }
@@ -403,7 +412,7 @@ async function initApp() {
                     await i18next.init({
                         resources: langResources,
                         lng: savedLng, 
-                        fallbackLng: ['ua', 'ru'],
+                        fallbackLng: loadSuccess ? savedLng : ['ua', 'ru'],
                         debug: false
                     });
                     

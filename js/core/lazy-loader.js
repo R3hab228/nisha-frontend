@@ -112,6 +112,8 @@ const loadProductModule = registerLazyModuleBridge(
     [
         ['openProductModal', 'open-product'],
         'openProductModalById',
+        'prewarmProductModal',
+        'cancelPrewarmProductModal',
         'prewarmProductDetails',
         'renderHistory',
         ['toggleHistory', 'toggle-history'],

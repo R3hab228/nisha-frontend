@@ -62,9 +62,67 @@ function canvasToBlobAsync(canvas, mimeType, quality) {
     });
 }
 
-// Сжатие фото (асинхронное декодирование + WebP 1000px с фолбэком в JPEG без фризов UI)
+const CLIENT_COMPRESS_MAX_SIZE = 1600;
+const CLIENT_COMPRESS_WEBP_QUALITY = 0.84;
+const CLIENT_COMPRESS_JPEG_QUALITY = 0.80;
+
+function computeResizedDimensions(width, height, maxSize = CLIENT_COMPRESS_MAX_SIZE) {
+    let targetW = width;
+    let targetH = height;
+    if (targetW > targetH && targetW > maxSize) {
+        targetH = Math.round(targetH * (maxSize / targetW));
+        targetW = maxSize;
+    } else if (targetH > maxSize) {
+        targetW = Math.round(targetW * (maxSize / targetH));
+        targetH = maxSize;
+    }
+    return {
+        width: Math.max(1, targetW),
+        height: Math.max(1, targetH),
+        wasResized: targetW !== width || targetH !== height
+    };
+}
+
+async function compressWithOffscreenCanvas(file) {
+    if (typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') return null;
+    let bitmap = null;
+    try {
+        bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        const { width, height, wasResized } = computeResizedDimensions(bitmap.width, bitmap.height);
+        const canvas = new OffscreenCanvas(width, height);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(bitmap, 0, 0, width, height);
+
+        let blob = await canvas.convertToBlob({ type: 'image/webp', quality: CLIENT_COMPRESS_WEBP_QUALITY }).catch(() => null);
+        let outType = 'image/webp';
+        let outExt = 'webp';
+        if (!blob || (blob.type && blob.type !== 'image/webp')) {
+            blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: CLIENT_COMPRESS_JPEG_QUALITY }).catch(() => null);
+            outType = 'image/jpeg';
+            outExt = 'jpg';
+        }
+        if (!blob) return null;
+        if (!wasResized && file.type === outType && file.size > 0 && blob.size >= file.size) {
+            return file;
+        }
+        const baseName = (file.name || 'photo').replace(/\.[^.]+$/, '');
+        return new File([blob], `${baseName}.${outExt}`, { type: outType });
+    } catch {
+        return null;
+    } finally {
+        if (bitmap && typeof bitmap.close === 'function') {
+            try { bitmap.close(); } catch {}
+        }
+    }
+}
+
+// Сжатие фото (OffscreenCanvas + createImageBitmap fast-path или <canvas> fallback: WebP max 1600px)
 export async function compressImage(file) {
     if (!file || (file.type && file.type.startsWith('video/'))) return file;
+
+    const offscreenResult = await compressWithOffscreenCanvas(file);
+    if (offscreenResult) return offscreenResult;
 
     const { promise, resolve } = Promise.withResolvers();
 
@@ -89,20 +147,13 @@ export async function compressImage(file) {
             if (settled) return;
 
             const canvas = document.createElement('canvas');
-            let width = img.naturalWidth || img.width;
-            let height = img.naturalHeight || img.height;
-            const MAX_SIZE = 1000;
+            const { width, height, wasResized } = computeResizedDimensions(
+                img.naturalWidth || img.width,
+                img.naturalHeight || img.height
+            );
 
-            if (width > height && width > MAX_SIZE) {
-                height = Math.round(height * (MAX_SIZE / width));
-                width = MAX_SIZE;
-            } else if (height > MAX_SIZE) {
-                width = Math.round(width * (MAX_SIZE / height));
-                height = MAX_SIZE;
-            }
-
-            canvas.width = Math.max(1, width);
-            canvas.height = Math.max(1, height);
+            canvas.width = width;
+            canvas.height = height;
             const ctx = canvas.getContext('2d');
             if (!ctx) {
                 clearTimeout(timeoutId);
@@ -112,17 +163,21 @@ export async function compressImage(file) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
             // Пробуем WebP (на 25-35% легче при том же качестве), при неподдержке — JPEG
-            let blob = await canvasToBlobAsync(canvas, 'image/webp', 0.8);
+            let blob = await canvasToBlobAsync(canvas, 'image/webp', CLIENT_COMPRESS_WEBP_QUALITY);
             let outType = 'image/webp';
             let outExt = 'webp';
             if (!blob || (blob.type && blob.type !== 'image/webp')) {
-                blob = await canvasToBlobAsync(canvas, 'image/jpeg', 0.75);
+                blob = await canvasToBlobAsync(canvas, 'image/jpeg', CLIENT_COMPRESS_JPEG_QUALITY);
                 outType = 'image/jpeg';
                 outExt = 'jpg';
             }
 
             clearTimeout(timeoutId);
             if (blob) {
+                if (!wasResized && file.type === outType && file.size > 0 && blob.size >= file.size) {
+                    finish(file);
+                    return;
+                }
                 const baseName = (file.name || 'photo').replace(/\.[^.]+$/, '');
                 finish(new File([blob], `${baseName}.${outExt}`, { type: outType }));
             } else {
