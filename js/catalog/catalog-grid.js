@@ -178,6 +178,11 @@ export function activateCardSlides(target, prioritizeNext = false) {
             if (img.parentElement && !img.parentElement.classList.contains('img-8bit-loaded')) {
                 img.parentElement.classList.add('img-8bit-loading');
             }
+            const rawSrcSet = img.getAttribute('data-srcset');
+            if (rawSrcSet) {
+                img.srcset = rawSrcSet;
+                img.removeAttribute('data-srcset');
+            }
             img.src = safeSrc;
             img.removeAttribute('data-src');
             if (img.complete && img.naturalWidth > 0) {

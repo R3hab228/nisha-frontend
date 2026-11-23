@@ -106,25 +106,77 @@ const loadOrdersModule = registerLazyModuleBridge(
     ]
 );
 
-// Фоновая предзагрузка вторичных чанков в простой браузера (не блокирует First Contentful Paint)
+const loadProductModule = registerLazyModuleBridge(
+    () => import('../product/product.js'),
+    [
+        ['openProductModal', 'open-product'],
+        'openProductModalById',
+        'prewarmProductDetails',
+        'renderHistory',
+        ['toggleHistory', 'toggle-history'],
+        ['removeHistoryItem', 'remove-history-item'],
+        ['clearHistory', 'clear-history'],
+        ['changeSlide', 'change-slide'],
+        ['setSlide', 'set-slide'],
+        'preloadSlide',
+        ['toggleFavFromModal', 'toggle-fav-from-modal'],
+        ['shareItem', 'share-item'],
+        ['toggleQuestionForm', 'toggle-question-form'],
+        ['submitQuestion', 'submit-question'],
+        'loadItemQuestions',
+        ['toggleAccordion', 'toggle-accordion'],
+        ['showInlineOfferPriceInput', 'offer-price'],
+        ['hideInlineOfferPriceInput', 'cancel-offer-price'],
+        ['submitInlineBargainOffer', 'submit-inline-bargain'],
+        ['submitBargainOffer', 'submit-bargain-offer'],
+        'openBargainModal',
+        'syncUserBargains',
+        'renderSimilarItems',
+        'preloadSimilarItemsImages'
+    ]
+);
+
+const loadCheckoutModule = registerLazyModuleBridge(
+    () => import('../cart/checkout-bundle.js'),
+    [
+        ['openCheckoutModal', 'open-checkout'],
+        ['submitOrder', 'submit-order'],
+        ['applyPromoCode', 'apply-promo-code'],
+        ['togglePaymentDropdown', 'toggle-payment-dropdown'],
+        ['selectPaymentMethod', 'select-payment-method'],
+        'searchCities',
+        'selectCity',
+        'searchBranches',
+        'selectBranch',
+        'detectUserCityAuto',
+        'updateCheckoutTotal',
+        'npStorageGet',
+        'npStorageSet',
+        'npStorageRemove'
+    ]
+);
+
+// Умная фоновая предзагрузка в простой браузера:
+// - на Save-Data / медленном мобильном интернете (2G/3G) ничего лишнего не качаем;
+// - на быстром соединении предзагружаем только карточку товара (главное действие на витрине),
+//   а редкие модалки (Drop, Отзывы, Чат, Заказы, Чекаут, IMask) грузятся строго по клику.
 const preloadSecondaryModules = () => {
-    loadDropModule();
-    loadReviewsModule();
-    loadChatModule();
-    loadOrdersModule();
-    const imaskLoader = invokeAction('loadIMask');
-    if (imaskLoader && typeof imaskLoader.catch === 'function') {
-        imaskLoader.catch(() => {});
-    }
+    const conn = typeof navigator !== 'undefined' ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
+    const isConstrained = Boolean(conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g' || conn.effectiveType === '3g'));
+    if (isConstrained) return;
+
+    loadProductModule();
 };
 
 if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-    window.requestIdleCallback(preloadSecondaryModules, { timeout: 2000 });
+    window.requestIdleCallback(preloadSecondaryModules, { timeout: 3500 });
 } else {
-    setTimeout(preloadSecondaryModules, 800);
+    setTimeout(preloadSecondaryModules, 2000);
 }
 
 export {
+    loadProductModule,
+    loadCheckoutModule,
     loadDropModule,
     loadReviewsModule,
     loadChatModule,

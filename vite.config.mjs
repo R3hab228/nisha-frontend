@@ -123,6 +123,14 @@ export default defineConfig({
           if (id.includes('/js/catalog/') || id.includes('\\js\\catalog\\')) {
             return 'app-catalog';
           }
+          if (
+            id.includes('/js/cart/checkout-') || id.includes('\\js\\cart\\checkout-') ||
+            id.includes('/js/cart/novaposhta-delivery') || id.includes('\\js\\cart\\novaposhta-delivery') ||
+            id.includes('/js/cart/novaposhta-city-detect') || id.includes('\\js\\cart\\novaposhta-city-detect') ||
+            id.includes('/js/cart/npCacheStorage') || id.includes('\\js\\cart\\npCacheStorage')
+          ) {
+            return 'app-checkout';
+          }
           if (id.includes('/js/cart/') || id.includes('\\js\\cart\\')) {
             return 'app-cart';
           }

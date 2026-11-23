@@ -27,18 +27,16 @@ import '../js/ui/windows.js';
 import '../js/ui/system-features.js';
 import '../js/auth/auth.js';
 
-// 6. Code Splitting: Ленивая подгрузка вторичных модальных модулей (Предложка, Отзывы, Чат поддержки)
+// 6. Code Splitting: Ленивая подгрузка вторичных модулей (Товар, Чекаут/НП, Предложка, Отзывы, Чат, Заказы)
 import '../js/core/lazy-loader.js';
 
 // 7. Основные модули витрины и оркестратор приложения
 import '../js/catalog/catalog.js';
 import '../js/catalog/live-search.js';
-import '../js/cart/cart.js';
-import '../js/product/product.js';
+import '../js/cart/cart-core.js';
 import '../js/profile/profile.js';
 import '../app.js';
 
 // 8. Экспорт официального модульного API приложения (Modern ES Modules Facade)
 export * from './modules/index.js';
 export { default } from './modules/index.js';
-

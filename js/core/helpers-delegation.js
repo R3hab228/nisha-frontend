@@ -478,6 +478,8 @@ export function handleDelegatedMediaError(e) {
         if (!hasTriedFb && safeFbSrc && safeFbSrc !== currentSrc) {
             if (target.dataset) target.dataset.fb = '1';
             if (typeof target.setAttribute === 'function') target.setAttribute('data-fb', '1');
+            if (typeof target.removeAttribute === 'function') target.removeAttribute('srcset');
+            if ('srcset' in target) target.srcset = '';
             target.src = safeFbSrc;
             return;
         }

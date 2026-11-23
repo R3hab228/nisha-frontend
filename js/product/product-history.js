@@ -151,7 +151,10 @@ export function renderSimilarItems(item) {
     if (similar.length > 0) {
         let cardsHTML = '';
         similar.forEach(s => {
-            const sImg = typeof getOptimizedImg === 'function' ? getOptimizedImg(s, true) : toCDN(s.thumbnails?.[0] || s.images?.[0], { isThumb: true });
+            const rawSimUrl = s.thumbnails?.[0] || s.images?.[0];
+            const sImg = rawSimUrl
+                ? toCDN(rawSimUrl, { isThumb: true, width: 320, quality: 80 })
+                : (typeof getOptimizedImg === 'function' ? getOptimizedImg(s, true) : '');
             if (sImg && !sImg.endsWith('.mp4') && !_preloadedSimilarUrls.has(sImg)) {
                 _pendingSimilarImgUrls.push(sImg);
             }
@@ -311,7 +314,10 @@ export function renderHistory() {
 
         if (hideUnavailable && currentStatus !== 'available') return;
 
-        const optImg = realItem ? ((typeof getOptimizedImg === 'function' ? getOptimizedImg(realItem, true) : '') || toCDN(h.img)) : toCDN(h.img);
+        const rawHistUrl = realItem ? (realItem.thumbnails?.[0] || realItem.images?.[0] || h.img) : h.img;
+        const optImg = rawHistUrl
+            ? toCDN(rawHistUrl, { isThumb: true, width: 320, quality: 80 })
+            : (realItem && typeof getOptimizedImg === 'function' ? getOptimizedImg(realItem, true) : '');
         const isVideo = optImg && optImg.endsWith('.mp4');
         const livePrice = realItem ? realItem.price : h.price;
         const liveOldPrice = realItem ? realItem.old_price : h.old_price;

@@ -152,10 +152,20 @@ export function buildCardDOM(item, idx = 0) {
     const baseAlt = [safeBrand, safeName].filter(Boolean).join(' ') || 'Винтажная одежда NISHA';
     const cleanAlt = fallbackEscHtml(baseAlt);
 
+    const buildCardSrcSet = (rawUrl) => {
+        if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.endsWith('.mp4') || rawUrl.endsWith('.webm') || rawUrl.endsWith('.svg')) return '';
+        return [320, 480, 640]
+            .map(w => `${toCDN(rawUrl, { isThumb: true, width: w, quality: 82 })} ${w}w`)
+            .join(', ');
+    };
+
     thumbsArray.forEach((thumbUrl, thumbIdx) => {
         const rawVidUrl = (item.images && item.images[thumbIdx]) ? item.images[thumbIdx] : thumbUrl;
         const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
-        const cdnThumb = toCDN(thumbUrl, { isThumb: true });
+        const cdnThumb = toCDN(thumbUrl, { isThumb: true, width: 480, quality: 82 });
+        const cardSrcSet = isVid ? '' : buildCardSrcSet(thumbUrl);
+        const srcsetAttr = cardSrcSet ? ` srcset="${escCardAttr(cardSrcSet)}" sizes="(max-width: 900px) 46vw, 260px"` : '';
+        const dataSrcsetAttr = cardSrcSet ? ` data-srcset="${escCardAttr(cardSrcSet)}" sizes="(max-width: 900px) 46vw, 260px"` : '';
         const cdnVidUrl = toCDN(rawVidUrl);
         const slideAlt = cleanAlt + (thumbIdx > 0 ? ` - фото ${thumbIdx + 1}` : '');
 
@@ -168,12 +178,12 @@ export function buildCardDOM(item, idx = 0) {
             const firstLoadAttr = (idx < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
             slidesStr += `
                 <div class="card-slide img-8bit-loading">
-                   <img class="card-slide-img" src="${escCardAttr(cdnThumb)}" data-fallback-src="${escCardAttr(cdnVidUrl || '')}" ${firstLoadAttr} decoding="async" alt="${slideAlt}">
+                   <img class="card-slide-img" src="${escCardAttr(cdnThumb)}"${srcsetAttr} data-fallback-src="${escCardAttr(cdnVidUrl || '')}" ${firstLoadAttr} decoding="async" alt="${slideAlt}">
                 </div>`;
         } else {
             slidesStr += `
                 <div class="card-slide">
-                   <img class="card-slide-img" data-src="${escCardAttr(cdnThumb)}" data-fallback-src="${escCardAttr(cdnVidUrl || '')}" loading="lazy" decoding="async" alt="${slideAlt}">
+                   <img class="card-slide-img" data-src="${escCardAttr(cdnThumb)}"${dataSrcsetAttr} data-fallback-src="${escCardAttr(cdnVidUrl || '')}" loading="lazy" decoding="async" alt="${slideAlt}">
                 </div>`;
         }
         dotsStr += `<div class="card-dot ${thumbIdx === 0 ? 'active' : ''}"></div>`;

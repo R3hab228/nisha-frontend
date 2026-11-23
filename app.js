@@ -805,7 +805,14 @@ async function initApp() {
         const scrollTrigger = document.getElementById('loadingTrigger');
         if (scrollTrigger) observer.observe(scrollTrigger);
 
-        if (typeof renderHistory === 'function') renderHistory();
+        const savedHistory = storage ? storage.getJSON('nisha_view_history', []) : [];
+        if (Array.isArray(savedHistory) && savedHistory.length > 0 && typeof renderHistory === 'function') {
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+                window.requestIdleCallback(() => renderHistory(), { timeout: 2500 });
+            } else {
+                setTimeout(() => renderHistory(), 600);
+            }
+        }
         invokeAction('initHitCounter');
         if (typeof updateSidebarCounters === 'function') updateSidebarCounters();
         invokeAction('renderActiveFilterChips');
