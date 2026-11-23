@@ -253,7 +253,7 @@ export function toggleMobileSidebar(_e, options = {}) {
         sidebar.style.maxHeight = '0px';
         sidebar.offsetHeight;
 
-        const targetHeight = sidebar.scrollHeight + 35;
+        const targetHeight = sidebar.scrollHeight;
         sidebar.style.maxHeight = targetHeight + 'px';
 
         if (sidebar._transitionCtrl) {
@@ -294,7 +294,7 @@ export function toggleMobileSidebar(_e, options = {}) {
         btn.style.background = '#050505';
         if (fab) fab.style.display = 'flex';
 
-        const currentHeight = sidebar.offsetHeight || (sidebar.scrollHeight + 35);
+        const currentHeight = sidebar.offsetHeight || sidebar.scrollHeight;
         sidebar.style.maxHeight = currentHeight + 'px';
         sidebar.offsetHeight;
 
