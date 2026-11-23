@@ -3,7 +3,7 @@
 // ==========================================
 
 import { resolveAction } from '../core/action-registry.js';
-import { getLenisInstance, getRuntimeProfile, getRuntimeUser } from '../core/runtime-env.js';
+import { getLenisInstance, getRuntimeProfile, getRuntimeUser, tSafe } from '../core/runtime-env.js';
 import {
     clearOrderSelection,
     escAttr,
@@ -15,19 +15,19 @@ import {
     getNovaPoshtaTrackingUrl,
     getOrderTabBucket,
     getOrdersData,
-    getSelectedOrderIds,
     getStorage,
-    hasSelectedOrders,
-    hideOrderIds,
     isOrderSelected,
-    mergeRemoteHiddenOrderIds,
-    pruneCachedOrdersByIds,
-    setCurrentOrderTab,
-    setOrdersData,
-    toggleOrderSelection
+    setCurrentOrderTab
 } from './orders-state.js';
 import { ensureOrderImagesLoaded, fetchMyOrders, getOrderItemImage } from './orders-fetch.js';
 import { buildOrderTrackingBarHtml, hydrateVisibleOrderTracking } from './orders-tracking.js';
+import {
+    bindOrdersLongPressSelection,
+    deleteSelectedOrders,
+    syncOrdersSelectionToolbar
+} from './orders-selection.js';
+
+export { bindOrdersLongPressSelection, deleteSelectedOrders, syncOrdersSelectionToolbar };
 
 const ORDER_TAB_ORDER = ['accepted', 'shipped', 'cancelled'];
 
@@ -49,9 +49,9 @@ export function updateOrderTabCounters() {
     const tabBlue = document.querySelector('.order-tab.tab-blue');
     const tabRed = document.querySelector('.order-tab.tab-red');
 
-    const txtAccepted = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_accepted', { defaultValue: 'ПРИНЯТЫЕ' }) : 'ПРИНЯТЫЕ';
-    const txtShipped = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_shipped', { defaultValue: 'ОТПРАВЛЕННЫЕ' }) : 'ОТПРАВЛЕННЫЕ';
-    const txtCancelled = typeof i18next !== 'undefined' ? i18next.t('orders_modal.tab_cancelled', { defaultValue: 'ОТМЕНЕННЫЕ' }) : 'ОТМЕНЕННЫЕ';
+    const txtAccepted = tSafe('orders_modal.tab_accepted', 'ПРИНЯТЫЕ');
+    const txtShipped = tSafe('orders_modal.tab_shipped', 'ОТПРАВЛЕННЫЕ');
+    const txtCancelled = tSafe('orders_modal.tab_cancelled', 'ОТМЕНЕННЫЕ');
 
     if (tabYellow) {
         tabYellow.removeAttribute('data-i18n');
@@ -275,206 +275,10 @@ export function bindOrdersTabSwipe() {
     listArea.addEventListener('touchcancel', () => finishSwipe(true), { passive: true });
 }
 
-const ORDER_LONG_PRESS_MS = 450;
-const ORDER_MOVE_TOLERANCE_PX = 10;
-
-function syncOrderCardSelectionDOM(cardEl, selected) {
-    if (!cardEl || !cardEl.classList) return;
-    cardEl.classList.toggle('is-selected', Boolean(selected));
-    cardEl.setAttribute('aria-selected', selected ? 'true' : 'false');
-}
-
-export function syncOrdersSelectionToolbar() {
-    if (typeof document === 'undefined') return;
-    const btn = document.getElementById('ordersDeleteSelectedBtn');
-    const countEl = document.getElementById('ordersDeleteCount');
-    const selectedCount = getSelectedOrderIds().length;
-    if (countEl) countEl.textContent = String(selectedCount);
-    if (!btn) return;
-    const isVisible = selectedCount > 0;
-    btn.hidden = !isVisible;
-    if (typeof btn.setAttribute === 'function') {
-        btn.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
-        const label = typeof i18next !== 'undefined'
-            ? i18next.t('orders_modal.delete_selected_title', { defaultValue: 'Видалити вибрані замовлення' })
-            : 'Видалити вибрані замовлення';
-        btn.setAttribute('title', label);
-        btn.setAttribute('aria-label', label);
-    }
-    if (btn.classList) btn.classList.toggle('is-visible', isVisible);
-}
-
-export function deleteSelectedOrders() {
-    const selectedIds = getSelectedOrderIds();
-    if (selectedIds.length === 0) return;
-
-    const selectedSet = new Set(selectedIds);
-    hideOrderIds(selectedIds);
-    pruneCachedOrdersByIds(selectedIds);
-    clearOrderSelection();
-
-    const activeUser = getRuntimeUser();
-    const apiClient = typeof window !== 'undefined' ? window.apiClient : null;
-    if (activeUser && activeUser.id && apiClient && typeof apiClient.post === 'function') {
-        const syncUserId = activeUser.id;
-        Promise.resolve(apiClient.post('/api/orders/hide', { orderIds: selectedIds }, { timeout: 8000 }))
-            .then((res) => {
-                const currentUser = getRuntimeUser();
-                if (currentUser && String(currentUser.id) !== String(syncUserId)) return;
-                if (Array.isArray(res?.hiddenOrderIds)) {
-                    mergeRemoteHiddenOrderIds(res.hiddenOrderIds);
-                }
-            })
-            .catch(() => {});
-    }
-
-    const remaining = getOrdersData().filter(o => o && !selectedSet.has(String(o.id)));
-    setOrdersData(remaining);
-
-    const hapticFn = resolveAction('triggerHaptic');
-    if (hapticFn) hapticFn('success');
-    const soundFn = resolveAction('playSound');
-    if (soundFn) Promise.resolve(soundFn('recycle', { kind: 'ui' })).catch(() => {});
-
-    syncOrdersSelectionToolbar();
-    updateOrderTabCounters();
-
-    const runUpdate = () => renderFilteredOrders();
-    const vtFn = resolveAction('safeViewTransition') || (typeof safeViewTransition === 'function' ? safeViewTransition : null);
-    if (vtFn) vtFn(runUpdate);
-    else runUpdate();
-
-    const toastFn = resolveAction('showToast') || (typeof showToast === 'function' ? showToast : null);
-    if (toastFn) {
-        const defaultMsg = `Видалено замовлень: ${selectedIds.length}`;
-        const msg = typeof i18next !== 'undefined'
-            ? i18next.t('orders_modal.deleted_selected', { count: selectedIds.length, defaultValue: defaultMsg })
-            : defaultMsg;
-        toastFn(msg, 'success');
-    }
-}
-
-function triggerOrderSelectFeedback(selected) {
-    const hapticFn = resolveAction('triggerHaptic');
-    if (hapticFn) hapticFn(selected ? 'medium' : 'light');
-    else if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-        try { navigator.vibrate(selected ? 18 : 8); } catch {}
-    }
-    const soundFn = resolveAction('playSound');
-    if (soundFn) {
-        Promise.resolve(soundFn(selected ? 'menu' : 'minimize', { kind: 'ui' })).catch(() => {});
-    }
-}
-
-/**
- * Привязывает современный long-press жест (Pointer Events) для выделения карточек заказов
- * во вкладках Принятые / Отправленные / Отмененные.
- */
-export function bindOrdersLongPressSelection() {
-    const listArea = document.getElementById('ordersListArea');
-    if (!listArea || !listArea.dataset || listArea.dataset.selectionBound === '1') return;
-    listArea.dataset.selectionBound = '1';
-
-    let pressTimer = null;
-    let activePointerId = null;
-    let startX = 0;
-    let startY = 0;
-    let pressedCard = null;
-    let longPressFired = false;
-    let suppressNextClickUntil = 0;
-
-    const clearPressTimer = () => {
-        if (pressTimer !== null) {
-            clearTimeout(pressTimer);
-            pressTimer = null;
-        }
-        activePointerId = null;
-        pressedCard = null;
-    };
-
-    listArea.addEventListener('pointerdown', (e) => {
-        if (e.isPrimary === false) return;
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-        const target = e.target;
-        const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
-        if (!card) return;
-        const orderId = card.dataset ? card.dataset.orderId : card.getAttribute?.('data-order-id');
-        if (!orderId) return;
-
-        clearPressTimer();
-        activePointerId = e.pointerId;
-        startX = Number(e.clientX) || 0;
-        startY = Number(e.clientY) || 0;
-        pressedCard = card;
-        longPressFired = false;
-
-        pressTimer = setTimeout(() => {
-            pressTimer = null;
-            if (!pressedCard) return;
-            const currentTab = getCurrentOrderTab();
-            if (!ORDER_TAB_ORDER.includes(currentTab)) return;
-
-            longPressFired = true;
-            suppressNextClickUntil = Date.now() + 550;
-            const nextSelected = toggleOrderSelection(orderId);
-            syncOrderCardSelectionDOM(pressedCard, nextSelected);
-            syncOrdersSelectionToolbar();
-            triggerOrderSelectFeedback(nextSelected);
-        }, ORDER_LONG_PRESS_MS);
-    }, { passive: true });
-
-    listArea.addEventListener('pointermove', (e) => {
-        if (pressTimer === null || e.pointerId !== activePointerId) return;
-        const dx = (Number(e.clientX) || 0) - startX;
-        const dy = (Number(e.clientY) || 0) - startY;
-        if (Math.hypot(dx, dy) > ORDER_MOVE_TOLERANCE_PX) {
-            clearPressTimer();
-        }
-    }, { passive: true });
-
-    const cancelPress = (e) => {
-        if (e && activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
-        clearPressTimer();
-    };
-    listArea.addEventListener('pointerup', cancelPress, { passive: true });
-    listArea.addEventListener('pointercancel', cancelPress, { passive: true });
-
-    listArea.addEventListener('contextmenu', (e) => {
-        const target = e.target;
-        const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
-        if (card && (pressedCard !== null || longPressFired || Date.now() < suppressNextClickUntil || hasSelectedOrders())) {
-            e.preventDefault();
-        }
-    });
-
-    listArea.addEventListener('click', (e) => {
-        if (longPressFired || Date.now() < suppressNextClickUntil) {
-            longPressFired = false;
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
-        if (!hasSelectedOrders()) return;
-        const target = e.target;
-        const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
-        if (!card) return;
-        const orderId = card.dataset ? card.dataset.orderId : card.getAttribute?.('data-order-id');
-        if (!orderId) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-        const nextSelected = toggleOrderSelection(orderId);
-        syncOrderCardSelectionDOM(card, nextSelected);
-        syncOrdersSelectionToolbar();
-        triggerOrderSelectFeedback(nextSelected);
-    }, true);
-}
-
 export function copyTTN(ttn, el) {
     if (!ttn) return;
     const cleanTtn = String(ttn).trim();
-    const ttnCopiedPrefix = typeof i18next !== 'undefined' ? i18next.t('orders_modal.ttn_copied', { defaultValue: 'ТТН скопирован: ' }) : 'ТТН скопирован: ';
+    const ttnCopiedPrefix = tSafe('orders_modal.ttn_copied', 'ТТН скопирован: ');
     const successMsg = ttnCopiedPrefix + cleanTtn;
 
     const animateCopiedIcon = () => {
@@ -525,9 +329,9 @@ export function renderFilteredOrders() {
     const filteredData = grouped[activeTab] || [];
 
     if (filteredData.length === 0) {
-        const emptyAccepted = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_accepted', { defaultValue: 'Нет активных заказов.' }) : 'Нет активных заказов.';
-        const emptyShipped = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_shipped', { defaultValue: 'Нет отправленных посылок.' }) : 'Нет отправленных посылок.';
-        const emptyCancelled = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_cancelled', { defaultValue: 'Нет отмененных заказов.' }) : 'Нет отмененных заказов.';
+        const emptyAccepted = tSafe('orders_modal.empty_accepted', 'Нет активных заказов.');
+        const emptyShipped = tSafe('orders_modal.empty_shipped', 'Нет отправленных посылок.');
+        const emptyCancelled = tSafe('orders_modal.empty_cancelled', 'Нет отмененных заказов.');
         const emptyMsg = activeTab === 'accepted' ? emptyAccepted :
             (activeTab === 'shipped' ? emptyShipped : emptyCancelled);
         listArea.innerHTML = `<div style="text-align:center; color:#666; font-family: monospace; padding: 30px;">[ ${emptyMsg} ]</div>`;
@@ -551,8 +355,8 @@ export function renderFilteredOrders() {
                     : '');
             const imgStyle = safeImgUrl ? `background-image: url('${safeImgUrl}');` : '';
             const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);
-            const openItemTitle = typeof i18next !== 'undefined' ? i18next.t('orders_modal.open_item_title', { defaultValue: 'Открыть карточку товара' }) : 'Открыть карточку товара';
-            const sizePrefix = typeof i18next !== 'undefined' ? i18next.t('orders_modal.size_prefix', { defaultValue: 'Размер:' }) : 'Размер:';
+            const openItemTitle = tSafe('orders_modal.open_item_title', 'Открыть карточку товара');
+            const sizePrefix = tSafe('orders_modal.size_prefix', 'Размер:');
             return `
                     <div class="order-item-row" data-action="open-product" data-id="${escAttr(item.id)}" title="${escAttr(openItemTitle)}">
                         <div class="order-item-img" data-item-id="${escAttr(item.id)}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
@@ -574,14 +378,14 @@ export function renderFilteredOrders() {
                 const trackingLang = (typeof i18next !== 'undefined' && i18next.language === 'ru') ? 'ru' : 'uk';
                 ttnHtml = rawTtns.map((ttn, idx) => {
                     const labelPrefix = rawTtns.length > 1
-                        ? ((typeof i18next !== 'undefined' ? i18next.t('orders_modal.parcel_prefix', { defaultValue: 'Посылка' }) : 'Посылка') + ` #${idx + 1} ТТН:`)
+                        ? `${tSafe('orders_modal.parcel_prefix', 'Посылка')} #${idx + 1} ТТН:`
                         : 'ТТН:';
                     const safeTtnAttr = escAttr(ttn);
                     const safeTtnHtml = escHtml(ttn);
                     const npTrackingUrl = getNovaPoshtaTrackingUrl(ttn, trackingLang);
-                    const copyTtnTitle = typeof i18next !== 'undefined' ? i18next.t('orders_modal.copy_ttn_title', { defaultValue: 'Нажмите, чтобы скопировать номер ТТН' }) : 'Нажмите, чтобы скопировать номер ТТН';
-                    const trackNpTitle = typeof i18next !== 'undefined' ? i18next.t('orders_modal.track_np_title', { defaultValue: 'Отследить на Новой Почте' }) : 'Отследить на Новой Почте';
-                    const trackBtnLabel = typeof i18next !== 'undefined' ? i18next.t('orders_modal.track_btn', { defaultValue: 'ТРЕК' }) : 'ТРЕК';
+                    const copyTtnTitle = tSafe('orders_modal.copy_ttn_title', 'Нажмите, чтобы скопировать номер ТТН');
+                    const trackNpTitle = tSafe('orders_modal.track_np_title', 'Отследить на Новой Почте');
+                    const trackBtnLabel = tSafe('orders_modal.track_btn', 'ТРЕК');
 
                     return `<div class="order-ttn">
                              <div class="order-ttn-header">
@@ -607,7 +411,7 @@ export function renderFilteredOrders() {
                            </div>`;
                 }).join('');
             } else {
-                const pendingText = typeof i18next !== 'undefined' ? i18next.t('orders_modal.ttn_pending', { defaultValue: 'ТТН: Ожидается генерация...' }) : 'ТТН: Ожидается генерация...';
+                const pendingText = tSafe('orders_modal.ttn_pending', 'ТТН: Ожидается генерация...');
                 ttnHtml = `<div class="order-ttn order-ttn-pending"><span class="order-ttn-pending-text">${escHtml(pendingText)}</span>${buildOrderTrackingBarHtml('', order.status)}</div>`;
             }
         }
@@ -625,13 +429,13 @@ export function renderFilteredOrders() {
                              data-action="prompt-order-review" data-hover-action="review-link-hover" data-order-id="${escAttr(order.id)}" data-item-name="${escAttr(safeName)}" data-item-img="${escAttr(firstItemImg)}" data-item-id="${escAttr(firstItem.id)}"
                              role="button"
                              tabindex="0">
-                            ${msgIcon} ${typeof i18next !== 'undefined' ? i18next.t('orders_modal.leave_review', { defaultValue: 'Оставить отзыв' }) : 'Оставить отзыв'}
+                            ${msgIcon} ${tSafe('orders_modal.leave_review', 'Оставить отзыв')}
                         </div>
                     `;
             } else {
                 reviewBtnHtml = `
                         <div style="margin-top: 10px; color: #666; font-size: 12px; font-family: var(--font-mono); text-align: center; user-select: none; cursor: default;">
-                            ${typeof i18next !== 'undefined' ? i18next.t('orders_modal.review_left', { defaultValue: '[✔] ОТЗЫВ ОСТАВЛЕН' }) : '[✔] ОТЗЫВ ОСТАВЛЕН'}
+                            ${tSafe('orders_modal.review_left', '[✔] ОТЗЫВ ОСТАВЛЕН')}
                         </div>
                     `;
             }
@@ -639,7 +443,8 @@ export function renderFilteredOrders() {
 
         const statusSlug = (order.status || '').toLowerCase().replace(/[\s_]+/g, '-');
         const ttnBlock = ttnHtml ? `<div class="order-ttns-wrapper">${ttnHtml}</div>` : '';
-        const totalPrefix = typeof i18next !== 'undefined' ? i18next.t('orders_modal.total_prefix', { defaultValue: 'ИТОГО:' }) : 'ИТОГО:';
+        const totalPrefix = tSafe('orders_modal.total_prefix', 'ИТОГО:');
+        const orderPrefix = tSafe('orders_modal.order_prefix', 'ЗАКАЗ #');
         const formattedTotal = fmtPrice(order.total_sum);
         const fmtStatus = formatOrderStatus(order.status);
         const isSelected = isOrderSelected(order.id);
@@ -650,7 +455,7 @@ export function renderFilteredOrders() {
                 <span class="order-select-corner" aria-hidden="true"></span>
                 <div class="order-header">
                     <div class="order-id-wrap">
-                        <span class="order-id">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.order_prefix', { defaultValue: 'ЗАКАЗ #' }) : 'ЗАКАЗ #'}${String(order.id || '').split('-').at(0).toUpperCase()}</span>
+                        <span class="order-id">${orderPrefix}${String(order.id || '').split('-').at(0).toUpperCase()}</span>
                         ${date ? `<span class="order-date">${date}</span>` : ''}
                     </div>
                     <span class="order-status status-${escAttr(statusSlug)}" data-raw-status="${escAttr(order.status || '')}">${escHtml(fmtStatus)}</span>
@@ -744,15 +549,15 @@ export function openOrdersModal() {
             ? displayNameFn(activeUser, activeProfile)
             : (activeProfile?.username || activeUser.user_metadata?.display_name || activeUser.user_metadata?.username || activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || activeUser.email.split('@').at(0));
 
-        const grantedMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_granted', { defaultValue: 'Доступ разрешен' }) : 'Доступ разрешен';
+        const grantedMsg = tSafe('orders_modal.access_granted', 'Доступ разрешен');
         const safeDName = escHtml(dName);
         if (guestText) guestText.innerHTML = `${grantedMsg}: <span style="color:var(--accent-green); font-weight:bold;">@${safeDName}</span>`;
         updateOrderTabCounters();
         fetchMyOrders();
     } else {
         if (guestInputGroup) guestInputGroup.style.display = 'flex';
-        const guestDescMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.guest_desc', { defaultValue: 'Введите номер телефона, указанный при заказе, чтобы отследить статус:' }) : 'Введите номер телефона, указанный при заказе, чтобы отследить статус:';
-        const searchPlaceholderMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.search_placeholder', { defaultValue: 'Введите номер телефона для поиска...' }) : 'Введите номер телефона для поиска...';
+        const guestDescMsg = tSafe('orders_modal.guest_desc', 'Введите номер телефона, указанный при заказе, чтобы отследить статус:');
+        const searchPlaceholderMsg = tSafe('orders_modal.search_placeholder', 'Введите номер телефона для поиска...');
         if (guestText) guestText.innerHTML = guestDescMsg;
         if (listArea) listArea.innerHTML = `<div style="text-align:center; color:#555; font-family: monospace; padding: 30px;">${searchPlaceholderMsg}</div>`;
         updateOrderTabCounters();

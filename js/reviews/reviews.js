@@ -3,7 +3,15 @@
 // ==========================================
 
 import { invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
-import { getRuntimeProfile, getRuntimeStorage, getRuntimeSupabase, getRuntimeUser } from '../core/runtime-env.js';
+import {
+    escapeAttrSafe,
+    escapeHtmlSafe,
+    getRuntimeProfile,
+    getRuntimeStorage,
+    getRuntimeSupabase,
+    getRuntimeUser,
+    tSafe
+} from '../core/runtime-env.js';
 import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
 const _failedReviewImages = new Set();
@@ -83,25 +91,21 @@ async function openReviewsModal() {
         data.forEach(rev => {
             const revDateMs = Date.parse(rev.created_at);
             const date = Number.isFinite(revDateMs) ? reviewDateFormatter.format(revDateMs) : '';
-            const safeText = sanitizeFn ? sanitizeFn(rev.text) : (rev.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-            const safeName = sanitizeFn ? sanitizeFn(rev.user_name) : (rev.user_name || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+            const safeText = sanitizeFn ? sanitizeFn(rev.text) : escapeHtmlSafe(rev.text);
+            const safeName = sanitizeFn ? sanitizeFn(rev.user_name) : escapeHtmlSafe(rev.user_name);
             
             const revImg = rev.item_image ? toCDN(rev.item_image) : '';
-            const safeRevImg = escHtmlFn ? escHtmlFn(revImg) : revImg.replaceAll('"', '&quot;');
+            const safeRevImg = escHtmlFn ? escHtmlFn(revImg) : escapeAttrSafe(revImg);
             const validImg = revImg && !_failedReviewImages.has(revImg) ? safeRevImg : '';
             const clickAction = validImg ? `data-action="open-review-image" data-img="${validImg}"` : '';
-            const zoomPhotoTitle = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-                ? i18next.t('reviews_modal.zoom_photo_title', { defaultValue: 'Увеличить фото' })
-                : 'Увеличить фото';
-            const openItemTitle = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-                ? i18next.t('reviews_modal.open_item_title', { defaultValue: 'Открыть товар' })
-                : 'Открыть товар';
-            const safeZoomTitle = escAttrFn ? escAttrFn(zoomPhotoTitle) : zoomPhotoTitle.replaceAll('"', '&quot;');
-            const safeOpenItemTitle = escAttrFn ? escAttrFn(openItemTitle) : openItemTitle.replaceAll('"', '&quot;');
+            const zoomPhotoTitle = tSafe('reviews_modal.zoom_photo_title', 'Увеличить фото');
+            const openItemTitle = tSafe('reviews_modal.open_item_title', 'Открыть товар');
+            const safeZoomTitle = escAttrFn ? escAttrFn(zoomPhotoTitle) : escapeAttrSafe(zoomPhotoTitle);
+            const safeOpenItemTitle = escAttrFn ? escAttrFn(openItemTitle) : escapeAttrSafe(openItemTitle);
             const imgHtml = validImg ? `<img class="review-item-thumb" src="${validImg}" alt="" loading="lazy" decoding="async" ${clickAction} title="${safeZoomTitle}">` : '';
             
             const nameClass = rev.item_id ? 'review-name review-name--linked' : 'review-name';
-            const safeItemIdAttr = escAttrFn ? escAttrFn(rev.item_id) : String(rev.item_id || '').replaceAll('"', '&quot;');
+            const safeItemIdAttr = escAttrFn ? escAttrFn(rev.item_id) : escapeAttrSafe(rev.item_id);
             const productLinkAction = rev.item_id ? `data-action="open-product" data-id="${safeItemIdAttr}" title="${safeOpenItemTitle}"` : '';
 
             html += `

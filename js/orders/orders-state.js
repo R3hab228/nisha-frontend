@@ -3,7 +3,14 @@
 // ==========================================
 
 import { resolveAction } from '../core/action-registry.js';
-import { getRuntimeSiteLang, getRuntimeStorage, getRuntimeUser } from '../core/runtime-env.js';
+import {
+    escapeAttrSafe,
+    escapeHtmlSafe,
+    getRuntimeSiteLang,
+    getRuntimeStorage,
+    getRuntimeUser,
+    tSafe
+} from '../core/runtime-env.js';
 
 function getReactiveStore() {
     if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
@@ -201,19 +208,12 @@ export const toCDN = (u) => {
 
 export const escHtml = (v) => {
     const fn = resolveAction('escapeHtml');
-    return fn ? fn(v) : String(v || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    return fn ? fn(v) : escapeHtmlSafe(v);
 };
 
 export const escAttr = (v) => {
     const fn = resolveAction('escapeAttr');
-    return fn
-        ? fn(v)
-        : String(v || '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;');
+    return fn ? fn(v) : escapeAttrSafe(v);
 };
 
 export const fmtPrice = (v) => {
@@ -247,9 +247,7 @@ export function formatOrderStatus(rawStatus) {
     const tr = (statusKey) => {
         const map = ORDER_STATUS_FALLBACKS[statusKey] || {};
         const def = map[lang] || map.ua || '';
-        const text = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-            ? i18next.t(`orders_modal.${statusKey}`, { defaultValue: def })
-            : def;
+        const text = tSafe(`orders_modal.${statusKey}`, { defaultValue: def }, def);
         return String(text || def).toUpperCase();
     };
 

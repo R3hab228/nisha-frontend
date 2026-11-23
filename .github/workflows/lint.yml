@@ -34,6 +34,9 @@ jobs:
       - name: 🧹 ESLint Code Quality Check
         run: npm run lint
 
+      - name: 🔐 Production Dependencies Security Audit
+        run: npm audit --omit=dev --audit-level=high
+
       - name: 🔍 Validate JavaScript Syntax (AST Check)
         run: |
           echo "Scanning and verifying all JavaScript files..."

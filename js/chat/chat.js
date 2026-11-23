@@ -1,6 +1,6 @@
 
 import { invokeAction, onAppEvent, registerActions, resolveAction } from '../core/action-registry.js';
-import { getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang } from '../core/runtime-env.js';
+import { escapeHtmlSafe, getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 import { setAcceptedBargain, setBargainDeclined } from '../core/bargain-storage.js';
 
 if (typeof document !== 'undefined') {
@@ -405,9 +405,8 @@ function handleIncomingSupportReply(r, sbClient) {
             }
             const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
             if (priceEl) {
-                const escText = (v) => String(v ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
-                const curr = (typeof getCurrency === 'function' ? getCurrency() : (typeof i18next !== 'undefined' ? i18next.t('currency', { defaultValue: 'грн' }) : 'грн')).trim();
-                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escText(parsed.originalPrice || activeItem.price)} ${escText(curr)}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escText(parsed.acceptedPrice)} ${escText(curr)}</span>`;
+                const curr = (typeof getCurrency === 'function' ? getCurrency() : tSafe('currency', 'грн')).trim();
+                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escapeHtmlSafe(parsed.originalPrice || activeItem.price)} ${escapeHtmlSafe(curr)}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escapeHtmlSafe(parsed.acceptedPrice)} ${escapeHtmlSafe(curr)}</span>`;
             }
         }
 

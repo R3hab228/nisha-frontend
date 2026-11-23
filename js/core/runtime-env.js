@@ -71,6 +71,29 @@ export function getLenisInstance() {
 }
 
 /**
+ * Escapes HTML special characters safely without requiring DOM or circular helper imports.
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function escapeHtmlSafe(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+/**
+ * Escapes attribute values safely for HTML attribute interpolation.
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function escapeAttrSafe(value) {
+    return escapeHtmlSafe(value).replaceAll('`', '&#96;');
+}
+
+/**
  * Safely translates an i18n key via active i18next instance with fallback string.
  * @param {string} key
  * @param {object|string} [optionsOrFallback='']

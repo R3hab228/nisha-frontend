@@ -3,7 +3,7 @@
 // ==========================================
 
 import { resolveAction } from '../core/action-registry.js';
-import { getRuntimeSiteLang } from '../core/runtime-env.js';
+import { getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 import { escAttr, escHtml } from './orders-state.js';
 
 const TRACK_CLIENT_TTL_MS = 5 * 60 * 1000;
@@ -71,10 +71,7 @@ function trTrack(key) {
     const lang = getRuntimeSiteLang();
     const map = TRACK_I18N_FALLBACKS[lang] || TRACK_I18N_FALLBACKS.ua;
     const def = map[key] || TRACK_I18N_FALLBACKS.ua[key] || '';
-    if (typeof i18next !== 'undefined' && typeof i18next.t === 'function') {
-        return i18next.t(`orders_modal.${key}`, { defaultValue: def });
-    }
-    return def;
+    return tSafe(`orders_modal.${key}`, { defaultValue: def }, def);
 }
 
 export function normalizeTtnDigits(raw) {
