@@ -88,7 +88,15 @@ export function tSafe(key, optionsOrFallback = '', fallback = '') {
             return String(res);
         }
     }
-    return String(defaultText ?? '');
+    let text = String(defaultText ?? '');
+    if (opts && text.includes('{{')) {
+        text = text.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (match, varName) => (
+            Object.hasOwn(opts, varName) && opts[varName] !== undefined && opts[varName] !== null
+                ? String(opts[varName])
+                : match
+        ));
+    }
+    return text;
 }
 
 /**

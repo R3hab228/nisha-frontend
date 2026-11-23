@@ -551,12 +551,14 @@ export function renderFilteredOrders() {
                     : '');
             const imgStyle = safeImgUrl ? `background-image: url('${safeImgUrl}');` : '';
             const itemPrice = item.currentPrice !== undefined ? item.currentPrice : (item.price || 0);
+            const openItemTitle = typeof i18next !== 'undefined' ? i18next.t('orders_modal.open_item_title', { defaultValue: 'Открыть карточку товара' }) : 'Открыть карточку товара';
+            const sizePrefix = typeof i18next !== 'undefined' ? i18next.t('orders_modal.size_prefix', { defaultValue: 'Размер:' }) : 'Размер:';
             return `
-                    <div class="order-item-row" data-action="open-product" data-id="${escAttr(item.id)}" title="Открыть карточку товара">
+                    <div class="order-item-row" data-action="open-product" data-id="${escAttr(item.id)}" title="${escAttr(openItemTitle)}">
                         <div class="order-item-img" data-item-id="${escAttr(item.id)}" style="${imgStyle}">${itemImg ? '' : 'NO IMG'}</div>
                         <div class="order-item-details">
                             <div class="order-item-name">${escHtml(item.name || 'Товар')}</div>
-                            <div class="order-item-meta"><span>Размер: ${escHtml(item.size || '—')}</span><span class="order-item-price">${fmtPrice(itemPrice)}</span></div>
+                            <div class="order-item-meta"><span>${escHtml(sizePrefix)} ${escHtml(item.size || '—')}</span><span class="order-item-price">${fmtPrice(itemPrice)}</span></div>
                         </div>
                     </div>`;
         }).join('');
@@ -577,20 +579,23 @@ export function renderFilteredOrders() {
                     const safeTtnAttr = escAttr(ttn);
                     const safeTtnHtml = escHtml(ttn);
                     const npTrackingUrl = getNovaPoshtaTrackingUrl(ttn, trackingLang);
+                    const copyTtnTitle = typeof i18next !== 'undefined' ? i18next.t('orders_modal.copy_ttn_title', { defaultValue: 'Нажмите, чтобы скопировать номер ТТН' }) : 'Нажмите, чтобы скопировать номер ТТН';
+                    const trackNpTitle = typeof i18next !== 'undefined' ? i18next.t('orders_modal.track_np_title', { defaultValue: 'Отследить на Новой Почте' }) : 'Отследить на Новой Почте';
+                    const trackBtnLabel = typeof i18next !== 'undefined' ? i18next.t('orders_modal.track_btn', { defaultValue: 'ТРЕК' }) : 'ТРЕК';
 
                     return `<div class="order-ttn">
                              <div class="order-ttn-header">
                                  <span class="order-ttn-label">${labelPrefix}</span>
                                  <div class="order-ttn-actions">
-                                     <div class="ttn-copy-btn" data-action="copy-ttn" data-ttn="${safeTtnAttr}" title="Нажмите, чтобы скопировать номер ТТН">
+                                     <div class="ttn-copy-btn" data-action="copy-ttn" data-ttn="${safeTtnAttr}" title="${escAttr(copyTtnTitle)}">
                                          <svg class="ttn-copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                              <rect x="2" y="2" width="13" height="13" rx="3.5"></rect>
                                              <path d="M7.5 7.5h8.5a3.5 3.5 0 0 1 3.5 3.5v8.5a3.5 3.5 0 0 1-3.5 3.5H7.5a3.5 3.5 0 0 1-3.5-3.5"></path>
                                          </svg>
                                          <span class="ttn-number">${safeTtnHtml}</span>
                                      </div>
-                                     <a href="${npTrackingUrl}" target="_blank" rel="noopener noreferrer" class="ttn-track-link" title="Отследить на Новой Почте">
-                                         <span>ТРЕК</span>
+                                     <a href="${npTrackingUrl}" target="_blank" rel="noopener noreferrer" class="ttn-track-link" title="${escAttr(trackNpTitle)}">
+                                         <span>${escHtml(trackBtnLabel)}</span>
                                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                                      </a>
                                  </div>

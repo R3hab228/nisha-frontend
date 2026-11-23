@@ -209,6 +209,52 @@ function resolveAndHealDisplayName(sb, user) {
     return uName;
 }
 
+function isProcessingOrderStatus(status) {
+    const s = String(status || '').trim().toLowerCase();
+    if (!s) return true;
+    return s.includes('обработ') || s.includes('оброб') || s.includes('process') || s === 'новый' || s === 'новий' || s === 'new';
+}
+
+function isModalElementOpen(el) {
+    if (!el) return false;
+    if (el.classList && typeof el.classList.contains === 'function' && el.classList.contains('is-open')) {
+        return true;
+    }
+    const disp = el.style && el.style.display;
+    return disp === 'flex' || disp === 'block';
+}
+
+function isUserOnMainFeed() {
+    if (typeof document === 'undefined') return true;
+    const ordersModal = typeof document.getElementById === 'function' ? document.getElementById('ordersModal') : null;
+    if (isModalElementOpen(ordersModal)) return false;
+
+    if (typeof document.querySelectorAll === 'function') {
+        const overlays = document.querySelectorAll('.modal-overlay');
+        for (const overlay of overlays) {
+            if (isModalElementOpen(overlay)) return false;
+        }
+    }
+    return true;
+}
+
+function findCachedOrderSnapshot(orderId) {
+    if (!orderId) return null;
+    if (Array.isArray(window.globalOrdersData)) {
+        const found = window.globalOrdersData.find(o => o && String(o.id) === String(orderId));
+        if (found) return found;
+    }
+    try {
+        const store = getStore();
+        const cached = store ? store.getJSON('nisha_cached_orders', []) : [];
+        if (Array.isArray(cached)) {
+            const found = cached.find(o => o && String(o.id) === String(orderId));
+            if (found) return found;
+        }
+    } catch {}
+    return null;
+}
+
 /**
  * Synchronizes incoming order status UPDATE payload with cached orders, modal counters, and catalog items.
  * @param {object} payload
@@ -234,7 +280,7 @@ function syncOrderUpdateCachesAndCatalog(payload) {
     } catch {}
     if (typeof document !== 'undefined') {
         const ordModal = document.getElementById('ordersModal');
-        if (ordModal && ordModal.style.display === 'flex') {
+        if (isModalElementOpen(ordModal)) {
             getGlobalFn('updateOrderTabCounters')?.();
             getGlobalFn('renderFilteredOrders')?.();
         }
@@ -277,14 +323,20 @@ export function subscribeOrderStatusUpdates(sb, userId) {
             table: 'orders',
             filter: `user_id=eq.${userId}`
         }, payload => {
+            const prevSnapshot = findCachedOrderSnapshot(payload.new?.id);
             syncOrderUpdateCachesAndCatalog(payload);
 
+            // Уведомления о статусе/ТТН показываем только когда пользователь в главной ленте (не в «Моих заказах» / модалках)
+            if (!isUserOnMainFeed()) return;
+
             const newStatus = payload.new.status;
-            const oldStatus = payload.old ? payload.old.status : null;
+            const oldStatus = (payload.old && payload.old.status !== undefined)
+                ? payload.old.status
+                : (prevSnapshot ? prevSnapshot.status : null);
             const shortId = payload.new.id.split('-').at(0).toUpperCase();
 
-            // 1. Изменение статуса заказа (без эмодзи)
-            if (newStatus && newStatus !== oldStatus) {
+            // 1. Изменение статуса заказа (без эмодзи и без спама стартовым статусом «В обработке»)
+            if (newStatus && newStatus !== oldStatus && !isProcessingOrderStatus(newStatus)) {
                 const formatStatusFn = getGlobalFn('formatOrderStatus');
                 const formattedNewStatus = formatStatusFn
                     ? formatStatusFn(newStatus)
@@ -296,16 +348,21 @@ export function subscribeOrderStatusUpdates(sb, userId) {
                     const itemImg = firstItem ? (firstItem.image || firstItem.img || '') : '';
                     const itemId = firstItem ? (firstItem.id || '') : '';
 
-                    notifyToast(`Заказ #${shortId} получен. Оставьте отзыв о покупке!`, 'info', itemImg, () => {
-                        getGlobalFn('promptOrderReview')?.(payload.new.id, itemName, itemImg, itemId);
-                    });
+                    notifyToast(
+                        tProfile('profile.order_completed_toast', 'Заказ #{{orderId}} получен. Оставьте отзыв о покупке!', { orderId: shortId }),
+                        'info',
+                        itemImg,
+                        () => {
+                            getGlobalFn('promptOrderReview')?.(payload.new.id, itemName, itemImg, itemId);
+                        }
+                    );
 
                     if (terminalFn) {
                         terminalFn(
                             'ORDER_COMPLETED.LOG',
-                            `Заказ #${escProfileHtml(shortId)} успешно получен.<br><br>` +
-                            `Будем благодарны за отзыв о покупке на сайте.`,
-                            '[ ОСТАВИТЬ ОТЗЫВ ]',
+                            `${tProfile('profile.order_completed_title', 'Заказ #{{orderId}} успешно получен.', { orderId: escProfileHtml(shortId) })}<br><br>` +
+                            `${tProfile('profile.order_completed_desc', 'Будем благодарны за отзыв о покупке на сайте.')}`,
+                            tProfile('profile.order_completed_btn', '[ ОСТАВИТЬ ОТЗЫВ ]'),
                             () => {
                                 getGlobalFn('promptOrderReview')?.(payload.new.id, itemName, itemImg, itemId);
                             }
@@ -330,18 +387,25 @@ export function subscribeOrderStatusUpdates(sb, userId) {
 
             // 2. Добавление / обновление номера ТТН Новой Почты (без эмодзи)
             const newTtn = payload.new.tracking_number;
-            const oldTtn = payload.old ? payload.old.tracking_number : null;
+            const oldTtn = (payload.old && payload.old.tracking_number !== undefined)
+                ? payload.old.tracking_number
+                : (prevSnapshot ? prevSnapshot.tracking_number : null);
             if (newTtn && newTtn !== oldTtn && !newTtn.startsWith('ОШИБКА')) {
-                notifyToast(`Заказ #${shortId}: добавлен номер ТТН ${newTtn}`, 'success', null, () => {
-                    getGlobalFn('openOrdersModal')?.();
-                });
+                notifyToast(
+                    tProfile('profile.ttn_added_toast', 'Заказ #{{orderId}}: добавлен номер ТТН {{ttn}}', { orderId: shortId, ttn: newTtn }),
+                    'success',
+                    null,
+                    () => {
+                        getGlobalFn('openOrdersModal')?.();
+                    }
+                );
 
                 if (terminalFn) {
                     terminalFn(
                         'TRACKING_NUMBER.LOG',
-                        `Заказ #${escProfileHtml(shortId)} передан в доставку.<br><br>` +
-                        `Номер ТТН Новой Почты: <b style="color:var(--accent-green);">${escProfileHtml(newTtn)}</b>`,
-                        '[ ОТСЛЕДИТЬ ]',
+                        `${tProfile('profile.ttn_added_title', 'Заказ #{{orderId}} передан в доставку.', { orderId: escProfileHtml(shortId) })}<br><br>` +
+                        `${tProfile('profile.ttn_added_number', 'Номер ТТН Новой Почты:')} <b style="color:var(--accent-green);">${escProfileHtml(newTtn)}</b>`,
+                        tProfile('profile.ttn_added_btn', '[ ОТСЛЕДИТЬ ]'),
                         () => {
                             getGlobalFn('openOrdersModal')?.();
                         }
@@ -385,9 +449,9 @@ export function subscribeQaUpdates(sb, userId) {
                     );
                     terminalFn(
                         'QUESTION_ANSWERED.LOG',
-                        `На ваш вопрос по товару опубликован ответ.<br><br>` +
+                        `${tProfile('profile.qa_answered_desc', 'На ваш вопрос по товару опубликован ответ.')}<br><br>` +
                         `<i>"${safeSnippet}"</i>`,
-                        '[ ПОСМОТРЕТЬ ТОВАР ]',
+                        tProfile('profile.qa_answered_btn', '[ ПОСМОТРЕТЬ ТОВАР ]'),
                         () => {
                             if (payload.new.item_id) {
                                 getGlobalFn('openProductModalById')?.(payload.new.item_id);

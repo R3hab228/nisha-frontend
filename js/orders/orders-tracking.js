@@ -230,6 +230,12 @@ export function resolveTrackingDisplayState(ttn, orderStatus, liveDoc = null) {
         dateText = `${trTrack('track_eta_prefix')} ${shortDate(cachedEntry.scheduledDeliveryDate)}`;
     }
 
+    const activeLang = getRuntimeSiteLang();
+    const localizedHeadline = headlineMap[stage] || trTrack('track_status_created');
+    const headline = (activeLang === 'ua' && cachedEntry.status)
+        ? cachedEntry.status
+        : localizedHeadline;
+
     return {
         stage,
         roadPercent: mapStageToRoadPercent(stage, cachedEntry.progress),
@@ -239,8 +245,8 @@ export function resolveTrackingDisplayState(ttn, orderStatus, liveDoc = null) {
         isFinal: Boolean(cachedEntry.isFinal || stage === 'delivered' || stage === 'returned'),
         isPostomat: Boolean(cachedEntry.isPostomat),
         hasLive: true,
-        headline: cachedEntry.status || headlineMap[stage] || trTrack('track_status_created'),
-        liveDetail: cachedEntry.status && cachedEntry.status !== headlineMap[stage] ? cachedEntry.status : '',
+        headline,
+        liveDetail: cachedEntry.status && cachedEntry.status !== localizedHeadline ? cachedEntry.status : '',
         routeText,
         dateText
     };

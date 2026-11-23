@@ -339,7 +339,13 @@
       "track_status_checking": "Checking live status...",
       "track_eta_prefix": "Est. arrival:",
       "track_delivered_prefix": "Delivered:",
-      "track_refresh_title": "Refresh delivery status"
+      "track_refresh_title": "Refresh delivery status",
+      "parcel_prefix": "Parcel",
+      "open_item_title": "Open item details",
+      "size_prefix": "Size:",
+      "copy_ttn_title": "Click to copy tracking number",
+      "track_np_title": "Track on Nova Poshta",
+      "track_btn": "TRACK"
     },
     "reviews_modal": {
       "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
@@ -414,7 +420,17 @@
       "both_verified": "Phone and Telegram verified!",
       "sound_label": "SOUND:",
       "sound_on": "ON",
-      "sound_off": "OFF"
+      "sound_off": "OFF",
+      "order_completed_toast": "Order #{{orderId}} delivered. Leave a review!",
+      "order_completed_title": "Order #{{orderId}} has been delivered.",
+      "order_completed_desc": "We would appreciate a quick review of your purchase on the site.",
+      "order_completed_btn": "[ LEAVE A REVIEW ]",
+      "ttn_added_toast": "Order #{{orderId}}: tracking number {{ttn}} added",
+      "ttn_added_title": "Order #{{orderId}} has been handed over for delivery.",
+      "ttn_added_number": "Nova Poshta tracking number:",
+      "ttn_added_btn": "[ TRACK PARCEL ]",
+      "qa_answered_desc": "An answer has been posted to your product question.",
+      "qa_answered_btn": "[ VIEW ITEM ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

@@ -339,7 +339,13 @@
       "track_status_checking": "Оновлення статусу НП...",
       "track_eta_prefix": "Орієнтовно:",
       "track_delivered_prefix": "Отримано:",
-      "track_refresh_title": "Оновити статус доставки"
+      "track_refresh_title": "Оновити статус доставки",
+      "parcel_prefix": "Посилка",
+      "open_item_title": "Відкрити картку товару",
+      "size_prefix": "Розмір:",
+      "copy_ttn_title": "Натисніть, щоб скопіювати номер ТТН",
+      "track_np_title": "Відстежити на Новій Пошті",
+      "track_btn": "ТРЕК"
     },
     "reviews_modal": {
       "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",
@@ -414,7 +420,17 @@
       "both_verified": "Номер та Telegram підтверджені!",
       "sound_label": "ЗВУК:",
       "sound_on": "УВІМК",
-      "sound_off": "ВИМК"
+      "sound_off": "ВИМК",
+      "order_completed_toast": "Замовлення #{{orderId}} отримано. Залиште відгук про покупку!",
+      "order_completed_title": "Замовлення #{{orderId}} успішно отримано.",
+      "order_completed_desc": "Будемо вдячні за відгук про покупку на сайті.",
+      "order_completed_btn": "[ ЗАЛИШИТИ ВІДГУК ]",
+      "ttn_added_toast": "Замовлення #{{orderId}}: додано номер ТТН {{ttn}}",
+      "ttn_added_title": "Замовлення #{{orderId}} передано в доставку.",
+      "ttn_added_number": "Номер ТТН Нової Пошти:",
+      "ttn_added_btn": "[ ВІДСЛІДКУВАТИ ]",
+      "qa_answered_desc": "На ваше питання щодо товару опубліковано відповідь.",
+      "qa_answered_btn": "[ ПЕРЕГЛЯНУТИ ТОВАР ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

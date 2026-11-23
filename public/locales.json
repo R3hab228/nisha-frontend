@@ -340,7 +340,13 @@
         "track_status_checking": "Оновлення статусу НП...",
         "track_eta_prefix": "Орієнтовно:",
         "track_delivered_prefix": "Отримано:",
-        "track_refresh_title": "Оновити статус доставки"
+        "track_refresh_title": "Оновити статус доставки",
+        "parcel_prefix": "Посилка",
+        "open_item_title": "Відкрити картку товару",
+        "size_prefix": "Розмір:",
+        "copy_ttn_title": "Натисніть, щоб скопіювати номер ТТН",
+        "track_np_title": "Відстежити на Новій Пошті",
+        "track_btn": "ТРЕК"
       },
       "reviews_modal": {
         "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",
@@ -415,7 +421,17 @@
         "both_verified": "Номер та Telegram підтверджені!",
         "sound_label": "ЗВУК:",
         "sound_on": "УВІМК",
-        "sound_off": "ВИМК"
+        "sound_off": "ВИМК",
+        "order_completed_toast": "Замовлення #{{orderId}} отримано. Залиште відгук про покупку!",
+        "order_completed_title": "Замовлення #{{orderId}} успішно отримано.",
+        "order_completed_desc": "Будемо вдячні за відгук про покупку на сайті.",
+        "order_completed_btn": "[ ЗАЛИШИТИ ВІДГУК ]",
+        "ttn_added_toast": "Замовлення #{{orderId}}: додано номер ТТН {{ttn}}",
+        "ttn_added_title": "Замовлення #{{orderId}} передано в доставку.",
+        "ttn_added_number": "Номер ТТН Нової Пошти:",
+        "ttn_added_btn": "[ ВІДСЛІДКУВАТИ ]",
+        "qa_answered_desc": "На ваше питання щодо товару опубліковано відповідь.",
+        "qa_answered_btn": "[ ПЕРЕГЛЯНУТИ ТОВАР ]"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -920,7 +936,13 @@
         "track_status_checking": "Обновление статуса НП...",
         "track_eta_prefix": "Ожидаемо:",
         "track_delivered_prefix": "Получена:",
-        "track_refresh_title": "Обновить статус доставки"
+        "track_refresh_title": "Обновить статус доставки",
+        "parcel_prefix": "Посылка",
+        "open_item_title": "Открыть карточку товара",
+        "size_prefix": "Размер:",
+        "copy_ttn_title": "Нажмите, чтобы скопировать номер ТТН",
+        "track_np_title": "Отследить на Новой Почте",
+        "track_btn": "ТРЕК"
       },
       "reviews_modal": {
         "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",
@@ -995,7 +1017,17 @@
         "both_verified": "Номер и Telegram подтверждены!",
         "sound_label": "ЗВУК:",
         "sound_on": "ВКЛ",
-        "sound_off": "ВЫКЛ"
+        "sound_off": "ВЫКЛ",
+        "order_completed_toast": "Заказ #{{orderId}} получен. Оставьте отзыв о покупке!",
+        "order_completed_title": "Заказ #{{orderId}} успешно получен.",
+        "order_completed_desc": "Будем благодарны за отзыв о покупке на сайте.",
+        "order_completed_btn": "[ ОСТАВИТЬ ОТЗЫВ ]",
+        "ttn_added_toast": "Заказ #{{orderId}}: добавлен номер ТТН {{ttn}}",
+        "ttn_added_title": "Заказ #{{orderId}} передан в доставку.",
+        "ttn_added_number": "Номер ТТН Новой Почты:",
+        "ttn_added_btn": "[ ОТСЛЕДИТЬ ]",
+        "qa_answered_desc": "На ваш вопрос по товару опубликован ответ.",
+        "qa_answered_btn": "[ ПОСМОТРЕТЬ ТОВАР ]"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",
@@ -1500,7 +1532,13 @@
         "track_status_checking": "Checking live status...",
         "track_eta_prefix": "Est. arrival:",
         "track_delivered_prefix": "Delivered:",
-        "track_refresh_title": "Refresh delivery status"
+        "track_refresh_title": "Refresh delivery status",
+        "parcel_prefix": "Parcel",
+        "open_item_title": "Open item details",
+        "size_prefix": "Size:",
+        "copy_ttn_title": "Click to copy tracking number",
+        "track_np_title": "Track on Nova Poshta",
+        "track_btn": "TRACK"
       },
       "reviews_modal": {
         "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",
@@ -1575,7 +1613,17 @@
         "both_verified": "Phone and Telegram verified!",
         "sound_label": "SOUND:",
         "sound_on": "ON",
-        "sound_off": "OFF"
+        "sound_off": "OFF",
+        "order_completed_toast": "Order #{{orderId}} delivered. Leave a review!",
+        "order_completed_title": "Order #{{orderId}} has been delivered.",
+        "order_completed_desc": "We would appreciate a quick review of your purchase on the site.",
+        "order_completed_btn": "[ LEAVE A REVIEW ]",
+        "ttn_added_toast": "Order #{{orderId}}: tracking number {{ttn}} added",
+        "ttn_added_title": "Order #{{orderId}} has been handed over for delivery.",
+        "ttn_added_number": "Nova Poshta tracking number:",
+        "ttn_added_btn": "[ TRACK PARCEL ]",
+        "qa_answered_desc": "An answer has been posted to your product question.",
+        "qa_answered_btn": "[ VIEW ITEM ]"
       },
       "propose": {
         "title": "DROP_ITEM.EXE",

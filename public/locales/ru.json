@@ -339,7 +339,13 @@
       "track_status_checking": "Обновление статуса НП...",
       "track_eta_prefix": "Ожидаемо:",
       "track_delivered_prefix": "Получена:",
-      "track_refresh_title": "Обновить статус доставки"
+      "track_refresh_title": "Обновить статус доставки",
+      "parcel_prefix": "Посылка",
+      "open_item_title": "Открыть карточку товара",
+      "size_prefix": "Размер:",
+      "copy_ttn_title": "Нажмите, чтобы скопировать номер ТТН",
+      "track_np_title": "Отследить на Новой Почте",
+      "track_btn": "ТРЕК"
     },
     "reviews_modal": {
       "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",
@@ -414,7 +420,17 @@
       "both_verified": "Номер и Telegram подтверждены!",
       "sound_label": "ЗВУК:",
       "sound_on": "ВКЛ",
-      "sound_off": "ВЫКЛ"
+      "sound_off": "ВЫКЛ",
+      "order_completed_toast": "Заказ #{{orderId}} получен. Оставьте отзыв о покупке!",
+      "order_completed_title": "Заказ #{{orderId}} успешно получен.",
+      "order_completed_desc": "Будем благодарны за отзыв о покупке на сайте.",
+      "order_completed_btn": "[ ОСТАВИТЬ ОТЗЫВ ]",
+      "ttn_added_toast": "Заказ #{{orderId}}: добавлен номер ТТН {{ttn}}",
+      "ttn_added_title": "Заказ #{{orderId}} передан в доставку.",
+      "ttn_added_number": "Номер ТТН Новой Почты:",
+      "ttn_added_btn": "[ ОТСЛЕДИТЬ ]",
+      "qa_answered_desc": "На ваш вопрос по товару опубликован ответ.",
+      "qa_answered_btn": "[ ПОСМОТРЕТЬ ТОВАР ]"
     },
     "propose": {
       "title": "DROP_ITEM.EXE",

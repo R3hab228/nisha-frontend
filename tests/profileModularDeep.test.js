@@ -675,4 +675,86 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
         expect(document.getElementById('favNav').style.color).toBe('#fff');
         expect(globalThis.applyFilters).toHaveBeenCalledWith(false, false);
     });
+
+    it('8. subscribeOrderStatusUpdates suppresses "В обработке", suppresses popups while ordersModal is open, and localizes delivery/review alerts', async () => {
+        const session = await import('../js/profile/profile-session.js');
+        let orderListener = null;
+        const sbMock = {
+            removeChannel: vi.fn(),
+            channel: () => ({
+                on: (_evt, _cfg, cb) => {
+                    orderListener = cb;
+                    return { subscribe: () => ({}) };
+                }
+            })
+        };
+
+        globalThis.showTerminalModal = vi.fn();
+        globalThis.updateOrderTabCounters = vi.fn();
+        globalThis.renderFilteredOrders = vi.fn();
+        globalThis.globalOrdersData = [{ id: 'ce4d66c2-1111', status: 'Принят', tracking_number: '' }];
+
+        session.subscribeOrderStatusUpdates(sbMock, 'usr-rt-test');
+        expect(typeof orderListener).toBe('function');
+
+        // 1. "В обработке" never triggers status broadcast popup
+        orderListener({
+            old: {},
+            new: { id: 'new11111-2222', status: 'В обработке', tracking_number: '' }
+        });
+        expect(globalThis.showTerminalModal).not.toHaveBeenCalled();
+        expect(mockToast).not.toHaveBeenCalled();
+
+        // 2. When #ordersModal is open (user not on main feed), silently refresh orders list without popup
+        const ordersModalEl = document.getElementById('ordersModal');
+        ordersModalEl.style.display = 'flex';
+        orderListener({
+            old: { status: 'Принят', tracking_number: '' },
+            new: { id: 'ce4d66c2-1111', status: 'Отправлен', tracking_number: '20450000123456' }
+        });
+        expect(globalThis.updateOrderTabCounters).toHaveBeenCalledTimes(1);
+        expect(globalThis.renderFilteredOrders).toHaveBeenCalledTimes(1);
+        expect(globalThis.showTerminalModal).not.toHaveBeenCalled();
+        expect(mockToast).not.toHaveBeenCalled();
+
+        // 3. Back on main feed with UA locale -> localized TRACKING_NUMBER.LOG and ORDER_COMPLETED.LOG
+        ordersModalEl.style.display = 'none';
+        const prevI18n = globalThis.i18next;
+        globalThis.i18next = {
+            language: 'ua',
+            t: (key, opts = {}) => {
+                const map = {
+                    'profile.order_completed_toast': `Замовлення #${opts.orderId} отримано. Залиште відгук про покупку!`,
+                    'profile.order_completed_title': `Замовлення #${opts.orderId} успішно отримано.`,
+                    'profile.order_completed_desc': 'Будемо вдячні за відгук про покупку на сайті.',
+                    'profile.order_completed_btn': '[ ЗАЛИШИТИ ВІДГУК ]',
+                    'profile.ttn_added_toast': `Замовлення #${opts.orderId}: додано номер ТТН ${opts.ttn}`,
+                    'profile.ttn_added_title': `Замовлення #${opts.orderId} передано в доставку.`,
+                    'profile.ttn_added_number': 'Номер ТТН Нової Пошти:',
+                    'profile.ttn_added_btn': '[ ВІДСЛІДКУВАТИ ]'
+                };
+                return map[key] || opts.defaultValue || key;
+            }
+        };
+        try {
+            orderListener({
+                old: { status: 'Отправлен', tracking_number: '' },
+                new: { id: 'ce4d66c2-1111', status: 'Завершен', tracking_number: '20450000999999', items: [{ id: 'it-1', name: 'Tee' }] }
+            });
+            expect(globalThis.showTerminalModal).toHaveBeenCalledWith(
+                'ORDER_COMPLETED.LOG',
+                expect.stringContaining('Замовлення #CE4D66C2 успішно отримано.'),
+                '[ ЗАЛИШИТИ ВІДГУК ]',
+                expect.any(Function)
+            );
+            expect(globalThis.showTerminalModal).toHaveBeenCalledWith(
+                'TRACKING_NUMBER.LOG',
+                expect.stringContaining('Замовлення #CE4D66C2 передано в доставку.'),
+                '[ ВІДСЛІДКУВАТИ ]',
+                expect.any(Function)
+            );
+        } finally {
+            globalThis.i18next = prevI18n;
+        }
+    });
 });
