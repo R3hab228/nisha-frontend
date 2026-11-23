@@ -129,6 +129,7 @@ if (typeof i18next !== 'undefined' && typeof i18next.on === 'function') {
     i18next.on('languageChanged', (lng) => {
         const norm = normalizeSiteLang(lng);
         updateFooterLanguageUI(norm);
+        invokeAction('renderActiveFilterChips');
     });
 }
 
@@ -309,8 +310,9 @@ function updateContentLanguage() {
     currentSearchLang = normalizeSiteLang(i18next.language || 'ua');
     startSearchTypewriter();
 
-    // Немедленно восстанавливаем красные индикаторы количества товаров в фильтрах и счетчики заказов после перевода
+    // Немедленно восстанавливаем красные индикаторы количества товаров в фильтрах, чипсы и счетчики заказов после перевода
     invokeAction('updateSidebarCounters');
+    invokeAction('renderActiveFilterChips');
     invokeAction('updateOrderTabCounters');
     // Обновляем текст статусов в карточках заказов при переключении языка
     document.querySelectorAll('.order-status[data-raw-status]').forEach(el => {

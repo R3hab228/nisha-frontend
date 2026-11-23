@@ -115,6 +115,8 @@ export async function submitQuestion(itemId) {
     }
 }
 
+let _qaLoadSeq = 0;
+
 /**
  * Fetches and renders Q&A entries for the given item from Supabase.
  * @param {string|number} itemId
@@ -124,10 +126,16 @@ export async function loadItemQuestions(itemId) {
     const sb = getSupabaseClient();
     if (!sb) return;
 
+    const reqSeq = ++_qaLoadSeq;
+    const activeBefore = getActiveOpenedItem();
+    const startedForActive = Boolean(activeBefore && String(activeBefore.id) === String(itemId));
     const { data } = await sb.from('item_questions')
         .select('question, answer, user_name, created_at')
         .eq('item_id', itemId)
         .order('created_at', { ascending: true });
+
+    if (reqSeq !== _qaLoadSeq) return;
+    if (startedForActive && String(getActiveOpenedItem()?.id) !== String(itemId)) return;
 
     const wrapper = document.getElementById('qaWrapper');
     const list = document.getElementById('qaList');

@@ -198,16 +198,41 @@ function resetToMain() {
     window.currentCategory = '';
     window.currentBrand = '';
     window.showingOnlyFavs = false;
-    try { sessionStorage.removeItem('nisha_showing_favs'); } catch {}
+    try {
+        sessionStorage.removeItem('nisha_showing_favs');
+        sessionStorage.setItem('nisha_last_category', '');
+    } catch {}
+    if (store && store.session) {
+        store.session.remove('nisha_showing_favs');
+        store.session.set('nisha_last_category', '');
+    }
     
     const searchInput = document.getElementById('mainSearch');
     if (searchInput) searchInput.value = '';
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    if (clearSearchBtn) clearSearchBtn.style.display = 'none';
     
     document.querySelectorAll('.size-cb').forEach(cb => cb.checked = false);
-    const saleCb = document.getElementById('onlySaleCb');
-    if (saleCb) saleCb.checked = false;
-    const bargainCb = document.getElementById('onlyBargainCb');
-    if (bargainCb) bargainCb.checked = false;
+    ['onlySaleCb', 'onlyBargainCb', 'hideUnavailableCb'].forEach(id => {
+        const cb = document.getElementById(id);
+        if (cb) cb.checked = false;
+    });
+
+    const minInput = document.getElementById('priceMin');
+    const maxInput = document.getElementById('priceMax');
+    const minDefault = minInput ? (Number.parseInt(minInput.min, 10) || 0) : 0;
+    const maxDefault = maxInput ? (Number.parseInt(maxInput.max, 10) || 15000) : 15000;
+    if (minInput) minInput.value = String(minDefault);
+    if (maxInput) maxInput.value = String(maxDefault);
+    const minLabel = document.getElementById('priceMinVal');
+    const maxLabel = document.getElementById('priceMaxVal');
+    if (minLabel) minLabel.textContent = String(minDefault);
+    if (maxLabel) maxLabel.textContent = String(maxDefault);
+    const rangeFill = document.getElementById('rangeFill');
+    if (rangeFill) {
+        rangeFill.style.left = '0%';
+        rangeFill.style.right = '0%';
+    }
     
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
@@ -783,6 +808,7 @@ async function initApp() {
         if (typeof renderHistory === 'function') renderHistory();
         invokeAction('initHitCounter');
         if (typeof updateSidebarCounters === 'function') updateSidebarCounters();
+        invokeAction('renderActiveFilterChips');
         invokeAction('initLeaderElection');
         invokeAction('updateAppBadge');
         

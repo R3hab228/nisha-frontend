@@ -21,6 +21,17 @@ import {
 } from './profile-contacts.js';
 import { renderProfileDelivery } from './profile-delivery.js';
 
+function escProfileHtml(str) {
+    const escFn = getGlobalFn('escapeHtml');
+    if (escFn) return escFn(str);
+    return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 /**
  * Opens profile modal and synchronizes cached/saved contacts and delivery fields inside it.
  */
@@ -289,7 +300,7 @@ export function subscribeOrderStatusUpdates(sb, userId) {
                     if (terminalFn) {
                         terminalFn(
                             'ORDER_COMPLETED.LOG',
-                            `Заказ #${shortId} успешно получен.<br><br>` +
+                            `Заказ #${escProfileHtml(shortId)} успешно получен.<br><br>` +
                             `Будем благодарны за отзыв о покупке на сайте.`,
                             '[ ОСТАВИТЬ ОТЗЫВ ]',
                             () => {
@@ -305,8 +316,8 @@ export function subscribeOrderStatusUpdates(sb, userId) {
                         terminalFn(
                             'SYSTEM_NOTIFICATION.LOG',
                             `${tProfile('profile.order_status_title', 'Статус вашего заказа изменился.')}<br><br>` +
-                            `${tProfile('profile.order_status_order', 'Заказ:')} #${shortId}<br>` +
-                            `${tProfile('profile.order_status_new', 'Новый статус:')} <b style="color:var(--accent-green);">${formattedNewStatus}</b>`,
+                            `${tProfile('profile.order_status_order', 'Заказ:')} #${escProfileHtml(shortId)}<br>` +
+                            `${tProfile('profile.order_status_new', 'Новый статус:')} <b style="color:var(--accent-green);">${escProfileHtml(formattedNewStatus)}</b>`,
                             tProfile('profile.order_status_view', '[ ПОСМОТРЕТЬ ]'),
                             () => { getGlobalFn('openOrdersModal')?.(); }
                         );
@@ -325,8 +336,8 @@ export function subscribeOrderStatusUpdates(sb, userId) {
                 if (terminalFn) {
                     terminalFn(
                         'TRACKING_NUMBER.LOG',
-                        `Заказ #${shortId} передан в доставку.<br><br>` +
-                        `Номер ТТН Новой Почты: <b style="color:var(--accent-green);">${newTtn}</b>`,
+                        `Заказ #${escProfileHtml(shortId)} передан в доставку.<br><br>` +
+                        `Номер ТТН Новой Почты: <b style="color:var(--accent-green);">${escProfileHtml(newTtn)}</b>`,
                         '[ ОТСЛЕДИТЬ ]',
                         () => {
                             getGlobalFn('openOrdersModal')?.();
@@ -364,9 +375,11 @@ export function subscribeQaUpdates(sb, userId) {
 
                 if (terminalFn) {
                     const truncateFn = getGlobalFn('safeTruncateText');
-                    const safeSnippet = truncateFn
-                        ? truncateFn(String(payload.new.answer || ''), 150)
-                        : String(payload.new.answer || '').slice(0, 150);
+                    const safeSnippet = escProfileHtml(
+                        truncateFn
+                            ? truncateFn(String(payload.new.answer || ''), 150)
+                            : String(payload.new.answer || '').slice(0, 150)
+                    );
                     terminalFn(
                         'QUESTION_ANSWERED.LOG',
                         `На ваш вопрос по товару опубликован ответ.<br><br>` +

@@ -84,8 +84,8 @@ describe('Service Worker, CSP, BFCache & Catalog Counter Hardening', () => {
         expect(catalog).toContain('const triggerForegroundSync = () =>');
         expect(catalog).toContain('if (now - _lastForegroundSyncAt < 2500) return;');
         expect(catalog).toContain('}, 25000);');
-        expect(product).toContain('<img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async"');
-        expect(product).toContain('<img class="similar-slide-img" src="${sImg}" loading="lazy" decoding="async"');
+        expect(product).toContain('<img class="modal-slide-img" src="${safeMediaSrc}" ${loadAttr} decoding="async"');
+        expect(product).toContain('<img class="similar-slide-img" src="${safeSimImg}" loading="lazy" decoding="async"');
     });
 
     it('7. cart.js uses CSP-safe delegated touch listeners for swipe-to-delete instead of inline ontouch* attributes', () => {

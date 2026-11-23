@@ -596,15 +596,31 @@ export function triggerFilterTransition() {
 export function setCategoryFilter(cat, element) {
     invokeAction('playSound', 'menu', { kind: 'ui' });
     const updateDom = async () => {
-        document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
+        const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
+        catLinks.forEach(el => el.classList.remove('active-filter'));
         if (element) {
             element.classList.add('active-filter');
+        } else {
+            const targetCat = String(cat || '');
+            for (const el of catLinks) {
+                if ((el.getAttribute('data-category') || '') === targetCat) {
+                    el.classList.add('active-filter');
+                    break;
+                }
+            }
+        }
+        const store = getCatalogStore();
+        if (window.showingOnlyFavs) {
+            window.showingOnlyFavs = false;
+            if (store && store.session) store.session.remove('nisha_showing_favs');
+            else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('nisha_showing_favs'); } catch {} }
+            const favNav = document.getElementById('favNav');
+            if (favNav) favNav.style.color = 'var(--accent-yellow)';
         }
         if (window.currentCategory !== cat) {
             clearSavedFeedScrollState();
         }
         window.currentCategory = cat;
-        const store = getCatalogStore();
         if (store && store.session) store.session.set('nisha_last_category', cat);
         else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_last_category', cat); } catch {} }
         await applyFilters(true, false);

@@ -21,6 +21,25 @@ const _preloadedSimilarUrls = new Set();
 let _pendingSimilarImgUrls = [];
 let _suppressHistoryRender = false;
 
+function sanitizeHistoryMediaUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return '';
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return '';
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith('javascript:') || lower.startsWith('vbscript:') || (lower.startsWith('data:') && !lower.startsWith('data:image/'))) {
+        return '';
+    }
+    return getEscAttr(trimmed);
+}
+
+function escapeHistoryCssUrl(rawUrl) {
+    const safeAttr = sanitizeHistoryMediaUrl(rawUrl);
+    if (!safeAttr) return '';
+    return String(safeAttr)
+        .replaceAll('(', '%28')
+        .replaceAll(')', '%29');
+}
+
 /**
  * Eagerly preloads pending "Similar items" thumbnail images when the user starts
  * scrolling the product card or swiping/changing photos inside the modal.
@@ -166,8 +185,9 @@ export function renderSimilarItems(item) {
             }
             const simBargain = s.status === 'available' ? getAcceptedBargain(s.id) : null;
             if (simBargain && simBargain.acceptedPrice) {
-                const origSimPrice = simBargain.originalPrice || s.price;
-                miniPriceHTML = `<span class="history-old-price history-old-price--bargain">${origSimPrice} ${curr}</span><span class="history-current-price--bargain">${simBargain.acceptedPrice} ${curr}</span>`;
+                const origSimPrice = getEscHtml(simBargain.originalPrice || s.price);
+                const accSimPrice = getEscHtml(simBargain.acceptedPrice);
+                miniPriceHTML = `<span class="history-old-price history-old-price--bargain">${origSimPrice} ${curr}</span><span class="history-current-price--bargain">${accSimPrice} ${curr}</span>`;
             }
 
             const isUnseen = !seenItemsIds.includes(s.id) && s.status === 'available';
@@ -179,7 +199,7 @@ export function renderSimilarItems(item) {
             if (s.status === 'sold') {
                 statusOverlayHTML = `<div class="sold-badge" style="font-size: 14px !important; letter-spacing: 2px !important; padding: 2px 8px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">SOLD</div>`;
                 imageFilter = 'filter: grayscale(80%) brightness(0.5);';
-                miniPriceHTML = `<span style="color:#888; text-decoration:line-through;">${s.price} ${curr}</span>`;
+                miniPriceHTML = `<span style="color:#888; text-decoration:line-through;">${getEscHtml(s.price)} ${curr}</span>`;
             } else if (s.status === 'reserved') {
                 statusOverlayHTML = `<div class="reserved-badge" style="font-size: 11px !important; letter-spacing: 1px !important; padding: 2px 4px !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) rotate(-15deg) !important; z-index: 10;">RESERVED</div>`;
                 imageFilter = 'filter: brightness(0.6);';
@@ -187,11 +207,12 @@ export function renderSimilarItems(item) {
 
             let imageBlockHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; font-family:var(--font-mono); font-size:10px;">NO FOTO</div>`;
 
-            if (sImg) {
+            const safeSimImg = sanitizeHistoryMediaUrl(sImg);
+            if (safeSimImg) {
                 if (sImg.endsWith('.mp4')) {
-                    imageBlockHTML = `<video src="${sImg}#t=0.001" style="width:100%; height:100%; object-fit:cover; pointer-events:none; ${imageFilter} transition: 0.3s;" preload="metadata"></video>`;
+                    imageBlockHTML = `<video src="${safeSimImg}#t=0.001" style="width:100%; height:100%; object-fit:cover; pointer-events:none; ${imageFilter} transition: 0.3s;" preload="metadata"></video>`;
                 } else {
-                    imageBlockHTML = `<img class="similar-slide-img" src="${sImg}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block; ${imageFilter} transition: 0.3s;">`;
+                    imageBlockHTML = `<img class="similar-slide-img" src="${safeSimImg}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; display:block; ${imageFilter} transition: 0.3s;">`;
                 }
             }
 
@@ -329,12 +350,18 @@ export function renderHistory() {
 
         if (optImg) {
             if (isVideo) {
-                mediaHTML = `
-                    <video src="${optImg}#t=0.001" muted playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none; ${imageFilter} transition: 0.3s;"></video>
+                const safeVideoUrl = sanitizeHistoryMediaUrl(optImg);
+                if (safeVideoUrl) {
+                    mediaHTML = `
+                    <video src="${safeVideoUrl}#t=0.001" muted playsinline webkit-playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none; ${imageFilter} transition: 0.3s;"></video>
                     <div style="position:absolute; z-index:5; top:4px; left:4px; background:rgba(0,0,0,0.8); padding:2px 4px; border-radius:2px; color:var(--accent-green); font-size:8px; font-family:var(--font-mono); border: 1px solid #333; pointer-events: none;">▶ VIDEO</div>
                 `;
+                }
             } else {
-                mediaHTML = `<div style="width:100%; height:100%; background-image:url('${optImg}'); background-size:cover; background-position:center; ${imageFilter} transition: 0.3s;"></div>`;
+                const safeBgUrl = escapeHistoryCssUrl(optImg);
+                if (safeBgUrl) {
+                    mediaHTML = `<div style="width:100%; height:100%; background-image:url('${safeBgUrl}'); background-size:cover; background-position:center; ${imageFilter} transition: 0.3s;"></div>`;
+                }
             }
         }
 

@@ -175,6 +175,10 @@ export function renderModalSlider(item) {
                     currentThumb = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23000'/%3E%3Cpolygon points='40,30 70,50 40,70' fill='%2300ff00'/%3E%3Ctext x='50' y='88' font-family='monospace' font-size='11' font-weight='bold' fill='%2300ff00' text-anchor='middle'%3EVIDEO%3C/text%3E%3C/svg%3E";
                 }
 
+                const safeMediaSrc = hasAction('escapeAttr')
+                    ? invokeAction('escapeAttr', cdnUrl)
+                    : String(cdnUrl || '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll("'", '&#39;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+
                 if (isVideo) {
                     slidesHtml += `
                         <div class="slide img-8bit-loading" style="background:#000; display:flex; justify-content:center; align-items:center;">
@@ -189,7 +193,7 @@ export function renderModalSlider(item) {
                                 controls 
                                 style="width:100%; height:100%; max-height:400px; object-fit:contain; opacity:0;"
                             >
-                                <source src="${cdnUrl}#t=0.001" type="video/mp4">
+                                <source src="${safeMediaSrc}#t=0.001" type="video/mp4">
                             </video>
                         </div>`;
                 } else {
@@ -200,11 +204,10 @@ export function renderModalSlider(item) {
                     const thumbBackdropHtml = safeThumbBg
                         ? `<span class="slide-thumb-backdrop" aria-hidden="true" style="position:absolute; inset:0; background:#000 url('${safeThumbBg}') center/contain no-repeat; filter:blur(14px) brightness(0.4); transform:scale(1.06); pointer-events:none; transition:opacity 0.16s ease-out;"></span>`
                         : '';
-                    const safeSlideHref = hasAction('escapeAttr') ? invokeAction('escapeAttr', cdnUrl) : cdnUrl;
                     slidesHtml += `
-                        <a href="${safeSlideHref}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" rel="noopener noreferrer" class="slide${isFirst ? ' img-8bit-loading' : ''}" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:#000;">
+                        <a href="${safeMediaSrc}" data-pswp-width="1000" data-pswp-height="1000" target="_blank" rel="noopener noreferrer" class="slide${isFirst ? ' img-8bit-loading' : ''}" style="display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:#000;">
                             ${thumbBackdropHtml}
-                            <img class="modal-slide-img" src="${cdnUrl}" ${loadAttr} decoding="async" style="position:relative; z-index:1; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.16s ease-out;">
+                            <img class="modal-slide-img" src="${safeMediaSrc}" ${loadAttr} decoding="async" style="position:relative; z-index:1; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.16s ease-out;">
                         </a>`;
                 }
 
