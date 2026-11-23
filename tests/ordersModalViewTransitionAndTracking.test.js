@@ -30,10 +30,10 @@ describe('Orders Modal View Transition Isolation & Direct Tracking Fix', () => {
             expect(styleCode).toContain('animation: vt-orders-fade-in');
         });
 
-        it('locks ordersModal height on mobile to 78dvh and makes list area flexibly scrollable', () => {
+        it('locks ordersModal height on mobile to 62dvh and makes list area flexibly scrollable', () => {
             expect(styleCode).toContain('#ordersModal .modal-window');
-            expect(styleCode).toContain('height: 78dvh !important');
-            expect(styleCode).toContain('max-height: 84dvh !important');
+            expect(styleCode).toContain('height: 62dvh !important');
+            expect(styleCode).toContain('max-height: 76dvh !important');
             expect(styleCode).toContain('#ordersModal #ordersListArea');
             expect(styleCode).toContain('flex: 1 1 auto !important');
             expect(styleCode).toContain('overflow-y: auto !important');
