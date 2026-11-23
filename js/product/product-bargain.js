@@ -610,11 +610,28 @@ export function bindBargainKeyboardShortcuts() {
     }, { capture: true });
 }
 
+let _bargainSyncInFlight = null;
+let _lastBargainSyncAt = 0;
+let _bargainSyncBackoffUntil = 0;
+const BARGAIN_SYNC_COOLDOWN_MS = 15000;
+const BARGAIN_SYNC_429_BACKOFF_MS = 60000;
+
 /**
  * Synchronizes active pending and accepted bargains across devices via `/api/bargains/active`.
+ * Deduplicates concurrent calls, enforces a 15s cooldown, and backs off on HTTP 429.
+ * @param {{ force?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export async function syncUserBargains() {
+export async function syncUserBargains(options = {}) {
+    const now = Date.now();
+    const force = Boolean(options && options.force);
+    if (!force && now < _bargainSyncBackoffUntil) return;
+    if (!force && _lastBargainSyncAt > 0 && (now - _lastBargainSyncAt) < BARGAIN_SYNC_COOLDOWN_MS) return;
+    if (_bargainSyncInFlight) return _bargainSyncInFlight;
+
+    _lastBargainSyncAt = now;
+
+    const runSync = async () => {
     try {
         const fp = (getRuntimeFingerprint() || '');
         const uid = (typeof window !== 'undefined' && window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : '';
@@ -627,20 +644,30 @@ export async function syncUserBargains() {
         let bargains = null;
         if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.get === 'function') {
             try {
-                const res = await window.apiClient.get(`/api/bargains/active?${params.toString()}`);
+                const res = await window.apiClient.get(`/api/bargains/active?${params.toString()}`, {
+                    retries: 0,
+                    timeout: 6000,
+                    dedupe: true
+                });
                 bargains = res?.data?.bargains || res?.bargains || [];
             } catch (apiErr) {
-                // fallback to fetch below
+                const errStatus = Number(apiErr?.status || apiErr?.response?.status || 0);
+                if (errStatus === 429) {
+                    _bargainSyncBackoffUntil = Date.now() + BARGAIN_SYNC_429_BACKOFF_MS;
+                }
+                // Не делаем повторный неавторизованный fetch при HTTP-ошибках (401/403/429)
+                return;
             }
-        }
-        if (bargains === null) {
+        } else {
             try {
-                const backendUrl = (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.getBaseUrl === 'function')
-                    ? window.apiClient.getBaseUrl()
-                    : ((typeof window !== 'undefined' && window.ENV && window.ENV.API_BASE_URL) || (typeof window !== 'undefined' && window.BACKEND_URL) || 'https://nisha-api.onrender.com');
+                const backendUrl = ((typeof window !== 'undefined' && window.ENV && window.ENV.API_BASE_URL) || (typeof window !== 'undefined' && window.BACKEND_URL) || 'https://nisha-api.onrender.com');
                 const res = await fetch(`${backendUrl}/api/bargains/active?${params.toString()}`, {
                     signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') ? AbortSignal.timeout(6000) : undefined
                 });
+                if (res.status === 429) {
+                    _bargainSyncBackoffUntil = Date.now() + BARGAIN_SYNC_429_BACKOFF_MS;
+                    return;
+                }
                 if (res.ok) {
                     const data = await res.json();
                     bargains = data?.bargains || [];
@@ -735,7 +762,13 @@ export async function syncUserBargains() {
         }
     } catch (e) {
         console.warn('[SYNC BARGAINS] Error:', e);
+    } finally {
+        _bargainSyncInFlight = null;
     }
+    };
+
+    _bargainSyncInFlight = runSync();
+    return _bargainSyncInFlight;
 }
 
 registerActions({
