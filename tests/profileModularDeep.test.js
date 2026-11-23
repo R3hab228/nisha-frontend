@@ -435,9 +435,23 @@ describe('Modular Profile, Auth, Contacts, Delivery & Favorites Deep Suite (js/p
             return { data: null, error: null };
         });
 
+        window.apiClient = {
+            post: vi.fn(async (url, body) => {
+                if (url === '/api/auth/telegram-link-token' && body?.type === 'otp') {
+                    return { success: true, token: 'otpt_mocktoken1234567890', botUrl: 'https://t.me/nisha_store1_bot?start=otpt_mocktoken1234567890' };
+                }
+                return { success: true };
+            })
+        };
+
         await contacts.saveContactFromInput('phone', false);
+        expect(window.apiClient.post).toHaveBeenCalledWith(
+            '/api/auth/telegram-link-token',
+            { type: 'otp', phone: '+380991112233' },
+            expect.any(Object)
+        );
         expect(globalThis.open).toHaveBeenCalledWith(
-            expect.stringContaining('t.me/nisha_store1_bot?start=otp_user-otp-1_380991112233'),
+            'https://t.me/nisha_store1_bot?start=otpt_mocktoken1234567890',
             '_blank',
             'noopener,noreferrer'
         );

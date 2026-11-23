@@ -510,7 +510,7 @@ export async function saveContactFromInput(type, isModal = false) {
     let clean = '';
     let rpcAvailVal = '';
     let otpTarget = '';
-    let tgLink = '';
+    let tokenPayload = null;
 
     if (isPhone) {
         clean = input.value.trim().replace(/[^\d+]/g, '');
@@ -530,8 +530,7 @@ export async function saveContactFromInput(type, isModal = false) {
         } catch {}
         rpcAvailVal = clean;
         otpTarget = clean;
-        const userPrefix = activeUser.id ? `${activeUser.id}_` : '';
-        tgLink = `https://t.me/nisha_store1_bot?start=otp_${userPrefix}${clean.replace('+', '')}`;
+        tokenPayload = { type: 'otp', phone: clean };
     } else {
         const rawVal = input.value.trim().replace(/^(https?:\/\/)?(www\.)?t\.me\//i, '@');
         const cleanUser = rawVal.replace(/^@+/, '').replace(/[^a-zA-Z0-9_]/g, '');
@@ -544,7 +543,7 @@ export async function saveContactFromInput(type, isModal = false) {
         const cleanLower = cleanUser.toLowerCase();
         rpcAvailVal = cleanUser;
         otpTarget = `tg_${cleanLower}`;
-        tgLink = `https://t.me/nisha_store1_bot?start=tg_${activeUser.id}_${cleanLower}`;
+        tokenPayload = { type: 'tg', username: cleanLower };
     }
 
     try {
@@ -598,6 +597,25 @@ export async function saveContactFromInput(type, isModal = false) {
         }
     } catch (e) {
         console.error(`OTP RPC error (${type}):`, e);
+    }
+
+    let tgLink = '';
+    try {
+        if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.post === 'function') {
+            const tokenRes = await window.apiClient.post('/api/auth/telegram-link-token', tokenPayload, { timeout: 8000, retries: 1 });
+            if (tokenRes && tokenRes.botUrl) tgLink = tokenRes.botUrl;
+        }
+    } catch (e) {
+        console.error(`Telegram link token error (${type}):`, e);
+    }
+
+    if (!tgLink) {
+        notifyToast(tProfile('profile.otp_server_err', 'Ошибка сервера при генерации кода'), 'error');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = '✓';
+        }
+        return;
     }
 
     if (typeof window !== 'undefined') window[cfg.pendingVar] = clean;

@@ -518,11 +518,31 @@ async function generateAndSendOTP() {
         return;
     }
     
-    // 5. Открываем Telegram-бота
+    // 5. Получаем одноразовый токен и открываем Telegram-бота
     const payloadPhone = cleanPhone.replace('+', '');
     const activeUser = store.user;
-    const userPrefix = (activeUser && activeUser.id) ? `${activeUser.id}_` : '';
-    const tgLink = `https://t.me/nisha_store1_bot?start=otp_${userPrefix}${payloadPhone}`;
+    let tgLink = '';
+    try {
+        if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.post === 'function') {
+            const tokenRes = await window.apiClient.post('/api/auth/telegram-link-token', {
+                type: 'otp',
+                phone: cleanPhone
+            }, { timeout: 8000, retries: 1 });
+            if (tokenRes && tokenRes.botUrl) tgLink = tokenRes.botUrl;
+        }
+    } catch {}
+
+    if (!tgLink) {
+        if (!activeUser || !activeUser.id) {
+            // Гостевой фоллбэк без UUID (не изменяет profiles)
+            tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
+        } else {
+            showToast(typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error', { defaultValue: 'Ошибка сервера' }) : 'Ошибка сервера', 'error');
+            clearInterval(otpInterval);
+            setOtpButtonDefault(btnOtp);
+            return;
+        }
+    }
     
     if (/android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())) {
         window.location.href = tgLink;
