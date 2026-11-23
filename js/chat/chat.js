@@ -3,6 +3,10 @@ import { invokeAction, onAppEvent, registerActions, resolveAction } from '../cor
 import { getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang } from '../core/runtime-env.js';
 import { setAcceptedBargain, setBargainDeclined } from '../core/bargain-storage.js';
 
+if (typeof document !== 'undefined') {
+    import('../../css/lazy-support-modal.css').catch(() => {});
+}
+
 // --- СИСТЕМА ЗАПОМИНАНИЯ ПОКАЗАННЫХ ОФФЕРОВ (ЧТОБЫ НЕ НАДОЕДАТЬ ПОЛЬЗОВАТЕЛЮ) ---
 const BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups';
 const SUPPORT_REPLY_SEEN_STORAGE_KEY = 'nisha_seen_support_reply_ids';

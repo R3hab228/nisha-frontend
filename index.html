@@ -467,7 +467,7 @@
 </div>
 </footer>
 </div>
-<div class=modal-overlay id=rulesModal style="background-color:rgba(0,0,0,.95);z-index:5000">
+<div class=modal-overlay id=rulesModal role=dialog aria-modal=true aria-labelledby=rulesModalTitle aria-hidden=true style="background-color:rgba(0,0,0,.95);z-index:5000">
 <div class=modal-window style="max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;border-radius:10px 10px 0 0">
 <div class=modal-header style=background:#000;flex-shrink:0>
 <span class="modal-title typewriter" id=rulesModalTitle style=color:var(--accent-red)>USER_AGREEMENT.TXT</span>
@@ -478,7 +478,7 @@
 </div>
 </div>
 </div>
-<div class=modal-overlay id=productModal>
+<div class=modal-overlay id=productModal role=dialog aria-modal=true aria-labelledby=modalTypewriterTitle aria-hidden=true>
 <div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" id=modalTypewriterTitle>ITEM_INFO.EXE</span>
@@ -577,7 +577,7 @@
 </div>
 </div>
 </div>
-<div class="modal-overlay" id="bargainModal" style="display:none">
+<div class="modal-overlay" id="bargainModal" role="dialog" aria-modal="true" aria-labelledby="bargainModalTitle" aria-hidden="true" style="display:none">
 <div class="modal-window" style="max-width:440px">
 <div class="modal-header">
 <span class="modal-title typewriter" id="bargainModalTitle" data-i18n="product.offer_modal_title">BARGAIN_OFFER.EXE</span>
@@ -602,7 +602,7 @@
 </div>
 </div>
 </div>
-<div class=modal-overlay id=checkoutModal>
+<div class=modal-overlay id=checkoutModal role=dialog aria-modal=true aria-labelledby=checkoutModalTitle aria-hidden=true>
 <div class=modal-window style=max-width:550px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=checkoutModalTitle>SECURE_CHECKOUT.EXE</span>
@@ -669,7 +669,7 @@
 </div>
 </div>
 </div>
-<div class=modal-overlay id=ordersModal>
+<div class=modal-overlay id=ordersModal role=dialog aria-modal=true aria-labelledby=ordersModalTitle aria-hidden=true>
 <div class=modal-window>
 <div class=modal-header>
 <span class="modal-title typewriter" id=ordersModalTitle>MY_ORDERS.DB</span>
@@ -706,7 +706,7 @@
 </div>
 </div>
 </div>
-<div class=modal-overlay id=reviewsModal>
+<div class=modal-overlay id=reviewsModal role=dialog aria-modal=true aria-labelledby=reviewsModalTitle aria-hidden=true>
 <div class=modal-window style=max-width:600px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=reviewsModalTitle>REVIEWS.TXT</span>
@@ -725,7 +725,7 @@
 <button class=fab-propose data-action="open-propose-modal" title="Предложить вещь" aria-label="Предложить вещь">
 <span style=display:block>[+]</span>
 </button>
-<div class=modal-overlay id=profileModal>
+<div class=modal-overlay id=profileModal role=dialog aria-modal=true aria-labelledby=profileModalTitle aria-hidden=true>
 <div class=modal-window style=max-width:450px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=profileModalTitle>PROFILE/LOGIN.EXE</span>
@@ -830,7 +830,7 @@
 </div>
 </div>
 </div>
-<div class=modal-overlay id=proposeModal>
+<div class=modal-overlay id=proposeModal role=dialog aria-modal=true aria-labelledby=proposeModalTitle aria-hidden=true>
 <div class=modal-window style=max-width:550px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=proposeModalTitle data-i18n=propose.title>DROP_ITEM.EXE</span>
@@ -903,7 +903,7 @@
 </div>
 </div>
 </div>
-<div class=modal-overlay id=writeReviewModal>
+<div class=modal-overlay id=writeReviewModal role=dialog aria-modal=true aria-labelledby=writeReviewModalTitle aria-hidden=true>
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=writeReviewModalTitle>NEW_REVIEW.EXE</span>
@@ -918,7 +918,7 @@
 </div>
 </div>
 </div>
-<div class=modal-overlay id=autoReviewModal>
+<div class=modal-overlay id=autoReviewModal role=dialog aria-modal=true aria-labelledby=autoReviewModalTitle aria-hidden=true>
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=autoReviewModalTitle style=color:var(--accent-green)>DELIVERY_SUCCESS.LOG</span>
@@ -938,7 +938,7 @@
 </div>
 </div>
 </div>
-<div class=modal-overlay id=supportModal>
+<div class=modal-overlay id=supportModal role=dialog aria-modal=true aria-labelledby=supportModalTitle aria-hidden=true>
 <div class=modal-window style=max-width:500px>
 <div class=modal-header>
 <span class="modal-title typewriter" id=supportModalTitle>SUPPORT_TICKET.EXE</span>

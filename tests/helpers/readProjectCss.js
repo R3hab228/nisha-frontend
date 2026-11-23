@@ -11,7 +11,8 @@ const LAZY_MODAL_STYLESHEETS = [
     'css/lazy-drop-modal.css',
     'css/lazy-product-checkout-modal.css',
     'css/lazy-reviews-modal.css',
-    'css/lazy-driver-tour.css'
+    'css/lazy-driver-tour.css',
+    'css/lazy-support-modal.css'
 ];
 
 export function readProjectCss(entryRelativePath = 'style.css') {
