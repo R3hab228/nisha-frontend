@@ -329,6 +329,9 @@ export function resetProposalForm() {
     if (Array.isArray(currentProposalFiles)) {
         currentProposalFiles.forEach(item => {
             if (item) item._cancelled = true;
+            if (item && item._uploadAbortCtrl) {
+                try { item._uploadAbortCtrl.abort(); } catch {}
+            }
             if (item && item.url) {
                 try { URL.revokeObjectURL(item.url); } catch {}
             }
@@ -363,6 +366,9 @@ export function openProposeModal() {
     if (getLenisInstance()) invokeAction('stopLenis');
     invokeAction('updateProposeAndCheckoutFields');
     resetPropBargainState();
+    if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.warmupBackendServer === 'function') {
+        window.apiClient.warmupBackendServer();
+    }
     const propNameEl = document.getElementById('propName');
     if (propNameEl) {
         delete propNameEl.dataset.userTyped;
@@ -615,11 +621,26 @@ export async function submitProposal() {
         formData.append('lang', getRuntimeSiteLang());
         if (propToken) formData.append('turnstileToken', propToken);
 
-        compressedFiles.forEach((file, index) => {
-            const isVid = (file && file.type && file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(file?.name || '');
-            const ext = isVid ? 'mp4' : (file?.type === 'image/webp' ? 'webp' : 'jpg');
-            formData.append('images', file, `prop_${index}.${ext}`);
-        });
+        // Дожидаемся уже запущенной предзагрузки фото (если юзер нажал «Отправить» сразу после выбора)
+        const pendingPreuploads = proposalItems.filter(item => !item.uploadedUrl && item.uploadPromise);
+        if (pendingPreuploads.length > 0) {
+            const uploadingTextPre = typeof i18next !== 'undefined'
+                ? i18next.t('propose.uploading', { defaultValue: 'ОТПРАВКА НА СЕРВЕР...' })
+                : 'ОТПРАВКА НА СЕРВЕР...';
+            btn.textContent = `[ ${uploadingTextPre} ]`;
+            await Promise.allSettled(pendingPreuploads.map(item => item.uploadPromise));
+        }
+
+        const allPreuploaded = proposalItems.length > 0 && proposalItems.every(item => Boolean(item.uploadedUrl));
+        if (allPreuploaded) {
+            formData.append('preuploadedUrls', JSON.stringify(proposalItems.map(item => item.uploadedUrl)));
+        } else {
+            compressedFiles.forEach((file, index) => {
+                const isVid = (file && file.type && file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(file?.name || '');
+                const ext = isVid ? 'mp4' : (file?.type === 'image/webp' ? 'webp' : 'jpg');
+                formData.append('images', file, `prop_${index}.${ext}`);
+            });
+        }
 
         const uploadingText = typeof i18next !== 'undefined'
             ? i18next.t('propose.uploading', { defaultValue: 'ОТПРАВКА НА СЕРВЕР...' })

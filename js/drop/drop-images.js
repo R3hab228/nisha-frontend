@@ -10,6 +10,70 @@ const BG_COMPRESS_CONCURRENCY = 2;
 const bgCompressQueue = [];
 let bgCompressActive = 0;
 
+const BG_PREUPLOAD_CONCURRENCY = 2;
+const bgPreuploadQueue = [];
+let bgPreuploadActive = 0;
+
+function pumpBackgroundPreupload() {
+    while (bgPreuploadActive < BG_PREUPLOAD_CONCURRENCY && bgPreuploadQueue.length > 0) {
+        const job = bgPreuploadQueue.shift();
+        if (!job || job.item._cancelled || !job.file) {
+            if (job) job.resolve(null);
+            continue;
+        }
+        if (typeof window === 'undefined' || !window.apiClient || typeof window.apiClient.fetchRaw !== 'function') {
+            job.resolve(null);
+            continue;
+        }
+        bgPreuploadActive++;
+        const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+        job.item._uploadAbortCtrl = ctrl;
+
+        const fd = new FormData();
+        const f = job.file;
+        const isVid = (f.type && f.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(f.name || '');
+        const ext = isVid ? 'mp4' : (f.type === 'image/webp' ? 'webp' : 'jpg');
+        fd.append('image', f, `prop_pre.${ext}`);
+
+        window.apiClient.fetchRaw('/api/propose-media', {
+            method: 'POST',
+            body: fd,
+            timeout: 25000,
+            retries: 0,
+            signal: ctrl ? ctrl.signal : undefined
+        })
+            .then(async (res) => {
+                if (!res || !res.ok || job.item._cancelled) return null;
+                const data = await res.json().catch(() => null);
+                const url = data && data.success && typeof data.url === 'string' ? data.url : null;
+                if (url && !job.item._cancelled) {
+                    job.item.uploadedUrl = url;
+                }
+                return url;
+            })
+            .catch(() => null)
+            .then((url) => job.resolve(url))
+            .finally(() => {
+                job.item._uploadAbortCtrl = null;
+                bgPreuploadActive = Math.max(0, bgPreuploadActive - 1);
+                setTimeout(pumpBackgroundPreupload, 16);
+            });
+    }
+}
+
+function scheduleBackgroundPreupload(itemObj, fileToUpload) {
+    if (!itemObj || itemObj._cancelled || !fileToUpload) return null;
+    if (typeof window === 'undefined' || !window.apiClient || typeof window.apiClient.fetchRaw !== 'function') {
+        return null;
+    }
+    const { promise, resolve } = Promise.withResolvers();
+    itemObj.uploadPromise = promise;
+    bgPreuploadQueue.push({ item: itemObj, file: fileToUpload, resolve });
+    if (typeof queueMicrotask === 'function') queueMicrotask(pumpBackgroundPreupload);
+    else Promise.resolve().then(pumpBackgroundPreupload);
+    return promise;
+}
+
 function pumpBackgroundCompression() {
     while (bgCompressActive < BG_COMPRESS_CONCURRENCY && bgCompressQueue.length > 0) {
         const job = bgCompressQueue.shift();
@@ -23,6 +87,7 @@ function pumpBackgroundCompression() {
             .then((compressed) => {
                 if (!job.item._cancelled) {
                     job.item.compressedFile = compressed;
+                    scheduleBackgroundPreupload(job.item, compressed);
                 }
                 job.resolve(compressed);
             })
@@ -42,6 +107,7 @@ function scheduleBackgroundCompression(itemObj) {
     const isVid = (itemObj.file.type && itemObj.file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(itemObj.file.name || '');
     if (isVid) {
         itemObj.compressedFile = itemObj.file;
+        scheduleBackgroundPreupload(itemObj, itemObj.file);
         return Promise.resolve(itemObj.file);
     }
     const { promise, resolve } = Promise.withResolvers();
@@ -62,9 +128,9 @@ function canvasToBlobAsync(canvas, mimeType, quality) {
     });
 }
 
-const CLIENT_COMPRESS_MAX_SIZE = 1600;
-const CLIENT_COMPRESS_WEBP_QUALITY = 0.84;
-const CLIENT_COMPRESS_JPEG_QUALITY = 0.80;
+const CLIENT_COMPRESS_MAX_SIZE = 1000;
+const CLIENT_COMPRESS_WEBP_QUALITY = 0.82;
+const CLIENT_COMPRESS_JPEG_QUALITY = 0.78;
 
 function computeResizedDimensions(width, height, maxSize = CLIENT_COMPRESS_MAX_SIZE) {
     let targetW = width;
@@ -304,6 +370,9 @@ export function removeProposalFile(index, element = null) {
     const removed = files.splice(targetIndex, 1);
     if (removed && removed.length > 0 && removed.at(0)) {
         removed.at(0)._cancelled = true;
+        if (removed.at(0)._uploadAbortCtrl) {
+            try { removed.at(0)._uploadAbortCtrl.abort(); } catch {}
+        }
         if (removed.at(0).url) {
             try { URL.revokeObjectURL(removed.at(0).url); } catch {}
         }
