@@ -754,9 +754,18 @@ async function initApp() {
             setTimeout(pingBackend, 3500);
         }
 
-        const openItemId = urlParams.get('item');
+        let openItemId = urlParams.get('item');
+        if (!openItemId && typeof window !== 'undefined' && window.location && typeof window.location.pathname === 'string') {
+            const sharePathMatch = window.location.pathname.match(/^\/share\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+            if (sharePathMatch && sharePathMatch[1]) {
+                openItemId = sharePathMatch[1];
+                try {
+                    window.history.replaceState(null, '', '/?item=' + encodeURIComponent(openItemId));
+                } catch {}
+            }
+        }
         if (openItemId) {
-            setTimeout(() => openProductModalById(openItemId), 500);
+            openProductModalById(openItemId);
         }
 
         const openAction = urlParams.get('action');

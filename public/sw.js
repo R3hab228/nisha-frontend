@@ -129,6 +129,7 @@ self.addEventListener('fetch', event => {
         url.pathname.endsWith('.webm') || 
         event.request.headers.get('range') ||
         url.pathname.startsWith('/api/') || 
+        url.pathname.startsWith('/share/') || 
         url.pathname.startsWith('/.well-known/') || 
         url.hostname === 'novaposhta.ua' || url.hostname.endsWith('.novaposhta.ua') ||
         url.hostname === 'accounts.google.com' ||
