@@ -363,7 +363,9 @@
       "db_error": "DATABASE CONNECTION ERROR",
       "new_review_from": "⭐ New review from {{author}}: \"{{snippet}}\"",
       "author_fallback": "Customer",
-      "new_review_notif": "NISHA STORE | New review ⭐"
+      "new_review_notif": "NISHA STORE | New review ⭐",
+      "zoom_photo_title": "Zoom photo",
+      "open_item_title": "Open item"
     },
     "profile": {
       "google_login": "SIGN IN WITH GOOGLE",
@@ -573,7 +575,8 @@
       "city_err": "City search error",
       "branch_err": "Branch loading error",
       "branch_placeholder": "Select branch or postomat...",
-      "searching": "Searching branches in Nova Poshta..."
+      "searching": "Searching branches in Nova Poshta...",
+      "branches_truncated": "Showing {{shown}} of {{total}}. Type a branch number or street to refine..."
     },
     "common": {
       "save": "Save",

@@ -338,3 +338,226 @@
         transition: width 3s cubic-bezier(0.1, 0.7, 1.0, 0.1);
     }
 }
+
+/* ==========================================
+   PHOTOSWIPE CUSTOM CONTROLS (Lazy with Product Modal)
+   ========================================== */
+.pswp { z-index: 20000 !important; }
+.pswp__img { object-fit: contain; }
+
+.pswp__button--close {
+    --pswp-icon-color: var(--accent-red, #ff3333) !important;
+    --pswp-icon-stroke-color: rgba(0, 0, 0, 0.95) !important;
+    color: var(--accent-red, #ff3333) !important;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.pswp__button--close .pswp__icn,
+.pswp__button--close svg path:not(.pswp__icn-shadow),
+#pswp__icn-close {
+    fill: var(--accent-red, #ff3333) !important;
+}
+.pswp__button--close:hover {
+    opacity: 1 !important;
+    transform: scale(1.15);
+}
+.pswp__button--close:active {
+    transform: scale(0.95);
+}
+
+.pswp__button--zoom {
+    --pswp-icon-color: var(--accent-green, #00ff00) !important;
+    --pswp-icon-color-secondary: var(--accent-red, #ff3333) !important;
+    --pswp-icon-stroke-color: rgba(0, 0, 0, 0.95) !important;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.pswp__button--zoom #pswp__icn-zoom,
+.pswp__button--zoom svg path#pswp__icn-zoom,
+#pswp__icn-zoom {
+    fill: var(--accent-green, #00ff00) !important;
+}
+.pswp__button--zoom .pswp__zoom-icn-bar-h,
+.pswp__button--zoom .pswp__zoom-icn-bar-v,
+.pswp__zoom-icn-bar-h,
+.pswp__zoom-icn-bar-v {
+    fill: var(--accent-red, #ff3333) !important;
+    color: var(--accent-red, #ff3333) !important;
+}
+.pswp__button--zoom:hover {
+    opacity: 1 !important;
+    transform: scale(1.15);
+}
+.pswp__button--zoom:active {
+    transform: scale(0.95);
+}
+
+.pswp__button--close .pswp__icn-shadow,
+.pswp__button--zoom .pswp__icn-shadow,
+.pswp__icn-shadow {
+    stroke: rgba(0, 0, 0, 0.95) !important;
+    stroke-width: 2.5px !important;
+    fill: none !important;
+}
+
+/* ==========================================
+   CHECKOUT PROMO CODE NOTICE
+   ========================================== */
+.promo-wrapper { display: flex; gap: 10px; margin-top: 5px; }
+.promo-msg {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.45;
+}
+.promo-msg:empty {
+    display: none;
+    margin-top: 0;
+}
+
+.promo-notice {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    font-family: var(--font-mono);
+    letter-spacing: 0.2px;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: promoNoticeFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes promoNoticeFade {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.promo-notice-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.3px;
+}
+
+.promo-notice-icon {
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.promo-notice-savings {
+    font-size: 11px;
+    color: var(--text-main);
+    letter-spacing: 0.2px;
+    padding-left: 18px;
+}
+
+.promo-notice-val {
+    color: var(--accent-green);
+    font-weight: 700;
+}
+
+.promo-notice-pct {
+    color: var(--accent-green);
+    font-weight: 700;
+}
+
+.promo-notice-success {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-green);
+    color: #fff;
+}
+
+.promo-notice-success .promo-notice-icon {
+    color: var(--accent-green);
+}
+
+.promo-notice-error {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-red);
+    color: #ff9999;
+}
+
+.promo-notice-error .promo-notice-icon {
+    color: var(--accent-red);
+}
+
+.promo-notice-warning {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-yellow);
+    color: #ffe680;
+}
+
+.promo-notice-warning .promo-notice-icon {
+    color: var(--accent-yellow);
+}
+
+/* ==========================================
+   PRODUCT MODAL Q&A ACCORDION
+   ========================================== */
+.qa-wrapper {
+    margin-top: 20px;
+    border-top: 1px dashed #333;
+    padding-top: 10px;
+    display: none;
+}
+.qa-title {
+    color: #555;
+    margin: 0 0 10px 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: color 0.2s;
+}
+.qa-collapse-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+    opacity: 1;
+}
+.qa-collapse-wrapper.collapsed {
+    grid-template-rows: 0fr;
+    opacity: 0;
+}
+.qa-collapse-wrapper > div {
+    overflow: hidden;
+}
+.qa-content {
+    max-height: 250px;
+    overflow-y: auto;
+}
+.qa-content::-webkit-scrollbar { width: 4px; }
+.qa-content::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+.ask-question-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent-green);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 13px;
+    text-decoration: underline;
+    transition: color 0.15s ease, text-shadow 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+    display: inline-block;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+.ask-question-btn:hover {
+    color: #66ff66;
+    text-shadow: 0 0 6px rgba(0, 255, 0, 0.4);
+}
+.ask-question-btn:active {
+    color: #b8ffb8;
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    transform: scale(0.96);
+}

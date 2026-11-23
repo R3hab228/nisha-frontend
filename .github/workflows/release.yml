@@ -94,6 +94,10 @@ jobs:
         run: npm test
 
       - name: ⚡ Build Production Bundle
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         run: npm run build
 
       - name: 🗜️ Archive Production Bundle

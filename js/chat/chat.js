@@ -126,7 +126,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         }
         const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
         if (priceEl) {
-            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escHtml(bargainData.originalPrice || activeItem.price)} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escHtml(bargainData.acceptedPrice)} грн</span>`;
+            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escHtml(bargainData.originalPrice || activeItem.price)} ${escHtml(currencyText)}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escHtml(bargainData.acceptedPrice)} ${escHtml(currencyText)}</span>`;
         }
     }
 
@@ -402,7 +402,8 @@ function handleIncomingSupportReply(r, sbClient) {
             const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
             if (priceEl) {
                 const escText = (v) => String(v ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
-                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escText(parsed.originalPrice || activeItem.price)} грн</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escText(parsed.acceptedPrice)} грн</span>`;
+                const curr = (typeof getCurrency === 'function' ? getCurrency() : (typeof i18next !== 'undefined' ? i18next.t('currency', { defaultValue: 'грн' }) : 'грн')).trim();
+                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escText(parsed.originalPrice || activeItem.price)} ${escText(curr)}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escText(parsed.acceptedPrice)} ${escText(curr)}</span>`;
             }
         }
 

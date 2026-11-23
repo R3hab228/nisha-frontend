@@ -108,7 +108,8 @@ export async function startOnboardingTour() {
         try {
             const [driverMod] = await Promise.all([
                 import('driver.js'),
-                import('driver.js/dist/driver.css')
+                import('driver.js/dist/driver.css'),
+                import('../../css/lazy-driver-tour.css').catch(() => {})
             ]);
             const driverFn = driverMod.driver || driverMod.default || driverMod;
             window.driver = { js: { driver: driverFn } };

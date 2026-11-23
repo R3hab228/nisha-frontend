@@ -363,7 +363,9 @@
       "db_error": "ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ",
       "new_review_from": "⭐ Новый отзыв от {{author}}: \"{{snippet}}\"",
       "author_fallback": "Покупатель",
-      "new_review_notif": "NISHA STORE | Новый отзыв ⭐"
+      "new_review_notif": "NISHA STORE | Новый отзыв ⭐",
+      "zoom_photo_title": "Увеличить фото",
+      "open_item_title": "Открыть товар"
     },
     "profile": {
       "google_login": "ВОЙТИ ЧЕРЕЗ GOOGLE",
@@ -573,7 +575,8 @@
       "city_err": "Ошибка поиска города",
       "branch_err": "Ошибка загрузки отделений",
       "branch_placeholder": "Выберите отделение или почтомат...",
-      "searching": "Ищем отделение в базе Новой Почты..."
+      "searching": "Ищем отделение в базе Новой Почты...",
+      "branches_truncated": "Показано {{shown}} из {{total}}. Введите номер или улицу для уточнения..."
     },
     "common": {
       "save": "Сохранить",

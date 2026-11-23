@@ -1,0 +1,26 @@
+/* ==========================================
+   LAZY STYLES: DRIVER.JS ONBOARDING TOUR
+   Loaded on-demand with driver.js in catalog-ui-info.js
+   ========================================== */
+
+.driver-popover { background-color: #0a0a0a !important; color: #fff !important; border: 2px dashed var(--accent-green) !important; font-family: var(--font-mono) !important; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2) !important; border-radius: 0 !important; z-index: 100000 !important; padding: 15px !important; max-width: min(300px, calc(100vw - 24px)) !important; }
+.driver-popover-title, header.driver-popover-title { font-size: 16px !important; color: var(--accent-green) !important; text-transform: uppercase; background: transparent !important; border: none !important; padding: 0 24px 0 0 !important; margin: 0 !important; line-height: 1.4 !important; }
+.driver-popover-description { font-size: 13px !important; color: #aaa !important; font-family: var(--font-main) !important; margin: 6px 0 0 0 !important; line-height: 1.45 !important; }
+.driver-popover-footer, footer.driver-popover-footer { background: transparent !important; border: none !important; padding: 0 !important; margin: 15px 0 0 0 !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; gap: 8px !important; width: 100% !important; }
+.driver-popover-footer button { background-color: var(--accent-green) !important; color: #000 !important; border: 2px outset #fff !important; font-family: var(--font-mono) !important; font-weight: bold !important; text-transform: uppercase; text-shadow: none !important; }
+.driver-popover-footer button:hover { background-color: #111 !important; color: var(--accent-green) !important; border-color: var(--accent-green) !important; }
+.driver-popover-progress-text { color: #555 !important; font-size: 12px !important; white-space: nowrap !important; }
+.driver-popover-close-btn { top: 6px !important; right: 6px !important; width: 26px !important; height: 26px !important; line-height: 26px !important; font-size: 18px !important; color: #888 !important; background: transparent !important; border: none !important; font-family: var(--font-mono) !important; }
+.driver-popover-close-btn:hover { color: var(--accent-red) !important; }
+.driver-stage-no-animation { border-radius: 15px !important; border: 2px solid var(--accent-yellow) !important; z-index: 99999 !important; }
+
+/* Отключение затемнения сайта при онбординге Driver.js (весь сайт остается светлым) */
+.driver-overlay,
+svg.driver-overlay,
+.driver-overlay path {
+    opacity: 0 !important;
+    fill: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    pointer-events: none !important;
+}

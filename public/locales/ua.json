@@ -363,7 +363,9 @@
       "db_error": "ПОМИЛКА ПІДКЛЮЧЕННЯ ДО БАЗИ",
       "new_review_from": "⭐ Новий відгук від {{author}}: \"{{snippet}}\"",
       "author_fallback": "Покупець",
-      "new_review_notif": "NISHA STORE | Новий відгук ⭐"
+      "new_review_notif": "NISHA STORE | Новий відгук ⭐",
+      "zoom_photo_title": "Збільшити фото",
+      "open_item_title": "Відкрити товар"
     },
     "profile": {
       "google_login": "УВІЙТИ ЧЕРЕЗ GOOGLE",
@@ -573,7 +575,8 @@
       "city_err": "Помилка пошуку міста",
       "branch_err": "Помилка завантаження відділень",
       "branch_placeholder": "Оберіть відділення або поштомат...",
-      "searching": "Шукаємо відділення в базі Нової Пошти..."
+      "searching": "Шукаємо відділення в базі Нової Пошти...",
+      "branches_truncated": "Показано {{shown}} з {{total}}. Введіть номер або вулицю для уточнення..."
     },
     "common": {
       "save": "Зберегти",

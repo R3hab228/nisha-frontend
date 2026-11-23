@@ -196,4 +196,64 @@ test.describe('NISHA STORE — Production Smoke E2E', () => {
         await expect(productModal).toBeVisible({ timeout: 10000 });
         await expect(page.locator('#modalItemTitle')).not.toHaveText('', { timeout: 5000 });
     });
+
+    test('orders modal lazy chunk loads cleanly and renders localized tracking UI', async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('nisha_rules_accepted', 'true');
+            localStorage.setItem('nisha_tour_completed', 'true');
+            localStorage.setItem('nisha_lang', 'en');
+        });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+        await expect(page.locator('#itemsGrid .item-card:not(.skeleton-card)').first()).toBeVisible({ timeout: 15000 });
+
+        await page.evaluate(() => window.openOrdersModal && window.openOrdersModal());
+        const ordersModal = page.locator('#ordersModal');
+        await expect(ordersModal).toBeVisible({ timeout: 8000 });
+        await expect(page.locator('#ordersSearchPhone')).toBeVisible({ timeout: 5000 });
+
+        // Inject a synthetic shipped order with TTN and verify SVG truck tracker renders without overflow
+        await page.evaluate(() => {
+            if (typeof window.setOrdersData === 'function') {
+                window.setOrdersData([
+                    {
+                        id: 'e2e12345-0000-0000-0000-000000000001',
+                        status: 'Отправлен',
+                        created_at: new Date().toISOString(),
+                        tracking_number: '20483289403202',
+                        total_sum: 2100,
+                        items: [{ id: 'it-e2e-1', name: 'Archive Hoodie', size: 'L', price: 2100 }]
+                    }
+                ]);
+                window.setCurrentOrderTab?.('shipped');
+                window.updateOrderTabCounters?.();
+                window.renderFilteredOrders?.();
+            }
+        });
+
+        const tracker = ordersModal.locator('.np-tracker[data-np-tracker-ttn="20483289403202"]');
+        await expect(tracker).toBeVisible({ timeout: 5000 });
+        await expect(tracker.locator('.np-truck-svg')).toBeVisible();
+        await expect(tracker.locator('.np-track-dot')).toHaveCount(4);
+    });
+
+    test('mobile product modal and inline bargain controls render without horizontal overflow', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.addInitScript(() => {
+            localStorage.setItem('nisha_rules_accepted', 'true');
+            localStorage.setItem('nisha_tour_completed', 'true');
+            localStorage.setItem('nisha_lang', 'ua');
+        });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+        const availableCard = page.locator('#itemsGrid .item-card:not(.skeleton-card):not(.sold-out):not(.reserved-item)').first();
+        await expect(availableCard).toBeVisible({ timeout: 15000 });
+        await availableCard.locator('.card-slider-wrapper').click();
+
+        const productModal = page.locator('#productModal');
+        await expect(productModal).toBeVisible({ timeout: 8000 });
+
+        const overflowPx = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflowPx).toBeLessThanOrEqual(2);
+    });
 });

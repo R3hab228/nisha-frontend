@@ -582,7 +582,10 @@ export function renderBranches(branches) {
         const notice = document.createElement('div');
         notice.setAttribute('data-msg', 'true');
         notice.style.cssText = 'padding:10px 14px; color:#888; font-size:11px; text-align:center; font-style:italic; border-top:1px dashed #333; pointer-events:none;';
-        notice.textContent = `Показано ${MAX_RENDERED_BRANCHES} из ${branches.length}. Введите номер или улицу для уточнения...`;
+        const fallbackNotice = `Показано ${MAX_RENDERED_BRANCHES} из ${branches.length}. Введите номер или улицу для уточнения...`;
+        notice.textContent = typeof i18next !== 'undefined'
+            ? i18next.t('np.branches_truncated', { shown: MAX_RENDERED_BRANCHES, total: branches.length, defaultValue: fallbackNotice })
+            : fallbackNotice;
         fragment.appendChild(notice);
     }
 

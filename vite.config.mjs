@@ -129,7 +129,16 @@ export default defineConfig({
             org: process.env.SENTRY_ORG || 'nisha-store-6w',
             project: process.env.SENTRY_PROJECT || 'node',
             authToken: process.env.SENTRY_AUTH_TOKEN,
-            release: { name: SENTRY_RELEASE },
+            release: {
+              name: SENTRY_RELEASE,
+              setCommits: {
+                auto: true,
+                ignoreMissing: true,
+              },
+              deploy: {
+                env: process.env.VERCEL_ENV || 'production',
+              },
+            },
             sourcemaps: {
               filesToDeleteAfterUpload: ['./dist/**/*.map'],
             },

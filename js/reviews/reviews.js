@@ -90,11 +90,19 @@ async function openReviewsModal() {
             const safeRevImg = escHtmlFn ? escHtmlFn(revImg) : revImg.replaceAll('"', '&quot;');
             const validImg = revImg && !_failedReviewImages.has(revImg) ? safeRevImg : '';
             const clickAction = validImg ? `data-action="open-review-image" data-img="${validImg}"` : '';
-            const imgHtml = validImg ? `<img class="review-item-thumb" src="${validImg}" alt="" loading="lazy" decoding="async" ${clickAction} title="Увеличить фото">` : '';
+            const zoomPhotoTitle = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+                ? i18next.t('reviews_modal.zoom_photo_title', { defaultValue: 'Увеличить фото' })
+                : 'Увеличить фото';
+            const openItemTitle = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+                ? i18next.t('reviews_modal.open_item_title', { defaultValue: 'Открыть товар' })
+                : 'Открыть товар';
+            const safeZoomTitle = escAttrFn ? escAttrFn(zoomPhotoTitle) : zoomPhotoTitle.replaceAll('"', '&quot;');
+            const safeOpenItemTitle = escAttrFn ? escAttrFn(openItemTitle) : openItemTitle.replaceAll('"', '&quot;');
+            const imgHtml = validImg ? `<img class="review-item-thumb" src="${validImg}" alt="" loading="lazy" decoding="async" ${clickAction} title="${safeZoomTitle}">` : '';
             
             const nameClass = rev.item_id ? 'review-name review-name--linked' : 'review-name';
             const safeItemIdAttr = escAttrFn ? escAttrFn(rev.item_id) : String(rev.item_id || '').replaceAll('"', '&quot;');
-            const productLinkAction = rev.item_id ? `data-action="open-product" data-id="${safeItemIdAttr}" title="Открыть товар"` : '';
+            const productLinkAction = rev.item_id ? `data-action="open-product" data-id="${safeItemIdAttr}" title="${safeOpenItemTitle}"` : '';
 
             html += `
             <div class="review-card-ui">
