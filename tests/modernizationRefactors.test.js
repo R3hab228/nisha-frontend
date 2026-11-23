@@ -6,6 +6,7 @@ import {
     setAcceptedBargain,
     setPendingBargain,
     setBargainDeclined,
+    clearDeclinedBargain,
     clearPendingBargain,
     clearAllBargainState
 } from '../js/core/bargain-storage.js';
@@ -88,5 +89,30 @@ describe('Modernization Refactors — Bargain Storage, Serialized OTP Polling & 
         expect(() => setAcceptedBargain('item-3', { acceptedPrice: 300 })).not.toThrow();
         expect(getAcceptedBargain('item-3')).toBeNull();
         expect(isBargainDeclined('item-3')).toBe(false);
+    });
+
+    it('isBargainDeclined enforces 48h TTL and auto-evicts expired or legacy permanent markers', () => {
+        const now = Date.now();
+        setBargainDeclined('item-recent');
+        expect(isBargainDeclined('item-recent')).toBe(true);
+
+        globalThis.localStorage.setItem('declined_bargain_item-expired', JSON.stringify({
+            declined: true,
+            timestamp: now - (49 * 60 * 60 * 1000)
+        }));
+        globalThis.sessionStorage.setItem('declined_bargain_item-expired', JSON.stringify({
+            declined: true,
+            timestamp: now - (49 * 60 * 60 * 1000)
+        }));
+        expect(isBargainDeclined('item-expired')).toBe(false);
+        expect(globalThis.localStorage.getItem('declined_bargain_item-expired')).toBeNull();
+        expect(globalThis.sessionStorage.getItem('declined_bargain_item-expired')).toBeNull();
+
+        globalThis.localStorage.setItem('declined_bargain_item-legacy', 'true');
+        expect(isBargainDeclined('item-legacy')).toBe(false);
+        expect(globalThis.localStorage.getItem('declined_bargain_item-legacy')).toBeNull();
+
+        clearDeclinedBargain('item-recent');
+        expect(isBargainDeclined('item-recent')).toBe(false);
     });
 });

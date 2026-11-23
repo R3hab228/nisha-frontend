@@ -36,7 +36,3 @@ import '../js/catalog/live-search.js';
 import '../js/cart/cart-core.js';
 import '../js/profile/profile-core.js';
 import '../app.js';
-
-// 8. Экспорт официального модульного API приложения (Modern ES Modules Facade)
-export * from './modules/index.js';
-export { default } from './modules/index.js';

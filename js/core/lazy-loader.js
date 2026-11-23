@@ -69,7 +69,10 @@ const loadDropModule = registerLazyModuleBridge(
 );
 
 const loadReviewsModule = registerLazyModuleBridge(
-    () => import('../reviews/reviews.js'),
+    () => Promise.all([
+        import('../reviews/reviews.js'),
+        typeof document !== 'undefined' ? import('../../css/lazy-reviews-modal.css').catch(() => {}) : Promise.resolve()
+    ]).then(([mod]) => mod),
     [
         ['openReviewsModal', 'open-reviews'],
         ['openReviewImage', 'open-review-image'],

@@ -146,10 +146,23 @@ test.describe('NISHA STORE — Production Smoke E2E', () => {
 
         const productModal = page.locator('#productModal');
         await expect(productModal).toBeVisible({ timeout: 8000 });
-        await expect(page.locator('#modalTitle')).not.toHaveText('', { timeout: 5000 });
+        await expect(page.locator('#modalItemTitle')).not.toHaveText('', { timeout: 5000 });
+
+        // 2b. Open PhotoSwipe zoom -> close with X -> product modal stays open
+        const slideLink = page.locator('#sliderWrapper a.slide').first();
+        if (await slideLink.isVisible({ timeout: 3000 }).then(() => true, () => false)) {
+            await slideLink.click();
+            const pswpCloseBtn = page.locator('.pswp__button--close');
+            if (await pswpCloseBtn.waitFor({ state: 'visible', timeout: 5000 }).then(() => true, () => false)) {
+                await pswpCloseBtn.click();
+                await expect(page.locator('.pswp')).toBeHidden({ timeout: 5000 });
+                await page.waitForTimeout(300);
+                await expect(productModal).toBeVisible();
+            }
+        }
 
         // 3. Add item to cart from modal -> open checkout (verifies lazy `app-checkout` chunk + Nova Poshta inputs)
-        const modalAddBtn = page.locator('#modalAddToCartBtn');
+        const modalAddBtn = page.locator('#modalCartBtn');
         await expect(modalAddBtn).toBeVisible({ timeout: 5000 });
         await modalAddBtn.click();
         await expect(page.locator('#cartCount')).toHaveText(/[1-9]/, { timeout: 5000 });
@@ -163,5 +176,24 @@ test.describe('NISHA STORE — Production Smoke E2E', () => {
         await expect(checkoutModal).toBeVisible({ timeout: 8000 });
         await expect(page.locator('#orderCity')).toBeVisible({ timeout: 5000 });
         await expect(page.locator('#orderBranch')).toBeVisible({ timeout: 5000 });
+    });
+
+    test('deep-link ?item=<id> opens target product modal directly', async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('nisha_rules_accepted', 'true');
+            localStorage.setItem('nisha_tour_completed', 'true');
+            localStorage.setItem('nisha_lang', 'ua');
+        });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+        const targetCard = page.locator('#itemsGrid .item-card:not(.skeleton-card)').first();
+        await expect(targetCard).toBeVisible({ timeout: 15000 });
+        const itemId = await targetCard.getAttribute('data-id');
+        expect(itemId).toBeTruthy();
+
+        await page.goto(`/?item=${encodeURIComponent(itemId)}`, { waitUntil: 'domcontentloaded' });
+        const productModal = page.locator('#productModal');
+        await expect(productModal).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('#modalItemTitle')).not.toHaveText('', { timeout: 5000 });
     });
 });
