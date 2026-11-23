@@ -67,12 +67,29 @@ function parseShareParams(req) {
   return { id, lang };
 }
 
+const SHARE_BOT_UA_RE = /(bot|crawl|spider|slurp|facebookexternalhit|facebot|meta-external|whatsapp|viber|discord|twitter|slack|linkedin|pinterest|applebot|telegram|yandex|duckduck|bytespider|preview|embed|curl|wget|python-requests|axios|node-fetch|postman|lighthouse|pagespeed)/i;
+
+function isCrawlerOrPreviewBot(req) {
+  const ua = String((req && req.headers && req.headers['user-agent']) || '');
+  if (!ua) return true;
+  return SHARE_BOT_UA_RE.test(ua);
+}
+
 module.exports = async function handler(req, res) {
   const { id, lang } = parseShareParams(req);
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
   if (!id || !uuidRegex.test(id)) {
-    return res.redirect('/');
+    return res.redirect(302, '/');
+  }
+
+  res.setHeader('Vary', 'User-Agent');
+
+  // Реальных пользователей мгновенно перекидываем HTTP 302 прямо в карточку на сайте (0ms без промежуточного экрана),
+  // а боты/превьюеры (Telegram, Instagram/FB, Google, WhatsApp и др.) получают полный OpenGraph + JSON-LD HTML.
+  if (!isCrawlerOrPreviewBot(req)) {
+    res.setHeader('Cache-Control', 'private, no-store');
+    return res.redirect(302, '/?item=' + encodeURIComponent(id));
   }
 
   const shareLang = normalizeShareLang(lang);
@@ -81,7 +98,7 @@ module.exports = async function handler(req, res) {
   const cached = shareHtmlCache.get(cacheKey);
   if (cached) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     res.setHeader('X-Cache-Shield', 'HIT');
     return res.status(200).send(cached.html);
   }
@@ -235,43 +252,36 @@ videoTags + '\n' +
 '<meta name="twitter:image" content="' + imageUrl + '">\n' +
 '<script type="application/ld+json">' + jsonLd.replaceAll('<', '\\u003c') + '</script>\n' +
 '<script type="speculationrules">{"prerender":[{"source":"list","urls":["/","/?item=' + id + '"],"eagerness":"immediate"}],"prefetch":[{"source":"list","urls":["/","/?item=' + id + '"],"eagerness":"immediate"}]}</script>\n' +
+'<script>try{if(!/(bot|crawl|spider|slurp|facebookexternalhit|facebot|meta-external|whatsapp|viber|discord|twitter|slack|linkedin|pinterest|applebot|telegram|bingbot|googlebot|ahrefs)/i.test(navigator.userAgent)){window.location.replace("/?item=' + id + '");}}catch(e){window.location.replace("/?item=' + id + '");}</script>\n' +
 '</head>\n' +
-'<body style="background:#0a0a0a;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;margin:0;padding:20px;text-align:center;">\n' +
-'<main style="max-width:640px;margin:30px auto;background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:24px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,0.5);">\n' +
-'  <nav style="margin-bottom:16px;">\n' +
-'    <a href="/" style="color:#00ff66;text-decoration:none;font-weight:700;font-family:monospace;font-size:14px;">← ГОЛОВНА NISHA STORE</a>\n' +
-'  </nav>\n' +
-'  <h1 style="font-size:22px;color:#fff;margin:0 0 16px 0;line-height:1.3;">' + title + '</h1>\n' +
-'  <div style="text-align:center;margin-bottom:20px;">\n' +
-'    <img src="' + imageUrl + '" alt="' + title + '" style="max-width:100%;max-height:480px;border-radius:8px;object-fit:cover;border:1px solid #2a2a2a;">\n' +
+'<body style="background:#000;color:#e0e0e0;font-family:\'Courier New\',Courier,monospace;margin:0;padding:16px;text-align:center;">\n' +
+'<main style="max-width:600px;margin:20px auto;background:#111;border:2px outset #555;text-align:left;box-shadow:0 0 30px rgba(0,255,0,0.12);">\n' +
+'  <div style="background:#002244;padding:10px 16px;border-bottom:2px inset #555;display:flex;justify-content:space-between;align-items:center;">\n' +
+'    <span style="color:#fff;font-weight:700;font-size:14px;letter-spacing:1px;">ITEM_INFO.EXE</span>\n' +
+'    <a href="/" style="color:#00ff00;text-decoration:none;font-weight:700;font-size:12px;">[ NISHA STORE ]</a>\n' +
 '  </div>\n' +
-'  <div style="font-size:15px;line-height:1.6;color:#ccc;margin-bottom:20px;">\n' +
-'    <p style="margin:6px 0;"><strong style="color:#fff;">Ціна:</strong> <span style="color:#00ff66;font-size:18px;font-weight:700;">' + safePriceStr + ' грн</span></p>\n' +
-'    <p style="margin:6px 0;"><strong style="color:#fff;">Розмір:</strong> ' + safeSize + '</p>\n' +
-'    <p style="margin:6px 0;"><strong style="color:#fff;">Стан:</strong> ' + safeCondition + '</p>\n' +
-'    <p style="margin:6px 0;"><strong style="color:#fff;">Статус:</strong> ' + (isSold ? '<span style="color:#ff3366;font-weight:700;">ПРОДАНО</span>' : '<span style="color:#00ff66;font-weight:700;">В наявності</span>') + '</p>\n' +
-'    <p style="margin:12px 0 0 0;color:#aaa;">' + safeCleanDesc + '</p>\n' +
-'  </div>\n' +
-'  <div style="margin-top:24px;text-align:center;">\n' +
-'    <a href="/?item=' + id + '" rel="nofollow" style="display:inline-block;padding:12px 28px;background:#00ff66;color:#000;font-weight:700;text-decoration:none;border-radius:6px;text-transform:uppercase;font-family:monospace;">Відкрити в магазині NISHA →</a>\n' +
+'  <div style="padding:20px;">\n' +
+'    <h1 style="font-size:20px;color:#fff;margin:0 0 14px 0;line-height:1.3;">' + title + '</h1>\n' +
+'    <div style="text-align:center;margin-bottom:16px;background:#000;border:1px solid #333;padding:6px;">\n' +
+'      <img src="' + imageUrl + '" alt="' + title + '" style="max-width:100%;max-height:420px;object-fit:contain;display:block;margin:0 auto;">\n' +
+'    </div>\n' +
+'    <div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:18px;">\n' +
+'      <p style="margin:4px 0;"><strong style="color:#888;">ЦІНА:</strong> <span style="color:#00ff00;font-size:18px;font-weight:700;">' + safePriceStr + ' грн</span></p>\n' +
+'      <p style="margin:4px 0;"><strong style="color:#888;">РОЗМІР:</strong> ' + safeSize + '</p>\n' +
+'      <p style="margin:4px 0;"><strong style="color:#888;">СТАН:</strong> ' + safeCondition + '</p>\n' +
+'      <p style="margin:4px 0;"><strong style="color:#888;">СТАТУС:</strong> ' + (isSold ? '<span style="color:#ff3333;font-weight:700;">ПРОДАНО</span>' : '<span style="color:#00ff00;font-weight:700;">В НАЯВНОСТІ</span>') + '</p>\n' +
+'      <p style="margin:10px 0 0 0;color:#aaa;font-family:Tahoma,Verdana,sans-serif;font-size:13px;">' + safeCleanDesc + '</p>\n' +
+'    </div>\n' +
+'    <a href="/?item=' + id + '" rel="nofollow" style="display:block;text-align:center;padding:12px 20px;background:#00ff00;color:#000;font-weight:700;text-decoration:none;border:2px outset #fff;text-transform:uppercase;letter-spacing:0.6px;">[ ВІДКРИТИ В NISHA STORE → ]</a>\n' +
 '  </div>\n' +
 '</main>\n' +
-'<script>\n' +
-'  try {\n' +
-'    if (!navigator.userAgent.match(/(bot|crawl|spider|slurp|facebookexternalhit|bingbot|googlebot|ahrefs)/i)) {\n' +
-'      window.location.replace("/?item=' + id + '");\n' +
-'    }\n' +
-'  } catch(e) {\n' +
-'    window.location.replace("/?item=' + id + '");\n' +
-'  }\n' +
-'</script>\n' +
 '</body>\n' +
 '</html>';
 
     shareHtmlCache.set(cacheKey, html);
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     res.setHeader('X-Cache-Shield', 'MISS');
     return res.status(200).send(html);
 
