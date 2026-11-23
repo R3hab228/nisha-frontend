@@ -853,4 +853,127 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
         expect(modalTitleEl.textContent).toBe('Archive Hoodie v2');
         expect(modalCartBtn.style.display).toBe('none');
     });
+
+    it('13. catalog-filters.js renders active filter chips, removes individual chips, and resets all filters cleanly', async () => {
+        const bar = createFakeEl('div');
+        bar.id = 'activeFiltersBar';
+        bar.style.display = 'none';
+        elementsById.set('activeFiltersBar', bar);
+
+        const searchInput = createFakeEl('input');
+        searchInput.id = 'mainSearch';
+        searchInput.value = '';
+        elementsById.set('mainSearch', searchInput);
+
+        const clearBtn = createFakeEl('button');
+        clearBtn.id = 'clearSearchBtn';
+        elementsById.set('clearSearchBtn', clearBtn);
+
+        const priceMin = createFakeEl('input');
+        priceMin.id = 'priceMin';
+        priceMin.min = '0';
+        priceMin.max = '15000';
+        priceMin.value = '0';
+        elementsById.set('priceMin', priceMin);
+
+        const priceMax = createFakeEl('input');
+        priceMax.id = 'priceMax';
+        priceMax.min = '0';
+        priceMax.max = '15000';
+        priceMax.value = '15000';
+        elementsById.set('priceMax', priceMax);
+
+        const priceMinVal = createFakeEl('span');
+        priceMinVal.id = 'priceMinVal';
+        elementsById.set('priceMinVal', priceMinVal);
+
+        const priceMaxVal = createFakeEl('span');
+        priceMaxVal.id = 'priceMaxVal';
+        elementsById.set('priceMaxVal', priceMaxVal);
+
+        const rangeFill = createFakeEl('div');
+        rangeFill.id = 'rangeFill';
+        elementsById.set('rangeFill', rangeFill);
+
+        const onlySaleCb = createFakeEl('input');
+        onlySaleCb.id = 'onlySaleCb';
+        onlySaleCb.checked = false;
+        elementsById.set('onlySaleCb', onlySaleCb);
+
+        const onlyBargainCb = createFakeEl('input');
+        onlyBargainCb.id = 'onlyBargainCb';
+        onlyBargainCb.checked = false;
+        elementsById.set('onlyBargainCb', onlyBargainCb);
+
+        const hideUnavailableCb = createFakeEl('input');
+        hideUnavailableCb.id = 'hideUnavailableCb';
+        hideUnavailableCb.checked = false;
+        elementsById.set('hideUnavailableCb', hideUnavailableCb);
+
+        const sizeMCb = createFakeEl('input');
+        sizeMCb.value = 'M';
+        sizeMCb.checked = false;
+
+        const origQsa = document.querySelectorAll;
+        document.querySelectorAll = vi.fn((sel) => {
+            if (sel === '.size-cb:checked') return sizeMCb.checked ? [sizeMCb] : [];
+            return origQsa(sel);
+        });
+
+        try {
+            window.currentCategory = '';
+            window.currentBrand = '';
+            window.showingOnlyFavs = false;
+
+            catalogMod.renderActiveFilterChips();
+            expect(bar.style.display).toBe('none');
+            expect(bar.innerHTML).toBe('');
+
+            // Activate multiple filters including XSS-bearing search string
+            window.currentCategory = 'Штаны и Джинсы';
+            sizeMCb.checked = true;
+            priceMin.value = '500';
+            priceMax.value = '2500';
+            onlySaleCb.checked = true;
+            onlyBargainCb.checked = true;
+            hideUnavailableCb.checked = true;
+            searchInput.value = '<script>x</script>';
+
+            catalogMod.renderActiveFilterChips();
+            expect(bar.style.display).toBe('flex');
+            expect(bar.innerHTML).toContain('data-filter-type="category"');
+            expect(bar.innerHTML).toContain('data-filter-type="size"');
+            expect(bar.innerHTML).toContain('data-filter-type="price"');
+            expect(bar.innerHTML).toContain('500–2500');
+            expect(bar.innerHTML).toContain('data-filter-type="sale"');
+            expect(bar.innerHTML).toContain('data-filter-type="bargain"');
+            expect(bar.innerHTML).toContain('data-filter-type="unavailable"');
+            expect(bar.innerHTML).toContain('data-action="clear-all-filters"');
+            expect(bar.innerHTML).not.toContain('<script>');
+            expect(bar.innerHTML).toContain('&lt;script&gt;x&lt;/script&gt;');
+
+            // Remove individual chips
+            await catalogMod.removeActiveFilterChip('sale');
+            expect(onlySaleCb.checked).toBe(false);
+
+            await catalogMod.removeActiveFilterChip('size', 'M');
+            expect(sizeMCb.checked).toBe(false);
+
+            await catalogMod.removeActiveFilterChip('price');
+            expect(priceMin.value).toBe('0');
+            expect(priceMax.value).toBe('15000');
+            expect(rangeFill.style.left).toBe('0%');
+            expect(rangeFill.style.right).toBe('0%');
+
+            // Clear all remaining filters at once
+            await catalogMod.clearAllFilters();
+            expect(window.currentCategory).toBe('');
+            expect(searchInput.value).toBe('');
+            expect(onlyBargainCb.checked).toBe(false);
+            expect(hideUnavailableCb.checked).toBe(false);
+            expect(bar.style.display).toBe('none');
+        } finally {
+            document.querySelectorAll = origQsa;
+        }
+    });
 });

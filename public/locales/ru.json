@@ -556,6 +556,11 @@
       "access_denied": "Доступ запрещен",
       "wait_sec": "Ждите {{sec}}с",
       "db_connecting": "Связь с БД..."
+    },
+    "filters": {
+      "reset_all": "СБРОСИТЬ ВСЁ",
+      "in_stock": "Только в наличии",
+      "remove_aria": "Убрать фильтр"
     }
   }
 }

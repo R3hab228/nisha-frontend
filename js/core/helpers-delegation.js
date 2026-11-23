@@ -295,6 +295,16 @@ export function handleDelegatedAction(e) {
             invokeCompatAction('set-category-filter', 'setCategoryFilter', cat, actionEl);
             break;
         }
+        case 'remove-filter-chip': {
+            const filterType = actionEl.getAttribute('data-filter-type') || '';
+            const filterValue = actionEl.getAttribute('data-filter-value') || '';
+            invokeCompatAction('remove-filter-chip', 'removeActiveFilterChip', filterType, filterValue);
+            break;
+        }
+        case 'clear-all-filters': {
+            invokeCompatAction('clear-all-filters', 'clearAllFilters');
+            break;
+        }
         case 'toggle-password-visibility': {
             const inputId = actionEl.getAttribute('data-input-id');
             if (inputId) invokeCompatAction('toggle-password-visibility', 'togglePasswordVisibility', inputId, actionEl);

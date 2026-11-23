@@ -423,6 +423,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             }
 
             updateSidebarCounters();
+            renderActiveFilterChips();
 
             if (grid) {
                 if (typeof requestAnimationFrame === 'function') {
@@ -612,6 +613,290 @@ export function setCategoryFilter(cat, element) {
     return runCatalogViewTransition(updateDom);
 }
 
+const CATEGORY_CHIP_I18N_KEYS = Object.freeze({
+    'Верхняя одежда': 'sidebar.outerwear',
+    'Кофты и Свитера': 'sidebar.sweaters',
+    'Штаны и Джинсы': 'sidebar.pants',
+    'Обувь': 'sidebar.shoes',
+    'Аксессуары': 'sidebar.accs'
+});
+
+const SIZE_CHIP_LABELS = Object.freeze({
+    S: 'S',
+    M: 'M',
+    L: 'L',
+    XL: 'XL / XXL',
+    '40-42': '40 - 42',
+    '43-46': '43 - 46'
+});
+
+function tCatalog(key, defaultValue) {
+    if (typeof i18next !== 'undefined' && typeof i18next.t === 'function') {
+        return i18next.t(key, { defaultValue });
+    }
+    return defaultValue;
+}
+
+/**
+ * Рендерит полоску чипсов активных фильтров над сеткой каталога.
+ * Скрывает контейнер, когда ни один фильтр не активен.
+ */
+export function renderActiveFilterChips() {
+    if (typeof document === 'undefined') return;
+    const bar = document.getElementById('activeFiltersBar');
+    if (!bar) return;
+
+    const chips = [];
+    const curCat = (typeof window !== 'undefined' && window.currentCategory) ? String(window.currentCategory).trim() : '';
+    const curBrand = (typeof window !== 'undefined' && window.currentBrand) ? String(window.currentBrand).trim() : '';
+    const onlyFavs = Boolean(typeof window !== 'undefined' && window.showingOnlyFavs);
+    const searchInput = document.getElementById('mainSearch');
+    const searchRaw = searchInput ? String(searchInput.value || '').trim() : '';
+    const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => String(cb.value || '').trim()).filter(Boolean);
+    const onlySale = Boolean(document.getElementById('onlySaleCb')?.checked);
+    const onlyBargain = Boolean(document.getElementById('onlyBargainCb')?.checked);
+    const hideUnavailable = Boolean(document.getElementById('hideUnavailableCb')?.checked);
+
+    const minInput = document.getElementById('priceMin');
+    const maxInput = document.getElementById('priceMax');
+    const minDefault = minInput ? (Number.parseInt(minInput.min, 10) || 0) : 0;
+    const maxDefault = maxInput ? (Number.parseInt(maxInput.max, 10) || 15000) : 15000;
+    const minVal = minInput ? Number.parseInt(minInput.value, 10) : minDefault;
+    const maxVal = maxInput ? Number.parseInt(maxInput.value, 10) : maxDefault;
+    const hasMinPrice = Number.isFinite(minVal) && minVal > minDefault;
+    const hasMaxPrice = Number.isFinite(maxVal) && maxVal > 0 && maxVal < maxDefault;
+
+    if (onlyFavs) {
+        chips.push({
+            type: 'fav',
+            value: '1',
+            label: `★ ${tCatalog('nav.favorites', 'ИЗБРАННОЕ')}`,
+            cls: 'is-fav'
+        });
+    }
+
+    if (curCat && !onlyFavs) {
+        const catKey = Object.hasOwn(CATEGORY_CHIP_I18N_KEYS, curCat) ? CATEGORY_CHIP_I18N_KEYS[curCat] : '';
+        const rawCatLabel = catKey ? tCatalog(catKey, curCat) : curCat;
+        const cleanCatLabel = String(rawCatLabel).replace(/^\[>\]\s*/, '').trim();
+        chips.push({
+            type: 'category',
+            value: curCat,
+            label: cleanCatLabel,
+            cls: 'is-category'
+        });
+    }
+
+    if (curBrand && !onlyFavs) {
+        chips.push({
+            type: 'brand',
+            value: curBrand,
+            label: curBrand,
+            cls: 'is-category'
+        });
+    }
+
+    if (searchRaw) {
+        chips.push({
+            type: 'search',
+            value: searchRaw,
+            label: `"${searchRaw}"`,
+            cls: 'is-search'
+        });
+    }
+
+    if (!onlyFavs) {
+        checkedSizes.forEach(sz => {
+            const label = Object.hasOwn(SIZE_CHIP_LABELS, sz) ? SIZE_CHIP_LABELS[sz] : sz;
+            chips.push({
+                type: 'size',
+                value: sz,
+                label,
+                cls: 'is-size'
+            });
+        });
+
+        if (hasMinPrice || hasMaxPrice) {
+            const uah = tCatalog('sidebar.uah', 'грн');
+            const fromWord = tCatalog('sidebar.from', 'ОТ').toLowerCase();
+            const toWord = tCatalog('sidebar.to', 'ДО').toLowerCase();
+            let priceLabel = '';
+            if (hasMinPrice && hasMaxPrice) priceLabel = `${minVal}–${maxVal} ${uah}`;
+            else if (hasMinPrice) priceLabel = `${fromWord} ${minVal} ${uah}`;
+            else priceLabel = `${toWord} ${maxVal} ${uah}`;
+            chips.push({
+                type: 'price',
+                value: `${minVal}-${maxVal}`,
+                label: priceLabel,
+                cls: 'is-price'
+            });
+        }
+    }
+
+    if (onlySale) {
+        chips.push({
+            type: 'sale',
+            value: '1',
+            label: tCatalog('sidebar.only_sale', '% Только со скидкой'),
+            cls: 'is-sale'
+        });
+    }
+
+    if (onlyBargain) {
+        chips.push({
+            type: 'bargain',
+            value: '1',
+            label: tCatalog('sidebar.only_bargain', 'Только с торгом'),
+            cls: 'is-bargain'
+        });
+    }
+
+    if (hideUnavailable) {
+        chips.push({
+            type: 'unavailable',
+            value: '1',
+            label: tCatalog('filters.in_stock', 'Только в наличии'),
+            cls: 'is-stock'
+        });
+    }
+
+    if (chips.length === 0) {
+        bar.style.display = 'none';
+        if (typeof bar.replaceChildren === 'function') bar.replaceChildren();
+        else bar.innerHTML = '';
+        return;
+    }
+
+    const removeAriaPrefix = tCatalog('filters.remove_aria', 'Убрать фильтр');
+    const htmlParts = chips.map(chip => {
+        const safeLabel = escCardHtml(chip.label);
+        const safeVal = escCardHtml(chip.value);
+        const safeAria = escCardHtml(`${removeAriaPrefix}: ${chip.label}`);
+        return `<button type="button" class="filter-chip ${chip.cls}" data-action="remove-filter-chip" data-filter-type="${chip.type}" data-filter-value="${safeVal}" aria-label="${safeAria}"><span>${safeLabel}</span><span class="filter-chip-close" aria-hidden="true">×</span></button>`;
+    });
+
+    if (chips.length >= 2) {
+        const resetLabel = escCardHtml(tCatalog('filters.reset_all', 'СБРОСИТЬ ВСЁ'));
+        htmlParts.push(`<button type="button" class="filter-chip filter-chip-reset" data-action="clear-all-filters">[ ${resetLabel} ]</button>`);
+    }
+
+    bar.innerHTML = htmlParts.join('');
+    bar.style.display = 'flex';
+}
+
+function resetPriceSlidersDom() {
+    const minInput = document.getElementById('priceMin');
+    const maxInput = document.getElementById('priceMax');
+    const minDefault = minInput ? (Number.parseInt(minInput.min, 10) || 0) : 0;
+    const maxDefault = maxInput ? (Number.parseInt(maxInput.max, 10) || 15000) : 15000;
+    if (minInput) minInput.value = String(minDefault);
+    if (maxInput) maxInput.value = String(maxDefault);
+    const minLabel = document.getElementById('priceMinVal');
+    const maxLabel = document.getElementById('priceMaxVal');
+    if (minLabel) minLabel.textContent = String(minDefault);
+    if (maxLabel) maxLabel.textContent = String(maxDefault);
+    const rangeFill = document.getElementById('rangeFill');
+    if (rangeFill) {
+        rangeFill.style.left = '0%';
+        rangeFill.style.right = '0%';
+    }
+}
+
+/**
+ * Снимает один конкретный активный фильтр по клику на чипс.
+ * @param {string} type
+ * @param {string} [value='']
+ */
+export function removeActiveFilterChip(type, value = '') {
+    if (!type || typeof document === 'undefined') return;
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+
+    switch (type) {
+        case 'category':
+            return setCategoryFilter('');
+        case 'search':
+            return clearSearchInput();
+        case 'fav': {
+            invokeAction('playSound', 'menu', { kind: 'ui' });
+            window.showingOnlyFavs = false;
+            try { sessionStorage.removeItem('nisha_showing_favs'); } catch {}
+            const favNav = document.getElementById('favNav');
+            if (favNav) favNav.style.color = 'var(--accent-yellow)';
+            return runCatalogViewTransition(() => applyFilters(true, false));
+        }
+        case 'brand': {
+            invokeAction('playSound', 'menu', { kind: 'ui' });
+            window.currentBrand = '';
+            return runCatalogViewTransition(() => applyFilters(true, false));
+        }
+        case 'size': {
+            const targetVal = String(value || '').trim();
+            document.querySelectorAll('.size-cb:checked').forEach(cb => {
+                if (String(cb.value || '').trim() === targetVal) cb.checked = false;
+            });
+            return triggerFilterTransition();
+        }
+        case 'price': {
+            resetPriceSlidersDom();
+            return triggerFilterTransition();
+        }
+        case 'sale': {
+            const cb = document.getElementById('onlySaleCb');
+            if (cb) cb.checked = false;
+            return triggerFilterTransition();
+        }
+        case 'bargain': {
+            const cb = document.getElementById('onlyBargainCb');
+            if (cb) cb.checked = false;
+            return triggerFilterTransition();
+        }
+        case 'unavailable': {
+            const cb = document.getElementById('hideUnavailableCb');
+            if (cb) cb.checked = false;
+            return triggerFilterTransition();
+        }
+        default:
+            return;
+    }
+}
+
+/**
+ * Сбрасывает все активные фильтры каталога одним действием.
+ */
+export function clearAllFilters() {
+    if (typeof document === 'undefined') return;
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+    invokeAction('playSound', 'menu', { kind: 'ui' });
+
+    window.currentCategory = '';
+    window.currentBrand = '';
+    window.showingOnlyFavs = false;
+    clearSavedFeedScrollState();
+
+    const store = getCatalogStore();
+    if (store && store.session) store.session.set('nisha_last_category', '');
+    else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_last_category', ''); } catch {} }
+    try { if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('nisha_showing_favs'); } catch {}
+
+    const favNav = document.getElementById('favNav');
+    if (favNav) favNav.style.color = 'var(--accent-yellow)';
+
+    const searchInput = document.getElementById('mainSearch');
+    if (searchInput) searchInput.value = '';
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (hasAction('closeSearch')) invokeAction('closeSearch');
+
+    document.querySelectorAll('.size-cb:checked').forEach(cb => { cb.checked = false; });
+    ['onlySaleCb', 'onlyBargainCb', 'hideUnavailableCb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+    });
+    resetPriceSlidersDom();
+
+    return runCatalogViewTransition(() => applyFilters(true, false));
+}
+
 registerActions({
     itemMatchesSizeFilter,
     updateSidebarCounters,
@@ -622,7 +907,10 @@ registerActions({
     setCategoryFilter,
     clearSearchInput,
     updatePriceUI,
-    toggleMobileSidebar
+    toggleMobileSidebar,
+    renderActiveFilterChips,
+    removeActiveFilterChip,
+    clearAllFilters
 });
 
 if (typeof window !== 'undefined') {
@@ -631,4 +919,7 @@ if (typeof window !== 'undefined') {
     window.applyFilters = applyFilters;
     window.sortItems = sortItems;
     window.setCategoryFilter = setCategoryFilter;
+    window.renderActiveFilterChips = renderActiveFilterChips;
+    window.removeActiveFilterChip = removeActiveFilterChip;
+    window.clearAllFilters = clearAllFilters;
 }

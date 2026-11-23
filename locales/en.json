@@ -556,6 +556,11 @@
       "access_denied": "Access denied",
       "wait_sec": "Wait {{sec}}s",
       "db_connecting": "Connecting to DB..."
+    },
+    "filters": {
+      "reset_all": "CLEAR ALL",
+      "in_stock": "In stock only",
+      "remove_aria": "Remove filter"
     }
   }
 }

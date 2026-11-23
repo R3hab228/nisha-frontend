@@ -375,6 +375,86 @@ label:hover .win95-cb:checked {
 .sorting a:not(.active-sort) { color: #aaa; }
 .sorting a:not(.active-sort):hover { color: #fff; }
 
+/* ACTIVE FILTER CHIPS BAR */
+.active-filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: -10px 0 18px 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    min-height: 28px;
+    background: #141414;
+    border: 1px solid #383838;
+    color: #e6e6e6;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.2;
+    cursor: pointer;
+    box-sizing: border-box;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease, transform 0.12s ease;
+}
+.filter-chip:hover {
+    border-color: var(--accent-green);
+    color: #fff;
+    background: #1c1c1c;
+}
+.filter-chip:active {
+    transform: scale(0.97);
+}
+.filter-chip-close {
+    color: #888;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+.filter-chip:hover .filter-chip-close {
+    color: var(--accent-red);
+}
+.filter-chip.is-category,
+.filter-chip.is-bargain {
+    border-color: rgba(0, 255, 0, 0.42);
+    color: var(--accent-green);
+}
+.filter-chip.is-sale,
+.filter-chip.is-fav {
+    border-color: rgba(255, 51, 51, 0.5);
+    color: var(--accent-red);
+}
+.filter-chip.is-sale:hover,
+.filter-chip.is-fav:hover {
+    border-color: var(--accent-red);
+    color: #ff6666;
+}
+.filter-chip.is-search {
+    border-color: rgba(255, 215, 0, 0.48);
+    color: var(--accent-yellow);
+}
+.filter-chip.is-search:hover {
+    border-color: var(--accent-yellow);
+}
+.filter-chip.filter-chip-reset {
+    background: transparent;
+    border: 1px dashed #555;
+    color: #aaa;
+    letter-spacing: 0.3px;
+}
+.filter-chip.filter-chip-reset:hover {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+    background: rgba(255, 0, 0, 0.06);
+}
+
 .items-grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
