@@ -775,11 +775,6 @@ export function renderActiveFilterChips() {
         return `<button type="button" class="filter-chip ${chip.cls}" data-action="remove-filter-chip" data-filter-type="${chip.type}" data-filter-value="${safeVal}" aria-label="${safeAria}"><span>${safeLabel}</span><span class="filter-chip-close" aria-hidden="true">×</span></button>`;
     });
 
-    if (chips.length >= 2) {
-        const resetLabel = escCardHtml(tCatalog('filters.reset_all', 'СБРОСИТЬ ВСЁ'));
-        htmlParts.push(`<button type="button" class="filter-chip filter-chip-reset" data-action="clear-all-filters">[ ${resetLabel} ]</button>`);
-    }
-
     bar.innerHTML = htmlParts.join('');
     bar.style.display = 'flex';
 }
@@ -860,43 +855,6 @@ export function removeActiveFilterChip(type, value = '') {
     }
 }
 
-/**
- * Сбрасывает все активные фильтры каталога одним действием.
- */
-export function clearAllFilters() {
-    if (typeof document === 'undefined') return;
-    if (typeof triggerHaptic === 'function') triggerHaptic('light');
-    invokeAction('playSound', 'menu', { kind: 'ui' });
-
-    window.currentCategory = '';
-    window.currentBrand = '';
-    window.showingOnlyFavs = false;
-    clearSavedFeedScrollState();
-
-    const store = getCatalogStore();
-    if (store && store.session) store.session.set('nisha_last_category', '');
-    else { try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('nisha_last_category', ''); } catch {} }
-    try { if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('nisha_showing_favs'); } catch {}
-
-    const favNav = document.getElementById('favNav');
-    if (favNav) favNav.style.color = 'var(--accent-yellow)';
-
-    const searchInput = document.getElementById('mainSearch');
-    if (searchInput) searchInput.value = '';
-    const clearBtn = document.getElementById('clearSearchBtn');
-    if (clearBtn) clearBtn.style.display = 'none';
-    if (hasAction('closeSearch')) invokeAction('closeSearch');
-
-    document.querySelectorAll('.size-cb:checked').forEach(cb => { cb.checked = false; });
-    ['onlySaleCb', 'onlyBargainCb', 'hideUnavailableCb'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.checked = false;
-    });
-    resetPriceSlidersDom();
-
-    return runCatalogViewTransition(() => applyFilters(true, false));
-}
-
 registerActions({
     itemMatchesSizeFilter,
     updateSidebarCounters,
@@ -909,8 +867,7 @@ registerActions({
     updatePriceUI,
     toggleMobileSidebar,
     renderActiveFilterChips,
-    removeActiveFilterChip,
-    clearAllFilters
+    removeActiveFilterChip
 });
 
 if (typeof window !== 'undefined') {
@@ -921,5 +878,4 @@ if (typeof window !== 'undefined') {
     window.setCategoryFilter = setCategoryFilter;
     window.renderActiveFilterChips = renderActiveFilterChips;
     window.removeActiveFilterChip = removeActiveFilterChip;
-    window.clearAllFilters = clearAllFilters;
 }

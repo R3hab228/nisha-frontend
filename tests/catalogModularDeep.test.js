@@ -948,11 +948,12 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
             expect(bar.innerHTML).toContain('data-filter-type="sale"');
             expect(bar.innerHTML).toContain('data-filter-type="bargain"');
             expect(bar.innerHTML).toContain('data-filter-type="unavailable"');
-            expect(bar.innerHTML).toContain('data-action="clear-all-filters"');
+            expect(bar.innerHTML).not.toContain('data-action="clear-all-filters"');
+            expect(bar.innerHTML).not.toContain('filter-chip-reset');
             expect(bar.innerHTML).not.toContain('<script>');
             expect(bar.innerHTML).toContain('&lt;script&gt;x&lt;/script&gt;');
 
-            // Remove individual chips
+            // Remove individual chips one by one
             await catalogMod.removeActiveFilterChip('sale');
             expect(onlySaleCb.checked).toBe(false);
 
@@ -965,11 +966,16 @@ describe('Modular Catalog Runtime & Behavioral Deep Suite (js/catalog/*.js)', ()
             expect(rangeFill.style.left).toBe('0%');
             expect(rangeFill.style.right).toBe('0%');
 
-            // Clear all remaining filters at once
-            await catalogMod.clearAllFilters();
+            await catalogMod.removeActiveFilterChip('category');
             expect(window.currentCategory).toBe('');
+
+            await catalogMod.removeActiveFilterChip('search');
             expect(searchInput.value).toBe('');
+
+            await catalogMod.removeActiveFilterChip('bargain');
             expect(onlyBargainCb.checked).toBe(false);
+
+            await catalogMod.removeActiveFilterChip('unavailable');
             expect(hideUnavailableCb.checked).toBe(false);
             expect(bar.style.display).toBe('none');
         } finally {

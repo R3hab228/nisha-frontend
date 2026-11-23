@@ -443,17 +443,6 @@ label:hover .win95-cb:checked {
 .filter-chip.is-search:hover {
     border-color: var(--accent-yellow);
 }
-.filter-chip.filter-chip-reset {
-    background: transparent;
-    border: 1px dashed #555;
-    color: #aaa;
-    letter-spacing: 0.3px;
-}
-.filter-chip.filter-chip-reset:hover {
-    border-color: var(--accent-red);
-    color: var(--accent-red);
-    background: rgba(255, 0, 0, 0.06);
-}
 
 .items-grid { 
     display: grid; 
