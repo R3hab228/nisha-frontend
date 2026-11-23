@@ -91,6 +91,9 @@ export function resetSignedOutProfileUI() {
     if (syncFields) syncFields();
     setProfileAuthFormsVisible(false);
     updateFavBadge();
+    if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.resetIdentity === 'function') {
+        window.analytics.resetIdentity();
+    }
 }
 
 /**
@@ -566,6 +569,12 @@ export async function checkSession() {
 
         if (currentUser?.id) {
             getGlobalFn('subscribeUserRealtime')?.(currentUser.id);
+            if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.identifyUser === 'function') {
+                window.analytics.identifyUser(currentUser.id, {
+                    username: uName || '',
+                    lang: profileState.userProfile?.language || 'ua'
+                });
+            }
         }
         getGlobalFn('syncUserBargains')?.();
         getGlobalFn('checkUnreadSupportReplies')?.();

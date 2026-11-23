@@ -429,7 +429,10 @@ export function openProductModal(item) {
 
     if (offerWrapper || offerPriceBtn) {
         const { hasBargain } = parseItemBargainInfo(item);
-        if ((item && item.status === 'sold') || !hasBargain) {
+        const isBargainFlagEnabled = (typeof window !== 'undefined' && window.analytics && typeof window.analytics.isFeatureEnabled === 'function')
+            ? window.analytics.isFeatureEnabled('enable_bargain', true)
+            : true;
+        if ((item && item.status === 'sold') || !hasBargain || !isBargainFlagEnabled) {
             if (offerWrapper) offerWrapper.style.display = 'none';
             if (offerPriceBtn) offerPriceBtn.style.display = 'none';
             if (offerInputRow) offerInputRow.style.display = 'none';

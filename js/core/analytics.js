@@ -13,6 +13,89 @@
     let _initialized = false;
     let _clarityLoaded = false;
     let _tiktokLoaded = false;
+    let _lastIdentifiedUserId = '';
+    const FLAG_CACHE_KEY = 'nisha_ph_flags_cache';
+    const _flagListeners = new Set();
+
+    function readCachedFlags() {
+        try {
+            const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(FLAG_CACHE_KEY) : null;
+            if (!raw) return { flags: {}, payloads: {} };
+            const parsed = JSON.parse(raw);
+            return {
+                flags: (parsed && parsed.flags && typeof parsed.flags === 'object') ? parsed.flags : {},
+                payloads: (parsed && parsed.payloads && typeof parsed.payloads === 'object') ? parsed.payloads : {}
+            };
+        } catch {
+            return { flags: {}, payloads: {} };
+        }
+    }
+
+    function writeCachedFlags(flagsObj, payloadsObj) {
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(FLAG_CACHE_KEY, JSON.stringify({
+                    flags: flagsObj || {},
+                    payloads: payloadsObj || {},
+                    updatedAt: Date.now()
+                }));
+            }
+        } catch {}
+    }
+
+    function applyBuiltinFeatureFlags() {
+        if (typeof document === 'undefined') return;
+        try {
+            // 1. Рубильник предложки DROP_ITEM.EXE (default: enabled)
+            const dropEnabled = isFeatureEnabled('enable_drop_propose', true);
+            document.querySelectorAll('[data-action="open-propose-modal"]').forEach(el => {
+                if (el && el.style) el.style.display = dropEnabled ? '' : 'none';
+            });
+
+            // 2. Динамический промо-баннер из PostHog JSON payload (default: disabled)
+            const promoEnabled = isFeatureEnabled('promo_banner', false);
+            const existingBanner = document.getElementById('nishaFeaturePromoBanner');
+            if (!promoEnabled) {
+                if (existingBanner) existingBanner.remove();
+                return;
+            }
+
+            const payload = getFeatureFlagPayload('promo_banner', null);
+            const curLang = (typeof window !== 'undefined' && window.i18next && window.i18next.language)
+                ? String(window.i18next.language).toLowerCase().slice(0, 2)
+                : 'ua';
+            const langKey = curLang === 'uk' ? 'ua' : curLang;
+            const text = (payload && typeof payload === 'object')
+                ? String(payload[langKey] || payload.ua || payload.ru || payload.en || payload.text || '').trim()
+                : (typeof payload === 'string' ? payload.trim() : '');
+            if (!text) {
+                if (existingBanner) existingBanner.remove();
+                return;
+            }
+
+            let banner = existingBanner;
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'nishaFeaturePromoBanner';
+                banner.setAttribute('role', 'status');
+                banner.style.cssText = 'background:#001a0a;border-bottom:1px solid var(--accent-green,#00ff00);color:var(--accent-green,#00ff00);font-family:var(--font-mono,monospace);font-size:12px;font-weight:700;text-align:center;padding:7px 14px;letter-spacing:0.5px;position:relative;z-index:120;';
+                const host = document.querySelector('header') || document.body;
+                if (host && host.parentNode && host.tagName === 'HEADER') {
+                    host.parentNode.insertBefore(banner, host.nextSibling);
+                } else if (document.body) {
+                    document.body.prepend(banner);
+                }
+            }
+            banner.textContent = text;
+        } catch {}
+    }
+
+    function notifyFlagListeners(flagsMap) {
+        applyBuiltinFeatureFlags();
+        _flagListeners.forEach(cb => {
+            try { cb(flagsMap); } catch {}
+        });
+    }
 
     // 1. Создаём неблокирующую очередь команд Plausible и init-конфиг до загрузки внешнего скрипта
     if (typeof window !== 'undefined') {
@@ -72,13 +155,30 @@
 
                 // Опциональная инициализация PostHog, если задан ключ в window.ENV.POSTHOG_KEY
                 if (cfg.posthogKey && typeof window.posthog === 'undefined') {
-                    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+                    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init identify capture register register_once register_for_session unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
                     window.posthog.init(cfg.posthogKey, {
                         api_host: cfg.posthogHost,
-                        persistence: 'memory', // Privacy-first: без cookies
+                        persistence: 'localStorage', // Без cookies, но со стабильным distinct_id для A/B-тестов
                         person_profiles: 'identified_only',
                         capture_pageview: true,
-                        capture_pageleave: true
+                        capture_pageleave: true,
+                        loaded: (ph) => {
+                            if (ph && typeof ph.onFeatureFlags === 'function') {
+                                ph.onFeatureFlags((flagKeys, flagVariants) => {
+                                    const variants = (flagVariants && typeof flagVariants === 'object') ? flagVariants : {};
+                                    const payloads = {};
+                                    const keys = Array.isArray(flagKeys) ? flagKeys : Object.keys(variants);
+                                    keys.forEach((k) => {
+                                        if (typeof ph.getFeatureFlagPayload === 'function') {
+                                            const p = ph.getFeatureFlagPayload(k);
+                                            if (p !== undefined) payloads[k] = p;
+                                        }
+                                    });
+                                    writeCachedFlags(variants, payloads);
+                                    notifyFlagListeners(variants);
+                                });
+                            }
+                        }
                     });
                 }
             } catch {}
@@ -269,6 +369,117 @@
         });
     }
 
+    /**
+     * Привязывает авторизованного пользователя в PostHog для таргетированных фича-флагов и A/B-тестов.
+     * @param {string} userId
+     * @param {Record<string, any>} [props={}]
+     */
+    function identifyUser(userId, props = {}) {
+        const cleanId = String(userId || '').trim();
+        if (!cleanId || _lastIdentifiedUserId === cleanId) return;
+        _lastIdentifiedUserId = cleanId;
+        try {
+            if (typeof window !== 'undefined' && window.posthog && typeof window.posthog.identify === 'function') {
+                window.posthog.identify(cleanId, (props && typeof props === 'object') ? props : {});
+            }
+        } catch {}
+    }
+
+    /**
+     * Сбрасывает идентификацию пользователя в PostHog при выходе из аккаунта.
+     */
+    function resetIdentity() {
+        if (!_lastIdentifiedUserId) return;
+        _lastIdentifiedUserId = '';
+        try {
+            if (typeof window !== 'undefined' && window.posthog && typeof window.posthog.reset === 'function') {
+                window.posthog.reset();
+            }
+        } catch {}
+    }
+
+    /**
+     * Возвращает значение фича-флага PostHog (boolean или строку варианта) с мгновенным кэш-фоллбэком.
+     * @param {string} flagKey
+     * @param {*} [defaultValue=undefined]
+     * @returns {*}
+     */
+    function getFeatureFlag(flagKey, defaultValue = undefined) {
+        if (!flagKey || typeof flagKey !== 'string') return defaultValue;
+        try {
+            if (typeof window !== 'undefined' && window.posthog && typeof window.posthog.getFeatureFlag === 'function' && window.posthog.__loaded) {
+                const live = window.posthog.getFeatureFlag(flagKey);
+                if (live !== undefined) return live;
+            }
+        } catch {}
+        const cached = readCachedFlags();
+        if (Object.hasOwn(cached.flags, flagKey) && cached.flags[flagKey] !== undefined) {
+            return cached.flags[flagKey];
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Проверяет, включён ли boolean фича-флаг в PostHog (с кэш-фоллбэком без мигания UI).
+     * @param {string} flagKey
+     * @param {boolean} [defaultValue=false]
+     * @returns {boolean}
+     */
+    function isFeatureEnabled(flagKey, defaultValue = false) {
+        const val = getFeatureFlag(flagKey, undefined);
+        if (val === undefined) return Boolean(defaultValue);
+        if (typeof val === 'boolean') return val;
+        if (typeof val === 'string') return val !== 'false' && val !== 'off' && val !== '0';
+        return Boolean(val);
+    }
+
+    /**
+     * Возвращает JSON payload фича-флага PostHog (например, текст/настройки промо-баннера).
+     * @param {string} flagKey
+     * @param {*} [defaultValue=null]
+     * @returns {*}
+     */
+    function getFeatureFlagPayload(flagKey, defaultValue = null) {
+        if (!flagKey || typeof flagKey !== 'string') return defaultValue;
+        try {
+            if (typeof window !== 'undefined' && window.posthog && typeof window.posthog.getFeatureFlagPayload === 'function' && window.posthog.__loaded) {
+                const live = window.posthog.getFeatureFlagPayload(flagKey);
+                if (live !== undefined && live !== null) return live;
+            }
+        } catch {}
+        const cached = readCachedFlags();
+        if (Object.hasOwn(cached.payloads, flagKey) && cached.payloads[flagKey] !== undefined) {
+            return cached.payloads[flagKey];
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Подписывается на обновление фича-флагов PostHog (сразу вызывает callback с кэшем, если он есть).
+     * @param {Function} callback
+     * @returns {Function} unsubscribe
+     */
+    function onFeatureFlags(callback) {
+        if (typeof callback !== 'function') return () => {};
+        _flagListeners.add(callback);
+        const cached = readCachedFlags();
+        if (Object.keys(cached.flags).length > 0) {
+            try { callback(cached.flags); } catch {}
+        }
+        return () => _flagListeners.delete(callback);
+    }
+
+    /**
+     * Принудительно перезапрашивает актуальные фича-флаги из PostHog.
+     */
+    function reloadFeatureFlags() {
+        try {
+            if (typeof window !== 'undefined' && window.posthog && typeof window.posthog.reloadFeatureFlags === 'function') {
+                window.posthog.reloadFeatureFlags();
+            }
+        } catch {}
+    }
+
     const analyticsApi = {
         init,
         track,
@@ -279,8 +490,23 @@
         trackCheckoutAttempt,
         trackPurchase,
         trackProposalSubmitted,
-        trackFavorite
+        trackFavorite,
+        identifyUser,
+        resetIdentity,
+        isFeatureEnabled,
+        getFeatureFlag,
+        getFeatureFlagPayload,
+        onFeatureFlags,
+        reloadFeatureFlags
     };
+
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading' && typeof document.addEventListener === 'function') {
+            document.addEventListener('DOMContentLoaded', applyBuiltinFeatureFlags, { once: true });
+        } else {
+            applyBuiltinFeatureFlags();
+        }
+    }
 
     if (typeof window !== 'undefined') {
         window.analytics = analyticsApi;

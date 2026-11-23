@@ -93,6 +93,60 @@ export function trackFavorite(itemId, isAdded = true) {
 }
 
 /**
+ * Checks whether a PostHog feature flag is enabled (with instant localStorage fallback).
+ * @param {string} flagKey
+ * @param {boolean} [defaultValue=false]
+ * @returns {boolean}
+ */
+export function isFeatureEnabled(flagKey, defaultValue = false) {
+    const a = getAnalytics();
+    if (a && typeof a.isFeatureEnabled === 'function') {
+        return a.isFeatureEnabled(flagKey, defaultValue);
+    }
+    return Boolean(defaultValue);
+}
+
+/**
+ * Returns multivariate PostHog feature flag value.
+ * @param {string} flagKey
+ * @param {*} [defaultValue=undefined]
+ * @returns {*}
+ */
+export function getFeatureFlag(flagKey, defaultValue = undefined) {
+    const a = getAnalytics();
+    if (a && typeof a.getFeatureFlag === 'function') {
+        return a.getFeatureFlag(flagKey, defaultValue);
+    }
+    return defaultValue;
+}
+
+/**
+ * Returns PostHog feature flag JSON payload.
+ * @param {string} flagKey
+ * @param {*} [defaultValue=null]
+ * @returns {*}
+ */
+export function getFeatureFlagPayload(flagKey, defaultValue = null) {
+    const a = getAnalytics();
+    if (a && typeof a.getFeatureFlagPayload === 'function') {
+        return a.getFeatureFlagPayload(flagKey, defaultValue);
+    }
+    return defaultValue;
+}
+
+/**
+ * Identifies authenticated user in PostHog for targeted rollouts.
+ * @param {string} userId
+ * @param {Record<string, any>} [props={}]
+ */
+export function identifyUser(userId, props = {}) {
+    const a = getAnalytics();
+    if (a && typeof a.identifyUser === 'function') {
+        return a.identifyUser(userId, props);
+    }
+}
+
+/**
  * Initializes privacy-first analytics provider tags
  */
 export function initAnalytics() {
