@@ -92,6 +92,38 @@ describe('Mobile Back Gesture & Overlay History Stack (js/ui/back-gesture.js)', 
         expect(getActiveBackLayerKeys()).toEqual([]);
     });
 
+    it('does not close productModal when PhotoSwipe red X triggers a delayed popstate after animation frames', async () => {
+        vi.useFakeTimers();
+        const closeModalSpy = vi.fn();
+        const listeners = new Map();
+        const fakeLightbox = {
+            pswp: { close: vi.fn() },
+            on: (evt, cb) => listeners.set(evt, cb)
+        };
+
+        pushBackLayer({ key: 'modal:productModal', type: 'modal', id: 'productModal', onBackClose: closeModalSpy });
+        bindPhotoSwipeBackGesture(fakeLightbox);
+        listeners.get('afterInit')();
+
+        // User closes PhotoSwipe via top-right red X button
+        listeners.get('close')();
+        await Promise.resolve();
+        expect(backSpy).toHaveBeenCalledTimes(1);
+
+        // Simulate slow mobile zoom-out animation: popstate arrives 120ms later (well past 2 rAF frames)
+        vi.advanceTimersByTime(120);
+        handleBackPopstate({ state: { nishaLayerDepth: 1 } });
+
+        expect(closeModalSpy).not.toHaveBeenCalled();
+        expect(getActiveBackLayerKeys()).toEqual(['modal:productModal']);
+
+        // Even if popstate arrives after 600ms with matching nishaLayerDepth=1, modal still stays open
+        vi.advanceTimersByTime(600);
+        handleBackPopstate({ state: { nishaLayerDepth: 1 } });
+        expect(closeModalSpy).not.toHaveBeenCalled();
+        expect(getActiveBackLayerKeys()).toEqual(['modal:productModal']);
+    });
+
     it('guards confirm layer cancellation, Escape propagation on inline bargain, and search click Lenis lock', () => {
         const windowsCode = readFileSync(resolve(import.meta.dirname, '../js/ui/windows.js'), 'utf8');
         const bargainCode = readFileSync(resolve(import.meta.dirname, '../js/product/product-bargain.js'), 'utf8');

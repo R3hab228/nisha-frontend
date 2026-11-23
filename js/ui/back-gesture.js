@@ -9,6 +9,7 @@ const _backStack = [];
 let _pushedDepth = 0;
 let _ignorePopstateCount = 0;
 let _ignoreResetGen = 0;
+let _ignoreResetTimer = null;
 let _reconcilePending = false;
 let _reconcileGen = 0;
 let _popstateListenerBound = false;
@@ -22,16 +23,21 @@ function hasUsableHistoryApi() {
     );
 }
 
+function clearIgnoreResetTimer() {
+    if (_ignoreResetTimer !== null) {
+        clearTimeout(_ignoreResetTimer);
+        _ignoreResetTimer = null;
+    }
+}
+
 function scheduleIgnoreResetFallback() {
     const gen = ++_ignoreResetGen;
-    if (typeof requestAnimationFrame !== 'function') return;
-    requestAnimationFrame(() => {
+    clearIgnoreResetTimer();
+    _ignoreResetTimer = setTimeout(() => {
         if (gen !== _ignoreResetGen) return;
-        requestAnimationFrame(() => {
-            if (gen !== _ignoreResetGen) return;
-            _ignorePopstateCount = 0;
-        });
-    });
+        _ignoreResetTimer = null;
+        _ignorePopstateCount = 0;
+    }, 500);
 }
 
 function cancelReconcileTimer() {
@@ -130,13 +136,27 @@ export function removeBackLayerFromUI(key) {
 
 /**
  * Handles browser `popstate` events triggered by mobile edge-swipe or Back button.
+ * @param {PopStateEvent} [event]
  */
-export function handleBackPopstate() {
+export function handleBackPopstate(event) {
     if (_ignorePopstateCount > 0) {
         _ignorePopstateCount -= 1;
         if (_ignorePopstateCount === 0) {
             _ignoreResetGen += 1;
+            clearIgnoreResetTimer();
         }
+        return;
+    }
+
+    // Защита от отложенного popstate после закрытия верхнего оверлея кнопкой X (например, PhotoSwipe):
+    // если глубина history.state уже совпадает с текущей глубиной стека (или выше), это наш собственный rollback.
+    const stateObj = (event && event.state && typeof event.state === 'object')
+        ? event.state
+        : ((typeof window !== 'undefined' && window.history && window.history.state && typeof window.history.state === 'object')
+            ? window.history.state
+            : null);
+    if (stateObj && typeof stateObj.nishaLayerDepth === 'number' && stateObj.nishaLayerDepth >= _backStack.length) {
+        _pushedDepth = Math.min(_pushedDepth, stateObj.nishaLayerDepth);
         return;
     }
 
@@ -180,6 +200,9 @@ export function bindPhotoSwipeBackGesture(lightbox) {
     });
 
     lightbox.on('close', () => {
+        if (typeof window !== 'undefined') {
+            window._nishaPswpClosedAt = Date.now();
+        }
         if (!lightbox._nishaClosedByBack) {
             removeBackLayerFromUI(layerKey);
         }
@@ -203,6 +226,7 @@ export function _resetBackGestureStateForTests() {
     _pushedDepth = 0;
     _ignorePopstateCount = 0;
     _ignoreResetGen += 1;
+    clearIgnoreResetTimer();
     cancelReconcileTimer();
 }
 

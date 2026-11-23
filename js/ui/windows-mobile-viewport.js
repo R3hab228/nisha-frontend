@@ -172,6 +172,11 @@ export function attachModalOverlayInteractions(overlay) {
                 return;
             }
             if (this.id === 'rulesModal') return;
+            if (typeof window !== 'undefined' && window._nishaPswpClosedAt && (Date.now() - window._nishaPswpClosedAt) < 350) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                return;
+            }
             if (e.target === this) {
                 invokeAction('closeModal', this.id, e);
             }
