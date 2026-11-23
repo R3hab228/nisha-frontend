@@ -51,6 +51,16 @@ const MEASUREMENT_PATTERNS = [
     // Waist & half-waist
     { pattern: 'ширина в талії (найвужче місце)', key: 'waist' },
     { pattern: 'ширина в талии (самое узкое место)', key: 'waist' },
+    { pattern: 'талія (напівобхват)', key: 'waist' },
+    { pattern: 'талія(напівобхват)', key: 'waist' },
+    { pattern: 'талія (півобхват)', key: 'waist' },
+    { pattern: 'талія(півобхват)', key: 'waist' },
+    { pattern: 'талия (полуобхват)', key: 'waist' },
+    { pattern: 'талия(полуобхват)', key: 'waist' },
+    { pattern: 'пояс (напівобхват)', key: 'half_waist' },
+    { pattern: 'пояс(напівобхват)', key: 'half_waist' },
+    { pattern: 'пояс (полуобхват)', key: 'half_waist' },
+    { pattern: 'пояс(полуобхват)', key: 'half_waist' },
     { pattern: 'полуобхват по поясу', key: 'half_waist' },
     { pattern: 'напівобхват по поясу', key: 'half_waist' },
     { pattern: 'полуобхват талии', key: 'waist' },
@@ -117,6 +127,7 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'внутренний шов', key: 'inseam' },
     { pattern: 'внутрішній крок', key: 'inseam' },
     { pattern: 'внутрішній шов', key: 'inseam' },
+    { pattern: 'кроковий шов', key: 'inseam' },
     { pattern: 'шаговый шов', key: 'inseam' },
     { pattern: 'обхват запястья', key: 'wrist' },
     { pattern: "обхват зап'ястя", key: 'wrist' },
@@ -169,6 +180,7 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'выход', key: 'leg_opening' },
     { pattern: 'вихід', key: 'leg_opening' },
     { pattern: 'шаговый', key: 'inseam' },
+    { pattern: 'кроковий', key: 'inseam' },
     { pattern: 'крок', key: 'inseam' },
     { pattern: 'inseam', key: 'inseam' },
     { pattern: 'стелька', key: 'insole' },
@@ -190,8 +202,9 @@ const TERMS_ALTERNATION = MEASUREMENT_PATTERNS.map(p => escapeRegExp(p.pattern))
 const PATTERN_LOOKUP = new Map(MEASUREMENT_PATTERNS.map(p => [p.pattern, p]));
 
 // Note: uses explicit Cyrillic+Latin boundary instead of JS \b (which treats Cyrillic as \W)
+// Also accepts optional parenthetical half-measure qualifiers like "(напівобхват)" / "(полуобхват)" after any term.
 const MEASUREMENT_LINE_RE = new RegExp(
-    `(^|[^${WORD_CHAR_CLASS}])(${TERMS_ALTERNATION})(?:[\\s:=\\u2014\\u2013\\-~≈•]+)?(\\d{1,3}(?:[.,]\\d{1,2})?)(?:\\s*(?:см|cm)(?![${WORD_CHAR_CLASS}]))?`,
+    `(^|[^${WORD_CHAR_CLASS}])(${TERMS_ALTERNATION})(?:\\s*\\(\\s*(?:напівобхват|півобхват|полуобхват|пол\\s*обхват)\\s*\\))?(?:[\\s:=\\u2014\\u2013\\-~≈•]+)?(\\d{1,3}(?:[.,]\\d{1,2})?)(?:\\s*(?:см|cm)(?![${WORD_CHAR_CLASS}]))?`,
     'gi'
 );
 const INSOLE_PREFIX_RE = new RegExp(
