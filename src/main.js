@@ -17,7 +17,7 @@ import '../style.css';
 // 5. Подключение конфигурации и базовых модулей ядра
 import '../config.js';
 import '../js/core/apiClient.js';
-import '../js/core/helpers.js';
+import '../js/core/helpers-core.js';
 import '../js/core/web-locks.js';
 import '../js/core/analytics.js';
 import '../js/core/rum.js';
@@ -34,7 +34,7 @@ import '../js/core/lazy-loader.js';
 import '../js/catalog/catalog.js';
 import '../js/catalog/live-search.js';
 import '../js/cart/cart-core.js';
-import '../js/profile/profile.js';
+import '../js/profile/profile-core.js';
 import '../app.js';
 
 // 8. Экспорт официального модульного API приложения (Modern ES Modules Facade)

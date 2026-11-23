@@ -60,6 +60,54 @@ function swBuildIdPlugin() {
   };
 }
 
+// Безопасная минификация HTML в production-сборке:
+// сохраняет <script>, <style>, <textarea>, <pre> и пробелы между inline-тегами на одной строке,
+// сжимает JSON-LD/speculationrules, комментарии и межстрочные отступы.
+function minifyHtmlPlugin() {
+  return {
+    name: 'nisha-minify-html',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const preserved = [];
+        const mask = (chunk) => {
+          const token = `__NISHA_HTML_PRESERVE_${preserved.length}__`;
+          preserved.push(chunk);
+          return token;
+        };
+
+        let out = html.replace(
+          /<(script|style|textarea|pre)(\b[^>]*)>([\s\S]*?)<\/\1>/gi,
+          (full, tag, attrs, inner) => {
+            if (/^script$/i.test(tag) && /type\s*=\s*["']?(?:application\/ld\+json|speculationrules)["']?/i.test(attrs)) {
+              try {
+                const compactJson = JSON.stringify(JSON.parse(inner));
+                return mask(`<${tag}${attrs}>${compactJson}</${tag}>`);
+              } catch {
+                return mask(full);
+              }
+            }
+            return mask(full);
+          }
+        );
+
+        // Strip non-conditional HTML comments
+        out = out.replace(/<!--(?!\[if)[\s\S]*?-->/g, '');
+        // Trim per-line indentation and drop blank lines
+        out = out.replace(/^[ \t]+|[ \t]+$/gm, '');
+        // Collapse newline-separated tag boundaries while preserving same-line inline spaces
+        out = out.replace(/>\s*\r?\n+\s*</g, '><');
+        out = out.replace(/\r?\n+/g, '\n');
+
+        // Restore protected blocks
+        out = out.replace(/__NISHA_HTML_PRESERVE_(\d+)__/g, (_, idx) => preserved[Number(idx)] ?? '');
+        return out.trim();
+      },
+    },
+  };
+}
+
 export default defineConfig({
   publicDir: 'public',
   resolve: {
@@ -74,6 +122,7 @@ export default defineConfig({
   },
   plugins: [
     swBuildIdPlugin(),
+    minifyHtmlPlugin(),
     ...(process.env.SENTRY_AUTH_TOKEN
       ? [
           sentryVitePlugin({
@@ -117,6 +166,9 @@ export default defineConfig({
             if (id.includes('dompurify')) return 'vendor-dompurify';
             return 'vendor';
           }
+          if (id.includes('/js/core/sound-effects') || id.includes('\\js\\core\\sound-effects')) {
+            return 'app-sound';
+          }
           if (id.includes('/js/core/') || id.includes('\\js\\core\\')) {
             return 'app-core';
           }
@@ -136,6 +188,14 @@ export default defineConfig({
           }
           if (id.includes('/js/product/') || id.includes('\\js\\product\\')) {
             return 'app-product';
+          }
+          if (
+            id.includes('/js/profile/profile-modal-bundle') || id.includes('\\js\\profile\\profile-modal-bundle') ||
+            id.includes('/js/profile/profile-contacts') || id.includes('\\js\\profile\\profile-contacts') ||
+            id.includes('/js/profile/profile-delivery') || id.includes('\\js\\profile\\profile-delivery') ||
+            id.includes('/js/profile/profile-np-delivery') || id.includes('\\js\\profile\\profile-np-delivery')
+          ) {
+            return 'app-profile-modal';
           }
           if (id.includes('/js/profile/') || id.includes('\\js\\profile\\') || id.includes('/js/auth/') || id.includes('\\js\\auth\\')) {
             return 'app-profile';

@@ -13,13 +13,13 @@ import {
     setProfileAuthFormsVisible
 } from './profile-state.js';
 import { loadFavorites, updateFavBadge } from './profile-favorites.js';
-import {
-    renderProfilePhone,
-    renderProfileTg,
-    checkPendingPhoneVerification,
-    checkPendingTgVerification
-} from './profile-contacts.js';
-import { renderProfileDelivery } from './profile-delivery.js';
+
+function callProfileModalFn(fnName, args = [], { skipIfLazyStub = false } = {}) {
+    const fn = getGlobalFn(fnName);
+    if (typeof fn !== 'function') return undefined;
+    if (skipIfLazyStub && fn._isNishaLazyStub) return undefined;
+    return fn(...args);
+}
 
 function escProfileHtml(str) {
     const escFn = getGlobalFn('escapeHtml');
@@ -66,13 +66,13 @@ export function openProfileModal() {
         const storedTg = store ? (store.get('nisha_last_tg') || '') : '';
         const uPhone = (profileState.userProfile?.phone || activeUser.user_metadata?.phone || storedPhone || '').trim();
         const uTg = (profileState.userProfile?.tg || activeUser.user_metadata?.tg || storedTg || '').trim();
-        if (uPhone) renderProfilePhone(uPhone);
-        if (uTg) renderProfileTg(uTg);
+        if (uPhone) callProfileModalFn('renderProfilePhone', [uPhone]);
+        if (uTg) callProfileModalFn('renderProfileTg', [uTg]);
 
         const cachedDelivery = (store ? store.getJSON('nisha_profile_delivery') : null) || {};
         const uFullName = (profileState.userProfile?.full_name || cachedDelivery.full_name || '').trim();
         const uDeliveryAddress = (profileState.userProfile?.delivery_address || cachedDelivery.delivery_address || '').trim();
-        renderProfileDelivery(uFullName, uDeliveryAddress);
+        callProfileModalFn('renderProfileDelivery', [uFullName, uDeliveryAddress]);
     }
 }
 bindWindowFn('openProfileModal', openProfileModal);
@@ -84,9 +84,9 @@ export function resetSignedOutProfileUI() {
     profileState.currentUser = null;
     profileState.userProfile = null;
     profileState.favorites = [];
-    renderProfilePhone('');
-    renderProfileTg('');
-    renderProfileDelivery('', '');
+    callProfileModalFn('renderProfilePhone', [''], { skipIfLazyStub: true });
+    callProfileModalFn('renderProfileTg', [''], { skipIfLazyStub: true });
+    callProfileModalFn('renderProfileDelivery', ['', ''], { skipIfLazyStub: true });
     const syncFields = getGlobalFn('updateProposeAndCheckoutFields');
     if (syncFields) syncFields();
     setProfileAuthFormsVisible(false);
@@ -498,16 +498,16 @@ export async function checkSession() {
 
         if (uPhone) {
             if (store && !store.get('nisha_last_phone')) store.set('nisha_last_phone', uPhone);
-            renderProfilePhone(uPhone);
+            callProfileModalFn('renderProfilePhone', [uPhone]);
         } else {
-            renderProfilePhone('');
+            callProfileModalFn('renderProfilePhone', ['']);
         }
 
         if (uTg) {
             if (store && !store.get('nisha_last_tg')) store.set('nisha_last_tg', uTg);
-            renderProfileTg(uTg);
+            callProfileModalFn('renderProfileTg', [uTg]);
         } else {
-            renderProfileTg('');
+            callProfileModalFn('renderProfileTg', ['']);
         }
 
         const cachedDelivery = (store ? store.getJSON('nisha_profile_delivery') : null) || {};
@@ -517,7 +517,7 @@ export async function checkSession() {
             if (!profileState.userProfile.full_name && uFullName) profileState.userProfile.full_name = uFullName;
             if (!profileState.userProfile.delivery_address && uDeliveryAddress) profileState.userProfile.delivery_address = uDeliveryAddress;
         }
-        renderProfileDelivery(uFullName, uDeliveryAddress);
+        callProfileModalFn('renderProfileDelivery', [uFullName, uDeliveryAddress]);
 
         const syncFields = getGlobalFn('updateProposeAndCheckoutFields');
         if (syncFields) syncFields();
@@ -531,20 +531,20 @@ export async function checkSession() {
         }
 
         if (store && store.get('nisha_pending_otp_phone')) {
-            checkPendingPhoneVerification();
+            callProfileModalFn('checkPendingPhoneVerification');
             if (store.get('nisha_pending_otp_phone') && !window.profileOtpPollInterval) {
                 window.profileOtpPollInterval = setInterval(() => {
                     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-                    checkPendingPhoneVerification();
+                    callProfileModalFn('checkPendingPhoneVerification');
                 }, 2000);
             }
         }
         if (store && store.get('nisha_pending_otp_tg')) {
-            checkPendingTgVerification();
+            callProfileModalFn('checkPendingTgVerification');
             if (store.get('nisha_pending_otp_tg') && !window.profileTgPollInterval) {
                 window.profileTgPollInterval = setInterval(() => {
                     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-                    checkPendingTgVerification();
+                    callProfileModalFn('checkPendingTgVerification');
                 }, 2000);
             }
         }

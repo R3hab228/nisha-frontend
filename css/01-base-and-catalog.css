@@ -783,7 +783,7 @@ label:hover .win95-cb:checked {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.history-section { padding: 20px 30px; background: var(--bg-card); border-top: 2px dashed #333; display: none; margin-top: auto;}
+.history-section { padding: 20px 30px; background: var(--bg-card); border-top: 2px dashed #333; display: none; margin-top: auto; content-visibility: auto; contain-intrinsic-size: auto 260px; }
 .history-title { color: var(--accent-green); font-family: var(--font-mono); font-size: 16px; margin: 0 0 15px 0; font-weight: bold; text-transform: uppercase;}
 .history-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; max-height: 250px; opacity: 1; transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.4s ease; overscroll-behavior-x: contain;}
 .history-grid.collapsed { max-height: 0; opacity: 0; padding-bottom: 0; overflow: hidden; }
@@ -808,7 +808,7 @@ label:hover .win95-cb:checked {
 .cart-checkout-btn:hover { filter: brightness(1.2); }
 .cart-checkout-btn:active { border-style: inset; }
 
-footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc(120px + env(safe-area-inset-bottom, 0px)) 20px; background-color: #000000; border-top: 2px inset var(--border-light); color: var(--text-muted); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 0 !important; line-height: 1.5; font-family: var(--font-main); margin-top: auto; }
+footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc(120px + env(safe-area-inset-bottom, 0px)) 20px; background-color: #000000; border-top: 2px inset var(--border-light); color: var(--text-muted); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 0 !important; line-height: 1.5; font-family: var(--font-main); margin-top: auto; content-visibility: auto; contain-intrinsic-size: auto 280px; }
 .hit-counter { font-family: var(--font-mono); font-size: 14px; color: #aaa; margin-bottom: 5px; }
 .hit-counter span { background-color: #000; color: var(--accent-green); padding: 2px 8px; border: 1px solid #333; letter-spacing: 4px; font-weight: bold; }
 .legal-info { max-width: 800px; color: #777; border-top: 1px dashed #333; padding-top: 15px; }

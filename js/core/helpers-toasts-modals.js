@@ -4,7 +4,13 @@
 
 import { hasAction, invokeAction, registerActions } from './action-registry.js';
 import { escapeAttr, escapeHtml, toCDN } from './helpers-security-media.js';
-import { playNotifySound, playSound } from './sound-effects.js';
+
+function triggerToastSound(actionName, ...args) {
+    const res = invokeAction(actionName, ...args);
+    if (res && typeof res.catch === 'function') {
+        res.catch(() => {});
+    }
+}
 
 let lastToastTime = 0;
 let activeToastState = null;
@@ -201,9 +207,9 @@ export function showToast(message, type = 'success', imgUrl = null, onClick = nu
     toast.innerHTML = html;
     container.appendChild(toast);
     if (type === 'error') {
-        playSound('chord', { kind: 'alert' }).catch(() => {});
+        triggerToastSound('playSound', 'chord', { kind: 'alert' });
     } else {
-        playNotifySound({ kind: 'toast' }).catch(() => {});
+        triggerToastSound('playNotifySound', { kind: 'toast' });
     }
     const msgEl = (typeof toast.querySelector === 'function') ? toast.querySelector('.toast-msg-body') : null;
     const currentState = { message: rawMsgStr, type, count: 1, toast, msgEl, safeMsgHtml, dismiss: null };
@@ -266,7 +272,7 @@ export function showCompactToast({ slot, className, tagText, titleText = '', img
     if (sound !== 'silent') {
         const resolvedSound = sound || (isAlert ? 'chord' : 'notify');
         const resolvedKind = resolvedSound === 'chord' ? 'alert' : 'toast';
-        playSound(resolvedSound, { kind: resolvedKind }).catch(() => {});
+        triggerToastSound('playSound', resolvedSound, { kind: resolvedKind });
     }
 
     const dismiss = attachToastLifecycle(toast, {
@@ -623,7 +629,7 @@ function _displayUnifiedNewItemToast(items) {
     }, dismiss, false);
 
     container.appendChild(toast);
-    playNotifySound({ kind: 'toast' }).catch(() => {});
+    triggerToastSound('playNotifySound', { kind: 'toast' });
     timerId = setTimeout(() => dismiss(false), 3800);
     _activeUnifiedToast = { toast, dismiss };
 }
