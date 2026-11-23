@@ -753,3 +753,154 @@ body.search-lock { overflow: hidden !important; height: 100vh; height: 100dvh; }
     transform: scale(0.96);
 }
 
+/* ==========================================
+   POSTHOG FEATURE FLAGS — WIN95 RETRO UI
+   ========================================== */
+.nisha-ff-promo-banner {
+    background: #001408;
+    border-bottom: 1px solid var(--accent-green);
+    color: var(--accent-green);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    padding: 7px 14px;
+    letter-spacing: 0.6px;
+    line-height: 1.35;
+    position: relative;
+    z-index: 120;
+    text-shadow: 0 0 6px rgba(0, 255, 0, 0.25);
+}
+
+.nisha-drop-lock-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9500;
+    background: rgba(0, 4, 12, 0.96);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+.nisha-drop-lock-window {
+    width: 100%;
+    max-width: 500px;
+    background: #0a0a0a;
+    border: 2px outset var(--border-light);
+    box-shadow: 0 0 40px rgba(0, 255, 0, 0.14);
+    overflow: hidden;
+    font-family: var(--font-mono);
+}
+.nisha-drop-lock-body {
+    padding: 26px 22px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+.nisha-drop-lock-title {
+    margin: 0;
+    color: var(--accent-green);
+    font-size: 18px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.nisha-drop-lock-sub {
+    margin: 0;
+    color: #aaa;
+    font-family: var(--font-main);
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 380px;
+}
+.nisha-drop-lock-timer {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(56px, 1fr));
+    gap: 8px;
+    width: 100%;
+    max-width: 340px;
+    margin: 6px 0;
+}
+.nisha-drop-lock-cell {
+    background: #000;
+    border: 1px solid #2b2b2b;
+    border-top: 2px solid var(--accent-green);
+    padding: 10px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.nisha-drop-lock-num {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+.nisha-drop-lock-lbl {
+    color: #777;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+.nisha-drop-lock-link {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 10px 18px;
+    background: var(--accent-green);
+    color: #000;
+    border: 2px outset #fff;
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+.nisha-drop-lock-link:active {
+    border-style: inset;
+}
+
+.nisha-free-ship-bar {
+    background: #080d0a;
+    border: 1px solid #2a3a2e;
+    border-left: 3px solid var(--accent-green);
+    padding: 8px 10px;
+    margin: 8px 10px 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    box-sizing: border-box;
+}
+.nisha-free-ship-bar--checkout {
+    margin: 8px 0 4px;
+}
+.nisha-free-ship-text {
+    color: #ccc;
+    margin-bottom: 6px;
+    line-height: 1.35;
+}
+.nisha-free-ship-bar.is-unlocked .nisha-free-ship-text {
+    color: var(--accent-green);
+    font-weight: 700;
+}
+.nisha-free-ship-track {
+    width: 100%;
+    height: 6px;
+    background: #111;
+    border: 1px solid #2b2b2b;
+    overflow: hidden;
+    position: relative;
+}
+.nisha-free-ship-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-green);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.35);
+    transition: width 0.25s ease-out;
+}
+
+

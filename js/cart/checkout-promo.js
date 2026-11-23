@@ -93,7 +93,10 @@ export function restoreCheckoutDraft() {
 
         if (draft.paymentMethod && document.getElementById('orderPaymentMethod')) {
             const rawDraftPm = String(draft.paymentMethod).toLowerCase();
-            const isCod = rawDraftPm.includes('200') || rawDraftPm.includes('налож') || rawDraftPm.includes('наклад') || rawDraftPm.includes('delivery') || rawDraftPm.includes('cod');
+            const codAllowed = (typeof window !== 'undefined' && window.analytics && typeof window.analytics.isFeatureEnabled === 'function')
+                ? window.analytics.isFeatureEnabled('enable_cod_payment', true)
+                : true;
+            const isCod = codAllowed && (rawDraftPm.includes('200') || rawDraftPm.includes('налож') || rawDraftPm.includes('наклад') || rawDraftPm.includes('delivery') || rawDraftPm.includes('cod'));
             document.getElementById('orderPaymentMethod').value = isCod ? 'Наложка (предоплата 200грн)' : 'Полная предоплата';
             const txtEl = document.getElementById('paymentSelectedText');
             if (txtEl) {
@@ -193,10 +196,16 @@ function syncPaymentDropdownSelectedState(selectedVal) {
 export function selectPaymentMethod(dbVal, displayLabel) {
     const txt = document.getElementById('paymentSelectedText');
     const input = document.getElementById('orderPaymentMethod');
-    const ruVal = normalizePaymentMethodRu(dbVal);
+    const codAllowed = (typeof window !== 'undefined' && window.analytics && typeof window.analytics.isFeatureEnabled === 'function')
+        ? window.analytics.isFeatureEnabled('enable_cod_payment', true)
+        : true;
+    const rawNormalized = normalizePaymentMethodRu(dbVal);
+    const ruVal = (!codAllowed && rawNormalized.includes('200')) ? 'Полная предоплата' : rawNormalized;
     if (txt) {
         txt.setAttribute('data-i18n', ruVal.includes('200') ? 'checkout.payment_cod' : 'checkout.payment_full');
-        txt.textContent = displayLabel || dbVal;
+        txt.textContent = (!codAllowed && rawNormalized.includes('200'))
+            ? (typeof i18next !== 'undefined' ? i18next.t('checkout.payment_full') : 'Полная предоплата')
+            : (displayLabel || dbVal);
     }
     if (input) input.value = ruVal;
     syncPaymentDropdownSelectedState(ruVal);

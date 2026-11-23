@@ -248,6 +248,9 @@ export function updateCartUI() {
             fab.style.removeProperty('pointer-events');
         }
         if (window.currentPromoDiscount || window.appliedPromoCode) resetPromoState();
+        if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.syncFreeShippingUI === 'function') {
+            window.analytics.syncFreeShippingUI(0);
+        }
         return;
     }
 
@@ -298,6 +301,9 @@ export function updateCartUI() {
     if (totalEl) totalEl.textContent = (typeof formatPrice === 'function') ? formatPrice(total) : (total + ' ' + getCurrency());
 
     renderCartItems();
+    if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.syncFreeShippingUI === 'function') {
+        window.analytics.syncFreeShippingUI(total);
+    }
 }
 
 /**
