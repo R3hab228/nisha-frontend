@@ -223,6 +223,9 @@ export function initGridEventDelegation() {
         const card = e.target.closest('.item-card');
         if (!card) return;
         activateCardSlides(card);
+        if (hasAction('prewarmProductModule')) {
+            invokeAction('prewarmProductModule');
+        }
 
         if (card !== currentTooltipCard) {
             currentTooltipCard = card;
@@ -302,8 +305,10 @@ export function initGridEventDelegation() {
     let startY = 0;
     let clickTimer = null;
     let lastClickedCard = null;
+    let lastPointerType = '';
 
     grid.addEventListener('pointerdown', (e) => {
+        lastPointerType = e.pointerType || '';
         const card = e.target.closest('.item-card');
         if (!card) return;
         const cardId = card.getAttribute('data-id');
@@ -316,6 +321,7 @@ export function initGridEventDelegation() {
     }, { passive: true });
 
     grid.addEventListener('touchstart', (e) => {
+        lastPointerType = 'touch';
         const card = e.target.closest('.item-card');
         if (!card) return;
         const cardId = card.getAttribute('data-id');
@@ -364,6 +370,16 @@ export function initGridEventDelegation() {
         if (!itemId) return;
 
         const DOUBLE_TAP_DELAY_MS = 200;
+        if (lastPointerType === 'mouse') {
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+                clickTimer = null;
+            }
+            lastClickedCard = null;
+            saveCurrentFeedScrollState(itemId);
+            if (typeof openProductModalById === 'function') openProductModalById(itemId);
+            return;
+        }
         if (clickTimer === null || lastClickedCard !== card) {
             if (clickTimer) clearTimeout(clickTimer);
             lastClickedCard = card;

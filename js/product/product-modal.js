@@ -261,17 +261,6 @@ export function openProductModal(item) {
     const titleEl = document.getElementById('modalItemTitle');
     if (titleEl) titleEl.textContent = item.name;
 
-    if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackProductView === 'function') {
-        window.analytics.trackProductView(item);
-    } else if (typeof window !== 'undefined' && window.ttq) {
-        ttq.track('ViewContent', {
-            content_id: item.id,
-            content_name: item.name,
-            value: item.price,
-            currency: 'UAH'
-        });
-    }
-
     const modalStar = document.getElementById('modalFavStar');
     const favs = getFavs();
     if (modalStar) {
@@ -467,7 +456,6 @@ export function openProductModal(item) {
     }
 
     renderModalSlider(item);
-    renderSimilarItems(item);
     renderTrustBadges(item);
 
     const modalEl = document.getElementById('productModal');
@@ -570,7 +558,28 @@ export function openProductModal(item) {
     }
 
     if (sb) loadItemQuestions(item.id);
-    updateProductSeoAndOg(item, cleanDesc);
+
+    const runDeferredModalWork = () => {
+        const activeNow = getActiveOpenedItem();
+        if (activeNow && String(activeNow.id) !== String(item.id)) return;
+        renderSimilarItems(item);
+        updateProductSeoAndOg(item, cleanDesc);
+        if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackProductView === 'function') {
+            window.analytics.trackProductView(item);
+        } else if (typeof window !== 'undefined' && window.ttq) {
+            ttq.track('ViewContent', {
+                content_id: item.id,
+                content_name: item.name,
+                value: item.price,
+                currency: 'UAH'
+            });
+        }
+    };
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(runDeferredModalWork);
+    } else {
+        runDeferredModalWork();
+    }
 }
 
 /**

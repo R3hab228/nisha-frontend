@@ -284,10 +284,14 @@ const preloadSecondaryModules = () => {
     loadProductModule();
 };
 
+registerAction('prewarmProductModule', () => {
+    loadProductModule();
+});
+
 if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-    window.requestIdleCallback(preloadSecondaryModules, { timeout: 3500 });
+    window.requestIdleCallback(preloadSecondaryModules, { timeout: 900 });
 } else {
-    setTimeout(preloadSecondaryModules, 2000);
+    setTimeout(preloadSecondaryModules, 500);
 }
 
 export {
