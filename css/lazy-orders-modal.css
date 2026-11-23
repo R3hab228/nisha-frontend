@@ -439,10 +439,10 @@
     --np-accent: var(--accent-green);
     --np-progress: 6%;
     position: relative;
-    background: linear-gradient(180deg, rgba(19, 23, 20, 0.94), rgba(10, 12, 11, 0.98));
-    border: 1px solid #262c28;
-    border-radius: 6px;
-    padding: 10px 10px 9px;
+    background: #060606;
+    border: 1px solid #2b2b2b;
+    border-radius: 0;
+    padding: 9px 10px 8px;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -453,7 +453,7 @@
 .np-tracker[data-stage="created"],
 .np-tracker[data-stage="not_found"],
 .np-tracker[data-stage="pending"] {
-    --np-accent: #ffcc00;
+    --np-accent: var(--accent-yellow, #ffcc00);
 }
 
 .np-tracker[data-stage="in_transit"] {
@@ -475,23 +475,25 @@
     justify-content: space-between;
     gap: 8px;
     flex-wrap: wrap;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #222;
 }
 
 .np-track-status-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     min-width: 0;
     flex: 1 1 auto;
 }
 
 .np-live-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 0;
     flex-shrink: 0;
     background: var(--np-accent);
-    box-shadow: 0 0 8px var(--np-accent);
+    box-shadow: 0 0 6px var(--np-accent);
 }
 
 .np-tracker[data-moving="true"] .np-live-dot,
@@ -500,10 +502,12 @@
 }
 
 .np-track-status-text {
-    color: #f0f2f1;
+    color: var(--np-accent);
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: bold;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
     line-height: 1.3;
     word-break: break-word;
 }
@@ -517,10 +521,10 @@
 }
 
 .np-track-route {
-    color: #9ba6a0;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid #2b312d;
-    border-radius: 3px;
+    color: #9a9a9a;
+    background: #0d0d0d;
+    border: 1px solid #2c2c2c;
+    border-radius: 0;
     padding: 2px 6px;
     font-family: var(--font-mono);
     font-size: 10px;
@@ -538,10 +542,10 @@
     width: 22px;
     height: 22px;
     padding: 0;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid #303733;
-    color: #9ba6a0;
+    border-radius: 0;
+    background: #0d0d0d;
+    border: 1px solid #333;
+    color: #9a9a9a;
     cursor: pointer;
     transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
 }
@@ -549,7 +553,7 @@
 .np-track-refresh-btn:hover {
     border-color: var(--np-accent);
     color: var(--np-accent);
-    background: rgba(0, 255, 0, 0.06);
+    background: #121212;
 }
 
 .np-track-refresh-btn:active {
@@ -562,7 +566,7 @@
 
 .np-track-stage {
     position: relative;
-    padding: 25px 22px 4px;
+    padding: 28px 22px 4px;
     box-sizing: border-box;
     user-select: none;
 }
@@ -578,23 +582,22 @@
 .np-track-rail {
     position: relative;
     width: 100%;
-    height: 6px;
-    border-radius: 999px;
-    background: #171a18;
-    border: 1px solid #2c332f;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.75);
+    height: 4px;
+    border-radius: 0;
+    background: #141414;
+    border: 1px solid #2c2c2c;
 }
 
 .np-track-rail::before {
     content: '';
     position: absolute;
-    inset: 2px 3px;
+    inset: 1px 2px;
     background: repeating-linear-gradient(
         90deg,
-        rgba(255, 255, 255, 0.18) 0 5px,
-        transparent 5px 10px
+        rgba(255, 255, 255, 0.2) 0 4px,
+        transparent 4px 8px
     );
-    border-radius: 999px;
+    border-radius: 0;
     pointer-events: none;
 }
 
@@ -605,91 +608,91 @@
     height: calc(100% + 2px);
     width: calc(var(--np-progress, 6%) + 1px);
     max-width: calc(100% + 2px);
-    border-radius: 999px;
-    background: linear-gradient(90deg, rgba(0, 175, 80, 0.72), var(--np-accent));
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.24);
+    border-radius: 0;
+    background: var(--np-accent);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.25);
     transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
 }
 
 .np-tracker[data-stage="in_transit"] .np-track-fill {
     background: linear-gradient(
         90deg,
-        rgba(0, 200, 110, 0.78) 0%,
-        var(--np-accent) 55%,
-        rgba(175, 255, 255, 0.95) 75%,
-        var(--np-accent) 100%
+        var(--accent-green) 0%,
+        #00e5ff 55%,
+        #ffffff 75%,
+        #00e5ff 100%
     );
     background-size: 200% 100%;
     animation: npRoadFlow 2.2s linear infinite;
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
 }
 
 .np-tracker[data-stage="created"] .np-track-fill,
 .np-tracker[data-stage="not_found"] .np-track-fill,
 .np-tracker[data-stage="pending"] .np-track-fill {
-    background: linear-gradient(90deg, rgba(255, 180, 0, 0.65), #ffcc00);
-    box-shadow: 0 0 8px rgba(255, 204, 0, 0.25);
+    background: var(--accent-yellow, #ffcc00);
+    box-shadow: 0 0 6px rgba(255, 204, 0, 0.28);
 }
 
 .np-tracker[data-stage="returned"] .np-track-fill {
-    background: linear-gradient(90deg, #992222, var(--accent-red));
-    box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+    background: var(--accent-red);
+    box-shadow: 0 0 8px rgba(255, 68, 68, 0.35);
 }
 
 .np-track-dot {
     position: absolute;
     top: 50%;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 0;
     transform: translate(-50%, -50%);
-    background: #111412;
-    border: 1.5px solid #444b47;
+    background: #0a0a0a;
+    border: 1px solid #444;
     z-index: 2;
     transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .np-track-dot.is-done {
     background: var(--np-accent);
-    border-color: #0d120f;
+    border-color: var(--np-accent);
     box-shadow: 0 0 6px rgba(0, 255, 0, 0.35);
 }
 
 .np-track-dot.is-current {
-    width: 12px;
-    height: 12px;
-    background: #0c100e;
+    width: 10px;
+    height: 10px;
+    background: #050505;
     border: 2px solid var(--np-accent);
-    box-shadow: 0 0 0 3px rgba(0, 255, 0, 0.14);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.45);
 }
 
 .np-tracker[data-stage="in_transit"] .np-track-dot.is-current {
-    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.18);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
 }
 
 .np-tracker[data-stage="created"] .np-track-dot.is-current,
 .np-tracker[data-stage="pending"] .np-track-dot.is-current {
-    box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.18);
+    box-shadow: 0 0 8px rgba(255, 204, 0, 0.45);
 }
 
 .np-track-dot.is-return.is-done,
 .np-track-dot.is-return.is-current {
     background: var(--accent-red);
-    border-color: #200909;
-    box-shadow: 0 0 8px rgba(255, 68, 68, 0.45);
+    border-color: var(--accent-red);
+    box-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
 }
 
 .np-track-truck {
     position: absolute;
     left: var(--np-progress, 6%);
-    bottom: 6px;
+    bottom: 9px;
     transform: translateX(-50%);
     color: var(--np-accent);
     z-index: 3;
     pointer-events: none;
     line-height: 0;
     transition: left 0.95s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s ease;
-    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.85));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
 }
 
 .np-truck-svg {
@@ -735,9 +738,11 @@
 
 .np-step-label {
     font-family: var(--font-mono);
-    font-size: 9.5px;
+    font-size: 9px;
     line-height: 1.2;
-    color: #606763;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #5d5d5d;
     text-align: center;
     word-break: break-word;
     transition: color 0.25s ease;
@@ -752,7 +757,7 @@
 }
 
 .np-step-label.is-done {
-    color: #a8b6ae;
+    color: #a8a8a8;
 }
 
 .np-step-label.is-active {
@@ -769,8 +774,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-top: 2px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-top: 4px;
+    border-top: 1px dashed #222;
 }
 
 .np-track-date {

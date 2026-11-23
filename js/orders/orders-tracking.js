@@ -253,35 +253,35 @@ export function buildDeliveryTruckSvg() {
     return `
         <svg class="np-truck-svg" viewBox="0 0 64 34" width="44" height="24" fill="none" aria-hidden="true">
             <g class="np-truck-speed-lines">
-                <line x1="1" y1="11" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7" />
-                <line x1="0" y1="15.5" x2="5" y2="15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.9" />
-                <line x1="2" y1="20" x2="6" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+                <line x1="0" y1="11" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" opacity="0.75" />
+                <line x1="1" y1="15.5" x2="6" y2="15.5" stroke="currentColor" stroke-width="1.5" opacity="0.95" />
+                <line x1="2" y1="20" x2="6" y2="20" stroke="currentColor" stroke-width="1.5" opacity="0.65" />
             </g>
-            <ellipse cx="34" cy="30.8" rx="22" ry="1.8" fill="rgba(0,0,0,0.65)" />
-            <polygon class="np-truck-beam" points="58,18.5 64,15.5 64,23.5 58,21.5" fill="currentColor" opacity="0.22" />
+            <rect x="10" y="30" width="46" height="1.5" fill="rgba(0,0,0,0.75)" />
+            <polygon class="np-truck-beam" points="58,18.5 64,15 64,23.5 58,21.5" fill="currentColor" opacity="0.25" />
             <g class="np-truck-chassis">
-                <path d="M8 7C8 5.89543 8.89543 5 10 5H37C38.1046 5 39 5.89543 39 7V24H8V7Z" fill="#141816" stroke="currentColor" stroke-width="1.6" />
-                <line x1="12" y1="10" x2="35" y2="10" stroke="currentColor" stroke-width="1" opacity="0.32" />
-                <line x1="12" y1="14.5" x2="29" y2="14.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.75" />
-                <line x1="12" y1="18.5" x2="23" y2="18.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5" />
-                <rect x="31.5" y="13.5" width="4.2" height="5.2" rx="0.8" stroke="currentColor" stroke-width="1" opacity="0.55" />
-                <path d="M39 10H48.2C49.6 10 50.9 10.65 51.75 11.75L56.5 17.8C57.15 18.62 57.5 19.63 57.5 20.68V24H39V10Z" fill="#181d1a" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
-                <path d="M41.5 12H47.6C48.5 12 49.4 12.45 50 13.25L53.2 17.4H41.5V12Z" fill="#09110d" stroke="currentColor" stroke-width="1.1" opacity="0.9" />
-                <line x1="42.5" y1="13.2" x2="46.2" y2="16.2" stroke="#ffffff" stroke-width="0.9" stroke-linecap="round" opacity="0.35" />
-                <rect x="55" y="19" width="2.5" height="2.4" rx="0.7" fill="#fff6b3" />
-                <line x1="7" y1="24" x2="58.5" y2="24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <rect x="8" y="5" width="31" height="19" fill="#0a0a0a" stroke="currentColor" stroke-width="1.5" />
+                <line x1="11" y1="9.5" x2="36" y2="9.5" stroke="currentColor" stroke-width="1" opacity="0.3" />
+                <line x1="11" y1="14" x2="28" y2="14" stroke="currentColor" stroke-width="1.4" opacity="0.8" />
+                <line x1="11" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="1.2" opacity="0.5" />
+                <rect x="31" y="13" width="5" height="5" stroke="currentColor" stroke-width="1" opacity="0.6" />
+                <polygon points="39,9.5 49,9.5 57.5,17.5 57.5,24 39,24" fill="#0e0e0e" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter" />
+                <polygon points="41.5,11.8 48,11.8 53.5,17.2 41.5,17.2" fill="#050505" stroke="currentColor" stroke-width="1.1" opacity="0.9" />
+                <line x1="42.5" y1="13" x2="46" y2="16" stroke="#ffffff" stroke-width="0.9" opacity="0.35" />
+                <rect x="55.5" y="19" width="2.5" height="2.4" fill="#fff6b3" />
+                <line x1="7" y1="24" x2="58.5" y2="24" stroke="currentColor" stroke-width="1.5" />
             </g>
             <g class="np-truck-wheel np-truck-wheel-rear" transform="translate(17 25.5)">
-                <circle cx="0" cy="0" r="4.3" fill="#080808" stroke="currentColor" stroke-width="1.6" />
-                <circle cx="0" cy="0" r="1.6" fill="currentColor" />
-                <line x1="-2.2" y1="0" x2="2.2" y2="0" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
-                <line x1="0" y1="-2.2" x2="0" y2="2.2" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+                <circle cx="0" cy="0" r="4.3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
+                <rect x="-1.4" y="-1.4" width="2.8" height="2.8" fill="currentColor" />
+                <line x1="-2.3" y1="0" x2="2.3" y2="0" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+                <line x1="0" y1="-2.3" x2="0" y2="2.3" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
             </g>
             <g class="np-truck-wheel np-truck-wheel-front" transform="translate(49 25.5)">
-                <circle cx="0" cy="0" r="4.3" fill="#080808" stroke="currentColor" stroke-width="1.6" />
-                <circle cx="0" cy="0" r="1.6" fill="currentColor" />
-                <line x1="-2.2" y1="0" x2="2.2" y2="0" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
-                <line x1="0" y1="-2.2" x2="0" y2="2.2" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+                <circle cx="0" cy="0" r="4.3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
+                <rect x="-1.4" y="-1.4" width="2.8" height="2.8" fill="currentColor" />
+                <line x1="-2.3" y1="0" x2="2.3" y2="0" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+                <line x1="0" y1="-2.3" x2="0" y2="2.3" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
             </g>
         </svg>
     `.trim();
