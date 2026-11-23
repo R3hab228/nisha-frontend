@@ -420,3 +420,419 @@
     padding: 10px 18px;
     font-size: 12px;
 }
+
+/* ==========================================
+   NOVA POSHTA LIVE SVG TRUCK TRACKING BAR
+   ========================================== */
+
+.order-ttn-pending {
+    gap: 10px;
+}
+
+.order-ttn-pending-text {
+    color: #8a8f8c;
+    font-size: 12px;
+    font-family: var(--font-mono);
+}
+
+.np-tracker {
+    --np-accent: var(--accent-green);
+    --np-progress: 6%;
+    position: relative;
+    background: linear-gradient(180deg, rgba(19, 23, 20, 0.94), rgba(10, 12, 11, 0.98));
+    border: 1px solid #262c28;
+    border-radius: 6px;
+    padding: 10px 10px 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.np-tracker[data-stage="created"],
+.np-tracker[data-stage="not_found"],
+.np-tracker[data-stage="pending"] {
+    --np-accent: #ffcc00;
+}
+
+.np-tracker[data-stage="in_transit"] {
+    --np-accent: #00e5ff;
+}
+
+.np-tracker[data-stage="arrived"],
+.np-tracker[data-stage="delivered"] {
+    --np-accent: var(--accent-green);
+}
+
+.np-tracker[data-stage="returned"] {
+    --np-accent: var(--accent-red);
+}
+
+.np-track-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.np-track-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.np-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--np-accent);
+    box-shadow: 0 0 8px var(--np-accent);
+}
+
+.np-tracker[data-moving="true"] .np-live-dot,
+.np-tracker[data-stage="arrived"] .np-live-dot {
+    animation: npLivePulse 1.8s ease-in-out infinite;
+}
+
+.np-track-status-text {
+    color: #f0f2f1;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.np-track-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.np-track-route {
+    color: #9ba6a0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid #2b312d;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.3;
+    max-width: 175px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.np-track-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid #303733;
+    color: #9ba6a0;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+
+.np-track-refresh-btn:hover {
+    border-color: var(--np-accent);
+    color: var(--np-accent);
+    background: rgba(0, 255, 0, 0.06);
+}
+
+.np-track-refresh-btn:active {
+    transform: scale(0.92);
+}
+
+.np-track-refresh-btn.is-spinning svg {
+    animation: npWheelSpin 0.65s linear infinite;
+}
+
+.np-track-stage {
+    position: relative;
+    padding: 25px 22px 4px;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.np-track-rail-wrap {
+    position: relative;
+    width: 100%;
+    height: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.np-track-rail {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: #171a18;
+    border: 1px solid #2c332f;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+.np-track-rail::before {
+    content: '';
+    position: absolute;
+    inset: 2px 3px;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.18) 0 5px,
+        transparent 5px 10px
+    );
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+.np-track-fill {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    height: calc(100% + 2px);
+    width: calc(var(--np-progress, 6%) + 1px);
+    max-width: calc(100% + 2px);
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(0, 175, 80, 0.72), var(--np-accent));
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.24);
+    transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+}
+
+.np-tracker[data-stage="in_transit"] .np-track-fill {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 200, 110, 0.78) 0%,
+        var(--np-accent) 55%,
+        rgba(175, 255, 255, 0.95) 75%,
+        var(--np-accent) 100%
+    );
+    background-size: 200% 100%;
+    animation: npRoadFlow 2.2s linear infinite;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+.np-tracker[data-stage="created"] .np-track-fill,
+.np-tracker[data-stage="not_found"] .np-track-fill,
+.np-tracker[data-stage="pending"] .np-track-fill {
+    background: linear-gradient(90deg, rgba(255, 180, 0, 0.65), #ffcc00);
+    box-shadow: 0 0 8px rgba(255, 204, 0, 0.25);
+}
+
+.np-tracker[data-stage="returned"] .np-track-fill {
+    background: linear-gradient(90deg, #992222, var(--accent-red));
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+}
+
+.np-track-dot {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: #111412;
+    border: 1.5px solid #444b47;
+    z-index: 2;
+    transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.np-track-dot.is-done {
+    background: var(--np-accent);
+    border-color: #0d120f;
+    box-shadow: 0 0 6px rgba(0, 255, 0, 0.35);
+}
+
+.np-track-dot.is-current {
+    width: 12px;
+    height: 12px;
+    background: #0c100e;
+    border: 2px solid var(--np-accent);
+    box-shadow: 0 0 0 3px rgba(0, 255, 0, 0.14);
+}
+
+.np-tracker[data-stage="in_transit"] .np-track-dot.is-current {
+    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.18);
+}
+
+.np-tracker[data-stage="created"] .np-track-dot.is-current,
+.np-tracker[data-stage="pending"] .np-track-dot.is-current {
+    box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.18);
+}
+
+.np-track-dot.is-return.is-done,
+.np-track-dot.is-return.is-current {
+    background: var(--accent-red);
+    border-color: #200909;
+    box-shadow: 0 0 8px rgba(255, 68, 68, 0.45);
+}
+
+.np-track-truck {
+    position: absolute;
+    left: var(--np-progress, 6%);
+    bottom: 6px;
+    transform: translateX(-50%);
+    color: var(--np-accent);
+    z-index: 3;
+    pointer-events: none;
+    line-height: 0;
+    transition: left 0.95s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s ease;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.85));
+}
+
+.np-truck-svg {
+    display: block;
+    width: 44px;
+    height: 24px;
+    overflow: visible;
+}
+
+.np-truck-speed-lines,
+.np-truck-beam {
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.np-tracker[data-moving="true"] .np-truck-speed-lines {
+    opacity: 1;
+    animation: npSpeedStreak 0.9s ease-in-out infinite;
+}
+
+.np-tracker[data-moving="true"] .np-truck-beam {
+    opacity: 0.32;
+}
+
+.np-tracker[data-moving="true"] .np-truck-chassis {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: npTruckBounce 0.95s ease-in-out infinite;
+}
+
+.np-tracker[data-moving="true"] .np-truck-wheel {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: npWheelSpin 0.85s linear infinite;
+}
+
+.np-track-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    align-items: start;
+}
+
+.np-step-label {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    line-height: 1.2;
+    color: #606763;
+    text-align: center;
+    word-break: break-word;
+    transition: color 0.25s ease;
+}
+
+.np-step-label[data-step-index="0"] {
+    text-align: left;
+}
+
+.np-step-label[data-step-index="3"] {
+    text-align: right;
+}
+
+.np-step-label.is-done {
+    color: #a8b6ae;
+}
+
+.np-step-label.is-active {
+    color: var(--np-accent);
+    font-weight: bold;
+}
+
+.np-step-label.is-return {
+    color: var(--accent-red);
+    font-weight: bold;
+}
+
+.np-track-sub {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-top: 2px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.np-track-date {
+    color: #8f9a94;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.3;
+}
+
+@keyframes npRoadFlow {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+@keyframes npTruckBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1.2px); }
+}
+
+@keyframes npWheelSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes npSpeedStreak {
+    0%, 100% { opacity: 0.45; transform: translateX(0); }
+    50% { opacity: 0.95; transform: translateX(-2px); }
+}
+
+@keyframes npLivePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.8); }
+}
+
+@media (max-width: 480px) {
+    .np-tracker {
+        padding: 9px 8px 8px;
+    }
+    .np-track-stage {
+        padding: 24px 18px 4px;
+    }
+    .np-truck-svg {
+        width: 40px;
+        height: 22px;
+    }
+    .np-track-route {
+        max-width: 135px;
+    }
+    .np-step-label {
+        font-size: 9px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .np-track-fill,
+    .np-track-truck,
+    .np-live-dot,
+    .np-truck-speed-lines,
+    .np-truck-chassis,
+    .np-truck-wheel,
+    .np-track-refresh-btn.is-spinning svg {
+        animation: none !important;
+        transition: none !important;
+    }
+}

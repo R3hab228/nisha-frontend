@@ -106,7 +106,8 @@ const loadOrdersModule = registerLazyModuleBridge(
         ['openOrdersModal', 'open-orders'],
         ['fetchMyOrders', 'fetch-my-orders'],
         ['switchOrderTab', 'switch-order-tab'],
-        ['copyTTN', 'copy-ttn']
+        ['copyTTN', 'copy-ttn'],
+        ['refreshOrderTracking', 'refresh-ttn-track']
     ]
 );
 

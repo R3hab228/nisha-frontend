@@ -324,7 +324,22 @@
       "status_accepted": "ПРИЙНЯТО",
       "err_otp_unverified": "Номер телефону не підтверджено через OTP або профіль",
       "delete_selected_title": "Видалити вибрані замовлення",
-      "deleted_selected": "Видалено замовлень: {{count}}"
+      "deleted_selected": "Видалено замовлень: {{count}}",
+      "track_step_created": "Оформлено",
+      "track_step_transit": "В дорозі",
+      "track_step_arrived": "У відділенні",
+      "track_step_postomat": "У поштоматі",
+      "track_step_delivered": "Отримано",
+      "track_step_returned": "Повернення",
+      "track_status_created": "Очікує передачі НП",
+      "track_status_transit": "Посилка прямує до вас",
+      "track_status_arrived": "Прибула, чекає отримання",
+      "track_status_delivered": "Посилку успішно отримано",
+      "track_status_returned": "Оформлено повернення",
+      "track_status_checking": "Оновлення статусу НП...",
+      "track_eta_prefix": "Орієнтовно:",
+      "track_delivered_prefix": "Отримано:",
+      "track_refresh_title": "Оновити статус доставки"
     },
     "reviews_modal": {
       "desc": "Тут зібрані відгуки реальних покупців. Завершені замовлення підтверджені системою. Ніякого скаму.",

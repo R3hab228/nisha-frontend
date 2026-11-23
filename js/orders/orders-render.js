@@ -27,6 +27,7 @@ import {
     toggleOrderSelection
 } from './orders-state.js';
 import { ensureOrderImagesLoaded, fetchMyOrders, getOrderItemImage } from './orders-fetch.js';
+import { buildOrderTrackingBarHtml, hydrateVisibleOrderTracking } from './orders-tracking.js';
 
 const ORDER_TAB_ORDER = ['accepted', 'shipped', 'cancelled'];
 
@@ -594,13 +595,15 @@ export function renderFilteredOrders() {
                                      </a>
                                  </div>
                              </div>
+                             ${buildOrderTrackingBarHtml(ttn, order.status)}
                              <div class="order-ttn-barcode">
                                  <svg class="barcode-svg" data-ttn="${safeTtnAttr}"></svg>
                              </div>
                            </div>`;
                 }).join('');
             } else {
-                ttnHtml = `<div class="order-ttn order-ttn-pending"><span style="color:#777; font-size:12px; font-family:var(--font-mono);">${typeof i18next !== 'undefined' ? i18next.t('orders_modal.ttn_pending', { defaultValue: 'ТТН: Ожидается генерация...' }) : 'ТТН: Ожидается генерация...'}</span></div>`;
+                const pendingText = typeof i18next !== 'undefined' ? i18next.t('orders_modal.ttn_pending', { defaultValue: 'ТТН: Ожидается генерация...' }) : 'ТТН: Ожидается генерация...';
+                ttnHtml = `<div class="order-ttn order-ttn-pending"><span class="order-ttn-pending-text">${escHtml(pendingText)}</span>${buildOrderTrackingBarHtml('', order.status)}</div>`;
             }
         }
 
@@ -661,6 +664,7 @@ export function renderFilteredOrders() {
     listArea.innerHTML = cardsHtml;
 
     ensureOrderImagesLoaded();
+    hydrateVisibleOrderTracking().catch(() => {});
 
     const drawBarcodes = () => {
         const barcodeFn = (typeof window !== 'undefined' && window.JsBarcode) || (typeof JsBarcode !== 'undefined' ? JsBarcode : null);

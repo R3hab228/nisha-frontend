@@ -324,7 +324,22 @@
       "status_accepted": "ACCEPTED",
       "err_otp_unverified": "Phone number is not verified via OTP or profile",
       "delete_selected_title": "Delete selected orders",
-      "deleted_selected": "Deleted orders: {{count}}"
+      "deleted_selected": "Deleted orders: {{count}}",
+      "track_step_created": "Created",
+      "track_step_transit": "In transit",
+      "track_step_arrived": "At branch",
+      "track_step_postomat": "At locker",
+      "track_step_delivered": "Delivered",
+      "track_step_returned": "Returned",
+      "track_status_created": "Awaiting dispatch",
+      "track_status_transit": "Parcel on the way",
+      "track_status_arrived": "Ready for pickup",
+      "track_status_delivered": "Parcel delivered",
+      "track_status_returned": "Return initiated",
+      "track_status_checking": "Checking live status...",
+      "track_eta_prefix": "Est. arrival:",
+      "track_delivered_prefix": "Delivered:",
+      "track_refresh_title": "Refresh delivery status"
     },
     "reviews_modal": {
       "desc": "Here are reviews from real buyers. Completed orders are verified by the system. No scams.",

@@ -34,9 +34,18 @@ import {
     updateOrderTabCounters
 } from './orders-render.js';
 
+import {
+    buildDeliveryTruckSvg,
+    buildOrderTrackingBarHtml,
+    hydrateVisibleOrderTracking,
+    refreshOrderTracking,
+    resolveTrackingDisplayState
+} from './orders-tracking.js';
+
 export * from './orders-state.js';
 export * from './orders-fetch.js';
 export * from './orders-render.js';
+export * from './orders-tracking.js';
 
 const ORDER_EXPORTS = {
     formatOrderDate,
@@ -58,7 +67,12 @@ const ORDER_EXPORTS = {
     deleteSelectedOrders,
     copyTTN,
     syncOrdersSelectionToolbar,
-    renderFilteredOrders
+    renderFilteredOrders,
+    buildDeliveryTruckSvg,
+    buildOrderTrackingBarHtml,
+    hydrateVisibleOrderTracking,
+    refreshOrderTracking,
+    resolveTrackingDisplayState
 };
 
 Object.entries(ORDER_EXPORTS).forEach(([name, fn]) => {

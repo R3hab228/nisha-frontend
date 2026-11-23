@@ -324,7 +324,22 @@
       "status_accepted": "ПРИНЯТ",
       "err_otp_unverified": "Номер телефона не подтвержден через OTP или профиль",
       "delete_selected_title": "Удалить выбранные заказы",
-      "deleted_selected": "Удалено заказов: {{count}}"
+      "deleted_selected": "Удалено заказов: {{count}}",
+      "track_step_created": "Оформлен",
+      "track_step_transit": "В пути",
+      "track_step_arrived": "В отделении",
+      "track_step_postomat": "В почтомате",
+      "track_step_delivered": "Получена",
+      "track_step_returned": "Возврат",
+      "track_status_created": "Ожидает передачи НП",
+      "track_status_transit": "Посылка в пути",
+      "track_status_arrived": "Прибыла, ждёт получения",
+      "track_status_delivered": "Посылка успешно получена",
+      "track_status_returned": "Оформлен возврат",
+      "track_status_checking": "Обновление статуса НП...",
+      "track_eta_prefix": "Ожидаемо:",
+      "track_delivered_prefix": "Получена:",
+      "track_refresh_title": "Обновить статус доставки"
     },
     "reviews_modal": {
       "desc": "Здесь собраны отзывы реальных покупателей. Завершенные заказы подтверждены системой. Никакого скама.",

@@ -206,7 +206,14 @@ export const escHtml = (v) => {
 
 export const escAttr = (v) => {
     const fn = resolveAction('escapeAttr');
-    return fn ? fn(v) : String(v || '').replaceAll('"', '&quot;');
+    return fn
+        ? fn(v)
+        : String(v || '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;');
 };
 
 export const fmtPrice = (v) => {

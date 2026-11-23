@@ -215,6 +215,12 @@ export function handleDelegatedAction(e) {
             if (ttn) invokeCompatAction('copy-ttn', 'copyTTN', ttn, actionEl);
             break;
         }
+        case 'refresh-ttn-track': {
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            const ttn = actionEl.getAttribute('data-ttn');
+            if (ttn) invokeCompatAction('refresh-ttn-track', 'refreshOrderTracking', ttn, actionEl);
+            break;
+        }
         case 'prompt-order-review': {
             invokeAction('closeModal', 'ordersModal');
             invokeCompatAction(
