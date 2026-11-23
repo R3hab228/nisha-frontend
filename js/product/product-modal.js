@@ -176,10 +176,14 @@ export async function openProductModalById(itemId) {
                 return;
             }
             if (hadBargain !== nowHasBargain) {
+                const isBargainFlagEnabled = (typeof window !== 'undefined' && window.analytics && typeof window.analytics.isFeatureEnabled === 'function')
+                    ? window.analytics.isFeatureEnabled('enable_bargain', true)
+                    : true;
+                const showBargain = nowHasBargain && isBargainFlagEnabled && mergedItem.status !== 'sold';
                 const offerWrapper = document.getElementById('offerPriceWrapper');
                 const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
-                if (offerWrapper) offerWrapper.style.display = nowHasBargain ? 'block' : 'none';
-                if (offerPriceBtn) offerPriceBtn.style.display = nowHasBargain ? 'block' : 'none';
+                if (offerWrapper) offerWrapper.style.display = showBargain ? 'block' : 'none';
+                if (offerPriceBtn) offerPriceBtn.style.display = showBargain ? 'flex' : 'none';
             }
 
             if (fullItem.description && String(active.description || '') !== String(fullItem.description || '')) {
