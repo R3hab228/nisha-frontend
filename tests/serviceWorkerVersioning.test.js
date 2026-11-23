@@ -117,4 +117,20 @@ describe('Service Worker & PWA Cache Automation', () => {
         expect(content).toContain('fallbackLink.onerror');
         expect(content).toContain('Unable to preload CSS');
     });
+
+    it('sw.js serves brand push icons Cache-First from persistent IMAGE_CACHE and prewarms icons in push handler', () => {
+        for (const swFile of [rootSwPath, publicSwPath]) {
+            const content = readFileSync(swFile, 'utf8');
+            expect(content).toContain('PUSH_ICON_URLS');
+            expect(content).toContain('const isBrandIcon =');
+            expect(content).toContain('ensurePushAssetCached(options.icon)');
+            expect(content).toContain('ensurePushAssetCached(options.badge)');
+        }
+
+        const vercelConfig = JSON.parse(readFileSync(resolve(process.cwd(), 'vercel.json'), 'utf8'));
+        const iconRule = vercelConfig.headers.find(h => h.source === '/(icon.*|badge.*)');
+        const cacheControl = iconRule?.headers.find(h => h.key === 'Cache-Control')?.value || '';
+        expect(cacheControl).toContain('max-age=86400');
+        expect(cacheControl).not.toContain('max-age=0');
+    });
 });

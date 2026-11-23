@@ -54,17 +54,33 @@ self.addEventListener('message', event => {
     }
 });
 
+const PUSH_ICON_URLS = [
+    '/badge.png?v=11',
+    '/icon-192.png?v=11',
+    '/icon-512.png?v=11',
+    '/icon.png?v=11'
+];
+
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            return Promise.allSettled(
-                STATIC_URLS.map(url =>
-                    cache.add(url).catch(err => {
-                        console.warn('[SW] Ошибка предварительного кэширования ресурса:', url, err);
-                    })
-                )
-            );
-        })
+        Promise.all([
+            caches.open(CACHE_NAME).then(cache => {
+                return Promise.allSettled(
+                    STATIC_URLS.map(url =>
+                        cache.add(url).catch(err => {
+                            console.warn('[SW] Ошибка предварительного кэширования ресурса:', url, err);
+                        })
+                    )
+                );
+            }),
+            caches.open(IMAGE_CACHE).then(imgCache => {
+                return Promise.allSettled(
+                    PUSH_ICON_URLS.map(url =>
+                        imgCache.add(url).catch(() => {})
+                    )
+                );
+            }).catch(() => {})
+        ])
     );
 });
 
@@ -225,6 +241,38 @@ self.addEventListener('fetch', event => {
         return; 
     }
 
+    // --- БРЕНДОВЫЕ ИКОНКИ УВЕДОМЛЕНИЙ И PWA (строгий Cache-First в постоянном IMAGE_CACHE) ---
+    const isBrandIcon = isSameOrigin && /^\/(icon[^/]*|badge[^/]*|cables\.svg)$/i.test(url.pathname);
+    if (isBrandIcon) {
+        event.respondWith(
+            (async () => {
+                const isValidIconRes = (res) => Boolean(
+                    res &&
+                    res.status === 200 &&
+                    ((res.headers.get('content-type') || '').startsWith('image/') || url.pathname.endsWith('.ico'))
+                );
+                const cachedExact = await caches.match(event.request);
+                if (isValidIconRes(cachedExact)) {
+                    return cachedExact;
+                }
+                try {
+                    const networkResponse = await fetch(event.request);
+                    if (isValidIconRes(networkResponse)) {
+                        const clone = networkResponse.clone();
+                        caches.open(IMAGE_CACHE).then(c => c.put(event.request, clone)).catch(() => {});
+                        return networkResponse;
+                    }
+                } catch (_) {}
+                const fallbackAnyVersion = await caches.match(event.request, { ignoreSearch: true });
+                if (isValidIconRes(fallbackAnyVersion)) {
+                    return fallbackAnyVersion;
+                }
+                return fetch(event.request);
+            })()
+        );
+        return;
+    }
+
     // Приватные запросы Supabase (auth, профили, заказы, RPC) не перехватываем и не кэшируем в SW
     if (url.hostname === 'supabase.co' || url.hostname.endsWith('.supabase.co')) {
         return;
@@ -378,8 +426,29 @@ self.addEventListener('push', event => {
         }
         self._recentPushes[notifKey] = now;
 
+        const ensurePushAssetCached = async (assetUrl) => {
+            if (!assetUrl) return;
+            try {
+                const hit = await caches.match(assetUrl);
+                if (hit && hit.status === 200) return;
+                const req = new Request(assetUrl, { cache: 'force-cache' });
+                const fetchWithLimit = Promise.race([
+                    fetch(req),
+                    new Promise(res => setTimeout(() => res(null), 1200))
+                ]);
+                const networkRes = await fetchWithLimit;
+                if (networkRes && networkRes.status === 200) {
+                    const imgCache = await caches.open(IMAGE_CACHE);
+                    await imgCache.put(assetUrl, networkRes.clone());
+                }
+            } catch (_) {}
+        };
+
         event.waitUntil(
-            self.registration.showNotification(data.title || 'NISHA STORE', options)
+            Promise.allSettled([
+                ensurePushAssetCached(options.icon),
+                ensurePushAssetCached(options.badge)
+            ]).then(() => self.registration.showNotification(data.title || 'NISHA STORE', options))
         );
     }
 });
