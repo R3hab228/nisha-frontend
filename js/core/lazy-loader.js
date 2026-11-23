@@ -63,7 +63,8 @@ const loadDropModule = registerLazyModuleBridge(
         ['openPropBargainInput', 'toggle-prop-bargain'],
         ['confirmPropBargainInput', 'confirm-prop-bargain'],
         ['hidePropBargainInput', 'cancel-prop-bargain'],
-        'resetPropBargainState'
+        'resetPropBargainState',
+        'updateCharCount'
     ]
 );
 
@@ -129,6 +130,7 @@ const loadProductModule = registerLazyModuleBridge(
         ['hideInlineOfferPriceInput', 'cancel-offer-price'],
         ['submitInlineBargainOffer', 'submit-inline-bargain'],
         ['submitBargainOffer', 'submit-bargain-offer'],
+        'openOfferPriceModal',
         'openBargainModal',
         'syncUserBargains',
         'renderSimilarItems',
@@ -145,8 +147,11 @@ const loadCheckoutModule = registerLazyModuleBridge(
         ['togglePaymentDropdown', 'toggle-payment-dropdown'],
         ['selectPaymentMethod', 'select-payment-method'],
         'searchCities',
+        'debouncedNPCitySearch',
         'selectCity',
         'searchBranches',
+        'loadNPBranches',
+        'filterNPBranches',
         'selectBranch',
         'detectUserCityAuto',
         'updateCheckoutTotal',
