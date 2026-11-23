@@ -7,6 +7,38 @@ import { getRuntimeUser, getRuntimeFingerprint, getRuntimeSiteLang, getRuntimeSt
 
 let pushPrompted = false;
 let pushListenersBound = false;
+let inFlightSubscribeSync = null;
+let inFlightSubscribeKey = '';
+const PUSH_SYNC_CACHE_KEY = 'nisha_push_sub_synced_meta';
+const PUSH_SYNC_TTL_MS = 6 * 60 * 60 * 1000;
+
+function readPushSyncMeta() {
+    try {
+        const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(PUSH_SYNC_CACHE_KEY) : null;
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.sig === 'string' && typeof parsed.ts === 'number') {
+            return parsed;
+        }
+    } catch {}
+    return null;
+}
+
+function writePushSyncMeta(sig) {
+    try {
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem(PUSH_SYNC_CACHE_KEY, JSON.stringify({ sig, ts: Date.now() }));
+        }
+    } catch {}
+}
+
+function clearPushSyncMeta() {
+    try {
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem(PUSH_SYNC_CACHE_KEY);
+        }
+    } catch {}
+}
 
 /**
  * Persists PWA installed state across store, localStorage, and long-lived cookie.
@@ -29,6 +61,7 @@ function markPwaInstalled() {
  * @returns {Promise<void>}
  */
 async function unsubscribeExistingPush(registration) {
+    clearPushSyncMeta();
     if (!registration || !registration.pushManager) return;
     const sub = await registration.pushManager.getSubscription();
     if (!sub) return;
@@ -166,17 +199,50 @@ export async function subscribeUserToPush(registration, silent = false) {
             }
             const activeUser = getRuntimeUser();
             const fp = window.clientFingerprint || 'guest_' + Date.now();
+            const resolvedUserId = activeUser ? activeUser.id : fp;
+            const clientType = isPwa ? 'pwa' : 'web';
+            const siteLang = getRuntimeSiteLang();
+            const syncSignature = `${targetSub.endpoint}|${resolvedUserId}|${fp}|${clientType}|${siteLang}`;
+
+            if (silent) {
+                const cachedSync = readPushSyncMeta();
+                if (cachedSync && cachedSync.sig === syncSignature && (Date.now() - cachedSync.ts) < PUSH_SYNC_TTL_MS) {
+                    return;
+                }
+            }
+
+            if (inFlightSubscribeSync && inFlightSubscribeKey === syncSignature) {
+                await inFlightSubscribeSync;
+                return;
+            }
+
             const payload = {
                 subscription: targetSub,
-                userId: activeUser ? activeUser.id : fp,
+                userId: resolvedUserId,
                 deviceId: fp,
                 clientId: fp,
-                clientType: isPwa ? 'pwa' : 'web',
-                isPwa: isPwa,
-                lang: getRuntimeSiteLang(),
+                clientType,
+                isPwa,
+                lang: siteLang,
                 origin: (typeof window !== 'undefined' && window.location) ? window.location.origin : 'https://www.nisha-store.shop'
             };
-            await window.apiClient.post('/api/subscribe', payload, { timeout: 10000, retries: 1 });
+
+            inFlightSubscribeKey = syncSignature;
+            inFlightSubscribeSync = window.apiClient.post('/api/subscribe', payload, {
+                timeout: 10000,
+                retries: silent ? 0 : 1,
+                dedupe: true
+            }).then((res) => {
+                writePushSyncMeta(syncSignature);
+                return res;
+            }).finally(() => {
+                if (inFlightSubscribeKey === syncSignature) {
+                    inFlightSubscribeSync = null;
+                    inFlightSubscribeKey = '';
+                }
+            });
+
+            await inFlightSubscribeSync;
         }
     } catch (e) {
         const expectedPushSkipNames = new Set(['NotAllowedError', 'AbortError', 'InvalidStateError', 'NotSupportedError']);
@@ -319,6 +385,9 @@ export function initPwaPush() {
  */
 export function resetPushPromptTestState() {
     pushPrompted = false;
+    inFlightSubscribeSync = null;
+    inFlightSubscribeKey = '';
+    clearPushSyncMeta();
 }
 
 registerActions({
