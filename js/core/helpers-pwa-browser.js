@@ -123,9 +123,103 @@ export function triggerVibration(duration = 150) {
     }
 }
 
+let _iosHapticLabel = null;
+let _lastIosHapticAt = 0;
+
 /**
- * Triggers Telegram WebApp HapticFeedback or mobile Vibration API feedback.
- * @param {'light'|'medium'|'heavy'|'success'|'error'} [type='light']
+ * Detects iOS / iPadOS touch devices where Web Vibration API is absent
+ * and native Safari 17.4+ `<input type="checkbox" switch>` triggers Taptic Engine.
+ * @returns {boolean}
+ */
+function isIosTouchDevice() {
+    if (typeof navigator === 'undefined') return false;
+    const ua = String(navigator.userAgent || '');
+    if (/iPhone|iPad|iPod/i.test(ua)) return true;
+    return navigator.platform === 'MacIntel' && Number(navigator.maxTouchPoints || 0) > 1;
+}
+
+/**
+ * Lazily creates an off-screen `<input type="checkbox" switch>` + `<label>` pair
+ * with click propagation isolated so triggering iOS Taptic Engine never affects app click handlers.
+ * @returns {HTMLLabelElement|null}
+ */
+function getOrCreateIosHapticLabel() {
+    if (typeof document === 'undefined' || !document.body || typeof document.createElement !== 'function') {
+        return null;
+    }
+    if (_iosHapticLabel && _iosHapticLabel.isConnected !== false) {
+        return _iosHapticLabel;
+    }
+    const existingLabel = document.getElementById('nishaHapticSwitchLabel');
+    if (existingLabel) {
+        _iosHapticLabel = existingLabel;
+        return _iosHapticLabel;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = 'nishaHapticSwitch';
+    input.setAttribute('switch', '');
+    input.setAttribute('aria-hidden', 'true');
+    input.tabIndex = -1;
+    input.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0.001;pointer-events:none;left:-9999px;top:-9999px;margin:0;padding:0;border:0;';
+
+    const label = document.createElement('label');
+    label.id = 'nishaHapticSwitchLabel';
+    label.setAttribute('for', 'nishaHapticSwitch');
+    label.setAttribute('aria-hidden', 'true');
+    label.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0.001;pointer-events:none;left:-9999px;top:-9999px;margin:0;padding:0;border:0;';
+
+    const isolateEvent = (e) => {
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    };
+    if (typeof input.addEventListener === 'function') {
+        input.addEventListener('click', isolateEvent);
+        input.addEventListener('change', isolateEvent);
+    }
+    if (typeof label.addEventListener === 'function') {
+        label.addEventListener('click', isolateEvent);
+    }
+
+    document.body.appendChild(input);
+    document.body.appendChild(label);
+    _iosHapticLabel = label;
+    return _iosHapticLabel;
+}
+
+/**
+ * Fires native iOS Safari 17.4+ / iOS PWA Taptic Engine feedback via hidden switch label click.
+ * @param {'selection'|'light'|'medium'|'heavy'|'success'|'warning'|'error'} type
+ * @returns {boolean}
+ */
+function triggerIosSwitchHaptic(type) {
+    if (!isIosTouchDevice()) return false;
+    const now = Date.now();
+    if (now - _lastIosHapticAt < 30 && (type === 'light' || type === 'selection')) {
+        return false;
+    }
+    const label = getOrCreateIosHapticLabel();
+    if (!label || typeof label.click !== 'function') return false;
+
+    _lastIosHapticAt = now;
+    try {
+        label.click();
+        if (type === 'success' || type === 'warning' || type === 'error') {
+            setTimeout(() => {
+                try {
+                    if (label.isConnected !== false) label.click();
+                } catch {}
+            }, type === 'error' ? 60 : 75);
+        }
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Triggers Telegram WebApp HapticFeedback, Android Vibration API, or iOS 17.4+ Taptic Engine switch feedback.
+ * @param {'selection'|'light'|'medium'|'heavy'|'success'|'warning'|'error'} [type='light']
  */
 export function triggerHaptic(type = 'light') {
     try {
@@ -133,11 +227,14 @@ export function triggerHaptic(type = 'light') {
             ? window.Telegram.WebApp.HapticFeedback
             : null;
         if (tgHaptic) {
-            if (type === 'success' || type === 'error') {
+            if (type === 'success' || type === 'warning' || type === 'error') {
                 if (typeof tgHaptic.notificationOccurred === 'function') {
                     tgHaptic.notificationOccurred(type);
                     return;
                 }
+            } else if (type === 'selection' && typeof tgHaptic.selectionChanged === 'function') {
+                tgHaptic.selectionChanged();
+                return;
             } else if (typeof tgHaptic.impactOccurred === 'function') {
                 const style = type === 'heavy' ? 'heavy' : (type === 'medium' ? 'medium' : 'light');
                 tgHaptic.impactOccurred(style);
@@ -146,16 +243,26 @@ export function triggerHaptic(type = 'light') {
         }
     } catch {}
 
-    if (typeof window === 'undefined' || window.innerWidth > 900 || typeof navigator === 'undefined' || !navigator.vibrate) return;
-    try {
-        switch (type) {
-            case 'light': navigator.vibrate(25); break;
-            case 'medium': navigator.vibrate(40); break;
-            case 'heavy': navigator.vibrate(70); break;
-            case 'success': navigator.vibrate([20, 60, 20]); break;
-            case 'error': navigator.vibrate([30, 50, 30, 50, 30]); break;
-        }
-    } catch {}
+    if (typeof window === 'undefined' || window.innerWidth > 900) return;
+
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        try {
+            switch (type) {
+                case 'selection': navigator.vibrate(10); break;
+                case 'light': navigator.vibrate(25); break;
+                case 'medium': navigator.vibrate(40); break;
+                case 'heavy': navigator.vibrate(70); break;
+                case 'success': navigator.vibrate([20, 60, 20]); break;
+                case 'warning': navigator.vibrate([25, 45, 25]); break;
+                case 'error': navigator.vibrate([30, 50, 30, 50, 30]); break;
+                default: navigator.vibrate(20); break;
+            }
+        } catch {}
+        return;
+    }
+
+    // Fallback for iOS 17.4+ Safari & iOS PWA where navigator.vibrate is unavailable
+    triggerIosSwitchHaptic(type);
 }
 if (typeof window !== 'undefined') window.triggerHaptic = triggerHaptic;
 if (typeof globalThis !== 'undefined') globalThis.triggerHaptic = triggerHaptic;

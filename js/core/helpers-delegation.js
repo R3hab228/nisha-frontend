@@ -5,6 +5,7 @@
 // ==========================================
 
 import { invokeAction, invokeCompatAction, registerActions } from './action-registry.js';
+import { triggerHaptic } from './helpers-pwa-browser.js';
 import { sanitizeHtmlMediaUrl } from './helpers-security-media.js';
 import { storage } from './helpers-storage-idb.js';
 import { isToastClickShielded, showToast } from './helpers-toasts-modals.js';
@@ -64,6 +65,45 @@ const SIMPLE_ACTION_MAP = {
     'toggle-sound': 'toggleSoundEnabled'
 };
 
+const ACTION_HAPTIC_MAP = {
+    // Crisp selection tick for tabs, filters, sliders, language & toggles
+    'set-category-filter': 'selection',
+    'sort-items': 'selection',
+    'switch-order-tab': 'selection',
+    'change-page': 'selection',
+    'set-slide': 'selection',
+    'move-slide': 'selection',
+    'scroll-grid-slider': 'selection',
+    'scroll-reviews': 'selection',
+    'set-lang': 'selection',
+    'toggle-footer-lang': 'selection',
+    'select-payment-method': 'selection',
+    'toggle-accordion': 'selection',
+    'toggle-qa-section': 'selection',
+    'toggle-history': 'selection',
+    'toggle-sound': 'selection',
+    'filter-favorites': 'selection',
+    'toggle-mobile-sidebar': 'selection',
+    // Clean tactile tap for modals, cards, cart drawer & utility buttons
+    'open-product': 'light',
+    'open-reviews': 'light',
+    'open-orders': 'light',
+    'open-profile': 'light',
+    'open-checkout': 'light',
+    'open-propose-modal': 'light',
+    'open-support-modal': 'light',
+    'open-offer-price': 'light',
+    'close-modal': 'light',
+    'toggle-cart-dropdown': 'light',
+    'close-cart-dropdown': 'light',
+    'remove-from-cart': 'light',
+    'remove-filter-chip': 'light',
+    'show-badge-info': 'light',
+    'refresh-ttn-track': 'light',
+    'share-item': 'light',
+    'copy-ttn': 'light'
+};
+
 /**
  * Global capture-phase click dispatcher for `[data-action]` triggers.
  * @param {Event} e
@@ -96,6 +136,9 @@ export function handleDelegatedAction(e) {
     }
 
     const action = actionEl.getAttribute('data-action');
+    if (action && Object.hasOwn(ACTION_HAPTIC_MAP, action)) {
+        triggerHaptic(ACTION_HAPTIC_MAP[action]);
+    }
     if (Object.hasOwn(SIMPLE_ACTION_MAP, action)) {
         invokeCompatAction(action, SIMPLE_ACTION_MAP[action]);
         return;

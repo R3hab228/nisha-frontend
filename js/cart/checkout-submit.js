@@ -553,6 +553,7 @@ export async function executeOrderFinal(emailToSave) {
                     if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(overlay);
                 }
                 invokeAction('playSound', 'tada', { kind: 'celebrate' });
+                if (typeof triggerHaptic === 'function') triggerHaptic('success');
 
                 setTimeout(() => {
                     if (overlay) overlay.style.display = 'none';
@@ -568,6 +569,7 @@ export async function executeOrderFinal(emailToSave) {
             cartState.isOrderSubmitting = false;
             invokeAction('captureError', err, { action: 'checkout_order_failed', city: city });
             const orderErrPref = tSafe('checkout.order_submit_err', 'Ошибка при оформлении: ');
+            if (typeof triggerHaptic === 'function') triggerHaptic('error');
             showToast(orderErrPref + err.message, 'error');
             btnSubmit.innerHTML = tSafe('checkout.btn_submit', 'ПОДТВЕРДИТЬ ЗАКАЗ');
             btnSubmit.style.pointerEvents = 'auto';
