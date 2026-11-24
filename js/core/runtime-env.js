@@ -115,12 +115,13 @@ export function tSafe(key, optionsOrFallback = '', fallbackOrOptions = '') {
     const defaultText = firstIsObj
         ? (optionsOrFallback.defaultValue ?? (typeof fallbackOrOptions === 'string' ? fallbackOrOptions : ''))
         : (typeof optionsOrFallback === 'string' ? optionsOrFallback : '');
+    const hasRealI18nExists = Boolean(i18n && typeof i18n.exists === 'function');
     const opts = rawOpts
         ? (rawOpts.defaultValue === undefined && defaultText ? { ...rawOpts, defaultValue: defaultText } : rawOpts)
-        : undefined;
+        : (hasRealI18nExists && defaultText ? { defaultValue: defaultText } : undefined);
     if (i18n && typeof i18n.t === 'function') {
         const res = opts !== undefined ? i18n.t(key, opts) : i18n.t(key);
-        if (res !== undefined && res !== null && res !== '') {
+        if (res !== undefined && res !== null && res !== '' && (!hasRealI18nExists || res !== key || !defaultText)) {
             return String(res);
         }
     }
