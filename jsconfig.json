@@ -8,7 +8,9 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "noEmit": true,
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*",

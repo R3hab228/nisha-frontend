@@ -12,7 +12,7 @@ import {
 } from './cart-state.js';
 import { updateCartUI } from './cart-ui.js';
 import { hasAction, invokeAction } from '../core/action-registry.js';
-import { getRuntimeStorage } from '../core/runtime-env.js';
+import { getRuntimeStorage, tSafe } from '../core/runtime-env.js';
 
 /**
  * Защита поля промокода от автозаполнения браузера (Chrome подставлял туда ФИО).
@@ -101,7 +101,7 @@ export function restoreCheckoutDraft() {
             const txtEl = document.getElementById('paymentSelectedText');
             if (txtEl) {
                 txtEl.setAttribute('data-i18n', isCod ? 'checkout.payment_cod' : 'checkout.payment_full');
-                txtEl.textContent = typeof i18next !== 'undefined' ? i18next.t(isCod ? 'checkout.payment_cod' : 'checkout.payment_full') : (draft.paymentSelectedText || document.getElementById('orderPaymentMethod').value);
+                txtEl.textContent = tSafe(isCod ? 'checkout.payment_cod' : 'checkout.payment_full', draft.paymentSelectedText || document.getElementById('orderPaymentMethod').value);
             }
         } else if (draft.paymentSelectedText && document.getElementById('paymentSelectedText')) {
             document.getElementById('paymentSelectedText').textContent = draft.paymentSelectedText;
@@ -204,7 +204,7 @@ export function selectPaymentMethod(dbVal, displayLabel) {
     if (txt) {
         txt.setAttribute('data-i18n', ruVal.includes('200') ? 'checkout.payment_cod' : 'checkout.payment_full');
         txt.textContent = (!codAllowed && rawNormalized.includes('200'))
-            ? (typeof i18next !== 'undefined' ? i18next.t('checkout.payment_full') : 'Полная предоплата')
+            ? tSafe('checkout.payment_full', 'Полная предоплата')
             : (displayLabel || dbVal);
     }
     if (input) input.value = ruVal;
@@ -314,8 +314,8 @@ export async function applyPromoCode() {
             await i18next.changeLanguage(currentLang);
         }
 
-        const limitErrorText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_limit') : 'Лимит использований исчерпан';
-        const invalidErrorText = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_invalid') : 'Неверный промокод';
+        const limitErrorText = tSafe('checkout.promo_limit', 'Лимит использований исчерпан');
+        const invalidErrorText = tSafe('checkout.promo_invalid', 'Неверный промокод');
 
         if (data && data.success) {
             cartState.currentPromoDiscount = data.discount_percent;
@@ -351,7 +351,7 @@ export async function applyPromoCode() {
         }
     } catch (err) {
         if (err && (err.name === 'AbortError' || err.isTimeout)) {
-            const warmingMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_warming', { defaultValue: 'Сервер запускается, нажмите «Применить» ещё раз' }) : 'Сервер запускается, нажмите «Применить» ещё раз';
+            const warmingMsg = tSafe('checkout.promo_warming', 'Сервер запускается, нажмите «Применить» ещё раз');
             if (msg) {
                 msg.innerHTML = renderPromoCodeNotice({
                     isWarning: true,
@@ -359,7 +359,7 @@ export async function applyPromoCode() {
                 });
             }
         } else {
-            const errMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error') : 'Ошибка сервера';
+            const errMsg = tSafe('checkout.promo_error', 'Ошибка сервера');
             if (msg) {
                 msg.innerHTML = renderPromoCodeNotice({
                     isError: true,
@@ -371,5 +371,5 @@ export async function applyPromoCode() {
         updateCartUI();
     }
 
-    if (btn) btn.textContent = typeof i18next !== 'undefined' ? i18next.t('checkout.apply') : 'ПРИМЕНИТЬ';
+    if (btn) btn.textContent = tSafe('checkout.apply', 'ПРИМЕНИТЬ');
 }

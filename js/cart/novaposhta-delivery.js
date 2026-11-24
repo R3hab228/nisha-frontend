@@ -28,6 +28,7 @@ import {
     autoDetectCity
 } from './novaposhta-city-detect.js';
 import { invokeAction, registerActions } from '../core/action-registry.js';
+import { tSafe } from '../core/runtime-env.js';
 
 export {
     clearNPCityInput,
@@ -111,9 +112,7 @@ export function filterNPBranches(query) {
     }
 
     if (!baseList || baseList.length === 0 || dropdown.children.length === 0 || dropdown.style.display === 'none') {
-        const searchingLabel = typeof i18next !== 'undefined'
-            ? i18next.t('np.searching', { defaultValue: 'Ищем отделение в базе Новой Почты...' })
-            : 'Ищем отделение в базе Новой Почты...';
+        const searchingLabel = tSafe('np.searching', 'Ищем отделение в базе Новой Почты...');
         dropdown.innerHTML = `<div class="np-dropdown-status">${searchingLabel}</div>`;
         dropdown.style.display = 'block';
     }
@@ -338,7 +337,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
         if (!cityRef) {
             const cityInput = document.getElementById('orderCity');
             if (input && (!cityInput || !cityInput.value.trim())) {
-                input.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_first', { defaultValue: 'Сначала выберите город' }) : 'Сначала выберите город';
+                input.placeholder = tSafe('checkout.choose_city_first', 'Сначала выберите город');
             }
             return;
         }
@@ -370,7 +369,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
 
     const myToken = ++_branchLoadToken;
     if (showDropdown) {
-        const loadBranchText = typeof i18next !== 'undefined' ? i18next.t('checkout.loading_branches', { defaultValue: 'Завантаження відділень...' }) : 'Завантаження відділень...';
+        const loadBranchText = tSafe('checkout.loading_branches', 'Завантаження відділень...');
         dropdown.innerHTML = `<div class="np-dropdown-status">${loadBranchText}</div>`;
         dropdown.style.display = 'block';
     }
@@ -464,7 +463,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
         }
 
         if (finalBranches.length > 0) {
-            if (input && !input.value) input.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.branch_placeholder', { defaultValue: 'Выберите отделение...' }) : 'Выберите отделение...';
+            if (input && !input.value) input.placeholder = tSafe('checkout.branch_placeholder', 'Выберите отделение...');
             if (!loopError) {
                 cartState.npBranchCache[cacheKey] = finalBranches;
                 if (!search) {
@@ -476,9 +475,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
                 renderBranches(finalBranches);
             }
         } else {
-            const emptyLabel = typeof i18next !== 'undefined'
-                ? i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })
-                : 'Не найдено';
+            const emptyLabel = tSafe('np.branch_empty', 'Не найдено');
             if (input && !input.value) input.placeholder = emptyLabel;
             if (showDropdown) {
                 dropdown.innerHTML = `<div class="np-dropdown-error">[ ${emptyLabel} ]</div>`;
@@ -488,9 +485,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
     } catch (e) {
         if (myToken !== _branchLoadToken) return;
         console.error('Сбой загрузки отделений НП:', e);
-        const errLabel = typeof i18next !== 'undefined'
-            ? i18next.t('np.branch_err', { defaultValue: 'Ошибка загрузки отделений' })
-            : 'Ошибка загрузки отделений';
+        const errLabel = tSafe('np.branch_err', 'Ошибка загрузки отделений');
         if (input && !input.value) input.placeholder = errLabel;
         if (showDropdown) {
             dropdown.innerHTML = `<div class="np-dropdown-error">[ ${errLabel} ]</div>`;
@@ -583,9 +578,7 @@ export function renderBranches(branches) {
         notice.setAttribute('data-msg', 'true');
         notice.style.cssText = 'padding:10px 14px; color:#888; font-size:11px; text-align:center; font-style:italic; border-top:1px dashed #333; pointer-events:none;';
         const fallbackNotice = `Показано ${MAX_RENDERED_BRANCHES} из ${branches.length}. Введите номер или улицу для уточнения...`;
-        notice.textContent = typeof i18next !== 'undefined'
-            ? i18next.t('np.branches_truncated', { shown: MAX_RENDERED_BRANCHES, total: branches.length, defaultValue: fallbackNotice })
-            : fallbackNotice;
+        notice.textContent = tSafe('np.branches_truncated', fallbackNotice, { shown: MAX_RENDERED_BRANCHES, total: branches.length });
         fragment.appendChild(notice);
     }
 

@@ -2446,8 +2446,8 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(getNP(publicEn).branch_empty).toBe('Not found');
 
             const cartCode = readCartSource();
-            expect(cartCode).toContain("i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })");
-            expect(cartCode).toContain("i18next.t('np.searching'");
+            expect(cartCode).toContain("tSafe('np.branch_empty', 'Не найдено')");
+            expect(cartCode).toContain("tSafe('np.searching'");
             expect(cartCode).toContain('bindDropdownScrollDismissKeyboard');
             expect(cartCode).toContain('diffY > 24 && diffY > diffX');
 

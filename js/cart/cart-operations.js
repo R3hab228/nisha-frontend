@@ -199,12 +199,12 @@ export async function addToCartFromModal() {
                 setActiveCart(currentCart);
                 updateCartUI();
                 if (typeof closeModal === 'function') closeModal('productModal');
-                const updateMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_cart_updated')) || 'Цену в корзине обновлено по согласованной ставке!';
+                const updateMsg = tSafe('product.offer_cart_updated', 'Цену в корзине обновлено по согласованной ставке!');
                 showToast(updateMsg, 'success');
                 syncCartToServer();
                 return;
             }
-            showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_exist') : 'Уже в корзине!', 'error');
+            showToast(tSafe('messages.cart_exist', 'Уже в корзине!'), 'error');
             return;
         }
 

@@ -19,7 +19,7 @@ import { _npNorm } from './novaposhta-helpers.js';
 import { ensureCityRef, ensureBranchRef } from './novaposhta-delivery.js';
 import { clearCheckoutDraft } from './checkout-form.js';
 import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
-import { getRuntimeUser, getRuntimeProfile, getRuntimeFingerprint, getRuntimeStorage, getRuntimeSiteLang } from '../core/runtime-env.js';
+import { getRuntimeUser, getRuntimeProfile, getRuntimeFingerprint, getRuntimeStorage, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 import { clearAllBargainState } from '../core/bargain-storage.js';
 
 /**
@@ -105,7 +105,7 @@ export async function submitOrder() {
     const isVerified = window.otpVerified || (typeof otpVerified !== 'undefined' && otpVerified);
     if (!isVerified) {
         trackAttempt('validation_failed', 'phone_unverified');
-        const verifyPhoneMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.verify_phone_first', { defaultValue: 'Подтвердите номер телефона!' }) : 'Подтвердите номер телефона!';
+        const verifyPhoneMsg = tSafe('checkout.verify_phone_first', 'Подтвердите номер телефона!');
         showToast(verifyPhoneMsg, 'error');
         return;
     }
@@ -131,7 +131,7 @@ export async function submitOrder() {
     if (!name || name.length < 2) {
         trackAttempt('validation_failed', 'invalid_name');
         highlightFieldError(nameInput);
-        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.req_fields') : 'Введите ваше имя (от 2 букв)!', 'error');
+        showToast(tSafe('messages.req_fields', 'Введите ваше имя (от 2 букв)!'), 'error');
         return;
     }
 
@@ -140,7 +140,7 @@ export async function submitOrder() {
     if (!phone || !isValidUAPhone) {
         trackAttempt('validation_failed', 'invalid_phone');
         highlightFieldError(phoneInput);
-        showToast(typeof i18next !== 'undefined' ? i18next.t('messages.valid_phone', { defaultValue: 'Введите полный номер телефона (+380...)!' }) : 'Введите полный номер телефона (+380...)!', 'error');
+        showToast(tSafe('messages.valid_phone', 'Введите полный номер телефона (+380...)!'), 'error');
         return;
     }
 
@@ -160,7 +160,7 @@ export async function submitOrder() {
     if (!city || !cityRef) {
         trackAttempt('validation_failed', 'missing_city');
         highlightFieldError(cityInput);
-        const chooseCityMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_from_dropdown', { defaultValue: 'Выберите Город строго из выпадающего списка!' }) : 'Выберите Город строго из выпадающего списка!';
+        const chooseCityMsg = tSafe('checkout.choose_city_from_dropdown', 'Выберите Город строго из выпадающего списка!');
         showToast(chooseCityMsg, 'error');
         return;
     }
@@ -181,7 +181,7 @@ export async function submitOrder() {
     if (!branch || !branchRef) {
         trackAttempt('validation_failed', 'missing_branch');
         highlightFieldError(branchInput);
-        const chooseBranchMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_branch_from_dropdown', { defaultValue: 'Выберите Отделение или Поштомат из выпадающего списка!' }) : 'Выберите Отделение или Поштомат из выпадающего списка!';
+        const chooseBranchMsg = tSafe('checkout.choose_branch_from_dropdown', 'Выберите Отделение или Поштомат из выпадающего списка!');
         showToast(chooseBranchMsg, 'error');
         return;
     }
@@ -228,7 +228,7 @@ export async function executeOrderFinal(emailToSave) {
             btnSubmit.style.position = '';
             btnSubmit.style.overflow = '';
             btnSubmit.style.color = '';
-            btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit', { defaultValue: 'ПОДТВЕРДИТЬ ЗАКАЗ' }) : 'ПОДТВЕРДИТЬ ЗАКАЗ';
+            btnSubmit.innerHTML = tSafe('checkout.btn_submit', 'ПОДТВЕРДИТЬ ЗАКАЗ');
         }
 
         btnSubmit.style.pointerEvents = 'none';
@@ -287,7 +287,7 @@ export async function executeOrderFinal(emailToSave) {
             resetSubmitButton();
             const cityInput = document.getElementById('orderCity');
             highlightFieldError(cityInput);
-            const chooseCityMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_from_dropdown', { defaultValue: 'Выберите Город строго из выпадающего списка!' }) : 'Выберите Город строго из выпадающего списка!';
+            const chooseCityMsg = tSafe('checkout.choose_city_from_dropdown', 'Выберите Город строго из выпадающего списка!');
             showToast(chooseCityMsg, 'error');
             return;
         }
@@ -296,7 +296,7 @@ export async function executeOrderFinal(emailToSave) {
             resetSubmitButton();
             const branchInput = document.getElementById('orderBranch');
             highlightFieldError(branchInput);
-            const chooseBranchMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_branch_from_dropdown', { defaultValue: 'Выберите Отделение или Поштомат из выпадающего списка!' }) : 'Выберите Отделение или Поштомат из выпадающего списка!';
+            const chooseBranchMsg = tSafe('checkout.choose_branch_from_dropdown', 'Выберите Отделение или Поштомат из выпадающего списка!');
             showToast(chooseBranchMsg, 'error');
             return;
         }
@@ -413,7 +413,7 @@ export async function executeOrderFinal(emailToSave) {
                 if (!city || !branch) {
                     cartState.isOrderSubmitting = false;
                     resetSubmitButton();
-                    const chooseCityBranchMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.choose_city_branch_from_dropdown', { defaultValue: 'Выберите Город и Отделение строго из выпадающего списка!' }) : 'Выберите Город и Отделение строго из выпадающего списка!';
+                    const chooseCityBranchMsg = tSafe('checkout.choose_city_branch_from_dropdown', 'Выберите Город и Отделение строго из выпадающего списка!');
                     showToast(chooseCityBranchMsg, 'error');
                     return;
                 }
@@ -545,7 +545,7 @@ export async function executeOrderFinal(emailToSave) {
 
             setTimeout(() => {
                 if (typeof closeModal === 'function') closeModal('checkoutModal');
-                btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
+                btnSubmit.innerHTML = tSafe('checkout.btn_submit', 'ПОДТВЕРДИТЬ ЗАКАЗ');
 
                 const overlay = document.getElementById('orderSuccessOverlay');
                 if (overlay) {
@@ -567,9 +567,9 @@ export async function executeOrderFinal(emailToSave) {
         } catch (err) {
             cartState.isOrderSubmitting = false;
             invokeAction('captureError', err, { action: 'checkout_order_failed', city: city });
-            const orderErrPref = typeof i18next !== 'undefined' ? i18next.t('checkout.order_submit_err', { defaultValue: 'Ошибка при оформлении: ' }) : 'Ошибка при оформлении: ';
+            const orderErrPref = tSafe('checkout.order_submit_err', 'Ошибка при оформлении: ');
             showToast(orderErrPref + err.message, 'error');
-            btnSubmit.innerHTML = typeof i18next !== 'undefined' ? i18next.t('checkout.btn_submit') : 'ПОДТВЕРДИТЬ ЗАКАЗ';
+            btnSubmit.innerHTML = tSafe('checkout.btn_submit', 'ПОДТВЕРДИТЬ ЗАКАЗ');
             btnSubmit.style.pointerEvents = 'auto';
             btnSubmit.style.opacity = '1';
             invokeAction('loadAllItems');

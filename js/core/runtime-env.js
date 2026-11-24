@@ -33,7 +33,7 @@ export function getRuntimeProfile() {
     return readRuntimeProp('userProfile') || null;
 }
 
-/** @returns {Array} */
+/** @returns {Array<any>} */
 export function getRuntimeCatalog() {
     const items = readRuntimeProp('allItems');
     return Array.isArray(items) ? items : [];
@@ -44,7 +44,7 @@ export function getRuntimeOpenedItem() {
     return readRuntimeProp('currentOpenedItem') || null;
 }
 
-/** @returns {Array} */
+/** @returns {Array<any>} */
 export function getRuntimeFavorites() {
     const favs = readRuntimeProp('favorites');
     return Array.isArray(favs) ? favs : [];
@@ -100,16 +100,24 @@ export function escapeAttrSafe(value) {
 
 /**
  * Safely translates an i18n key via active i18next instance with fallback string.
+ * Supports `(key, fallback)`, `(key, opts, fallback)`, and `(key, fallback, opts)`.
  * @param {string} key
- * @param {object|string} [optionsOrFallback='']
- * @param {string} [fallback='']
+ * @param {Record<string, any>|string} [optionsOrFallback='']
+ * @param {Record<string, any>|string} [fallbackOrOptions='']
  * @returns {string}
  */
-export function tSafe(key, optionsOrFallback = '', fallback = '') {
+export function tSafe(key, optionsOrFallback = '', fallbackOrOptions = '') {
     const i18n = readRuntimeProp('i18next');
-    const isOptsObj = optionsOrFallback !== null && typeof optionsOrFallback === 'object';
-    const opts = isOptsObj ? optionsOrFallback : undefined;
-    const defaultText = isOptsObj ? (optionsOrFallback.defaultValue ?? fallback) : (optionsOrFallback || fallback);
+    const firstIsObj = optionsOrFallback !== null && typeof optionsOrFallback === 'object';
+    const secondIsObj = fallbackOrOptions !== null && typeof fallbackOrOptions === 'object';
+    /** @type {Record<string, any>|undefined} */
+    const rawOpts = firstIsObj ? optionsOrFallback : (secondIsObj ? fallbackOrOptions : undefined);
+    const defaultText = firstIsObj
+        ? (optionsOrFallback.defaultValue ?? (typeof fallbackOrOptions === 'string' ? fallbackOrOptions : ''))
+        : (typeof optionsOrFallback === 'string' ? optionsOrFallback : '');
+    const opts = rawOpts
+        ? (rawOpts.defaultValue === undefined && defaultText ? { ...rawOpts, defaultValue: defaultText } : rawOpts)
+        : undefined;
     if (i18n && typeof i18n.t === 'function') {
         const res = opts !== undefined ? i18n.t(key, opts) : i18n.t(key);
         if (res !== undefined && res !== null && res !== '') {
@@ -132,6 +140,7 @@ export function tSafe(key, optionsOrFallback = '', fallback = '') {
  * @returns {'ua'|'ru'|'en'}
  */
 export function getRuntimeSiteLang() {
+    /** @param {any} val */
     const normalize = (val) => {
         const clean = String(val || '').trim().toLowerCase();
         if (!clean) return null;

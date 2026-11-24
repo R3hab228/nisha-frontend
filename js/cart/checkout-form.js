@@ -37,7 +37,7 @@ import {
     autoDetectCity
 } from './novaposhta-delivery.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getLenisInstance, getRuntimeProfile, getRuntimeStorage, getRuntimeUser } from '../core/runtime-env.js';
+import { getLenisInstance, getRuntimeProfile, getRuntimeStorage, getRuntimeUser, tSafe } from '../core/runtime-env.js';
 
 export {
     sanitizePromoField,
@@ -63,7 +63,7 @@ export async function openCheckoutModal() {
 
     cartState.isCheckoutOpening = true;
     const originalText = btn.textContent;
-    btn.textContent = typeof i18next !== 'undefined' ? i18next.t('checkout.checking_stock', { defaultValue: '[ ПРОВЕРКА НАЛИЧИЯ... ]' }) : '[ ПРОВЕРКА НАЛИЧИЯ... ]';
+    btn.textContent = tSafe('checkout.checking_stock', '[ ПРОВЕРКА НАЛИЧИЯ... ]');
     btn.style.pointerEvents = 'none';
 
     try {
@@ -80,7 +80,7 @@ export async function openCheckoutModal() {
                     const cId = String(cartItem?.id || cartItem?.item_id || cartItem).trim();
                     const dbItem = dbItems.find(i => String(i.id).trim() === cId);
                     if (dbItem && dbItem.status === 'sold') {
-                        const itemBoughtMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.item_bought_toast', { name: cartItem.name, defaultValue: `Товар "${cartItem.name}" уже кто-то купил! 😢` }) : `Товар "${cartItem.name}" уже кто-то купил! 😢`;
+                        const itemBoughtMsg = tSafe('checkout.item_bought_toast', `Товар "${cartItem.name}" уже кто-то купил! 😢`, { name: cartItem.name });
                         showToast(itemBoughtMsg, 'error');
                         hasSoldItems = true;
                         return false;

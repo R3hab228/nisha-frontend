@@ -13,6 +13,7 @@ import {
     getSupabaseClient
 } from './cart-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { tSafe } from '../core/runtime-env.js';
 import { pushBackLayer, removeBackLayerFromUI } from '../ui/back-gesture.js';
 
 /**
@@ -129,9 +130,7 @@ export async function checkCartItemsAvailability() {
             }
 
             if (soldNames.length > 0) {
-                const soldMsg = typeof i18next !== 'undefined'
-                    ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' })
-                    : 'Товар уже куплен';
+                const soldMsg = tSafe('messages.item_sold', 'Товар уже куплен');
                 showToast(`⚠️ ${soldMsg}: ${soldNames.at(0)}`, 'error');
             }
         }
@@ -154,8 +153,8 @@ export function renderCartItems() {
         list.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; border: 1px dashed #222; background: #000; margin: 15px 5px;">
                 <div style="font-size: 30px; margin-bottom: 15px;">🛒</div>
-                <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;" data-i18n="cart.empty_title">${typeof i18next !== 'undefined' ? i18next.t('cart.empty_title') : 'КОРЗИНА ПУСТА'}</div>
-                <div style="color:#888; font-size: 12px; line-height: 1.5;" data-i18n="cart.empty_desc">${typeof i18next !== 'undefined' ? i18next.t('cart.empty_desc') : 'Выберите понравившиеся вещи в каталоге'}</div>
+                <div style="color:var(--accent-red); font-family: var(--font-mono); font-weight:bold; margin-bottom: 10px;" data-i18n="cart.empty_title">${tSafe('cart.empty_title', 'КОРЗИНА ПУСТА')}</div>
+                <div style="color:#888; font-size: 12px; line-height: 1.5;" data-i18n="cart.empty_desc">${tSafe('cart.empty_desc', 'Выберите понравившиеся вещи в каталоге')}</div>
             </div>`;
         return;
     }
@@ -163,7 +162,7 @@ export function renderCartItems() {
     list.innerHTML = `
         <div class="cart-warning-bar" style="padding: 10px 14px; margin-bottom: 10px; border-bottom: 1px dashed #333; background: #000; text-align: center;">
             <div style="color: var(--accent-red); font-size: 11px; line-height: 1.45; font-family: var(--font-main);" data-i18n="cart.warning">
-                ${typeof i18next !== 'undefined' ? i18next.t('cart.warning', { defaultValue: 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.' }) : 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.'}
+                ${tSafe('cart.warning', 'Товары не забронированы и могут быть куплены кем-то другим до момента оплаты.')}
             </div>
         </div>
     `;
@@ -176,12 +175,12 @@ export function renderCartItems() {
         const row = document.createElement('div');
         row.className = 'cart-item-row';
         const isSold = !!item._isSold;
-        const soldLabel = typeof i18next !== 'undefined' ? i18next.t('messages.item_sold', { defaultValue: 'Товар уже куплен' }) : 'Товар уже куплен';
+        const soldLabel = tSafe('messages.item_sold', 'Товар уже куплен');
         const soldBadgeHtml = isSold
             ? `<div class="cart-sold-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>${escCartHtml(soldLabel)}</span></div>`
             : '';
         const rowStyle = isSold ? 'opacity: 0.8; border-left: 3px solid #ff4444;' : '';
-        const sizePrefix = typeof i18next !== 'undefined' ? i18next.t('grid.size_prefix', { defaultValue: 'Размер: ' }) : 'Размер: ';
+        const sizePrefix = tSafe('grid.size_prefix', 'Размер: ');
         const priceLabel = typeof formatPrice === 'function' ? formatPrice(item.price) : `${item.price} ${getCurrency()}`;
 
         row.innerHTML = `

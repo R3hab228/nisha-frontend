@@ -34,6 +34,9 @@ jobs:
       - name: 🧹 ESLint Code Quality Check
         run: npm run lint
 
+      - name: 🔷 TypeScript JSDoc Typecheck (@ts-check)
+        run: npm run typecheck
+
       - name: 🔐 Production Dependencies Security Audit
         run: npm audit --omit=dev --audit-level=high
 

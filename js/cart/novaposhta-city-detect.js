@@ -19,6 +19,7 @@ import {
     hideNPDropdowns
 } from './novaposhta-helpers.js';
 import { invokeAction } from '../core/action-registry.js';
+import { tSafe } from '../core/runtime-env.js';
 
 let _ensureCityInFlight = null;
 
@@ -127,7 +128,7 @@ export function renderCitySearchResults(data) {
                 if (branchInput) {
                     branchInput.readOnly = false;
                     branchInput.value = '';
-                    branchInput.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.branch_placeholder', { defaultValue: 'Выберите отделение...' }) : 'Выберите отделение...';
+                    branchInput.placeholder = tSafe('checkout.branch_placeholder', 'Выберите отделение...');
                 }
 
                 cartState.cachedBranches = [];
@@ -179,7 +180,7 @@ export async function searchNPCity(query) {
         console.error('Ошибка поиска города НП', e);
         const cd = document.getElementById('cityDropdown');
         if (cd) cd.style.display = 'none';
-        showToast(typeof i18next !== 'undefined' ? i18next.t('np.city_err') : 'Ошибка поиска города', 'error');
+        showToast(tSafe('np.city_err', 'Ошибка поиска города'), 'error');
     }
 }
 
@@ -269,7 +270,7 @@ export async function autoDetectCity() {
     if (!cityInput || cityInput.value.trim() !== '') return;
 
     const originalPlaceholder = cityInput.placeholder;
-    cityInput.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.geo_searching', { defaultValue: 'Поиск спутников...' }) : 'Поиск спутников...';
+    cityInput.placeholder = tSafe('checkout.geo_searching', 'Поиск спутников...');
 
     try {
         let data = null;
@@ -349,12 +350,12 @@ export async function autoDetectCity() {
 
                 if (branchInput) {
                     branchInput.readOnly = false;
-                    branchInput.placeholder = typeof i18next !== 'undefined' ? i18next.t('checkout.branch_placeholder', { defaultValue: 'Выберите отделение...' }) : 'Выберите отделение...';
+                    branchInput.placeholder = tSafe('checkout.branch_placeholder', 'Выберите отделение...');
                 }
                 invokeAction('loadNPBranches', '', false);
                 hideNPDropdowns();
 
-                const locPrefix = typeof i18next !== 'undefined' ? i18next.t('checkout.location_prefix', { defaultValue: 'Локация: ' }) : 'Локация: ';
+                const locPrefix = tSafe('checkout.location_prefix', 'Локация: ');
                 showToast(`[GEO] ${locPrefix}${cityObj.MainDescription}`, 'success');
             } else {
                 cityInput.value = detectedCity;
