@@ -458,7 +458,7 @@
 }
 
 .np-tracker[data-stage="in_transit"] {
-    --np-accent: var(--accent-green, #00ff66);
+    --np-accent: #00aaff;
 }
 
 .np-tracker[data-stage="arrived"],
@@ -608,14 +608,14 @@
 .np-tracker[data-stage="in_transit"] .np-track-fill {
     background: linear-gradient(
         90deg,
-        rgba(0, 255, 102, 0.55) 0%,
-        var(--accent-green, #00ff66) 55%,
-        #8cffb8 75%,
-        var(--accent-green, #00ff66) 100%
+        #0066cc 0%,
+        #00aaff 55%,
+        #66d0ff 75%,
+        #00aaff 100%
     );
     background-size: 200% 100%;
     animation: npRoadFlow 2.4s linear infinite;
-    box-shadow: 0 0 6px rgba(0, 255, 102, 0.25);
+    box-shadow: 0 0 8px rgba(0, 170, 255, 0.35);
 }
 
 .np-tracker[data-stage="created"] .np-track-fill,
@@ -646,7 +646,7 @@
 .np-track-dot.is-done {
     background: var(--np-accent);
     border-color: var(--np-accent);
-    box-shadow: 0 0 6px rgba(0, 255, 0, 0.35);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--np-accent) 45%, transparent);
 }
 
 .np-track-dot.is-current {
@@ -654,11 +654,11 @@
     height: 10px;
     background: #050505;
     border: 2px solid var(--np-accent);
-    box-shadow: 0 0 8px rgba(0, 255, 0, 0.45);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--np-accent) 55%, transparent);
 }
 
 .np-tracker[data-stage="in_transit"] .np-track-dot.is-current {
-    box-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
+    box-shadow: 0 0 8px rgba(0, 170, 255, 0.5);
 }
 
 .np-tracker[data-stage="created"] .np-track-dot.is-current,
