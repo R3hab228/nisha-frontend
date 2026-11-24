@@ -1,0 +1,32 @@
+# NISHA STORE
+
+> Ukrainian vintage & archive streetwear marketplace offering curated 1-of-1 garments, footwear, and accessories with buyer protection, Nova Poshta delivery across Ukraine, and direct price negotiation (bargain).
+
+## Store Overview
+
+- **Website**: https://www.nisha-store.shop/
+- **Category**: Vintage, Archive & Streetwear Marketplace (Ukraine)
+- **Inventory Model**: 1-of-1 authentic vintage and archive pieces (each item is unique)
+- **Languages**: Ukrainian (`ua`, default), Russian (`ru`), English (`en`)
+- **Currency**: UAH (Ukrainian Hryvnia)
+- **Telegram Bot**: https://t.me/nisha_store1_bot
+
+## Key Pages & Machine-Readable Endpoints
+
+- [Main Catalog](https://www.nisha-store.shop/): Live searchable catalog with filters by category, brand, size, price, sale, and bargain eligibility
+- [Return & Buyer Protection Policy](https://www.nisha-store.shop/return-policy): Detailed return, inspection, and deal guarantee terms
+- [Product Feed (Google Merchant & Meta Catalog XML)](https://www.nisha-store.shop/feed.xml): Live RSS 2.0 XML product catalog with prices, sizes, conditions, and stock availability
+- [XML Sitemap](https://www.nisha-store.shop/sitemap.xml): Canonical index of all available product pages and images
+
+## Core Marketplace Features
+
+- **Offer Your Price (Bargain)**: On eligible items, buyers can submit a custom offer directly to the seller/curator and receive a personal discounted price upon approval.
+- **NISHA STUDIO**: Verified seller drops with escrow-style buyer protection handled by NISHA.
+- **Nova Poshta Integration**: Fast city/branch/postomat lookup, delivery cost calculation, and live order tracking inside the "My Orders" cabinet.
+- **Measurements & Condition Transparency**: Every listing includes detailed garment measurements, condition rating, and high-resolution photos.
+
+## Delivery, Payment & Guarantee
+
+- **Delivery**: Nova Poshta across Ukraine (same-day dispatch for orders confirmed before 16:00, or next business day).
+- **Payment Options**: Full prepayment or Cash on Delivery (Nova Poshta) with a 200 UAH prepayment.
+- **Buyer Protection**: Buyers inspect and try on items at the Nova Poshta branch before final acceptance. Selected archive items include a 14-day return/exchange guarantee; drop items are inspected at the branch.

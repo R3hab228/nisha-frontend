@@ -106,6 +106,19 @@
       ]
     },
     {
+      "source": "/llms.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
       "source": "/(icon.*|badge.*)",
       "headers": [
         {
@@ -143,6 +156,14 @@
     {
       "source": "/google-feed.xml",
       "destination": "https://nisha-api.onrender.com/api/google-feed.xml"
+    },
+    {
+      "source": "/api/feed.xml",
+      "destination": "https://nisha-api.onrender.com/api/feed.xml"
+    },
+    {
+      "source": "/feed.xml",
+      "destination": "https://nisha-api.onrender.com/api/feed.xml"
     },
     {
       "source": "/api/rum",
