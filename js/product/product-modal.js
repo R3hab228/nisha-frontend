@@ -130,7 +130,7 @@ function renderTrustBadges(item) {
     badgesContainer.innerHTML = `
         <div class="badge-item" data-action="show-badge-info" data-badge="secure">
             <span class="badge-icon">${secureSvg}</span> 
-            <span class="badge-text" data-i18n="product.badge_orig">${tSafe('product.badge_orig', '100% ОРИГИНАЛ')}</span>
+            <span class="badge-text" data-i18n="product.badge_orig">${tSafe('product.badge_orig', 'БЕЗОПАСНАЯ СДЕЛКА')}</span>
         </div>
         ${deliveryOrBargainBadgeHTML}
         ${refundBadgeHTML}

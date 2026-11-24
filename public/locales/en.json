@@ -617,12 +617,12 @@
         "p3_1": "Once placed, an order holds the item in <b>RESERVED</b> status for exactly <b>2 hours</b> to complete the deposit or full payment.",
         "p3_2": "If payment is not received within 2 hours, the reservation expires automatically and the item returns to the catalog.",
         "h4": "[ 4. CONTACTS & BUSINESS HOURS ]",
-        "p4_1": "Order processing & support: <b>Mon–Sat, 10:00–20:00</b> (Kyiv time).",
+        "p4_1": "Order processing & support: <b>Mon–Sat, 10:00–22:00</b> (Kyiv time).",
         "p4_2": "Official support email: <b>nisha.store.ua@gmail.com</b> · Telegram support chat is available directly on the website."
       },
       "return": {
         "window_title": "RETURN_POLICY.TXT",
-        "title": "RETURN, EXCHANGE & AUTHENTICITY POLICY (UKRAINE)",
+        "title": "RETURN, EXCHANGE & INSPECTION POLICY (UKRAINE)",
         "h1": "[ 1. MANDATORY INSPECTION AT NOVA POSHTA ]",
         "p1_1": "Buyers must inspect the item, verify its condition, check for any undisclosed defects, and confirm measurements directly at the Nova Poshta branch <b>before paying COD</b>.",
         "p1_2": "Completing payment and taking the parcel out of the branch confirms the item has been inspected with no claims.",
@@ -633,8 +633,8 @@
         "h3": "[ 3. «NO RETURN» & «DROP ITEM» LISTINGS ]",
         "p3_1": "Vintage (pre-owned) items from independent sellers (<b>DROP ITEM</b>) and items badged <b>«NO RETURN»</b> are consignment peer-to-peer sales sold «as is».",
         "p3_2": "Once paid for and taken from the post office, returns or exchanges are not possible as funds are released to the seller within 24 hours.",
-        "h4": "[ 4. AUTHENTICITY GUARANTEE ]",
-        "p4_1": "Every item in NISHA is authenticated before listing. If an item does not match its description or has a hidden defect upon inspection at the post office, refuse the parcel and we will refund your deposit in full.",
+        "h4": "[ 4. DESCRIPTION ACCURACY & INSPECTION ]",
+        "p4_1": "Every item is listed with real photos, condition details, and measurements. Buyers can personally inspect the item, tags, and stitching at the Nova Poshta branch before paying. If an item does not match its description or has an undisclosed defect upon inspection, refuse the parcel and we will refund your deposit in full.",
         "p4_2": "For any return inquiries, contact <b>nisha.store.ua@gmail.com</b> or use the on-site support chat."
       },
       "privacy": {

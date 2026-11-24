@@ -618,12 +618,12 @@
           "p3_1": "Після оформлення замовлення товар отримує статус <b>RESERVED</b> рівно на <b>2 години</b> для внесення авансу або повної оплати.",
           "p3_2": "Якщо оплата не надійшла протягом 2 годин, бронь знімається автоматично і річ повертається у вільний продаж.",
           "h4": "[ 4. КОНТАКТИ ТА ГРАФІК РОБОТИ ]",
-          "p4_1": "Обробка замовлень та підтримка: <b>Пн–Сб, 10:00–20:00</b> (за київським часом).",
+          "p4_1": "Обробка замовлень та підтримка: <b>Пн–Сб, 10:00–22:00</b> (за київським часом).",
           "p4_2": "Офіційний Email підтримки: <b>nisha.store.ua@gmail.com</b> · Telegram-чат підтримки доступний безпосередньо на сайті."
         },
         "return": {
           "window_title": "RETURN_POLICY.TXT",
-          "title": "УМОВИ ПОВЕРНЕННЯ, ОБМІНУ ТА ГАРАНТІЇ (УКРАЇНА)",
+          "title": "УМОВИ ПОВЕРНЕННЯ, ОБМІНУ ТА ОГЛЯДУ (УКРАЇНА)",
           "h1": "[ 1. ОБОВ'ЯЗКОВИЙ ОГЛЯД НА «НОВІЙ ПОШТІ» ]",
           "p1_1": "Покупець зобов'язаний оглянути річ, перевірити стан, відсутність не заявлених дефектів та відповідність замірам безпосередньо у відділенні «Нової Пошти» <b>до оплати накладеного платежу</b>.",
           "p1_2": "Оплата накладеного платежу та забір посилки з відділення підтверджують, що товар перевірено і претензії до стану чи розміру відсутні.",
@@ -634,8 +634,8 @@
           "h3": "[ 3. ТОВАРИ «БЕЗ ПОВЕРНЕННЯ» ТА «DROP ITEM» ]",
           "p3_1": "Вінтажні (б/в) позиції незалежних продавців (<b>DROP ITEM</b>) та товари з бейджем <b>«БЕЗ ПОВЕРНЕННЯ»</b> є комісійними угодами між фізичними особами та продаються у стані «як є».",
           "p3_2": "Після оплати на пошті та виносу посилки з відділення повернення або обмін неможливі, оскільки кошти виплачуються власнику речі протягом 24 годин.",
-          "h4": "[ 4. ГАРАНТІЯ ОРИГІНАЛЬНОСТІ ]",
-          "p4_1": "Кожна річ у каталозі NISHA проходить перевірку на автентичність перед публікацією. Якщо на пошті виявлено невідповідність опису або прихований дефект — відмовтесь від отримання, і ми повернемо аванс у повному обсязі.",
+          "h4": "[ 4. ВІДПОВІДНІСТЬ ОПИСУ ТА ОГЛЯД ]",
+          "p4_1": "Кожна позиція публікується з реальними фотографіями, вказаним станом та замірами. Покупець має можливість особисто оглянути річ, бірки та шви у відділенні «Нової Пошти» до оплати. Якщо під час огляду виявлено невідповідність опису або прихований дефект — відмовтесь від отримання, і ми повернемо аванс у повному обсязі.",
           "p4_2": "З усіх питань щодо повернення звертайтесь на <b>nisha.store.ua@gmail.com</b> або в онлайн-підтримку сайту."
         },
         "privacy": {
@@ -1277,12 +1277,12 @@
           "p3_1": "После оформления заказа товар получает статус <b>RESERVED</b> ровно на <b>2 часа</b> для внесения аванса или полной оплаты.",
           "p3_2": "Если оплата не поступила в течение 2 часов, бронь снимается автоматически и вещь возвращается в свободную продажу.",
           "h4": "[ 4. КОНТАКТЫ И ГРАФИК РАБОТЫ ]",
-          "p4_1": "Обработка заказов и поддержка: <b>Пн–Сб, 10:00–20:00</b> (по киевскому времени).",
+          "p4_1": "Обработка заказов и поддержка: <b>Пн–Сб, 10:00–22:00</b> (по киевскому времени).",
           "p4_2": "Официальный Email поддержки: <b>nisha.store.ua@gmail.com</b> · Telegram-чат поддержки доступен прямо на сайте."
         },
         "return": {
           "window_title": "RETURN_POLICY.TXT",
-          "title": "УСЛОВИЯ ВОЗВРАТА, ОБМЕНА И ГАРАНТИИ (УКРАИНА)",
+          "title": "УСЛОВИЯ ВОЗВРАТА, ОБМЕНА И ОСМОТРА (УКРАИНА)",
           "h1": "[ 1. ОБЯЗАТЕЛЬНЫЙ ОСМОТР НА «НОВОЙ ПОЧТЕ» ]",
           "p1_1": "Покупатель обязан осмотреть вещь, проверить состояние, отсутствие не заявленных дефектов и соответствие замерам непосредственно в отделении «Новой Почты» <b>до оплаты наложенного платежа</b>.",
           "p1_2": "Оплата наложенного платежа и забор посылки из отделения подтверждают, что товар проверен и претензии к состоянию или размеру отсутствуют.",
@@ -1293,8 +1293,8 @@
           "h3": "[ 3. ТОВАРЫ «БЕЗ ВОЗВРАТА» И «DROP ITEM» ]",
           "p3_1": "Винтажные (б/у) позиции независимых продавцов (<b>DROP ITEM</b>) и товары с бейджем <b>«БЕЗ ВОЗВРАТА»</b> являются комиссионными сделками между физлицами и продаются в состоянии «как есть».",
           "p3_2": "После оплаты на почте и выноса посылки из отделения возврат или обмен невозможны, так как средства выплачиваются владельцу вещи в течение 24 часов.",
-          "h4": "[ 4. ГАРАНТИЯ ОРИГИНАЛЬНОСТИ ]",
-          "p4_1": "Каждая вещь в каталоге NISHA проходит проверку на подлинность перед публикацией. Если на почте обнаружено несоответствие описанию или скрытый дефект — откажитесь от получения, и мы вернем аванс в полном объеме.",
+          "h4": "[ 4. СООТВЕТСТВИЕ ОПИСАНИЮ И ОСМОТР ]",
+          "p4_1": "Каждая позиция публикуется с реальными фотографиями, указанным состоянием и замерами. Покупатель может лично осмотреть вещь, бирки и швы в отделении «Новой Почты» до оплаты. Если при осмотре обнаружено несоответствие описанию или скрытый дефект — откажитесь от получения, и мы вернем аванс в полном объеме.",
           "p4_2": "По всем вопросам возврата обращайтесь на <b>nisha.store.ua@gmail.com</b> или в онлайн-поддержку сайта."
         },
         "privacy": {
@@ -1936,12 +1936,12 @@
           "p3_1": "Once placed, an order holds the item in <b>RESERVED</b> status for exactly <b>2 hours</b> to complete the deposit or full payment.",
           "p3_2": "If payment is not received within 2 hours, the reservation expires automatically and the item returns to the catalog.",
           "h4": "[ 4. CONTACTS & BUSINESS HOURS ]",
-          "p4_1": "Order processing & support: <b>Mon–Sat, 10:00–20:00</b> (Kyiv time).",
+          "p4_1": "Order processing & support: <b>Mon–Sat, 10:00–22:00</b> (Kyiv time).",
           "p4_2": "Official support email: <b>nisha.store.ua@gmail.com</b> · Telegram support chat is available directly on the website."
         },
         "return": {
           "window_title": "RETURN_POLICY.TXT",
-          "title": "RETURN, EXCHANGE & AUTHENTICITY POLICY (UKRAINE)",
+          "title": "RETURN, EXCHANGE & INSPECTION POLICY (UKRAINE)",
           "h1": "[ 1. MANDATORY INSPECTION AT NOVA POSHTA ]",
           "p1_1": "Buyers must inspect the item, verify its condition, check for any undisclosed defects, and confirm measurements directly at the Nova Poshta branch <b>before paying COD</b>.",
           "p1_2": "Completing payment and taking the parcel out of the branch confirms the item has been inspected with no claims.",
@@ -1952,8 +1952,8 @@
           "h3": "[ 3. «NO RETURN» & «DROP ITEM» LISTINGS ]",
           "p3_1": "Vintage (pre-owned) items from independent sellers (<b>DROP ITEM</b>) and items badged <b>«NO RETURN»</b> are consignment peer-to-peer sales sold «as is».",
           "p3_2": "Once paid for and taken from the post office, returns or exchanges are not possible as funds are released to the seller within 24 hours.",
-          "h4": "[ 4. AUTHENTICITY GUARANTEE ]",
-          "p4_1": "Every item in NISHA is authenticated before listing. If an item does not match its description or has a hidden defect upon inspection at the post office, refuse the parcel and we will refund your deposit in full.",
+          "h4": "[ 4. DESCRIPTION ACCURACY & INSPECTION ]",
+          "p4_1": "Every item is listed with real photos, condition details, and measurements. Buyers can personally inspect the item, tags, and stitching at the Nova Poshta branch before paying. If an item does not match its description or has an undisclosed defect upon inspection, refuse the parcel and we will refund your deposit in full.",
           "p4_2": "For any return inquiries, contact <b>nisha.store.ua@gmail.com</b> or use the on-site support chat."
         },
         "privacy": {
