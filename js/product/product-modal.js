@@ -25,7 +25,7 @@ import { addToHistory, preloadSimilarItemsImages, renderSimilarItems } from './p
 import { loadItemQuestions } from './product-qa.js';
 import { parseItemMeasurements, renderMeasurementsTableHtml } from './product-measurements.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getLenisInstance, isSiteHackedMode } from '../core/runtime-env.js';
+import { getLenisInstance, isSiteHackedMode, tSafe } from '../core/runtime-env.js';
 
 function closeSecondaryOverlays() {
     if (typeof closeModal !== 'function') return;
@@ -44,8 +44,8 @@ function renderModalDescriptionContent(item, qaPart = '') {
         ? `<div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(bodyText) : getEscHtml(bodyText)}</div>`
         : '';
     const measurementsHtml = renderMeasurementsTableHtml(measurements, getEscHtml);
-    const sizeTitle = typeof i18next !== 'undefined' ? i18next.t('product.size') : 'РАЗМЕР';
-    const brandTitle = typeof i18next !== 'undefined' ? i18next.t('product.brand') : 'БРЕНД';
+    const sizeTitle = tSafe('product.size', 'РАЗМЕР');
+    const brandTitle = tSafe('product.brand', 'БРЕНД');
 
     return `
         <div style="margin-bottom: 5px;">
@@ -74,21 +74,21 @@ function renderTrustBadges(item) {
         refundBadgeHTML = `
             <div class="badge-item danger-badge" data-action="show-badge-info" data-badge="drop">
                 <span class="badge-icon">${alertSvg}</span> 
-                <span class="badge-text" data-i18n="product.badge_drop">${typeof i18next !== 'undefined' ? i18next.t('product.badge_drop') : 'DROP ITEM'}</span>
+                <span class="badge-text" data-i18n="product.badge_drop">${tSafe('product.badge_drop', 'DROP ITEM')}</span>
             </div>`;
     } else if (isReturnable) {
         const returnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
         refundBadgeHTML = `
             <div class="badge-item" data-action="show-badge-info" data-badge="refund_yes">
                 <span class="badge-icon">${returnSvg}</span> 
-                <span class="badge-text" data-i18n="product.badge_refund">${typeof i18next !== 'undefined' ? i18next.t('product.badge_refund') : 'ВОЗВРАТ 14 ДНЕЙ'}</span>
+                <span class="badge-text" data-i18n="product.badge_refund">${tSafe('product.badge_refund', 'ВОЗВРАТ 14 ДНЕЙ')}</span>
             </div>`;
     } else {
         const noReturnSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line><text x="12" y="16" font-family="monospace" font-size="12" font-weight="bold" fill="var(--accent-green)" text-anchor="middle" stroke="none">R</text></svg>`;
         refundBadgeHTML = `
             <div class="badge-item" data-action="show-badge-info" data-badge="refund_no">
                 <span class="badge-icon">${noReturnSvg}</span> 
-                <span class="badge-text" data-i18n="product.badge_norefund">${typeof i18next !== 'undefined' ? i18next.t('product.badge_norefund') : 'БЕЗ ВОЗВРАТА'}</span>
+                <span class="badge-text" data-i18n="product.badge_norefund">${tSafe('product.badge_norefund', 'БЕЗ ВОЗВРАТА')}</span>
             </div>`;
     }
 
@@ -100,9 +100,7 @@ function renderTrustBadges(item) {
         const gavelSvg = `<svg width="18" height="18" viewBox="30 30 205 170" fill="var(--accent-green, #00ff66)" stroke="none" aria-hidden="true"><path d="M128 37 L135 38 L170 67 L177 74 L177 81 L173 84 L165 82 L129 52 L124 47 L124 41 L127 38 Z M124 54 L126 54 L162 84 L162 86 L126 129 L123 132 L120 130 L85 101 L123 55 Z M77 101 L83 104 L118 133 L124 140 L123 146 L118 149 L112 147 L77 118 L70 110 L71 104 L76 102 Z M149 107 L222 163 L227 169 L226 176 L221 180 L216 180 L208 174 L143 115 L148 108 Z M55 167 H133 C136 167 138 169 138 172 V174 C138 175.5 140 176.5 142 176.5 H145 C148.5 176.5 151 179 151 182.5 V188.5 C151 192 148.5 194.5 145 194.5 H43 C39.5 194.5 37 192 37 188.5 V182.5 C37 179 39.5 176.5 43 176.5 H46 C48 176.5 50 175.5 50 174 V172 C50 169 52 167 55 167 Z" /></svg>`;
         const curLang = (typeof i18next !== 'undefined' && i18next.language) ? i18next.language : 'ru';
         const fallbackBargainText = (curLang.startsWith('ua') || curLang.startsWith('uk')) ? 'Є ТОРГ' : (curLang.startsWith('en') ? 'BARGAIN' : 'ЕСТЬ ТОРГ');
-        let bargainText = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-            ? i18next.t('product.badge_bargain', { defaultValue: fallbackBargainText })
-            : fallbackBargainText;
+        let bargainText = tSafe('product.badge_bargain', { defaultValue: fallbackBargainText });
         if (!bargainText || bargainText === 'product.badge_bargain') {
             bargainText = fallbackBargainText;
         }
@@ -125,14 +123,14 @@ function renderTrustBadges(item) {
         deliveryOrBargainBadgeHTML = `
             <div class="badge-item" data-action="show-badge-info" data-badge="fast">
                 <span class="badge-icon">24H</span> 
-                <span class="badge-text" data-i18n="product.badge_fast">${typeof i18next !== 'undefined' ? i18next.t('product.badge_fast') : 'БЫСТРАЯ ОТПРАВКА'}</span>
+                <span class="badge-text" data-i18n="product.badge_fast">${tSafe('product.badge_fast', 'БЫСТРАЯ ОТПРАВКА')}</span>
             </div>`;
     }
 
     badgesContainer.innerHTML = `
         <div class="badge-item" data-action="show-badge-info" data-badge="secure">
             <span class="badge-icon">${secureSvg}</span> 
-            <span class="badge-text" data-i18n="product.badge_orig">${typeof i18next !== 'undefined' ? i18next.t('product.badge_orig') : '100% ОРИГИНАЛ'}</span>
+            <span class="badge-text" data-i18n="product.badge_orig">${tSafe('product.badge_orig', '100% ОРИГИНАЛ')}</span>
         </div>
         ${deliveryOrBargainBadgeHTML}
         ${refundBadgeHTML}
@@ -338,7 +336,7 @@ export function openProductModal(item) {
             <!-- БЛОК ВОПРОСОВ И ОТВЕТОВ (АККОРДЕОН) -->
             <div id="qaWrapper" class="qa-wrapper">
                 <h4 class="qa-title" data-action="toggle-qa-section">
-                    <span data-i18n="product.qa_title">${typeof i18next !== 'undefined' ? i18next.t('product.qa_title', { defaultValue: 'Q&A: Вопросы покупателей' }) : 'Q&A: Вопросы покупателей'}</span>
+                    <span data-i18n="product.qa_title">${tSafe('product.qa_title', { defaultValue: 'Q&A: Вопросы покупателей' })}</span>
                     <span class="qa-arrow" style="transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); color: var(--accent-green); display: inline-block;">▼</span>
                 </h4>
                 <div id="qaCollapseWrapper" class="qa-collapse-wrapper">
@@ -348,12 +346,12 @@ export function openProductModal(item) {
 
             <!-- КНОПКА ЗАДАТЬ ВОПРОС -->
             <div style="margin-top: 15px; text-align: right;">
-                <button data-action="toggle-question-form" class="ask-question-btn" data-i18n="product.ask_btn">${typeof i18next !== 'undefined' ? i18next.t('product.ask_btn', { defaultValue: 'Задать вопрос?' }) : 'Задать вопрос?'}</button>
+                <button data-action="toggle-question-form" class="ask-question-btn" data-i18n="product.ask_btn">${tSafe('product.ask_btn', { defaultValue: 'Задать вопрос?' })}</button>
             </div>
             <div id="questionFormContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-top: 5px;">
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="questionInput" class="form-input" maxlength="100" placeholder="${getEscHtml(typeof i18next !== 'undefined' ? i18next.t('product.ask_ph', { defaultValue: 'Ваш вопрос...' }) : 'Ваш вопрос...')}" data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
-                    <button class="search-btn btn-target" data-action="submit-question" data-id="${getEscAttr(item.id)}" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${typeof i18next !== 'undefined' ? i18next.t('product.ask_send', { defaultValue: 'ОТПРАВИТЬ' }) : 'ОТПРАВИТЬ'}</button>
+                    <input type="text" id="questionInput" class="form-input" maxlength="100" placeholder="${getEscHtml(tSafe('product.ask_ph', { defaultValue: 'Ваш вопрос...' }))}" data-i18n-ph="product.ask_ph" style="font-size: 12px; padding: 8px;">
+                    <button class="search-btn btn-target" data-action="submit-question" data-id="${getEscAttr(item.id)}" style="padding: 8px 15px; font-size: 12px;" data-i18n="product.ask_send">${tSafe('product.ask_send', { defaultValue: 'ОТПРАВИТЬ' })}</button>
                 </div>
             </div>
         `;
@@ -420,8 +418,8 @@ export function openProductModal(item) {
             cartBtn.style.display = 'block';
             const userCart = getActiveCartSafe();
             const isInCart = userCart.some(i => i && String(i.id) === String(item.id));
-            const inCartText = (typeof i18next !== 'undefined') ? i18next.t('product.in_cart', { defaultValue: 'В КОРЗИНЕ' }) : 'В КОРЗИНЕ';
-            const addToCartText = (typeof i18next !== 'undefined') ? i18next.t('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' }) : 'В КОРЗИНУ';
+            const inCartText = tSafe('product.in_cart', { defaultValue: 'В КОРЗИНЕ' });
+            const addToCartText = tSafe('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' });
             cartBtn.textContent = isInCart ? inCartText : addToCartText;
         }
     }

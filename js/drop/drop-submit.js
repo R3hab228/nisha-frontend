@@ -3,7 +3,7 @@
 // ==========================================
 
 import { invokeAction, resolveAction } from '../core/action-registry.js';
-import { getLenisInstance, getRuntimeFingerprint, getRuntimeUser, getTurnstileApi, getRuntimeSiteLang } from '../core/runtime-env.js';
+import { getLenisInstance, getRuntimeFingerprint, getRuntimeUser, getTurnstileApi, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 import {
     getProposalFiles,
     hasPrivateMeasurementsDodge,
@@ -114,7 +114,7 @@ export function enqueueProposalUpload(formData) {
         .catch((err) => {
             console.error('[PROPOSAL BACKGROUND UPLOAD FAILED]', err);
             if (typeof showToast === 'function') {
-                const errMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Ошибка отправки вещи на сервер. Проверьте интернет и попробуйте еще раз.';
+                const errMsg = tSafe('propose.err_network', 'Ошибка отправки вещи на сервер. Проверьте интернет и попробуйте еще раз.');
                 showToast(errMsg, 'error');
             }
         })
@@ -175,9 +175,7 @@ export function resetProposalForm() {
     }
     const descLabel = document.getElementById('descLabel');
     if (descLabel) {
-        descLabel.textContent = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-            ? i18next.t('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' })
-            : 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):';
+        descLabel.textContent = tSafe('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' });
         descLabel.style.color = '';
     }
 
@@ -309,9 +307,7 @@ export async function submitProposal() {
 
     if (window._propBargainMode || (rawMinBargain && !window._propBargainEnabled)) {
         if (typeof triggerHaptic === 'function') triggerHaptic('warning');
-        const confirmMsg = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-            ? i18next.t('propose.err_confirm_bargain', { defaultValue: 'Подтвердите торг нажатием на галочку [ ✓ ]!' })
-            : 'Подтвердите торг нажатием на галочку [ ✓ ]!';
+        const confirmMsg = tSafe('propose.err_confirm_bargain', { defaultValue: 'Подтвердите торг нажатием на галочку [ ✓ ]!' });
         showToast(confirmMsg, 'warning');
 
         const btnConfirm = document.getElementById('btnConfirmPropBargain');
@@ -327,22 +323,21 @@ export async function submitProposal() {
 
     if (!files.length || !nameItem || !brand || (categoryEl && !category) || !size || !desc || Number.isNaN(cond) || Number.isNaN(price) || price <= 0 || !contact) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const fillAllMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_fill_all')) || 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!';
+        const fillAllMsg = tSafe('propose.err_fill_all', 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!');
         showToast(fillAllMsg, 'error');
         return;
     }
 
     if (cond < 1 || cond > 10) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const condMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_cond_range')) || 'Оценка состояния от 1 до 10!';
+        const condMsg = tSafe('propose.err_cond_range', 'Оценка состояния от 1 до 10!');
         showToast(condMsg, 'error');
         return;
     }
 
     if (hasPrivateMeasurementsDodge(rawDesc) || hasPrivateMeasurementsDodge(rawName)) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const measurementsDmMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_measurements_dm'))
-            || 'Замеры в ЛС запрещены — укажите замеры цифрами прямо в описании!';
+        const measurementsDmMsg = tSafe('propose.err_measurements_dm', 'Замеры в ЛС запрещены — укажите замеры цифрами прямо в описании!');
         showToast(measurementsDmMsg, 'error');
         const descEl = document.getElementById('propDesc');
         if (descEl && typeof descEl.focus === 'function') descEl.focus();
@@ -355,7 +350,7 @@ export async function submitProposal() {
         minBargainPrice = Number.parseInt(rawMinBargain, 10);
         if (Number.isNaN(minBargainPrice) || minBargainPrice < 100) {
             if (typeof triggerHaptic === 'function') triggerHaptic('error');
-            const minBargainMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_bargain_min')) || 'Минимальная цена торга должна быть не менее 100 грн!';
+            const minBargainMsg = tSafe('propose.err_bargain_min', 'Минимальная цена торга должна быть не менее 100 грн!');
             showToast(minBargainMsg, 'error');
             if (!window._propBargainMode && typeof openPropBargainInput === 'function') openPropBargainInput();
             else if (minBargainInput) minBargainInput.focus();
@@ -363,7 +358,7 @@ export async function submitProposal() {
         }
         if (minBargainPrice >= price) {
             if (typeof triggerHaptic === 'function') triggerHaptic('error');
-            const lessPriceMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_bargain_less_price')) || 'Минимальная цена торга должна быть меньше желаемой цены!';
+            const lessPriceMsg = tSafe('propose.err_bargain_less_price', 'Минимальная цена торга должна быть меньше желаемой цены!');
             showToast(lessPriceMsg, 'error');
             if (!window._propBargainMode && typeof openPropBargainInput === 'function') openPropBargainInput();
             else if (minBargainInput) minBargainInput.focus();
@@ -395,7 +390,7 @@ export async function submitProposal() {
         if (allPrecompressed) {
             compressedFiles = proposalItems.map(item => item.compressedFile);
         } else {
-            const compressText = typeof i18next !== 'undefined' ? i18next.t('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' }) : 'СЖАТИЕ ФОТО';
+            const compressText = tSafe('propose.compressing', { defaultValue: 'СЖАТИЕ ФОТО' });
             let compressedDone = proposalItems.filter(item => Boolean(item.compressedFile)).length;
             btn.textContent = `[ ${compressText}: ${compressedDone}/${proposalItems.length} ]`;
 
@@ -451,9 +446,7 @@ export async function submitProposal() {
         // Дожидаемся уже запущенной предзагрузки фото (если юзер нажал «Отправить» сразу после выбора)
         const pendingPreuploads = proposalItems.filter(item => !item.uploadedUrl && item.uploadPromise);
         if (pendingPreuploads.length > 0) {
-            const uploadingTextPre = typeof i18next !== 'undefined'
-                ? i18next.t('propose.uploading', { defaultValue: 'ОТПРАВКА НА СЕРВЕР...' })
-                : 'ОТПРАВКА НА СЕРВЕР...';
+            const uploadingTextPre = tSafe('propose.uploading', { defaultValue: 'ОТПРАВКА НА СЕРВЕР...' });
             btn.textContent = `[ ${uploadingTextPre} ]`;
             await Promise.allSettled(pendingPreuploads.map(item => item.uploadPromise));
         }
@@ -469,9 +462,7 @@ export async function submitProposal() {
             });
         }
 
-        const uploadingText = typeof i18next !== 'undefined'
-            ? i18next.t('propose.uploading', { defaultValue: 'ОТПРАВКА НА СЕРВЕР...' })
-            : 'ОТПРАВКА НА СЕРВЕР...';
+        const uploadingText = tSafe('propose.uploading', { defaultValue: 'ОТПРАВКА НА СЕРВЕР...' });
         btn.textContent = `[ ${uploadingText} ]`;
 
         activeProposalUploads++;
@@ -492,9 +483,7 @@ export async function submitProposal() {
         }
 
         resetProposalForm();
-        btn.textContent = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-            ? i18next.t('propose.btn_submit', { defaultValue: '[ ОТПРАВИТЬ ЗАЯВКУ ]' })
-            : '[ ОТПРАВИТЬ ЗАЯВКУ ]';
+        btn.textContent = tSafe('propose.btn_submit', { defaultValue: '[ ОТПРАВИТЬ ЗАЯВКУ ]' });
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
         _isSubmittingProposal = false;
@@ -507,17 +496,17 @@ export async function submitProposal() {
         }
 
         setTimeout(() => {
-            const okTitle = (typeof i18next !== 'undefined' && i18next.t('propose.success_title', { defaultValue: 'SYSTEM_OK.LOG' })) || 'SYSTEM_OK.LOG';
-            const okText = (typeof i18next !== 'undefined' && i18next.t('propose.success_text', { defaultValue: 'Заявка успешно отправлена.' })) || 'Заявка успешно отправлена.';
-            const okBtn = (typeof i18next !== 'undefined' && i18next.t('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' })) || '[ ЗАКРЫТЬ ]';
+            const okTitle = tSafe('propose.success_title', { defaultValue: 'SYSTEM_OK.LOG' });
+            const okText = tSafe('propose.success_text', { defaultValue: 'Заявка успешно отправлена.' });
+            const okBtn = tSafe('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' });
             invokeAction('playSound', 'tada', { kind: 'celebrate' });
             showTerminalModal(okTitle, okText, okBtn, null);
         }, 100);
     } catch (err) {
         console.error(err);
-        const serverErrPref = typeof i18next !== 'undefined' ? i18next.t('propose.err_server', { defaultValue: 'Сбой сервера: ' }) : 'Сбой сервера: ';
+        const serverErrPref = tSafe('propose.err_server', { defaultValue: 'Сбой сервера: ' });
         showToast(serverErrPref + err.message, 'error');
-        btn.textContent = typeof i18next !== 'undefined' ? i18next.t('propose.btn_retry', { defaultValue: '[ ПОВТОРИТЬ ПОПЫТКУ ]' }) : '[ ПОВТОРИТЬ ПОПЫТКУ ]';
+        btn.textContent = tSafe('propose.btn_retry', { defaultValue: '[ ПОВТОРИТЬ ПОПЫТКУ ]' });
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
         _isSubmittingProposal = false;

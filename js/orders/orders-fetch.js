@@ -3,7 +3,7 @@
 // ==========================================
 
 import { invokeAction, resolveAction } from '../core/action-registry.js';
-import { getRuntimeProfile, getRuntimeSiteLang, getRuntimeUser } from '../core/runtime-env.js';
+import { getRuntimeProfile, getRuntimeSiteLang, getRuntimeUser, tSafe } from '../core/runtime-env.js';
 import {
     escAttr,
     escHtml,
@@ -170,7 +170,7 @@ export async function fetchMyOrders() {
     }
 
     if (!currentOrders || currentOrders.length === 0) {
-        const loadingDbMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.loading_db', { defaultValue: '[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]' }) : '[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]';
+        const loadingDbMsg = tSafe('orders_modal.loading_db', { defaultValue: '[ ЗАГРУЗКА БАЗЫ ДАННЫХ... ]' });
         listArea.innerHTML = `<div style="text-align:center; color:#aaa; font-family: monospace;">${loadingDbMsg}</div>`;
         if (tabsContainer) tabsContainer.style.display = 'none';
     }
@@ -358,10 +358,10 @@ export async function fetchMyOrders() {
         if (!phone || phone.length < 10) {
             const toastFn = resolveAction('showToast') || (typeof showToast === 'function' ? showToast : null);
             if (toastFn) {
-                const errPhoneMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.err_phone', { defaultValue: 'Введите корректный номер телефона!' }) : 'Введите корректный номер телефона!';
+                const errPhoneMsg = tSafe('orders_modal.err_phone', { defaultValue: 'Введите корректный номер телефона!' });
                 toastFn(errPhoneMsg, 'error');
             }
-            const errNoPhoneMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.err_no_phone', { defaultValue: '[ НОМЕР НЕ ВВЕДЕН ]' }) : '[ НОМЕР НЕ ВВЕДЕН ]';
+            const errNoPhoneMsg = tSafe('orders_modal.err_no_phone', { defaultValue: '[ НОМЕР НЕ ВВЕДЕН ]' });
             listArea.innerHTML = `<div style="text-align:center; color:#555; font-family: monospace;">${errNoPhoneMsg}</div>`;
             return;
         }
@@ -369,8 +369,8 @@ export async function fetchMyOrders() {
         const { data: vResult } = await sb.rpc('check_otp_verified', { p_phone: phone });
         const otpCheck = vResult ? [{ is_verified: true }] : [];
         if (!otpCheck || otpCheck.length === 0 || !otpCheck.at(0).is_verified) {
-            const deniedOtpMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.access_denied_otp', { defaultValue: 'Сначала подтвердите, что это ваш номер телефона.' }) : 'Сначала подтвердите, что это ваш номер телефона.';
-            const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' }) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
+            const deniedOtpMsg = tSafe('orders_modal.access_denied_otp', { defaultValue: 'Сначала подтвердите, что это ваш номер телефона.' });
+            const verifyBotMsg = tSafe('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' });
             renderOrdersErrorCard(listArea, {
                 code: 'ACCESS_DENIED.SYS',
                 messageHtml: deniedOtpMsg,
@@ -410,15 +410,13 @@ export async function fetchMyOrders() {
                     en: 'Phone number is not verified via OTP or profile'
                 };
                 const localizedDefault = otpErrFallbacks[lang] || otpErrFallbacks.ua;
-                displayMsg = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-                    ? i18next.t('orders_modal.err_otp_unverified', { defaultValue: localizedDefault })
-                    : localizedDefault;
+                displayMsg = tSafe('orders_modal.err_otp_unverified', { defaultValue: localizedDefault });
             }
             if (enteredPhone && enteredPhone.length >= 10) {
-                const verifyBotMsg = typeof i18next !== 'undefined' ? i18next.t('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' }) : 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ';
+                const verifyBotMsg = tSafe('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' });
                 actionHtml = `<button type="button" class="cart-checkout-btn btn-target" data-action="verify-orders-phone" data-phone="${escAttr(enteredPhone)}">[ ${escHtml(verifyBotMsg)} ]</button>`;
             } else {
-                const openProfileMsg = typeof i18next !== 'undefined' ? i18next.t('profile.title', { defaultValue: 'ПРОФИЛЬ' }) : 'ПРОФИЛЬ';
+                const openProfileMsg = tSafe('profile.title', { defaultValue: 'ПРОФИЛЬ' });
                 actionHtml = `<button type="button" class="cart-checkout-btn btn-target" data-action="open-profile">[ ${escHtml(openProfileMsg)} ]</button>`;
             }
         }
@@ -432,8 +430,8 @@ export async function fetchMyOrders() {
     }
 
     if (!latestOrders || latestOrders.length === 0) {
-        const emptyTitle = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_title') : 'ЗАКАЗОВ НЕТ';
-        const emptyDesc = typeof i18next !== 'undefined' ? i18next.t('orders_modal.empty_desc') : 'Вы еще не делали заказов в нашем магазине.';
+        const emptyTitle = tSafe('orders_modal.empty_title', 'ЗАКАЗОВ НЕТ');
+        const emptyDesc = tSafe('orders_modal.empty_desc', 'Вы еще не делали заказов в нашем магазине.');
         listArea.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; border: 1px dashed #333; background: #0a0a0a;">
                 <div style="font-size: 30px; margin-bottom: 15px;">📦</div>
