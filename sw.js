@@ -20,6 +20,8 @@ const STATIC_URLS = [
     '/locales/en.json',
     '/404.html',
     '/return-policy.html',
+    '/shipping-payment.html',
+    '/privacy-policy.html',
     '/badge.png?v=11',
     '/icon-192.png?v=11',
     '/icon-512.png?v=11',

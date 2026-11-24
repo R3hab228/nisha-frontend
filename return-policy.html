@@ -1,28 +1,20 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Политика возврата и гарантии | NISHA STORE</title>
-    <meta name="description" content="Условия возврата, гарантии и правила обслуживания в магазине винтажной одежды NISHA.">
+    <title>Політика повернення та гарантії | NISHA STORE</title>
+    <meta name="description" content="Умови повернення, обміну та гарантії оригінальності в магазині вінтажного одягу NISHA STORE в Україні. 14 днів на повернення для товарів з бейджем згідно із законом.">
     <link rel="canonical" href="https://www.nisha-store.shop/return-policy">
     <link rel="icon" type="image/png" sizes="32x32" href="/icon.png">
 
-    <!-- OpenGraph / Facebook / Instagram / Telegram -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="NISHA">
+    <meta property="og:site_name" content="NISHA STORE">
     <meta property="og:url" content="https://www.nisha-store.shop/return-policy">
     <meta property="og:title" content="Політика повернення та гарантії | NISHA STORE">
-    <meta property="og:description" content="Умови повернення, гарантії та правила обслуговування в магазині вінтажного одягу NISHA. 14 днів на повернення згідно із законом.">
+    <meta property="og:description" content="Умови повернення, обміну та гарантії в магазині вінтажного одягу NISHA STORE. 14 днів на повернення згідно із законом України.">
     <meta property="og:image" content="https://www.nisha-store.shop/og-image.png">
     <meta property="og:locale" content="uk_UA">
-
-    <!-- Twitter / X -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://www.nisha-store.shop/return-policy">
-    <meta name="twitter:title" content="Політика повернення та гарантії | NISHA STORE">
-    <meta name="twitter:description" content="Умови повернення, гарантії та правила обслуговування в магазині вінтажного одягу NISHA. 14 днів на повернення згідно із законом.">
-    <meta name="twitter:image" content="https://www.nisha-store.shop/og-image.png">
     <script type="speculationrules">
     {
       "prerender": [
@@ -41,18 +33,18 @@
       ]
     }
     </script>
+
     <style>
         :root {
             --bg-color: #0a0a0a;
-            --card-bg: #141414;
-            --text-color: #e0e0e0;
+            --card-bg: #111111;
+            --text-color: #dddddd;
             --accent-green: #00ff66;
             --accent-red: #ff3366;
             --accent-yellow: #ffcc00;
             --border-color: #2a2a2a;
             --font-mono: "Courier New", Courier, monospace;
         }
-
         @supports (color: oklch(0% 0 0)) {
             :root {
                 --bg-color: oklch(10% 0 0);
@@ -63,7 +55,6 @@
                 --accent-yellow: oklch(88% 0.21 95);
                 --border-color: oklch(25% 0 0);
             }
-
             @media (color-gamut: p3) {
                 :root {
                     --accent-green: oklch(87.5% 0.315 142.5);
@@ -77,121 +68,169 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.6;
+            line-height: 1.65;
             padding: 20px;
         }
         .container {
-            max-width: 800px;
-            margin: 40px auto;
+            max-width: 760px;
+            margin: 32px auto;
             background: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
         }
         .header {
+            background: #000;
             border-bottom: 2px solid var(--border-color);
-            padding-bottom: 15px;
-            margin-bottom: 25px;
+            padding: 14px 22px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         .logo {
             font-family: var(--font-mono);
-            font-size: 22px;
+            font-size: 16px;
             font-weight: bold;
-            color: var(--accent-green);
+            color: var(--accent-red);
             text-decoration: none;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .lang-btn, .back-link {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #aaa;
+            background: #111;
+            text-decoration: none;
+            border: 1px solid #333;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .lang-btn.active, .lang-btn:hover, .back-link:hover {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+        .body-content { padding: 26px; }
         h1 {
             font-family: var(--font-mono);
-            font-size: 20px;
+            font-size: 17px;
             color: var(--accent-yellow);
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         h2 {
             font-family: var(--font-mono);
-            font-size: 16px;
+            font-size: 15px;
             color: var(--accent-green);
-            margin-top: 25px;
+            margin-top: 24px;
             margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
         }
-        p, li {
-            font-size: 14px;
-            color: #ccc;
-            margin-bottom: 10px;
-        }
-        ul {
-            padding-left: 20px;
-            margin-bottom: 15px;
-        }
-        .badge-red { color: var(--accent-red); font-weight: bold; }
-        .badge-green { color: var(--accent-green); font-weight: bold; }
-        .back-btn {
-            display: inline-block;
-            margin-top: 25px;
-            padding: 10px 20px;
-            background: #111;
-            color: var(--accent-green);
+        h2.danger { color: var(--accent-red); }
+        ul { padding-left: 20px; margin-bottom: 14px; }
+        li { margin-bottom: 10px; color: #ddd; font-size: 14px; }
+        b, strong { color: #fff; }
+        .footer-nav {
+            background: #000;
+            border-top: 1px dashed #333;
+            padding: 16px 26px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             font-family: var(--font-mono);
-            text-decoration: none;
-            border: 1px solid var(--accent-green);
-            border-radius: 4px;
-            font-weight: bold;
-            transition: all 0.2s;
+            font-size: 12px;
         }
-        .back-btn:hover {
-            background: var(--accent-green);
-            color: #000;
-        }
+        .footer-nav a { color: #999; text-decoration: underline; text-underline-offset: 4px; }
+        .footer-nav a:hover { color: var(--accent-green); }
     </style>
 </head>
 <body>
-    <div class="container">
+    <main class="container">
         <div class="header">
-            <a href="/" class="logo">NISHA_STORE.EXE</a>
-            <span style="font-family: var(--font-mono); font-size: 13px; color: #888;">RETURN_POLICY.LOG</span>
+            <a href="/" class="logo">RETURN_POLICY.TXT</a>
+            <div class="header-controls">
+                <button type="button" class="lang-btn" data-lang="ua">UA</button>
+                <button type="button" class="lang-btn" data-lang="ru">RU</button>
+                <button type="button" class="lang-btn" data-lang="en">EN</button>
+                <a href="/" class="back-link" id="backLink">[ ← КАТАЛОГ ]</a>
+            </div>
         </div>
 
-        <h1>УСЛОВИЯ ВОЗВРАТА, ОБМЕНА И ДОСТАВКИ</h1>
+        <div class="body-content" id="docBody">
+            <h1>УМОВИ ПОВЕРНЕННЯ, ОБМІНУ ТА ГАРАНТІЇ (УКРАЇНА)</h1>
+            <h2>[ 1. ОБОВ'ЯЗКОВИЙ ОГЛЯД НА «НОВІЙ ПОШТІ» ]</h2>
+            <ul>
+                <li>Покупець зобов'язаний оглянути річ, перевірити стан, відсутність не заявлених дефектів та відповідність замірам безпосередньо у відділенні «Нової Пошти» <b>до оплати накладеного платежу</b>.</li>
+                <li>Оплата накладеного платежу та забір посилки з відділення підтверджують, що товар перевірено і претензії до стану чи розміру відсутні.</li>
+            </ul>
+            <h2>[ 2. ТОВАРИ З БЕЙДЖЕМ «ПОВЕРНЕННЯ 14 ДНІВ» ]</h2>
+            <ul>
+                <li>Для архівних речей власного фонду магазину з позначкою <b>«ПОВЕРНЕННЯ 14 ДНІВ»</b> діє право на повернення протягом <b>14 календарних днів</b> з моменту отримання згідно зі ст. 9 Закону України «Про захист прав споживачів».</li>
+                <li>Обов'язкові умови повернення: збережений первісний вигляд речі, відсутність слідів носіння, прання чи сторонніх запахів, а також збережені оригінальні бірки/пломби NISHA.</li>
+                <li>Вартість зворотної доставки «Новою Поштою» оплачує покупець. Повернення коштів на банківську картку здійснюється протягом <b>1–3 робочих днів</b> після отримання та перевірки товару.</li>
+            </ul>
+            <h2 class="danger">[ 3. ТОВАРИ «БЕЗ ПОВЕРНЕННЯ» ТА «DROP ITEM» ]</h2>
+            <ul>
+                <li>Вінтажні (б/в) позиції незалежних продавців (<b>DROP ITEM</b>) та товари з бейджем <b>«БЕЗ ПОВЕРНЕННЯ»</b> є комісійними угодами між фізичними особами та продаються у стані «як є».</li>
+                <li>Після оплати на пошті та виносу посилки з відділення повернення або обмін неможливі, оскільки кошти виплачуються власнику речі протягом 24 годин.</li>
+            </ul>
+            <h2>[ 4. ГАРАНТІЯ ОРИГІНАЛЬНОСТІ ]</h2>
+            <ul>
+                <li>Кожна річ у каталозі NISHA проходить перевірку на автентичність перед публікацією. Якщо на пошті виявлено невідповідність опису або прихований дефект — відмовтесь від отримання, і ми повернемо аванс у повному обсязі.</li>
+                <li>З усіх питань щодо повернення звертайтесь на <b>nisha.store.ua@gmail.com</b> або в онлайн-підтримку сайту.</li>
+            </ul>
+        </div>
 
-        <h2>[ 1. ОБЩИЕ ПОЛОЖЕНИЯ ]</h2>
-        <ul>
-            <li>Сервис NISHA является комиссионной онлайн-витриной и гарантом безопасных расчетов между сторонами.</li>
-            <li>Бейдж «Безопасная сделка» гарантирует: вы не рискуете всей суммой и оплачиваете остаток стоимости вещи наложенным платежом только после личного осмотра и примерки на почте.</li>
-            <li>В каталоге представлены архивные вещи магазина и независимых продавцов. Все товары винтажные (б/у) и продаются в состоянии «как есть».</li>
-        </ul>
+        <nav class="footer-nav" aria-label="Legal links">
+            <a href="/">NISHA STORE — Головна</a>
+            <a href="/shipping-payment">Доставка та оплата</a>
+            <a href="/privacy-policy">Політика конфіденційності</a>
+            <a href="https://t.me/nisha_support" target="_blank" rel="noopener noreferrer">Telegram Підтримка</a>
+        </nav>
+    </main>
 
-        <h2>[ 2. УСЛОВИЯ ВОЗВРАТА (14 ДНЕЙ) ]</h2>
-        <ul>
-            <li><b>Осмотр на почте обязателен:</b> Оплата наложенного платежа и забор посылки подтверждают, что вещь проверена на соответствие замерам, описанию, и претензии отсутствуют.</li>
-            <li><span class="badge-green">ТОВАРЫ С БЕЙДЖЕМ «ВОЗВРАТ 14 ДНЕЙ»:</span> Возврат архивных вещей магазина надлежащего качества возможен в течение <b>14 календарных дней</b> с момента получения посылки согласно законодательству Украины.</li>
-            <li><b>Требования к возвращаемому товару:</b> Товар принимается строго с сохранением оригинальных бирок магазина и без следов носки/эксплуатации. Доставку возврата оплачивает покупатель.</li>
-            <li><span class="badge-red">ТОВАРЫ «БЕЗ ВОЗВРАТА» И «ПРЕДЛОЖКА»:</span> Комиссионные сделки между физическими лицами. После забора посылки с почты возврат не предусмотрен, так как средства перечисляются владельцу вещи.</li>
-        </ul>
-
-        <h2>[ 3. ОБМЕН ТОВАРОВ ]</h2>
-        <p>Поскольку все вещи в нашем магазине являются уникальными винтажными и архивными единицами в единственном экземпляре, <b>обмен товаров не производится</b>.</p>
-
-        <h2>[ 4. ОПЛАТА И ДОСТАВКА ]</h2>
-        <ul>
-            <li>Доставка по всей Украине осуществляется службой <b>«Нова Пошта»</b> за счет покупателя по тарифам перевозчика.</li>
-            <li>Форматы оплаты: Наложенный платеж с авансом 200 грн (остаток оплачивается в отделении после осмотра) либо 100% предоплата.</li>
-            <li>Отправка заказов производится в день оплаты (до 16:00) либо на следующий рабочий день. Срок доставки: 1–3 рабочих дня.</li>
-        </ul>
-
-        <h2>[ 5. КОНТАКТЫ ДЛЯ СВЯЗИ ]</h2>
-        <p>По всем вопросам возврата и консультаций обращайтесь:</p>
-        <ul>
-            <li>Telegram поддержка: <a href="https://t.me/NISHA_ADMIN01" target="_blank" rel="noopener noreferrer" style="color: var(--accent-green); text-decoration: none;"><b>@NISHA_ADMIN01</b></a></li>
-            <li>Официальный сайт: <a href="https://www.nisha-store.shop" style="color: var(--accent-green);">https://www.nisha-store.shop</a></li>
-        </ul>
-
-        <a href="/" class="back-btn">← ВЕРНУТЬСЯ В КАТАЛОГ</a>
-    </div>
+    <script>
+        (function () {
+            var docKey = 'return';
+            var buttons = document.querySelectorAll('.lang-btn');
+            var backLabels = { ua: '[ ← КАТАЛОГ ]', ru: '[ ← КАТАЛОГ ]', en: '[ ← CATALOG ]' };
+            function norm(l) {
+                l = String(l || '').toLowerCase();
+                if (l.startsWith('ru')) return 'ru';
+                if (l.startsWith('en')) return 'en';
+                return 'ua';
+            }
+            function render(lang, data) {
+                var d = data && data.translation && data.translation.legal_docs && data.translation.legal_docs[docKey];
+                if (!d) return;
+                document.documentElement.lang = lang === 'ua' ? 'uk' : lang;
+                document.getElementById('backLink').textContent = backLabels[lang] || backLabels.ua;
+                buttons.forEach(function (b) { b.classList.toggle('active', b.dataset.lang === lang); });
+                document.getElementById('docBody').innerHTML =
+                    '<h1>' + d.title + '</h1>' +
+                    '<h2>' + d.h1 + '</h2><ul><li>' + d.p1_1 + '</li><li>' + d.p1_2 + '</li></ul>' +
+                    '<h2>' + d.h2 + '</h2><ul><li>' + d.p2_1 + '</li><li>' + d.p2_2 + '</li><li>' + d.p2_3 + '</li></ul>' +
+                    '<h2 class="danger">' + d.h3 + '</h2><ul><li>' + d.p3_1 + '</li><li>' + d.p3_2 + '</li></ul>' +
+                    '<h2>' + d.h4 + '</h2><ul><li>' + d.p4_1 + '</li><li>' + d.p4_2 + '</li></ul>';
+            }
+            function loadLang(lang) {
+                lang = norm(lang);
+                try { localStorage.setItem('nisha_lang', lang); } catch (_) {}
+                fetch('/locales/' + lang + '.json').then(function (r) { return r.json(); }).then(function (data) { render(lang, data); }).catch(function () {});
+            }
+            buttons.forEach(function (b) { b.addEventListener('click', function () { loadLang(b.dataset.lang); }); });
+            var saved = 'ua';
+            try { saved = norm(localStorage.getItem('nisha_lang')); } catch (_) {}
+            loadLang(saved);
+        })();
+    </script>
 </body>
 </html>

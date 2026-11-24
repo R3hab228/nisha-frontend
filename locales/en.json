@@ -92,7 +92,10 @@
       "pwa_broadcast_later": "LATER",
       "pwa_broadcast_ok": "GOT IT",
       "pwa_broadcast_installed": "PWA installed",
-      "pwa_broadcast_close": "CLOSE"
+      "pwa_broadcast_close": "CLOSE",
+      "shipping_payment": "Shipping & Payment",
+      "return_policy_link": "Return Policy",
+      "rules_link": "Rules"
     },
     "product": {
       "size": "SIZE:",
@@ -595,6 +598,62 @@
     "filters": {
       "in_stock": "In stock only",
       "remove_aria": "Remove filter"
+    },
+    "legal_docs": {
+      "btn_close": "[ CLOSE ]",
+      "shipping": {
+        "window_title": "SHIPPING_PAYMENT.TXT",
+        "title": "SHIPPING & PAYMENT IN UKRAINE (NOVA POSHTA)",
+        "h1": "[ 1. NOVA POSHTA DELIVERY ]",
+        "p1_1": "Orders are delivered exclusively across Ukraine via <b>Nova Poshta</b> (branch pickup, parcel locker, or courier).",
+        "p1_2": "Orders are dispatched on the same day once deposit or full payment is confirmed before <b>16:00</b> (Mon–Sat), or on the next business day.",
+        "p1_3": "Estimated delivery time across Ukraine is <b>1–3 business days</b>. Shipping fees are paid by the buyer according to carrier rates (from 90 UAH).",
+        "p1_4": "Your tracking number (TTN) appears automatically in <b>My Orders</b> and is sent via Telegram / Email immediately after dispatch.",
+        "h2": "[ 2. PAYMENT METHODS ]",
+        "p2_1": "<b>1. Cash on Delivery (COD) with 200 UAH deposit:</b> the deposit is paid upon checkout, and the remaining balance is paid at Nova Poshta strictly after inspecting and trying on the item.",
+        "p2_2": "<b>2. 100% Prepayment:</b> optional full payment to avoid Nova Poshta money transfer fees (20 UAH + 2%).",
+        "p2_3": "The <b>200 UAH</b> deposit is non-refundable if the parcel is refused, unclaimed, or cancelled after dispatch, as it covers round-trip shipping costs.",
+        "h3": "[ 3. ITEM RESERVATION ]",
+        "p3_1": "Once placed, an order holds the item in <b>RESERVED</b> status for exactly <b>2 hours</b> to complete the deposit or full payment.",
+        "p3_2": "If payment is not received within 2 hours, the reservation expires automatically and the item returns to the catalog.",
+        "h4": "[ 4. CONTACTS & BUSINESS HOURS ]",
+        "p4_1": "Order processing & support: <b>Mon–Sat, 10:00–20:00</b> (Kyiv time).",
+        "p4_2": "Official support email: <b>nisha.store.ua@gmail.com</b> · Telegram support chat is available directly on the website."
+      },
+      "return": {
+        "window_title": "RETURN_POLICY.TXT",
+        "title": "RETURN, EXCHANGE & AUTHENTICITY POLICY (UKRAINE)",
+        "h1": "[ 1. MANDATORY INSPECTION AT NOVA POSHTA ]",
+        "p1_1": "Buyers must inspect the item, verify its condition, check for any undisclosed defects, and confirm measurements directly at the Nova Poshta branch <b>before paying COD</b>.",
+        "p1_2": "Completing payment and taking the parcel out of the branch confirms the item has been inspected with no claims.",
+        "h2": "[ 2. ITEMS WITH «14-DAY RETURN» BADGE ]",
+        "p2_1": "Store-owned archive items marked <b>«14-DAY RETURN»</b> are eligible for return within <b>14 calendar days</b> of receipt in accordance with Art. 9 of the Law of Ukraine «On Consumer Rights Protection».",
+        "p2_2": "Conditions: original condition preserved, no signs of wear, washing, or odors, and all original NISHA tags/seals intact.",
+        "p2_3": "Return shipping via Nova Poshta is covered by the buyer. Refunds are issued to your bank card within <b>1–3 business days</b> after inspection.",
+        "h3": "[ 3. «NO RETURN» & «DROP ITEM» LISTINGS ]",
+        "p3_1": "Vintage (pre-owned) items from independent sellers (<b>DROP ITEM</b>) and items badged <b>«NO RETURN»</b> are consignment peer-to-peer sales sold «as is».",
+        "p3_2": "Once paid for and taken from the post office, returns or exchanges are not possible as funds are released to the seller within 24 hours.",
+        "h4": "[ 4. AUTHENTICITY GUARANTEE ]",
+        "p4_1": "Every item in NISHA is authenticated before listing. If an item does not match its description or has a hidden defect upon inspection at the post office, refuse the parcel and we will refund your deposit in full.",
+        "p4_2": "For any return inquiries, contact <b>nisha.store.ua@gmail.com</b> or use the on-site support chat."
+      },
+      "privacy": {
+        "window_title": "PRIVACY_POLICY.TXT",
+        "title": "PRIVACY POLICY & DATA PROTECTION (UKRAINE)",
+        "h1": "[ 1. LEGAL BASIS ]",
+        "p1_1": "This Policy governs the collection, processing, and protection of personal data of users of <b>https://www.nisha-store.shop/</b> in accordance with the Law of Ukraine «On Personal Data Protection» No. 2297-VI.",
+        "p1_2": "By placing an order, creating an account, or submitting a DROP_ITEM listing, you consent to data processing under this Policy.",
+        "h2": "[ 2. DATA WE COLLECT ]",
+        "p2_1": "Contact details you voluntarily provide: full name, phone number, email address, and Telegram username.",
+        "p2_2": "Delivery details: city and Nova Poshta branch or parcel locker number.",
+        "p2_3": "Security and functional data: auth session tokens, Cloudflare Turnstile anti-bot checks, and local browser storage for cart, favorites, and language preference.",
+        "h3": "[ 3. HOW WE USE & PROTECT DATA ]",
+        "p3_1": "Data is used strictly for order fulfillment, Nova Poshta waybill (TTN) creation, parcel status notifications, seller verification, and fraud prevention.",
+        "p3_2": "We <b>never sell</b> personal data to third parties. Data is shared only with essential fulfillment providers (Nova Poshta, Supabase, Resend, Telegram API) over encrypted HTTPS.",
+        "h4": "[ 4. YOUR RIGHTS & DATA DELETION ]",
+        "p4_1": "You have the right to access, correct, or request complete deletion of your personal data from our database.",
+        "p4_2": "To request account or personal data deletion, email <b>nisha.store.ua@gmail.com</b> — requests are processed within 3 business days."
+      }
     }
   }
 }

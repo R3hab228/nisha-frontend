@@ -442,12 +442,12 @@
 <div class=hit-counter><span data-i18n=footer.visitors>VISITORS:</span> <span id=hitCounterValue>_ _ _ _ _</span></div>
 <div class=legal-info>
 <p data-i18n=footer.legal_text>Цей сайт діє відповідно до Законодавства України. Здійснюючи замовлення, ви погоджуєтесь з умовами Публічної оферти.</p>
-<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px 14px;margin-top:8px">
-<a href="/shipping-payment">Доставка та оплата</a>
-<a href="/return-policy">Політика повернення</a>
-<a href="/privacy-policy" data-i18n=footer.privacy_policy>Політика конфіденційності</a>
-<a href="#" data-action="show-rules">Правила</a>
-</div>
+<nav class=legal-links-col aria-label="Legal & Info">
+<a href="/shipping-payment" data-action="open-legal-modal" data-doc="shipping" data-i18n=footer.shipping_payment>Доставка та оплата</a>
+<a href="/return-policy" data-action="open-legal-modal" data-doc="return" data-i18n=footer.return_policy_link>Політика повернення</a>
+<a href="/privacy-policy" data-action="open-legal-modal" data-doc="privacy" data-i18n=footer.privacy_policy>Політика конфіденційності</a>
+<a href="#" data-action="show-rules" data-i18n=footer.rules_link>Правила</a>
+</nav>
 <button id=installAppBtn style="display:none;background:0 0;color:var(--accent-green);font-family:var(--font-mono);font-weight:700;font-size:14px;padding:15px 10px;border:none;cursor:pointer;margin:5px auto 10px auto;width:100%;text-align:center;text-transform:uppercase" data-i18n=footer.install>⬇ УСТАНОВИТЬ ПРИЛОЖЕНИЕ</button>
 <p style=margin-top:10px;color:#555 data-i18n=footer.refund_policy>Повернення та обмін товару належної якості здійснюється протягом 14 днів з моменту покупки.</p>
 <div style="margin-top:15px;border-top:1px dashed #333;padding-top:15px;font-family:var(--font-mono);font-size:11px">
@@ -478,6 +478,18 @@
 <div class=rules-content id=rulesContentBody style=flex-grow:1;overflow-y:auto;padding:25px;background:#0a0a0a;color:#ddd;font-size:14px;line-height:1.6;overscroll-behavior-y:contain></div>
 <div class=rules-footer style="background:#000;padding:15px;border-top:2px inset var(--border-light);flex-shrink:0">
 <button class="accept-btn btn-target" data-action="accept-rules" data-i18n=rules.btn_accept style="background:#111;color:var(--accent-green);font-weight:700;padding:15px 20px;font-size:15px;font-family:var(--font-mono);border:2px outset #444;cursor:pointer;text-transform:uppercase;width:100%">[ Я СОГЛАСЕН С ПРАВИЛАМИ ]</button>
+</div>
+</div>
+</div>
+<div class=modal-overlay id=legalDocModal role=dialog aria-modal=true aria-labelledby=legalDocModalTitle aria-hidden=true style="background-color:rgba(0,0,0,.95);z-index:5000">
+<div class=modal-window style="max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;border-radius:10px 10px 0 0">
+<div class=modal-header style=background:#000;flex-shrink:0>
+<span class="modal-title typewriter" id=legalDocModalTitle style=color:var(--accent-green)>DOCUMENT.TXT</span>
+<button class=close-btn data-action=close-modal data-modal-id=legalDocModal aria-label="Закрыть окно">X</button>
+</div>
+<div class=rules-content id=legalDocContentBody style=flex-grow:1;overflow-y:auto;padding:25px;background:#0a0a0a;color:#ddd;font-size:14px;line-height:1.6;overscroll-behavior-y:contain></div>
+<div class=rules-footer style="background:#000;padding:15px;border-top:2px inset var(--border-light);flex-shrink:0">
+<button class="accept-btn btn-target" data-action=close-modal data-modal-id=legalDocModal data-i18n=legal_docs.btn_close style="background:#111;color:var(--accent-green);font-weight:700;padding:15px 20px;font-size:15px;font-family:var(--font-mono);border:2px outset #444;cursor:pointer;text-transform:uppercase;width:100%">[ ЗАКРИТИ ]</button>
 </div>
 </div>
 </div>

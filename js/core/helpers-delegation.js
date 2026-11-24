@@ -92,6 +92,8 @@ const ACTION_HAPTIC_MAP = {
     'open-checkout': 'light',
     'open-propose-modal': 'light',
     'open-support-modal': 'light',
+    'open-legal-modal': 'light',
+    'show-rules': 'light',
     'open-offer-price': 'light',
     'close-modal': 'light',
     'toggle-cart-dropdown': 'light',
@@ -216,6 +218,11 @@ export function handleDelegatedAction(e) {
         case 'show-badge-info': {
             const badge = actionEl.getAttribute('data-badge');
             if (badge) invokeCompatAction('show-badge-info', 'showBadgeInfo', badge);
+            break;
+        }
+        case 'open-legal-modal': {
+            const doc = actionEl.getAttribute('data-doc');
+            if (doc) invokeCompatAction('open-legal-modal', 'openLegalDocModal', doc);
             break;
         }
         case 'remove-history-item': {

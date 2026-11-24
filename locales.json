@@ -93,7 +93,10 @@
         "pwa_broadcast_later": "ПІЗНІШЕ",
         "pwa_broadcast_ok": "ЗРОЗУМІЛО",
         "pwa_broadcast_installed": "PWA встановлено",
-        "pwa_broadcast_close": "ЗАКРИТИ"
+        "pwa_broadcast_close": "ЗАКРИТИ",
+        "shipping_payment": "Доставка та оплата",
+        "return_policy_link": "Політика повернення",
+        "rules_link": "Правила"
       },
       "product": {
         "size": "РОЗМІР:",
@@ -596,6 +599,62 @@
       "filters": {
         "in_stock": "Тільки в наявності",
         "remove_aria": "Прибрати фільтр"
+      },
+      "legal_docs": {
+        "btn_close": "[ ЗАКРИТИ ]",
+        "shipping": {
+          "window_title": "SHIPPING_PAYMENT.TXT",
+          "title": "ДОСТАВКА ТА ОПЛАТА ПО УКРАЇНІ (НОВА ПОШТА)",
+          "h1": "[ 1. ДОСТАВКА «НОВОЮ ПОШТОЮ» ]",
+          "p1_1": "Доставка замовлень здійснюється виключно по території України через службу <b>«Нова Пошта»</b> (у відділення, поштомат або кур'єром).",
+          "p1_2": "Відправка відбувається в день внесення авансу або повної оплати (якщо оплата надійшла до <b>16:00</b>, Пн–Сб) або наступного робочого дня.",
+          "p1_3": "Орієнтовний термін доставки по Україні — <b>1–3 робочі дні</b>. Вартість доставки оплачується покупцем за тарифами перевізника (від 90 грн).",
+          "p1_4": "Номер ТТН автоматично з'являється у розділі <b>«Мої замовлення»</b> та надсилається у Telegram / Email одразу після відправки.",
+          "h2": "[ 2. СПОСОБИ ОПЛАТИ ]",
+          "p2_1": "<b>1. Післяплата (накладений платіж) з авансом 200 грн:</b> аванс вноситься при оформленні замовлення, а залишок суми ви сплачуєте у відділенні «Нової Пошти» строго після особистого огляду та примірки речі.",
+          "p2_2": "<b>2. 100% передоплата:</b> за бажанням клієнта, щоб не переплачувати комісію «Нової Пошти» (20 грн + 2%) за грошовий переказ.",
+          "p2_3": "Аванс <b>200 грн</b> не повертається у разі відмови від посилки, неявки на пошту або скасування замовлення після відправки — він покриває вартість доставки в обидва боки.",
+          "h3": "[ 3. БРОНЮВАННЯ ТОВАРУ ]",
+          "p3_1": "Після оформлення замовлення товар отримує статус <b>RESERVED</b> рівно на <b>2 години</b> для внесення авансу або повної оплати.",
+          "p3_2": "Якщо оплата не надійшла протягом 2 годин, бронь знімається автоматично і річ повертається у вільний продаж.",
+          "h4": "[ 4. КОНТАКТИ ТА ГРАФІК РОБОТИ ]",
+          "p4_1": "Обробка замовлень та підтримка: <b>Пн–Сб, 10:00–20:00</b> (за київським часом).",
+          "p4_2": "Офіційний Email підтримки: <b>nisha.store.ua@gmail.com</b> · Telegram-чат підтримки доступний безпосередньо на сайті."
+        },
+        "return": {
+          "window_title": "RETURN_POLICY.TXT",
+          "title": "УМОВИ ПОВЕРНЕННЯ, ОБМІНУ ТА ГАРАНТІЇ (УКРАЇНА)",
+          "h1": "[ 1. ОБОВ'ЯЗКОВИЙ ОГЛЯД НА «НОВІЙ ПОШТІ» ]",
+          "p1_1": "Покупець зобов'язаний оглянути річ, перевірити стан, відсутність не заявлених дефектів та відповідність замірам безпосередньо у відділенні «Нової Пошти» <b>до оплати накладеного платежу</b>.",
+          "p1_2": "Оплата накладеного платежу та забір посилки з відділення підтверджують, що товар перевірено і претензії до стану чи розміру відсутні.",
+          "h2": "[ 2. ТОВАРИ З БЕЙДЖЕМ «ПОВЕРНЕННЯ 14 ДНІВ» ]",
+          "p2_1": "Для архівних речей власного фонду магазину з позначкою <b>«ПОВЕРНЕННЯ 14 ДНІВ»</b> діє право на повернення протягом <b>14 календарних днів</b> з моменту отримання згідно зі ст. 9 Закону України «Про захист прав споживачів».",
+          "p2_2": "Обов'язкові умови повернення: збережений первісний вигляд речі, відсутність слідів носіння, прання чи сторонніх запахів, а також збережені оригінальні бірки/пломби NISHA.",
+          "p2_3": "Вартість зворотної доставки «Новою Поштою» оплачує покупець. Повернення коштів на банківську картку здійснюється протягом <b>1–3 робочих днів</b> після отримання та перевірки товару.",
+          "h3": "[ 3. ТОВАРИ «БЕЗ ПОВЕРНЕННЯ» ТА «DROP ITEM» ]",
+          "p3_1": "Вінтажні (б/в) позиції незалежних продавців (<b>DROP ITEM</b>) та товари з бейджем <b>«БЕЗ ПОВЕРНЕННЯ»</b> є комісійними угодами між фізичними особами та продаються у стані «як є».",
+          "p3_2": "Після оплати на пошті та виносу посилки з відділення повернення або обмін неможливі, оскільки кошти виплачуються власнику речі протягом 24 годин.",
+          "h4": "[ 4. ГАРАНТІЯ ОРИГІНАЛЬНОСТІ ]",
+          "p4_1": "Кожна річ у каталозі NISHA проходить перевірку на автентичність перед публікацією. Якщо на пошті виявлено невідповідність опису або прихований дефект — відмовтесь від отримання, і ми повернемо аванс у повному обсязі.",
+          "p4_2": "З усіх питань щодо повернення звертайтесь на <b>nisha.store.ua@gmail.com</b> або в онлайн-підтримку сайту."
+        },
+        "privacy": {
+          "window_title": "PRIVACY_POLICY.TXT",
+          "title": "ПОЛІТИКА КОНФІДЕНЦІЙНОСТІ ТА ЗАХИСТ ДАНИХ (УКРАЇНА)",
+          "h1": "[ 1. ПРАВОВА ОСНОВА ]",
+          "p1_1": "Ця Політика визначає порядок збору, обробки та захисту персональних даних користувачів сайту <b>https://www.nisha-store.shop/</b> відповідно до Закону України «Про захист персональних даних» № 2297-VI.",
+          "p1_2": "Оформлюючи замовлення, реєструючи акаунт або подаючи заявку DROP_ITEM, ви надаєте згоду на обробку ваших даних у межах цієї Політики.",
+          "h2": "[ 2. ЯКІ ДАНІ МИ ЗБИРАЄМО ]",
+          "p2_1": "Контактні дані, які ви добровільно вказуєте: ім'я та прізвище, номер телефону, email, Telegram username.",
+          "p2_2": "Дані доставки: місто та номер відділення або поштомату «Нової Пошти».",
+          "p2_3": "Технічні дані безпеки та зручності: сесійні токени авторизації, перевірка від ботів (Cloudflare Turnstile), локальне збереження кошика, обраного та обраної мови інтерфейсу.",
+          "h3": "[ 3. ЯК МИ ВИКОРИСТОВУЄМО ТА ЗАХИЩАЄМО ДАНІ ]",
+          "p3_1": "Дані використовуються виключно для оформлення і доставки замовлень, створення ТТН «Нової Пошти», сповіщень про статус посилки, верифікації продавців та захисту від шахрайства.",
+          "p3_2": "Ми <b>не продаємо</b> персональні дані третім особам. Передача здійснюється лише сервісам, необхідним для виконання замовлення («Нова Пошта», Supabase, Resend, Telegram API) по захищеному HTTPS-з'єднанню.",
+          "h4": "[ 4. ВАШІ ПРАВА ТА ВИДАЛЕННЯ ДАНИХ ]",
+          "p4_1": "Ви маєте право отримати інформацію про свої дані, вимагати їх виправлення або повного видалення з бази магазину.",
+          "p4_2": "Для запиту на видалення акаунту або персональних даних напишіть на <b>nisha.store.ua@gmail.com</b> — запит обробляється протягом 3 робочих днів."
+        }
       }
     }
   },
@@ -693,7 +752,10 @@
         "pwa_broadcast_later": "ПОЗЖЕ",
         "pwa_broadcast_ok": "ПОНЯТНО",
         "pwa_broadcast_installed": "PWA установлено",
-        "pwa_broadcast_close": "ЗАКРЫТЬ"
+        "pwa_broadcast_close": "ЗАКРЫТЬ",
+        "shipping_payment": "Доставка и оплата",
+        "return_policy_link": "Политика возврата",
+        "rules_link": "Правила"
       },
       "product": {
         "size": "РАЗМЕР:",
@@ -1196,6 +1258,62 @@
       "filters": {
         "in_stock": "Только в наличии",
         "remove_aria": "Убрать фильтр"
+      },
+      "legal_docs": {
+        "btn_close": "[ ЗАКРЫТЬ ]",
+        "shipping": {
+          "window_title": "SHIPPING_PAYMENT.TXT",
+          "title": "ДОСТАВКА И ОПЛАТА ПО УКРАИНЕ (НОВАЯ ПОЧТА)",
+          "h1": "[ 1. ДОСТАВКА «НОВОЙ ПОЧТОЙ» ]",
+          "p1_1": "Доставка заказов осуществляется исключительно по территории Украины через службу <b>«Новая Почта»</b> (в отделение, почтомат или курьером).",
+          "p1_2": "Отправка происходит в день внесения аванса или полной оплаты (если оплата поступила до <b>16:00</b>, Пн–Сб) либо на следующий рабочий день.",
+          "p1_3": "Ориентировочный срок доставки по Украине — <b>1–3 рабочих дня</b>. Стоимость доставки оплачивается покупателем по тарифам перевозчика (от 90 грн).",
+          "p1_4": "Номер ТТН автоматически появляется в разделе <b>«Мои заказы»</b> и отправляется в Telegram / Email сразу после отправки.",
+          "h2": "[ 2. СПОСОБЫ ОПЛАТЫ ]",
+          "p2_1": "<b>1. Наложенный платеж с авансом 200 грн:</b> аванс вносится при оформлении заказа, а остаток суммы вы оплачиваете в отделении «Новой Почты» строго после личного осмотра и примерки вещи.",
+          "p2_2": "<b>2. 100% предоплата:</b> по желанию клиента, чтобы не переплачивать комиссию «Новой Почты» (20 грн + 2%) за денежный перевод.",
+          "p2_3": "Аванс <b>200 грн</b> не возвращается в случае отказа от посылки, неявки на почту или отмены заказа после отправки — он покрывает стоимость доставки в обе стороны.",
+          "h3": "[ 3. БРОНИРОВАНИЕ ТОВАРА ]",
+          "p3_1": "После оформления заказа товар получает статус <b>RESERVED</b> ровно на <b>2 часа</b> для внесения аванса или полной оплаты.",
+          "p3_2": "Если оплата не поступила в течение 2 часов, бронь снимается автоматически и вещь возвращается в свободную продажу.",
+          "h4": "[ 4. КОНТАКТЫ И ГРАФИК РАБОТЫ ]",
+          "p4_1": "Обработка заказов и поддержка: <b>Пн–Сб, 10:00–20:00</b> (по киевскому времени).",
+          "p4_2": "Официальный Email поддержки: <b>nisha.store.ua@gmail.com</b> · Telegram-чат поддержки доступен прямо на сайте."
+        },
+        "return": {
+          "window_title": "RETURN_POLICY.TXT",
+          "title": "УСЛОВИЯ ВОЗВРАТА, ОБМЕНА И ГАРАНТИИ (УКРАИНА)",
+          "h1": "[ 1. ОБЯЗАТЕЛЬНЫЙ ОСМОТР НА «НОВОЙ ПОЧТЕ» ]",
+          "p1_1": "Покупатель обязан осмотреть вещь, проверить состояние, отсутствие не заявленных дефектов и соответствие замерам непосредственно в отделении «Новой Почты» <b>до оплаты наложенного платежа</b>.",
+          "p1_2": "Оплата наложенного платежа и забор посылки из отделения подтверждают, что товар проверен и претензии к состоянию или размеру отсутствуют.",
+          "h2": "[ 2. ТОВАРЫ С БЕЙДЖЕМ «ВОЗВРАТ 14 ДНЕЙ» ]",
+          "p2_1": "Для архивных вещей собственного фонда магазина с отметкой <b>«ВОЗВРАТ 14 ДНЕЙ»</b> действует право на возврат в течение <b>14 календарных дней</b> с момента получения согласно ст. 9 Закона Украины «О защите прав потребителей».",
+          "p2_2": "Обязательные условия возврата: сохранен первоначальный вид вещи, отсутствие следов носки, стирки или посторонних запахов, а также сохранены оригинальные бирки/пломбы NISHA.",
+          "p2_3": "Стоимость обратной доставки «Новой Почтой» оплачивает покупатель. Возврат средств на банковскую карту осуществляется в течение <b>1–3 рабочих дней</b> после получения и проверки товара.",
+          "h3": "[ 3. ТОВАРЫ «БЕЗ ВОЗВРАТА» И «DROP ITEM» ]",
+          "p3_1": "Винтажные (б/у) позиции независимых продавцов (<b>DROP ITEM</b>) и товары с бейджем <b>«БЕЗ ВОЗВРАТА»</b> являются комиссионными сделками между физлицами и продаются в состоянии «как есть».",
+          "p3_2": "После оплаты на почте и выноса посылки из отделения возврат или обмен невозможны, так как средства выплачиваются владельцу вещи в течение 24 часов.",
+          "h4": "[ 4. ГАРАНТИЯ ОРИГИНАЛЬНОСТИ ]",
+          "p4_1": "Каждая вещь в каталоге NISHA проходит проверку на подлинность перед публикацией. Если на почте обнаружено несоответствие описанию или скрытый дефект — откажитесь от получения, и мы вернем аванс в полном объеме.",
+          "p4_2": "По всем вопросам возврата обращайтесь на <b>nisha.store.ua@gmail.com</b> или в онлайн-поддержку сайта."
+        },
+        "privacy": {
+          "window_title": "PRIVACY_POLICY.TXT",
+          "title": "ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ И ЗАЩИТА ДАННЫХ (УКРАИНА)",
+          "h1": "[ 1. ПРАВОВАЯ ОСНОВА ]",
+          "p1_1": "Настоящая Политика определяет порядок сбора, обработки и защиты персональных данных пользователей сайта <b>https://www.nisha-store.shop/</b> в соответствии с Законом Украины «О защите персональных данных» № 2297-VI.",
+          "p1_2": "Оформляя заказ, регистрируя аккаунт или подавая заявку DROP_ITEM, вы даете согласие на обработку ваших данных в рамках этой Политики.",
+          "h2": "[ 2. КАКИЕ ДАННЫЕ МЫ СОБИРАЕМ ]",
+          "p2_1": "Контактные данные, которые вы добровольно указываете: имя и фамилия, номер телефона, email, Telegram username.",
+          "p2_2": "Данные доставки: город и номер отделения или почтомата «Новой Почты».",
+          "p2_3": "Технические данные безопасности и удобства: сессионные токены авторизации, защита от ботов (Cloudflare Turnstile), локальное сохранение корзины, избранного и выбранного языка интерфейса.",
+          "h3": "[ 3. КАК МЫ ИСПОЛЬЗУЕМ И ЗАЩИЩАЕМ ДАННЫЕ ]",
+          "p3_1": "Данные используются исключительно для оформления и доставки заказов, создания ТТН «Новой Почты», уведомлений о статусе посылки, верификации продавцов и защиты от мошенничества.",
+          "p3_2": "Мы <b>не продаем</b> персональные данные третьим лицам. Передача осуществляется только сервисам, необходимым для выполнения заказа («Новая Почта», Supabase, Resend, Telegram API) по защищенному HTTPS-соединению.",
+          "h4": "[ 4. ВАШИ ПРАВА И УДАЛЕНИЕ ДАННЫХ ]",
+          "p4_1": "Вы имеете право получить информацию о своих данных, потребовать их исправления или полного удаления из базы магазина.",
+          "p4_2": "Для запроса на удаление аккаунта или персональных данных напишите на <b>nisha.store.ua@gmail.com</b> — запрос обрабатывается в течение 3 рабочих дней."
+        }
       }
     }
   },
@@ -1293,7 +1411,10 @@
         "pwa_broadcast_later": "LATER",
         "pwa_broadcast_ok": "GOT IT",
         "pwa_broadcast_installed": "PWA installed",
-        "pwa_broadcast_close": "CLOSE"
+        "pwa_broadcast_close": "CLOSE",
+        "shipping_payment": "Shipping & Payment",
+        "return_policy_link": "Return Policy",
+        "rules_link": "Rules"
       },
       "product": {
         "size": "SIZE:",
@@ -1796,6 +1917,62 @@
       "filters": {
         "in_stock": "In stock only",
         "remove_aria": "Remove filter"
+      },
+      "legal_docs": {
+        "btn_close": "[ CLOSE ]",
+        "shipping": {
+          "window_title": "SHIPPING_PAYMENT.TXT",
+          "title": "SHIPPING & PAYMENT IN UKRAINE (NOVA POSHTA)",
+          "h1": "[ 1. NOVA POSHTA DELIVERY ]",
+          "p1_1": "Orders are delivered exclusively across Ukraine via <b>Nova Poshta</b> (branch pickup, parcel locker, or courier).",
+          "p1_2": "Orders are dispatched on the same day once deposit or full payment is confirmed before <b>16:00</b> (Mon–Sat), or on the next business day.",
+          "p1_3": "Estimated delivery time across Ukraine is <b>1–3 business days</b>. Shipping fees are paid by the buyer according to carrier rates (from 90 UAH).",
+          "p1_4": "Your tracking number (TTN) appears automatically in <b>My Orders</b> and is sent via Telegram / Email immediately after dispatch.",
+          "h2": "[ 2. PAYMENT METHODS ]",
+          "p2_1": "<b>1. Cash on Delivery (COD) with 200 UAH deposit:</b> the deposit is paid upon checkout, and the remaining balance is paid at Nova Poshta strictly after inspecting and trying on the item.",
+          "p2_2": "<b>2. 100% Prepayment:</b> optional full payment to avoid Nova Poshta money transfer fees (20 UAH + 2%).",
+          "p2_3": "The <b>200 UAH</b> deposit is non-refundable if the parcel is refused, unclaimed, or cancelled after dispatch, as it covers round-trip shipping costs.",
+          "h3": "[ 3. ITEM RESERVATION ]",
+          "p3_1": "Once placed, an order holds the item in <b>RESERVED</b> status for exactly <b>2 hours</b> to complete the deposit or full payment.",
+          "p3_2": "If payment is not received within 2 hours, the reservation expires automatically and the item returns to the catalog.",
+          "h4": "[ 4. CONTACTS & BUSINESS HOURS ]",
+          "p4_1": "Order processing & support: <b>Mon–Sat, 10:00–20:00</b> (Kyiv time).",
+          "p4_2": "Official support email: <b>nisha.store.ua@gmail.com</b> · Telegram support chat is available directly on the website."
+        },
+        "return": {
+          "window_title": "RETURN_POLICY.TXT",
+          "title": "RETURN, EXCHANGE & AUTHENTICITY POLICY (UKRAINE)",
+          "h1": "[ 1. MANDATORY INSPECTION AT NOVA POSHTA ]",
+          "p1_1": "Buyers must inspect the item, verify its condition, check for any undisclosed defects, and confirm measurements directly at the Nova Poshta branch <b>before paying COD</b>.",
+          "p1_2": "Completing payment and taking the parcel out of the branch confirms the item has been inspected with no claims.",
+          "h2": "[ 2. ITEMS WITH «14-DAY RETURN» BADGE ]",
+          "p2_1": "Store-owned archive items marked <b>«14-DAY RETURN»</b> are eligible for return within <b>14 calendar days</b> of receipt in accordance with Art. 9 of the Law of Ukraine «On Consumer Rights Protection».",
+          "p2_2": "Conditions: original condition preserved, no signs of wear, washing, or odors, and all original NISHA tags/seals intact.",
+          "p2_3": "Return shipping via Nova Poshta is covered by the buyer. Refunds are issued to your bank card within <b>1–3 business days</b> after inspection.",
+          "h3": "[ 3. «NO RETURN» & «DROP ITEM» LISTINGS ]",
+          "p3_1": "Vintage (pre-owned) items from independent sellers (<b>DROP ITEM</b>) and items badged <b>«NO RETURN»</b> are consignment peer-to-peer sales sold «as is».",
+          "p3_2": "Once paid for and taken from the post office, returns or exchanges are not possible as funds are released to the seller within 24 hours.",
+          "h4": "[ 4. AUTHENTICITY GUARANTEE ]",
+          "p4_1": "Every item in NISHA is authenticated before listing. If an item does not match its description or has a hidden defect upon inspection at the post office, refuse the parcel and we will refund your deposit in full.",
+          "p4_2": "For any return inquiries, contact <b>nisha.store.ua@gmail.com</b> or use the on-site support chat."
+        },
+        "privacy": {
+          "window_title": "PRIVACY_POLICY.TXT",
+          "title": "PRIVACY POLICY & DATA PROTECTION (UKRAINE)",
+          "h1": "[ 1. LEGAL BASIS ]",
+          "p1_1": "This Policy governs the collection, processing, and protection of personal data of users of <b>https://www.nisha-store.shop/</b> in accordance with the Law of Ukraine «On Personal Data Protection» No. 2297-VI.",
+          "p1_2": "By placing an order, creating an account, or submitting a DROP_ITEM listing, you consent to data processing under this Policy.",
+          "h2": "[ 2. DATA WE COLLECT ]",
+          "p2_1": "Contact details you voluntarily provide: full name, phone number, email address, and Telegram username.",
+          "p2_2": "Delivery details: city and Nova Poshta branch or parcel locker number.",
+          "p2_3": "Security and functional data: auth session tokens, Cloudflare Turnstile anti-bot checks, and local browser storage for cart, favorites, and language preference.",
+          "h3": "[ 3. HOW WE USE & PROTECT DATA ]",
+          "p3_1": "Data is used strictly for order fulfillment, Nova Poshta waybill (TTN) creation, parcel status notifications, seller verification, and fraud prevention.",
+          "p3_2": "We <b>never sell</b> personal data to third parties. Data is shared only with essential fulfillment providers (Nova Poshta, Supabase, Resend, Telegram API) over encrypted HTTPS.",
+          "h4": "[ 4. YOUR RIGHTS & DATA DELETION ]",
+          "p4_1": "You have the right to access, correct, or request complete deletion of your personal data from our database.",
+          "p4_2": "To request account or personal data deletion, email <b>nisha.store.ua@gmail.com</b> — requests are processed within 3 business days."
+        }
       }
     }
   }

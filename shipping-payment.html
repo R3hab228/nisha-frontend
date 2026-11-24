@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Доставка, оплата та контакти | NISHA STORE</title>
-    <meta name="description" content="Умови доставки Новою Поштою по Україні, способи оплати (повна передплата або накладений платіж) та офіційні контакти магазину NISHA STORE.">
+    <title>Доставка та оплата по Україні | NISHA STORE</title>
+    <meta name="description" content="Доставка Новою Поштою по Україні (1–3 робочі дні), післяплата з авансом 200 грн або 100% передоплата, бронювання товару на 2 години та офіційні контакти NISHA STORE.">
     <link rel="canonical" href="https://www.nisha-store.shop/shipping-payment">
     <link rel="icon" type="image/png" sizes="32x32" href="/icon.png">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="NISHA STORE">
     <meta property="og:url" content="https://www.nisha-store.shop/shipping-payment">
-    <meta property="og:title" content="Доставка, оплата та контакти | NISHA STORE">
-    <meta property="og:description" content="Доставка Новою Поштою по всій Україні за 1–3 робочі дні, прозора оплата та офіційні контакти NISHA STORE.">
+    <meta property="og:title" content="Доставка та оплата по Україні | NISHA STORE">
+    <meta property="og:description" content="Доставка Новою Поштою по Україні за 1–3 робочі дні, післяплата з авансом 200 грн або 100% передоплата, бронь 2 години.">
     <meta property="og:image" content="https://www.nisha-store.shop/og-image.png">
     <meta property="og:locale" content="uk_UA">
 
     <style>
         :root {
             --bg-color: #0a0a0a;
-            --card-bg: #141414;
-            --text-color: #e0e0e0;
+            --card-bg: #111111;
+            --text-color: #dddddd;
             --accent-green: #00ff66;
             --accent-red: #ff3366;
             --accent-yellow: #ffcc00;
@@ -36,18 +36,18 @@
             padding: 20px;
         }
         .container {
-            max-width: 820px;
-            margin: 36px auto;
+            max-width: 760px;
+            margin: 32px auto;
             background: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
         }
         .header {
+            background: #000;
             border-bottom: 2px solid var(--border-color);
-            padding-bottom: 15px;
-            margin-bottom: 25px;
+            padding: 14px 22px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -56,126 +56,145 @@
         }
         .logo {
             font-family: var(--font-mono);
-            font-size: 22px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--accent-green);
             text-decoration: none;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
-        .back-link {
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .lang-btn, .back-link {
             font-family: var(--font-mono);
-            font-size: 13px;
+            font-size: 12px;
             color: #aaa;
+            background: #111;
             text-decoration: none;
             border: 1px solid #333;
-            padding: 6px 12px;
+            padding: 5px 10px;
+            cursor: pointer;
         }
-        .back-link:hover { color: var(--accent-green); border-color: var(--accent-green); }
+        .lang-btn.active, .lang-btn:hover, .back-link:hover {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+        .body-content { padding: 26px; }
         h1 {
             font-family: var(--font-mono);
-            font-size: 20px;
+            font-size: 17px;
             color: var(--accent-yellow);
             margin-bottom: 18px;
         }
         h2 {
             font-family: var(--font-mono);
-            font-size: 16px;
+            font-size: 15px;
             color: var(--accent-green);
-            margin-top: 26px;
+            margin-top: 24px;
             margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 6px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
         }
-        p { margin-bottom: 12px; color: #ccc; }
-        ul { margin-left: 20px; margin-bottom: 14px; color: #ccc; }
-        li { margin-bottom: 8px; }
-        .info-box {
-            background: #0d0d0d;
-            border: 1px dashed #333;
-            border-left: 3px solid var(--accent-green);
-            padding: 16px;
-            margin: 18px 0;
-        }
-        .contact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-        .contact-item {
-            background: #0d0d0d;
-            border: 1px solid #2a2a2a;
-            padding: 12px 14px;
-            font-family: var(--font-mono);
-            font-size: 13px;
-        }
-        .contact-label { color: #888; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; }
-        .contact-val a { color: var(--accent-green); text-decoration: none; }
-        .contact-val a:hover { text-decoration: underline; }
+        ul { padding-left: 20px; margin-bottom: 14px; }
+        li { margin-bottom: 10px; color: #ddd; font-size: 14px; }
+        b, strong { color: #fff; }
         .footer-nav {
-            margin-top: 30px;
-            padding-top: 16px;
+            background: #000;
             border-top: 1px dashed #333;
+            padding: 16px 26px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             font-family: var(--font-mono);
             font-size: 12px;
         }
-        .footer-nav a { color: #999; text-decoration: none; }
+        .footer-nav a { color: #999; text-decoration: underline; text-underline-offset: 4px; }
         .footer-nav a:hover { color: var(--accent-green); }
     </style>
 </head>
 <body>
     <main class="container">
         <div class="header">
-            <a href="/" class="logo">NISHA STORE</a>
-            <a href="/" class="back-link">[ ← ДО КАТАЛОГУ ]</a>
-        </div>
-
-        <h1>[ SHIPPING_PAYMENT_CONTACTS.SYS ]</h1>
-        <p>Магазин вінтажного та архівного streetwear-одягу <strong>NISHA STORE</strong> здійснює доставку по всій території України з прозорими умовами оплати та захистом покупця.</p>
-
-        <h2>1. Доставка Новою Поштою</h2>
-        <ul>
-            <li><strong>Перевізник:</strong> «Нова Пошта» (у відділення або поштомат по всій Україні).</li>
-            <li><strong>Обробка та відправка:</strong> відправляємо в день підтвердження замовлення (при оплаті до 16:00) або наступного робочого дня (0–1 робочий день).</li>
-            <li><strong>Термін доставки:</strong> 1–3 робочі дні по Україні.</li>
-            <li><strong>Вартість доставки:</strong> за тарифами перевізника «Нова Пошта» (орієнтовно від 70 до 120 грн залежно від міста та ваги посилки; точний розрахунок відображається при оформленні замовлення).</li>
-            <li><strong>Відстеження:</strong> після відправки номер ТТН автоматично з'являється у розділі «Мої замовлення» на сайті та надсилається в Telegram.</li>
-        </ul>
-
-        <h2>2. Способи оплати</h2>
-        <div class="info-box">
-            <p style="margin-bottom:8px;"><strong>Варіант 1 — Повна передплата:</strong> оплата повної вартості замовлення на офіційні реквізити. Ви не сплачуєте комісію Нової Пошти за переказ коштів.</p>
-            <p style="margin-bottom:0;"><strong>Варіант 2 — Накладений платіж (Нова Пошта):</strong> мінімальна передплата <strong>200 грн</strong> (покриває доставку в обидва боки у разі відмови), залишок суми оплачується у відділенні Нової Пошти після огляду та примірки речі.</p>
-        </div>
-        <p>Валюта розрахунків — українська гривня (<strong>UAH</strong>). Усі ціни на сайті є остаточними та не містять прихованих комісій магазину.</p>
-
-        <h2>3. Повернення та гарантія</h2>
-        <p>Покупець завжди має право оглянути та приміряти річ у відділенні «Нової Пошти». Для товарів з позначкою гарантії діє повернення та обмін протягом <strong>14 днів</strong> згідно із Законом України «Про захист прав споживачів». Детальні умови описані на сторінці <a href="/return-policy" style="color:var(--accent-green);">Політика повернення</a>.</p>
-
-        <h2>4. Офіційні контакти NISHA STORE</h2>
-        <div class="contact-grid">
-            <div class="contact-item">
-                <div class="contact-label">Email підтримки</div>
-                <div class="contact-val"><a href="mailto:nisha.store.ua@gmail.com">nisha.store.ua@gmail.com</a></div>
-            </div>
-            <div class="contact-item">
-                <div class="contact-label">Telegram підтримка / бот</div>
-                <div class="contact-val"><a href="https://t.me/nisha_store1_bot" target="_blank" rel="noopener noreferrer">@nisha_store1_bot</a></div>
-            </div>
-            <div class="contact-item">
-                <div class="contact-label">Регіон та графік</div>
-                <div class="contact-val">Україна · Пн–Нд, 10:00–21:00 (EET)</div>
+            <a href="/" class="logo">SHIPPING_PAYMENT.TXT</a>
+            <div class="header-controls">
+                <button type="button" class="lang-btn" data-lang="ua">UA</button>
+                <button type="button" class="lang-btn" data-lang="ru">RU</button>
+                <button type="button" class="lang-btn" data-lang="en">EN</button>
+                <a href="/" class="back-link" id="backLink">[ ← КАТАЛОГ ]</a>
             </div>
         </div>
 
-        <nav class="footer-nav" aria-label="Юридичні сторінки">
-            <a href="/">Каталог</a>
+        <div class="body-content" id="docBody">
+            <h1>ДОСТАВКА ТА ОПЛАТА ПО УКРАЇНІ (НОВА ПОШТА)</h1>
+            <h2>[ 1. ДОСТАВКА «НОВОЮ ПОШТОЮ» ]</h2>
+            <ul>
+                <li>Доставка замовлень здійснюється виключно по території України через службу <b>«Нова Пошта»</b> (у відділення, поштомат або кур'єром).</li>
+                <li>Відправка відбувається в день внесення авансу або повної оплати (якщо оплата надійшла до <b>16:00</b>, Пн–Сб) або наступного робочого дня.</li>
+                <li>Орієнтовний термін доставки по Україні — <b>1–3 робочі дні</b>. Вартість доставки оплачується покупцем за тарифами перевізника (від 90 грн).</li>
+                <li>Номер ТТН автоматично з'являється у розділі <b>«Мої замовлення»</b> та надсилається у Telegram / Email одразу після відправки.</li>
+            </ul>
+            <h2>[ 2. СПОСОБИ ОПЛАТИ ]</h2>
+            <ul>
+                <li><b>1. Післяплата (накладений платіж) з авансом 200 грн:</b> аванс вноситься при оформленні замовлення, а залишок суми ви сплачуєте у відділенні «Нової Пошти» строго після особистого огляду та примірки речі.</li>
+                <li><b>2. 100% передоплата:</b> за бажанням клієнта, щоб не переплачувати комісію «Нової Пошти» (20 грн + 2%) за грошовий переказ.</li>
+                <li>Аванс <b>200 грн</b> не повертається у разі відмови від посилки, неявки на пошту або скасування замовлення після відправки — він покриває вартість доставки в обидва боки.</li>
+            </ul>
+            <h2>[ 3. БРОНЮВАННЯ ТОВАРУ ]</h2>
+            <ul>
+                <li>Після оформлення замовлення товар отримує статус <b>RESERVED</b> рівно на <b>2 години</b> для внесення авансу або повної оплати.</li>
+                <li>Якщо оплата не надійшла протягом 2 годин, бронь знімається автоматично і річ повертається у вільний продаж.</li>
+            </ul>
+            <h2>[ 4. КОНТАКТИ ТА ГРАФІК РОБОТИ ]</h2>
+            <ul>
+                <li>Обробка замовлень та підтримка: <b>Пн–Сб, 10:00–20:00</b> (за київським часом).</li>
+                <li>Офіційний Email підтримки: <b>nisha.store.ua@gmail.com</b> · Telegram-чат підтримки доступний безпосередньо на сайті.</li>
+            </ul>
+        </div>
+
+        <nav class="footer-nav" aria-label="Legal links">
+            <a href="/">NISHA STORE — Головна</a>
             <a href="/return-policy">Політика повернення</a>
             <a href="/privacy-policy">Політика конфіденційності</a>
         </nav>
     </main>
+
+    <script>
+        (function () {
+            var docKey = 'shipping';
+            var buttons = document.querySelectorAll('.lang-btn');
+            var backLabels = { ua: '[ ← КАТАЛОГ ]', ru: '[ ← КАТАЛОГ ]', en: '[ ← CATALOG ]' };
+            function norm(l) {
+                l = String(l || '').toLowerCase();
+                if (l.startsWith('ru')) return 'ru';
+                if (l.startsWith('en')) return 'en';
+                return 'ua';
+            }
+            function render(lang, data) {
+                var d = data && data.translation && data.translation.legal_docs && data.translation.legal_docs[docKey];
+                if (!d) return;
+                document.documentElement.lang = lang === 'ua' ? 'uk' : lang;
+                document.getElementById('backLink').textContent = backLabels[lang] || backLabels.ua;
+                buttons.forEach(function (b) { b.classList.toggle('active', b.dataset.lang === lang); });
+                document.getElementById('docBody').innerHTML =
+                    '<h1>' + d.title + '</h1>' +
+                    '<h2>' + d.h1 + '</h2><ul><li>' + d.p1_1 + '</li><li>' + d.p1_2 + '</li><li>' + d.p1_3 + '</li><li>' + d.p1_4 + '</li></ul>' +
+                    '<h2>' + d.h2 + '</h2><ul><li>' + d.p2_1 + '</li><li>' + d.p2_2 + '</li><li>' + d.p2_3 + '</li></ul>' +
+                    '<h2>' + d.h3 + '</h2><ul><li>' + d.p3_1 + '</li><li>' + d.p3_2 + '</li></ul>' +
+                    '<h2>' + d.h4 + '</h2><ul><li>' + d.p4_1 + '</li><li>' + d.p4_2 + '</li></ul>';
+            }
+            function loadLang(lang) {
+                lang = norm(lang);
+                try { localStorage.setItem('nisha_lang', lang); } catch (_) {}
+                fetch('/locales/' + lang + '.json').then(function (r) { return r.json(); }).then(function (data) { render(lang, data); }).catch(function () {});
+            }
+            buttons.forEach(function (b) { b.addEventListener('click', function () { loadLang(b.dataset.lang); }); });
+            var saved = 'ua';
+            try { saved = norm(localStorage.getItem('nisha_lang')); } catch (_) {}
+            loadLang(saved);
+        })();
+    </script>
 </body>
 </html>

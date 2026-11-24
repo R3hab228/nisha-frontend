@@ -170,6 +170,76 @@ function showRulesModal() {
     openModal('rulesModal');
 }
 
+const LEGAL_DOC_SPECS = {
+    shipping: {
+        windowTitle: 'SHIPPING_PAYMENT.TXT',
+        titleColor: 'var(--accent-green)',
+        sections: [
+            { h: 'h1', items: ['p1_1', 'p1_2', 'p1_3', 'p1_4'] },
+            { h: 'h2', items: ['p2_1', 'p2_2', 'p2_3'] },
+            { h: 'h3', items: ['p3_1', 'p3_2'] },
+            { h: 'h4', items: ['p4_1', 'p4_2'] }
+        ]
+    },
+    return: {
+        windowTitle: 'RETURN_POLICY.TXT',
+        titleColor: 'var(--accent-red)',
+        sections: [
+            { h: 'h1', items: ['p1_1', 'p1_2'] },
+            { h: 'h2', items: ['p2_1', 'p2_2', 'p2_3'] },
+            { h: 'h3', items: ['p3_1', 'p3_2'], headingColor: 'var(--accent-red)' },
+            { h: 'h4', items: ['p4_1', 'p4_2'] }
+        ]
+    },
+    privacy: {
+        windowTitle: 'PRIVACY_POLICY.TXT',
+        titleColor: 'var(--accent-green)',
+        sections: [
+            { h: 'h1', items: ['p1_1', 'p1_2'] },
+            { h: 'h2', items: ['p2_1', 'p2_2', 'p2_3'] },
+            { h: 'h3', items: ['p3_1', 'p3_2'] },
+            { h: 'h4', items: ['p4_1', 'p4_2'] }
+        ]
+    }
+};
+
+function buildLegalDocHtml(docKey) {
+    const spec = LEGAL_DOC_SPECS[docKey];
+    if (!spec) return '';
+    const prefix = `legal_docs.${docKey}`;
+    const sectionsHtml = spec.sections.map((sec) => {
+        const hColor = sec.headingColor || 'var(--accent-green)';
+        const itemsHtml = sec.items
+            .map((pKey) => `<li data-i18n="${prefix}.${pKey}" style="margin-bottom:10px"></li>`)
+            .join('');
+        return `
+<h3 data-i18n="${prefix}.${sec.h}" style="color:${hColor};font-family:var(--font-mono);border-bottom:1px solid #333;padding-bottom:10px;margin-top:25px"></h3>
+<ul style="padding-left:20px">${itemsHtml}</ul>`;
+    }).join('');
+
+    return `<p style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:16px;font-weight:700;margin-top:0" data-i18n="${prefix}.title"></p>${sectionsHtml}`;
+}
+
+function openLegalDocModal(docType) {
+    const docKey = Object.hasOwn(LEGAL_DOC_SPECS, docType) ? docType : 'shipping';
+    const spec = LEGAL_DOC_SPECS[docKey];
+    if (typeof document === 'undefined' || typeof document.getElementById !== 'function') return;
+
+    const titleEl = document.getElementById('legalDocModalTitle');
+    const bodyEl = document.getElementById('legalDocContentBody');
+    if (titleEl) {
+        titleEl.textContent = spec.windowTitle;
+        titleEl.setAttribute('data-i18n', `legal_docs.${docKey}.window_title`);
+        titleEl.style.color = spec.titleColor;
+    }
+    if (bodyEl) {
+        bodyEl.innerHTML = buildLegalDocHtml(docKey);
+        bodyEl.scrollTop = 0;
+    }
+    invokeAction('updateContentLanguage');
+    openModal('legalDocModal');
+}
+
 function acceptRules() {
     if (storage) storage.set('nisha_rules_accepted', 'true');
     executeCloseModal('rulesModal');
@@ -458,10 +528,15 @@ registerActions({
     checkRules,
     showRulesModal,
     'show-rules': showRulesModal,
+    openLegalDocModal,
+    'open-legal-modal': openLegalDocModal,
     acceptRules,
     'accept-rules': acceptRules,
     triggerEasterEgg,
     initHitCounter,
     updateCharCount
 });
-if (typeof window !== 'undefined') window.initHitCounter = initHitCounter;
+if (typeof window !== 'undefined') {
+    window.initHitCounter = initHitCounter;
+    window.openLegalDocModal = openLegalDocModal;
+}

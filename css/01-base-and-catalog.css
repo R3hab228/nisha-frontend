@@ -814,4 +814,7 @@ footer:not(.driver-popover-footer) { text-align: center; padding: 30px 20px calc
 .legal-info { max-width: 800px; color: #777; border-top: 1px dashed #333; padding-top: 15px; }
 .legal-info a { color: #888; text-decoration: underline; margin: 0 10px; cursor: pointer;}
 .legal-info a:hover { color: var(--text-main); }
+.legal-links-col { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 14px auto 6px; }
+.legal-links-col a { display: inline-block; margin: 0; padding: 4px 12px; color: #9a9a9a; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.4px; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: #444; transition: color 0.18s ease, text-decoration-color 0.18s ease; }
+.legal-links-col a:hover, .legal-links-col a:focus-visible { color: var(--accent-green); text-decoration-color: var(--accent-green); }
 
