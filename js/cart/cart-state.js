@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CART — SHARED STATE, LOCKS & HELPERS
 // ==========================================
@@ -101,7 +102,7 @@ export function resetPromoState() {
         window.appliedPromoCode = '';
         window.currentPromoFixed = null;
     }
-    const promoInput = document.getElementById('promoInput');
+    const promoInput = /** @type {HTMLInputElement|null} */ (document.getElementById('promoInput'));
     if (promoInput) promoInput.value = '';
     const promoMsg = document.getElementById('promoMessage');
     if (promoMsg) {
@@ -112,12 +113,14 @@ export function resetPromoState() {
 
 /**
  * Рендерит минималистичное уведомление статуса промокода (без свечений).
- * @param {object} [options]
+ * @param {Record<string, any>} [options]
  * @returns {string}
  */
 export function renderPromoCodeNotice(options = {}) {
     const { isError, isWarning, message, percent, savedMoney, isFixed } = options;
+    /** @param {string} k @param {string} def */
     const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+    /** @param {any} s */
     const escapeSafe = (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 
     if (isError) {

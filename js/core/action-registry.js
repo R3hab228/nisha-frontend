@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE: ACTION REGISTRY & EVENT BUS
 // Replaces legacy global `window.*` function coupling with:
@@ -52,10 +53,11 @@ export function onAppEvent(eventName, listener, options) {
     if (!eventName || typeof listener !== 'function' || typeof appEvents?.addEventListener !== 'function') {
         return () => {};
     }
-    appEvents.addEventListener(eventName, listener, options);
+    const evtListener = /** @type {EventListener} */ (listener);
+    appEvents.addEventListener(eventName, evtListener, options);
     return () => {
         if (typeof appEvents.removeEventListener === 'function') {
-            appEvents.removeEventListener(eventName, listener, options);
+            appEvents.removeEventListener(eventName, evtListener, options);
         }
     };
 }
@@ -131,6 +133,22 @@ export function listRegisteredActions() {
 }
 
 /**
+ * @param {string} compatKey
+ * @returns {any}
+ */
+function getCompatOverrideFn(compatKey) {
+    if (!compatKey) return null;
+    if (typeof window !== 'undefined' && typeof window[compatKey] === 'function') {
+        return window[compatKey];
+    }
+    const g = /** @type {Record<string, any>} */ (globalThis);
+    if (typeof g !== 'undefined' && typeof g[compatKey] === 'function') {
+        return g[compatKey];
+    }
+    return null;
+}
+
+/**
  * Resolves an action handler without hardcoding `window.*` dependencies.
  * Resolution order:
  * 1) Explicit non-stub test/runtime override on `globalThis[compatKey]` if it differs from the registered function
@@ -141,17 +159,6 @@ export function listRegisteredActions() {
  * @param {string} [compatName]
  * @returns {Function|null}
  */
-function getCompatOverrideFn(compatKey) {
-    if (!compatKey) return null;
-    if (typeof window !== 'undefined' && typeof window[compatKey] === 'function') {
-        return window[compatKey];
-    }
-    if (typeof globalThis !== 'undefined' && typeof globalThis[compatKey] === 'function') {
-        return globalThis[compatKey];
-    }
-    return null;
-}
-
 export function resolveAction(name, compatName) {
     const entry = (name ? actionRegistry.get(name) : undefined)
         || (compatName && compatName !== name ? actionRegistry.get(compatName) : undefined);

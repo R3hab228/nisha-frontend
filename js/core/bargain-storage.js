@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE — BARGAIN STORAGE HELPER (js/core/bargain-storage.js)
 // Единый слой чтения/записи/очистки состояния торга в sessionStorage и localStorage.
@@ -9,6 +10,7 @@ const DECLINED_PREFIX = 'declined_bargain_';
 const DEFAULT_PENDING_TTL_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_DECLINED_TTL_MS = 48 * 60 * 60 * 1000;
 
+/** @param {string} prop */
 function resolveWebStorage(prop) {
     try {
         if (typeof window !== 'undefined' && window[prop] && typeof window[prop].getItem === 'function') {
@@ -16,8 +18,9 @@ function resolveWebStorage(prop) {
         }
     } catch {}
     try {
-        if (typeof globalThis !== 'undefined' && globalThis[prop] && typeof globalThis[prop].getItem === 'function') {
-            return globalThis[prop];
+        const g = /** @type {Record<string, any>} */ (globalThis);
+        if (typeof g !== 'undefined' && g[prop] && typeof g[prop].getItem === 'function') {
+            return g[prop];
         }
     } catch {}
     return null;
@@ -27,6 +30,7 @@ function getStorageAreas() {
     return [resolveWebStorage('sessionStorage'), resolveWebStorage('localStorage')].filter(Boolean);
 }
 
+/** @param {string} key */
 function readRawKey(key) {
     for (const area of getStorageAreas()) {
         try {
@@ -39,6 +43,7 @@ function readRawKey(key) {
     return null;
 }
 
+/** @param {string} key @param {string} value */
 function writeRawKey(key, value) {
     for (const area of getStorageAreas()) {
         try {
@@ -47,6 +52,7 @@ function writeRawKey(key, value) {
     }
 }
 
+/** @param {string} key */
 function removeRawKey(key) {
     for (const area of getStorageAreas()) {
         try {
@@ -55,6 +61,7 @@ function removeRawKey(key) {
     }
 }
 
+/** @param {string|null} raw */
 function parseJsonSafe(raw) {
     if (!raw) return null;
     try {

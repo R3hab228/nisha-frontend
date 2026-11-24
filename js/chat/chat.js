@@ -99,7 +99,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     document.querySelectorAll('.bargain-broadcast-overlay, .terminal-modal-overlay').forEach(el => el.remove());
 
-    const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+    const t = (k, def) => tSafe(k, def);
     const escHtml = (s) => String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
     const safeUrl = (u) => {
         const str = String(u || '').trim();
@@ -356,7 +356,7 @@ function checkPendingBargainNotification() {
             setTimeout(checkPendingBargainNotification, 200);
         });
     } else if (notif.type === 'BARGAIN_DECLINED') {
-        const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+        const t = (k, def) => tSafe(k, def);
         const declMsg = t('product.offer_declined_toast', 'Продавець відхилив пропозицію ціни на товар.');
         if (typeof showToast === 'function') showToast(declMsg, 'info');
         if (typeof notif.markAsRead === 'function') notif.markAsRead();
@@ -388,7 +388,7 @@ function handleIncomingSupportReply(r, sbClient) {
     if (parsed && parsed.type === 'BARGAIN_ACCEPTED') {
         setAcceptedBargain(parsed.itemId, parsed);
 
-        const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+        const t = (k, def) => tSafe(k, def);
 
         const activeItem = getRuntimeOpenedItem();
         if (activeItem && String(activeItem.id) === String(parsed.itemId)) {
@@ -457,7 +457,7 @@ function handleIncomingSupportReply(r, sbClient) {
     if (parsed && parsed.type === 'BARGAIN_DECLINED') {
         setBargainDeclined(parsed.itemId);
 
-        const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+        const t = (k, def) => tSafe(k, def);
 
         const activeItem = getRuntimeOpenedItem();
         if (activeItem && String(activeItem.id) === String(parsed.itemId)) {
@@ -492,8 +492,8 @@ function handleIncomingSupportReply(r, sbClient) {
 
     const escFn = resolveAction('escapeHtml');
     const safeAnswer = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(r.answer_text) : (escFn ? escFn(r.answer_text) : r.answer_text);
-    const replyTitle = (typeof i18next !== 'undefined' && i18next.t('support.reply_title', { defaultValue: 'Ответ от Поддержки:' })) || 'Ответ от Поддержки:';
-    const replyReadBtn = (typeof i18next !== 'undefined' && i18next.t('support.reply_btn_read', { defaultValue: '[ ПРОЧИТАНО ]' })) || '[ ПРОЧИТАНО ]';
+    const replyTitle = tSafe('support.reply_title', 'Ответ от Поддержки:');
+    const replyReadBtn = tSafe('support.reply_btn_read', '[ ПРОЧИТАНО ]');
     invokeAction('playSound', 'balloon', { kind: 'broadcast' });
     showTerminalModal('INCOMING_MESSAGE.SYS', `<b>${replyTitle}</b><br><br>${safeAnswer}`, replyReadBtn, markAsRead);
 }
@@ -587,7 +587,7 @@ async function submitSupportTicket() {
     let message = input.value.trim();
 
     if (message.length < 5) {
-        const minLenMsg = typeof i18next !== 'undefined' ? i18next.t('support.min_len', { defaultValue: 'Опиши проблему подробнее (минимум 5 символов)' }) : 'Опиши проблему подробнее (минимум 5 символов)';
+        const minLenMsg = tSafe('support.min_len', 'Опиши проблему подробнее (минимум 5 символов)');
         showToast(minLenMsg, 'error');
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         return;
@@ -598,7 +598,7 @@ async function submitSupportTicket() {
     }
 
     btn.style.pointerEvents = 'none';
-    btn.textContent = (typeof i18next !== 'undefined' && i18next.t('support.sending', { defaultValue: '[ ОТПРАВКА... ]' })) || '[ ОТПРАВКА... ]';
+    btn.textContent = tSafe('support.sending', '[ ОТПРАВКА... ]');
 
     const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
@@ -621,7 +621,7 @@ async function submitSupportTicket() {
 
     // Моментальный отклик интерфейса
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
-    const successMsg = typeof i18next !== 'undefined' ? i18next.t('support.success_sent', { defaultValue: 'Сообщение успешно доставлено админу!' }) : 'Сообщение успешно доставлено админу!';
+    const successMsg = tSafe('support.success_sent', 'Сообщение успешно доставлено админу!');
     showToast(successMsg, 'success');
     
     if (typeof closeModal === 'function') {
@@ -633,7 +633,7 @@ async function submitSupportTicket() {
     // Возвращаем кнопку в исходное состояние
     setTimeout(() => {
         btn.style.pointerEvents = 'auto';
-        btn.textContent = typeof i18next !== 'undefined' ? i18next.t('support.submit', { defaultValue: 'ОТПРАВИТЬ СИГНАЛ' }) : 'ОТПРАВИТЬ СИГНАЛ';
+        btn.textContent = tSafe('support.submit', 'ОТПРАВИТЬ СИГНАЛ');
         input.value = '';
         updateSupportCharCounter();
     }, 500);

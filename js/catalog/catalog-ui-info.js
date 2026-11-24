@@ -4,7 +4,7 @@
 
 import { getCatalogStore } from './catalog-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeOpenedItem } from '../core/runtime-env.js';
+import { getRuntimeOpenedItem, tSafe } from '../core/runtime-env.js';
 
 /**
  * Показывает информационную терминальную модалку по клику на бейдж товара.
@@ -16,41 +16,39 @@ export function showBadgeInfo(type) {
     const activeItem = getRuntimeOpenedItem();
 
     if (type === 'secure') {
-        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.secure_title', { defaultValue: 'SECURE_PAYMENT.EXE' }) : 'SECURE_PAYMENT.EXE';
+        title = tSafe('badge_info.secure_title', { defaultValue: 'SECURE_PAYMENT.EXE' });
         const isReturnable = activeItem && activeItem.is_returnable === true;
         const isDropItem = activeItem && (activeItem.is_drop === true || (activeItem.tags && activeItem.tags.map(t => t.toLowerCase()).includes('drop')));
 
         if (!isReturnable || isDropItem) {
             const defaultSecureText = 'NISHA выступает гарантом сделки. Вы не рискуете всей суммой.<br><br>Примеряйте вещь на почте: при наложке вы можете отказаться от покупки прямо в отделении.<br><br>После забора посылки домой возврат или обмен невозможен.';
-            text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.secure_no_return_text', { defaultValue: defaultSecureText }) : defaultSecureText;
+            text = tSafe('badge_info.secure_no_return_text', { defaultValue: defaultSecureText });
         } else {
-            text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.secure_return_text', { defaultValue: 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style="color:var(--accent-green);">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>' }) : 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style="color:var(--accent-green);">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>';
+            text = tSafe('badge_info.secure_return_text', { defaultValue: 'NISHA выступает гарантом сделки. Ваши деньги надежно защищены.<br><br>Вы можете примерить вещь на почте. Даже если вы забрали её домой, на данный товар действует <b style="color:var(--accent-green);">гарантия возврата и обмена в течение 14 дней</b>.<br><br><i>Обязательное условие возврата: сохранение товарного вида и отсутствие следов носки.</i>' });
         }
     } else if (type === 'fast') {
-        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.fast_title', { defaultValue: 'FAST_SHIPPING.SYS' }) : 'FAST_SHIPPING.SYS';
-        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.fast_text', { defaultValue: 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.' }) : 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.';
+        title = tSafe('badge_info.fast_title', { defaultValue: 'FAST_SHIPPING.SYS' });
+        text = tSafe('badge_info.fast_text', { defaultValue: 'Отправка заказа осуществляется в день оплаты (при подтверждении до 16:00) или на следующий рабочий день.' });
     } else if (type === 'bargain') {
-        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.bargain_title', { defaultValue: 'BARGAIN_AVAILABLE.SYS' }) : 'BARGAIN_AVAILABLE.SYS';
+        title = tSafe('badge_info.bargain_title', { defaultValue: 'BARGAIN_AVAILABLE.SYS' });
         const descMatch = activeItem && typeof activeItem.description === 'string' && activeItem.description.match(/\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i);
         const minVal = activeItem?.min_bargain_price || (descMatch ? descMatch[1] : null);
         const minText = minVal ? `<br><br>Мінімальна ціна для торгу: <b style="color:var(--accent-green);">${minVal} грн</b>` : '';
-        const baseBargainText = (typeof i18next !== 'undefined')
-            ? i18next.t('badge_info.bargain_text', { defaultValue: 'Продавець увімкнув можливість торгу для цієї речі. Ви можете запропонувати свою суму за допомогою кнопки <b>«ЗАПРОПОНУВАТИ СВОЮ ЦІНУ»</b>.' })
-            : 'Продавець увімкнув можливість торгу для цієї речі. Ви можете запропонувати свою суму за допомогою кнопки <b>«ЗАПРОПОНУВАТИ СВОЮ ЦІНУ»</b>.';
+        const baseBargainText = tSafe('badge_info.bargain_text', { defaultValue: 'Продавець увімкнув можливість торгу для цієї речі. Ви можете запропонувати свою суму за допомогою кнопки <b>«ЗАПРОПОНУВАТИ СВОЮ ЦІНУ»</b>.' });
         text = baseBargainText + minText;
     } else if (type === 'refund_no') {
-        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_no_title', { defaultValue: 'NO_RETURN_POLICY.LOG' }) : 'NO_RETURN_POLICY.LOG';
-        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_no_text', { defaultValue: '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>' }) : '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>';
+        title = tSafe('badge_info.refund_no_title', { defaultValue: 'NO_RETURN_POLICY.LOG' });
+        text = tSafe('badge_info.refund_no_text', { defaultValue: '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ТОВАР НЕ ПОДЛЕЖИТ ВОЗВРАТУ ]</span><br><br>Мы настоятельно просим вас внимательно изучать фото, замеры и описание перед оформлением заказа.<br><br><b style="color:var(--accent-red);">Данная вещь не подлежит возврату или обмену ни при каких условиях.</b>' });
     } else if (type === 'refund_yes') {
-        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_yes_title', { defaultValue: 'RETURN_POLICY.SYS' }) : 'RETURN_POLICY.SYS';
-        text = (typeof i18next !== 'undefined') ? i18next.t('badge_info.refund_yes_text', { defaultValue: '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>' }) : '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>';
+        title = tSafe('badge_info.refund_yes_title', { defaultValue: 'RETURN_POLICY.SYS' });
+        text = tSafe('badge_info.refund_yes_text', { defaultValue: '<span style="color:var(--accent-green); font-weight:bold; font-size:16px;">[ ДОСТУПЕН ВОЗВРАТ ]</span><br><br>Данный товар подлежит возврату и обмену в течение <b>14 дней</b> с момента покупки, согласно законодательству Украины.<br><br><i>Условие возврата: сохранение товарного вида, всех бирок и отсутствие следов носки.</i>' });
     } else if (type === 'drop') {
-        title = (typeof i18next !== 'undefined') ? i18next.t('badge_info.drop_title', { defaultValue: 'WARNING: DROP_ITEM' }) : 'WARNING: DROP_ITEM';
+        title = tSafe('badge_info.drop_title', { defaultValue: 'WARNING: DROP_ITEM' });
         const defaultDropText = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Вещь от стороннего продавца. NISHA — гарант сделки.</span><br><br>Осмотр и примерка — строго на «Новой Почте» (при наложке остаток оплачивается после проверки).<br><br>После забора посылки возврат невозможен: сделка считается закрытой, а деньги сразу переводятся владельцу.';
         text = (typeof i18next !== 'undefined') ? (i18next.t('badge_info.drop_desc') || i18next.t('badge_info.drop_text') || defaultDropText) : defaultDropText;
     }
 
-    const btnText = (typeof i18next !== 'undefined') ? i18next.t('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' }) : '[ ПОНЯТНО ]';
+    const btnText = tSafe('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' });
     if (typeof showTerminalModal === 'function') {
         showTerminalModal(title, text, btnText, null);
     }
@@ -77,8 +75,8 @@ export function flushPendingBroadcast() {
 
     setTimeout(() => {
         const closeBtnText = customMarkSeen
-            ? ((typeof i18next !== 'undefined' && i18next.t('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' })) || '[ ПОНЯТНО ]')
-            : ((typeof i18next !== 'undefined' && i18next.t('propose.btn_close')) || '[ ЗАКРЫТЬ ]');
+            ? tSafe('badge_info.btn_understood', '[ ПОНЯТНО ]')
+            : tSafe('propose.btn_close', '[ ЗАКРЫТЬ ]');
         showBroadcastFn('SYSTEM_BROADCAST.MSG', bHtml, closeBtnText, () => {
             if (customMarkSeen) {
                 customMarkSeen();
@@ -152,25 +150,25 @@ export async function startOnboardingTour() {
         const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
 
         const activeSteps = [];
-        activeSteps.push({ element: '.search-wrapper', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.search_title') : 'ПОИСК', description: typeof i18next !== 'undefined' ? i18next.t('tour.search_desc') : 'Поиск по вещам' } });
+        activeSteps.push({ element: '.search-wrapper', popover: { title: tSafe('tour.search_title', 'ПОИСК'), description: tSafe('tour.search_desc', 'Поиск по вещам') } });
 
         if (isMobile) {
             activeSteps.push(
-                { element: '.mobile-profile-link', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.prof_title') : 'ПРОФИЛЬ', description: typeof i18next !== 'undefined' ? i18next.t('tour.prof_desc') : 'Личный кабинет' } },
-                { element: '#mobileFilterBtn', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.filt_title') : 'ФИЛЬТРЫ', description: typeof i18next !== 'undefined' ? i18next.t('tour.filt_desc') : 'Фильтры каталога' } }
+                { element: '.mobile-profile-link', popover: { title: tSafe('tour.prof_title', 'ПРОФИЛЬ'), description: tSafe('tour.prof_desc', 'Личный кабинет') } },
+                { element: '#mobileFilterBtn', popover: { title: tSafe('tour.filt_title', 'ФИЛЬТРЫ'), description: tSafe('tour.filt_desc', 'Фильтры каталога') } }
             );
-            if (firstStar) activeSteps.push({ element: firstStar, popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.star_title') : 'ИЗБРАННОЕ', description: typeof i18next !== 'undefined' ? i18next.t('tour.star_desc') : 'Сохраняйте вещи' } });
-            if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.cartbtn_title') : 'КОРЗИНА', description: typeof i18next !== 'undefined' ? i18next.t('tour.cartbtn_desc') : 'Добавление в заказ' } });
-            activeSteps.push({ element: '.fab-propose', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.prop_title') : 'ПРЕДЛОЖКА', description: typeof i18next !== 'undefined' ? i18next.t('tour.prop_desc') : 'Продать свою вещь' } });
-            activeSteps.push({ element: '#cartInfoWrapper', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.cart_title') : 'КОРЗИНА', description: typeof i18next !== 'undefined' ? i18next.t('tour.cart_desc') : 'Ваши покупки' } });
+            if (firstStar) activeSteps.push({ element: firstStar, popover: { title: tSafe('tour.star_title', 'ИЗБРАННОЕ'), description: tSafe('tour.star_desc', 'Сохраняйте вещи') } });
+            if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: tSafe('tour.cartbtn_title', 'КОРЗИНА'), description: tSafe('tour.cartbtn_desc', 'Добавление в заказ') } });
+            activeSteps.push({ element: '.fab-propose', popover: { title: tSafe('tour.prop_title', 'ПРЕДЛОЖКА'), description: tSafe('tour.prop_desc', 'Продать свою вещь') } });
+            activeSteps.push({ element: '#cartInfoWrapper', popover: { title: tSafe('tour.cart_title', 'КОРЗИНА'), description: tSafe('tour.cart_desc', 'Ваши покупки') } });
         } else {
             activeSteps.push(
-                { element: '#authBox', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.prof_title') : 'ПРОФИЛЬ', description: typeof i18next !== 'undefined' ? i18next.t('tour.prof_desc') : 'Авторизация' } },
-                { element: '.sidebar', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.filt_title') : 'ФИЛЬТРЫ', description: typeof i18next !== 'undefined' ? i18next.t('tour.filt_desc') : 'Фильтры каталога' } }
+                { element: '#authBox', popover: { title: tSafe('tour.prof_title', 'ПРОФИЛЬ'), description: tSafe('tour.prof_desc', 'Авторизация') } },
+                { element: '.sidebar', popover: { title: tSafe('tour.filt_title', 'ФИЛЬТРЫ'), description: tSafe('tour.filt_desc', 'Фильтры каталога') } }
             );
-            if (firstStar) activeSteps.push({ element: firstStar, popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.star_title') : 'ИЗБРАННОЕ', description: typeof i18next !== 'undefined' ? i18next.t('tour.star_desc') : 'Сохраняйте вещи' } });
-            if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.cartbtn_title') : 'КОРЗИНА', description: typeof i18next !== 'undefined' ? i18next.t('tour.cartbtn_desc') : 'Добавление в заказ' } });
-            activeSteps.push({ element: '.fab-propose', popover: { title: typeof i18next !== 'undefined' ? i18next.t('tour.prop_title') : 'ПРЕДЛОЖКА', description: typeof i18next !== 'undefined' ? i18next.t('tour.prop_desc') : 'Продать свою вещь' } });
+            if (firstStar) activeSteps.push({ element: firstStar, popover: { title: tSafe('tour.star_title', 'ИЗБРАННОЕ'), description: tSafe('tour.star_desc', 'Сохраняйте вещи') } });
+            if (firstCartBtn) activeSteps.push({ element: firstCartBtn, popover: { title: tSafe('tour.cartbtn_title', 'КОРЗИНА'), description: tSafe('tour.cartbtn_desc', 'Добавление в заказ') } });
+            activeSteps.push({ element: '.fab-propose', popover: { title: tSafe('tour.prop_title', 'ПРЕДЛОЖКА'), description: tSafe('tour.prop_desc', 'Продать свою вещь') } });
         }
 
         const driverFn = (window.driver && window.driver.js && window.driver.js.driver) || (window.driver && window.driver.driver) || (typeof window.driver === 'function' ? window.driver : null);
@@ -180,9 +178,9 @@ export async function startOnboardingTour() {
             showProgress: true,
             overlayColor: 'transparent',
             overlayOpacity: 0,
-            nextBtnText: typeof i18next !== 'undefined' ? i18next.t('tour.next') : 'Далее',
-            prevBtnText: typeof i18next !== 'undefined' ? i18next.t('tour.prev') : 'Назад',
-            doneBtnText: typeof i18next !== 'undefined' ? i18next.t('tour.done') : 'Готово',
+            nextBtnText: tSafe('tour.next', 'Далее'),
+            prevBtnText: tSafe('tour.prev', 'Назад'),
+            doneBtnText: tSafe('tour.done', 'Готово'),
             steps: activeSteps,
             onDestroyStarted: () => {
                 store.set('nisha_tour_done', 'true');

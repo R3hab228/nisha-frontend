@@ -4,7 +4,7 @@
 
 import { store, storage, apiClient, showToast } from '../../src/modules/index.js';
 import { invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeSupabase, getTurnstileApi } from '../core/runtime-env.js';
+import { getRuntimeSupabase, getTurnstileApi, tSafe } from '../core/runtime-env.js';
 
 // --- CLOUDFLARE TURNSTILE (CAPTCHA / BOT SHIELD) ---
 const locHost = (typeof window !== 'undefined' && window.location && window.location.hostname) || '';
@@ -192,9 +192,7 @@ export function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
 
 export function setOtpButtonSuccess(btnOtp) {
     if (!btnOtp) return;
-    const successText = typeof i18next !== 'undefined'
-        ? i18next.t('checkout.btn_otp_success', { defaultValue: 'УСПЕХ ✓' })
-        : 'УСПЕХ ✓';
+    const successText = tSafe('checkout.btn_otp_success', 'УСПЕХ ✓');
     btnOtp.classList.add('btn-otp-success');
     btnOtp.setAttribute('data-i18n', 'checkout.btn_otp_success');
     btnOtp.disabled = true;
@@ -210,9 +208,7 @@ export function setOtpButtonSuccess(btnOtp) {
 
 export function setOtpButtonDefault(btnOtp) {
     if (!btnOtp) return;
-    const defaultText = typeof i18next !== 'undefined'
-        ? i18next.t('checkout.btn_otp', { defaultValue: 'Подтвердить' })
-        : 'Подтвердить';
+    const defaultText = tSafe('checkout.btn_otp', 'Подтвердить');
     btnOtp.classList.remove('btn-otp-success');
     btnOtp.setAttribute('data-i18n', 'checkout.btn_otp');
     btnOtp.disabled = false;
@@ -425,7 +421,7 @@ async function generateAndSendOTP() {
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
     
     if (!cleanPhone || cleanPhone.length < 10) {
-        showToast(typeof i18next !== 'undefined' ? i18next.t('orders_modal.err_phone', { defaultValue: 'Введите корректный номер телефона!' }) : 'Введите корректный номер телефона!', 'error');
+        showToast(tSafe('orders_modal.err_phone', 'Введите корректный номер телефона!'), 'error');
         return;
     }
 
@@ -446,7 +442,7 @@ async function generateAndSendOTP() {
     
     // Блокируем кнопку от двойных нажатий
     btnOtp.disabled = true;
-    btnOtp.textContent = typeof i18next !== 'undefined' ? i18next.t('auth.db_connecting', { defaultValue: 'Связь с БД...' }) : 'Связь с БД...';
+    btnOtp.textContent = tSafe('auth.db_connecting', 'Связь с БД...');
     btnOtp.style.opacity = '0.5';
 
     // Верификация капчи на бэкенде
@@ -454,7 +450,7 @@ async function generateAndSendOTP() {
         try {
             const vData = await apiClient.post('/api/verify-turnstile', { token: turnToken }, { timeout: 8000 });
             if (!vData || !vData.success) {
-                showToast(typeof i18next !== 'undefined' ? i18next.t('auth.turnstile_err', { defaultValue: 'Ошибка проверки безопасности Turnstile' }) : 'Ошибка проверки безопасности Turnstile', 'error');
+                showToast(tSafe('auth.turnstile_err', 'Ошибка проверки безопасности Turnstile'), 'error');
                 if (tsApi && widgetId !== null && widgetId !== undefined) {
                     tsApi.reset(widgetId);
                 }
@@ -473,9 +469,9 @@ async function generateAndSendOTP() {
     const { data: blacklisted } = await sb.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
     if (blacklisted && blacklisted.length > 0) {
         const statusEl = document.getElementById('otpStatus');
-        const secBlockedText = typeof i18next !== 'undefined' ? i18next.t('profile.security_blocked', { defaultValue: '[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН' }) : '[!] ОШИБКА БЕЗОПАСНОСТИ. ВАШ НОМЕР ЗАБЛОКИРОВАН.';
+        const secBlockedText = tSafe('profile.security_blocked', '[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН');
         if (statusEl) statusEl.innerHTML = `<span class="otp-status-blocked">${secBlockedText}</span>`;
-        showToast(typeof i18next !== 'undefined' ? i18next.t('auth.access_denied', { defaultValue: 'Доступ запрещен' }) : 'Доступ запрещен', 'error');
+        showToast(tSafe('auth.access_denied', 'Доступ запрещен'), 'error');
         setOtpButtonDefault(btnOtp);
         return; 
     }
@@ -493,7 +489,7 @@ async function generateAndSendOTP() {
     const updateOtpBtnText = () => {
         const remaining = Math.max(0, Math.ceil((otpEndTime - Date.now()) / 1000));
         if (remaining > 0) {
-            btnOtp.textContent = typeof i18next !== 'undefined' ? i18next.t('auth.wait_sec', { sec: remaining, defaultValue: `Ждите ${remaining}с` }) : `Ждите ${remaining}с`;
+            btnOtp.textContent = tSafe('auth.wait_sec', `Ждите ${remaining}с`, { sec: remaining });
             return false;
         } else {
             if (otpInterval) {
@@ -512,7 +508,7 @@ async function generateAndSendOTP() {
     // 4. Генерация кода в базе
     const { error } = await sb.rpc('generate_secure_otp', { p_phone: cleanPhone });
     if (error) {
-        showToast(typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error', { defaultValue: 'Ошибка сервера' }) : 'Ошибка сервера', 'error');
+        showToast(tSafe('checkout.promo_error', 'Ошибка сервера'), 'error');
         clearInterval(otpInterval);
         setOtpButtonDefault(btnOtp);
         return;
@@ -537,7 +533,7 @@ async function generateAndSendOTP() {
             // Гостевой фоллбэк без UUID (не изменяет profiles)
             tgLink = `https://t.me/nisha_store1_bot?start=otp_${payloadPhone}`;
         } else {
-            showToast(typeof i18next !== 'undefined' ? i18next.t('checkout.promo_error', { defaultValue: 'Ошибка сервера' }) : 'Ошибка сервера', 'error');
+            showToast(tSafe('checkout.promo_error', 'Ошибка сервера'), 'error');
             clearInterval(otpInterval);
             setOtpButtonDefault(btnOtp);
             return;
@@ -552,7 +548,7 @@ async function generateAndSendOTP() {
     
     const statusEl = document.getElementById('otpStatus');
     if (statusEl) {
-        const botPromptText = typeof i18next !== 'undefined' ? i18next.t('profile.go_to_bot_phone', { defaultValue: "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... " }) : "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... ";
+        const botPromptText = tSafe('profile.go_to_bot_phone', "Перейдите в бота и нажмите 'СТАРТ' для подтверждения... ");
         statusEl.innerHTML = botPromptText + ' ' + getWin95HourglassHtml(14);
     }
     
@@ -605,7 +601,7 @@ async function generateAndSendOTP() {
                     setOtpButtonDefault(btnOtp);
                 }
                 if (statusEl) {
-                    const expiredMsg = typeof i18next !== 'undefined' ? i18next.t('checkout.otp_expired') : 'Время ожидания подтверждения истекло. Запросите код снова.';
+                    const expiredMsg = tSafe('checkout.otp_expired', 'Время ожидания подтверждения истекло. Запросите код снова.');
                     statusEl.innerHTML = `<span class="otp-status-expired">${expiredMsg}</span>`;
                 }
                 return;

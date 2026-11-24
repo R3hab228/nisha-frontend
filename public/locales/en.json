@@ -242,7 +242,8 @@
       "password_updated": "Password updated successfully!",
       "password_update_error": "Password update error: ",
       "btn_save_password": "SAVE",
-      "saving": "SAVING..."
+      "saving": "SAVING...",
+      "valid_phone": "Enter your full phone number (+380...)!"
     },
     "checkout": {
       "desc": "Fill in shipping details. Reserved for 2 hours.",

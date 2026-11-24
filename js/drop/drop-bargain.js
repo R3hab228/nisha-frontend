@@ -2,6 +2,8 @@
 // NISHA DROP BARGAIN MODE & TOASTS
 // ==========================================
 
+import { tSafe } from '../core/runtime-env.js';
+
 export function openPropBargainInput() {
     const label = document.getElementById('propPriceLabel');
     const priceInput = document.getElementById('propPrice');
@@ -17,10 +19,7 @@ export function openPropBargainInput() {
     if (label) {
         label.classList.add('label-animating');
         setTimeout(() => {
-            const minBidText = (typeof i18next !== 'undefined')
-                ? i18next.t('propose.min_bid_label', { defaultValue: 'МИНИМАЛЬНАЯ СТАВКА (ГРН) :' })
-                : 'МИНИМАЛЬНАЯ СТАВКА (ГРН) :';
-            label.textContent = minBidText;
+            label.textContent = tSafe('propose.min_bid_label', 'МИНИМАЛЬНАЯ СТАВКА (ГРН) :');
             label.setAttribute('data-i18n', 'propose.min_bid_label');
             label.classList.remove('label-animating');
         }, 110);
@@ -51,12 +50,8 @@ export function showBargainSavedToast(minBid) {
     const toast = document.createElement('div');
     toast.className = 'toast toast-new-item toast-bargain-saved success';
 
-    const tagText = (typeof i18next !== 'undefined')
-        ? i18next.t('propose.toast_bargain_tag', { defaultValue: 'ТОРГ' })
-        : 'ТОРГ';
-    const savedText = (typeof i18next !== 'undefined')
-        ? i18next.t('propose.toast_bargain_saved', { min: minBid, defaultValue: `СОХРАНЕНО: от ${minBid} грн` })
-        : `СОХРАНЕНО: от ${minBid} грн`;
+    const tagText = tSafe('propose.toast_bargain_tag', 'ТОРГ');
+    const savedText = tSafe('propose.toast_bargain_saved', `СОХРАНЕНО: от ${minBid} грн`, { min: minBid });
 
     toast.innerHTML = `
         <div class="toast-item-thumb toast-bargain-icon">
@@ -101,10 +96,7 @@ export function returnToDesiredPriceMode(hasBargain = false) {
     if (label) {
         label.classList.add('label-animating');
         setTimeout(() => {
-            const priceLabelText = (typeof i18next !== 'undefined')
-                ? i18next.t('propose.price_label', { defaultValue: 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):' })
-                : 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):';
-            label.textContent = priceLabelText;
+            label.textContent = tSafe('propose.price_label', 'ЖЕЛАЕМАЯ ЦЕНА (ГРН):');
             label.setAttribute('data-i18n', 'propose.price_label');
             label.classList.remove('label-animating');
         }, 110);
@@ -127,16 +119,10 @@ export function returnToDesiredPriceMode(hasBargain = false) {
 
         if (hasBargain) {
             btnToggle.classList.add('active');
-            const activeText = (typeof i18next !== 'undefined')
-                ? i18next.t('propose.btn_bargain_active', { defaultValue: '[ ТОРГ ✓ ]' })
-                : '[ ТОРГ ✓ ]';
-            btnToggle.textContent = activeText;
+            btnToggle.textContent = tSafe('propose.btn_bargain_active', '[ ТОРГ ✓ ]');
         } else {
             btnToggle.classList.remove('active');
-            const defText = (typeof i18next !== 'undefined')
-                ? i18next.t('propose.btn_bargain', { defaultValue: '[ ТОРГ ]' })
-                : '[ ТОРГ ]';
-            btnToggle.textContent = defText;
+            btnToggle.textContent = tSafe('propose.btn_bargain', '[ ТОРГ ]');
         }
     }
 }
@@ -150,9 +136,7 @@ export function hidePropBargainInput(silent = false) {
     returnToDesiredPriceMode(false);
 
     if (wasBargain && !silent) {
-        const offMsg = (typeof i18next !== 'undefined')
-            ? i18next.t('propose.toast_bargain_off', { defaultValue: 'Торг выключен' })
-            : 'Торг выключен';
+        const offMsg = tSafe('propose.toast_bargain_off', 'Торг выключен');
         if (typeof showToast === 'function') showToast(offMsg, 'info');
     }
 }
@@ -171,9 +155,7 @@ export function confirmPropBargainInput() {
     const minBid = Number.parseInt(rawVal, 10);
     if (Number.isNaN(minBid) || minBid < 100) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const minErrMsg = (typeof i18next !== 'undefined')
-            ? i18next.t('propose.err_bargain_min', { defaultValue: 'Минимальная цена торга должна быть не менее 100 грн!' })
-            : 'Минимальная цена торга должна быть не менее 100 грн!';
+        const minErrMsg = tSafe('propose.err_bargain_min', 'Минимальная цена торга должна быть не менее 100 грн!');
         if (typeof showToast === 'function') showToast(minErrMsg, 'error');
         if (minInput) minInput.focus();
         return;
@@ -182,9 +164,7 @@ export function confirmPropBargainInput() {
     const desiredPrice = Number.parseInt(priceInput?.value || '', 10);
     if (!Number.isNaN(desiredPrice) && desiredPrice > 0 && minBid >= desiredPrice) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const lessErrMsg = (typeof i18next !== 'undefined')
-            ? i18next.t('propose.err_bargain_less_price', { defaultValue: 'Минимальная цена торга должна быть меньше желаемой цены!' })
-            : 'Минимальная цена торга должна быть меньше желаемой цены!';
+        const lessErrMsg = tSafe('propose.err_bargain_less_price', 'Минимальная цена торга должна быть меньше желаемой цены!');
         if (typeof showToast === 'function') showToast(lessErrMsg, 'error');
         if (minInput) minInput.focus();
         return;
