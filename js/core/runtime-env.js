@@ -1,14 +1,19 @@
+// @ts-check
 // ==========================================
 // NISHA CORE — RUNTIME ENVIRONMENT ACCESSORS
 // Zero-dependency helpers replacing legacy `typeof global !== 'undefined'` checks.
 // ==========================================
 
+/**
+ * @param {string} name
+ * @returns {any}
+ */
 function readRuntimeProp(name) {
-    if (typeof window !== 'undefined' && window && window[name] !== undefined) {
-        return window[name];
+    if (typeof window !== 'undefined' && window && /** @type {any} */ (window)[name] !== undefined) {
+        return /** @type {any} */ (window)[name];
     }
-    if (typeof globalThis !== 'undefined' && globalThis[name] !== undefined) {
-        return globalThis[name];
+    if (typeof globalThis !== 'undefined' && /** @type {any} */ (globalThis)[name] !== undefined) {
+        return /** @type {any} */ (globalThis)[name];
     }
     return undefined;
 }

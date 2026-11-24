@@ -9,7 +9,7 @@ import {
     getUser
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeProfile, getRuntimeSiteLang } from '../core/runtime-env.js';
+import { getRuntimeProfile, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 
 /**
  * Expands or collapses the inline question submission form.
@@ -37,7 +37,7 @@ export function toggleQuestionForm() {
 export async function submitQuestion(itemId) {
     const currentUser = getUser();
     if (!currentUser) {
-        const authMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_auth')) || 'Для отправки вопроса нужно войти в аккаунт!';
+        const authMsg = tSafe('product.qa_err_auth', 'Для отправки вопроса нужно войти в аккаунт!');
         showToast(authMsg, 'error');
         if (typeof openProfileModal === 'function') openProfileModal();
         return;
@@ -47,7 +47,7 @@ export async function submitQuestion(itemId) {
     if (!input) return;
     let text = input.value.trim();
     if (text.length < 5) {
-        const shortMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_short')) || 'Вопрос слишком короткий!';
+        const shortMsg = tSafe('product.qa_err_short', 'Вопрос слишком короткий!');
         showToast(shortMsg, 'error');
         return;
     }
@@ -64,7 +64,7 @@ export async function submitQuestion(itemId) {
     if (questionData.date !== today) questionData = { date: today, count: 0 };
     if (questionData.count >= 2) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const limitMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_limit')) || 'Лимит: 2 вопроса в день.';
+        const limitMsg = tSafe('product.qa_err_limit', 'Лимит: 2 вопроса в день.');
         return showToast(limitMsg, 'error');
     }
 
@@ -96,14 +96,14 @@ export async function submitQuestion(itemId) {
                 if (store) store.setJSON('nisha_questions', questionData);
                 input.value = '';
                 toggleQuestionForm();
-                const sentMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_success')) || 'Вопрос отправлен!';
+                const sentMsg = tSafe('product.qa_success', 'Вопрос отправлен!');
                 showToast(sentMsg, 'success');
             } else {
-                const sendErrMsg = (typeof i18next !== 'undefined' && i18next.t('product.qa_err_send')) || 'Ошибка при отправке вопроса.';
+                const sendErrMsg = tSafe('product.qa_err_send', 'Ошибка при отправке вопроса.');
                 showToast(sendErrMsg, 'error');
             }
         } catch (err) {
-            const connErrMsg = (typeof i18next !== 'undefined' && i18next.t('propose.err_network')) || 'Ошибка соединения с сервером.';
+            const connErrMsg = tSafe('propose.err_network', 'Ошибка соединения с сервером.');
             showToast(connErrMsg, 'error');
         }
     };

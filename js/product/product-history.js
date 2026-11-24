@@ -16,6 +16,7 @@ import {
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { isItemBargainEnabled } from '../catalog/catalog-card-markup.js';
 import { getAcceptedBargain } from '../core/bargain-storage.js';
+import { tSafe } from '../core/runtime-env.js';
 
 const _preloadedSimilarUrls = new Set();
 let _pendingSimilarImgUrls = [];
@@ -242,7 +243,7 @@ export function renderSimilarItems(item) {
             });
         }
     } else {
-        const noItemsText = (typeof i18next !== 'undefined') ? i18next.t('product.no_similar', { defaultValue: 'Похожих товаров пока нет.' }) : 'Похожих товаров пока нет.';
+        const noItemsText = tSafe('product.no_similar', 'Похожих товаров пока нет.');
         const emptyHTML = `<div style="color:#555; font-size:12px; font-family: var(--font-mono);">${noItemsText}</div>`;
         if (simCont) simCont.innerHTML = emptyHTML;
         if (simContDesktop) simContDesktop.innerHTML = emptyHTML;

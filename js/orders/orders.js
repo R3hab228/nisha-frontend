@@ -47,7 +47,7 @@ export * from './orders-fetch.js';
 export * from './orders-render.js';
 export * from './orders-tracking.js';
 
-const ORDER_EXPORTS = {
+const ORDER_WINDOW_EXPORTS = {
     formatOrderDate,
     openOrdersModal,
     formatOrderStatus,
@@ -68,19 +68,23 @@ const ORDER_EXPORTS = {
     copyTTN,
     syncOrdersSelectionToolbar,
     renderFilteredOrders,
+    hydrateVisibleOrderTracking,
+    refreshOrderTracking
+};
+
+const ORDER_REGISTRY_ACTIONS = {
+    ...ORDER_WINDOW_EXPORTS,
     buildDeliveryTruckSvg,
     buildOrderTrackingBarHtml,
-    hydrateVisibleOrderTracking,
-    refreshOrderTracking,
     resolveTrackingDisplayState
 };
 
-Object.entries(ORDER_EXPORTS).forEach(([name, fn]) => {
+Object.entries(ORDER_WINDOW_EXPORTS).forEach(([name, fn]) => {
     if (typeof window !== 'undefined') window[name] = fn;
     if (typeof globalThis !== 'undefined') globalThis[name] = fn;
 });
 
-registerActions(ORDER_EXPORTS);
+registerActions(ORDER_REGISTRY_ACTIONS);
 
 if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
     try { updateOrderTabCounters(); } catch {}

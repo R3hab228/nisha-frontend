@@ -13,7 +13,7 @@ import {
 } from './cart-state.js';
 import { updateCartUI, closeCartDropdown } from './cart-ui.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, isSiteHackedMode } from '../core/runtime-env.js';
+import { getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, isSiteHackedMode, tSafe } from '../core/runtime-env.js';
 import { getAcceptedBargain } from '../core/bargain-storage.js';
 
 /**
@@ -78,11 +78,11 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
                 setActiveCart(currentCart);
                 updateCartUI();
                 syncCartToServer();
-                const updateMsg = (typeof i18next !== 'undefined' && i18next.t('product.offer_cart_updated')) || 'Цену в корзине обновлено по согласованной ставке!';
+                const updateMsg = tSafe('product.offer_cart_updated', 'Цену в корзине обновлено по согласованной ставке!');
                 showToast(updateMsg, 'success');
                 return;
             }
-            showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_exist') : 'Уже в корзине!', 'error');
+            showToast(tSafe('messages.cart_exist', 'Уже в корзине!'), 'error');
             return;
         }
 
@@ -116,7 +116,7 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
         if (hasAction('showCartToast')) {
             invokeAction('showCartToast', item, true, getOptimizedImg(item));
         } else {
-            showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success', getOptimizedImg(item));
+            showToast(tSafe('messages.cart_add', 'Добавлено в корзину!'), 'success', getOptimizedImg(item));
         }
         await syncCartToServer();
     });
@@ -226,7 +226,7 @@ export async function addToCartFromModal() {
         if (hasAction('showCartToast')) {
             invokeAction('showCartToast', cartItem, true, getOptimizedImg(cartItem));
         } else {
-            showToast(typeof i18next !== 'undefined' ? i18next.t('messages.cart_add') : 'Добавлено в корзину!', 'success');
+            showToast(tSafe('messages.cart_add', 'Добавлено в корзину!'), 'success');
         }
         if (hasAction('warmupBackendServer')) invokeAction('warmupBackendServer');
         await syncCartToServer();
@@ -278,7 +278,7 @@ export async function removeFromCart(index, event, rowElement) {
             if (hasAction('showCartToast')) {
                 invokeAction('showCartToast', removedItem, false, imgUrl);
             } else {
-                showToast(`${typeof i18next !== 'undefined' ? i18next.t('messages.cart_delete') : 'Удалено: '}${removedItem.name}`, 'error', imgUrl);
+                showToast(`${tSafe('messages.cart_delete', 'Удалено: ')}${removedItem.name}`, 'error', imgUrl);
             }
             await syncCartToServer();
         } finally {
