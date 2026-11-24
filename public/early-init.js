@@ -50,6 +50,10 @@
     } catch (e) {}
     try {
         const CHUNK_RELOAD_KEY = 'nisha_chunk_reload_at';
+        const CHUNK_COUNT_KEY = 'nisha_chunk_reload_count';
+        const MAX_AUTO_RECOVERIES = 2;
+        let recoveryInFlight = false;
+
         const clearHtmlCaches = function () {
             try {
                 if (typeof caches === 'undefined' || !caches || typeof caches.keys !== 'function') {
@@ -63,22 +67,129 @@
                                 .map(function (k) { return caches.delete(k); })
                         );
                     }),
-                    new Promise(function (resolve) { setTimeout(resolve, 300); })
+                    new Promise(function (resolve) { setTimeout(resolve, 400); })
                 ]).catch(function () {});
             } catch (e) {
                 return Promise.resolve();
             }
         };
+
+        const flushStaleServiceWorkers = function (forceUnregister) {
+            try {
+                if (typeof navigator === 'undefined' || !navigator.serviceWorker || typeof navigator.serviceWorker.getRegistrations !== 'function') {
+                    return Promise.resolve();
+                }
+                return Promise.race([
+                    navigator.serviceWorker.getRegistrations().then(function (regs) {
+                        return Promise.all(regs.map(function (reg) {
+                            if (forceUnregister) {
+                                return reg.unregister().catch(function () {});
+                            }
+                            if (reg.waiting) {
+                                try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+                                return Promise.resolve();
+                            }
+                            return typeof reg.update === 'function' ? reg.update().catch(function () {}) : Promise.resolve();
+                        }));
+                    }),
+                    new Promise(function (resolve) { setTimeout(resolve, 500); })
+                ]).catch(function () {});
+            } catch (e) {
+                return Promise.resolve();
+            }
+        };
+
+        const navigateFreshUrl = function () {
+            try {
+                const freshUrl = new URL(window.location.href);
+                freshUrl.searchParams.set('_sw_upd', String(Date.now()));
+                if (typeof window.location.replace === 'function') {
+                    window.location.replace(freshUrl.toString());
+                    return;
+                }
+            } catch (e) {}
+            window.location.reload();
+        };
+
+        const showManualRecoveryBanner = function () {
+            try {
+                if (window.__nishaAppBooted || !document.body || document.getElementById('nishaBootRecoveryBanner')) return;
+                let lang = 'ua';
+                try {
+                    const raw = (localStorage.getItem('nisha_lang') || localStorage.getItem('i18nextLng') || 'ua').toLowerCase();
+                    lang = raw.startsWith('ru') ? 'ru' : (raw.startsWith('en') ? 'en' : 'ua');
+                } catch (e) {}
+                const copy = {
+                    ua: { title: '[ ОНОВЛЕННЯ САЙТУ ]', text: 'Щось пішло не так під час завантаження оновлення. Натисніть кнопку нижче, щоб перезавантажити сторінку.', btn: '[ ОНОВИТИ СТОРІНКУ ]' },
+                    ru: { title: '[ ОБНОВЛЕНИЕ САЙТА ]', text: 'Произошел сбой при загрузке обновления. Нажмите кнопку ниже, чтобы перезагрузить страницу.', btn: '[ ОБНОВИТЬ СТРАНИЦУ ]' },
+                    en: { title: '[ SITE UPDATE ]', text: 'Loading was interrupted during a deployment. Tap below to reload the latest version.', btn: '[ RELOAD PAGE ]' }
+                }[lang];
+
+                const wrap = document.createElement('div');
+                wrap.id = 'nishaBootRecoveryBanner';
+                wrap.setAttribute('role', 'alert');
+                wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,5,5,0.96);display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Courier New",Courier,monospace;';
+
+                const box = document.createElement('div');
+                box.style.cssText = 'max-width:420px;width:100%;background:#0e0e0e;border:2px solid #00ff66;padding:22px;text-align:center;color:#ddd;';
+
+                const titleEl = document.createElement('div');
+                titleEl.textContent = copy.title;
+                titleEl.style.cssText = 'color:#00ff66;font-weight:700;font-size:15px;margin-bottom:12px;';
+
+                const textEl = document.createElement('p');
+                textEl.textContent = copy.text;
+                textEl.style.cssText = 'font-size:13px;line-height:1.5;margin:0 0 18px;color:#bbb;';
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = copy.btn;
+                btn.style.cssText = 'width:100%;padding:13px 16px;background:#111;color:#00ff66;border:2px solid #00ff66;font-family:"Courier New",Courier,monospace;font-size:13px;font-weight:700;cursor:pointer;';
+                btn.addEventListener('click', function () {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.6';
+                    try {
+                        sessionStorage.removeItem(CHUNK_COUNT_KEY);
+                        sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+                    } catch (e) {}
+                    Promise.all([clearHtmlCaches(), flushStaleServiceWorkers(true)]).then(navigateFreshUrl);
+                });
+
+                box.appendChild(titleEl);
+                box.appendChild(textEl);
+                box.appendChild(btn);
+                wrap.appendChild(box);
+                document.body.appendChild(wrap);
+            } catch (e) {}
+        };
+
         const tryRecoverStaleChunk = function () {
             try {
+                if (recoveryInFlight) return;
                 if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
                 const now = Date.now();
                 const last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || '0');
-                if (last && (now - last) < 15000) return;
+                let count = Number(sessionStorage.getItem(CHUNK_COUNT_KEY) || '0');
+                // Reset attempt counter if previous recovery was over 45s ago
+                if (last && (now - last) > 45000) {
+                    count = 0;
+                }
+                if (count >= MAX_AUTO_RECOVERIES) {
+                    showManualRecoveryBanner();
+                    return;
+                }
+                if (last && (now - last) < 2500) return;
+
+                recoveryInFlight = true;
+                const nextCount = count + 1;
                 sessionStorage.setItem(CHUNK_RELOAD_KEY, String(now));
-                clearHtmlCaches().then(function () {
-                    window.location.reload();
-                });
+                sessionStorage.setItem(CHUNK_COUNT_KEY, String(nextCount));
+
+                // On 2nd recovery attempt, force-unregister stale SW so fresh deploy HTML loads cleanly
+                Promise.all([
+                    clearHtmlCaches(),
+                    flushStaleServiceWorkers(nextCount >= 2)
+                ]).then(navigateFreshUrl);
             } catch (e) {}
         };
         window.addEventListener('vite:preloadError', function (event) {
@@ -134,7 +245,12 @@
             if (!window.__nishaAppBooted && typeof navigator !== 'undefined' && navigator.onLine !== false) {
                 tryRecoverStaleChunk();
             }
-        }, 5000);
+        }, 4500);
+        setTimeout(function () {
+            if (!window.__nishaAppBooted && typeof navigator !== 'undefined' && navigator.onLine !== false) {
+                showManualRecoveryBanner();
+            }
+        }, 9000);
     } catch (e) {}
     try {
         const locHash = (window.location && window.location.hash) || '';

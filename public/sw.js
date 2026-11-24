@@ -179,9 +179,11 @@ self.addEventListener('fetch', event => {
                     if (isValidAssetMime(networkResponse)) {
                         const responseToCache = networkResponse.clone();
                         caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache)).catch(() => {});
+                        return networkResponse;
                     }
-                    return networkResponse;
-                });
+                    // Stale chunk 404 / HTML fallback during deploy: fail fast so early-init triggers clean recovery
+                    return Response.error();
+                }).catch(() => Response.error());
             })
         );
         return;
@@ -285,8 +287,10 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         (async () => {
             try {
-                // Если запрос навигационный и браузер заранее загрузил HTML параллельно старту SW
-                if (event.request.mode === 'navigate' && event.preloadResponse) {
+                const isForceFresh = event.request.cache === 'reload' || url.searchParams.has('_sw_upd');
+
+                // Если запрос навигационный и браузер заранее загрузил HTML параллельно старту SW (кроме принудительного обновления)
+                if (!isForceFresh && event.request.mode === 'navigate' && event.preloadResponse) {
                     try {
                         const preloadResponse = await event.preloadResponse;
                         if (preloadResponse && (preloadResponse.status === 200 || preloadResponse.type === 'opaque')) {
@@ -297,8 +301,10 @@ self.addEventListener('fetch', event => {
                     } catch (_) {}
                 }
 
-                // Пытаемся получить свежую версию из сети
-                const networkPromise = fetch(event.request);
+                // Пытаемся получить свежую версию из сети (при _sw_upd/reload пробиваем HTTP-кэш браузера)
+                const networkPromise = isForceFresh
+                    ? fetch(event.request, { cache: 'no-store' })
+                    : fetch(event.request);
                 
                 // Проверяем наличие в кэше на случай медленной сети / офлайна (точное совпадение URL + query)
                 const cachedResponse = await caches.match(event.request);

@@ -868,12 +868,22 @@ registerActions({
     resetToMain
 });
 
+function markAppBooted() {
+    window.__nishaAppBooted = true;
+    try {
+        sessionStorage.removeItem('nisha_chunk_reload_count');
+        sessionStorage.removeItem('nisha_chunk_reload_at');
+    } catch {}
+    const recoveryBanner = document.getElementById('nishaBootRecoveryBanner');
+    if (recoveryBanner) recoveryBanner.remove();
+}
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        window.__nishaAppBooted = true;
+        markAppBooted();
         initApp();
     });
 } else {
-    window.__nishaAppBooted = true;
+    markAppBooted();
     initApp();
 }
