@@ -138,3 +138,33 @@
 .reviews-nav button:hover { border-color: var(--accent-green); background: #111; }
 .reviews-nav button:active { transform: scale(0.9); }
 @media (min-width: 901px) { .reviews-nav { display: flex; } }
+
+@media (max-width: 900px) {
+    #reviewsModal .modal-window {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 76dvh !important;
+        min-height: min(460px, 76dvh) !important;
+        max-height: 82dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+    #reviewsModal .modal-header {
+        flex-shrink: 0;
+    }
+    #reviewsModal .orders-container {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        padding: 15px !important;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+    }
+    #reviewsModal .reviews-slider {
+        flex: 1 1 auto;
+        align-content: start;
+    }
+}

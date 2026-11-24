@@ -341,9 +341,9 @@
     #ordersModal .modal-window {
         width: 100% !important;
         max-width: 100% !important;
-        height: 62dvh !important;
-        min-height: min(380px, 62dvh) !important;
-        max-height: 76dvh !important;
+        height: 76dvh !important;
+        min-height: min(460px, 76dvh) !important;
+        max-height: 82dvh !important;
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
