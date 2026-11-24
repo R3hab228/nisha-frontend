@@ -274,17 +274,21 @@ export function buildDeliveryTruckSvg() {
                 <rect x="55.5" y="19" width="2.5" height="2.4" fill="#fff6b3" />
                 <line x1="7" y1="24" x2="58.5" y2="24" stroke="currentColor" stroke-width="1.5" />
             </g>
-            <g class="np-truck-wheel np-truck-wheel-rear" transform="translate(17 25.5)">
-                <circle cx="0" cy="0" r="4.3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
-                <rect x="-1.4" y="-1.4" width="2.8" height="2.8" fill="currentColor" />
-                <line x1="-2.3" y1="0" x2="2.3" y2="0" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
-                <line x1="0" y1="-2.3" x2="0" y2="2.3" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+            <g transform="translate(17 25.5)">
+                <g class="np-truck-wheel np-truck-wheel-rear">
+                    <circle cx="0" cy="0" r="4.3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
+                    <rect x="-1.4" y="-1.4" width="2.8" height="2.8" fill="currentColor" />
+                    <line x1="-2.3" y1="0" x2="2.3" y2="0" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+                    <line x1="0" y1="-2.3" x2="0" y2="2.3" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+                </g>
             </g>
-            <g class="np-truck-wheel np-truck-wheel-front" transform="translate(49 25.5)">
-                <circle cx="0" cy="0" r="4.3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
-                <rect x="-1.4" y="-1.4" width="2.8" height="2.8" fill="currentColor" />
-                <line x1="-2.3" y1="0" x2="2.3" y2="0" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
-                <line x1="0" y1="-2.3" x2="0" y2="2.3" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+            <g transform="translate(49 25.5)">
+                <g class="np-truck-wheel np-truck-wheel-front">
+                    <circle cx="0" cy="0" r="4.3" fill="#050505" stroke="currentColor" stroke-width="1.5" />
+                    <rect x="-1.4" y="-1.4" width="2.8" height="2.8" fill="currentColor" />
+                    <line x1="-2.3" y1="0" x2="2.3" y2="0" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+                    <line x1="0" y1="-2.3" x2="0" y2="2.3" stroke="currentColor" stroke-width="0.9" opacity="0.7" />
+                </g>
             </g>
         </svg>
     `.trim();

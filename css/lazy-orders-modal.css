@@ -439,8 +439,9 @@
     --np-accent: var(--accent-green);
     --np-progress: 6%;
     position: relative;
-    background: #060606;
+    background: #080808;
     border: 1px solid #2b2b2b;
+    border-left: 2px solid var(--np-accent);
     border-radius: 0;
     padding: 9px 10px 8px;
     display: flex;
@@ -457,12 +458,12 @@
 }
 
 .np-tracker[data-stage="in_transit"] {
-    --np-accent: #00e5ff;
+    --np-accent: var(--accent-green, #00ff66);
 }
 
 .np-tracker[data-stage="arrived"],
 .np-tracker[data-stage="delivered"] {
-    --np-accent: var(--accent-green);
+    --np-accent: var(--accent-green, #00ff66);
 }
 
 .np-tracker[data-stage="returned"] {
@@ -476,29 +477,19 @@
     gap: 8px;
     flex-wrap: wrap;
     padding-bottom: 5px;
-    border-bottom: 1px dashed #222;
+    border-bottom: 1px dashed #242424;
 }
 
 .np-track-status-pill {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
     flex: 1 1 auto;
 }
 
 .np-live-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 0;
-    flex-shrink: 0;
-    background: var(--np-accent);
-    box-shadow: 0 0 6px var(--np-accent);
-}
-
-.np-tracker[data-moving="true"] .np-live-dot,
-.np-tracker[data-stage="arrived"] .np-live-dot {
-    animation: npLivePulse 1.8s ease-in-out infinite;
+    display: none;
 }
 
 .np-track-status-text {
@@ -617,14 +608,14 @@
 .np-tracker[data-stage="in_transit"] .np-track-fill {
     background: linear-gradient(
         90deg,
-        var(--accent-green) 0%,
-        #00e5ff 55%,
-        #ffffff 75%,
-        #00e5ff 100%
+        rgba(0, 255, 102, 0.55) 0%,
+        var(--accent-green, #00ff66) 55%,
+        #8cffb8 75%,
+        var(--accent-green, #00ff66) 100%
     );
     background-size: 200% 100%;
-    animation: npRoadFlow 2.2s linear infinite;
-    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+    animation: npRoadFlow 2.4s linear infinite;
+    box-shadow: 0 0 6px rgba(0, 255, 102, 0.25);
 }
 
 .np-tracker[data-stage="created"] .np-track-fill,
@@ -667,7 +658,7 @@
 }
 
 .np-tracker[data-stage="in_transit"] .np-track-dot.is-current {
-    box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+    box-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
 }
 
 .np-tracker[data-stage="created"] .np-track-dot.is-current,
