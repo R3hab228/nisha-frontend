@@ -24,10 +24,18 @@ describe('AI Discovery (llms.txt) & Universal Product Feed Routing (/feed.xml)',
 
         expect(rewrites.some(r => r.source === '/feed.xml' && r.destination.includes('/api/feed.xml'))).toBe(true);
         expect(rewrites.some(r => r.source === '/api/feed.xml' && r.destination.includes('/api/feed.xml'))).toBe(true);
+        expect(rewrites.some(r => r.source === '/shipping-payment' && r.destination === '/shipping-payment.html')).toBe(true);
+        expect(rewrites.some(r => r.source === '/privacy-policy' && r.destination === '/privacy-policy.html')).toBe(true);
         expect(headers.some(h => h.source === '/llms.txt')).toBe(true);
 
         const publicRobots = readFileSync(resolve(rootDir, 'public/robots.txt'), 'utf8');
         expect(publicRobots).toContain('Allow: /llms.txt');
         expect(publicRobots).toContain('Allow: /feed.xml');
+        expect(publicRobots).toContain('User-agent: Storebot-Google');
+
+        const shippingHtml = readFileSync(resolve(rootDir, 'shipping-payment.html'), 'utf8');
+        const privacyHtml = readFileSync(resolve(rootDir, 'privacy-policy.html'), 'utf8');
+        expect(shippingHtml).toContain('nisha.store.ua@gmail.com');
+        expect(privacyHtml).toContain('nisha.store.ua@gmail.com');
     });
 });

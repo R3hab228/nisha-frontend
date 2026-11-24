@@ -156,6 +156,8 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
         returnPolicy: resolve(import.meta.dirname, 'return-policy.html'),
+        shippingPayment: resolve(import.meta.dirname, 'shipping-payment.html'),
+        privacyPolicy: resolve(import.meta.dirname, 'privacy-policy.html'),
         notFound: resolve(import.meta.dirname, '404.html'),
       },
       output: {

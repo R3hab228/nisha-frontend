@@ -14,7 +14,9 @@
 ## Key Pages & Machine-Readable Endpoints
 
 - [Main Catalog](https://www.nisha-store.shop/): Live searchable catalog with filters by category, brand, size, price, sale, and bargain eligibility
+- [Shipping, Payment & Contacts](https://www.nisha-store.shop/shipping-payment): Nova Poshta delivery timelines, payment options, and official support email (`nisha.store.ua@gmail.com`)
 - [Return & Buyer Protection Policy](https://www.nisha-store.shop/return-policy): Detailed return, inspection, and deal guarantee terms
+- [Privacy Policy & Terms](https://www.nisha-store.shop/privacy-policy): Personal data protection and public offer under Ukrainian law
 - [Product Feed (Google Merchant & Meta Catalog XML)](https://www.nisha-store.shop/feed.xml): Live RSS 2.0 XML product catalog with prices, sizes, conditions, and stock availability
 - [XML Sitemap](https://www.nisha-store.shop/sitemap.xml): Canonical index of all available product pages and images
 

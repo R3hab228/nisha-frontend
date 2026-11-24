@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 Allow: /share/
 Allow: /return-policy
+Allow: /shipping-payment
+Allow: /privacy-policy
 Allow: /assets/
 Allow: /sitemap.xml
 Allow: /llms.txt
@@ -15,6 +17,10 @@ Disallow: /*?search=*
 Disallow: /*?sort=*
 Disallow: /*?order=*
 Disallow: /*?page=*
+
+# Google Merchant Center crawler (needs full access to /?item= product landing pages)
+User-agent: Storebot-Google
+Allow: /
 
 # AI Search & Training Bots Policy
 User-agent: GPTBot
