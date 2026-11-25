@@ -261,7 +261,7 @@ describe('Security Sanitization & XSS Shield', () => {
             await import('../js/profile/profile.js');
 
             window.renderProfilePhone('+380991112233');
-            expect(els['profilePhone'].innerHTML).toContain('+380991112233');
+            expect(els['profilePhone'].innerHTML).toContain('+380 (99) 111-22-33');
             expect(els['profilePhone'].innerHTML).toContain('data-action="remove-profile-phone"');
             expect(els['profileAddPhoneBtn'].style.display).toBe('none');
 

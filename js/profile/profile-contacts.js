@@ -12,6 +12,7 @@ import {
     getGlobalFn,
     bindWindowFn
 } from './profile-state.js';
+import { formatUaPhoneDisplay } from '../core/helpers-core-utils.js';
 
 export const CONTACT_CONFIG = {
     phone: {
@@ -122,7 +123,11 @@ export function renderProfileContact(type, rawVal) {
 
     const trimmed = (rawVal || '').trim();
     const hasVal = type === 'tg' ? Boolean(trimmed.length > 0 && trimmed !== '@') : Boolean(trimmed.length > 0);
-    const displayVal = !hasVal ? '' : (type === 'tg' ? (trimmed.startsWith('@') ? trimmed : '@' + trimmed) : rawVal);
+    const displayVal = !hasVal
+        ? ''
+        : (type === 'tg'
+            ? (trimmed.startsWith('@') ? trimmed : '@' + trimmed)
+            : formatUaPhoneDisplay(trimmed));
     const escapeFn = getGlobalFn('escapeHtml');
     const safeVal = escapeFn ? escapeFn(displayVal) : displayVal;
     const delBtnHtml = (isModal) => `<button data-action="${cfg.removeAction}" data-modal="${isModal ? '1' : '0'}" title="${cfg.removeTitle}" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
