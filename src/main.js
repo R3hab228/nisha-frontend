@@ -36,3 +36,11 @@ import '../js/catalog/live-search.js';
 import '../js/cart/cart-core.js';
 import '../js/profile/profile-core.js';
 import '../app.js';
+
+// 8. Vercel Speed Insights (Real User Monitoring: LCP, INP, CLS, TTFB)
+import { injectSpeedInsights } from '@vercel/speed-insights';
+if (typeof window !== 'undefined' && import.meta.env.PROD) {
+    try {
+        injectSpeedInsights();
+    } catch {}
+}
