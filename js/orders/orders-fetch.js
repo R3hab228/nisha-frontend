@@ -259,12 +259,29 @@ export async function fetchMyOrders() {
 
             if (uniqueCleanPhones.size > 0 && typeof window !== 'undefined' && window.apiClient) {
                 const uid = activeUser.id;
-                const linkTasks = Array.from(uniqueCleanPhones).map(clean =>
-                    window.apiClient.post('/api/link-orders', {
+                const phonesToLink = Array.from(uniqueCleanPhones).filter((clean) => {
+                    const key = `nisha_linked_orders_v1:${uid}:${String(clean).slice(-9)}`;
+                    try {
+                        const rawTs = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(key) : null;
+                        if (rawTs && (Date.now() - Number(rawTs)) < 30 * 60 * 1000) return false;
+                    } catch {}
+                    return true;
+                });
+
+                const linkTasks = phonesToLink.map(clean => {
+                    const key = `nisha_linked_orders_v1:${uid}:${String(clean).slice(-9)}`;
+                    return window.apiClient.post('/api/link-orders', {
                         userId: uid,
                         phone: clean
-                    }, { timeout: 8000, dedupe: true })
-                );
+                    }, { timeout: 8000, dedupe: true }).then((res) => {
+                        if (res && res.success !== false) {
+                            try {
+                                if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, String(Date.now()));
+                            } catch {}
+                        }
+                        return res;
+                    });
+                });
 
                 const settleHandler = typeof Promise.allSettled === 'function'
                     ? Promise.allSettled(linkTasks)

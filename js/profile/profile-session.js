@@ -590,11 +590,28 @@ export async function checkSession() {
         if (syncFields) syncFields();
 
         const phoneToLink = uPhone || (store ? store.get('nisha_last_phone') : null) || '';
-        if (phoneToLink && phoneToLink.replace(/[^\d]/g, '').length >= 9 && window.apiClient) {
-            window.apiClient.post('/api/link-orders', {
-                userId: currentUser.id,
-                phone: phoneToLink
-            }, { timeout: 8000, dedupe: true }).catch(() => {});
+        const phoneDigitsToLink = phoneToLink.replace(/[^\d]/g, '');
+        if (phoneDigitsToLink.length >= 9 && window.apiClient) {
+            const linkCacheKey = `nisha_linked_orders_v1:${currentUser.id}:${phoneDigitsToLink.slice(-9)}`;
+            let alreadyLinked = false;
+            try {
+                const rawTs = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(linkCacheKey) : null;
+                if (rawTs && (Date.now() - Number(rawTs)) < 30 * 60 * 1000) {
+                    alreadyLinked = true;
+                }
+            } catch {}
+            if (!alreadyLinked) {
+                window.apiClient.post('/api/link-orders', {
+                    userId: currentUser.id,
+                    phone: phoneToLink
+                }, { timeout: 8000, dedupe: true }).then((res) => {
+                    if (res && res.success !== false) {
+                        try {
+                            if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(linkCacheKey, String(Date.now()));
+                        } catch {}
+                    }
+                }).catch(() => {});
+            }
         }
 
         if (store && store.get('nisha_pending_otp_phone')) {

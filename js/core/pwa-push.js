@@ -168,6 +168,10 @@ export async function subscribeUserToPush(registration, silent = false) {
             return;
         }
 
+        if (silent && inFlightSubscribeSync) {
+            try { await inFlightSubscribeSync; } catch {}
+        }
+
         let targetSub = await registration.pushManager.getSubscription();
 
         if (!targetSub) {
