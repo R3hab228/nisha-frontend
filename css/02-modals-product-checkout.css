@@ -167,6 +167,10 @@
 .form-layout > * { flex-shrink: 0; }
 .form-layout textarea,
 #propDesc { min-height: 85px !important; height: 85px !important; flex-shrink: 0 !important; resize: none; box-sizing: border-box; }
+@supports (field-sizing: content) {
+    .form-layout textarea,
+    #propDesc { field-sizing: content; height: auto !important; min-height: 85px !important; max-height: 220px; }
+}
 .form-layout label { color: var(--accent-green); font-family: var(--font-mono); font-size: 14px; font-weight: bold; margin-bottom: -10px; text-transform: uppercase;}
 .form-input { background: #000; color: #fff; border: 2px inset var(--border-light); padding: 12px; font-family: var(--font-main); font-size: 15px; outline: none; width: 100%; box-sizing: border-box; transition: 0.2s;}
 .form-input:focus { border-color: var(--accent-green); box-shadow: 0 0 8px rgba(0, 255, 0, 0.2); }

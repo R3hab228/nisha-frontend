@@ -185,5 +185,9 @@ if (typeof window !== 'undefined') {
     window.clearSavedFeedScrollState = clearSavedFeedScrollState;
     window.restoreFeedScrollPosition = restoreFeedScrollPosition;
     window.showScrollRestoredBadge = showScrollRestoredBadge;
-    window.addEventListener('scroll', scheduleFeedScrollSave, { passive: true });
+    if ('onscrollend' in window) {
+        window.addEventListener('scrollend', () => saveCurrentFeedScrollState(), { passive: true });
+    } else {
+        window.addEventListener('scroll', scheduleFeedScrollSave, { passive: true });
+    }
 }

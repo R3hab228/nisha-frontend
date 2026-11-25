@@ -9,6 +9,9 @@
 .support-topic-chip.active { border-color: var(--accent-green); color: var(--accent-green); background: rgba(0, 255, 0, 0.08); box-shadow: 0 0 8px rgba(0, 255, 0, 0.18); }
 .support-input-wrap { position: relative; width: 100%; }
 .support-textarea { height: 120px; resize: none; text-align: left; padding-bottom: 24px !important; }
+@supports (field-sizing: content) {
+    .support-textarea { field-sizing: content; height: auto; min-height: 120px; max-height: 240px; }
+}
 .support-char-counter { position: absolute; right: 8px; bottom: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: -0.3px; color: #666; pointer-events: none; line-height: 1; background: rgba(0, 0, 0, 0.72); padding: 2px 4px; border-radius: 2px; }
 .support-char-counter.near-limit { color: var(--accent-yellow); }
 .support-char-counter.at-limit { color: var(--accent-red); }
