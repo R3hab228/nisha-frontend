@@ -386,12 +386,13 @@ export function renderHistory() {
             miniBadgeHTML = `<div class="system-status-bar history-status-bar" style="position: absolute; top: 4px; left: 4px; z-index: 10; background: #c0c0c0; border-top: 1px solid #fff; border-left: 1px solid #fff; border-bottom: 1px solid #555; border-right: 1px solid #555; box-shadow: 1px 1px 0px #000; display: flex; align-items: center; gap: 4px; padding: 1.5px 4px; font-family: 'Tahoma', sans-serif; font-size: 8px; font-weight: bold; pointer-events: none; line-height: 1; transform: translateZ(25px);">${parts.join('<div style="width:1px;height:8px;background:#888;flex-shrink:0;"></div>')}</div>`;
         }
 
+        const removeLabel = getEscAttr(tSafe('history.remove_item', 'Удалить'));
         card.innerHTML = `
             <div class="history-img" style="position: relative; overflow: hidden; padding: 0; background: #111;">
                 ${mediaHTML}
                 ${miniBadgeHTML}
                 ${statusOverlayHTML}
-                <button type="button" class="close-btn history-item-remove" data-action="remove-history-item" data-id="${getEscAttr(h.id)}" title="${typeof i18next !== 'undefined' ? i18next.t('history.remove_item', { defaultValue: 'Удалить' }) : 'Удалить'}" aria-label="${typeof i18next !== 'undefined' ? i18next.t('history.remove_item', { defaultValue: 'Удалить' }) : 'Удалить'}" style="z-index: 20;">X</button>
+                <button type="button" class="close-btn history-item-remove" data-action="remove-history-item" data-id="${getEscAttr(h.id)}" title="${removeLabel}" aria-label="${removeLabel}" style="z-index: 20;">X</button>
             </div>
             <div class="history-info">
                 <div class="history-name" title="${getEscAttr(liveName)}" style="${currentStatus !== 'available' ? 'color:#888; text-decoration:line-through;' : ''}">${getEscHtml(liveName)}</div>

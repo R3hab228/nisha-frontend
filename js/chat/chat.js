@@ -116,7 +116,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     const titleText = t('product.offer_accepted_title', 'ВАША ЦІНА ПРИЙНЯТА!');
     const descText = t('product.offer_accepted_text', 'Ваша пропозиція прийнята на суму');
     const buyBtnText = t('product.offer_buy_btn', 'В КОШИК');
-    const currencyText = (typeof getCurrency === 'function' ? getCurrency() : (typeof i18next !== 'undefined' ? i18next.t('currency', { defaultValue: 'грн' }) : 'грн')).trim();
+    const currencyText = (typeof getCurrency === 'function' ? getCurrency() : tSafe('currency', 'грн')).trim();
 
     // 1. Сохраняем состояние принятого торга для текущего товара
     setAcceptedBargain(bargainData.itemId, bargainData);

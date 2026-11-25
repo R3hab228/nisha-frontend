@@ -9,6 +9,7 @@ import { triggerHaptic } from './helpers-pwa-browser.js';
 import { sanitizeHtmlMediaUrl } from './helpers-security-media.js';
 import { storage } from './helpers-storage-idb.js';
 import { isToastClickShielded, showToast } from './helpers-toasts-modals.js';
+import { tSafe } from './runtime-env.js';
 
 function hasActiveModalShield(actionEl) {
     if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return false;
@@ -321,7 +322,7 @@ export function handleDelegatedAction(e) {
             const filesCount = (globalThis.currentProposalFiles && globalThis.currentProposalFiles.length) || 0;
             if (filesCount >= 5) {
                 if (typeof showToast === 'function') {
-                    showToast(typeof i18next !== 'undefined' ? i18next.t('messages.prop_max_files', { defaultValue: 'Максимум 5 фото/видео!' }) : 'Максимум 5 фото/видео!', 'error');
+                    showToast(tSafe('messages.prop_max_files', 'Максимум 5 фото/видео!'), 'error');
                 }
                 break;
             }

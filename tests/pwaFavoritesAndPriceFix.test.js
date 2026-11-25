@@ -147,7 +147,9 @@ describe('PWA Quick Action Favorites, Mobile Price Layout & Modal Scrollbar Fixe
         it('renders accessible semantic close-btn button in product.js with remove-history-item action', () => {
             expect(productJs).toContain('class="close-btn history-item-remove"');
             expect(productJs).toContain('data-action="remove-history-item"');
-            expect(productJs).toContain('title="${typeof i18next !== \'undefined\' ? i18next.t(\'history.remove_item\', { defaultValue: \'Удалить\' }) : \'Удалить\'}"');
+            expect(productJs).toContain("tSafe('history.remove_item', 'Удалить')");
+            expect(productJs).toContain('title="${removeLabel}"');
+            expect(productJs).toContain('aria-label="${removeLabel}"');
         });
 
         it('localizes history remove action in locales.json', () => {

@@ -9,6 +9,7 @@ import {
     toCDN
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
+import { tSafe } from '../core/runtime-env.js';
 import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
 let _pswpLightbox = null;
@@ -242,7 +243,7 @@ export function renderModalSlider(item) {
             });
             thumbs.innerHTML = thumbsHtml;
         } else {
-            const noPhotoText = typeof i18next !== 'undefined' ? i18next.t('product.no_photo', { defaultValue: 'НЕТ ФОТО' }) : 'НЕТ ФОТО';
+            const noPhotoText = tSafe('product.no_photo', 'НЕТ ФОТО');
             wrapper.innerHTML = `<a class="slide" style="background:#111; pointer-events:none;">${noPhotoText}</a>`;
         }
     }

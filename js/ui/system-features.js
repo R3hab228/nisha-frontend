@@ -29,6 +29,7 @@ import {
     invokeAction,
     registerActions
 } from '../../src/modules/index.js';
+import { tSafe } from '../core/runtime-env.js';
 
 let pendingBroadcastQueue = null;
 
@@ -260,7 +261,7 @@ function triggerEasterEgg() {
     if (overlay) {
         const msgEl = document.getElementById('glitchMessage');
         if (msgEl) {
-            const secretMsg = typeof i18next !== 'undefined' ? i18next.t('messages.secret_discount_applied', { defaultValue: 'Секретная скидка -10% активирована' }) : 'Секретная скидка -10% активирована';
+            const secretMsg = tSafe('messages.secret_discount_applied', 'Секретная скидка -10% активирована');
             msgEl.innerHTML = `SYSTEM OVERRIDE<br>[ ACCESS GRANTED ]<br><span style='font-size: 20px; color:#fff; font-family: Tahoma;'>${secretMsg}</span>`;
         }
         overlay.style.display = 'flex';
