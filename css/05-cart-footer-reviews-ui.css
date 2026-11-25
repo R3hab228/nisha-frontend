@@ -335,6 +335,14 @@ body.search-lock { overflow: hidden !important; height: 100vh; height: 100dvh; }
     pointer-events: none;
 }
 
+.img-8bit-loading.has-thumbhash::before {
+    background: linear-gradient(110deg, rgba(11, 11, 11, 0.14) 30%, rgba(21, 30, 23, 0.28) 48%, rgba(11, 11, 11, 0.14) 66%);
+}
+
+.img-8bit-loading.has-thumbhash::after {
+    opacity: 0.45;
+}
+
 @keyframes nishaImgShimmer {
     0% { background-position: 100% 0; }
     100% { background-position: -100% 0; }

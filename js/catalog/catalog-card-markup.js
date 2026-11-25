@@ -4,6 +4,7 @@
 
 import { getCatalogStore } from './catalog-state.js';
 import { toCDN } from './media-prefetch.js';
+import { decodeThumbHashToDataUrl } from './thumbhash-preview.js';
 import { hasAction, invokeAction, resolveAction } from '../core/action-registry.js';
 import { getRuntimeFavorites } from '../core/runtime-env.js';
 import { getAcceptedBargain } from '../core/bargain-storage.js';
@@ -159,6 +160,12 @@ export function buildCardDOM(item, idx = 0) {
             .join(', ');
     };
 
+    const thumbBlurDataUrl = item && item.thumbhash ? decodeThumbHashToDataUrl(item.thumbhash) : '';
+    const thumbBlurStyleAttr = thumbBlurDataUrl
+        ? ` style="background-image:url('${escCardAttr(thumbBlurDataUrl)}');background-size:cover;background-position:center;"`
+        : '';
+    const thumbBlurClass = thumbBlurDataUrl ? ' has-thumbhash' : '';
+
     thumbsArray.forEach((thumbUrl, thumbIdx) => {
         const rawVidUrl = (item.images && item.images[thumbIdx]) ? item.images[thumbIdx] : thumbUrl;
         const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
@@ -177,7 +184,7 @@ export function buildCardDOM(item, idx = 0) {
         } else if (thumbIdx === 0) {
             const firstLoadAttr = (idx < 4) ? 'fetchpriority="high"' : 'loading="lazy"';
             slidesStr += `
-                <div class="card-slide img-8bit-loading">
+                <div class="card-slide img-8bit-loading${thumbBlurClass}"${thumbBlurStyleAttr}>
                    <img class="card-slide-img" src="${escCardAttr(cdnThumb)}"${srcsetAttr} data-fallback-src="${escCardAttr(cdnVidUrl || '')}" ${firstLoadAttr} decoding="async" alt="${slideAlt}">
                 </div>`;
         } else {

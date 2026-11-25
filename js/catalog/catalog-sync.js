@@ -24,14 +24,14 @@ export {
     initCatalogRealtimeSubscription
 };
 
-const ITEM_FULL_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price';
+const ITEM_FULL_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, thumbhash, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price';
+const ITEM_NO_THUMBHASH_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price';
 const ITEM_LEGACY_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable';
 
-function isMissingBargainColumnError(error) {
+function isMissingColumnError(error, columnNames) {
     return Boolean(
         error && (
-            error.message?.includes('is_bargain') ||
-            error.message?.includes('min_bargain_price') ||
+            columnNames.some(col => error.message?.includes(col)) ||
             error.code === '42703' ||
             error.code === 'PGRST204'
         )
@@ -40,9 +40,20 @@ function isMissingBargainColumnError(error) {
 
 async function queryItemsWithBargainFallback(runQuery) {
     const first = await runQuery(ITEM_FULL_COLS);
-    if (isMissingBargainColumnError(first.error)) {
+    if (!first.error) return first;
+
+    if (isMissingColumnError(first.error, ['thumbhash'])) {
+        const second = await runQuery(ITEM_NO_THUMBHASH_COLS);
+        if (!second.error || !isMissingColumnError(second.error, ['is_bargain', 'min_bargain_price'])) {
+            return second;
+        }
         return runQuery(ITEM_LEGACY_COLS);
     }
+
+    if (isMissingColumnError(first.error, ['is_bargain', 'min_bargain_price'])) {
+        return runQuery(ITEM_LEGACY_COLS);
+    }
+
     return first;
 }
 
