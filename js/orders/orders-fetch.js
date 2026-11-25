@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA ORDERS FETCH & IMAGE HYDRATION MODULE
 // ==========================================
@@ -17,6 +18,10 @@ import {
     toCDN
 } from './orders-state.js';
 
+/**
+ * @param {any} item
+ * @returns {string}
+ */
 export function getOrderItemImage(item) {
     if (!item) return '';
 
@@ -36,8 +41,9 @@ export function getOrderItemImage(item) {
         return toCDN(item.images.at(0));
     }
 
+    const g = /** @type {any} */ (globalThis);
     const imageCache = getOrderItemsImageCache();
-    if (item.id && imageCache && (typeof hasOwn === 'function' ? hasOwn(imageCache, item.id) : Object.hasOwn(imageCache, item.id))) {
+    if (item.id && imageCache && (typeof g.hasOwn === 'function' ? g.hasOwn(imageCache, item.id) : Object.hasOwn(imageCache, item.id))) {
         return imageCache[item.id];
     }
 
@@ -50,8 +56,8 @@ export function getOrderItemImage(item) {
             let foundUrl = '';
             if (optImgFn) {
                 foundUrl = optImgFn(catalogItem, true);
-            } else if (typeof getOptimizedImageUrl === 'function') {
-                foundUrl = getOptimizedImageUrl(catalogItem, true);
+            } else if (typeof g.getOptimizedImageUrl === 'function') {
+                foundUrl = g.getOptimizedImageUrl(catalogItem, true);
             }
             if (!foundUrl && Array.isArray(catalogItem.thumbnails) && catalogItem.thumbnails.length > 0) {
                 foundUrl = catalogItem.thumbnails.at(0);
@@ -74,10 +80,11 @@ export async function ensureOrderImagesLoaded() {
     const ordersList = getOrdersData();
     if (!Array.isArray(ordersList) || ordersList.length === 0) return;
 
+    /** @type {any[]} */
     const missingIds = [];
     ordersList.forEach(order => {
         if (order.items && Array.isArray(order.items)) {
-            order.items.forEach(item => {
+            order.items.forEach((/** @type {any} */ item) => {
                 if (item && item.id && !getOrderItemImage(item)) {
                     if (!missingIds.includes(item.id)) missingIds.push(item.id);
                 }
@@ -90,12 +97,13 @@ export async function ensureOrderImagesLoaded() {
     const sb = getSupabase();
     if (!sb) return;
 
+    const g = /** @type {any} */ (globalThis);
     const imageCache = getOrderItemsImageCache();
 
     try {
         const { data } = await sb.from('items').select('id, thumbnails, images').in('id', missingIds);
         if (data && data.length > 0) {
-            data.forEach(di => {
+            data.forEach((/** @type {any} */ di) => {
                 const imgUrl = (di.thumbnails && di.thumbnails.length > 0) ? di.thumbnails.at(0) : (di.images && di.images.length > 0 ? di.images.at(0) : '');
                 if (imgUrl) {
                     imageCache[di.id] = toCDN(imgUrl);
@@ -103,11 +111,11 @@ export async function ensureOrderImagesLoaded() {
             });
         }
 
-        const stillMissing = missingIds.filter(id => !(typeof hasOwn === 'function' ? hasOwn(imageCache, id) : Object.hasOwn(imageCache, id)));
+        const stillMissing = missingIds.filter(id => !(typeof g.hasOwn === 'function' ? g.hasOwn(imageCache, id) : Object.hasOwn(imageCache, id)));
         if (stillMissing.length > 0) {
             const { data: archData } = await sb.from('archived_items').select('id, thumbnails, images').in('id', stillMissing);
             if (archData && archData.length > 0) {
-                archData.forEach(di => {
+                archData.forEach((/** @type {any} */ di) => {
                     const imgUrl = (di.thumbnails && di.thumbnails.length > 0) ? di.thumbnails.at(0) : (di.images && di.images.length > 0 ? di.images.at(0) : '');
                     if (imgUrl) {
                         imageCache[di.id] = toCDN(imgUrl);
@@ -118,11 +126,12 @@ export async function ensureOrderImagesLoaded() {
 
         if (typeof document !== 'undefined') {
             document.querySelectorAll('.order-item-img[data-item-id]').forEach(el => {
-                const itId = el.getAttribute('data-item-id');
+                const htmlEl = /** @type {HTMLElement} */ (el);
+                const itId = htmlEl.getAttribute('data-item-id');
                 const resolved = getOrderItemImage({ id: itId });
                 if (resolved) {
-                    el.style.backgroundImage = `url('${resolved}')`;
-                    el.textContent = '';
+                    htmlEl.style.backgroundImage = `url('${resolved}')`;
+                    htmlEl.textContent = '';
                 }
             });
         }
@@ -131,6 +140,10 @@ export async function ensureOrderImagesLoaded() {
     }
 }
 
+/**
+ * @param {HTMLElement | null} listArea
+ * @param {{ code?: string, messageHtml?: string, actionHtml?: string }} [opts]
+ */
 function renderOrdersErrorCard(listArea, { code = 'SYSTEM_ERROR.LOG', messageHtml = '', actionHtml = '' } = {}) {
     if (!listArea) return;
     listArea.innerHTML = `
@@ -209,7 +222,7 @@ export async function fetchMyOrders() {
             if (userOrdersErr) fetchError = userOrdersErr;
 
             const orderMap = new Map();
-            (userOrders || []).forEach(o => {
+            (userOrders || []).forEach((/** @type {any} */ o) => {
                 if (o && o.id) {
                     orderMap.set(o.id, o);
                     if (o.phone) candidatePhones.add(o.phone);
@@ -231,7 +244,7 @@ export async function fetchMyOrders() {
 
                     phoneRpcTasks.push(
                         sb.rpc('get_orders_by_phone', { search_phone: canonicalPhone })
-                            .then(({ data: phoneOrders }) => {
+                            .then((/** @type {any} */ { data: phoneOrders }) => {
                                 if (Array.isArray(phoneOrders) && phoneOrders.length > 0) {
                                     for (const po of phoneOrders) {
                                         if (po && po.id && !orderMap.has(po.id)) {
@@ -273,7 +286,7 @@ export async function fetchMyOrders() {
                     return window.apiClient.post('/api/link-orders', {
                         userId: uid,
                         phone: clean
-                    }, { timeout: 8000, dedupe: true }).then((res) => {
+                    }, { timeout: 8000, dedupe: true }).then((/** @type {any} */ res) => {
                         if (res && res.success !== false) {
                             try {
                                 if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, String(Date.now()));
@@ -305,7 +318,7 @@ export async function fetchMyOrders() {
                             });
                             if (added) {
                                 const orderValues = Array.from(orderMap.values());
-                                const sortOrdersDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+                                const sortOrdersDesc = (/** @type {any} */ a, /** @type {any} */ b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
                                 const sortFn = resolveAction('toSorted');
                                 const sortedOrders = sortFn
                                     ? sortFn(orderValues, sortOrdersDesc)
@@ -325,7 +338,7 @@ export async function fetchMyOrders() {
             }
 
             const initialOrderValues = Array.from(orderMap.values());
-            const sortOrdersDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+            const sortOrdersDesc = (/** @type {any} */ a, /** @type {any} */ b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
             const sortFn = resolveAction('toSorted');
             const nextOrders = sortFn
                 ? sortFn(initialOrderValues, sortOrdersDesc)
@@ -370,7 +383,7 @@ export async function fetchMyOrders() {
             fetchError = e;
         }
     } else {
-        const phoneInput = document.getElementById('ordersSearchPhone');
+        const phoneInput = /** @type {HTMLInputElement | null} */ (document.getElementById('ordersSearchPhone'));
         const phone = phoneInput ? phoneInput.value.replace(/[^\d+]/g, '') : '';
         if (!phone || phone.length < 10) {
             const toastFn = resolveAction('showToast') || (typeof showToast === 'function' ? showToast : null);
@@ -385,7 +398,7 @@ export async function fetchMyOrders() {
 
         const { data: vResult } = await sb.rpc('check_otp_verified', { p_phone: phone });
         const otpCheck = vResult ? [{ is_verified: true }] : [];
-        if (!otpCheck || otpCheck.length === 0 || !otpCheck.at(0).is_verified) {
+        if (!otpCheck || otpCheck.length === 0 || !otpCheck.at(0)?.is_verified) {
             const deniedOtpMsg = tSafe('orders_modal.access_denied_otp', { defaultValue: 'Сначала подтвердите, что это ваш номер телефона.' });
             const verifyBotMsg = tSafe('orders_modal.verify_bot_btn', { defaultValue: 'ПОДТВЕРДИТЬ НОМЕР В БОТЕ' });
             renderOrdersErrorCard(listArea, {
@@ -413,7 +426,7 @@ export async function fetchMyOrders() {
         const rawErr = String(fetchError.message || 'Unknown error');
         const isAccessDenied = /ACCESS_DENIED|OTP|не подтвержден|не підтверджено/i.test(rawErr);
         const cleanMsg = rawErr.replace(/^\s*ACCESS_DENIED\s*:\s*/i, '').trim();
-        const phoneInput = document.getElementById('ordersSearchPhone');
+        const phoneInput = /** @type {HTMLInputElement | null} */ (document.getElementById('ordersSearchPhone'));
         const enteredPhone = phoneInput ? phoneInput.value.replace(/[^\d+]/g, '') : '';
 
         let displayMsg = cleanMsg || rawErr;
@@ -468,7 +481,7 @@ export async function fetchMyOrders() {
     if (Array.isArray(latestOrders) && latestOrders.length > 0 && sb) {
         const completedIds = latestOrders.filter(o => (o.status || '').toLowerCase() === 'завершен').map(o => o.id);
         if (completedIds.length > 0) {
-            sb.from('reviews').select('order_id').in('order_id', completedIds).then(({ data: revs }) => {
+            sb.from('reviews').select('order_id').in('order_id', completedIds).then((/** @type {any} */ { data: revs }) => {
                 if (Array.isArray(revs) && revs.length > 0) {
                     let rOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
                     if (!Array.isArray(rOrders)) rOrders = [];

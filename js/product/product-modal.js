@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT MODAL LIFECYCLE & DETAILS RENDERING MODULE
 // ==========================================
@@ -28,20 +29,26 @@ import { hasAction, invokeAction, registerActions } from '../core/action-registr
 import { getLenisInstance, isSiteHackedMode, tSafe } from '../core/runtime-env.js';
 
 function closeSecondaryOverlays() {
-    if (typeof closeModal !== 'function') return;
+    const closeModalFn = /** @type {any} */ (globalThis).closeModal;
+    if (typeof closeModalFn !== 'function') return;
     const om = document.getElementById('ordersModal');
-    if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModal('ordersModal');
+    if (om && (om.style.display === 'flex' || om.style.display === 'block')) closeModalFn('ordersModal');
     const rm = document.getElementById('reviewsModal');
-    if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModal('reviewsModal');
+    if (rm && (rm.style.display === 'flex' || rm.style.display === 'block')) closeModalFn('reviewsModal');
 }
 
+/**
+ * @param {any} item
+ * @param {string} [qaPart='']
+ */
 function renderModalDescriptionContent(item, qaPart = '') {
     const defaultDesc = 'Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.';
     const rawDesc = item.description ? String(item.description) : defaultDesc;
     const { measurements, cleanText } = parseItemMeasurements(rawDesc);
     const bodyText = (cleanText || (measurements.length > 0 ? '' : defaultDesc)).replaceAll('\r', '').replaceAll('\n', '<br>');
+    const domPurify = /** @type {any} */ (globalThis).DOMPurify;
     const safeDescHtml = bodyText
-        ? `<div style="color: #aaa; font-size: 13px;">${typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(bodyText) : getEscHtml(bodyText)}</div>`
+        ? `<div style="color: #aaa; font-size: 13px;">${domPurify ? domPurify.sanitize(bodyText) : getEscHtml(bodyText)}</div>`
         : '';
     const measurementsHtml = renderMeasurementsTableHtml(measurements, getEscHtml);
     const sizeTitle = tSafe('product.size', 'РАЗМЕР');
@@ -61,11 +68,12 @@ function renderModalDescriptionContent(item, qaPart = '') {
     ` + qaPart;
 }
 
+/** @param {any} item */
 function renderTrustBadges(item) {
     const badgesContainer = document.querySelector('.trust-badges');
     if (!badgesContainer) return;
 
-    const isDropItem = item.is_drop === true || (item.tags && item.tags.map(t => t.toLowerCase()).includes('drop'));
+    const isDropItem = item.is_drop === true || (item.tags && item.tags.map((/** @type {string} */ t) => t.toLowerCase()).includes('drop'));
     const isReturnable = item.is_returnable === true;
 
     let refundBadgeHTML = '';
@@ -144,7 +152,7 @@ function renderTrustBadges(item) {
  */
 export async function openProductModalById(itemId) {
     invokeAction('hideItemMeasurementsTooltip');
-    const catalog = getCatalogItems();
+    const catalog = /** @type {any[]} */ (getCatalogItems());
     const item = catalog.find(i => String(i.id) === String(itemId));
 
     const key = String(itemId);
@@ -152,9 +160,9 @@ export async function openProductModalById(itemId) {
         ? window._prewarmedItemDetails.get(key)
         : null;
 
-    const onFullItemLoaded = (fullItem) => {
+    const onFullItemLoaded = (/** @type {any} */ fullItem) => {
         if (!fullItem) return;
-        const active = getActiveOpenedItem();
+        const active = /** @type {any} */ (getActiveOpenedItem());
         if (active && String(active.id) === String(fullItem.id)) {
             const hadNoImages = (!active.images || active.images.length === 0) && (!active.thumbnails || active.thumbnails.length === 0);
             const hasFullImages = (fullItem.images && fullItem.images.length > 0) || (fullItem.thumbnails && fullItem.thumbnails.length > 0);
@@ -206,7 +214,7 @@ export async function openProductModalById(itemId) {
             window._seenItemsSet.add(String(itemId));
         }
         setTimeout(() => {
-            const store = getStore();
+            const store = /** @type {any} */ (getStore());
             let seenItemsIds = store ? store.getJSON('nisha_seen_items', []) : [];
             if (!seenItemsIds.includes(itemId)) {
                 seenItemsIds.push(itemId);
@@ -238,9 +246,10 @@ export async function openProductModalById(itemId) {
 
 /**
  * Renders full product modal dialog UI, media slider, views, badges, similar items, Q&A, and SEO metadata.
- * @param {object} item
+ * @param {any} item
  */
 export function openProductModal(item) {
+    const g = /** @type {any} */ (globalThis);
     setActiveOpenedItem(item);
 
     if (item && item.id) {
@@ -249,6 +258,7 @@ export function openProductModal(item) {
     }
 
     setTimeout(() => {
+        const ensurePhotoSwipe = g.ensurePhotoSwipe;
         if (typeof ensurePhotoSwipe === 'function') ensurePhotoSwipe();
     }, 0);
 
@@ -280,7 +290,7 @@ export function openProductModal(item) {
     }
 
     try {
-        const { acceptedData } = getBargainOfferState(item.id);
+        const { acceptedData } = /** @type {any} */ (getBargainOfferState(item.id));
         const accPriceNum = Number(acceptedData && acceptedData.acceptedPrice);
         if (acceptedData && Number.isFinite(accPriceNum) && accPriceNum > 0 && priceEl) {
             const origPriceNum = Number(acceptedData.originalPrice ?? item.price);
@@ -318,7 +328,7 @@ export function openProductModal(item) {
     const tagsContainer = document.getElementById('modalItemTags');
     if (tagsContainer) {
         if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
-            tagsContainer.innerHTML = item.tags.slice(0, 3).map(t => `<span style="color: #fff; margin-right: 12px; letter-spacing: 0.5px;">#${getEscHtml(t)}</span>`).join('');
+            tagsContainer.innerHTML = item.tags.slice(0, 3).map((/** @type {string} */ t) => `<span style="color: #fff; margin-right: 12px; letter-spacing: 0.5px;">#${getEscHtml(t)}</span>`).join('');
             tagsContainer.style.display = 'block';
         } else {
             tagsContainer.style.display = 'none';
@@ -374,12 +384,12 @@ export function openProductModal(item) {
     }
 
     const viewCount = document.getElementById('modalItemViews');
-    const sb = getSupabaseClient();
+    const sb = /** @type {any} */ (getSupabaseClient());
     if (viewCount) {
         viewCount.textContent = item.views_count || 0;
 
         if (sb) {
-            const store = getStore();
+            const store = /** @type {any} */ (getStore());
             const viewedItems = store ? store.getJSON('nisha_added_views', []) : [];
 
             if (!viewedItems.includes(item.id)) {
@@ -387,13 +397,13 @@ export function openProductModal(item) {
                 if (!visitorId || visitorId.startsWith('guest_')) {
                     visitorId = (store ? store.get('nisha_visitor_id') : null) || ('user_' + (hasAction('generateShortId') ? invokeAction('generateShortId', 9) : (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().replaceAll('-', '').slice(0, 9) : Date.now().toString(36))));
                 }
-                const currentUser = getUser();
+                const currentUser = /** @type {any} */ (getUser());
                 const viewerId = currentUser ? currentUser.id : visitorId;
 
                 sb.rpc('increment_item_views', {
                     p_item_uuid: item.id,
                     p_viewer_id: viewerId
-                }).then(({ data, error }) => {
+                }).then((/** @type {any} */ { data, error }) => {
                     if (!error && data !== null) {
                         viewCount.textContent = data;
                         item.views_count = data;
@@ -416,7 +426,7 @@ export function openProductModal(item) {
             cartBtn.style.display = 'none';
         } else {
             cartBtn.style.display = 'block';
-            const userCart = getActiveCartSafe();
+            const userCart = /** @type {any[]} */ (getActiveCartSafe());
             const isInCart = userCart.some(i => i && String(i.id) === String(item.id));
             const inCartText = tSafe('product.in_cart', { defaultValue: 'В КОРЗИНЕ' });
             const addToCartText = tSafe('product.add_to_cart', { defaultValue: 'В КОРЗИНУ' });
@@ -427,7 +437,7 @@ export function openProductModal(item) {
     const offerWrapper = document.getElementById('offerPriceWrapper');
     const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
     const offerInputRow = document.getElementById('offerPriceInputRow');
-    const inlineInput = document.getElementById('inlineBargainPriceInput');
+    const inlineInput = /** @type {HTMLInputElement | null} */ (document.getElementById('inlineBargainPriceInput'));
 
     if (offerWrapper || offerPriceBtn) {
         const { hasBargain } = parseItemBargainInfo(item);
@@ -474,8 +484,8 @@ export function openProductModal(item) {
         if (item && item.id) {
             invokeAction('saveCurrentFeedScrollState', item.id);
         }
-        if (typeof openModal === 'function') {
-            openModal('productModal');
+        if (typeof g.openModal === 'function') {
+            g.openModal('productModal');
         } else if (modalEl) {
             invokeAction('playSound', 'start', { kind: 'ui' });
             modalEl.inert = false;
@@ -483,7 +493,7 @@ export function openProductModal(item) {
             modalEl.classList.remove('closing');
             modalEl.style.pointerEvents = '';
             modalEl.setAttribute('aria-hidden', 'false');
-            const win = modalEl.querySelector('.modal-window');
+            const win = /** @type {HTMLElement | null} */ (modalEl.querySelector('.modal-window'));
             if (win) {
                 win.style.pointerEvents = '';
                 win.style.transform = '';
@@ -496,17 +506,17 @@ export function openProductModal(item) {
                 window._preModalScrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
             }
             document.body.style.overflow = 'hidden';
-            if (typeof triggerModalTypewriter === 'function') {
-                triggerModalTypewriter(modalEl);
+            if (typeof g.triggerModalTypewriter === 'function') {
+                g.triggerModalTypewriter(modalEl);
             }
         }
     } else {
         invokeAction('playSound', 'start', { kind: 'ui' });
         if (modalEl) modalEl.style.pointerEvents = '';
-        const win = modalEl ? modalEl.querySelector('.modal-window') : null;
+        const win = /** @type {HTMLElement | null} */ (modalEl ? modalEl.querySelector('.modal-window') : null);
         if (win) win.style.pointerEvents = '';
-        if (typeof triggerModalTypewriter === 'function') {
-            triggerModalTypewriter(modalEl);
+        if (typeof g.triggerModalTypewriter === 'function') {
+            g.triggerModalTypewriter(modalEl);
         }
     }
 
@@ -516,7 +526,7 @@ export function openProductModal(item) {
         Promise.resolve().then(() => addToHistory(item));
     }
 
-    const modalWin = document.querySelector('#productModal .modal-window');
+    const modalWin = /** @type {any} */ (document.querySelector('#productModal .modal-window'));
     if (modalWin) {
         modalWin.style.pointerEvents = '';
         if (typeof modalWin.setAttribute === 'function') modalWin.setAttribute('data-lenis-prevent', 'true');
@@ -555,7 +565,7 @@ export function openProductModal(item) {
         }
     }
 
-    const url = new URL(window.location);
+    const url = new URL(window.location.href);
     if (url.searchParams.has('item')) {
         url.searchParams.delete('item');
         const curState = (window.history && window.history.state !== undefined) ? window.history.state : null;
@@ -565,14 +575,14 @@ export function openProductModal(item) {
     if (sb) loadItemQuestions(item.id);
 
     const runDeferredModalWork = () => {
-        const activeNow = getActiveOpenedItem();
+        const activeNow = /** @type {any} */ (getActiveOpenedItem());
         if (activeNow && String(activeNow.id) !== String(item.id)) return;
         renderSimilarItems(item);
         updateProductSeoAndOg(item, cleanDesc);
         if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackProductView === 'function') {
             window.analytics.trackProductView(item);
         } else if (typeof window !== 'undefined' && window.ttq) {
-            ttq.track('ViewContent', {
+            window.ttq.track('ViewContent', {
                 content_id: item.id,
                 content_name: item.name,
                 value: item.price,
@@ -593,16 +603,17 @@ export function openProductModal(item) {
  * @returns {Promise<void>}
  */
 export async function toggleFavFromModal(event) {
-    const active = getActiveOpenedItem();
+    const active = /** @type {any} */ (getActiveOpenedItem());
     if (!active) return;
 
     const modalStar = document.getElementById('modalFavStar');
     if (modalStar) modalStar.blur();
 
+    const g = /** @type {any} */ (globalThis);
     if (hasAction('toggleFav')) {
         await invokeAction('toggleFav', event, active.id);
-    } else if (typeof toggleFav === 'function') {
-        await toggleFav(event, active.id);
+    } else if (typeof g.toggleFav === 'function') {
+        await g.toggleFav(event, active.id);
     }
 }
 

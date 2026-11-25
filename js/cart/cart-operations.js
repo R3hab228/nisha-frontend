@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CART — MUTATIONS & SERVER SYNC
 // ==========================================
@@ -15,6 +16,12 @@ import { updateCartUI, closeCartDropdown } from './cart-ui.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, isSiteHackedMode, tSafe } from '../core/runtime-env.js';
 import { getAcceptedBargain } from '../core/bargain-storage.js';
+
+/** @param {any} item @returns {string} */
+function getOptimizedImg(item) {
+    const fn = /** @type {any} */ (globalThis).getOptimizedImg;
+    return typeof fn === 'function' ? fn(item) : '';
+}
 
 /**
  * Синхронизирует корзину с сервером и сервисом брошенных корзин (Abandoned Cart Recovery).
@@ -44,7 +51,7 @@ export async function syncCartToServer() {
  * Добавляет товар в корзину по ID (с поддержкой согласованной ставки торга и скидки hacked).
  * @param {string|number} itemId
  * @param {number|string|null} [customPriceOrSize=null]
- * @param {object} [options={}]
+ * @param {{ price?: number|string, customPrice?: number|string }} [options={}]
  * @returns {Promise<void>}
  */
 export async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
@@ -59,6 +66,7 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
         }
 
         if (customPrice === null) {
+            /** @type {any} */
             const parsedBargain = getAcceptedBargain(itemId);
             if (parsedBargain && parsedBargain.acceptedPrice) {
                 customPrice = Number(parsedBargain.acceptedPrice);
@@ -79,10 +87,10 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
                 updateCartUI();
                 syncCartToServer();
                 const updateMsg = tSafe('product.offer_cart_updated', 'Цену в корзине обновлено по согласованной ставке!');
-                showToast(updateMsg, 'success');
+                if (typeof showToast === 'function') showToast(updateMsg, 'success');
                 return;
             }
-            showToast(tSafe('messages.cart_exist', 'Уже в корзине!'), 'error');
+            if (typeof showToast === 'function') showToast(tSafe('messages.cart_exist', 'Уже в корзине!'), 'error');
             return;
         }
 
@@ -105,7 +113,7 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
         if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackAddToCart === 'function') {
             window.analytics.trackAddToCart(cartItem);
         } else if (typeof window !== 'undefined' && window.ttq) {
-            ttq.track('AddToCart', {
+            window.ttq.track('AddToCart', {
                 contents: [{ content_id: cartItem.id, content_name: cartItem.name }],
                 value: cartItem.price,
                 currency: 'UAH'
@@ -115,7 +123,7 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
         updateCartUI();
         if (hasAction('showCartToast')) {
             invokeAction('showCartToast', item, true, getOptimizedImg(item));
-        } else {
+        } else if (typeof showToast === 'function') {
             showToast(tSafe('messages.cart_add', 'Добавлено в корзину!'), 'success', getOptimizedImg(item));
         }
         await syncCartToServer();
@@ -141,7 +149,8 @@ export function addToCartWithAnimation(itemId, btnElement, event) {
 
     addToCartById(itemId);
 
-    if (typeof triggerHaptic === 'function') triggerHaptic('success');
+    const g = /** @type {any} */ (globalThis);
+    if (typeof g.triggerHaptic === 'function') g.triggerHaptic('success');
     if (hasAction('warmupBackendServer')) invokeAction('warmupBackendServer');
 
     const cartIcon = document.getElementById('cartInfoWrapper');
@@ -180,6 +189,7 @@ export function addToCartWithAnimation(itemId, btnElement, event) {
  */
 export async function addToCartFromModal() {
     return await withCartLock(async () => {
+        const g = /** @type {any} */ (globalThis);
         const now = Date.now();
         if (now - cartState.lastCartActionTime < 350) return;
         cartState.lastCartActionTime = now;
@@ -190,7 +200,7 @@ export async function addToCartFromModal() {
         const currentCart = getActiveCart();
         const existingIndex = currentCart.findIndex(i => String(i.id) === String(activeItem.id));
 
-        const parsedBargain = getAcceptedBargain(activeItem.id);
+        const parsedBargain = /** @type {any} */ (getAcceptedBargain(activeItem.id));
 
         if (existingIndex !== -1) {
             if (parsedBargain && parsedBargain.acceptedPrice && currentCart[existingIndex].price !== Number(parsedBargain.acceptedPrice)) {
@@ -198,13 +208,13 @@ export async function addToCartFromModal() {
                 currentCart[existingIndex].bargainPrice = Number(parsedBargain.acceptedPrice);
                 setActiveCart(currentCart);
                 updateCartUI();
-                if (typeof closeModal === 'function') closeModal('productModal');
+                if (typeof g.closeModal === 'function') g.closeModal('productModal');
                 const updateMsg = tSafe('product.offer_cart_updated', 'Цену в корзине обновлено по согласованной ставке!');
-                showToast(updateMsg, 'success');
+                if (typeof showToast === 'function') showToast(updateMsg, 'success');
                 syncCartToServer();
                 return;
             }
-            showToast(tSafe('messages.cart_exist', 'Уже в корзине!'), 'error');
+            if (typeof showToast === 'function') showToast(tSafe('messages.cart_exist', 'Уже в корзине!'), 'error');
             return;
         }
 
@@ -222,10 +232,10 @@ export async function addToCartFromModal() {
         currentCart.push(cartItem);
         setActiveCart(currentCart);
         updateCartUI();
-        if (typeof closeModal === 'function') closeModal('productModal');
+        if (typeof g.closeModal === 'function') g.closeModal('productModal');
         if (hasAction('showCartToast')) {
             invokeAction('showCartToast', cartItem, true, getOptimizedImg(cartItem));
-        } else {
+        } else if (typeof showToast === 'function') {
             showToast(tSafe('messages.cart_add', 'Добавлено в корзину!'), 'success');
         }
         if (hasAction('warmupBackendServer')) invokeAction('warmupBackendServer');
@@ -277,7 +287,7 @@ export async function removeFromCart(index, event, rowElement) {
             updateCartUI();
             if (hasAction('showCartToast')) {
                 invokeAction('showCartToast', removedItem, false, imgUrl);
-            } else {
+            } else if (typeof showToast === 'function') {
                 showToast(`${tSafe('messages.cart_delete', 'Удалено: ')}${removedItem.name}`, 'error', imgUrl);
             }
             await syncCartToServer();

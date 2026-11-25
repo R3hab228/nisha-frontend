@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA DROP MODAL LAUNCHER, UPLOAD QUEUE & SUBMISSION
 // ==========================================
@@ -35,13 +36,17 @@ export {
 };
 
 let _propCustomSelectI18nBound = false;
+const globalEnv = /** @type {any} */ (globalThis);
 
 // Очередь фоновой отправки предложки с авто-повтором при сбоях сети
+/** @type {Promise<any>} */
 let proposalUploadChain = Promise.resolve();
 let activeProposalUploads = 0;
+/** @type {string | null} */
 let _lastUsedPropToken = null;
 let _isSubmittingProposal = false;
 
+/** @param {BeforeUnloadEvent} e */
 function onProposalBeforeUnload(e) {
     if (activeProposalUploads > 0) {
         e.preventDefault();
@@ -62,8 +67,9 @@ function resetProposalTurnstileWidget() {
     if (typeof window !== 'undefined') {
         window._turnstilePropToken = null;
     }
-    const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined')
-        ? turnstilePropWidgetId
+    const g = /** @type {any} */ (globalThis);
+    const propWidgetId = (typeof g.turnstilePropWidgetId !== 'undefined')
+        ? g.turnstilePropWidgetId
         : (typeof window !== 'undefined' ? window.turnstilePropWidgetId : null);
     const tsApi = getTurnstileApi();
     if (tsApi && propWidgetId !== null && propWidgetId !== undefined && typeof tsApi.reset === 'function') {
@@ -71,9 +77,13 @@ function resetProposalTurnstileWidget() {
     }
 }
 
+/**
+ * @param {FormData} formData
+ * @param {number} [maxAttempts=3]
+ */
 export async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
     let lastError = null;
-    const sleepFn = resolveAction('sleep') || ((ms) => new Promise(r => setTimeout(r, ms)));
+    const sleepFn = resolveAction('sleep') || ((/** @type {number} */ ms) => new Promise(r => setTimeout(r, ms)));
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
@@ -96,10 +106,11 @@ export async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
             }
         } catch (err) {
             lastError = err;
-            if (err && /^HTTP 4\d\d:/.test(err.message) && !/^HTTP (408|429):/.test(err.message)) {
+            const errMsg = err instanceof Error ? err.message : String(err || '');
+            if (err && /^HTTP 4\d\d:/.test(errMsg) && !/^HTTP (408|429):/.test(errMsg)) {
                 throw err;
             }
-            console.warn(`[PROPOSAL UPLOAD] Network error on attempt ${attempt}/${maxAttempts}:`, err.message);
+            console.warn(`[PROPOSAL UPLOAD] Network error on attempt ${attempt}/${maxAttempts}:`, errMsg);
         }
         if (attempt < maxAttempts) {
             await sleepFn(1500 * attempt);
@@ -108,6 +119,7 @@ export async function sendProposalFormDataWithRetry(formData, maxAttempts = 3) {
     throw lastError || new Error('Upload failed');
 }
 
+/** @param {FormData} formData */
 export function enqueueProposalUpload(formData) {
     activeProposalUploads++;
     updateProposalBeforeUnloadListener();
@@ -137,21 +149,21 @@ export function resetProposalForm() {
     }
     const fields = ['propBrand', 'propCategory', 'propSize', 'propCond', 'propPrice', 'propContact', 'propName', 'propDesc', 'propMinBargainPrice'];
     fields.forEach(id => {
-        const el = document.getElementById(id);
+        const el = /** @type {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null} */ (document.getElementById(id));
         if (el) {
             el.value = '';
             if (id === 'propName') delete el.dataset.userTyped;
         }
     });
     syncPropSizeOptionsByCategory('');
-    refreshCustomPropSelect(document.getElementById('propCategory'));
+    refreshCustomPropSelect(/** @type {HTMLSelectElement | null} */ (document.getElementById('propCategory')));
     document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => {
         w.classList.remove('is-open');
         const t = w.querySelector('.prop-custom-trigger');
         if (t) t.setAttribute('aria-expanded', 'false');
     });
 
-    const filesInput = document.getElementById('propFiles');
+    const filesInput = /** @type {HTMLInputElement | null} */ (document.getElementById('propFiles'));
     if (filesInput) filesInput.value = '';
 
     const currentProposalFiles = getProposalFiles();
@@ -170,8 +182,8 @@ export function resetProposalForm() {
     setProposalFiles([]);
 
     renderProposalPreviews();
-    if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
-    const contactEl = document.getElementById('propContact');
+    if (typeof globalEnv.updateProposeAndCheckoutFields === 'function') globalEnv.updateProposeAndCheckoutFields();
+    const contactEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
     if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
         contactEl.value = window._lastProposalContact;
     }
@@ -181,7 +193,7 @@ export function resetProposalForm() {
         descLabel.style.color = '';
     }
 
-    const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
+    const propWidgetId = (typeof globalEnv.turnstilePropWidgetId !== 'undefined') ? globalEnv.turnstilePropWidgetId : window.turnstilePropWidgetId;
     const tsApi = getTurnstileApi();
     if (tsApi && propWidgetId !== null && propWidgetId !== undefined) {
         try { tsApi.reset(propWidgetId); } catch {}
@@ -201,31 +213,31 @@ export function openProposeModal() {
         delete propNameEl.dataset.userTyped;
         if (typeof queueMicrotask === 'function') {
             queueMicrotask(sanitizeProposalNameField);
-        } else if (typeof runMicrotask === 'function') {
-            runMicrotask(sanitizeProposalNameField);
+        } else if (typeof globalEnv.runMicrotask === 'function') {
+            globalEnv.runMicrotask(sanitizeProposalNameField);
         } else {
             Promise.resolve().then(sanitizeProposalNameField);
         }
         [150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms));
     }
-    const contactEl = document.getElementById('propContact');
+    const contactEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
     if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
         contactEl.value = window._lastProposalContact;
     }
-    if (typeof Sortable === 'undefined' && typeof window.Sortable === 'undefined') {
+    if (typeof globalEnv.Sortable === 'undefined' && typeof window.Sortable === 'undefined') {
         import('sortablejs').then(mod => {
             window.Sortable = mod.default || mod;
         }).catch(() => {});
     }
 
-    if (typeof openModal === 'function') {
-        openModal('proposeModal');
-        if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter('proposeModal');
-        if (typeof initTurnstileWidgets === 'function') {
-            setTimeout(initTurnstileWidgets, 100);
+    if (typeof globalEnv.openModal === 'function') {
+        globalEnv.openModal('proposeModal');
+        if (typeof globalEnv.triggerModalTypewriter === 'function') globalEnv.triggerModalTypewriter('proposeModal');
+        if (typeof globalEnv.initTurnstileWidgets === 'function') {
+            setTimeout(globalEnv.initTurnstileWidgets, 100);
         }
     } else {
-        const modal = document.getElementById('proposeModal');
+        const modal = /** @type {any} */ (document.getElementById('proposeModal'));
         if (modal) {
             if (modal._closeTimer) {
                 clearTimeout(modal._closeTimer);
@@ -236,7 +248,7 @@ export function openProposeModal() {
             modal.setAttribute('aria-hidden', 'false');
             modal.classList.remove('closing');
             modal.style.pointerEvents = '';
-            const win = modal.querySelector('.modal-window');
+            const win = /** @type {HTMLElement | null} */ (modal.querySelector('.modal-window'));
             if (win) {
                 win.style.transform = '';
                 win.style.opacity = '';
@@ -245,29 +257,32 @@ export function openProposeModal() {
             }
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
-            if (typeof initTurnstileWidgets === 'function') {
-                setTimeout(initTurnstileWidgets, 100);
+            if (typeof globalEnv.initTurnstileWidgets === 'function') {
+                setTimeout(globalEnv.initTurnstileWidgets, 100);
             }
         }
     }
 }
 
 export async function submitProposal() {
+    const g = /** @type {any} */ (globalThis);
     const btn = document.getElementById('btnSubmitProp');
     if (!btn || _isSubmittingProposal) return;
 
     const proposalItems = getProposalFiles().filter(obj => obj && obj.file);
     const files = proposalItems.map(obj => obj.file);
 
-    const rawName = (document.getElementById('propName')?.value || '').trim();
-    const rawBrand = (document.getElementById('propBrand')?.value || '').trim();
-    const categoryEl = document.getElementById('propCategory');
+    /** @param {string} id @returns {string} */
+    const getFieldVal = (id) => (/** @type {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null} */ (document.getElementById(id))?.value || '');
+    const rawName = getFieldVal('propName').trim();
+    const rawBrand = getFieldVal('propBrand').trim();
+    const categoryEl = /** @type {HTMLSelectElement | null} */ (document.getElementById('propCategory'));
     const rawCategory = (categoryEl?.value || '').trim();
-    const rawSize = (document.getElementById('propSize')?.value || '').trim();
-    const rawDesc = (document.getElementById('propDesc')?.value || '').trim();
-    const cond = Number.parseInt(document.getElementById('propCond')?.value, 10);
-    const price = Number.parseInt(document.getElementById('propPrice')?.value, 10) || 0;
-    let rawContact = (document.getElementById('propContact')?.value || '').trim();
+    const rawSize = getFieldVal('propSize').trim();
+    const rawDesc = getFieldVal('propDesc').trim();
+    const cond = Number.parseInt(getFieldVal('propCond'), 10);
+    const price = Number.parseInt(getFieldVal('propPrice'), 10) || 0;
+    let rawContact = getFieldVal('propContact').trim();
 
     if (!rawContact) {
         const phoneFn = resolveAction('getUserPhone');
@@ -283,7 +298,7 @@ export async function submitProposal() {
     }
 
     const sanitizeFn = resolveAction('sanitizeText');
-    const sanitize = sanitizeFn ? sanitizeFn : (s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    const sanitize = sanitizeFn ? sanitizeFn : (/** @type {any} */ s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     const nameItem = sanitize(rawName);
     const brand = sanitize(rawBrand);
     const category = sanitize(rawCategory);
@@ -292,11 +307,11 @@ export async function submitProposal() {
     const contact = sanitize(rawContact);
 
     if ((Number.isNaN(price) || price <= 0) && window._propBargainMode) {
-        const minEl = document.getElementById('propMinBargainPrice');
+        const minEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propMinBargainPrice'));
         const savedMin = Number.parseInt((minEl?.value || '').trim(), 10);
         if (!Number.isNaN(savedMin) && savedMin >= 100) {
             window._propBargainEnabled = true;
-            returnToDesiredPriceMode(true, savedMin);
+            returnToDesiredPriceMode(true);
         } else {
             returnToDesiredPriceMode(false);
         }
@@ -304,13 +319,13 @@ export async function submitProposal() {
         if (prEl) prEl.focus();
     }
 
-    const minBargainInput = document.getElementById('propMinBargainPrice');
+    const minBargainInput = /** @type {HTMLInputElement | null} */ (document.getElementById('propMinBargainPrice'));
     const rawMinBargain = (minBargainInput?.value || '').trim();
 
     if (window._propBargainMode || (rawMinBargain && !window._propBargainEnabled)) {
-        if (typeof triggerHaptic === 'function') triggerHaptic('warning');
+        if (typeof g.triggerHaptic === 'function') g.triggerHaptic('warning');
         const confirmMsg = tSafe('propose.err_confirm_bargain', { defaultValue: 'Подтвердите торг нажатием на галочку [ ✓ ]!' });
-        showToast(confirmMsg, 'warning');
+        if (typeof showToast === 'function') showToast(confirmMsg, 'warning');
 
         const btnConfirm = document.getElementById('btnConfirmPropBargain');
         if (btnConfirm && btnConfirm.style.display !== 'none') {
@@ -324,23 +339,23 @@ export async function submitProposal() {
     }
 
     if (!files.length || !nameItem || !brand || (categoryEl && !category) || !size || !desc || Number.isNaN(cond) || Number.isNaN(price) || price <= 0 || !contact) {
-        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        if (typeof g.triggerHaptic === 'function') g.triggerHaptic('error');
         const fillAllMsg = tSafe('propose.err_fill_all', 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!');
-        showToast(fillAllMsg, 'error');
+        if (typeof showToast === 'function') showToast(fillAllMsg, 'error');
         return;
     }
 
     if (cond < 1 || cond > 10) {
-        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        if (typeof g.triggerHaptic === 'function') g.triggerHaptic('error');
         const condMsg = tSafe('propose.err_cond_range', 'Оценка состояния от 1 до 10!');
-        showToast(condMsg, 'error');
+        if (typeof showToast === 'function') showToast(condMsg, 'error');
         return;
     }
 
     if (hasPrivateMeasurementsDodge(rawDesc) || hasPrivateMeasurementsDodge(rawName)) {
-        if (typeof triggerHaptic === 'function') triggerHaptic('error');
+        if (typeof g.triggerHaptic === 'function') g.triggerHaptic('error');
         const measurementsDmMsg = tSafe('propose.err_measurements_dm', 'Замеры в ЛС запрещены — укажите замеры цифрами прямо в описании!');
-        showToast(measurementsDmMsg, 'error');
+        if (typeof showToast === 'function') showToast(measurementsDmMsg, 'error');
         const descEl = document.getElementById('propDesc');
         if (descEl && typeof descEl.focus === 'function') descEl.focus();
         return;
@@ -351,17 +366,17 @@ export async function submitProposal() {
     if (window._propBargainEnabled && rawMinBargain) {
         minBargainPrice = Number.parseInt(rawMinBargain, 10);
         if (Number.isNaN(minBargainPrice) || minBargainPrice < 100) {
-            if (typeof triggerHaptic === 'function') triggerHaptic('error');
+            if (typeof g.triggerHaptic === 'function') g.triggerHaptic('error');
             const minBargainMsg = tSafe('propose.err_bargain_min', 'Минимальная цена торга должна быть не менее 100 грн!');
-            showToast(minBargainMsg, 'error');
+            if (typeof showToast === 'function') showToast(minBargainMsg, 'error');
             if (!window._propBargainMode && typeof openPropBargainInput === 'function') openPropBargainInput();
             else if (minBargainInput) minBargainInput.focus();
             return;
         }
         if (minBargainPrice >= price) {
-            if (typeof triggerHaptic === 'function') triggerHaptic('error');
+            if (typeof g.triggerHaptic === 'function') g.triggerHaptic('error');
             const lessPriceMsg = tSafe('propose.err_bargain_less_price', 'Минимальная цена торга должна быть меньше желаемой цены!');
-            showToast(lessPriceMsg, 'error');
+            if (typeof showToast === 'function') showToast(lessPriceMsg, 'error');
             if (!window._propBargainMode && typeof openPropBargainInput === 'function') openPropBargainInput();
             else if (minBargainInput) minBargainInput.focus();
             return;
@@ -370,7 +385,7 @@ export async function submitProposal() {
 
     window._lastProposalContact = contact;
 
-    const propWidgetId = (typeof turnstilePropWidgetId !== 'undefined') ? turnstilePropWidgetId : window.turnstilePropWidgetId;
+    const propWidgetId = (typeof g.turnstilePropWidgetId !== 'undefined') ? g.turnstilePropWidgetId : window.turnstilePropWidgetId;
     const tsApi = getTurnstileApi();
     let propToken = window._turnstilePropToken || (tsApi && propWidgetId !== null && propWidgetId !== undefined ? tsApi.getResponse(propWidgetId) : null);
     if (propToken && propToken === _lastUsedPropToken) {
@@ -429,15 +444,15 @@ export async function submitProposal() {
         formData.append('name', nameItem);
         formData.append('brand', brand);
         formData.append('measurements', category ? `${category} | ${size}` : size);
-        formData.append('condition', cond);
-        formData.append('price', price);
+        formData.append('condition', String(cond));
+        formData.append('price', String(price));
         let finalDesc = desc;
         if (minBargainPrice && !finalDesc.includes('[ТОРГ:')) {
             finalDesc = `${finalDesc}\n\n[ТОРГ: от ${minBargainPrice} грн]`;
         }
         formData.append('description', finalDesc);
         if (minBargainPrice) {
-            formData.append('minBargainPrice', minBargainPrice);
+            formData.append('minBargainPrice', String(minBargainPrice));
             formData.append('isBargain', 'true');
         }
         formData.append('contact', contact);
@@ -491,10 +506,10 @@ export async function submitProposal() {
         _isSubmittingProposal = false;
         if (typeof window !== 'undefined') window._isSubmittingProposal = false;
 
-        if (typeof executeCloseModal === 'function') {
-            executeCloseModal('proposeModal');
-        } else if (typeof closeModal === 'function') {
-            closeModal('proposeModal');
+        if (typeof g.executeCloseModal === 'function') {
+            g.executeCloseModal('proposeModal');
+        } else if (typeof g.closeModal === 'function') {
+            g.closeModal('proposeModal');
         }
 
         setTimeout(() => {
@@ -502,12 +517,13 @@ export async function submitProposal() {
             const okText = tSafe('propose.success_text', { defaultValue: 'Заявка успешно отправлена.' });
             const okBtn = tSafe('propose.btn_close', { defaultValue: '[ ЗАКРЫТЬ ]' });
             invokeAction('playSound', 'tada', { kind: 'celebrate' });
-            showTerminalModal(okTitle, okText, okBtn, null);
+            if (typeof g.showTerminalModal === 'function') g.showTerminalModal(okTitle, okText, okBtn, null);
         }, 100);
     } catch (err) {
         console.error(err);
         const serverErrPref = tSafe('propose.err_server', { defaultValue: 'Сбой сервера: ' });
-        showToast(serverErrPref + err.message, 'error');
+        const errMsg = err instanceof Error ? err.message : String(err || '');
+        if (typeof showToast === 'function') showToast(serverErrPref + errMsg, 'error');
         btn.textContent = tSafe('propose.btn_retry', { defaultValue: '[ ПОВТОРИТЬ ПОПЫТКУ ]' });
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
@@ -517,10 +533,10 @@ export async function submitProposal() {
 }
 
 export function initProposalListeners() {
-    const minInput = document.getElementById('propMinBargainPrice');
+    const minInput = /** @type {any} */ (document.getElementById('propMinBargainPrice'));
     if (minInput && !minInput._bargainKeyBound) {
         minInput._bargainKeyBound = true;
-        minInput.addEventListener('keydown', (e) => {
+        minInput.addEventListener('keydown', (/** @type {KeyboardEvent} */ e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 confirmPropBargainInput();
@@ -531,8 +547,8 @@ export function initProposalListeners() {
         });
     }
 
-    const catSelect = document.getElementById('propCategory');
-    const sizeSelect = document.getElementById('propSize');
+    const catSelect = /** @type {(HTMLSelectElement & { _propCatBound?: boolean }) | null} */ (document.getElementById('propCategory'));
+    const sizeSelect = /** @type {HTMLSelectElement | null} */ (document.getElementById('propSize'));
     if (catSelect && !catSelect._propCatBound) {
         catSelect._propCatBound = true;
         catSelect.addEventListener('change', function () {
@@ -546,22 +562,25 @@ export function initProposalListeners() {
         _propCustomSelectI18nBound = true;
         i18next.on('languageChanged', () => {
             setTimeout(() => {
-                refreshCustomPropSelect(document.getElementById('propCategory'));
-                refreshCustomPropSelect(document.getElementById('propSize'));
+                refreshCustomPropSelect(/** @type {HTMLSelectElement | null} */ (document.getElementById('propCategory')));
+                refreshCustomPropSelect(/** @type {HTMLSelectElement | null} */ (document.getElementById('propSize')));
             }, 0);
         });
     }
 
-    const fileInput = document.getElementById('propFiles');
+    const fileInput = /** @type {(HTMLInputElement & { _propBound?: boolean }) | null} */ (document.getElementById('propFiles'));
     if (fileInput && !fileInput._propBound) {
         fileInput._propBound = true;
         fileInput.addEventListener('change', function (e) {
-            handleNewProposalFiles(Array.from(e.target.files));
+            const target = /** @type {HTMLInputElement | null} */ (e.target);
+            if (target && target.files) {
+                handleNewProposalFiles(Array.from(target.files));
+            }
             this.value = '';
         });
     }
 
-    const dropzone = document.getElementById('propDropzone');
+    const dropzone = /** @type {(HTMLElement & { _propBound?: boolean }) | null} */ (document.getElementById('propDropzone'));
     if (dropzone && !dropzone._propBound) {
         dropzone._propBound = true;
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -577,8 +596,10 @@ export function initProposalListeners() {
         });
 
         dropzone.addEventListener('drop', e => {
-            const droppedFiles = Array.from(e.dataTransfer.files);
-            handleNewProposalFiles(droppedFiles);
+            if (e.dataTransfer && e.dataTransfer.files) {
+                const droppedFiles = Array.from(e.dataTransfer.files);
+                handleNewProposalFiles(droppedFiles);
+            }
         });
     }
 }
