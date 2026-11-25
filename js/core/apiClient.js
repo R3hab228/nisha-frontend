@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - PROTECTED API CLIENT (js/core/apiClient.js)
 // ==========================================
@@ -23,6 +24,7 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
         return String(envUrl || DEFAULT_BASE_URL).replace(/\/+$/, '');
     }
 
+    /** @param {string} endpoint */
     function resolveUrl(endpoint) {
         if (!endpoint) return getBaseUrl();
         const str = String(endpoint).trim();
@@ -38,20 +40,26 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
         return `${prefix}_${Date.now()}_${rand}`;
     }
 
+    /** @param {number} ms */
     function waitMsDelay(ms) {
-        if (typeof globalThis.sleep === 'function') {
-            return globalThis.sleep(ms);
+        const g = /** @type {any} */ (globalThis);
+        if (typeof g.sleep === 'function') {
+            return g.sleep(ms);
         }
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    /** @param {unknown} body */
     function isFormDataBody(body) {
         return typeof FormData !== 'undefined' && body instanceof FormData;
     }
 
+    /** @param {number} timeoutMs @param {AbortSignal | null | undefined} externalSignal */
     function createTimeoutSignal(timeoutMs, externalSignal) {
         const hasNativeTimeout = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function';
+        /** @type {AbortSignal | null} */
         let timeoutSig = null;
+        /** @type {ReturnType<typeof setTimeout> | null} */
         let fallbackTimer = null;
         let timedOut = false;
 
@@ -76,7 +84,7 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
                 signal = AbortSignal.any([externalSignal, timeoutSig]);
             } else if (typeof AbortController !== 'undefined') {
                 const combinedCtrl = new AbortController();
-                const forward = (src) => {
+                const forward = (/** @type {AbortSignal} */ src) => {
                     if (!combinedCtrl.signal.aborted) combinedCtrl.abort(src.reason);
                 };
                 if (externalSignal.aborted) forward(externalSignal);
@@ -106,6 +114,8 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
     /**
      * Низкоуровневый защищенный запрос с поддержкой таймаута и авто-повтора.
      * Возвращает нативный объект Response.
+     * @param {string} endpoint
+     * @param {Record<string, any>} [options]
      */
     async function fetchRaw(endpoint, options = {}) {
         const url = resolveUrl(endpoint);
@@ -159,6 +169,7 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
             const { signal, isTimedOut, cleanup } = createTimeoutSignal(timeoutMs, options.signal);
 
             try {
+                /** @type {RequestInit} */
                 const fetchOpts = {
                     method,
                     headers,
@@ -190,13 +201,15 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
                     throw err;
                 }
 
-                if (isTimedOut() || err?.name === 'TimeoutError') {
+                const errObj = /** @type {any} */ (err);
+                if (isTimedOut() || errObj?.name === 'TimeoutError') {
+                    /** @type {Error & { isTimeout?: boolean }} */
                     const timeoutErr = new Error('Превышено время ожидания ответа от сервера');
                     timeoutErr.name = 'AbortError';
                     timeoutErr.isTimeout = true;
                     lastError = timeoutErr;
                 } else {
-                    err.isNetworkError = true;
+                    if (errObj && typeof errObj === 'object') errObj.isNetworkError = true;
                     lastError = err;
                 }
 
@@ -213,6 +226,7 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
 
     /**
      * Безопасное чтение JSON из ответа сервера
+     * @param {Response} response
      */
     async function parseResponseSafe(response) {
         const text = await response.text();
@@ -242,6 +256,8 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
 
     /**
      * Основной метод выполнения API-запроса с парсингом JSON и опциональной дедупликацией
+     * @param {string} endpoint
+     * @param {Record<string, any>} [options]
      */
     async function request(endpoint, options = {}) {
         const url = resolveUrl(endpoint);
@@ -265,6 +281,7 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
 
             if (options.throwOnHttpError && !response.ok) {
                 const errMessage = (data && (data.message || data.error)) || `Сетевая ошибка HTTP ${response.status}`;
+                /** @type {Error & { status?: number, data?: any }} */
                 const httpErr = new Error(errMessage);
                 httpErr.status = response.status;
                 httpErr.data = data;
@@ -272,6 +289,7 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
             }
 
             if (data && data._nonJson && !response.ok) {
+                /** @type {Error & { status?: number, data?: any }} */
                 const nonJsonErr = new Error(data.message || `Ошибка сервера HTTP ${response.status}`);
                 nonJsonErr.status = response.status;
                 nonJsonErr.data = data;
@@ -291,14 +309,17 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
         return executePromise;
     }
 
+    /** @param {string} endpoint @param {Record<string, any>} [options] */
     function get(endpoint, options = {}) {
         return request(endpoint, { ...options, method: 'GET' });
     }
 
+    /** @param {string} endpoint @param {any} [body] @param {Record<string, any>} [options] */
     function post(endpoint, body = {}, options = {}) {
         return request(endpoint, { ...options, method: 'POST', body });
     }
 
+    /** @param {string} endpoint @param {FormData} formData @param {Record<string, any>} [options] */
     function postForm(endpoint, formData, options = {}) {
         return request(endpoint, {
             timeout: UPLOAD_TIMEOUT_MS,
@@ -352,9 +373,10 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
         warmupBackendServer
     });
     if (typeof globalThis !== 'undefined') {
-        globalThis.apiClient = apiClient;
-        globalThis.apiRequest = request;
-        globalThis.warmupBackendServer = warmupBackendServer;
+        const g = /** @type {any} */ (globalThis);
+        g.apiClient = apiClient;
+        g.apiRequest = request;
+        g.warmupBackendServer = warmupBackendServer;
     }
 
     // Фоновый прогрев при входе на сайт (в моменты простоя браузера, не тормозит загрузку каталога)

@@ -7,7 +7,9 @@
         "no_matches": "ЗБІГІВ НЕМАЄ",
         "no_items": "ТОВАРІВ НЕ ЗНАЙДЕНО",
         "recent_queries": "НЕЩОДАВНІ ЗАПИТИ",
-        "clear_history": "ОЧИСТИТИ"
+        "clear_history": "ОЧИСТИТИ",
+        "no_items_hint": "Спробуйте змінити запит або скинути активні фільтри",
+        "reset_filters": "СКИНУТИ ФІЛЬТРИ"
       },
       "nav": {
         "home": "ГОЛОВНА",
@@ -666,7 +668,9 @@
         "no_matches": "СОВПАДЕНИЙ НЕТ",
         "no_items": "ТОВАРОВ НЕ НАЙДЕНО",
         "recent_queries": "НЕДАВНИЕ ЗАПРОСЫ",
-        "clear_history": "ОЧИСТИТЬ"
+        "clear_history": "ОЧИСТИТЬ",
+        "no_items_hint": "Попробуйте изменить запрос или сбросить активные фильтры",
+        "reset_filters": "СБРОСИТЬ ФИЛЬТРЫ"
       },
       "nav": {
         "home": "ГЛАВНАЯ",
@@ -1325,7 +1329,9 @@
         "no_matches": "NO MATCHES FOUND",
         "no_items": "NO ITEMS FOUND",
         "recent_queries": "RECENT SEARCHES",
-        "clear_history": "CLEAR"
+        "clear_history": "CLEAR",
+        "no_items_hint": "Try adjusting your query or resetting active filters",
+        "reset_filters": "RESET FILTERS"
       },
       "nav": {
         "home": "HOME",

@@ -459,11 +459,23 @@ function startSearchTypewriter() {
 
     if (!window._searchTypewriterVisBound) {
         window._searchTypewriterVisBound = true;
+        const pauseTypewriter = () => {
+            stopCursorBlink();
+            if (searchTypewriterInterval) {
+                clearTimeout(searchTypewriterInterval);
+                searchTypewriterInterval = null;
+            }
+        };
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && !searchCursorBlinkInterval && !searchTypewriterInterval && document.getElementById('mainSearch')) {
+            if (document.hidden) {
+                pauseTypewriter();
+                return;
+            }
+            if (!searchCursorBlinkInterval && !searchTypewriterInterval && document.getElementById('mainSearch')) {
                 startSearchTypewriter();
             }
         });
+        window.addEventListener('pagehide', pauseTypewriter);
     }
 
     typeLoop();

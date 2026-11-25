@@ -221,12 +221,22 @@ export function initServiceWorkerUpdates() {
                 };
 
                 if (isUserBusyWithOrder()) {
+                    const stopCheck = () => {
+                        clearInterval(checkInterval);
+                        if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+                            window.removeEventListener('pagehide', stopCheck);
+                        }
+                    };
                     const checkInterval = setInterval(() => {
+                        if (typeof document !== 'undefined' && document.hidden) return;
                         if (!isUserBusyWithOrder()) {
-                            clearInterval(checkInterval);
+                            stopCheck();
                             setTimeout(triggerUpdateModal, 2500);
                         }
                     }, 2000);
+                    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+                        window.addEventListener('pagehide', stopCheck, { once: true });
+                    }
                 } else {
                     triggerUpdateModal();
                 }

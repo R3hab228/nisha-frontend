@@ -6,7 +6,9 @@
       "no_matches": "NO MATCHES FOUND",
       "no_items": "NO ITEMS FOUND",
       "recent_queries": "RECENT SEARCHES",
-      "clear_history": "CLEAR"
+      "clear_history": "CLEAR",
+      "no_items_hint": "Try adjusting your query or resetting active filters",
+      "reset_filters": "RESET FILTERS"
     },
     "nav": {
       "home": "HOME",

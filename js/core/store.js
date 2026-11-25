@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - UNIFIED REACTIVE STATE STORE
 // Centralized Reactive State Engine with Safe Storage Persistence
@@ -6,6 +7,7 @@
 import { emitAppEvent, invokeAction } from './action-registry.js';
 
     // 1. СХЕМЫ ВСЕХ СВОЙСТВ СОСТОЯНИЯ С АВТОМАТИЧЕСКИМ МАППИНГОМ НА LOCALSTORAGE
+    /** @type {Record<string, { storageKey?: string, default: any, type: string }>} */
     const SCHEMAS = {
         // Корзина и чекаут
         cart: { storageKey: 'nisha_cart', default: () => [], type: 'json' },
@@ -82,6 +84,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
     });
 
     // 2. БЕЗОПАСНЫЕ СЕРИАЛИЗАТОРЫ И ДЕСЕРИАЛИЗАТОРЫ
+    /** @param {any} raw @param {{ storageKey?: string, default: any, type: string }} schema */
     function deserializeValue(raw, schema) {
         if (raw === null || raw === undefined) {
             return typeof schema.default === 'function' ? schema.default() : schema.default;
@@ -106,6 +109,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
     }
 
+    /** @param {any} val @param {{ storageKey?: string, default: any, type: string }} schema */
     function serializeValue(val, schema) {
         if (val === null || val === undefined) return null;
         switch (schema.type) {
@@ -125,6 +129,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
     // 3. БЕЗОПАСНАЯ РАБОТА С ХРАНИЛИЩЕМ (С ЗАЩИТОЙ ОТ QUOTA EXCEEDED И PRIVACY MODE)
     let isInternalStorageSync = false;
 
+    /** @param {string} storageKey @param {string} stringVal */
     function safeStorageSet(storageKey, stringVal) {
         try {
             isInternalStorageSync = true;
@@ -141,6 +146,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
     }
 
+    /** @param {string} storageKey */
     function safeStorageRemove(storageKey) {
         try {
             isInternalStorageSync = true;
@@ -186,11 +192,13 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // Получить значение из памяти (0ms, без JSON.parse)
+        /** @param {string} key */
         get(key) {
             return this._state[key];
         }
 
         // Установить значение с реактивным оповещением и сохранением в storage
+        /** @param {string} key @param {any} value @param {{ save?: boolean, silent?: boolean }} [options] */
         set(key, value, options = {}) {
             const oldValue = this._state[key];
             if (oldValue === value && typeof value !== 'object') {
@@ -229,6 +237,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // Функциональное обновление
+        /** @param {string} key @param {(current: any) => any} updaterFn @param {{ save?: boolean, silent?: boolean }} [options] */
         update(key, updaterFn, options = {}) {
             if (typeof updaterFn !== 'function') return;
             const current = this.get(key);
@@ -237,10 +246,11 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // Внутреннее оповещение слушателей
+        /** @param {string} key @param {any} newValue @param {any} [oldValue] */
         _notify(key, newValue, oldValue) {
             const listeners = this._listeners.get(key);
             if (listeners && listeners.size > 0) {
-                listeners.forEach(fn => {
+                listeners.forEach((/** @type {Function} */ fn) => {
                     try {
                         fn(newValue, oldValue, key);
                     } catch (err) {
@@ -262,6 +272,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // Пакетное обновление нескольких ключей (оповещения вызываются один раз в конце)
+        /** @param {() => void} callback */
         batch(callback) {
             if (typeof callback !== 'function') return;
             if (this._batchQueue !== null) {
@@ -280,6 +291,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // Подписка на изменение ключа или всех изменений
+        /** @param {string | Function} keyOrFn @param {Function} [maybeFn] */
         subscribe(keyOrFn, maybeFn) {
             if (typeof keyOrFn === 'function') {
                 this._globalListeners.add(keyOrFn);
@@ -302,9 +314,10 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // Одноразовая подписка
+        /** @param {string} key @param {Function} fn */
         subscribeOnce(key, fn) {
             if (typeof fn !== 'function') return () => {};
-            const unsubscribe = this.subscribe(key, (newVal, oldVal, k) => {
+            const unsubscribe = this.subscribe(key, (/** @type {any} */ newVal, /** @type {any} */ oldVal, /** @type {string} */ k) => {
                 unsubscribe();
                 fn(newVal, oldVal, k);
             });
@@ -312,6 +325,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // Синхронизация при внешнем изменении storage (из другой вкладки или легаси кода)
+        /** @param {string} stateKey @param {any} rawValue */
         _syncFromExternalStorage(stateKey, rawValue) {
             const schema = Object.hasOwn(SCHEMAS, stateKey) ? SCHEMAS[stateKey] : null;
             if (!schema) return;
@@ -320,10 +334,11 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // 5. УДОБНЫЕ ХЕЛПЕРЫ ДЛЯ КОРЗИНЫ
+        /** @param {any} item */
         addToCart(item) {
             if (!item || !item.id) return false;
             const currentCart = Array.isArray(this._state.cart) ? this._state.cart : [];
-            if (!currentCart.some(c => c.id === item.id)) {
+            if (!currentCart.some((/** @type {any} */ c) => c.id === item.id)) {
                 const clonedItem = (typeof deepClone === 'function')
                     ? deepClone(item)
                     : ((typeof structuredClone === 'function') ? structuredClone(item) : { ...item });
@@ -338,9 +353,10 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
             return false;
         }
 
+        /** @param {any} itemId */
         removeFromCart(itemId) {
             const currentCart = Array.isArray(this._state.cart) ? this._state.cart : [];
-            const newCart = currentCart.filter(c => c.id !== itemId);
+            const newCart = currentCart.filter((/** @type {any} */ c) => c.id !== itemId);
             if (newCart.length !== currentCart.length) {
                 this.set('cart', newCart);
                 return true;
@@ -356,26 +372,30 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
             });
         }
 
+        /** @param {any} itemId */
         isInCart(itemId) {
             const currentCart = Array.isArray(this._state.cart) ? this._state.cart : [];
-            return currentCart.some(c => c.id === itemId);
+            return currentCart.some((/** @type {any} */ c) => c.id === itemId);
         }
 
         // 6. УДОБНЫЕ ХЕЛПЕРЫ ДЛЯ ИЗБРАННОГО
+        /** @param {any} itemId */
         isFavorite(itemId) {
             const favs = Array.isArray(this._state.favorites) ? this._state.favorites : [];
             return favs.includes(itemId);
         }
 
+        /** @param {any} itemId */
         toggleFavorite(itemId) {
             const favs = Array.isArray(this._state.favorites) ? this._state.favorites : [];
             const exists = favs.includes(itemId);
-            const newFavs = exists ? favs.filter(id => id !== itemId) : [...favs, itemId];
+            const newFavs = exists ? favs.filter((/** @type {any} */ id) => id !== itemId) : [...favs, itemId];
             this.set('favorites', newFavs);
             return !exists;
         }
 
         // 7. УДОБНЫЕ ХЕЛПЕРЫ ДЛЯ ИСТОРИИ ПРОСМОТРОВ
+        /** @param {any} item */
         addHistory(item) {
             if (!item || !item.id) return;
             let hist = Array.isArray(this._state.history) ? [...this._state.history] : [];
@@ -397,11 +417,13 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         }
 
         // 8. ХЕЛПЕРЫ ДЛЯ ОТЗЫВОВ
+        /** @param {any} orderId */
         isReviewed(orderId) {
             const rev = Array.isArray(this._state.reviewedOrders) ? this._state.reviewedOrders : [];
             return rev.includes(orderId);
         }
 
+        /** @param {any} orderId */
         markReviewed(orderId) {
             const rev = Array.isArray(this._state.reviewedOrders) ? this._state.reviewedOrders : [];
             if (!rev.includes(orderId)) {
@@ -409,11 +431,13 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
             }
         }
 
+        /** @param {any} orderId */
         isDismissed(orderId) {
             const dis = Array.isArray(this._state.dismissedReviews) ? this._state.dismissedReviews : [];
             return dis.includes(orderId);
         }
 
+        /** @param {any} orderId */
         dismissReview(orderId) {
             const dis = Array.isArray(this._state.dismissedReviews) ? this._state.dismissedReviews : [];
             if (!dis.includes(orderId)) {
@@ -427,12 +451,13 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
 
     // Оборачиваем в Proxy для естественного обращения `store.cart`, `store.cart = [...]`
     const store = new Proxy(storeInstance, {
-        get(target, prop, receiver) {
-            if (prop in target) {
-                const val = target[prop];
+        get(target, prop) {
+            const t = /** @type {any} */ (target);
+            if (typeof prop === 'string' && prop in t) {
+                const val = t[prop];
                 return typeof val === 'function' ? val.bind(target) : val;
             }
-            if (prop in target._state) {
+            if (typeof prop === 'string' && prop in target._state) {
                 return target.get(prop);
             }
             // Алиасы
@@ -441,7 +466,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
             if (prop === 'cartCount') return (target.get('cart') || []).length;
             if (prop === 'cartTotal') {
                 const c = target.get('cart') || [];
-                return c.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+                return c.reduce((/** @type {number} */ sum, /** @type {any} */ item) => sum + (Number(item.price) || 0), 0);
             }
             if (prop === 'lastCartItem') {
                 const c = target.get('cart') || [];
@@ -453,9 +478,10 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
             }
             return undefined;
         },
-        set(target, prop, value, receiver) {
-            if (prop in target && !prop.startsWith('_')) {
-                target[prop] = value;
+        set(target, prop, value) {
+            const t = /** @type {any} */ (target);
+            if (typeof prop === 'string' && prop in t && !prop.startsWith('_')) {
+                t[prop] = value;
                 return true;
             }
             // Алиасы
@@ -468,7 +494,9 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
                 return true;
             }
 
-            target.set(prop, value);
+            if (typeof prop === 'string') {
+                target.set(prop, value);
+            }
             return true;
         }
     });
@@ -555,14 +583,14 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
     window.cart = store.get('cart');
 
     // Реактивное обновление window.cart и UI при любых изменениях корзины
-    store.subscribe('cart', (newCart) => {
+    store.subscribe('cart', (/** @type {any} */ newCart) => {
         if (typeof window !== 'undefined') window.cart = newCart;
         emitAppEvent('nisha:cart-changed', { cart: newCart });
         invokeAction('updateCartUI');
     });
 
     // Реактивное обновление избранного (не вызываем сеттер, если window.favorites уже проксируется в store)
-    store.subscribe('favorites', (newFavs) => {
+    store.subscribe('favorites', (/** @type {any} */ newFavs) => {
         if (typeof window !== 'undefined') {
             const favDesc = Object.getOwnPropertyDescriptor(window, 'favorites');
             if (!favDesc || (!favDesc.set && favDesc.writable)) {
@@ -574,7 +602,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
     });
 
     // Реактивное обновление истории
-    store.subscribe('history', (newHistory) => {
+    store.subscribe('history', (/** @type {any} */ newHistory) => {
         emitAppEvent('nisha:history-changed', { history: newHistory });
         invokeAction('renderHistory');
     });
@@ -583,6 +611,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
     window.store = store;
     window.appStore = store;
     if (typeof globalThis !== 'undefined') {
-        globalThis.store = store;
-        globalThis.appStore = store;
+        const g = /** @type {any} */ (globalThis);
+        g.store = store;
+        g.appStore = store;
     }

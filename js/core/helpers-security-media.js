@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS: CDN MEDIA, XSS SANITIZATION & LAZY RESOURCE LOADERS
 // ==========================================
@@ -51,7 +52,7 @@ export function toCDN(url, options = {}) {
     return result;
 }
 if (typeof window !== 'undefined') window.toCDN = toCDN;
-if (typeof globalThis !== 'undefined') globalThis.toCDN = toCDN;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).toCDN = toCDN;
 
 /**
  * Alias for toCDN responsive image optimizer.
@@ -63,7 +64,7 @@ export function getOptimizedCDNImageUrl(url, options = {}) {
     return toCDN(url, options);
 }
 if (typeof window !== 'undefined') window.getOptimizedCDNImageUrl = getOptimizedCDNImageUrl;
-if (typeof globalThis !== 'undefined') globalThis.getOptimizedCDNImageUrl = getOptimizedCDNImageUrl;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).getOptimizedCDNImageUrl = getOptimizedCDNImageUrl;
 
 /**
  * Generates responsive srcset string for catalog/product images.
@@ -78,7 +79,7 @@ export function getImageSrcSet(url, widths = [320, 480, 768]) {
         .join(', ');
 }
 if (typeof window !== 'undefined') window.getImageSrcSet = getImageSrcSet;
-if (typeof globalThis !== 'undefined') globalThis.getImageSrcSet = getImageSrcSet;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).getImageSrcSet = getImageSrcSet;
 
 /**
  * Escapes HTML special characters to neutralize XSS injection.
@@ -134,7 +135,7 @@ export function sanitizeText(value) {
     return escapeHtml(String(value));
 }
 if (typeof window !== 'undefined') window.sanitizeText = sanitizeText;
-if (typeof globalThis !== 'undefined') globalThis.sanitizeText = sanitizeText;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).sanitizeText = sanitizeText;
 
 /**
  * Validates and normalizes an HTML media URL, allowing only http/https/data protocols.
@@ -196,7 +197,7 @@ export function sanitizeCssMediaUrl(rawUrl) {
     );
 }
 if (typeof window !== 'undefined') window.sanitizeCssMediaUrl = sanitizeCssMediaUrl;
-if (typeof globalThis !== 'undefined') globalThis.sanitizeCssMediaUrl = sanitizeCssMediaUrl;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).sanitizeCssMediaUrl = sanitizeCssMediaUrl;
 
 /**
  * Safe getter for active Supabase client.
@@ -209,7 +210,7 @@ if (typeof window !== 'undefined') window.getSupabase = getSupabase;
 
 /**
  * Safe getter for active catalog array.
- * @returns {Array}
+ * @returns {any[]}
  */
 export function getCatalog() {
     return getRuntimeCatalog();
@@ -218,7 +219,7 @@ if (typeof window !== 'undefined') window.getCatalog = getCatalog;
 
 /**
  * Resolves the primary optimized image URL for a catalog item.
- * @param {Object} item
+ * @param {any} item
  * @param {boolean} [thumb=true]
  * @returns {string}
  */
@@ -250,6 +251,7 @@ registerActions({
 });
 
 // --- LAZY EXTERNAL SCRIPT / STYLE LOADERS ---
+/** @type {Record<string, Promise<void> | undefined>} */
 const _loadedExternalScripts = {};
 
 /**
@@ -259,7 +261,7 @@ const _loadedExternalScripts = {};
  */
 export function loadExternalScript(src) {
     if (_loadedExternalScripts[src]) return _loadedExternalScripts[src];
-    const { promise, resolve, reject } = Promise.withResolvers();
+    const { promise, resolve, reject } = /** @type {any} */ (Promise).withResolvers();
     _loadedExternalScripts[src] = promise;
     try {
         if (typeof document === 'undefined') {
@@ -293,6 +295,7 @@ export function loadExternalScript(src) {
 }
 if (typeof window !== 'undefined') window.loadExternalScript = loadExternalScript;
 
+/** @type {Record<string, Promise<void> | undefined>} */
 const _loadedExternalStyles = {};
 
 /**
@@ -302,7 +305,7 @@ const _loadedExternalStyles = {};
  */
 export function loadExternalStyle(href) {
     if (_loadedExternalStyles[href]) return _loadedExternalStyles[href];
-    const { promise, resolve } = Promise.withResolvers();
+    const { promise, resolve } = /** @type {any} */ (Promise).withResolvers();
     _loadedExternalStyles[href] = promise;
     try {
         if (typeof document === 'undefined') {
@@ -332,6 +335,7 @@ export function loadExternalStyle(href) {
 }
 registerActions({ loadExternalStyle });
 
+/** @type {Promise<any> | null} */
 let _photoSwipeInitPromise = null;
 
 /**
@@ -343,11 +347,14 @@ export async function ensurePhotoSwipe() {
     if (_photoSwipeInitPromise) return _photoSwipeInitPromise;
     _photoSwipeInitPromise = (async () => {
         try {
-            const [lightboxMod, pswpMod] = await Promise.all([
+            const [rawLightboxMod, rawPswpMod] = await Promise.all([
                 import('photoswipe/lightbox'),
                 import('photoswipe'),
+                // @ts-expect-error -- Vite handles CSS side-effect imports without .d.ts
                 import('photoswipe/style.css')
             ]);
+            const lightboxMod = /** @type {any} */ (rawLightboxMod);
+            const pswpMod = /** @type {any} */ (rawPswpMod);
             const Lightbox = lightboxMod.default || lightboxMod.PhotoSwipeLightbox || lightboxMod;
             const PhotoSwipe = pswpMod.default || pswpMod.PhotoSwipe || pswpMod;
             if (typeof window !== 'undefined') {
@@ -360,7 +367,9 @@ export async function ensurePhotoSwipe() {
             try {
                 loadExternalStyle('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css');
                 const [mod, pswpMod] = await Promise.all([
+                    // @ts-expect-error -- Remote CDN ESM fallback has no local type declarations
                     import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js'),
+                    // @ts-expect-error -- Remote CDN ESM fallback has no local type declarations
                     import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.esm.min.js')
                 ]);
                 const Lightbox = mod.default || mod.PhotoSwipeLightbox || mod;

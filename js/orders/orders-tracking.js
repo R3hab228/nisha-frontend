@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA NOVA POSHTA LIVE ORDER TRACKING BAR
 // ==========================================
@@ -67,17 +68,22 @@ const TRACK_I18N_FALLBACKS = Object.freeze({
     }
 });
 
+/** @param {string} key */
 function trTrack(key) {
     const lang = getRuntimeSiteLang();
-    const map = TRACK_I18N_FALLBACKS[lang] || TRACK_I18N_FALLBACKS.ua;
-    const def = map[key] || TRACK_I18N_FALLBACKS.ua[key] || '';
+    /** @type {Record<string, Record<string, string>>} */
+    const allMaps = TRACK_I18N_FALLBACKS;
+    const map = allMaps[lang] || TRACK_I18N_FALLBACKS.ua;
+    const def = map[key] || allMaps.ua[key] || '';
     return tSafe(`orders_modal.${key}`, { defaultValue: def }, def);
 }
 
+/** @param {unknown} raw */
 export function normalizeTtnDigits(raw) {
     return String(raw || '').replace(/[^\d]/g, '');
 }
 
+/** @param {unknown} raw */
 export function isTrackableNpTtn(raw) {
     return VALID_TTN_REGEX.test(normalizeTtnDigits(raw));
 }
@@ -85,6 +91,8 @@ export function isTrackableNpTtn(raw) {
 /**
  * Преобразует процент прогресса этапа (0..100 от бэкенда/fallback)
  * в координаты на 4-точечной линейке (0%, 33.333%, 66.666%, 100%).
+ * @param {string} stage
+ * @param {number|string|null|undefined} backendProgress
  */
 function mapStageToRoadPercent(stage, backendProgress) {
     switch (stage) {
@@ -110,6 +118,7 @@ function mapStageToRoadPercent(stage, backendProgress) {
     }
 }
 
+/** @param {unknown} orderStatus */
 export function getFallbackTrackingState(orderStatus) {
     const s = String(orderStatus || '').trim().toLowerCase();
     if (s.includes('возврат') || s.includes('поверн') || s.includes('return')) {
@@ -162,12 +171,18 @@ export function getFallbackTrackingState(orderStatus) {
     };
 }
 
+/**
+ * @param {unknown} ttn
+ * @param {unknown} orderStatus
+ * @param {Record<string, any> | null} [liveDoc]
+ */
 export function resolveTrackingDisplayState(ttn, orderStatus, liveDoc = null) {
     const cleanTtn = normalizeTtnDigits(ttn);
     const cachedEntry = liveDoc || (cleanTtn ? trackingCache.get(cleanTtn)?.data : null) || null;
     const fallback = getFallbackTrackingState(orderStatus);
 
     if (!cachedEntry || !cachedEntry.stage) {
+        /** @type {Record<string, string>} */
         const headlineMap = {
             created: trTrack('track_status_created'),
             in_transit: trTrack('track_status_transit'),
@@ -197,6 +212,7 @@ export function resolveTrackingDisplayState(ttn, orderStatus, liveDoc = null) {
     else if (stage === 'arrived') stepIndex = 2;
     else if (stage === 'delivered' || stage === 'returned') stepIndex = 3;
 
+    /** @type {Record<string, string>} */
     const headlineMap = {
         created: trTrack('track_status_created'),
         in_transit: trTrack('track_status_transit'),
@@ -210,7 +226,7 @@ export function resolveTrackingDisplayState(ttn, orderStatus, liveDoc = null) {
         ? `${routeParts[0]} ➔ ${routeParts[1]}`
         : (routeParts[1] || routeParts[0] || '');
 
-    const shortDate = (raw) => {
+    const shortDate = (/** @type {unknown} */ raw) => {
         const str = String(raw || '').trim();
         if (!str) return '';
         const match = str.match(/(\d{2})[-.](\d{2})[-.](\d{4})/);
@@ -294,6 +310,7 @@ export function buildDeliveryTruckSvg() {
     `.trim();
 }
 
+/** @param {any} state */
 function getStepLabels(state) {
     return [
         trTrack('track_step_created'),
@@ -303,6 +320,7 @@ function getStepLabels(state) {
     ];
 }
 
+/** @param {any} state */
 function buildStepsHtml(state) {
     const labels = getStepLabels(state);
     return labels.map((label, idx) => {
@@ -318,6 +336,7 @@ function buildStepsHtml(state) {
     }).join('');
 }
 
+/** @param {any} state */
 function buildDotsHtml(state) {
     const positions = ['0%', '33.333%', '66.666%', '100%'];
     return positions.map((pos, idx) => {
@@ -335,6 +354,8 @@ function buildDotsHtml(state) {
 
 /**
  * Рендерит HTML-разметку живой полосы трекинга с SVG-грузовиком внутри блока ТТН.
+ * @param {unknown} ttn
+ * @param {unknown} orderStatus
  */
 export function buildOrderTrackingBarHtml(ttn, orderStatus) {
     const cleanTtn = normalizeTtnDigits(ttn);
@@ -397,6 +418,11 @@ export function buildOrderTrackingBarHtml(ttn, orderStatus) {
     `.trim();
 }
 
+/**
+ * @param {HTMLElement | Element | null} trackerEl
+ * @param {unknown} ttn
+ * @param {Record<string, any> | null} liveDoc
+ */
 function applyTrackingStateToDom(trackerEl, ttn, liveDoc) {
     if (!trackerEl) return;
     const orderStatus = trackerEl.getAttribute('data-order-status') || '';
@@ -405,7 +431,9 @@ function applyTrackingStateToDom(trackerEl, ttn, liveDoc) {
 
     trackerEl.setAttribute('data-stage', state.stage);
     trackerEl.setAttribute('data-moving', state.isMoving ? 'true' : 'false');
-    trackerEl.style.setProperty('--np-progress', `${roadPct}%`);
+    if ('style' in trackerEl && trackerEl.style) {
+        /** @type {HTMLElement} */ (trackerEl).style.setProperty('--np-progress', `${roadPct}%`);
+    }
 
     const statusTextEl = trackerEl.querySelector('.np-track-status-text');
     if (statusTextEl) statusTextEl.textContent = state.headline;
@@ -461,6 +489,7 @@ function applyTrackingStateToDom(trackerEl, ttn, liveDoc) {
     }
 }
 
+/** @param {string[]} ttns @param {boolean} [refresh] */
 async function postTrackBatch(ttns, refresh = false) {
     const payload = { ttns, refresh: Boolean(refresh) };
     const apiClient = (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.post === 'function')
@@ -484,6 +513,7 @@ async function postTrackBatch(ttns, refresh = false) {
 /**
  * Догружает актуальные статусы Новой Почты для всех видимых ТТН в модальном окне заказов
  * и плавно переводит SVG-грузовик к актуальному этапу.
+ * @param {{ refresh?: boolean, ttns?: string[] }} [options]
  */
 export async function hydrateVisibleOrderTracking(options = {}) {
     if (typeof document === 'undefined') return {};
@@ -557,6 +587,7 @@ export async function hydrateVisibleOrderTracking(options = {}) {
     return liveMap;
 }
 
+/** @param {unknown} ttn @param {HTMLButtonElement | null} [btnEl] */
 export async function refreshOrderTracking(ttn, btnEl) {
     const cleanTtn = normalizeTtnDigits(ttn);
     if (!VALID_TTN_REGEX.test(cleanTtn)) return;

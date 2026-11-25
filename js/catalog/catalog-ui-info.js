@@ -124,7 +124,20 @@ export async function startOnboardingTour() {
         return;
     }
 
+    let tourPollAttempts = 0;
+    const stopTourPoll = () => {
+        clearInterval(checkAndRun);
+        if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+            window.removeEventListener('pagehide', stopTourPoll);
+        }
+    };
     const checkAndRun = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
+        tourPollAttempts++;
+        if (tourPollAttempts > 120) {
+            stopTourPoll();
+            return;
+        }
         const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
             return hasAction('isElementVisible')
                 ? invokeAction('isElementVisible', el)
@@ -138,13 +151,13 @@ export async function startOnboardingTour() {
 
         const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         if (currentScrollY > 30) {
-            clearInterval(checkAndRun);
+            stopTourPoll();
             store.set('nisha_tour_done', 'true');
             flushPendingBroadcast();
             return;
         }
 
-        clearInterval(checkAndRun);
+        stopTourPoll();
         const isMobile = window.innerWidth <= 900;
         const firstStar = document.querySelector('.item-card .fav-star');
         const firstCartBtn = document.querySelector('.item-card .grid-cart-btn');
@@ -192,6 +205,9 @@ export async function startOnboardingTour() {
         _activeDriverTour = driverObj;
         driverObj.drive();
     }, 500);
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+        window.addEventListener('pagehide', stopTourPoll, { once: true });
+    }
 }
 
 registerActions({

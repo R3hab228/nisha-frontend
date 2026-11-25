@@ -19,7 +19,7 @@ import { renderNextBatch } from './catalog-grid.js';
 import { isItemBargainEnabled } from './catalog-card-markup.js';
 import { renderActiveFilterChips, removeActiveFilterChip } from './catalog-filter-chips.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeFavorites, isSiteHackedMode } from '../core/runtime-env.js';
+import { getRuntimeFavorites, isSiteHackedMode, tSafe } from '../core/runtime-env.js';
 
 export {
     updateSidebarCounters,
@@ -376,8 +376,16 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             }
 
             if (window.filteredItems.length === 0) {
-                const noItemsMsg = typeof i18next !== 'undefined' ? i18next.t('search.no_items', { defaultValue: 'ТОВАРОВ НЕ НАЙДЕНО' }) : 'ТОВАРОВ НЕ НАЙДЕНО';
-                if (grid) grid.innerHTML = `<div class="catalog-empty-state">[ ${noItemsMsg} ]</div>`;
+                const noItemsMsg = tSafe('search.no_items', { defaultValue: 'ТОВАРОВ НЕ НАЙДЕНО' });
+                const emptyHint = tSafe('search.no_items_hint', { defaultValue: 'Попробуйте изменить запрос или сбросить активные фильтры' });
+                const resetBtnText = tSafe('search.reset_filters', { defaultValue: 'СБРОСИТЬ ФИЛЬТРЫ' });
+                const hasCatalogItems = Array.isArray(window.allItems) && window.allItems.length > 0;
+                const resetHtml = hasCatalogItems
+                    ? `<div class="catalog-empty-hint">${emptyHint}</div><button type="button" class="catalog-empty-reset-btn btn-target" data-action="reset-to-main">[ ${resetBtnText} ]</button>`
+                    : '';
+                if (grid) {
+                    grid.innerHTML = `<div class="catalog-empty-state"><div class="catalog-empty-title">[ ${noItemsMsg} ]</div>${resetHtml}</div>`;
+                }
             } else {
                 let targetMobileCount = 0;
                 if (preserveViewport) {

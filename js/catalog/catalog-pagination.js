@@ -157,7 +157,7 @@ export function insertNewItemCardSmoothly(item) {
         if (!nameMatch && !brandMatch) return;
     }
 
-    const emptyPlaceholder = grid.querySelector('div[style*="grid-column: 1/-1"]');
+    const emptyPlaceholder = grid.querySelector('.catalog-empty-state, div[style*="grid-column: 1/-1"]');
     if (emptyPlaceholder) emptyPlaceholder.remove();
 
     if (!Array.isArray(window.filteredItems)) window.filteredItems = [];
