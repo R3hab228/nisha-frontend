@@ -51,6 +51,9 @@ describe('Modular Orders Suite (js/orders/orders-*.js)', () => {
     beforeEach(() => {
         globalThis.window = globalThis.window || globalThis;
         window.store = store;
+        window.currentSiteLang = 'ua';
+        delete window.i18next;
+        globalThis.i18next = undefined;
         store.set('globalOrdersData', []);
         store.set('currentOrderTab', 'accepted');
         window.JsBarcode = vi.fn();

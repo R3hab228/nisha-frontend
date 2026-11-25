@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CART, CHECKOUT & DELIVERY MODULE (MODULAR ENTRYPOINT)
 // Порядок импортов строго сохраняет порядок инициализации и side-effects.

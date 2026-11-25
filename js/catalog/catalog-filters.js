@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — ФИЛЬТРЫ, ПОИСК, СОРТИРОВКА И САЙДБАР
 // ==========================================
@@ -17,7 +18,7 @@ import {
 } from './catalog-sidebar-ui.js';
 import { renderNextBatch } from './catalog-grid.js';
 import { getItemSortMeta } from './catalog-pagination.js';
-import { isItemBargainEnabled } from './catalog-card-markup.js';
+import { isItemBargainEnabled, escCardHtml } from './catalog-card-markup.js';
 import { renderActiveFilterChips, removeActiveFilterChip } from './catalog-filter-chips.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeFavorites, isSiteHackedMode, tSafe } from '../core/runtime-env.js';
@@ -31,12 +32,14 @@ export {
     removeActiveFilterChip
 };
 
+/** @type {ReturnType<typeof setTimeout> | null} */
 let applyFiltersTimeout = null;
+/** @type {(() => void) | null} */
 let _resolveApplyFilters = null;
 
 /**
  * Проверяет соответствие товара (или строки размера) выбранному фильтру размера.
- * @param {object|string} itemOrSize
+ * @param {{ size?: any, category?: any } | string} itemOrSize
  * @param {string} filterVal
  * @returns {boolean}
  */
@@ -127,9 +130,12 @@ export function itemMatchesSizeFilter(itemOrSize, filterVal) {
 }
 
 // Кэшированный инстанс Fuse.js для каталога (устраняет создание индекса на каждое нажатие клавиши)
+/** @type {any} */
 let _catalogFuseCache = null;
+/** @type {any} */
 let _catalogFuseItemsRef = null;
 
+/** @param {any[]} items */
 function getCatalogFuse(items) {
     if (!_catalogFuseCache || _catalogFuseItemsRef !== items) {
         _catalogFuseItemsRef = items;
@@ -137,7 +143,8 @@ function getCatalogFuse(items) {
             includeScore: true, threshold: 0.4, ignoreLocation: true, useExtendedSearch: true,
             keys: [{ name: 'tags', weight: 1.0 }, { name: 'brand', weight: 0.8 }, { name: 'name', weight: 0.8 }, { name: 'size', weight: 0.8 }, { name: 'category', weight: 0.2 }]
         };
-        _catalogFuseCache = new Fuse(items, fuseOptions);
+        const FuseCtor = /** @type {any} */ (globalThis).Fuse;
+        _catalogFuseCache = new FuseCtor(items, fuseOptions);
     }
     return _catalogFuseCache;
 }
@@ -171,7 +178,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
         grid.classList.add('fade-out');
     }
 
-    clearTimeout(applyFiltersTimeout);
+    if (applyFiltersTimeout !== null) clearTimeout(applyFiltersTimeout);
     const delay = (immediate || preserveViewport || isInitialRender) ? 0 : 160;
     const filterSeq = ++_applyFiltersSeq;
 
@@ -179,26 +186,32 @@ export function applyFilters(immediate = false, preserveViewport = false) {
         _resolveApplyFilters();
         _resolveApplyFilters = null;
     }
-    const { promise, resolve } = Promise.withResolvers();
+    const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (Promise.withResolvers());
     _resolveApplyFilters = resolve;
     applyFiltersTimeout = setTimeout(async () => {
         try {
             if (filterSeq !== _applyFiltersSeq) return;
-            const searchInput = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
+            const g = /** @type {any} */ (globalThis);
+            const searchInput = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('mainSearch') : null);
             const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            const checkedSizes = typeof document !== 'undefined' ? Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => cb.value) : [];
-            const onlySale = typeof document !== 'undefined' && document.getElementById('onlySaleCb') ? document.getElementById('onlySaleCb').checked : false;
-            const onlyBargain = typeof document !== 'undefined' && document.getElementById('onlyBargainCb') ? document.getElementById('onlyBargainCb').checked : false;
-            const hideUnavailable = typeof document !== 'undefined' && document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
+            const checkedSizes = typeof document !== 'undefined'
+                ? Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => /** @type {HTMLInputElement} */ (cb).value)
+                : [];
+            const onlySaleEl = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('onlySaleCb') : null);
+            const onlyBargainEl = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('onlyBargainCb') : null);
+            const hideUnavailableEl = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('hideUnavailableCb') : null);
+            const onlySale = onlySaleEl ? onlySaleEl.checked : false;
+            const onlyBargain = onlyBargainEl ? onlyBargainEl.checked : false;
+            const hideUnavailable = hideUnavailableEl ? hideUnavailableEl.checked : false;
 
-            const minInput = typeof document !== 'undefined' ? document.getElementById('priceMin') : null;
-            const maxInput = typeof document !== 'undefined' ? document.getElementById('priceMax') : null;
+            const minInput = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('priceMin') : null);
+            const maxInput = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('priceMax') : null);
             const rawMin = minInput ? Number.parseInt(minInput.value, 10) : NaN;
             const minPrice = (Number.isFinite(rawMin) && rawMin >= 0) ? rawMin : 0;
             const rawMax = maxInput ? Number.parseInt(maxInput.value, 10) : NaN;
             const maxPrice = (Number.isFinite(rawMax) && rawMax > 0) ? rawMax : Infinity;
 
-            const getSafePrice = (price) => Number.parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
+            const getSafePrice = (/** @type {any} */ price) => Number.parseInt(String(price).replace(/[^\d]/g, ''), 10) || 0;
             let userFavs = getRuntimeFavorites();
             if (!userFavs || userFavs.length === 0) {
                 const store = getCatalogStore();
@@ -254,17 +267,18 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                         const matchedIds = await searchWorker.searchCatalog(cleanSearchTerm, candidateIds);
                         if (filterSeq !== _applyFiltersSeq) return;
                         const itemMap = new Map(window.filteredItems.map(i => [i.id, i]));
-                        window.filteredItems = matchedIds.map(id => itemMap.get(id)).filter(Boolean);
+                        window.filteredItems = matchedIds.map((/** @type {any} */ id) => itemMap.get(id)).filter(Boolean);
                     } else {
-                        const priceQuery = (typeof parsePriceSearchQuery === 'function')
-                            ? parsePriceSearchQuery(cleanSearchTerm)
+                        const priceQuery = (typeof g.parsePriceSearchQuery === 'function')
+                            ? g.parsePriceSearchQuery(cleanSearchTerm)
                             : (hasAction('parsePriceSearchQuery') ? invokeAction('parsePriceSearchQuery', cleanSearchTerm) : null);
-                        const canCheckPrice = typeof itemMatchesPrice === 'function' || hasAction('itemMatchesPrice');
-                        const checkPriceFn = (itm, pq) => (typeof itemMatchesPrice === 'function'
-                            ? itemMatchesPrice(itm, pq)
+                        const canCheckPrice = typeof g.itemMatchesPrice === 'function' || hasAction('itemMatchesPrice');
+                        const checkPriceFn = (/** @type {any} */ itm, /** @type {any} */ pq) => (typeof g.itemMatchesPrice === 'function'
+                            ? g.itemMatchesPrice(itm, pq)
                             : invokeAction('itemMatchesPrice', itm, pq));
 
                         const matchedIds = new Set();
+                        /** @type {any[]} */
                         const finalResults = [];
 
                         if (priceQuery && canCheckPrice) {
@@ -278,15 +292,15 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                             });
                         }
 
-                        const queryVariants = (typeof expandSearchQuery === 'function')
-                            ? expandSearchQuery(cleanSearchTerm)
+                        const queryVariants = (typeof g.expandSearchQuery === 'function')
+                            ? g.expandSearchQuery(cleanSearchTerm)
                             : [cleanSearchTerm.toLowerCase()];
 
-                        if (typeof Fuse !== 'undefined') {
+                        if (typeof g.Fuse !== 'undefined') {
                             const fuse = getCatalogFuse(window.filteredItems);
                             for (const variant of queryVariants) {
                                 const found = fuse.search(variant);
-                                found.forEach(res => {
+                                found.forEach((/** @type {any} */ res) => {
                                     if (res.item && res.item.status === 'sold') return;
                                     if (!matchedIds.has(res.item.id)) {
                                         matchedIds.add(res.item.id);
@@ -302,7 +316,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                                 const name = (item.name || '').toLowerCase();
                                 const brand = (item.brand || '').toLowerCase();
                                 const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : (item.tags || '').toLowerCase();
-                                return queryVariants.some(q => name.includes(q) || brand.includes(q) || tags.includes(q));
+                                return queryVariants.some((/** @type {string} */ q) => name.includes(q) || brand.includes(q) || tags.includes(q));
                             });
                         }
                     }
@@ -314,18 +328,18 @@ export function applyFilters(immediate = false, preserveViewport = false) {
 
             // 3. Сортировка (кэшированные _ts / _priceNum через WeakMap без повторных Date.parse)
             const now = Date.now();
-            const isItemTop = (item) => item && item.is_top === true && getItemSortMeta(item).topUntilTs > now;
+            const isItemTop = (/** @type {any} */ item) => item && item.is_top === true && getItemSortMeta(item).topUntilTs > now;
             const sortCheap = typeof document !== 'undefined' ? document.getElementById('sort-cheap') : null;
 
             const comparator = (sortCheap && sortCheap.classList.contains('active-sort'))
-                ? (a, b) => {
+                ? (/** @type {any} */ a, /** @type {any} */ b) => {
                     const topA = isItemTop(a);
                     const topB = isItemTop(b);
                     if (topA && !topB) return -1;
                     if (!topA && topB) return 1;
                     return getItemSortMeta(a).priceNum - getItemSortMeta(b).priceNum;
                 }
-                : (a, b) => {
+                : (/** @type {any} */ a, /** @type {any} */ b) => {
                     const topA = isItemTop(a);
                     const topB = isItemTop(b);
                     if (topA && !topB) return -1;
@@ -333,9 +347,12 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                     return getItemSortMeta(b).createdTs - getItemSortMeta(a).createdTs;
                 };
 
-            window.filteredItems = hasAction('toSorted')
-                ? invokeAction('toSorted', window.filteredItems, comparator)
-                : (window.filteredItems.toSorted ? window.filteredItems.toSorted(comparator) : [...window.filteredItems].sort(comparator));
+            const preSortItems = window.filteredItems || [];
+            /** @type {any[]} */
+            const sortedItems = hasAction('toSorted')
+                ? invokeAction('toSorted', preSortItems, comparator)
+                : (preSortItems.toSorted ? preSortItems.toSorted(comparator) : [...preSortItems].sort(comparator));
+            window.filteredItems = sortedItems;
 
             if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
             if (filterSeq !== _applyFiltersSeq) return;
@@ -344,9 +361,9 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             const prevRenderedCount = window.renderedCount || 0;
             const prevPage = window.currentPage || 1;
             const batchSizeNow = window.innerWidth <= 900 ? 12 : 15;
-            const maxPageNow = Math.max(1, Math.ceil(window.filteredItems.length / batchSizeNow));
+            const maxPageNow = Math.max(1, Math.ceil(sortedItems.length / batchSizeNow));
 
-            const savedScrollState = (isInitialRender && !preserveViewport) ? getSavedFeedScrollState() : null;
+            const savedScrollState = /** @type {any} */ ((isInitialRender && !preserveViewport) ? getSavedFeedScrollState() : null);
             const canRestoreScroll = Boolean(
                 savedScrollState &&
                 savedScrollState.scrollY > 80 &&
@@ -373,10 +390,10 @@ export function applyFilters(immediate = false, preserveViewport = false) {
 
             const countEl = typeof document !== 'undefined' ? document.getElementById('itemCount') : null;
             if (countEl) {
-                countEl.textContent = window.filteredItems.length;
+                /** @type {any} */ (countEl).textContent = sortedItems.length;
             }
 
-            if (window.filteredItems.length === 0) {
+            if (sortedItems.length === 0) {
                 const noItemsMsg = tSafe('search.no_items', { defaultValue: 'ТОВАРОВ НЕ НАЙДЕНО' });
                 const emptyHint = tSafe('search.no_items_hint', { defaultValue: 'Попробуйте изменить запрос или сбросить активные фильтры' });
                 const resetBtnText = tSafe('search.reset_filters', { defaultValue: 'СБРОСИТЬ ФИЛЬТРЫ' });
@@ -405,7 +422,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             // Обновляем URL параметры
             if (typeof window !== 'undefined' && window.location && window.history) {
                 try {
-                    const url = new URL(window.location);
+                    const url = new URL(String(window.location));
                     if (curCat) url.searchParams.set('cat', curCat); else url.searchParams.delete('cat');
                     if (searchTerm) url.searchParams.set('q', searchTerm); else url.searchParams.delete('q');
                     if (onlySale) url.searchParams.set('sale', '1'); else url.searchParams.delete('sale');
@@ -449,7 +466,10 @@ export function applyFilters(immediate = false, preserveViewport = false) {
         } catch (err) {
             console.error('ОШИБКА ФИЛЬТРАЦИИ:', err);
             if (grid) {
-                const safeRenderErr = escCardHtml(err?.message || 'Unknown error');
+                const errMsg = err instanceof Error
+                    ? err.message
+                    : (err && typeof err === 'object' && 'message' in err ? String(/** @type {any} */ (err).message) : 'Unknown error');
+                const safeRenderErr = escCardHtml(errMsg || 'Unknown error');
                 grid.innerHTML = `<div class="catalog-error-state">[ ОШИБКА РЕНДЕРА: ${safeRenderErr} ]</div>`;
                 grid.classList.remove('fade-out');
             }
@@ -466,6 +486,7 @@ export function applyFilters(immediate = false, preserveViewport = false) {
 // Автоматическая перерисовка каталога при смене режима экрана (ПК <-> мобильный, брейкпоинт 900px)
 function initCatalogBreakpointWatcher() {
     if (typeof window === 'undefined') return;
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let resizeTimer = null;
     const checkBreakpoint = () => {
         const nowMobile = window.innerWidth <= 900;
@@ -477,7 +498,7 @@ function initCatalogBreakpointWatcher() {
         applyFilters(true, false);
     };
     const scheduleCheck = () => {
-        clearTimeout(resizeTimer);
+        if (resizeTimer !== null) clearTimeout(resizeTimer);
         resizeTimer = setTimeout(checkBreakpoint, 150);
     };
     window.addEventListener('resize', scheduleCheck, { passive: true });
@@ -507,7 +528,7 @@ export function sortItems(type) {
         const targetSort = document.getElementById('sort-' + type);
         if (targetSort) targetSort.classList.add('active-sort');
 
-        const countEl = document.getElementById('itemCount');
+        const countEl = /** @type {(HTMLElement & { _sortFlashCtrl?: AbortController | null }) | null} */ (document.getElementById('itemCount'));
         if (countEl) {
             if (countEl._sortFlashCtrl) {
                 try { countEl._sortFlashCtrl.abort(); } catch {}
@@ -519,6 +540,7 @@ export function sortItems(type) {
             countEl.style.opacity = '0.2';
             countEl.style.color = 'var(--accent-yellow)';
 
+            /** @type {ReturnType<typeof setTimeout> | null} */
             let fallbackTimer = null;
             const restoreCountStyle = () => {
                 if (fallbackTimer) {
@@ -555,7 +577,7 @@ export function sortItems(type) {
         await applyFilters(true, false);
     };
 
-    const scrollGridIntoView = (tr) => {
+    const scrollGridIntoView = (/** @type {any} */ tr) => {
         const onFinish = () => {
             const grid = document.getElementById('itemsGrid');
             if (grid) {

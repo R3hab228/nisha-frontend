@@ -4,7 +4,8 @@
       "@/*": ["./src/*"],
       "@modules/*": ["./src/modules/*"]
     },
-    "target": "ES2022",
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowJs": true,

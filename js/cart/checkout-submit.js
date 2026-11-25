@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CHECKOUT — VALIDATION, EMAIL PROMPT & ORDER EXECUTION
 // ==========================================
@@ -42,7 +43,7 @@ export function normalizeOrderPhone(raw) {
 
 /**
  * Подсвечивает ошибочное поле ввода и снимает подсветку при первом изменении.
- * @param {HTMLElement|null} inputEl
+ * @param {(HTMLElement & { _clearErrorCtrl?: AbortController | null }) | null} inputEl
  */
 export function highlightFieldError(inputEl) {
     if (!inputEl) return;
@@ -74,25 +75,26 @@ export function highlightFieldError(inputEl) {
 export async function submitOrder() {
     if (cartState.isOrderSubmitting) return;
     if (hasAction('triggerVibration')) invokeAction('triggerVibration', 150);
-    const botTrap = document.getElementById('botTrap');
+    const g = /** @type {any} */ (globalThis);
+    const botTrap = /** @type {HTMLInputElement | null} */ (document.getElementById('botTrap'));
     if (botTrap && botTrap.value !== '') return;
 
     const activeUser = getRuntimeUser();
     const activeProfile = getRuntimeProfile();
     if (activeUser && activeProfile && activeProfile.phone && activeProfile.phone.trim()) {
-        const ordPhone = document.getElementById('orderPhone');
+        const ordPhone = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
         if (ordPhone) ordPhone.value = activeProfile.phone.trim();
         window.otpVerified = true;
-    } else if (typeof getUserPhone === 'function') {
-        const uPhone = getUserPhone();
+    } else if (typeof g.getUserPhone === 'function') {
+        const uPhone = g.getUserPhone();
         if (uPhone) {
-            const ordPhone = document.getElementById('orderPhone');
+            const ordPhone = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
             if (ordPhone && !ordPhone.value.trim()) ordPhone.value = uPhone;
             window.otpVerified = true;
         }
     }
 
-    const trackAttempt = (stage, reason = '') => {
+    const trackAttempt = (/** @type {string} */ stage, reason = '') => {
         if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackCheckoutAttempt === 'function') {
             window.analytics.trackCheckoutAttempt({
                 stage,
@@ -102,36 +104,36 @@ export async function submitOrder() {
         }
     };
 
-    const isVerified = window.otpVerified || (typeof otpVerified !== 'undefined' && otpVerified);
+    const isVerified = Boolean(window.otpVerified || g.otpVerified);
     if (!isVerified) {
         trackAttempt('validation_failed', 'phone_unverified');
         const verifyPhoneMsg = tSafe('checkout.verify_phone_first', 'Подтвердите номер телефона!');
-        showToast(verifyPhoneMsg, 'error');
+        showToast?.(verifyPhoneMsg, 'error');
         return;
     }
 
-    const rawName = document.getElementById('orderName').value.trim();
-    const cleanLettersName = rawName.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '').trim();
-    const rawCity = document.getElementById('orderCity').value.trim();
-    const rawBranch = document.getElementById('orderBranch').value.trim();
+    const nameInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderName'));
+    const phoneInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
+    const cityInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
+    const branchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
 
-    const sanitize = resolveAction('sanitizeText') || ((s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
+    const rawName = (nameInput ? nameInput.value : '').trim();
+    const cleanLettersName = rawName.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '').trim();
+    const rawCity = (cityInput ? cityInput.value : '').trim();
+    const rawBranch = (branchInput ? branchInput.value : '').trim();
+
+    const sanitize = resolveAction('sanitizeText') || ((/** @type {any} */ s) => String(s || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
     const name = sanitize(cleanLettersName);
     const city = sanitize(rawCity);
     const branch = sanitize(rawBranch);
 
-    const phoneRaw = document.getElementById('orderPhone').value;
+    const phoneRaw = phoneInput ? phoneInput.value : '';
     const phone = normalizeOrderPhone(phoneRaw);
-
-    const nameInput = document.getElementById('orderName');
-    const phoneInput = document.getElementById('orderPhone');
-    const cityInput = document.getElementById('orderCity');
-    const branchInput = document.getElementById('orderBranch');
 
     if (!name || name.length < 2) {
         trackAttempt('validation_failed', 'invalid_name');
         highlightFieldError(nameInput);
-        showToast(tSafe('messages.req_fields', 'Введите ваше имя (от 2 букв)!'), 'error');
+        showToast?.(tSafe('messages.req_fields', 'Введите ваше имя (от 2 букв)!'), 'error');
         return;
     }
 
@@ -140,7 +142,7 @@ export async function submitOrder() {
     if (!phone || !isValidUAPhone) {
         trackAttempt('validation_failed', 'invalid_phone');
         highlightFieldError(phoneInput);
-        showToast(tSafe('messages.valid_phone', 'Введите полный номер телефона (+380...)!'), 'error');
+        showToast?.(tSafe('messages.valid_phone', 'Введите полный номер телефона (+380...)!'), 'error');
         return;
     }
 
@@ -161,7 +163,7 @@ export async function submitOrder() {
         trackAttempt('validation_failed', 'missing_city');
         highlightFieldError(cityInput);
         const chooseCityMsg = tSafe('checkout.choose_city_from_dropdown', 'Выберите Город строго из выпадающего списка!');
-        showToast(chooseCityMsg, 'error');
+        showToast?.(chooseCityMsg, 'error');
         return;
     }
 
@@ -182,7 +184,7 @@ export async function submitOrder() {
         trackAttempt('validation_failed', 'missing_branch');
         highlightFieldError(branchInput);
         const chooseBranchMsg = tSafe('checkout.choose_branch_from_dropdown', 'Выберите Отделение или Поштомат из выпадающего списка!');
-        showToast(chooseBranchMsg, 'error');
+        showToast?.(chooseBranchMsg, 'error');
         return;
     }
 
@@ -240,21 +242,28 @@ export async function executeOrderFinal(emailToSave) {
             <div id="btnProgressBar" class="checkout-submit-progress"></div>
         `;
 
+        const g = /** @type {any} */ (globalThis);
         const scheduleBarStart = typeof requestAnimationFrame === 'function'
             ? requestAnimationFrame
-            : (cb) => setTimeout(cb, 0);
+            : (/** @type {() => void} */ cb) => setTimeout(cb, 0);
         scheduleBarStart(() => {
             const bar = document.getElementById('btnProgressBar');
             if (bar) bar.style.width = '90%';
         });
 
-        const rawName = document.getElementById('orderName').value.trim();
+        const orderNameEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderName'));
+        const orderPhoneEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
+        const orderCityEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
+        const orderBranchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
+        const orderPaymentEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPaymentMethod'));
+
+        const rawName = (orderNameEl ? orderNameEl.value : '').trim();
         const name = rawName.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ\s\-'\u2019]/g, '').trim();
-        const phoneRaw = document.getElementById('orderPhone').value;
+        const phoneRaw = orderPhoneEl ? orderPhoneEl.value : '';
         const phone = normalizeOrderPhone(phoneRaw);
-        const city = document.getElementById('orderCity').value.trim();
-        const branch = document.getElementById('orderBranch').value.trim();
-        const rawPaymentVal = document.getElementById('orderPaymentMethod') ? document.getElementById('orderPaymentMethod').value : '';
+        const city = (orderCityEl ? orderCityEl.value : '').trim();
+        const branch = (orderBranchEl ? orderBranchEl.value : '').trim();
+        const rawPaymentVal = orderPaymentEl ? orderPaymentEl.value : '';
         const lowerPmVal = String(rawPaymentVal || '').toLowerCase();
         const paymentMethod = (lowerPmVal.includes('200') || lowerPmVal.includes('налож') || lowerPmVal.includes('наклад') || lowerPmVal.includes('delivery') || lowerPmVal.includes('cod'))
             ? 'Наложка (предоплата 200грн)'
@@ -288,7 +297,7 @@ export async function executeOrderFinal(emailToSave) {
             const cityInput = document.getElementById('orderCity');
             highlightFieldError(cityInput);
             const chooseCityMsg = tSafe('checkout.choose_city_from_dropdown', 'Выберите Город строго из выпадающего списка!');
-            showToast(chooseCityMsg, 'error');
+            showToast?.(chooseCityMsg, 'error');
             return;
         }
         if (!branch || !branchRef) {
@@ -297,7 +306,7 @@ export async function executeOrderFinal(emailToSave) {
             const branchInput = document.getElementById('orderBranch');
             highlightFieldError(branchInput);
             const chooseBranchMsg = tSafe('checkout.choose_branch_from_dropdown', 'Выберите Отделение или Поштомат из выпадающего списка!');
-            showToast(chooseBranchMsg, 'error');
+            showToast?.(chooseBranchMsg, 'error');
             return;
         }
 
@@ -330,7 +339,7 @@ export async function executeOrderFinal(emailToSave) {
             });
             let createdAtIso = new Date().toISOString();
             let handledViaAtomicServer = false;
-            const saveDeliveryCheckbox = document.getElementById('saveDeliveryToProfileCheckbox');
+            const saveDeliveryCheckbox = /** @type {HTMLInputElement | null} */ (document.getElementById('saveDeliveryToProfileCheckbox'));
             const shouldSaveToProfile = !!(user && (!saveDeliveryCheckbox || saveDeliveryCheckbox.checked));
 
             // 1. ОСНОВНОЙ ПУТЬ: Атомарное оформление через защищенный сервер (/api/create-order)
@@ -368,15 +377,15 @@ export async function executeOrderFinal(emailToSave) {
                     handledViaAtomicServer = true;
                 } else if (serverOrderRes && !serverOrderRes.success) {
                     if (serverOrderRes.code === 'ITEM_UNAVAILABLE') {
-                        const unavailIds = new Set((serverOrderRes.unavailableItems || []).map(u => String(u.id)));
+                        const unavailIds = new Set((serverOrderRes.unavailableItems || []).map((/** @type {any} */ u) => String(u.id)));
                         const updatedCart = unavailIds.size > 0
                             ? currentCart.filter(ci => !unavailIds.has(String(ci.id)))
                             : currentCart;
                         setActiveCart(updatedCart);
                         await syncCartToServer();
                         updateCartUI();
-                        if (updatedCart.length === 0 && typeof closeModal === 'function') {
-                            closeModal('checkoutModal');
+                        if (updatedCart.length === 0 && typeof g.closeModal === 'function') {
+                            g.closeModal('checkoutModal');
                         }
                         throw new Error(serverOrderRes.message || 'Один из товаров уже куплен другим покупателем!');
                     }
@@ -385,7 +394,9 @@ export async function executeOrderFinal(emailToSave) {
                     }
                 }
             } catch (serverErr) {
-                const errMsg = serverErr && serverErr.message ? String(serverErr.message) : '';
+                const errMsg = serverErr instanceof Error
+                    ? serverErr.message
+                    : (serverErr && typeof serverErr === 'object' && 'message' in serverErr ? String(/** @type {any} */ (serverErr).message) : '');
                 if (
                     errMsg.includes('уже кто-то купил') ||
                     errMsg.includes('уже куплен') ||
@@ -400,10 +411,10 @@ export async function executeOrderFinal(emailToSave) {
                 ) {
                     cartState.isOrderSubmitting = false;
                     resetSubmitButton();
-                    showToast(errMsg, 'error');
+                    showToast?.(errMsg, 'error');
                     return;
                 }
-                console.warn('[ЗАКАЗ] Серверный /api/create-order недоступен, используем прямой RPC фоллбэк:', serverErr.message);
+                console.warn('[ЗАКАЗ] Серверный /api/create-order недоступен, используем прямой RPC фоллбэк:', errMsg);
             }
 
             // 2. РЕЗЕРВНЫЙ ПУТЬ (если сервер Render перезагружается): Прямой транзакционный RPC в Supabase
@@ -414,10 +425,11 @@ export async function executeOrderFinal(emailToSave) {
                     cartState.isOrderSubmitting = false;
                     resetSubmitButton();
                     const chooseCityBranchMsg = tSafe('checkout.choose_city_branch_from_dropdown', 'Выберите Город и Отделение строго из выпадающего списка!');
-                    showToast(chooseCityBranchMsg, 'error');
+                    showToast?.(chooseCityBranchMsg, 'error');
                     return;
                 }
 
+                /** @type {Record<string, any>} */
                 const rpcParams = {
                     p_user_id: user ? user.id : null,
                     p_name: name,
@@ -469,7 +481,7 @@ export async function executeOrderFinal(emailToSave) {
                     paymentMethod
                 });
             } else if (window.ttq) {
-                ttq.track('CompletePayment', {
+                window.ttq.track('CompletePayment', {
                     contents: currentCart.map(i => ({ content_id: i.id, content_name: i.name })),
                     value: finalTotalSum,
                     currency: 'UAH'
@@ -514,13 +526,14 @@ export async function executeOrderFinal(emailToSave) {
                     items: finalOrderItems,
                     created_at: createdAtIso
                 };
-                cached = [newOrderObj, ...cached.filter(c => c && c.id !== orderId)];
+                cached = [newOrderObj, ...cached.filter((/** @type {any} */ c) => c && c.id !== orderId)];
                 if (store) store.setJSON('nisha_cached_orders', cached);
             } catch {}
 
-            if (Array.isArray(window.allItems) && Array.isArray(finalOrderItems)) {
+            const allItems = window.allItems;
+            if (Array.isArray(allItems) && Array.isArray(finalOrderItems)) {
                 finalOrderItems.forEach(ordered => {
-                    const catItem = window.allItems.find(i => i && String(i.id) === String(ordered.id));
+                    const catItem = allItems.find(i => i && String(i.id) === String(ordered.id));
                     if (catItem) {
                         catItem.status = 'reserved';
                         invokeAction('updateCardDOM', catItem);
@@ -528,7 +541,7 @@ export async function executeOrderFinal(emailToSave) {
                     clearAllBargainState(ordered.id);
                 });
                 invokeAction('updateSidebarCounters');
-                if (typeof renderHistory === 'function') renderHistory();
+                if (typeof g.renderHistory === 'function') g.renderHistory();
             }
 
             setActiveCart([]);
@@ -544,16 +557,16 @@ export async function executeOrderFinal(emailToSave) {
             }
 
             setTimeout(() => {
-                if (typeof closeModal === 'function') closeModal('checkoutModal');
+                if (typeof g.closeModal === 'function') g.closeModal('checkoutModal');
                 btnSubmit.innerHTML = tSafe('checkout.btn_submit', 'ПОДТВЕРДИТЬ ЗАКАЗ');
 
                 const overlay = document.getElementById('orderSuccessOverlay');
                 if (overlay) {
                     overlay.style.display = 'flex';
-                    if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter(overlay);
+                    if (typeof g.triggerModalTypewriter === 'function') g.triggerModalTypewriter(overlay);
                 }
                 invokeAction('playSound', 'tada', { kind: 'celebrate' });
-                if (typeof triggerHaptic === 'function') triggerHaptic('success');
+                if (typeof g.triggerHaptic === 'function') g.triggerHaptic('success');
 
                 setTimeout(() => {
                     if (overlay) overlay.style.display = 'none';
@@ -569,8 +582,11 @@ export async function executeOrderFinal(emailToSave) {
             cartState.isOrderSubmitting = false;
             invokeAction('captureError', err, { action: 'checkout_order_failed', city: city });
             const orderErrPref = tSafe('checkout.order_submit_err', 'Ошибка при оформлении: ');
-            if (typeof triggerHaptic === 'function') triggerHaptic('error');
-            showToast(orderErrPref + err.message, 'error');
+            if (typeof g.triggerHaptic === 'function') g.triggerHaptic('error');
+            const errMessage = err instanceof Error
+                ? err.message
+                : (err && typeof err === 'object' && 'message' in err ? String(/** @type {any} */ (err).message) : String(err));
+            showToast?.(orderErrPref + errMessage, 'error');
             btnSubmit.innerHTML = tSafe('checkout.btn_submit', 'ПОДТВЕРДИТЬ ЗАКАЗ');
             btnSubmit.style.pointerEvents = 'auto';
             btnSubmit.style.opacity = '1';

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE SESSION, REALTIME & CART SYNC MODULE
 // ==========================================
@@ -14,13 +15,19 @@ import {
 } from './profile-state.js';
 import { loadFavorites, updateFavBadge } from './profile-favorites.js';
 
+/**
+ * @param {string} fnName
+ * @param {any[]} [args]
+ * @param {{ skipIfLazyStub?: boolean }} [options]
+ */
 function callProfileModalFn(fnName, args = [], { skipIfLazyStub = false } = {}) {
-    const fn = getGlobalFn(fnName);
+    const fn = /** @type {any} */ (getGlobalFn(fnName));
     if (typeof fn !== 'function') return undefined;
     if (skipIfLazyStub && fn._isNishaLazyStub) return undefined;
     return fn(...args);
 }
 
+/** @param {any} str */
 function escProfileHtml(str) {
     const escFn = getGlobalFn('escapeHtml');
     if (escFn) return escFn(str);
@@ -61,7 +68,7 @@ export function openProfileModal() {
     // Повторная синхронизация контактов и данных доставки в модалке при каждом открытии
     const activeUser = profileState.currentUser;
     if (activeUser) {
-        const store = getStore();
+        const store = /** @type {any} */ (getStore());
         const storedPhone = store ? (store.get('nisha_last_phone') || '') : '';
         const storedTg = store ? (store.get('nisha_last_tg') || '') : '';
         const uPhone = (profileState.userProfile?.phone || activeUser.user_metadata?.phone || storedPhone || '').trim();
@@ -98,7 +105,7 @@ export function resetSignedOutProfileUI() {
 
 /**
  * Queries the user's profile row with automatic fallback to legacy schema without delivery columns.
- * @param {object} sb
+ * @param {any} sb
  * @param {string} userId
  * @returns {Promise<{profiles: any[]|null, profileErr: any}>}
  */
@@ -134,7 +141,7 @@ function syncLanguageFromProfile(rawLang) {
     if (!rawLang) return;
     const normFn = getGlobalFn('normalizeSiteLang');
     const normLang = normFn ? normFn(rawLang) : rawLang;
-    const store = getStore();
+    const store = /** @type {any} */ (getStore());
     const currentLang = store ? store.get('nisha_lang', 'ua') : 'ua';
     const changeLangFn = getGlobalFn('changeLanguage');
     const updateFooterFn = getGlobalFn('updateFooterLanguageUI');
@@ -159,8 +166,8 @@ function syncLanguageFromProfile(rawLang) {
 
 /**
  * Resolves and self-heals username across profile table and Supabase user metadata.
- * @param {object} sb
- * @param {object} user
+ * @param {any} sb
+ * @param {any} user
  * @returns {string}
  */
 function resolveAndHealDisplayName(sb, user) {
@@ -209,12 +216,14 @@ function resolveAndHealDisplayName(sb, user) {
     return uName;
 }
 
+/** @param {any} status */
 function isProcessingOrderStatus(status) {
     const s = String(status || '').trim().toLowerCase();
     if (!s) return true;
     return s.includes('обработ') || s.includes('оброб') || s.includes('process') || s === 'новый' || s === 'новий' || s === 'new';
 }
 
+/** @param {any} el */
 function isModalElementOpen(el) {
     if (!el) return false;
     if (el.classList && typeof el.classList.contains === 'function' && el.classList.contains('is-open')) {
@@ -238,6 +247,7 @@ function isUserOnMainFeed() {
     return true;
 }
 
+/** @param {any} orderId */
 function findCachedOrderSnapshot(orderId) {
     if (!orderId) return null;
     if (Array.isArray(window.globalOrdersData)) {
@@ -245,7 +255,7 @@ function findCachedOrderSnapshot(orderId) {
         if (found) return found;
     }
     try {
-        const store = getStore();
+        const store = /** @type {any} */ (getStore());
         const cached = store ? store.getJSON('nisha_cached_orders', []) : [];
         if (Array.isArray(cached)) {
             const found = cached.find(o => o && String(o.id) === String(orderId));
@@ -257,7 +267,7 @@ function findCachedOrderSnapshot(orderId) {
 
 /**
  * Synchronizes incoming order status UPDATE payload with cached orders, modal counters, and catalog items.
- * @param {object} payload
+ * @param {any} payload
  */
 function syncOrderUpdateCachesAndCatalog(payload) {
     if (!payload.new || !payload.new.id) return;
@@ -268,7 +278,7 @@ function syncOrderUpdateCachesAndCatalog(payload) {
         }
     }
     try {
-        const store = getStore();
+        const store = /** @type {any} */ (getStore());
         const cached = store ? store.getJSON('nisha_cached_orders', []) : [];
         if (Array.isArray(cached)) {
             const cIdx = cached.findIndex(o => o && o.id === payload.new.id);
@@ -286,13 +296,14 @@ function syncOrderUpdateCachesAndCatalog(payload) {
         }
     }
 
-    if (Array.isArray(payload.new.items) && payload.new.items.length > 0 && Array.isArray(window.allItems)) {
+    const allItems = window.allItems;
+    if (Array.isArray(payload.new.items) && payload.new.items.length > 0 && Array.isArray(allItems)) {
         const lowerSt = String(payload.new.status || '').toLowerCase();
         const isPaidOrShipped = lowerSt.includes('оплач') || lowerSt.includes('отправ') || lowerSt.includes('заверш');
         const isCancelled = lowerSt.includes('отмен') || lowerSt.includes('возврат');
-        payload.new.items.forEach(orderedItem => {
+        payload.new.items.forEach((/** @type {any} */ orderedItem) => {
             const itId = orderedItem && (orderedItem.id || orderedItem);
-            const catItem = window.allItems.find(i => i && String(i.id) === String(itId));
+            const catItem = allItems.find(i => i && String(i.id) === String(itId));
             if (!catItem) return;
             if (isPaidOrShipped && catItem.status !== 'sold') {
                 catItem.status = 'sold';
@@ -308,7 +319,7 @@ function syncOrderUpdateCachesAndCatalog(payload) {
 
 /**
  * Subscribes to realtime order status & Nova Poshta TTN updates for the signed-in user.
- * @param {object} sb
+ * @param {any} sb
  * @param {string} userId
  */
 export function subscribeOrderStatusUpdates(sb, userId) {
@@ -322,7 +333,7 @@ export function subscribeOrderStatusUpdates(sb, userId) {
             schema: 'public',
             table: 'orders',
             filter: `user_id=eq.${userId}`
-        }, payload => {
+        }, (/** @type {any} */ payload) => {
             const prevSnapshot = findCachedOrderSnapshot(payload.new?.id);
             syncOrderUpdateCachesAndCatalog(payload);
 
@@ -418,7 +429,7 @@ export function subscribeOrderStatusUpdates(sb, userId) {
 
 /**
  * Subscribes to realtime admin answers on user's Q&A product questions.
- * @param {object} sb
+ * @param {any} sb
  * @param {string} userId
  */
 export function subscribeQaUpdates(sb, userId) {
@@ -432,7 +443,7 @@ export function subscribeQaUpdates(sb, userId) {
             schema: 'public',
             table: 'item_questions',
             filter: `user_id=eq.${userId}`
-        }, payload => {
+        }, (/** @type {any} */ payload) => {
             if (payload.new.answer && (!payload.old || !payload.old.answer)) {
                 notifyToast(tProfile('messages.qa_answered', 'Вам ответили на вопрос по товару!'), 'success', null, () => {
                     if (payload.new.item_id) {
@@ -466,7 +477,7 @@ export function subscribeQaUpdates(sb, userId) {
 
 /**
  * Restores or merges abandoned server cart with local cart upon session check.
- * @param {object|null} profile
+ * @param {any} profile
  */
 export async function syncProfileAbandonedCart(profile) {
     let localCart = window.cart || [];
@@ -474,7 +485,7 @@ export async function syncProfileAbandonedCart(profile) {
     if (profile && profile.cart && profile.cart.length > 0) {
         const dbCart = profile.cart;
         if (localCart.length === 0) {
-            localCart = dbCart.map(it => {
+            localCart = dbCart.map((/** @type {any} */ it) => {
                 if (it && typeof it === 'object') {
                     const clean = { ...it };
                     delete clean._isSold;
@@ -488,7 +499,7 @@ export async function syncProfileAbandonedCart(profile) {
             const mergedCart = [...localCart];
             let addedCount = 0;
 
-            dbCart.forEach(dbItem => {
+            dbCart.forEach((/** @type {any} */ dbItem) => {
                 const dbId = String(dbItem?.id || dbItem?.item_id || dbItem).trim();
                 if (!mergedCart.some(it => String(it?.id || it?.item_id || it).trim() === dbId)) {
                     const clean = (dbItem && typeof dbItem === 'object') ? { ...dbItem } : dbItem;
@@ -503,7 +514,7 @@ export async function syncProfileAbandonedCart(profile) {
             if (addedCount > 0) notifyToast(tProfile('messages.cart_synced', 'Корзины синхронизированы'), 'success');
         }
 
-        const store = getStore();
+        const store = /** @type {any} */ (getStore());
         if (store) store.setJSON('nisha_cart', localCart);
         if (syncFn) await syncFn();
     } else if (localCart.length > 0 && syncFn) {
@@ -517,7 +528,7 @@ export async function syncProfileAbandonedCart(profile) {
  * Checks active Supabase session, hydrates profile/contacts/delivery/favorites/cart, and subscribes realtime channels.
  */
 export async function checkSession() {
-    const sb = getSupabase();
+    const sb = /** @type {any} */ (getSupabase());
     if (!sb) return;
 
     try {
@@ -552,7 +563,7 @@ export async function checkSession() {
             if (mProfEmailEl) mProfEmailEl.textContent = uEmail;
         }
 
-        const store = getStore();
+        const store = /** @type {any} */ (getStore());
         const storedPhone = store ? (store.get('nisha_last_phone') || '') : '';
         const storedTg = store ? (store.get('nisha_last_tg') || '') : '';
         const uPhone = (profileState.userProfile?.phone || currentUser.user_metadata?.phone || storedPhone || '').trim();
@@ -604,7 +615,7 @@ export async function checkSession() {
                 window.apiClient.post('/api/link-orders', {
                     userId: currentUser.id,
                     phone: phoneToLink
-                }, { timeout: 8000, dedupe: true }).then((res) => {
+                }, { timeout: 8000, dedupe: true }).then((/** @type {any} */ res) => {
                     if (res && res.success !== false) {
                         try {
                             if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(linkCacheKey, String(Date.now()));

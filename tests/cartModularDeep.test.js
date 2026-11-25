@@ -247,6 +247,7 @@ describe('Modular Cart, Nova Poshta & Checkout Deep Suite (js/cart/*.js)', () =>
         globalThis.renderHistory = vi.fn();
         globalThis.sleep = vi.fn(async () => {});
 
+        vi.resetModules();
         cartMod = await import('../js/cart/cart.js');
     });
 

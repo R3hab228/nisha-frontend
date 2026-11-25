@@ -22,9 +22,11 @@ class MockStorage {
 let store;
 
 beforeAll(async () => {
+    vi.resetModules();
     globalThis.Storage = MockStorage;
     globalThis.localStorage = new MockStorage();
     globalThis.window = globalThis.window || globalThis;
+    globalThis.window.localStorage = globalThis.localStorage;
     if (typeof globalThis.window.addEventListener !== 'function') {
         globalThis.window.addEventListener = vi.fn();
     }
