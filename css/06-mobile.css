@@ -202,7 +202,6 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
         will-change: transform; overscroll-behavior-y: none;
         padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
         box-sizing: border-box;
-        transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
     }
     .modal-overlay.closing .modal-window {
         animation: slideDownMobile 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
@@ -211,8 +210,7 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
         .modal-overlay.is-open .modal-window {
             animation: none;
             transition: opacity 0.19s cubic-bezier(0.16, 1, 0.3, 1),
-                        transform 0.19s cubic-bezier(0.16, 1, 0.3, 1),
-                        max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+                        transform 0.19s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @starting-style {
             .modal-overlay.is-open .modal-window {
@@ -250,6 +248,11 @@ button.is-loading, .is-loading[disabled] { opacity: 0.7; cursor: wait !important
         max-height: var(--vv-height, 100dvh) !important;
         min-height: 0 !important;
         transition: none !important;
+    }
+    html.keyboard-settling .modal-overlay,
+    html.keyboard-settling .modal-window {
+        transition: none !important;
+        animation: none !important;
     }
     html.keyboard-open .custom-dropdown {
         max-height: 180px !important;

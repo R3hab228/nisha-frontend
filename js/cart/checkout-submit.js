@@ -88,13 +88,19 @@ export async function submitOrder() {
     const activeProfile = getRuntimeProfile();
     if (activeUser && activeProfile && activeProfile.phone && activeProfile.phone.trim()) {
         const ordPhone = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
-        if (ordPhone) ordPhone.value = activeProfile.phone.trim();
+        if (ordPhone) {
+            if (typeof g.formatPhoneInput === 'function') g.formatPhoneInput(ordPhone, activeProfile.phone.trim());
+            else ordPhone.value = activeProfile.phone.trim();
+        }
         window.otpVerified = true;
     } else if (typeof g.getUserPhone === 'function') {
         const uPhone = g.getUserPhone();
         if (uPhone) {
             const ordPhone = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
-            if (ordPhone && !ordPhone.value.trim()) ordPhone.value = uPhone;
+            if (ordPhone && !ordPhone.value.trim()) {
+                if (typeof g.formatPhoneInput === 'function') g.formatPhoneInput(ordPhone, uPhone);
+                else ordPhone.value = uPhone;
+            }
             window.otpVerified = true;
         }
     }

@@ -456,6 +456,10 @@ async function initApp() {
         const searchPhoneInput = document.getElementById('ordersSearchPhone');
         if (phoneInput && typeof IMask !== 'undefined') {
             const phoneMask = IMask(phoneInput, { mask: '+{380} (00) 000-00-00' });
+            phoneInput._nishaPhoneMask = phoneMask;
+            if (phoneInput.value && typeof window.formatPhoneInput === 'function') {
+                window.formatPhoneInput(phoneInput);
+            }
             
             function validatePhoneVisual() {
                 const unmasked = phoneMask.unmaskedValue || '';
@@ -491,9 +495,11 @@ async function initApp() {
             }
 
             phoneMask.on('accept', () => {
-                phoneInput.dataset.userTyped = '1';
+                if (!phoneInput._syncingMaskValue) {
+                    phoneInput.dataset.userTyped = '1';
+                }
                 validatePhoneVisual();
-                if (typeof checkPhoneAuth === 'function') checkPhoneAuth();
+                if (!phoneInput._syncingMaskValue && typeof checkPhoneAuth === 'function') checkPhoneAuth();
             });
             phoneInput.addEventListener('blur', validatePhoneVisual);
             phoneInput.addEventListener('focus', validatePhoneVisual);

@@ -231,7 +231,7 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
         updateProposeAndCheckoutFields();
 
         expect(elements.checkoutPhoneWrapper.style.display).toBe('flex');
-        expect(elements.orderPhone.value).toBe('+380991234567');
+        expect(elements.orderPhone.value).toBe('+380 (99) 123-45-67');
         expect(window.otpVerified).toBe(true);
         expect(elements.btnSubmitOrder.style.opacity).toBe('1');
         expect(elements.btnSubmitOrder.style.pointerEvents).toBe('auto');

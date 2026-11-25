@@ -657,3 +657,52 @@ export function setIsSubsetOf(setA, setB) {
     return true;
 }
 exposeGlobal('setIsSubsetOf', setIsSubsetOf);
+
+/**
+ * Formats Ukrainian phone numbers into `+380 (XX) XXX-XX-XX` display mask format.
+ * @param {string|null|undefined} raw
+ * @returns {string}
+ */
+export function formatUaPhoneDisplay(raw) {
+    const trimmed = String(raw ?? '').trim();
+    if (!trimmed) return '';
+    let digits = trimmed.replace(/\D/g, '');
+    if (digits.length === 10 && digits.startsWith('0')) {
+        digits = '38' + digits;
+    } else if (digits.length === 9) {
+        digits = '380' + digits;
+    }
+    if (digits.length === 12 && digits.startsWith('380')) {
+        return `+380 (${digits.slice(3, 5)}) ${digits.slice(5, 8)}-${digits.slice(8, 10)}-${digits.slice(10, 12)}`;
+    }
+    return trimmed;
+}
+exposeGlobal('formatUaPhoneDisplay', formatUaPhoneDisplay);
+
+/**
+ * Applies `+380 (XX) XXX-XX-XX` mask formatting to a phone input and keeps IMask in sync
+ * without falsely marking the field as manually typed.
+ * @param {HTMLInputElement|null|undefined} inputEl
+ * @param {string} [rawValue]
+ * @returns {string}
+ */
+export function formatPhoneInput(inputEl, rawValue) {
+    if (!inputEl) return '';
+    const source = rawValue !== undefined ? rawValue : inputEl.value;
+    const formatted = formatUaPhoneDisplay(source);
+    const mask = inputEl._imask || inputEl._nishaPhoneMask || null;
+    inputEl._syncingMaskValue = true;
+    try {
+        inputEl.value = formatted;
+        if (mask) {
+            try { mask.value = formatted; } catch {}
+            if (typeof mask.updateValue === 'function') {
+                try { mask.updateValue(); } catch {}
+            }
+        }
+    } finally {
+        inputEl._syncingMaskValue = false;
+    }
+    return formatted;
+}
+exposeGlobal('formatPhoneInput', formatPhoneInput);

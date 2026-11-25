@@ -257,7 +257,13 @@ export function handleDelegatedAction(e) {
         case 'verify-orders-phone': {
             const phone = actionEl.getAttribute('data-phone') || '';
             const orderPhoneEl = typeof document !== 'undefined' ? document.getElementById('orderPhone') : null;
-            if (orderPhoneEl) orderPhoneEl.value = phone;
+            if (orderPhoneEl) {
+                if (typeof window !== 'undefined' && typeof window.formatPhoneInput === 'function') {
+                    window.formatPhoneInput(orderPhoneEl, phone);
+                } else {
+                    orderPhoneEl.value = phone;
+                }
+            }
             invokeCompatAction('generate-and-send-otp', 'generateAndSendOTP');
             break;
         }

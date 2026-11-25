@@ -218,8 +218,10 @@ export async function openCheckoutModal() {
             if (branchInput) branchInput.readOnly = false;
             if (nameInput && !nameInput.value.trim() && profileFullName) nameInput.value = profileFullName;
             if (phoneInput && !phoneInput.value.trim() && profilePhone) {
-                phoneInput.value = profilePhone;
-                if (typeof formatPhoneInput === 'function') formatPhoneInput(phoneInput);
+                if (typeof formatPhoneInput === 'function') formatPhoneInput(phoneInput, profilePhone);
+                else phoneInput.value = profilePhone;
+            } else if (phoneInput && phoneInput.value.trim() && typeof formatPhoneInput === 'function') {
+                formatPhoneInput(phoneInput);
             }
         } else {
             restoreCheckoutDraft();
@@ -230,8 +232,10 @@ export async function openCheckoutModal() {
             }
 
             if (phoneInput && !phoneInput.value.trim() && profilePhone) {
-                phoneInput.value = profilePhone;
-                if (typeof formatPhoneInput === 'function') formatPhoneInput(phoneInput);
+                if (typeof formatPhoneInput === 'function') formatPhoneInput(phoneInput, profilePhone);
+                else phoneInput.value = profilePhone;
+            } else if (phoneInput && phoneInput.value.trim() && typeof formatPhoneInput === 'function') {
+                formatPhoneInput(phoneInput);
             }
 
             if (cityInput && !cityInput.value.trim()) {

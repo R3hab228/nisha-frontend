@@ -255,7 +255,11 @@ function updateProposeAndCheckoutFields() {
 
     if (orderPhoneInput && phone) {
         if (!orderPhoneInput.value || !orderPhoneInput.dataset.userTyped) {
-            orderPhoneInput.value = phone;
+            if (typeof window !== 'undefined' && typeof window.formatPhoneInput === 'function') {
+                window.formatPhoneInput(orderPhoneInput, phone);
+            } else {
+                orderPhoneInput.value = phone;
+            }
         }
     }
 

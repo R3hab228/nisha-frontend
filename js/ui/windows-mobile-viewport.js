@@ -264,28 +264,48 @@ export function initMobileKeyboardViewport() {
     _mobileKbBound = true;
 
     const root = document.documentElement;
-    let baselineHeight = window.innerHeight || 0;
+    let baselineHeight = Math.max(window.innerHeight || 0, (window.visualViewport && window.visualViewport.height) || 0);
+    let lastInnerWidth = window.innerWidth || 0;
     let scrollDebounceTimer = null;
+    let settlingTimer = null;
     let vvRafPending = false;
     let lastVvHeight = null;
     let lastKeyboardOpen = null;
 
+    const getVisibleModalScrollHost = () => {
+        if (!document.querySelectorAll) return null;
+        const modals = document.querySelectorAll('.modal-overlay');
+        for (let i = modals.length - 1; i >= 0; i -= 1) {
+            const ov = modals[i];
+            if (ov && (ov.style.display === 'flex' || ov.style.display === 'block' || (ov.classList && ov.classList.contains('is-open')))) {
+                return ov.querySelector('.modal-window') || null;
+            }
+        }
+        return null;
+    };
+
     const updateViewportMetrics = (source = '') => {
         if (window.innerWidth > 900) {
-            if (root && root.classList) root.classList.remove('keyboard-open');
+            if (root && root.classList) {
+                root.classList.remove('keyboard-open');
+                root.classList.remove('keyboard-settling');
+            }
             return;
         }
         const vv = window.visualViewport;
         const currentH = vv ? vv.height : window.innerHeight;
-        const _offsetTop = vv ? vv.offsetTop : 0;
+        const currentW = window.innerWidth || 0;
 
-        const activeEl = document.activeElement;
-        const isInputFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
-        if (!isInputFocused) {
-            baselineHeight = currentH;
+        // Сбрасываем базовую высоту ТОЛЬКО при смене ориентации/ширины, но НЕ при focusout пока клавиатура ещё открыта
+        if (Math.abs(currentW - lastInnerWidth) > 40) {
+            lastInnerWidth = currentW;
+            baselineHeight = Math.max(currentH, window.innerHeight || 0);
         } else if (currentH > baselineHeight) {
             baselineHeight = currentH;
         }
+
+        const activeEl = document.activeElement;
+        const isInputFocused = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'));
         const refHeight = Math.max(baselineHeight, window.innerHeight || 0);
         const kbDelta = refHeight - currentH;
         const isKeyboardOpen = kbDelta > 90 || (isInputFocused && kbDelta > 40);
@@ -298,8 +318,27 @@ export function initMobileKeyboardViewport() {
             }
         }
         if (isKeyboardOpen !== lastKeyboardOpen) {
+            const wasOpen = lastKeyboardOpen === true;
             lastKeyboardOpen = isKeyboardOpen;
-            if (root && root.classList) {
+            if (wasOpen && !isKeyboardOpen) {
+                const modalWin = getVisibleModalScrollHost();
+                const savedScrollTop = modalWin ? modalWin.scrollTop : 0;
+                if (root && root.classList) {
+                    root.classList.add('keyboard-settling');
+                    root.classList.remove('keyboard-open');
+                }
+                if (settlingTimer) clearTimeout(settlingTimer);
+                settlingTimer = setTimeout(() => {
+                    settlingTimer = null;
+                    if (root && root.classList) root.classList.remove('keyboard-settling');
+                }, 280);
+                if (modalWin && typeof requestAnimationFrame === 'function') {
+                    requestAnimationFrame(() => {
+                        const maxScroll = Math.max(0, modalWin.scrollHeight - modalWin.clientHeight);
+                        modalWin.scrollTop = Math.min(savedScrollTop, maxScroll);
+                    });
+                }
+            } else if (root && root.classList) {
                 root.classList.toggle('keyboard-open', isKeyboardOpen);
             }
         }

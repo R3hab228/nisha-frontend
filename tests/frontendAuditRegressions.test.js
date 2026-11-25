@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getOrderTabBucket } from '../js/orders/orders-state.js';
-import { withWebLock } from '../js/core/helpers-core-utils.js';
+import { withWebLock, formatUaPhoneDisplay, formatPhoneInput } from '../js/core/helpers-core-utils.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -69,5 +69,28 @@ describe('Frontend Audit Regression Guards', () => {
         const baseUiCss = fs.readFileSync(path.join(rootDir, 'css/05-cart-footer-reviews-ui.css'), 'utf8');
         expect(baseUiCss).toContain('::-moz-range-thumb');
         expect(baseUiCss).toMatch(/::-moz-range-thumb\s*\{[^}]*pointer-events:\s*auto/);
+    });
+
+    it('formats autofilled Ukrainian phone numbers into +380 (XX) XXX-XX-XX and syncs IMask without marking userTyped', () => {
+        expect(formatUaPhoneDisplay('+380973115592')).toBe('+380 (97) 311-55-92');
+        expect(formatUaPhoneDisplay('0973115592')).toBe('+380 (97) 311-55-92');
+        expect(formatUaPhoneDisplay('380973115592')).toBe('+380 (97) 311-55-92');
+        expect(formatUaPhoneDisplay('+380 (97) 311-55-92')).toBe('+380 (97) 311-55-92');
+
+        const fakeMask = { value: '', updateValue: vi.fn() };
+        const fakeInput = { value: '+380973115592', _nishaPhoneMask: fakeMask, _syncingMaskValue: false };
+        const out = formatPhoneInput(fakeInput);
+        expect(out).toBe('+380 (97) 311-55-92');
+        expect(fakeInput.value).toBe('+380 (97) 311-55-92');
+        expect(fakeMask.value).toBe('+380 (97) 311-55-92');
+        expect(fakeMask.updateValue).toHaveBeenCalledTimes(1);
+        expect(fakeInput._syncingMaskValue).toBe(false);
+    });
+
+    it('does not animate max-height on mobile .modal-window to prevent keyboard-close jump', () => {
+        const mobileCss = fs.readFileSync(path.join(rootDir, 'css/06-mobile.css'), 'utf8');
+        const modalSection = mobileCss.slice(mobileCss.indexOf('.modal-window {'), mobileCss.indexOf('.modal-header {'));
+        expect(modalSection).not.toContain('max-height 0.28s');
+        expect(mobileCss).toContain('html.keyboard-settling');
     });
 });

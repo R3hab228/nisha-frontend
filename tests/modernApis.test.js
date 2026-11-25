@@ -2455,7 +2455,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             expect(profileCode).toContain("i18next.t('np.branch_empty', { defaultValue: 'Не найдено' })");
 
             const css = readProjectCss();
-            expect(css).toContain('transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);');
+            expect(css).toContain('html.keyboard-settling');
 
             const windowsCode = readWindowsSource();
             expect(windowsCode).toContain('const isKeyboardOpen = kbDelta > 90 || (isInputFocused && kbDelta > 40);');
