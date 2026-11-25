@@ -157,4 +157,20 @@ describe('Protected API Client (js/core/apiClient.js) — Retries, Deduplication
         globalThis.warmupBackendServer(true);
         expect(pingSpy).toHaveBeenCalledTimes(2);
     });
+
+    it('automatically attaches X-Site-Lang header from runtime site language', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(
+            new Response(JSON.stringify({ success: true }), { status: 200 })
+        );
+        globalThis.fetch = fetchMock;
+        const prevI18n = globalThis.i18next;
+        globalThis.i18next = { language: 'en' };
+        try {
+            await apiClient.post('/api/check-promo', { code: 'TEST' });
+            const [, calledOpts] = fetchMock.mock.calls[0];
+            expect(calledOpts.headers.get('X-Site-Lang')).toBe('en');
+        } finally {
+            globalThis.i18next = prevI18n;
+        }
+    });
 });

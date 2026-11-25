@@ -10,6 +10,7 @@
 // - Безопасный парсинг JSON без падений при HTML-страницах ошибок прокси/Cloudflare
 
 import { invokeAction, registerActions } from './action-registry.js';
+import { getRuntimeSiteLang, tSafe } from './runtime-env.js';
 
 const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
     const DEFAULT_TIMEOUT_MS = 12000;
@@ -70,7 +71,7 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
                 const fallbackCtrl = new AbortController();
                 fallbackTimer = setTimeout(() => {
                     timedOut = true;
-                    const err = new Error('Превышено время ожидания ответа от сервера');
+                    const err = new Error(tSafe('errors.server_timeout', 'Превышено время ожидания ответа от сервера'));
                     err.name = 'TimeoutError';
                     fallbackCtrl.abort(err);
                 }, timeoutMs);
@@ -132,6 +133,9 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
         const baseRetryDelay = typeof options.retryDelay === 'number' ? options.retryDelay : 1200;
 
         const headers = new Headers(options.headers || {});
+        if (!headers.has('X-Site-Lang')) {
+            headers.set('X-Site-Lang', getRuntimeSiteLang());
+        }
         let finalBody = options.body;
 
         // Автоматическая передача JWT токена текущей авторизованной сессии Supabase (защита от IDOR/BOLA)
@@ -204,7 +208,7 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
                 const errObj = /** @type {any} */ (err);
                 if (isTimedOut() || errObj?.name === 'TimeoutError') {
                     /** @type {Error & { isTimeout?: boolean }} */
-                    const timeoutErr = new Error('Превышено время ожидания ответа от сервера');
+                    const timeoutErr = new Error(tSafe('errors.server_timeout', 'Превышено время ожидания ответа от сервера'));
                     timeoutErr.name = 'AbortError';
                     timeoutErr.isTimeout = true;
                     lastError = timeoutErr;
