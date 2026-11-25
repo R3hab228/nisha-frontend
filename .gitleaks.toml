@@ -1,0 +1,15 @@
+title = "NISHA Frontend Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow public client-side keys and unit test fixtures"
+paths = [
+  '''^tests/''',
+  '''^package-lock\.json$'''
+]
+regexes = [
+  '''0x4AAAAAAFPA7MSg5EklX3ye''',
+  '''01ac2585860848979462a119e807d80f'''
+]

@@ -40,21 +40,36 @@ function normalizeShareLang(rawLang) {
   return (lang === 'ru' || lang === 'en') ? lang : 'ua';
 }
 
+function toCdnShareUrl(rawUrl) {
+  const str = String(rawUrl || '').trim();
+  if (!str) return '';
+  return str.replace(
+    /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\//i,
+    'https://cdn.nisha-store.shop/storage/v1/object/public/'
+  );
+}
+
 function buildShareMeta(item, shareLang) {
   const isSold = item.status === 'sold';
+  const isReserved = item.status === 'reserved';
   const rawBrand = item.brand ? item.brand.trim() : '';
   const rawName = item.name ? item.name.trim() : '';
-  const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || 'Вінтажна річ';
-  const statusPrefix = isSold ? '[ПРОДАНО] ' : '';
-  const cleanTitle = (statusPrefix + fullItemTitle).slice(0, 48).trim();
+  const fullItemTitle = [rawBrand, rawName].filter(Boolean).join(' ') || (shareLang === 'en' ? 'Archive Piece' : 'Вінтажна річ');
+  const statusPrefix = isSold
+    ? (shareLang === 'en' ? '[SOLD] ' : '[ПРОДАНО] ')
+    : isReserved
+      ? (shareLang === 'en' ? '[RESERVED] ' : '[БРОНЬ] ')
+      : '';
+  const cleanTitle = (statusPrefix + fullItemTitle).slice(0, 64).trim();
   const priceVal = item.price || 0;
   const sizeVal = item.size || 'One size';
+  const condVal = item.condition ? String(item.condition).trim() : '';
   const rawMetaDesc = shareLang === 'en'
-    ? `${statusPrefix}Price: ${priceVal} UAH · Size: ${sizeVal}`
+    ? `${statusPrefix}Price: ${priceVal} UAH · Size: ${sizeVal}${condVal ? ` · Condition: ${condVal}` : ''}`
     : shareLang === 'ru'
-      ? `${statusPrefix}Цена: ${priceVal} грн · Размер: ${sizeVal}`
-      : `${statusPrefix}Ціна: ${priceVal} грн · Розмір: ${sizeVal}`;
-  return { isSold, rawBrand, fullItemTitle, cleanTitle, rawMetaDesc };
+      ? `${statusPrefix}Цена: ${priceVal} грн · Размер: ${sizeVal}${condVal ? ` · Состояние: ${condVal}` : ''}`
+      : `${statusPrefix}Ціна: ${priceVal} грн · Розмір: ${sizeVal}${condVal ? ` · Стан: ${condVal}` : ''}`;
+  return { isSold, isReserved, rawBrand, fullItemTitle, cleanTitle, rawMetaDesc };
 }
 
 function parseShareParams(req) {
@@ -147,7 +162,7 @@ module.exports = async function handler(req, res) {
         .replaceAll('"', '&quot;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
-    const { isSold, rawBrand, fullItemTitle, cleanTitle, rawMetaDesc } = buildShareMeta(item, shareLang);
+    const { isSold, isReserved, rawBrand, fullItemTitle, cleanTitle, rawMetaDesc } = buildShareMeta(item, shareLang);
     const title = escapeHTML(cleanTitle + ' | NISHA');
 
     const cleanItemDesc = String(item.description || '').replace(/\s*\[ТОРГ:?[^\]]*\]/gi, '').trim();
@@ -158,16 +173,19 @@ module.exports = async function handler(req, res) {
     let imageUrl = rawImageUrl;
     let videoUrl = '';
     
-    if (item.images && item.images.length > 0) {
-      const photo = item.images.at(0);
-      if (photo.endsWith('.mp4')) {
-          videoUrl = escapeHTML(photo);
-          if (item.thumbnails && item.thumbnails.length > 0 && item.thumbnails.at(0)) {
-              rawImageUrl = String(item.thumbnails.at(0));
+    if (Array.isArray(item.images) && item.images.length > 0) {
+      const photo = String(item.images.at(0) || '');
+      if (/\.(mp4|mov|webm)(?:\?|$)/i.test(photo)) {
+          videoUrl = escapeHTML(toCdnShareUrl(photo));
+          const thumbCandidate = Array.isArray(item.thumbnails) && item.thumbnails.at(0)
+            ? String(item.thumbnails.at(0))
+            : String(item.images.find((u) => u && !/\.(mp4|mov|webm)(?:\?|$)/i.test(String(u))) || '');
+          if (thumbCandidate) {
+              rawImageUrl = toCdnShareUrl(thumbCandidate);
               imageUrl = escapeHTML(rawImageUrl);
           }
-      } else {
-          rawImageUrl = String(photo);
+      } else if (photo) {
+          rawImageUrl = toCdnShareUrl(photo);
           imageUrl = escapeHTML(rawImageUrl);
       }
     }
@@ -227,6 +245,8 @@ module.exports = async function handler(req, res) {
     });
 
     const htmlLang = shareLang === 'ua' ? 'uk' : shareLang;
+    const ogLocale = shareLang === 'en' ? 'en_US' : shareLang === 'ru' ? 'ru_RU' : 'uk_UA';
+    const ogAvailability = (isSold || isReserved) ? 'out of stock' : 'in stock';
     const html = '<!DOCTYPE html>\n' +
 '<html lang="' + htmlLang + '">\n' +
 '<head>\n' +
@@ -237,12 +257,15 @@ module.exports = async function handler(req, res) {
 '<link rel="canonical" href="' + shareUrl + '">\n' +
 '<link rel="preload" as="image" href="' + imageUrl + '" fetchpriority="high">\n' +
 '<meta property="og:type" content="product">\n' +
+'<meta property="og:locale" content="' + ogLocale + '">\n' +
 '<meta property="og:site_name" content="NISHA">\n' +
 '<meta property="og:title" content="' + title + '">\n' +
 '<meta property="og:description" content="' + description + '">\n' +
 '<meta property="og:image" content="' + imageUrl + '">\n' +
+'<meta property="og:image:secure_url" content="' + imageUrl + '">\n' +
+'<meta property="og:image:alt" content="' + title + '">\n' +
 '<meta property="og:url" content="' + shareUrl + '">\n' +
-'<meta property="product:availability" content="' + (isSold ? 'out of stock' : 'in stock') + '">\n' +
+'<meta property="product:availability" content="' + ogAvailability + '">\n' +
 '<meta property="product:price:amount" content="' + safePriceStr + '">\n' +
 '<meta property="product:price:currency" content="UAH">\n' +
 videoTags + '\n' +
@@ -250,6 +273,7 @@ videoTags + '\n' +
 '<meta name="twitter:title" content="' + title + '">\n' +
 '<meta name="twitter:description" content="' + description + '">\n' +
 '<meta name="twitter:image" content="' + imageUrl + '">\n' +
+'<meta name="twitter:image:alt" content="' + title + '">\n' +
 '<script type="application/ld+json">' + jsonLd.replaceAll('<', '\\u003c') + '</script>\n' +
 '<script type="speculationrules">{"prerender":[{"source":"list","urls":["/","/?item=' + id + '"],"eagerness":"immediate"}],"prefetch":[{"source":"list","urls":["/","/?item=' + id + '"],"eagerness":"immediate"}]}</script>\n' +
 '<script>try{if(!/(bot|crawl|spider|slurp|facebookexternalhit|facebot|meta-external|whatsapp|viber|discord|twitter|slack|linkedin|pinterest|applebot|telegram|bingbot|googlebot|ahrefs)/i.test(navigator.userAgent)){window.location.replace("/?item=' + id + '");}}catch(e){window.location.replace("/?item=' + id + '");}</script>\n' +
