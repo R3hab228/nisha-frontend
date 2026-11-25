@@ -151,6 +151,7 @@ export async function loadAllItems() {
 
     // Сравниваем изменения без блокирующего JSON.stringify на всем каталоге
     let isStructureChanged = !Array.isArray(window.allItems) || (data.length !== window.allItems.length);
+    let hasThumbhashUpdate = false;
     const changedCardItems = [];
     if (!isStructureChanged) {
         for (let i = 0; i < data.length; i++) {
@@ -159,6 +160,9 @@ export async function loadAllItems() {
             if (!cur || cur.id !== next.id || cur.name !== next.name || cur.category !== next.category || cur.size !== next.size || cur.brand !== next.brand || !!cur.is_top !== !!next.is_top) {
                 isStructureChanged = true;
                 break;
+            }
+            if ((cur.thumbhash || '') !== (next.thumbhash || '')) {
+                hasThumbhashUpdate = true;
             }
             const wasHot = (cur.views_count || 0) >= 25;
             const nowHot = (next.views_count || 0) >= 25;
@@ -187,7 +191,7 @@ export async function loadAllItems() {
         if (searchWorker && typeof searchWorker.setItems === 'function') {
             searchWorker.setItems(data);
         }
-        if (isStructureChanged || changedCardItems.length > 0 || !cachedItems) saveCatalogNow();
+        if (isStructureChanged || changedCardItems.length > 0 || hasThumbhashUpdate || !cachedItems) saveCatalogNow();
         updateSidebarCounters();
     } else if (data && data.length > 0) {
         console.warn('[КАТАЛОГ] Сервер или SW вернул ответ без фото, сохраняем существующие изображения...');
@@ -197,6 +201,7 @@ export async function loadAllItems() {
             if (old) {
                 if (!item.images || item.images.length === 0) item.images = old.images;
                 if (!item.thumbnails || item.thumbnails.length === 0) item.thumbnails = old.thumbnails;
+                if (!item.thumbhash && old.thumbhash) item.thumbhash = old.thumbhash;
                 if (!item.description) item.description = old.description;
             }
         });
