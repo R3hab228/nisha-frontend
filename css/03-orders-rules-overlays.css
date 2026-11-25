@@ -2,6 +2,7 @@
 /* PhotoSwipe custom controls moved to css/lazy-product-checkout-modal.css */
 
 #rulesModal {
+    backdrop-filter: blur(4px);
     animation: fadeInRulesOverlay 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -16,11 +17,9 @@
 @keyframes fadeInRulesOverlay {
     from {
         opacity: 0;
-        backdrop-filter: blur(0px);
     }
     to {
         opacity: 1;
-        backdrop-filter: blur(4px);
     }
 }
 
@@ -57,11 +56,9 @@
 @keyframes fadeOutRulesOverlay {
     0% {
         opacity: 1;
-        backdrop-filter: blur(4px);
     }
     100% {
         opacity: 0;
-        backdrop-filter: blur(0px);
     }
 }
 

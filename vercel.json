@@ -84,11 +84,32 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         },
         {
           "key": "Cloudflare-CDN-Cache-Control",
-          "value": "public, max-age=60"
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/locales/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, stale-while-revalidate=86400"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "public, max-age=300, stale-while-revalidate=86400"
+        },
+        {
+          "key": "Cloudflare-CDN-Cache-Control",
+          "value": "public, max-age=300, stale-while-revalidate=86400"
         }
       ]
     },
