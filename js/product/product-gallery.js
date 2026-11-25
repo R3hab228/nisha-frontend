@@ -12,6 +12,24 @@ import { hasAction, invokeAction, registerActions } from '../core/action-registr
 import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
 let _pswpLightbox = null;
+const _decodedSlideUrls = new Set();
+
+function predecodeSlideImage(rawUrl, priority = 'auto') {
+    const cdnUrl = toCDN(rawUrl);
+    if (!cdnUrl || typeof cdnUrl !== 'string' || cdnUrl.endsWith('.mp4') || _decodedSlideUrls.has(cdnUrl)) return;
+    if (_decodedSlideUrls.size >= 64) {
+        const first = _decodedSlideUrls.values().next().value;
+        if (first) _decodedSlideUrls.delete(first);
+    }
+    _decodedSlideUrls.add(cdnUrl);
+    const img = new Image();
+    img.decoding = 'async';
+    if (priority === 'high') img.fetchPriority = 'high';
+    img.src = cdnUrl;
+    if (typeof img.decode === 'function') {
+        img.decode().catch(() => {});
+    }
+}
 
 function escapeCssUrl(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return '';
@@ -32,11 +50,7 @@ export function preloadSlide(step) {
     if (!active || !active.images || active.images.length <= 1) return;
     const current = getActiveSlideIndex();
     const targetIndex = (current + step + active.images.length) % active.images.length;
-    const url = toCDN(active.images[targetIndex]);
-    if (url && !url.endsWith('.mp4')) {
-        const img = new Image();
-        img.src = url;
-    }
+    predecodeSlideImage(active.images[targetIndex], 'high');
 }
 
 /**
@@ -114,12 +128,9 @@ export function setSlide(index, animated = true) {
     if (hasAction('preloadSimilarItemsImages')) invokeAction('preloadSimilarItemsImages');
 
     const active = getActiveOpenedItem();
-    if (active && active.images && active.images[index + 1]) {
-        const nextUrl = toCDN(active.images[index + 1]);
-        if (!nextUrl.endsWith('.mp4')) {
-            const preImg = new Image();
-            preImg.src = nextUrl;
-        }
+    if (active && Array.isArray(active.images) && active.images.length > 1) {
+        if (active.images[index + 1]) predecodeSlideImage(active.images[index + 1], 'high');
+        if (index > 0 && active.images[index - 1]) predecodeSlideImage(active.images[index - 1], 'auto');
     }
 }
 
@@ -240,13 +251,7 @@ export function renderModalSlider(item) {
 
     if (mediaList.length > 0) {
         mediaList.slice(0, 3).forEach((url, i) => {
-            const cdnUrl = toCDN(url);
-            if (typeof cdnUrl === 'string' && !cdnUrl.endsWith('.mp4')) {
-                const preImg = new Image();
-                preImg.decoding = 'async';
-                preImg.fetchPriority = (i === 0) ? 'high' : 'auto';
-                preImg.src = cdnUrl;
-            }
+            predecodeSlideImage(url, i === 0 ? 'high' : 'auto');
         });
     }
 

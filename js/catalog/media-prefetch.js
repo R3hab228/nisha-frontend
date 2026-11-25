@@ -76,20 +76,21 @@ let _prefetchDebounceTimer = null;
 let _prefetchPendingId = null;
 
 /**
- * Отложенно предзагружает миниатюры и основные фото товара при наведении курсора.
+ * Отложенно или мгновенно предзагружает и декодирует фото товара для 0ms открытия модалки.
  * @param {string|number} id
+ * @param {boolean} [immediate=false]
  */
-export function prefetchItemImages(id) {
+export function prefetchItemImages(id, immediate = false) {
     if (hasAction('prewarmProductModal')) {
-        invokeAction('prewarmProductModal', id);
+        if (immediate) invokeAction('prewarmProductModal', id, true);
+        else invokeAction('prewarmProductModal', id);
         return;
     }
     if (typeof window === 'undefined') return;
     if (_prefetchedItems.has(id)) return;
+    if (!immediate && hasAction('isSaveDataMode') && invokeAction('isSaveDataMode')) return;
 
-    clearTimeout(_prefetchDebounceTimer);
-    _prefetchPendingId = id;
-    _prefetchDebounceTimer = setTimeout(() => {
+    const runPrefetch = () => {
         if (_prefetchedItems.has(id)) return;
         _prefetchedItems.add(id);
         const catalog = typeof getCatalog === 'function' ? getCatalog() : (window.allItems || []);
@@ -102,21 +103,33 @@ export function prefetchItemImages(id) {
                         const img = new Image();
                         img.decoding = 'async';
                         img.src = toCDN(url, { isThumb: true });
+                        if (typeof img.decode === 'function') img.decode().catch(() => {});
                     }
                 });
             }
-            // Предзагрузка фото высокого качества для мгновенного открытия модалки (0 мс)
+            // Предзагрузка и pre-decode фото высокого качества для мгновенного открытия модалки (0 мс)
             if (item.images && item.images.length > 0) {
-                item.images.slice(0, 2).forEach(url => {
+                item.images.slice(0, 2).forEach((url, idx) => {
                     if (url && typeof url === 'string' && !url.endsWith('.mp4')) {
                         const img = new Image();
                         img.decoding = 'async';
+                        if (idx === 0) img.fetchPriority = 'high';
                         img.src = toCDN(url);
+                        if (typeof img.decode === 'function') img.decode().catch(() => {});
                     }
                 });
             }
         }
-    }, 100);
+    };
+
+    clearTimeout(_prefetchDebounceTimer);
+    if (immediate) {
+        _prefetchPendingId = null;
+        runPrefetch();
+        return;
+    }
+    _prefetchPendingId = id;
+    _prefetchDebounceTimer = setTimeout(runPrefetch, 100);
 }
 
 /**

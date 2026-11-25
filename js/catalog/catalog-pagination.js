@@ -104,7 +104,46 @@ export function changePage(step) {
                 grid.classList.remove('fade-out');
             });
         }
-    }, 300);
+    }, 120);
+}
+
+const _itemSortMetaCache = new WeakMap();
+
+/**
+ * Возвращает кэшированные числовые метаданные товара для быстрой сортировки O(N) без повторных Date.parse/regex.
+ * Автоматически обновляется при изменении цены, даты создания или top_until.
+ * @param {object} item
+ * @returns {{ createdTs: number, topUntilTs: number, priceNum: number }}
+ */
+export function getItemSortMeta(item) {
+    if (!item || typeof item !== 'object') {
+        return { createdTs: 0, topUntilTs: 0, priceNum: 0 };
+    }
+    const cached = _itemSortMetaCache.get(item);
+    if (
+        cached &&
+        cached.createdRaw === item.created_at &&
+        cached.topRaw === item.top_until &&
+        cached.priceRaw === item.price
+    ) {
+        return cached;
+    }
+    const createdTs = item.created_at ? (Date.parse(item.created_at) || 0) : 0;
+    const topUntilTs = item.top_until ? (Date.parse(item.top_until) || 0) : 0;
+    const priceNum = typeof item.price === 'number'
+        ? (Number.isFinite(item.price) ? item.price : 0)
+        : (Number.parseInt(String(item.price || '').replace(/[^\d]/g, ''), 10) || 0);
+
+    const meta = {
+        createdRaw: item.created_at,
+        topRaw: item.top_until,
+        priceRaw: item.price,
+        createdTs,
+        topUntilTs,
+        priceNum
+    };
+    _itemSortMetaCache.set(item, meta);
+    return meta;
 }
 
 /**
@@ -113,17 +152,16 @@ export function changePage(step) {
  */
 export function getCatalogItemComparator() {
     const nowTs = Date.now();
-    const isTopNow = (it) => !!(it && it.is_top === true && it.top_until && Date.parse(it.top_until) > nowTs);
+    const isTopNow = (it) => !!(it && it.is_top === true && getItemSortMeta(it).topUntilTs > nowTs);
     const sortCheapEl = typeof document !== 'undefined' ? document.getElementById('sort-cheap') : null;
     const byCheap = !!(sortCheapEl && sortCheapEl.classList.contains('active-sort'));
-    const safePrice = (p) => Number.parseInt(String(p).replace(/[^\d]/g, ''), 10) || 0;
     return (a, b) => {
         const topA = isTopNow(a);
         const topB = isTopNow(b);
         if (topA && !topB) return -1;
         if (!topA && topB) return 1;
-        if (byCheap) return safePrice(a.price) - safePrice(b.price);
-        return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+        if (byCheap) return getItemSortMeta(a).priceNum - getItemSortMeta(b).priceNum;
+        return getItemSortMeta(b).createdTs - getItemSortMeta(a).createdTs;
     };
 }
 
@@ -302,7 +340,10 @@ export async function renderNextBatch(targetMobileCount = 0) {
                 vids.forEach(v => newVideoElements.push(v));
             }
         } catch (err) { console.error(err); }
-        if ((i - startIndex + 1) % 8 === 0 && (endIndex - startIndex) > 15 && hasAction('yieldToMain')) {
+        const shouldYield = isMobile
+            ? ((i - startIndex + 1) % 6 === 0)
+            : ((i - startIndex + 1) % 8 === 0);
+        if (shouldYield && (i + 1) < endIndex && hasAction('yieldToMain')) {
             grid.appendChild(fragment);
             await invokeAction('yieldToMain');
             if (batchSeq !== _renderBatchSeq) return;

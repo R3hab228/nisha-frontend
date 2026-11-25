@@ -311,11 +311,15 @@ export function initGridEventDelegation() {
         lastPointerType = e.pointerType || '';
         const card = e.target.closest('.item-card');
         if (!card) return;
+        if (hasAction('prewarmProductModule')) {
+            invokeAction('prewarmProductModule');
+        }
         const cardId = card.getAttribute('data-id');
         if (cardId) {
-            prefetchItemImages(cardId);
             if (hasAction('prewarmProductModal')) {
                 invokeAction('prewarmProductModal', cardId, true);
+            } else {
+                prefetchItemImages(cardId, true);
             }
         }
     }, { passive: true });
@@ -324,11 +328,15 @@ export function initGridEventDelegation() {
         lastPointerType = 'touch';
         const card = e.target.closest('.item-card');
         if (!card) return;
+        if (hasAction('prewarmProductModule')) {
+            invokeAction('prewarmProductModule');
+        }
         const cardId = card.getAttribute('data-id');
         if (cardId) {
-            prefetchItemImages(cardId);
             if (hasAction('prewarmProductModal')) {
                 invokeAction('prewarmProductModal', cardId, true);
+            } else {
+                prefetchItemImages(cardId, true);
             }
         }
         const wrapper = e.target.closest('.card-slider-wrapper');

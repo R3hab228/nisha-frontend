@@ -16,6 +16,7 @@ import {
     toggleMobileSidebar
 } from './catalog-sidebar-ui.js';
 import { renderNextBatch } from './catalog-grid.js';
+import { getItemSortMeta } from './catalog-pagination.js';
 import { isItemBargainEnabled } from './catalog-card-markup.js';
 import { renderActiveFilterChips, removeActiveFilterChip } from './catalog-filter-chips.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
@@ -311,9 +312,9 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
             if (filterSeq !== _applyFiltersSeq) return;
 
-            // 3. Сортировка
+            // 3. Сортировка (кэшированные _ts / _priceNum через WeakMap без повторных Date.parse)
             const now = Date.now();
-            const isItemTop = (item) => item.is_top === true && item.top_until && Date.parse(item.top_until) > now;
+            const isItemTop = (item) => item && item.is_top === true && getItemSortMeta(item).topUntilTs > now;
             const sortCheap = typeof document !== 'undefined' ? document.getElementById('sort-cheap') : null;
 
             const comparator = (sortCheap && sortCheap.classList.contains('active-sort'))
@@ -322,14 +323,14 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                     const topB = isItemTop(b);
                     if (topA && !topB) return -1;
                     if (!topA && topB) return 1;
-                    return getSafePrice(a.price) - getSafePrice(b.price);
+                    return getItemSortMeta(a).priceNum - getItemSortMeta(b).priceNum;
                 }
                 : (a, b) => {
                     const topA = isItemTop(a);
                     const topB = isItemTop(b);
                     if (topA && !topB) return -1;
                     if (!topA && topB) return 1;
-                    return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+                    return getItemSortMeta(b).createdTs - getItemSortMeta(a).createdTs;
                 };
 
             window.filteredItems = hasAction('toSorted')
