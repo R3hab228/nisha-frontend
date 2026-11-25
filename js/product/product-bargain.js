@@ -445,7 +445,22 @@ export async function syncUserBargains(options = {}) {
     const runSync = async () => {
     try {
         const fp = (getRuntimeFingerprint() || '');
-        const uid = (typeof window !== 'undefined' && window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : '';
+        let uid = (typeof window !== 'undefined' && window.currentUser && window.currentUser.id) ? String(window.currentUser.id) : '';
+        if (uid && typeof window !== 'undefined') {
+            try {
+                const sb = window._supabase || (hasAction('getSupabase') ? invokeAction('getSupabase') : null);
+                if (sb && sb.auth && typeof sb.auth.getSession === 'function') {
+                    const sess = await sb.auth.getSession();
+                    const tok = sess?.data?.session?.access_token;
+                    const sessUid = sess?.data?.session?.user?.id ? String(sess.data.session.user.id) : '';
+                    if (!tok || (sessUid && sessUid !== uid)) {
+                        uid = '';
+                    }
+                }
+            } catch {
+                uid = '';
+            }
+        }
         if (!fp && !uid) return;
 
         const params = new URLSearchParams();
