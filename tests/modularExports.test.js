@@ -195,8 +195,15 @@ describe('Modular ES Architecture Facade (src/modules/index.js)', () => {
         });
 
         it('provides warmupBackendServer export without crashing', async () => {
-            const res = await warmupBackendServer(false);
-            expect(res !== undefined).toBe(true);
+            const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+                new Response(JSON.stringify({ status: 'ok' }), { status: 200 })
+            );
+            try {
+                const res = await warmupBackendServer(false);
+                expect(res !== undefined).toBe(true);
+            } finally {
+                fetchSpy.mockRestore();
+            }
         });
     });
 
