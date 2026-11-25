@@ -169,6 +169,12 @@ if (!SUPABASE_ANON_KEY) {
         };
 
         _supabase = clientCreator(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                flowType: 'pkce',
+                detectSessionInUrl: true,
+                persistSession: true,
+                autoRefreshToken: true
+            },
             global: {
                 fetch: (url, options) => {
                     // Используем CDN ТОЛЬКО для главного списка товаров (limit=1000). Точечные запросы идут напрямую!

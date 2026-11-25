@@ -509,6 +509,34 @@ function clearPendingPasswordRecoveryFlag() {
 }
 
 /**
+ * Removes OAuth/auth sensitive tokens (#access_token, #refresh_token, #provider_token, ?code)
+ * from the browser URL bar immediately after Supabase processes the session so users can never
+ * accidentally copy & share their live session token in messengers.
+ */
+export function scrubAuthTokensFromUrl() {
+    if (typeof window === 'undefined' || !window.history?.replaceState || !window.location) return;
+    try {
+        const hash = String(window.location.hash || '');
+        const search = String(window.location.search || '');
+        const hasAuthHash = /(?:^|[#&])(?:access_token|refresh_token|provider_token|provider_refresh_token|token_type|expires_at|expires_in)=/i.test(hash);
+        const hasAuthQuery = /(?:^|[?&])(?:code|token_hash)=/i.test(search);
+        if (!hasAuthHash && !hasAuthQuery) return;
+
+        let nextSearch = search;
+        if (hasAuthQuery) {
+            const params = new URLSearchParams(search);
+            params.delete('code');
+            params.delete('token_hash');
+            const serialized = params.toString();
+            nextSearch = serialized ? `?${serialized}` : '';
+        }
+        const nextHash = hasAuthHash ? '' : hash;
+        const cleanUrl = `${window.location.pathname || '/'}${nextSearch}${nextHash}`;
+        window.history.replaceState(window.history.state ?? null, '', cleanUrl);
+    } catch {}
+}
+
+/**
  * Subscribes to Supabase auth state lifecycle events (TOKEN_REFRESHED, SIGNED_OUT, SIGNED_IN, INITIAL_SESSION, PASSWORD_RECOVERY).
  */
 export function initAuthListener() {
@@ -519,6 +547,7 @@ export function initAuthListener() {
 
     const triggerPasswordRecoveryFlow = async (session) => {
         clearPendingPasswordRecoveryFlag();
+        scrubAuthTokensFromUrl();
         if (session?.user && !profileState.currentUser) {
             await checkSession();
         }
@@ -545,6 +574,9 @@ export function initAuthListener() {
             if (session?.user && hasPendingPasswordRecoveryFlag()) {
                 await triggerPasswordRecoveryFlow(session);
                 return;
+            }
+            if (session?.user) {
+                scrubAuthTokensFromUrl();
             }
             if (event === 'SIGNED_IN' && !profileState.currentUser) {
                 await checkSession();
