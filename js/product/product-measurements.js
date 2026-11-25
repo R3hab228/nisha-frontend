@@ -219,7 +219,9 @@ const MEASUREMENT_PATTERNS = [
 ];
 
 function escapeRegExp(str) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return typeof RegExp.escape === 'function'
+        ? RegExp.escape(str)
+        : str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 const WORD_CHAR_CLASS = 'а-яА-ЯёЁіІїЇєЄґҐa-zA-Z0-9_';

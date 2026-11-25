@@ -36,7 +36,7 @@ function escapeCssUrl(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return '';
     const escaped = hasAction('escapeAttr')
         ? invokeAction('escapeAttr', rawUrl)
-        : rawUrl.replace(/'/g, '%27').replace(/"/g, '%22');
+        : rawUrl.replaceAll("'", '%27').replaceAll('"', '%22');
     return String(escaped)
         .replaceAll('(', '%28')
         .replaceAll(')', '%29');

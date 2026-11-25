@@ -4,6 +4,7 @@
 // ==========================================
 
 import { resolveAction } from '../core/action-registry.js';
+import { toSorted } from '../core/helpers-core-utils.js';
 import { getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 import { escAttr, escHtml } from './orders-state.js';
 
@@ -550,7 +551,7 @@ export async function hydrateVisibleOrderTracking(options = {}) {
 
     if (toFetch.length === 0) return {};
 
-    const batchKey = `${forceRefresh ? 'R:' : ''}${toFetch.slice().sort().join(',')}`;
+    const batchKey = `${forceRefresh ? 'R:' : ''}${toSorted(toFetch).join(',')}`;
     let reqPromise = inFlightTrackBatches.get(batchKey);
     if (!reqPromise) {
         reqPromise = postTrackBatch(toFetch, forceRefresh)

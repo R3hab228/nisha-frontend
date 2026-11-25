@@ -34,6 +34,8 @@ export {
     initCustomPropSelect
 };
 
+let _propCustomSelectI18nBound = false;
+
 // Очередь фоновой отправки предложки с авто-повтором при сбоях сети
 let proposalUploadChain = Promise.resolve();
 let activeProposalUploads = 0;
@@ -540,8 +542,8 @@ export function initProposalListeners() {
     initCustomPropSelect(catSelect);
     initCustomPropSelect(sizeSelect);
 
-    if (typeof i18next !== 'undefined' && typeof i18next.on === 'function' && !window._propCustomSelectI18nBound) {
-        window._propCustomSelectI18nBound = true;
+    if (typeof i18next !== 'undefined' && typeof i18next.on === 'function' && !_propCustomSelectI18nBound) {
+        _propCustomSelectI18nBound = true;
         i18next.on('languageChanged', () => {
             setTimeout(() => {
                 refreshCustomPropSelect(document.getElementById('propCategory'));

@@ -45,7 +45,7 @@ export function showBadgeInfo(type) {
     } else if (type === 'drop') {
         title = tSafe('badge_info.drop_title', { defaultValue: 'WARNING: DROP_ITEM' });
         const defaultDropText = '<span style="color:var(--accent-red); font-weight:bold; font-size:16px;">[ ВНИМАНИЕ ]</span><br><span style="color:#fff;">Вещь от стороннего продавца. NISHA — гарант сделки.</span><br><br>Осмотр и примерка — строго на «Новой Почте» (при наложке остаток оплачивается после проверки).<br><br>После забора посылки возврат невозможен: сделка считается закрытой, а деньги сразу переводятся владельцу.';
-        text = (typeof i18next !== 'undefined') ? (i18next.t('badge_info.drop_desc') || i18next.t('badge_info.drop_text') || defaultDropText) : defaultDropText;
+        text = tSafe('badge_info.drop_desc', '') || tSafe('badge_info.drop_text', defaultDropText);
     }
 
     const btnText = tSafe('badge_info.btn_understood', { defaultValue: '[ ПОНЯТНО ]' });

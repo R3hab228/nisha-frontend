@@ -531,7 +531,7 @@ async function submitSupportTicket() {
     btn.style.pointerEvents = 'none';
     btn.textContent = tSafe('support.sending', '[ ОТПРАВКА... ]');
 
-    const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeText = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(message) : message.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     
     const activeUser = getRuntimeUser();
     const userContact = activeUser ? (activeUser.email || activeUser.phone || 'Аноним') : 'Гость';

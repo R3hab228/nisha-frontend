@@ -6,6 +6,8 @@ const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
 const SHOE_SIZES = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'];
 const ACCESSORY_SIZES = ['One Size', 'XS', 'S', 'M', 'L', 'XL'];
 
+let _propCustomSelectOutsideBound = false;
+
 /**
  * Syncs `#propSize` options according to selected item category.
  * @param {string} category
@@ -166,8 +168,8 @@ export function initCustomPropSelect(selectEl) {
         selectEl.addEventListener('change', () => refreshCustomPropSelect(selectEl));
     }
 
-    if (typeof document !== 'undefined' && !window._propCustomSelectOutsideBound) {
-        window._propCustomSelectOutsideBound = true;
+    if (typeof document !== 'undefined' && !_propCustomSelectOutsideBound) {
+        _propCustomSelectOutsideBound = true;
         document.addEventListener('click', (e) => {
             if (e.target && typeof e.target.closest === 'function' && e.target.closest('.prop-select-wrap')) return;
             document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => {
