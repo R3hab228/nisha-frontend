@@ -4,7 +4,7 @@
 
 import { invokeAction, registerActions } from './action-registry.js';
 import { debugPwaLog } from './pwa-sw-versioning.js';
-import { getRuntimeSupabase, getRuntimeOpenedItem, getRuntimeStorage } from './runtime-env.js';
+import { getRuntimeSupabase, getRuntimeOpenedItem, getRuntimeStorage, tSafe } from './runtime-env.js';
 
 let deferredPrompt = null;
 let lifecycleListenersBound = false;
@@ -89,13 +89,7 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
         }
     }
 
-    const t = (key, fallback) => {
-        if (typeof i18next !== 'undefined' && typeof i18next.t === 'function') {
-            const res = i18next.t(key, { defaultValue: fallback });
-            if (res && res !== key) return res;
-        }
-        return fallback;
-    };
+    const t = (key, fallback) => tSafe(key, { defaultValue: fallback });
 
     const title = t('footer.pwa_broadcast_title', 'SYSTEM_BROADCAST.MSG');
 
@@ -321,7 +315,7 @@ export function createNetErrorElement() {
   <path fill="#1c5e96" d="M29,22h1v1h-1z" />
 </svg>
 </div>
-<p id="win95-error-msg" data-i18n="pwa.offline_msg" style="color:#000;margin-top:15px;margin-bottom:0;font-family:Tahoma,sans-serif;font-size:13px;font-weight:normal">${(typeof i18next !== 'undefined' && i18next.t('pwa.offline_msg')) || 'Соединение потеряно'}</p>
+<p id="win95-error-msg" data-i18n="pwa.offline_msg" style="color:#000;margin-top:15px;margin-bottom:0;font-family:Tahoma,sans-serif;font-size:13px;font-weight:normal">${tSafe('pwa.offline_msg', 'Соединение потеряно')}</p>
 </div>
 </div>`;
     return wrapper;
@@ -391,7 +385,7 @@ export function handleNetworkOffline() {
             if (netError) {
                 const msgEl = document.getElementById('win95-error-msg') || (netError.querySelector && netError.querySelector('#win95-error-msg'));
                 if (msgEl) {
-                    msgEl.textContent = (typeof i18next !== 'undefined' && i18next.t('pwa.offline_msg')) || 'Соединение потеряно';
+                    msgEl.textContent = tSafe('pwa.offline_msg', 'Соединение потеряно');
                     msgEl.style.color = '#000';
                     msgEl.style.fontFamily = 'Tahoma, sans-serif';
                     msgEl.style.fontSize = '13px';
@@ -424,7 +418,7 @@ export function handleNetworkOnline() {
     const grid = document.getElementById('itemsGrid');
 
     if (msgEl) {
-        msgEl.textContent = (typeof i18next !== 'undefined' && i18next.t('pwa.online_msg')) || 'Соединение восстановлено!!!';
+        msgEl.textContent = tSafe('pwa.online_msg', 'Соединение восстановлено!!!');
         msgEl.style.color = '#008000';
         msgEl.style.fontFamily = 'Tahoma, sans-serif';
         msgEl.style.fontSize = '13px';

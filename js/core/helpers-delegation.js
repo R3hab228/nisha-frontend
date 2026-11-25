@@ -498,6 +498,7 @@ export function handleDelegatedMediaLoad(e) {
     if (!target || !target.classList) return;
 
     if (target.classList.contains('card-slide-img')) {
+        if (typeof target.classList.add === 'function') target.classList.add('is-loaded');
         target.style.opacity = '1';
         if (target.parentElement) {
             target.parentElement.classList.remove('img-8bit-loading');

@@ -4,6 +4,7 @@
 
 import { hasAction, invokeAction, registerActions } from './action-registry.js';
 import { escapeAttr, escapeHtml, toCDN } from './helpers-security-media.js';
+import { tSafe } from './runtime-env.js';
 import {
     showTerminalModal,
     showConfirmTerminalModal,
@@ -303,11 +304,9 @@ export function showCompactToast({ slot, className, tagText, titleText = '', img
  * @param {string|null} [imgUrl=null]
  */
 export function showFavoriteToast(itemOrTitle, isAdded = true, imgUrl = null) {
-    const tagText = typeof i18next !== 'undefined'
-        ? i18next.t(isAdded ? 'messages.fav_add' : 'messages.fav_remove', {
-            defaultValue: isAdded ? 'Добавлено в избранное' : 'Удалено из избранного'
-        })
-        : (isAdded ? 'Добавлено в избранное' : 'Удалено из избранного');
+    const tagText = tSafe(isAdded ? 'messages.fav_add' : 'messages.fav_remove', {
+        defaultValue: isAdded ? 'Добавлено в избранное' : 'Удалено из избранного'
+    });
 
     showCompactToast({
         slot: 'fav',
@@ -326,9 +325,7 @@ if (typeof window !== 'undefined') window.showFavoriteToast = showFavoriteToast;
  */
 export function showLanguageToast(langCode) {
     const normalized = String(langCode || 'ua').trim().toUpperCase();
-    const titleText = typeof i18next !== 'undefined'
-        ? i18next.t('messages.lang_changed', { defaultValue: 'Язык изменен' })
-        : 'Язык изменен';
+    const titleText = tSafe('messages.lang_changed', { defaultValue: 'Язык изменен' });
 
     showCompactToast({
         slot: 'lang',
@@ -382,11 +379,9 @@ if (typeof window !== 'undefined') window.showSoundToast = showSoundToast;
  * @param {string|null} [imgUrl=null]
  */
 export function showCartToast(itemOrTitle, isAdded = true, imgUrl = null) {
-    const rawTag = typeof i18next !== 'undefined'
-        ? i18next.t(isAdded ? 'messages.cart_add' : 'messages.cart_delete', {
-            defaultValue: isAdded ? 'Добавлено в корзину!' : 'Удалено'
-        })
-        : (isAdded ? 'Добавлено в корзину!' : 'Удалено');
+    const rawTag = tSafe(isAdded ? 'messages.cart_add' : 'messages.cart_delete', {
+        defaultValue: isAdded ? 'Добавлено в корзину!' : 'Удалено'
+    });
 
     showCompactToast({
         slot: 'cart',
@@ -405,9 +400,7 @@ if (typeof window !== 'undefined') window.showCartToast = showCartToast;
  * @param {string|null} [imgUrl=null]
  */
 export function showSaleToast(itemOrTitle, imgUrl = null) {
-    const rawTag = typeof i18next !== 'undefined'
-        ? i18next.t('messages.sale_prefix', { defaultValue: '🔥 СКИДКА' })
-        : '🔥 СКИДКА';
+    const rawTag = tSafe('messages.sale_prefix', { defaultValue: '🔥 СКИДКА' });
     const thumbFallback = (itemOrTitle && typeof itemOrTitle === 'object')
         ? (itemOrTitle.thumbnails?.[0] || itemOrTitle.images?.[0] || null)
         : null;
@@ -581,9 +574,7 @@ function _displayUnifiedNewItemToast(items) {
         titleText = formatNewItemsCountText(items.length);
     } else {
         const brandPart = firstItem.brand ? `${safeToastEscape(firstItem.brand)} — ` : '';
-        const fallbackName = typeof i18next !== 'undefined'
-            ? i18next.t('messages.new_item_fallback', { defaultValue: 'Новая вещь' })
-            : 'Новая вещь';
+        const fallbackName = tSafe('messages.new_item_fallback', { defaultValue: 'Новая вещь' });
         const namePart = safeToastEscape(firstItem.name || fallbackName);
         titleText = `${brandPart}${namePart}`;
     }
@@ -595,7 +586,7 @@ function _displayUnifiedNewItemToast(items) {
     }
     html += `
         <div class="toast-item-content">
-            <div class="toast-item-tag">${typeof i18next !== 'undefined' ? i18next.t('messages.new_items_toast', { defaultValue: 'Новые Вещи!!!' }) : 'Новые Вещи!!!'}</div>
+            <div class="toast-item-tag">${tSafe('messages.new_items_toast', { defaultValue: 'Новые Вещи!!!' })}</div>
             <div class="toast-item-title">${titleText}</div>
         </div>
     `;

@@ -10,7 +10,7 @@ import {
     hidePopoverSafe
 } from '../../src/modules/index.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeCatalog } from '../core/runtime-env.js';
+import { getRuntimeCatalog, tSafe } from '../core/runtime-env.js';
 import { pushBackLayer, removeBackLayerFromUI } from '../ui/back-gesture.js';
 
 function isItemBargainEnabled(item) {
@@ -125,7 +125,7 @@ function showSearchHistory() {
     const history = storage ? storage.getJSON('nisha_search_history', []) : [];
     if (!Array.isArray(history) || history.length < 4) return;
 
-    const t = (k, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function') ? i18next.t(k, { defaultValue: def }) : def;
+    const t = (k, def) => tSafe(k, { defaultValue: def });
     const recentQueriesText = t('search.recent_queries', 'НЕДАВНИЕ ЗАПРОСЫ');
     const clearText = t('search.clear_history', 'ОЧИСТИТЬ');
 
@@ -297,7 +297,8 @@ function handleLiveSearch() {
                 }
 
                 const hasBargain = isItemBargainEnabled(item);
-                const rawBargainText = (typeof i18next !== 'undefined' && i18next.t && i18next.t('search.bargain_badge', { defaultValue: 'ТОРГ' })) || 'ТОРГ';
+                const t = tSafe;
+                const rawBargainText = t('search.bargain_badge', { defaultValue: 'ТОРГ' });
                 const bargainText = (typeof rawBargainText === 'string' && !rawBargainText.includes('search.')) ? rawBargainText : 'ТОРГ';
                 const bargainBadgeHtml = hasBargain
                     ? `<span class="live-search-bargain-badge">${bargainText}</span>`
@@ -322,7 +323,7 @@ function handleLiveSearch() {
                     dropdown.innerHTML = html;
                     openSearchDropdown(dropdown);
                 } else {
-                    const noMatchesText = typeof i18next !== 'undefined' ? i18next.t('search.no_matches', { defaultValue: 'СОВПАДЕНИЙ НЕТ' }) : 'СОВПАДЕНИЙ НЕТ';
+                    const noMatchesText = tSafe('search.no_matches', { defaultValue: 'СОВПАДЕНИЙ НЕТ' });
         dropdown.innerHTML = `<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ ${noMatchesText} ]</div>`;
                     openSearchDropdown(dropdown);
                     document.body.classList.remove('search-lock');
@@ -330,7 +331,7 @@ function handleLiveSearch() {
                 }
             }
         } else if (dropdown) {
-            const noMatchesText = typeof i18next !== 'undefined' ? i18next.t('search.no_matches', { defaultValue: 'СОВПАДЕНИЙ НЕТ' }) : 'СОВПАДЕНИЙ НЕТ';
+            const noMatchesText = tSafe('search.no_matches', { defaultValue: 'СОВПАДЕНИЙ НЕТ' });
         dropdown.innerHTML = `<div style="padding: 20px; color: #666; font-family: monospace; text-align: center;">[ ${noMatchesText} ]</div>`;
             openSearchDropdown(dropdown);
             document.body.classList.remove('search-lock');
@@ -406,7 +407,7 @@ if (mainSearchInput) {
         if (clearBtn) clearBtn.style.display = this.value.length > 0 ? 'block' : 'none';
     });
     mainSearchInput.addEventListener('focus', () => {
-        mainSearchInput.placeholder = (typeof i18next !== 'undefined' && i18next.t('search.placeholder')) || 'Поиск...';
+        mainSearchInput.placeholder = tSafe('search.placeholder', 'Поиск...');
     });
     mainSearchInput.addEventListener('blur', () => {
         if (mainSearchInput.value.length === 0) {

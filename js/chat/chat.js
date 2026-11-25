@@ -1,7 +1,14 @@
 
 import { invokeAction, onAppEvent, registerActions, resolveAction } from '../core/action-registry.js';
-import { escapeHtmlSafe, getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
+import { escapeHtmlSafe, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 import { setAcceptedBargain, setBargainDeclined } from '../core/bargain-storage.js';
+import {
+    SUPPORT_MAX_LENGTH,
+    selectSupportTopic,
+    updateSupportCharCounter,
+    collectSupportBugContext,
+    openSupportModalWindow
+} from './support-modal.js';
 
 if (typeof document !== 'undefined') {
     import('../../css/lazy-support-modal.css').catch(() => {});
@@ -501,82 +508,6 @@ function handleIncomingSupportReply(r, sbClient) {
 // ==========================================
 // NISHA CHAT & SUPPORT MODULE (SUPPORT_TICKET.EXE & Realtime)
 // ==========================================
-
-function resetSupportTopicChips() {
-    const chips = document.querySelectorAll('#supportTopicChips .support-topic-chip');
-    chips.forEach(chip => {
-        chip.classList.remove('active');
-        chip.setAttribute('aria-pressed', 'false');
-    });
-}
-
-function selectSupportTopic(topicEl) {
-    if (!topicEl) return;
-    const wasActive = topicEl.classList.contains('active');
-    resetSupportTopicChips();
-    if (!wasActive) {
-        topicEl.classList.add('active');
-        topicEl.setAttribute('aria-pressed', 'true');
-    }
-    if (typeof triggerHaptic === 'function') triggerHaptic('light');
-}
-
-const SUPPORT_MAX_LENGTH = 500;
-
-function updateSupportCharCounter() {
-    const input = document.getElementById('supportInput');
-    const counter = document.getElementById('supportCharCounter');
-    if (!input || !counter) return;
-    const len = input.value.length;
-    counter.textContent = `${len}/${SUPPORT_MAX_LENGTH}`;
-    counter.classList.toggle('near-limit', len >= 450 && len < SUPPORT_MAX_LENGTH);
-    counter.classList.toggle('at-limit', len >= SUPPORT_MAX_LENGTH);
-}
-
-function collectSupportBugContext() {
-    if (typeof navigator === 'undefined' || typeof window === 'undefined') return null;
-    const ua = String(navigator.userAgent || '');
-    let os = 'Desktop';
-    if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
-    else if (/android/i.test(ua)) os = 'Android';
-    const isStandalone = (typeof document !== 'undefined' && document.documentElement?.classList.contains('pwa-standalone')) ||
-        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-    const device = `${os}${isStandalone ? ' (PWA)' : ''}`;
-    const lang = (typeof i18next !== 'undefined' && i18next.language)
-        ? String(i18next.language).slice(0, 10)
-        : String(document?.documentElement?.lang || 'ua').slice(0, 10);
-    const url = `${window.location.pathname || '/'}${window.location.search || ''}`.slice(0, 300);
-    return { device, lang, url };
-}
-
-// 1. Открытие модального окна поддержки
-function openSupportModalWindow() {
-    if (getLenisInstance()) invokeAction('stopLenis');
-    const input = document.getElementById('supportInput');
-    if (input) {
-        input.value = ''; // Очищаем поле при открытии
-        if (!input._supportCounterBound) {
-            input._supportCounterBound = true;
-            input.addEventListener('input', updateSupportCharCounter);
-        }
-    }
-    updateSupportCharCounter();
-    resetSupportTopicChips();
-    
-    if (typeof openModal === 'function') {
-        openModal('supportModal');
-        if (typeof triggerModalTypewriter === 'function') triggerModalTypewriter('supportModal');
-    } else {
-        const modal = document.getElementById('supportModal');
-        if (modal) {
-            modal.inert = false;
-            modal.removeAttribute('inert');
-            modal.setAttribute('aria-hidden', 'false');
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-    }
-}
 
 // 2. Быстрая отправка тикета поддержки в фоне
 async function submitSupportTicket() {

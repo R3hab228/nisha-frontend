@@ -3,7 +3,7 @@
 // ==========================================
 
 import { invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeOpenedItem } from '../core/runtime-env.js';
+import { getRuntimeOpenedItem, tSafe } from '../core/runtime-env.js';
 import { isPopoverOpenSafe } from '../core/helpers-pwa-browser.js';
 import { showConfirmTerminalModal } from '../core/helpers-toasts-modals.js';
 import {
@@ -242,9 +242,7 @@ function closeModal(id, e, options = {}) {
     }
     if (id === 'proposeModal') {
         if (typeof window !== 'undefined' && window._isSubmittingProposal) {
-            const waitMsg = (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
-                ? i18next.t('propose.wait_uploading', { defaultValue: '⏳ Заявка отправляется на сервер, подождите пару секунд...' })
-                : '⏳ Заявка отправляется на сервер, подождите пару секунд...';
+            const waitMsg = tSafe('propose.wait_uploading', { defaultValue: '⏳ Заявка отправляется на сервер, подождите пару секунд...' });
             if (typeof showToast === 'function') showToast(waitMsg, 'info');
             if (options && options.fromBackGesture) {
                 pushBackLayer({

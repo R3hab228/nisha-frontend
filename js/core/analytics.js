@@ -605,7 +605,7 @@
         });
 
         try {
-            if (typeof window !== 'undefined' && window.plausible === 'function') {
+            if (typeof window !== 'undefined' && typeof window.plausible === 'function') {
                 window.plausible('Purchase', {
                     revenue: { currency: 'UAH', amount: numericValue },
                     props: { order_id: String(orderId || ''), items_count: safeItems.length }
