@@ -129,8 +129,11 @@ export async function ensureOrderImagesLoaded() {
                 const htmlEl = /** @type {HTMLElement} */ (el);
                 const itId = htmlEl.getAttribute('data-item-id');
                 const resolved = getOrderItemImage({ id: itId });
-                if (resolved) {
-                    htmlEl.style.backgroundImage = `url('${resolved}')`;
+                const safeResolved = resolved && /^https?:\/\//i.test(String(resolved).trim())
+                    ? String(resolved).trim().replaceAll("'", '%27').replaceAll('"', '%22').replaceAll('(', '%28').replaceAll(')', '%29')
+                    : '';
+                if (safeResolved) {
+                    htmlEl.style.backgroundImage = `url('${safeResolved}')`;
                     htmlEl.textContent = '';
                 }
             });

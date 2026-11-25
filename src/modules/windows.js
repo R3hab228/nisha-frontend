@@ -132,23 +132,26 @@ export function isUserInProductFeed() {
 /**
  * Displays branded terminal/system dialog
  * @param {string} title
- * @param {string} text
- * @param {'info'|'warning'|'error'|'success'} [type='info']
- * @param {(() => void)|null} [onConfirm=null]
+ * @param {string} htmlText
+ * @param {string} [btnText='[ OK ]']
+ * @param {(() => void)|null} [callback=null]
+ * @param {{ persistent?: boolean }} [options={}]
  */
-export function showTerminalModal(title, text, type = 'info', onConfirm = null) {
-    return callAction('showTerminalModal', [title, text, type, onConfirm]);
+export function showTerminalModal(title, htmlText, btnText = '[ OK ]', callback = null, options = {}) {
+    return callAction('showTerminalModal', [title, htmlText, btnText, callback, options]);
 }
 
 /**
  * Displays terminal dialog with confirm & cancel actions
  * @param {string} title
- * @param {string} text
+ * @param {string} htmlText
+ * @param {string} [confirmBtnText='[ OK ]']
+ * @param {string} [cancelBtnText='[ ОТМЕНА ]']
  * @param {(() => void)|null} [onConfirm=null]
  * @param {(() => void)|null} [onCancel=null]
  */
-export function showConfirmTerminalModal(title, text, onConfirm = null, onCancel = null) {
-    return callAction('showConfirmTerminalModal', [title, text, onConfirm, onCancel]);
+export function showConfirmTerminalModal(title, htmlText, confirmBtnText = '[ OK ]', cancelBtnText = '[ ОТМЕНА ]', onConfirm = null, onCancel = null) {
+    return callAction('showConfirmTerminalModal', [title, htmlText, confirmBtnText, cancelBtnText, onConfirm, onCancel]);
 }
 
 /**

@@ -171,9 +171,14 @@ export function slimBranches(list) {
 
 async function runWithNativeLock(lockName, fn) {
     if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        let entered = false;
         try {
-            return await navigator.locks.request(lockName, fn);
-        } catch (_) {
+            return await navigator.locks.request(lockName, async (lock) => {
+                entered = true;
+                return await fn(lock);
+            });
+        } catch (err) {
+            if (entered) throw err;
             return await fn();
         }
     }

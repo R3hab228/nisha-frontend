@@ -192,11 +192,12 @@ export function renderModalSlider(item) {
                     : String(cdnUrl || '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll("'", '&#39;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
                 if (isVideo) {
+                    const autoplayAttr = index === 0 ? 'autoplay="autoplay"' : '';
                     slidesHtml += `
                         <div class="slide img-8bit-loading" style="background:#000; display:flex; justify-content:center; align-items:center;">
                             <video 
                                 class="modal-video-player"
-                                autoplay="autoplay" 
+                                ${autoplayAttr}
                                 muted="muted" 
                                 loop="loop" 
                                 playsinline="playsinline" 
@@ -257,19 +258,21 @@ export function renderModalSlider(item) {
     }
 
     const playModalVideosAfterPaint = () => {
-        if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
-        const modalVideos = document.querySelectorAll('#sliderWrapper video.modal-video-player');
-        modalVideos.forEach(vid => {
-            if (!vid || typeof vid.play !== 'function') return;
-            const playPromise = vid.play();
-            if (playPromise !== undefined && typeof playPromise.catch === 'function') {
-                playPromise.catch(() => {
-                    if (typeof window !== 'undefined' && window.__NISHA_DEBUG__) {
-                        console.log('Ожидание клика (политика браузера)');
-                    }
-                });
-            }
-        });
+        if (typeof document === 'undefined') return;
+        const sliderWrap = document.getElementById('sliderWrapper');
+        if (!sliderWrap || typeof sliderWrap.querySelectorAll !== 'function') return;
+        const slides = sliderWrap.querySelectorAll('.slide');
+        const activeSlide = slides[getActiveSlideIndex()];
+        const activeVid = activeSlide ? activeSlide.querySelector('video.modal-video-player') : null;
+        if (!activeVid || typeof activeVid.play !== 'function') return;
+        const playPromise = activeVid.play();
+        if (playPromise !== undefined && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {
+                if (typeof window !== 'undefined' && window.__NISHA_DEBUG__) {
+                    console.log('Ожидание клика (политика браузера)');
+                }
+            });
+        }
     };
     if (typeof requestAnimationFrame === 'function') {
         requestAnimationFrame(() => requestAnimationFrame(playModalVideosAfterPaint));

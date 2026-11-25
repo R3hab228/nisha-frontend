@@ -88,6 +88,29 @@ bindWindowFn('openProfileModal', openProfileModal);
  * Resets profile UI, favorites, and contacts to signed-out state.
  */
 export function resetSignedOutProfileUI() {
+    const sb = /** @type {any} */ (getSupabase());
+    if (sb && typeof sb.removeChannel === 'function') {
+        if (profileState.orderStatusChannel) {
+            try { sb.removeChannel(profileState.orderStatusChannel); } catch {}
+            profileState.orderStatusChannel = null;
+        }
+        if (profileState.qaUpdatesChannel) {
+            try { sb.removeChannel(profileState.qaUpdatesChannel); } catch {}
+            profileState.qaUpdatesChannel = null;
+        }
+    }
+    if (typeof window !== 'undefined') {
+        if (window.profileOtpPollInterval) {
+            clearInterval(window.profileOtpPollInterval);
+            window.profileOtpPollInterval = null;
+        }
+        if (window.profileTgPollInterval) {
+            clearInterval(window.profileTgPollInterval);
+            window.profileTgPollInterval = null;
+        }
+        window.profileSelectedCityRef = '';
+        window.profileSelectedBranchRef = '';
+    }
     profileState.currentUser = null;
     profileState.userProfile = null;
     profileState.favorites = [];
@@ -524,15 +547,54 @@ export async function syncProfileAbandonedCart(profile) {
     if (updateCartFn) updateCartFn();
 }
 
+/** @type {Promise<void>|null} */
+let _checkSessionInFlight = null;
+
 /**
  * Checks active Supabase session, hydrates profile/contacts/delivery/favorites/cart, and subscribes realtime channels.
  */
-export async function checkSession() {
+export function checkSession() {
+    if (_checkSessionInFlight) return _checkSessionInFlight;
+    const promise = _runCheckSession().finally(() => {
+        if (_checkSessionInFlight === promise) {
+            _checkSessionInFlight = null;
+        }
+    });
+    _checkSessionInFlight = promise;
+    return promise;
+}
+
+async function _runCheckSession() {
     const sb = /** @type {any} */ (getSupabase());
     if (!sb) return;
 
     try {
-        const { data: { user }, error: userError } = await sb.auth.getUser();
+        let user = null;
+        let userError = null;
+        try {
+            const authRes = await sb.auth.getUser();
+            user = authRes?.data?.user || null;
+            userError = authRes?.error || null;
+        } catch (netErr) {
+            userError = netErr;
+        }
+
+        if (!user && userError) {
+            const isOfflineOrTransient = (typeof navigator !== 'undefined' && navigator.onLine === false)
+                || userError?.name === 'AuthRetryableFetchError'
+                || userError?.status === 0
+                || /network|failed to fetch|timeout|abort/i.test(String(userError?.message || ''));
+            if (isOfflineOrTransient && typeof sb.auth.getSession === 'function') {
+                try {
+                    const sessRes = await sb.auth.getSession();
+                    if (sessRes?.data?.session?.user) {
+                        user = sessRes.data.session.user;
+                        userError = null;
+                    }
+                } catch {}
+            }
+        }
+
         if (!user || userError) {
             resetSignedOutProfileUI();
             return;

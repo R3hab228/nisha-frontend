@@ -272,10 +272,10 @@ export function updateCartUI() {
     let total = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
 
     const promoDiscount = window.currentPromoDiscount || cartState.currentPromoDiscount || 0;
+    const fixedAmt = Number(window.currentPromoFixed) || 0;
     const promoCode = window.appliedPromoCode || cartState.appliedPromoCode || '';
     const msg = document.getElementById('promoMessage');
-    if (promoDiscount > 0 && promoCode) {
-        const fixedAmt = Number(window.currentPromoFixed) || 0;
+    if ((promoDiscount > 0 || fixedAmt > 0) && promoCode) {
         const savedMoney = fixedAmt > 0
             ? Math.min(fixedAmt, Math.max(0, total - 1))
             : Math.floor(total * promoDiscount);
@@ -492,6 +492,12 @@ if (typeof window !== 'undefined') {
                 fab.style.setProperty('display', 'none', 'important');
                 fab.style.setProperty('opacity', '0', 'important');
                 fab.style.setProperty('pointer-events', 'none', 'important');
+            }
+            if (hasAction('pushBackLayer')) {
+                invokeAction('pushBackLayer', {
+                    key: 'cart:main',
+                    close: () => closeCartDropdown()
+                });
             }
             checkCartItemsAvailability();
             renderCartItems();

@@ -8,7 +8,8 @@
       "recent_queries": "RECENT SEARCHES",
       "clear_history": "CLEAR",
       "no_items_hint": "Try adjusting your query or resetting active filters",
-      "reset_filters": "RESET FILTERS"
+      "reset_filters": "RESET FILTERS",
+      "bargain_badge": "OFFER"
     },
     "nav": {
       "home": "HOME",
@@ -181,7 +182,9 @@
       "meas_half_measure": "Half-measure",
       "meas_rise": "Rise",
       "offer_disabled": "Bargaining is not available for this item!",
-      "share_check_out": "Check out:"
+      "share_check_out": "Check out:",
+      "offer_declined_toast": "The seller declined your price offer.",
+      "default_desc": "Authentic. Any legit checks welcome. Great condition. Extra measurements available on request."
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
@@ -198,7 +201,8 @@
       "btn_understood": "[ GOT IT ]",
       "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA is the deal escrow.</span><br><br>Inspection and try-on strictly at Nova Poshta (for COD, remaining balance is paid after check).<br><br>No returns after pickup: deal is finalized and funds are immediately transferred to seller.",
       "bargain_title": "BARGAIN_AVAILABLE.SYS",
-      "bargain_text": "Bargaining is available for this item. You can make an offer to the seller using the MAKE AN OFFER button."
+      "bargain_text": "Bargaining is available for this item. You can make an offer to the seller using the MAKE AN OFFER button.",
+      "min_bargain_price": "Minimum offer price:"
     },
     "grid": {
       "size_prefix": "Size: "
@@ -294,7 +298,8 @@
       "promo_warming": "Server is warming up, please click \"Apply\" again",
       "location_prefix": "Location: ",
       "promo_applied": "Code applied",
-      "promo_order_discount": "Order discount:"
+      "promo_order_discount": "Order discount:",
+      "processing_data": "[ PROCESSING DATA... ]"
     },
     "orders_modal": {
       "access_granted": "Access granted",

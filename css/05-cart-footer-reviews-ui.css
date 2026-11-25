@@ -9,6 +9,7 @@
 .range-fill { position: absolute; height: 100%; background: var(--accent-green); left: 0%; right: 0%; z-index: 1;}
 .range-slider input[type="range"] { position: absolute; width: 100%; -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none; z-index: 2; top: -6px; margin: 0;}
 .range-slider input[type="range"]::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; width: 16px; height: 16px; background: #000; border: 2px solid var(--accent-green); cursor: pointer; border-radius: 0; box-shadow: 0 0 5px rgba(0,255,0,0.5);}
+.range-slider input[type="range"]::-moz-range-thumb { pointer-events: auto; width: 16px; height: 16px; background: #000; border: 2px solid var(--accent-green); cursor: pointer; border-radius: 0; box-shadow: 0 0 5px rgba(0,255,0,0.5); box-sizing: border-box;}
 
 #mobileFilterBtn { display: none; }
 

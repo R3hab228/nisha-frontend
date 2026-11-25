@@ -432,15 +432,19 @@ export function handleDropdownsOutsideClick(e) {
     if (!e.target.closest('#cartInfoWrapper') && !e.target.closest('#cartDropdown')) {
         const cartDrop = document.getElementById('cartDropdown');
         if (cartDrop && cartDrop.classList.contains('active')) {
-            cartDrop.classList.remove('active');
-            clearDropdownInlineStyles(cartDrop);
-            const panel = document.getElementById('cartPanel');
-            if (panel) panel.classList.remove('dropdown-open');
-            const fab = document.querySelector('.fab-propose');
-            if (fab) {
-                fab.style.removeProperty('display');
-                fab.style.removeProperty('opacity');
-                fab.style.removeProperty('pointer-events');
+            if (hasAction('closeCartDropdown')) {
+                invokeAction('closeCartDropdown');
+            } else {
+                cartDrop.classList.remove('active');
+                clearDropdownInlineStyles(cartDrop);
+                const panel = document.getElementById('cartPanel');
+                if (panel) panel.classList.remove('dropdown-open');
+                const fab = document.querySelector('.fab-propose');
+                if (fab) {
+                    fab.style.removeProperty('display');
+                    fab.style.removeProperty('opacity');
+                    fab.style.removeProperty('pointer-events');
+                }
             }
         }
     }

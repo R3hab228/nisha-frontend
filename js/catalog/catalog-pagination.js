@@ -175,6 +175,7 @@ export function insertNewItemCardSmoothly(item) {
     if (!grid) return;
 
     if (grid.querySelector(`.item-card[data-id="${item.id}"]`)) return;
+    if (window.showingOnlyFavs) return;
 
     const curCat = window.currentCategory || '';
     const curBrand = window.currentBrand || '';
@@ -189,6 +190,20 @@ export function insertNewItemCardSmoothly(item) {
     if (onlySale && !item.is_sale) return;
     if (onlyBargain && !isItemBargainEnabled(item)) return;
     if (hideUnavailable && item.status !== 'available') return;
+
+    const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => String(cb.value || '').toLowerCase());
+    if (checkedSizes.length > 0) {
+        const itemSizeStr = String(item.size || '').toLowerCase();
+        if (!checkedSizes.some(sz => itemSizeStr === sz || itemSizeStr.includes(sz))) return;
+    }
+
+    const priceMinEl = document.getElementById('priceMin');
+    const priceMaxEl = document.getElementById('priceMax');
+    const minP = priceMinEl ? Number(priceMinEl.value) : NaN;
+    const maxP = priceMaxEl ? Number(priceMaxEl.value) : NaN;
+    const itemPriceNum = Number(item.price) || 0;
+    if (Number.isFinite(minP) && minP > 0 && itemPriceNum < minP) return;
+    if (Number.isFinite(maxP) && maxP > 0 && itemPriceNum > maxP) return;
     if (searchTerm) {
         const nameMatch = item.name && item.name.toLowerCase().includes(searchTerm);
         const brandMatch = item.brand && item.brand.toLowerCase().includes(searchTerm);

@@ -9,7 +9,8 @@
         "recent_queries": "НЕЩОДАВНІ ЗАПИТИ",
         "clear_history": "ОЧИСТИТИ",
         "no_items_hint": "Спробуйте змінити запит або скинути активні фільтри",
-        "reset_filters": "СКИНУТИ ФІЛЬТРИ"
+        "reset_filters": "СКИНУТИ ФІЛЬТРИ",
+        "bargain_badge": "ТОРГ"
       },
       "nav": {
         "home": "ГОЛОВНА",
@@ -178,11 +179,13 @@
         "meas_qual_from_shoulder": "від плеча",
         "meas_qual_from_seam": "від шва",
         "meas_qual_from_neck": "від горла",
-        "meas_neck_width": "Ширина выреза",
-        "meas_half_measure": "Полуобхват",
+        "meas_neck_width": "Ширина вирізу",
+        "meas_half_measure": "Напівобхват",
         "meas_rise": "Посадка",
         "offer_disabled": "Для цього товару торг не передбачено!",
-        "share_check_out": "Заціни:"
+        "share_check_out": "Заціни:",
+        "offer_declined_toast": "Продавець відхилив вашу пропозицію щодо ціни.",
+        "default_desc": "Оригінал. Будь-які перевірки. Відмінний стан. Додаткові заміри за запитом у ЛС."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -199,7 +202,8 @@
         "btn_understood": "[ ЗРОЗУМІЛО ]",
         "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ УВАГА ]</span><br><span style=\"color:#fff;\">Річ від стороннього продавця. NISHA — гарант угоди.</span><br><br>Огляд та примірка — суворо на «Новій Пошті» (при післяплаті залишок сплачується після перевірки).<br><br>Після отримання посилки повернення неможливе: угода вважається закритою, а кошти одразу переказуються власнику.",
         "bargain_title": "BARGAIN_AVAILABLE.SYS",
-        "bargain_text": "На цей товар доступний торг. Ви можете запропонувати свою ціну продавцю за допомогою кнопки «ЗАПРОПОНУВАТИ СВОЮ ЦІНУ»."
+        "bargain_text": "На цей товар доступний торг. Ви можете запропонувати свою ціну продавцю за допомогою кнопки «ЗАПРОПОНУВАТИ СВОЮ ЦІНУ».",
+        "min_bargain_price": "Мінімальна ціна для торгу:"
       },
       "grid": {
         "size_prefix": "Розмір: "
@@ -295,7 +299,8 @@
         "promo_warming": "Сервер запускається, натисніть «Застосувати» ще раз",
         "location_prefix": "Локація: ",
         "promo_applied": "Код активовано",
-        "promo_order_discount": "Знижка на замовлення:"
+        "promo_order_discount": "Знижка на замовлення:",
+        "processing_data": "[ ОБРОБКА ДАНИХ... ]"
       },
       "orders_modal": {
         "access_granted": "Доступ дозволено",
@@ -562,7 +567,7 @@
         "reply_btn_read": "[ ПРОЧИТАНО ]",
         "topic_bug": "[ БАГ ]",
         "topic_order": "[ ЗАМОВЛЕННЯ / ТТН ]",
-        "topic_bargain": "[ ПРЕДЛОЖКА / ТОРГ ]",
+        "topic_bargain": "[ ПРОПОЗИЦІЯ / ТОРГ ]",
         "topic_idea": "[ ІДЕЯ ]"
       },
       "pwa": {
@@ -670,7 +675,8 @@
         "recent_queries": "НЕДАВНИЕ ЗАПРОСЫ",
         "clear_history": "ОЧИСТИТЬ",
         "no_items_hint": "Попробуйте изменить запрос или сбросить активные фильтры",
-        "reset_filters": "СБРОСИТЬ ФИЛЬТРЫ"
+        "reset_filters": "СБРОСИТЬ ФИЛЬТРЫ",
+        "bargain_badge": "ТОРГ"
       },
       "nav": {
         "home": "ГЛАВНАЯ",
@@ -843,7 +849,9 @@
         "meas_half_measure": "Полуобхват",
         "meas_rise": "Посадка",
         "offer_disabled": "Для этого товара торг не предусмотрен!",
-        "share_check_out": "Зацени:"
+        "share_check_out": "Зацени:",
+        "offer_declined_toast": "Продавец отклонил ваше предложение по цене.",
+        "default_desc": "Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -860,7 +868,8 @@
         "btn_understood": "[ ПОНЯТНО ]",
         "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ВНИМАНИЕ ]</span><br><span style=\"color:#fff;\">Вещь от стороннего продавца. NISHA — гарант сделки.</span><br><br>Осмотр и примерка — строго на «Новой Почте» (при наложке остаток оплачивается после проверки).<br><br>После забора посылки возврат невозможен: сделка считается закрытой, а деньги сразу переводятся владельцу.",
         "bargain_title": "BARGAIN_AVAILABLE.SYS",
-        "bargain_text": "На данный товар доступен торг. Вы можете предложить свою цену продавцу с помощью кнопки «ПРЕДЛОЖИТЬ СВОЮ ЦЕНУ»."
+        "bargain_text": "На данный товар доступен торг. Вы можете предложить свою цену продавцу с помощью кнопки «ПРЕДЛОЖИТЬ СВОЮ ЦЕНУ».",
+        "min_bargain_price": "Минимальная цена для торга:"
       },
       "grid": {
         "size_prefix": "Размер: "
@@ -936,13 +945,13 @@
         "save_to_profile": "Запомнить этот адрес в профиле",
         "otp_expired": "Время ожидания подтверждения истекло. Запросите код снова.",
         "offline_banner": "[!] ОФЛАЙН-РЕЖИМ: Отображаются сохраненные товары. Оформление заказа возобновится при появлении сети.",
-        "name_ph": "Іванов Іван Іванович",
-        "city_ph": "Київ...",
-        "branch_ph": "Відділення або поштомат...",
+        "name_ph": "Иванов Иван Иванович",
+        "city_ph": "Киев...",
+        "branch_ph": "Отделение или почтомат...",
         "promo_ph": "Введите код...",
         "branch_placeholder": "Выберите отделение...",
         "choose_city_first": "Сначала выберите город",
-        "loading_branches": "Завантаження відділень...",
+        "loading_branches": "Загрузка отделений...",
         "calc_pending": "Рассчитываем...",
         "np_rates": "По тарифам НП",
         "checking_stock": "[ ПРОВЕРКА НАЛИЧИЯ... ]",
@@ -956,7 +965,8 @@
         "promo_warming": "Сервер запускается, нажмите «Применить» ещё раз",
         "location_prefix": "Локация: ",
         "promo_applied": "Код активирован",
-        "promo_order_discount": "Скидка на заказ:"
+        "promo_order_discount": "Скидка на заказ:",
+        "processing_data": "[ ОБРАБОТКА ДАННЫХ... ]"
       },
       "orders_modal": {
         "access_granted": "Доступ разрешен",
@@ -1049,9 +1059,9 @@
         "delivery_btn": "[ ДАННЫЕ ДОСТАВКИ ▼ ]",
         "delivery_btn_open": "[ ДАННЫЕ ДОСТАВКИ ▲ ]",
         "delivery_fullname": "ФИО ПОЛУЧАТЕЛЯ:",
-        "delivery_fullname_ph": "Іванов Іван Іванович",
+        "delivery_fullname_ph": "Иванов Иван Иванович",
         "delivery_address": "МЕСТО ДОСТАВКИ (НП):",
-        "delivery_address_ph": "Київ, Відділення №45...",
+        "delivery_address_ph": "Киев, Отделение №45...",
         "delivery_save": "[ СОХРАНИТЬ ]",
         "delivery_saved_toast": "Данные доставки сохранены!",
         "delivery_fill_warn": "Заполните ФИО или место доставки!",
@@ -1331,7 +1341,8 @@
         "recent_queries": "RECENT SEARCHES",
         "clear_history": "CLEAR",
         "no_items_hint": "Try adjusting your query or resetting active filters",
-        "reset_filters": "RESET FILTERS"
+        "reset_filters": "RESET FILTERS",
+        "bargain_badge": "OFFER"
       },
       "nav": {
         "home": "HOME",
@@ -1504,7 +1515,9 @@
         "meas_half_measure": "Half-measure",
         "meas_rise": "Rise",
         "offer_disabled": "Bargaining is not available for this item!",
-        "share_check_out": "Check out:"
+        "share_check_out": "Check out:",
+        "offer_declined_toast": "The seller declined your price offer.",
+        "default_desc": "Authentic. Any legit checks welcome. Great condition. Extra measurements available on request."
       },
       "badge_info": {
         "secure_title": "SECURE_PAYMENT.EXE",
@@ -1521,7 +1534,8 @@
         "btn_understood": "[ GOT IT ]",
         "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ ATTENTION ]</span><br><span style=\"color:#fff;\">Item from a third-party seller. NISHA is the deal escrow.</span><br><br>Inspection and try-on strictly at Nova Poshta (for COD, remaining balance is paid after check).<br><br>No returns after pickup: deal is finalized and funds are immediately transferred to seller.",
         "bargain_title": "BARGAIN_AVAILABLE.SYS",
-        "bargain_text": "Bargaining is available for this item. You can make an offer to the seller using the MAKE AN OFFER button."
+        "bargain_text": "Bargaining is available for this item. You can make an offer to the seller using the MAKE AN OFFER button.",
+        "min_bargain_price": "Minimum offer price:"
       },
       "grid": {
         "size_prefix": "Size: "
@@ -1617,7 +1631,8 @@
         "promo_warming": "Server is warming up, please click \"Apply\" again",
         "location_prefix": "Location: ",
         "promo_applied": "Code applied",
-        "promo_order_discount": "Order discount:"
+        "promo_order_discount": "Order discount:",
+        "processing_data": "[ PROCESSING DATA... ]"
       },
       "orders_modal": {
         "access_granted": "Access granted",

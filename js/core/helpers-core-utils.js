@@ -564,9 +564,14 @@ exposeGlobal('sleep', sleep);
  */
 export async function withWebLock(name, fn) {
     if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
+        let entered = false;
         try {
-            return await navigator.locks.request(name, fn);
+            return await navigator.locks.request(name, async (lock) => {
+                entered = true;
+                return await fn(lock);
+            });
         } catch (e) {
+            if (entered) throw e;
             return await fn();
         }
     }

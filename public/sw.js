@@ -222,17 +222,17 @@ self.addEventListener('fetch', event => {
     
     if (isImage) {
         event.respondWith(
-            caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
+            caches.match(event.request).then(cachedResponse => {
                 if (cachedResponse) return cachedResponse;
                 
                 return fetch(event.request).then(networkResponse => {
                     if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
                         const responseToCache = networkResponse.clone();
                         caches.open(IMAGE_CACHE).then(cache => {
-                            cache.put(event.request, responseToCache).then(() => {
+                            return cache.put(event.request, responseToCache).then(() => {
                                 scheduleTrimCache(IMAGE_CACHE, 150);
                             });
-                        });
+                        }).catch(() => {});
                     }
                     return networkResponse;
                 }).catch(() => {
@@ -272,7 +272,7 @@ self.addEventListener('fetch', event => {
                 if (isValidIconRes(fallbackAnyVersion)) {
                     return fallbackAnyVersion;
                 }
-                return fetch(event.request);
+                return Response.error();
             })()
         );
         return;

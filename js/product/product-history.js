@@ -209,7 +209,8 @@ export function renderSimilarItems(item) {
                 imageFilter = 'filter: brightness(0.6);';
             }
 
-            let imageBlockHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; font-family:var(--font-mono); font-size:10px;">NO FOTO</div>`;
+            const noPhotoLabel = getEscHtml(tSafe('product.no_photo', 'NO PHOTO'));
+            let imageBlockHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555; font-family:var(--font-mono); font-size:10px;">${noPhotoLabel}</div>`;
 
             const safeSimImg = sanitizeHistoryMediaUrl(sImg);
             if (safeSimImg) {
@@ -301,13 +302,13 @@ export function renderHistory() {
         return;
     }
 
-    section.style.display = 'block';
     if (typeof container.replaceChildren === 'function') container.replaceChildren();
     else container.innerHTML = '';
 
     const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
     const fragment = document.createDocumentFragment();
     const cardsForTilt = [];
+    let renderedCount = 0;
 
     hist.forEach(h => {
         const realItem = catalog.find(i => i.id === h.id);
@@ -353,7 +354,8 @@ export function renderHistory() {
         card.setAttribute('data-action', 'open-product');
         card.setAttribute('data-id', h.id);
 
-        let mediaHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555;">NO FOTO</div>';
+        const noPhotoHistLabel = getEscHtml(tSafe('product.no_photo', 'NO PHOTO'));
+        let mediaHTML = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#555;">${noPhotoHistLabel}</div>`;
 
         if (optImg) {
             if (isVideo) {
@@ -400,12 +402,19 @@ export function renderHistory() {
             </div>`;
 
         fragment.appendChild(card);
+        renderedCount += 1;
 
         if (window.innerWidth > 900) {
             cardsForTilt.push(card);
         }
     });
 
+    if (renderedCount === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
     container.appendChild(fragment);
 
     if (cardsForTilt.length > 0) {

@@ -29,25 +29,89 @@ export async function loadIMask() {
 }
 
 function imaskStub(el, opts) {
+    let realInstance = null;
+    let pendingValue = el ? el.value : '';
+    let pendingUnmaskedValue = el ? el.value : '';
+    let pendingOptions = null;
+    let destroyed = false;
+    const queuedListeners = [];
+
     const fakeInstance = {
         _isStub: true,
-        value: el ? el.value : '',
-        unmaskedValue: el ? el.value : '',
-        destroy: () => {},
-        updateOptions: () => {},
-        on: () => {},
-        off: () => {}
-    };
-    loadIMask().then(realIMask => {
-        if (realIMask && el) {
-            const real = realIMask(el, opts);
-            if (fakeInstance.value && fakeInstance.value !== (el ? el.value : '')) {
-                try { real.value = fakeInstance.value; } catch {}
+        get value() {
+            return realInstance ? realInstance.value : pendingValue;
+        },
+        set value(val) {
+            pendingValue = String(val ?? '');
+            if (realInstance) {
+                try { realInstance.value = pendingValue; } catch {}
+            } else if (el) {
+                el.value = pendingValue;
             }
-            fakeInstance._isStub = false;
-            Object.assign(fakeInstance, real);
-            el._imask = real;
+        },
+        get unmaskedValue() {
+            if (realInstance) return realInstance.unmaskedValue;
+            return el ? String(el.value || '').replace(/\D/g, '') : pendingUnmaskedValue;
+        },
+        set unmaskedValue(val) {
+            pendingUnmaskedValue = String(val ?? '');
+            if (realInstance) {
+                try { realInstance.unmaskedValue = pendingUnmaskedValue; } catch {}
+            }
+        },
+        destroy: () => {
+            destroyed = true;
+            queuedListeners.length = 0;
+            if (realInstance && typeof realInstance.destroy === 'function') {
+                realInstance.destroy();
+            }
+        },
+        updateOptions: (nextOpts) => {
+            pendingOptions = nextOpts;
+            if (realInstance && typeof realInstance.updateOptions === 'function') {
+                realInstance.updateOptions(nextOpts);
+            }
+        },
+        updateValue: () => {
+            if (realInstance && typeof realInstance.updateValue === 'function') {
+                realInstance.updateValue();
+            }
+        },
+        on: (evt, fn) => {
+            if (realInstance && typeof realInstance.on === 'function') {
+                realInstance.on(evt, fn);
+            } else if (typeof fn === 'function') {
+                queuedListeners.push([evt, fn]);
+            }
+            return fakeInstance;
+        },
+        off: (evt, fn) => {
+            if (realInstance && typeof realInstance.off === 'function') {
+                realInstance.off(evt, fn);
+            } else {
+                for (let i = queuedListeners.length - 1; i >= 0; i -= 1) {
+                    if (queuedListeners[i][0] === evt && (!fn || queuedListeners[i][1] === fn)) {
+                        queuedListeners.splice(i, 1);
+                    }
+                }
+            }
+            return fakeInstance;
         }
+    };
+
+    loadIMask().then(realIMask => {
+        if (destroyed || !realIMask || !el) return;
+        const real = realIMask(el, pendingOptions || opts);
+        realInstance = real;
+        fakeInstance._isStub = false;
+        if (pendingValue && pendingValue !== (el ? el.value : '')) {
+            try { real.value = pendingValue; } catch {}
+        }
+        while (queuedListeners.length > 0) {
+            const [evt, fn] = queuedListeners.shift();
+            try { real.on(evt, fn); } catch {}
+        }
+        el._imask = real;
     });
     return fakeInstance;
 }

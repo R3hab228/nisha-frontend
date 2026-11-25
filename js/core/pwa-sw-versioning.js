@@ -259,7 +259,9 @@ export function initServiceWorkerUpdates() {
         }).catch(err => console.warn('[PWA] Ошибка SW: ', err));
     };
 
-    if (typeof window.addEventListener === 'function') {
-        window.addEventListener('load', registerSw);
+    if (typeof document !== 'undefined' && document.readyState === 'complete') {
+        registerSw();
+    } else if (typeof window.addEventListener === 'function') {
+        window.addEventListener('load', registerSw, { once: true });
     }
 }

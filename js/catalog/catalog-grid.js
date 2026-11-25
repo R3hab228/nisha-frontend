@@ -16,7 +16,8 @@ import {
     buildStatusBadgeHtml,
     buildCardPriceHtml,
     buildCardDOM,
-    escCardHtml
+    escCardHtml,
+    readAcceptedBargain
 } from './catalog-card-markup.js';
 import {
     markCardImageLoaded,
@@ -76,12 +77,19 @@ export function updateCardDOM(item) {
             if (item.status === 'sold') {
                 card.classList.add('sold-out');
                 card.classList.remove('unseen-pulse');
-                if (cartBtn) cartBtn.style.display = 'none';
+                if (cartBtn) {
+                    cartBtn.classList.add('grid-cart-btn--hidden');
+                    cartBtn.style.display = '';
+                }
             } else if (item.status === 'reserved') {
                 card.classList.add('reserved-item');
                 card.classList.remove('unseen-pulse');
-                if (cartBtn) cartBtn.style.display = '';
+                if (cartBtn) {
+                    cartBtn.classList.remove('grid-cart-btn--hidden');
+                    cartBtn.style.display = '';
+                }
             } else if (cartBtn) {
+                cartBtn.classList.remove('grid-cart-btn--hidden');
                 cartBtn.style.display = '';
             }
 
@@ -137,9 +145,17 @@ export function updateCardDOM(item) {
             }
         }
         if (modalPriceEl) {
-            const isHackedActive = isSiteHackedMode();
-            const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
-            modalPriceEl.textContent = hasAction('formatPrice') ? invokeAction('formatPrice', finalPrice) : (finalPrice + ' ' + curr);
+            const acceptedBargain = readAcceptedBargain(item);
+            const fmtPrice = (val) => (hasAction('formatPrice') ? invokeAction('formatPrice', val) : `${val} ${curr}`);
+            if (acceptedBargain && Number(acceptedBargain.acceptedPrice) > 0 && item.status !== 'sold') {
+                const origFmt = escCardHtml(fmtPrice(item.price));
+                const accFmt = escCardHtml(fmtPrice(Number(acceptedBargain.acceptedPrice)));
+                modalPriceEl.innerHTML = `<span style="text-decoration:line-through;opacity:0.5;font-size:0.8em;margin-right:6px;">${origFmt}</span><span style="color:var(--accent-yellow);">${accFmt}</span>`;
+            } else {
+                const isHackedActive = isSiteHackedMode();
+                const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
+                modalPriceEl.textContent = fmtPrice(finalPrice);
+            }
         }
     }
 }
@@ -359,6 +375,12 @@ export function initGridEventDelegation() {
         }
     }, { passive: true });
 
+    grid.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse') {
+            isDraggingSlider = false;
+        }
+    }, { passive: true });
+
     grid.addEventListener('click', (e) => {
         if (e.target.closest('#toastContainer, .toast') || (hasAction('isToastClickShielded') && invokeAction('isToastClickShielded'))) {
             e.preventDefault();
@@ -369,6 +391,7 @@ export function initGridEventDelegation() {
         if (!card) return;
         if (e.target.closest('.fav-star, .grid-cart-btn, .grid-slider-btn, .card-dots-container, [data-action]')) return;
         if (isDraggingSlider && e.target.closest('.card-slider-wrapper')) {
+            isDraggingSlider = false;
             e.preventDefault();
             e.stopPropagation();
             return;

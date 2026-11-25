@@ -337,6 +337,10 @@ export async function openProposalPhotoByIndex(index, element = null) {
         const clickedIndex = photos.findIndex(f => f === item);
         if (clickedIndex < 0) return;
 
+        if (window._activeDropLightbox && typeof window._activeDropLightbox.destroy === 'function') {
+            try { window._activeDropLightbox.destroy(); } catch {}
+            window._activeDropLightbox = null;
+        }
         const pswp = new window.PhotoSwipeLightbox({
             dataSource: photos.map(f => ({
                 src: f.url,
@@ -348,6 +352,7 @@ export async function openProposalPhotoByIndex(index, element = null) {
             hideAnimationDuration: 200,
             pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
         });
+        window._activeDropLightbox = pswp;
         bindPhotoSwipeBackGesture(pswp);
         pswp.init();
         pswp.loadAndOpen(clickedIndex);

@@ -3,7 +3,7 @@
 // Registers lazy chunk loaders directly into ActionRegistry (+ compat global bridge)
 // ==========================================
 
-import { invokeAction, registerAction } from './action-registry.js';
+import { invokeAction, registerAction, resolveAction } from './action-registry.js';
 
 function registerLazyModuleBridge(loaderFn, methodEntries) {
     let modulePromise = null;
@@ -12,6 +12,7 @@ function registerLazyModuleBridge(loaderFn, methodEntries) {
             modulePromise = loaderFn().catch(err => {
                 modulePromise = null;
                 console.error('[LazyModule] Load error:', err);
+                throw err;
             });
         }
         return modulePromise;
@@ -28,7 +29,12 @@ function registerLazyModuleBridge(loaderFn, methodEntries) {
             if (typeof resolved === 'function' && resolved !== proxyStub) {
                 return Reflect.apply(resolved, this, args);
             }
-            return invokeAction(fnName, ...args);
+            const actionFn = resolveAction(fnName);
+            if (typeof actionFn === 'function' && actionFn !== proxyStub) {
+                return invokeAction(fnName, ...args);
+            }
+            console.warn(`[LazyModule] Action "${fnName}" is not exported after chunk load.`);
+            return undefined;
         };
         proxyStub._isNishaLazyStub = true;
 
@@ -209,7 +215,7 @@ const loadProfileModalModule = registerLazyModuleBridge(
 function isSoundEnabledLite() {
     try {
         if (typeof localStorage !== 'undefined') {
-            return localStorage.getItem('nisha_sound_enabled') !== '0';
+            return localStorage.getItem('nisha_sfx_enabled') !== '0';
         }
     } catch {}
     return true;

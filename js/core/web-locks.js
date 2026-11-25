@@ -56,15 +56,18 @@ async function runWithLock(lockName, taskFn, options = {}) {
     const { ifAvailable = true, mode = 'exclusive' } = options;
 
     if (isWebLocksSupported()) {
+        let entered = false;
         try {
             return await navigator.locks.request(lockName, { mode, ifAvailable }, async (lock) => {
                 if (ifAvailable && !lock) {
                     // Another tab is actively holding this lock. Skip duplicate operation.
                     return null;
                 }
+                entered = true;
                 return await taskFn();
             });
         } catch (err) {
+            if (entered) throw err;
             return await taskFn();
         }
     }

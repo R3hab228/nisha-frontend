@@ -3,7 +3,7 @@
 // ==========================================
 
 import { hasAction, invokeAction, registerActions } from './action-registry.js';
-import { escapeAttr, escapeHtml, toCDN } from './helpers-security-media.js';
+import { escapeAttr, escapeHtml, sanitizeCssMediaUrl, toCDN } from './helpers-security-media.js';
 import { tSafe } from './runtime-env.js';
 import {
     showTerminalModal,
@@ -138,12 +138,13 @@ export function isToastClickShielded() {
 }
 
 function buildToastThumbHtml(imgUrl, useCdn = false) {
-    if (!imgUrl || typeof imgUrl !== 'string' || /^\s*javascript:/i.test(imgUrl)) {
+    if (!imgUrl || typeof imgUrl !== 'string') {
         return '';
     }
     const resolved = useCdn ? toCDN(imgUrl) : imgUrl;
-    const safeImgUrl = escapeAttr(resolved).replaceAll('(', '%28').replaceAll(')', '%29');
-    return `<div class="toast-item-thumb" style="background-image: url('${safeImgUrl}');"></div>`;
+    const safeImgUrl = sanitizeCssMediaUrl(resolved);
+    if (!safeImgUrl) return '';
+    return `<div class="toast-item-thumb" style="background-image: url('${escapeAttr(safeImgUrl)}');"></div>`;
 }
 
 function bindToastDismissClick(toast, onClick, dismiss, logError = false) {
@@ -581,8 +582,7 @@ function _displayUnifiedNewItemToast(items) {
 
     let html = '';
     if (imgUrl) {
-        const cdnImg = toCDN(imgUrl);
-        html += `<div class="toast-item-thumb" style="background-image: url('${safeToastEscape(cdnImg)}');"></div>`;
+        html += buildToastThumbHtml(imgUrl, true);
     }
     html += `
         <div class="toast-item-content">

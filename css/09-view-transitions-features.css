@@ -221,7 +221,7 @@
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .feed-scroll-restored-badge.cart-active,
-body:has(.cart-panel.active) .feed-scroll-restored-badge {
+body:has(.cart-panel.show) .feed-scroll-restored-badge {
     bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 }
 body:has(.cart-dropdown.active) .feed-scroll-restored-badge,
@@ -249,7 +249,7 @@ body:has(.cart-panel.dropdown-open) .feed-scroll-restored-badge {
         gap: 6px;
     }
     .feed-scroll-restored-badge.cart-active,
-    body:has(.cart-panel.active) .feed-scroll-restored-badge {
+    body:has(.cart-panel.show) .feed-scroll-restored-badge {
         bottom: calc(122px + env(safe-area-inset-bottom, 0px));
     }
     .feed-scroll-restored-badge .feed-scroll-icon {

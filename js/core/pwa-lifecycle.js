@@ -33,7 +33,8 @@ export function isPwaAlreadyInstalled() {
             return true;
         }
         const store = getRuntimeStorage();
-        if (store && store.get(PWA_INSTALLED_KEY) === '1') return true;
+        const installedFlag = store ? store.get(PWA_INSTALLED_KEY) : null;
+        if (installedFlag === '1' || installedFlag === 'true') return true;
     } catch {}
     return false;
 }
@@ -101,7 +102,14 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
         const installLabel = t('footer.pwa_broadcast_install', '⬇ УСТАНОВИТЬ');
         const laterLabel = t('footer.pwa_broadcast_later', 'ПОЗЖЕ');
 
-        document.querySelectorAll('.terminal-modal-overlay').forEach(el => el.remove());
+        document.querySelectorAll('.terminal-modal-overlay').forEach(el => {
+            if (typeof el._nishaDismiss === 'function') {
+                try { el._nishaDismiss(); } catch { el.remove(); }
+                if (el.isConnected) el.remove();
+            } else {
+                el.remove();
+            }
+        });
 
         const overlay = document.createElement('div');
         overlay.className = 'terminal-modal-overlay pwa-broadcast-overlay';

@@ -74,6 +74,11 @@ export function highlightFieldError(inputEl) {
  */
 export async function submitOrder() {
     if (cartState.isOrderSubmitting) return;
+    if (getActiveCart().length === 0) {
+        if (typeof showToast === 'function') showToast(tSafe('messages.cart_empty', 'Корзина пуста!'), 'error');
+        if (hasAction('closeModal')) invokeAction('closeModal', 'checkoutModal');
+        return;
+    }
     if (hasAction('triggerVibration')) invokeAction('triggerVibration', 150);
     const g = /** @type {any} */ (globalThis);
     const botTrap = /** @type {HTMLInputElement | null} */ (document.getElementById('botTrap'));
@@ -217,6 +222,11 @@ export async function submitOrder() {
 export async function executeOrderFinal(emailToSave) {
     return await withCheckoutLock(async () => {
         if (cartState.isOrderSubmitting) return;
+        if (getActiveCart().length === 0) {
+            if (typeof showToast === 'function') showToast(tSafe('messages.cart_empty', 'Корзина пуста!'), 'error');
+            if (hasAction('closeModal')) invokeAction('closeModal', 'checkoutModal');
+            return;
+        }
         cartState.isOrderSubmitting = true;
         const btnSubmit = document.getElementById('btnSubmitOrder');
         if (!btnSubmit) {
@@ -237,8 +247,9 @@ export async function executeOrderFinal(emailToSave) {
         btnSubmit.style.position = 'relative';
         btnSubmit.style.overflow = 'hidden';
         btnSubmit.style.color = '#000';
+        const processingLabel = tSafe('checkout.processing_data', '[ ОБРАБОТКА ДАННЫХ... ]');
         btnSubmit.innerHTML = `
-            <span class="checkout-submit-label">[ ОБРАБОТКА ДАННЫХ... ]</span>
+            <span class="checkout-submit-label">${processingLabel}</span>
             <div id="btnProgressBar" class="checkout-submit-progress"></div>
         `;
 

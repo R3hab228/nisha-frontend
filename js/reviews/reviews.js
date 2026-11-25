@@ -21,12 +21,18 @@ const toCDN = (u) => {
     return fn ? fn(u) : (u || '');
 };
 
+let _activeReviewLightbox = null;
+
 // Глобальная функция для открытия 1 картинки в PhotoSwipe
 async function openReviewImage(url) {
     if (typeof ensurePhotoSwipe === 'function') {
         await ensurePhotoSwipe();
     }
     if (!window.PhotoSwipeLightbox) return;
+    if (_activeReviewLightbox && typeof _activeReviewLightbox.destroy === 'function') {
+        try { _activeReviewLightbox.destroy(); } catch {}
+        _activeReviewLightbox = null;
+    }
     const cdnUrl = toCDN(url);
     const lightbox = new window.PhotoSwipeLightbox({
         dataSource: [{ src: cdnUrl, width: 1000, height: 1000 }],
@@ -35,6 +41,7 @@ async function openReviewImage(url) {
         hideAnimationDuration: 200,
         pswpModule: window.PhotoSwipe || (() => import('photoswipe'))
     });
+    _activeReviewLightbox = lightbox;
     bindPhotoSwipeBackGesture(lightbox);
     lightbox.init();
     lightbox.loadAndOpen(0);
@@ -276,7 +283,12 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
     if (nameEl) nameEl.textContent = itemName;
 
     const previewEl = document.getElementById('autoReviewImg');
-    if (previewEl) previewEl.style.backgroundImage = resolvedImg ? `url('${resolvedImg}')` : 'none';
+    if (previewEl) {
+        const safePreviewUrl = hasAction('sanitizeCssMediaUrl')
+            ? invokeAction('sanitizeCssMediaUrl', resolvedImg)
+            : (/^https?:\/\//i.test(String(resolvedImg || '').trim()) ? String(resolvedImg).trim().replaceAll("'", '%27').replaceAll('"', '%22').replaceAll('(', '%28').replaceAll(')', '%29') : '');
+        previewEl.style.backgroundImage = safePreviewUrl ? `url('${safePreviewUrl}')` : 'none';
+    }
 
     const inputEl = document.getElementById('autoReviewInput');
     if (inputEl) inputEl.value = ''; 

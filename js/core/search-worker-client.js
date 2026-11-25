@@ -32,6 +32,7 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
 
                     // Проверка на устаревшие запросы (race condition protection)
                     if (channel && reqId < lastActiveRequestId[channel]) {
+                        resolve(null);
                         return; // Запрос устарел, более новый уже отправлен
                     }
 

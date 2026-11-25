@@ -138,15 +138,20 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
         }
         let finalBody = options.body;
 
-        // Автоматическая передача JWT токена текущей авторизованной сессии Supabase (защита от IDOR/BOLA)
+        // Автоматическая передача JWT токена текущей авторизованной сессии Supabase (только на свой API / same-origin)
         if (!headers.has('Authorization') && typeof window !== 'undefined') {
             try {
-                const sb = window._supabase || invokeAction('getSupabase');
-                if (sb && sb.auth && typeof sb.auth.getSession === 'function') {
-                    const sess = await sb.auth.getSession();
-                    const tok = sess && sess.data && sess.data.session && sess.data.session.access_token;
-                    if (tok) {
-                        headers.set('Authorization', `Bearer ${tok}`);
+                const pageOrigin = window.location?.origin || '';
+                const apiOrigin = new URL(getBaseUrl(), pageOrigin || 'https://www.nisha-store.shop').origin;
+                const targetOrigin = new URL(url, pageOrigin || apiOrigin).origin;
+                if (targetOrigin === apiOrigin || (pageOrigin && targetOrigin === pageOrigin)) {
+                    const sb = window._supabase || invokeAction('getSupabase');
+                    if (sb && sb.auth && typeof sb.auth.getSession === 'function') {
+                        const sess = await sb.auth.getSession();
+                        const tok = sess && sess.data && sess.data.session && sess.data.session.access_token;
+                        if (tok) {
+                            headers.set('Authorization', `Bearer ${tok}`);
+                        }
                     }
                 }
             } catch {}

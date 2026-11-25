@@ -43,7 +43,12 @@ if (typeof window !== 'undefined') {
         Promise.all([
             import('../js/core/analytics.js'),
             import('../js/core/rum.js')
-        ]).catch(() => {});
+        ]).then(([analyticsMod]) => {
+            const analyticsApi = (analyticsMod && analyticsMod.default) || window.analytics;
+            if (analyticsApi && typeof analyticsApi.init === 'function') {
+                analyticsApi.init();
+            }
+        }).catch(() => {});
     };
     if ('requestIdleCallback' in window) {
         window.requestIdleCallback(loadTelemetryChunks, { timeout: 1500 });

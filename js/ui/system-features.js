@@ -472,6 +472,7 @@ document.addEventListener('keydown', function(e) {
         }
 
         if (activeEl.tagName === 'INPUT') {
+            if (e.defaultPrevented) return;
             if (activeEl.id === 'propMinBargainPrice') {
                 e.preventDefault();
                 invokeAction('confirmPropBargainInput');
@@ -518,8 +519,19 @@ document.addEventListener('keydown', function(e) {
 
     const pModal = document.getElementById('productModal');
     if (pModal && (pModal.style.display === 'flex' || pModal.style.display === 'block')) {
-        if (e.key === 'ArrowLeft') invokeAction('moveSlide', -1);
-        else if (e.key === 'ArrowRight') invokeAction('moveSlide', 1);
+        const activeTag = document.activeElement?.tagName;
+        const isEditingField = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || Boolean(document.activeElement?.isContentEditable);
+        const hasBlockingOverlay = Boolean(
+            document.querySelector('.pswp--open, .terminal-modal-overlay') ||
+            (() => {
+                const bm = document.getElementById('bargainModal');
+                return bm && (bm.style.display === 'flex' || bm.style.display === 'block');
+            })()
+        );
+        if (!isEditingField && !hasBlockingOverlay) {
+            if (e.key === 'ArrowLeft') invokeAction('moveSlide', -1);
+            else if (e.key === 'ArrowRight') invokeAction('moveSlide', 1);
+        }
     }
 });
 

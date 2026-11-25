@@ -290,10 +290,19 @@ export async function syncCriticalStatuses() {
     const executeSync = async () => {
         _isSyncingItems = true;
         try {
-            const { data, error } = await sb.from('items')
-                .select('id, name, brand, price, old_price, is_sale, is_top, top_until, status, views_count, created_at, category, size, condition')
+            const SYNC_COLS_WITH_BARGAIN = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, views_count, created_at, category, size, condition, is_bargain, min_bargain_price';
+            const SYNC_COLS_LEGACY = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, views_count, created_at, category, size, condition';
+            let syncRes = await sb.from('items')
+                .select(SYNC_COLS_WITH_BARGAIN)
                 .order('created_at', { ascending: false })
                 .limit(999);
+            if (isMissingColumnError(syncRes.error, ['is_bargain', 'min_bargain_price'])) {
+                syncRes = await sb.from('items')
+                    .select(SYNC_COLS_LEGACY)
+                    .order('created_at', { ascending: false })
+                    .limit(999);
+            }
+            const { data, error } = syncRes;
 
             if (error || !data) return;
 
@@ -396,7 +405,10 @@ export async function syncCriticalStatuses() {
 
                 const statusChanged = item.status !== fresh.status;
                 const saleChanged = (!!item.is_sale !== !!fresh.is_sale) || (item.old_price !== fresh.old_price);
-                const bargainChanged = isItemBargainEnabled(item) !== isItemBargainEnabled(fresh);
+                const hasFreshBargainMeta = fresh.is_bargain !== undefined || fresh.min_bargain_price !== undefined;
+                const bargainChanged = hasFreshBargainMeta
+                    ? (isItemBargainEnabled(item) !== isItemBargainEnabled({ ...item, ...fresh }))
+                    : false;
                 const priceChanged = item.price !== fresh.price;
                 const wasHot = (item.views_count || 0) >= 25;
                 const nowHot = (fresh.views_count || 0) >= 25;

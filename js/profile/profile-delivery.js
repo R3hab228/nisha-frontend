@@ -406,13 +406,13 @@ export async function saveDeliveryToProfile(fullName, address, refs = {}) {
     const activeUser = profileState.currentUser;
     const sb = getSupabase();
     if (activeUser && sb) {
-        try {
-            await sb.from('profiles').update({
-                full_name: fn,
-                delivery_address: addr
-            }).eq('id', activeUser.id);
-        } catch (err) {
-            console.error('Ошибка сохранения доставки в профиле Supabase:', err);
+        const { error: dbErr } = await sb.from('profiles').update({
+            full_name: fn,
+            delivery_address: addr
+        }).eq('id', activeUser.id);
+        if (dbErr) {
+            console.error('Ошибка сохранения доставки в профиле Supabase:', dbErr);
+            throw dbErr;
         }
     }
 }

@@ -368,7 +368,7 @@ export function renderFilteredOrders() {
         }).join('');
 
         let ttnHtml = '';
-        if ((order.status || '').toUpperCase() !== 'ОТМЕНЕН') {
+        if (getOrderTabBucket(order) !== 'cancelled') {
             const rawTtns = String(order.tracking_number || '')
                 .split(/[,;\n\r/]+/)
                 .map(t => t.trim())
@@ -547,7 +547,7 @@ export function openOrdersModal() {
         const displayNameFn = resolveAction('getUserDisplayName');
         const dName = displayNameFn
             ? displayNameFn(activeUser, activeProfile)
-            : (activeProfile?.username || activeUser.user_metadata?.display_name || activeUser.user_metadata?.username || activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || activeUser.email.split('@').at(0));
+            : (activeProfile?.username || activeUser.user_metadata?.display_name || activeUser.user_metadata?.username || activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || (activeUser.email ? activeUser.email.split('@').at(0) : 'User'));
 
         const grantedMsg = tSafe('orders_modal.access_granted', 'Доступ разрешен');
         const safeDName = escHtml(dName);

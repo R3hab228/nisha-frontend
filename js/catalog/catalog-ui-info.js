@@ -18,7 +18,10 @@ export function showBadgeInfo(type) {
     if (type === 'secure') {
         title = tSafe('badge_info.secure_title', { defaultValue: 'SECURE_PAYMENT.EXE' });
         const isReturnable = activeItem && activeItem.is_returnable === true;
-        const isDropItem = activeItem && (activeItem.is_drop === true || (activeItem.tags && activeItem.tags.map(t => t.toLowerCase()).includes('drop')));
+        const normalizedTags = activeItem && Array.isArray(activeItem.tags)
+            ? activeItem.tags.map(t => String(t).toLowerCase())
+            : (activeItem && typeof activeItem.tags === 'string' ? activeItem.tags.split(',').map(t => t.trim().toLowerCase()) : []);
+        const isDropItem = Boolean(activeItem && (activeItem.is_drop === true || normalizedTags.includes('drop')));
 
         if (!isReturnable || isDropItem) {
             const defaultSecureText = 'NISHA выступает гарантом сделки. Вы не рискуете всей суммой.<br><br>Примеряйте вещь на почте: при наложке вы можете отказаться от покупки прямо в отделении.<br><br>После забора посылки домой возврат или обмен невозможен.';
@@ -33,7 +36,9 @@ export function showBadgeInfo(type) {
         title = tSafe('badge_info.bargain_title', { defaultValue: 'BARGAIN_AVAILABLE.SYS' });
         const descMatch = activeItem && typeof activeItem.description === 'string' && activeItem.description.match(/\[ТОРГ:?\s*(?:(?:від|от)\s*)?(\d+)/i);
         const minVal = activeItem?.min_bargain_price || (descMatch ? descMatch[1] : null);
-        const minText = minVal ? `<br><br>Мінімальна ціна для торгу: <b style="color:var(--accent-green);">${minVal} грн</b>` : '';
+        const formattedMin = minVal ? (hasAction('formatPrice') ? invokeAction('formatPrice', Number(minVal)) : `${minVal} грн`) : '';
+        const minLabel = tSafe('badge_info.min_bargain_price', { defaultValue: 'Мінімальна ціна для торгу:' });
+        const minText = minVal ? `<br><br>${minLabel} <b style="color:var(--accent-green);">${formattedMin}</b>` : '';
         const baseBargainText = tSafe('badge_info.bargain_text', { defaultValue: 'Продавець увімкнув можливість торгу для цієї речі. Ви можете запропонувати свою суму за допомогою кнопки <b>«ЗАПРОПОНУВАТИ СВОЮ ЦІНУ»</b>.' });
         text = baseBargainText + minText;
     } else if (type === 'refund_no') {

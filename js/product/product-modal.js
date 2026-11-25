@@ -42,7 +42,7 @@ function closeSecondaryOverlays() {
  * @param {string} [qaPart='']
  */
 function renderModalDescriptionContent(item, qaPart = '') {
-    const defaultDesc = 'Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.';
+    const defaultDesc = tSafe('product.default_desc', 'Оригинал. Любые проверки. Отличное состояние. Дополнительные замеры по запросу в ЛС.');
     const rawDesc = item.description ? String(item.description) : defaultDesc;
     const { measurements, cleanText } = parseItemMeasurements(rawDesc);
     const bodyText = (cleanText || (measurements.length > 0 ? '' : defaultDesc)).replaceAll('\r', '').replaceAll('\n', '<br>');
@@ -73,7 +73,10 @@ function renderTrustBadges(item) {
     const badgesContainer = document.querySelector('.trust-badges');
     if (!badgesContainer) return;
 
-    const isDropItem = item.is_drop === true || (item.tags && item.tags.map((/** @type {string} */ t) => t.toLowerCase()).includes('drop'));
+    const normalizedTags = Array.isArray(item.tags)
+        ? item.tags.map((/** @type {any} */ t) => String(t).toLowerCase())
+        : (typeof item.tags === 'string' ? item.tags.split(',').map((/** @type {string} */ t) => t.trim().toLowerCase()) : []);
+    const isDropItem = item.is_drop === true || normalizedTags.includes('drop');
     const isReturnable = item.is_returnable === true;
 
     let refundBadgeHTML = '';
@@ -190,6 +193,7 @@ export async function openProductModalById(itemId) {
                 const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
                 if (offerWrapper) offerWrapper.style.display = showBargain ? 'block' : 'none';
                 if (offerPriceBtn) offerPriceBtn.style.display = showBargain ? 'flex' : 'none';
+                renderTrustBadges(mergedItem);
             }
 
             if (fullItem.description && String(active.description || '') !== String(fullItem.description || '')) {
@@ -405,7 +409,10 @@ export function openProductModal(item) {
                     p_viewer_id: viewerId
                 }).then((/** @type {any} */ { data, error }) => {
                     if (!error && data !== null) {
-                        viewCount.textContent = data;
+                        const stillOpened = /** @type {any} */ (getActiveOpenedItem());
+                        if (stillOpened && String(stillOpened.id) === String(item.id)) {
+                            viewCount.textContent = data;
+                        }
                         item.views_count = data;
                         if (typeof window !== 'undefined' && Array.isArray(window.allItems)) {
                             const catItem = window.allItems.find(i => i && String(i.id) === String(item.id));

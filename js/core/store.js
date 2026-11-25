@@ -508,9 +508,13 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         const nativeSetItem = Storage.prototype.setItem;
         const nativeRemoveItem = Storage.prototype.removeItem;
 
+        const isLocalStorageInstance = (/** @type {any} */ ctx) => {
+            try { return typeof localStorage !== 'undefined' && ctx === localStorage; } catch { return false; }
+        };
+
         Storage.prototype.setItem = function(key, val) {
             nativeSetItem.call(this, key, val);
-            if (!isInternalStorageSync && this === localStorage && storageKeyToStateKey.has(key)) {
+            if (!isInternalStorageSync && isLocalStorageInstance(this) && storageKeyToStateKey.has(key)) {
                 const stateKey = storageKeyToStateKey.get(key);
                 storeInstance._syncFromExternalStorage(stateKey, val);
             }
@@ -518,7 +522,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
 
         Storage.prototype.removeItem = function(key) {
             nativeRemoveItem.call(this, key);
-            if (!isInternalStorageSync && this === localStorage && storageKeyToStateKey.has(key)) {
+            if (!isInternalStorageSync && isLocalStorageInstance(this) && storageKeyToStateKey.has(key)) {
                 const stateKey = storageKeyToStateKey.get(key);
                 storeInstance._syncFromExternalStorage(stateKey, null);
             }

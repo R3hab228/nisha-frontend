@@ -1,6 +1,6 @@
 
 import { invokeAction, onAppEvent, registerActions, resolveAction } from '../core/action-registry.js';
-import { escapeHtmlSafe, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
+import { escapeHtmlSafe, getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 import { setAcceptedBargain, setBargainDeclined } from '../core/bargain-storage.js';
 import {
     SUPPORT_MAX_LENGTH,
@@ -249,14 +249,15 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     if (addBtn) {
         addBtn.addEventListener('click', async () => {
-            if (typeof triggerHaptic === 'function') triggerHaptic('success');
             const addToCartFn = resolveAction('addToCartById');
+            let added = true;
             if (addToCartFn) {
-                await addToCartFn(bargainData.itemId, bargainData.acceptedPrice);
+                added = await addToCartFn(bargainData.itemId, bargainData.acceptedPrice);
             }
-            invokeAction('openCart');
-            const addedToast = t('product.offer_added_toast', 'Товар додано в кошик за узгодженою ціною!');
-            if (typeof showToast === 'function') showToast(addedToast, 'success');
+            if (added !== false) {
+                if (typeof triggerHaptic === 'function') triggerHaptic('success');
+                invokeAction('openCart');
+            }
             closeOverlay();
         }, { signal: modalCtrl.signal });
     }

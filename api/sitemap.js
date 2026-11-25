@@ -37,6 +37,11 @@ module.exports = async function handler(req, res) {
     let items = [];
     if (dbRes.ok) {
       items = await dbRes.json();
+    } else if (cachedSitemapXml) {
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
+      res.setHeader('X-Cache-Shield', 'STALE-FALLBACK');
+      return res.status(200).send(cachedSitemapXml);
     }
 
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -85,12 +90,18 @@ module.exports = async function handler(req, res) {
 
     xml += '</urlset>';
 
-    cachedSitemapXml = xml;
-    cachedSitemapTime = Date.now();
+    const hasFullCatalog = dbRes.ok && Array.isArray(items) && items.length > 0;
+    if (hasFullCatalog) {
+      cachedSitemapXml = xml;
+      cachedSitemapTime = Date.now();
+    }
 
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400');
-    res.setHeader('X-Cache-Shield', 'MISS');
+    res.setHeader(
+      'Cache-Control',
+      hasFullCatalog ? 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' : 'no-store'
+    );
+    res.setHeader('X-Cache-Shield', hasFullCatalog ? 'MISS' : 'BYPASS');
     return res.status(200).send(xml);
   } catch (e) {
     console.error('Error generating dynamic sitemap:', e);

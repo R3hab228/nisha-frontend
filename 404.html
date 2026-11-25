@@ -174,15 +174,6 @@
         <a href="/" class="reboot-btn">[ REBOOT_SYSTEM.EXE ]</a>
     </div>
 
-    <script>
-        // Генерация фейкового ID сессии для серьезности
-        const fakeId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase() : Math.random().toString(36).substring(2, 10).toUpperCase();
-        document.getElementById('session-id').innerText = fakeId + '-' + Date.now();
-        
-        // Автоматический редирект через 15 секунд, если юзер уснул
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 15000);
-    </script>
+    <script src="/404-init.js" defer></script>
 </body>
 </html>

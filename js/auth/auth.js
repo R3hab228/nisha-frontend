@@ -463,10 +463,22 @@ async function generateAndSendOTP() {
         }
     }
 
-    if (!sb) return;
+    if (!sb) {
+        setOtpButtonDefault(btnOtp);
+        return;
+    }
 
     // 1. Проверяем черный список
-    const { data: blacklisted } = await sb.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
+    let blacklisted = null;
+    try {
+        const blRes = await sb.from('blacklist').select('phone').eq('phone', cleanPhone).limit(1);
+        blacklisted = blRes?.data || null;
+    } catch (err) {
+        console.error('[OTP] blacklist check error:', err);
+        showToast(tSafe('checkout.promo_error', 'Ошибка сервера'), 'error');
+        setOtpButtonDefault(btnOtp);
+        return;
+    }
     if (blacklisted && blacklisted.length > 0) {
         const statusEl = document.getElementById('otpStatus');
         const secBlockedText = tSafe('profile.security_blocked', '[!] ОШИБКА БЕЗОПАСНОСТИ: ВАШ НОМЕР ЗАБЛОКИРОВАН');
@@ -477,7 +489,16 @@ async function generateAndSendOTP() {
     }
     
     // 2. Двойная проверка: вдруг номер уже подтвержден
-    const { data: vResult } = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
+    let vResult = null;
+    try {
+        const vRes = await sb.rpc('check_otp_verified', { p_phone: cleanPhone });
+        vResult = vRes?.data || null;
+    } catch (err) {
+        console.error('[OTP] check_otp_verified error:', err);
+        showToast(tSafe('checkout.promo_error', 'Ошибка сервера'), 'error');
+        setOtpButtonDefault(btnOtp);
+        return;
+    }
     const existCode = vResult ? [{ is_verified: true }] : [];
     if (existCode && existCode.length > 0 && existCode[0].is_verified) {
         checkPhoneAuth();
@@ -506,10 +527,19 @@ async function generateAndSendOTP() {
     otpInterval = setInterval(updateOtpBtnText, 1000);
 
     // 4. Генерация кода в базе
-    const { error } = await sb.rpc('generate_secure_otp', { p_phone: cleanPhone });
-    if (error) {
+    let otpError = null;
+    try {
+        const genRes = await sb.rpc('generate_secure_otp', { p_phone: cleanPhone });
+        otpError = genRes?.error || null;
+    } catch (err) {
+        otpError = err;
+    }
+    if (otpError) {
         showToast(tSafe('checkout.promo_error', 'Ошибка сервера'), 'error');
-        clearInterval(otpInterval);
+        if (otpInterval) {
+            clearInterval(otpInterval);
+            otpInterval = null;
+        }
         setOtpButtonDefault(btnOtp);
         return;
     }

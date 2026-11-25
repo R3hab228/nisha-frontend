@@ -52,7 +52,7 @@ export async function syncCartToServer() {
  * @param {string|number} itemId
  * @param {number|string|null} [customPriceOrSize=null]
  * @param {{ price?: number|string, customPrice?: number|string }} [options={}]
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>}
  */
 export async function addToCartById(itemId, customPriceOrSize = null, options = {}) {
     return await withCartLock(async () => {
@@ -75,7 +75,11 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
 
         const catalog = getRuntimeCatalog();
         const item = catalog.find(i => String(i.id) === String(itemId));
-        if (!item) return;
+        if (!item) return false;
+        if (item.status === 'sold') {
+            if (typeof showToast === 'function') showToast(tSafe('messages.item_sold', 'Эта вещь уже продана!'), 'error');
+            return false;
+        }
 
         const currentCart = getActiveCart();
         const existingIndex = currentCart.findIndex(i => String(i.id) === String(item.id));
@@ -88,10 +92,10 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
                 syncCartToServer();
                 const updateMsg = tSafe('product.offer_cart_updated', 'Цену в корзине обновлено по согласованной ставке!');
                 if (typeof showToast === 'function') showToast(updateMsg, 'success');
-                return;
+                return true;
             }
             if (typeof showToast === 'function') showToast(tSafe('messages.cart_exist', 'Уже в корзине!'), 'error');
-            return;
+            return false;
         }
 
         const cartItem = (typeof deepClone === 'function')
@@ -127,6 +131,7 @@ export async function addToCartById(itemId, customPriceOrSize = null, options = 
             showToast(tSafe('messages.cart_add', 'Добавлено в корзину!'), 'success', getOptimizedImg(item));
         }
         await syncCartToServer();
+        return true;
     });
 }
 
@@ -144,10 +149,16 @@ export function addToCartWithAnimation(itemId, btnElement, event) {
     cartState.lastCartActionTime = now;
 
     const catalog = getRuntimeCatalog();
-    const item = catalog.find(i => i.id === itemId);
+    const item = catalog.find(i => String(i.id) === String(itemId));
     if (!item) return;
+    if (item.status === 'sold') {
+        if (typeof showToast === 'function') showToast(tSafe('messages.item_sold', 'Эта вещь уже продана!'), 'error');
+        return;
+    }
 
+    const alreadyInCart = getActiveCart().some(i => String(i.id) === String(item.id));
     addToCartById(itemId);
+    if (alreadyInCart) return;
 
     const g = /** @type {any} */ (globalThis);
     if (typeof g.triggerHaptic === 'function') g.triggerHaptic('success');
@@ -196,6 +207,10 @@ export async function addToCartFromModal() {
 
         const activeItem = getRuntimeOpenedItem();
         if (!activeItem) return;
+        if (activeItem.status === 'sold') {
+            if (typeof showToast === 'function') showToast(tSafe('messages.item_sold', 'Эта вещь уже продана!'), 'error');
+            return;
+        }
 
         const currentCart = getActiveCart();
         const existingIndex = currentCart.findIndex(i => String(i.id) === String(activeItem.id));

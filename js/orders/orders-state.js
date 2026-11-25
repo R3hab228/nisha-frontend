@@ -277,17 +277,26 @@ export function formatOrderStatus(rawStatus) {
 export function getOrderTabBucket(order) {
     const s = (order?.status || '').toLowerCase();
     if (
-        s.includes('принят') || s.includes('прийнят') || s.includes('accept') ||
-        s.includes('оплачен') || s.includes('оплач') || s.includes('paid') ||
-        s.includes('обработ') || s.includes('оброб') || s.includes('processing') || s.includes('новый') || s.includes('нов')
+        s.includes('отмен') || s.includes('скас') || s.includes('cancel') ||
+        s.includes('возврат') || s.includes('поверн') || s.includes('return')
     ) {
-        return 'accepted';
+        return 'cancelled';
     }
-    if (s.includes('отправлен') || s.includes('відправ') || s.includes('ship') || s.includes('завершен') || s.includes('complet')) {
+    if (
+        s.includes('отправ') || s.includes('відправ') || s.includes('ship') ||
+        s.includes('завершен') || s.includes('complet') ||
+        s.includes('выполн') || s.includes('викон') ||
+        s.includes('получ') || s.includes('отрим') ||
+        s.includes('доставл') || s.includes('deliver')
+    ) {
         return 'shipped';
     }
-    if (s.includes('отменен') || s.includes('возврат')) {
-        return 'cancelled';
+    if (
+        s.includes('принят') || s.includes('прийнят') || s.includes('accept') ||
+        s.includes('оплач') || s.includes('paid') ||
+        s.includes('обработ') || s.includes('оброб') || s.includes('process') || s.includes('нов')
+    ) {
+        return 'accepted';
     }
     return 'other';
 }

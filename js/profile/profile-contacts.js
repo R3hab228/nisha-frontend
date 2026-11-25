@@ -597,6 +597,12 @@ export async function saveContactFromInput(type, isModal = false) {
         }
     } catch (e) {
         console.error(`OTP RPC error (${type}):`, e);
+        notifyToast(tProfile('profile.otp_server_err', 'Ошибка сервера при генерации кода'), 'error');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = '✓';
+        }
+        return;
     }
 
     let tgLink = '';

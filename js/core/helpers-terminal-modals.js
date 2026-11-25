@@ -5,6 +5,28 @@
 import { hasAction, invokeAction } from './action-registry.js';
 import { escapeAttr, escapeHtml } from './helpers-security-media.js';
 
+function sanitizeTerminalHtml(rawHtml) {
+    const str = String(rawHtml ?? '');
+    const dp = typeof window !== 'undefined' ? window.DOMPurify : (typeof globalThis !== 'undefined' ? globalThis.DOMPurify : null);
+    if (dp && typeof dp.sanitize === 'function') {
+        return dp.sanitize(str, {
+            ADD_ATTR: ['target', 'rel', 'data-pswp-width', 'data-pswp-height', 'data-fallback-src', 'data-action', 'data-modal-id', 'loading', 'decoding']
+        });
+    }
+    return str;
+}
+
+function dismissExistingOverlays(selector) {
+    document.querySelectorAll(selector).forEach(el => {
+        if (typeof el._nishaDismiss === 'function') {
+            try { el._nishaDismiss(); } catch { el.remove(); }
+            if (el.isConnected) el.remove();
+        } else {
+            el.remove();
+        }
+    });
+}
+
 /**
  * Displays a single-button terminal dialog overlay.
  * @param {string} title
@@ -19,7 +41,7 @@ export function showTerminalModal(title, htmlText, btnText, callback, options = 
         return;
     }
     if (typeof document === 'undefined') return;
-    document.querySelectorAll('.terminal-modal-overlay').forEach(el => el.remove());
+    dismissExistingOverlays('.terminal-modal-overlay');
 
     const isPersistent = Boolean(options && options.persistent);
     const isMeasureModal = title && title.includes('MEASURE_SYSTEM');
@@ -30,12 +52,16 @@ export function showTerminalModal(title, htmlText, btnText, callback, options = 
     overlay.className = 'terminal-modal-overlay';
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;';
 
+    const safeTitle = escapeHtml(title ?? '');
+    const safeHtml = sanitizeTerminalHtml(htmlText);
+    const safeBtn = escapeHtml(btnText ?? '[ OK ]');
+
     overlay.innerHTML = `
         <div class="success-terminal-box ${boxExtraClass}">
-            <div class="${titleClass}">${title}</div>
+            <div class="${titleClass}">${safeTitle}</div>
             <div class="success-divider"></div>
-            <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${htmlText}</div>
-            <button class="cart-checkout-btn btn-target" style="width: 100%; padding: 15px;">${btnText}</button>
+            <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${safeHtml}</div>
+            <button class="cart-checkout-btn btn-target" style="width: 100%; padding: 15px;">${safeBtn}</button>
         </div>
     `;
 
@@ -124,14 +150,19 @@ export function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancel
     overlay.className = 'terminal-modal-overlay confirm-modal-overlay';
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 100000; display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px; box-sizing: border-box;';
 
+    const safeTitle = escapeHtml(title ?? '');
+    const safeHtml = sanitizeTerminalHtml(htmlText);
+    const safeConfirmBtn = escapeHtml(confirmBtnText ?? '[ OK ]');
+    const safeCancelBtn = escapeHtml(cancelBtnText ?? '[ ОТМЕНА ]');
+
     overlay.innerHTML = `
         <div class="success-terminal-box" style="animation: none; transform: scale(1); opacity: 1;">
-            <div class="success-title typewriter" style="color: var(--accent-yellow);">${title}</div>
+            <div class="success-title typewriter" style="color: var(--accent-yellow);">${safeTitle}</div>
             <div class="success-divider" style="background: repeating-linear-gradient(90deg, var(--accent-yellow), var(--accent-yellow) 5px, transparent 5px, transparent 10px);"></div>
-            <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${htmlText}</div>
+            <div class="success-text" style="margin-bottom: 20px; color: #ddd; text-align: left;">${safeHtml}</div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="cart-checkout-btn btn-target confirm-yes" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding-left: 12px; padding-right: 12px; background: var(--accent-red); border-color: var(--accent-red); color: #fff;">${confirmBtnText}</button>
-                <button class="cart-checkout-btn btn-target confirm-no" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding-left: 12px; padding-right: 12px; background: #333; border-color: #555; color: #fff;">${cancelBtnText}</button>
+                <button class="cart-checkout-btn btn-target confirm-yes" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding-left: 12px; padding-right: 12px; background: var(--accent-red); border-color: var(--accent-red); color: #fff;">${safeConfirmBtn}</button>
+                <button class="cart-checkout-btn btn-target confirm-no" style="flex: 1 1 0; min-width: max-content; white-space: nowrap; padding-left: 12px; padding-right: 12px; background: #333; border-color: #555; color: #fff;">${safeCancelBtn}</button>
             </div>
         </div>
     `;
@@ -175,7 +206,7 @@ export function showPromptTerminalModal({
     cancelBtnText = '[ ОТМЕНА ]'
 } = {}) {
     if (typeof document === 'undefined') return Promise.resolve(null);
-    document.querySelectorAll('.prompt-terminal-overlay').forEach(el => el.remove());
+    dismissExistingOverlays('.prompt-terminal-overlay');
 
     return new Promise((resolve) => {
         const overlay = document.createElement('div');

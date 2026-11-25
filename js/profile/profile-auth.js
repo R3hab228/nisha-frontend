@@ -75,43 +75,48 @@ export async function handleAuth(action, isModal = false) {
     }
 
     let result;
-    if (action === 'register') {
-        if (!username) {
-            notifyToast(tProfile('messages.need_nickname', 'Для регистрации нужен никнейм!'), 'error');
-            return;
-        }
-        const userMetaData = {
-            username: username,
-            display_name: username,
-            full_name: username,
-            name: username
-        };
-        result = await sb.auth.signUp({
-            email,
-            password,
-            options: { data: userMetaData }
-        });
-        if (!result.error) {
-            notifyToast(tProfile('messages.reg_success', 'Регистрация успешна! Проверьте почту.'), 'success');
-            if (result.data?.user?.id) {
-                try {
-                    const table = typeof sb.from === 'function' ? sb.from('profiles') : null;
-                    if (table && typeof table.upsert === 'function') {
-                        await table.upsert({
-                            id: result.data.user.id,
-                            username: username
-                        }, { onConflict: 'id' });
-                    }
-                } catch {}
+    try {
+        if (action === 'register') {
+            if (!username) {
+                notifyToast(tProfile('messages.need_nickname', 'Для регистрации нужен никнейм!'), 'error');
+                return;
+            }
+            const userMetaData = {
+                username: username,
+                display_name: username,
+                full_name: username,
+                name: username
+            };
+            result = await sb.auth.signUp({
+                email,
+                password,
+                options: { data: userMetaData }
+            });
+            if (!result.error) {
+                notifyToast(tProfile('messages.reg_success', 'Регистрация успешна! Проверьте почту.'), 'success');
+                if (result.data?.user?.id) {
+                    try {
+                        const table = typeof sb.from === 'function' ? sb.from('profiles') : null;
+                        if (table && typeof table.upsert === 'function') {
+                            await table.upsert({
+                                id: result.data.user.id,
+                                username: username
+                            }, { onConflict: 'id' });
+                        }
+                    } catch {}
+                }
+            }
+        } else {
+            result = await sb.auth.signInWithPassword({ email, password });
+            if (!result.error) {
+                const playFn = getGlobalFn('playSound');
+                if (playFn) playFn('chimes', { kind: 'success' }).catch(() => {});
+                notifyToast(tProfile('messages.login_success', 'Вход выполнен успешно!'), 'success');
             }
         }
-    } else {
-        result = await sb.auth.signInWithPassword({ email, password });
-        if (!result.error) {
-            const playFn = getGlobalFn('playSound');
-            if (playFn) playFn('chimes', { kind: 'success' }).catch(() => {});
-            notifyToast(tProfile('messages.login_success', 'Вход выполнен успешно!'), 'success');
-        }
+    } catch (authErr) {
+        notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + (authErr?.message || 'Network error'), 'error');
+        return;
     }
 
     if (result.error) {
@@ -201,8 +206,12 @@ bindWindowFn('handleForgotPassword', handleForgotPassword);
  */
 export async function logout() {
     const sb = getSupabase();
-    if (sb) {
-        await sb.auth.signOut();
+    if (sb && sb.auth && typeof sb.auth.signOut === 'function') {
+        try {
+            await sb.auth.signOut();
+        } catch (err) {
+            console.warn('[AUTH] signOut network fallback:', err);
+        }
     }
     const playFn = getGlobalFn('playSound');
     if (playFn) playFn('logoff', { kind: 'ui' });
@@ -222,6 +231,9 @@ export async function logout() {
         'nisha_last_phone',
         'nisha_last_tg',
         'nisha_profile_delivery',
+        'nisha_profile_delivery_refs',
+        'nisha_pending_otp_phone',
+        'nisha_pending_otp_tg',
         'nisha_checkout_data',
         'nisha_email_preference'
     ];
@@ -229,6 +241,9 @@ export async function logout() {
         if (store && typeof store.remove === 'function') store.remove(k);
         try { if (typeof localStorage !== 'undefined') localStorage.removeItem(k); } catch {}
     });
+    try {
+        if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('nisha_showing_favs');
+    } catch {}
     if (typeof caches !== 'undefined' && typeof caches.delete === 'function') {
         caches.delete('nisha-api-v2').catch(() => {});
     }
@@ -237,6 +252,7 @@ export async function logout() {
         if (favNav) favNav.style.color = 'var(--accent-yellow)';
     }
 
+    resetSignedOutProfileUI();
     await checkSession();
     const applyFiltersFn = getGlobalFn('applyFilters');
     if (applyFiltersFn) applyFiltersFn();
@@ -259,15 +275,19 @@ export async function loginWithGoogle() {
     if (!sb) return;
 
     const redirectUrl = (typeof window !== 'undefined' && window.location?.origin) || 'https://www.nisha-store.shop';
-    const { error } = await sb.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-            redirectTo: redirectUrl,
-            queryParams: { prompt: 'select_account', access_type: 'offline' }
+    try {
+        const { error } = await sb.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: redirectUrl,
+                queryParams: { prompt: 'select_account', access_type: 'offline' }
+            }
+        });
+        if (error) {
+            notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + error.message, 'error');
         }
-    });
-    if (error) {
-        notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + error.message, 'error');
+    } catch (err) {
+        notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + (err?.message || 'Network error'), 'error');
     }
 }
 bindWindowFn('loginWithGoogle', loginWithGoogle);
@@ -545,11 +565,11 @@ export function initAuthListener() {
     if (sb.auth._nishaAuthListenerBound) return;
     sb.auth._nishaAuthListenerBound = true;
 
-    const triggerPasswordRecoveryFlow = async (session) => {
+    const triggerPasswordRecoveryFlow = (session) => {
         clearPendingPasswordRecoveryFlag();
         scrubAuthTokensFromUrl();
         if (session?.user && !profileState.currentUser) {
-            await checkSession();
+            setTimeout(() => { checkSession().catch(() => {}); }, 0);
         }
         showPasswordRecoveryModal();
     };
@@ -557,7 +577,9 @@ export function initAuthListener() {
     sb.auth.onAuthStateChange(async (event, session) => {
         if (event === 'TOKEN_REFRESHED') {
             if (window.__NISHA_DEBUG__) console.log('[AUTH] Токен безопасности успешно продлен (Refresh Token).');
-            profileState.currentUser = session.user;
+            if (session?.user) {
+                profileState.currentUser = session.user;
+            }
         } else if (event === 'SIGNED_OUT') {
             if (window.__NISHA_DEBUG__) console.log('[AUTH] Выполнен выход из аккаунта.');
             clearPendingPasswordRecoveryFlag();
@@ -566,20 +588,26 @@ export function initAuthListener() {
             if (store) {
                 store.remove('nisha_cached_orders');
                 store.remove('nisha_cached_favorites');
+                store.remove('nisha_profile_delivery_refs');
+                store.remove('nisha_pending_otp_phone');
+                store.remove('nisha_pending_otp_tg');
             }
+            try {
+                if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('nisha_showing_favs');
+            } catch {}
             resetSignedOutProfileUI();
         } else if (event === 'PASSWORD_RECOVERY') {
-            await triggerPasswordRecoveryFlow(session);
+            triggerPasswordRecoveryFlow(session);
         } else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
             if (session?.user && hasPendingPasswordRecoveryFlag()) {
-                await triggerPasswordRecoveryFlow(session);
+                triggerPasswordRecoveryFlow(session);
                 return;
             }
             if (session?.user) {
                 scrubAuthTokensFromUrl();
             }
             if (event === 'SIGNED_IN' && !profileState.currentUser) {
-                await checkSession();
+                setTimeout(() => { checkSession().catch(() => {}); }, 0);
             }
         }
     });

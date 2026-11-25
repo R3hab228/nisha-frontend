@@ -160,8 +160,10 @@ module.exports = async function handler(req, res) {
     const escapeHTML = (str) => String(str || '')
         .replaceAll('&', '&amp;')
         .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
+    const isSafeHttpUrl = (u) => typeof u === 'string' && /^https?:\/\//i.test(u.trim());
     const { isSold, isReserved, rawBrand, fullItemTitle, cleanTitle, rawMetaDesc } = buildShareMeta(item, shareLang);
     const title = escapeHTML(cleanTitle + ' | NISHA');
 
@@ -176,17 +178,24 @@ module.exports = async function handler(req, res) {
     if (Array.isArray(item.images) && item.images.length > 0) {
       const photo = String(item.images.at(0) || '');
       if (/\.(mp4|mov|webm)(?:\?|$)/i.test(photo)) {
-          videoUrl = escapeHTML(toCdnShareUrl(photo));
+          const cdnVid = toCdnShareUrl(photo);
+          if (isSafeHttpUrl(cdnVid)) {
+              videoUrl = escapeHTML(cdnVid);
+          }
           const thumbCandidate = Array.isArray(item.thumbnails) && item.thumbnails.at(0)
             ? String(item.thumbnails.at(0))
             : String(item.images.find((u) => u && !/\.(mp4|mov|webm)(?:\?|$)/i.test(String(u))) || '');
-          if (thumbCandidate) {
-              rawImageUrl = toCdnShareUrl(thumbCandidate);
+          const cdnThumb = thumbCandidate ? toCdnShareUrl(thumbCandidate) : '';
+          if (isSafeHttpUrl(cdnThumb)) {
+              rawImageUrl = cdnThumb;
               imageUrl = escapeHTML(rawImageUrl);
           }
       } else if (photo) {
-          rawImageUrl = toCdnShareUrl(photo);
-          imageUrl = escapeHTML(rawImageUrl);
+          const cdnPhoto = toCdnShareUrl(photo);
+          if (isSafeHttpUrl(cdnPhoto)) {
+              rawImageUrl = cdnPhoto;
+              imageUrl = escapeHTML(rawImageUrl);
+          }
       }
     }
 
@@ -276,7 +285,6 @@ videoTags + '\n' +
 '<meta name="twitter:image:alt" content="' + title + '">\n' +
 '<script type="application/ld+json">' + jsonLd.replaceAll('<', '\\u003c') + '</script>\n' +
 '<script type="speculationrules">{"prerender":[{"source":"list","urls":["/","/?item=' + id + '"],"eagerness":"immediate"}],"prefetch":[{"source":"list","urls":["/","/?item=' + id + '"],"eagerness":"immediate"}]}</script>\n' +
-'<script>try{if(!/(bot|crawl|spider|slurp|facebookexternalhit|facebot|meta-external|whatsapp|viber|discord|twitter|slack|linkedin|pinterest|applebot|telegram|bingbot|googlebot|ahrefs)/i.test(navigator.userAgent)){window.location.replace("/?item=' + id + '");}}catch(e){window.location.replace("/?item=' + id + '");}</script>\n' +
 '</head>\n' +
 '<body style="background:#000;color:#e0e0e0;font-family:\'Courier New\',Courier,monospace;margin:0;padding:16px;text-align:center;">\n' +
 '<main style="max-width:600px;margin:20px auto;background:#111;border:2px outset #555;text-align:left;box-shadow:0 0 30px rgba(0,255,0,0.12);">\n' +

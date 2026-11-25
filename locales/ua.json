@@ -8,7 +8,8 @@
       "recent_queries": "НЕЩОДАВНІ ЗАПИТИ",
       "clear_history": "ОЧИСТИТИ",
       "no_items_hint": "Спробуйте змінити запит або скинути активні фільтри",
-      "reset_filters": "СКИНУТИ ФІЛЬТРИ"
+      "reset_filters": "СКИНУТИ ФІЛЬТРИ",
+      "bargain_badge": "ТОРГ"
     },
     "nav": {
       "home": "ГОЛОВНА",
@@ -177,11 +178,13 @@
       "meas_qual_from_shoulder": "від плеча",
       "meas_qual_from_seam": "від шва",
       "meas_qual_from_neck": "від горла",
-      "meas_neck_width": "Ширина выреза",
-      "meas_half_measure": "Полуобхват",
+      "meas_neck_width": "Ширина вирізу",
+      "meas_half_measure": "Напівобхват",
       "meas_rise": "Посадка",
       "offer_disabled": "Для цього товару торг не передбачено!",
-      "share_check_out": "Заціни:"
+      "share_check_out": "Заціни:",
+      "offer_declined_toast": "Продавець відхилив вашу пропозицію щодо ціни.",
+      "default_desc": "Оригінал. Будь-які перевірки. Відмінний стан. Додаткові заміри за запитом у ЛС."
     },
     "badge_info": {
       "secure_title": "SECURE_PAYMENT.EXE",
@@ -198,7 +201,8 @@
       "btn_understood": "[ ЗРОЗУМІЛО ]",
       "drop_desc": "<span style=\"color:var(--accent-red); font-weight:bold; font-size:16px;\">[ УВАГА ]</span><br><span style=\"color:#fff;\">Річ від стороннього продавця. NISHA — гарант угоди.</span><br><br>Огляд та примірка — суворо на «Новій Пошті» (при післяплаті залишок сплачується після перевірки).<br><br>Після отримання посилки повернення неможливе: угода вважається закритою, а кошти одразу переказуються власнику.",
       "bargain_title": "BARGAIN_AVAILABLE.SYS",
-      "bargain_text": "На цей товар доступний торг. Ви можете запропонувати свою ціну продавцю за допомогою кнопки «ЗАПРОПОНУВАТИ СВОЮ ЦІНУ»."
+      "bargain_text": "На цей товар доступний торг. Ви можете запропонувати свою ціну продавцю за допомогою кнопки «ЗАПРОПОНУВАТИ СВОЮ ЦІНУ».",
+      "min_bargain_price": "Мінімальна ціна для торгу:"
     },
     "grid": {
       "size_prefix": "Розмір: "
@@ -294,7 +298,8 @@
       "promo_warming": "Сервер запускається, натисніть «Застосувати» ще раз",
       "location_prefix": "Локація: ",
       "promo_applied": "Код активовано",
-      "promo_order_discount": "Знижка на замовлення:"
+      "promo_order_discount": "Знижка на замовлення:",
+      "processing_data": "[ ОБРОБКА ДАНИХ... ]"
     },
     "orders_modal": {
       "access_granted": "Доступ дозволено",
@@ -561,7 +566,7 @@
       "reply_btn_read": "[ ПРОЧИТАНО ]",
       "topic_bug": "[ БАГ ]",
       "topic_order": "[ ЗАМОВЛЕННЯ / ТТН ]",
-      "topic_bargain": "[ ПРЕДЛОЖКА / ТОРГ ]",
+      "topic_bargain": "[ ПРОПОЗИЦІЯ / ТОРГ ]",
       "topic_idea": "[ ІДЕЯ ]"
     },
     "pwa": {

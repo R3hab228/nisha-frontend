@@ -560,8 +560,14 @@ async function initApp() {
             const trimmed = rawUrl.trim();
             if (!/^https?:\/\//i.test(trimmed)) return { primary: '', fallback: '' };
             const cdnUrl = typeof window.toCDN === 'function' ? window.toCDN(trimmed) : trimmed;
-            const safePrimary = /^https?:\/\//i.test(cdnUrl) ? cdnUrl.replaceAll('"', '&quot;') : '';
-            const safeFallback = trimmed !== cdnUrl ? trimmed.replaceAll('"', '&quot;') : '';
+            const escBroadcastAttr = (u) => String(u)
+                .replaceAll('&', '&amp;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;');
+            const safePrimary = /^https?:\/\//i.test(cdnUrl) ? escBroadcastAttr(cdnUrl) : '';
+            const safeFallback = trimmed !== cdnUrl ? escBroadcastAttr(trimmed) : '';
             return { primary: safePrimary, fallback: safeFallback };
         };
 

@@ -34,7 +34,7 @@ function detectInitialSiteLang() {
     }
     if (saved) return normalizeSiteLang(saved);
 
-    let i18nSaved = store && typeof store.get === 'function' ? store.get('i18nextLng') : null;
+    let i18nSaved = storage && typeof storage.get === 'function' ? storage.get('i18nextLng') : null;
     if (!i18nSaved && typeof localStorage !== 'undefined') {
         try { i18nSaved = localStorage.getItem('i18nextLng'); } catch {}
     }

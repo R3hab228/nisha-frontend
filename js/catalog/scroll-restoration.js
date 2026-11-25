@@ -123,7 +123,7 @@ export function showScrollRestoredBadge() {
     if (_scrollRestoredBadgeTimeout) clearTimeout(_scrollRestoredBadgeTimeout);
     if (_scrollBadgeCtrl) _scrollBadgeCtrl.abort();
     const cartPanel = document.getElementById('cartPanel') || document.querySelector('.cart-panel');
-    const isCartActive = Boolean(cartPanel && cartPanel.classList && cartPanel.classList.contains('active'));
+    const isCartActive = Boolean(cartPanel && cartPanel.classList && (cartPanel.classList.contains('show') || cartPanel.classList.contains('active')));
     badge.classList.toggle('cart-active', isCartActive);
     badge.classList.add('is-visible');
 

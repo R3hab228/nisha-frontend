@@ -72,12 +72,12 @@ export function togglePasswordVisibility(inputId, iconElement) {
 
 /**
  * Toggles favorite state for item
+ * @param {Event|null} event
  * @param {string|number} itemId
- * @param {boolean} [silent=false]
  * @returns {Promise<boolean>}
  */
-export function toggleFav(itemId, silent = false) {
-    return callAsyncAction('toggleFav', [itemId, silent], () => false);
+export function toggleFav(event, itemId) {
+    return callAsyncAction('toggleFav', [event, itemId], () => false);
 }
 
 /**
