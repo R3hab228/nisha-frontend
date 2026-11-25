@@ -180,8 +180,17 @@ export default defineConfig({
           if (id.includes('/js/core/sound-effects') || id.includes('\\js\\core\\sound-effects')) {
             return 'app-sound';
           }
+          if (
+            id.includes('/js/core/analytics') || id.includes('\\js\\core\\analytics') ||
+            id.includes('/js/core/rum') || id.includes('\\js\\core\\rum')
+          ) {
+            return 'app-analytics';
+          }
           if (id.includes('/js/core/') || id.includes('\\js\\core\\')) {
             return 'app-core';
+          }
+          if (id.includes('/js/catalog/live-search') || id.includes('\\js\\catalog\\live-search')) {
+            return 'app-search';
           }
           if (id.includes('/js/catalog/') || id.includes('\\js\\catalog\\')) {
             return 'app-catalog';

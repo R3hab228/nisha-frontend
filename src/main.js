@@ -19,25 +19,40 @@ import '../config.js';
 import '../js/core/apiClient.js';
 import '../js/core/helpers-core.js';
 import '../js/core/web-locks.js';
-import '../js/core/analytics.js';
-import '../js/core/rum.js';
 import '../js/core/i18n.js';
 import '../js/core/pwa-network.js';
 import '../js/ui/windows.js';
 import '../js/ui/system-features.js';
 import '../js/auth/auth.js';
 
-// 6. Code Splitting: Ленивая подгрузка вторичных модулей (Товар, Чекаут/НП, Предложка, Отзывы, Чат, Заказы)
+// 6. Code Splitting: Ленивая подгрузка вторичных модулей (Товар, Поиск, Аналитика, Чекаут/НП, Предложка, Отзывы, Чат, Заказы)
 import '../js/core/lazy-loader.js';
 
 // 7. Основные модули витрины и оркестратор приложения
 import '../js/catalog/catalog.js';
-import '../js/catalog/live-search.js';
 import '../js/cart/cart-core.js';
 import '../js/profile/profile-core.js';
 import '../app.js';
 
-// 8. Vercel Speed Insights (Real User Monitoring: LCP, INP, CLS, TTFB)
+// 8. Отложенная загрузка некритичной аналитики и RUM (после первого рендера, 0 мс влияния на LCP)
+if (typeof window !== 'undefined') {
+    let _telemetryLoaded = false;
+    const loadTelemetryChunks = () => {
+        if (_telemetryLoaded) return;
+        _telemetryLoaded = true;
+        Promise.all([
+            import('../js/core/analytics.js'),
+            import('../js/core/rum.js')
+        ]).catch(() => {});
+    };
+    if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(loadTelemetryChunks, { timeout: 1500 });
+    } else {
+        setTimeout(loadTelemetryChunks, 800);
+    }
+}
+
+// 9. Vercel Speed Insights (Real User Monitoring: LCP, INP, CLS, TTFB)
 import { injectSpeedInsights } from '@vercel/speed-insights';
 if (typeof window !== 'undefined' && import.meta.env.PROD) {
     try {

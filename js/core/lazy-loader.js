@@ -262,6 +262,37 @@ const loadSoundModule = registerLazyModuleBridge(
     ]
 );
 
+const loadLiveSearchModule = registerLazyModuleBridge(
+    () => import('../catalog/live-search.js'),
+    [
+        'saveRecentSearch',
+        'showSearchHistory',
+        'handleLiveSearch',
+        'closeSearch',
+        'invalidateLiveSearchFuse',
+        'openSearchDropdown',
+        'positionLiveSearchDropdown'
+    ]
+);
+
+// Warm live-search chunk on first interaction with #mainSearch so search opens seamlessly
+if (typeof document !== 'undefined') {
+    const bindSearchWarmup = () => {
+        const searchEl = document.getElementById('mainSearch');
+        if (!searchEl || searchEl._lazySearchBound) return;
+        searchEl._lazySearchBound = true;
+        const warmSearch = () => { loadLiveSearchModule(); };
+        searchEl.addEventListener('focus', warmSearch, { passive: true, once: true });
+        searchEl.addEventListener('pointerdown', warmSearch, { passive: true, once: true });
+        searchEl.addEventListener('input', warmSearch, { passive: true, once: true });
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindSearchWarmup, { once: true });
+    } else {
+        bindSearchWarmup();
+    }
+}
+
 // Warm sound-effects chunk passively on first real user gesture (when sound is ON)
 // so UI click/toast sounds respond immediately without delaying initial load.
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
@@ -286,6 +317,7 @@ const preloadSecondaryModules = () => {
     if (isConstrained) return;
 
     loadProductModule();
+    loadLiveSearchModule();
 };
 
 registerAction('prewarmProductModule', () => {
@@ -303,6 +335,7 @@ export {
     loadCheckoutModule,
     loadProfileModalModule,
     loadSoundModule,
+    loadLiveSearchModule,
     loadDropModule,
     loadReviewsModule,
     loadChatModule,
