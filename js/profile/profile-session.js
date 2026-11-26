@@ -631,10 +631,12 @@ async function _runCheckSession() {
         const store = /** @type {any} */ (getStore());
         const storedPhone = store ? (store.get('nisha_last_phone') || '') : '';
         const storedTg = store ? (store.get('nisha_last_tg') || '') : '';
-        const uPhone = (profileState.userProfile?.phone || currentUser.user_metadata?.phone || storedPhone || '').trim();
+        const dbVerifiedPhone = (profileState.userProfile?.phone || '').trim();
+        const uPhone = (dbVerifiedPhone || currentUser.user_metadata?.phone || storedPhone || '').trim();
         const uTg = (profileState.userProfile?.tg || currentUser.user_metadata?.tg || storedTg || '').trim();
 
         if (profileState.userProfile) {
+            profileState.userProfile._verifiedDbPhone = dbVerifiedPhone;
             if (!profileState.userProfile.phone && uPhone) profileState.userProfile.phone = uPhone;
             if (!profileState.userProfile.tg && uTg) profileState.userProfile.tg = uTg;
         }
@@ -665,7 +667,9 @@ async function _runCheckSession() {
         const syncFields = getGlobalFn('updateProposeAndCheckoutFields');
         if (syncFields) syncFields();
 
-        const phoneToLink = uPhone || (store ? store.get('nisha_last_phone') : null) || '';
+        // Привязываем старые гостевые заказы ТОЛЬКО по реально подтверждённому номеру из profiles.phone
+        // (не отправляем черновики из localStorage / неподтверждённые номера, чтобы не вызывать ложные 403/Security Radar)
+        const phoneToLink = dbVerifiedPhone;
         const phoneDigitsToLink = phoneToLink.replace(/[^\d]/g, '');
         if (phoneDigitsToLink.length >= 9 && window.apiClient) {
             const linkCacheKey = `nisha_linked_orders_v1:${currentUser.id}:${phoneDigitsToLink.slice(-9)}`;
@@ -680,13 +684,15 @@ async function _runCheckSession() {
                 window.apiClient.post('/api/link-orders', {
                     userId: currentUser.id,
                     phone: phoneToLink
-                }, { timeout: 8000, dedupe: true }).then((/** @type {any} */ res) => {
-                    if (res && res.success !== false) {
-                        try {
-                            if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(linkCacheKey, String(Date.now()));
-                        } catch {}
-                    }
-                }).catch(() => {});
+                }, { timeout: 8000, dedupe: true }).then(() => {
+                    try {
+                        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(linkCacheKey, String(Date.now()));
+                    } catch {}
+                }).catch(() => {
+                    try {
+                        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(linkCacheKey, String(Date.now()));
+                    } catch {}
+                });
             }
         }
 

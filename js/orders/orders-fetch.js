@@ -233,7 +233,6 @@ export async function fetchMyOrders() {
             });
 
             const queriedLast9 = new Set();
-            const uniqueCleanPhones = new Set();
             const phoneRpcTasks = [];
 
             for (const rawP of candidatePhones) {
@@ -241,7 +240,6 @@ export async function fetchMyOrders() {
                 if (clean.length >= 9) {
                     const last9 = clean.slice(-9);
                     const canonicalPhone = '380' + last9;
-                    uniqueCleanPhones.add(canonicalPhone);
                     if (queriedLast9.has(last9)) continue;
                     queriedLast9.add(last9);
 
@@ -273,9 +271,21 @@ export async function fetchMyOrders() {
                 });
             }
 
-            if (uniqueCleanPhones.size > 0 && typeof window !== 'undefined' && window.apiClient) {
+            // Для /api/link-orders используем ТОЛЬКО подтверждённый номер из profiles.phone
+            // (исключаем nisha_pending_otp_phone, черновики чекаута и номера получателей из чужих заказов,
+            // чтобы не отправлять неподтверждённые номера и не вызывать ложные 403 в Security Radar)
+            const verifiedLinkPhones = new Set();
+            const verifiedDbPhone = (activeProfile && Object.hasOwn(activeProfile, '_verifiedDbPhone'))
+                ? activeProfile._verifiedDbPhone
+                : (activeProfile?.phone || '');
+            const cleanVerifiedDb = String(verifiedDbPhone || '').replace(/[^\d]/g, '');
+            if (cleanVerifiedDb.length >= 9) {
+                verifiedLinkPhones.add('380' + cleanVerifiedDb.slice(-9));
+            }
+
+            if (verifiedLinkPhones.size > 0 && typeof window !== 'undefined' && window.apiClient) {
                 const uid = activeUser.id;
-                const phonesToLink = Array.from(uniqueCleanPhones).filter((clean) => {
+                const phonesToLink = Array.from(verifiedLinkPhones).filter((clean) => {
                     const key = `nisha_linked_orders_v1:${uid}:${String(clean).slice(-9)}`;
                     try {
                         const rawTs = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(key) : null;
@@ -290,12 +300,15 @@ export async function fetchMyOrders() {
                         userId: uid,
                         phone: clean
                     }, { timeout: 8000, dedupe: true }).then((/** @type {any} */ res) => {
-                        if (res && res.success !== false) {
-                            try {
-                                if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, String(Date.now()));
-                            } catch {}
-                        }
+                        try {
+                            if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, String(Date.now()));
+                        } catch {}
                         return res;
+                    }).catch(() => {
+                        try {
+                            if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, String(Date.now()));
+                        } catch {}
+                        return null;
                     });
                 });
 

@@ -93,4 +93,14 @@ describe('Frontend Audit Regression Guards', () => {
         expect(modalSection).not.toContain('max-height 0.28s');
         expect(mobileCss).toContain('html.keyboard-settling');
     });
+
+    it('never sends unverified draft/pending phones to /api/link-orders (prevents false Security Radar 403 alerts)', () => {
+        const profileSessionSrc = fs.readFileSync(path.join(rootDir, 'js/profile/profile-session.js'), 'utf8');
+        expect(profileSessionSrc).toContain('const phoneToLink = dbVerifiedPhone;');
+        expect(profileSessionSrc).toContain('profileState.userProfile._verifiedDbPhone = dbVerifiedPhone;');
+
+        const ordersFetchSrc = fs.readFileSync(path.join(rootDir, 'js/orders/orders-fetch.js'), 'utf8');
+        expect(ordersFetchSrc).toContain('const verifiedLinkPhones = new Set();');
+        expect(ordersFetchSrc).not.toContain('Array.from(uniqueCleanPhones)');
+    });
 });

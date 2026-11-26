@@ -512,7 +512,14 @@ export async function executeOrderFinal(emailToSave) {
             }
 
             if (user && user.id && phone) {
-                if (!handledViaAtomicServer) {
+                const phoneDigits = String(phone).replace(/[^\d]/g, '');
+                const dbProfilePhone = String(window.userProfile?._verifiedDbPhone ?? window.userProfile?.phone ?? '').replace(/[^\d]/g, '');
+                const isVerifiedForLink = Boolean(window.otpVerified) || (
+                    phoneDigits.length >= 9 &&
+                    dbProfilePhone.length >= 9 &&
+                    phoneDigits.slice(-9) === dbProfilePhone.slice(-9)
+                );
+                if (!handledViaAtomicServer && isVerifiedForLink) {
                     window.apiClient.post('/api/link-orders', { userId: user.id, phone: phone }, { timeout: 8000 }).catch(() => {});
                 }
 
