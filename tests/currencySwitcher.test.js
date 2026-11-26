@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
     CURRENCY_STORAGE_KEY,
+    CURRENCY_UPDATED_AT_KEY,
     normalizeCurrencyCode,
     validateFxRatesPair,
     getActiveCurrencyCode,
@@ -12,6 +13,7 @@ import {
     setCurrencyCode,
     cycleCurrency,
     syncCurrencyToggleUI,
+    syncCurrencyFromUser,
     fetchLiveExchangeRates,
     _resetCurrencyTestState
 } from '../js/core/currency.js';
@@ -225,5 +227,74 @@ describe('Currency Switcher & Live FX Conversion (js/core/currency.js)', () => {
         const okBid = validateBargainSubmission(item, 45);
         expect(okBid.ok).toBe(true);
         expect(okBid.offeredPriceUah).toBe(1800);
+    });
+
+    it('remembers currency via cookie self-healing and syncs across devices via Supabase user_metadata', async () => {
+        vi.useFakeTimers();
+        try {
+            /** @type {string} */
+            let cookieJar = '';
+            Object.defineProperty(/** @type {any} */ (globalThis).document, 'cookie', {
+                configurable: true,
+                get: () => cookieJar,
+                set: (v) => { cookieJar = String(v).split(';')[0]; }
+            });
+
+            const updateUserMock = vi.fn(async () => ({ data: {}, error: null }));
+            const mockUser = { id: 'user-1', user_metadata: /** @type {Record<string, any>} */ ({}) };
+            /** @type {any} */ (globalThis).window.currentUser = mockUser;
+            /** @type {any} */ (globalThis).window._supabase = { auth: { updateUser: updateUserMock } };
+
+            // 1. Switching currency saves to localStorage, cookie, timestamp, and debounces Supabase updateUser
+            setCurrencyCode('EUR', { silent: true, updatedAt: 1000 });
+            expect(storageMap.get(CURRENCY_STORAGE_KEY)).toBe('EUR');
+            expect(storageMap.get(CURRENCY_UPDATED_AT_KEY)).toBe('1000');
+            expect(cookieJar).toBe('nisha_currency=EUR');
+            expect(mockUser.user_metadata.preferred_currency).toBe('EUR');
+
+            vi.advanceTimersByTime(450);
+            expect(updateUserMock).toHaveBeenCalledTimes(1);
+            expect(updateUserMock).toHaveBeenCalledWith({
+                data: {
+                    preferred_currency: 'EUR',
+                    preferred_currency_updated_at: 1000
+                }
+            });
+
+            // 2. If localStorage is cleared (e.g. Safari ITP), cookie restores currency and self-heals localStorage
+            storageMap.delete(CURRENCY_STORAGE_KEY);
+            expect(getActiveCurrencyCode()).toBe('EUR');
+            expect(storageMap.get(CURRENCY_STORAGE_KEY)).toBe('EUR');
+
+            // 3. Fresh device login restores currency from account user_metadata silently
+            storageMap.clear();
+            cookieJar = '';
+            const restored = syncCurrencyFromUser({
+                id: 'user-1',
+                user_metadata: { preferred_currency: 'USD', preferred_currency_updated_at: 2000 }
+            });
+            expect(restored).toBe('USD');
+            expect(storageMap.get(CURRENCY_STORAGE_KEY)).toBe('USD');
+            expect(cookieJar).toBe('nisha_currency=USD');
+            expect(domById.get('profileCurrencyToggleBtn').glyph.textContent).toBe('$');
+
+            // 4. Newer local choice wins over older account metadata and pushes update to Supabase
+            updateUserMock.mockClear();
+            setCurrencyCode('EUR', { silent: true, syncRemote: false, updatedAt: 5000 });
+            const keptLocal = syncCurrencyFromUser({
+                id: 'user-1',
+                user_metadata: { preferred_currency: 'USD', preferred_currency_updated_at: 2000 }
+            });
+            expect(keptLocal).toBe('EUR');
+            vi.advanceTimersByTime(450);
+            expect(updateUserMock).toHaveBeenCalledWith({
+                data: {
+                    preferred_currency: 'EUR',
+                    preferred_currency_updated_at: 5000
+                }
+            });
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });

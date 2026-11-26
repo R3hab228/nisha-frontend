@@ -609,6 +609,9 @@ async function _runCheckSession() {
             syncLanguageFromProfile(profileState.userProfile.language);
         }
 
+        const syncCurrencyUserFn = getGlobalFn('syncCurrencyFromUser');
+        if (syncCurrencyUserFn) syncCurrencyUserFn(currentUser);
+
         const uName = resolveAndHealDisplayName(sb, currentUser);
         const uEmail = currentUser.email;
 

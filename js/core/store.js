@@ -43,6 +43,7 @@ import { emitAppEvent, invokeAction } from './action-registry.js';
         // Настройки сайта и правила
         lang: { storageKey: 'nisha_lang', default: 'ua', type: 'string' },
         flag: { storageKey: 'nisha_flag', default: '🇺🇦', type: 'string' },
+        currency: { storageKey: 'nisha_currency', default: 'UAH', type: 'string' },
         rulesAccepted: { storageKey: 'nisha_rules_accepted', default: false, type: 'boolean' },
         tourDone: { storageKey: 'nisha_tour_done', default: false, type: 'boolean' },
         lastBroadcast: { storageKey: 'nisha_last_broadcast', default: '', type: 'string' },

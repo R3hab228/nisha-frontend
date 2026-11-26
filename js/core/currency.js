@@ -4,13 +4,17 @@
 // ==========================================
 
 import { emitAppEvent, hasAction, invokeAction, registerActions } from './action-registry.js';
-import { getRuntimeOpenedItem, getRuntimeStorage } from './runtime-env.js';
+import { getRuntimeOpenedItem, getRuntimeStorage, getRuntimeSupabase, getRuntimeUser } from './runtime-env.js';
 
 export const CURRENCY_STORAGE_KEY = 'nisha_currency';
+export const CURRENCY_UPDATED_AT_KEY = 'nisha_currency_updated_at';
+export const CURRENCY_COOKIE_NAME = 'nisha_currency';
 export const FX_RATES_STORAGE_KEY = 'nisha_fx_rates_v1';
 export const CURRENCY_ORDER = /** @type {const} */ (['UAH', 'USD', 'EUR']);
 const FX_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 часов
 const FX_FETCH_TIMEOUT_MS = 5000;
+const CURRENCY_COOKIE_MAX_AGE_SEC = 365 * 24 * 60 * 60; // 1 год
+const REMOTE_SYNC_DEBOUNCE_MS = 400;
 
 const USD_MIN_RATE = 20;
 const USD_MAX_RATE = 120;
@@ -40,6 +44,21 @@ let _inFlightRatesFetch = null;
 /** @type {number | null} */
 let _pendingPriceRefreshRaf = null;
 let _storageSyncBound = false;
+/** @type {ReturnType<typeof setTimeout> | null} */
+let _remoteSyncTimer = null;
+
+/**
+ * Строго парсит код валюты без фолбэка (возвращает `null` для пустого/невалидного значения).
+ * @param {unknown} raw
+ * @returns {CurrencyCode | null}
+ */
+export function parseValidCurrencyCode(raw) {
+    const code = String(raw || '').trim().toUpperCase();
+    if (code === 'UAH' || code === '₴') return 'UAH';
+    if (code === 'USD' || code === '$') return 'USD';
+    if (code === 'EUR' || code === '€') return 'EUR';
+    return null;
+}
 
 /**
  * Нормализует код валюты в строго допустимый набор (`UAH` | `USD` | `EUR`).
@@ -47,10 +66,7 @@ let _storageSyncBound = false;
  * @returns {CurrencyCode}
  */
 export function normalizeCurrencyCode(raw) {
-    const code = String(raw || '').trim().toUpperCase();
-    if (code === 'USD' || code === '$') return 'USD';
-    if (code === 'EUR' || code === '€') return 'EUR';
-    return 'UAH';
+    return parseValidCurrencyCode(raw) || 'UAH';
 }
 
 /**
@@ -76,7 +92,10 @@ export function validateFxRatesPair(rawUsd, rawEur) {
 function readStoredItem(key) {
     const store = getRuntimeStorage();
     if (store && typeof store.get === 'function') {
-        return store.get(key, null);
+        const fromFacade = store.get(key, null);
+        if (fromFacade !== null && fromFacade !== undefined && fromFacade !== '') {
+            return fromFacade;
+        }
     }
     try {
         if (typeof localStorage !== 'undefined') return localStorage.getItem(key);
@@ -86,14 +105,66 @@ function readStoredItem(key) {
 
 /** @param {string} key @param {string} value */
 function writeStoredItem(key, value) {
+    const strVal = String(value);
     const store = getRuntimeStorage();
     if (store && typeof store.set === 'function') {
-        store.set(key, value);
-        return;
+        store.set(key, strVal);
     }
     try {
-        if (typeof localStorage !== 'undefined') localStorage.setItem(key, value);
+        if (typeof localStorage !== 'undefined' && localStorage.getItem(key) !== strVal) {
+            localStorage.setItem(key, strVal);
+        }
     } catch {}
+}
+
+/**
+ * Читает резервную cookie `nisha_currency` (переживает очистку localStorage / Safari ITP).
+ * @returns {CurrencyCode | null}
+ */
+function readCurrencyCookie() {
+    try {
+        if (typeof document === 'undefined' || typeof document.cookie !== 'string' || !document.cookie) {
+            return null;
+        }
+        const prefix = `${CURRENCY_COOKIE_NAME}=`;
+        const parts = document.cookie.split(';');
+        for (const part of parts) {
+            const trimmed = part.trim();
+            if (trimmed.startsWith(prefix)) {
+                return parseValidCurrencyCode(decodeURIComponent(trimmed.slice(prefix.length)));
+            }
+        }
+    } catch {}
+    return null;
+}
+
+/**
+ * Сохраняет выбранную валюту в долгоживущую first-party cookie (1 год).
+ * @param {CurrencyCode} code
+ */
+function writeCurrencyCookie(code) {
+    try {
+        if (typeof document === 'undefined') return;
+        const isHttps = typeof window !== 'undefined' && window.location?.protocol === 'https:';
+        const secureAttr = isHttps ? '; Secure' : '';
+        document.cookie = `${CURRENCY_COOKIE_NAME}=${encodeURIComponent(code)}; path=/; max-age=${CURRENCY_COOKIE_MAX_AGE_SEC}; SameSite=Lax${secureAttr}`;
+    } catch {}
+}
+
+/**
+ * Возвращает сохранённую пользователем валюту (localStorage → cookie с автовосстановлением) или `null`, если выбор ещё не делался.
+ * @returns {CurrencyCode | null}
+ */
+export function readSavedCurrencyPreference() {
+    const fromStorage = parseValidCurrencyCode(readStoredItem(CURRENCY_STORAGE_KEY));
+    if (fromStorage) return fromStorage;
+
+    const fromCookie = readCurrencyCookie();
+    if (fromCookie) {
+        writeStoredItem(CURRENCY_STORAGE_KEY, fromCookie);
+        return fromCookie;
+    }
+    return null;
 }
 
 /**
@@ -119,7 +190,7 @@ hydrateCachedRatesFromStorage();
  * @returns {CurrencyCode}
  */
 export function getActiveCurrencyCode() {
-    return normalizeCurrencyCode(readStoredItem(CURRENCY_STORAGE_KEY));
+    return readSavedCurrencyPreference() || 'UAH';
 }
 
 /**
@@ -431,14 +502,67 @@ export function syncCurrencyToggleUI(animate = false) {
 }
 
 /**
- * Устанавливает валюту, сохраняет её и мгновенно обновляет UI.
+ * Отложенно (debounced) сохраняет выбранную валюту в Supabase `user_metadata`,
+ * чтобы выбор пользователя автоматически переносился между устройствами и браузерами.
+ * @param {CurrencyCode} code
+ * @param {number} updatedAt
+ */
+function syncCurrencyToAccount(code, updatedAt) {
+    const activeUser = getRuntimeUser();
+    if (!activeUser || typeof activeUser !== 'object') return;
+
+    if (!activeUser.user_metadata || typeof activeUser.user_metadata !== 'object') {
+        activeUser.user_metadata = {};
+    }
+    activeUser.user_metadata.preferred_currency = code;
+    activeUser.user_metadata.preferred_currency_updated_at = updatedAt;
+
+    const sb = getRuntimeSupabase();
+    if (!sb || !sb.auth || typeof sb.auth.updateUser !== 'function') return;
+
+    if (_remoteSyncTimer !== null) {
+        clearTimeout(_remoteSyncTimer);
+    }
+    _remoteSyncTimer = setTimeout(() => {
+        _remoteSyncTimer = null;
+        try {
+            Promise.resolve(
+                sb.auth.updateUser({
+                    data: {
+                        preferred_currency: code,
+                        preferred_currency_updated_at: updatedAt
+                    }
+                })
+            ).catch(() => {});
+        } catch {}
+    }, REMOTE_SYNC_DEBOUNCE_MS);
+}
+
+/**
+ * Устанавливает валюту, надёжно сохраняет её (localStorage + cookie + reactive store + аккаунт)
+ * и мгновенно обновляет UI.
  * @param {CurrencyCode} nextCode
- * @param {{ silent?: boolean, animate?: boolean }} [options={}]
+ * @param {{ silent?: boolean, animate?: boolean, syncRemote?: boolean, updatedAt?: number }} [options={}]
  * @returns {CurrencyCode}
  */
 export function setCurrencyCode(nextCode, options = {}) {
     const normalized = normalizeCurrencyCode(nextCode);
+    const updatedAt = Number.isFinite(Number(options.updatedAt)) && Number(options.updatedAt) > 0
+        ? Number(options.updatedAt)
+        : Date.now();
+
     writeStoredItem(CURRENCY_STORAGE_KEY, normalized);
+    writeStoredItem(CURRENCY_UPDATED_AT_KEY, String(updatedAt));
+    writeCurrencyCookie(normalized);
+
+    try {
+        const g = /** @type {any} */ (globalThis);
+        const reactiveStore = (typeof window !== 'undefined' && window.store) || g.store;
+        if (reactiveStore && typeof reactiveStore.set === 'function' && reactiveStore.get?.('currency') !== normalized) {
+            reactiveStore.set('currency', normalized);
+        }
+    } catch {}
+
     syncCurrencyToggleUI(Boolean(options.animate));
 
     if (normalized !== 'UAH') {
@@ -447,12 +571,60 @@ export function setCurrencyCode(nextCode, options = {}) {
 
     scheduleLivePricesRefresh();
 
+    if (options.syncRemote !== false) {
+        syncCurrencyToAccount(normalized, updatedAt);
+    }
+
     if (!options.silent && hasAction('showCurrencyToast')) {
         const rate = normalized === 'UAH' ? 1 : _activeRates[normalized];
         invokeAction('showCurrencyToast', normalized, getCurrencySymbol(normalized), rate);
     }
 
     return normalized;
+}
+
+/**
+ * Синхронизирует валюту между локальным устройством и аккаунтом пользователя при входе/проверке сессии.
+ * Использует timestamp (Last-Write-Wins), чтобы никогда не перезаписывать более свежий выбор.
+ * @param {any} user
+ * @returns {CurrencyCode}
+ */
+export function syncCurrencyFromUser(user) {
+    const localCode = readSavedCurrencyPreference();
+    const localUpdatedAt = Number(readStoredItem(CURRENCY_UPDATED_AT_KEY)) || 0;
+    const remoteCode = parseValidCurrencyCode(user?.user_metadata?.preferred_currency);
+    const remoteUpdatedAt = Number(user?.user_metadata?.preferred_currency_updated_at) || 0;
+
+    if (remoteCode) {
+        const shouldAdoptRemote = !localCode || remoteUpdatedAt > localUpdatedAt;
+        if (shouldAdoptRemote) {
+            if (localCode !== remoteCode) {
+                return setCurrencyCode(remoteCode, {
+                    silent: true,
+                    animate: false,
+                    syncRemote: false,
+                    updatedAt: remoteUpdatedAt || Date.now()
+                });
+            }
+            if (remoteUpdatedAt > localUpdatedAt) {
+                writeStoredItem(CURRENCY_UPDATED_AT_KEY, String(remoteUpdatedAt));
+            }
+            writeCurrencyCookie(remoteCode);
+            syncCurrencyToggleUI(false);
+            return remoteCode;
+        }
+        if (localCode && localCode !== remoteCode && localUpdatedAt > remoteUpdatedAt) {
+            syncCurrencyToAccount(localCode, localUpdatedAt);
+        }
+        return localCode || 'UAH';
+    }
+
+    if (localCode) {
+        syncCurrencyToAccount(localCode, localUpdatedAt || Date.now());
+        return localCode;
+    }
+
+    return 'UAH';
 }
 
 /**
@@ -479,11 +651,19 @@ export function _resetCurrencyTestState() {
         cancelAnimationFrame(_pendingPriceRefreshRaf);
     }
     _pendingPriceRefreshRaf = null;
+    if (_remoteSyncTimer !== null) {
+        clearTimeout(_remoteSyncTimer);
+        _remoteSyncTimer = null;
+    }
 }
 
 // Авто-инициализация UI, фонового обновления курсов и кросс-вкладочной синхронизации
 if (typeof document !== 'undefined') {
     const bootCurrencyUI = () => {
+        const saved = readSavedCurrencyPreference();
+        if (saved) {
+            writeCurrencyCookie(saved);
+        }
         syncCurrencyToggleUI(false);
         syncPriceFilterCurrencyUI();
         const needsEarlyRates = getActiveCurrencyCode() !== 'UAH';
@@ -512,6 +692,14 @@ if (typeof window !== 'undefined' && !_storageSyncBound && typeof window.addEven
             syncCurrencyToggleUI(false);
             if (getActiveCurrencyCode() !== 'UAH') scheduleLivePricesRefresh();
         } else if (ev.key === CURRENCY_STORAGE_KEY) {
+            const active = getActiveCurrencyCode();
+            writeCurrencyCookie(active);
+            syncCurrencyToggleUI(false);
+            scheduleLivePricesRefresh();
+        }
+    });
+    window.addEventListener('pageshow', (ev) => {
+        if (ev && ev.persisted) {
             syncCurrencyToggleUI(false);
             scheduleLivePricesRefresh();
         }
@@ -526,6 +714,7 @@ if (typeof window !== 'undefined') {
     window.setCurrencyCode = setCurrencyCode;
     window.cycleCurrency = cycleCurrency;
     window.syncCurrencyToggleUI = syncCurrencyToggleUI;
+    window.syncCurrencyFromUser = syncCurrencyFromUser;
     window.syncPriceFilterCurrencyUI = syncPriceFilterCurrencyUI;
     window.refreshAllPricesInDOM = refreshAllPricesInDOM;
     window.fetchLiveExchangeRates = fetchLiveExchangeRates;
@@ -540,6 +729,7 @@ registerActions({
     setCurrencyCode,
     cycleCurrency,
     syncCurrencyToggleUI,
+    syncCurrencyFromUser,
     syncPriceFilterCurrencyUI,
     refreshAllPricesInDOM,
     fetchLiveExchangeRates
