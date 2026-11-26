@@ -20,6 +20,22 @@ import { renderNextBatch } from './catalog-grid.js';
 import { getItemSortMeta } from './catalog-pagination.js';
 import { isItemBargainEnabled, escCardHtml } from './catalog-card-markup.js';
 import { renderActiveFilterChips, removeActiveFilterChip } from './catalog-filter-chips.js';
+import {
+    CATEGORY_TO_SLUG,
+    normalizeCategoryParam,
+    categoryToUrlSlug,
+    normalizeBrandParam,
+    normalizeSizeToken,
+    parseSizesFromParams,
+    parsePriceBoundsFromParams,
+    parseSortParam,
+    hasExplicitFilterParams,
+    parseCatalogFiltersFromUrl,
+    hydrateCatalogFiltersFromUrl,
+    buildCatalogFilterUrl,
+    syncCatalogFiltersToUrl,
+    shareCurrentFilterLink
+} from './catalog-url-sync.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
 import { getRuntimeFavorites, isSiteHackedMode, tSafe } from '../core/runtime-env.js';
 
@@ -29,7 +45,21 @@ export {
     updatePriceUI,
     toggleMobileSidebar,
     renderActiveFilterChips,
-    removeActiveFilterChip
+    removeActiveFilterChip,
+    CATEGORY_TO_SLUG,
+    normalizeCategoryParam,
+    categoryToUrlSlug,
+    normalizeBrandParam,
+    normalizeSizeToken,
+    parseSizesFromParams,
+    parsePriceBoundsFromParams,
+    parseSortParam,
+    hasExplicitFilterParams,
+    parseCatalogFiltersFromUrl,
+    hydrateCatalogFiltersFromUrl,
+    buildCatalogFilterUrl,
+    syncCatalogFiltersToUrl,
+    shareCurrentFilterLink
 };
 
 /** @type {ReturnType<typeof setTimeout> | null} */
@@ -193,7 +223,8 @@ export function applyFilters(immediate = false, preserveViewport = false) {
             if (filterSeq !== _applyFiltersSeq) return;
             const g = /** @type {any} */ (globalThis);
             const searchInput = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('mainSearch') : null);
-            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const searchRaw = searchInput ? searchInput.value.trim() : '';
+            const searchTerm = searchRaw.toLowerCase();
             const checkedSizes = typeof document !== 'undefined'
                 ? Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => /** @type {HTMLInputElement} */ (cb).value)
                 : [];
@@ -369,7 +400,9 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                 savedScrollState.scrollY > 80 &&
                 (savedScrollState.category || '') === (curCat || '') &&
                 (savedScrollState.search || '') === (searchTerm || '') &&
-                Boolean(savedScrollState.showingFavs) === Boolean(onlyFavs)
+                Boolean(savedScrollState.showingFavs) === Boolean(onlyFavs) &&
+                !curBrand &&
+                checkedSizes.length === 0
             );
 
             if (grid) {
@@ -419,18 +452,25 @@ export function applyFilters(immediate = false, preserveViewport = false) {
                 }
             }
 
-            // Обновляем URL параметры
-            if (typeof window !== 'undefined' && window.location && window.history) {
-                try {
-                    const url = new URL(String(window.location));
-                    if (curCat) url.searchParams.set('cat', curCat); else url.searchParams.delete('cat');
-                    if (searchTerm) url.searchParams.set('q', searchTerm); else url.searchParams.delete('q');
-                    if (onlySale) url.searchParams.set('sale', '1'); else url.searchParams.delete('sale');
-                    if (onlyBargain) url.searchParams.set('bargain', '1'); else url.searchParams.delete('bargain');
-                    const curState = (window.history && window.history.state !== undefined) ? window.history.state : null;
-                    window.history.replaceState(curState, '', url);
-                } catch {}
-            }
+            // Синхронизируем все активные фильтры с URL (?cat=...&brand=...&size=...&min=...&max=...&sort=...)
+            const minDefault = minInput ? (Number.parseInt(minInput.min, 10) || 0) : 0;
+            const maxDefault = maxInput ? (Number.parseInt(maxInput.max, 10) || 15000) : 15000;
+            const activeSort = (sortCheap && sortCheap.classList.contains('active-sort')) ? 'cheap' : 'new';
+            syncCatalogFiltersToUrl({
+                category: curCat,
+                brand: curBrand,
+                sizes: checkedSizes,
+                query: searchRaw,
+                onlySale,
+                onlyBargain,
+                hideUnavailable,
+                minPrice,
+                maxPrice: Number.isFinite(maxPrice) ? maxPrice : maxDefault,
+                minDefault,
+                maxDefault,
+                sort: activeSort,
+                onlyFavs
+            });
 
             // Подсветка активной категории
             if (typeof document !== 'undefined') {
@@ -675,7 +715,9 @@ registerActions({
     updatePriceUI,
     toggleMobileSidebar,
     renderActiveFilterChips,
-    removeActiveFilterChip
+    removeActiveFilterChip,
+    hydrateCatalogFiltersFromUrl,
+    shareCurrentFilterLink
 });
 
 if (typeof window !== 'undefined') {
@@ -686,4 +728,5 @@ if (typeof window !== 'undefined') {
     window.setCategoryFilter = setCategoryFilter;
     window.renderActiveFilterChips = renderActiveFilterChips;
     window.removeActiveFilterChip = removeActiveFilterChip;
+    window.shareCurrentFilterLink = shareCurrentFilterLink;
 }

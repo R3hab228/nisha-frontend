@@ -605,7 +605,11 @@
       },
       "filters": {
         "in_stock": "Тільки в наявності",
-        "remove_aria": "Прибрати фільтр"
+        "remove_aria": "Прибрати фільтр",
+        "share_link": "Поділитися",
+        "share_link_aria": "Скопіювати посилання на добірку",
+        "link_copied": "Посилання на добірку скопійовано!",
+        "link_copy_error": "Не вдалося скопіювати посилання"
       },
       "legal_docs": {
         "btn_close": "[ ЗАКРИТИ ]",
@@ -1271,7 +1275,11 @@
       },
       "filters": {
         "in_stock": "Только в наличии",
-        "remove_aria": "Убрать фильтр"
+        "remove_aria": "Убрать фильтр",
+        "share_link": "Поделиться",
+        "share_link_aria": "Скопировать ссылку на подборку",
+        "link_copied": "Ссылка на подборку скопирована!",
+        "link_copy_error": "Не удалось скопировать ссылку"
       },
       "legal_docs": {
         "btn_close": "[ ЗАКРЫТЬ ]",
@@ -1937,7 +1945,11 @@
       },
       "filters": {
         "in_stock": "In stock only",
-        "remove_aria": "Remove filter"
+        "remove_aria": "Remove filter",
+        "share_link": "Share",
+        "share_link_aria": "Copy filter selection link",
+        "link_copied": "Filter link copied!",
+        "link_copy_error": "Failed to copy link"
       },
       "legal_docs": {
         "btn_close": "[ CLOSE ]",

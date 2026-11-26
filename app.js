@@ -243,6 +243,11 @@ function resetToMain() {
     const favNav = document.getElementById('favNav');
     if (favNav) favNav.style.color = 'var(--accent-yellow)';
     
+    const sortNew = document.getElementById('sort-new');
+    const sortCheap = document.getElementById('sort-cheap');
+    if (sortNew) sortNew.classList.add('active-sort');
+    if (sortCheap) sortCheap.classList.remove('active-sort');
+
     document.querySelectorAll('.sidebar .filter-list:first-of-type a').forEach(el => el.classList.remove('active-filter'));
     const allItemsLink = document.querySelector('.sidebar .filter-list:first-of-type a');
     if (allItemsLink) allItemsLink.classList.add('active-filter');
@@ -275,7 +280,7 @@ async function initApp() {
             }
         } catch {}
 
-        // 1. Восстанавливаем фильтры, категорию и поисковый запрос
+        // 1. Восстанавливаем фильтры, категорию, бренд, размеры, цену, сортировку и поисковый запрос из URL
         const urlParams = new URLSearchParams(window.location.search);
         const quickAction = urlParams.get('action');
         if (quickAction === 'cart') {
@@ -291,56 +296,7 @@ async function initApp() {
             setTimeout(() => { openReviewsModal(); }, 250);
         }
 
-        let showingFavs = false;
-        let savedCat = urlParams.get('cat') || null;
-        try {
-            showingFavs = sessionStorage.getItem('nisha_showing_favs') === 'true';
-            if (!savedCat) savedCat = sessionStorage.getItem('nisha_last_category');
-        } catch {}
-
-        if (showingFavs) {
-            window.showingOnlyFavs = true;
-            const favNav = document.getElementById('favNav');
-            if (favNav) favNav.style.color = '#fff';
-        }
-        const catLinks = document.querySelectorAll('.sidebar .filter-list:first-of-type a');
-        catLinks.forEach(el => el.classList.remove('active-filter'));
-
-        if (savedCat) {
-            window.currentCategory = savedCat;
-            catLinks.forEach(link => {
-                const dataCat = link.getAttribute('data-category');
-                const onclickText = link.getAttribute('onclick') || '';
-                if (dataCat === savedCat || onclickText.includes(`'${savedCat}'`)) {
-                    link.classList.add('active-filter');
-                }
-            });
-        } else {
-            const firstLink = document.querySelector('.sidebar .filter-list:first-of-type a');
-            if (firstLink) firstLink.classList.add('active-filter');
-        }
-
-        const savedQuery = urlParams.get('q') || urlParams.get('search');
-        if (savedQuery) {
-            const sInput = document.getElementById('mainSearch');
-            if (sInput) {
-                sInput.value = savedQuery;
-                const clearBtn = document.getElementById('clearSearchBtn');
-                if (clearBtn) clearBtn.style.display = 'block';
-            }
-        }
-
-        const saleParam = urlParams.get('sale');
-        if (saleParam === '1' || saleParam === 'true') {
-            const saleCb = document.getElementById('onlySaleCb');
-            if (saleCb) saleCb.checked = true;
-        }
-
-        const bargainParam = urlParams.get('bargain');
-        if (bargainParam === '1' || bargainParam === 'true') {
-            const bargainCb = document.getElementById('onlyBargainCb');
-            if (bargainCb) bargainCb.checked = true;
-        }
+        invokeAction('hydrateCatalogFiltersFromUrl', urlParams);
 
         // 2. Мгновенный запуск каталога, сессии и словарей локализации параллельно
         const itemsPromise = loadAllItems();

@@ -452,6 +452,26 @@ label:hover .win95-cb:checked {
 .filter-chip.is-search:hover {
     border-color: var(--accent-yellow);
 }
+.filter-chip.is-share-link {
+    border-style: dashed;
+    border-color: rgba(0, 170, 255, 0.52);
+    color: #7cd8ff;
+    background: rgba(0, 170, 255, 0.06);
+}
+.filter-chip.is-share-link:hover {
+    border-color: #0af;
+    color: #fff;
+    background: rgba(0, 170, 255, 0.14);
+}
+.filter-chip.is-share-link.is-copied {
+    border-style: solid;
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+    background: rgba(0, 255, 0, 0.08);
+}
+.filter-chip-link-icon {
+    flex-shrink: 0;
+}
 
 .items-grid { 
     display: grid; 

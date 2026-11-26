@@ -604,7 +604,11 @@
     },
     "filters": {
       "in_stock": "In stock only",
-      "remove_aria": "Remove filter"
+      "remove_aria": "Remove filter",
+      "share_link": "Share",
+      "share_link_aria": "Copy filter selection link",
+      "link_copied": "Filter link copied!",
+      "link_copy_error": "Failed to copy link"
     },
     "legal_docs": {
       "btn_close": "[ CLOSE ]",

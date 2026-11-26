@@ -101,6 +101,7 @@ const ACTION_HAPTIC_MAP = {
     'close-cart-dropdown': 'light',
     'remove-from-cart': 'light',
     'remove-filter-chip': 'light',
+    'share-filter-link': 'light',
     'show-badge-info': 'light',
     'refresh-ttn-track': 'light',
     'share-item': 'light',
@@ -362,6 +363,10 @@ export function handleDelegatedAction(e) {
             const filterType = actionEl.getAttribute('data-filter-type') || '';
             const filterValue = actionEl.getAttribute('data-filter-value') || '';
             invokeCompatAction('remove-filter-chip', 'removeActiveFilterChip', filterType, filterValue);
+            break;
+        }
+        case 'share-filter-link': {
+            invokeCompatAction('share-filter-link', 'shareCurrentFilterLink', actionEl);
             break;
         }
         case 'toggle-password-visibility': {
