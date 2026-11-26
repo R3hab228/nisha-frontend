@@ -116,7 +116,19 @@ function renderTrustBadges(item) {
             bargainText = fallbackBargainText;
         }
         if (itemMinBargain) {
-            if (curLang.startsWith('ua') || curLang.startsWith('uk')) {
+            const activeCode = (typeof window !== 'undefined' && typeof window.getActiveCurrencyCode === 'function')
+                ? window.getActiveCurrencyCode()
+                : 'UAH';
+            if (activeCode && activeCode !== 'UAH' && typeof formatPrice === 'function') {
+                const formattedMin = formatPrice(itemMinBargain).toUpperCase();
+                if (curLang.startsWith('ua') || curLang.startsWith('uk')) {
+                    bargainText = `ВІД ${formattedMin}`;
+                } else if (curLang.startsWith('en')) {
+                    bargainText = `FROM ${formattedMin}`;
+                } else {
+                    bargainText = `ОТ ${formattedMin}`;
+                }
+            } else if (curLang.startsWith('ua') || curLang.startsWith('uk')) {
                 bargainText = `ВІД ${itemMinBargain} ГРН`;
             } else if (curLang.startsWith('en')) {
                 bargainText = `FROM ${itemMinBargain} UAH`;
@@ -300,7 +312,9 @@ export function openProductModal(item) {
             const origPriceNum = Number(acceptedData.originalPrice ?? item.price);
             const safeOrig = Number.isFinite(origPriceNum) ? origPriceNum : 0;
             const cur = getEscHtml((typeof getCurrency === 'function' ? getCurrency() : 'грн').trim());
-            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${safeOrig} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accPriceNum} ${cur}</span>`;
+            const origFmt = (typeof formatPrice === 'function') ? getEscHtml(formatPrice(safeOrig)) : `${safeOrig} ${cur}`;
+            const accFmt = (typeof formatPrice === 'function') ? getEscHtml(formatPrice(accPriceNum)) : `${accPriceNum} ${cur}`;
+            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${origFmt}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accFmt}</span>`;
         }
     } catch {}
 
@@ -624,9 +638,62 @@ export async function toggleFavFromModal(event) {
     }
 }
 
+/**
+ * Точечно обновляет цену и бейдж минимального торга в уже открытой модалке товара
+ * при мгновенном переключении валюты.
+ * @param {any} [item]
+ */
+export function refreshOpenedProductModalPrices(item = getActiveOpenedItem()) {
+    if (!item || typeof document === 'undefined') return;
+    const isHackedActive = isSiteHackedMode();
+    const finalPrice = isHackedActive ? Math.floor(item.price * 0.9) : item.price;
+    const priceEl = document.getElementById('modalItemPrice');
+    if (priceEl) {
+        let renderedBargain = false;
+        try {
+            const { acceptedData } = /** @type {any} */ (getBargainOfferState(item.id));
+            const accPriceNum = Number(acceptedData && acceptedData.acceptedPrice);
+            if (acceptedData && Number.isFinite(accPriceNum) && accPriceNum > 0) {
+                const origPriceNum = Number(acceptedData.originalPrice ?? item.price);
+                const safeOrig = Number.isFinite(origPriceNum) ? origPriceNum : 0;
+                const cur = getEscHtml((typeof getCurrency === 'function' ? getCurrency() : 'грн').trim());
+                const origFmt = (typeof formatPrice === 'function') ? getEscHtml(formatPrice(safeOrig)) : `${safeOrig} ${cur}`;
+                const accFmt = (typeof formatPrice === 'function') ? getEscHtml(formatPrice(accPriceNum)) : `${accPriceNum} ${cur}`;
+                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${origFmt}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accFmt}</span>`;
+                renderedBargain = true;
+            }
+        } catch {}
+
+        if (!renderedBargain) {
+            priceEl.textContent = (typeof formatPrice === 'function')
+                ? formatPrice(finalPrice)
+                : (finalPrice + ' ' + (typeof getCurrency === 'function' ? getCurrency() : 'грн'));
+        }
+    }
+
+    const minBadge = document.querySelector('#productModal [data-min-bargain]');
+    if (minBadge) {
+        const minRaw = Number(minBadge.getAttribute('data-min-bargain'));
+        if (Number.isFinite(minRaw) && minRaw > 0) {
+            const curLang = (typeof i18next !== 'undefined' && i18next.language) ? i18next.language : 'ua';
+            const formattedMin = (typeof formatPrice === 'function')
+                ? formatPrice(minRaw)
+                : `${minRaw} ${(curLang.startsWith('en') ? 'UAH' : 'грн')}`;
+            if (curLang.startsWith('ua') || curLang.startsWith('uk')) {
+                minBadge.textContent = `ВІД ${formattedMin.toUpperCase()}`;
+            } else if (curLang.startsWith('en')) {
+                minBadge.textContent = `FROM ${formattedMin.toUpperCase()}`;
+            } else {
+                minBadge.textContent = `ОТ ${formattedMin.toUpperCase()}`;
+            }
+        }
+    }
+}
+
 registerActions({
     openProductModalById,
     openProductModal,
+    refreshOpenedProductModalPrices,
     toggleFavFromModal
 });
 

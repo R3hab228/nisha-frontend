@@ -335,6 +335,8 @@ function updateContentLanguage() {
         }
     });
     invokeAction('syncSoundToggleUI');
+    invokeAction('syncCurrencyToggleUI');
+    invokeAction('syncPriceFilterCurrencyUI');
 }
 window.updateContentLanguage = updateContentLanguage;
 

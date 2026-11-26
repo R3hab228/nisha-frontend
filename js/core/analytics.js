@@ -286,14 +286,17 @@
         const pct = Math.min(100, Math.max(0, Math.round((total / minUah) * 100)));
         const lang = getCurrentFlagLang();
         const curr = lang === 'en' ? 'UAH' : 'грн';
+        const remainingFormatted = (typeof window !== 'undefined' && typeof window.formatPrice === 'function')
+            ? window.formatPrice(remaining)
+            : `${remaining} ${curr}`;
         const isUnlocked = remaining <= 0;
         const labelText = isUnlocked
             ? (lang === 'en' ? '✓ FREE SHIPPING UNLOCKED!' : (lang === 'ru' ? '✓ БЕСПЛАТНАЯ ДОСТАВКА АКТИВИРОВАНА!' : '✓ БЕЗКОШТОВНА ДОСТАВКА АКТИВОВАНА!'))
             : (lang === 'en'
-                ? `ADD ${remaining} ${curr} FOR FREE SHIPPING`
+                ? `ADD ${remainingFormatted} FOR FREE SHIPPING`
                 : (lang === 'ru'
-                    ? `ДО БЕСПЛАТНОЙ ДОСТАВКИ: +${remaining} ${curr}`
-                    : `ДО БЕЗКОШТОВНОЇ ДОСТАВКИ: +${remaining} ${curr}`));
+                    ? `ДО БЕСПЛАТНОЙ ДОСТАВКИ: +${remainingFormatted}`
+                    : `ДО БЕЗКОШТОВНОЇ ДОСТАВКИ: +${remainingFormatted}`));
 
         const renderBar = (barId, parentEl, anchorEl, extraClass = '') => {
             if (!parentEl) return;

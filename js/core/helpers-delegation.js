@@ -63,7 +63,8 @@ const SIMPLE_ACTION_MAP = {
     'delete-selected-orders': 'deleteSelectedOrders',
     'open-propose-modal': 'openProposeModal',
     'retry-load-items': 'loadAllItems',
-    'toggle-sound': 'toggleSoundEnabled'
+    'toggle-sound': 'toggleSoundEnabled',
+    'cycle-currency': 'cycleCurrency'
 };
 
 const ACTION_HAPTIC_MAP = {
@@ -83,6 +84,7 @@ const ACTION_HAPTIC_MAP = {
     'toggle-qa-section': 'selection',
     'toggle-history': 'selection',
     'toggle-sound': 'selection',
+    'cycle-currency': 'selection',
     'filter-favorites': 'selection',
     'toggle-mobile-sidebar': 'selection',
     // Clean tactile tap for modals, cards, cart drawer & utility buttons

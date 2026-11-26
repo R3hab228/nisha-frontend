@@ -104,13 +104,25 @@ export function renderActiveFilterChips() {
         });
 
         if (hasMinPrice || hasMaxPrice) {
-            const uah = tSafe('sidebar.uah', 'грн');
+            const activeCode = (typeof window !== 'undefined' && typeof window.getActiveCurrencyCode === 'function')
+                ? window.getActiveCurrencyCode()
+                : 'UAH';
+            const isForeignCurrency = activeCode && activeCode !== 'UAH';
+            const displayMin = (isForeignCurrency && typeof formatPrice === 'function')
+                ? formatPrice(minVal, { numberOnly: true })
+                : String(minVal);
+            const displayMax = (isForeignCurrency && typeof formatPrice === 'function')
+                ? formatPrice(maxVal, { numberOnly: true })
+                : String(maxVal);
+            const currUnit = isForeignCurrency
+                ? (typeof getCurrency === 'function' ? getCurrency() : activeCode)
+                : tSafe('sidebar.uah', 'грн');
             const fromWord = tSafe('sidebar.from', 'ОТ').toLowerCase();
             const toWord = tSafe('sidebar.to', 'ДО').toLowerCase();
             let priceLabel = '';
-            if (hasMinPrice && hasMaxPrice) priceLabel = `${minVal}–${maxVal} ${uah}`;
-            else if (hasMinPrice) priceLabel = `${fromWord} ${minVal} ${uah}`;
-            else priceLabel = `${toWord} ${maxVal} ${uah}`;
+            if (hasMinPrice && hasMaxPrice) priceLabel = `${displayMin}–${displayMax} ${currUnit}`;
+            else if (hasMinPrice) priceLabel = `${fromWord} ${displayMin} ${currUnit}`;
+            else priceLabel = `${toWord} ${displayMax} ${currUnit}`;
             chips.push({
                 type: 'price',
                 value: `${minVal}-${maxVal}`,
@@ -184,8 +196,16 @@ function resetPriceSlidersDom() {
     if (maxInput) maxInput.value = String(maxDefault);
     const minLabel = document.getElementById('priceMinVal');
     const maxLabel = document.getElementById('priceMaxVal');
-    if (minLabel) minLabel.textContent = String(minDefault);
-    if (maxLabel) maxLabel.textContent = String(maxDefault);
+    const activeCode = (typeof window !== 'undefined' && typeof window.getActiveCurrencyCode === 'function')
+        ? window.getActiveCurrencyCode()
+        : 'UAH';
+    if (activeCode && activeCode !== 'UAH' && typeof formatPrice === 'function') {
+        if (minLabel) minLabel.textContent = formatPrice(minDefault, { numberOnly: true });
+        if (maxLabel) maxLabel.textContent = formatPrice(maxDefault, { numberOnly: true });
+    } else {
+        if (minLabel) minLabel.textContent = String(minDefault);
+        if (maxLabel) maxLabel.textContent = String(maxDefault);
+    }
     const rangeFill = document.getElementById('rangeFill');
     if (rangeFill) {
         rangeFill.style.left = '0%';

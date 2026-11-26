@@ -210,8 +210,14 @@ export function updatePriceUI(e) {
 
     const minLabel = document.getElementById('priceMinVal');
     const maxLabel = document.getElementById('priceMaxVal');
-    if (minLabel) minLabel.textContent = minVal;
-    if (maxLabel) maxLabel.textContent = maxVal;
+    const activeCode = hasAction('getActiveCurrencyCode') ? invokeAction('getActiveCurrencyCode') : 'UAH';
+    if (activeCode && activeCode !== 'UAH' && hasAction('convertFromUah')) {
+        if (minLabel) minLabel.textContent = invokeAction('convertFromUah', minVal, activeCode);
+        if (maxLabel) maxLabel.textContent = invokeAction('convertFromUah', maxVal, activeCode);
+    } else {
+        if (minLabel) minLabel.textContent = minVal;
+        if (maxLabel) maxLabel.textContent = maxVal;
+    }
 
     const percentMin = (minVal / 15000) * 100;
     const percentMax = (maxVal / 15000) * 100;

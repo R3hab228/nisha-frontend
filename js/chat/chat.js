@@ -137,7 +137,13 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
         }
         const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
         if (priceEl) {
-            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escHtml(bargainData.originalPrice || activeItem.price)} ${escHtml(currencyText)}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escHtml(bargainData.acceptedPrice)} ${escHtml(currencyText)}</span>`;
+            const origFmt = (typeof formatPrice === 'function')
+                ? escHtml(formatPrice(bargainData.originalPrice || activeItem.price))
+                : `${escHtml(bargainData.originalPrice || activeItem.price)} ${escHtml(currencyText)}`;
+            const accFmt = (typeof formatPrice === 'function')
+                ? escHtml(formatPrice(bargainData.acceptedPrice))
+                : `${escHtml(bargainData.acceptedPrice)} ${escHtml(currencyText)}`;
+            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${origFmt}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accFmt}</span>`;
         }
     }
 
@@ -164,7 +170,9 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     const safeName = escHtml(bargainData.itemName || 'Товар');
     const safeImg = bargainData.itemImage ? safeUrl(bargainData.itemImage) : '';
-    const newPrice = escHtml(bargainData.acceptedPrice || '');
+    const formattedBargainPrice = (typeof formatPrice === 'function' && bargainData.acceptedPrice)
+        ? escHtml(formatPrice(bargainData.acceptedPrice))
+        : `${escHtml(bargainData.acceptedPrice || '')} ${escHtml(currencyText)}`;
 
     overlay.innerHTML = `
         <div class="success-terminal-box" style="max-width: 420px; width: 90%; background: #0a0a0a; border: 1px solid #333; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.85); padding: 30px 24px; text-align: center;">
@@ -182,7 +190,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
             <div style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">${safeName}</div>
             <div style="font-family: var(--font-main); font-size: 14px; color: #ddd; line-height: 1.6; margin-bottom: 22px;">
-                ${escHtml(descText)}: <b style="color: var(--accent-green, #00ff66); font-size: 16px; font-family: var(--font-mono);"><span class="bargain-price-val">${newPrice}</span> ${escHtml(currencyText)}</b>
+                ${escHtml(descText)}: <b style="color: var(--accent-green, #00ff66); font-size: 16px; font-family: var(--font-mono);"><span class="bargain-price-val">${formattedBargainPrice}</span></b>
             </div>
 
             <button class="buy-tg-btn cart-add btn-target bargain-add-cart-btn" style="width: 100%; min-height: 52px; font-size: 16px; text-transform: uppercase; font-family: var(--font-main); font-weight: bold;">
@@ -414,7 +422,13 @@ function handleIncomingSupportReply(r, sbClient) {
             const priceEl = document.getElementById('modalItemPrice') || document.getElementById('modalPrice');
             if (priceEl) {
                 const curr = (typeof getCurrency === 'function' ? getCurrency() : tSafe('currency', 'грн')).trim();
-                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${escapeHtmlSafe(parsed.originalPrice || activeItem.price)} ${escapeHtmlSafe(curr)}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${escapeHtmlSafe(parsed.acceptedPrice)} ${escapeHtmlSafe(curr)}</span>`;
+                const origFmt = (typeof formatPrice === 'function')
+                    ? escapeHtmlSafe(formatPrice(parsed.originalPrice || activeItem.price))
+                    : `${escapeHtmlSafe(parsed.originalPrice || activeItem.price)} ${escapeHtmlSafe(curr)}`;
+                const accFmt = (typeof formatPrice === 'function')
+                    ? escapeHtmlSafe(formatPrice(parsed.acceptedPrice))
+                    : `${escapeHtmlSafe(parsed.acceptedPrice)} ${escapeHtmlSafe(curr)}`;
+                priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${origFmt}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accFmt}</span>`;
             }
         }
 

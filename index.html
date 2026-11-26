@@ -230,7 +230,7 @@
 <div class=filter-box>
 <div class=filter-title data-i18n=sidebar.sizes_title>РАЗМЕРЫ И ЦЕНА</div>
 <div class=price-filter-container>
-<div class=price-values><span data-i18n=sidebar.from>ОТ</span> <span id=priceMinVal>0</span> <span data-i18n=sidebar.to>ДО</span> <span id=priceMaxVal>15000</span> <span data-i18n=sidebar.uah>грн</span></div>
+<div class=price-values><span data-i18n=sidebar.from>ОТ</span> <span id=priceMinVal>0</span> <span data-i18n=sidebar.to>ДО</span> <span id=priceMaxVal>15000</span> <span id=priceCurrencyUnit data-i18n=sidebar.uah>грн</span></div>
 <div class=range-slider>
 <div class=range-fill id=rangeFill></div>
 <input type=range id=priceMin min=0 max=15000 step=100 value=0>
@@ -356,6 +356,12 @@
 <span class=profile-sfx-label data-i18n=profile.sound_label>ЗВУК:</span>
 <button type=button id=profileSoundToggleBtn class="profile-sfx-toggle is-on" data-action=toggle-sound aria-pressed=true>
 <span class=profile-sfx-state data-i18n=profile.sound_on>ВКЛ</span>
+</button>
+</div>
+<div class=profile-sfx-row>
+<span class=profile-sfx-label data-i18n=profile.currency_label>ВАЛЮТА:</span>
+<button type=button id=profileCurrencyToggleBtn class="profile-sfx-toggle profile-currency-toggle is-uah" data-action=cycle-currency data-currency=UAH aria-label="Валюта">
+<span class="profile-sfx-state profile-currency-state"><span class=currency-glyph>₴</span></span>
 </button>
 </div>
 </div>
@@ -837,6 +843,12 @@
 <span class=profile-sfx-label data-i18n=profile.sound_label>ЗВУК:</span>
 <button type=button id=modalProfileSoundToggleBtn class="profile-sfx-toggle is-on" data-action=toggle-sound aria-pressed=true>
 <span class=profile-sfx-state data-i18n=profile.sound_on>ВКЛ</span>
+</button>
+</div>
+<div class="profile-sfx-row profile-sfx-row--modal">
+<span class=profile-sfx-label data-i18n=profile.currency_label>ВАЛЮТА:</span>
+<button type=button id=modalProfileCurrencyToggleBtn class="profile-sfx-toggle profile-currency-toggle is-uah" data-action=cycle-currency data-currency=UAH aria-label="Валюта">
+<span class="profile-sfx-state profile-currency-state"><span class=currency-glyph>₴</span></span>
 </button>
 </div>
 </div>

@@ -461,4 +461,33 @@ html.pwa-standalone body {
     color: var(--accent-red, #ff3333);
 }
 
+.profile-currency-toggle {
+    color: var(--accent-green, #00ff00);
+}
+
+.profile-currency-state {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.currency-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2em;
+    height: 1.1em;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-sfx-row--modal .currency-glyph {
+    font-size: 14px;
+}
+
 

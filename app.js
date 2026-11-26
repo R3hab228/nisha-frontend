@@ -234,6 +234,7 @@ function resetToMain() {
     const maxLabel = document.getElementById('priceMaxVal');
     if (minLabel) minLabel.textContent = String(minDefault);
     if (maxLabel) maxLabel.textContent = String(maxDefault);
+    invokeAction('syncPriceFilterCurrencyUI');
     const rangeFill = document.getElementById('rangeFill');
     if (rangeFill) {
         rangeFill.style.left = '0%';

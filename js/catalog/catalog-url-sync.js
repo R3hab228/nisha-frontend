@@ -426,6 +426,7 @@ export function hydrateCatalogFiltersFromUrl(urlParams) {
         const maxLabel = document.getElementById('priceMaxVal');
         if (minLabel) minLabel.textContent = String(parsed.minPrice);
         if (maxLabel) maxLabel.textContent = String(parsed.maxPrice);
+        invokeAction('syncPriceFilterCurrencyUI');
         const rangeFill = document.getElementById('rangeFill');
         if (rangeFill && maxDefault > 0) {
             rangeFill.style.left = `${(parsed.minPrice / maxDefault) * 100}%`;

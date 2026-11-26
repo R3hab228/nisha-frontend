@@ -532,8 +532,42 @@ export async function handleDoubleTapLike(event, itemId, container) {
     }
 }
 
+/**
+ * Точечно обновляет только цены на всех уже отрендеренных карточках каталога
+ * без пересоздания DOM, без мигания изображений и без потери позиции скролла.
+ */
+export function refreshCatalogCardPrices() {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+    const grid = document.getElementById('itemsGrid');
+    if (!grid) return;
+    const items = Array.isArray(window.allItems) ? window.allItems : [];
+    if (items.length === 0) return;
+
+    const byId = new Map();
+    for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        if (it && it.id !== undefined && it.id !== null) {
+            byId.set(String(it.id), it);
+        }
+    }
+
+    const curr = (typeof getCurrency === 'function') ? getCurrency() : 'грн';
+    const cards = grid.querySelectorAll('.item-card[data-id]');
+    cards.forEach((card) => {
+        const id = card.getAttribute('data-id');
+        if (!id) return;
+        const item = byId.get(String(id));
+        if (!item) return;
+        const priceDiv = card.querySelector('.item-price');
+        if (priceDiv) {
+            priceDiv.innerHTML = buildCardPriceHtml(item, curr);
+        }
+    });
+}
+
 registerActions({
     updateCardDOM,
+    refreshCatalogCardPrices,
     observeGridVideo: (v) => { if (gridVideoObserver && v) gridVideoObserver.observe(v); },
     initGridEventDelegation,
     changePage,

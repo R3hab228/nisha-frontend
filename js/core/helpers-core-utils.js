@@ -4,6 +4,7 @@
 // ==========================================
 
 import { registerAction } from './action-registry.js';
+import { getActiveCurrencyCode, getCurrencySymbol, convertFromUah } from './currency.js';
 
 // Polyfill Promise.withResolvers (ES2024) if not natively present
 if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function') {
@@ -374,10 +375,14 @@ export function clearElement(el) {
 exposeGlobal('clearElement', clearElement);
 
 /**
- * Returns localized currency label based on stored site language.
- * @returns {'UAH'|'грн'}
+ * Returns active display currency label (`грн`/`UAH` for UAH, `$` for USD, `€` for EUR).
+ * @returns {'UAH'|'грн'|'$'|'€'}
  */
 export function getCurrency() {
+    const activeCode = getActiveCurrencyCode();
+    if (activeCode === 'USD' || activeCode === 'EUR') {
+        return getCurrencySymbol(activeCode);
+    }
     const storeRef = (typeof window !== 'undefined' && window.storage)
         ? window.storage
         : (typeof globalThis !== 'undefined' ? globalThis.storage : null);
@@ -395,21 +400,33 @@ export const cachedPriceNumberFormatter = (typeof Intl !== 'undefined' && typeof
 exposeGlobal('cachedPriceNumberFormatter', cachedPriceNumberFormatter);
 
 /**
- * Formats an integer/string price using the cached Intl.NumberFormat singleton.
+ * Formats an integer/string UAH price into the active display currency using the cached Intl.NumberFormat singleton.
  * @param {number|string} amount
- * @param {{ currencyOnly?: boolean, numberOnly?: boolean }} [options={}]
+ * @param {{ currencyOnly?: boolean, numberOnly?: boolean, forceUah?: boolean }} [options={}]
  * @returns {string}
  */
 export function formatPrice(amount, options = {}) {
     const cleanNum = typeof amount === 'number'
         ? amount
         : Number(String(amount || 0).replace(/[^\d.-]/g, '')) || 0;
-    const rounded = Math.round(cleanNum);
-    const currency = getCurrency();
+    const activeCode = options.forceUah ? 'UAH' : getActiveCurrencyCode();
+    const converted = activeCode === 'UAH'
+        ? Math.round(cleanNum)
+        : convertFromUah(cleanNum, activeCode);
+
+    const storeRef = (typeof window !== 'undefined' && window.storage)
+        ? window.storage
+        : (typeof globalThis !== 'undefined' ? globalThis.storage : null);
+    const lang = (storeRef && typeof storeRef.get === 'function')
+        ? storeRef.get('nisha_lang', 'ua')
+        : 'ua';
+    const currency = activeCode === 'UAH'
+        ? (lang === 'en' ? 'UAH' : 'грн')
+        : getCurrencySymbol(activeCode);
 
     const formattedNum = cachedPriceNumberFormatter
-        ? cachedPriceNumberFormatter.format(rounded)
-        : rounded.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        ? cachedPriceNumberFormatter.format(converted)
+        : converted.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
     if (options.currencyOnly) return currency;
     if (options.numberOnly) return formattedNum;

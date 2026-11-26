@@ -374,6 +374,29 @@ export function showSoundToast(enabled) {
 if (typeof window !== 'undefined') window.showSoundToast = showSoundToast;
 
 /**
+ * Shows compact currency switch notification toast matching sound/language toast sizing.
+ * @param {'UAH'|'USD'|'EUR'} currencyCode
+ * @param {string} symbol
+ * @param {number} [rate]
+ */
+export function showCurrencyToast(currencyCode, symbol, rate = 1) {
+    const code = String(currencyCode || 'UAH').toUpperCase();
+    const sym = String(symbol || '₴');
+    const baseTitle = tSafe('messages.currency_changed', { defaultValue: 'Валюта изменена' });
+    const titleText = (code !== 'UAH' && Number.isFinite(Number(rate)) && Number(rate) > 0)
+        ? `${baseTitle} (1 ${sym} ≈ ${Number(rate).toFixed(2)} ₴)`
+        : `${baseTitle} (${code})`;
+
+    showCompactToast({
+        slot: 'currency',
+        className: 'toast-lang-item',
+        tagText: `${code} [${sym}]`,
+        titleText
+    });
+}
+if (typeof window !== 'undefined') window.showCurrencyToast = showCurrencyToast;
+
+/**
  * Shows compact cart add/remove notification toast.
  * @param {Object|string} itemOrTitle
  * @param {boolean} [isAdded=true]
@@ -641,6 +664,7 @@ registerActions({
     showFavoriteToast,
     showLanguageToast,
     showSoundToast,
+    showCurrencyToast,
     showCartToast,
     showSaleToast,
     showReviewToast,

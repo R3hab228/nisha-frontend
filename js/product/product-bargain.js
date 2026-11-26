@@ -567,8 +567,10 @@ export async function syncUserBargains(options = {}) {
                             const origNum = Number(b.originalPrice ?? activeItem.price);
                             const safeOrig = Number.isFinite(origNum) ? origNum : 0;
                             const rawCur = (typeof getCurrency === 'function' ? getCurrency() : 'грн').trim();
-                            const cur = hasAction('escapeHtml') ? invokeAction('escapeHtml', rawCur) : rawCur.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-                            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${safeOrig} ${cur}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accNum} ${cur}</span>`;
+                            const esc = (s) => (hasAction('escapeHtml') ? invokeAction('escapeHtml', s) : String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
+                            const origFmt = (typeof formatPrice === 'function') ? esc(formatPrice(safeOrig)) : `${safeOrig} ${esc(rawCur)}`;
+                            const accFmt = (typeof formatPrice === 'function') ? esc(formatPrice(accNum)) : `${accNum} ${esc(rawCur)}`;
+                            priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${origFmt}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accFmt}</span>`;
                         }
                     }
                 }
