@@ -43,7 +43,12 @@ export function syncBargainInputsCurrency(activeItem = getActiveOpenedItem()) {
     const minOfferUah = itemMinBargain || 100;
     const activeCode = getActiveCurrencyCode();
     const isForeign = activeCode !== 'UAH';
-    const minDisplayNum = isForeign ? convertFromUah(minOfferUah, activeCode) : minOfferUah;
+    const curPriceUah = Number(activeItem.price) || 0;
+    const rawMinDisplay = isForeign ? convertFromUah(minOfferUah, activeCode) : minOfferUah;
+    const curDisplay = isForeign && curPriceUah > 0 ? convertFromUah(curPriceUah, activeCode) : curPriceUah;
+    const minDisplayNum = isForeign && curDisplay > 1
+        ? Math.min(rawMinDisplay, curDisplay - 1)
+        : rawMinDisplay;
     const minDisplayFormatted = (typeof formatPrice === 'function')
         ? formatPrice(minOfferUah)
         : `${minDisplayNum} ${typeof getCurrency === 'function' ? getCurrency() : 'грн'}`;

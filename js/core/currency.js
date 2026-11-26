@@ -118,8 +118,8 @@ function writeStoredItem(key, value) {
 }
 
 /**
- * Читает резервную cookie `nisha_currency` (переживает очистку localStorage / Safari ITP).
- * @returns {CurrencyCode | null}
+ * Читает резервную cookie `nisha_currency` (формат `USD` или `USD.<timestamp>`).
+ * @returns {{ code: CurrencyCode, updatedAt: number } | null}
  */
 function readCurrencyCookie() {
     try {
@@ -131,7 +131,15 @@ function readCurrencyCookie() {
         for (const part of parts) {
             const trimmed = part.trim();
             if (trimmed.startsWith(prefix)) {
-                return parseValidCurrencyCode(decodeURIComponent(trimmed.slice(prefix.length)));
+                const rawVal = decodeURIComponent(trimmed.slice(prefix.length));
+                const [rawCode, rawTs] = rawVal.split('.');
+                const code = parseValidCurrencyCode(rawCode);
+                if (!code) return null;
+                const ts = Number(rawTs);
+                return {
+                    code,
+                    updatedAt: Number.isFinite(ts) && ts > 0 ? ts : 0
+                };
             }
         }
     } catch {}
@@ -139,20 +147,24 @@ function readCurrencyCookie() {
 }
 
 /**
- * Сохраняет выбранную валюту в долгоживущую first-party cookie (1 год).
+ * Сохраняет выбранную валюту (и timestamp последнего выбора) в долгоживущую first-party cookie (1 год).
  * @param {CurrencyCode} code
+ * @param {number} [updatedAt=0]
  */
-function writeCurrencyCookie(code) {
+function writeCurrencyCookie(code, updatedAt = 0) {
     try {
         if (typeof document === 'undefined') return;
         const isHttps = typeof window !== 'undefined' && window.location?.protocol === 'https:';
         const secureAttr = isHttps ? '; Secure' : '';
-        document.cookie = `${CURRENCY_COOKIE_NAME}=${encodeURIComponent(code)}; path=/; max-age=${CURRENCY_COOKIE_MAX_AGE_SEC}; SameSite=Lax${secureAttr}`;
+        const payload = Number.isFinite(updatedAt) && updatedAt > 0
+            ? `${code}.${Math.trunc(updatedAt)}`
+            : code;
+        document.cookie = `${CURRENCY_COOKIE_NAME}=${encodeURIComponent(payload)}; path=/; max-age=${CURRENCY_COOKIE_MAX_AGE_SEC}; SameSite=Lax${secureAttr}`;
     } catch {}
 }
 
 /**
- * Возвращает сохранённую пользователем валюту (localStorage → cookie с автовосстановлением) или `null`, если выбор ещё не делался.
+ * Возвращает сохранённую пользователем валюту (localStorage → cookie с автовосстановлением кода и timestamp) или `null`.
  * @returns {CurrencyCode | null}
  */
 export function readSavedCurrencyPreference() {
@@ -161,8 +173,11 @@ export function readSavedCurrencyPreference() {
 
     const fromCookie = readCurrencyCookie();
     if (fromCookie) {
-        writeStoredItem(CURRENCY_STORAGE_KEY, fromCookie);
-        return fromCookie;
+        writeStoredItem(CURRENCY_STORAGE_KEY, fromCookie.code);
+        if (fromCookie.updatedAt > 0 && !readStoredItem(CURRENCY_UPDATED_AT_KEY)) {
+            writeStoredItem(CURRENCY_UPDATED_AT_KEY, String(fromCookie.updatedAt));
+        }
+        return fromCookie.code;
     }
     return null;
 }
@@ -361,7 +376,9 @@ export function syncPriceFilterCurrencyUI() {
     if (unitEl) {
         const code = getActiveCurrencyCode();
         if (code === 'UAH') {
-            const lang = String(readStoredItem('nisha_lang') || 'ua').slice(0, 2).toLowerCase();
+            const i18n = (typeof window !== 'undefined' && /** @type {any} */ (window).i18next) || g.i18next;
+            const rawLang = (i18n && (i18n.resolvedLanguage || i18n.language)) || readStoredItem('nisha_lang') || 'ua';
+            const lang = String(rawLang).slice(0, 2).toLowerCase();
             unitEl.textContent = lang === 'en' ? 'UAH' : 'грн';
         } else {
             unitEl.textContent = getCurrencySymbol(code);
@@ -553,7 +570,7 @@ export function setCurrencyCode(nextCode, options = {}) {
 
     writeStoredItem(CURRENCY_STORAGE_KEY, normalized);
     writeStoredItem(CURRENCY_UPDATED_AT_KEY, String(updatedAt));
-    writeCurrencyCookie(normalized);
+    writeCurrencyCookie(normalized, updatedAt);
 
     try {
         const g = /** @type {any} */ (globalThis);
@@ -598,18 +615,19 @@ export function syncCurrencyFromUser(user) {
     if (remoteCode) {
         const shouldAdoptRemote = !localCode || remoteUpdatedAt > localUpdatedAt;
         if (shouldAdoptRemote) {
+            const effectiveTs = remoteUpdatedAt || Date.now();
             if (localCode !== remoteCode) {
                 return setCurrencyCode(remoteCode, {
                     silent: true,
                     animate: false,
                     syncRemote: false,
-                    updatedAt: remoteUpdatedAt || Date.now()
+                    updatedAt: effectiveTs
                 });
             }
             if (remoteUpdatedAt > localUpdatedAt) {
                 writeStoredItem(CURRENCY_UPDATED_AT_KEY, String(remoteUpdatedAt));
             }
-            writeCurrencyCookie(remoteCode);
+            writeCurrencyCookie(remoteCode, effectiveTs);
             syncCurrencyToggleUI(false);
             return remoteCode;
         }
@@ -662,7 +680,8 @@ if (typeof document !== 'undefined') {
     const bootCurrencyUI = () => {
         const saved = readSavedCurrencyPreference();
         if (saved) {
-            writeCurrencyCookie(saved);
+            const savedTs = Number(readStoredItem(CURRENCY_UPDATED_AT_KEY)) || 0;
+            writeCurrencyCookie(saved, savedTs);
         }
         syncCurrencyToggleUI(false);
         syncPriceFilterCurrencyUI();
@@ -693,7 +712,8 @@ if (typeof window !== 'undefined' && !_storageSyncBound && typeof window.addEven
             if (getActiveCurrencyCode() !== 'UAH') scheduleLivePricesRefresh();
         } else if (ev.key === CURRENCY_STORAGE_KEY) {
             const active = getActiveCurrencyCode();
-            writeCurrencyCookie(active);
+            const activeTs = Number(readStoredItem(CURRENCY_UPDATED_AT_KEY)) || 0;
+            writeCurrencyCookie(active, activeTs);
             syncCurrencyToggleUI(false);
             scheduleLivePricesRefresh();
         }

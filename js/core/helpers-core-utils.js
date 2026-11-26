@@ -375,6 +375,29 @@ export function clearElement(el) {
 exposeGlobal('clearElement', clearElement);
 
 /**
+ * Resolves the active 2-letter site language (`ua` | `ru` | `en`) across i18next, storage facade, and localStorage.
+ * @returns {'ua'|'ru'|'en'}
+ */
+function resolveCurrencyDisplayLang() {
+    const g = /** @type {any} */ (globalThis);
+    const i18n = (typeof window !== 'undefined' && window.i18next) || g.i18next;
+    const rawI18n = i18n && (i18n.resolvedLanguage || i18n.language);
+    const storeRef = (typeof window !== 'undefined' && window.storage)
+        ? window.storage
+        : (typeof globalThis !== 'undefined' ? globalThis.storage : null);
+    let rawStored = (storeRef && typeof storeRef.get === 'function')
+        ? storeRef.get('nisha_lang', null)
+        : null;
+    if (!rawStored && typeof localStorage !== 'undefined') {
+        try { rawStored = localStorage.getItem('nisha_lang'); } catch {}
+    }
+    const clean = String(rawI18n || rawStored || 'ua').trim().toLowerCase().slice(0, 2);
+    if (clean === 'en') return 'en';
+    if (clean === 'ru') return 'ru';
+    return 'ua';
+}
+
+/**
  * Returns active display currency label (`грн`/`UAH` for UAH, `$` for USD, `€` for EUR).
  * @returns {'UAH'|'грн'|'$'|'€'}
  */
@@ -383,13 +406,7 @@ export function getCurrency() {
     if (activeCode === 'USD' || activeCode === 'EUR') {
         return getCurrencySymbol(activeCode);
     }
-    const storeRef = (typeof window !== 'undefined' && window.storage)
-        ? window.storage
-        : (typeof globalThis !== 'undefined' ? globalThis.storage : null);
-    const lang = (storeRef && typeof storeRef.get === 'function')
-        ? storeRef.get('nisha_lang', 'ua')
-        : 'ua';
-    return lang === 'en' ? 'UAH' : 'грн';
+    return resolveCurrencyDisplayLang() === 'en' ? 'UAH' : 'грн';
 }
 exposeGlobal('getCurrency', getCurrency);
 
@@ -414,12 +431,7 @@ export function formatPrice(amount, options = {}) {
         ? Math.round(cleanNum)
         : convertFromUah(cleanNum, activeCode);
 
-    const storeRef = (typeof window !== 'undefined' && window.storage)
-        ? window.storage
-        : (typeof globalThis !== 'undefined' ? globalThis.storage : null);
-    const lang = (storeRef && typeof storeRef.get === 'function')
-        ? storeRef.get('nisha_lang', 'ua')
-        : 'ua';
+    const lang = resolveCurrencyDisplayLang();
     const currency = activeCode === 'UAH'
         ? (lang === 'en' ? 'UAH' : 'грн')
         : getCurrencySymbol(activeCode);

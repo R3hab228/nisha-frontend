@@ -179,8 +179,8 @@ export function validateBargainSubmission(activeItem, offeredPrice) {
 
     // Мультивалютная валидация (USD / EUR): сверяем с отображаемыми порогами и конвертируем в UAH для сервера
     const currentDisplay = convertFromUah(currentPriceUah, activeCode);
-    const minFloorDisplay = convertFromUah(minFloorUah, activeCode);
-    const effectiveMinDisplay = convertFromUah(effectiveMinUah, activeCode);
+    const minFloorDisplay = Math.min(convertFromUah(minFloorUah, activeCode), Math.max(1, currentDisplay - 1));
+    const effectiveMinDisplay = Math.min(convertFromUah(effectiveMinUah, activeCode), Math.max(1, currentDisplay - 1));
 
     if (offeredPrice < minFloorDisplay || offeredPrice >= currentDisplay) {
         return {

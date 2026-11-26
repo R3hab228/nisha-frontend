@@ -211,7 +211,10 @@ export function updatePriceUI(e) {
     const minLabel = document.getElementById('priceMinVal');
     const maxLabel = document.getElementById('priceMaxVal');
     const activeCode = hasAction('getActiveCurrencyCode') ? invokeAction('getActiveCurrencyCode') : 'UAH';
-    if (activeCode && activeCode !== 'UAH' && hasAction('convertFromUah')) {
+    if (activeCode && activeCode !== 'UAH' && hasAction('formatPrice')) {
+        if (minLabel) minLabel.textContent = invokeAction('formatPrice', minVal, { numberOnly: true });
+        if (maxLabel) maxLabel.textContent = invokeAction('formatPrice', maxVal, { numberOnly: true });
+    } else if (activeCode && activeCode !== 'UAH' && hasAction('convertFromUah')) {
         if (minLabel) minLabel.textContent = invokeAction('convertFromUah', minVal, activeCode);
         if (maxLabel) maxLabel.textContent = invokeAction('convertFromUah', maxVal, activeCode);
     } else {

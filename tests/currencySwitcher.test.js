@@ -245,11 +245,11 @@ describe('Currency Switcher & Live FX Conversion (js/core/currency.js)', () => {
             /** @type {any} */ (globalThis).window.currentUser = mockUser;
             /** @type {any} */ (globalThis).window._supabase = { auth: { updateUser: updateUserMock } };
 
-            // 1. Switching currency saves to localStorage, cookie, timestamp, and debounces Supabase updateUser
+            // 1. Switching currency saves to localStorage, cookie (with timestamp), and debounces Supabase updateUser
             setCurrencyCode('EUR', { silent: true, updatedAt: 1000 });
             expect(storageMap.get(CURRENCY_STORAGE_KEY)).toBe('EUR');
             expect(storageMap.get(CURRENCY_UPDATED_AT_KEY)).toBe('1000');
-            expect(cookieJar).toBe('nisha_currency=EUR');
+            expect(cookieJar).toBe('nisha_currency=EUR.1000');
             expect(mockUser.user_metadata.preferred_currency).toBe('EUR');
 
             vi.advanceTimersByTime(450);
@@ -261,10 +261,11 @@ describe('Currency Switcher & Live FX Conversion (js/core/currency.js)', () => {
                 }
             });
 
-            // 2. If localStorage is cleared (e.g. Safari ITP), cookie restores currency and self-heals localStorage
-            storageMap.delete(CURRENCY_STORAGE_KEY);
+            // 2. If localStorage is completely cleared (e.g. Safari ITP), cookie restores both currency and timestamp
+            storageMap.clear();
             expect(getActiveCurrencyCode()).toBe('EUR');
             expect(storageMap.get(CURRENCY_STORAGE_KEY)).toBe('EUR');
+            expect(storageMap.get(CURRENCY_UPDATED_AT_KEY)).toBe('1000');
 
             // 3. Fresh device login restores currency from account user_metadata silently
             storageMap.clear();
@@ -275,7 +276,7 @@ describe('Currency Switcher & Live FX Conversion (js/core/currency.js)', () => {
             });
             expect(restored).toBe('USD');
             expect(storageMap.get(CURRENCY_STORAGE_KEY)).toBe('USD');
-            expect(cookieJar).toBe('nisha_currency=USD');
+            expect(cookieJar).toBe('nisha_currency=USD.2000');
             expect(domById.get('profileCurrencyToggleBtn').glyph.textContent).toBe('$');
 
             // 4. Newer local choice wins over older account metadata and pushes update to Supabase
@@ -293,6 +294,14 @@ describe('Currency Switcher & Live FX Conversion (js/core/currency.js)', () => {
                     preferred_currency_updated_at: 5000
                 }
             });
+
+            // 5. Tight bargain range in foreign currency (e.g. 1000 vs 990 UAH both rounding to 25 $) still allows valid bid
+            applyExchangeRates({ USD: 40, EUR: 44 }, 'nbu');
+            setCurrencyCode('USD', { silent: true, syncRemote: false });
+            const tightItem = { id: 'tight-1', price: 1000, is_bargain: true, min_bargain_price: 990 };
+            const tightOk = validateBargainSubmission(tightItem, 24);
+            expect(tightOk.ok).toBe(true);
+            expect(tightOk.offeredPriceUah).toBe(990);
         } finally {
             vi.useRealTimers();
         }
