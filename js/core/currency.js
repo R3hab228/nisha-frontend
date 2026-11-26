@@ -191,6 +191,23 @@ export function convertFromUah(amountUah, targetCode = getActiveCurrencyCode()) 
 }
 
 /**
+ * Конвертирует сумму из выбранной валюты обратно в UAH (для отправки ставки торга на сервер).
+ * @param {number} amountInCurrency
+ * @param {CurrencyCode} [sourceCode]
+ * @returns {number}
+ */
+export function convertToUah(amountInCurrency, sourceCode = getActiveCurrencyCode()) {
+    const num = Number(amountInCurrency);
+    if (!Number.isFinite(num) || num === 0) return 0;
+    const code = normalizeCurrencyCode(sourceCode);
+    if (code === 'UAH') return Math.round(num);
+
+    const rate = _activeRates[code];
+    if (!Number.isFinite(rate) || rate <= 0) return Math.round(num);
+    return Math.round(num * rate);
+}
+
+/**
  * Загружает свежие реальные курсы валют с бэкенда (`/api/exchange-rates`).
  * Безопасно: соблюдает CSP, кэширует на 6ч, дедуплицирует параллельные запросы и никогда не бросает исключений.
  * @param {{ force?: boolean }} [options={}]
@@ -304,6 +321,21 @@ export function refreshAllPricesInDOM() {
     );
     if (isProductOpen && hasAction('refreshOpenedProductModalPrices')) {
         invokeAction('refreshOpenedProductModalPrices', activeItem);
+    }
+
+    // 2.1. Поле минимальной ставки и модалка торга (если открыты)
+    if (hasAction('syncBargainInputsCurrency')) {
+        invokeAction('syncBargainInputsCurrency', activeItem);
+    }
+
+    // 2.2. Расчёт стоимости доставки Новой Почтой в чекауте (если рассчитан)
+    const calcCostEl = document.getElementById('calcCostVal');
+    if (calcCostEl && calcCostEl.dataset && calcCostEl.dataset.costUah) {
+        const costUah = Number(calcCostEl.dataset.costUah);
+        const g = /** @type {any} */ (globalThis);
+        if (Number.isFinite(costUah) && costUah > 0 && typeof g.formatPrice === 'function') {
+            calcCostEl.textContent = g.formatPrice(costUah);
+        }
     }
 
     // 3. Ползунок цены в сайдбаре и чипсы активных фильтров
@@ -489,6 +521,8 @@ if (typeof window !== 'undefined' && !_storageSyncBound && typeof window.addEven
 if (typeof window !== 'undefined') {
     window.getActiveCurrencyCode = getActiveCurrencyCode;
     window.getCurrencySymbol = getCurrencySymbol;
+    window.convertFromUah = convertFromUah;
+    window.convertToUah = convertToUah;
     window.setCurrencyCode = setCurrencyCode;
     window.cycleCurrency = cycleCurrency;
     window.syncCurrencyToggleUI = syncCurrencyToggleUI;
@@ -502,6 +536,7 @@ registerActions({
     getCurrencySymbol,
     getExchangeRatesState,
     convertFromUah,
+    convertToUah,
     setCurrencyCode,
     cycleCurrency,
     syncCurrencyToggleUI,

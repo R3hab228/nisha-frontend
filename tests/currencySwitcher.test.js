@@ -7,6 +7,7 @@ import {
     getActiveCurrencyCode,
     getCurrencySymbol,
     convertFromUah,
+    convertToUah,
     applyExchangeRates,
     setCurrencyCode,
     cycleCurrency,
@@ -15,6 +16,9 @@ import {
     _resetCurrencyTestState
 } from '../js/core/currency.js';
 import { formatPrice, getCurrency } from '../js/core/helpers-core-utils.js';
+import { showCurrencyToast } from '../js/core/helpers-toasts-modals.js';
+import { validateBargainSubmission } from '../js/product/product-bargain-logic.js';
+import { syncBargainInputsCurrency } from '../js/product/product-bargain.js';
 
 describe('Currency Switcher & Live FX Conversion (js/core/currency.js)', () => {
     /** @type {Map<string, string>} */
@@ -145,5 +149,81 @@ describe('Currency Switcher & Live FX Conversion (js/core/currency.js)', () => {
         // Rejects corrupt rates without breaking active conversion
         expect(applyExchangeRates({ USD: 0, EUR: -5 })).toBe(false);
         expect(convertFromUah(2200, 'EUR')).toBe(50);
+    });
+
+    it('renders localized currency toast across UA, RU, and EN for all currencies', () => {
+        /** @type {any[]} */
+        const appendedToasts = [];
+        const container = {
+            querySelector: () => null,
+            appendChild: (/** @type {any} */ node) => { appendedToasts.push(node); return node; }
+        };
+        domById.set('toastContainer', container);
+        /** @type {any} */ (globalThis).document.createElement = () => {
+            const cls = new Set();
+            return {
+                className: '',
+                innerHTML: '',
+                dataset: {},
+                classList: { add: (/** @type {string} */ c) => cls.add(c), remove: (/** @type {string} */ c) => cls.delete(c) },
+                addEventListener: vi.fn(),
+                remove: vi.fn()
+            };
+        };
+
+        delete /** @type {any} */ (globalThis).i18next;
+
+        storageMap.set('nisha_lang', 'ua');
+        showCurrencyToast('USD', '$', 41.5);
+        expect(appendedToasts.at(-1).innerHTML).toContain('Валюту змінено');
+        expect(appendedToasts.at(-1).innerHTML).toContain('Долар США');
+        expect(appendedToasts.at(-1).innerHTML).toContain('41.50');
+
+        storageMap.set('nisha_lang', 'ru');
+        showCurrencyToast('EUR', '€', 45);
+        expect(appendedToasts.at(-1).innerHTML).toContain('Валюта изменена');
+        expect(appendedToasts.at(-1).innerHTML).toContain('Евро');
+
+        storageMap.set('nisha_lang', 'en');
+        showCurrencyToast('UAH', '₴', 1);
+        expect(appendedToasts.at(-1).innerHTML).toContain('Currency changed');
+        expect(appendedToasts.at(-1).innerHTML).toContain('Hryvnia');
+    });
+
+    it('adapts bargain min-bid placeholder, label, validation, and UAH conversion to active currency', () => {
+        applyExchangeRates({ USD: 40, EUR: 44 }, 'nbu');
+        storageMap.set('nisha_lang', 'ua');
+        setCurrencyCode('USD', { silent: true });
+
+        const inlineInp = { id: 'inlineBargainPriceInput', min: '', step: '', placeholder: '', value: '' };
+        const modalInp = { id: 'bargainPriceInput', min: '', step: '', placeholder: '', value: '' };
+        const priceLabel = { id: 'bargainPriceLabel', textContent: '' };
+        const itemPriceEl = { id: 'bargainItemPrice', textContent: '' };
+        domById.set('inlineBargainPriceInput', inlineInp);
+        domById.set('bargainPriceInput', modalInp);
+        domById.set('bargainPriceLabel', priceLabel);
+        domById.set('bargainItemPrice', itemPriceEl);
+
+        const item = { id: 'item-1', price: 2000, is_bargain: true, min_bargain_price: 1600 };
+        syncBargainInputsCurrency(item);
+
+        // 1600 UAH / 40 = 40 $, 2000 UAH / 40 = 50 $
+        expect(inlineInp.min).toBe('40');
+        expect(inlineInp.step).toBe('1');
+        expect(inlineInp.placeholder).toContain('40\u00A0$');
+        expect(modalInp.placeholder).toContain('40\u00A0$');
+        expect(priceLabel.textContent).toContain('($)');
+        expect(itemPriceEl.textContent).toBe('50\u00A0$');
+
+        // Below minimum in USD (35 < 40) -> localized error in USD
+        const tooLow = validateBargainSubmission(item, 35);
+        expect(tooLow.ok).toBe(false);
+        expect(tooLow.message).toContain('40\u00A0$');
+
+        // Valid bid in USD (45 $) -> converts back cleanly to UAH (1800) for backend
+        expect(convertToUah(45, 'USD')).toBe(1800);
+        const okBid = validateBargainSubmission(item, 45);
+        expect(okBid.ok).toBe(true);
+        expect(okBid.offeredPriceUah).toBe(1800);
     });
 });

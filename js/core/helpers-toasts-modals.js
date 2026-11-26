@@ -374,7 +374,8 @@ export function showSoundToast(enabled) {
 if (typeof window !== 'undefined') window.showSoundToast = showSoundToast;
 
 /**
- * Shows compact currency switch notification toast matching sound/language toast sizing.
+ * Shows compact currency switch notification toast matching sound/language toast sizing
+ * with full UA / RU / EN localization.
  * @param {'UAH'|'USD'|'EUR'} currencyCode
  * @param {string} symbol
  * @param {number} [rate]
@@ -382,16 +383,42 @@ if (typeof window !== 'undefined') window.showSoundToast = showSoundToast;
 export function showCurrencyToast(currencyCode, symbol, rate = 1) {
     const code = String(currencyCode || 'UAH').toUpperCase();
     const sym = String(symbol || '₴');
-    const baseTitle = tSafe('messages.currency_changed', { defaultValue: 'Валюта изменена' });
+    const hasI18n = typeof i18next !== 'undefined' && typeof i18next.t === 'function';
+    const rawLang = (hasI18n && (i18next.resolvedLanguage || i18next.language))
+        || (typeof localStorage !== 'undefined' ? (localStorage.getItem('nisha_lang') || '') : '')
+        || 'ua';
+    const lang = String(rawLang).toLowerCase().slice(0, 2);
+
+    const fallbackTitle = lang === 'ru'
+        ? 'Валюта изменена'
+        : (lang === 'en' ? 'Currency changed' : 'Валюту змінено');
+    const currencyFallbacks = {
+        UAH: lang === 'ru' ? 'Гривна' : (lang === 'en' ? 'Hryvnia' : 'Гривня'),
+        USD: lang === 'ru' ? 'Доллар США' : (lang === 'en' ? 'US Dollar' : 'Долар США'),
+        EUR: lang === 'ru' ? 'Евро' : (lang === 'en' ? 'Euro' : 'Євро')
+    };
+    const currKey = `messages.currency_${code.toLowerCase()}`;
+    const fallbackCurrName = Object.hasOwn(currencyFallbacks, code)
+        ? currencyFallbacks[code]
+        : code;
+
+    const baseTitle = hasI18n
+        ? i18next.t('messages.currency_changed', { defaultValue: fallbackTitle })
+        : fallbackTitle;
+    const currName = hasI18n
+        ? i18next.t(currKey, { defaultValue: fallbackCurrName })
+        : fallbackCurrName;
+
     const titleText = (code !== 'UAH' && Number.isFinite(Number(rate)) && Number(rate) > 0)
-        ? `${baseTitle} (1 ${sym} ≈ ${Number(rate).toFixed(2)} ₴)`
-        : `${baseTitle} (${code})`;
+        ? `${baseTitle} · ${currName} (1 ${sym} ≈ ${Number(rate).toFixed(2)} ₴)`
+        : `${baseTitle} · ${currName}`;
 
     showCompactToast({
         slot: 'currency',
         className: 'toast-lang-item',
         tagText: `${code} [${sym}]`,
-        titleText
+        titleText,
+        sound: 'silent'
     });
 }
 if (typeof window !== 'undefined') window.showCurrencyToast = showCurrencyToast;

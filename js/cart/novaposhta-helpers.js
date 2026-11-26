@@ -393,9 +393,17 @@ export async function calculateDeliveryCost() {
 
         if (data && data.success) {
             const uahText = (typeof i18next !== 'undefined' && i18next.language === 'en') ? 'UAH' : 'грн';
-            if (costVal) costVal.textContent = data.cost + ' ' + uahText;
+            if (costVal) {
+                if (costVal.dataset) costVal.dataset.costUah = String(data.cost);
+                costVal.textContent = (typeof formatPrice === 'function')
+                    ? formatPrice(data.cost)
+                    : (data.cost + ' ' + uahText);
+            }
         } else {
-            if (costVal) costVal.textContent = tSafe('checkout.np_rates', 'По тарифам НП');
+            if (costVal) {
+                if (costVal.dataset) delete costVal.dataset.costUah;
+                costVal.textContent = tSafe('checkout.np_rates', 'По тарифам НП');
+            }
         }
     } catch (e) {
         console.error('Ошибка расчета НП', e);

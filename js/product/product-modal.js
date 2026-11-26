@@ -676,17 +676,30 @@ export function refreshOpenedProductModalPrices(item = getActiveOpenedItem()) {
         const minRaw = Number(minBadge.getAttribute('data-min-bargain'));
         if (Number.isFinite(minRaw) && minRaw > 0) {
             const curLang = (typeof i18next !== 'undefined' && i18next.language) ? i18next.language : 'ua';
-            const formattedMin = (typeof formatPrice === 'function')
-                ? formatPrice(minRaw)
-                : `${minRaw} ${(curLang.startsWith('en') ? 'UAH' : 'грн')}`;
-            if (curLang.startsWith('ua') || curLang.startsWith('uk')) {
-                minBadge.textContent = `ВІД ${formattedMin.toUpperCase()}`;
+            const activeCode = (typeof window !== 'undefined' && typeof window.getActiveCurrencyCode === 'function')
+                ? window.getActiveCurrencyCode()
+                : 'UAH';
+            if (activeCode && activeCode !== 'UAH' && typeof formatPrice === 'function') {
+                const formattedMin = formatPrice(minRaw).toUpperCase();
+                if (curLang.startsWith('ua') || curLang.startsWith('uk')) {
+                    minBadge.textContent = `ВІД ${formattedMin}`;
+                } else if (curLang.startsWith('en')) {
+                    minBadge.textContent = `FROM ${formattedMin}`;
+                } else {
+                    minBadge.textContent = `ОТ ${formattedMin}`;
+                }
+            } else if (curLang.startsWith('ua') || curLang.startsWith('uk')) {
+                minBadge.textContent = `ВІД ${minRaw} ГРН`;
             } else if (curLang.startsWith('en')) {
-                minBadge.textContent = `FROM ${formattedMin.toUpperCase()}`;
+                minBadge.textContent = `FROM ${minRaw} UAH`;
             } else {
-                minBadge.textContent = `ОТ ${formattedMin.toUpperCase()}`;
+                minBadge.textContent = `ОТ ${minRaw} ГРН`;
             }
         }
+    }
+
+    if (hasAction('syncBargainInputsCurrency')) {
+        invokeAction('syncBargainInputsCurrency', item);
     }
 }
 

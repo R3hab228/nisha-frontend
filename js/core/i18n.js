@@ -337,6 +337,8 @@ function updateContentLanguage() {
     invokeAction('syncSoundToggleUI');
     invokeAction('syncCurrencyToggleUI');
     invokeAction('syncPriceFilterCurrencyUI');
+    invokeAction('refreshOpenedProductModalPrices');
+    invokeAction('syncBargainInputsCurrency');
 }
 window.updateContentLanguage = updateContentLanguage;
 

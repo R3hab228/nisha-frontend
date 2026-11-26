@@ -11,6 +11,7 @@ import {
 } from './product-state.js';
 import { getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
 import { setPendingBargain } from '../core/bargain-storage.js';
+import { getActiveCurrencyCode, convertFromUah, convertToUah } from '../core/currency.js';
 
 const BARGAIN_RATE_LIMIT_STORAGE_KEY = 'nisha_bargain_offers_history';
 const BARGAIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -112,9 +113,10 @@ export function recordClientBargainOffer() {
 
 /**
  * Shared validation for both modal and inline bargain submissions.
+ * Accepts input in the active display currency (`UAH` | `USD` | `EUR`) and returns normalized `offeredPriceUah`.
  * @param {object} activeItem
  * @param {number} offeredPrice
- * @returns {{ ok: boolean, message?: string, focusInput?: boolean }}
+ * @returns {{ ok: boolean, offeredPriceUah?: number, message?: string, focusInput?: boolean }}
  */
 export function validateBargainSubmission(activeItem, offeredPrice) {
     const rateCheck = checkClientBargainRateLimit();
@@ -126,7 +128,10 @@ export function validateBargainSubmission(activeItem, offeredPrice) {
         };
     }
 
-    const currentPrice = Number(activeItem.price) || 0;
+    const currentPriceUah = Number(activeItem.price) || 0;
+    const activeCode = getActiveCurrencyCode();
+    const isForeignCurrency = activeCode !== 'UAH';
+
     if (!offeredPrice || Number.isNaN(offeredPrice) || offeredPrice <= 0) {
         return {
             ok: false,
@@ -134,30 +139,76 @@ export function validateBargainSubmission(activeItem, offeredPrice) {
             message: tSafe('product.offer_enter_price', 'Вкажіть ціну!')
         };
     }
-    if (offeredPrice < 100 || offeredPrice >= currentPrice) {
+
+    const { hasBargain, itemMinBargain } = parseItemBargainInfo(activeItem);
+    const minFloorUah = 100;
+    const effectiveMinUah = itemMinBargain ? Math.max(minFloorUah, itemMinBargain) : minFloorUah;
+
+    const formatMinErrorMsg = (uahVal) => {
+        const g = /** @type {any} */ (globalThis);
+        const formatted = typeof g.formatPrice === 'function' ? g.formatPrice(uahVal) : `${uahVal} грн`;
+        const lang = getRuntimeSiteLang();
+        if (lang === 'ru') return `Минимальная цена предложения: ${formatted}!`;
+        if (lang === 'en') return `Minimum offer price: ${formatted}!`;
+        return `Мінімальна ціна для пропозиції: ${formatted}!`;
+    };
+
+    if (!isForeignCurrency) {
+        if (offeredPrice < minFloorUah || offeredPrice >= currentPriceUah) {
+            return {
+                ok: false,
+                focusInput: true,
+                message: (offeredPrice > 0 && offeredPrice < minFloorUah)
+                    ? tSafe('product.offer_min_100', 'Мінімальна ціна для пропозиції: 100 грн!')
+                    : tSafe('product.offer_invalid_price', 'Будь ласка, вкажіть реальну ціну нижче поточної!')
+            };
+        }
+        if (!hasBargain) {
+            return { ok: false, message: tSafe('product.offer_disabled', 'Для цього товару торг не передбачено!') };
+        }
+        if (itemMinBargain && offeredPrice < itemMinBargain) {
+            return {
+                ok: false,
+                focusInput: true,
+                message: tSafe('product.offer_below_min', 'Мінімальна ціна для пропозиції: {{min}} грн!', { min: itemMinBargain })
+                    .replace('{{min}}', String(itemMinBargain))
+            };
+        }
+        return { ok: true, offeredPriceUah: Math.round(offeredPrice) };
+    }
+
+    // Мультивалютная валидация (USD / EUR): сверяем с отображаемыми порогами и конвертируем в UAH для сервера
+    const currentDisplay = convertFromUah(currentPriceUah, activeCode);
+    const minFloorDisplay = convertFromUah(minFloorUah, activeCode);
+    const effectiveMinDisplay = convertFromUah(effectiveMinUah, activeCode);
+
+    if (offeredPrice < minFloorDisplay || offeredPrice >= currentDisplay) {
         return {
             ok: false,
             focusInput: true,
-            message: (offeredPrice > 0 && offeredPrice < 100)
-                ? tSafe('product.offer_min_100', 'Мінімальна ціна для пропозиції: 100 грн!')
+            message: (offeredPrice > 0 && offeredPrice < minFloorDisplay)
+                ? formatMinErrorMsg(minFloorUah)
                 : tSafe('product.offer_invalid_price', 'Будь ласка, вкажіть реальну ціну нижче поточної!')
         };
     }
 
-    const { hasBargain, itemMinBargain } = parseItemBargainInfo(activeItem);
     if (!hasBargain) {
         return { ok: false, message: tSafe('product.offer_disabled', 'Для цього товару торг не передбачено!') };
     }
-    if (itemMinBargain && offeredPrice < itemMinBargain) {
+
+    if (itemMinBargain && offeredPrice < effectiveMinDisplay) {
         return {
             ok: false,
             focusInput: true,
-            message: tSafe('product.offer_below_min', 'Мінімальна ціна для пропозиції: {{min}} грн!', { min: itemMinBargain })
-                .replace('{{min}}', String(itemMinBargain))
+            message: formatMinErrorMsg(itemMinBargain)
         };
     }
 
-    return { ok: true };
+    const rawUah = convertToUah(offeredPrice, activeCode);
+    const maxAllowedUah = Math.max(effectiveMinUah, currentPriceUah - 1);
+    const safeOfferedUah = Math.min(maxAllowedUah, Math.max(effectiveMinUah, rawUah));
+
+    return { ok: true, offeredPriceUah: safeOfferedUah };
 }
 
 /**

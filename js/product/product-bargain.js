@@ -11,7 +11,8 @@ import {
     applyOfferButtonState
 } from './product-state.js';
 import { hasAction, invokeAction, registerActions } from '../core/action-registry.js';
-import { getRuntimeFingerprint, tSafe } from '../core/runtime-env.js';
+import { getRuntimeFingerprint, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
+import { getActiveCurrencyCode, convertFromUah } from '../core/currency.js';
 import { getAcceptedBargain, isBargainDeclined, setAcceptedBargain, setPendingBargain } from '../core/bargain-storage.js';
 import {
     getBestBuyerContact,
@@ -30,6 +31,54 @@ export {
 };
 
 const _t = (key, def) => tSafe(key, def);
+
+/**
+ * Синхронизирует плейсхолдер «Минимальная ставка», min/step, лейбл валюты и цену товара
+ * в полях торга (`#inlineBargainPriceInput`, `#bargainPriceInput`, `#bargainModal`) под текущую валюту.
+ * @param {any} [activeItem]
+ */
+export function syncBargainInputsCurrency(activeItem = getActiveOpenedItem()) {
+    if (typeof document === 'undefined' || !activeItem) return;
+    const { itemMinBargain } = parseItemBargainInfo(activeItem);
+    const minOfferUah = itemMinBargain || 100;
+    const activeCode = getActiveCurrencyCode();
+    const isForeign = activeCode !== 'UAH';
+    const minDisplayNum = isForeign ? convertFromUah(minOfferUah, activeCode) : minOfferUah;
+    const minDisplayFormatted = (typeof formatPrice === 'function')
+        ? formatPrice(minOfferUah)
+        : `${minDisplayNum} ${typeof getCurrency === 'function' ? getCurrency() : 'грн'}`;
+    const lang = getRuntimeSiteLang();
+    const defaultPh = lang === 'ru'
+        ? `Минимальная ставка: ${minDisplayFormatted}`
+        : (lang === 'en' ? `Minimum bid: ${minDisplayFormatted}` : `Мінімальна ставка: ${minDisplayFormatted}`);
+    const phText = _t('product.offer_min_bid_ph', defaultPh).replace('{{min}}', minDisplayFormatted);
+    const stepStr = isForeign ? '1' : '10';
+
+    ['bargainPriceInput', 'inlineBargainPriceInput'].forEach((id) => {
+        const inp = document.getElementById(id);
+        if (!inp) return;
+        inp.min = String(minDisplayNum);
+        inp.step = stepStr;
+        inp.placeholder = phText;
+    });
+
+    const priceLabelEl = document.getElementById('bargainPriceLabel');
+    if (priceLabelEl) {
+        const currLabel = typeof getCurrency === 'function' ? getCurrency() : (lang === 'en' ? 'UAH' : 'грн');
+        const labelFallback = lang === 'ru'
+            ? `Ваша цена (${currLabel}):`
+            : (lang === 'en' ? `Your price (${currLabel}):` : `Ваша ціна (${currLabel}):`);
+        priceLabelEl.textContent = _t('product.offer_your_price_currency', labelFallback).replace('{{curr}}', currLabel);
+    }
+
+    const bargainPriceEl = document.getElementById('bargainItemPrice');
+    if (bargainPriceEl) {
+        const curPrice = activeItem.price || 0;
+        bargainPriceEl.textContent = (typeof formatPrice === 'function')
+            ? formatPrice(curPrice)
+            : `${Number(curPrice).toLocaleString('en-US', { maximumFractionDigits: 0 })} ${typeof getCurrency === 'function' ? getCurrency() : 'грн'}`;
+    }
+}
 
 /**
  * Opens the dedicated bargain offer modal populated with active item info.
@@ -74,11 +123,8 @@ export function openOfferPriceModal() {
 
     if (priceInput) {
         priceInput.value = '';
-        const { itemMinBargain } = parseItemBargainInfo(activeItem);
-        const minOffer = itemMinBargain || 100;
-        priceInput.min = String(minOffer);
-        priceInput.placeholder = _t('product.offer_min_bid_ph', 'Мінімальна ставка: {{min}}').replace('{{min}}', minOffer);
     }
+    syncBargainInputsCurrency(activeItem);
     if (contactInput) {
         contactInput.value = getBestBuyerContact();
     }
@@ -142,7 +188,8 @@ export async function submitBargainOffer() {
     }
 
     try {
-        const payload = buildBargainPayload(activeItem, offeredPrice, contact);
+        const finalOfferedUah = validation.offeredPriceUah ?? offeredPrice;
+        const payload = buildBargainPayload(activeItem, finalOfferedUah, contact);
         let bargainResponse = null;
         if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.post === 'function') {
             bargainResponse = await window.apiClient.post('/api/bargain', payload, {
@@ -160,7 +207,7 @@ export async function submitBargainOffer() {
             bar.style.width = '100%';
         }
         recordClientBargainOffer();
-        markPendingBargainLocally(activeItem.id, offeredPrice);
+        markPendingBargainLocally(activeItem.id, finalOfferedUah);
 
         if (typeof triggerHaptic === 'function') triggerHaptic('success');
         showToast(_t('product.offer_sent_toast', 'Пропозицію надіслано! Очікуйте відповіді продавця.'), 'success');
@@ -283,11 +330,8 @@ export function showInlineOfferPriceInput() {
         return;
     }
 
-    const { itemMinBargain } = parseItemBargainInfo(activeItem);
-    const minOffer = itemMinBargain || 100;
-    input.min = String(minOffer);
-    input.placeholder = _t('product.offer_min_bid_ph', 'Мінімальна ставка: {{min}}').replace('{{min}}', minOffer);
     input.value = '';
+    syncBargainInputsCurrency(activeItem);
 
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
@@ -358,7 +402,8 @@ export async function submitInlineBargainOffer() {
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
     try {
-        const payload = buildBargainPayload(activeItem, offeredPrice, savedContact);
+        const finalOfferedUah = validation.offeredPriceUah ?? offeredPrice;
+        const payload = buildBargainPayload(activeItem, finalOfferedUah, savedContact);
         let bargainResponse = null;
         if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.post === 'function') {
             bargainResponse = await window.apiClient.post('/api/bargain', payload, {
@@ -384,7 +429,7 @@ export async function submitInlineBargainOffer() {
 
         showToast(_t('product.offer_sent_toast', 'Пропозицію надіслано! Очікуйте відповіді продавця.'), 'success');
         hideInlineOfferPriceInput();
-        markPendingBargainLocally(activeItem.id, offeredPrice);
+        markPendingBargainLocally(activeItem.id, finalOfferedUah);
     } catch (err) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
         showToast(resolveBargainErrorMessage(err), 'error');
@@ -608,6 +653,7 @@ registerActions({
     showInlineOfferPriceInput,
     hideInlineOfferPriceInput,
     submitInlineBargainOffer,
+    syncBargainInputsCurrency,
     syncUserBargains
 });
 
