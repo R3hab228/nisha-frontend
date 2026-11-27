@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT Q&A & ACCORDION SYSTEM MODULE
 // ==========================================
@@ -21,7 +22,7 @@ export function toggleQuestionForm() {
     if (container.style.maxHeight === '0px' || container.style.maxHeight === '') {
         container.style.maxHeight = '100px';
         setTimeout(() => {
-            const input = document.getElementById('questionInput');
+            const input = /** @type {HTMLInputElement | HTMLTextAreaElement | null} */ (document.getElementById('questionInput'));
             if (input) input.focus();
         }, 100);
     } else {
@@ -43,7 +44,7 @@ export async function submitQuestion(itemId) {
         return;
     }
 
-    const input = document.getElementById('questionInput');
+    const input = /** @type {HTMLInputElement | HTMLTextAreaElement | null} */ (document.getElementById('questionInput'));
     if (!input) return;
     let text = input.value.trim();
     if (text.length < 5) {
@@ -145,18 +146,18 @@ export async function loadItemQuestions(itemId) {
         if (typeof list.replaceChildren === 'function') list.replaceChildren();
         else list.innerHTML = '';
 
-        const escEntity = (s) => String(s ?? '')
+        const escEntity = (/** @type {any} */ s) => String(s ?? '')
             .replaceAll('&', '&amp;')
             .replaceAll('<', '&lt;')
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#39;');
         const sanitize = hasAction('sanitizeText')
-            ? (s) => invokeAction('sanitizeText', s)
+            ? (/** @type {any} */ s) => invokeAction('sanitizeText', s)
             : escEntity;
 
         let listHtml = '';
-        data.forEach(q => {
+        data.forEach((/** @type {any} */ q) => {
             const safeQ = sanitize(q.question);
             const safeA = q.answer ? sanitize(q.answer) : null;
             const safeU = sanitize(q.user_name);
@@ -204,7 +205,7 @@ export function toggleQASection(btn) {
     } else if (list) {
         isCollapsed = list.classList.toggle('collapsed');
     }
-    const arrow = btn ? btn.querySelector('.qa-arrow') : document.querySelector('#qaWrapper .qa-arrow');
+    const arrow = /** @type {HTMLElement | null} */ (btn ? btn.querySelector('.qa-arrow') : document.querySelector('#qaWrapper .qa-arrow'));
     if (arrow) {
         arrow.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
     }
@@ -221,7 +222,7 @@ export function initProductQASubscription() {
     if (sb && typeof sb.channel === 'function') {
         _productQaSubInitialized = true;
         sb.channel('public-qa-updates')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'item_questions' }, payload => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'item_questions' }, (/** @type {any} */ payload) => {
                 const active = getActiveOpenedItem();
                 if (active && payload.new && payload.new.item_id === active.id) {
                     if (hasAction('loadItemQuestions')) {

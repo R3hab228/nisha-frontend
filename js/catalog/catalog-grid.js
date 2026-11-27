@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — СЕТКА КАРТОЧЕК, ПАГИНАЦИЯ И ВЗАИМОДЕЙСТВИЯ
 // ==========================================
@@ -48,7 +49,7 @@ export {
 
 /**
  * Точечно обновляет статус, цену, заголовок и модалку карточки товара в DOM.
- * @param {object} item
+ * @param {any} item
  */
 export function updateCardDOM(item) {
     if (!item || !item.id || typeof document === 'undefined') return;
@@ -71,7 +72,7 @@ export function updateCardDOM(item) {
             oldBadges.forEach(b => b.remove());
             card.classList.remove('sold-out', 'reserved-item');
 
-            const cartBtn = card.querySelector('.grid-cart-btn');
+            const cartBtn = /** @type {HTMLElement | null} */ (card.querySelector('.grid-cart-btn'));
 
             // 2. Обрабатываем статус и бейджи (SOLD / RESERVED / TOP / SALE / HOT)
             if (item.status === 'sold') {
@@ -131,7 +132,7 @@ export function updateCardDOM(item) {
         const modalTitleEl = document.getElementById('modalItemTitle');
         const modalViewsEl = document.getElementById('modalItemViews');
         if (modalTitleEl && item.name) modalTitleEl.textContent = item.name;
-        if (modalViewsEl && item.views_count !== undefined) modalViewsEl.textContent = item.views_count || 0;
+        if (modalViewsEl && item.views_count !== undefined) modalViewsEl.textContent = String(item.views_count || 0);
         if (modalCartBtn) {
             if (item.status === 'sold') {
                 modalCartBtn.style.display = 'none';
@@ -146,7 +147,7 @@ export function updateCardDOM(item) {
         }
         if (modalPriceEl) {
             const acceptedBargain = readAcceptedBargain(item);
-            const fmtPrice = (val) => (hasAction('formatPrice') ? invokeAction('formatPrice', val) : `${val} ${curr}`);
+            const fmtPrice = (/** @type {any} */ val) => (hasAction('formatPrice') ? invokeAction('formatPrice', val) : `${val} ${curr}`);
             if (acceptedBargain && Number(acceptedBargain.acceptedPrice) > 0 && item.status !== 'sold') {
                 const origFmt = escCardHtml(fmtPrice(item.price));
                 const accFmt = escCardHtml(fmtPrice(Number(acceptedBargain.acceptedPrice)));
@@ -167,13 +168,13 @@ export function updateCardDOM(item) {
  */
 export function activateCardSlides(target, prioritizeNext = false) {
     if (!target) return;
-    const wrapper = (target.classList && target.classList.contains('card-slider-wrapper'))
+    const wrapper = /** @type {any} */ ((target.classList && target.classList.contains('card-slider-wrapper'))
         ? target
-        : (target.closest && target.closest('.card-slider-wrapper')) || (target.querySelector && target.querySelector('.card-slider-wrapper'));
+        : (target.closest && target.closest('.card-slider-wrapper')) || (target.querySelector && target.querySelector('.card-slider-wrapper')));
     if (!wrapper) return;
     if (prioritizeNext && !wrapper._secondSlidePrioritized) {
         wrapper._secondSlidePrioritized = true;
-        const secondImg = wrapper.querySelector('.card-slide:nth-child(2) img.card-slide-img');
+        const secondImg = /** @type {HTMLImageElement | null} */ (wrapper.querySelector('.card-slide:nth-child(2) img.card-slide-img'));
         if (secondImg && !secondImg.complete) {
             secondImg.fetchPriority = 'high';
             secondImg.loading = 'eager';
@@ -183,9 +184,9 @@ export function activateCardSlides(target, prioritizeNext = false) {
     wrapper._slidesActivated = true;
     const lazyImgs = wrapper.querySelectorAll('img[data-src]');
     for (let i = 0; i < lazyImgs.length; i++) {
-        const img = lazyImgs[i];
+        const img = /** @type {HTMLImageElement} */ (lazyImgs[i]);
         const rawSrc = img.getAttribute('data-src');
-        const safeSrc = sanitizeHtmlMediaUrl(rawSrc);
+        const safeSrc = rawSrc ? sanitizeHtmlMediaUrl(rawSrc) : null;
         if (safeSrc) {
             if (prioritizeNext && i === 0) {
                 img.fetchPriority = 'high';
@@ -220,12 +221,15 @@ export function initGridEventDelegation() {
     _gridDelegationInitialized = true;
 
     // 1. Тултип замеров и предзагрузка картинок + lazy-чанка app-product на десктопе (с hover-intent 65ms)
+    /** @type {HTMLElement | null} */
     let currentTooltipCard = null;
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let hoverIntentTimer = null;
 
-    const triggerCardPrefetch = (id, immediate = false) => {
+    const triggerCardPrefetch = (/** @type {string | number} */ id, immediate = false) => {
         if (!id) return;
-        const conn = typeof navigator !== 'undefined' ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
+        const nav = /** @type {any} */ (typeof navigator !== 'undefined' ? navigator : null);
+        const conn = nav ? (nav.connection || nav.mozConnection || nav.webkitConnection) : null;
         if (!immediate && conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g')) {
             return;
         }
@@ -235,8 +239,8 @@ export function initGridEventDelegation() {
         }
     };
 
-    grid.addEventListener('mouseover', (e) => {
-        const card = e.target.closest('.item-card');
+    grid.addEventListener('mouseover', (/** @type {any} */ e) => {
+        const card = e.target && typeof e.target.closest === 'function' ? e.target.closest('.item-card') : null;
         if (!card) return;
         activateCardSlides(card);
         if (hasAction('prewarmProductModule')) {
@@ -274,7 +278,8 @@ export function initGridEventDelegation() {
 
     grid.addEventListener('mousemove', (e) => {
         if (!currentTooltipCard) return;
-        const isCartBtn = !!(e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]'));
+        const targetEl = /** @type {Element | null} */ (e.target);
+        const isCartBtn = !!(targetEl && typeof targetEl.closest === 'function' && targetEl.closest('.grid-cart-btn, [data-action="add-to-cart"]'));
         if (isCartBtn) {
             if (isItemMeasurementsTooltipVisible()) {
                 invokeAction('hideItemMeasurementsTooltip');
@@ -295,7 +300,7 @@ export function initGridEventDelegation() {
 
     grid.addEventListener('mouseout', (e) => {
         if (!currentTooltipCard) return;
-        if (!e.relatedTarget || !currentTooltipCard.contains(e.relatedTarget)) {
+        if (!e.relatedTarget || !currentTooltipCard.contains(/** @type {Node} */ (e.relatedTarget))) {
             if (hoverIntentTimer) {
                 clearTimeout(hoverIntentTimer);
                 hoverIntentTimer = null;
@@ -319,13 +324,16 @@ export function initGridEventDelegation() {
     let isDraggingSlider = false;
     let startX = 0;
     let startY = 0;
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let clickTimer = null;
+    /** @type {HTMLElement | null} */
     let lastClickedCard = null;
     let lastPointerType = '';
 
     grid.addEventListener('pointerdown', (e) => {
         lastPointerType = e.pointerType || '';
-        const card = e.target.closest('.item-card');
+        const targetEl = /** @type {Element | null} */ (e.target);
+        const card = targetEl && targetEl.closest('.item-card');
         if (!card) return;
         if (hasAction('prewarmProductModule')) {
             invokeAction('prewarmProductModule');
@@ -342,7 +350,8 @@ export function initGridEventDelegation() {
 
     grid.addEventListener('touchstart', (e) => {
         lastPointerType = 'touch';
-        const card = e.target.closest('.item-card');
+        const targetEl = /** @type {Element | null} */ (e.target);
+        const card = targetEl && targetEl.closest('.item-card');
         if (!card) return;
         if (hasAction('prewarmProductModule')) {
             invokeAction('prewarmProductModule');
@@ -355,7 +364,7 @@ export function initGridEventDelegation() {
                 prefetchItemImages(cardId, true);
             }
         }
-        const wrapper = e.target.closest('.card-slider-wrapper');
+        const wrapper = /** @type {HTMLElement | null} */ (targetEl && targetEl.closest('.card-slider-wrapper'));
         if (!wrapper) return;
         activateCardSlides(wrapper, true);
         isDraggingSlider = false;
@@ -366,7 +375,8 @@ export function initGridEventDelegation() {
     }, { passive: true });
 
     grid.addEventListener('touchend', (e) => {
-        const wrapper = e.target.closest('.card-slider-wrapper');
+        const targetEl = /** @type {Element | null} */ (e.target);
+        const wrapper = targetEl && targetEl.closest('.card-slider-wrapper');
         if (!wrapper) return;
         if (e.changedTouches && e.changedTouches[0]) {
             const dx = Math.abs(e.changedTouches[0].clientX - startX);
@@ -381,7 +391,7 @@ export function initGridEventDelegation() {
         }
     }, { passive: true });
 
-    grid.addEventListener('click', (e) => {
+    grid.addEventListener('click', (/** @type {any} */ e) => {
         if (e.target.closest('#toastContainer, .toast') || (hasAction('isToastClickShielded') && invokeAction('isToastClickShielded'))) {
             e.preventDefault();
             e.stopPropagation();
@@ -424,14 +434,16 @@ export function initGridEventDelegation() {
             clearTimeout(clickTimer);
             clickTimer = null;
             lastClickedCard = null;
-            const animContainer = card.querySelector('.card-slider-wrapper') || card;
+            const animContainer = /** @type {HTMLElement} */ (card.querySelector('.card-slider-wrapper') || card);
             handleDoubleTapLike(e, itemId, animContainer);
         }
     });
 }
 
 // Логика слайдера фото в карточке товара на ПК/моб
+/** @type {number | null} */
 let _dotsRaf = null;
+/** @type {Record<string | number, number>} */
 const _lastDotIndices = {};
 
 /**
@@ -568,7 +580,7 @@ export function refreshCatalogCardPrices() {
 registerActions({
     updateCardDOM,
     refreshCatalogCardPrices,
-    observeGridVideo: (v) => { if (gridVideoObserver && v) gridVideoObserver.observe(v); },
+    observeGridVideo: (/** @type {Element} */ v) => { if (gridVideoObserver && v) gridVideoObserver.observe(v); },
     initGridEventDelegation,
     changePage,
     activateCardSlides,

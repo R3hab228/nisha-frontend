@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — CDN, MEDIA SANITIZATION & IMAGE PREFETCH
 // ==========================================
@@ -24,7 +25,7 @@ if (typeof window !== 'undefined') {
         if (width || height || quality || format) {
             const sep = result.includes('?') ? '&' : '?';
             const params = [];
-            const _enc = (v) => (hasAction('safeEncodeURIComponent') ? invokeAction('safeEncodeURIComponent', v) : encodeURIComponent(v));
+            const _enc = (/** @type {any} */ v) => (hasAction('safeEncodeURIComponent') ? invokeAction('safeEncodeURIComponent', v) : encodeURIComponent(v));
             if (width) params.push(`w=${_enc(width)}`);
             if (height) params.push(`h=${_enc(height)}`);
             if (quality) params.push(`q=${_enc(quality)}`);
@@ -50,13 +51,13 @@ export function toCDN(url, options) {
 
 /**
  * Возвращает оптимизированный URL изображения (превью или оригинал) через CDN.
- * @param {object} item
+ * @param {any} item
  * @param {boolean} [wantsThumb=false]
  * @returns {string}
  */
 export function getOptimizedImageUrl(item, wantsThumb = false) {
     if (!item || typeof item !== 'object') return '';
-    const isValid = (url) => typeof url === 'string' && url.trim().length > 10;
+    const isValid = (/** @type {any} */ url) => typeof url === 'string' && url.trim().length > 10;
 
     let resultUrl = '';
 
@@ -72,7 +73,9 @@ export function getOptimizedImageUrl(item, wantsThumb = false) {
 }
 
 // ОПТИМИЗАЦИЯ PREFETCH: отложенная предзагрузка картинок (задержка 100мс на hover для мгновенного 0мс открытия товара)
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _prefetchDebounceTimer = null;
+/** @type {string | number | null} */
 let _prefetchPendingId = null;
 
 /**
@@ -98,7 +101,7 @@ export function prefetchItemImages(id, immediate = false) {
         if (item) {
             // Предзагрузка миниатюр карточки для мгновенного свайпа в сетке
             if (item.thumbnails && item.thumbnails.length > 1) {
-                item.thumbnails.slice(1, 4).forEach(url => {
+                item.thumbnails.slice(1, 4).forEach((/** @type {any} */ url) => {
                     if (url && typeof url === 'string' && !url.endsWith('.mp4')) {
                         const img = new Image();
                         img.decoding = 'async';
@@ -109,7 +112,7 @@ export function prefetchItemImages(id, immediate = false) {
             }
             // Предзагрузка и pre-decode фото высокого качества для мгновенного открытия модалки (0 мс)
             if (item.images && item.images.length > 0) {
-                item.images.slice(0, 2).forEach((url, idx) => {
+                item.images.slice(0, 2).forEach((/** @type {any} */ url, /** @type {number} */ idx) => {
                     if (url && typeof url === 'string' && !url.endsWith('.mp4')) {
                         const img = new Image();
                         img.decoding = 'async';
@@ -122,7 +125,7 @@ export function prefetchItemImages(id, immediate = false) {
         }
     };
 
-    clearTimeout(_prefetchDebounceTimer);
+    if (_prefetchDebounceTimer !== null) clearTimeout(_prefetchDebounceTimer);
     if (immediate) {
         _prefetchPendingId = null;
         runPrefetch();
@@ -138,7 +141,7 @@ export function prefetchItemImages(id, immediate = false) {
  */
 export function cancelPrefetchItemImages(id) {
     if (_prefetchPendingId === id) {
-        clearTimeout(_prefetchDebounceTimer);
+        if (_prefetchDebounceTimer !== null) clearTimeout(_prefetchDebounceTimer);
         _prefetchPendingId = null;
     }
 }

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA NOVA POSHTA — CITY SEARCH, AUTODETECT & CACHE
 // ==========================================
@@ -21,6 +22,7 @@ import {
 import { invokeAction } from '../core/action-registry.js';
 import { tSafe } from '../core/runtime-env.js';
 
+/** @type {{ typed: string, promise: Promise<string> } | null} */
 let _ensureCityInFlight = null;
 
 /**
@@ -32,8 +34,8 @@ export function clearNPCityInput(e) {
         if (typeof e.preventDefault === 'function') e.preventDefault();
         if (typeof e.stopPropagation === 'function') e.stopPropagation();
     }
-    const cityEl = document.getElementById('orderCity');
-    const branchEl = document.getElementById('orderBranch');
+    const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
+    const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
     const cd = document.getElementById('cityDropdown');
     const bd = document.getElementById('branchDropdown');
     if (cityEl) {
@@ -64,7 +66,7 @@ export function debouncedNPCitySearch(query) {
     const bd = document.getElementById('branchDropdown');
     if (bd) bd.style.display = 'none';
 
-    const branchEl = document.getElementById('orderBranch');
+    const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
     if (branchEl) {
         branchEl.value = '';
         branchEl.readOnly = true;
@@ -101,19 +103,19 @@ export function renderCitySearchResults(data) {
     bindDropdownScrollDismissKeyboard(dropdown, 'orderCity');
 
     if (data && data.success && Array.isArray(data.data) && data.data[0] && Array.isArray(data.data[0].Addresses) && data.data[0].Addresses.length > 0) {
-        data.data[0].Addresses.forEach(city => {
+        data.data[0].Addresses.forEach((/** @type {any} */ city) => {
             const div = document.createElement('div');
             div.className = 'city-item';
             div.textContent = city.Present;
 
             let selectedOnce = false;
-            const selectCityItem = (e) => {
+            const selectCityItem = (/** @type {any} */ e) => {
                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
                 if (selectedOnce) return;
                 selectedOnce = true;
                 setTimeout(() => { selectedOnce = false; }, 300);
 
-                const cityEl = document.getElementById('orderCity');
+                const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
                 if (cityEl) {
                     cityEl.value = city.Present;
                     cityEl.classList.remove('input-field-error');
@@ -124,7 +126,7 @@ export function renderCitySearchResults(data) {
                 setSelectedBranchRefState('');
                 dropdown.style.display = 'none';
 
-                const branchInput = document.getElementById('orderBranch');
+                const branchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
                 if (branchInput) {
                     branchInput.readOnly = false;
                     branchInput.value = '';
@@ -140,7 +142,7 @@ export function renderCitySearchResults(data) {
                 div.addEventListener('mousedown', selectCityItem);
                 div.addEventListener('click', selectCityItem);
             }
-            div._selectItem = selectCityItem;
+            (/** @type {any} */ (div))._selectItem = selectCityItem;
             bindTouchTapSelect(div, selectCityItem);
             dropdown.appendChild(div);
         });
@@ -194,7 +196,7 @@ export async function ensureCityRef(opts = {}) {
     const existing = (typeof window !== 'undefined' && window.selectedCityRef) || cartState.selectedCityRef;
     if (existing) return existing;
 
-    const cityInput = document.getElementById('orderCity');
+    const cityInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
     const typed = cityInput ? cityInput.value.trim() : '';
     if (typed.length < 2) return '';
 
@@ -205,7 +207,7 @@ export async function ensureCityRef(opts = {}) {
 
     const run = (async () => {
         try {
-            const cleanTyped = typed.replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село|г\.|гор\.|город)\s*/i, '').split(',').at(0).trim();
+            const cleanTyped = (typed.replace(/^(м\.|с\.|смт\.?|с-ще\.?|місто|село|г\.|гор\.|город)\s*/i, '').split(',').at(0) || '').trim();
             const data = await npProxyRequest({ CityName: cleanTyped || typed, Limit: '10' }, 'searchSettlements');
             const addrs = (data && data.success && data.data && data.data.at(0) && data.data.at(0).Addresses) || [];
             if (addrs.length === 0) return '';
@@ -217,16 +219,16 @@ export async function ensureCityRef(opts = {}) {
             }
 
             const wantedFull = _npNorm(typed);
-            const wantedName = _npStripPrefix(typed.split(',').at(0));
-            const regionToken = _npNorm(typed.split(',').slice(1).join(',')).split(',').at(0).trim();
+            const wantedName = _npStripPrefix(typed.split(',').at(0) || '');
+            const regionToken = (_npNorm(typed.split(',').slice(1).join(',')).split(',').at(0) || '').trim();
             const pick =
-                addrs.find(a => _npNorm(a.Present) === wantedFull) ||
-                addrs.find(a => _npStripPrefix(String(a.Present || '').split(',').at(0)) === wantedName && (!regionToken || _npNorm(a.Present).includes(regionToken))) ||
-                addrs.find(a => _npStripPrefix(a.MainDescription) === wantedName && !regionToken) ||
+                addrs.find((/** @type {any} */ a) => _npNorm(a.Present) === wantedFull) ||
+                addrs.find((/** @type {any} */ a) => _npStripPrefix(String(a.Present || '').split(',').at(0) || '') === wantedName && (!regionToken || _npNorm(a.Present).includes(regionToken))) ||
+                addrs.find((/** @type {any} */ a) => _npStripPrefix(a.MainDescription) === wantedName && !regionToken) ||
                 (addrs.length === 1 ? addrs.at(0) : null);
 
             const fallbackPick = (!pick && !interactive && addrs.length > 0)
-                ? (addrs.find(a => _npNorm(a.MainDescription).includes(wantedName) || _npNorm(a.Present).includes(wantedName)) || addrs.at(0))
+                ? (addrs.find((/** @type {any} */ a) => _npNorm(a.MainDescription).includes(wantedName) || _npNorm(a.Present).includes(wantedName)) || addrs.at(0))
                 : null;
             const resolvedPick = pick || fallbackPick;
 
@@ -239,7 +241,7 @@ export async function ensureCityRef(opts = {}) {
             setSelectedCityRefState(cityRefVal);
             if (typeof window !== 'undefined') window.selectedSettlementRef = resolvedPick.Ref || '';
             if (cityInput && resolvedPick.Present) cityInput.value = resolvedPick.Present;
-            const branchInput = document.getElementById('orderBranch');
+            const branchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
             if (branchInput) branchInput.readOnly = false;
             updateNPClearButtons();
             if (!interactive) hideNPDropdowns();
@@ -264,8 +266,8 @@ export async function ensureCityRef(opts = {}) {
  * @returns {Promise<void>}
  */
 export async function autoDetectCity() {
-    const cityInput = document.getElementById('orderCity');
-    const branchInput = document.getElementById('orderBranch');
+    const cityInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
+    const branchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
 
     if (!cityInput || cityInput.value.trim() !== '') return;
 
@@ -288,6 +290,7 @@ export async function autoDetectCity() {
         }
 
         if (data && data.country_code === 'UA' && data.city) {
+            /** @type {Record<string, string>} */
             const enToUaCities = {
                 'Kyiv': 'Київ', 'Kiev': 'Київ', 'Kharkiv': 'Харків', 'Kharkov': 'Харків',
                 'Odesa': 'Одеса', 'Odessa': 'Одеса', 'Dnipro': 'Дніпро', 'Dnipropetrovsk': 'Дніпро',

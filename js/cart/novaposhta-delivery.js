@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA NOVA POSHTA — CITY/BRANCH SEARCH, AUTODETECT & DROPDOWNS
 // ==========================================
@@ -40,6 +41,7 @@ export {
 };
 
 let _branchLoadToken = 0;
+/** @type {{ key: string, promise: Promise<string> } | null} */
 let _ensureBranchInFlight = null;
 
 /**
@@ -53,7 +55,7 @@ export function clearNPBranchInput(e) {
     }
     ++_branchLoadToken;
     if (cartState.branchSearchTimeout) clearTimeout(cartState.branchSearchTimeout);
-    const branchEl = document.getElementById('orderBranch');
+    const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
     setSelectedBranchRefState('');
     if (branchEl) {
         branchEl.value = '';
@@ -133,15 +135,15 @@ export function matchAndSetBranchRef(branchText) {
     const branches = (cityRef && cartState.npBranchCache[cityRef + '_']) || cartState.cachedBranches || [];
     if (!branches || branches.length === 0) return false;
 
-    const norm = (str) => String(str || '').toLowerCase().replace(/[^a-zа-яёіїєґ0-9]/gi, '');
+    const norm = (/** @type {any} */ str) => String(str || '').toLowerCase().replace(/[^a-zа-яёіїєґ0-9]/gi, '');
     const wanted = norm(branchText);
     const numMatch = branchText.match(/\d+/);
     const wantedNum = numMatch ? numMatch.at(0) : null;
     const isPostomat = /поштомат|почтомат|postomat/i.test(branchText);
 
-    let match = branches.find(b => norm(b.Description) === wanted);
+    let match = branches.find((/** @type {any} */ b) => norm(b.Description) === wanted);
     if (!match && wantedNum) {
-        match = branches.find(b => {
+        match = branches.find((/** @type {any} */ b) => {
             const bDesc = b.Description || '';
             const bNum = extractBranchNumber(b) || (bDesc.match(/\d+/) || [])[0];
             const bIsPost = /поштомат|почтомат|postomat/i.test(bDesc);
@@ -149,7 +151,7 @@ export function matchAndSetBranchRef(branchText) {
         });
     }
     if (!match && wantedNum) {
-        match = branches.find(b => {
+        match = branches.find((/** @type {any} */ b) => {
             const bDesc = b.Description || '';
             const bNum = extractBranchNumber(b) || (bDesc.match(/\d+/) || [])[0];
             return bNum === wantedNum;
@@ -157,7 +159,7 @@ export function matchAndSetBranchRef(branchText) {
     }
     if (!match) return false;
 
-    const branchEl = document.getElementById('orderBranch');
+    const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
     if (branchEl && branchEl.value.trim() !== String(branchText).trim()) return false;
     if (branchEl) branchEl.value = match.Description;
     setSelectedBranchRefState(match.Ref);
@@ -176,7 +178,7 @@ export async function ensureBranchRef(branchText) {
     const existing = (typeof window !== 'undefined' && window.selectedBranchRef) || cartState.selectedBranchRef;
     if (existing) return existing;
 
-    const branchInput = document.getElementById('orderBranch');
+    const branchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
     const typed = (branchText || (branchInput ? branchInput.value : '')).trim();
     if (typed.length < 2) return '';
 
@@ -192,7 +194,7 @@ export async function ensureBranchRef(branchText) {
         return (typeof window !== 'undefined' && window.selectedBranchRef) || cartState.selectedBranchRef;
     }
 
-    const norm = (str) => String(str || '').toLowerCase().replace(/[^a-zа-яёіїєґ0-9]/gi, '');
+    const norm = (/** @type {any} */ str) => String(str || '').toLowerCase().replace(/[^a-zа-яёіїєґ0-9]/gi, '');
     const wanted = norm(typed);
     const numMatch = typed.match(/\d+/);
     const wantedNum = numMatch ? numMatch.at(0) : null;
@@ -238,6 +240,7 @@ export async function ensureBranchRef(branchText) {
         try {
             const parsed = parseNPBranchQuery(typed);
             const searchTarget = (parsed && parsed.apiSearch) ? parsed.apiSearch : typed;
+            /** @type {Record<string, any>} */
             const props = { CityRef: cityRef, Limit: '50' };
             if (searchTarget) props.FindByString = searchTarget;
             else if (wantedNum) props.WarehouseId = wantedNum;
@@ -256,7 +259,7 @@ export async function ensureBranchRef(branchText) {
             const slimmed = slimBranches(branches);
             if (!cartState.npBranchCache[cityRef + '_']) cartState.npBranchCache[cityRef + '_'] = [];
             slimmed.forEach(sb => {
-                if (!cartState.npBranchCache[cityRef + '_'].some(b => b.Ref === sb.Ref)) {
+                if (!cartState.npBranchCache[cityRef + '_'].some((/** @type {any} */ b) => b.Ref === sb.Ref)) {
                     cartState.npBranchCache[cityRef + '_'].push(sb);
                 }
             });
@@ -319,7 +322,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
 
     if (typeof searchString !== 'string') searchString = '';
 
-    const input = document.getElementById('orderBranch');
+    const input = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
     const dropdown = document.getElementById('branchDropdown');
     if (!dropdown) return;
 
@@ -335,7 +338,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
     if (!cityRef) {
         cityRef = await ensureCityRef({ interactive: showDropdown });
         if (!cityRef) {
-            const cityInput = document.getElementById('orderCity');
+            const cityInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
             if (input && (!cityInput || !cityInput.value.trim())) {
                 input.placeholder = tSafe('checkout.choose_city_first', 'Сначала выберите город');
             }
@@ -344,7 +347,7 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
         if (input) input.readOnly = false;
     }
 
-    const search = searchString.trim();
+    const search = (searchString || '').trim();
     const parsedQuery = parseNPBranchQuery(search);
     const cacheKey = cityRef + '_' + search.toLowerCase();
 
@@ -379,13 +382,15 @@ export async function loadNPBranches(searchString = '', showDropdown = false) {
         const MAX_PAGES = search ? 1 : 3;
         let refProp = 'CityRef';
         let refVal = cityRef;
+        /** @type {any[]} */
         const all = [];
 
         let loopError = null;
         let isCityFullyLoaded = false;
         try {
             for (let page = 1; page <= MAX_PAGES; page++) {
-                const buildProps = (findStr) => {
+                const buildProps = (/** @type {string} */ findStr) => {
+                    /** @type {Record<string, any>} */
                     const p = { Limit: String(PAGE_SIZE), Page: String(page) };
                     p[refProp] = refVal;
                     if (findStr) p.FindByString = findStr;
@@ -498,7 +503,7 @@ const MAX_RENDERED_BRANCHES = 50;
 
 /**
  * Отрисовывает список отделений/почтоматов с лимитом 50 элементов.
- * @param {object[]} branches
+ * @param {any[]} branches
  */
 export function renderBranches(branches) {
     const dropdown = document.getElementById('branchDropdown');
@@ -538,13 +543,13 @@ export function renderBranches(branches) {
         }
 
         let selectedOnce = false;
-        const selectBranchItem = (e) => {
+        const selectBranchItem = (/** @type {any} */ e) => {
             if (e && typeof e.preventDefault === 'function') e.preventDefault();
             if (selectedOnce) return;
             selectedOnce = true;
             setTimeout(() => { selectedOnce = false; }, 300);
 
-            const branchEl = document.getElementById('orderBranch');
+            const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
             if (branchEl) {
                 branchEl.value = desc;
                 branchEl.classList.remove('input-field-error');
@@ -556,7 +561,7 @@ export function renderBranches(branches) {
             calculateDeliveryCost();
             invokeAction('saveCheckoutDraft');
             if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackDeliverySelected === 'function') {
-                const cityVal = document.getElementById('orderCity')?.value?.trim() || '';
+                const cityVal = (/** @type {HTMLInputElement | null} */ (document.getElementById('orderCity')))?.value?.trim() || '';
                 window.analytics.trackDeliverySelected({
                     city: cityVal,
                     branch: desc,
@@ -568,7 +573,7 @@ export function renderBranches(branches) {
             div.addEventListener('mousedown', selectBranchItem);
             div.addEventListener('click', selectBranchItem);
         }
-        div._selectItem = selectBranchItem;
+        (/** @type {any} */ (div))._selectItem = selectBranchItem;
         bindTouchTapSelect(div, selectBranchItem);
         fragment.appendChild(div);
     }

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT GALLERY, SLIDER, SWIPE & PHOTOSWIPE MODULE
 // ==========================================
@@ -12,9 +13,11 @@ import { hasAction, invokeAction, registerActions } from '../core/action-registr
 import { tSafe } from '../core/runtime-env.js';
 import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
+/** @type {any} */
 let _pswpLightbox = null;
 const _decodedSlideUrls = new Set();
 
+/** @param {any} rawUrl @param {'auto' | 'high' | 'low'} [priority] */
 function predecodeSlideImage(rawUrl, priority = 'auto') {
     const cdnUrl = toCDN(rawUrl);
     if (!cdnUrl || typeof cdnUrl !== 'string' || cdnUrl.endsWith('.mp4') || _decodedSlideUrls.has(cdnUrl)) return;
@@ -32,6 +35,7 @@ function predecodeSlideImage(rawUrl, priority = 'auto') {
     }
 }
 
+/** @param {any} rawUrl */
 function escapeCssUrl(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return '';
     const escaped = hasAction('escapeAttr')
@@ -92,7 +96,7 @@ export function updateSlider(animated = true) {
 
     const allSlides = Array.from(document.querySelectorAll('#sliderWrapper .slide'));
     allSlides.forEach((slide, idx) => {
-        const vid = slide.querySelector('video.modal-video-player');
+        const vid = /** @type {HTMLVideoElement | null} */ (slide.querySelector('video.modal-video-player'));
         if (vid) {
             if (idx === current) {
                 vid.play().catch(() => {});
@@ -137,11 +141,11 @@ export function setSlide(index, animated = true) {
 
 /**
  * Renders product modal media slides (photos + mp4 videos), thumbnails, and PhotoSwipe click trigger.
- * @param {object} item
+ * @param {any} item
  */
 export function renderModalSlider(item) {
     setActiveSlideIndex(0);
-    const wrapper = document.getElementById('sliderWrapper');
+    const wrapper = /** @type {(HTMLElement & { _pswpClickBound?: boolean }) | null} */ (document.getElementById('sliderWrapper'));
     const thumbs = document.getElementById('modalThumbnails');
     if (wrapper) {
         if (wrapper.style) {
@@ -161,8 +165,8 @@ export function renderModalSlider(item) {
         : ((Array.isArray(item.thumbnails) && item.thumbnails.length > 0) ? item.thumbnails : []);
 
     const totalMedia = mediaList.length;
-    const prevBtn = document.querySelector('.slider-btn.prev');
-    const nextBtn = document.querySelector('.slider-btn.next');
+    const prevBtn = /** @type {HTMLElement | null} */ (document.querySelector('.slider-btn.prev'));
+    const nextBtn = /** @type {HTMLElement | null} */ (document.querySelector('.slider-btn.next'));
 
     if (totalMedia <= 1) {
         if (prevBtn) prevBtn.style.display = 'none';
@@ -176,7 +180,7 @@ export function renderModalSlider(item) {
         if (mediaList.length > 0) {
             let slidesHtml = '';
             let thumbsHtml = '';
-            mediaList.forEach((url, index) => {
+            mediaList.forEach((/** @type {any} */ url, /** @type {number} */ index) => {
                 const cdnUrl = toCDN(url);
                 const isVideo = typeof cdnUrl === 'string' && cdnUrl.endsWith('.mp4');
                 let currentThumb = (item.thumbnails && item.thumbnails[index])
@@ -229,13 +233,13 @@ export function renderModalSlider(item) {
             });
 
             wrapper.innerHTML = slidesHtml;
-            wrapper.querySelectorAll('img.modal-slide-img').forEach(img => {
+            /** @type {NodeListOf<HTMLImageElement>} */ (wrapper.querySelectorAll('img.modal-slide-img')).forEach(img => {
                 if (img.complete && img.naturalWidth > 0) {
                     img.style.transition = 'none';
                     img.style.opacity = '1';
                     if (img.parentElement) {
-                        img.parentElement.setAttribute('data-pswp-width', img.naturalWidth);
-                        img.parentElement.setAttribute('data-pswp-height', img.naturalHeight);
+                        img.parentElement.setAttribute('data-pswp-width', String(img.naturalWidth));
+                        img.parentElement.setAttribute('data-pswp-height', String(img.naturalHeight));
                         img.parentElement.classList.remove('skeleton', 'img-8bit-loading');
                         const backdrop = img.parentElement.querySelector ? img.parentElement.querySelector('.slide-thumb-backdrop') : null;
                         if (backdrop) backdrop.remove();
@@ -252,7 +256,7 @@ export function renderModalSlider(item) {
     setSlide(0, false);
 
     if (mediaList.length > 0) {
-        mediaList.slice(0, 3).forEach((url, i) => {
+        mediaList.slice(0, 3).forEach((/** @type {any} */ url, /** @type {number} */ i) => {
             predecodeSlideImage(url, i === 0 ? 'high' : 'auto');
         });
     }
@@ -263,7 +267,7 @@ export function renderModalSlider(item) {
         if (!sliderWrap || typeof sliderWrap.querySelectorAll !== 'function') return;
         const slides = sliderWrap.querySelectorAll('.slide');
         const activeSlide = slides[getActiveSlideIndex()];
-        const activeVid = activeSlide ? activeSlide.querySelector('video.modal-video-player') : null;
+        const activeVid = /** @type {HTMLVideoElement | null} */ (activeSlide ? activeSlide.querySelector('video.modal-video-player') : null);
         if (!activeVid || typeof activeVid.play !== 'function') return;
         const playPromise = activeVid.play();
         if (playPromise !== undefined && typeof playPromise.catch === 'function') {
@@ -287,9 +291,10 @@ export function renderModalSlider(item) {
     if (wrapper && !wrapper._pswpClickBound) {
         wrapper._pswpClickBound = true;
         wrapper.addEventListener('click', (e) => {
-            const slide = e.target.closest('a.slide');
+            const target = /** @type {Element | null} */ (e.target);
+            const slide = target ? /** @type {HTMLElement | null} */ (target.closest('a.slide')) : null;
             if (!slide || !wrapper.contains(slide)) return;
-            if (e.target.closest('button, [data-action], video')) return;
+            if (target && target.closest('button, [data-action], video')) return;
             if (window._isSliderSwiping) return;
 
             e.preventDefault();
@@ -301,6 +306,7 @@ export function renderModalSlider(item) {
     }
 }
 
+/** @param {any[]} items */
 function createPhotoSwipeLightboxInstance(items) {
     const lightbox = new window.PhotoSwipeLightbox({
         dataSource: items,
@@ -357,27 +363,27 @@ export async function openProductPhotoZoom(targetSlideOrIndex) {
     const wrapper = document.getElementById('sliderWrapper');
     if (!wrapper) return;
 
-    const imageSlides = Array.from(wrapper.querySelectorAll('a.slide'));
+    const imageSlides = /** @type {HTMLAnchorElement[]} */ (Array.from(wrapper.querySelectorAll('a.slide')));
     if (imageSlides.length === 0) return;
 
     let targetIndex = 0;
     if (typeof targetSlideOrIndex === 'number') {
         targetIndex = Math.max(0, Math.min(targetSlideOrIndex, imageSlides.length - 1));
     } else if (targetSlideOrIndex && typeof targetSlideOrIndex.closest === 'function') {
-        const slideEl = targetSlideOrIndex.closest('a.slide');
-        const foundIdx = imageSlides.indexOf(slideEl);
+        const slideEl = /** @type {HTMLAnchorElement | null} */ (targetSlideOrIndex.closest('a.slide'));
+        const foundIdx = slideEl ? imageSlides.indexOf(slideEl) : -1;
         if (foundIdx >= 0) targetIndex = foundIdx;
     } else {
         const allSlides = Array.from(wrapper.querySelectorAll('.slide'));
         const activeSlide = allSlides.at(getActiveSlideIndex() || 0);
-        const foundIdx = imageSlides.indexOf(activeSlide);
+        const foundIdx = activeSlide ? imageSlides.indexOf(/** @type {HTMLAnchorElement} */ (activeSlide)) : -1;
         if (foundIdx >= 0) targetIndex = foundIdx;
     }
 
     const items = imageSlides.map(slide => {
         const img = slide.querySelector('img');
-        const parsedW = Number.parseInt(slide.getAttribute('data-pswp-width') || (img && img.naturalWidth) || 0, 10);
-        const parsedH = Number.parseInt(slide.getAttribute('data-pswp-height') || (img && img.naturalHeight) || 0, 10);
+        const parsedW = Number.parseInt(String(slide.getAttribute('data-pswp-width') || (img && img.naturalWidth) || 0), 10);
+        const parsedH = Number.parseInt(String(slide.getAttribute('data-pswp-height') || (img && img.naturalHeight) || 0), 10);
         const src = slide.href || slide.getAttribute('data-pswp-src') || (img && img.src);
         const msrc = (img && (img.currentSrc || img.src)) || src;
         return {
@@ -421,7 +427,7 @@ export async function openProductPhotoZoom(targetSlideOrIndex) {
  * Binds horizontal touch-swipe gestures on `#sliderContainer`.
  */
 export function initSliderSwipe() {
-    const sliderContainer = document.getElementById('sliderContainer');
+    const sliderContainer = /** @type {(HTMLElement & { _swipeBound?: boolean }) | null} */ (document.getElementById('sliderContainer'));
     if (!sliderContainer) return;
     if (sliderContainer._swipeBound) return;
     sliderContainer._swipeBound = true;

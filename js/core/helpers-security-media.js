@@ -163,7 +163,7 @@ export function sanitizeHtmlMediaUrl(rawUrl) {
         return null;
     }
 }
-if (typeof window !== 'undefined') window.sanitizeHtmlMediaUrl = sanitizeHtmlMediaUrl;
+if (typeof window !== 'undefined') /** @type {any} */ (window).sanitizeHtmlMediaUrl = sanitizeHtmlMediaUrl;
 
 /**
  * Returns true if rawUrl resolves to a safe media URL.
@@ -231,7 +231,7 @@ export function getOptimizedImg(item, thumb = true) {
         ? toCDN(item.images[0])
         : '';
 }
-if (typeof window !== 'undefined') window.getOptimizedImg = getOptimizedImg;
+if (typeof window !== 'undefined') /** @type {any} */ (window).getOptimizedImg = getOptimizedImg;
 
 registerActions({
     toCDN,
@@ -350,7 +350,6 @@ export async function ensurePhotoSwipe() {
             const [rawLightboxMod, rawPswpMod] = await Promise.all([
                 import('photoswipe/lightbox'),
                 import('photoswipe'),
-                // @ts-expect-error -- Vite handles CSS side-effect imports without .d.ts
                 import('photoswipe/style.css')
             ]);
             const lightboxMod = /** @type {any} */ (rawLightboxMod);

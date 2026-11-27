@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA DROP STATE & NAME AUTOFILL SANITIZER
 // ==========================================
@@ -15,6 +16,7 @@ function getReactiveStore() {
 }
 
 // Локальный fallback массива файлов предложки: объекты { file, url }
+/** @type {any[]} */
 let _proposalFiles = [];
 
 export function getProposalFiles() {
@@ -29,6 +31,7 @@ export function getProposalFiles() {
     return _proposalFiles;
 }
 
+/** @param {any[]} files */
 export function setProposalFiles(files) {
     const safeList = Array.isArray(files) ? files : [];
     _proposalFiles = safeList;
@@ -50,12 +53,12 @@ export function getStorage() {
 
 // Защита поля «Название вещи» от автозаполнения браузером ФИО покупателя (Chrome Autofill принимает поле за «имя»)
 export function sanitizeProposalNameField() {
-    const el = document.getElementById('propName');
+    const el = /** @type {HTMLInputElement | null} */ (document.getElementById('propName'));
     if (!el || el.dataset.userTyped === '1') return;
     const val = (el.value || '').trim();
     if (!val) return;
 
-    const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const norm = (/** @type {any} */ s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
     const store = getStorage();
     let cachedDelivery = null;
     try { cachedDelivery = store ? store.getJSON('nisha_profile_delivery', null) : null; } catch {}
@@ -65,9 +68,9 @@ export function sanitizeProposalNameField() {
         prof?.full_name,
         prof?.username,
         cachedDelivery?.full_name,
-        document.getElementById('orderName')?.value,
-        document.getElementById('profileDeliveryFullName')?.value,
-        document.getElementById('modalProfileDeliveryFullName')?.value
+        (/** @type {HTMLInputElement | null} */ (document.getElementById('orderName')))?.value,
+        (/** @type {HTMLInputElement | null} */ (document.getElementById('profileDeliveryFullName')))?.value,
+        (/** @type {HTMLInputElement | null} */ (document.getElementById('modalProfileDeliveryFullName')))?.value
     ].map(norm).filter(Boolean);
 
     if (knownNames.includes(norm(val))) {
@@ -82,12 +85,14 @@ export function initProposalNameGuard() {
 
     ['keydown', 'paste', 'compositionstart'].forEach(evtName => {
         document.addEventListener(evtName, (e) => {
-            if (e.target && e.target.id === 'propName') e.target.dataset.userTyped = '1';
+            const target = /** @type {HTMLElement | null} */ (e.target);
+            if (target && target.id === 'propName') target.dataset.userTyped = '1';
         }, true);
     });
     ['input', 'change', 'focusin'].forEach(evtName => {
         document.addEventListener(evtName, (e) => {
-            if (e.target && e.target.id === 'propName') sanitizeProposalNameField();
+            const target = /** @type {HTMLElement | null} */ (e.target);
+            if (target && target.id === 'propName') sanitizeProposalNameField();
         }, true);
     });
 }

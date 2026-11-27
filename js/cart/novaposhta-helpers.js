@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA NOVA POSHTA — HELPERS, PARSING, RANKING & DELIVERY COST
 // ==========================================
@@ -35,8 +36,8 @@ export const _npStripPrefix = (str) => _npNorm(str)
  * Обновляет видимость кнопок очистки (✕) для полей города и отделения.
  */
 export function updateNPClearButtons() {
-    const cityEl = document.getElementById('orderCity');
-    const branchEl = document.getElementById('orderBranch');
+    const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
+    const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
     const clearCityBtn = document.getElementById('clearOrderCityBtn');
     const clearBranchBtn = document.getElementById('clearOrderBranchBtn');
     if (clearCityBtn && cityEl) {
@@ -59,20 +60,20 @@ export function bindTouchTapSelect(el, handler) {
     let moved = false;
     let startTime = 0;
 
-    const onStart = (cx, cy) => {
+    const onStart = (/** @type {number} */ cx, /** @type {number} */ cy) => {
         startX = cx;
         startY = cy;
         moved = false;
         startTime = Date.now();
     };
 
-    const onMove = (cx, cy) => {
+    const onMove = (/** @type {number} */ cx, /** @type {number} */ cy) => {
         if (Math.hypot(cx - startX, cy - startY) > 24) {
             moved = true;
         }
     };
 
-    const onEnd = (ev) => {
+    const onEnd = (/** @type {Event} */ ev) => {
         const duration = Date.now() - startTime;
         if (!moved && duration < 800) {
             if (ev.cancelable && typeof ev.preventDefault === 'function') ev.preventDefault();
@@ -118,8 +119,8 @@ export function bindTouchTapSelect(el, handler) {
  * @param {string} inputId
  */
 export function bindDropdownScrollDismissKeyboard(dropdown, inputId) {
-    if (!dropdown || dropdown._scrollDismissBound || typeof dropdown.addEventListener !== 'function') return;
-    dropdown._scrollDismissBound = true;
+    if (!dropdown || (/** @type {any} */ (dropdown))._scrollDismissBound || typeof dropdown.addEventListener !== 'function') return;
+    (/** @type {any} */ (dropdown))._scrollDismissBound = true;
     let startY = 0;
     let startX = 0;
     let isDismissing = false;
@@ -170,7 +171,7 @@ export function scrollNPFieldIntoModalView(inputEl) {
 
 /**
  * Извлекает реальный номер отделения или почтомата (после №), игнорируя вес и номер дома.
- * @param {object} branch
+ * @param {any} branch
  * @returns {string}
  */
 export function extractBranchNumber(branch) {
@@ -179,14 +180,14 @@ export function extractBranchNumber(branch) {
     const desc = String(branch.Description || '');
     const m = desc.match(/№\s*(\d+[а-яa-zіїєґ]?)/i);
     if (m) return m[1].toLowerCase();
-    const head = desc.split(':').at(0).replace(/\([^)]*\)/g, '');
+    const head = (desc.split(':').at(0) || '').replace(/\([^)]*\)/g, '');
     const hm = head.match(/\b(\d+)\b/);
     return hm ? hm[1].toLowerCase() : '';
 }
 
 /**
  * Определяет, является ли точка Новой Почты почтоматом.
- * @param {object} branch
+ * @param {any} branch
  * @returns {boolean}
  */
 export function isPostomatBranch(branch) {
@@ -239,9 +240,9 @@ export function parseNPBranchQuery(rawQuery) {
 
 /**
  * Умная фильтрация и ранжирование отделений/почтоматов.
- * @param {object[]} list
+ * @param {any[]} list
  * @param {string} rawQuery
- * @returns {object[]}
+ * @returns {any[]}
  */
 export function filterAndSortBranches(list, rawQuery) {
     if (!Array.isArray(list) || list.length === 0) return [];
@@ -296,7 +297,7 @@ export function filterAndSortBranches(list, rawQuery) {
         }
     }
 
-    const sortBranchesFn = (a, b) => {
+    const sortBranchesFn = (/** @type {any} */ a, /** @type {any} */ b) => {
         if (b.score !== a.score) return b.score - a.score;
         if (a.numVal !== b.numVal) return a.numVal - b.numVal;
         return a.idx - b.idx;
@@ -308,12 +309,12 @@ export function filterAndSortBranches(list, rawQuery) {
             ? scored.toSorted(sortBranchesFn)
             : [...scored].sort(sortBranchesFn));
 
-    return sortedScored.map(s => s.branch);
+    return sortedScored.map((/** @type {any} */ s) => s.branch);
 }
 
 /**
  * Выполняет запрос к прокси Новой Почты.
- * @param {object} methodProperties
+ * @param {any} methodProperties
  * @param {string} calledMethod
  * @returns {Promise<any>}
  */
@@ -327,7 +328,7 @@ export async function npProxyRequest(methodProperties, calledMethod) {
 
 /**
  * Запрашивает страницу отделений с автоматическим повтором при 429/сбоях.
- * @param {object} props
+ * @param {any} props
  * @returns {Promise<any>}
  */
 export async function npFetchPage(props) {
@@ -337,7 +338,7 @@ export async function npFetchPage(props) {
             return await npProxyRequest(props, 'getWarehouses');
         } catch (e) {
             lastErr = e;
-            await sleep(e && e.status === 429 ? 1500 : 800);
+            await sleep(e && (/** @type {any} */ (e)).status === 429 ? 1500 : 800);
         }
     }
     throw lastErr;
@@ -361,8 +362,8 @@ export function resetCheckoutAddressState() {
     setSelectedBranchRefState('');
     if (typeof window !== 'undefined') window.selectedSettlementRef = '';
     cartState.cachedBranches = [];
-    const cityEl = document.getElementById('orderCity');
-    const branchEl = document.getElementById('orderBranch');
+    const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
+    const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
     if (cityEl) cityEl.value = '';
     if (branchEl) branchEl.value = '';
     updateNPClearButtons();

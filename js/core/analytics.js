@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRIVACY-FIRST ANALYTICS SERVICE (Plausible + PostHog + TikTok Pixel Facade)
 // ==========================================
@@ -14,6 +15,7 @@
     let _clarityLoaded = false;
     let _tiktokLoaded = false;
     let _lastIdentifiedUserId = '';
+    /** @type {ReturnType<typeof setInterval> | null} */
     let _dropLockTimerId = null;
     let _flagLangListenerBound = false;
     const FLAG_CACHE_KEY = 'nisha_ph_flags_cache';
@@ -28,6 +30,11 @@
         return 'ua';
     }
 
+    /**
+     * @param {any} payload
+     * @param {string} baseKey
+     * @param {Record<string, string>} fallbacks
+     */
     function pickLocalizedText(payload, baseKey, fallbacks) {
         const lang = getCurrentFlagLang();
         if (payload && typeof payload === 'object') {
@@ -51,6 +58,10 @@
         }
     }
 
+    /**
+     * @param {any} flagsObj
+     * @param {any} payloadsObj
+     */
     function writeCachedFlags(flagsObj, payloadsObj) {
         try {
             if (typeof localStorage !== 'undefined') {
@@ -144,6 +155,7 @@
         p.textContent = subtitle;
         body.appendChild(p);
 
+        /** @type {HTMLSpanElement[]} */
         let numEls = [];
         if (Number.isFinite(unlockMs)) {
             const timerGrid = document.createElement('div');
@@ -216,11 +228,12 @@
         // 3. Рубильник наложенного платежа (default: enabled)
         const codEnabled = isFeatureEnabled('enable_cod_payment', true);
         const codOptions = document.querySelectorAll('#paymentDropdown .payment-dropdown-option[data-i18n="checkout.payment_cod"], #paymentDropdown [data-payment-method*="200"]');
-        codOptions.forEach(opt => {
+        codOptions.forEach((rawOpt) => {
+            const opt = /** @type {HTMLElement} */ (rawOpt);
             if (opt && opt.style) opt.style.display = codEnabled ? '' : 'none';
         });
         if (!codEnabled) {
-            const pmInput = document.getElementById('orderPaymentMethod');
+            const pmInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPaymentMethod'));
             const pmText = document.getElementById('paymentSelectedText');
             const curVal = pmInput ? String(pmInput.value || '').toLowerCase() : '';
             if (curVal.includes('200') || curVal.includes('налож') || curVal.includes('наклад') || curVal.includes('cod')) {
@@ -236,8 +249,8 @@
 
         // 4. Рубильник поля промокодов в чекауте (default: enabled)
         const promoCodesEnabled = isFeatureEnabled('enable_promo_codes', true);
-        const promoLabel = document.querySelector('#checkoutModal label[data-i18n="checkout.promo"]');
-        const promoWrap = document.querySelector('#checkoutModal .promo-wrapper');
+        const promoLabel = /** @type {HTMLElement | null} */ (document.querySelector('#checkoutModal label[data-i18n="checkout.promo"]'));
+        const promoWrap = /** @type {HTMLElement | null} */ (document.querySelector('#checkoutModal .promo-wrapper'));
         const promoMsg = document.getElementById('promoMessage');
         if (promoLabel && promoLabel.style) promoLabel.style.display = promoCodesEnabled ? '' : 'none';
         if (promoWrap && promoWrap.style) promoWrap.style.display = promoCodesEnabled ? '' : 'none';
@@ -298,6 +311,12 @@
                     ? `ДО БЕСПЛАТНОЙ ДОСТАВКИ: +${remainingFormatted}`
                     : `ДО БЕЗКОШТОВНОЇ ДОСТАВКИ: +${remainingFormatted}`));
 
+        /**
+         * @param {string} barId
+         * @param {Node | null} parentEl
+         * @param {Node | null} anchorEl
+         * @param {string} [extraClass='']
+         */
         const renderBar = (barId, parentEl, anchorEl, extraClass = '') => {
             if (!parentEl) return;
             let bar = document.getElementById(barId);
@@ -323,7 +342,7 @@
             bar.classList.toggle('is-unlocked', isUnlocked);
             const txtEl = bar.querySelector('.nisha-free-ship-text');
             if (txtEl) txtEl.textContent = labelText;
-            const fillEl = bar.querySelector('.nisha-free-ship-fill');
+            const fillEl = /** @type {HTMLElement | null} */ (bar.querySelector('.nisha-free-ship-fill'));
             if (fillEl) fillEl.style.width = `${pct}%`;
         };
 
@@ -343,7 +362,8 @@
         try {
             // 1. Рубильник предложки DROP_ITEM.EXE (default: enabled)
             const dropEnabled = isFeatureEnabled('enable_drop_propose', true);
-            document.querySelectorAll('[data-action="open-propose-modal"]').forEach(el => {
+            document.querySelectorAll('[data-action="open-propose-modal"]').forEach((rawEl) => {
+                const el = /** @type {HTMLElement} */ (rawEl);
                 if (el && el.style) el.style.display = dropEnabled ? '' : 'none';
             });
 
@@ -390,6 +410,7 @@
         } catch {}
     }
 
+    /** @param {any} flagsMap */
     function notifyFlagListeners(flagsMap) {
         applyBuiltinFeatureFlags();
         _flagListeners.forEach(cb => {
@@ -402,7 +423,7 @@
         window.plausible = window.plausible || function () {
             (window.plausible.q = window.plausible.q || []).push(arguments);
         };
-        window.plausible.init = window.plausible.init || function (i) {
+        window.plausible.init = window.plausible.init || function (/** @type {any} */ i) {
             window.plausible.o = i || {};
         };
     }
@@ -455,17 +476,18 @@
 
                 // Опциональная инициализация PostHog, если задан ключ в window.ENV.POSTHOG_KEY
                 if (cfg.posthogKey && typeof window.posthog === 'undefined') {
-                    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init identify capture register register_once register_for_session unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+                    (function(/** @type {any} */ t, /** @type {any} */ e){/** @type {any} */ var o,/** @type {any} */ n,/** @type {any} */ p,/** @type {any} */ r;e.__SV||(window.posthog=e,e._i=[],e.init=function(/** @type {any} */ i,/** @type {any} */ s,/** @type {any} */ a){function g(/** @type {any} */ t,/** @type {any} */ e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);/** @type {any} */ var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(/** @type {any} */ t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init identify capture register register_once register_for_session unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)})(document,/** @type {any} */ (window.posthog||[]));
                     window.posthog.init(cfg.posthogKey, {
                         api_host: cfg.posthogHost,
                         persistence: 'localStorage', // Без cookies, но со стабильным distinct_id для A/B-тестов
                         person_profiles: 'identified_only',
                         capture_pageview: true,
                         capture_pageleave: true,
-                        loaded: (ph) => {
+                        loaded: (/** @type {any} */ ph) => {
                             if (ph && typeof ph.onFeatureFlags === 'function') {
-                                ph.onFeatureFlags((flagKeys, flagVariants) => {
+                                ph.onFeatureFlags((/** @type {any} */ flagKeys, /** @type {any} */ flagVariants) => {
                                     const variants = (flagVariants && typeof flagVariants === 'object') ? flagVariants : {};
+                                    /** @type {Record<string, any>} */
                                     const payloads = {};
                                     const keys = Array.isArray(flagKeys) ? flagKeys : Object.keys(variants);
                                     keys.forEach((k) => {
@@ -515,6 +537,7 @@
 
     /**
      * Просмотр карточки товара (воронка: шаг 1)
+     * @param {any} item
      */
     function trackProductView(item) {
         if (!item || typeof item !== 'object') return;
@@ -544,6 +567,7 @@
 
     /**
      * Добавление товара в корзину (воронка: шаг 2)
+     * @param {any} item
      */
     function trackAddToCart(item) {
         if (!item || typeof item !== 'object') return;
@@ -570,6 +594,7 @@
 
     /**
      * Открытие окна оформления заказа (воронка: шаг 3)
+     * @param {any[]} [cartItems=[]]
      */
     function trackCheckoutStart(cartItems = []) {
         const items = Array.isArray(cartItems) ? cartItems : [];
@@ -594,6 +619,7 @@
 
     /**
      * Успешное оформление заказа (воронка: шаг 4 / конверсия)
+     * @param {{ orderId?: string, items?: any[], value?: number, paymentMethod?: string }} [opts={}]
      */
     function trackPurchase({ orderId = '', items = [], value = 0, paymentMethod = '' } = {}) {
         const safeItems = Array.isArray(items) ? items : [];
@@ -640,6 +666,8 @@
 
     /**
      * Добавление/удаление из избранного
+     * @param {any} itemId
+     * @param {boolean} [isAdded=true]
      */
     function trackFavorite(itemId, isAdded = true) {
         track(isAdded ? 'Favorite Added' : 'Favorite Removed', {
@@ -822,8 +850,9 @@
         window.analytics = analyticsApi;
     }
     if (typeof globalThis !== 'undefined') {
-        globalThis.analytics = analyticsApi;
-        globalThis.trackEvent = track;
+        const g = /** @type {any} */ (globalThis);
+        g.analytics = analyticsApi;
+        g.trackEvent = track;
     }
 
     // Отложенная загрузка сторонних тегов (Microsoft Clarity + TikTok Pixel) вне index.html (для строгого CSP без unsafe-inline)
@@ -851,16 +880,16 @@
             window.TiktokAnalyticsObject = 'ttq';
             const ttq = window.ttq = window.ttq || [];
             ttq.methods = ['page', 'track', 'identify', 'instances', 'debug', 'on', 'off', 'once', 'ready', 'alias', 'group', 'enableCookie', 'disableCookie', 'holdConsent', 'revokeConsent', 'grantConsent'];
-            ttq.setAndDefer = function (t, e) {
+            ttq.setAndDefer = function (/** @type {any} */ t, /** @type {any} */ e) {
                 t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))); };
             };
             for (let i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
-            ttq.instance = function (t) {
+            ttq.instance = function (/** @type {any} */ t) {
                 const e = ttq._i[t] || [];
                 for (let n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
                 return e;
             };
-            ttq.load = function (e, n) {
+            ttq.load = function (/** @type {any} */ e, /** @type {any} */ n) {
                 const r = 'https://analytics.tiktok.com/i18n/pixel/events.js';
                 ttq._i = ttq._i || {};
                 ttq._i[e] = [];

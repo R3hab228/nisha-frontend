@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA DROP IMAGES: COMPRESSION, PREVIEWS & LIGHTBOX
 // ==========================================
@@ -5,12 +6,15 @@
 import { getProposalFiles, setProposalFiles } from './drop-state.js';
 import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
+/** @type {any} */
 let proposalSortable = null;
 const BG_COMPRESS_CONCURRENCY = 2;
+/** @type {Array<{ item: any, resolve: (val: any) => void }>} */
 const bgCompressQueue = [];
 let bgCompressActive = 0;
 
 const BG_PREUPLOAD_CONCURRENCY = 2;
+/** @type {Array<{ item: any, file: any, resolve: (val: any) => void }>} */
 const bgPreuploadQueue = [];
 let bgPreuploadActive = 0;
 
@@ -42,7 +46,7 @@ function pumpBackgroundPreupload() {
             retries: 0,
             signal: ctrl ? ctrl.signal : undefined
         })
-            .then(async (res) => {
+            .then(async (/** @type {any} */ res) => {
                 if (!res || !res.ok || job.item._cancelled) return null;
                 const data = await res.json().catch(() => null);
                 const url = data && data.success && typeof data.url === 'string' ? data.url : null;
@@ -52,7 +56,7 @@ function pumpBackgroundPreupload() {
                 return url;
             })
             .catch(() => null)
-            .then((url) => job.resolve(url))
+            .then((/** @type {any} */ url) => job.resolve(url))
             .finally(() => {
                 job.item._uploadAbortCtrl = null;
                 bgPreuploadActive = Math.max(0, bgPreuploadActive - 1);
@@ -61,6 +65,10 @@ function pumpBackgroundPreupload() {
     }
 }
 
+/**
+ * @param {any} itemObj
+ * @param {any} fileToUpload
+ */
 function scheduleBackgroundPreupload(itemObj, fileToUpload) {
     if (!itemObj || itemObj._cancelled || !fileToUpload) return null;
     if (typeof window === 'undefined' || !window.apiClient || typeof window.apiClient.fetchRaw !== 'function') {
@@ -102,6 +110,7 @@ function pumpBackgroundCompression() {
     }
 }
 
+/** @param {any} itemObj */
 function scheduleBackgroundCompression(itemObj) {
     if (!itemObj || !itemObj.file) return null;
     const isVid = (itemObj.file.type && itemObj.file.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(itemObj.file.name || '');
@@ -118,6 +127,12 @@ function scheduleBackgroundCompression(itemObj) {
     return promise;
 }
 
+/**
+ * @param {HTMLCanvasElement} canvas
+ * @param {string} mimeType
+ * @param {number} quality
+ * @returns {Promise<Blob | null>}
+ */
 function canvasToBlobAsync(canvas, mimeType, quality) {
     return new Promise((resolve) => {
         try {
@@ -132,6 +147,11 @@ const CLIENT_COMPRESS_MAX_SIZE = 1000;
 const CLIENT_COMPRESS_WEBP_QUALITY = 0.82;
 const CLIENT_COMPRESS_JPEG_QUALITY = 0.78;
 
+/**
+ * @param {number} width
+ * @param {number} height
+ * @param {number} [maxSize]
+ */
 function computeResizedDimensions(width, height, maxSize = CLIENT_COMPRESS_MAX_SIZE) {
     let targetW = width;
     let targetH = height;
@@ -149,6 +169,7 @@ function computeResizedDimensions(width, height, maxSize = CLIENT_COMPRESS_MAX_S
     };
 }
 
+/** @param {File} file */
 async function compressWithOffscreenCanvas(file) {
     if (typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') return null;
     let bitmap = null;
@@ -184,6 +205,7 @@ async function compressWithOffscreenCanvas(file) {
 }
 
 // Сжатие фото (OffscreenCanvas + createImageBitmap fast-path или <canvas> fallback: WebP max 1600px)
+/** @param {File} file */
 export async function compressImage(file) {
     if (!file || (file.type && file.type.startsWith('video/'))) return file;
 
@@ -194,7 +216,7 @@ export async function compressImage(file) {
 
     let settled = false;
     const objectUrl = URL.createObjectURL(file);
-    const finish = (resultFile) => {
+    const finish = (/** @type {File} */ resultFile) => {
         if (settled) return;
         settled = true;
         try { URL.revokeObjectURL(objectUrl); } catch {}
@@ -269,6 +291,7 @@ export async function compressImage(file) {
 }
 
 // Добавление новых файлов (до 5 шт)
+/** @param {File[]} newFiles */
 export function handleNewProposalFiles(newFiles) {
     if (!newFiles || newFiles.length === 0) return;
 
@@ -313,6 +336,10 @@ export function handleNewProposalFiles(newFiles) {
 }
 
 // Открытие фото в полный экран через PhotoSwipe
+/**
+ * @param {number} index
+ * @param {Element | null} [element]
+ */
 export async function openProposalPhotoByIndex(index, element = null) {
     let targetIndex = index;
     if (element) {
@@ -360,6 +387,10 @@ export async function openProposalPhotoByIndex(index, element = null) {
 }
 
 // Удаление файла из предложки с освобождением памяти
+/**
+ * @param {number} index
+ * @param {Element | null} [element]
+ */
 export function removeProposalFile(index, element = null) {
     let targetIndex = index;
     if (element && typeof element.closest === 'function') {
@@ -407,7 +438,7 @@ export function renderProposalPreviews() {
         files.forEach((item, index) => {
             const img = document.createElement('div');
             img.className = 'preview-img';
-            img.setAttribute('data-index', index);
+            img.setAttribute('data-index', String(index));
             img.setAttribute('data-action', 'preview-proposal-photo');
             img.setAttribute('title', 'Нажмите, чтобы просмотреть');
 
@@ -422,7 +453,7 @@ export function renderProposalPreviews() {
             delBtn.innerHTML = '✖';
             delBtn.className = 'preview-del-btn';
             delBtn.setAttribute('data-action', 'delete-proposal-photo');
-            delBtn.setAttribute('data-index', index);
+            delBtn.setAttribute('data-index', String(index));
             delBtn.setAttribute('title', 'Удалить');
 
             if (typeof delBtn.addEventListener === 'function') {
@@ -477,17 +508,17 @@ export function renderProposalPreviews() {
                     if (isTouchDevice) {
                         if (typeof triggerHaptic === 'function') triggerHaptic('medium');
                         document.body.classList.add('sort-lock');
-                        const modalWin = document.querySelector('#proposeModal .modal-window');
+                        const modalWin = /** @type {HTMLElement | null} */ (document.querySelector('#proposeModal .modal-window'));
                         if (modalWin) {
                             modalWin.style.overflow = 'hidden';
                             modalWin.style.touchAction = 'none';
                         }
                     }
                 },
-                onEnd: function (evt) {
+                onEnd: function (/** @type {any} */ evt) {
                     if (isTouchDevice) {
                         document.body.classList.remove('sort-lock');
-                        const modalWin = document.querySelector('#proposeModal .modal-window');
+                        const modalWin = /** @type {HTMLElement | null} */ (document.querySelector('#proposeModal .modal-window'));
                         if (modalWin) {
                             modalWin.style.overflow = 'auto';
                             modalWin.style.touchAction = 'auto';
@@ -501,9 +532,9 @@ export function renderProposalPreviews() {
                     setProposalFiles(nextFiles);
 
                     container.querySelectorAll('.preview-img').forEach((el, idx) => {
-                        el.setAttribute('data-index', idx);
+                        el.setAttribute('data-index', String(idx));
                         const btn = el.querySelector('.preview-del-btn');
-                        if (btn) btn.setAttribute('data-index', idx);
+                        if (btn) btn.setAttribute('data-index', String(idx));
                     });
                 }
             });

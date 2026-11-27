@@ -1,11 +1,16 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — SMART FEED SCROLL RESTORATION ENGINE
 // ==========================================
 
 const FEED_SCROLL_STORAGE_KEY = 'nisha_feed_scroll_v1';
+/** @type {number | null} */
 let _saveScrollRafId = null;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _saveScrollTimeout = null;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _scrollRestoredBadgeTimeout = null;
+/** @type {AbortController | null} */
 let _scrollBadgeCtrl = null;
 
 /**
@@ -17,7 +22,7 @@ export function isAnyModalActive() {
     if (document.body && document.body.style && document.body.style.overflow === 'hidden') return true;
     const modals = document.querySelectorAll('.modal-overlay');
     for (let i = 0; i < modals.length; i++) {
-        const m = modals[i];
+        const m = /** @type {HTMLElement} */ (modals[i]);
         if (m.classList.contains('closing')) continue;
         if (m.classList.contains('is-open') || m.style.display === 'flex' || m.style.display === 'block') {
             return true;
@@ -41,7 +46,7 @@ export function saveCurrentFeedScrollState(preferredActiveItemId = null) {
     if (!activeItemId && effectiveScrollY > 100 && typeof document !== 'undefined') {
         const cards = document.querySelectorAll('#itemsGrid .item-card');
         for (let i = 0; i < cards.length; i++) {
-            const card = cards[i];
+            const card = /** @type {HTMLElement} */ (cards[i]);
             const rect = card.getBoundingClientRect();
             if (rect.top >= -100 && rect.top <= window.innerHeight * 0.5) {
                 activeItemId = card.dataset.id || null;
@@ -50,7 +55,7 @@ export function saveCurrentFeedScrollState(preferredActiveItemId = null) {
         }
     }
 
-    const searchEl = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
+    const searchEl = typeof document !== 'undefined' ? /** @type {HTMLInputElement | null} */ (document.getElementById('mainSearch')) : null;
     const state = {
         scrollY: effectiveScrollY,
         renderedCount: window.renderedCount || 0,
@@ -74,7 +79,7 @@ export function scheduleFeedScrollSave() {
     if (_saveScrollRafId) cancelAnimationFrame(_saveScrollRafId);
     _saveScrollRafId = requestAnimationFrame(() => {
         _saveScrollRafId = null;
-        clearTimeout(_saveScrollTimeout);
+        if (_saveScrollTimeout !== null) clearTimeout(_saveScrollTimeout);
         _saveScrollTimeout = setTimeout(() => {
             saveCurrentFeedScrollState();
         }, 120);
@@ -83,7 +88,7 @@ export function scheduleFeedScrollSave() {
 
 /**
  * Возвращает сохранённое состояние скролла ленты, если оно ещё не устарело (TTL 4 часа).
- * @returns {object|null}
+ * @returns {any}
  */
 export function getSavedFeedScrollState() {
     if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return null;
@@ -141,7 +146,7 @@ export function showScrollRestoredBadge() {
 
 /**
  * Восстанавливает сохранённую позицию скролла с поправкой на актуальную карточку в DOM.
- * @param {object} state
+ * @param {any} state
  */
 export function restoreFeedScrollPosition(state) {
     if (!state || typeof state.scrollY !== 'number' || state.scrollY <= 0) return;
@@ -152,7 +157,7 @@ export function restoreFeedScrollPosition(state) {
     requestAnimationFrame(() => {
         let exactY = targetY;
         if (activeItemId && typeof document !== 'undefined') {
-            const cardEl = document.querySelector(`#itemsGrid .item-card[data-id="${activeItemId}"]`);
+            const cardEl = /** @type {HTMLElement | null} */ (document.querySelector(`#itemsGrid .item-card[data-id="${activeItemId}"]`));
             if (cardEl) {
                 const cardTop = cardEl.offsetTop;
                 if (cardTop > 0 && Math.abs(cardTop - targetY) < 500) {
@@ -162,16 +167,18 @@ export function restoreFeedScrollPosition(state) {
         }
 
         window.scrollTo({ top: exactY, behavior: 'instant' });
-        if (typeof window.lenis !== 'undefined' && window.lenis && typeof window.lenis.scrollTo === 'function') {
-            window.lenis.scrollTo(exactY, { immediate: true });
+        const lenisInst = /** @type {any} */ (window.lenis);
+        if (typeof lenisInst !== 'undefined' && lenisInst && typeof lenisInst.scrollTo === 'function') {
+            lenisInst.scrollTo(exactY, { immediate: true });
         }
 
         setTimeout(() => {
             const currentY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
             if (Math.abs(currentY - exactY) > 80) {
                 window.scrollTo({ top: exactY, behavior: 'instant' });
-                if (typeof window.lenis !== 'undefined' && window.lenis && typeof window.lenis.scrollTo === 'function') {
-                    window.lenis.scrollTo(exactY, { immediate: true });
+                const lenisRetry = /** @type {any} */ (window.lenis);
+                if (typeof lenisRetry !== 'undefined' && lenisRetry && typeof lenisRetry.scrollTo === 'function') {
+                    lenisRetry.scrollTo(exactY, { immediate: true });
                 }
             }
             showScrollRestoredBadge();
@@ -188,6 +195,6 @@ if (typeof window !== 'undefined') {
     if ('onscrollend' in window) {
         window.addEventListener('scrollend', () => saveCurrentFeedScrollState(), { passive: true });
     } else {
-        window.addEventListener('scroll', scheduleFeedScrollSave, { passive: true });
+        /** @type {Window} */ (window).addEventListener('scroll', scheduleFeedScrollSave, { passive: true });
     }
 }

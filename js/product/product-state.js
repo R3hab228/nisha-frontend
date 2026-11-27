@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT SHARED STATE, SEO, PRE-WARM & SCORING MODULE
 // ==========================================
@@ -29,7 +30,7 @@ if (typeof window !== 'undefined' && typeof window.currentOpenedItem === 'undefi
 
 /**
  * Returns the currently active product item from reactive store, window, or shared state.
- * @returns {object|null}
+ * @returns {any}
  */
 export function getActiveOpenedItem() {
     const s = getReactiveStore();
@@ -45,7 +46,7 @@ export function getActiveOpenedItem() {
 
 /**
  * Sets the active product item in reactive store, shared state, and window global.
- * @param {object|null} item
+ * @param {any} item
  */
 export function setActiveOpenedItem(item) {
     const next = item || null;
@@ -83,7 +84,7 @@ export function setActiveSlideIndex(index) {
 /**
  * Resolves CDN image URL via global toCDN helper when available.
  * @param {string} u
- * @param {object} [opts]
+ * @param {any} [opts]
  * @returns {string}
  */
 export function toCDN(u, opts) {
@@ -100,7 +101,7 @@ export function getFavs() {
 
 /**
  * Returns authenticated user or null.
- * @returns {object|null}
+ * @returns {any}
  */
 export function getUser() {
     return getRuntimeUser();
@@ -116,17 +117,18 @@ export function getFingerprint() {
 
 /**
  * Returns Supabase client if available.
- * @returns {object|null}
+ * @returns {any}
  */
 export function getSupabaseClient() {
-    if (typeof getSupabase === 'function') return getSupabase();
+    const globalGetSupabase = /** @type {any} */ (globalThis).getSupabase;
+    if (typeof globalGetSupabase === 'function') return globalGetSupabase();
     if (hasAction('getSupabase')) return invokeAction('getSupabase');
     return (typeof window !== 'undefined' && window.supabaseClient) || null;
 }
 
 /**
  * Returns in-memory catalog array.
- * @returns {object[]}
+ * @returns {any[]}
  */
 export function getCatalogItems() {
     if (typeof getCatalog === 'function') return getCatalog();
@@ -136,7 +138,7 @@ export function getCatalogItems() {
 
 /**
  * Returns persistent storage wrapper if present.
- * @returns {object|null}
+ * @returns {any}
  */
 export function getStore() {
     return getRuntimeStorage();
@@ -144,7 +146,7 @@ export function getStore() {
 
 /**
  * Returns current active cart array safely.
- * @returns {object[]}
+ * @returns {any[]}
  */
 export function getActiveCartSafe() {
     if (hasAction('getActiveCart')) {
@@ -181,7 +183,7 @@ export function getEscAttr(s) {
 
 /**
  * Extracts bargain eligibility and minimum accepted price from an item.
- * @param {object|null} item
+ * @param {any} item
  * @returns {{ hasBargain: boolean, itemMinBargain: number|null }}
  */
 export function parseItemBargainInfo(item) {
@@ -195,7 +197,7 @@ export function parseItemBargainInfo(item) {
 /**
  * Reads persisted bargain offer state (declined, accepted, or valid 24h pending) for an item.
  * @param {string|number} itemId
- * @returns {{ isAcceptedBargain: boolean, isDeclinedBargain: boolean, isPendingBargain: boolean, acceptedData: object|null }}
+ * @returns {{ isAcceptedBargain: boolean, isDeclinedBargain: boolean, isPendingBargain: boolean, acceptedData: any }}
  */
 export function getBargainOfferState(itemId) {
     let isAcceptedBargain = false;
@@ -206,7 +208,7 @@ export function getBargainOfferState(itemId) {
     if (isBargainDeclined(itemId)) {
         isDeclinedBargain = true;
     } else {
-        const savedAcc = getAcceptedBargain(itemId);
+        const savedAcc = /** @type {any} */ (getAcceptedBargain(itemId));
         if (savedAcc && savedAcc.acceptedPrice) {
             isAcceptedBargain = true;
             acceptedData = savedAcc;
@@ -221,13 +223,13 @@ export function getBargainOfferState(itemId) {
 
 /**
  * Updates #modalOfferPriceBtn visual state uniformly.
- * @param {HTMLElement|null} offerPriceBtn
+ * @param {any} offerPriceBtn
  * @param {'declined'|'accepted'|'pending'|'default'} state
  * @param {string} [labelOverride]
  */
 export function applyOfferButtonState(offerPriceBtn, state, labelOverride) {
     if (!offerPriceBtn) return;
-    const t = (key, def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
+    const t = (/** @type {string} */ key, /** @type {string} */ def) => (typeof i18next !== 'undefined' && typeof i18next.t === 'function')
         ? i18next.t(key, { defaultValue: def })
         : def;
 
@@ -273,8 +275,8 @@ export function applyOfferButtonState(offerPriceBtn, state, labelOverride) {
 
 /**
  * Computes multi-factor similarity score between two catalog items.
- * @param {object} source
- * @param {object} target
+ * @param {any} source
+ * @param {any} target
  * @returns {number}
  */
 export function computeItemSimilarity(source, target) {
@@ -314,11 +316,11 @@ export function computeItemSimilarity(source, target) {
     }
 
     // 6. Теги (до +20)
-    const srcTags = Array.isArray(source.tags) ? source.tags.map(t => String(t).toLowerCase().trim()) : [];
-    const tgtTags = Array.isArray(target.tags) ? target.tags.map(t => String(t).toLowerCase().trim()) : [];
+    const srcTags = Array.isArray(source.tags) ? source.tags.map((/** @type {any} */ t) => String(t).toLowerCase().trim()) : [];
+    const tgtTags = Array.isArray(target.tags) ? target.tags.map((/** @type {any} */ t) => String(t).toLowerCase().trim()) : [];
     if (srcTags.length > 0 && tgtTags.length > 0) {
         let tagMatches = 0;
-        srcTags.forEach(t => {
+        srcTags.forEach((/** @type {string} */ t) => {
             if (tgtTags.includes(t)) tagMatches++;
         });
         score += Math.min(20, tagMatches * 10);
@@ -337,7 +339,9 @@ export function computeItemSimilarity(source, target) {
 // ==========================================
 export const _prewarmedItemDetails = new Map();
 export const _prewarmedImagesSet = new Set();
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _prewarmDebounceTimer = null;
+/** @type {string | null} */
 let _prewarmPendingId = null;
 
 /**
@@ -361,7 +365,7 @@ export function isDataSaverActive() {
 /**
  * Fetches full product details from Supabase `items` or `archived_items` with legacy column fallback.
  * @param {string|number} itemId
- * @returns {Promise<object|null>}
+ * @returns {Promise<any>}
  */
 export async function fetchFullItemFromDb(itemId) {
     const sb = getSupabaseClient();
@@ -394,7 +398,7 @@ export async function fetchFullItemFromDb(itemId) {
 /**
  * Speculatively fetches and caches full item details in LRU-capped map.
  * @param {string|number} itemId
- * @returns {Promise<object|null>}
+ * @returns {Promise<any>}
  */
 export function prewarmItemDetails(itemId) {
     if (!itemId) return Promise.resolve(null);
@@ -447,6 +451,11 @@ export function prewarmProductModal(id, immediate = false) {
 
         // 3. Предзагрузка первых двух полноразмерных фото и миниатюр галереи в кэш браузера (если не Save-Data)
         if (item && !isDataSaverActive()) {
+            /**
+             * @param {any} rawUrl
+             * @param {any} [opts]
+             * @param {'auto' | 'high' | 'low'} [priority]
+             */
             const preloadMedia = (rawUrl, opts = {}, priority = 'auto') => {
                 if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.endsWith('.mp4')) return;
                 const cdnUrl = typeof toCDN === 'function' ? toCDN(rawUrl, opts) : rawUrl;
@@ -467,12 +476,12 @@ export function prewarmProductModal(id, immediate = false) {
                 ? item.images
                 : (Array.isArray(item.thumbnails) ? item.thumbnails : []);
 
-            mediaList.slice(0, 2).forEach((url, idx) => {
+            mediaList.slice(0, 2).forEach((/** @type {any} */ url, /** @type {number} */ idx) => {
                 preloadMedia(url, {}, idx === 0 ? 'high' : 'auto');
             });
 
             if (Array.isArray(item.thumbnails)) {
-                item.thumbnails.slice(0, 5).forEach(thumbUrl => {
+                item.thumbnails.slice(0, 5).forEach((/** @type {any} */ thumbUrl) => {
                     preloadMedia(thumbUrl, { isThumb: true }, 'low');
                 });
             }
@@ -484,7 +493,7 @@ export function prewarmProductModal(id, immediate = false) {
         return;
     }
 
-    clearTimeout(_prewarmDebounceTimer);
+    if (_prewarmDebounceTimer !== null) clearTimeout(_prewarmDebounceTimer);
     _prewarmPendingId = itemIdStr;
     _prewarmDebounceTimer = setTimeout(() => {
         _prewarmPendingId = null;
@@ -498,7 +507,7 @@ export function prewarmProductModal(id, immediate = false) {
  */
 export function cancelPrewarmProductModal(id) {
     if (_prewarmPendingId && String(_prewarmPendingId) === String(id)) {
-        clearTimeout(_prewarmDebounceTimer);
+        if (_prewarmDebounceTimer !== null) clearTimeout(_prewarmDebounceTimer);
         _prewarmPendingId = null;
     }
 }
@@ -524,12 +533,12 @@ export function setMetaTag(property, content) {
 
 /**
  * Updates JSON-LD schema.org Product script and OpenGraph / Twitter meta tags for opened item.
- * @param {object} item
+ * @param {any} item
  * @param {string} cleanDesc
  */
 export function updateProductSeoAndOg(item, cleanDesc) {
     if (typeof document === 'undefined') return;
-    let schemaScript = typeof document.getElementById === 'function' ? document.getElementById('seo-schema') : null;
+    let schemaScript = /** @type {HTMLScriptElement | null} */ (typeof document.getElementById === 'function' ? document.getElementById('seo-schema') : null);
     if (!schemaScript && document.head && typeof document.createElement === 'function' && typeof document.head.appendChild === 'function') {
         schemaScript = document.createElement('script');
         schemaScript.id = 'seo-schema';

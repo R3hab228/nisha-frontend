@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CHECKOUT — MODAL OPEN, AUTOFILL & DROPDOWN DISMISS
 // ==========================================
@@ -58,7 +59,7 @@ export {
  */
 export async function openCheckoutModal() {
     if (cartState.isCheckoutOpening) return;
-    const btn = document.querySelector('.cart-panel .cart-checkout-btn');
+    const btn = /** @type {HTMLElement | null} */ (document.querySelector('.cart-panel .cart-checkout-btn'));
     if (!btn) return;
 
     cartState.isCheckoutOpening = true;
@@ -78,7 +79,7 @@ export async function openCheckoutModal() {
             if (dbItems && !error) {
                 currentCart = currentCart.filter(cartItem => {
                     const cId = String(cartItem?.id || cartItem?.item_id || cartItem).trim();
-                    const dbItem = dbItems.find(i => String(i.id).trim() === cId);
+                    const dbItem = dbItems.find((/** @type {any} */ i) => String(i.id).trim() === cId);
                     if (dbItem && dbItem.status === 'sold') {
                         const itemBoughtMsg = tSafe('checkout.item_bought_toast', `Товар "${cartItem.name}" уже кто-то купил! 😢`, { name: cartItem.name });
                         showToast(itemBoughtMsg, 'error');
@@ -132,7 +133,7 @@ export async function openCheckoutModal() {
         if (typeof updateProposeAndCheckoutFields === 'function') updateProposeAndCheckoutFields();
         if (typeof initTurnstileWidgets === 'function') setTimeout(initTurnstileWidgets, 100);
 
-        const orderNameEl = document.getElementById('orderName');
+        const orderNameEl = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById('orderName'));
         if (orderNameEl) {
             if (hasAction('attachFullNameAutoCapitalize')) {
                 invokeAction('attachFullNameAutoCapitalize', orderNameEl);
@@ -161,14 +162,14 @@ export async function openCheckoutModal() {
         }
 
         ['orderName', 'orderPhone', 'orderCity', 'orderBranch'].forEach(fieldId => {
-            const el = document.getElementById(fieldId);
+            const el = /** @type {(HTMLElement & Record<string, any>) | null} */ (document.getElementById(fieldId));
             if (el && !el._draftBound) {
                 el._draftBound = true;
                 el.addEventListener('input', saveCheckoutDraft);
             }
         });
 
-        const promoEl = document.getElementById('promoInput');
+        const promoEl = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById('promoInput'));
         if (promoEl && !promoEl._guardBound && typeof promoEl.addEventListener === 'function') {
             promoEl._guardBound = true;
             promoEl.addEventListener('change', sanitizePromoField);
@@ -186,11 +187,11 @@ export async function openCheckoutModal() {
         const cachedDelivery = deliveryStore ? deliveryStore.getJSON('nisha_profile_delivery', null) : null;
         const cachedRefs = deliveryStore ? deliveryStore.getJSON('nisha_profile_delivery_refs', null) : null;
 
-        const profFullNameEl = document.getElementById('profileDeliveryFullName') || document.getElementById('modalProfileDeliveryFullName');
-        const profPhoneEl = document.getElementById('profilePhone') || document.getElementById('modalProfilePhone');
-        const profCityEl = document.getElementById('profileDeliveryCity') || document.getElementById('modalProfileDeliveryCity');
-        const profBranchEl = document.getElementById('profileDeliveryBranch') || document.getElementById('modalProfileDeliveryBranch');
-        const profAddrEl = document.getElementById('profileDeliveryAddress') || document.getElementById('modalProfileDeliveryAddress');
+        const profFullNameEl = /** @type {HTMLInputElement | null} */ (document.getElementById('profileDeliveryFullName') || document.getElementById('modalProfileDeliveryFullName'));
+        const profPhoneEl = /** @type {HTMLInputElement | null} */ (document.getElementById('profilePhone') || document.getElementById('modalProfilePhone'));
+        const profCityEl = /** @type {HTMLInputElement | null} */ (document.getElementById('profileDeliveryCity') || document.getElementById('modalProfileDeliveryCity'));
+        const profBranchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('profileDeliveryBranch') || document.getElementById('modalProfileDeliveryBranch'));
+        const profAddrEl = /** @type {HTMLInputElement | null} */ (document.getElementById('profileDeliveryAddress') || document.getElementById('modalProfileDeliveryAddress'));
 
         const profileFullName = (activeProfile?.full_name || cachedDelivery?.full_name || profFullNameEl?.value || '').trim();
         const profilePhone = (activeProfile?.phone || window.userProfile?.phone || profPhoneEl?.value || (deliveryStore ? (deliveryStore.get('nisha_last_phone') || deliveryStore.get('user_phone')) : '') || '').trim();
@@ -207,10 +208,10 @@ export async function openCheckoutModal() {
         const savedCityRef = activeProfile?.delivery_city_ref || cachedRefs?.cityRef || cachedDelivery?.delivery_city_ref || window.profileSelectedCityRef?.desktop || window.profileSelectedCityRef?.modal || '';
         const savedBranchRef = activeProfile?.delivery_branch_ref || cachedRefs?.branchRef || cachedDelivery?.delivery_branch_ref || window.profileSelectedBranchRef?.desktop || window.profileSelectedBranchRef?.modal || '';
 
-        const nameInput = document.getElementById('orderName');
-        const phoneInput = document.getElementById('orderPhone');
-        const cityInput = document.getElementById('orderCity');
-        const branchInput = document.getElementById('orderBranch');
+        const nameInput = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById('orderName'));
+        const phoneInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
+        const cityInput = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById('orderCity'));
+        const branchInput = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById('orderBranch'));
 
         const alreadyFilled = !!(cityInput && cityInput.value.trim() && branchInput && branchInput.value.trim() && ((typeof window !== 'undefined' && window.selectedCityRef) || cartState.selectedCityRef));
 
@@ -327,13 +328,13 @@ export async function openCheckoutModal() {
         if (branchInput && !branchInput._unlockBound) {
             branchInput._unlockBound = true;
             const unlockOnly = () => {
-                const cVal = document.getElementById('orderCity')?.value.trim();
+                const cVal = (/** @type {HTMLInputElement | null} */ (document.getElementById('orderCity')))?.value.trim();
                 if (cVal && cVal.length >= 2) {
                     branchInput.readOnly = false;
                 }
             };
             const unlockAndLoad = () => {
-                const cVal = document.getElementById('orderCity')?.value.trim();
+                const cVal = (/** @type {HTMLInputElement | null} */ (document.getElementById('orderCity')))?.value.trim();
                 if (cVal && cVal.length >= 2) {
                     branchInput.readOnly = false;
                     scrollNPFieldIntoModalView(branchInput);
@@ -361,7 +362,7 @@ export async function openCheckoutModal() {
                     e.preventDefault();
                     const bd = document.getElementById('branchDropdown');
                     if (bd) {
-                        const firstItem = bd.querySelector('.branch-item, div[data-branch-ref]');
+                        const firstItem = /** @type {(HTMLElement & Record<string, any>) | null} */ (bd.querySelector('.branch-item, div[data-branch-ref]'));
                         if (firstItem && !window.selectedBranchRef) {
                             if (typeof firstItem._selectItem === 'function') {
                                 firstItem._selectItem();
@@ -383,7 +384,7 @@ export async function openCheckoutModal() {
                     e.preventDefault();
                     const cd = document.getElementById('cityDropdown');
                     if (cd) {
-                        const firstCity = cd.querySelector('.city-item, div');
+                        const firstCity = /** @type {(HTMLElement & Record<string, any>) | null} */ (cd.querySelector('.city-item, div'));
                         if (firstCity && !window.selectedCityRef) {
                             if (typeof firstCity._selectItem === 'function') {
                                 firstCity._selectItem();
@@ -404,7 +405,7 @@ export async function openCheckoutModal() {
             saveWrap.style.display = isAuth ? 'flex' : 'none';
         }
 
-        if (document.getElementById('orderPhone')?.value && typeof checkPhoneAuth === 'function') {
+        if ((/** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone')))?.value && typeof checkPhoneAuth === 'function') {
             checkPhoneAuth();
         }
 
@@ -421,19 +422,20 @@ export async function openCheckoutModal() {
  * @param {Event} e
  */
 export function handleDropdownsOutsideClick(e) {
-    if (!e || !e.target || typeof e.target.closest !== 'function') return;
-    if (!e.target.closest('#orderCity') && !e.target.closest('#cityDropdown') && !e.target.closest('#clearOrderCityBtn')) {
+    const target = /** @type {Element | null} */ (e && e.target);
+    if (!target || typeof target.closest !== 'function') return;
+    if (!target.closest('#orderCity') && !target.closest('#cityDropdown') && !target.closest('#clearOrderCityBtn')) {
         const cd = document.getElementById('cityDropdown');
         if (cd) cd.style.display = 'none';
     }
-    if (!e.target.closest('#orderBranch') && !e.target.closest('#branchDropdown') && !e.target.closest('#clearOrderBranchBtn')) {
+    if (!target.closest('#orderBranch') && !target.closest('#branchDropdown') && !target.closest('#clearOrderBranchBtn')) {
         const bd = document.getElementById('branchDropdown');
         if (bd) bd.style.display = 'none';
     }
-    if (!e.target.closest('#paymentDisplay') && !e.target.closest('#paymentDropdown')) {
+    if (!target.closest('#paymentDisplay') && !target.closest('#paymentDropdown')) {
         closePaymentDropdown();
     }
-    if (!e.target.closest('#cartInfoWrapper') && !e.target.closest('#cartDropdown')) {
+    if (!target.closest('#cartInfoWrapper') && !target.closest('#cartDropdown')) {
         const cartDrop = document.getElementById('cartDropdown');
         if (cartDrop && cartDrop.classList.contains('active')) {
             if (hasAction('closeCartDropdown')) {
@@ -443,7 +445,7 @@ export function handleDropdownsOutsideClick(e) {
                 clearDropdownInlineStyles(cartDrop);
                 const panel = document.getElementById('cartPanel');
                 if (panel) panel.classList.remove('dropdown-open');
-                const fab = document.querySelector('.fab-propose');
+                const fab = /** @type {HTMLElement | null} */ (document.querySelector('.fab-propose'));
                 if (fab) {
                     fab.style.removeProperty('display');
                     fab.style.removeProperty('opacity');
@@ -452,7 +454,7 @@ export function handleDropdownsOutsideClick(e) {
             }
         }
     }
-    if (!e.target.closest('#footerLangWrapper')) {
+    if (!target.closest('#footerLangWrapper')) {
         const langWrap = document.getElementById('footerLangWrapper');
         if (langWrap) {
             langWrap.classList.remove('active');

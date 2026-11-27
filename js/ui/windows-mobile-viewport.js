@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA UI — МОБИЛЬНЫЕ ЖЕСТЫ (SWIPE-TO-DISMISS) И АДАПТАЦИЯ ПОД КЛАВИАТУРУ
 // ==========================================
@@ -6,11 +7,11 @@ import { invokeAction } from '../core/action-registry.js';
 
 /**
  * Привязывает плавный свайп вниз для закрытия модального окна на мобильных устройствах.
- * @param {HTMLElement} overlay
+ * @param {HTMLElement & { _swipeClosing?: boolean }} overlay
  */
 export function attachMobileSwipeToWindow(overlay) {
     if (!overlay) return;
-    const modalWin = overlay.querySelector ? overlay.querySelector('.modal-window') : null;
+    const modalWin = /** @type {(HTMLElement & { _swipeBound?: boolean }) | null} */ (overlay.querySelector ? overlay.querySelector('.modal-window') : null);
     if (!modalWin || modalWin._swipeBound) return;
     modalWin._swipeBound = true;
 
@@ -26,7 +27,7 @@ export function attachMobileSwipeToWindow(overlay) {
     let isGalleryTouch = false;
     let isHeaderTouch = false;
 
-    modalWin.addEventListener('touchstart', (e) => {
+    modalWin.addEventListener('touchstart', (/** @type {any} */ e) => {
         if (window.innerWidth > 900) return;
         if (e.touches && e.touches.length > 1) return;
         if (overlay.classList && overlay.classList.contains('closing')) return;
@@ -157,7 +158,7 @@ export function attachMobileSwipeToWindow(overlay) {
 
 /**
  * Ленивая привязка интерактивных слушателей и жестов к модальному окну при первом открытии.
- * @param {HTMLElement} overlay
+ * @param {HTMLElement & { _interactionsAttached?: boolean, _swipeClosing?: boolean }} overlay
  */
 export function attachModalOverlayInteractions(overlay) {
     if (!overlay || overlay._interactionsAttached) return;
@@ -198,7 +199,7 @@ export function attachModalOverlayInteractions(overlay) {
  */
 export function initMobileSwipe() {
     if (typeof document === 'undefined' || !document.querySelectorAll) return;
-    document.querySelectorAll('.modal-overlay').forEach(attachMobileSwipeToWindow);
+    document.querySelectorAll('.modal-overlay').forEach(el => attachMobileSwipeToWindow(/** @type {HTMLElement} */ (el)));
 }
 
 /**
@@ -252,7 +253,7 @@ export function ensureFieldVisibleInModal(targetEl) {
     }
 }
 if (typeof window !== 'undefined') window.ensureFieldVisibleInModal = ensureFieldVisibleInModal;
-if (typeof globalThis !== 'undefined') globalThis.ensureFieldVisibleInModal = ensureFieldVisibleInModal;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).ensureFieldVisibleInModal = ensureFieldVisibleInModal;
 
 let _mobileKbBound = false;
 
@@ -266,17 +267,21 @@ export function initMobileKeyboardViewport() {
     const root = document.documentElement;
     let baselineHeight = Math.max(window.innerHeight || 0, (window.visualViewport && window.visualViewport.height) || 0);
     let lastInnerWidth = window.innerWidth || 0;
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let scrollDebounceTimer = null;
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let settlingTimer = null;
     let vvRafPending = false;
+    /** @type {number | null} */
     let lastVvHeight = null;
+    /** @type {boolean | null} */
     let lastKeyboardOpen = null;
 
     const getVisibleModalScrollHost = () => {
         if (!document.querySelectorAll) return null;
         const modals = document.querySelectorAll('.modal-overlay');
         for (let i = modals.length - 1; i >= 0; i -= 1) {
-            const ov = modals[i];
+            const ov = /** @type {HTMLElement} */ (modals[i]);
             if (ov && (ov.style.display === 'flex' || ov.style.display === 'block' || (ov.classList && ov.classList.contains('is-open')))) {
                 return ov.querySelector('.modal-window') || null;
             }
@@ -349,7 +354,7 @@ export function initMobileKeyboardViewport() {
             scrollDebounceTimer = setTimeout(() => {
                 scrollDebounceTimer = null;
                 if (document.activeElement === activeEl) {
-                    ensureFieldVisibleInModal(activeEl);
+                    ensureFieldVisibleInModal(/** @type {HTMLElement} */ (activeEl));
                 }
             }, source === 'focusin' ? 120 : 60);
         }
@@ -384,7 +389,7 @@ export function initMobileKeyboardViewport() {
     if (typeof document.addEventListener === 'function') {
         document.addEventListener('focusin', (e) => {
             if (window.innerWidth > 900) return;
-            const t = e && e.target;
+            const t = /** @type {HTMLElement | null} */ (e && e.target);
             if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA')) return;
             updateViewportMetrics('focusin');
         });

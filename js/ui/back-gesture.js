@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA UI — MOBILE BACK GESTURE & OVERLAY HISTORY STACK
 // ==========================================
@@ -5,10 +6,12 @@
 // so closing PhotoSwipe zoom, modals, cart drawer, mobile filters, or search
 // smoothly dismisses the topmost overlay instead of exiting the PWA.
 
+/** @type {Array<{ key: string, type: string, id: string, onBackClose: Function }>} */
 const _backStack = [];
 let _pushedDepth = 0;
 let _ignorePopstateCount = 0;
 let _ignoreResetGen = 0;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _ignoreResetTimer = null;
 let _reconcilePending = false;
 let _reconcileGen = 0;
@@ -45,6 +48,7 @@ function cancelReconcileTimer() {
     _reconcilePending = false;
 }
 
+/** @param {number} targetDepth */
 function pushSyntheticHistoryEntry(targetDepth) {
     if (!hasUsableHistoryApi()) return false;
     try {
@@ -175,7 +179,7 @@ export function handleBackPopstate(event) {
 
 /**
  * Attaches PhotoSwipe lightbox lifecycle hooks so edge-swipe / Back closes zoomed photos smoothly.
- * @param {object} lightbox - PhotoSwipeLightbox instance
+ * @param {any} lightbox - PhotoSwipeLightbox instance
  */
 export function bindPhotoSwipeBackGesture(lightbox) {
     if (!lightbox || typeof lightbox.on !== 'function' || lightbox._nishaBackBound) return;

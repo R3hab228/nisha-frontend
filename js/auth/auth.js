@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA AUTH & SECURITY MODULE (OTP & Turnstile)
 // ==========================================
@@ -25,10 +26,19 @@ const TURNSTILE_SITE_KEY = isLocalhost
     ? '1x00000000000000000000AA' 
     : '0x4AAAAAAFPA7MSg5EklX3ye';
 
+const _store = /** @type {any} */ (store);
+const _storage = /** @type {any} */ (storage);
+const _apiClient = /** @type {any} */ (apiClient);
+
+/** @type {any} */
 let turnstileOtpWidgetId = null;
+/** @type {any} */
 let turnstilePropWidgetId = null;
+/** @type {Promise<any> | null} */
 let _turnstileLoadPromise = null;
+/** @type {string | null} */
 let _turnstileOtpToken = null;
+/** @type {(() => Promise<boolean>) | null} */
 let _checkActiveOtp = null;
 window._turnstilePropToken = null;
 
@@ -44,10 +54,12 @@ function ensureTurnstileLoaded() {
         return Promise.resolve(null);
     }
 
+    /** @type {{ promise: Promise<any>, resolve: (value?: any) => void }} */
     const { promise, resolve } = typeof Promise.withResolvers === 'function'
         ? Promise.withResolvers()
         : (() => {
-            let res;
+            /** @type {(value?: any) => void} */
+            let res = () => {};
             const p = new Promise((r) => { res = r; });
             return { promise: p, resolve: res };
         })();
@@ -92,7 +104,7 @@ function initTurnstileOtpWidget() {
             turnstileOtpWidgetId = ts.render('#turnstile-otp-container', {
                 sitekey: TURNSTILE_SITE_KEY,
                 size: 'compact',
-                callback: function(token) {
+                callback: function(/** @type {string} */ token) {
                     _turnstileOtpToken = token;
                 },
                 'expired-callback': function() {
@@ -117,7 +129,7 @@ function initTurnstilePropWidget() {
             turnstilePropWidgetId = ts.render('#turnstile-prop-container', {
                 sitekey: TURNSTILE_SITE_KEY,
                 size: 'compact',
-                callback: function(token) {
+                callback: function(/** @type {string} */ token) {
                     window._turnstilePropToken = token;
                 },
                 'expired-callback': function() {
@@ -140,7 +152,7 @@ function initTurnstileWidgets() {
         initTurnstilePropWidget();
         return;
     }
-    ensureTurnstileLoaded().then((ts) => {
+    ensureTurnstileLoaded().then((/** @type {any} */ ts) => {
         if (ts || getTurnstileApi()) {
             initTurnstileOtpWidget();
             initTurnstilePropWidget();
@@ -151,8 +163,8 @@ window.initTurnstileWidgets = initTurnstileWidgets;
 
 // --- КОНТАКТНЫЕ ДАННЫЕ ЮЗЕРА ---
 function getUserPhone() {
-    const activeUser = store.user || (typeof window !== 'undefined' ? window.currentUser : null);
-    const profile = store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
+    const activeUser = _store.user || (typeof window !== 'undefined' ? window.currentUser : null);
+    const profile = _store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
     if (profile?.phone && profile.phone.trim()) {
         return profile.phone.trim();
     }
@@ -162,22 +174,26 @@ function getUserPhone() {
     if (activeUser?.user_metadata?.phone && activeUser.user_metadata.phone.trim()) {
         return activeUser.user_metadata.phone.trim();
     }
-    return (storage ? storage.get('nisha_last_phone', '') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_last_phone') : '') || '').trim();
+    return (_storage ? _storage.get('nisha_last_phone', '') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_last_phone') : '') || '').trim();
 }
 window.getUserPhone = getUserPhone;
 
 function getUserTg() {
-    const activeUser = store.user || (typeof window !== 'undefined' ? window.currentUser : null);
-    const profile = store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
+    const activeUser = _store.user || (typeof window !== 'undefined' ? window.currentUser : null);
+    const profile = _store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
     if (profile?.tg && profile.tg.trim()) {
         return profile.tg.trim();
     }
     if (activeUser?.user_metadata?.tg && activeUser.user_metadata.tg.trim()) {
         return activeUser.user_metadata.tg.trim();
     }
-    return (storage ? storage.get('nisha_last_tg', '') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_last_tg') : '') || '').trim();
+    return (_storage ? _storage.get('nisha_last_tg', '') : (typeof localStorage !== 'undefined' ? localStorage.getItem('nisha_last_tg') : '') || '').trim();
 }
 
+/**
+ * @param {any} inputPhone
+ * @param {any} verifiedPhone
+ */
 export function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
     if (!inputPhone || !verifiedPhone) return false;
     const cleanA = String(inputPhone).replace(/\D/g, '');
@@ -190,6 +206,7 @@ export function isPhoneMatchingVerified(inputPhone, verifiedPhone) {
     return false;
 }
 
+/** @param {HTMLButtonElement | null} btnOtp */
 export function setOtpButtonSuccess(btnOtp) {
     if (!btnOtp) return;
     const successText = tSafe('checkout.btn_otp_success', 'УСПЕХ ✓');
@@ -206,6 +223,7 @@ export function setOtpButtonSuccess(btnOtp) {
     btnOtp.innerHTML = `<span class="otp-btn-success-label">${successText}</span>`;
 }
 
+/** @param {HTMLButtonElement | null} btnOtp */
 export function setOtpButtonDefault(btnOtp) {
     if (!btnOtp) return;
     const defaultText = tSafe('checkout.btn_otp', 'Подтвердить');
@@ -226,14 +244,14 @@ export function setOtpButtonDefault(btnOtp) {
 function updateProposeAndCheckoutFields() {
     const phone = getUserPhone();
     const tg = getUserTg();
-    const activeUser = store.user || (typeof window !== 'undefined' ? window.currentUser : null);
-    const profile = store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
+    const activeUser = _store.user || (typeof window !== 'undefined' ? window.currentUser : null);
+    const profile = _store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
     const hasVerifiedProfilePhone = Boolean(phone);
     const hasVerifiedProfileTg = Boolean(tg);
 
     // 1. Предложка: если заполнены и телефон, и tg в профиле — поле связи скрывается, иначе остается редактируемым
     const propContactWrap = document.getElementById('propContactWrapper');
-    const propContactInput = document.getElementById('propContact');
+    const propContactInput = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
     if (hasVerifiedProfilePhone && hasVerifiedProfileTg && (activeUser || profile)) {
         if (propContactWrap) propContactWrap.style.display = 'none';
         if (propContactInput) propContactInput.value = `${tg} | ${phone}`;
@@ -246,8 +264,8 @@ function updateProposeAndCheckoutFields() {
 
     // 2. Оформление заказа: поле телефона всегда остается видимым
     const checkoutPhoneWrap = document.getElementById('checkoutPhoneWrapper');
-    const orderPhoneInput = document.getElementById('orderPhone');
-    const btnOtp = document.getElementById('btnGetOtp');
+    const orderPhoneInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
+    const btnOtp = /** @type {HTMLButtonElement | null} */ (document.getElementById('btnGetOtp'));
     const statusOtp = document.getElementById('otpStatus');
     const btnSubmit = document.getElementById('btnSubmitOrder');
 
@@ -308,8 +326,10 @@ function getWin95HourglassHtml(height = 14) {
 // --- OTP ПОДТВЕРЖДЕНИЕ НОМЕРА ТЕЛЕФОНА (ЧЕКАУТ) ---
 let otpVerified = false;
 window.otpVerified = otpVerified;
+/** @type {ReturnType<typeof setInterval> | null} */
 let otpInterval = null;
 let _otpPollSessionToken = 0;
+/** @type {Promise<boolean> | null} */
 let _otpCheckInFlight = null;
 
 function stopOtpCountdown() {
@@ -336,9 +356,9 @@ if (typeof window !== 'undefined') {
 async function checkPhoneAuth() {
     const sb = getRuntimeSupabase();
     const btnSubmit = document.getElementById('btnSubmitOrder');
-    const btnOtp = document.getElementById('btnGetOtp');
+    const btnOtp = /** @type {HTMLButtonElement | null} */ (document.getElementById('btnGetOtp'));
     const statusOtp = document.getElementById('otpStatus');
-    const rawPhone = document.getElementById('orderPhone')?.value || '';
+    const rawPhone = (/** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone')))?.value || '';
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
 
     const uPhone = (typeof getUserPhone === 'function' ? getUserPhone() : '').replace(/[^\d+]/g, '');
@@ -347,7 +367,7 @@ async function checkPhoneAuth() {
     if (isProfileVerified) {
         otpVerified = true;
         window.otpVerified = true;
-        if (storage) storage.set('nisha_last_phone', cleanPhone);
+        if (_storage) _storage.set('nisha_last_phone', cleanPhone);
         if (btnSubmit) {
             btnSubmit.style.opacity = '1';
             btnSubmit.style.pointerEvents = 'auto';
@@ -391,7 +411,7 @@ async function checkPhoneAuth() {
                 // Номер уже подтвержден
                 otpVerified = true;
                 window.otpVerified = true;
-                if (storage) storage.set('nisha_last_phone', cleanPhone);
+                if (_storage) _storage.set('nisha_last_phone', cleanPhone);
                 if (btnSubmit) {
                     btnSubmit.style.opacity = '1';
                     btnSubmit.style.pointerEvents = 'auto';
@@ -421,7 +441,7 @@ window.checkPhoneAuth = checkPhoneAuth;
 
 async function generateAndSendOTP() {
     const sb = getRuntimeSupabase();
-    const rawPhone = document.getElementById('orderPhone')?.value || '';
+    const rawPhone = (/** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone')))?.value || '';
     const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); 
     
     if (!cleanPhone || cleanPhone.length < 10) {
@@ -429,7 +449,7 @@ async function generateAndSendOTP() {
         return;
     }
 
-    const btnOtp = document.getElementById('btnGetOtp');
+    const btnOtp = /** @type {HTMLButtonElement | null} */ (document.getElementById('btnGetOtp'));
     if (!btnOtp || btnOtp.disabled) return;
 
     // Проверяем: если уже подтвержден в профиле
@@ -452,7 +472,7 @@ async function generateAndSendOTP() {
     // Верификация капчи на бэкенде
     if (turnToken) {
         try {
-            const vData = await apiClient.post('/api/verify-turnstile', { token: turnToken }, { timeout: 8000 });
+            const vData = await _apiClient.post('/api/verify-turnstile', { token: turnToken }, { timeout: 8000 });
             if (!vData || !vData.success) {
                 showToast(tSafe('auth.turnstile_err', 'Ошибка проверки безопасности Turnstile'), 'error');
                 if (tsApi && widgetId !== null && widgetId !== undefined) {
@@ -550,7 +570,7 @@ async function generateAndSendOTP() {
     
     // 5. Получаем одноразовый токен и открываем Telegram-бота
     const payloadPhone = cleanPhone.replace('+', '');
-    const activeUser = store.user;
+    const activeUser = _store.user;
     let tgLink = '';
     try {
         if (typeof window !== 'undefined' && window.apiClient && typeof window.apiClient.post === 'function') {
@@ -662,10 +682,10 @@ document.addEventListener('visibilitychange', () => {
         if (typeof _checkActiveOtp === 'function') {
             _checkActiveOtp();
         }
-        if (storage && storage.get('nisha_pending_otp_phone')) {
+        if (_storage && _storage.get('nisha_pending_otp_phone')) {
             invokeAction('checkPendingPhoneVerification');
         }
-        if (storage && storage.get('nisha_pending_otp_tg')) {
+        if (_storage && _storage.get('nisha_pending_otp_tg')) {
             invokeAction('checkPendingTgVerification');
         }
     }

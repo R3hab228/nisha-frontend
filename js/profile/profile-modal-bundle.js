@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE CONTACTS & DELIVERY BUNDLE (Lazy Chunk)
 // Loaded on demand when authenticated user renders contacts/delivery

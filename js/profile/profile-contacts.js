@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE CONTACTS (PHONE & TELEGRAM + OTP VERIFICATION)
 // ==========================================
@@ -14,6 +15,7 @@ import {
 } from './profile-state.js';
 import { formatUaPhoneDisplay } from '../core/helpers-core-utils.js';
 
+/** @type {Record<string, any>} */
 export const CONTACT_CONFIG = {
     phone: {
         cap: 'Phone',
@@ -56,7 +58,7 @@ let contactListenersBound = false;
 /**
  * Resolves contact descriptor safely from CONTACT_CONFIG.
  * @param {string} type
- * @returns {object|null}
+ * @returns {any}
  */
 function getContactCfg(type) {
     return Object.hasOwn(CONTACT_CONFIG, type) ? CONTACT_CONFIG[type] : null;
@@ -71,8 +73,9 @@ export function resetContactSaveButtons(type) {
     if (!cfg || typeof document === 'undefined') return;
     const selector = `#profile${cfg.cap}InputWrap .win95-save-btn, #modalProfile${cfg.cap}InputWrap .win95-save-btn`;
     document.querySelectorAll(selector).forEach(b => {
-        b.disabled = false;
-        b.textContent = '✓';
+        const btn = /** @type {HTMLButtonElement} */ (b);
+        btn.disabled = false;
+        btn.textContent = '✓';
     });
 }
 
@@ -84,11 +87,12 @@ export function clearPendingContactState(type) {
     const cfg = getContactCfg(type);
     if (!cfg) return;
     if (typeof window !== 'undefined') {
-        if (window[cfg.pollVar]) {
-            clearInterval(window[cfg.pollVar]);
-            window[cfg.pollVar] = null;
+        const win = /** @type {any} */ (window);
+        if (win[cfg.pollVar]) {
+            clearInterval(win[cfg.pollVar]);
+            win[cfg.pollVar] = null;
         }
-        window[cfg.pendingVar] = null;
+        win[cfg.pendingVar] = null;
     }
     const store = getStore();
     if (store) {
@@ -130,7 +134,7 @@ export function renderProfileContact(type, rawVal) {
             : formatUaPhoneDisplay(trimmed));
     const escapeFn = getGlobalFn('escapeHtml');
     const safeVal = escapeFn ? escapeFn(displayVal) : displayVal;
-    const delBtnHtml = (isModal) => `<button data-action="${cfg.removeAction}" data-modal="${isModal ? '1' : '0'}" title="${cfg.removeTitle}" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
+    const delBtnHtml = (/** @type {boolean} */ isModal) => `<button data-action="${cfg.removeAction}" data-modal="${isModal ? '1' : '0'}" title="${cfg.removeTitle}" class="win95-check-btn" style="background:#2a2a2a;border:2px outset #777;color:#ff5555;font-family:var(--font-mono);font-size:10px;padding:1px 5px;cursor:pointer;line-height:1;box-shadow:1px 1px 0 #000;margin-left:auto">✕</button>`;
 
     [false, true].forEach(isModal => {
         const prefix = isModal ? 'modalProfile' : 'profile';
@@ -197,8 +201,8 @@ export async function removeProfileContact(type) {
     const syncFields = getGlobalFn('updateProposeAndCheckoutFields');
     if (syncFields) syncFields();
 }
-bindWindowFn('removeProfilePhone', (isModal = false) => removeProfileContact('phone', isModal));
-bindWindowFn('removeProfileTg', (isModal = false) => removeProfileContact('tg', isModal));
+bindWindowFn('removeProfilePhone', () => removeProfileContact('phone'));
+bindWindowFn('removeProfileTg', () => removeProfileContact('tg'));
 
 /**
  * Opens inline Win95 contact editor for phone (with IMask) or Telegram (@ handle normalization).
@@ -211,8 +215,8 @@ export function showContactInput(type, isModal = false) {
     const prefix = isModal ? 'modalProfile' : 'profile';
     const btn = document.getElementById(`${prefix}Add${cfg.cap}Btn`);
     const wrap = document.getElementById(`${prefix}${cfg.cap}InputWrap`);
-    const input = document.getElementById(`${prefix}${cfg.cap}Input`);
-    const saveBtn = document.querySelector(`#${prefix}${cfg.cap}InputWrap .win95-save-btn`);
+    const input = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById(`${prefix}${cfg.cap}Input`));
+    const saveBtn = /** @type {HTMLButtonElement | null} */ (document.querySelector(`#${prefix}${cfg.cap}InputWrap .win95-save-btn`));
     const store = getStore();
 
     if (saveBtn && store && store.get(cfg.storagePending)) {
@@ -228,7 +232,7 @@ export function showContactInput(type, isModal = false) {
     if (!input) return;
 
     if (type === 'phone') {
-        const attachMask = (MaskLib) => {
+        const attachMask = (/** @type {any} */ MaskLib) => {
             if (MaskLib && input && (!input._imask || input._imask._isStub)) {
                 input._imask = MaskLib(input, { mask: '+{380} (00) 000-00-00' });
             }
@@ -305,7 +309,7 @@ export function hideContactInput(type, isModal = false) {
     const prefix = isModal ? 'modalProfile' : 'profile';
     const btn = document.getElementById(`${prefix}Add${cfg.cap}Btn`);
     const wrap = document.getElementById(`${prefix}${cfg.cap}InputWrap`);
-    const input = document.getElementById(`${prefix}${cfg.cap}Input`);
+    const input = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById(`${prefix}${cfg.cap}Input`));
 
     if (wrap) wrap.style.display = 'none';
     if (btn) btn.style.display = 'inline-block';
@@ -319,10 +323,10 @@ bindWindowFn('hideTgInput', (isModal = false) => hideContactInput('tg', isModal)
 
 /**
  * Checks whether verified phone OTP belongs to another account and commits it to profile/state.
- * @param {object} sb
- * @param {object|null} activeUser
+ * @param {any} sb
+ * @param {any} activeUser
  * @param {string} pendingVal
- * @param {object|null} store
+ * @param {any} store
  * @returns {Promise<'aborted'|'ok'>}
  */
 async function commitVerifiedPhone(sb, activeUser, pendingVal, store) {
@@ -377,11 +381,11 @@ async function commitVerifiedPhone(sb, activeUser, pendingVal, store) {
 
 /**
  * Checks whether verified Telegram handle belongs to another account and commits it to profile/state.
- * @param {object} sb
- * @param {object|null} activeUser
+ * @param {any} sb
+ * @param {any} activeUser
  * @param {string} pendingVal
- * @param {object} cfg
- * @param {object|null} store
+ * @param {any} cfg
+ * @param {any} store
  * @returns {Promise<'aborted'|'ok'>}
  */
 async function commitVerifiedTg(sb, activeUser, pendingVal, cfg, store) {
@@ -509,7 +513,7 @@ export async function saveContactFromInput(type, isModal = false) {
     }
 
     const prefix = isModal ? 'modalProfile' : 'profile';
-    const input = document.getElementById(`${prefix}${cfg.cap}Input`);
+    const input = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}${cfg.cap}Input`));
     if (!input) return;
 
     let clean = '';
@@ -583,7 +587,7 @@ export async function saveContactFromInput(type, isModal = false) {
         isTgOtpCompleted = false;
     }
 
-    const saveBtn = document.querySelector(`#${prefix}${cfg.cap}InputWrap .win95-save-btn`);
+    const saveBtn = /** @type {HTMLButtonElement | null} */ (document.querySelector(`#${prefix}${cfg.cap}InputWrap .win95-save-btn`));
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerHTML = getHourglass(14);
@@ -629,7 +633,7 @@ export async function saveContactFromInput(type, isModal = false) {
         return;
     }
 
-    if (typeof window !== 'undefined') window[cfg.pendingVar] = clean;
+    if (typeof window !== 'undefined') (/** @type {any} */ (window))[cfg.pendingVar] = clean;
     const store = getStore();
     if (store) {
         store.set(cfg.storagePending, clean);
@@ -645,8 +649,9 @@ export async function saveContactFromInput(type, isModal = false) {
     );
 
     if (typeof window !== 'undefined') {
-        if (window[cfg.pollVar]) clearInterval(window[cfg.pollVar]);
-        window[cfg.pollVar] = setInterval(() => {
+        const win = /** @type {any} */ (window);
+        if (win[cfg.pollVar]) clearInterval(win[cfg.pollVar]);
+        win[cfg.pollVar] = setInterval(() => {
             if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
             checkPendingContactVerification(type);
         }, 2000);

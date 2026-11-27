@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE — NOVA POSHTA AUTOCOMPLETE & IDB CACHE MODULE
 // ==========================================
@@ -26,10 +27,12 @@ export function getProfileScopeKey(isModal) {
     return isModal ? 'modal' : 'desktop';
 }
 
+/** @param {HTMLElement} dropdown */
 function clearDropdownNode(dropdown) {
-    dropdown.innerHTML = '';
     if (typeof dropdown.replaceChildren === 'function') {
         dropdown.replaceChildren();
+    } else {
+        dropdown.innerHTML = '';
     }
 }
 
@@ -92,7 +95,7 @@ function writeNpCache(cacheKey, payload) {
  */
 function bindDropdownOptionSelect(div, onSelect) {
     let selectedOnce = false;
-    const handler = (e) => {
+    const handler = (/** @type {any} */ e) => {
         if (e && typeof e.preventDefault === 'function') e.preventDefault();
         if (selectedOnce) return;
         selectedOnce = true;
@@ -113,9 +116,9 @@ function bindDropdownOptionSelect(div, onSelect) {
 export function syncProfileCombinedAddress(isModal) {
     if (typeof document === 'undefined') return;
     const prefix = isModal ? 'modalProfile' : 'profile';
-    const cityEl = document.getElementById(`${prefix}DeliveryCity`);
-    const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
-    const legacyEl = document.getElementById(`${prefix}DeliveryAddress`);
+    const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryCity`));
+    const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryBranch`));
+    const legacyEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryAddress`));
     if (legacyEl && cityEl && branchEl) {
         const c = cityEl.value.trim();
         const b = branchEl.value.trim();
@@ -172,15 +175,15 @@ bindWindowFn('searchProfileNPCity', searchProfileNPCity);
 /**
  * Renders Nova Poshta city autocomplete suggestions dropdown.
  * @param {boolean} isModal
- * @param {object} data
+ * @param {any} data
  */
 export function renderProfileCityDropdown(isModal, data) {
     if (typeof document === 'undefined') return;
     const prefix = isModal ? 'modalProfile' : 'profile';
     const scopeKey = getProfileScopeKey(isModal);
     const dropdown = document.getElementById(`${prefix}DeliveryCityDropdown`);
-    const cityInput = document.getElementById(`${prefix}DeliveryCity`);
-    const branchInput = document.getElementById(`${prefix}DeliveryBranch`);
+    const cityInput = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryCity`));
+    const branchInput = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryBranch`));
     if (!dropdown || !cityInput) return;
 
     clearDropdownNode(dropdown);
@@ -201,7 +204,7 @@ export function renderProfileCityDropdown(isModal, data) {
         ? document.createDocumentFragment()
         : dropdown;
 
-    addrs.forEach(city => {
+    addrs.forEach((/** @type {any} */ city) => {
         const div = document.createElement('div');
         div.textContent = city.Present;
         bindDropdownOptionSelect(div, () => {
@@ -241,7 +244,7 @@ export async function resolveProfileCityRef(isModal) {
     }
 
     if (typeof document === 'undefined') return '';
-    const cityInput = document.getElementById(`${prefix}DeliveryCity`);
+    const cityInput = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryCity`));
     const typed = cityInput ? cityInput.value.trim() : '';
     if (typed.length < 2) return '';
 
@@ -275,8 +278,8 @@ export async function loadProfileBranches(isModal, searchString = '') {
     const scopeKey = getProfileScopeKey(isModal);
     const reqSeq = ++profileBranchRequestSeq[scopeKey];
     const dropdown = document.getElementById(`${prefix}DeliveryBranchDropdown`);
-    const cityInput = document.getElementById(`${prefix}DeliveryCity`);
-    const branchInput = document.getElementById(`${prefix}DeliveryBranch`);
+    const cityInput = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryCity`));
+    const branchInput = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryBranch`));
     if (!dropdown) return;
 
     if (!cityInput || !cityInput.value.trim()) {
@@ -323,6 +326,7 @@ export async function loadProfileBranches(isModal, searchString = '') {
 
     if (!list) {
         try {
+            /** @type {Record<string, any>} */
             const props = { CityRef: cityRef, Limit: '100' };
             if (rawTrimmed) {
                 props.FindByString = (parsed && parsed.apiSearch)
@@ -356,7 +360,7 @@ export async function loadProfileBranches(isModal, searchString = '') {
             }
 
             if (data && data.success && Array.isArray(data.data)) {
-                list = data.data.map(b => ({
+                list = data.data.map((/** @type {any} */ b) => ({
                     Ref: b.Ref,
                     Description: b.Description || '',
                     TypeOfWarehouse: b.TypeOfWarehouse || '',
@@ -388,14 +392,14 @@ bindWindowFn('loadProfileBranches', loadProfileBranches);
 /**
  * Renders Nova Poshta branches and postomats dropdown list.
  * @param {boolean} isModal
- * @param {Array<object>} list
+ * @param {any[]} list
  */
 export function renderProfileBranchDropdown(isModal, list) {
     if (typeof document === 'undefined') return;
     const prefix = isModal ? 'modalProfile' : 'profile';
     const scopeKey = getProfileScopeKey(isModal);
     const dropdown = document.getElementById(`${prefix}DeliveryBranchDropdown`);
-    const branchInput = document.getElementById(`${prefix}DeliveryBranch`);
+    const branchInput = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryBranch`));
     if (!dropdown || !branchInput) return;
 
     clearDropdownNode(dropdown);

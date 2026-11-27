@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE, AUTH, CONTACTS & ORDERS ENTRYPOINT
 // Modular ES barrel re-exporting all profile submodules.

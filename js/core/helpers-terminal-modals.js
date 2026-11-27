@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS: TERMINAL MODALS (ALERT / CONFIRM / PROMPT)
 // ==========================================
@@ -5,6 +6,7 @@
 import { hasAction, invokeAction } from './action-registry.js';
 import { escapeAttr, escapeHtml } from './helpers-security-media.js';
 
+/** @param {any} rawHtml */
 function sanitizeTerminalHtml(rawHtml) {
     const str = String(rawHtml ?? '');
     const dp = typeof window !== 'undefined' ? window.DOMPurify : (typeof globalThis !== 'undefined' ? globalThis.DOMPurify : null);
@@ -16,10 +18,12 @@ function sanitizeTerminalHtml(rawHtml) {
     return str;
 }
 
+/** @param {string} selector */
 function dismissExistingOverlays(selector) {
     document.querySelectorAll(selector).forEach(el => {
-        if (typeof el._nishaDismiss === 'function') {
-            try { el._nishaDismiss(); } catch { el.remove(); }
+        const overlayEl = /** @type {any} */ (el);
+        if (typeof overlayEl._nishaDismiss === 'function') {
+            try { overlayEl._nishaDismiss(); } catch { el.remove(); }
             if (el.isConnected) el.remove();
         } else {
             el.remove();
@@ -71,14 +75,16 @@ export function showTerminalModal(title, htmlText, btnText, callback, options = 
     const modalCtrl = new AbortController();
     const closeOverlay = () => {
         modalCtrl.abort();
-        if (document.activeElement && typeof document.activeElement.blur === 'function') {
-            document.activeElement.blur();
+        const activeEl = /** @type {HTMLElement | null} */ (document.activeElement);
+        if (activeEl && typeof activeEl.blur === 'function') {
+            activeEl.blur();
         }
         overlay.remove();
         if (callback) callback();
     };
-    overlay._nishaPersistent = isPersistent;
-    overlay._nishaDismiss = () => {
+    const overlayAny = /** @type {any} */ (overlay);
+    overlayAny._nishaPersistent = isPersistent;
+    overlayAny._nishaDismiss = () => {
         if (!isPersistent && !(document.querySelector && document.querySelector('.pswp--open'))) {
             closeOverlay();
         }
@@ -87,15 +93,16 @@ export function showTerminalModal(title, htmlText, btnText, callback, options = 
     const mediaTiles = overlay.querySelectorAll ? Array.from(overlay.querySelectorAll('.broadcast-media-item')) : [];
     if (mediaTiles.length > 0) {
         overlay.addEventListener('click', (e) => {
-            const tile = e.target && typeof e.target.closest === 'function' ? e.target.closest('.broadcast-media-item') : null;
+            const target = /** @type {Element | null} */ (e.target);
+            const tile = target && typeof target.closest === 'function' ? target.closest('.broadcast-media-item') : null;
             if (!tile || !overlay.contains(tile)) return;
             e.preventDefault();
             e.stopPropagation();
 
             const items = mediaTiles.map((el) => {
                 const imgEl = el.querySelector ? el.querySelector('img') : null;
-                const parsedW = Number.parseInt(el.getAttribute('data-pswp-width') || (imgEl && imgEl.naturalWidth) || 0, 10);
-                const parsedH = Number.parseInt(el.getAttribute('data-pswp-height') || (imgEl && imgEl.naturalHeight) || 0, 10);
+                const parsedW = Number.parseInt(String(el.getAttribute('data-pswp-width') || (imgEl && imgEl.naturalWidth) || 0), 10);
+                const parsedH = Number.parseInt(String(el.getAttribute('data-pswp-height') || (imgEl && imgEl.naturalHeight) || 0), 10);
                 const src = el.getAttribute('href') || (imgEl && (imgEl.currentSrc || imgEl.src)) || '';
                 const msrc = (imgEl && (imgEl.currentSrc || imgEl.src)) || src;
                 return {
@@ -133,7 +140,7 @@ export function showTerminalModal(title, htmlText, btnText, callback, options = 
         }, { signal: modalCtrl.signal });
     }
 }
-if (typeof window !== 'undefined') window.showTerminalModal = showTerminalModal;
+if (typeof window !== 'undefined') /** @type {any} */ (window).showTerminalModal = showTerminalModal;
 
 /**
  * Displays a two-button terminal confirmation overlay.
@@ -181,10 +188,10 @@ export function showConfirmTerminalModal(title, htmlText, confirmBtnText, cancel
             onCancel(dismissOptions);
         }
     };
-    overlay._nishaDismiss = (confirmed = false, dismissOptions = {}) => closeOverlay(Boolean(confirmed), dismissOptions);
+    /** @type {any} */ (overlay)._nishaDismiss = (confirmed = false, dismissOptions = {}) => closeOverlay(Boolean(confirmed), dismissOptions);
 
-    overlay.querySelector('.confirm-yes').addEventListener('click', () => closeOverlay(true), { signal: confirmCtrl.signal });
-    overlay.querySelector('.confirm-no').addEventListener('click', () => closeOverlay(false), { signal: confirmCtrl.signal });
+    overlay.querySelector('.confirm-yes')?.addEventListener('click', () => closeOverlay(true), { signal: confirmCtrl.signal });
+    overlay.querySelector('.confirm-no')?.addEventListener('click', () => closeOverlay(false), { signal: confirmCtrl.signal });
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(false); }, { signal: confirmCtrl.signal });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOverlay(false); }, { signal: confirmCtrl.signal });
 }
@@ -235,21 +242,23 @@ export function showPromptTerminalModal({
         `;
         document.body.appendChild(overlay);
 
-        const inputEl = overlay.querySelector('.prompt-terminal-input');
+        const inputEl = /** @type {HTMLInputElement | null} */ (overlay.querySelector('.prompt-terminal-input'));
         const ctrl = new AbortController();
         let settled = false;
 
+        /** @param {string | null} value */
         const finish = (value) => {
             if (settled) return;
             settled = true;
             ctrl.abort();
-            if (document.activeElement && typeof document.activeElement.blur === 'function') {
-                document.activeElement.blur();
+            const activeEl = /** @type {HTMLElement | null} */ (document.activeElement);
+            if (activeEl && typeof activeEl.blur === 'function') {
+                activeEl.blur();
             }
             overlay.remove();
             resolve(value);
         };
-        overlay._nishaDismiss = () => finish(null);
+        /** @type {any} */ (overlay)._nishaDismiss = () => finish(null);
 
         overlay.querySelector('.prompt-confirm')?.addEventListener('click', () => finish(inputEl ? inputEl.value : ''), { signal: ctrl.signal });
         overlay.querySelector('.prompt-cancel')?.addEventListener('click', () => finish(null), { signal: ctrl.signal });

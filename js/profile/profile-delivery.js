@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE DELIVERY & NOVA POSHTA MODULE
 // ==========================================
@@ -35,15 +36,18 @@ export {
     renderProfileBranchDropdown
 };
 
+/** @type {ReturnType<typeof setTimeout> | null} */
 let profileNpCityTimeout = null;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let profileNpBranchTimeout = null;
 let outsideClickBound = false;
 let _isSavingProfileDelivery = false;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _deliveryLockTimer = null;
 
 /**
  * Toggles CSS class flag defensively for both native DOMTokenList and test mocks.
- * @param {object} el
+ * @param {any} el
  * @param {string} className
  * @param {boolean} flag
  */
@@ -65,9 +69,9 @@ export function initProfileDeliveryEvents() {
     if (typeof document === 'undefined') return;
     [false, true].forEach(isModal => {
         const prefix = isModal ? 'modalProfile' : 'profile';
-        const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
-        const cityEl = document.getElementById(`${prefix}DeliveryCity`);
-        const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
+        const fnEl = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById(`${prefix}DeliveryFullName`));
+        const cityEl = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById(`${prefix}DeliveryCity`));
+        const branchEl = /** @type {(HTMLInputElement & Record<string, any>) | null} */ (document.getElementById(`${prefix}DeliveryBranch`));
 
         if (fnEl) {
             getGlobalFn('attachFullNameAutoCapitalize')?.(fnEl);
@@ -96,7 +100,7 @@ export function initProfileDeliveryEvents() {
                     cityEl.addEventListener('input', (e) => {
                         if (profileNpCityTimeout) clearTimeout(profileNpCityTimeout);
                         profileNpCityTimeout = setTimeout(() => {
-                            searchProfileNPCity(isModal, e.target.value);
+                            searchProfileNPCity(isModal, (/** @type {any} */ (e.target)).value);
                         }, 300);
                         syncProfileCombinedAddress(isModal);
                     });
@@ -119,7 +123,7 @@ export function initProfileDeliveryEvents() {
                     branchEl.addEventListener('input', (e) => {
                         if (profileNpBranchTimeout) clearTimeout(profileNpBranchTimeout);
                         profileNpBranchTimeout = setTimeout(() => {
-                            loadProfileBranches(isModal, e.target.value);
+                            loadProfileBranches(isModal, (/** @type {any} */ (e.target)).value);
                         }, 300);
                         syncProfileCombinedAddress(isModal);
                     });
@@ -141,9 +145,9 @@ export function setProfileDeliveryLockState(locked) {
     if (typeof document === 'undefined') return;
     [false, true].forEach(modalFlag => {
         const prefix = modalFlag ? 'modalProfile' : 'profile';
-        const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
-        const cityEl = document.getElementById(`${prefix}DeliveryCity`);
-        const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
+        const fnEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryFullName`));
+        const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryCity`));
+        const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryBranch`));
         const btn = document.getElementById(`${prefix}DeliverySaveBtn`);
 
         [fnEl, cityEl, branchEl].forEach(input => {
@@ -197,10 +201,10 @@ export function renderProfileDelivery(fullName, address) {
     if (typeof document !== 'undefined') {
         [false, true].forEach(isModal => {
             const prefix = isModal ? 'modalProfile' : 'profile';
-            const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
-            const cityEl = document.getElementById(`${prefix}DeliveryCity`);
-            const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
-            const addrEl = document.getElementById(`${prefix}DeliveryAddress`);
+            const fnEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryFullName`));
+            const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryCity`));
+            const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryBranch`));
+            const addrEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryAddress`));
             if (fnEl) fnEl.value = fn;
             if (cityEl) cityEl.value = cityPart;
             if (branchEl) branchEl.value = branchPart;
@@ -239,7 +243,7 @@ bindWindowFn('renderProfileDelivery', renderProfileDelivery);
 export function toggleProfileDeliveryAccordion(isModal, btn) {
     if (typeof document === 'undefined') return;
     const prefix = isModal ? 'modalProfile' : 'profile';
-    const collapseEl = document.getElementById(`${prefix}DeliveryCollapse`);
+    const collapseEl = /** @type {(HTMLElement & Record<string, any>) | null} */ (document.getElementById(`${prefix}DeliveryCollapse`));
     const toggleBtn = btn || document.getElementById(`${prefix}DeliveryToggleBtn`);
     if (!collapseEl) return;
 
@@ -262,7 +266,7 @@ export function toggleProfileDeliveryAccordion(isModal, btn) {
     } else {
         if (collapseEl._expandTimer) clearTimeout(collapseEl._expandTimer);
         if (typeof collapseEl.classList.remove === 'function') collapseEl.classList.remove('is-expanded');
-        document.querySelectorAll('.profile-np-dropdown').forEach(d => { d.style.display = 'none'; });
+        document.querySelectorAll('.profile-np-dropdown').forEach(d => { (/** @type {HTMLElement} */ (d)).style.display = 'none'; });
     }
 
     if (toggleBtn) {
@@ -299,10 +303,10 @@ export async function saveProfileDeliveryFromForm(isModal, btn) {
         return;
     }
 
-    const fnEl = document.getElementById(`${prefix}DeliveryFullName`);
-    const cityEl = document.getElementById(`${prefix}DeliveryCity`);
-    const branchEl = document.getElementById(`${prefix}DeliveryBranch`);
-    const addrEl = document.getElementById(`${prefix}DeliveryAddress`);
+    const fnEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryFullName`));
+    const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryCity`));
+    const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryBranch`));
+    const addrEl = /** @type {HTMLInputElement | null} */ (document.getElementById(`${prefix}DeliveryAddress`));
     const fullName = (fnEl ? fnEl.value : '').trim();
     const city = (cityEl ? cityEl.value : '').trim();
     const branch = (branchEl ? branchEl.value : '').trim();
@@ -318,11 +322,11 @@ export async function saveProfileDeliveryFromForm(isModal, btn) {
         return;
     }
 
-    const saveBtns = [
+    const saveBtns = /** @type {HTMLButtonElement[]} */ ([
         btn,
         document.getElementById('profileDeliverySaveBtn'),
         document.getElementById('modalProfileDeliverySaveBtn')
-    ].filter(Boolean);
+    ].filter(Boolean));
 
     saveBtns.forEach(b => {
         b.disabled = true;
@@ -349,7 +353,7 @@ export async function saveProfileDeliveryFromForm(isModal, btn) {
             setProfileDeliveryLockState(true);
         }, 800);
     } catch (e) {
-        notifyToast(tProfile('profile.delivery_save_error', 'Ошибка сохранения данных: ') + (e.message || 'Сбой сети'), 'error');
+        notifyToast(tProfile('profile.delivery_save_error', 'Ошибка сохранения данных: ') + ((/** @type {any} */ (e))?.message || 'Сбой сети'), 'error');
     } finally {
         _isSavingProfileDelivery = false;
         saveBtns.forEach(b => {
@@ -364,7 +368,7 @@ bindWindowFn('saveProfileDeliveryFromForm', saveProfileDeliveryFromForm);
  * Persists delivery details and optional Nova Poshta refs into userProfile, localStorage, and Supabase.
  * @param {string} fullName
  * @param {string} address
- * @param {object} [refs={}]
+ * @param {any} [refs={}]
  */
 export async function saveDeliveryToProfile(fullName, address, refs = {}) {
     const fn = (fullName || '').trim();
@@ -426,9 +430,10 @@ export function initProfileDeliveryOutsideClick() {
     outsideClickBound = true;
     if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
         document.addEventListener('click', (e) => {
-            if (!e?.target?.closest || !e.target.closest('.profile-np-wrap')) {
+            const target = /** @type {Element | null} */ (e?.target);
+            if (!target?.closest || !target.closest('.profile-np-wrap')) {
                 document.querySelectorAll('.profile-np-dropdown').forEach(d => {
-                    d.style.display = 'none';
+                    (/** @type {HTMLElement} */ (d)).style.display = 'none';
                 });
             }
         });

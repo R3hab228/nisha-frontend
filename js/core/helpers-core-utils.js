@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS: PLATFORM PRIMITIVES, COLLECTIONS & FORMATTING
 // ES2022-2025 Polyfills, String/URL safety, Scheduling, Sets, Price & DOM utils
@@ -8,8 +9,9 @@ import { getActiveCurrencyCode, getCurrencySymbol, convertFromUah } from './curr
 
 // Polyfill Promise.withResolvers (ES2024) if not natively present
 if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function') {
-    Promise.withResolvers = function() {
-        let resolve, reject;
+    /** @type {any} */ (Promise).withResolvers = function() {
+        /** @type {any} */ let resolve;
+        /** @type {any} */ let reject;
         const promise = new Promise((res, rej) => {
             resolve = res;
             reject = rej;
@@ -18,9 +20,13 @@ if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function
     };
 }
 
+/**
+ * @param {string} name
+ * @param {any} value
+ */
 function exposeGlobal(name, value) {
-    if (typeof window !== 'undefined') window[name] = value;
-    if (typeof globalThis !== 'undefined') globalThis[name] = value;
+    if (typeof window !== 'undefined') /** @type {any} */ (window)[name] = value;
+    if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis)[name] = value;
     if (typeof value === 'function') registerAction(name, value);
 }
 
@@ -97,6 +103,7 @@ exposeGlobal('safeEncodeURIComponent', safeEncodeURIComponent);
 /**
  * Grapheme-safe text segmentation (Intl.Segmenter Baseline 2023/2024).
  * Guarantees that compound emojis and accented characters are never severed.
+ * @type {Intl.Segmenter | null}
  */
 let _cachedGraphemeSegmenter = null;
 
@@ -169,7 +176,7 @@ exposeGlobal('getGraphemeCount', getGraphemeCount);
  * @returns {AbortSignal|null}
  */
 export function combineAbortSignals(signals) {
-    const validSignals = (signals || []).filter(Boolean);
+    const validSignals = /** @type {AbortSignal[]} */ ((signals || []).filter(Boolean));
     if (validSignals.length === 0) return null;
     if (validSignals.length === 1) return validSignals[0];
     if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.any === 'function') {
@@ -201,7 +208,7 @@ export async function yieldToMain() {
             // fallback if scheduler.yield rejects or is aborted
         }
     }
-    const { promise, resolve } = Promise.withResolvers();
+    const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (Promise.withResolvers());
     if (typeof MessageChannel !== 'undefined') {
         try {
             const channel = new MessageChannel();
@@ -298,7 +305,7 @@ if (typeof window !== 'undefined') window.decompressJSON = decompressJSON;
 
 /**
  * Zero-delay microtask scheduler (queueMicrotask instead of setTimeout 0).
- * @param {Function} fn
+ * @param {() => void} fn
  */
 export function runMicrotask(fn) {
     if (typeof fn !== 'function') return;
@@ -313,11 +320,14 @@ export function runMicrotask(fn) {
     }
 }
 if (typeof window !== 'undefined') window.runMicrotask = runMicrotask;
-if (typeof globalThis !== 'undefined') globalThis.runMicrotask = globalThis.runMicrotask || runMicrotask;
+if (typeof globalThis !== 'undefined') {
+    const g = /** @type {any} */ (globalThis);
+    g.runMicrotask = g.runMicrotask || runMicrotask;
+}
 
 /**
  * Returns the last element of an array/string without mutating it.
- * @param {Array|string} arr
+ * @param {any[]|string} arr
  * @returns {*}
  */
 export function getLastItem(arr) {
@@ -325,11 +335,14 @@ export function getLastItem(arr) {
     return arr.at(-1);
 }
 if (typeof window !== 'undefined') window.getLastItem = getLastItem;
-if (typeof globalThis !== 'undefined') globalThis.getLastItem = globalThis.getLastItem || getLastItem;
+if (typeof globalThis !== 'undefined') {
+    const g = /** @type {any} */ (globalThis);
+    g.getLastItem = g.getLastItem || getLastItem;
+}
 
 /**
  * Returns the first element of an array/string without mutating it.
- * @param {Array|string} arr
+ * @param {any[]|string} arr
  * @returns {*}
  */
 export function getFirstItem(arr) {
@@ -337,12 +350,15 @@ export function getFirstItem(arr) {
     return typeof arr.at === 'function' ? arr.at(0) : arr[0];
 }
 if (typeof window !== 'undefined') window.getFirstItem = getFirstItem;
-if (typeof globalThis !== 'undefined') globalThis.getFirstItem = globalThis.getFirstItem || getFirstItem;
+if (typeof globalThis !== 'undefined') {
+    const g = /** @type {any} */ (globalThis);
+    g.getFirstItem = g.getFirstItem || getFirstItem;
+}
 
 /**
  * Resolves a human-readable display name from profile and Supabase user metadata.
- * @param {Object|null} user
- * @param {Object|null} profile
+ * @param {any} user
+ * @param {any} profile
  * @returns {string}
  */
 export function getUserDisplayName(user, profile) {
@@ -404,7 +420,7 @@ function resolveCurrencyDisplayLang() {
 export function getCurrency() {
     const activeCode = getActiveCurrencyCode();
     if (activeCode === 'USD' || activeCode === 'EUR') {
-        return getCurrencySymbol(activeCode);
+        return /** @type {'$' | '€'} */ (getCurrencySymbol(activeCode));
     }
     return resolveCurrencyDisplayLang() === 'en' ? 'UAH' : 'грн';
 }
@@ -494,21 +510,23 @@ export function deepClone(obj) {
         }
     }
     if (Array.isArray(obj)) {
-        return obj.map(item => deepClone(item));
+        return /** @type {T} */ (/** @type {unknown} */ (obj.map(item => deepClone(item))));
     }
+    /** @type {Record<string, any>} */
     const copy = {};
-    for (const key of Object.keys(obj)) {
-        copy[key] = deepClone(obj[key]);
+    const objRec = /** @type {Record<string, any>} */ (obj);
+    for (const key of Object.keys(objRec)) {
+        copy[key] = deepClone(objRec[key]);
     }
-    return copy;
+    return /** @type {T} */ (copy);
 }
 exposeGlobal('deepClone', deepClone);
 
 /**
  * Non-mutating sort using Array.prototype.toSorted with safe fallback.
- * @param {Array} array
- * @param {Function} [compareFn]
- * @returns {Array}
+ * @param {any[]} array
+ * @param {(a: any, b: any) => number} [compareFn]
+ * @returns {any[]}
  */
 export function toSorted(array, compareFn) {
     if (!Array.isArray(array)) return [];
@@ -521,8 +539,8 @@ exposeGlobal('toSorted', toSorted);
 
 /**
  * Non-mutating reverse using Array.prototype.toReversed with safe fallback.
- * @param {Array} array
- * @returns {Array}
+ * @param {any[]} array
+ * @returns {any[]}
  */
 export function toReversed(array) {
     if (!Array.isArray(array)) return [];
@@ -535,7 +553,7 @@ exposeGlobal('toReversed', toReversed);
 
 /**
  * Safe index lookup supporting negative offsets (Array.prototype.at).
- * @param {Array|string} array
+ * @param {any[]|string} array
  * @param {number} index
  * @returns {*}
  */
@@ -571,14 +589,14 @@ export function sleep(ms, signal) {
     if (signal?.aborted) {
         return Promise.reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
     }
-    const { promise, resolve, reject } = Promise.withResolvers();
+    const { promise, resolve, reject } = /** @type {PromiseWithResolvers<void>} */ (Promise.withResolvers());
     const timer = setTimeout(() => {
         signal?.removeEventListener('abort', onAbort);
         resolve();
     }, ms);
     function onAbort() {
         clearTimeout(timer);
-        reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
+        reject(signal?.reason ?? new DOMException('Aborted', 'AbortError'));
     }
     signal?.addEventListener('abort', onAbort, { once: true });
     return promise;
@@ -610,15 +628,16 @@ exposeGlobal('withWebLock', withWebLock);
 
 /**
  * ES2025 Set difference with fallback.
- * @param {Set|null} setA
- * @param {Set|null} setB
- * @returns {Set}
+ * @param {Set<any>|null} setA
+ * @param {Set<any>|null} setB
+ * @returns {Set<any>}
  */
 export function setDifference(setA, setB) {
     if (!setA) return new Set();
     if (!setB) return new Set(setA);
-    if (typeof setA.difference === 'function') {
-        return setA.difference(setB);
+    const setAAny = /** @type {any} */ (setA);
+    if (typeof setAAny.difference === 'function') {
+        return setAAny.difference(setB);
     }
     const diff = new Set();
     for (const elem of setA) {
@@ -630,14 +649,15 @@ exposeGlobal('setDifference', setDifference);
 
 /**
  * ES2025 Set intersection with fallback.
- * @param {Set|null} setA
- * @param {Set|null} setB
- * @returns {Set}
+ * @param {Set<any>|null} setA
+ * @param {Set<any>|null} setB
+ * @returns {Set<any>}
  */
 export function setIntersection(setA, setB) {
     if (!setA || !setB) return new Set();
-    if (typeof setA.intersection === 'function') {
-        return setA.intersection(setB);
+    const setAAny = /** @type {any} */ (setA);
+    if (typeof setAAny.intersection === 'function') {
+        return setAAny.intersection(setB);
     }
     const inter = new Set();
     for (const elem of setB) {
@@ -649,16 +669,17 @@ exposeGlobal('setIntersection', setIntersection);
 
 /**
  * ES2025 Set union with fallback.
- * @param {Set|null} setA
- * @param {Set|null} setB
- * @returns {Set}
+ * @param {Set<any>|null} setA
+ * @param {Set<any>|null} setB
+ * @returns {Set<any>}
  */
 export function setUnion(setA, setB) {
     if (!setA && !setB) return new Set();
     if (!setA) return new Set(setB);
     if (!setB) return new Set(setA);
-    if (typeof setA.union === 'function') {
-        return setA.union(setB);
+    const setAAny = /** @type {any} */ (setA);
+    if (typeof setAAny.union === 'function') {
+        return setAAny.union(setB);
     }
     const union = new Set(setA);
     for (const elem of setB) {
@@ -670,15 +691,16 @@ exposeGlobal('setUnion', setUnion);
 
 /**
  * ES2025 Set isSubsetOf with fallback.
- * @param {Set|null} setA
- * @param {Set|null} setB
+ * @param {Set<any>|null} setA
+ * @param {Set<any>|null} setB
  * @returns {boolean}
  */
 export function setIsSubsetOf(setA, setB) {
     if (!setA) return true;
     if (!setB) return setA.size === 0;
-    if (typeof setA.isSubsetOf === 'function') {
-        return setA.isSubsetOf(setB);
+    const setAAny = /** @type {any} */ (setA);
+    if (typeof setAAny.isSubsetOf === 'function') {
+        return setAAny.isSubsetOf(setB);
     }
     for (const elem of setA) {
         if (!setB.has(elem)) return false;
@@ -717,10 +739,11 @@ exposeGlobal('formatUaPhoneDisplay', formatUaPhoneDisplay);
  */
 export function formatPhoneInput(inputEl, rawValue) {
     if (!inputEl) return '';
+    const inputAny = /** @type {any} */ (inputEl);
     const source = rawValue !== undefined ? rawValue : inputEl.value;
     const formatted = formatUaPhoneDisplay(source);
-    const mask = inputEl._imask || inputEl._nishaPhoneMask || null;
-    inputEl._syncingMaskValue = true;
+    const mask = inputAny._imask || inputAny._nishaPhoneMask || null;
+    inputAny._syncingMaskValue = true;
     try {
         inputEl.value = formatted;
         if (mask) {
@@ -730,7 +753,7 @@ export function formatPhoneInput(inputEl, rawValue) {
             }
         }
     } finally {
-        inputEl._syncingMaskValue = false;
+        inputAny._syncingMaskValue = false;
     }
     return formatted;
 }

@@ -1,8 +1,9 @@
+// @ts-check
 // ==========================================
 // NISHA REVIEWS MODULE (REVIEWS.TXT / EXE)
 // ==========================================
 
-import { invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
+import { hasAction, invokeAction, registerActions, resolveAction } from '../core/action-registry.js';
 import {
     escapeAttrSafe,
     escapeHtmlSafe,
@@ -16,14 +17,17 @@ import { bindPhotoSwipeBackGesture } from '../ui/back-gesture.js';
 
 const _failedReviewImages = new Set();
 
+/** @param {any} u */
 const toCDN = (u) => {
     const fn = resolveAction('toCDN');
     return fn ? fn(u) : (u || '');
 };
 
+/** @type {any} */
 let _activeReviewLightbox = null;
 
 // Глобальная функция для открытия 1 картинки в PhotoSwipe
+/** @param {any} url */
 async function openReviewImage(url) {
     if (typeof ensurePhotoSwipe === 'function') {
         await ensurePhotoSwipe();
@@ -48,6 +52,7 @@ async function openReviewImage(url) {
 }
 
 // Оперативный кэш отзывов (TTL: 3 минуты) для мгновенного повторного открытия
+/** @type {{ data: any[] | null, timestamp: number }} */
 let reviewsCache = {
     data: null,
     timestamp: 0
@@ -55,6 +60,7 @@ let reviewsCache = {
 const REVIEWS_CACHE_TTL = 3 * 60 * 1000;
 const reviewDateFormatter = new Intl.DateTimeFormat('ru-RU');
 let _isSubmittingAutoReview = false;
+/** @type {string | null} */
 let _myLastReviewText = null;
 const _notifiedReviewIds = new Set();
 
@@ -79,6 +85,7 @@ async function openReviewsModal() {
     const container = document.getElementById('reviewsContainerList');
     if (!container) return;
 
+    /** @param {any[]} data */
     const renderReviewsData = (data) => {
         container.classList.remove('is-loading');
         if (!data || data.length === 0) {
@@ -93,7 +100,7 @@ async function openReviewsModal() {
         const escHtmlFn = resolveAction('escapeHtml');
         const escAttrFn = resolveAction('escapeAttr');
         let html = ''; 
-        data.forEach(rev => {
+        data.forEach((/** @type {any} */ rev) => {
             const revDateMs = Date.parse(rev.created_at);
             const date = Number.isFinite(revDateMs) ? reviewDateFormatter.format(revDateMs) : '';
             const safeText = sanitizeFn ? sanitizeFn(rev.text) : escapeHtmlSafe(rev.text);
@@ -179,7 +186,7 @@ async function openReviewsModal() {
                 error = null;
             }
         } catch (apiErr) {
-            console.warn('[REVIEWS] Backend reviews fallback error:', apiErr.message);
+            console.warn('[REVIEWS] Backend reviews fallback error:', apiErr instanceof Error ? apiErr.message : String(apiErr));
         }
     }
 
@@ -201,10 +208,11 @@ async function openReviewsModal() {
 }
 
 // Прокрутка слайдера отзывов стрелками
+/** @param {number} direction */
 function scrollReviews(direction) {
     const slider = document.getElementById('reviewsContainerList');
     if (!slider) return;
-    const card = slider.querySelector('.review-card-ui');
+    const card = /** @type {HTMLElement | null} */ (slider.querySelector('.review-card-ui'));
     if (!card) return;
     const colWidth = card.offsetWidth + 15;
     const scrollAmount = window.innerWidth > 900 ? (colWidth * 2) : colWidth;
@@ -216,7 +224,7 @@ function equalizeReviewCardHeights() {
     requestAnimationFrame(() => {
         const slider = document.getElementById('reviewsContainerList');
         if (!slider) return;
-        const cards = slider.querySelectorAll('.review-card-ui');
+        const cards = /** @type {NodeListOf<HTMLElement>} */ (slider.querySelectorAll('.review-card-ui'));
         if (!cards.length) return;
 
         // 1. Сбрасываем фиксированную высоту
@@ -241,6 +249,7 @@ function equalizeReviewCardHeights() {
     });
 }
 
+/** @type {number | null} */
 let resizeReviewCardRaf = null;
 window.addEventListener('resize', () => {
     if (resizeReviewCardRaf) return;
@@ -255,6 +264,7 @@ window.addEventListener('resize', () => {
 }, { passive: true });
 
 // Умный сбор отзывов за полученные посылки
+/** @param {any} orderId @param {any} itemName @param {any} itemImage @param {any} itemId */
 function promptOrderReview(orderId, itemName, itemImage, itemId) {
     if (orderId) {
         const store = getRuntimeStorage();
@@ -265,7 +275,7 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
         }
     }
 
-    const orderInput = document.getElementById('autoReviewOrderId');
+    const orderInput = /** @type {HTMLInputElement | null} */ (document.getElementById('autoReviewOrderId'));
     if (orderInput) orderInput.value = orderId;
 
     let resolvedImg = itemImage || '';
@@ -273,10 +283,10 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
         resolvedImg = getOrderItemImage({ id: itemId }) || '';
     }
 
-    const itemImgInput = document.getElementById('autoReviewItemImage');
+    const itemImgInput = /** @type {HTMLInputElement | null} */ (document.getElementById('autoReviewItemImage'));
     if (itemImgInput) itemImgInput.value = resolvedImg;
 
-    const itemIdInput = document.getElementById('autoReviewItemId');
+    const itemIdInput = /** @type {HTMLInputElement | null} */ (document.getElementById('autoReviewItemId'));
     if (itemIdInput) itemIdInput.value = itemId || '';
 
     const nameEl = document.getElementById('autoReviewName');
@@ -290,7 +300,7 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
         previewEl.style.backgroundImage = safePreviewUrl ? `url('${safePreviewUrl}')` : 'none';
     }
 
-    const inputEl = document.getElementById('autoReviewInput');
+    const inputEl = /** @type {HTMLInputElement | HTMLTextAreaElement | null} */ (document.getElementById('autoReviewInput'));
     if (inputEl) inputEl.value = ''; 
 
     if (typeof openModal === 'function') {
@@ -310,6 +320,7 @@ function promptOrderReview(orderId, itemName, itemImage, itemId) {
 window.promptOrderReview = promptOrderReview;
 
 // Защищенная отправка отзыва (сначала бэкенд API с service_role и обходом RLS, затем фолбэк на Supabase)
+/** @param {any} payload */
 async function sendReviewPayload(payload) {
     // 1. Приоритетный защищенный канал через бэкенд API (service_role, обход RLS, валидация, Telegram-уведомление)
     if (window.apiClient && typeof window.apiClient.post === 'function') {
@@ -322,9 +333,10 @@ async function sendReviewPayload(payload) {
                 return { success: false, error: new Error(apiRes.message) };
             }
         } catch (apiErr) {
-            console.warn('[REVIEWS] Backend API error, attempting direct Supabase fallback:', apiErr.message);
+            const errObj = /** @type {any} */ (apiErr);
+            console.warn('[REVIEWS] Backend API error, attempting direct Supabase fallback:', errObj?.message);
             // Если клиент получил явную ошибку валидации от бэкенда (400), возвращаем ее
-            if (apiErr.status === 400 || (apiErr.message && apiErr.message.includes('короткий'))) {
+            if (errObj?.status === 400 || (errObj?.message && String(errObj.message).includes('короткий'))) {
                 return { success: false, error: apiErr };
             }
         }
@@ -337,6 +349,7 @@ async function sendReviewPayload(payload) {
     }
 
     const activeUser = getRuntimeUser();
+    /** @type {Record<string, any>} */
     const directPayload = {
         user_name: payload.user_name || payload.userName || 'User',
         text: payload.text,
@@ -367,11 +380,11 @@ window.sendReviewPayload = sendReviewPayload;
 // Отправка авто-отзыва по заказу
 async function submitAutoReview() {
     if (_isSubmittingAutoReview) return;
-    const inputEl = document.getElementById('autoReviewInput');
+    const inputEl = /** @type {HTMLInputElement | HTMLTextAreaElement | null} */ (document.getElementById('autoReviewInput'));
     const text = inputEl ? inputEl.value.trim() : '';
-    const orderId = document.getElementById('autoReviewOrderId')?.value;
-    const itemImage = document.getElementById('autoReviewItemImage')?.value;
-    const itemId = document.getElementById('autoReviewItemId')?.value;
+    const orderId = (/** @type {HTMLInputElement | null} */ (document.getElementById('autoReviewOrderId')))?.value;
+    const itemImage = (/** @type {HTMLInputElement | null} */ (document.getElementById('autoReviewItemImage')))?.value;
+    const itemId = (/** @type {HTMLInputElement | null} */ (document.getElementById('autoReviewItemId')))?.value;
 
     if (orderId) {
         const store = getRuntimeStorage();
@@ -448,7 +461,7 @@ async function submitAutoReview() {
 
 // Пропуск авто-отзыва ("Позже")
 function skipAutoReview() {
-    const orderId = document.getElementById('autoReviewOrderId')?.value;
+    const orderId = (/** @type {HTMLInputElement | null} */ (document.getElementById('autoReviewOrderId')))?.value;
     if (orderId) {
         try {
             const store = getRuntimeStorage();
@@ -474,7 +487,7 @@ function writeReviewOnSite() {
         return;
     }
 
-    const inputEl = document.getElementById('manualReviewInput');
+    const inputEl = /** @type {HTMLInputElement | HTMLTextAreaElement | null} */ (document.getElementById('manualReviewInput'));
     if (inputEl) inputEl.value = '';
     closeModal('reviewsModal');
     
@@ -497,7 +510,7 @@ function writeReviewOnSite() {
 
 // Отправка ручного отзыва
 async function submitManualReview() {
-    const inputEl = document.getElementById('manualReviewInput');
+    const inputEl = /** @type {HTMLInputElement | HTMLTextAreaElement | null} */ (document.getElementById('manualReviewInput'));
     const text = inputEl ? inputEl.value.trim() : '';
     
     if (text.length < 3) {
@@ -556,8 +569,10 @@ async function submitManualReview() {
 // ==========================================
 // REALTIME ПУШ-УВЕДОМЛЕНИЯ О НОВЫХ ОТЗЫВАХ
 // ==========================================
+/** @type {any} */
 let _reviewsRealtimeChannel = null;
 
+/** @param {any} [sb] */
 function initReviewsRealtime(sb) {
     if (!sb) sb = getRuntimeSupabase();
     if (!sb) return;
@@ -565,7 +580,7 @@ function initReviewsRealtime(sb) {
 
     try {
         _reviewsRealtimeChannel = sb.channel('public:reviews')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, (payload) => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, (/** @type {any} */ payload) => {
                 if (payload.eventType !== 'INSERT' && payload.eventType !== 'UPDATE') return;
                 const rev = payload.new;
                 if (!rev) return;
@@ -606,7 +621,7 @@ function initReviewsRealtime(sb) {
                 const snippet = truncFn
                     ? truncFn(cleanText, 52, '...')
                     : (cleanText.length > 55 ? cleanText.slice(0, 52) + '...' : cleanText);
-                const esc = resolveAction('escapeHtml') || (s => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'));
+                const esc = resolveAction('escapeHtml') || ((/** @type {any} */ s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'));
                 const toastMsg = tSafe('reviews_modal.new_review_from', {
                     author: esc(author),
                     snippet: esc(snippet),
@@ -648,14 +663,14 @@ function initReviewsRealtime(sb) {
                             : `${origin}/icon-192.png?v=11`;
 
                         const notifTitle = tSafe('reviews_modal.new_review_notif', { defaultValue: 'NISHA STORE | Новый отзыв ⭐' });
-                        reg.showNotification(notifTitle, {
+                        reg.showNotification(notifTitle, /** @type {NotificationOptions} */ ({
                             body: `${author}: "${snippet}"`,
                             icon: notifIcon,
                             badge: notifBadge,
                             tag: 'nisha-review-' + (rev.id || Date.now()),
                             renotify: true,
                             data: { url: 'https://www.nisha-store.shop/?action=reviews' }
-                        });
+                        }));
                     }).catch(() => {});
                 }
             })

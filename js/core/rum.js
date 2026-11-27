@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - REAL USER MONITORING (RUM)
 // js/core/rum.js - Web Vitals & Real Client Speed Telemetry
@@ -10,6 +11,7 @@
 // - Device Category (iOS, Android, Desktop) & Connection Type
 // Zero overhead: uses native PerformanceObserver with buffered: true
 
+/** @type {{ lcp: number | null, inp: number | null, cls: number, ttfb: number | null, device: string, connection: string, url: string }} */
 const rumData = {
         lcp: null,
         inp: null,
@@ -51,8 +53,9 @@ const rumData = {
         try {
             if (typeof performance === 'undefined') return;
             const navEntries = performance.getEntriesByType('navigation');
-            if (navEntries && navEntries.length > 0 && Number.isFinite(navEntries[0].responseStart) && navEntries[0].responseStart > 0) {
-                rumData.ttfb = Math.round(navEntries[0].responseStart);
+            const navEntry = /** @type {PerformanceNavigationTiming | undefined} */ (navEntries && navEntries[0]);
+            if (navEntry && Number.isFinite(navEntry.responseStart) && navEntry.responseStart > 0) {
+                rumData.ttfb = Math.round(navEntry.responseStart);
             }
         } catch {}
     }
@@ -67,7 +70,9 @@ const rumData = {
                 const entries = entryList.getEntries();
                 if (entries.length > 0) {
                     const lastEntry = entries.at(-1);
-                    rumData.lcp = Math.round(lastEntry.startTime);
+                    if (lastEntry) {
+                        rumData.lcp = Math.round(lastEntry.startTime);
+                    }
                 }
             });
             lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
@@ -76,7 +81,8 @@ const rumData = {
         // 2. CLS (Cumulative Layout Shift)
         try {
             const clsObserver = new PerformanceObserver((entryList) => {
-                for (const entry of entryList.getEntries()) {
+                for (const rawEntry of entryList.getEntries()) {
+                    const entry = /** @type {any} */ (rawEntry);
                     if (!entry.hadRecentInput) {
                         rumData.cls = Number((rumData.cls + entry.value).toFixed(4));
                     }
@@ -86,8 +92,10 @@ const rumData = {
         } catch {}
 
         // 3. INP (Interaction to Next Paint) & First Input Delay
+        /** @param {PerformanceObserverEntryList} entryList */
         const handleInputEntry = (entryList) => {
-            for (const entry of entryList.getEntries()) {
+            for (const rawEntry of entryList.getEntries()) {
+                const entry = /** @type {any} */ (rawEntry);
                 const duration = entry.duration || (entry.processingStart - entry.startTime);
                 if (Number.isFinite(duration)) {
                     rumData.inp = Math.round(Math.max(rumData.inp || 0, duration));
@@ -98,7 +106,7 @@ const rumData = {
         // Modern Event Timing (INP) with durationThreshold
         try {
             const eventObserver = new PerformanceObserver(handleInputEntry);
-            eventObserver.observe({ type: 'event', durationThreshold: 40, buffered: true });
+            eventObserver.observe(/** @type {any} */ ({ type: 'event', durationThreshold: 40, buffered: true }));
         } catch {}
 
         // Universal first-input fallback (FID / Initial Interaction)
@@ -216,8 +224,9 @@ const rumData = {
                 sendRumReport('timer');
             }
         }, 6000);
-        if (timer && typeof timer.unref === 'function') {
-            timer.unref();
+        const timerObj = /** @type {any} */ (timer);
+        if (timerObj && typeof timerObj.unref === 'function') {
+            timerObj.unref();
         }
 
         // 4. Send updated vitals when user hides tab or navigates away

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA UI WINDOWS & MODALS (Оконная система Win95)
 // ==========================================
@@ -27,6 +28,7 @@ export {
 };
 
 // Быстрая проверка видимости DOM-элемента через inline-стили и нативный Element.checkVisibility()
+/** @param {any} el */
 function isElementVisible(el) {
     if (!el) return false;
     if (el.style) {
@@ -44,7 +46,7 @@ function isElementVisible(el) {
     return comp.display !== 'none' && comp.visibility !== 'hidden' && comp.opacity !== '0';
 }
 window.isElementVisible = isElementVisible;
-if (typeof globalThis !== 'undefined') globalThis.isElementVisible = isElementVisible;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).isElementVisible = isElementVisible;
 
 // 1. Проверка: находится ли пользователь СТРОГО в обычной ленте товаров (каталоге) без открытых окон и карточек
 function isUserInProductFeed() {
@@ -125,12 +127,17 @@ function isUserInProductFeed() {
 
 // Реестр функций ленивой гидратации модальных окон
 const _modalInitializers = new Map();
+/**
+ * @param {string} id
+ * @param {Function} initFn
+ */
 function registerModalInitializer(id, initFn) {
     if (typeof initFn === 'function') {
         _modalInitializers.set(id, initFn);
     }
 }
 
+/** @param {string} id */
 function triggerModalInitializer(id) {
     const fn = _modalInitializers.get(id);
     if (typeof fn === 'function') {
@@ -140,6 +147,7 @@ function triggerModalInitializer(id) {
 }
 
 // Перезапуск анимации печатной машинки заголовка с мигающим квадратным курсором (1-в-1 как в ITEM_INFO.EXE)
+/** @param {any} modalOrId */
 function triggerModalTypewriter(modalOrId, { skipReflow = false } = {}) {
     if (!modalOrId) return;
     const modal = typeof modalOrId === 'string'
@@ -152,7 +160,7 @@ function triggerModalTypewriter(modalOrId, { skipReflow = false } = {}) {
         twElements.push(modal);
     } else if (typeof modal.querySelectorAll === 'function') {
         try {
-            modal.querySelectorAll('.typewriter').forEach(el => twElements.push(el));
+            modal.querySelectorAll('.typewriter').forEach((/** @type {any} */ el) => twElements.push(el));
         } catch {}
     } else if (typeof modal.querySelector === 'function') {
         try {
@@ -173,9 +181,10 @@ function triggerModalTypewriter(modalOrId, { skipReflow = false } = {}) {
 window.triggerModalTypewriter = triggerModalTypewriter;
 
 // 2. Универсальное открытие модального окна (с ленивой инициализацией)
+/** @param {string} id */
 function openModal(id) {
     invokeAction('stopLenis');
-    const modal = document.getElementById(id);
+    const modal = /** @type {any} */ (document.getElementById(id));
     if (!modal) return;
     invokeAction('playSound', 'start', { kind: 'ui' });
 
@@ -204,7 +213,7 @@ function openModal(id) {
     }
     modal.style.pointerEvents = '';
     modal.setAttribute('aria-hidden', 'false');
-    const win = modal.querySelector ? modal.querySelector('.modal-window') : null;
+    const win = /** @type {HTMLElement | null} */ (modal.querySelector ? modal.querySelector('.modal-window') : null);
     if (win) {
         win.style.pointerEvents = '';
         win.scrollTop = 0;
@@ -233,6 +242,11 @@ function openModal(id) {
 window.openModal = openModal;
 
 // 3. Закрытие модального окна по крестику (с защитой данных)
+/**
+ * @param {string} id
+ * @param {any} [e]
+ * @param {{ fromBackGesture?: boolean }} [options={}]
+ */
 function closeModal(id, e, options = {}) { 
     const evt = e || null;
     if (evt) {
@@ -257,19 +271,19 @@ function closeModal(id, e, options = {}) {
         if (typeof document !== 'undefined' && document.querySelector('.confirm-modal-overlay')) {
             return;
         }
-        const filesCount = (window.currentProposalFiles && window.currentProposalFiles.length) || document.getElementById('propFiles')?.files?.length || 0;
-        const name = document.getElementById('propName')?.value.trim() || '';
-        const brand = document.getElementById('propBrand')?.value.trim() || '';
-        const category = document.getElementById('propCategory')?.value.trim() || '';
-        const size = document.getElementById('propSize')?.value.trim() || '';
-        const desc = document.getElementById('propDesc')?.value.trim() || '';
-        const cond = document.getElementById('propCond')?.value.trim() || '';
-        const price = document.getElementById('propPrice')?.value.trim() || '';
+        const filesCount = (window.currentProposalFiles && window.currentProposalFiles.length) || /** @type {HTMLInputElement | null} */ (document.getElementById('propFiles'))?.files?.length || 0;
+        const name = /** @type {HTMLInputElement | null} */ (document.getElementById('propName'))?.value.trim() || '';
+        const brand = /** @type {HTMLInputElement | null} */ (document.getElementById('propBrand'))?.value.trim() || '';
+        const category = /** @type {HTMLInputElement | null} */ (document.getElementById('propCategory'))?.value.trim() || '';
+        const size = /** @type {HTMLInputElement | null} */ (document.getElementById('propSize'))?.value.trim() || '';
+        const desc = /** @type {HTMLTextAreaElement | null} */ (document.getElementById('propDesc'))?.value.trim() || '';
+        const cond = /** @type {HTMLInputElement | null} */ (document.getElementById('propCond'))?.value.trim() || '';
+        const price = /** @type {HTMLInputElement | null} */ (document.getElementById('propPrice'))?.value.trim() || '';
         
         // Проверяем контакты: если поле скрыто (автоподстановка для профиля) или значение совпадает с данными профиля — не считаем ручным вводом
         const contactWrap = document.getElementById('propContactWrapper');
         const isContactVisible = isElementVisible(contactWrap);
-        const contactVal = document.getElementById('propContact')?.value.trim() || '';
+        const contactVal = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'))?.value.trim() || '';
         
         const autoTg = String(invokeAction('getUserTg') || '').trim();
         const autoPhone = String(invokeAction('getUserPhone') || '').trim();
@@ -309,7 +323,7 @@ function closeModal(id, e, options = {}) {
                     invokeAction('resetProposalForm');
                     executeCloseModal(id, evt); 
                 },
-                (dismissOpts) => {
+                (/** @type {any} */ dismissOpts) => {
                     if (!dismissOpts || !dismissOpts.fromBackGesture) {
                         removeBackLayerFromUI(`confirm:${id}`);
                     }
@@ -322,7 +336,7 @@ function closeModal(id, e, options = {}) {
                     type: 'confirm',
                     id,
                     onBackClose: () => {
-                        const cur = document.querySelector('.confirm-modal-overlay');
+                        const cur = /** @type {any} */ (document.querySelector('.confirm-modal-overlay'));
                         if (!cur) return;
                         if (typeof cur._nishaDismiss === 'function') {
                             cur._nishaDismiss(false, { fromBackGesture: true });
@@ -340,6 +354,11 @@ function closeModal(id, e, options = {}) {
 window.closeModal = closeModal;
 
 // 4. Исполнение плавного закрытия окна с анимацией
+/**
+ * @param {string} id
+ * @param {any} [e]
+ * @param {{ fromBackGesture?: boolean }} [options={}]
+ */
 function executeCloseModal(id, e, options = {}) {
     if (!options || !options.fromBackGesture) {
         removeBackLayerFromUI(`modal:${id}`);
@@ -361,7 +380,7 @@ function executeCloseModal(id, e, options = {}) {
     if (id === 'proposeModal') {
         invokeAction('resetPropBargainState');
     }
-    const modal = document.getElementById(id);
+    const modal = /** @type {any} */ (document.getElementById(id));
     if (!modal) return;
 
     // Если окно уже в процессе закрытия или скрыто — выходим
@@ -369,7 +388,8 @@ function executeCloseModal(id, e, options = {}) {
     if (modal.style.display === 'none' && !modal.style.opacity) return;
 
     // Мгновенная разблокировка скролла (только если нет других открытых модальных окон)
-    const hasOtherOpenModal = () => Array.from(document.querySelectorAll('.modal-overlay')).some(m => {
+    const hasOtherOpenModal = () => Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
+        const m = /** @type {HTMLElement} */ (el);
         if (m === modal || m.classList.contains('closing')) return false;
         return m.style.display === 'flex' || m.style.display === 'block';
     });
@@ -388,7 +408,7 @@ function executeCloseModal(id, e, options = {}) {
 
     // Мгновенная пауза любых видео в закрывающемся окне
     const modalVideos = modal.querySelectorAll('video');
-    modalVideos.forEach(v => {
+    modalVideos.forEach((/** @type {HTMLVideoElement} */ v) => {
         try { v.pause(); } catch {}
     });
 
@@ -407,7 +427,7 @@ function executeCloseModal(id, e, options = {}) {
         }
         invokeAction('resetOpenGraphTags');
         try {
-            const u = new URL(window.location);
+            const u = new URL(String(window.location));
             if (u.searchParams.has('item')) {
                 u.searchParams.delete('item');
                 const curState = (window.history && window.history.state !== undefined) ? window.history.state : null;
@@ -418,7 +438,7 @@ function executeCloseModal(id, e, options = {}) {
 
     // Снимаем фокус с дочерних элементов закрывающегося окна перед aria-hidden=true (WAI-ARIA compliance)
     if (typeof document !== 'undefined' && document.activeElement && modal.contains(document.activeElement)) {
-        try { document.activeElement.blur(); } catch {}
+        try { /** @type {HTMLElement} */ (document.activeElement).blur(); } catch {}
     }
 
     const isSwipeClosing = Boolean(modal._swipeClosing);
@@ -429,7 +449,7 @@ function executeCloseModal(id, e, options = {}) {
     if (isSwipeClosing) modal.classList.add('swipe-closing');
     modal.style.pointerEvents = 'none';
     modal.setAttribute('aria-hidden', 'true');
-    const winClosing = modal.querySelector('.modal-window');
+    const winClosing = /** @type {HTMLElement | null} */ (modal.querySelector('.modal-window'));
     if (winClosing) {
         winClosing.style.pointerEvents = '';
         if (!isSwipeClosing) {
@@ -455,7 +475,7 @@ function executeCloseModal(id, e, options = {}) {
         modal.inert = true;
         modal.setAttribute('inert', '');
 
-        const win = modal.querySelector('.modal-window');
+        const win = /** @type {HTMLElement | null} */ (modal.querySelector('.modal-window'));
         if (win) {
             win.style.pointerEvents = '';
             win.style.transform = '';
@@ -525,7 +545,7 @@ if (typeof document !== 'undefined' && typeof document.addEventListener === 'fun
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         // 1. Закрытие терминальных окон подтверждения или алертов
-        const topTerm = Array.from(document.querySelectorAll('.confirm-modal-overlay, .terminal-modal-overlay, #confirmTerminalModal, #customTerminalAlert')).findLast(isElementVisible);
+        const topTerm = /** @type {any} */ (Array.from(document.querySelectorAll('.confirm-modal-overlay, .terminal-modal-overlay, #confirmTerminalModal, #customTerminalAlert')).findLast(isElementVisible));
         if (topTerm) {
             if (topTerm._nishaPersistent) return;
             if (typeof topTerm._nishaDismiss === 'function') {
@@ -538,7 +558,7 @@ document.addEventListener('keydown', (e) => {
 
         // 2. Оверлей успешного заказа
         const orderSuccess = document.getElementById('orderSuccessOverlay');
-        if (isElementVisible(orderSuccess)) {
+        if (orderSuccess && isElementVisible(orderSuccess)) {
             orderSuccess.style.display = 'none';
             return;
         }

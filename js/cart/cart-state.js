@@ -19,6 +19,27 @@ if (typeof window !== 'undefined') {
     window.selectedBranchRef = window.selectedBranchRef || '';
 }
 
+/**
+ * @type {{
+ *   cart: any[],
+ *   currentPromoDiscount: number,
+ *   appliedPromoCode: string,
+ *   selectedCityRef: string,
+ *   selectedBranchRef: string,
+ *   citySearchTimeout: ReturnType<typeof setTimeout> | null,
+ *   branchSearchTimeout: ReturnType<typeof setTimeout> | null,
+ *   cachedBranches: any[],
+ *   npBranchCache: Record<string, any[]>,
+ *   npBranchCacheComplete: Record<string, boolean>,
+ *   cartSwipeStartX: number,
+ *   cartSwipeCurrentX: number,
+ *   lastCartActionTime: number,
+ *   isCheckoutOpening: boolean,
+ *   isOrderSubmitting: boolean,
+ *   removingCartIds: Set<any>,
+ *   _postOpenAutofillTimer?: ReturnType<typeof setTimeout> | null
+ * }}
+ */
 export const cartState = {
     cart: (typeof window !== 'undefined' && window.cart) ? window.cart : [],
     currentPromoDiscount: 0,

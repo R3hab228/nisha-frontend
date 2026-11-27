@@ -1,3 +1,5 @@
+// @ts-check
+/// <reference types="vite/client" />
 // ==========================================
 // NISHA SEARCH WORKER CLIENT
 // High-performance asynchronous bridge to Fuse.js Web Worker with synchronous fallback
@@ -7,9 +9,11 @@ import SearchWorker from '../../src/workers/search.worker.js?worker';
 import { invokeAction, registerActions } from './action-registry.js';
 import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './helpers-search-address.js';
 
+    /** @type {Worker | null} */
     let worker = null;
     let isWorkerReady = false;
     let requestIdCounter = 0;
+    /** @type {Map<number, { resolve: (val: any) => void, channel: 'live' | 'catalog', reqId: number }>} */
     const pendingRequests = new Map();
     const lastActiveRequestId = { live: 0, catalog: 0 };
 
@@ -18,7 +22,7 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
         if (typeof Worker !== 'undefined') {
             worker = new SearchWorker();
 
-            worker.onmessage = function(e) {
+            worker.onmessage = function(/** @type {MessageEvent} */ e) {
                 const data = e.data;
                 if (!data) return;
 
@@ -27,8 +31,10 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
                 }
 
                 if (data.requestId !== undefined && pendingRequests.has(data.requestId)) {
-                    const { resolve, channel, reqId } = pendingRequests.get(data.requestId);
+                    const pending = pendingRequests.get(data.requestId);
                     pendingRequests.delete(data.requestId);
+                    if (!pending) return;
+                    const { resolve, channel, reqId } = pending;
 
                     // Проверка на устаревшие запросы (race condition protection)
                     if (channel && reqId < lastActiveRequestId[channel]) {
@@ -46,7 +52,7 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
                 }
             };
 
-            worker.onerror = function(err) {
+            worker.onerror = function(/** @type {ErrorEvent} */ err) {
                 console.warn('[SearchWorker] Worker error, falling back to main-thread Fuse:', err);
                 isWorkerReady = false;
                 ensureFallbackFuseLoaded();
@@ -62,15 +68,19 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
     }
 
     // Вспомогательный синхронный/ленивый fallback в основном потоке на случай сбоя Worker
+    /** @type {any} */
     let _fallbackFuse = null;
+    /** @type {any[] | null} */
     let _fallbackItemsRef = null;
+    /** @type {Promise<any> | null} */
     let _fuseLoadPromise = null;
 
     function ensureFallbackFuseLoaded() {
         if (typeof window.Fuse !== 'undefined') return Promise.resolve(window.Fuse);
         if (!_fuseLoadPromise) {
             _fuseLoadPromise = import('fuse.js').then((mod) => {
-                const FuseClass = mod.default || mod.Fuse || mod;
+                const modAny = /** @type {any} */ (mod);
+                const FuseClass = modAny.default || modAny.Fuse || modAny;
                 window.Fuse = FuseClass;
                 if (typeof globalThis !== 'undefined') globalThis.Fuse = FuseClass;
                 return FuseClass;
@@ -79,6 +89,7 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
         return _fuseLoadPromise;
     }
 
+    /** @param {any[]} items */
     function getFallbackFuse(items) {
         if (typeof window.Fuse === 'undefined') {
             ensureFallbackFuseLoaded();
@@ -106,6 +117,7 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
 
     // ПУБЛИЧНЫЙ КЛИЕНТСКИЙ API
     const searchWorkerClient = {
+        /** @param {any[]} items */
         // Загрузка товаров в воркер
         setItems(items) {
             if (!Array.isArray(items)) return;
@@ -122,7 +134,11 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
             }
         },
 
-        // Быстрый асинхронный поиск для живого выпадающего списка
+        /**
+         * Быстрый асинхронный поиск для живого выпадающего списка
+         * @param {string} query
+         * @param {number} [limit=8]
+         */
         searchLive(query, limit = 8) {
             const reqId = ++requestIdCounter;
             lastActiveRequestId.live = reqId;
@@ -153,7 +169,11 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
             return Promise.resolve(searchWorkerClient.fallbackLiveSearch(query, limit));
         },
 
-        // Поиск по каталогу (возвращает массив ID подходящих товаров в порядке релевантности)
+        /**
+         * Поиск по каталогу (возвращает массив ID подходящих товаров в порядке релевантности)
+         * @param {string} query
+         * @param {any[] | null} [candidateIds=null]
+         */
         searchCatalog(query, candidateIds = null) {
             const reqId = ++requestIdCounter;
             lastActiveRequestId.catalog = reqId;
@@ -181,7 +201,11 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
             return Promise.resolve(searchWorkerClient.fallbackCatalogSearch(query, candidateIds));
         },
 
-        // Синхронный fallback для живого поиска
+        /**
+         * Синхронный fallback для живого поиска
+         * @param {string} query
+         * @param {number} [limit=8]
+         */
         fallbackLiveSearch(query, limit = 8) {
             const items = window.allItems || [];
             if (!query || !query.trim()) return [];
@@ -237,7 +261,11 @@ import { expandSearchQuery, itemMatchesPrice, parsePriceSearchQuery } from './he
             return collected.slice(0, limit);
         },
 
-        // Синхронный fallback для каталога
+        /**
+         * Синхронный fallback для каталога
+         * @param {string} query
+         * @param {any[] | null} [candidateIds=null]
+         */
         fallbackCatalogSearch(query, candidateIds = null) {
             const items = window.allItems || [];
             if (!query || !query.trim()) return candidateIds || [];

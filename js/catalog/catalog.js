@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG & FILTERS MODULE (MODULAR ENTRYPOINT)
 // Порядок импортов строго сохраняет порядок инициализации и side-effects.

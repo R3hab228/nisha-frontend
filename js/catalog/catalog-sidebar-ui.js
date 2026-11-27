@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — UI САЙДБАРА: СЧЁТЧИКИ, ПОИСК-ИНПУТ, ЦЕНА И МОБИЛЬНЫЙ ДРОЕР
 // ==========================================
@@ -7,11 +8,12 @@ import { isItemBargainEnabled } from './catalog-card-markup.js';
 import { hasAction, invokeAction } from '../core/action-registry.js';
 import { pushBackLayer, removeBackLayerFromUI } from '../ui/back-gesture.js';
 
+/** @type {ReturnType<typeof setTimeout> | null} */
 let priceTimeout = null;
 
 /**
  * Запускает DOM-обновление через View Transitions API (если доступно), либо синхронно.
- * @param {Function} updateDom
+ * @param {() => any} updateDom
  * @returns {any}
  */
 export function runCatalogViewTransition(updateDom) {
@@ -30,8 +32,10 @@ export function runCatalogViewTransition(updateDom) {
 export function updateSidebarCounters() {
     if (typeof document === 'undefined' || !window.allItems || window.allItems.length === 0) return;
     const curCat = window.currentCategory || '';
-    const onlySale = document.getElementById('onlySaleCb') ? document.getElementById('onlySaleCb').checked : false;
-    const onlyBargain = document.getElementById('onlyBargainCb') ? document.getElementById('onlyBargainCb').checked : false;
+    const onlySaleEl = /** @type {HTMLInputElement | null} */ (document.getElementById('onlySaleCb'));
+    const onlyBargainEl = /** @type {HTMLInputElement | null} */ (document.getElementById('onlyBargainCb'));
+    const onlySale = onlySaleEl ? onlySaleEl.checked : false;
+    const onlyBargain = onlyBargainEl ? onlyBargainEl.checked : false;
 
     const availableItemsAll = window.allItems.filter(i => {
         if (!i || i.status !== 'available') return false;
@@ -40,6 +44,7 @@ export function updateSidebarCounters() {
         return true;
     });
 
+    /** @type {Record<string, number>} */
     const catCounts = { 'Все вещи': availableItemsAll.length };
     if (typeof Object.groupBy === 'function') {
         const groups = Object.groupBy(availableItemsAll, item => item?.category || 'Без категории');
@@ -54,6 +59,7 @@ export function updateSidebarCounters() {
         });
     }
 
+    /** @param {Element | null} el @param {number} count */
     const setFilterCountBadge = (el, count) => {
         if (!el) return;
         let badge = el.querySelector('.filter-count-badge');
@@ -119,7 +125,7 @@ export function updateSidebarCounters() {
         return true;
     });
 
-    const sizeCheckboxes = Array.from(document.querySelectorAll('.size-cb'));
+    const sizeCheckboxes = /** @type {HTMLInputElement[]} */ (Array.from(document.querySelectorAll('.size-cb')));
     const sizeCounts = new Map();
     sizeCheckboxes.forEach(cb => {
         if (cb.value && !sizeCounts.has(cb.value)) {
@@ -143,10 +149,10 @@ export function updateSidebarCounters() {
         setFilterCountBadge(labelSpan, count);
 
         if (count > 0) {
-            cb.parentElement.style.opacity = '1';
+            if (cb.parentElement) cb.parentElement.style.opacity = '1';
             cb.disabled = false;
         } else {
-            cb.parentElement.style.opacity = '0.4';
+            if (cb.parentElement) cb.parentElement.style.opacity = '0.4';
             cb.disabled = true;
             cb.checked = false;
         }
@@ -159,7 +165,7 @@ export function updateSidebarCounters() {
  */
 export function clearSearchInput() {
     clearSavedFeedScrollState();
-    const input = document.getElementById('mainSearch');
+    const input = /** @type {HTMLInputElement | null} */ (document.getElementById('mainSearch'));
     if (input) input.value = '';
     const clearBtn = document.getElementById('clearSearchBtn');
     if (clearBtn) clearBtn.style.display = 'none';
@@ -189,21 +195,21 @@ export function clearSearchInput() {
  * @param {Event} [e]
  */
 export function updatePriceUI(e) {
-    const minInput = document.getElementById('priceMin');
-    const maxInput = document.getElementById('priceMax');
+    const minInput = /** @type {HTMLInputElement | null} */ (document.getElementById('priceMin'));
+    const maxInput = /** @type {HTMLInputElement | null} */ (document.getElementById('priceMax'));
     if (!minInput || !maxInput) return;
     let minVal = Number.parseInt(minInput.value, 10);
     let maxVal = Number.parseInt(maxInput.value, 10);
 
     if (minVal >= maxVal) {
-        const activeTargetId = e?.target?.id
+        const activeTargetId = /** @type {HTMLElement | null} */ (e?.target)?.id
             || (typeof document !== 'undefined' ? document.activeElement?.id : '')
             || '';
         if (activeTargetId === 'priceMin') {
-            minInput.value = maxVal - 100;
+            minInput.value = String(maxVal - 100);
             minVal = maxVal - 100;
         } else {
-            maxInput.value = minVal + 100;
+            maxInput.value = String(minVal + 100);
             maxVal = minVal + 100;
         }
     }
@@ -218,8 +224,8 @@ export function updatePriceUI(e) {
         if (minLabel) minLabel.textContent = invokeAction('convertFromUah', minVal, activeCode);
         if (maxLabel) maxLabel.textContent = invokeAction('convertFromUah', maxVal, activeCode);
     } else {
-        if (minLabel) minLabel.textContent = minVal;
-        if (maxLabel) maxLabel.textContent = maxVal;
+        if (minLabel) minLabel.textContent = /** @type {any} */ (minVal);
+        if (maxLabel) maxLabel.textContent = /** @type {any} */ (maxVal);
     }
 
     const percentMin = (minVal / 15000) * 100;
@@ -230,19 +236,21 @@ export function updatePriceUI(e) {
         rangeFill.style.right = (100 - percentMax) + '%';
     }
 
-    clearTimeout(priceTimeout);
+    if (priceTimeout !== null) clearTimeout(priceTimeout);
     priceTimeout = setTimeout(() => { invokeAction('applyFilters'); }, 300);
 }
 
 /**
  * Плавно раскрывает и сворачивает мобильное меню фильтров (`.sidebar`).
+ * @param {any} [_e]
+ * @param {{ fromBackGesture?: boolean }} [options={}]
  */
 export function toggleMobileSidebar(_e, options = {}) {
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
 
-    const sidebar = document.querySelector('.sidebar');
+    const sidebar = /** @type {(HTMLElement & { _transitionCtrl?: AbortController | null }) | null} */ (document.querySelector('.sidebar'));
     const btn = document.getElementById('mobileFilterBtn');
-    const fab = document.querySelector('.fab-propose');
+    const fab = /** @type {HTMLElement | null} */ (document.querySelector('.fab-propose'));
     if (!sidebar || !btn) return;
 
     const isOpen = sidebar.classList.contains('active-mobile');
@@ -271,7 +279,7 @@ export function toggleMobileSidebar(_e, options = {}) {
         const openCtrl = new AbortController();
         sidebar._transitionCtrl = openCtrl;
 
-        const onOpenEnd = (e) => {
+        const onOpenEnd = (/** @type {TransitionEvent} */ e) => {
             if (e.target === sidebar && e.propertyName === 'max-height') {
                 openCtrl.abort();
                 sidebar._transitionCtrl = null;
@@ -316,7 +324,7 @@ export function toggleMobileSidebar(_e, options = {}) {
         const closeCtrl = new AbortController();
         sidebar._transitionCtrl = closeCtrl;
 
-        const onCloseEnd = (e) => {
+        const onCloseEnd = (/** @type {TransitionEvent} */ e) => {
             if (e.target === sidebar && e.propertyName === 'max-height') {
                 closeCtrl.abort();
                 sidebar._transitionCtrl = null;

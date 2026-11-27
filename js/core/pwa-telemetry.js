@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA HYBRID CLIENT-SIDE ERROR TELEMETRY (SENTRY + TELEGRAM LOGGER)
 // ==========================================
@@ -5,6 +6,7 @@
 import { invokeAction, registerActions } from './action-registry.js';
 import { debugPwaLog } from './pwa-sw-versioning.js';
 
+/** @type {any[]} */
 const earlySentryErrors = [];
 const earlySentryCtrl = new AbortController();
 export const reportedErrorHashes = new Set();
@@ -52,11 +54,12 @@ export const IGNORED_ERROR_PATTERNS = [
 
 /**
  * Redacts sensitive fields recursively from telemetry context objects.
- * @param {object} context
- * @returns {object}
+ * @param {any} context
+ * @returns {Record<string, any>}
  */
 export function sanitizeContext(context) {
     if (!context || typeof context !== 'object') return {};
+    /** @type {Record<string, any>} */
     const clean = {};
     const SENSITIVE_KEYS = /password|token|secret|pin|card|cvv|auth/i;
     for (const [k, v] of Object.entries(context)) {
@@ -87,14 +90,14 @@ export function isIgnoredError(msg, stack, source) {
 /**
  * Extracts normalized pathname/location from URLs and filenames for telemetry reports.
  * @param {string} rawPath
- * @param {object} [context={}]
+ * @param {any} [context={}]
  * @returns {string}
  */
 export function formatCleanLocation(rawPath, context = {}) {
     const raw = (context && context.filename) || rawPath || '';
     if (!raw) return 'index.html';
     try {
-        const withoutHash = String(raw).split('#').at(0).split('?').at(0);
+        const withoutHash = (String(raw).split('#').at(0) || '').split('?').at(0) || '';
         if (withoutHash.startsWith('http://') || withoutHash.startsWith('https://')) {
             const canParse = (typeof URL !== 'undefined' && typeof URL.canParse === 'function')
                 ? URL.canParse(withoutHash)
@@ -106,7 +109,7 @@ export function formatCleanLocation(rawPath, context = {}) {
         }
         return withoutHash.slice(-60) || '/';
     } catch {
-        return String(raw).split('#').at(0).split('?').at(0).slice(-60) || '/';
+        return ((String(raw).split('#').at(0) || '').split('?').at(0) || '').slice(-60) || '/';
     }
 }
 
@@ -127,7 +130,7 @@ export function getReadableDevice() {
     else if (/linux/i.test(ua)) os = '🐧 Linux';
 
     let browser = '';
-    if (/brave/i.test(ua) || (typeof navigator !== 'undefined' && navigator.brave)) browser = 'Brave';
+    if (/brave/i.test(ua) || (typeof navigator !== 'undefined' && /** @type {any} */ (navigator).brave)) browser = 'Brave';
     else if (/chrome|crios/i.test(ua) && !/edg|opr|opera/i.test(ua)) browser = 'Chrome';
     else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
     else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
@@ -152,11 +155,12 @@ export function getAppMode() {
 
 /**
  * Formats non-internal telemetry context keys as a compact key=value summary.
- * @param {object} ctx
+ * @param {any} ctx
  * @returns {string}
  */
 export function formatCleanContext(ctx) {
     if (!ctx || typeof ctx !== 'object') return '';
+    /** @type {Record<string, any>} */
     const clean = {};
     for (const [k, v] of Object.entries(ctx)) {
         if (['_forceSend', 'source', 'filename', 'lineno', 'colno'].includes(k)) continue;
@@ -168,6 +172,7 @@ export function formatCleanContext(ctx) {
     return Object.entries(clean).map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`).join(', ');
 }
 
+/** @type {Array<{ score: number, level: string, emoji: string, reason: string, match: (t: string) => boolean }>} */
 const SEVERITY_RULES = [
     {
         score: 10, level: 'Критическая', emoji: '💀', reason: 'Блокировка оформления заказа или оплаты',
@@ -223,7 +228,7 @@ const SEVERITY_RULES = [
 
 /**
  * Evaluates client error severity score (1-10) based on business impact.
- * @param {object} [params={}]
+ * @param {any} [params={}]
  * @returns {{score: number, level: string, emoji: string, reason: string}}
  */
 export function evaluateClientErrorSeverity(params = {}) {
@@ -245,7 +250,7 @@ export function evaluateClientErrorSeverity(params = {}) {
 /**
  * Deduplicates, formats, and sends client error alerts to /api/support telemetry endpoint.
  * @param {any} errorObj
- * @param {object} [context={}]
+ * @param {any} [context={}]
  */
 export function sendTelegramErrorAlert(errorObj, context = {}) {
     if (telemetrySentCount >= MAX_SESSION_TELEMETRY) return;
@@ -288,6 +293,10 @@ export function sendTelegramErrorAlert(errorObj, context = {}) {
         details: cleanDetails
     });
 
+    /**
+     * @param {string} str
+     * @param {number} len
+     */
     const truncate = (str, len) => invokeAction('safeTruncateText', str, len) || str.slice(0, len);
 
     const alertMessage =
@@ -327,8 +336,9 @@ export function sendTelegramErrorAlert(errorObj, context = {}) {
  * @param {ErrorEvent|PromiseRejectionEvent} evt
  */
 export function recordEarlySentryError(evt) {
-    const err = evt.error || evt.reason || evt.message || evt;
-    if (isIgnoredError(err && (err.message || err.reason || err), err && err.stack, evt.filename || evt.source)) return;
+    const evtAny = /** @type {any} */ (evt);
+    const err = evtAny.error || evtAny.reason || evtAny.message || evtAny;
+    if (isIgnoredError(err && (err.message || err.reason || err), err && err.stack, evtAny.filename || evtAny.source)) return;
     if (typeof window !== 'undefined' && !window._sentryActive && earlySentryErrors.length < 20) {
         earlySentryErrors.push(evt);
         initSentryDeferred();

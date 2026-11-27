@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // КЭШ НОВОЙ ПОЧТЫ (IN-MEMORY L1 + INDEXEDDB L2 + SAFE FALLBACK)
 // ==========================================
@@ -17,6 +18,7 @@ function trimMemoryCacheIfNeeded() {
     }
 }
 
+/** @param {string} key */
 export function getNPDefaultTTL(key) {
     if (typeof key === 'string' && key.startsWith('city_')) {
         return NP_CITY_CACHE_TTL_MS;
@@ -25,6 +27,7 @@ export function getNPDefaultTTL(key) {
 }
 
 // Минимальный вид отделения для кэша (экономит память и дисковое пространство)
+/** @param {any[]} list */
 export function slimBranches(list) {
     if (!Array.isArray(list)) return [];
     return list.map(b => ({
@@ -151,7 +154,7 @@ export function setNPStorage(key, val, customTtl) {
                                Array.isArray(payload) && payload.length > 20;
 
         if (shouldCompress) {
-            invokeAction('compressJSON', payload).then(compressedBuffer => {
+            invokeAction('compressJSON', payload).then((/** @type {any} */ compressedBuffer) => {
                 invokeAction('idbSet', 'np_' + key, { ts: Date.now(), ttl, data: compressedBuffer, compressed: true }).catch(() => {});
             }).catch(() => {
                 invokeAction('idbSet', 'np_' + key, { ts: Date.now(), ttl, data: payload }).catch(() => {});

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE SHARED STATE & DEPENDENCY ACCESSORS
 // ==========================================
@@ -7,7 +8,7 @@ import { getRuntimeCatalog, getRuntimeStorage, getRuntimeSupabase, tSafe } from 
 
 /**
  * Resolves safe localStorage/sessionStorage wrapper from window or global scope.
- * @returns {object|null}
+ * @returns {any}
  */
 export function getStore() {
     return getRuntimeStorage();
@@ -28,7 +29,7 @@ function resolveInitialFavorites() {
 
 /**
  * Resolves central reactive store instance when initialized.
- * @returns {object|null}
+ * @returns {any}
  */
 export function getAppStore() {
     if (typeof window !== 'undefined' && window.store && typeof window.store.get === 'function' && typeof window.store.set === 'function') {
@@ -48,7 +49,10 @@ const STORE_BACKED_KEYS = new Set([
     'currentOrderTab'
 ]);
 
-/** Shared mutable profile, auth, favorites, orders, and realtime state. */
+/**
+ * Shared mutable profile, auth, favorites, orders, and realtime state.
+ * @type {Record<string, any>}
+ */
 const _localProfileState = {
     currentUser: (typeof window !== 'undefined' && typeof window.currentUser !== 'undefined') ? window.currentUser : null,
     userProfile: (typeof window !== 'undefined' && typeof window.userProfile !== 'undefined') ? window.userProfile : null,
@@ -72,18 +76,18 @@ if (_initStore && Array.isArray(_localProfileState.favorites) && _localProfileSt
 
 export const profileState = new Proxy(_localProfileState, {
     get(target, prop) {
-        if (STORE_BACKED_KEYS.has(prop)) {
+        if (typeof prop === 'string' && STORE_BACKED_KEYS.has(prop)) {
             const s = getAppStore();
             if (s) {
                 const val = s.get(prop);
                 if (val !== undefined) return val;
             }
         }
-        return target[prop];
+        return (/** @type {any} */ (target))[prop];
     },
     set(target, prop, value) {
-        target[prop] = value;
-        if (STORE_BACKED_KEYS.has(prop)) {
+        (/** @type {any} */ (target))[prop] = value;
+        if (typeof prop === 'string' && STORE_BACKED_KEYS.has(prop)) {
             const s = getAppStore();
             if (s && s.get(prop) !== value) {
                 s.set(prop, value);
@@ -101,7 +105,7 @@ export const profileState = new Proxy(_localProfileState, {
 function bindSyncedWindowStateProp(key) {
     if (typeof window === 'undefined') return;
     const desc = Object.getOwnPropertyDescriptor(window, key);
-    if (desc && typeof desc.get === 'function' && desc.get._profileStateRef === profileState) {
+    if (desc && typeof desc.get === 'function' && (/** @type {any} */ (desc.get))._profileStateRef === profileState) {
         return;
     }
     if (desc && desc.configurable === false) {
@@ -109,8 +113,8 @@ function bindSyncedWindowStateProp(key) {
         return;
     }
     const getter = () => profileState[key];
-    getter._profileStateRef = profileState;
-    const setter = (val) => {
+    (/** @type {any} */ (getter))._profileStateRef = profileState;
+    const setter = (/** @type {any} */ val) => {
         profileState[key] = val;
     };
     Object.defineProperty(window, key, {
@@ -135,7 +139,7 @@ function bindSyncedWindowStateProp(key) {
 
 /**
  * Returns the active Supabase client or null.
- * @returns {object|null}
+ * @returns {any}
  */
 export function getSupabase() {
     const fn = resolveAction('getSupabase');
@@ -163,7 +167,7 @@ export function getHourglass(height = 14) {
     const fn = resolveAction('getWin95HourglassHtml');
     if (fn) return fn(height);
     if (typeof getWin95HourglassHtml === 'function') {
-        return getWin95HourglassHtml(height);
+        return (/** @type {any} */ (getWin95HourglassHtml))(height);
     }
     return '⌛';
 }
@@ -202,7 +206,8 @@ export function notifyToast(msg, type = 'info', imgUrl = null, onClick = null) {
 export function getGlobalFn(name) {
     const resolved = resolveAction(name);
     if (resolved) return resolved;
-    if (typeof globalThis !== 'undefined' && typeof globalThis[name] === 'function') return globalThis[name];
+    const g = /** @type {any} */ (typeof globalThis !== 'undefined' ? globalThis : null);
+    if (g && typeof g[name] === 'function') return g[name];
     return null;
 }
 
@@ -246,8 +251,8 @@ export function syncProfileFavoritesCounters(nextFavorites) {
     }
     if (typeof document !== 'undefined') {
         const pCount = document.getElementById('profileLikesCount');
-        if (pCount) pCount.textContent = list.length;
+        if (pCount) pCount.textContent = String(list.length);
         const mCount = document.getElementById('modalProfileLikesCount');
-        if (mCount) mCount.textContent = list.length;
+        if (mCount) mCount.textContent = String(list.length);
     }
 }

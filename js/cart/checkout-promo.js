@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CHECKOUT — DRAFT STORAGE, PROMOCODES & PAYMENT DROPDOWN
 // ==========================================
@@ -18,12 +19,12 @@ import { getRuntimeStorage, tSafe } from '../core/runtime-env.js';
  * Защита поля промокода от автозаполнения браузера (Chrome подставлял туда ФИО).
  */
 export function sanitizePromoField() {
-    const promoEl = document.getElementById('promoInput');
+    const promoEl = /** @type {HTMLInputElement | null} */ (document.getElementById('promoInput'));
     if (!promoEl) return;
     const val = (promoEl.value || '').trim();
     if (!val || (typeof window !== 'undefined' && window.appliedPromoCode)) return;
-    const normStr = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
-    const nameVal = normStr(document.getElementById('orderName')?.value);
+    const normStr = (/** @type {any} */ s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const nameVal = normStr((/** @type {HTMLInputElement | null} */ (document.getElementById('orderName')))?.value);
     const profName = normStr(typeof window !== 'undefined' && window.userProfile?.full_name);
     const v = normStr(val);
     const looksLikeName = /\s/.test(v) || (nameVal && v === nameVal) || (profName && v === profName);
@@ -36,13 +37,13 @@ export function sanitizePromoField() {
 export function saveCheckoutDraft() {
     try {
         const draft = {
-            name: document.getElementById('orderName')?.value || '',
-            phone: document.getElementById('orderPhone')?.value || '',
-            city: document.getElementById('orderCity')?.value || '',
-            branch: document.getElementById('orderBranch')?.value || '',
+            name: (/** @type {HTMLInputElement | null} */ (document.getElementById('orderName')))?.value || '',
+            phone: (/** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone')))?.value || '',
+            city: (/** @type {HTMLInputElement | null} */ (document.getElementById('orderCity')))?.value || '',
+            branch: (/** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch')))?.value || '',
             cityRef: (typeof window !== 'undefined' && window.selectedCityRef) || cartState.selectedCityRef || '',
             branchRef: (typeof window !== 'undefined' && window.selectedBranchRef) || cartState.selectedBranchRef || '',
-            paymentMethod: document.getElementById('orderPaymentMethod')?.value || '',
+            paymentMethod: (/** @type {HTMLInputElement | null} */ (document.getElementById('orderPaymentMethod')))?.value || '',
             paymentSelectedText: document.getElementById('paymentSelectedText')?.textContent || ''
         };
         const store = getRuntimeStorage();
@@ -81,30 +82,31 @@ export function restoreCheckoutDraft() {
         if (!draft || typeof draft !== 'object') return false;
 
         let hasRestored = false;
-        const nameEl = document.getElementById('orderName');
-        const phoneEl = document.getElementById('orderPhone');
-        const cityEl = document.getElementById('orderCity');
-        const branchEl = document.getElementById('orderBranch');
+        const nameEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderName'));
+        const phoneEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPhone'));
+        const cityEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderCity'));
+        const branchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderBranch'));
 
         if (nameEl && draft.name) { nameEl.value = draft.name; hasRestored = true; }
         if (phoneEl && draft.phone) { phoneEl.value = draft.phone; hasRestored = true; }
         if (cityEl && draft.city) { cityEl.value = draft.city; hasRestored = true; }
         if (branchEl && draft.branch) { branchEl.value = draft.branch; hasRestored = true; }
 
-        if (draft.paymentMethod && document.getElementById('orderPaymentMethod')) {
+        const paymentMethodEl = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPaymentMethod'));
+        const txtEl = document.getElementById('paymentSelectedText');
+        if (draft.paymentMethod && paymentMethodEl) {
             const rawDraftPm = String(draft.paymentMethod).toLowerCase();
             const codAllowed = (typeof window !== 'undefined' && window.analytics && typeof window.analytics.isFeatureEnabled === 'function')
                 ? window.analytics.isFeatureEnabled('enable_cod_payment', true)
                 : true;
             const isCod = codAllowed && (rawDraftPm.includes('200') || rawDraftPm.includes('налож') || rawDraftPm.includes('наклад') || rawDraftPm.includes('delivery') || rawDraftPm.includes('cod'));
-            document.getElementById('orderPaymentMethod').value = isCod ? 'Наложка (предоплата 200грн)' : 'Полная предоплата';
-            const txtEl = document.getElementById('paymentSelectedText');
+            paymentMethodEl.value = isCod ? 'Наложка (предоплата 200грн)' : 'Полная предоплата';
             if (txtEl) {
                 txtEl.setAttribute('data-i18n', isCod ? 'checkout.payment_cod' : 'checkout.payment_full');
-                txtEl.textContent = tSafe(isCod ? 'checkout.payment_cod' : 'checkout.payment_full', draft.paymentSelectedText || document.getElementById('orderPaymentMethod').value);
+                txtEl.textContent = tSafe(isCod ? 'checkout.payment_cod' : 'checkout.payment_full', draft.paymentSelectedText || paymentMethodEl.value);
             }
-        } else if (draft.paymentSelectedText && document.getElementById('paymentSelectedText')) {
-            document.getElementById('paymentSelectedText').textContent = draft.paymentSelectedText;
+        } else if (draft.paymentSelectedText && txtEl) {
+            txtEl.textContent = draft.paymentSelectedText;
         }
 
         if (draft.cityRef) setSelectedCityRefState(draft.cityRef);
@@ -195,7 +197,7 @@ function syncPaymentDropdownSelectedState(selectedVal) {
  */
 export function selectPaymentMethod(dbVal, displayLabel) {
     const txt = document.getElementById('paymentSelectedText');
-    const input = document.getElementById('orderPaymentMethod');
+    const input = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPaymentMethod'));
     const codAllowed = (typeof window !== 'undefined' && window.analytics && typeof window.analytics.isFeatureEnabled === 'function')
         ? window.analytics.isFeatureEnabled('enable_cod_payment', true)
         : true;
@@ -225,7 +227,7 @@ export function togglePaymentDropdown() {
     if (isOpen) {
         closePaymentDropdown();
     } else {
-        const currentInput = document.getElementById('orderPaymentMethod');
+        const currentInput = /** @type {HTMLInputElement | null} */ (document.getElementById('orderPaymentMethod'));
         syncPaymentDropdownSelectedState(currentInput ? currentInput.value : '');
         const bd = document.getElementById('branchDropdown');
         if (bd) bd.style.display = 'none';
@@ -263,7 +265,7 @@ export function togglePaymentDropdown() {
  */
 export function initPaymentPopoverSync() {
     if (typeof document === 'undefined') return;
-    const pd = document.getElementById('paymentDropdown');
+    const pd = /** @type {(HTMLElement & Record<string, any>) | null} */ (document.getElementById('paymentDropdown'));
     if (pd && !pd._popoverBound) {
         pd._popoverBound = true;
         pd.addEventListener('toggle', (evt) => {
@@ -276,7 +278,7 @@ export function initPaymentPopoverSync() {
             }
         });
     }
-    const checkoutModal = document.getElementById('checkoutModal');
+    const checkoutModal = /** @type {(HTMLElement & Record<string, any>) | null} */ (document.getElementById('checkoutModal'));
     if (checkoutModal && !checkoutModal._scrollDismissBound) {
         checkoutModal._scrollDismissBound = true;
         checkoutModal.addEventListener('scroll', () => {
@@ -291,7 +293,8 @@ export function initPaymentPopoverSync() {
  */
 export async function applyPromoCode() {
     sanitizePromoField();
-    const input = document.getElementById('promoInput').value.trim().toUpperCase();
+    const promoInputEl = /** @type {HTMLInputElement | null} */ (document.getElementById('promoInput'));
+    const input = (promoInputEl ? promoInputEl.value : '').trim().toUpperCase();
     const msg = document.getElementById('promoMessage');
     const btn = document.querySelector('.promo-wrapper button');
 
@@ -350,7 +353,8 @@ export async function applyPromoCode() {
             invokeAction('playSound', 'chord', { kind: 'alert' });
         }
     } catch (err) {
-        if (err && (err.name === 'AbortError' || err.isTimeout)) {
+        const e = /** @type {any} */ (err);
+        if (e && (e.name === 'AbortError' || e.isTimeout)) {
             const warmingMsg = tSafe('checkout.promo_warming', 'Сервер запускается, нажмите «Применить» ещё раз');
             if (msg) {
                 msg.innerHTML = renderPromoCodeNotice({

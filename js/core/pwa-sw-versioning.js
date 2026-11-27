@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PWA SERVICE WORKER & BUILD VERSIONING MODULE
 // ==========================================
@@ -124,6 +125,7 @@ export async function performServiceWorkerUpdateReload({ registration = null, wo
     const hasSwContainer = typeof navigator !== 'undefined' && navigator.serviceWorker;
 
     if (targetWorker && hasSwContainer && typeof navigator.serviceWorker.addEventListener === 'function') {
+        /** @type {Promise<void>} */
         const controllerReadyPromise = new Promise((resolve) => {
             const fallbackTimer = setTimeout(resolve, 750);
             const onControllerChange = () => {
@@ -170,6 +172,7 @@ export function initServiceWorkerUpdates() {
 
             registration.update().catch(() => {});
 
+            /** @param {ServiceWorker | null} worker */
             const handleInstalledWorker = async (worker) => {
                 if (!worker || !hadControllerAtBoot || !navigator.serviceWorker.controller) return;
                 if (updateModalShownInPage || APP_BUILD_ID === 'dev') return;

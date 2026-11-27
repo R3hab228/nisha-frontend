@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS: GLOBAL EVENT DELEGATION & FORM LISTENERS
 // Handles [data-action], [data-hover-action], media load/error/canplay, scroll & inputs
@@ -11,9 +12,11 @@ import { storage } from './helpers-storage-idb.js';
 import { isToastClickShielded, showToast } from './helpers-toasts-modals.js';
 import { tSafe } from './runtime-env.js';
 
+/** @param {Element} actionEl */
 function hasActiveModalShield(actionEl) {
     if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return false;
-    const hasActiveModal = Array.from(document.querySelectorAll('.modal-overlay')).some(m => {
+    const hasActiveModal = Array.from(document.querySelectorAll('.modal-overlay')).some((rawM) => {
+        const m = /** @type {HTMLElement} */ (rawM);
         if (!m) return false;
         if (m.classList && typeof m.classList.contains === 'function' && m.classList.contains('closing')) return true;
         const disp = m.style ? (m.style.display || '') : '';
@@ -26,6 +29,7 @@ function hasActiveModalShield(actionEl) {
     return !parentModal || (parentModal.classList && typeof parentModal.classList.contains === 'function' && parentModal.classList.contains('closing')) || isShieldActive;
 }
 
+/** @type {Record<string, string>} */
 const SIMPLE_ACTION_MAP = {
     'dismiss-net-error': 'dismissNetError',
     'toggle-question-form': 'toggleQuestionForm',
@@ -67,6 +71,7 @@ const SIMPLE_ACTION_MAP = {
     'cycle-currency': 'cycleCurrency'
 };
 
+/** @type {Record<string, 'selection'|'light'|'medium'|'heavy'|'success'|'warning'|'error'>} */
 const ACTION_HAPTIC_MAP = {
     // Crisp selection tick for tabs, filters, sliders, language & toggles
     'set-category-filter': 'selection',
@@ -115,9 +120,10 @@ const ACTION_HAPTIC_MAP = {
  * @param {Event} e
  */
 export function handleDelegatedAction(e) {
-    if (!e || !e.target || typeof e.target.closest !== 'function') return;
-    const actionEl = e.target.closest('[data-action]');
-    const toastEl = e.target.closest('#toastContainer, .toast');
+    const rawTarget = /** @type {Element | null} */ (e && e.target);
+    if (!rawTarget || typeof rawTarget.closest !== 'function') return;
+    const actionEl = /** @type {HTMLButtonElement | null} */ (rawTarget.closest('[data-action]'));
+    const toastEl = rawTarget.closest('#toastContainer, .toast');
     // Allow toast.onclick to receive clicks inside toast container directly
     if (toastEl && toastEl !== actionEl) {
         return;
@@ -145,7 +151,7 @@ export function handleDelegatedAction(e) {
     if (action && Object.hasOwn(ACTION_HAPTIC_MAP, action)) {
         triggerHaptic(ACTION_HAPTIC_MAP[action]);
     }
-    if (Object.hasOwn(SIMPLE_ACTION_MAP, action)) {
+    if (action && Object.hasOwn(SIMPLE_ACTION_MAP, action)) {
         invokeCompatAction(action, SIMPLE_ACTION_MAP[action]);
         return;
     }
@@ -158,7 +164,7 @@ export function handleDelegatedAction(e) {
         }
         case 'scroll-grid-slider': {
             const id = actionEl.getAttribute('data-id');
-            const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
+            const dir = Number.parseInt(actionEl.getAttribute('data-dir') || '', 10) || 1;
             if (id) invokeCompatAction('scroll-grid-slider', 'scrollGridSlider', e, id, dir);
             break;
         }
@@ -173,12 +179,12 @@ export function handleDelegatedAction(e) {
             break;
         }
         case 'change-page': {
-            const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10);
+            const dir = Number.parseInt(actionEl.getAttribute('data-dir') || '', 10);
             if (!Number.isNaN(dir)) invokeCompatAction('change-page', 'changePage', dir);
             break;
         }
         case 'remove-from-cart': {
-            const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
+            const idx = Number.parseInt(actionEl.getAttribute('data-index') || '', 10);
             if (!Number.isNaN(idx)) {
                 const rowEl = typeof actionEl.closest === 'function' ? actionEl.closest('.cart-item-row') : null;
                 invokeCompatAction('remove-from-cart', 'removeFromCart', idx, e, rowEl);
@@ -194,7 +200,7 @@ export function handleDelegatedAction(e) {
         case 'apply-search-history': {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             const term = actionEl.getAttribute('data-term') || '';
-            const input = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
+            const input = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('mainSearch') : null);
             if (input) input.value = term;
             invokeAction('handleLiveSearch');
             break;
@@ -215,7 +221,7 @@ export function handleDelegatedAction(e) {
             break;
         }
         case 'set-slide': {
-            const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
+            const idx = Number.parseInt(actionEl.getAttribute('data-index') || '', 10);
             if (!Number.isNaN(idx)) invokeCompatAction('set-slide', 'setSlide', idx);
             break;
         }
@@ -259,7 +265,7 @@ export function handleDelegatedAction(e) {
         }
         case 'verify-orders-phone': {
             const phone = actionEl.getAttribute('data-phone') || '';
-            const orderPhoneEl = typeof document !== 'undefined' ? document.getElementById('orderPhone') : null;
+            const orderPhoneEl = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('orderPhone') : null);
             if (orderPhoneEl) {
                 if (typeof window !== 'undefined' && typeof window.formatPhoneInput === 'function') {
                     window.formatPhoneInput(orderPhoneEl, phone);
@@ -310,7 +316,7 @@ export function handleDelegatedAction(e) {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             if (typeof e.preventDefault === 'function') e.preventDefault();
-            const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
+            const idx = Number.parseInt(actionEl.getAttribute('data-index') || '', 10);
             if (!Number.isNaN(idx)) invokeCompatAction('delete-proposal-photo', 'removeProposalFile', idx, actionEl);
             break;
         }
@@ -318,17 +324,18 @@ export function handleDelegatedAction(e) {
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
             if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             if (typeof e.preventDefault === 'function') e.preventDefault();
-            const idx = Number.parseInt(actionEl.getAttribute('data-index'), 10);
+            const idx = Number.parseInt(actionEl.getAttribute('data-index') || '', 10);
             if (!Number.isNaN(idx)) invokeCompatAction('preview-proposal-photo', 'openProposalPhotoByIndex', idx, actionEl);
             break;
         }
         case 'trigger-prop-files': {
-            if (e.target && typeof e.target.closest === 'function') {
-                if (e.target.closest('.preview-img') || e.target.closest('.preview-del-btn') || e.target.closest('[data-action="delete-proposal-photo"]') || e.target.closest('[data-action="preview-proposal-photo"]')) {
+            if (rawTarget && typeof rawTarget.closest === 'function') {
+                if (rawTarget.closest('.preview-img') || rawTarget.closest('.preview-del-btn') || rawTarget.closest('[data-action="delete-proposal-photo"]') || rawTarget.closest('[data-action="preview-proposal-photo"]')) {
                     break;
                 }
             }
-            const filesCount = (globalThis.currentProposalFiles && globalThis.currentProposalFiles.length) || 0;
+            const g = /** @type {any} */ (globalThis);
+            const filesCount = (g.currentProposalFiles && g.currentProposalFiles.length) || 0;
             if (filesCount >= 5) {
                 if (typeof showToast === 'function') {
                     showToast(tSafe('messages.prop_max_files', 'Максимум 5 фото/видео!'), 'error');
@@ -349,7 +356,7 @@ export function handleDelegatedAction(e) {
             break;
         }
         case 'submit-main-search': {
-            const input = typeof document !== 'undefined' ? document.getElementById('mainSearch') : null;
+            const input = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' ? document.getElementById('mainSearch') : null);
             const val = input ? input.value.trim() : '';
             invokeAction('saveRecentSearch', val);
             invokeAction('applyFilters');
@@ -468,7 +475,7 @@ export function handleDelegatedAction(e) {
             break;
         }
         case 'move-slide': {
-            const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
+            const dir = Number.parseInt(actionEl.getAttribute('data-dir') || '', 10) || 1;
             invokeCompatAction('move-slide', 'moveSlide', dir);
             break;
         }
@@ -511,7 +518,7 @@ export function handleDelegatedAction(e) {
             break;
         }
         case 'scroll-reviews': {
-            const dir = Number.parseInt(actionEl.getAttribute('data-dir'), 10) || 1;
+            const dir = Number.parseInt(actionEl.getAttribute('data-dir') || '', 10) || 1;
             invokeCompatAction('scroll-reviews', 'scrollReviews', dir);
             break;
         }
@@ -524,7 +531,7 @@ if (typeof window !== 'undefined') window.handleDelegatedAction = handleDelegate
  * @param {Event} e
  */
 export function handleDelegatedMediaLoad(e) {
-    const target = e && e.target;
+    const target = /** @type {HTMLImageElement | null} */ (e && e.target);
     if (!target || !target.classList) return;
 
     if (target.classList.contains('card-slide-img')) {
@@ -537,8 +544,8 @@ export function handleDelegatedMediaLoad(e) {
     } else if (target.classList.contains('modal-slide-img')) {
         target.style.opacity = '1';
         if (target.parentElement) {
-            if (target.naturalWidth) target.parentElement.setAttribute('data-pswp-width', target.naturalWidth);
-            if (target.naturalHeight) target.parentElement.setAttribute('data-pswp-height', target.naturalHeight);
+            if (target.naturalWidth) target.parentElement.setAttribute('data-pswp-width', String(target.naturalWidth));
+            if (target.naturalHeight) target.parentElement.setAttribute('data-pswp-height', String(target.naturalHeight));
             target.parentElement.classList.remove('skeleton', 'img-8bit-loading');
             target.parentElement.style.backgroundImage = 'none';
             const backdrop = target.parentElement.querySelector ? target.parentElement.querySelector('.slide-thumb-backdrop') : null;
@@ -553,12 +560,12 @@ if (typeof window !== 'undefined') window.handleDelegatedMediaLoad = handleDeleg
  * @param {Event} e
  */
 export function handleDelegatedMediaError(e) {
-    const target = e && e.target;
+    const target = /** @type {HTMLImageElement | null} */ (e && e.target);
     if (!target || !target.classList) return;
 
     if (target.classList.contains('card-slide-img')) {
         const ds = target.dataset || {};
-        const fallbackSrc = ds.fallbackSrc || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fallback-src') : '');
+        const fallbackSrc = ds.fallbackSrc || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fallback-src') : '') || '';
         const hasTriedFb = ds.fb || (typeof target.getAttribute === 'function' ? target.getAttribute('data-fb') : '');
         const currentSrc = target.src || (typeof target.getAttribute === 'function' ? target.getAttribute('src') : '');
         const safeFbSrc = sanitizeHtmlMediaUrl(fallbackSrc);
@@ -596,7 +603,7 @@ if (typeof window !== 'undefined') window.handleDelegatedMediaError = handleDele
  * @param {Event} e
  */
 export function handleDelegatedMediaCanPlay(e) {
-    const target = e && e.target;
+    const target = /** @type {HTMLElement | null} */ (e && e.target);
     if (!target || !target.classList) return;
 
     if (target.classList.contains('grid-lazy-video')) {
@@ -619,7 +626,7 @@ if (typeof window !== 'undefined') window.handleDelegatedMediaCanPlay = handleDe
  * @param {Event} e
  */
 export function handleDelegatedScroll(e) {
-    const target = e && e.target;
+    const target = /** @type {HTMLElement | null} */ (e && e.target);
     if (!target || !target.classList) return;
 
     if (target.classList.contains('card-slider-container')) {
@@ -645,8 +652,9 @@ export function initActionDelegation() {
     document.addEventListener('scroll', handleDelegatedScroll, { capture: true, passive: true });
 
     document.addEventListener('touchstart', (e) => {
-        if (!e.target || typeof e.target.closest !== 'function') return;
-        const trigger = e.target.closest('.live-search-item, [data-action="open-product"]');
+        const t = /** @type {Element | null} */ (e.target);
+        if (!t || typeof t.closest !== 'function') return;
+        const trigger = t.closest('.live-search-item, [data-action="open-product"]');
         if (trigger) {
             const id = trigger.getAttribute('data-id');
             if (id) invokeAction('prewarmProductModal', id, true);
@@ -654,23 +662,24 @@ export function initActionDelegation() {
     }, { passive: true });
 
     document.addEventListener('mouseover', (e) => {
-        if (!e.target || typeof e.target.closest !== 'function') return;
-        const trigger = e.target.closest('.live-search-item, [data-action="open-product"]');
+        const t = /** @type {Element | null} */ (e.target);
+        if (!t || typeof t.closest !== 'function') return;
+        const trigger = t.closest('.live-search-item, [data-action="open-product"]');
         if (trigger) {
             const id = trigger.getAttribute('data-id');
             if (id) invokeAction('prewarmProductModal', id);
         }
-        const hoverEl = e.target.closest('[data-hover-action]');
+        const hoverEl = /** @type {HTMLElement | null} */ (t.closest('[data-hover-action]'));
         if (!hoverEl) return;
-        if (e.relatedTarget && typeof hoverEl.contains === 'function' && hoverEl.contains(e.relatedTarget)) return;
+        if (e.relatedTarget && typeof hoverEl.contains === 'function' && hoverEl.contains(/** @type {Node} */ (e.relatedTarget))) return;
 
         const hoverAction = hoverEl.getAttribute('data-hover-action');
         if (hoverAction === 'preload-grid-slide') {
             const id = hoverEl.getAttribute('data-id');
-            const dir = Number.parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
+            const dir = Number.parseInt(hoverEl.getAttribute('data-dir') || '', 10) || 1;
             if (id) invokeCompatAction('preload-grid-slide', 'preloadGridSlide', e, id, dir);
         } else if (hoverAction === 'preload-slide') {
-            const dir = Number.parseInt(hoverEl.getAttribute('data-dir'), 10) || 1;
+            const dir = Number.parseInt(hoverEl.getAttribute('data-dir') || '', 10) || 1;
             invokeCompatAction('preload-slide', 'preloadSlide', dir);
         } else if (hoverAction === 'similar-item-tooltip') {
             const id = hoverEl.getAttribute('data-id');
@@ -682,16 +691,18 @@ export function initActionDelegation() {
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (!e.target || typeof e.target.closest !== 'function') return;
-        const hoverEl = e.target.closest('[data-hover-action="similar-item-tooltip"]');
+        const t = /** @type {Element | null} */ (e.target);
+        if (!t || typeof t.closest !== 'function') return;
+        const hoverEl = t.closest('[data-hover-action="similar-item-tooltip"]');
         if (hoverEl) invokeAction('moveItemMeasurementsTooltip', e);
     });
 
     document.addEventListener('mouseout', (e) => {
-        if (!e.target || typeof e.target.closest !== 'function') return;
-        const hoverEl = e.target.closest('[data-hover-action]');
+        const t = /** @type {Element | null} */ (e.target);
+        if (!t || typeof t.closest !== 'function') return;
+        const hoverEl = /** @type {HTMLElement | null} */ (t.closest('[data-hover-action]'));
         if (!hoverEl) return;
-        if (e.relatedTarget && typeof hoverEl.contains === 'function' && hoverEl.contains(e.relatedTarget)) return;
+        if (e.relatedTarget && typeof hoverEl.contains === 'function' && hoverEl.contains(/** @type {Node} */ (e.relatedTarget))) return;
 
         const hoverAction = hoverEl.getAttribute('data-hover-action');
         if (hoverAction === 'similar-item-tooltip') {
@@ -714,7 +725,7 @@ export function bindFormAndFilterListeners() {
     if (searchForm) {
         searchForm.addEventListener('submit', (event) => {
             event.preventDefault();
-            const searchEl = document.getElementById('mainSearch');
+            const searchEl = /** @type {HTMLInputElement | null} */ (document.getElementById('mainSearch'));
             if (searchEl) invokeAction('saveRecentSearch', searchEl.value.trim());
             invokeAction('applyFilters');
             invokeAction('closeSearch');
@@ -740,7 +751,7 @@ export function bindFormAndFilterListeners() {
 
     if (typeof document.addEventListener === 'function') {
         document.addEventListener('change', (e) => {
-            const target = e.target;
+            const target = /** @type {HTMLElement | null} */ (e.target);
             if (!target) return;
             if ((target.classList && target.classList.contains('size-cb')) ||
                 target.id === 'onlySaleCb' ||
@@ -751,14 +762,14 @@ export function bindFormAndFilterListeners() {
         });
     }
 
-    const orderCity = typeof document.getElementById === 'function' ? document.getElementById('orderCity') : null;
+    const orderCity = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' && typeof document.getElementById === 'function' ? document.getElementById('orderCity') : null);
     if (orderCity) {
         orderCity.addEventListener('input', () => {
             invokeAction('debouncedNPCitySearch', orderCity.value);
         });
     }
 
-    const orderBranch = typeof document.getElementById === 'function' ? document.getElementById('orderBranch') : null;
+    const orderBranch = /** @type {HTMLInputElement | null} */ (typeof document !== 'undefined' && typeof document.getElementById === 'function' ? document.getElementById('orderBranch') : null);
     if (orderBranch) {
         orderBranch.addEventListener('focus', () => {
             invokeAction('loadNPBranches', '', true);

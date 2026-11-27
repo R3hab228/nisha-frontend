@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — ACTIVE FILTER CHIPS UI
 // ==========================================
@@ -7,6 +8,7 @@ import { tSafe } from '../core/runtime-env.js';
 import { escCardHtml } from './catalog-card-markup.js';
 import { runCatalogViewTransition } from './catalog-sidebar-ui.js';
 
+/** @type {Readonly<Record<string, string>>} */
 const CATEGORY_CHIP_I18N_KEYS = Object.freeze({
     'Верхняя одежда': 'sidebar.outerwear',
     'Кофты и Свитера': 'sidebar.sweaters',
@@ -15,6 +17,7 @@ const CATEGORY_CHIP_I18N_KEYS = Object.freeze({
     'Аксессуары': 'sidebar.accs'
 });
 
+/** @type {Readonly<Record<string, string>>} */
 const SIZE_CHIP_LABELS = Object.freeze({
     S: 'S',
     M: 'M',
@@ -37,15 +40,15 @@ export function renderActiveFilterChips() {
     const curCat = (typeof window !== 'undefined' && window.currentCategory) ? String(window.currentCategory).trim() : '';
     const curBrand = (typeof window !== 'undefined' && window.currentBrand) ? String(window.currentBrand).trim() : '';
     const onlyFavs = Boolean(typeof window !== 'undefined' && window.showingOnlyFavs);
-    const searchInput = document.getElementById('mainSearch');
+    const searchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('mainSearch'));
     const searchRaw = searchInput ? String(searchInput.value || '').trim() : '';
-    const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => String(cb.value || '').trim()).filter(Boolean);
-    const onlySale = Boolean(document.getElementById('onlySaleCb')?.checked);
-    const onlyBargain = Boolean(document.getElementById('onlyBargainCb')?.checked);
-    const hideUnavailable = Boolean(document.getElementById('hideUnavailableCb')?.checked);
+    const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => String(/** @type {HTMLInputElement} */ (cb).value || '').trim()).filter(Boolean);
+    const onlySale = Boolean(/** @type {HTMLInputElement | null} */ (document.getElementById('onlySaleCb'))?.checked);
+    const onlyBargain = Boolean(/** @type {HTMLInputElement | null} */ (document.getElementById('onlyBargainCb'))?.checked);
+    const hideUnavailable = Boolean(/** @type {HTMLInputElement | null} */ (document.getElementById('hideUnavailableCb'))?.checked);
 
-    const minInput = document.getElementById('priceMin');
-    const maxInput = document.getElementById('priceMax');
+    const minInput = /** @type {HTMLInputElement | null} */ (document.getElementById('priceMin'));
+    const maxInput = /** @type {HTMLInputElement | null} */ (document.getElementById('priceMax'));
     const minDefault = minInput ? (Number.parseInt(minInput.min, 10) || 0) : 0;
     const maxDefault = maxInput ? (Number.parseInt(maxInput.max, 10) || 15000) : 15000;
     const minVal = minInput ? Number.parseInt(minInput.value, 10) : minDefault;
@@ -188,8 +191,8 @@ export function renderActiveFilterChips() {
 }
 
 function resetPriceSlidersDom() {
-    const minInput = document.getElementById('priceMin');
-    const maxInput = document.getElementById('priceMax');
+    const minInput = /** @type {HTMLInputElement | null} */ (document.getElementById('priceMin'));
+    const maxInput = /** @type {HTMLInputElement | null} */ (document.getElementById('priceMax'));
     const minDefault = minInput ? (Number.parseInt(minInput.min, 10) || 0) : 0;
     const maxDefault = maxInput ? (Number.parseInt(maxInput.max, 10) || 15000) : 15000;
     if (minInput) minInput.value = String(minDefault);
@@ -243,7 +246,8 @@ export function removeActiveFilterChip(type, value = '') {
         case 'size': {
             const targetVal = String(value || '').trim();
             document.querySelectorAll('.size-cb:checked').forEach(cb => {
-                if (String(cb.value || '').trim() === targetVal) cb.checked = false;
+                const input = /** @type {HTMLInputElement} */ (cb);
+                if (String(input.value || '').trim() === targetVal) input.checked = false;
             });
             return invokeAction('triggerFilterTransition');
         }
@@ -252,17 +256,17 @@ export function removeActiveFilterChip(type, value = '') {
             return invokeAction('triggerFilterTransition');
         }
         case 'sale': {
-            const cb = document.getElementById('onlySaleCb');
+            const cb = /** @type {HTMLInputElement | null} */ (document.getElementById('onlySaleCb'));
             if (cb) cb.checked = false;
             return invokeAction('triggerFilterTransition');
         }
         case 'bargain': {
-            const cb = document.getElementById('onlyBargainCb');
+            const cb = /** @type {HTMLInputElement | null} */ (document.getElementById('onlyBargainCb'));
             if (cb) cb.checked = false;
             return invokeAction('triggerFilterTransition');
         }
         case 'unavailable': {
-            const cb = document.getElementById('hideUnavailableCb');
+            const cb = /** @type {HTMLInputElement | null} */ (document.getElementById('hideUnavailableCb'));
             if (cb) cb.checked = false;
             return invokeAction('triggerFilterTransition');
         }

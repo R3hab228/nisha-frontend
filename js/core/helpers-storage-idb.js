@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS: SAFE WEB STORAGE & INDEXEDDB KEY-VAL STORE
 // Quota / Safari Incognito Guard + Async IndexedDB Key-Val Cache
@@ -6,15 +7,21 @@
 import { registerActions } from './action-registry.js';
 import { hasOwn } from './helpers-core-utils.js';
 
+/** @type {Record<string, string>} */
 const _memStorageFallback = {};
+/** @type {Record<string, string>} */
 const _memSessionFallback = {};
 
+/**
+ * @param {'localStorage' | 'sessionStorage'} storeProp
+ * @returns {Storage | null}
+ */
 function getWebStore(storeProp) {
     try {
         if (typeof window !== 'undefined' && window[storeProp] && typeof window[storeProp].getItem === 'function') {
             return window[storeProp];
         }
-        const gStore = typeof globalThis !== 'undefined' ? globalThis[storeProp] : null;
+        const gStore = typeof globalThis !== 'undefined' ? /** @type {any} */ (globalThis)[storeProp] : null;
         if (gStore && typeof gStore.getItem === 'function') {
             return gStore;
         }
@@ -53,7 +60,11 @@ export function cleanStorageLimits() {
     }
 }
 
+/**
+ * @param {{ getStore: () => Storage | null, fallbackMap: Record<string, string>, allowQuotaCleanup: boolean }} opts
+ */
 function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
+    /** @param {string} key */
     const readRaw = (key) => {
         const store = getStore();
         let val = null;
@@ -66,6 +77,10 @@ function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
         return hasOwn(fallbackMap, key) ? fallbackMap[key] : null;
     };
 
+    /**
+     * @param {string} key
+     * @param {string} strVal
+     */
     const writeRaw = (key, strVal) => {
         const store = getStore();
         if (!store) {
@@ -91,6 +106,10 @@ function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
     };
 
     return {
+        /**
+         * @param {string} key
+         * @param {any} [defaultValue=null]
+         */
         getJSON(key, defaultValue = null) {
             try {
                 const raw = readRaw(key);
@@ -101,6 +120,10 @@ function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
                 return defaultValue;
             }
         },
+        /**
+         * @param {string} key
+         * @param {any} value
+         */
         setJSON(key, value) {
             try {
                 return writeRaw(key, JSON.stringify(value));
@@ -108,6 +131,10 @@ function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
                 return false;
             }
         },
+        /**
+         * @param {string} key
+         * @param {any} [defaultValue=null]
+         */
         get(key, defaultValue = null) {
             try {
                 const val = readRaw(key);
@@ -116,6 +143,10 @@ function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
                 return hasOwn(fallbackMap, key) ? fallbackMap[key] : defaultValue;
             }
         },
+        /**
+         * @param {string} key
+         * @param {any} value
+         */
         set(key, value) {
             try {
                 return writeRaw(key, String(value));
@@ -123,6 +154,7 @@ function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
                 return false;
             }
         },
+        /** @param {string} key */
         remove(key) {
             delete fallbackMap[key];
             try {
@@ -133,6 +165,7 @@ function createStorageArea({ getStore, fallbackMap, allowQuotaCleanup }) {
                 return false;
             }
         },
+        /** @param {string} key */
         has(key) {
             try {
                 const store = getStore();
@@ -177,14 +210,23 @@ export const storage = {
     })
 };
 
+/**
+ * @param {string} key
+ * @param {any} value
+ */
 export function safeSetItem(key, value) {
     return storage.set(key, value);
 }
 
+/**
+ * @param {string} key
+ * @param {any} [fallback=null]
+ */
 export function safeGetItem(key, fallback = null) {
     return storage.get(key, fallback);
 }
 
+/** @param {string} key */
 export function safeRemoveItem(key) {
     return storage.remove(key);
 }
@@ -200,9 +242,10 @@ if (typeof window !== 'undefined') {
     window.safeStorage = safeStorage;
 }
 if (typeof globalThis !== 'undefined') {
-    globalThis.storage = storage;
-    globalThis.getStorageJSON = (key, defaultValue = null) => storage.getJSON(key, defaultValue);
-    globalThis.setStorageJSON = (key, value) => storage.setJSON(key, value);
+    const g = /** @type {any} */ (globalThis);
+    g.storage = storage;
+    g.getStorageJSON = (/** @type {string} */ key, /** @type {any} */ defaultValue = null) => storage.getJSON(key, defaultValue);
+    g.setStorageJSON = (/** @type {string} */ key, /** @type {any} */ value) => storage.setJSON(key, value);
 }
 
 // Guard direct Storage.prototype calls against Safari Private / QuotaExceededError
@@ -210,6 +253,7 @@ if (typeof globalThis !== 'undefined') {
     try {
         if (typeof Storage !== 'undefined' && Storage.prototype && !Storage.prototype._nishaGuarded) {
             Storage.prototype._nishaGuarded = true;
+            /** @param {Storage} storageInstance */
             const getFallbackMap = (storageInstance) => {
                 try {
                     if (typeof sessionStorage !== 'undefined' && storageInstance === sessionStorage) {
@@ -266,6 +310,7 @@ if (typeof globalThis !== 'undefined') {
 // ==========================================
 const DB_NAME = 'nisha_idb_v1';
 const STORE_NAME = 'keyval';
+/** @type {Promise<IDBDatabase | null> | null} */
 let _dbPromise = null;
 
 function getIDBDatabase() {
@@ -280,6 +325,7 @@ function getIDBDatabase() {
             return _dbPromise;
         }
         let settled = false;
+        /** @param {IDBDatabase | null} val */
         const safeResolve = (val) => {
             if (settled) return;
             settled = true;
@@ -294,7 +340,7 @@ function getIDBDatabase() {
         try {
             const req = idbApi.open(DB_NAME, 1);
             req.onupgradeneeded = (e) => {
-                const db = e.target.result;
+                const db = /** @type {IDBOpenDBRequest} */ (e.target).result;
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     db.createObjectStore(STORE_NAME);
                 }
@@ -336,6 +382,7 @@ export async function idbGet(key) {
         if (!db) return null;
         const { promise, resolve } = Promise.withResolvers();
         let settled = false;
+        /** @param {any} val */
         const safeResolve = (val) => {
             if (settled) return;
             settled = true;
@@ -419,7 +466,7 @@ export async function idbDel(key) {
 
 /**
  * Lists all keys stored in the IndexedDB keyval store.
- * @returns {Promise<Array>}
+ * @returns {Promise<any[]>}
  */
 export async function idbGetAllKeys() {
     try {
@@ -436,10 +483,11 @@ export async function idbGetAllKeys() {
                 req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
                 req.onerror = () => resolve([]);
             } else {
+                /** @type {IDBValidKey[]} */
                 const keys = [];
                 const req = store.openKeyCursor ? store.openKeyCursor() : store.openCursor();
-                req.onsuccess = (e) => {
-                    const cursor = e.target.result;
+                req.onsuccess = (/** @type {Event} */ e) => {
+                    const cursor = /** @type {IDBRequest} */ (e.target).result;
                     if (cursor) {
                         keys.push(cursor.key);
                         cursor.continue();
@@ -477,8 +525,8 @@ export async function idbClearNP() {
             const store = tx.objectStore(STORE_NAME);
             if (typeof store.openCursor === 'function') {
                 const req = store.openCursor();
-                req.onsuccess = (e) => {
-                    const cursor = e.target.result;
+                req.onsuccess = (/** @type {Event} */ e) => {
+                    const cursor = /** @type {IDBRequest} */ (e.target).result;
                     if (cursor) {
                         if (typeof cursor.key === 'string' && cursor.key.startsWith('np_')) {
                             cursor.delete();

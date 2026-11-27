@@ -1,3 +1,5 @@
+// @ts-check
+/// <reference types="vite/client" />
 // ==========================================
 // NISHA DROP MODULE (Lazy Chunk Orchestrator: DROP_ITEM.EXE)
 // ==========================================
@@ -60,7 +62,7 @@ const DROP_EXPORTS = {
 
 Object.entries(DROP_EXPORTS).forEach(([name, fn]) => {
     if (typeof window !== 'undefined') window[name] = fn;
-    if (typeof globalThis !== 'undefined') globalThis[name] = fn;
+    if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis)[name] = fn;
 });
 
 initProposalNameGuard();

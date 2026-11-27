@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA ORDERS STATE, FORMATTERS & TRACKING HELPERS
 // ==========================================
@@ -42,6 +43,7 @@ function getHiddenOrdersStorageKey() {
     return uid ? `nisha_hidden_orders_${uid}` : HIDDEN_ORDERS_STORAGE_KEY;
 }
 
+/** @param {any} list */
 function normalizeOrderIdList(list) {
     if (!Array.isArray(list) || list.length === 0) return [];
     const seen = new Set();
@@ -52,6 +54,7 @@ function normalizeOrderIdList(list) {
     return Array.from(seen).slice(-200);
 }
 
+/** @param {string[]} mergedIds */
 function syncActiveUserHiddenMetadata(mergedIds) {
     const activeUser = getRuntimeUser();
     if (!activeUser || typeof activeUser !== 'object') return;
@@ -61,6 +64,7 @@ function syncActiveUserHiddenMetadata(mergedIds) {
     activeUser.user_metadata.hidden_order_ids = mergedIds;
 }
 
+/** @param {string} key @param {any} fallback */
 function readOrderJsonStorage(key, fallback) {
     const store = getRuntimeStorage();
     if (store && typeof store.getJSON === 'function') {
@@ -75,6 +79,7 @@ function readOrderJsonStorage(key, fallback) {
     return fallback;
 }
 
+/** @param {string} key @param {any} value */
 function writeOrderJsonStorage(key, value) {
     const store = getRuntimeStorage();
     if (store && typeof store.setJSON === 'function') {
@@ -98,6 +103,7 @@ export function getHiddenOrderIds() {
     ]);
 }
 
+/** @param {any} ids */
 function mergeAndPersistHiddenOrderIds(ids) {
     const incoming = normalizeOrderIdList(ids);
     if (incoming.length === 0) return { changed: false, merged: Array.from(getHiddenOrderIds()) };
@@ -109,14 +115,17 @@ function mergeAndPersistHiddenOrderIds(ids) {
     return { changed, merged };
 }
 
+/** @param {any} ids */
 export function hideOrderIds(ids) {
     mergeAndPersistHiddenOrderIds(ids);
 }
 
+/** @param {any} ids */
 export function mergeRemoteHiddenOrderIds(ids) {
     return mergeAndPersistHiddenOrderIds(ids).changed;
 }
 
+/** @param {any} ids */
 export function pruneCachedOrdersByIds(ids) {
     const selectedSet = new Set(Array.isArray(ids) ? ids.map(String) : []);
     if (selectedSet.size === 0) return;
@@ -126,6 +135,7 @@ export function pruneCachedOrdersByIds(ids) {
     }
 }
 
+/** @param {any} nextList */
 export function setOrdersData(nextList) {
     const hiddenSet = getHiddenOrderIds();
     const rawList = Array.isArray(nextList) ? nextList : [];
@@ -158,6 +168,7 @@ export function getCurrentOrderTab() {
     return 'accepted';
 }
 
+/** @param {any} tab */
 export function setCurrentOrderTab(tab) {
     const nextTab = tab || 'accepted';
     const s = getReactiveStore();
@@ -201,21 +212,25 @@ export function getSupabase() {
     return (typeof window !== 'undefined' && (window.supabaseClient || window._supabase)) || null;
 }
 
+/** @param {any} u */
 export const toCDN = (u) => {
     const fn = resolveAction('toCDN');
     return fn ? fn(u) : (u || '');
 };
 
+/** @param {any} v */
 export const escHtml = (v) => {
     const fn = resolveAction('escapeHtml');
     return fn ? fn(v) : escapeHtmlSafe(v);
 };
 
+/** @param {any} v */
 export const escAttr = (v) => {
     const fn = resolveAction('escapeAttr');
     return fn ? fn(v) : escapeAttrSafe(v);
 };
 
+/** @param {any} v */
 export const fmtPrice = (v) => {
     const fn = resolveAction('formatPrice');
     if (fn) return fn(v);
@@ -223,6 +238,7 @@ export const fmtPrice = (v) => {
     return `${v} ${curr}`;
 };
 
+/** @param {any} rawDate */
 export function formatOrderDate(rawDate) {
     const ms = typeof rawDate === 'number' ? rawDate : Date.parse(rawDate);
     if (!Number.isFinite(ms)) return '';
@@ -230,6 +246,7 @@ export function formatOrderDate(rawDate) {
     return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
 }
 
+/** @type {Readonly<Record<string, Readonly<Record<string, string>>>>} */
 const ORDER_STATUS_FALLBACKS = Object.freeze({
     status_cancelled: { ua: 'СКАСОВАНО', ru: 'ОТМЕНЕН', en: 'CANCELLED' },
     status_completed: { ua: 'ЗАВЕРШЕНО', ru: 'ЗАВЕРШЕН', en: 'COMPLETED' },
@@ -240,10 +257,12 @@ const ORDER_STATUS_FALLBACKS = Object.freeze({
 });
 
 // Локализация статусов заказов для всех поддерживаемых языков (RU, UA, EN)
+/** @param {any} rawStatus */
 export function formatOrderStatus(rawStatus) {
     if (!rawStatus) return '';
     const s = String(rawStatus).trim().toLowerCase();
     const lang = getRuntimeSiteLang();
+    /** @param {string} statusKey */
     const tr = (statusKey) => {
         const map = ORDER_STATUS_FALLBACKS[statusKey] || {};
         const def = map[lang] || map.ua || '';
@@ -274,6 +293,7 @@ export function formatOrderStatus(rawStatus) {
 }
 
 // Вспомогательная группировка заказов по статусам для вкладок (через Object.groupBy)
+/** @param {any} order */
 export function getOrderTabBucket(order) {
     const s = (order?.status || '').toLowerCase();
     if (
@@ -301,11 +321,13 @@ export function getOrderTabBucket(order) {
     return 'other';
 }
 
+/** @param {any} ttn */
 export function encodeNovaPoshtaTtn(ttn) {
     const clean = String(ttn || '').replace(/\D+/g, '');
     if (!clean) return '';
     try {
-        const b64 = (typeof btoa === 'function' ? btoa(clean) : Buffer.from(clean).toString('base64')).replace(/=+$/, '');
+        const NodeBuffer = /** @type {any} */ (globalThis).Buffer;
+        const b64 = (typeof btoa === 'function' ? btoa(clean) : NodeBuffer.from(clean).toString('base64')).replace(/=+$/, '');
         const chars = b64.split('');
         return (typeof chars.toReversed === 'function' ? chars.toReversed() : chars.reverse()).join('');
     } catch (_) {
@@ -313,6 +335,7 @@ export function encodeNovaPoshtaTtn(ttn) {
     }
 }
 
+/** @param {any} ttn @param {any} [lang] */
 export function getNovaPoshtaTrackingUrl(ttn, lang) {
     const cleanTtn = String(ttn || '').trim();
     if (!cleanTtn) return 'https://tracking.novaposhta.ua/';
@@ -328,6 +351,7 @@ export function getSelectedOrderIds() {
     return Array.from(selectedOrderIds);
 }
 
+/** @param {any} orderId */
 export function isOrderSelected(orderId) {
     if (orderId === undefined || orderId === null || orderId === '') return false;
     return selectedOrderIds.has(String(orderId));
@@ -337,6 +361,7 @@ export function hasSelectedOrders() {
     return selectedOrderIds.size > 0;
 }
 
+/** @param {any} orderId @param {boolean} [force] */
 export function toggleOrderSelection(orderId, force) {
     if (orderId === undefined || orderId === null || orderId === '') return false;
     const key = String(orderId);

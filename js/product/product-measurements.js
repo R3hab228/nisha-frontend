@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT MEASUREMENTS PARSER & TABLE RENDERER
 // ==========================================
@@ -218,9 +219,11 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'height', key: 'height' }
 ];
 
+/** @param {string} str */
 function escapeRegExp(str) {
-    return typeof RegExp.escape === 'function'
-        ? RegExp.escape(str)
+    const regExpEscape = /** @type {any} */ (RegExp).escape;
+    return typeof regExpEscape === 'function'
+        ? regExpEscape(str)
         : str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
@@ -239,6 +242,7 @@ const INSOLE_PREFIX_RE = new RegExp(
     'gi'
 );
 
+/** @type {Record<string, string>} */
 const DEFAULT_LABELS = {
     measurements_title: 'ЗАМЕРЫ:',
     meas_cm: 'см',
@@ -266,6 +270,7 @@ const DEFAULT_LABELS = {
     meas_qual_from_neck: 'от горла'
 };
 
+/** @param {string} key */
 const _t = (key) => {
     const def = DEFAULT_LABELS[key] || key;
     if (typeof i18next !== 'undefined' && typeof i18next.t === 'function') {
@@ -288,6 +293,7 @@ function normalizeSourceText(raw) {
         .trim();
 }
 
+/** @param {string} key @param {any} value */
 function setBoundedCache(key, value) {
     if (_measurementParseCache.size >= MEASUREMENT_CACHE_LIMIT) {
         const firstKey = _measurementParseCache.keys().next().value;
@@ -410,7 +416,7 @@ export function parseItemMeasurements(rawDescription) {
  */
 export function renderMeasurementsTableHtml(measurements, escapeFn) {
     if (!Array.isArray(measurements) || measurements.length === 0) return '';
-    const esc = typeof escapeFn === 'function' ? escapeFn : (s) => String(s ?? '');
+    const esc = typeof escapeFn === 'function' ? escapeFn : (/** @type {any} */ s) => String(s ?? '');
 
     const titleText = _t('measurements_title');
     const unitText = _t('meas_cm');

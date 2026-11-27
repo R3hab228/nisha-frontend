@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA DROP BARGAIN MODE & TOASTS
 // ==========================================
@@ -40,6 +41,7 @@ export function openPropBargainInput() {
     if (minInput) minInput.focus();
 }
 
+/** @param {number} minBid */
 export function showBargainSavedToast(minBid) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -128,7 +130,7 @@ export function returnToDesiredPriceMode(hasBargain = false) {
 }
 
 export function hidePropBargainInput(silent = false) {
-    const minInput = document.getElementById('propMinBargainPrice');
+    const minInput = /** @type {HTMLInputElement | null} */ (document.getElementById('propMinBargainPrice'));
     if (minInput) minInput.value = '';
     const wasBargain = window._propBargainEnabled;
     window._propBargainEnabled = false;
@@ -142,8 +144,8 @@ export function hidePropBargainInput(silent = false) {
 }
 
 export function confirmPropBargainInput() {
-    const minInput = document.getElementById('propMinBargainPrice');
-    const priceInput = document.getElementById('propPrice');
+    const minInput = /** @type {HTMLInputElement | null} */ (document.getElementById('propMinBargainPrice'));
+    const priceInput = /** @type {HTMLInputElement | null} */ (document.getElementById('propPrice'));
     const rawVal = (minInput?.value || '').trim();
 
     if (!rawVal) {
@@ -173,7 +175,7 @@ export function confirmPropBargainInput() {
     window._propBargainEnabled = true;
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
 
-    returnToDesiredPriceMode(true, minBid);
+    returnToDesiredPriceMode(true);
 
     if (priceInput && (!desiredPrice || Number.isNaN(desiredPrice) || desiredPrice <= 0)) {
         priceInput.focus();

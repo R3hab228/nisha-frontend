@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA ORDERS SELECTION & LONG-PRESS DELETE MODULE
 // ==========================================
@@ -21,6 +22,7 @@ const ORDER_TAB_ORDER = ['accepted', 'shipped', 'cancelled'];
 const ORDER_LONG_PRESS_MS = 450;
 const ORDER_MOVE_TOLERANCE_PX = 10;
 
+/** @param {any} cardEl @param {any} selected */
 function syncOrderCardSelectionDOM(cardEl, selected) {
     if (!cardEl || !cardEl.classList) return;
     cardEl.classList.toggle('is-selected', Boolean(selected));
@@ -81,7 +83,8 @@ export function deleteSelectedOrders() {
     invokeAction('updateOrderTabCounters');
 
     const runUpdate = () => invokeAction('renderFilteredOrders');
-    const vtFn = resolveAction('safeViewTransition') || (typeof safeViewTransition === 'function' ? safeViewTransition : null);
+    const globalVt = /** @type {any} */ (globalThis).safeViewTransition;
+    const vtFn = resolveAction('safeViewTransition') || (typeof globalVt === 'function' ? globalVt : null);
     if (vtFn) vtFn(runUpdate);
     else runUpdate();
 
@@ -93,6 +96,7 @@ export function deleteSelectedOrders() {
     }
 }
 
+/** @param {any} selected */
 function triggerOrderSelectFeedback(selected) {
     const hapticFn = resolveAction('triggerHaptic');
     if (hapticFn) hapticFn(selected ? 'medium' : 'light');
@@ -114,10 +118,13 @@ export function bindOrdersLongPressSelection() {
     if (!listArea || !listArea.dataset || listArea.dataset.selectionBound === '1') return;
     listArea.dataset.selectionBound = '1';
 
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let pressTimer = null;
+    /** @type {number | null} */
     let activePointerId = null;
     let startX = 0;
     let startY = 0;
+    /** @type {HTMLElement | null} */
     let pressedCard = null;
     let longPressFired = false;
     let suppressNextClickUntil = 0;
@@ -135,7 +142,7 @@ export function bindOrdersLongPressSelection() {
         if (e.isPrimary === false) return;
         if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-        const target = e.target;
+        const target = /** @type {any} */ (e.target);
         const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
         if (!card) return;
         const orderId = card.dataset ? card.dataset.orderId : card.getAttribute?.('data-order-id');
@@ -172,6 +179,7 @@ export function bindOrdersLongPressSelection() {
         }
     }, { passive: true });
 
+    /** @param {any} e */
     const cancelPress = (e) => {
         if (e && activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
         clearPressTimer();
@@ -180,7 +188,7 @@ export function bindOrdersLongPressSelection() {
     listArea.addEventListener('pointercancel', cancelPress, { passive: true });
 
     listArea.addEventListener('contextmenu', (e) => {
-        const target = e.target;
+        const target = /** @type {any} */ (e.target);
         const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
         if (card && (pressedCard !== null || longPressFired || Date.now() < suppressNextClickUntil || hasSelectedOrders())) {
             e.preventDefault();
@@ -195,7 +203,7 @@ export function bindOrdersLongPressSelection() {
             return;
         }
         if (!hasSelectedOrders()) return;
-        const target = e.target;
+        const target = /** @type {any} */ (e.target);
         const card = target && typeof target.closest === 'function' ? target.closest('.order-card') : null;
         if (!card) return;
         const orderId = card.dataset ? card.dataset.orderId : card.getAttribute?.('data-order-id');

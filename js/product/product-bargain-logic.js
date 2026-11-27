@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT BARGAIN — VALIDATION, RATE LIMIT & PAYLOAD HELPERS
 // ==========================================
@@ -114,7 +115,7 @@ export function recordClientBargainOffer() {
 /**
  * Shared validation for both modal and inline bargain submissions.
  * Accepts input in the active display currency (`UAH` | `USD` | `EUR`) and returns normalized `offeredPriceUah`.
- * @param {object} activeItem
+ * @param {any} activeItem
  * @param {number} offeredPrice
  * @returns {{ ok: boolean, offeredPriceUah?: number, message?: string, focusInput?: boolean }}
  */
@@ -144,7 +145,7 @@ export function validateBargainSubmission(activeItem, offeredPrice) {
     const minFloorUah = 100;
     const effectiveMinUah = itemMinBargain ? Math.max(minFloorUah, itemMinBargain) : minFloorUah;
 
-    const formatMinErrorMsg = (uahVal) => {
+    const formatMinErrorMsg = (/** @type {number} */ uahVal) => {
         const g = /** @type {any} */ (globalThis);
         const formatted = typeof g.formatPrice === 'function' ? g.formatPrice(uahVal) : `${uahVal} грн`;
         const lang = getRuntimeSiteLang();
@@ -213,10 +214,10 @@ export function validateBargainSubmission(activeItem, offeredPrice) {
 
 /**
  * Builds canonical `/api/bargain` request payload.
- * @param {object} activeItem
+ * @param {any} activeItem
  * @param {number} offeredPrice
  * @param {string} contact
- * @returns {object}
+ * @returns {Record<string, any>}
  */
 export function buildBargainPayload(activeItem, offeredPrice, contact) {
     const fingerprint = getFingerprint();

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - WEB LOCKS & LEADER ELECTION API
 // Multi-tab synchronization, mutual exclusion & leader election
@@ -6,7 +7,9 @@
 import { registerActions } from './action-registry.js';
 
 let _isLeader = false;
+/** @type {AbortController | null} */
 let _leaderAbortController = null;
+/** @type {Set<() => void>} */
 const _leaderCallbacks = new Set();
 
 /**
@@ -79,7 +82,7 @@ async function runWithLock(lockName, taskFn, options = {}) {
 /**
  * Initiates leader election among open tabs of the store
  * The first tab to acquire 'nisha_tab_leader' becomes Leader until closed or navigated
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean | void>}
  */
 function initLeaderElection() {
     if (typeof window === 'undefined') return Promise.resolve(false);

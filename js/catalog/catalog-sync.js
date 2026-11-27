@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — ЗАГРУЗКА ИЗ БД, КЭШ, REALTIME И СИНХРОНИЗАЦИЯ
 // ==========================================
@@ -28,6 +29,10 @@ const ITEM_FULL_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_
 const ITEM_NO_THUMBHASH_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable, is_bargain, min_bargain_price';
 const ITEM_LEGACY_COLS = 'id, name, brand, price, old_price, is_sale, is_top, top_until, status, thumbnails, images, category, size, views_count, created_at, condition, description, is_drop, tags, is_returnable';
 
+/**
+ * @param {any} error
+ * @param {string[]} columnNames
+ */
 function isMissingColumnError(error, columnNames) {
     return Boolean(
         error && (
@@ -38,6 +43,9 @@ function isMissingColumnError(error, columnNames) {
     );
 }
 
+/**
+ * @param {(cols: string) => Promise<any>} runQuery
+ */
 async function queryItemsWithBargainFallback(runQuery) {
     const first = await runQuery(ITEM_FULL_COLS);
     if (!first.error) return first;
@@ -235,8 +243,9 @@ export async function loadAllItems() {
     // 3. ИСТОРИЯ ПРОСМОТРОВ
     const profile = getRuntimeProfile();
     if (profile && profile.viewed_history && profile.viewed_history.length > 0) {
+        /** @type {any[]} */
         const dbHistory = [];
-        profile.viewed_history.forEach(uuid => {
+        profile.viewed_history.forEach((/** @type {any} */ uuid) => {
             const histItem = window.allItems.find(i => i.id === uuid);
             if (histItem) {
                 const img = (histItem.images && histItem.images.length > 0) ? histItem.images[0] : '';
@@ -306,13 +315,13 @@ export async function syncCriticalStatuses() {
 
             if (error || !data) return;
 
-            const freshIdSet = new Set(data.map(d => d.id));
+            const freshIdSet = new Set(data.map((/** @type {any} */ d) => d.id));
             const currentIdSet = new Set(window.allItems.map(i => i.id));
             let gridNeedsFullRefresh = false;
 
             // 1. Очистка от удаленных из БД товаров (Set.prototype.difference)
-            const deletedIds = (typeof currentIdSet.difference === 'function')
-                ? Array.from(currentIdSet.difference(freshIdSet))
+            const deletedIds = (typeof /** @type {any} */ (currentIdSet).difference === 'function')
+                ? Array.from(/** @type {any} */ (currentIdSet).difference(freshIdSet))
                 : (hasAction('setDifference')
                     ? Array.from(invokeAction('setDifference', currentIdSet, freshIdSet))
                     : window.allItems.filter(i => i && !freshIdSet.has(i.id)).map(i => i.id));
@@ -330,7 +339,7 @@ export async function syncCriticalStatuses() {
                 });
                 const countEl = document.getElementById('itemCount');
                 if (countEl && Array.isArray(window.filteredItems)) {
-                    countEl.textContent = window.filteredItems.length;
+                    countEl.textContent = String(window.filteredItems.length);
                 }
                 const activeModal = getRuntimeOpenedItem();
                 if (activeModal && deletedIds.some(d => String(d) === String(activeModal.id)) && typeof closeModal === 'function') {
@@ -343,11 +352,11 @@ export async function syncCriticalStatuses() {
             }
 
             // 2. Проверка новых товаров
-            const newIds = (typeof freshIdSet.difference === 'function')
-                ? Array.from(freshIdSet.difference(currentIdSet))
+            const newIds = (typeof /** @type {any} */ (freshIdSet).difference === 'function')
+                ? Array.from(/** @type {any} */ (freshIdSet).difference(currentIdSet))
                 : (hasAction('setDifference')
                     ? Array.from(invokeAction('setDifference', freshIdSet, currentIdSet))
-                    : data.filter(d => d && !currentIdSet.has(d.id)).map(d => d.id));
+                    : data.filter((/** @type {any} */ d) => d && !currentIdSet.has(d.id)).map((/** @type {any} */ d) => d.id));
             if (newIds.length > 0) {
                 const { data: fullNewItems } = await queryItemsWithBargainFallback((cols) =>
                     sb.from('items').select(cols).in('id', newIds)
@@ -355,8 +364,9 @@ export async function syncCriticalStatuses() {
 
                 if (fullNewItems && fullNewItems.length > 0) {
                     window._notifiedItemIds = window._notifiedItemIds || new Set();
+                    /** @type {any[]} */
                     const freshNewArrivals = [];
-                    fullNewItems.forEach(newItem => {
+                    fullNewItems.forEach((/** @type {any} */ newItem) => {
                         if (!window.allItems.some(i => i.id === newItem.id)) {
                             window.allItems.unshift(newItem);
                         }
@@ -366,7 +376,7 @@ export async function syncCriticalStatuses() {
                         }
                     });
 
-                    const sortDateDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+                    const sortDateDesc = (/** @type {any} */ a, /** @type {any} */ b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
                     window.allItems = hasAction('toSorted')
                         ? invokeAction('toSorted', window.allItems, sortDateDesc)
                         : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
@@ -386,11 +396,11 @@ export async function syncCriticalStatuses() {
 
             // 3. Синхронизация статусов, бейджей (TOP/HOT/SALE/SOLD/RESERVED) и цен существующих товаров
             const freshMap = new Map();
-            data.forEach(d => freshMap.set(d.id, d));
+            data.forEach((/** @type {any} */ d) => freshMap.set(d.id, d));
             const nowTs = Date.now();
-            const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
-            const onlySale = document.getElementById('onlySaleCb')?.checked || false;
-            const onlyBargain = document.getElementById('onlyBargainCb')?.checked || false;
+            const hideUnavailable = /** @type {HTMLInputElement | null} */ (document.getElementById('hideUnavailableCb'))?.checked || false;
+            const onlySale = /** @type {HTMLInputElement | null} */ (document.getElementById('onlySaleCb'))?.checked || false;
+            const onlyBargain = /** @type {HTMLInputElement | null} */ (document.getElementById('onlyBargainCb'))?.checked || false;
 
             window.allItems.forEach(item => {
                 const fresh = freshMap.get(item.id);

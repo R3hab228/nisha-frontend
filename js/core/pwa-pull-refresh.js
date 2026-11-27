@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PWA STANDALONE PULL-TO-REFRESH MODULE
 // ==========================================
@@ -31,12 +32,12 @@ function getPwaPullText(key) {
 
 /**
  * Creates or returns the pull-to-refresh terminal capsule container and child controls.
- * @returns {{container: HTMLElement|null, arrowIcon: Element|null, label: HTMLElement|null}}
+ * @returns {{container: HTMLElement|null, arrowIcon: HTMLElement|SVGElement|null, label: HTMLElement|null}}
  */
 function ensurePullRefreshDom() {
     let container = document.getElementById('pwaPullRefresh');
-    let arrowIcon = container && typeof container.querySelector === 'function' ? container.querySelector('.pwa-pull-arrow') : null;
-    let label = document.getElementById('pwaPullLabel') || (container && typeof container.querySelector === 'function' ? container.querySelector('.pwa-pull-text') : null);
+    let arrowIcon = /** @type {HTMLElement | SVGElement | null} */ (container && typeof container.querySelector === 'function' ? container.querySelector('.pwa-pull-arrow') : null);
+    let label = /** @type {HTMLElement | null} */ (document.getElementById('pwaPullLabel') || (container && typeof container.querySelector === 'function' ? container.querySelector('.pwa-pull-text') : null));
 
     if (!container && document.body) {
         container = document.createElement('div');
@@ -62,7 +63,7 @@ function ensurePullRefreshDom() {
         } else if (typeof document.body.appendChild === 'function') {
             document.body.appendChild(container);
         }
-        arrowIcon = typeof container.querySelector === 'function' ? container.querySelector('.pwa-pull-arrow') : null;
+        arrowIcon = /** @type {HTMLElement | SVGElement | null} */ (typeof container.querySelector === 'function' ? container.querySelector('.pwa-pull-arrow') : null);
         label = document.getElementById('pwaPullLabel');
     }
 
@@ -75,9 +76,10 @@ function ensurePullRefreshDom() {
  * @returns {boolean}
  */
 function isRestrictedOrScrollableTarget(target) {
-    if (!target) return false;
+    const targetEl = /** @type {Element | null} */ (target);
+    if (!targetEl) return false;
 
-    if (target.closest && target.closest([
+    if (targetEl.closest && targetEl.closest([
         'input', 'textarea', 'select', 'button',
         '.card-slider', '.stories-container',
         '.modal', '.modal-window', '.modal-overlay',
@@ -91,7 +93,8 @@ function isRestrictedOrScrollableTarget(target) {
         return true;
     }
 
-    let node = target;
+    /** @type {Element | null} */
+    let node = targetEl;
     while (node && node !== document.body && node !== document.documentElement) {
         if (node.hasAttribute && (node.hasAttribute('data-lenis-prevent') || node.hasAttribute('data-no-pull') || (node.classList && node.classList.contains && node.classList.contains('no-pull')))) {
             return true;
@@ -127,7 +130,9 @@ export function initPwaPullToRefresh() {
     let hapticDone = false;
     let touchActive = false;
     let currentPullDistance = 0;
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let resetTimeoutId = null;
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let refreshTimeoutId = null;
     const THRESHOLD = 60;
     const MAX_PULL = 85;
@@ -163,7 +168,7 @@ export function initPwaPullToRefresh() {
         );
         if (isLiveSearchOpen) return false;
 
-        const activeEl = document.activeElement;
+        const activeEl = /** @type {HTMLElement | null} */ (document.activeElement);
         if (activeEl && (
             activeEl.tagName === 'INPUT' ||
             activeEl.tagName === 'TEXTAREA' ||

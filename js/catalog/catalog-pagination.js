@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — ПАГИНАЦИЯ, БАТЧИНГ, КОМПАРАТОР И ВИДЕО-ПЛЕЕР СЕТКИ
 // ==========================================
@@ -6,6 +7,7 @@ import { buildCardDOM, getSeenItemsSet, isItemBargainEnabled } from './catalog-c
 import { hasAction, invokeAction } from '../core/action-registry.js';
 
 let itemsPageSize = typeof window !== 'undefined' && window.innerWidth <= 900 ? 12 : 15;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let changePageTimeout = null;
 let _renderBatchSeq = 0;
 
@@ -25,13 +27,14 @@ export function markCardImageLoaded(img) {
 // Умный плеер для видео в сетке (IntersectionObserver с поддержкой Network Information API)
 export const gridVideoObserver = (typeof IntersectionObserver !== 'undefined')
     ? new IntersectionObserver((entries) => {
-        const conn = (typeof navigator !== 'undefined') ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
+        const nav = /** @type {any} */ (typeof navigator !== 'undefined' ? navigator : null);
+        const conn = nav ? (nav.connection || nav.mozConnection || nav.webkitConnection) : null;
         const isSaveData = hasAction('isSaveDataMode')
             ? invokeAction('isSaveDataMode')
             : Boolean(conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g'));
 
         entries.forEach(entry => {
-            const video = entry.target;
+            const video = /** @type {HTMLVideoElement} */ (entry.target);
             if (entry.isIntersecting && !document.hidden && !isSaveData) {
                 video.play().catch(() => {});
             } else {
@@ -47,28 +50,30 @@ if (typeof document !== 'undefined') {
         const videos = document.querySelectorAll('video');
         if (document.hidden) {
             videos.forEach(v => {
-                if (!v.paused) {
-                    v._wasPlaying = true;
-                    v.pause();
+                const vid = /** @type {HTMLVideoElement & { _wasPlaying?: boolean }} */ (v);
+                if (!vid.paused) {
+                    vid._wasPlaying = true;
+                    vid.pause();
                 }
             });
         } else {
             videos.forEach(v => {
-                if (v._wasPlaying) {
-                    delete v._wasPlaying;
-                    if (v.classList.contains('modal-video-player')) {
+                const vid = /** @type {HTMLVideoElement & { _wasPlaying?: boolean }} */ (v);
+                if (vid._wasPlaying) {
+                    delete vid._wasPlaying;
+                    if (vid.classList.contains('modal-video-player')) {
                         const modal = document.getElementById('productModal');
                         if (modal && modal.style.display !== 'none') {
-                            const slide = v.closest('.slide');
+                            const slide = vid.closest('.slide');
                             const slides = Array.from(document.querySelectorAll('#sliderWrapper .slide'));
-                            if (slides.indexOf(slide) === window.currentSlide) {
-                                v.play().catch(() => {});
+                            if (slide && slides.indexOf(slide) === window.currentSlide) {
+                                vid.play().catch(() => {});
                             }
                         }
                     } else {
-                        const rect = v.getBoundingClientRect();
+                        const rect = vid.getBoundingClientRect();
                         if (rect.top < window.innerHeight + 50 && rect.bottom > -50) {
-                            v.play().catch(() => {});
+                            vid.play().catch(() => {});
                         }
                     }
                 }
@@ -89,7 +94,7 @@ export function changePage(step) {
         grid.classList.add('fade-out');
     }
 
-    clearTimeout(changePageTimeout);
+    if (changePageTimeout !== null) clearTimeout(changePageTimeout);
     changePageTimeout = setTimeout(() => {
         renderNextBatch();
 
@@ -112,7 +117,7 @@ const _itemSortMetaCache = new WeakMap();
 /**
  * Возвращает кэшированные числовые метаданные товара для быстрой сортировки O(N) без повторных Date.parse/regex.
  * Автоматически обновляется при изменении цены, даты создания или top_until.
- * @param {object} item
+ * @param {any} item
  * @returns {{ createdTs: number, topUntilTs: number, priceNum: number }}
  */
 export function getItemSortMeta(item) {
@@ -148,11 +153,11 @@ export function getItemSortMeta(item) {
 
 /**
  * Единый компаратор витрины (TOP-закрепленные всегда выше, далее активная сортировка: дата или цена).
- * @returns {(a: object, b: object) => number}
+ * @returns {(a: any, b: any) => number}
  */
 export function getCatalogItemComparator() {
     const nowTs = Date.now();
-    const isTopNow = (it) => !!(it && it.is_top === true && getItemSortMeta(it).topUntilTs > nowTs);
+    const isTopNow = (/** @type {any} */ it) => !!(it && it.is_top === true && getItemSortMeta(it).topUntilTs > nowTs);
     const sortCheapEl = typeof document !== 'undefined' ? document.getElementById('sort-cheap') : null;
     const byCheap = !!(sortCheapEl && sortCheapEl.classList.contains('active-sort'));
     return (a, b) => {
@@ -167,7 +172,7 @@ export function getCatalogItemComparator() {
 
 /**
  * Плавно добавляет новую карточку в витрину на правильную позицию с учётом TOP-товаров и сортировки.
- * @param {object} item
+ * @param {any} item
  */
 export function insertNewItemCardSmoothly(item) {
     if (!item || !item.id || typeof document === 'undefined') return;
@@ -179,11 +184,11 @@ export function insertNewItemCardSmoothly(item) {
 
     const curCat = window.currentCategory || '';
     const curBrand = window.currentBrand || '';
-    const searchInput = document.getElementById('mainSearch');
+    const searchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('mainSearch'));
     const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
-    const onlySale = document.getElementById('onlySaleCb')?.checked || false;
-    const onlyBargain = document.getElementById('onlyBargainCb')?.checked || false;
-    const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
+    const onlySale = /** @type {HTMLInputElement | null} */ (document.getElementById('onlySaleCb'))?.checked || false;
+    const onlyBargain = /** @type {HTMLInputElement | null} */ (document.getElementById('onlyBargainCb'))?.checked || false;
+    const hideUnavailable = /** @type {HTMLInputElement | null} */ (document.getElementById('hideUnavailableCb'))?.checked || false;
 
     if (curCat && item.category !== curCat) return;
     if (curBrand && (!item.brand || !item.brand.toLowerCase().includes(curBrand.toLowerCase()))) return;
@@ -191,14 +196,14 @@ export function insertNewItemCardSmoothly(item) {
     if (onlyBargain && !isItemBargainEnabled(item)) return;
     if (hideUnavailable && item.status !== 'available') return;
 
-    const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => String(cb.value || '').toLowerCase());
+    const checkedSizes = Array.from(document.querySelectorAll('.size-cb:checked')).map(cb => String(/** @type {HTMLInputElement} */ (cb).value || '').toLowerCase());
     if (checkedSizes.length > 0) {
         const itemSizeStr = String(item.size || '').toLowerCase();
         if (!checkedSizes.some(sz => itemSizeStr === sz || itemSizeStr.includes(sz))) return;
     }
 
-    const priceMinEl = document.getElementById('priceMin');
-    const priceMaxEl = document.getElementById('priceMax');
+    const priceMinEl = /** @type {HTMLInputElement | null} */ (document.getElementById('priceMin'));
+    const priceMaxEl = /** @type {HTMLInputElement | null} */ (document.getElementById('priceMax'));
     const minP = priceMinEl ? Number(priceMinEl.value) : NaN;
     const maxP = priceMaxEl ? Number(priceMaxEl.value) : NaN;
     const itemPriceNum = Number(item.price) || 0;
@@ -236,14 +241,14 @@ export function insertNewItemCardSmoothly(item) {
             if (renderedNew) renderedNew.classList.add('item-card-new-arrival');
         }
         const countElDesktop = document.getElementById('itemCount');
-        if (countElDesktop) countElDesktop.textContent = list.length;
+        if (countElDesktop) countElDesktop.textContent = String(list.length);
         return;
     }
 
     const alreadyRenderedAll = (window.renderedCount || 0) >= prevLen;
     if (!(insertIdx < (window.renderedCount || 0) || alreadyRenderedAll)) {
         const countElMobile = document.getElementById('itemCount');
-        if (countElMobile) countElMobile.textContent = list.length;
+        if (countElMobile) countElMobile.textContent = String(list.length);
         return;
     }
 
@@ -264,7 +269,7 @@ export function insertNewItemCardSmoothly(item) {
             if (gridVideoObserver) gridVideoObserver.observe(v);
         });
 
-        const img = card.querySelector('img.card-slide-img');
+        const img = /** @type {HTMLImageElement | null} */ (card.querySelector('img.card-slide-img'));
         if (img) {
             if (img.complete && img.naturalWidth > 0) {
                 markCardImageLoaded(img);
@@ -276,7 +281,7 @@ export function insertNewItemCardSmoothly(item) {
 
     const countEl = document.getElementById('itemCount');
     if (countEl && Array.isArray(window.filteredItems)) {
-        countEl.textContent = window.filteredItems.length;
+        countEl.textContent = String(window.filteredItems.length);
     }
 }
 
@@ -317,7 +322,7 @@ export async function renderNextBatch(targetMobileCount = 0) {
             if (typeof grid.replaceChildren === 'function') grid.replaceChildren();
             else grid.innerHTML = '';
         }
-        startIndex = window.renderedCount;
+        startIndex = window.renderedCount || 0;
         const batchLen = (startIndex === 0 && targetMobileCount > BATCH_SIZE) ? targetMobileCount : BATCH_SIZE;
         endIndex = Math.min(startIndex + batchLen, window.filteredItems.length);
         window.renderedCount = endIndex;
@@ -332,7 +337,7 @@ export async function renderNextBatch(targetMobileCount = 0) {
     if (startIndex >= endIndex) {
         if (isMobile) {
             const scrollTrigger = document.getElementById('loadingTrigger');
-            if (scrollTrigger && window.renderedCount >= (window.filteredItems ? window.filteredItems.length : 0)) {
+            if (scrollTrigger && (window.renderedCount || 0) >= (window.filteredItems ? window.filteredItems.length : 0)) {
                 scrollTrigger.style.display = 'none';
             }
         }
@@ -342,6 +347,7 @@ export async function renderNextBatch(targetMobileCount = 0) {
     getSeenItemsSet();
 
     const fragment = document.createDocumentFragment();
+    /** @type {Element[]} */
     const newVideoElements = [];
 
     for (let i = startIndex; i < endIndex; i++) {
@@ -413,7 +419,8 @@ export async function renderNextBatch(targetMobileCount = 0) {
 
     if (hasAction('yieldToMain')) await invokeAction('yieldToMain');
     if (batchSeq !== _renderBatchSeq) return;
-    grid.querySelectorAll('img.card-slide-img').forEach(img => {
+    grid.querySelectorAll('img.card-slide-img').forEach(el => {
+        const img = /** @type {HTMLImageElement} */ (el);
         if (img.complete && img.naturalWidth > 0 && img.style.opacity !== '1') {
             markCardImageLoaded(img);
         }

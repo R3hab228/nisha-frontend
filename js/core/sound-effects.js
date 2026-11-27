@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA SOUND EFFECTS ENGINE (WIN98 FULL PACK + ADAPTIVE MASTERING)
 // ==========================================
@@ -114,6 +115,7 @@ export const SOUND_PROFILES = Object.freeze({
     }
 });
 
+/** @type {AudioContext | null} */
 let _audioCtx = null;
 const _bufferCache = new Map();
 const _bufferPromises = new Map();
@@ -121,6 +123,7 @@ const _lastPlayedBySound = new Map();
 let _unlockListenersBound = false;
 let _warmupStarted = false;
 let _higherPriorityLock = { priority: 0, until: 0 };
+/** @type {{ sound: string, kind: 'toast'|'broadcast'|'alert'|'success'|'celebrate'|'ui', queuedAt: number } | null} */
 let _pendingPlay = null;
 
 /**
@@ -130,7 +133,8 @@ let _pendingPlay = null;
  */
 function resolveSoundProfile(name) {
     const key = String(name || 'notify').toLowerCase();
-    const prof = Object.hasOwn(SOUND_PROFILES, key) ? SOUND_PROFILES[key] : SOUND_PROFILES.notify;
+    const profiles = /** @type {Record<string, typeof SOUND_PROFILES.notify>} */ (SOUND_PROFILES);
+    const prof = Object.hasOwn(SOUND_PROFILES, key) ? profiles[key] : SOUND_PROFILES.notify;
     return { key: Object.hasOwn(SOUND_PROFILES, key) ? key : 'notify', ...prof };
 }
 
@@ -267,6 +271,10 @@ function getOrCreateAudioContext() {
     return _audioCtx;
 }
 
+/**
+ * @param {AudioContext | null} ctx
+ * @param {string} soundName
+ */
 async function loadSoundBuffer(ctx, soundName) {
     const prof = resolveSoundProfile(soundName);
     if (_bufferCache.has(prof.key)) return _bufferCache.get(prof.key);
@@ -289,6 +297,7 @@ async function loadSoundBuffer(ctx, soundName) {
     return promise;
 }
 
+/** @param {AudioContext | null} ctx */
 function warmUpCoreSounds(ctx) {
     if (_warmupStarted || !ctx || typeof setTimeout !== 'function') return;
     if (typeof navigator !== 'undefined' && navigator.connection && navigator.connection.saveData) return;
@@ -304,6 +313,12 @@ function warmUpCoreSounds(ctx) {
     });
 }
 
+/**
+ * @param {AudioContext | null} ctx
+ * @param {AudioBuffer | null} buffer
+ * @param {string} soundName
+ * @param {'toast'|'broadcast'|'alert'|'success'|'celebrate'|'ui'} kind
+ */
 function playBufferWithMastering(ctx, buffer, soundName, kind) {
     if (!ctx || !buffer || typeof ctx.createBufferSource !== 'function') return false;
     try {
@@ -315,6 +330,7 @@ function playBufferWithMastering(ctx, buffer, soundName, kind) {
         const targetGain = computeAdaptiveOutputGain({ sound: soundName, kind, bufferRms: rms });
         gainNode.gain.setValueAtTime(targetGain, ctx.currentTime);
 
+        /** @type {AudioNode} */
         let chainTail = source;
 
         if (typeof ctx.createBiquadFilter === 'function') {
@@ -353,6 +369,10 @@ function playBufferWithMastering(ctx, buffer, soundName, kind) {
     }
 }
 
+/**
+ * @param {string} soundName
+ * @param {'toast'|'broadcast'|'alert'|'success'|'celebrate'|'ui'} kind
+ */
 function playFallbackHtmlAudio(soundName, kind) {
     if (typeof Audio !== 'function') return false;
     const prof = resolveSoundProfile(soundName);
@@ -369,11 +389,20 @@ function playFallbackHtmlAudio(soundName, kind) {
     }
 }
 
+/**
+ * @param {{ key: string, priority: number, lockLowerMs: number }} profile
+ * @param {string} kind
+ */
 function resolveEffectivePriority(profile, kind) {
     if (profile.key === 'notify' && kind === 'broadcast') return 3;
     return profile.priority;
 }
 
+/**
+ * @param {{ key: string, priority: number, lockLowerMs: number }} profile
+ * @param {string} kind
+ * @param {number} now
+ */
 function markPlaybackTimestamps(profile, kind, now) {
     _lastPlayedBySound.set(profile.key, now);
     const effectivePriority = resolveEffectivePriority(profile, kind);
@@ -587,7 +616,7 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof window !== 'undefined') {
-    window.playSound = playSound;
+    /** @type {any} */ (window).playSound = playSound;
     window.playNotifySound = playNotifySound;
     window.toggleSoundEnabled = toggleSoundEnabled;
     window.syncSoundToggleUI = syncSoundToggleUI;

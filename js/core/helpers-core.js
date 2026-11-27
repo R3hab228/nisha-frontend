@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS (Eager Entrypoint)
 // Re-exports core utilities without pulling WebAudio sound-effects into initial bundle.

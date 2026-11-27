@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PWA INSTALL PROMPT, BFCACHE, OFFLINE WIN95 & BATTERY ADAPTER
 // ==========================================
@@ -6,6 +7,7 @@ import { invokeAction, registerActions } from './action-registry.js';
 import { debugPwaLog } from './pwa-sw-versioning.js';
 import { getRuntimeSupabase, getRuntimeOpenedItem, getRuntimeStorage, tSafe } from './runtime-env.js';
 
+/** @type {any} */
 let deferredPrompt = null;
 let lifecycleListenersBound = false;
 const PWA_INSTALLED_KEY = 'nisha_pwa_installed';
@@ -50,9 +52,10 @@ function markPwaInstalled() {
 
 async function detectPwaInstalledAsync() {
     if (isPwaAlreadyInstalled()) return true;
-    if (typeof navigator !== 'undefined' && typeof navigator.getInstalledRelatedApps === 'function') {
+    const nav = /** @type {any} */ (typeof navigator !== 'undefined' ? navigator : null);
+    if (nav && typeof nav.getInstalledRelatedApps === 'function') {
         try {
-            const related = await navigator.getInstalledRelatedApps();
+            const related = await nav.getInstalledRelatedApps();
             if (Array.isArray(related) && related.length > 0) {
                 markPwaInstalled();
                 return true;
@@ -90,6 +93,10 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
         }
     }
 
+    /**
+     * @param {string} key
+     * @param {string} fallback
+     */
     const t = (key, fallback) => tSafe(key, { defaultValue: fallback });
 
     const title = t('footer.pwa_broadcast_title', 'SYSTEM_BROADCAST.MSG');
@@ -103,8 +110,9 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
         const laterLabel = t('footer.pwa_broadcast_later', 'ПОЗЖЕ');
 
         document.querySelectorAll('.terminal-modal-overlay').forEach(el => {
-            if (typeof el._nishaDismiss === 'function') {
-                try { el._nishaDismiss(); } catch { el.remove(); }
+            const overlayEl = /** @type {any} */ (el);
+            if (typeof overlayEl._nishaDismiss === 'function') {
+                try { overlayEl._nishaDismiss(); } catch { el.remove(); }
                 if (el.isConnected) el.remove();
             } else {
                 el.remove();
@@ -141,10 +149,11 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
             }
         };
 
-        const installBtnEl = overlay.querySelector('.pwa-bc-install');
-        const laterBtnEl = overlay.querySelector('.pwa-bc-later');
+        const installBtnEl = /** @type {HTMLButtonElement | null} */ (overlay.querySelector('.pwa-bc-install'));
+        const laterBtnEl = /** @type {HTMLButtonElement | null} */ (overlay.querySelector('.pwa-bc-later'));
         const statusEl = overlay.querySelector('.pwa-bc-status');
 
+        if (installBtnEl) {
         installBtnEl.addEventListener('click', async () => {
             if (isInstalling) return;
             const promptEvent = deferredPrompt;
@@ -175,8 +184,9 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
                 laterBtnEl.style.opacity = '0.4';
             }
 
-            const bars = Array.from(installBtnEl.querySelectorAll('.pwa-bc-bar'));
+            const bars = /** @type {HTMLElement[]} */ (Array.from(installBtnEl.querySelectorAll('.pwa-bc-bar')));
             let currentBars = 0;
+            /** @param {number} count */
             const setBars = (count) => {
                 const target = Math.max(0, Math.min(TOTAL_BARS, count));
                 for (let i = 0; i < bars.length; i++) {
@@ -250,11 +260,14 @@ export async function maybeShowPostOrderPwaBroadcast({ skipCooldown = false } = 
                 closeOverlay(false);
             }
         }, { signal: ctrl.signal });
+        }
 
-        laterBtnEl.addEventListener('click', () => {
-            if (!isInstalling) closeOverlay(true);
-            else if (isInstallDone) closeOverlay(false);
-        }, { signal: ctrl.signal });
+        if (laterBtnEl) {
+            laterBtnEl.addEventListener('click', () => {
+                if (!isInstalling) closeOverlay(true);
+                else if (isInstallDone) closeOverlay(false);
+            }, { signal: ctrl.signal });
+        }
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 if (!isInstalling) closeOverlay(true);
@@ -442,8 +455,9 @@ export function handleNetworkOnline() {
 
         setTimeout(async () => {
             hideNetErrorAndRestoreGrid(netError, grid);
-            if (grid && typeof loadAllItems === 'function') {
-                loadAllItems();
+            const loadAllItemsFn = /** @type {any} */ (globalThis).loadAllItems;
+            if (grid && typeof loadAllItemsFn === 'function') {
+                loadAllItemsFn();
             }
             if (typeof checkSession === 'function') checkSession();
             if (typeof updateCartUI === 'function') updateCartUI();
@@ -480,8 +494,9 @@ export function initPwaLifecycle() {
     if (installBtn && isPwaAlreadyInstalled()) {
         installBtn.style.display = 'none';
     }
-    if (installBtn && !installBtn._pwaInstallBound) {
-        installBtn._pwaInstallBound = true;
+    const installBtnAny = /** @type {any} */ (installBtn);
+    if (installBtn && !installBtnAny._pwaInstallBound) {
+        installBtnAny._pwaInstallBound = true;
         installBtn.addEventListener('click', () => {
             maybeShowPostOrderPwaBroadcast({ skipCooldown: true });
         });

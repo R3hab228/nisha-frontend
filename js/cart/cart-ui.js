@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CART — UI, DROPDOWN, SCROLL ISOLATION & SWIPE-TO-DELETE
 // ==========================================
@@ -36,8 +37,8 @@ export function initCartScrollIsolation() {
         }
     });
 
-    if (list && !list._cartScrollIsoBound) {
-        list._cartScrollIsoBound = true;
+    if (list && !(/** @type {any} */ (list))._cartScrollIsoBound) {
+        (/** @type {any} */ (list))._cartScrollIsoBound = true;
         list.addEventListener('wheel', (e) => {
             if (typeof window !== 'undefined' && window.innerWidth <= 900) return;
             const scrollTop = list.scrollTop;
@@ -58,15 +59,16 @@ export function initCartScrollIsolation() {
         }, { passive: false });
     }
 
-    if (dropdown && !dropdown._cartScrollIsoBound) {
-        dropdown._cartScrollIsoBound = true;
+    if (dropdown && !(/** @type {any} */ (dropdown))._cartScrollIsoBound) {
+        (/** @type {any} */ (dropdown))._cartScrollIsoBound = true;
         dropdown.addEventListener('wheel', (e) => {
             if (typeof window !== 'undefined' && window.innerWidth <= 900) return;
-            if (list && list.scrollHeight > list.clientHeight && !e.target.closest('#cartDropdownList')) {
+            const target = /** @type {Element | null} */ (e.target);
+            if (list && list.scrollHeight > list.clientHeight && !target?.closest('#cartDropdownList')) {
                 list.scrollTop += e.deltaY;
                 e.preventDefault();
                 e.stopPropagation();
-            } else if (!e.target.closest('#cartDropdownList')) {
+            } else if (!target?.closest('#cartDropdownList')) {
                 e.preventDefault();
                 e.stopPropagation();
             }
@@ -81,8 +83,8 @@ export function initCartHoverDesktop() {
     initCartScrollIsolation();
     if (typeof document === 'undefined') return;
     const infoWrapper = document.getElementById('cartInfoWrapper');
-    if (!infoWrapper || infoWrapper._cartHoverBound) return;
-    infoWrapper._cartHoverBound = true;
+    if (!infoWrapper || (/** @type {any} */ (infoWrapper))._cartHoverBound) return;
+    (/** @type {any} */ (infoWrapper))._cartHoverBound = true;
 
     infoWrapper.addEventListener('mouseenter', () => {
         if (typeof window !== 'undefined' && window.innerWidth > 900) {
@@ -111,10 +113,11 @@ export async function checkCartItemsAvailability() {
         const { data: dbItems, error } = await sb.from('items').select('id, name, status').in('id', itemIds);
         if (dbItems && !error) {
             let hasChanges = false;
+            /** @type {string[]} */
             const soldNames = [];
             currentCart.forEach(cartItem => {
                 const cId = String(cartItem?.id || cartItem?.item_id || cartItem).trim();
-                const dbItem = dbItems.find(i => String(i.id).trim() === cId);
+                const dbItem = dbItems.find((/** @type {any} */ i) => String(i.id).trim() === cId);
                 const isSold = Boolean(dbItem && dbItem.status === 'sold');
                 if (cartItem._isSold !== isSold) {
                     cartItem._isSold = isSold;
@@ -143,7 +146,7 @@ export async function checkCartItemsAvailability() {
  * Отрисовывает список товаров в выпадающей панели корзины с поддержкой свайпа.
  */
 export function renderCartItems() {
-    const list = document.getElementById('cartDropdownList');
+    const list = /** @type {any} */ (document.getElementById('cartDropdownList'));
     if (!list) return;
     if (typeof list.replaceChildren === 'function') list.replaceChildren();
     else list.innerHTML = '';
@@ -215,9 +218,9 @@ export function renderCartItems() {
     });
     if (!list._swipeDelegatedBound) {
         list._swipeDelegatedBound = true;
-        list.addEventListener('touchstart', (e) => invokeAction('handleSwipeStart', e), { passive: true });
-        list.addEventListener('touchmove', (e) => invokeAction('handleSwipeMove', e), { passive: true });
-        list.addEventListener('touchend', (e) => invokeAction('handleSwipeEnd', e), { passive: true });
+        list.addEventListener('touchstart', (/** @type {any} */ e) => invokeAction('handleSwipeStart', e), { passive: true });
+        list.addEventListener('touchmove', (/** @type {any} */ e) => invokeAction('handleSwipeMove', e), { passive: true });
+        list.addEventListener('touchend', (/** @type {any} */ e) => invokeAction('handleSwipeEnd', e), { passive: true });
     }
 }
 
@@ -226,7 +229,7 @@ export function renderCartItems() {
  */
 export function updateCartUI() {
     const p = document.getElementById('cartPanel');
-    const fab = document.querySelector('.fab-propose');
+    const fab = /** @type {HTMLElement | null} */ (document.querySelector('.fab-propose'));
     if (!p) return;
 
     const currentCart = getActiveCart();
@@ -267,7 +270,7 @@ export function updateCartUI() {
     }
 
     const countEl = document.getElementById('cartCount');
-    if (countEl) countEl.textContent = currentCart.length;
+    if (countEl) countEl.textContent = String(currentCart.length);
     if (hasAction('updateAppBadge')) invokeAction('updateAppBadge', currentCart.length);
     let total = currentCart.reduce((sum, item) => sum + parseCartPrice(item.price), 0);
 
@@ -314,7 +317,7 @@ export function toggleCartDropdown(e) {
     const dropdown = document.getElementById('cartDropdown');
     if (dropdown) clearDropdownInlineStyles(dropdown);
     const panel = document.getElementById('cartPanel');
-    const fab = document.querySelector('.fab-propose');
+    const fab = /** @type {HTMLElement | null} */ (document.querySelector('.fab-propose'));
     if (dropdown) {
         dropdown.classList.toggle('active');
         const isActive = dropdown.classList.contains('active');
@@ -351,7 +354,8 @@ export function toggleCartDropdown(e) {
 
 /**
  * Закрывает выпадающую шторку корзины и восстанавливает FAB.
- * @param {Event} [e]
+ * @param {Event | null} [e]
+ * @param {{ fromBackGesture?: boolean }} [options={}]
  */
 export function closeCartDropdown(e, options = {}) {
     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -360,7 +364,7 @@ export function closeCartDropdown(e, options = {}) {
     }
     const dropdown = document.getElementById('cartDropdown');
     const panel = document.getElementById('cartPanel');
-    const fab = document.querySelector('.fab-propose');
+    const fab = /** @type {HTMLElement | null} */ (document.querySelector('.fab-propose'));
     if (dropdown) {
         dropdown.classList.remove('active');
         clearDropdownInlineStyles(dropdown);
@@ -386,10 +390,12 @@ export function closeCartDropdown(e, options = {}) {
  */
 export function resolveSwipeSurface(e) {
     if (!e) return null;
-    if (e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.contains('swipe-surface')) {
-        return e.currentTarget;
+    const curTarget = /** @type {HTMLElement | null} */ (e.currentTarget);
+    if (curTarget && curTarget.classList && curTarget.classList.contains('swipe-surface')) {
+        return curTarget;
     }
-    return (e.target && typeof e.target.closest === 'function') ? e.target.closest('.swipe-surface') : null;
+    const target = /** @type {Element | null} */ (e.target);
+    return (target && typeof target.closest === 'function') ? /** @type {HTMLElement | null} */ (target.closest('.swipe-surface')) : null;
 }
 
 if (typeof window !== 'undefined') {
@@ -401,7 +407,7 @@ if (typeof window !== 'undefined') {
     let cartSwipeCurrentX = 0;
     let cartSwipeArmed = false;
 
-    window.handleSwipeStart = function(e) {
+    window.handleSwipeStart = function(/** @type {any} */ e) {
         const rowSurface = resolveSwipeSurface(e);
         if (!rowSurface || !e.touches || !e.touches[0]) return;
         cartSwipeStartX = e.touches[0].clientX;
@@ -412,7 +418,7 @@ if (typeof window !== 'undefined') {
         rowSurface.style.transition = 'none';
     };
 
-    window.handleSwipeMove = function(e) {
+    window.handleSwipeMove = function(/** @type {any} */ e) {
         const rowSurface = resolveSwipeSurface(e);
         if (!rowSurface || !e.touches || !e.touches[0]) return;
         cartSwipeCurrentX = e.touches[0].clientX;
@@ -427,7 +433,7 @@ if (typeof window !== 'undefined') {
 
             const parentRow = rowSurface.closest('.cart-item-row');
             const swipeBg = parentRow ? parentRow.querySelector('.swipe-background') : null;
-            const crossWrap = parentRow ? parentRow.querySelector('.swipe-cross-wrap') : null;
+            const crossWrap = /** @type {HTMLElement | null} */ (parentRow ? parentRow.querySelector('.swipe-cross-wrap') : null);
 
             const bgOpacity = Math.min(1, moveX / 75);
             const isArmed = diff > 120;
@@ -444,12 +450,12 @@ if (typeof window !== 'undefined') {
         }
     };
 
-    window.handleSwipeEnd = function(e) {
+    window.handleSwipeEnd = function(/** @type {any} */ e) {
         const rowSurface = resolveSwipeSurface(e);
         if (!rowSurface) return;
         const diff = cartSwipeStartX - cartSwipeCurrentX;
         const parentRow = rowSurface.closest('.cart-item-row');
-        const itemIndex = Number.parseInt(rowSurface.getAttribute('data-index'), 10);
+        const itemIndex = Number.parseInt(rowSurface.getAttribute('data-index') || '', 10);
 
         rowSurface.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
 
@@ -467,7 +473,7 @@ if (typeof window !== 'undefined') {
 
             if (parentRow) {
                 const swipeBg = parentRow.querySelector('.swipe-background');
-                const crossWrap = parentRow.querySelector('.swipe-cross-wrap');
+                const crossWrap = /** @type {HTMLElement | null} */ (parentRow.querySelector('.swipe-cross-wrap'));
                 if (swipeBg && swipeBg.classList) swipeBg.classList.remove('armed');
                 if (crossWrap) crossWrap.style.opacity = '0';
             }
@@ -483,7 +489,7 @@ if (typeof window !== 'undefined') {
     window.openCart = function() {
         const dropdown = document.getElementById('cartDropdown');
         const panel = document.getElementById('cartPanel');
-        const fab = document.querySelector('.fab-propose');
+        const fab = /** @type {HTMLElement | null} */ (document.querySelector('.fab-propose'));
         if (dropdown) {
             clearDropdownInlineStyles(dropdown);
             dropdown.classList.add('active');

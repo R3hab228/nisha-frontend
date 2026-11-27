@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA ORDERS RENDER, TABS & SWIPE UI MODULE
 // ==========================================
@@ -80,6 +81,7 @@ export function updateOrderTabCounters() {
     if (tabRed) tabRed.classList.toggle('active', currentTab === 'cancelled');
 }
 
+/** @param {string} tabName */
 export function switchOrderTab(tabName) {
     if (getCurrentOrderTab() === tabName) return;
 
@@ -87,7 +89,8 @@ export function switchOrderTab(tabName) {
     const prevGridVt = bgGrid ? bgGrid.style.viewTransitionName : '';
     if (bgGrid) bgGrid.style.setProperty('view-transition-name', 'none', 'important');
 
-    const bgCards = document.querySelectorAll('#itemsGrid .item-card');
+    const bgCards = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('#itemsGrid .item-card'));
+    /** @type {Array<{ card: HTMLElement, vt: string, prio: string }>} */
     const cardsToRestore = [];
     if (bgCards && bgCards.length > 0) {
         bgCards.forEach(card => {
@@ -127,7 +130,8 @@ export function switchOrderTab(tabName) {
         renderFilteredOrders();
     };
 
-    const viewTransitionFn = resolveAction('safeViewTransition') || (typeof safeViewTransition === 'function' ? safeViewTransition : null);
+    const globalVt = /** @type {any} */ (globalThis).safeViewTransition;
+    const viewTransitionFn = resolveAction('safeViewTransition') || (typeof globalVt === 'function' ? globalVt : null);
     let transitionResult;
     if (viewTransitionFn) {
         transitionResult = viewTransitionFn(updateDom);
@@ -159,6 +163,7 @@ export function bindOrdersTabSwipe() {
     let startY = 0;
     let startTime = 0;
     let lastDx = 0;
+    /** @type {'x' | 'y' | null} */
     let axis = null; // null | 'x' | 'y'
     let active = false;
 
@@ -187,7 +192,7 @@ export function bindOrdersTabSwipe() {
         const tabsEl = document.getElementById('ordersTabs');
         if (!tabsEl || tabsEl.style.display === 'none') return;
 
-        const target = e.target;
+        const target = /** @type {any} */ (e.target);
         if (target && typeof target.closest === 'function' && target.closest('input, textarea, select')) return;
 
         const touch = e.touches[0];
@@ -275,6 +280,7 @@ export function bindOrdersTabSwipe() {
     listArea.addEventListener('touchcancel', () => finishSwipe(true), { passive: true });
 }
 
+/** @param {any} ttn @param {any} [el] */
 export function copyTTN(ttn, el) {
     if (!ttn) return;
     const cleanTtn = String(ttn).trim();
@@ -298,7 +304,7 @@ export function copyTTN(ttn, el) {
 
     const copyFn = resolveAction('copyToClipboard');
     if (copyFn) {
-        copyFn(cleanTtn, successMsg).then(ok => {
+        copyFn(cleanTtn, successMsg).then((/** @type {any} */ ok) => {
             if (ok) animateCopiedIcon();
         });
     } else if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -342,10 +348,10 @@ export function renderFilteredOrders() {
     let reviewedOrders = store ? store.getJSON('nisha_reviewed_orders', []) : [];
     if (!Array.isArray(reviewedOrders)) reviewedOrders = [];
 
-    const cardsHtml = filteredData.map(order => {
+    const cardsHtml = filteredData.map((/** @type {any} */ order) => {
         const orderDateMs = Date.parse(order.created_at);
         const date = formatOrderDate(orderDateMs);
-        const itemsHtml = (Array.isArray(order.items) ? order.items : []).map(item => {
+        const itemsHtml = (Array.isArray(order.items) ? order.items : []).map((/** @type {any} */ item) => {
             const itemImg = getOrderItemImage(item);
             const sanitizeCssFn = resolveAction('sanitizeCssMediaUrl');
             const safeImgUrl = sanitizeCssFn
@@ -455,7 +461,7 @@ export function renderFilteredOrders() {
                 <span class="order-select-corner" aria-hidden="true"></span>
                 <div class="order-header">
                     <div class="order-id-wrap">
-                        <span class="order-id">${orderPrefix}${String(order.id || '').split('-').at(0).toUpperCase()}</span>
+                        <span class="order-id">${orderPrefix}${(String(order.id || '').split('-').at(0) || '').toUpperCase()}</span>
                         ${date ? `<span class="order-date">${date}</span>` : ''}
                     </div>
                     <span class="order-status status-${escAttr(statusSlug)}" data-raw-status="${escAttr(order.status || '')}">${escHtml(fmtStatus)}</span>
@@ -564,7 +570,7 @@ export function openOrdersModal() {
 
         const store = getStorage();
         const lastPhone = store ? store.get('nisha_last_phone') : null;
-        const phoneInput = document.getElementById('ordersSearchPhone');
+        const phoneInput = /** @type {HTMLInputElement | null} */ (document.getElementById('ordersSearchPhone'));
         if (lastPhone && phoneInput && !phoneInput.value) {
             phoneInput.value = lastPhone;
         }

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PWA, SENTRY, PUSH & NETWORK ENTRYPOINT
 // Modular ES barrel re-exporting all PWA & network submodules.

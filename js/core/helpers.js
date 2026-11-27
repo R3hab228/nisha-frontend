@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS (MODULAR ES ENTRYPOINT)
 // Barrel entrypoint re-exporting all cohesive submodules and initializing runtime listeners.

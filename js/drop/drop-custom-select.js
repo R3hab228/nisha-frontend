@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA DROP — CUSTOM TERMINAL SELECT UI & SIZE SYNC
 // ==========================================
@@ -15,7 +16,7 @@ let _propCustomSelectOutsideBound = false;
  * @param {string} category
  */
 export function syncPropSizeOptionsByCategory(category) {
-    const sizeSelect = document.getElementById('propSize');
+    const sizeSelect = /** @type {HTMLSelectElement | null} */ (document.getElementById('propSize'));
     if (!sizeSelect || sizeSelect.tagName !== 'SELECT') return;
 
     let options = CLOTHING_SIZES;
@@ -23,7 +24,8 @@ export function syncPropSizeOptionsByCategory(category) {
     else if (category === 'Аксессуары') options = ACCESSORY_SIZES;
 
     const prevValue = sizeSelect.value;
-    sizeSelect.innerHTML = '';
+    if (typeof sizeSelect.replaceChildren === 'function') sizeSelect.replaceChildren();
+    else sizeSelect.innerHTML = '';
 
     const placeholderOpt = document.createElement('option');
     placeholderOpt.value = '';
@@ -52,7 +54,7 @@ export function refreshCustomPropSelect(selectEl) {
 
     const trigger = wrap.querySelector('.prop-custom-trigger');
     const triggerText = wrap.querySelector('.prop-custom-trigger-text');
-    const dropdown = wrap.querySelector('.prop-custom-dropdown');
+    const dropdown = /** @type {HTMLElement | null} */ (wrap.querySelector('.prop-custom-dropdown'));
     if (!trigger || !triggerText || !dropdown) return;
 
     const options = Array.from(selectEl.options || []);
@@ -61,7 +63,8 @@ export function refreshCustomPropSelect(selectEl) {
     triggerText.textContent = currentLabel;
     trigger.classList.toggle('is-placeholder', !selectEl.value);
 
-    dropdown.innerHTML = '';
+    if (typeof dropdown.replaceChildren === 'function') dropdown.replaceChildren();
+    else dropdown.innerHTML = '';
     options.forEach((opt) => {
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -122,8 +125,9 @@ export function initCustomPropSelect(selectEl) {
         trigger.className = 'form-input prop-select prop-custom-trigger';
         trigger.setAttribute('aria-haspopup', 'listbox');
         trigger.setAttribute('aria-expanded', 'false');
-        if (selectEl.getAttribute('aria-label')) {
-            trigger.setAttribute('aria-label', selectEl.getAttribute('aria-label'));
+        const ariaLabel = selectEl.getAttribute('aria-label');
+        if (ariaLabel) {
+            trigger.setAttribute('aria-label', ariaLabel);
         }
 
         const triggerText = document.createElement('span');
@@ -147,7 +151,7 @@ export function initCustomPropSelect(selectEl) {
                 w.classList.remove('is-open');
                 const t = w.querySelector('.prop-custom-trigger');
                 if (t) t.setAttribute('aria-expanded', 'false');
-                const dd = w.querySelector('.prop-custom-dropdown');
+                const dd = /** @type {HTMLElement | null} */ (w.querySelector('.prop-custom-dropdown'));
                 if (dd) detachFloatingPopover(dd);
             });
         };
@@ -182,20 +186,21 @@ export function initCustomPropSelect(selectEl) {
         });
     }
 
-    if (!selectEl._customPropBound) {
-        selectEl._customPropBound = true;
+    if (!(/** @type {any} */ (selectEl))._customPropBound) {
+        (/** @type {any} */ (selectEl))._customPropBound = true;
         selectEl.addEventListener('change', () => refreshCustomPropSelect(selectEl));
     }
 
     if (typeof document !== 'undefined' && !_propCustomSelectOutsideBound) {
         _propCustomSelectOutsideBound = true;
         document.addEventListener('click', (e) => {
-            if (e.target && typeof e.target.closest === 'function' && e.target.closest('.prop-select-wrap')) return;
+            const target = /** @type {Element | null} */ (e.target);
+            if (target && typeof target.closest === 'function' && target.closest('.prop-select-wrap')) return;
             document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => {
                 w.classList.remove('is-open');
                 const t = w.querySelector('.prop-custom-trigger');
                 if (t) t.setAttribute('aria-expanded', 'false');
-                const dd = w.querySelector('.prop-custom-dropdown');
+                const dd = /** @type {HTMLElement | null} */ (w.querySelector('.prop-custom-dropdown'));
                 if (dd) detachFloatingPopover(dd);
             });
         });
@@ -205,7 +210,7 @@ export function initCustomPropSelect(selectEl) {
                     w.classList.remove('is-open');
                     const t = w.querySelector('.prop-custom-trigger');
                     if (t) t.setAttribute('aria-expanded', 'false');
-                    const dd = w.querySelector('.prop-custom-dropdown');
+                    const dd = /** @type {HTMLElement | null} */ (w.querySelector('.prop-custom-dropdown'));
                     if (dd) detachFloatingPopover(dd);
                 });
             }

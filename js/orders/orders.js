@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA MY ORDERS MODULE (Lazy Chunk Orchestrator: MY_ORDERS.EXE & JSBARCODE)
 // ==========================================
@@ -5,7 +6,7 @@
 import { registerActions } from '../core/action-registry.js';
 
 if (typeof document !== 'undefined') {
-    import('../../css/lazy-orders-modal.css').catch(() => {});
+    import(/** @type {string} */ ('../../css/lazy-orders-modal.css')).catch(() => {});
 }
 import {
     clearOrderSelection,
@@ -81,7 +82,7 @@ const ORDER_REGISTRY_ACTIONS = {
 
 Object.entries(ORDER_WINDOW_EXPORTS).forEach(([name, fn]) => {
     if (typeof window !== 'undefined') window[name] = fn;
-    if (typeof globalThis !== 'undefined') globalThis[name] = fn;
+    if (typeof globalThis !== 'undefined') (/** @type {any} */ (globalThis))[name] = fn;
 });
 
 registerActions(ORDER_REGISTRY_ACTIONS);

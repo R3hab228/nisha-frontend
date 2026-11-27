@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA WEB PUSH SUBSCRIPTION & PWA STANDALONE DEDUPLICATION MODULE
 // ==========================================
@@ -7,6 +8,7 @@ import { getRuntimeUser, getRuntimeFingerprint, getRuntimeSiteLang, getRuntimeSt
 
 let pushPrompted = false;
 let pushListenersBound = false;
+/** @type {Promise<any> | null} */
 let inFlightSubscribeSync = null;
 let inFlightSubscribeKey = '';
 const PUSH_SYNC_CACHE_KEY = 'nisha_push_sub_synced_meta';
@@ -24,6 +26,7 @@ function readPushSyncMeta() {
     return null;
 }
 
+/** @param {string} sig */
 function writePushSyncMeta(sig) {
     try {
         if (typeof localStorage !== 'undefined') {
@@ -236,7 +239,7 @@ export async function subscribeUserToPush(registration, silent = false) {
                 timeout: 10000,
                 retries: silent ? 0 : 1,
                 dedupe: true
-            }).then((res) => {
+            }).then((/** @type {any} */ res) => {
                 writePushSyncMeta(syncSignature);
                 return res;
             }).finally(() => {
@@ -250,8 +253,9 @@ export async function subscribeUserToPush(registration, silent = false) {
         }
     } catch (e) {
         const expectedPushSkipNames = new Set(['NotAllowedError', 'AbortError', 'InvalidStateError', 'NotSupportedError']);
-        const isExpectedSkip = e && (
-            expectedPushSkipNames.has(e.name) ||
+        const err = /** @type {any} */ (e);
+        const isExpectedSkip = err && (
+            expectedPushSkipNames.has(err.name) ||
             (typeof Notification !== 'undefined' && Notification.permission === 'denied')
         );
         if (!isExpectedSkip) {
@@ -278,7 +282,7 @@ export function initPwaPush() {
     }
 
     if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) {
-        navigator.getInstalledRelatedApps().then(apps => {
+        /** @type {any} */ (navigator).getInstalledRelatedApps().then((/** @type {any} */ apps) => {
             if (Array.isArray(apps) && apps.length > 0) {
                 markPwaInstalled();
                 if (!isPwaStandalone() && 'serviceWorker' in navigator) {
@@ -371,8 +375,9 @@ export function initPwaPush() {
 
             const openModal = document.querySelector('.modal-overlay[style*="display: flex"], .modal-overlay[style*="display: block"], #cartSidebar.active, .swal2-container');
             if (openModal) return;
-            if (e.target && e.target.closest && e.target.closest('.item-card')) return;
-            if (e.target && e.target.closest && e.target.closest('.bottom-nav, #cartBtn, #profileBtn, button, a')) return;
+            const target = /** @type {Element | null} */ (e.target);
+            if (target && target.closest && target.closest('.item-card')) return;
+            if (target && target.closest && target.closest('.bottom-nav, #cartBtn, #profileBtn, button, a')) return;
 
             pushPrompted = true;
             if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {

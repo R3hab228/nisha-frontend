@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE AUTHENTICATION, LOGOUT & AUTH LISTENER MODULE
 // ==========================================
@@ -61,9 +62,9 @@ export async function handleAuth(action, isModal = false) {
     if (!sb || typeof document === 'undefined') return;
 
     const p = isModal ? 'modalAuth' : 'auth';
-    const emailInput = document.getElementById(p + 'Email');
-    const passInput = document.getElementById(p + 'Pass');
-    const userInput = document.getElementById(p + 'Username');
+    const emailInput = /** @type {HTMLInputElement | null} */ (document.getElementById(p + 'Email'));
+    const passInput = /** @type {HTMLInputElement | null} */ (document.getElementById(p + 'Pass'));
+    const userInput = /** @type {HTMLInputElement | null} */ (document.getElementById(p + 'Username'));
 
     const email = emailInput ? emailInput.value.trim() : '';
     const password = passInput ? passInput.value.trim() : '';
@@ -115,7 +116,7 @@ export async function handleAuth(action, isModal = false) {
             }
         }
     } catch (authErr) {
-        notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + (authErr?.message || 'Network error'), 'error');
+        notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + ((/** @type {any} */ (authErr))?.message || 'Network error'), 'error');
         return;
     }
 
@@ -148,7 +149,7 @@ export async function handleForgotPassword(isModal = false) {
     if (!sb || typeof document === 'undefined') return;
 
     const p = isModal ? 'modalAuth' : 'auth';
-    const emailInput = document.getElementById(p + 'Email');
+    const emailInput = /** @type {HTMLInputElement | null} */ (document.getElementById(p + 'Email'));
     let email = emailInput ? emailInput.value.trim() : '';
 
     if (!email) {
@@ -287,7 +288,7 @@ export async function loginWithGoogle() {
             notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + error.message, 'error');
         }
     } catch (err) {
-        notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + (err?.message || 'Network error'), 'error');
+        notifyToast(tProfile('profile.err_prefix', 'Ошибка: ') + ((/** @type {any} */ (err))?.message || 'Network error'), 'error');
     }
 }
 bindWindowFn('loginWithGoogle', loginWithGoogle);
@@ -299,7 +300,7 @@ bindWindowFn('loginWithGoogle', loginWithGoogle);
  */
 export function togglePasswordVisibility(inputId, iconElement) {
     if (typeof document === 'undefined') return;
-    const input = document.getElementById(inputId);
+    const input = /** @type {HTMLInputElement | null} */ (document.getElementById(inputId));
     if (!input) return;
 
     const isPassword = input.type === 'password';
@@ -382,27 +383,28 @@ export function showPasswordRecoveryModal() {
         document.body.appendChild(overlay);
 
         const formEl = overlay.querySelector('.password-recovery-form');
-        const newPassInput = overlay.querySelector('#recoveryNewPassword');
-        const confirmPassInput = overlay.querySelector('#recoveryConfirmPassword');
-        const errorEl = overlay.querySelector('#recoveryPassError');
-        const submitBtn = overlay.querySelector('.recovery-submit');
+        const newPassInput = /** @type {HTMLInputElement | null} */ (overlay.querySelector('#recoveryNewPassword'));
+        const confirmPassInput = /** @type {HTMLInputElement | null} */ (overlay.querySelector('#recoveryConfirmPassword'));
+        const errorEl = /** @type {HTMLElement | null} */ (overlay.querySelector('#recoveryPassError'));
+        const submitBtn = /** @type {HTMLButtonElement | null} */ (overlay.querySelector('.recovery-submit'));
         const cancelBtn = overlay.querySelector('.recovery-cancel');
         const ctrl = new AbortController();
         let settled = false;
         let submitting = false;
 
-        const showInlineError = (msg) => {
+        const showInlineError = (/** @type {string} */ msg) => {
             if (!errorEl) return;
             errorEl.textContent = msg;
             errorEl.style.display = 'block';
         };
 
-        const finish = (updated) => {
+        const finish = (/** @type {boolean} */ updated) => {
             if (settled) return;
             settled = true;
             ctrl.abort();
-            if (document.activeElement && typeof document.activeElement.blur === 'function') {
-                document.activeElement.blur();
+            const activeEl = /** @type {HTMLElement | null} */ (document.activeElement);
+            if (activeEl && typeof activeEl.blur === 'function') {
+                activeEl.blur();
             }
             overlay.remove();
             resolve(updated);
@@ -565,7 +567,7 @@ export function initAuthListener() {
     if (sb.auth._nishaAuthListenerBound) return;
     sb.auth._nishaAuthListenerBound = true;
 
-    const triggerPasswordRecoveryFlow = (session) => {
+    const triggerPasswordRecoveryFlow = (/** @type {any} */ session) => {
         clearPendingPasswordRecoveryFlag();
         scrubAuthTokensFromUrl();
         if (session?.user && !profileState.currentUser) {
@@ -574,7 +576,7 @@ export function initAuthListener() {
         showPasswordRecoveryModal();
     };
 
-    sb.auth.onAuthStateChange(async (event, session) => {
+    sb.auth.onAuthStateChange(async (/** @type {string} */ event, /** @type {any} */ session) => {
         if (event === 'TOKEN_REFRESHED') {
             if (window.__NISHA_DEBUG__) console.log('[AUTH] Токен безопасности успешно продлен (Refresh Token).');
             if (session?.user) {

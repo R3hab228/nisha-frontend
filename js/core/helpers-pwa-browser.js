@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS: NETWORK MODE, PWA BADGING, HAPTICS, POPOVER, SHARE & VIEW TRANSITIONS
 // ==========================================
@@ -11,7 +12,8 @@ import { showToast } from './helpers-toasts-modals.js';
  */
 export function isSaveDataMode() {
     if (typeof navigator === 'undefined') return false;
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const nav = /** @type {any} */ (navigator);
+    const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
     if (!conn) return false;
     if (conn.saveData === true) return true;
     if (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') return true;
@@ -43,7 +45,8 @@ export function initNetworkAwareRendering() {
         }
     };
     update();
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const nav = /** @type {any} */ (navigator);
+    const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
     if (conn && typeof conn.addEventListener === 'function' && !conn._hasSaveDataListener) {
         conn.addEventListener('change', update, { passive: true });
         conn._hasSaveDataListener = true;
@@ -123,6 +126,7 @@ export function triggerVibration(duration = 150) {
     }
 }
 
+/** @type {HTMLLabelElement | null} */
 let _iosHapticLabel = null;
 let _lastIosHapticAt = 0;
 
@@ -150,7 +154,7 @@ function getOrCreateIosHapticLabel() {
     if (_iosHapticLabel && _iosHapticLabel.isConnected !== false) {
         return _iosHapticLabel;
     }
-    const existingLabel = document.getElementById('nishaHapticSwitchLabel');
+    const existingLabel = /** @type {HTMLLabelElement | null} */ (document.getElementById('nishaHapticSwitchLabel'));
     if (existingLabel) {
         _iosHapticLabel = existingLabel;
         return _iosHapticLabel;
@@ -170,6 +174,7 @@ function getOrCreateIosHapticLabel() {
     label.setAttribute('aria-hidden', 'true');
     label.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0.001;pointer-events:none;left:-9999px;top:-9999px;margin:0;padding:0;border:0;';
 
+    /** @param {Event} e */
     const isolateEvent = (e) => {
         if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
     };
@@ -264,8 +269,8 @@ export function triggerHaptic(type = 'light') {
     // Fallback for iOS 17.4+ Safari & iOS PWA where navigator.vibrate is unavailable
     triggerIosSwitchHaptic(type);
 }
-if (typeof window !== 'undefined') window.triggerHaptic = triggerHaptic;
-if (typeof globalThis !== 'undefined') globalThis.triggerHaptic = triggerHaptic;
+if (typeof window !== 'undefined') /** @type {any} */ (window).triggerHaptic = triggerHaptic;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).triggerHaptic = triggerHaptic;
 
 // --- NATIVE POPOVER API & SCROLL-DRIVEN ANIMATIONS FACADE ---
 
@@ -279,7 +284,7 @@ export function isPopoverSupported() {
         typeof HTMLElement.prototype.hidePopover === 'function';
 }
 if (typeof window !== 'undefined') window.isPopoverSupported = isPopoverSupported;
-if (typeof globalThis !== 'undefined') globalThis.isPopoverSupported = isPopoverSupported;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).isPopoverSupported = isPopoverSupported;
 
 /**
  * Safely calls showPopover() on a `[popover]` element without throwing if already open.
@@ -303,7 +308,7 @@ export function showPopoverSafe(element) {
     return false;
 }
 if (typeof window !== 'undefined') window.showPopoverSafe = showPopoverSafe;
-if (typeof globalThis !== 'undefined') globalThis.showPopoverSafe = showPopoverSafe;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).showPopoverSafe = showPopoverSafe;
 
 /**
  * Safely calls hidePopover() on a `[popover]` element without throwing if already closed.
@@ -327,7 +332,7 @@ export function hidePopoverSafe(element) {
     return false;
 }
 if (typeof window !== 'undefined') window.hidePopoverSafe = hidePopoverSafe;
-if (typeof globalThis !== 'undefined') globalThis.hidePopoverSafe = hidePopoverSafe;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).hidePopoverSafe = hidePopoverSafe;
 
 /**
  * Safely toggles a `[popover]` element.
@@ -348,7 +353,7 @@ export function togglePopoverSafe(element, force) {
     return false;
 }
 if (typeof window !== 'undefined') window.togglePopoverSafe = togglePopoverSafe;
-if (typeof globalThis !== 'undefined') globalThis.togglePopoverSafe = togglePopoverSafe;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).togglePopoverSafe = togglePopoverSafe;
 
 /**
  * Checks whether a popover element is open natively or via legacy class/style fallback.
@@ -373,7 +378,7 @@ export function isPopoverOpenSafe(element) {
     return false;
 }
 if (typeof window !== 'undefined') window.isPopoverOpenSafe = isPopoverOpenSafe;
-if (typeof globalThis !== 'undefined') globalThis.isPopoverOpenSafe = isPopoverOpenSafe;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).isPopoverOpenSafe = isPopoverOpenSafe;
 
 /**
  * Checks CSS scroll-driven animation timeline support.
@@ -391,7 +396,7 @@ export function isScrollDrivenAnimationSupported() {
     return false;
 }
 if (typeof window !== 'undefined') window.isScrollDrivenAnimationSupported = isScrollDrivenAnimationSupported;
-if (typeof globalThis !== 'undefined') globalThis.isScrollDrivenAnimationSupported = isScrollDrivenAnimationSupported;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).isScrollDrivenAnimationSupported = isScrollDrivenAnimationSupported;
 
 // --- CLIPBOARD & WEB SHARE API ---
 
@@ -432,7 +437,7 @@ export async function copyToClipboard(text, successMsg = 'Скопировано
     return false;
 }
 if (typeof window !== 'undefined') window.copyToClipboard = copyToClipboard;
-if (typeof globalThis !== 'undefined') globalThis.copyToClipboard = copyToClipboard;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).copyToClipboard = copyToClipboard;
 
 /**
  * Invokes navigator.share when supported, falling back to clipboard copy on unsupported environments.
@@ -450,7 +455,8 @@ export async function shareContent({ title = '', text = '', url = '', fallbackMs
             });
             return true;
         } catch (err) {
-            if (err && err.name === 'AbortError') {
+            const errObj = /** @type {any} */ (err);
+            if (errObj && errObj.name === 'AbortError') {
                 return false;
             }
         }
@@ -461,7 +467,7 @@ export async function shareContent({ title = '', text = '', url = '', fallbackMs
     return copyToClipboard(targetUrl, fallbackMsg || defaultSuccess);
 }
 if (typeof window !== 'undefined') window.shareContent = shareContent;
-if (typeof globalThis !== 'undefined') globalThis.shareContent = shareContent;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).shareContent = shareContent;
 
 // ==========================================
 // VIEW TRANSITIONS API WRAPPER
@@ -485,8 +491,9 @@ export function isViewTransitionAbortError(err) {
     );
 }
 if (typeof window !== 'undefined') window.isViewTransitionAbortError = isViewTransitionAbortError;
-if (typeof globalThis !== 'undefined') globalThis.isViewTransitionAbortError = isViewTransitionAbortError;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).isViewTransitionAbortError = isViewTransitionAbortError;
 
+/** @param {() => void | Promise<void>} updateFn */
 function runViewTransitionFallback(updateFn) {
     try {
         const res = updateFn();
@@ -573,7 +580,7 @@ export function safeViewTransition(updateFn) {
     return runViewTransitionFallback(updateFn);
 }
 if (typeof window !== 'undefined') window.safeViewTransition = safeViewTransition;
-if (typeof globalThis !== 'undefined') globalThis.safeViewTransition = safeViewTransition;
+if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).safeViewTransition = safeViewTransition;
 
 registerActions({
     isSaveDataMode,

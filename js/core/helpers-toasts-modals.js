@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS: TOASTS, BUTTON BUSY GUARD & TERMINAL MODALS
 // ==========================================
@@ -17,6 +18,10 @@ export {
     showPromptTerminalModal
 };
 
+/**
+ * @param {string} actionName
+ * @param {...any} args
+ */
 function triggerToastSound(actionName, ...args) {
     const res = invokeAction(actionName, ...args);
     if (res && typeof res.catch === 'function') {
@@ -25,6 +30,7 @@ function triggerToastSound(actionName, ...args) {
 }
 
 let lastToastTime = 0;
+/** @type {{ message: string, type: string, count: number, toast: HTMLElement, msgEl: Element | null, safeMsgHtml: string, dismiss: any } | null} */
 let activeToastState = null;
 
 /**
@@ -46,6 +52,7 @@ export function attachToastLifecycle(toast, { duration = 2500, onDismiss = null 
     let isDismissed = false;
     let remainingMs = duration;
     let timerStartedAt = Date.now();
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let dismissTimerId = null;
     let isPaused = false;
 
@@ -53,7 +60,7 @@ export function attachToastLifecycle(toast, { duration = 2500, onDismiss = null 
         if (isDismissed) return;
         isDismissed = true;
         isPaused = false;
-        clearTimeout(dismissTimerId);
+        if (dismissTimerId !== null) clearTimeout(dismissTimerId);
         dismissTimerId = null;
         if (typeof onDismiss === 'function') onDismiss();
         if (toast.classList) {
@@ -67,7 +74,7 @@ export function attachToastLifecycle(toast, { duration = 2500, onDismiss = null 
 
     const scheduleDismiss = () => {
         if (isDismissed || isPaused) return;
-        clearTimeout(dismissTimerId);
+        if (dismissTimerId !== null) clearTimeout(dismissTimerId);
         timerStartedAt = Date.now();
         dismissTimerId = setTimeout(dismiss, Math.max(0, remainingMs));
     };
@@ -75,7 +82,7 @@ export function attachToastLifecycle(toast, { duration = 2500, onDismiss = null 
     const pauseDismiss = () => {
         if (isDismissed || isPaused) return;
         isPaused = true;
-        clearTimeout(dismissTimerId);
+        if (dismissTimerId !== null) clearTimeout(dismissTimerId);
         dismissTimerId = null;
         remainingMs = Math.max(0, remainingMs - (Date.now() - timerStartedAt));
         if (toast.classList && typeof toast.classList.add === 'function') {
@@ -137,6 +144,10 @@ export function isToastClickShielded() {
     return Date.now() < _fallbackToastClickShieldUntil;
 }
 
+/**
+ * @param {string | null | undefined} imgUrl
+ * @param {boolean} [useCdn=false]
+ */
 function buildToastThumbHtml(imgUrl, useCdn = false) {
     if (!imgUrl || typeof imgUrl !== 'string') {
         return '';
@@ -147,9 +158,15 @@ function buildToastThumbHtml(imgUrl, useCdn = false) {
     return `<div class="toast-item-thumb" style="background-image: url('${escapeAttr(safeImgUrl)}');"></div>`;
 }
 
+/**
+ * @param {HTMLElement} toast
+ * @param {Function | null} onClick
+ * @param {Function} dismiss
+ * @param {boolean} [logError=false]
+ */
 function bindToastDismissClick(toast, onClick, dismiss, logError = false) {
     if (typeof toast.addEventListener !== 'function') return;
-    toast.addEventListener('click', (e) => {
+    toast.addEventListener('click', (/** @type {Event} */ e) => {
         if (e) {
             if (typeof e.preventDefault === 'function') e.preventDefault();
             if (typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -225,6 +242,7 @@ export function showToast(message, type = 'success', imgUrl = null, onClick = nu
         triggerToastSound('playNotifySound', { kind: 'toast' });
     }
     const msgEl = (typeof toast.querySelector === 'function') ? toast.querySelector('.toast-msg-body') : null;
+    /** @type {{ message: string, type: string, count: number, toast: HTMLElement, msgEl: Element | null, safeMsgHtml: string, dismiss: any }} */
     const currentState = { message: rawMsgStr, type, count: 1, toast, msgEl, safeMsgHtml, dismiss: null };
     const dismiss = attachToastLifecycle(toast, {
         duration: 2500,
@@ -236,10 +254,11 @@ export function showToast(message, type = 'success', imgUrl = null, onClick = nu
     activeToastState = currentState;
     bindToastDismissClick(toast, onClick, dismiss, true);
 }
-if (typeof window !== 'undefined') window.showToast = showToast;
+if (typeof window !== 'undefined') /** @type {any} */ (window).showToast = showToast;
 
 const _activeCompactToasts = new Map();
 
+/** @param {any} itemOrTitle */
 function extractCompactItemTitle(itemOrTitle) {
     if (itemOrTitle && typeof itemOrTitle === 'object') {
         const brand = itemOrTitle.brand ? `${String(itemOrTitle.brand).trim()} ` : '';
@@ -392,6 +411,7 @@ export function showCurrencyToast(currencyCode, symbol, rate = 1) {
     const fallbackTitle = lang === 'ru'
         ? 'Валюта изменена'
         : (lang === 'en' ? 'Currency changed' : 'Валюту змінено');
+    /** @type {Record<string, string>} */
     const currencyFallbacks = {
         UAH: lang === 'ru' ? 'Гривна' : (lang === 'en' ? 'Hryvnia' : 'Гривня'),
         USD: lang === 'ru' ? 'Доллар США' : (lang === 'en' ? 'US Dollar' : 'Долар США'),
@@ -447,7 +467,7 @@ if (typeof window !== 'undefined') window.showCartToast = showCartToast;
 
 /**
  * Shows compact sale alert toast with optional product deep-link click action.
- * @param {Object|string} itemOrTitle
+ * @param {any} itemOrTitle
  * @param {string|null} [imgUrl=null]
  */
 export function showSaleToast(itemOrTitle, imgUrl = null) {
@@ -496,9 +516,9 @@ if (typeof window !== 'undefined') window.showReviewToast = showReviewToast;
  * @returns {Promise<*>}
  */
 export async function withButtonBusy(btnOrSelector, asyncFn, loadingLabel = '...') {
-    const btn = typeof btnOrSelector === 'string'
+    const btn = /** @type {HTMLButtonElement | null} */ (typeof btnOrSelector === 'string'
         ? (typeof document !== 'undefined' ? document.querySelector(btnOrSelector) : null)
-        : btnOrSelector;
+        : btnOrSelector);
     if (!btn) return asyncFn();
     if (btn.dataset?.busy === '1' || btn.disabled) return undefined;
 
@@ -523,8 +543,11 @@ export async function withButtonBusy(btnOrSelector, asyncFn, loadingLabel = '...
 if (typeof window !== 'undefined') window.withButtonBusy = withButtonBusy;
 
 // --- BATCHED NEW ITEMS TOAST QUEUE ---
+/** @type {any[]} */
 let _batchedNewItemsList = [];
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _batchToastTimer = null;
+/** @type {{ toast: HTMLElement, dismiss: (immediate?: boolean) => void } | null} */
 let _activeUnifiedToast = null;
 
 /**
@@ -603,6 +626,7 @@ export function formatNewItemsCountText(count) {
     });
 }
 
+/** @param {any[]} items */
 function _displayUnifiedNewItemToast(items) {
     if (typeof document === 'undefined') return;
     const container = document.getElementById('toastContainer');
@@ -643,6 +667,7 @@ function _displayUnifiedNewItemToast(items) {
     toast.innerHTML = html;
 
     let isDismissed = false;
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let timerId = null;
 
     const dismiss = (immediate = false) => {

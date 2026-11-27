@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — МОДУЛЬ ЗАМЕРОВ И ТУЛТИПОВ (ПК)
 // ==========================================
@@ -39,6 +40,10 @@ const MEASUREMENT_NOTE_TRANSLATIONS = [
     }
 ];
 
+/**
+ * @param {string} rawNote
+ * @param {'ua'|'ru'|'en'} lang
+ */
 function formatMeasurementNote(rawNote, lang) {
     if (!rawNote) return '';
     const cleaned = rawNote.trim();
@@ -261,6 +266,10 @@ const MEASUREMENT_TRANSLATIONS = [
     }
 ];
 
+/**
+ * @param {string} rawLabel
+ * @param {'ua'|'ru'|'en'} lang
+ */
 function translateMeasurementLabel(rawLabel, lang) {
     for (const rule of MEASUREMENT_TRANSLATIONS) {
         if (rule.pattern.test(rawLabel)) {
@@ -358,7 +367,7 @@ export function formatMeasurementItem(str, lang) {
 
 /**
  * Извлекает список замеров товара из описания/размера с кэшированием по языку.
- * @param {object} item
+ * @param {any} item
  * @param {'ua'|'ru'|'en'} [customLang]
  * @returns {string[]}
  */
@@ -373,7 +382,7 @@ export function extractItemMeasurements(item, customLang) {
 
     // Предобработка: разбиваем слитные замеры, записанные в одну строку, но не рвём обратный порядок ("28.5 см стелька")
     const kwSplitRegex = /(\d+(?:[\.,]\d+)?\s*(?:см|cm|с|c|мм|mm)?)(?:\s*[,;•|/\-–—]+\s*|\s+)((?:(?:довжина|длин+а)\s+р[ууы]кав[аеу]?(?:\s*(?:від|от)?\s*плеч[аея])?|(?:довжина|длин+а)\s+р[ууы]кав[аеу]?(?:\s*(?:від|от)?\s*(?:ши[їи]|горл[ае]|ворот[ае]|комір[ае]))?|(?:довжина|длин+а)\s*(?:по\s*спин[іе]|спин[иы])|(?:довжина|длин+а)\s*замк[аи]|(?:довжина|длин+а)\s*штанин[иы]|(?:загальн[ао]|общ[ая]|полн[ая])\s+(?:довжина|длин+а)|довжина|длин+а|плеч[иіея]?|груд[иіеяь]|підмишк[иае]|подмышк[иае]|пахи|подмыхи|пог|пот|поб|напівобхват|полуобхват|р[ууы]кав[аеу]?|тал[иі][яеєїі]|пояс|стегн[ао]|бедр[ао]|штанин[аы]|вихід|выход|посадк[аи]|кроков|шагов|внутр[іе]шн|устілк[аи]|стельк[аи]|висот[аы]|высот[аы]|ширин[аы]|замок|блискавк|манжет|комір|ворот|воротник|пах)(?![а-яёa-zієїґ]))/gi;
-    const splitInlineMeasurements = (input) => input.replace(kwSplitRegex, (full, num, kw, offset, wholeStr) => {
+    const splitInlineMeasurements = (/** @type {string} */ input) => input.replace(kwSplitRegex, (/** @type {string} */ full, /** @type {string} */ num, /** @type {string} */ kw, /** @type {number} */ offset, /** @type {string} */ wholeStr) => {
         const before = wholeStr.slice(0, offset);
         const clauseStart = Math.max(
             before.lastIndexOf('\n'),
@@ -390,9 +399,9 @@ export function extractItemMeasurements(item, customLang) {
     let lines = [];
     const kwRegex = /(?:выход\s+штанины|вихід\s+штанини|довжина\s+замк[аи]|длина\s+замка|довжина\s+рукава|длина\s+рукава|полуобхват\s+груд[еиейяі]|груд[иеяьі]\s+повністю|грудь\s+полностью|довжина|длин+а|р[ууы]кав|плеч[иіея]|груд[иіеяь]|подмышк[иае]|підмишк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі][яеєїі]|висота|высота|ширина|замок|блискавк|посадка|кроковий|шаговый|внутр[іе]шн|манжет|ворот|комір|шов|пах)/i;
     const measureLinePattern = /^[\-\–—\•\*\s]*[а-яёa-zієїґ\s\(\)\/]{2,35}[\s\-–—:]+\d{1,3}(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?$/i;
-    const isStopLine = (str) => /^(?:стан|состояние|дефект|дефекти|нюанс|контакт|тг|tg|ціна|цена|город|місто|доставка|отправка|відправка|размер|розмір)[:\s]|(?:\d+\s*\/\s*\d+)|(?:грн|uah|\$|€|t\.me|\@)/i.test(str);
+    const isStopLine = (/** @type {string} */ str) => /^(?:стан|состояние|дефект|дефекти|нюанс|контакт|тг|tg|ціна|цена|город|місто|доставка|отправка|відправка|размер|розмір)[:\s]|(?:\d+\s*\/\s*\d+)|(?:грн|uah|\$|€|t\.me|\@)/i.test(str);
     // Срезаем буллиты и нумерацию списков ("1. ...", "2) ..."), не затрагивая десятичные значения ("28.5 стелька")
-    const stripListPrefix = (str) => str.trim().replace(/^[\-\–—\•\*\s]*(?:\d+(?:\.(?!\d)|\))\s*)?/, '').trim();
+    const stripListPrefix = (/** @type {string} */ str) => str.trim().replace(/^[\-\–—\•\*\s]*(?:\d+(?:\.(?!\d)|\))\s*)?/, '').trim();
 
     // 1. Поиск по маркеру замеров
     const markerRegex = /(?:заміри|замеры|параметри|параметры|промери|виміри|measurements?)[:\s\-\n]/i;
@@ -459,7 +468,7 @@ export function extractItemMeasurements(item, customLang) {
     if (lines.length === 0) {
         const inlineMatches = text.match(/(?:(?:довжина|длин+а|р[ууы]кав|плеч[иіея]|груд[иіеяь]|підмишк[иае]|подмышк[иае]|пахи|подмыхи|полуобхват|напівобхват|пог|пот|поб|стелька|устілка|пояс|вихід|выход|штанина|бедра|стегна|тал[иі][яеєїі]|висота|высота|ширина|замок|блискавк)[\s\-–—:]*\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?|\d+(?:[\.,]\d+)?\s*(?:см|mm|мм|с|c)?\s*(?:стелька|устілка))/gi);
         if (inlineMatches && inlineMatches.length > 0) {
-            lines = inlineMatches.map(m => formatMeasurementItem(m, lang)).filter(Boolean);
+            lines = inlineMatches.map((/** @type {string} */ m) => formatMeasurementItem(m, lang)).filter(Boolean);
         }
     }
 
@@ -482,6 +491,7 @@ export function extractItemMeasurements(item, customLang) {
     }
 
     // Убираем дубликаты строк и ограничиваем до 8 пунктов
+    /** @type {string[]} */
     const unique = [];
     for (const l of sanitizedLines) {
         if (!unique.includes(l)) unique.push(l);
@@ -492,8 +502,10 @@ export function extractItemMeasurements(item, customLang) {
     return finalResult;
 }
 
+/** @type {HTMLElement | null} */
 let _tooltipEl = null;
 let _isTooltipVisible = false;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _tooltipHideTimer = null;
 
 function getMeasurementsTooltip() {
@@ -510,7 +522,7 @@ function getMeasurementsTooltip() {
 
 /**
  * Показывает интерактивный тултип замеров рядом с курсором на десктопе.
- * @param {object|string} itemOrId
+ * @param {any} itemOrId
  * @param {MouseEvent|TouchEvent} e
  */
 export const showItemMeasurementsTooltip = function(itemOrId, e) {
@@ -518,7 +530,8 @@ export const showItemMeasurementsTooltip = function(itemOrId, e) {
     if (('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth <= 768) return;
 
     // Не показываем плашку замеров при наведении на кнопку "В корзину"
-    if (e && e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]')) {
+    const targetEl = /** @type {Element | null} */ (e && e.target);
+    if (targetEl && typeof targetEl.closest === 'function' && targetEl.closest('.grid-cart-btn, [data-action="add-to-cart"]')) {
         return;
     }
 
@@ -564,7 +577,7 @@ export const showItemMeasurementsTooltip = function(itemOrId, e) {
 
     const listEl = document.createElement('ul');
     listEl.className = 'measurements-tooltip-list';
-    measures.forEach(m => {
+    measures.forEach((/** @type {any} */ m) => {
         const li = document.createElement('li');
         li.className = 'measurements-tooltip-item';
         const dot = document.createElement('span');
@@ -595,15 +608,17 @@ export const showItemMeasurementsTooltip = function(itemOrId, e) {
 export const moveItemMeasurementsTooltip = function(e) {
     if (!e || !_isTooltipVisible) return;
     // Если курсор оказался над кнопкой корзины - прячем плашку замеров
-    if (e.target && typeof e.target.closest === 'function' && e.target.closest('.grid-cart-btn, [data-action="add-to-cart"]')) {
+    const targetEl = /** @type {Element | null} */ (e.target);
+    if (targetEl && typeof targetEl.closest === 'function' && targetEl.closest('.grid-cart-btn, [data-action="add-to-cart"]')) {
         invokeAction('hideItemMeasurementsTooltip');
         return;
     }
     const tooltip = getMeasurementsTooltip();
     if (!tooltip || tooltip.style.display === 'none') return;
 
-    const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : null);
-    const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+    const evt = /** @type {any} */ (e);
+    const clientX = (evt.clientX !== undefined) ? evt.clientX : (evt.touches && evt.touches[0] ? evt.touches[0].clientX : null);
+    const clientY = (evt.clientY !== undefined) ? evt.clientY : (evt.touches && evt.touches[0] ? evt.touches[0].clientY : null);
     if (clientX === null || clientY === null) return;
 
     positionAtCursor(tooltip, clientX, clientY, {

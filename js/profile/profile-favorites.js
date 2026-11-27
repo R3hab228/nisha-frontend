@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE FAVORITES / LIKES MODULE
 // ==========================================
@@ -52,7 +53,7 @@ export async function loadFavorites() {
 
     const { data, error } = await sb.from('favorites').select('item_id').eq('user_id', profileState.currentUser.id);
     if (data && !error) {
-        const nextFavs = data.map(f => f.item_id);
+        const nextFavs = data.map((/** @type {any} */ f) => f.item_id);
         persistFavoritesCache(nextFavs);
 
         if (window.showingOnlyFavs && typeof applyFilters === 'function') {

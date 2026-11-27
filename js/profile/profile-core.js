@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PROFILE CORE ENTRYPOINT (Eager Bundle)
 // Loads auth, session, realtime & favorites on startup.

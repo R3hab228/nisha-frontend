@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CART CORE (EAGER LIGHTWEIGHT ENTRYPOINT)
 // Содержит только бейдж, дропдаун корзины и операции add/remove.

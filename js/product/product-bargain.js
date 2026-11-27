@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT BARGAIN SYSTEM MODULE
 // ==========================================
@@ -30,6 +31,7 @@ export {
     recordClientBargainOffer
 };
 
+/** @param {string} key @param {any} def */
 const _t = (key, def) => tSafe(key, def);
 
 /**
@@ -60,7 +62,7 @@ export function syncBargainInputsCurrency(activeItem = getActiveOpenedItem()) {
     const stepStr = isForeign ? '1' : '10';
 
     ['bargainPriceInput', 'inlineBargainPriceInput'].forEach((id) => {
-        const inp = document.getElementById(id);
+        const inp = /** @type {HTMLInputElement | null} */ (document.getElementById(id));
         if (!inp) return;
         inp.min = String(minDisplayNum);
         inp.step = stepStr;
@@ -95,19 +97,19 @@ export function openOfferPriceModal() {
     const rateCheck = checkClientBargainRateLimit();
     if (!rateCheck.allowed) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const limitMsg = _t('product.offer_rate_limit', 'Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.').replace('{{min}}', rateCheck.remainingMin);
+        const limitMsg = _t('product.offer_rate_limit', 'Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.').replace('{{min}}', String(rateCheck.remainingMin ?? ''));
         return showToast(limitMsg, 'error');
     }
 
     const modal = document.getElementById('bargainModal');
     if (!modal) return;
 
-    const thumbEl = document.getElementById('bargainItemThumb');
+    const thumbEl = /** @type {HTMLImageElement | null} */ (document.getElementById('bargainItemThumb'));
     const nameEl = document.getElementById('bargainItemName');
     const priceEl = document.getElementById('bargainItemPrice');
-    const priceInput = document.getElementById('bargainPriceInput');
-    const contactInput = document.getElementById('bargainContactInput');
-    const submitBtn = document.getElementById('bargainSubmitBtn');
+    const priceInput = /** @type {HTMLInputElement | null} */ (document.getElementById('bargainPriceInput'));
+    const contactInput = /** @type {HTMLInputElement | null} */ (document.getElementById('bargainContactInput'));
+    const submitBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById('bargainSubmitBtn'));
 
     const firstImg = (Array.isArray(activeItem.images) && activeItem.images[0]) ||
                      (Array.isArray(activeItem.thumbnails) && activeItem.thumbnails[0]) ||
@@ -158,15 +160,15 @@ export async function submitBargainOffer() {
     const activeItem = getActiveOpenedItem();
     if (!activeItem) return;
 
-    const priceInput = document.getElementById('bargainPriceInput');
-    const contactInput = document.getElementById('bargainContactInput');
-    const submitBtn = document.getElementById('bargainSubmitBtn');
+    const priceInput = /** @type {HTMLInputElement | null} */ (document.getElementById('bargainPriceInput'));
+    const contactInput = /** @type {HTMLInputElement | null} */ (document.getElementById('bargainContactInput'));
+    const submitBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById('bargainSubmitBtn'));
 
     const offeredPrice = priceInput ? Number.parseInt(priceInput.value, 10) : 0;
     const validation = validateBargainSubmission(activeItem, offeredPrice);
     if (!validation.ok) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        showToast(validation.message, 'error');
+        showToast(validation.message || '', 'error');
         if (validation.focusInput && priceInput && typeof priceInput.focus === 'function') {
             priceInput.focus();
         }
@@ -239,7 +241,9 @@ export async function submitBargainOffer() {
     }
 }
 
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _inlineOfferToggleTimer = null;
+/** @type {Animation | null} */
 let _inlineOfferActiveAnim = null;
 let _inlineOfferToggleGen = 0;
 
@@ -318,9 +322,9 @@ function animateInlineOfferIn(inEl, startTranslateY) {
  * Transitions the modal offer button into inline numeric price input mode.
  */
 export function showInlineOfferPriceInput() {
-    const btn = document.getElementById('modalOfferPriceBtn');
+    const btn = /** @type {HTMLButtonElement | null} */ (document.getElementById('modalOfferPriceBtn'));
     const row = document.getElementById('offerPriceInputRow');
-    const input = document.getElementById('inlineBargainPriceInput');
+    const input = /** @type {HTMLInputElement | null} */ (document.getElementById('inlineBargainPriceInput'));
     const activeItem = getActiveOpenedItem();
     if (!activeItem || !btn || !row || !input) return;
 
@@ -330,7 +334,7 @@ export function showInlineOfferPriceInput() {
     const rateCheck = checkClientBargainRateLimit();
     if (!rateCheck.allowed) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        const limitMsg = _t('product.offer_rate_limit', 'Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.').replace('{{min}}', rateCheck.remainingMin);
+        const limitMsg = _t('product.offer_rate_limit', 'Максимум 2 пропозиції за 10 хвилин. Будь ласка, зачекайте ще {{min}} хв.').replace('{{min}}', String(rateCheck.remainingMin ?? ''));
         showToast(limitMsg, 'error');
         return;
     }
@@ -354,9 +358,9 @@ export function showInlineOfferPriceInput() {
  * Transitions inline bargain input back to the primary `#modalOfferPriceBtn`.
  */
 export function hideInlineOfferPriceInput() {
-    const btn = document.getElementById('modalOfferPriceBtn');
+    const btn = /** @type {HTMLButtonElement | null} */ (document.getElementById('modalOfferPriceBtn'));
     const row = document.getElementById('offerPriceInputRow');
-    const input = document.getElementById('inlineBargainPriceInput');
+    const input = /** @type {HTMLInputElement | null} */ (document.getElementById('inlineBargainPriceInput'));
     if (!btn || !row) return;
 
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
@@ -384,15 +388,15 @@ export async function submitInlineBargainOffer() {
     const activeItem = getActiveOpenedItem();
     if (!activeItem) return;
 
-    const input = document.getElementById('inlineBargainPriceInput');
-    const submitBtn = document.getElementById('inlineBargainSubmitBtn');
+    const input = /** @type {HTMLInputElement | null} */ (document.getElementById('inlineBargainPriceInput'));
+    const submitBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById('inlineBargainSubmitBtn'));
     if (!input || !submitBtn) return;
 
     const offeredPrice = Number.parseInt(input.value, 10);
     const validation = validateBargainSubmission(activeItem, offeredPrice);
     if (!validation.ok) {
         if (typeof triggerHaptic === 'function') triggerHaptic('error');
-        showToast(validation.message, 'error');
+        showToast(validation.message || '', 'error');
         if (validation.focusInput) input.focus();
         return;
     }
@@ -471,6 +475,7 @@ export function bindBargainKeyboardShortcuts() {
     }, { capture: true });
 }
 
+/** @type {Promise<void> | null} */
 let _bargainSyncInFlight = null;
 let _lastBargainSyncAt = 0;
 let _bargainSyncBackoffUntil = 0;
@@ -527,7 +532,8 @@ export async function syncUserBargains(options = {}) {
                 });
                 bargains = res?.data?.bargains || res?.bargains || [];
             } catch (apiErr) {
-                const errStatus = Number(apiErr?.status || apiErr?.response?.status || 0);
+                const errObj = /** @type {any} */ (apiErr);
+                const errStatus = Number(errObj?.status || errObj?.response?.status || 0);
                 if (errStatus === 429) {
                     _bargainSyncBackoffUntil = Date.now() + BARGAIN_SYNC_429_BACKOFF_MS;
                 }
@@ -555,7 +561,7 @@ export async function syncUserBargains(options = {}) {
             let cartUpdated = false;
             const activeCart = getActiveCartSafe();
 
-            bargains.forEach(b => {
+            bargains.forEach((/** @type {any} */ b) => {
                 if (!b || !b.itemId) return;
 
                 if (b.status === 'pending' || (!b.acceptedPrice && b.offeredPrice)) {
@@ -617,7 +623,7 @@ export async function syncUserBargains(options = {}) {
                             const origNum = Number(b.originalPrice ?? activeItem.price);
                             const safeOrig = Number.isFinite(origNum) ? origNum : 0;
                             const rawCur = (typeof getCurrency === 'function' ? getCurrency() : 'грн').trim();
-                            const esc = (s) => (hasAction('escapeHtml') ? invokeAction('escapeHtml', s) : String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
+                            const esc = (/** @type {any} */ s) => (hasAction('escapeHtml') ? invokeAction('escapeHtml', s) : String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'));
                             const origFmt = (typeof formatPrice === 'function') ? esc(formatPrice(safeOrig)) : `${safeOrig} ${esc(rawCur)}`;
                             const accFmt = (typeof formatPrice === 'function') ? esc(formatPrice(accNum)) : `${accNum} ${esc(rawCur)}`;
                             priceEl.innerHTML = `<span style="text-decoration: line-through; color: #777; font-size: 0.75em; margin-right: 8px;">${origFmt}</span><span style="color: var(--accent-yellow, #ffd700); font-weight: bold;">${accFmt}</span>`;
@@ -632,8 +638,9 @@ export async function syncUserBargains(options = {}) {
             });
 
             if (cartUpdated && Array.isArray(activeCart)) {
+                const globalSetCart = /** @type {any} */ (globalThis).setActiveCart;
                 if (hasAction('setActiveCart')) invokeAction('setActiveCart', activeCart);
-                else if (typeof setActiveCart === 'function') setActiveCart(activeCart);
+                else if (typeof globalSetCart === 'function') globalSetCart(activeCart);
                 if (hasAction('updateCartUI')) invokeAction('updateCartUI');
                 else if (typeof updateCartUI === 'function') updateCartUI();
             }

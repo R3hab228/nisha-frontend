@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — REALTIME, BROADCAST CHANNEL И КЭШ-ХЕЛПЕРЫ
 // ==========================================
@@ -11,7 +12,7 @@ import { getRuntimeOpenedItem, tSafe } from '../core/runtime-env.js';
 
 /**
  * Уведомляет пользователя о смене статуса/цены/скидки товара.
- * @param {object} item
+ * @param {any} item
  * @param {string} oldStatus
  * @param {number} oldPrice
  * @param {boolean} oldIsSale
@@ -90,13 +91,14 @@ export function removeSoldItemFromCart(itemId, itemName) {
     const currentCart = hasAction('getActiveCart')
         ? invokeAction('getActiveCart')
         : ((typeof getActiveCart === 'function') ? getActiveCart() : (window.cart || []));
-    const cartIdx = currentCart.findIndex(c => c && String(c.id) === String(itemId));
+    const cartIdx = currentCart.findIndex((/** @type {any} */ c) => c && String(c.id) === String(itemId));
     if (cartIdx !== -1) {
         currentCart.splice(cartIdx, 1);
+        const globalSetActiveCart = /** @type {any} */ (globalThis).setActiveCart;
         if (hasAction('setActiveCart')) {
             invokeAction('setActiveCart', currentCart);
-        } else if (typeof setActiveCart === 'function') {
-            setActiveCart(currentCart);
+        } else if (typeof globalSetActiveCart === 'function') {
+            globalSetActiveCart(currentCart);
         } else {
             const store = getCatalogStore();
             if (store) store.setJSON('nisha_cart', currentCart);
@@ -116,6 +118,7 @@ export function removeSoldItemFromCart(itemId, itemName) {
 }
 
 // КРОСС-ВКЛАДОЧНЫЙ BROADCAST CHANNEL (МГНОВЕННАЯ СИНХРОНИЗАЦИЯ МЕЖДУ ВКЛАДКАМИ БРАУЗЕРА)
+/** @type {BroadcastChannel | null} */
 let _catalogBroadcastChannel = null;
 let _nishaCatalogBcInit = false;
 if (typeof BroadcastChannel !== 'undefined' && typeof window !== 'undefined' && !_nishaCatalogBcInit) {
@@ -155,7 +158,7 @@ export function removeCatalogCardsWithoutJerk(deletedIds) {
         const viewportH = typeof window !== 'undefined' && typeof window.innerHeight === 'number' ? window.innerHeight : 900;
         const gridCards = Array.from(grid.querySelectorAll('.item-card'));
         for (let i = 0; i < gridCards.length; i++) {
-            const card = gridCards[i];
+            const card = /** @type {HTMLElement} */ (gridCards[i]);
             const cardId = String(card?.dataset?.id ?? card?.getAttribute?.('data-id') ?? '');
             if (deletedIdSet.has(cardId)) {
                 removedPrimaryCount++;
@@ -194,8 +197,9 @@ export function removeCatalogCardsWithoutJerk(deletedIds) {
         }
     };
 
-    if (typeof safeViewTransition === 'function') {
-        safeViewTransition(performDomRemoval);
+    const globalSafeVT = /** @type {any} */ (globalThis).safeViewTransition;
+    if (typeof globalSafeVT === 'function') {
+        globalSafeVT(performDomRemoval);
     } else if (hasAction('safeViewTransition')) {
         invokeAction('safeViewTransition', performDomRemoval);
     } else {
@@ -205,7 +209,7 @@ export function removeCatalogCardsWithoutJerk(deletedIds) {
 
 /**
  * Обрабатывает Realtime-события Supabase (INSERT / UPDATE / DELETE) без перезагрузки страницы.
- * @param {object} payload
+ * @param {any} payload
  * @param {boolean} [fromBroadcast=false]
  */
 export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
@@ -229,7 +233,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
 
         const countEl = document.getElementById('itemCount');
         if (countEl && Array.isArray(window.filteredItems)) {
-            countEl.textContent = window.filteredItems.length;
+            countEl.textContent = String(window.filteredItems.length);
         }
 
         const activeModal = getRuntimeOpenedItem();
@@ -272,7 +276,7 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
         } else {
             window.allItems.unshift(fresh);
         }
-        const sortDateDesc = (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+        const sortDateDesc = (/** @type {any} */ a, /** @type {any} */ b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
         window.allItems = hasAction('toSorted')
             ? invokeAction('toSorted', window.allItems, sortDateDesc)
             : (window.allItems.toSorted ? window.allItems.toSorted(sortDateDesc) : [...window.allItems].sort(sortDateDesc));
@@ -335,9 +339,9 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
     if (hasAction('invalidateFuseCache')) invokeAction('invalidateFuseCache');
     safelySaveCatalogToStorage(window.allItems);
 
-    const hideUnavailable = document.getElementById('hideUnavailableCb')?.checked || false;
-    const onlySale = document.getElementById('onlySaleCb')?.checked || false;
-    const onlyBargain = document.getElementById('onlyBargainCb')?.checked || false;
+    const hideUnavailable = /** @type {HTMLInputElement | null} */ (document.getElementById('hideUnavailableCb'))?.checked || false;
+    const onlySale = /** @type {HTMLInputElement | null} */ (document.getElementById('onlySaleCb'))?.checked || false;
+    const onlyBargain = /** @type {HTMLInputElement | null} */ (document.getElementById('onlyBargainCb'))?.checked || false;
     const needsGridResortOrRefilter = topChanged || categoryChanged || sizeChanged ||
                                       (hideUnavailable && statusChanged) ||
                                       (onlySale && saleChanged) ||
@@ -352,7 +356,9 @@ export function handleRealtimeCatalogEvent(payload, fromBroadcast = false) {
     }
 }
 
+/** @type {any} */
 let _catalogRealtimeChannel = null;
+/** @type {ReturnType<typeof setTimeout> | null} */
 let _realtimeReconnectTimer = null;
 let _realtimeReconnectAttempt = 0;
 let _realtimeHadDisconnect = false;
@@ -380,10 +386,10 @@ export function initCatalogRealtimeSubscription() {
     try {
         let isTearingDown = false;
         const channel = sb.channel('public-items-live-feed')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (payload) => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (/** @type {any} */ payload) => {
                 handleRealtimeCatalogEvent(payload, false);
             })
-            .subscribe((status) => {
+            .subscribe((/** @type {any} */ status) => {
                 if (status === 'SUBSCRIBED') {
                     _realtimeReconnectAttempt = 0;
                     if (_realtimeHadDisconnect) {

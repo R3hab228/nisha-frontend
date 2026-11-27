@@ -2308,7 +2308,7 @@ describe('Modern JS APIs (crypto.randomUUID, Object.groupBy, structuredClone)', 
             const ordersCode = readOrdersSource();
             expect(ordersCode).toContain("activeUser.email.split('@').at(0)");
             expect(ordersCode).toContain('order.items.at(0)');
-            expect(ordersCode).toContain("String(order.id || '').split('-').at(0).toUpperCase()");
+            expect(ordersCode).toMatch(/String\(order\.id \|\| ''\)\.split\('-'\)\.at\(0\)/);
 
             // Verify product.js uses .at()
             const productCode = readProductSource();

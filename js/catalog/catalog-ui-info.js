@@ -1,3 +1,5 @@
+// @ts-check
+/// <reference types="vite/client" />
 // ==========================================
 // NISHA CATALOG — БЕЙДЖИ ИНФО, БРОАДКАСТ И ОНБОРДИНГ-ТУР
 // ==========================================
@@ -19,8 +21,8 @@ export function showBadgeInfo(type) {
         title = tSafe('badge_info.secure_title', { defaultValue: 'SECURE_PAYMENT.EXE' });
         const isReturnable = activeItem && activeItem.is_returnable === true;
         const normalizedTags = activeItem && Array.isArray(activeItem.tags)
-            ? activeItem.tags.map(t => String(t).toLowerCase())
-            : (activeItem && typeof activeItem.tags === 'string' ? activeItem.tags.split(',').map(t => t.trim().toLowerCase()) : []);
+            ? activeItem.tags.map((/** @type {any} */ t) => String(t).toLowerCase())
+            : (activeItem && typeof activeItem.tags === 'string' ? activeItem.tags.split(',').map((/** @type {string} */ t) => t.trim().toLowerCase()) : []);
         const isDropItem = Boolean(activeItem && (activeItem.is_drop === true || normalizedTags.includes('drop')));
 
         if (!isReturnable || isDropItem) {
@@ -59,15 +61,17 @@ export function showBadgeInfo(type) {
     }
 }
 
+/** @type {any} */
 let _activeDriverTour = null;
 
 /**
  * Безопасный показ отложенного системного броадкаста.
  */
 export function flushPendingBroadcast() {
+    const globalTryShow = /** @type {any} */ (globalThis).tryShowBroadcast;
     const showBroadcastFn = (typeof window !== 'undefined' && typeof window.tryShowBroadcast === 'function')
         ? window.tryShowBroadcast
-        : (typeof tryShowBroadcast === 'function' ? tryShowBroadcast : (hasAction('tryShowBroadcast') ? (...args) => invokeAction('tryShowBroadcast', ...args) : null));
+        : (typeof globalTryShow === 'function' ? globalTryShow : (hasAction('tryShowBroadcast') ? (/** @type {any[]} */ ...args) => invokeAction('tryShowBroadcast', ...args) : null));
     if (!window.pendingBroadcastHtml || !showBroadcastFn) return;
     const bHtml = window.pendingBroadcastHtml;
     const bId = window.pendingBroadcastId;
@@ -114,7 +118,7 @@ export async function startOnboardingTour() {
                 import('driver.js/dist/driver.css'),
                 import('../../css/lazy-driver-tour.css').catch(() => {})
             ]);
-            const driverFn = driverMod.driver || driverMod.default || driverMod;
+            const driverFn = driverMod.driver || /** @type {any} */ (driverMod).default || driverMod;
             window.driver = { js: { driver: driverFn } };
             startOnboardingTour();
         } catch (err) {

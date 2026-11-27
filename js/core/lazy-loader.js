@@ -1,3 +1,5 @@
+// @ts-check
+/// <reference types="vite/client" />
 // ==========================================
 // NISHA LAZY MODULE LOADER (Code Splitting Bridge)
 // Registers lazy chunk loaders directly into ActionRegistry (+ compat global bridge)
@@ -5,11 +7,16 @@
 
 import { invokeAction, registerAction, resolveAction } from './action-registry.js';
 
+/**
+ * @param {() => Promise<any>} loaderFn
+ * @param {Array<string | string[]>} methodEntries
+ */
 function registerLazyModuleBridge(loaderFn, methodEntries) {
+    /** @type {Promise<any> | null} */
     let modulePromise = null;
     const ensureLoaded = () => {
         if (!modulePromise) {
-            modulePromise = loaderFn().catch(err => {
+            modulePromise = loaderFn().catch((/** @type {any} */ err) => {
                 modulePromise = null;
                 console.error('[LazyModule] Load error:', err);
                 throw err;
@@ -18,14 +25,21 @@ function registerLazyModuleBridge(loaderFn, methodEntries) {
         return modulePromise;
     };
 
-    methodEntries.forEach(entry => {
+    const win = /** @type {any} */ (typeof window !== 'undefined' ? window : null);
+    const g = /** @type {any} */ (typeof globalThis !== 'undefined' ? globalThis : null);
+
+    methodEntries.forEach((entry) => {
         const [fnName, ...actionAliases] = Array.isArray(entry) ? entry : [entry];
+        /**
+         * @this {any}
+         * @param {...any} args
+         */
         const proxyStub = async function (...args) {
             const loadedMod = await ensureLoaded();
             if (loadedMod && typeof loadedMod[fnName] === 'function') {
                 return Reflect.apply(loadedMod[fnName], this, args);
             }
-            const resolved = typeof window !== 'undefined' ? window[fnName] : globalThis[fnName];
+            const resolved = win ? win[fnName] : (g ? g[fnName] : undefined);
             if (typeof resolved === 'function' && resolved !== proxyStub) {
                 return Reflect.apply(resolved, this, args);
             }
@@ -43,11 +57,11 @@ function registerLazyModuleBridge(loaderFn, methodEntries) {
             registerAction(alias, proxyStub, { compatName: fnName, isLazyStub: true });
         });
 
-        if (typeof window !== 'undefined' && typeof window[fnName] !== 'function') {
-            window[fnName] = proxyStub;
+        if (win && typeof win[fnName] !== 'function') {
+            win[fnName] = proxyStub;
         }
-        if (typeof globalThis !== 'undefined' && typeof globalThis[fnName] !== 'function') {
-            globalThis[fnName] = proxyStub;
+        if (g && typeof g[fnName] !== 'function') {
+            g[fnName] = proxyStub;
         }
     });
 
@@ -284,7 +298,7 @@ const loadLiveSearchModule = registerLazyModuleBridge(
 // Warm live-search chunk on first interaction with #mainSearch so search opens seamlessly
 if (typeof document !== 'undefined') {
     const bindSearchWarmup = () => {
-        const searchEl = document.getElementById('mainSearch');
+        const searchEl = /** @type {any} */ (document.getElementById('mainSearch'));
         if (!searchEl || searchEl._lazySearchBound) return;
         searchEl._lazySearchBound = true;
         const warmSearch = () => { loadLiveSearchModule(); };
@@ -318,7 +332,8 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
 // - на быстром соединении предзагружаем только карточку товара (главное действие на витрине),
 //   а редкие модалки (Drop, Отзывы, Чат, Заказы, Чекаут, Профиль контакты/НП, IMask) грузятся строго по клику.
 const preloadSecondaryModules = () => {
-    const conn = typeof navigator !== 'undefined' ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
+    const nav = /** @type {any} */ (typeof navigator !== 'undefined' ? navigator : null);
+    const conn = nav ? (nav.connection || nav.mozConnection || nav.webkitConnection) : null;
     const isConstrained = Boolean(conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g' || conn.effectiveType === '3g'));
     if (isConstrained) return;
 

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CORE HELPERS: SEARCH SYNONYMS, PRICE PARSING, ADDRESS & NAME NORMALIZATION
 // ==========================================
@@ -5,6 +6,7 @@
 import { hasOwn } from './helpers-core-utils.js';
 import { registerActions } from './action-registry.js';
 
+/** @type {Record<string, string>} */
 export const SEARCH_SYNONYMS = {
     'найк': 'nike', 'найки': 'nike', 'адидас': 'adidas', 'адики': 'adidas',
     'пума': 'puma', 'левис': 'levis', 'левайс': 'levis', 'кархарт': 'carhartt',
@@ -29,6 +31,7 @@ export const SEARCH_SYNONYMS = {
     'кроси': 'sneakers', 'кеды': 'sneakers shoes vans'
 };
 
+/** @type {Record<string, string>} */
 export const CYRILLIC_TO_LATIN = {
     'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'ґ': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
     'ж': 'zh', 'з': 'z', 'и': 'i', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k', 'л': 'l',
@@ -149,8 +152,8 @@ if (typeof window !== 'undefined') window.parsePriceSearchQuery = parsePriceSear
 
 /**
  * Checks whether a catalog item matches a parsed price query.
- * @param {Object} item
- * @param {Object} priceQuery
+ * @param {any} item
+ * @param {any} priceQuery
  * @returns {boolean}
  */
 export function itemMatchesPrice(item, priceQuery) {
@@ -264,8 +267,9 @@ if (typeof window !== 'undefined') window.normalizeFullNameOnBlur = normalizeFul
  * @param {HTMLInputElement|null} input
  */
 export function attachFullNameAutoCapitalize(input) {
-    if (!input || input._nameCapBound) return;
-    input._nameCapBound = true;
+    const inputAny = /** @type {any} */ (input);
+    if (!input || inputAny._nameCapBound) return;
+    inputAny._nameCapBound = true;
 
     if (typeof input.addEventListener === 'function') {
         input.addEventListener('input', () => {

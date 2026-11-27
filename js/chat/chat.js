@@ -1,3 +1,4 @@
+// @ts-check
 
 import { invokeAction, onAppEvent, registerActions, resolveAction } from '../core/action-registry.js';
 import { escapeHtmlSafe, getLenisInstance, getRuntimeSupabase, getRuntimeUser, getRuntimeCatalog, getRuntimeOpenedItem, getRuntimeFingerprint, getRuntimeSiteLang, tSafe } from '../core/runtime-env.js';
@@ -11,18 +12,20 @@ import {
 } from './support-modal.js';
 
 if (typeof document !== 'undefined') {
-    import('../../css/lazy-support-modal.css').catch(() => {});
+    import(/** @type {string} */ ('../../css/lazy-support-modal.css')).catch(() => {});
 }
 
 // --- СИСТЕМА ЗАПОМИНАНИЯ ПОКАЗАННЫХ ОФФЕРОВ (ЧТОБЫ НЕ НАДОЕДАТЬ ПОЛЬЗОВАТЕЛЮ) ---
 const BARGAIN_SEEN_STORAGE_KEY = 'nisha_shown_bargain_popups';
 const SUPPORT_REPLY_SEEN_STORAGE_KEY = 'nisha_seen_support_reply_ids';
 const _shownSupportReplyIds = new Set();
+/** @type {any} */
 let _userSupportChannel = null;
 let _supportRepliesInitialized = false;
 let _supportInitRetries = 0;
 const MAX_SUPPORT_INIT_RETRIES = 6;
 
+/** @param {any} key */
 function hasSeenBargainPopup(key) {
     if (!key) return false;
     try {
@@ -35,6 +38,7 @@ function hasSeenBargainPopup(key) {
     }
 }
 
+/** @param {any} key */
 function markBargainPopupAsSeen(key) {
     if (!key) return;
     try {
@@ -48,6 +52,7 @@ function markBargainPopupAsSeen(key) {
     } catch {}
 }
 
+/** @param {any} id */
 function isSupportReplySeen(id) {
     if (!id) return false;
     if (_shownSupportReplyIds.has(String(id))) return true;
@@ -61,6 +66,7 @@ function isSupportReplySeen(id) {
     return false;
 }
 
+/** @param {any} id */
 function markSupportReplyAsSeen(id) {
     if (!id) return;
     _shownSupportReplyIds.add(String(id));
@@ -77,6 +83,7 @@ function markSupportReplyAsSeen(id) {
 
 
 // --- МОДАЛЬНОЕ ОКНО ПРИНЯТОГО ТОРГА С ПРЯМЫМ ДОБАВЛЕНИЕМ В КОРЗИНУ ---
+/** @param {any} bargainData @param {any} [onDismiss] */
 function showBargainAcceptedModal(bargainData, onDismiss) {
     if (!bargainData) return;
 
@@ -106,9 +113,9 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 
     document.querySelectorAll('.bargain-broadcast-overlay, .terminal-modal-overlay').forEach(el => el.remove());
 
-    const t = (k, def) => tSafe(k, def);
-    const escHtml = (s) => String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
-    const safeUrl = (u) => {
+    const t = (/** @type {string} */ k, /** @type {any} */ def) => tSafe(k, def);
+    const escHtml = (/** @type {any} */ s) => String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+    const safeUrl = (/** @type {any} */ u) => {
         const str = String(u || '').trim();
         return /^https?:\/\/|^\/(?!\/)/i.test(str) ? escHtml(str) : '';
     };
@@ -124,7 +131,7 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     // 2. Обновляем кнопку предложения цены и цену на карточке товара, если открыт именно этот товар
     const activeItem = getRuntimeOpenedItem();
     if (activeItem && String(activeItem.id) === String(bargainData.itemId)) {
-        const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
+        const offerPriceBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById('modalOfferPriceBtn'));
         if (offerPriceBtn) {
             const acceptedBtnText = t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
             offerPriceBtn.textContent = acceptedBtnText;
@@ -230,14 +237,16 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
     };
 
     overlay.addEventListener('touchmove', (e) => {
-        if (!e.target.closest('.success-terminal-box')) e.preventDefault();
+        const target = /** @type {Element | null} */ (e.target);
+        if (!target || !target.closest('.success-terminal-box')) e.preventDefault();
     }, { passive: false, signal: modalCtrl.signal });
     overlay.addEventListener('wheel', (e) => {
-        if (!e.target.closest('.success-terminal-box')) e.preventDefault();
+        const target = /** @type {Element | null} */ (e.target);
+        if (!target || !target.closest('.success-terminal-box')) e.preventDefault();
     }, { passive: false, signal: modalCtrl.signal });
 
     const addBtn = overlay.querySelector('.bargain-add-cart-btn');
-    const closeXBtn = overlay.querySelector('.close-bargain-x-btn');
+    const closeXBtn = /** @type {HTMLElement | null} */ (overlay.querySelector('.close-bargain-x-btn'));
     const imgEl = overlay.querySelector('.bargain-broadcast-img');
 
     if (imgEl) {
@@ -284,13 +293,15 @@ function showBargainAcceptedModal(bargainData, onDismiss) {
 }
 
 // Кросс-девайс синхронизация: помечаем попап как просмотренный на сервере, чтобы он больше не всплывал на других устройствах (ПК <-> Смартфон)
+/** @param {any} bargainData */
 async function syncBargainPopupSeenToServer(bargainData) {
     if (!bargainData) return;
     const offerKey = String(bargainData.bargainId || ('accepted_' + bargainData.itemId + '_' + bargainData.acceptedPrice));
     markBargainPopupAsSeen(offerKey);
 
     try {
-        const activeSb = (typeof getSupabase === 'function' ? getSupabase() : null) || window.supabaseClient;
+        const globalGetSupabase = /** @type {any} */ (globalThis).getSupabase;
+        const activeSb = (typeof globalGetSupabase === 'function' ? globalGetSupabase() : null) || window.supabaseClient;
         if (activeSb) {
             if (bargainData.bargainId) {
                 activeSb.from('support_replies')
@@ -332,6 +343,7 @@ async function syncBargainPopupSeenToServer(bargainData) {
 
 window.pendingBargainNotifications = window.pendingBargainNotifications || [];
 
+/** @param {any} type @param {any} data @param {any} markAsRead */
 function queueBargainNotification(type, data, markAsRead) {
     window.pendingBargainNotifications = window.pendingBargainNotifications || [];
     window.pendingBargainNotifications.push({ type, data, markAsRead });
@@ -372,7 +384,7 @@ function checkPendingBargainNotification() {
             setTimeout(checkPendingBargainNotification, 200);
         });
     } else if (notif.type === 'BARGAIN_DECLINED') {
-        const t = (k, def) => tSafe(k, def);
+        const t = (/** @type {string} */ k, /** @type {any} */ def) => tSafe(k, def);
         const declMsg = t('product.offer_declined_toast', 'Продавець відхилив пропозицію ціни на товар.');
         if (typeof showToast === 'function') showToast(declMsg, 'info');
         if (typeof notif.markAsRead === 'function') notif.markAsRead();
@@ -383,6 +395,7 @@ function checkPendingBargainNotification() {
 }
 window.checkPendingBargainNotification = checkPendingBargainNotification;
 
+/** @param {any} r @param {any} sbClient */
 function handleIncomingSupportReply(r, sbClient) {
     if (!r) return;
     if (r.id && isSupportReplySeen(r.id)) return;
@@ -404,11 +417,11 @@ function handleIncomingSupportReply(r, sbClient) {
     if (parsed && parsed.type === 'BARGAIN_ACCEPTED') {
         setAcceptedBargain(parsed.itemId, parsed);
 
-        const t = (k, def) => tSafe(k, def);
+        const t = (/** @type {string} */ k, /** @type {any} */ def) => tSafe(k, def);
 
         const activeItem = getRuntimeOpenedItem();
         if (activeItem && String(activeItem.id) === String(parsed.itemId)) {
-            const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
+            const offerPriceBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById('modalOfferPriceBtn'));
             if (offerPriceBtn) {
                 const acceptedBtnText = t('product.offer_accepted_btn', 'ПРОПОЗИЦІЮ ПРИЙНЯТО ✓');
                 offerPriceBtn.textContent = acceptedBtnText;
@@ -448,7 +461,8 @@ function handleIncomingSupportReply(r, sbClient) {
                     cartItem.originalPrice = Number(parsed.originalPrice || cartItem.originalPrice || cartItem.price);
                     cartItem.price = Number(parsed.acceptedPrice);
                     cartItem.bargainPrice = Number(parsed.acceptedPrice);
-                    const setCartFn = resolveAction('setActiveCart') || (typeof setActiveCart === 'function' ? setActiveCart : null);
+                    const globalSetCart = /** @type {any} */ (globalThis).setActiveCart;
+                    const setCartFn = resolveAction('setActiveCart') || (typeof globalSetCart === 'function' ? globalSetCart : null);
                     if (setCartFn) setCartFn(activeCart);
                     const updCartFn = resolveAction('updateCartUI') || (typeof updateCartUI === 'function' ? updateCartUI : null);
                     if (updCartFn) updCartFn();
@@ -479,11 +493,11 @@ function handleIncomingSupportReply(r, sbClient) {
     if (parsed && parsed.type === 'BARGAIN_DECLINED') {
         setBargainDeclined(parsed.itemId);
 
-        const t = (k, def) => tSafe(k, def);
+        const t = (/** @type {string} */ k, /** @type {any} */ def) => tSafe(k, def);
 
         const activeItem = getRuntimeOpenedItem();
         if (activeItem && String(activeItem.id) === String(parsed.itemId)) {
-            const offerPriceBtn = document.getElementById('modalOfferPriceBtn');
+            const offerPriceBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById('modalOfferPriceBtn'));
             if (offerPriceBtn) {
                 const declinedBtnText = t('product.offer_declined_btn', 'ПРОПОЗИЦІЮ ВІДХИЛЕНО');
                 offerPriceBtn.textContent = declinedBtnText;
@@ -526,7 +540,7 @@ function handleIncomingSupportReply(r, sbClient) {
 
 // 2. Быстрая отправка тикета поддержки в фоне
 async function submitSupportTicket() {
-    const input = document.getElementById('supportInput');
+    const input = /** @type {HTMLTextAreaElement | HTMLInputElement | null} */ (document.getElementById('supportInput'));
     const btn = document.getElementById('btnSubmitSupport');
     if (!input || !btn) return;
 
@@ -563,7 +577,7 @@ async function submitSupportTicket() {
         topic: selectedTopic,
         lang: getRuntimeSiteLang(),
         ...(bugMeta ? { meta: bugMeta } : {})
-    }, { timeout: 10000, retries: 2 }).catch(e => console.log('Фоновая отправка в саппорт не удалась: ', e));
+    }, { timeout: 10000, retries: 2 }).catch((/** @type {any} */ e) => console.log('Фоновая отправка в саппорт не удалась: ', e));
 
     // Моментальный отклик интерфейса
     if (typeof triggerHaptic === 'function') triggerHaptic('success');
@@ -586,6 +600,7 @@ async function submitSupportTicket() {
 }
 
 // 3. Система личных ответов от поддержки (Realtime + Offline)
+/** @param {...any} args */
 function debugChatLog(...args) {
     if (typeof window !== 'undefined' && window.__NISHA_DEBUG__) {
         console.log(...args);
@@ -599,10 +614,11 @@ function checkUnreadSupportReplies() {
     if (!activeSb || (!activeFp && !currentUid)) return;
 
 
+    /** @param {any[]} replies */
     const processReplies = (replies) => {
         if (replies && replies.length > 0) {
             debugChatLog(`[СИСТЕМА ОТВЕТОВ] Найдено ${replies.length} новых сообщений!`);
-            replies.forEach(r => handleIncomingSupportReply(r, activeSb));
+            replies.forEach((/** @type {any} */ r) => handleIncomingSupportReply(r, activeSb));
         }
     };
 
@@ -611,7 +627,7 @@ function checkUnreadSupportReplies() {
             .select('id, answer_text')
             .eq('client_id', activeFp)
             .eq('is_read', false)
-            .then(({ data: replies, error: replErr }) => {
+            .then((/** @type {any} */ { data: replies, error: replErr }) => {
                 if (!replErr) processReplies(replies);
             });
     }
@@ -621,12 +637,13 @@ function checkUnreadSupportReplies() {
             .select('id, answer_text')
             .eq('client_id', `user_${currentUid}`)
             .eq('is_read', false)
-            .then(({ data: userReplies, error: uErr }) => {
+            .then((/** @type {any} */ { data: userReplies, error: uErr }) => {
                 if (!uErr) processReplies(userReplies);
             });
     }
 }
 
+/** @param {any} userId */
 function subscribeUserRealtime(userId) {
     const activeSb = getRuntimeSupabase();
     if (!userId || !activeSb) return;
@@ -640,7 +657,7 @@ function subscribeUserRealtime(userId) {
             schema: 'public',
             table: 'support_replies',
             filter: `client_id=eq.user_${userId}`
-        }, payload => {
+        }, (/** @type {any} */ payload) => {
             debugChatLog('[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение (user) Online:', payload.new);
             handleIncomingSupportReply(payload.new, activeSb);
         })
@@ -686,11 +703,11 @@ function initSupportRepliesSystem() {
                 schema: 'public', 
                 table: 'support_replies', 
                 filter: `client_id=eq.${fingerprint}` 
-            }, payload => {
+            }, (/** @type {any} */ payload) => {
                 debugChatLog('[СИСТЕМА ОТВЕТОВ] Пришло новое сообщение Online:', payload.new);
                 handleIncomingSupportReply(payload.new, sb);
             })
-            .subscribe((status) => {
+            .subscribe((/** @type {any} */ status) => {
                 if (status === 'SUBSCRIBED') {
                     debugChatLog('[СИСТЕМА ОТВЕТОВ] Успешно подключен к каналу!');
                 }

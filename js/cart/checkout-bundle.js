@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CHECKOUT & NOVA POSHTA BUNDLE (LAZY-LOADED ON DEMAND)
 // Подгружается через `lazy-loader.js` только при открытии оформления заказа.

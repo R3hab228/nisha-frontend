@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT MODAL, GALLERY & Q&A ENTRYPOINT
 // Modular ES barrel re-exporting all product submodules.

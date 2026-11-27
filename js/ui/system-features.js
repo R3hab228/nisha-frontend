@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA SYSTEM FEATURES (Broadcasts, Rules, Hit Counter, Easter Egg, Shortcuts)
 // ==========================================
@@ -31,8 +32,16 @@ import {
 } from '../../src/modules/index.js';
 import { tSafe } from '../core/runtime-env.js';
 
+/** @type {any} */
 let pendingBroadcastQueue = null;
 
+/**
+ * @param {string} title
+ * @param {any} htmlText
+ * @param {string} [btnText]
+ * @param {(() => void) | null} [callback]
+ * @param {{ persistent?: boolean }} [options={}]
+ */
 function tryShowBroadcast(title, htmlText, btnText, callback, options = {}) {
     if (!htmlText || htmlText === 'null' || (typeof htmlText === 'string' && !htmlText.trim())) {
         if (callback) callback();
@@ -71,6 +80,7 @@ function checkPendingBroadcast() {
     }, 200);
 }
 
+/** @type {ReturnType<typeof setInterval> | null} */
 let _pendingBroadcastIntervalId = null;
 
 function runPendingNotificationsTick() {
@@ -157,9 +167,9 @@ function ensureRulesContentRendered() {
 }
 
 function checkRules() {
-    if (!storage || !storage.get('nisha_rules_accepted')) {
+    if (!storage || !/** @type {any} */ (storage).get('nisha_rules_accepted')) {
         setTimeout(() => {
-            if (!storage || !storage.get('nisha_rules_accepted')) {
+            if (!storage || !/** @type {any} */ (storage).get('nisha_rules_accepted')) {
                 showRulesModal();
             }
         }, 550);
@@ -171,6 +181,7 @@ function showRulesModal() {
     openModal('rulesModal');
 }
 
+/** @type {Record<string, { windowTitle: string, titleColor: string, sections: Array<{ h: string, items: string[], headingColor?: string }> }>} */
 const LEGAL_DOC_SPECS = {
     shipping: {
         windowTitle: 'SHIPPING_PAYMENT.TXT',
@@ -204,6 +215,7 @@ const LEGAL_DOC_SPECS = {
     }
 };
 
+/** @param {string} docKey */
 function buildLegalDocHtml(docKey) {
     const spec = LEGAL_DOC_SPECS[docKey];
     if (!spec) return '';
@@ -221,6 +233,7 @@ function buildLegalDocHtml(docKey) {
     return `<p style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:16px;font-weight:700;margin-top:0" data-i18n="${prefix}.title"></p>${sectionsHtml}`;
 }
 
+/** @param {string} docType */
 function openLegalDocModal(docType) {
     const docKey = Object.hasOwn(LEGAL_DOC_SPECS, docType) ? docType : 'shipping';
     const spec = LEGAL_DOC_SPECS[docKey];
@@ -242,7 +255,7 @@ function openLegalDocModal(docType) {
 }
 
 function acceptRules() {
-    if (storage) storage.set('nisha_rules_accepted', 'true');
+    if (storage) /** @type {any} */ (storage).set('nisha_rules_accepted', 'true');
     executeCloseModal('rulesModal');
     if (typeof i18next !== 'undefined') {
         showToast(i18next.t('messages.rules_accepted'), 'success');
@@ -276,7 +289,7 @@ function triggerEasterEgg() {
     activeCart.forEach(item => { 
         item.price = Math.floor(item.price * 0.9); 
     });
-    if (storage && typeof storage.setJSON === 'function') storage.setJSON('nisha_cart', activeCart);
+    if (storage && typeof /** @type {any} */ (storage).setJSON === 'function') /** @type {any} */ (storage).setJSON('nisha_cart', activeCart);
     syncCartToServer();
     updateCartUI();
 }
@@ -289,18 +302,19 @@ async function initHitCounter() {
     initAnalytics();
 
     const counterEl = document.getElementById('hitCounterValue');
+    const storeApi = /** @type {any} */ (storage);
 
     try {
-        let visitorId = storage ? storage.get('nisha_visitor_id') : null;
+        let visitorId = storeApi ? storeApi.get('nisha_visitor_id') : null;
         if (!visitorId) {
-            visitorId = 'user_' + generateShortId(9);
-            if (storage) storage.set('nisha_visitor_id', visitorId);
+            visitorId = 'user_' + /** @type {any} */ (generateShortId)(9);
+            if (storeApi) storeApi.set('nisha_visitor_id', visitorId);
         }
         window.clientFingerprint = visitorId;
         if (typeof globalThis !== 'undefined') globalThis.clientFingerprint = visitorId;
 
         const todayDate = new Date().toISOString().slice(0, 10);
-        const lastVisitDate = storage ? storage.get('nisha_last_visit_date') : null;
+        const lastVisitDate = storeApi ? storeApi.get('nisha_last_visit_date') : null;
         const isNewVisitToday = (lastVisitDate !== todayDate);
 
         if (isNewVisitToday) {
@@ -309,33 +323,34 @@ async function initHitCounter() {
 
         if (!counterEl) return;
 
-        const cachedCount = (storage ? storage.get('nisha_last_hit_count', '0') : '0') || '0';
+        const cachedCount = (storeApi ? storeApi.get('nisha_last_hit_count', '0') : '0') || '0';
         if (Number(cachedCount) > 0) counterEl.textContent = String(cachedCount).padStart(5, '0').split('').join(' ');
 
-        const data = await apiClient.post('/api/hit', {
+        const data = await /** @type {any} */ (apiClient).post('/api/hit', {
             date: todayDate,
             countAsNew: isNewVisitToday
         }, { timeout: 5500, retries: 1, dedupe: true });
 
         if (data && data.success && data.count !== undefined) {
-            if (isNewVisitToday && storage) {
-                storage.set('nisha_last_visit_date', todayDate);
+            if (isNewVisitToday && storeApi) {
+                storeApi.set('nisha_last_visit_date', todayDate);
             }
             
-            if (storage) {
-                storage.set('nisha_last_hit_count', data.count);
+            if (storeApi) {
+                storeApi.set('nisha_last_hit_count', data.count);
             }
             
             const strCount = data.count.toString().padStart(5, '0');
             counterEl.textContent = strCount.split('').join(' ');
         }
     } catch (err) {
-        console.warn("Счетчик работает в оффлайн-режиме (Сервер спит или нет сети):", err.message);
+        console.warn("Счетчик работает в оффлайн-режиме (Сервер спит или нет сети):", /** @type {any} */ (err).message);
     }
 }
 
 
 // === ЖИВОЙ СЧЕТЧИК СИМВОЛОВ ДЛЯ ПРЕДЛОЖКИ ===
+/** @param {any} textarea */
 function updateCharCount(textarea) {
     const label = document.getElementById('descLabel');
     if (!label) return;
@@ -352,6 +367,7 @@ function updateCharCount(textarea) {
 
 // === ГОРЯЧИЕ КЛАВИШИ И НАВИГАЦИЯ С КЛАВИАТУРЫ ===
 let lastTextareaEnterTime = 0;
+/** @type {Element | null} */
 let lastTextareaTarget = null;
 
 document.addEventListener('keydown', function(e) {
@@ -359,14 +375,14 @@ document.addEventListener('keydown', function(e) {
     const isSlash = (e.key === '/' || (e.code === 'Slash' && !e.shiftKey)) && !e.ctrlKey && !e.metaKey && !e.altKey;
 
     if (isCtrlK || isSlash) {
-        const activeEl = document.activeElement;
+        const activeEl = /** @type {HTMLElement | null} */ (document.activeElement);
         const tag = activeEl ? activeEl.tagName : '';
         const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (activeEl && activeEl.isContentEditable);
 
         if (!(isSlash && isEditing)) {
             const hasOpenModal = document.querySelector('.modal-overlay[style*="display: flex"], .modal-overlay[style*="display: block"]');
             if (!hasOpenModal || isCtrlK) {
-                const searchInput = document.getElementById('mainSearch');
+                const searchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('mainSearch'));
                 if (searchInput && activeEl !== searchInput) {
                     e.preventDefault();
                     if (hasOpenModal && typeof closeModal === 'function') {
@@ -406,43 +422,44 @@ document.addEventListener('keydown', function(e) {
 
         // В многострочном поле (textarea): быстрый двойной Enter переводит фокус на следующее поле формы
         if (activeEl.tagName === 'TEXTAREA') {
+            const taEl = /** @type {HTMLTextAreaElement} */ (activeEl);
             if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 const now = Date.now();
-                if (activeEl === lastTextareaTarget && (now - lastTextareaEnterTime) < 450) {
+                if (taEl === lastTextareaTarget && (now - lastTextareaEnterTime) < 450) {
                     e.preventDefault();
                     lastTextareaEnterTime = 0;
                     lastTextareaTarget = null;
 
                     // Убираем перевод строки, вставленный первым нажатием Enter
-                    const pos = typeof activeEl.selectionStart === 'number' ? activeEl.selectionStart : activeEl.value.length;
-                    const val = activeEl.value;
+                    const pos = typeof taEl.selectionStart === 'number' ? taEl.selectionStart : taEl.value.length;
+                    const val = taEl.value;
                     if (pos > 0 && val.charAt(pos - 1) === '\n') {
-                        activeEl.value = val.slice(0, pos - 1) + val.slice(pos);
+                        taEl.value = val.slice(0, pos - 1) + val.slice(pos);
                         const newPos = pos - 1;
-                        try { activeEl.setSelectionRange(newPos, newPos); } catch {}
+                        try { taEl.setSelectionRange(newPos, newPos); } catch {}
                     } else if (val.endsWith('\n')) {
-                        activeEl.value = val.slice(0, -1);
+                        taEl.value = val.slice(0, -1);
                     }
 
                     try {
-                        activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+                        taEl.dispatchEvent(new Event('input', { bubbles: true }));
                     } catch {}
                     if (typeof updateCharCount === 'function') {
                         updateCharCount(activeEl);
                     }
 
-                    const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields') || activeEl.closest('.modal-window');
+                    const form = taEl.closest('.form-layout') || taEl.closest('.auth-fields') || taEl.closest('.modal-window');
                     if (form) {
-                        const isVisible = (el) => {
+                        const isVisible = (/** @type {any} */ el) => {
                             if (!el || el.disabled || el.type === 'hidden') return false;
                             if (el.style && el.style.display === 'none') return false;
                             if (el.closest && el.closest('[style*="display: none"]')) return false;
                             return true;
                         };
                         const focusables = Array.from(form.querySelectorAll('input, textarea, button')).filter(isVisible);
-                        const currentIndex = focusables.indexOf(activeEl);
+                        const currentIndex = focusables.indexOf(taEl);
                         if (currentIndex > -1 && currentIndex < focusables.length - 1) {
-                            const nextEl = focusables[currentIndex + 1];
+                            const nextEl = /** @type {any} */ (focusables[currentIndex + 1]);
                             nextEl.focus();
                             if (typeof nextEl.select === 'function' && nextEl.tagName === 'INPUT') {
                                 try { nextEl.select(); } catch {}
@@ -458,8 +475,8 @@ document.addEventListener('keydown', function(e) {
                     return;
                 } else {
                     lastTextareaEnterTime = now;
-                    lastTextareaTarget = activeEl;
-                    activeEl.addEventListener('blur', () => {
+                    lastTextareaTarget = taEl;
+                    taEl.addEventListener('blur', () => {
                         lastTextareaEnterTime = 0;
                         lastTextareaTarget = null;
                     }, { once: true });
@@ -491,7 +508,7 @@ document.addEventListener('keydown', function(e) {
             e.preventDefault();
             const form = activeEl.closest('.form-layout') || activeEl.closest('.auth-fields') || activeEl.closest('.modal-window');
             if (form) {
-                const isVisible = (el) => {
+                const isVisible = (/** @type {any} */ el) => {
                     if (!el || el.disabled || el.type === 'hidden') return false;
                     if (el.style && el.style.display === 'none') return false;
                     if (el.closest && (el.closest('[style*="display: none"]') || el.closest('[style*="display:none"]'))) return false;
@@ -501,7 +518,7 @@ document.addEventListener('keydown', function(e) {
                 const focusables = Array.from(form.querySelectorAll('input, textarea, button')).filter(isVisible);
                 const currentIndex = focusables.indexOf(activeEl);
                 if (currentIndex > -1 && currentIndex < focusables.length - 1) {
-                    const nextEl = focusables[currentIndex + 1];
+                    const nextEl = /** @type {any} */ (focusables[currentIndex + 1]);
                     nextEl.focus();
                     if (typeof nextEl.select === 'function' && nextEl.tagName === 'INPUT') {
                         try { nextEl.select(); } catch {}
@@ -520,7 +537,7 @@ document.addEventListener('keydown', function(e) {
     const pModal = document.getElementById('productModal');
     if (pModal && (pModal.style.display === 'flex' || pModal.style.display === 'block')) {
         const activeTag = document.activeElement?.tagName;
-        const isEditingField = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || Boolean(document.activeElement?.isContentEditable);
+        const isEditingField = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || Boolean(/** @type {HTMLElement | null} */ (document.activeElement)?.isContentEditable);
         const hasBlockingOverlay = Boolean(
             document.querySelector('.pswp--open, .terminal-modal-overlay') ||
             (() => {

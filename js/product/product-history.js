@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA PRODUCT VIEWING HISTORY, SIMILAR ITEMS & SHARE MODULE
 // ==========================================
@@ -19,9 +20,11 @@ import { getAcceptedBargain } from '../core/bargain-storage.js';
 import { tSafe } from '../core/runtime-env.js';
 
 const _preloadedSimilarUrls = new Set();
+/** @type {string[]} */
 let _pendingSimilarImgUrls = [];
 let _suppressHistoryRender = false;
 
+/** @param {any} rawUrl */
 function sanitizeHistoryMediaUrl(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return '';
     const trimmed = rawUrl.trim();
@@ -33,6 +36,7 @@ function sanitizeHistoryMediaUrl(rawUrl) {
     return getEscAttr(trimmed);
 }
 
+/** @param {any} rawUrl */
 function escapeHistoryCssUrl(rawUrl) {
     const safeAttr = sanitizeHistoryMediaUrl(rawUrl);
     if (!safeAttr) return '';
@@ -48,7 +52,7 @@ function escapeHistoryCssUrl(rawUrl) {
  */
 export function preloadSimilarItemsImages() {
     if (typeof document !== 'undefined') {
-        document.querySelectorAll('.similar-slide-img[loading="lazy"]').forEach(imgEl => {
+        /** @type {NodeListOf<HTMLImageElement>} */ (document.querySelectorAll('.similar-slide-img[loading="lazy"]')).forEach(imgEl => {
             imgEl.loading = 'eager';
             imgEl.setAttribute('loading', 'eager');
         });
@@ -108,7 +112,7 @@ export function shareItem() {
 
 /**
  * Renders similar items recommendation blocks (mobile + desktop containers).
- * @param {object} item
+ * @param {any} item
  */
 export function renderSimilarItems(item) {
     const simCont = document.getElementById('similarItemsContainer');
@@ -124,7 +128,8 @@ export function renderSimilarItems(item) {
         else simContDesktop.innerHTML = '';
     }
 
-    const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
+    const hideCb = /** @type {HTMLInputElement | null} */ (document.getElementById('hideUnavailableCb'));
+    const hideUnavailable = hideCb ? hideCb.checked : false;
     const catalog = getCatalogItems();
 
     const candidates = catalog.filter(i => {
@@ -139,23 +144,23 @@ export function renderSimilarItems(item) {
         score: computeItemSimilarity(item, c)
     }));
 
-    const sortScoreFn = (a, b) => b.score - a.score;
+    const sortScoreFn = (/** @type {{ score: number }} */ a, /** @type {{ score: number }} */ b) => b.score - a.score;
     const sortedCandidates = hasAction('toSorted')
         ? invokeAction('toSorted', scoredCandidates, sortScoreFn)
         : (scoredCandidates.toSorted ? scoredCandidates.toSorted(sortScoreFn) : [...scoredCandidates].sort(sortScoreFn));
 
-    const similar = sortedCandidates.slice(0, 6).map(c => c.item);
+    const similar = sortedCandidates.slice(0, 6).map((/** @type {any} */ c) => c.item);
     _pendingSimilarImgUrls = [];
     const store = getStore();
     const seenItemsIds = store ? store.getJSON('nisha_seen_items', []) : [];
 
     if (similar.length > 0) {
         let cardsHTML = '';
-        similar.forEach(s => {
+        similar.forEach((/** @type {any} */ s) => {
             const rawSimUrl = s.thumbnails?.[0] || s.images?.[0];
             const sImg = rawSimUrl
                 ? toCDN(rawSimUrl, { isThumb: true, width: 320, quality: 80 })
-                : (typeof getOptimizedImg === 'function' ? getOptimizedImg(s, true) : '');
+                : (typeof getOptimizedImg === 'function' ? getOptimizedImg(s, /** @type {any} */ (true)) : '');
             if (sImg && !sImg.endsWith('.mp4') && !_preloadedSimilarUrls.has(sImg)) {
                 _pendingSimilarImgUrls.push(sImg);
             }
@@ -187,7 +192,7 @@ export function renderSimilarItems(item) {
                 const formattedOld = (typeof formatPrice === 'function') ? formatPrice(s.old_price, { numberOnly: true }) : s.old_price;
                 miniPriceHTML = `<span style="color: #4a704a; text-decoration: line-through; font-size: 9px; margin-right: 4px;">${formattedOld}</span><span style="color: var(--accent-green);">${formattedSimilarPrice}</span>`;
             }
-            const simBargain = s.status === 'available' ? getAcceptedBargain(s.id) : null;
+            const simBargain = /** @type {any} */ (s.status === 'available' ? getAcceptedBargain(s.id) : null);
             if (simBargain && simBargain.acceptedPrice) {
                 const origSimPrice = getEscHtml(simBargain.originalPrice || s.price);
                 const accSimPrice = getEscHtml(simBargain.acceptedPrice);
@@ -253,13 +258,13 @@ export function renderSimilarItems(item) {
 
 /**
  * Adds an item to local viewing history (capped at 30) and re-renders the history drawer.
- * @param {object} item
+ * @param {any} item
  */
 export function addToHistory(item) {
     const store = getStore();
     let hist = store ? store.getJSON('nisha_history', []) : [];
-    hist = hist.filter(i => i.id !== item.id);
-    const img = (typeof getOptimizedImg === 'function' ? getOptimizedImg(item, true) : '') || ((item.images && item.images.length > 0) ? item.images.at(0) : '');
+    hist = hist.filter((/** @type {any} */ i) => i.id !== item.id);
+    const img = (typeof getOptimizedImg === 'function' ? getOptimizedImg(item, /** @type {any} */ (true)) : '') || ((item.images && item.images.length > 0) ? item.images.at(0) : '');
 
     hist.unshift({
         id: item.id,
@@ -290,7 +295,7 @@ export function renderHistory() {
 
     const catalog = getCatalogItems();
     if (catalog.length > 0) {
-        const validHist = hist.filter(h => catalog.some(dbItem => dbItem.id === h.id));
+        const validHist = hist.filter((/** @type {any} */ h) => catalog.some(dbItem => dbItem.id === h.id));
         if (validHist.length !== hist.length) {
             hist = validHist;
             if (store) store.setJSON('nisha_history', hist);
@@ -305,12 +310,14 @@ export function renderHistory() {
     if (typeof container.replaceChildren === 'function') container.replaceChildren();
     else container.innerHTML = '';
 
-    const hideUnavailable = document.getElementById('hideUnavailableCb') ? document.getElementById('hideUnavailableCb').checked : false;
+    const hideCb = /** @type {HTMLInputElement | null} */ (document.getElementById('hideUnavailableCb'));
+    const hideUnavailable = hideCb ? hideCb.checked : false;
     const fragment = document.createDocumentFragment();
+    /** @type {HTMLElement[]} */
     const cardsForTilt = [];
     let renderedCount = 0;
 
-    hist.forEach(h => {
+    hist.forEach((/** @type {any} */ h) => {
         const realItem = catalog.find(i => i.id === h.id);
         const currentStatus = realItem ? realItem.status : 'available';
 
@@ -319,7 +326,7 @@ export function renderHistory() {
         const rawHistUrl = realItem ? (realItem.thumbnails?.[0] || realItem.images?.[0] || h.img) : h.img;
         const optImg = rawHistUrl
             ? toCDN(rawHistUrl, { isThumb: true, width: 320, quality: 80 })
-            : (realItem && typeof getOptimizedImg === 'function' ? getOptimizedImg(realItem, true) : '');
+            : (realItem && typeof getOptimizedImg === 'function' ? getOptimizedImg(realItem, /** @type {any} */ (true)) : '');
         const isVideo = optImg && optImg.endsWith('.mp4');
         const livePrice = realItem ? realItem.price : h.price;
         const liveOldPrice = realItem ? realItem.old_price : h.old_price;
@@ -443,7 +450,7 @@ export function renderHistory() {
     const currentUser = getUser();
     const sb = getSupabaseClient();
     if (currentUser && sb) {
-        sb.from('profiles').update({ viewed_history: hist.map(h => h.id) }).eq('id', currentUser.id).then();
+        sb.from('profiles').update({ viewed_history: hist.map((/** @type {any} */ h) => h.id) }).eq('id', currentUser.id).then();
     }
 }
 
@@ -470,16 +477,17 @@ export function toggleHistory() {
 export function removeHistoryItem(event, itemId) {
     if (event) event.stopPropagation();
 
-    const targetCard = (event && event.target && typeof event.target.closest === 'function'
-        ? event.target.closest('.history-card')
+    const evTarget = /** @type {any} */ (event && event.target);
+    const targetCard = /** @type {HTMLElement | null} */ ((evTarget && typeof evTarget.closest === 'function'
+        ? evTarget.closest('.history-card')
         : null)
         || (typeof document !== 'undefined'
             ? Array.from(document.querySelectorAll('#historyGrid .history-card')).find(el => el.getAttribute('data-id') === String(itemId))
-            : null);
+            : null));
 
     const store = getStore();
     let hist = store ? store.getJSON('nisha_history', []) : [];
-    hist = hist.filter(item => item.id !== itemId);
+    hist = hist.filter((/** @type {any} */ item) => item.id !== itemId);
 
     if (store) {
         if (targetCard) _suppressHistoryRender = true;
@@ -494,7 +502,7 @@ export function removeHistoryItem(event, itemId) {
     const sb = getSupabaseClient();
     if (currentUser && sb) {
         sb.from('profiles').update({
-            viewed_history: hist.map(h => h.id)
+            viewed_history: hist.map((/** @type {any} */ h) => h.id)
         }).eq('id', currentUser.id).then();
     }
 

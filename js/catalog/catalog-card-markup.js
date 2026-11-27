@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA CATALOG — ЧИСТАЯ РАЗМЕТКА И DOM-СБОРКА КАРТОЧЕК ТОВАРОВ
 // ==========================================
@@ -9,6 +10,7 @@ import { hasAction, invokeAction, resolveAction } from '../core/action-registry.
 import { getRuntimeFavorites } from '../core/runtime-env.js';
 import { getAcceptedBargain } from '../core/bargain-storage.js';
 
+/** @param {any} str */
 function fallbackEscHtml(str) {
     return String(str ?? '')
         .replaceAll('&', '&amp;')
@@ -18,18 +20,20 @@ function fallbackEscHtml(str) {
         .replaceAll("'", '&#39;');
 }
 
+/** @param {any} v */
 export function escCardHtml(v) {
     return hasAction('escapeHtml') ? invokeAction('escapeHtml', v) : fallbackEscHtml(v);
 }
 
+/** @param {any} v */
 function escCardAttr(v) {
     return hasAction('escapeAttr') ? invokeAction('escapeAttr', v) : fallbackEscHtml(v);
 }
 
 /**
  * Читает сохранённую персональную цену по принятому торгу (sessionStorage / localStorage).
- * @param {object} item
- * @returns {object|null}
+ * @param {any} item
+ * @returns {any}
  */
 export function readAcceptedBargain(item) {
     if (!item || item.id === undefined || item.id === null) return null;
@@ -38,7 +42,7 @@ export function readAcceptedBargain(item) {
 
 /**
  * Проверяет, включён ли торг на товаре (по флагам БД или тегу [ТОРГ] в описании).
- * @param {object} item
+ * @param {any} item
  * @returns {boolean}
  */
 export function isItemBargainEnabled(item) {
@@ -49,7 +53,7 @@ export function isItemBargainEnabled(item) {
 
 /**
  * Генерирует HTML-разметку статус-бейджей карточки товара (SOLD, RESERVED, TOP, SALE, HOT, BID).
- * @param {object} item
+ * @param {any} item
  * @returns {string}
  */
 export function buildStatusBadgeHtml(item) {
@@ -87,12 +91,12 @@ export function buildStatusBadgeHtml(item) {
 
 /**
  * Генерирует HTML-разметку цены карточки с учётом принятого торга или скидки.
- * @param {object} item
+ * @param {any} item
  * @param {string} [curr='грн']
  * @returns {string}
  */
 export function buildCardPriceHtml(item, curr = 'грн') {
-    const formatPriceFn = resolveAction('formatPrice') || ((val) => `${val} ${curr}`);
+    const formatPriceFn = resolveAction('formatPrice') || ((/** @type {any} */ val) => `${val} ${curr}`);
 
     const savedBargain = readAcceptedBargain(item);
     if (savedBargain && savedBargain.acceptedPrice) {
@@ -128,7 +132,7 @@ export function getSeenItemsSet() {
 
 /**
  * Создаёт DOM-элемент карточки товара для сетки каталога.
- * @param {object} item
+ * @param {any} item
  * @param {number} [idx=0]
  * @returns {HTMLElement|null}
  */
@@ -153,7 +157,7 @@ export function buildCardDOM(item, idx = 0) {
     const baseAlt = [safeBrand, safeName].filter(Boolean).join(' ') || 'Винтажная одежда NISHA';
     const cleanAlt = fallbackEscHtml(baseAlt);
 
-    const buildCardSrcSet = (rawUrl) => {
+    const buildCardSrcSet = (/** @type {any} */ rawUrl) => {
         if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.endsWith('.mp4') || rawUrl.endsWith('.webm') || rawUrl.endsWith('.svg')) return '';
         return [320, 480, 640]
             .map(w => `${toCDN(rawUrl, { isThumb: true, width: w, quality: 82 })} ${w}w`)
@@ -166,7 +170,7 @@ export function buildCardDOM(item, idx = 0) {
         : '';
     const thumbBlurClass = thumbBlurDataUrl ? ' has-thumbhash' : '';
 
-    thumbsArray.forEach((thumbUrl, thumbIdx) => {
+    thumbsArray.forEach((/** @type {any} */ thumbUrl, /** @type {number} */ thumbIdx) => {
         const rawVidUrl = (item.images && item.images[thumbIdx]) ? item.images[thumbIdx] : thumbUrl;
         const isVid = typeof rawVidUrl === 'string' && rawVidUrl.endsWith('.mp4');
         const cdnThumb = toCDN(thumbUrl, { isThumb: true, width: 480, quality: 82 });

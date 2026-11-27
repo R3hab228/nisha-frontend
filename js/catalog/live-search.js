@@ -1,3 +1,4 @@
+// @ts-check
 
 import {
     storage,
@@ -13,6 +14,7 @@ import { hasAction, invokeAction, registerActions } from '../core/action-registr
 import { getRuntimeCatalog, tSafe } from '../core/runtime-env.js';
 import { pushBackLayer, removeBackLayerFromUI } from '../ui/back-gesture.js';
 
+/** @param {any} item */
 function isItemBargainEnabled(item) {
     if (!item || item.status === 'sold') return false;
     if (item.is_bargain === true || String(item.is_bargain) === 'true' || item.is_bargain === 1) return true;
@@ -25,9 +27,12 @@ function isItemBargainEnabled(item) {
 // NISHA LIVE SEARCH & SEARCH HISTORY MODULE
 // ==========================================
 
+/** @type {ReturnType<typeof setTimeout> | undefined} */
 let searchDebounce;
 let currentLiveSearchSeq = 0;
+/** @type {any} */
 let cachedFuseInstance = null;
+/** @type {any} */
 let cachedFuseItemsRef = null;
 
 function getLiveSearchFuse() {
@@ -65,19 +70,21 @@ function invalidateLiveSearchFuse() {
 }
 
 // Функция сохранения истории поиска (с защитой от квоты localStorage)
+/** @param {string} term */
 function saveRecentSearch(term) {
     if (!term || term.length < 2) return;
-    let history = storage ? storage.getJSON('nisha_search_history', []) : [];
+    let history = storage ? /** @type {any} */ (storage).getJSON('nisha_search_history', []) : [];
     if (!Array.isArray(history)) history = [];
-    history = history.filter(t => t.toLowerCase() !== term.toLowerCase());
+    history = history.filter((/** @type {string} */ t) => t.toLowerCase() !== term.toLowerCase());
     history.unshift(term);
     if (history.length > 8) history.pop();
     
     if (storage) {
-        storage.setJSON('nisha_search_history', history);
+        /** @type {any} */ (storage).setJSON('nisha_search_history', history);
     }
 }
 
+/** @param {HTMLElement | null} dropdown */
 function positionLiveSearchDropdown(dropdown) {
     if (!dropdown) return;
     const wrapper = (dropdown.closest && dropdown.closest('.search-wrapper')) || document.querySelector('.search-wrapper');
@@ -105,6 +112,7 @@ function positionLiveSearchDropdown(dropdown) {
     dropdown.style.setProperty('margin', '0', 'important');
 }
 
+/** @param {HTMLElement | null} dropdown */
 function openSearchDropdown(dropdown) {
     if (!dropdown) return;
     showPopoverSafe(dropdown);
@@ -122,10 +130,10 @@ function openSearchDropdown(dropdown) {
 function showSearchHistory() {
     const dropdown = document.getElementById('liveSearchDropdown');
     if (!dropdown) return;
-    const history = storage ? storage.getJSON('nisha_search_history', []) : [];
+    const history = storage ? /** @type {any} */ (storage).getJSON('nisha_search_history', []) : [];
     if (!Array.isArray(history) || history.length < 4) return;
 
-    const t = (k, def) => tSafe(k, { defaultValue: def });
+    const t = (/** @type {string} */ k, /** @type {string} */ def) => tSafe(k, { defaultValue: def });
     const recentQueriesText = t('search.recent_queries', 'НЕДАВНИЕ ЗАПРОСЫ');
     const clearText = t('search.clear_history', 'ОЧИСТИТЬ');
 
@@ -145,7 +153,7 @@ function showSearchHistory() {
 function handleLiveSearch() {
     clearTimeout(searchDebounce);
     const dropdown = document.getElementById('liveSearchDropdown');
-    const searchInput = document.getElementById('mainSearch');
+    const searchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('mainSearch'));
     if (!searchInput) return;
     const searchTerm = searchInput.value.trim();
 
@@ -181,7 +189,7 @@ function handleLiveSearch() {
                     ? parsePriceSearchQuery(cleanSearchTerm)
                     : (hasAction('parsePriceSearchQuery') ? invokeAction('parsePriceSearchQuery', cleanSearchTerm) : null);
                 const canCheckPrice = typeof itemMatchesPrice === 'function' || hasAction('itemMatchesPrice');
-                const checkPriceFn = (itm, pq) => (typeof itemMatchesPrice === 'function'
+                const checkPriceFn = (/** @type {any} */ itm, /** @type {any} */ pq) => (typeof itemMatchesPrice === 'function'
                     ? itemMatchesPrice(itm, pq)
                     : invokeAction('itemMatchesPrice', itm, pq));
 
@@ -211,7 +219,7 @@ function handleLiveSearch() {
                     
                     for (const variant of queryVariants) {
                         const subResults = fuse.search(variant);
-                        subResults.forEach(r => {
+                        subResults.forEach((/** @type {any} */ r) => {
                             if (r.item && r.item.status === 'sold') return;
                             if (!seenIds.has(r.item.id)) {
                                 seenIds.add(r.item.id);
@@ -242,7 +250,7 @@ function handleLiveSearch() {
             if (hasAction('stopLenis')) invokeAction('stopLenis');
             
             let html = '';
-            results.forEach(result => {
+            results.forEach((/** @type {any} */ result) => {
                 const rawItem = result.item;
                 if (!rawItem) return;
                 const catItem = (window.allItems && window.allItems.find(i => String(i.id) === String(rawItem.id))) || {};
@@ -264,11 +272,11 @@ function handleLiveSearch() {
                 
                 let highlightedName = escapeHtml(rawItemName);
                 if (result.matches) {
-                    const nameMatch = result.matches.find(m => m.key === 'name');
+                    const nameMatch = result.matches.find((/** @type {any} */ m) => m.key === 'name');
                     if (nameMatch) {
                         let tempName = '';
                         let lastIdx = 0;
-                        nameMatch.indices.forEach(([start, end]) => {
+                        nameMatch.indices.forEach((/** @type {[number, number]} */ [start, end]) => {
                             tempName += escapeHtml(rawItemName.slice(lastIdx, start));
                             tempName += `<span style="color: var(--accent-green); background: rgba(0,255,0,0.1);">${escapeHtml(rawItemName.slice(start, end + 1))}</span>`;
                             lastIdx = end + 1;
@@ -289,7 +297,7 @@ function handleLiveSearch() {
                     ? parsePriceSearchQuery(cleanSearchTerm)
                     : (hasAction('parsePriceSearchQuery') ? invokeAction('parsePriceSearchQuery', cleanSearchTerm) : null);
                 const canCheckPrice = typeof itemMatchesPrice === 'function' || hasAction('itemMatchesPrice');
-                const checkPriceFn = (itm, pq) => (typeof itemMatchesPrice === 'function'
+                const checkPriceFn = (/** @type {any} */ itm, /** @type {any} */ pq) => (typeof itemMatchesPrice === 'function'
                     ? itemMatchesPrice(itm, pq)
                     : invokeAction('itemMatchesPrice', itm, pq));
                 if (priceQuery && canCheckPrice && checkPriceFn(item, priceQuery)) {
@@ -340,6 +348,7 @@ function handleLiveSearch() {
     }, 250);
 }
 
+/** @param {{ immediate?: boolean, fromBackGesture?: boolean }} [options={}] */
 function closeSearch(options = {}) {
     clearTimeout(searchDebounce);
     currentLiveSearchSeq++;
@@ -372,9 +381,10 @@ function closeSearch(options = {}) {
         }
     }
     document.body.classList.remove('search-lock');
-    const hasOpenModal = typeof document.querySelectorAll === 'function' && Array.from(document.querySelectorAll('.modal-overlay')).some(m => (
-        m && !m.classList?.contains('closing') && (m.style?.display === 'flex' || m.style?.display === 'block')
-    ));
+    const hasOpenModal = typeof document.querySelectorAll === 'function' && Array.from(document.querySelectorAll('.modal-overlay')).some(el => {
+        const m = /** @type {HTMLElement} */ (el);
+        return m && !m.classList?.contains('closing') && (m.style?.display === 'flex' || m.style?.display === 'block');
+    });
     if (!hasOpenModal && hasAction('startLenis')) invokeAction('startLenis');
     if (searchInput) searchInput.blur();
 }
@@ -390,7 +400,7 @@ registerActions({
 });
 
 // Слушатели строки главного поиска
-const mainSearchInput = document.getElementById('mainSearch');
+const mainSearchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('mainSearch'));
 if (mainSearchInput) {
     mainSearchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -417,14 +427,16 @@ if (mainSearchInput) {
 }
 
 document.addEventListener('click', (e) => {
-    if (!e.target || !e.target.isConnected) return;
-    if (!e.target.closest('.search-wrapper')) {
+    const targetEl = /** @type {Element | null} */ (e.target);
+    if (!targetEl || !targetEl.isConnected) return;
+    if (!targetEl.closest('.search-wrapper')) {
         closeSearch();
     }
 });
 
 document.addEventListener('touchstart', (e) => {
-    if (e.target.closest('#liveSearchDropdown')) {
+    const targetEl = /** @type {Element | null} */ (e.target);
+    if (targetEl && targetEl.closest('#liveSearchDropdown')) {
         const searchInput = document.getElementById('mainSearch');
         if (searchInput && document.activeElement === searchInput) {
             searchInput.blur();
@@ -436,10 +448,10 @@ document.addEventListener('touchstart', (e) => {
 // Native Popover API Light Dismiss Sync
 if (typeof document !== 'undefined') {
     const initLiveSearchPopoverSync = () => {
-        const liveSearchDropEl = document.getElementById('liveSearchDropdown');
+        const liveSearchDropEl = /** @type {(HTMLElement & { _popoverBound?: boolean }) | null} */ (document.getElementById('liveSearchDropdown'));
         if (liveSearchDropEl && !liveSearchDropEl._popoverBound) {
             liveSearchDropEl._popoverBound = true;
-            liveSearchDropEl.addEventListener('toggle', (evt) => {
+            liveSearchDropEl.addEventListener('toggle', (/** @type {any} */ evt) => {
                 if (evt.newState === 'closed') {
                     closeSearch();
                 }
