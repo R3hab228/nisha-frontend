@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - UNIFIED ES MODULES BARREL
 // Modern modular architecture facade for core frontend services

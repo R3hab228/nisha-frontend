@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR TELEMETRY & PWA FACADE
 // Safe, typed ES module exports for client error logging & PWA

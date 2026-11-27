@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR API CLIENT FACADE
 // Safe, typed ES module exports for backend communication
@@ -18,8 +19,9 @@ export function getApiClient() {
 /**
  * Protected API client proxy allowing modular imports:
  * `import { apiClient } from '@/modules';` or `import apiClient from '@/modules/apiClient';`
+ * @type {any}
  */
-export const apiClient = new Proxy({}, {
+export const apiClient = new Proxy(/** @type {any} */ ({}), {
     get(_target, prop) {
         const client = getApiClient();
         if (!client) return undefined;

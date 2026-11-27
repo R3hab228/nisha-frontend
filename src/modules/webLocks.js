@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR WEB LOCKS & LEADER ELECTION FACADE
 // Safe, typed ES module exports for multi-tab coordination
@@ -6,6 +7,7 @@
 import { callAction } from './_facade.js';
 
 let _isLeader = false;
+/** @type {AbortController | null} */
 let _leaderAbortController = null;
 const _leaderCallbacks = new Set();
 
@@ -106,11 +108,12 @@ export function initLeaderElection() {
                 _leaderCallbacks.forEach(cb => { try { cb(); } catch {} });
 
                 const { promise, resolve } = Promise.withResolvers();
+                const done = () => resolve(undefined);
                 if (typeof window !== 'undefined') {
-                    window.addEventListener('pagehide', resolve, { once: true });
-                    window.addEventListener('beforeunload', resolve, { once: true });
+                    window.addEventListener('pagehide', done, { once: true });
+                    window.addEventListener('beforeunload', done, { once: true });
                 } else {
-                    resolve();
+                    done();
                 }
                 await promise;
 

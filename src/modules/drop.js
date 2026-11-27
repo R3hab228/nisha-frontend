@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR PROPOSAL / CONSIGNMENT FACADE
 // Safe, typed ES module exports for community item proposals

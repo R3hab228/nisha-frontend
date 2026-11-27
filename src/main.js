@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MAIN VITE ENTRY POINT
 // ==========================================
@@ -41,10 +42,14 @@ if (typeof window !== 'undefined') {
         if (_telemetryLoaded) return;
         _telemetryLoaded = true;
         Promise.all([
+            import('../js/core/analytics-feature-ui.js'),
+            import('../js/core/analytics-vendors.js')
+        ]).then(() => Promise.all([
+            // @ts-ignore — IIFE script without ES exports (eval-compatible in security tests)
             import('../js/core/analytics.js'),
             import('../js/core/rum.js')
-        ]).then(([analyticsMod]) => {
-            const analyticsApi = (analyticsMod && analyticsMod.default) || window.analytics;
+        ])).then(([analyticsMod]) => {
+            const analyticsApi = (analyticsMod && /** @type {any} */ (analyticsMod).default) || window.analytics;
             if (analyticsApi && typeof analyticsApi.init === 'function') {
                 analyticsApi.init();
             }

@@ -5,8 +5,33 @@
 // строго без изменения размеров, отступов и визуального стиля самих окон.
 // ==========================================
 
-import { computePosition, autoUpdate, offset, flip, shift } from '@floating-ui/dom';
 import { registerActions } from './action-registry.js';
+
+/** @type {Promise<typeof import('@floating-ui/dom') | null> | null} */
+let _floatingModPromise = null;
+/** @type {typeof import('@floating-ui/dom') | null} */
+let _floatingMod = null;
+
+/**
+ * Лениво подгружает `@floating-ui/dom` только при первом реальном открытии тултипа или поповера,
+ * чтобы не утяжелять начальный бандл `app-catalog` (~19 КБ экономии на первой загрузке).
+ * @returns {Promise<typeof import('@floating-ui/dom') | null>}
+ */
+function loadFloatingUi() {
+    if (_floatingMod) return Promise.resolve(_floatingMod);
+    if (!_floatingModPromise) {
+        _floatingModPromise = import('@floating-ui/dom')
+            .then((mod) => {
+                _floatingMod = mod;
+                return mod;
+            })
+            .catch(() => {
+                _floatingModPromise = null;
+                return null;
+            });
+    }
+    return _floatingModPromise;
+}
 
 /** @type {WeakMap<HTMLElement, () => void>} */
 const _activeCleanups = new WeakMap();
@@ -119,6 +144,9 @@ export async function positionAtCursor(floatingEl, clientX, clientY, options = {
     _cursorTokens.set(floatingEl, token);
 
     try {
+        const floatingUi = await loadFloatingUi();
+        if (!floatingUi) return null;
+        const { computePosition, offset, flip, shift } = floatingUi;
         const virtualRef = createCursorVirtualElement(clientX, clientY);
         const result = await computePosition(virtualRef, floatingEl, {
             strategy: 'fixed',
@@ -223,57 +251,62 @@ export function attachFloatingPopover(referenceEl, floatingEl, options = {}) {
     const verticalOnly = Boolean(options.verticalOnly);
 
     let disposed = false;
-
-    const update = () => {
-        if (disposed || !referenceEl.isConnected || !floatingEl.isConnected) return;
-        const middleware = [
-            offset(offsetPx),
-            flip({ padding, ...(boundary ? { boundary } : {}) }),
-            ...(verticalOnly ? [] : [shift({ padding, ...(boundary ? { boundary } : {}) })])
-        ];
-
-        computePosition(referenceEl, floatingEl, {
-            strategy,
-            placement,
-            middleware
-        }).then((res) => {
-            if (disposed || !floatingEl.style) return;
-            const refRect = typeof referenceEl.getBoundingClientRect === 'function'
-                ? referenceEl.getBoundingClientRect()
-                : null;
-            // В моках без реального DOM layout (0x0) оставляем штатный CSS
-            if (!refRect || (refRect.width === 0 && refRect.height === 0)) return;
-
-            if (Number.isFinite(res.x) && Number.isFinite(res.y)) {
-                floatingEl.style.top = `${Math.round(res.y)}px`;
-                floatingEl.style.bottom = 'auto';
-                floatingEl.style.marginTop = '0';
-                floatingEl.style.marginBottom = '0';
-                if (!verticalOnly) {
-                    floatingEl.style.left = `${Math.round(res.x)}px`;
-                    floatingEl.style.right = 'auto';
-                }
-                if (floatingEl.dataset) {
-                    floatingEl.dataset.floatingPlacement = res.placement;
-                }
-            }
-        }).catch(() => {});
-    };
-
     let stopAutoUpdate = () => {};
-    try {
-        if (typeof ResizeObserver === 'function' && typeof window !== 'undefined') {
-            stopAutoUpdate = autoUpdate(referenceEl, floatingEl, update, {
-                ancestorScroll: true,
-                ancestorResize: true,
-                elementResize: true
-            });
-        } else {
+
+    loadFloatingUi().then((floatingUi) => {
+        if (disposed || !floatingUi || !referenceEl.isConnected || !floatingEl.isConnected) return;
+        const { computePosition, autoUpdate, offset, flip, shift } = floatingUi;
+
+        const update = () => {
+            if (disposed || !referenceEl.isConnected || !floatingEl.isConnected) return;
+            const middleware = [
+                offset(offsetPx),
+                flip({ padding, ...(boundary ? { boundary } : {}) }),
+                ...(verticalOnly ? [] : [shift({ padding, ...(boundary ? { boundary } : {}) })])
+            ];
+
+            computePosition(referenceEl, floatingEl, {
+                strategy,
+                placement,
+                middleware
+            }).then((res) => {
+                if (disposed || !floatingEl.style) return;
+                const refRect = typeof referenceEl.getBoundingClientRect === 'function'
+                    ? referenceEl.getBoundingClientRect()
+                    : null;
+                // В моках без реального DOM layout (0x0) оставляем штатный CSS
+                if (!refRect || (refRect.width === 0 && refRect.height === 0)) return;
+
+                if (Number.isFinite(res.x) && Number.isFinite(res.y)) {
+                    floatingEl.style.top = `${Math.round(res.y)}px`;
+                    floatingEl.style.bottom = 'auto';
+                    floatingEl.style.marginTop = '0';
+                    floatingEl.style.marginBottom = '0';
+                    if (!verticalOnly) {
+                        floatingEl.style.left = `${Math.round(res.x)}px`;
+                        floatingEl.style.right = 'auto';
+                    }
+                    if (floatingEl.dataset) {
+                        floatingEl.dataset.floatingPlacement = res.placement;
+                    }
+                }
+            }).catch(() => {});
+        };
+
+        try {
+            if (typeof ResizeObserver === 'function' && typeof window !== 'undefined') {
+                stopAutoUpdate = autoUpdate(referenceEl, floatingEl, update, {
+                    ancestorScroll: true,
+                    ancestorResize: true,
+                    elementResize: true
+                });
+            } else {
+                update();
+            }
+        } catch {
             update();
         }
-    } catch {
-        update();
-    }
+    });
 
     const cleanup = () => {
         disposed = true;

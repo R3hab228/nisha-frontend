@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR ORDERS FACADE
 // Safe, typed ES module exports for order tracking & history
@@ -96,7 +97,8 @@ export function encodeNovaPoshtaTtn(ttn) {
         const clean = String(rawTtn || '').replace(/\D+/g, '');
         if (!clean) return '';
         try {
-            const b64 = (typeof btoa === 'function' ? btoa(clean) : Buffer.from(clean).toString('base64')).replace(/=+$/, '');
+            const g = /** @type {any} */ (globalThis);
+            const b64 = (typeof btoa === 'function' ? btoa(clean) : g.Buffer.from(clean).toString('base64')).replace(/=+$/, '');
             const chars = b64.split('');
             return (typeof chars.toReversed === 'function' ? chars.toReversed() : chars.reverse()).join('');
         } catch (_) {

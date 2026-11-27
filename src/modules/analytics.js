@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR ANALYTICS FACADE
 // Safe, typed ES module exports for Plausible / PostHog / TikTok tracking
@@ -9,7 +10,8 @@
  */
 export function getAnalytics() {
     if (typeof window !== 'undefined' && window.analytics) return window.analytics;
-    if (typeof globalThis !== 'undefined' && globalThis.analytics) return globalThis.analytics;
+    const g = /** @type {any} */ (globalThis);
+    if (typeof globalThis !== 'undefined' && g.analytics) return g.analytics;
     return null;
 }
 
@@ -158,8 +160,9 @@ export function initAnalytics() {
 
 /**
  * Modular analytics proxy
+ * @type {any}
  */
-export const analytics = new Proxy({}, {
+export const analytics = new Proxy(/** @type {any} */ ({}), {
     get(_target, prop) {
         const a = getAnalytics();
         if (!a) return undefined;

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - SHARED MODULAR FACADE HELPER
 // Unified delegation through ActionRegistry + compat global override resolution
@@ -9,11 +10,10 @@ export { resolveAction };
 /**
  * Resolves and invokes a registered module action (or global test mock),
  * falling back to an optional local implementation when unloaded.
- * @template T
  * @param {string} actionName
  * @param {any[]} [args=[]]
- * @param {(...args: any[]) => T} [fallback]
- * @returns {T|undefined}
+ * @param {(...args: any[]) => any} [fallback]
+ * @returns {any}
  */
 export function callAction(actionName, args = [], fallback) {
     const fn = resolveAction(actionName, actionName);
@@ -25,11 +25,10 @@ export function callAction(actionName, args = [], fallback) {
 
 /**
  * Resolves an async action handler and guarantees a Promise return value.
- * @template T
  * @param {string} actionName
  * @param {any[]} [args=[]]
- * @param {(...args: any[]) => T|Promise<T>} [fallback]
- * @returns {Promise<T|undefined>}
+ * @param {(...args: any[]) => any} [fallback]
+ * @returns {Promise<any>}
  */
 export async function callAsyncAction(actionName, args = [], fallback) {
     return callAction(actionName, args, fallback);

@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR CATALOG FACADE
 // Safe, typed ES module exports for catalog & product display
@@ -34,9 +35,10 @@ export function getCatalog() {
 
 /**
  * Applies active category, search and size filters to grid
+ * @param {boolean} [force]
  */
-export function applyFilters() {
-    return callAction('applyFilters');
+export function applyFilters(force) {
+    return callAction('applyFilters', force !== undefined ? [force] : []);
 }
 
 /**
@@ -144,7 +146,7 @@ export function startOnboardingTour() {
 
 /**
  * Checks if an item supports bargaining (ТОРГ)
- * @param {Object} item - Product item
+ * @param {any} item - Product item
  * @returns {boolean}
  */
 export function isItemBargainEnabled(item) {

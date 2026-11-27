@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA SEARCH WEB WORKER
 // Offloads heavy Fuse.js fuzzy search and indexing from the main UI thread
@@ -5,6 +6,7 @@
 
 import Fuse from 'fuse.js';
 
+/** @type {Record<string, string>} */
 const SEARCH_SYNONYMS = {
     'найк': 'nike', 'найки': 'nike', 'адидас': 'adidas', 'адики': 'adidas',
     'пума': 'puma', 'левис': 'levis', 'левайс': 'levis', 'кархарт': 'carhartt',
@@ -29,6 +31,7 @@ const SEARCH_SYNONYMS = {
     'кроси': 'sneakers', 'кеды': 'sneakers shoes vans'
 };
 
+/** @type {Record<string, string>} */
 const CYRILLIC_TO_LATIN = {
     'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'ґ': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
     'ж': 'zh', 'з': 'z', 'и': 'i', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k', 'л': 'l',
@@ -37,6 +40,7 @@ const CYRILLIC_TO_LATIN = {
     'э': 'e', 'ю': 'yu', 'я': 'ya', 'є': 'ye'
 };
 
+/** @param {string} str */
 function transliterateCyrillic(str) {
     if (!str || typeof str !== 'string') return '';
     return str.split('').map(char => {
@@ -45,6 +49,7 @@ function transliterateCyrillic(str) {
     }).join('');
 }
 
+/** @param {string} query */
 function expandSearchQuery(query) {
     if (!query || typeof query !== 'string') return [];
     const clean = query.replace(/[#&]/g, '').trim().toLowerCase();
@@ -86,6 +91,7 @@ function expandSearchQuery(query) {
 }
 
 // === ПОИСК ПО ЦЕНЕ (Например: "800", "800грн", "800 грн", "до 800", "500-800") ===
+/** @param {string} query */
 function parsePriceSearchQuery(query) {
     if (!query || typeof query !== 'string') return null;
     const clean = query.trim().toLowerCase();
@@ -130,6 +136,10 @@ function parsePriceSearchQuery(query) {
     return null;
 }
 
+/**
+ * @param {any} item
+ * @param {any} priceQuery
+ */
 function itemMatchesPrice(item, priceQuery) {
     if (!item || !priceQuery) return false;
     const rawPrice = item.price;
@@ -169,8 +179,10 @@ const FUSE_OPTIONS = {
     ]
 };
 
+/** @type {any[]} */
 let allItems = [];
 let itemsById = new Map();
+/** @type {any} */
 let fuseInstance = null;
 
 // Обработка сообщений из главного потока
@@ -182,7 +194,7 @@ self.onmessage = function(e) {
         case 'SET_ITEMS': {
             const rawItems = Array.isArray(data.items) ? data.items : [];
             // Сохраняем только необходимые для поиска и превью поля, чтобы экономить память
-            allItems = rawItems.map(item => ({
+            allItems = rawItems.map((/** @type {any} */ item) => ({
                 id: item.id,
                 name: item.name || '',
                 brand: item.brand || '',
@@ -201,7 +213,7 @@ self.onmessage = function(e) {
             }));
 
             itemsById.clear();
-            allItems.forEach(i => itemsById.set(i.id, i));
+            allItems.forEach((/** @type {any} */ i) => itemsById.set(i.id, i));
 
             // Инициализация Fuse.js в фоновом потоке
             fuseInstance = new Fuse(allItems, FUSE_OPTIONS);

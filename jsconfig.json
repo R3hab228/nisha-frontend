@@ -9,16 +9,16 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowJs": true,
-    "checkJs": false,
+    "checkJs": true,
+    "maxNodeModuleJsDepth": 0,
     "noEmit": true,
     "skipLibCheck": true
   },
   "include": [
     "src/**/*",
     "js/**/*",
-    "tests/**/*",
-    "*.js",
-    "*.mjs"
+    "app.js",
+    "config.js"
   ],
   "exclude": [
     "node_modules",

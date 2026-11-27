@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR CORE HELPERS FACADE
 // Thin ES module facade delegating directly to js/core/helpers-*.js
@@ -117,18 +118,34 @@ export function isCompressionStreamSupported() {
     return coreIsCompressionStreamSupported();
 }
 
+/**
+ * @param {string} str
+ * @param {'gzip' | 'deflate' | 'deflate-raw'} [format='gzip']
+ */
 export async function compressString(str, format = 'gzip') {
     return coreCompressString(str, format);
 }
 
+/**
+ * @param {any} data
+ * @param {'gzip' | 'deflate' | 'deflate-raw'} [format='gzip']
+ */
 export async function decompressString(data, format = 'gzip') {
     return coreDecompressString(data, format);
 }
 
+/**
+ * @param {any} obj
+ * @param {'gzip' | 'deflate' | 'deflate-raw'} [format='gzip']
+ */
 export async function compressJSON(obj, format = 'gzip') {
     return coreCompressJSON(obj, format);
 }
 
+/**
+ * @param {any} data
+ * @param {'gzip' | 'deflate' | 'deflate-raw'} [format='gzip']
+ */
 export async function decompressJSON(data, format = 'gzip') {
     return coreDecompressJSON(data, format);
 }
@@ -230,18 +247,21 @@ export function generateShortId(prefix = 'id') {
     return `${prefix}_${coreGenerateShortId(8)}`;
 }
 
-/** Safe localStorage wrapper proxy delegating to window.storage. */
-export const storage = new Proxy({}, {
+/**
+ * Safe localStorage wrapper proxy delegating to window.storage.
+ * @type {any}
+ */
+export const storage = new Proxy(/** @type {any} */ ({}), {
     get(_target, prop) {
         if (typeof window !== 'undefined' && window.storage) {
-            const val = window.storage[prop];
+            const val = /** @type {any} */ (window.storage)[prop];
             return typeof val === 'function' ? val.bind(window.storage) : val;
         }
         return undefined;
     },
     set(_target, prop, value) {
         if (typeof window !== 'undefined' && window.storage) {
-            window.storage[prop] = value;
+            /** @type {any} */ (window.storage)[prop] = value;
             return true;
         }
         return false;
@@ -254,18 +274,21 @@ export const storage = new Proxy({}, {
     }
 });
 
-/** Safe persistent storage proxy delegating to window.safeStorage. */
-export const safeStorage = new Proxy({}, {
+/**
+ * Safe persistent storage proxy delegating to window.safeStorage.
+ * @type {any}
+ */
+export const safeStorage = new Proxy(/** @type {any} */ ({}), {
     get(_target, prop) {
         if (typeof window !== 'undefined' && window.safeStorage) {
-            const val = window.safeStorage[prop];
+            const val = /** @type {any} */ (window.safeStorage)[prop];
             return typeof val === 'function' ? val.bind(window.safeStorage) : val;
         }
         return undefined;
     },
     set(_target, prop, value) {
         if (typeof window !== 'undefined' && window.safeStorage) {
-            window.safeStorage[prop] = value;
+            /** @type {any} */ (window.safeStorage)[prop] = value;
             return true;
         }
         return false;

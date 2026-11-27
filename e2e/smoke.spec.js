@@ -256,4 +256,84 @@ test.describe('NISHA STORE — Production Smoke E2E', () => {
         const overflowPx = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflowPx).toBeLessThanOrEqual(2);
     });
+
+    test('currency switcher updates visible catalog prices live and persists across reload', async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('nisha_rules_accepted', 'true');
+            localStorage.setItem('nisha_tour_completed', 'true');
+            localStorage.setItem('nisha_lang', 'ua');
+        });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+        const firstPrice = page.locator('#itemsGrid .item-card:not(.skeleton-card) .item-price').first();
+        await expect(firstPrice).toBeVisible({ timeout: 15000 });
+        await expect(firstPrice).toContainText('₴');
+
+        // Cycle UAH -> USD -> EUR via the public currency API and verify live DOM + cookie persistence
+        await page.evaluate(() => window.cycleCurrency?.());
+        await expect(firstPrice).toContainText('$', { timeout: 5000 });
+
+        await page.evaluate(() => window.cycleCurrency?.());
+        await expect(firstPrice).toContainText('€', { timeout: 5000 });
+
+        const persistedState = await page.evaluate(() => ({
+            ls: localStorage.getItem('nisha_currency'),
+            cookie: document.cookie
+        }));
+        expect(persistedState.ls).toBe('EUR');
+        expect(persistedState.cookie).toContain('nisha_currency=EUR');
+
+        // Reload page and confirm EUR stays active without reverting to UAH
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        const reloadedPrice = page.locator('#itemsGrid .item-card:not(.skeleton-card) .item-price').first();
+        await expect(reloadedPrice).toBeVisible({ timeout: 15000 });
+        await expect(reloadedPrice).toContainText('€', { timeout: 5000 });
+    });
+
+    test('smart filter URL restores query & sale filters on load and cleans URL on reset', async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('nisha_rules_accepted', 'true');
+            localStorage.setItem('nisha_tour_completed', 'true');
+            localStorage.setItem('nisha_lang', 'ua');
+        });
+        await page.goto('/?q=nike&sale=1', { waitUntil: 'domcontentloaded' });
+
+        await expect(page.locator('#mainSearch')).toHaveValue('nike', { timeout: 15000 });
+        await expect(page.locator('#onlySaleCb')).toBeChecked({ timeout: 5000 });
+        await expect(page.locator('#activeFiltersBar .filter-chip[data-filter-type="search"]')).toBeVisible({ timeout: 5000 });
+
+        await page.evaluate(() => window.resetToMain?.());
+        await expect(page.locator('#mainSearch')).toHaveValue('', { timeout: 5000 });
+        await expect(page.locator('#onlySaleCb')).not.toBeChecked({ timeout: 5000 });
+        await expect(page.locator('#activeFiltersBar')).toBeHidden({ timeout: 5000 });
+
+        const finalSearch = await page.evaluate(() => window.location.search);
+        expect(finalSearch).not.toContain('q=nike');
+        expect(finalSearch).not.toContain('sale=1');
+    });
+
+    test('footer language Floating UI popover opens without overflow and switches language cleanly', async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('nisha_rules_accepted', 'true');
+            localStorage.setItem('nisha_tour_completed', 'true');
+            localStorage.setItem('nisha_lang', 'ua');
+        });
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+        const footerTrigger = page.locator('#currentLangLabelFooter');
+        await footerTrigger.scrollIntoViewIfNeeded();
+        await expect(footerTrigger).toBeVisible({ timeout: 15000 });
+        await footerTrigger.click();
+
+        const langMenu = page.locator('#footerLangWrapper .footer-lang-menu');
+        await expect(langMenu).toBeVisible({ timeout: 5000 });
+
+        const overflowPx = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflowPx).toBeLessThanOrEqual(2);
+
+        await langMenu.locator('a[data-lang="en"]').click();
+        await expect(footerTrigger).toContainText('[EN]', { timeout: 5000 });
+        const htmlLang = await page.evaluate(() => document.documentElement.lang);
+        expect(htmlLang).toBe('en');
+    });
 });

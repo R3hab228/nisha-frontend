@@ -174,6 +174,7 @@ export default defineConfig({
             if (id.includes('lenis')) return 'feature-lenis';
             if (id.includes('fuse.js')) return 'feature-fuse';
             if (id.includes('imask')) return 'feature-imask';
+            if (id.includes('@floating-ui')) return 'feature-floating-ui';
             if (id.includes('dompurify')) return 'vendor-dompurify';
             return 'vendor';
           }

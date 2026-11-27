@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR REVIEWS FACADE
 // Safe, typed ES module exports for customer reviews & feedback

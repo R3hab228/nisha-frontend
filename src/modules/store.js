@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR REACTIVE STORE FACADE
 // Safe, typed ES module exports for centralized state
@@ -60,8 +61,9 @@ export function setStoreState(key, value) {
 /**
  * Reactive store proxy allowing modular imports:
  * `import { store } from '@/modules';` or `import store from '@/modules/store';`
+ * @type {any}
  */
-export const store = new Proxy({}, {
+export const store = new Proxy(/** @type {any} */ ({}), {
     get(_target, prop) {
         const s = getStore();
         if (!s) return undefined;

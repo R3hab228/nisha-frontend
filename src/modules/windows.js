@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR WINDOWS & MODALS FACADE
 // Safe, typed ES module exports for modal dialogs & drawers
@@ -24,7 +25,7 @@ export function triggerModalTypewriter(modalOrId) {
             twElements.push(modal);
         } else if (typeof modal.querySelectorAll === 'function') {
             try {
-                modal.querySelectorAll('.typewriter').forEach(el => twElements.push(el));
+                modal.querySelectorAll('.typewriter').forEach((/** @type {any} */ el) => twElements.push(el));
             } catch {}
         } else if (typeof modal.querySelector === 'function') {
             try {

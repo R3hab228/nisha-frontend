@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR INTERNATIONALIZATION FACADE
 // Safe, typed ES module exports for multi-language support
@@ -54,7 +55,7 @@ export function detectInitialSiteLang() {
         const s = getStore();
         if (s && s.lang) return normalizeSiteLang(s.lang);
         if (typeof navigator !== 'undefined') {
-            const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+            const nav = (navigator.language || /** @type {any} */ (navigator).userLanguage || '').toLowerCase();
             if (nav.startsWith('ru')) return 'ru';
             if (nav.startsWith('en')) return 'en';
             if (nav.startsWith('uk')) return 'ua';
@@ -75,7 +76,7 @@ export function updateFooterLanguageUI(lang) {
 
         if (typeof document === 'undefined') return;
 
-        const flagImg = document.getElementById('currentFlagImg');
+        const flagImg = /** @type {HTMLImageElement | null} */ (document.getElementById('currentFlagImg'));
         if (flagImg) {
             flagImg.src = flagUrl;
             flagImg.alt = upper;
@@ -91,7 +92,7 @@ export function updateFooterLanguageUI(lang) {
 
         const menuLinks = document.querySelectorAll('.footer-lang-menu a[data-lang]');
         menuLinks.forEach(link => {
-            const itemLang = normalizeSiteLang(link.getAttribute('data-lang'));
+            const itemLang = normalizeSiteLang(link.getAttribute('data-lang') || undefined);
             if (itemLang === code) {
                 link.classList.add('active');
                 link.setAttribute('aria-selected', 'true');

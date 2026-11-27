@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR PROFILE & AUTH FACADE
 // Safe, typed ES module exports for profile, auth & favorites

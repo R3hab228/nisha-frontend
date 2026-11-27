@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - CORE LIBRARIES INITIALIZATION
 // Runs before any application scripts
@@ -8,18 +9,19 @@ import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 // --- LAZY IMASK LOADER & TRANSPARENT STUB ---
+/** @type {Promise<any> | null} */
 let _imaskPromise = null;
 export async function loadIMask() {
     if (typeof window !== 'undefined' && window.IMask && !window.IMask._isStub) {
         return window.IMask;
     }
     if (!_imaskPromise) {
-        _imaskPromise = import('imask').then(m => {
+        _imaskPromise = import('imask').then((m) => {
             const IMaskLib = m.default || m;
             if (typeof window !== 'undefined') window.IMask = IMaskLib;
-            if (typeof globalThis !== 'undefined') globalThis.IMask = IMaskLib;
+            if (typeof globalThis !== 'undefined') /** @type {any} */ (globalThis).IMask = IMaskLib;
             return IMaskLib;
-        }).catch(err => {
+        }).catch((err) => {
             _imaskPromise = null;
             console.error('[IMask] Lazy load failed:', err);
             return null;
@@ -28,12 +30,19 @@ export async function loadIMask() {
     return _imaskPromise;
 }
 
+/**
+ * @param {any} el
+ * @param {any} opts
+ */
 function imaskStub(el, opts) {
+    /** @type {any} */
     let realInstance = null;
     let pendingValue = el ? el.value : '';
     let pendingUnmaskedValue = el ? el.value : '';
+    /** @type {any} */
     let pendingOptions = null;
     let destroyed = false;
+    /** @type {Array<[string, Function]>} */
     const queuedListeners = [];
 
     const fakeInstance = {
@@ -66,7 +75,7 @@ function imaskStub(el, opts) {
                 realInstance.destroy();
             }
         },
-        updateOptions: (nextOpts) => {
+        updateOptions: (/** @type {any} */ nextOpts) => {
             pendingOptions = nextOpts;
             if (realInstance && typeof realInstance.updateOptions === 'function') {
                 realInstance.updateOptions(nextOpts);
@@ -77,7 +86,7 @@ function imaskStub(el, opts) {
                 realInstance.updateValue();
             }
         },
-        on: (evt, fn) => {
+        on: (/** @type {string} */ evt, /** @type {Function} */ fn) => {
             if (realInstance && typeof realInstance.on === 'function') {
                 realInstance.on(evt, fn);
             } else if (typeof fn === 'function') {
@@ -85,7 +94,7 @@ function imaskStub(el, opts) {
             }
             return fakeInstance;
         },
-        off: (evt, fn) => {
+        off: (/** @type {string} */ evt, /** @type {Function} */ fn) => {
             if (realInstance && typeof realInstance.off === 'function') {
                 realInstance.off(evt, fn);
             } else {
@@ -99,7 +108,7 @@ function imaskStub(el, opts) {
         }
     };
 
-    loadIMask().then(realIMask => {
+    loadIMask().then((realIMask) => {
         if (destroyed || !realIMask || !el) return;
         const real = realIMask(el, pendingOptions || opts);
         realInstance = real;
@@ -108,7 +117,9 @@ function imaskStub(el, opts) {
             try { real.value = pendingValue; } catch {}
         }
         while (queuedListeners.length > 0) {
-            const [evt, fn] = queuedListeners.shift();
+            const pair = queuedListeners.shift();
+            if (!pair) break;
+            const [evt, fn] = pair;
             try { real.on(evt, fn); } catch {}
         }
         el._imask = real;
@@ -130,11 +141,12 @@ if (typeof window !== 'undefined') {
 
 // Bind to globalThis for global identifier lookups
 if (typeof globalThis !== 'undefined') {
-    globalThis.supabase = { createClient };
-    globalThis.createClient = createClient;
-    globalThis.DOMPurify = DOMPurify;
-    globalThis.IMask = imaskStub;
-    globalThis.loadIMask = loadIMask;
-    globalThis.i18next = i18next;
-    globalThis.i18nextBrowserLanguageDetector = LanguageDetector;
+    const g = /** @type {any} */ (globalThis);
+    g.supabase = { createClient };
+    g.createClient = createClient;
+    g.DOMPurify = DOMPurify;
+    g.IMask = imaskStub;
+    g.loadIMask = loadIMask;
+    g.i18next = i18next;
+    g.i18nextBrowserLanguageDetector = LanguageDetector;
 }

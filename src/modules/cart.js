@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR CART & CHECKOUT FACADE
 // Safe, typed ES module exports for cart operations
@@ -169,6 +170,10 @@ export function slimBranches(list) {
     });
 }
 
+/**
+ * @param {string} lockName
+ * @param {(lock?: any) => any} fn
+ */
 async function runWithNativeLock(lockName, fn) {
     if (typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function') {
         let entered = false;

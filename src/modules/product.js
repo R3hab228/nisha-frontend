@@ -1,3 +1,4 @@
+// @ts-check
 // ==========================================
 // NISHA STORE - MODULAR PRODUCT FACADE
 // Safe, typed ES module exports for product card, slider & questions
