@@ -117,6 +117,10 @@ describe('drop-contact-validation (phone & Telegram non-blocking checks)', () =>
             ok: false,
             errorKey: 'propose.err_contact_single_only'
         });
+        expect(validateProposalContactSync('0971234567 0631234567')).toMatchObject({
+            ok: false,
+            errorKey: 'propose.err_contact_single_only'
+        });
 
         expect(validateProposalContactSync('+38097123')).toMatchObject({
             ok: false,

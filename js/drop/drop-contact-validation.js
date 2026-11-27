@@ -207,10 +207,12 @@ function splitContactSegments(cleaned) {
             segments.push(twoTgs[1].trim(), twoTgs[2].trim());
             continue;
         }
-        // Два номера с '+' через пробел: "+380971234567 +380631234567"
-        const twoPlusPhones = part.match(/^(\+\d[\d\s()-]{8,})\s+(\+\d[\d\s()-]{8,})$/);
-        if (twoPlusPhones) {
-            segments.push(twoPlusPhones[1].trim(), twoPlusPhones[2].trim());
+        // Два номера через пробел: "+380971234567 +380631234567" или "0971234567 0631234567"
+        const twoPhones =
+            part.match(/^(\+\d[\d\s()-]{8,})\s+(\+\d[\d\s()-]{8,})$/) ||
+            part.match(/^(0\d{9})\s+(0\d{9})$/);
+        if (twoPhones) {
+            segments.push(twoPhones[1].trim(), twoPhones[2].trim());
             continue;
         }
 

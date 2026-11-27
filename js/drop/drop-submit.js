@@ -370,8 +370,6 @@ export async function submitProposal() {
         if (uPhone && uTg) rawContact = `${uTg} | ${uPhone}`;
         else if (uTg) rawContact = uTg;
         else if (uPhone) rawContact = uPhone;
-    } else if (!rawContact && !isContactHiddenByProfile && window._lastProposalContact && !String(window._lastProposalContact).includes('|')) {
-        rawContact = window._lastProposalContact;
     }
 
     const sanitizeFn = resolveAction('sanitizeText');
@@ -472,6 +470,7 @@ export async function submitProposal() {
         if (syncContactCheck.tgUsername) {
             const cachedTg = getCachedTelegramUsernameStatus(syncContactCheck.tgUsername);
             if (cachedTg && cachedTg.verified === true && cachedTg.exists === false) {
+                _lastBlurErrorContactKey = `${rawContact}|not_found`;
                 notifyInvalidProposalContact('propose.err_tg_not_found', syncContactCheck.tgUsername, { focus: true });
                 return;
             }
@@ -497,6 +496,7 @@ export async function submitProposal() {
                     btn.style.opacity = '1';
                 }
                 if (!verifyRes.ok) {
+                    _lastBlurErrorContactKey = `${rawContact}|not_found`;
                     notifyInvalidProposalContact(verifyRes.errorKey, verifyRes.tgUsername, { focus: true });
                     return;
                 }
