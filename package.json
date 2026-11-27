@@ -50,7 +50,8 @@
     "photoswipe": "^5.4.4",
     "sortablejs": "^1.15.7",
     "thumbhash": "^0.1.1",
-    "vanilla-tilt": "^1.8.1"
+    "vanilla-tilt": "^1.8.1",
+    "web-vitals": "^6.2.3"
   },
   "overrides": {
     "minimatch": "^11.0.1"

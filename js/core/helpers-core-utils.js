@@ -6,6 +6,21 @@
 
 import { registerAction } from './action-registry.js';
 import { getActiveCurrencyCode, getCurrencySymbol, convertFromUah } from './currency.js';
+import {
+    escapeRegExp,
+    isErrorLike,
+    promiseTry,
+    base64ToBytes,
+    bytesToBase64
+} from './es2025-utils.js';
+
+export {
+    escapeRegExp,
+    isErrorLike,
+    promiseTry,
+    base64ToBytes,
+    bytesToBase64
+};
 
 // Polyfill Promise.withResolvers (ES2024) if not natively present
 if (typeof Promise !== 'undefined' && typeof Promise.withResolvers !== 'function') {
@@ -758,3 +773,9 @@ export function formatPhoneInput(inputEl, rawValue) {
     return formatted;
 }
 exposeGlobal('formatPhoneInput', formatPhoneInput);
+
+exposeGlobal('escapeRegExp', escapeRegExp);
+exposeGlobal('isErrorLike', isErrorLike);
+exposeGlobal('promiseTry', promiseTry);
+exposeGlobal('base64ToBytes', base64ToBytes);
+exposeGlobal('bytesToBase64', bytesToBase64);

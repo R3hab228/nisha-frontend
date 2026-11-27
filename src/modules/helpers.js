@@ -45,7 +45,12 @@ export {
     setDifference,
     setIntersection,
     setUnion,
-    setIsSubsetOf
+    setIsSubsetOf,
+    escapeRegExp,
+    isErrorLike,
+    promiseTry,
+    base64ToBytes,
+    bytesToBase64
 } from '../../js/core/helpers-core-utils.js';
 
 export {

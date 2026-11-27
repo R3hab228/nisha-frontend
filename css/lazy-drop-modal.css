@@ -527,6 +527,15 @@
         height: 85px !important;
         flex-shrink: 0 !important;
     }
+    @supports (field-sizing: content) {
+        #proposeModal #propDesc,
+        #proposeModal textarea {
+            field-sizing: content;
+            height: auto !important;
+            min-height: 85px !important;
+            max-height: 180px;
+        }
+    }
     .prop-bargain-toggle-btn {
         min-width: 85px;
         padding: 0 10px;

@@ -3,6 +3,8 @@
 // NISHA PRODUCT MEASUREMENTS PARSER & TABLE RENDERER
 // ==========================================
 
+import { escapeRegExp } from '../core/es2025-utils.js';
+
 const MEASUREMENT_CACHE_LIMIT = 250;
 const _measurementParseCache = new Map();
 
@@ -218,14 +220,6 @@ const MEASUREMENT_PATTERNS = [
     { pattern: 'висота', key: 'height' },
     { pattern: 'height', key: 'height' }
 ];
-
-/** @param {string} str */
-function escapeRegExp(str) {
-    const regExpEscape = /** @type {any} */ (RegExp).escape;
-    return typeof regExpEscape === 'function'
-        ? regExpEscape(str)
-        : str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 const WORD_CHAR_CLASS = 'а-яА-ЯёЁіІїЇєЄґҐa-zA-Z0-9_';
 const TERMS_ALTERNATION = MEASUREMENT_PATTERNS.map(p => escapeRegExp(p.pattern)).join('|');

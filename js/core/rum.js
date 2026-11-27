@@ -1,261 +1,273 @@
 // @ts-check
 // ==========================================
 // NISHA STORE - REAL USER MONITORING (RUM)
-// js/core/rum.js - Web Vitals & Real Client Speed Telemetry
+// js/core/rum.js - Web Vitals v5 & Real Client Speed Telemetry
 // ==========================================
-// Monitors:
+// Monitors via official Google `web-vitals` v5 (bfcache, hidden-tab & soft-nav safe):
 // - LCP (Largest Contentful Paint)
-// - INP (Interaction to Next Paint / Event Timing & First Input)
+// - INP (Interaction to Next Paint)
 // - CLS (Cumulative Layout Shift)
 // - TTFB (Time to First Byte)
+// - FCP (First Contentful Paint)
 // - Device Category (iOS, Android, Desktop) & Connection Type
-// Zero overhead: uses native PerformanceObserver with buffered: true
+// Zero LCP/TBT overhead: loaded lazily inside the deferred `app-analytics` chunk.
 
-/** @type {{ lcp: number | null, inp: number | null, cls: number, ttfb: number | null, device: string, connection: string, url: string }} */
+import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
+
+/**
+ * @typedef {{
+ *   lcp: number | null,
+ *   inp: number | null,
+ *   cls: number,
+ *   ttfb: number | null,
+ *   fcp: number | null,
+ *   ratings: Record<string, string>,
+ *   device: string,
+ *   connection: string,
+ *   url: string
+ * }} RumMetrics
+ */
+
+/** @type {RumMetrics} */
 const rumData = {
-        lcp: null,
-        inp: null,
-        cls: 0,
-        ttfb: null,
-        device: 'Desktop',
-        connection: 'unknown',
-        url: '/'
-    };
+    lcp: null,
+    inp: null,
+    cls: 0,
+    ttfb: null,
+    fcp: null,
+    ratings: {},
+    device: 'Desktop',
+    connection: 'unknown',
+    url: '/'
+};
 
-    let hasReported = false;
-    let isInitialized = false;
-    let lastReportedSig = '';
+let hasReported = false;
+let isInitialized = false;
+let lastReportedSig = '';
 
-    // Detect device category safely
-    function detectDevice() {
-        if (typeof navigator === 'undefined') return 'Desktop';
-        const ua = navigator.userAgent || '';
-        const platform = navigator.userAgentData?.platform || navigator.platform || '';
-        if (/iPad|iPhone|iPod/.test(ua) || ((platform === 'MacIntel' || platform === 'macOS') && navigator.maxTouchPoints > 1)) {
-            return 'iOS';
+// Detect device category safely
+function detectDevice() {
+    if (typeof navigator === 'undefined') return 'Desktop';
+    const ua = navigator.userAgent || '';
+    const platform = navigator.userAgentData?.platform || navigator.platform || '';
+    if (/iPad|iPhone|iPod/.test(ua) || ((platform === 'MacIntel' || platform === 'macOS') && navigator.maxTouchPoints > 1)) {
+        return 'iOS';
+    }
+    if (/Android/i.test(ua)) {
+        return 'Android';
+    }
+    return 'Desktop';
+}
+
+// Detect network connection type if supported
+function detectConnection() {
+    if (typeof navigator !== 'undefined' && navigator.connection && navigator.connection.effectiveType) {
+        return navigator.connection.effectiveType;
+    }
+    return 'unknown';
+}
+
+// Measure TTFB fallback via Navigation Timing API (Level 2) for synchronous reads before web-vitals fires
+function measureTTFB() {
+    try {
+        if (rumData.ttfb !== null || typeof performance === 'undefined') return;
+        const navEntries = performance.getEntriesByType('navigation');
+        const navEntry = /** @type {PerformanceNavigationTiming | undefined} */ (navEntries && navEntries.at(-1));
+        if (navEntry && Number.isFinite(navEntry.responseStart) && navEntry.responseStart > 0) {
+            rumData.ttfb = Math.round(navEntry.responseStart);
         }
-        if (/Android/i.test(ua)) {
-            return 'Android';
-        }
-        return 'Desktop';
-    }
+    } catch {}
+}
 
-    // Detect network connection type if supported
-    function detectConnection() {
-        if (typeof navigator !== 'undefined' && navigator.connection && navigator.connection.effectiveType) {
-            return navigator.connection.effectiveType;
-        }
-        return 'unknown';
-    }
+// Initialize official Google web-vitals v5 observers (handles bfcache, hidden tabs & accurate CLS/INP windows)
+function initWebVitalsObservers() {
+    if (typeof window === 'undefined') return;
 
-    // Measure TTFB via Navigation Timing API (Level 2)
-    function measureTTFB() {
-        try {
-            if (typeof performance === 'undefined') return;
-            const navEntries = performance.getEntriesByType('navigation');
-            const navEntry = /** @type {PerformanceNavigationTiming | undefined} */ (navEntries && navEntries[0]);
-            if (navEntry && Number.isFinite(navEntry.responseStart) && navEntry.responseStart > 0) {
-                rumData.ttfb = Math.round(navEntry.responseStart);
+    try {
+        onLCP((metric) => {
+            if (Number.isFinite(metric.value)) {
+                rumData.lcp = Math.round(metric.value);
+                if (metric.rating) rumData.ratings.lcp = metric.rating;
             }
-        } catch {}
-    }
+        }, { reportAllChanges: true });
+    } catch {}
 
-    // Initialize PerformanceObservers for Core Web Vitals
-    function initObservers() {
-        if (typeof window === 'undefined' || typeof PerformanceObserver === 'undefined') return;
-
-        // 1. LCP (Largest Contentful Paint)
-        try {
-            const lcpObserver = new PerformanceObserver((entryList) => {
-                const entries = entryList.getEntries();
-                if (entries.length > 0) {
-                    const lastEntry = entries.at(-1);
-                    if (lastEntry) {
-                        rumData.lcp = Math.round(lastEntry.startTime);
-                    }
-                }
-            });
-            lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
-        } catch {}
-
-        // 2. CLS (Cumulative Layout Shift)
-        try {
-            const clsObserver = new PerformanceObserver((entryList) => {
-                for (const rawEntry of entryList.getEntries()) {
-                    const entry = /** @type {any} */ (rawEntry);
-                    if (!entry.hadRecentInput) {
-                        rumData.cls = Number((rumData.cls + entry.value).toFixed(4));
-                    }
-                }
-            });
-            clsObserver.observe({ type: 'layout-shift', buffered: true });
-        } catch {}
-
-        // 3. INP (Interaction to Next Paint) & First Input Delay
-        /** @param {PerformanceObserverEntryList} entryList */
-        const handleInputEntry = (entryList) => {
-            for (const rawEntry of entryList.getEntries()) {
-                const entry = /** @type {any} */ (rawEntry);
-                const duration = entry.duration || (entry.processingStart - entry.startTime);
-                if (Number.isFinite(duration)) {
-                    rumData.inp = Math.round(Math.max(rumData.inp || 0, duration));
-                }
+    try {
+        onCLS((metric) => {
+            if (Number.isFinite(metric.value)) {
+                rumData.cls = Number(metric.value.toFixed(4));
+                if (metric.rating) rumData.ratings.cls = metric.rating;
             }
-        };
+        }, { reportAllChanges: true });
+    } catch {}
 
-        // Modern Event Timing (INP) with durationThreshold
-        try {
-            const eventObserver = new PerformanceObserver(handleInputEntry);
-            eventObserver.observe(/** @type {any} */ ({ type: 'event', durationThreshold: 40, buffered: true }));
-        } catch {}
-
-        // Universal first-input fallback (FID / Initial Interaction)
-        try {
-            const fidObserver = new PerformanceObserver(handleInputEntry);
-            fidObserver.observe({ type: 'first-input', buffered: true });
-        } catch {}
-    }
-
-    // Safely send RUM payload to backend
-    function sendRumReport(reason = 'scheduled') {
-        try {
-            measureTTFB();
-
-            // Do not report if no vitals are measured yet
-            if (rumData.lcp === null && rumData.ttfb === null && rumData.cls === 0 && rumData.inp === null) {
-                return false;
+    try {
+        onINP((metric) => {
+            if (Number.isFinite(metric.value)) {
+                rumData.inp = Math.round(metric.value);
+                if (metric.rating) rumData.ratings.inp = metric.rating;
             }
+        }, { reportAllChanges: true });
+    } catch {}
 
-            rumData.device = detectDevice();
-            rumData.connection = detectConnection();
-            rumData.url = (typeof window !== 'undefined' && window.location) ? window.location.pathname : '/';
-
-            // Deduplication: do not re-send identical vitals unless triggered manually
-            const payloadSig = `${rumData.lcp}_${rumData.inp}_${rumData.cls}_${rumData.ttfb}`;
-            if (payloadSig === lastReportedSig && reason !== 'manual' && reason !== 'manual_test') {
-                return false;
+    try {
+        onTTFB((metric) => {
+            if (Number.isFinite(metric.value)) {
+                rumData.ttfb = Math.round(metric.value);
+                if (metric.rating) rumData.ratings.ttfb = metric.rating;
             }
+        });
+    } catch {}
 
-            const payload = {
-                lcp: rumData.lcp,
-                inp: rumData.inp,
-                cls: rumData.cls,
-                ttfb: rumData.ttfb,
-                device: rumData.device,
-                connection: rumData.connection,
-                url: rumData.url,
-                reason
-            };
-
-            const jsonStr = JSON.stringify(payload);
-            const backendUrl = (typeof window !== 'undefined' && window.BACKEND_URL)
-                ? String(window.BACKEND_URL).replace(/\/+$/, '')
-                : 'https://nisha-api.onrender.com';
-
-            const isProdDomain = typeof window !== 'undefined' && window.location && (
-                window.location.hostname.includes('nisha-store.shop') ||
-                window.location.hostname.includes('vercel.app')
-            );
-            const endpoint = isProdDomain ? '/api/rum' : `${backendUrl}/api/rum`;
-
-            // Modern transport: fetch with keepalive: true with sync & async beacon fallback
-            let fetchAttempted = false;
-            if (typeof fetch === 'function') {
-                try {
-                    fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: jsonStr,
-                        keepalive: true
-                    }).catch(() => {
-                        // Fallback to beacon on network error
-                        if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-                            try {
-                                const blob = new Blob([jsonStr], { type: 'application/json' });
-                                navigator.sendBeacon(endpoint, blob);
-                            } catch (_) {
-                                navigator.sendBeacon(endpoint, jsonStr);
-                            }
-                        }
-                    });
-                    fetchAttempted = true;
-                } catch (_) {
-                    fetchAttempted = false;
-                }
+    try {
+        onFCP((metric) => {
+            if (Number.isFinite(metric.value)) {
+                rumData.fcp = Math.round(metric.value);
+                if (metric.rating) rumData.ratings.fcp = metric.rating;
             }
-            if (!fetchAttempted && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-                try {
-                    const blob = new Blob([jsonStr], { type: 'application/json' });
-                    navigator.sendBeacon(endpoint, blob);
-                } catch (_) {
-                    navigator.sendBeacon(endpoint, jsonStr);
-                }
-            }
+        });
+    } catch {}
+}
 
-            lastReportedSig = payloadSig;
-            hasReported = true;
-            return true;
-        } catch (_) {
+// Safely send RUM payload to backend
+function sendRumReport(reason = 'scheduled') {
+    try {
+        measureTTFB();
+
+        // Do not report if no vitals are measured yet
+        if (rumData.lcp === null && rumData.ttfb === null && rumData.cls === 0 && rumData.inp === null && rumData.fcp === null) {
             return false;
         }
-    }
-
-    function initRUM() {
-        if (isInitialized || typeof window === 'undefined') return;
-        isInitialized = true;
 
         rumData.device = detectDevice();
         rumData.connection = detectConnection();
+        rumData.url = (typeof window !== 'undefined' && window.location) ? window.location.pathname : '/';
 
-        // 1. Measure TTFB immediately and on load
+        // Deduplication: do not re-send identical vitals unless triggered manually
+        const payloadSig = `${rumData.lcp}_${rumData.inp}_${rumData.cls}_${rumData.ttfb}_${rumData.fcp}`;
+        if (payloadSig === lastReportedSig && reason !== 'manual' && reason !== 'manual_test') {
+            return false;
+        }
+
+        const payload = {
+            lcp: rumData.lcp,
+            inp: rumData.inp,
+            cls: rumData.cls,
+            ttfb: rumData.ttfb,
+            fcp: rumData.fcp,
+            ratings: rumData.ratings,
+            device: rumData.device,
+            connection: rumData.connection,
+            url: rumData.url,
+            reason
+        };
+
+        const jsonStr = JSON.stringify(payload);
+        const backendUrl = (typeof window !== 'undefined' && window.BACKEND_URL)
+            ? String(window.BACKEND_URL).replace(/\/+$/, '')
+            : 'https://nisha-api.onrender.com';
+
+        const isProdDomain = typeof window !== 'undefined' && window.location && (
+            window.location.hostname.includes('nisha-store.shop') ||
+            window.location.hostname.includes('vercel.app')
+        );
+        const endpoint = isProdDomain ? '/api/rum' : `${backendUrl}/api/rum`;
+
+        // Modern transport: fetch with keepalive: true with sync & async beacon fallback
+        let fetchAttempted = false;
+        if (typeof fetch === 'function') {
+            try {
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: jsonStr,
+                    keepalive: true
+                }).catch(() => {
+                    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+                        try {
+                            const blob = new Blob([jsonStr], { type: 'application/json' });
+                            navigator.sendBeacon(endpoint, blob);
+                        } catch (_) {
+                            navigator.sendBeacon(endpoint, jsonStr);
+                        }
+                    }
+                });
+                fetchAttempted = true;
+            } catch (_) {
+                fetchAttempted = false;
+            }
+        }
+        if (!fetchAttempted && typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+            try {
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                navigator.sendBeacon(endpoint, blob);
+            } catch (_) {
+                navigator.sendBeacon(endpoint, jsonStr);
+            }
+        }
+
+        lastReportedSig = payloadSig;
+        hasReported = true;
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function initRUM() {
+    if (isInitialized || typeof window === 'undefined') return;
+    isInitialized = true;
+
+    rumData.device = detectDevice();
+    rumData.connection = detectConnection();
+
+    // 1. Measure TTFB immediately and on load
+    measureTTFB();
+    if (document.readyState === 'complete') {
         measureTTFB();
-        if (document.readyState === 'complete') {
-            measureTTFB();
-        } else {
-            window.addEventListener('load', measureTTFB, { once: true, passive: true });
+    } else {
+        window.addEventListener('load', measureTTFB, { once: true, passive: true });
+    }
+
+    // 2. Start official web-vitals v5 observers
+    initWebVitalsObservers();
+
+    // 3. Safety timer: send report after 6 seconds of page load so even quiet sessions are logged
+    const timer = setTimeout(() => {
+        if (!hasReported) {
+            sendRumReport('timer');
         }
+    }, 6000);
+    const timerObj = /** @type {any} */ (timer);
+    if (timerObj && typeof timerObj.unref === 'function') {
+        timerObj.unref();
+    }
 
-        // 2. Start Web Vitals Observers
-        initObservers();
-
-        // 3. Safety timer: send report after 6 seconds of page load so even quiet sessions are logged
-        const timer = setTimeout(() => {
-            if (!hasReported) {
-                sendRumReport('timer');
-            }
-        }, 6000);
-        const timerObj = /** @type {any} */ (timer);
-        if (timerObj && typeof timerObj.unref === 'function') {
-            timerObj.unref();
+    // 4. Send updated vitals when user hides tab or navigates away
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            sendRumReport('visibility_hidden');
         }
+    }, { passive: true });
 
-        // 4. Send updated vitals when user hides tab or navigates away
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                sendRumReport('visibility_hidden');
-            }
-        }, { passive: true });
+    window.addEventListener('pagehide', () => {
+        sendRumReport('pagehide');
+    }, { passive: true });
+}
 
-        window.addEventListener('pagehide', () => {
-            sendRumReport('pagehide');
-        }, { passive: true });
-    }
+// Expose RUM API globally for debugging & vitest
+export const rumApi = {
+    initRUM,
+    getMetrics: () => ({ ...rumData, ratings: { ...rumData.ratings } }),
+    sendRumReport,
+    rumData
+};
 
-    // Expose RUM API globally for debugging & vitest
-    const rumApi = {
-        initRUM,
-        getMetrics: () => ({ ...rumData }),
-        sendRumReport,
-        rumData
-    };
+if (typeof window !== 'undefined') {
+    window.__nishaRUM = rumApi;
+    window.getRumMetrics = rumApi.getMetrics;
+    initRUM();
+}
 
-    if (typeof window !== 'undefined') {
-        window.__nishaRUM = rumApi;
-        window.getRumMetrics = rumApi.getMetrics;
-        // Auto-initialize in browser
-        initRUM();
-    }
-
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = rumApi;
-    }
+export { initRUM, sendRumReport, rumData };
+export default rumApi;

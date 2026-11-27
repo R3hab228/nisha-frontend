@@ -4,31 +4,11 @@
 // ==========================================
 
 import { thumbHashToDataURL } from 'thumbhash';
+import { base64ToBytes } from '../core/es2025-utils.js';
 
 const MAX_THUMBHASH_CACHE = 400;
 /** @type {Map<string, string>} */
 const thumbHashCache = new Map();
-
-/**
- * Безопасно декодирует base64-строку в Uint8Array (браузер + Node/Vitest).
- * @param {string} base64
- * @returns {Uint8Array|null}
- */
-function base64ToBytes(base64) {
-    try {
-        if (typeof globalThis.atob === 'function') {
-            const binary = globalThis.atob(base64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i += 1) {
-                bytes[i] = binary.charCodeAt(i);
-            }
-            return bytes;
-        }
-    } catch {
-        return null;
-    }
-    return null;
-}
 
 /**
  * Декодирует компактный base64 ThumbHash в data:image/png;base64,... URL для мгновенного blur-фона карточки.
