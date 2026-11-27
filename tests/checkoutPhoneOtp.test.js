@@ -92,7 +92,8 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
             },
             propContact: {
                 id: 'propContact',
-                value: ''
+                value: '',
+                dataset: {}
             }
         };
 
@@ -237,5 +238,26 @@ describe('Checkout Phone OTP Verification & Win95 Success Button State', () => {
         expect(elements.btnSubmitOrder.style.pointerEvents).toBe('auto');
         expect(elements.btnGetOtp.classList.contains('btn-otp-success')).toBe(true);
         expect(elements.btnGetOtp.disabled).toBe(true);
+        // Complete profile (phone + tg) hides #propContactWrapper and supplies combined profile contact automatically
+        expect(elements.propContactWrapper.style.display).toBe('none');
+        expect(elements.propContact.value).toBe('@testuser | +380991234567');
+        expect(elements.propContact.dataset.isProfileAuto).toBe('1');
+    });
+
+    it('updateProposeAndCheckoutFields keeps #propContactWrapper visible for guests/partial profiles and never fills two contacts at once', () => {
+        const { updateProposeAndCheckoutFields } = window;
+        // Guest with stale storage values for BOTH phone and tg
+        window.userProfile = null;
+        window.currentUser = null;
+        window.storage.set('nisha_last_phone', '+380973115592');
+        window.storage.set('nisha_last_tg', '@sand0ra420');
+        elements.propContact.value = '@sand0ra420 | +380973115592';
+
+        updateProposeAndCheckoutFields();
+
+        expect(elements.propContactWrapper.style.display).toBe('block');
+        expect(elements.propContact.value).toBe('@sand0ra420');
+        expect(elements.propContact.value).not.toContain('|');
+        expect(elements.propContact.dataset.isProfileAuto).toBeUndefined();
     });
 });

@@ -67,6 +67,7 @@ function getProposalContactErrorMessage(errorKey, tgUsername = '') {
         'propose.err_phone_invalid': 'Некорректный номер телефона! Проверьте цифры и попробуйте ещё раз.',
         'propose.err_tg_format': 'Некорректный Telegram @ник (5–32 латинских символа, цифры или _).',
         'propose.err_tg_not_found': 'Telegram @{{nick}} не найден! Проверьте написание или укажите номер телефона.',
+        'propose.err_contact_single_only': 'Укажите что-то одно: либо Telegram @ник, либо номер телефона (не два сразу)!',
         'propose.err_contact_invalid': 'Укажите корректный Telegram @ник или номер телефона (например @nick или +380...)',
         'propose.err_fill_all': 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!'
     };
@@ -235,8 +236,10 @@ export function resetProposalForm() {
 
     renderProposalPreviews();
     if (typeof globalEnv.updateProposeAndCheckoutFields === 'function') globalEnv.updateProposeAndCheckoutFields();
+    const contactWrap = document.getElementById('propContactWrapper');
+    const isContactHidden = Boolean(contactWrap && (contactWrap.style.display === 'none' || contactWrap.hidden));
     const contactEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
-    if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
+    if (!isContactHidden && contactEl && !contactEl.value.trim() && window._lastProposalContact && !String(window._lastProposalContact).includes('|')) {
         contactEl.value = window._lastProposalContact;
     }
     _lastBlurErrorContactKey = '';
@@ -273,12 +276,14 @@ export function openProposeModal() {
         }
         [150, 400, 900, 1800].forEach(ms => setTimeout(sanitizeProposalNameField, ms));
     }
+    const contactWrap = document.getElementById('propContactWrapper');
+    const isContactHidden = Boolean(contactWrap && (contactWrap.style.display === 'none' || contactWrap.hidden));
     const contactEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
-    if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
+    if (!isContactHidden && contactEl && !contactEl.value.trim() && window._lastProposalContact && !String(window._lastProposalContact).includes('|')) {
         contactEl.value = window._lastProposalContact;
     }
     _lastBlurErrorContactKey = '';
-    if (contactEl && contactEl.value.trim()) {
+    if (!isContactHidden && contactEl && contactEl.value.trim()) {
         scheduleBackgroundTelegramCheck(contactEl.value, { delayMs: 250 });
     }
     if (typeof globalEnv.Sortable === 'undefined' && typeof window.Sortable === 'undefined') {
@@ -346,9 +351,18 @@ export async function submitProposal() {
     const rawDesc = getFieldVal('propDesc').trim();
     const cond = Number.parseInt(getFieldVal('propCond'), 10);
     const price = Number.parseInt(getFieldVal('propPrice'), 10) || 0;
+    const contactWrapEl = document.getElementById('propContactWrapper');
+    const contactInputEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
+    const isContactHiddenByProfile = Boolean(
+        contactWrapEl && (contactWrapEl.style.display === 'none' || contactWrapEl.hidden)
+    );
+    const isProfileAutoContact = Boolean(
+        isContactHiddenByProfile || contactInputEl?.dataset?.isProfileAuto === '1'
+    );
+
     let rawContact = getFieldVal('propContact').trim();
 
-    if (!rawContact) {
+    if (isProfileAutoContact && !rawContact) {
         const phoneFn = resolveAction('getUserPhone');
         const tgFn = resolveAction('getUserTg');
         const uPhone = typeof phoneFn === 'function' ? phoneFn() : '';
@@ -356,8 +370,7 @@ export async function submitProposal() {
         if (uPhone && uTg) rawContact = `${uTg} | ${uPhone}`;
         else if (uTg) rawContact = uTg;
         else if (uPhone) rawContact = uPhone;
-    }
-    if (!rawContact && window._lastProposalContact) {
+    } else if (!rawContact && !isContactHiddenByProfile && window._lastProposalContact && !String(window._lastProposalContact).includes('|')) {
         rawContact = window._lastProposalContact;
     }
 
@@ -447,52 +460,51 @@ export async function submitProposal() {
         }
     }
 
-    const contactWrapEl = document.getElementById('propContactWrapper');
-    const isContactHiddenByProfile = Boolean(contactWrapEl && contactWrapEl.style.display === 'none');
-    const syncContactCheck = validateProposalContactSync(rawContact);
-    if (!syncContactCheck.ok) {
-        notifyInvalidProposalContact(syncContactCheck.errorKey, '', { focus: true });
-        return;
-    }
-
-    // Если поле скрыто автоподстановкой профиля и в нём уже есть подтверждённый телефон —
-    // не блокируем отправку из-за устаревшего/сменённого @ника в профиле.
-    const shouldVerifyRemoteTg = Boolean(syncContactCheck.tgUsername) && !(isContactHiddenByProfile && syncContactCheck.phone);
-    if (shouldVerifyRemoteTg) {
-        const cachedTg = getCachedTelegramUsernameStatus(syncContactCheck.tgUsername);
-        if (cachedTg && cachedTg.verified === true && cachedTg.exists === false) {
-            notifyInvalidProposalContact('propose.err_tg_not_found', syncContactCheck.tgUsername, { focus: true });
+    // Если все контакты заполнены в профиле и поле скрыто — отправляем их автоматически без ручной валидации.
+    // Если поле контакта видимо — требуем строго ОДИН корректный контакт (либо @Telegram, либо телефон) и проверяем TG.
+    if (!isProfileAutoContact) {
+        const syncContactCheck = validateProposalContactSync(rawContact);
+        if (!syncContactCheck.ok) {
+            notifyInvalidProposalContact(syncContactCheck.errorKey, '', { focus: true });
             return;
         }
-        if (!cachedTg) {
-            _isVerifyingContact = true;
-            const prevBtnText = btn.textContent;
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.8';
-            const slowHintTimer = setTimeout(() => {
-                if (_isVerifyingContact) {
-                    const checkLabel = tSafe('propose.checking_contact', { defaultValue: 'ПРОВЕРКА КОНТАКТА' });
-                    btn.textContent = `[ ${checkLabel}... ]`;
-                }
-            }, 120);
-            let verifyRes;
-            try {
-                verifyRes = await verifyProposalContactBeforeSubmit(rawContact);
-            } finally {
-                clearTimeout(slowHintTimer);
-                _isVerifyingContact = false;
-                btn.textContent = prevBtnText;
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-            }
-            if (!verifyRes.ok) {
-                notifyInvalidProposalContact(verifyRes.errorKey, verifyRes.tgUsername, { focus: true });
+
+        if (syncContactCheck.tgUsername) {
+            const cachedTg = getCachedTelegramUsernameStatus(syncContactCheck.tgUsername);
+            if (cachedTg && cachedTg.verified === true && cachedTg.exists === false) {
+                notifyInvalidProposalContact('propose.err_tg_not_found', syncContactCheck.tgUsername, { focus: true });
                 return;
             }
+            if (!cachedTg) {
+                _isVerifyingContact = true;
+                const prevBtnText = btn.textContent;
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.8';
+                const slowHintTimer = setTimeout(() => {
+                    if (_isVerifyingContact) {
+                        const checkLabel = tSafe('propose.checking_contact', { defaultValue: 'ПРОВЕРКА КОНТАКТА' });
+                        btn.textContent = `[ ${checkLabel}... ]`;
+                    }
+                }, 120);
+                let verifyRes;
+                try {
+                    verifyRes = await verifyProposalContactBeforeSubmit(rawContact);
+                } finally {
+                    clearTimeout(slowHintTimer);
+                    _isVerifyingContact = false;
+                    btn.textContent = prevBtnText;
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.opacity = '1';
+                }
+                if (!verifyRes.ok) {
+                    notifyInvalidProposalContact(verifyRes.errorKey, verifyRes.tgUsername, { focus: true });
+                    return;
+                }
+            }
         }
-    }
 
-    window._lastProposalContact = contact;
+        window._lastProposalContact = contact;
+    }
 
     const propWidgetId = (typeof g.turnstilePropWidgetId !== 'undefined') ? g.turnstilePropWidgetId : window.turnstilePropWidgetId;
     const tsApi = getTurnstileApi();
@@ -686,6 +698,7 @@ export function initProposalListeners() {
         }, { passive: true });
 
         contactInput.addEventListener('blur', () => {
+            if (contactInput.dataset?.isProfileAuto === '1') return;
             const val = contactInput.value.trim();
             if (!val) return;
             const sync = validateProposalContactSync(val);

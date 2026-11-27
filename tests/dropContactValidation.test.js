@@ -68,7 +68,7 @@ describe('drop-contact-validation (phone & Telegram non-blocking checks)', () =>
         expect(extractTelegramUsername('@my nick')).toEqual({ valid: false, username: '' }); // space
     });
 
-    it('validates single and combined contacts with specific localized error keys', () => {
+    it('validates single contact only (either phone OR Telegram) and rejects two contacts at once', () => {
         expect(validateProposalContactSync('+380971234567')).toMatchObject({
             ok: true,
             kind: 'phone',
@@ -81,12 +81,6 @@ describe('drop-contact-validation (phone & Telegram non-blocking checks)', () =>
             tgUsername: 'durov',
             phone: ''
         });
-        expect(validateProposalContactSync('@durov | +380971234567')).toMatchObject({
-            ok: true,
-            kind: 'both',
-            tgUsername: 'durov',
-            phone: '+380971234567'
-        });
         expect(validateProposalContactSync('тг: @durov')).toMatchObject({
             ok: true,
             kind: 'telegram',
@@ -97,17 +91,31 @@ describe('drop-contact-validation (phone & Telegram non-blocking checks)', () =>
             kind: 'phone',
             phone: '+380971234567'
         });
+
+        // Two contacts at once MUST be rejected with dedicated errorKey
+        expect(validateProposalContactSync('@sand0ra420 | +380973115592')).toMatchObject({
+            ok: false,
+            errorKey: 'propose.err_contact_single_only'
+        });
         expect(validateProposalContactSync('@durov +380971234567')).toMatchObject({
-            ok: true,
-            kind: 'both',
-            tgUsername: 'durov',
-            phone: '+380971234567'
+            ok: false,
+            errorKey: 'propose.err_contact_single_only'
         });
         expect(validateProposalContactSync('+380971234567 @durov')).toMatchObject({
-            ok: true,
-            kind: 'both',
-            tgUsername: 'durov',
-            phone: '+380971234567'
+            ok: false,
+            errorKey: 'propose.err_contact_single_only'
+        });
+        expect(validateProposalContactSync('@durov, +380971234567')).toMatchObject({
+            ok: false,
+            errorKey: 'propose.err_contact_single_only'
+        });
+        expect(validateProposalContactSync('@user1 @user2')).toMatchObject({
+            ok: false,
+            errorKey: 'propose.err_contact_single_only'
+        });
+        expect(validateProposalContactSync('+380971234567 +380631234567')).toMatchObject({
+            ok: false,
+            errorKey: 'propose.err_contact_single_only'
         });
 
         expect(validateProposalContactSync('+38097123')).toMatchObject({

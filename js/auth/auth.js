@@ -162,9 +162,19 @@ function initTurnstileWidgets() {
 window.initTurnstileWidgets = initTurnstileWidgets;
 
 // --- КОНТАКТНЫЕ ДАННЫЕ ЮЗЕРА ---
+function getActiveUser() {
+    const fromStore = (_store && typeof _store.get === 'function') ? _store.get('currentUser') : null;
+    return fromStore || _store?.user || (typeof window !== 'undefined' ? window.currentUser : null) || null;
+}
+
+function getActiveProfile() {
+    const fromStore = (_store && typeof _store.get === 'function') ? _store.get('userProfile') : null;
+    return fromStore || _store?.profile || (typeof window !== 'undefined' ? window.userProfile : null) || null;
+}
+
 function getUserPhone() {
-    const activeUser = _store.user || (typeof window !== 'undefined' ? window.currentUser : null);
-    const profile = _store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
+    const activeUser = getActiveUser();
+    const profile = getActiveProfile();
     if (profile?.phone && profile.phone.trim()) {
         return profile.phone.trim();
     }
@@ -179,8 +189,8 @@ function getUserPhone() {
 window.getUserPhone = getUserPhone;
 
 function getUserTg() {
-    const activeUser = _store.user || (typeof window !== 'undefined' ? window.currentUser : null);
-    const profile = _store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
+    const activeUser = getActiveUser();
+    const profile = getActiveProfile();
     if (profile?.tg && profile.tg.trim()) {
         return profile.tg.trim();
     }
@@ -244,21 +254,46 @@ export function setOtpButtonDefault(btnOtp) {
 function updateProposeAndCheckoutFields() {
     const phone = getUserPhone();
     const tg = getUserTg();
-    const activeUser = _store.user || (typeof window !== 'undefined' ? window.currentUser : null);
-    const profile = _store.profile || (typeof window !== 'undefined' ? window.userProfile : null);
-    const hasVerifiedProfilePhone = Boolean(phone);
-    const hasVerifiedProfileTg = Boolean(tg);
+    const activeUser = getActiveUser();
+    const profile = getActiveProfile();
+    const isAuthenticated = Boolean(activeUser || profile);
+    const profilePhone = String(profile?.phone || activeUser?.phone || activeUser?.user_metadata?.phone || (isAuthenticated ? phone : '') || '').trim();
+    const profileTg = String(profile?.tg || activeUser?.user_metadata?.tg || (isAuthenticated ? tg : '') || '').trim();
+    const hasCompleteProfileContacts = Boolean(isAuthenticated && profilePhone && profileTg);
 
-    // 1. Предложка: если заполнены и телефон, и tg в профиле — поле связи скрывается, иначе остается редактируемым
+    // 1. Предложка: если в профиле заполнены и телефон, и tg — поле связи скрывается и данные подставляются автоматически.
+    // Если поле остаётся видимым — в него НИКОГДА не подставляются оба контакта сразу (только один: @tg или телефон).
     const propContactWrap = document.getElementById('propContactWrapper');
     const propContactInput = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
-    if (hasVerifiedProfilePhone && hasVerifiedProfileTg && (activeUser || profile)) {
-        if (propContactWrap) propContactWrap.style.display = 'none';
-        if (propContactInput) propContactInput.value = `${tg} | ${phone}`;
+    if (hasCompleteProfileContacts) {
+        if (propContactWrap) {
+            propContactWrap.style.display = 'none';
+            propContactWrap.hidden = true;
+        }
+        if (propContactInput) {
+            propContactInput.value = `${profileTg} | ${profilePhone}`;
+            if (propContactInput.dataset) {
+                propContactInput.dataset.isProfileAuto = '1';
+            }
+        }
     } else {
-        if (propContactWrap) propContactWrap.style.display = 'block';
-        if (propContactInput && !propContactInput.value && (phone || tg)) {
-            propContactInput.value = [tg, phone].filter(Boolean).join(' | ');
+        if (propContactWrap) {
+            propContactWrap.style.display = 'block';
+            propContactWrap.hidden = false;
+        }
+        if (propContactInput) {
+            const wasProfileAuto = Boolean(propContactInput.dataset?.isProfileAuto === '1');
+            if (propContactInput.dataset) {
+                delete propContactInput.dataset.isProfileAuto;
+            }
+            const singleFallback = profileTg || profilePhone || tg || phone || '';
+            const currentVal = String(propContactInput.value || '').trim();
+            // Очищаем устаревшую связку "tg | phone" (после логаута или удаления одного из контактов профиля)
+            if (wasProfileAuto || currentVal.includes('|')) {
+                propContactInput.value = singleFallback;
+            } else if (!currentVal && singleFallback) {
+                propContactInput.value = singleFallback;
+            }
         }
     }
 

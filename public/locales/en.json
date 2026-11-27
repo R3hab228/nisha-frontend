@@ -483,6 +483,7 @@
       "success_text": "Proposal successfully submitted.",
       "err_fill_all": "Please fill in absolutely all fields!",
       "err_contact_invalid": "Enter a valid Telegram @username or phone number (e.g. @nick or +380...)",
+      "err_contact_single_only": "Enter only one contact: either Telegram @username or phone number (not both at once)!",
       "err_phone_invalid": "Invalid phone number! Please check the digits and try again.",
       "err_tg_format": "Invalid Telegram @username (5–32 Latin letters, digits, or _).",
       "err_tg_not_found": "Telegram @{{nick}} not found! Check the spelling or enter your phone number.",

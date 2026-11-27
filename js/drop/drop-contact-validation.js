@@ -30,7 +30,7 @@ const MAX_CACHE_ENTRIES = 200;
 const DEFAULT_REMOTE_TIMEOUT_MS = 2800;
 
 /** @typedef {{ exists: boolean | null, verified: boolean, username: string, ts: number }} CachedTgStatus */
-/** @typedef {{ ok: boolean, kind: 'empty'|'phone'|'telegram'|'both'|'invalid', errorKey: string, tgUsername: string, phone: string }} ContactSyncResult */
+/** @typedef {{ ok: boolean, kind: 'empty'|'phone'|'telegram'|'invalid', errorKey: string, tgUsername: string, phone: string }} ContactSyncResult */
 /** @typedef {{ ok: boolean, errorKey: string, tgUsername: string, phone: string }} ContactVerifyResult */
 
 /** @type {Map<string, CachedTgStatus>} */
@@ -172,13 +172,14 @@ function looksLikePhoneAttempt(raw) {
 }
 
 /**
- * Разбивает ввод пользователя на сегменты контактов (поддержка | , ;, меток вроде "тг @nick" и пар "@nick +380...").
+ * Разбивает ввод на отдельные кандидаты, чтобы выявлять попытку указать сразу 2 контакта
+ * (через |, ,, ;, " / ", либо пробельную пару "@nick +380..." / "+380... @nick" / "@one @two").
  * @param {string} cleaned
  * @returns {string[]}
  */
 function splitContactSegments(cleaned) {
     const rawParts = cleaned
-        .split(/[|,;]+/)
+        .split(/[|,;]+|\s+\/\s+/)
         .map((s) => s.trim())
         .filter(Boolean);
 
@@ -188,15 +189,28 @@ function splitContactSegments(cleaned) {
         const part = rawPart.replace(CONTACT_PREFIX_LABEL_RE, '').trim();
         if (!part) continue;
 
-        // Поддержка пробельной пары "@nick +380..." / "t.me/nick 097..." или "+380... @nick"
+        // Пара "@nick +380..." или "t.me/nick 097..."
         const tgFirst = part.match(/^((?:@|(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/)\S+)\s+([+\d][\d\s()+-]{6,})$/i);
         if (tgFirst) {
             segments.push(tgFirst[1].trim(), tgFirst[2].trim());
             continue;
         }
+        // Пара "+380... @nick" или "097... t.me/nick"
         const phoneFirst = part.match(/^([+\d][\d\s()+-]{6,})\s+((?:@|(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/)\S+)$/i);
         if (phoneFirst) {
             segments.push(phoneFirst[1].trim(), phoneFirst[2].trim());
+            continue;
+        }
+        // Два Telegram-ника через пробел: "@one @two"
+        const twoTgs = part.match(/^((?:@|(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/)\S+)\s+((?:@|(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/)\S+)$/i);
+        if (twoTgs) {
+            segments.push(twoTgs[1].trim(), twoTgs[2].trim());
+            continue;
+        }
+        // Два номера с '+' через пробел: "+380971234567 +380631234567"
+        const twoPlusPhones = part.match(/^(\+\d[\d\s()-]{8,})\s+(\+\d[\d\s()-]{8,})$/);
+        if (twoPlusPhones) {
+            segments.push(twoPlusPhones[1].trim(), twoPlusPhones[2].trim());
             continue;
         }
 
@@ -206,7 +220,8 @@ function splitContactSegments(cleaned) {
 }
 
 /**
- * Синхронная 0ms валидация поля контакта предложки (телефон, Telegram @username или связка "@nick | +380...").
+ * Синхронная 0ms валидация ручного ввода контакта предложки:
+ * строго ОДИН контакт — либо номер телефона, либо Telegram @username (не два сразу).
  * @param {string} rawContact
  * @returns {ContactSyncResult}
  */
@@ -217,38 +232,32 @@ export function validateProposalContactSync(rawContact) {
     }
 
     const parts = splitContactSegments(trimmed);
-
-    if (parts.length === 0 || parts.length > 3) {
+    if (parts.length === 0) {
         return { ok: false, kind: 'invalid', errorKey: 'propose.err_contact_invalid', tgUsername: '', phone: '' };
     }
 
-    let phone = '';
-    let tgUsername = '';
-
-    for (const part of parts) {
-        const phoneRes = validateProposalPhone(part);
-        if (phoneRes.valid) {
-            if (!phone) phone = phoneRes.normalized;
-            continue;
-        }
-
-        const tgRes = extractTelegramUsername(part);
-        if (tgRes.valid) {
-            if (!tgUsername) tgUsername = tgRes.username;
-            continue;
-        }
-
-        const errorKey = looksLikeTelegramAttempt(part)
-            ? 'propose.err_tg_format'
-            : looksLikePhoneAttempt(part)
-                ? 'propose.err_phone_invalid'
-                : 'propose.err_contact_invalid';
-
-        return { ok: false, kind: 'invalid', errorKey, tgUsername: '', phone: '' };
+    if (parts.length > 1) {
+        return { ok: false, kind: 'invalid', errorKey: 'propose.err_contact_single_only', tgUsername: '', phone: '' };
     }
 
-    const kind = phone && tgUsername ? 'both' : tgUsername ? 'telegram' : 'phone';
-    return { ok: true, kind, errorKey: '', tgUsername, phone };
+    const single = parts[0];
+    const phoneRes = validateProposalPhone(single);
+    if (phoneRes.valid) {
+        return { ok: true, kind: 'phone', errorKey: '', tgUsername: '', phone: phoneRes.normalized };
+    }
+
+    const tgRes = extractTelegramUsername(single);
+    if (tgRes.valid) {
+        return { ok: true, kind: 'telegram', errorKey: '', tgUsername: tgRes.username, phone: '' };
+    }
+
+    const errorKey = looksLikeTelegramAttempt(single)
+        ? 'propose.err_tg_format'
+        : looksLikePhoneAttempt(single)
+            ? 'propose.err_phone_invalid'
+            : 'propose.err_contact_invalid';
+
+    return { ok: false, kind: 'invalid', errorKey, tgUsername: '', phone: '' };
 }
 
 /**
