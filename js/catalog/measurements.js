@@ -601,8 +601,13 @@ export const showItemMeasurementsTooltip = function(itemOrId, e) {
     invokeAction('moveItemMeasurementsTooltip', e);
 };
 
+/** @type {number | null} */
+let _tooltipMoveRafId = null;
+/** @type {{ x: number, y: number } | null} */
+let _pendingTooltipPos = null;
+
 /**
- * Позиционирует тултип замеров с учётом границ окна.
+ * Позиционирует тултип замеров с учётом границ окна (rAF-троттлинг: не чаще 1 раза за кадр).
  * @param {MouseEvent|TouchEvent} e
  */
 export const moveItemMeasurementsTooltip = function(e) {
@@ -621,11 +626,30 @@ export const moveItemMeasurementsTooltip = function(e) {
     const clientY = (evt.clientY !== undefined) ? evt.clientY : (evt.touches && evt.touches[0] ? evt.touches[0].clientY : null);
     if (clientX === null || clientY === null) return;
 
-    positionAtCursor(tooltip, clientX, clientY, {
-        offsetX: 16,
-        offsetY: 16,
-        flipPadding: 12,
-        shiftPadding: 10
+    _pendingTooltipPos = { x: clientX, y: clientY };
+    if (typeof requestAnimationFrame !== 'function') {
+        positionAtCursor(tooltip, clientX, clientY, {
+            offsetX: 16,
+            offsetY: 16,
+            flipPadding: 12,
+            shiftPadding: 10
+        });
+        return;
+    }
+    if (_tooltipMoveRafId !== null) return;
+    _tooltipMoveRafId = requestAnimationFrame(() => {
+        _tooltipMoveRafId = null;
+        if (!_isTooltipVisible || !_pendingTooltipPos) return;
+        const pos = _pendingTooltipPos;
+        _pendingTooltipPos = null;
+        const curTooltip = getMeasurementsTooltip();
+        if (!curTooltip || curTooltip.style.display === 'none') return;
+        positionAtCursor(curTooltip, pos.x, pos.y, {
+            offsetX: 16,
+            offsetY: 16,
+            flipPadding: 12,
+            shiftPadding: 10
+        });
     });
 };
 
@@ -643,6 +667,11 @@ export const isItemMeasurementsTooltipVisible = function() {
 export const hideItemMeasurementsTooltip = function() {
     if (!_isTooltipVisible) return;
     _isTooltipVisible = false;
+    _pendingTooltipPos = null;
+    if (_tooltipMoveRafId !== null && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(_tooltipMoveRafId);
+        _tooltipMoveRafId = null;
+    }
     const tooltip = getMeasurementsTooltip();
     if (tooltip) {
         cancelCursorPosition(tooltip);

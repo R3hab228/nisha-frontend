@@ -691,11 +691,14 @@ export function initActionDelegation() {
     });
 
     document.addEventListener('mousemove', (e) => {
+        if (typeof window !== 'undefined' && typeof window.isItemMeasurementsTooltipVisible === 'function' && !window.isItemMeasurementsTooltipVisible()) {
+            return;
+        }
         const t = /** @type {Element | null} */ (e.target);
         if (!t || typeof t.closest !== 'function') return;
         const hoverEl = t.closest('[data-hover-action="similar-item-tooltip"]');
         if (hoverEl) invokeAction('moveItemMeasurementsTooltip', e);
-    });
+    }, { passive: true });
 
     document.addEventListener('mouseout', (e) => {
         const t = /** @type {Element | null} */ (e.target);

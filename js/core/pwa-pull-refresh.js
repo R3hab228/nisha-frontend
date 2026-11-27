@@ -138,6 +138,11 @@ export function initPwaPullToRefresh() {
     const MAX_PULL = 85;
 
     function isEligibleForPull() {
+        if (isRefreshing) return false;
+        // Самая быстрая O(1) проверка: если лента прокручена вниз — сразу выходим без querySelector/getComputedStyle
+        const top = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || (document.body ? document.body.scrollTop : 0) || 0;
+        if (top > 2) return false;
+
         if (hasAction('isPwaStandalone')) {
             if (!invokeAction('isPwaStandalone')) return false;
         } else if (document.documentElement && document.documentElement.classList && !document.documentElement.classList.contains('pwa-standalone')) {
@@ -148,8 +153,6 @@ export function initPwaPullToRefresh() {
             );
             if (!isMediaStandalone && (!navigator || !navigator.standalone)) return false;
         }
-
-        if (isRefreshing) return false;
 
         const hasOpenOverlay = Boolean(
             document.querySelector && document.querySelector('.modal.active, .modal-overlay.active, .pswp--open, .lightbox-overlay.active, #orderSuccessOverlay[style*="display: block"], #orderSuccessOverlay[style*="display: flex"]')
@@ -183,8 +186,7 @@ export function initPwaPullToRefresh() {
         );
         if (hasOpenDropdown) return false;
 
-        const top = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || (document.body ? document.body.scrollTop : 0) || 0;
-        return top <= 2;
+        return true;
     }
 
     function resetPull() {

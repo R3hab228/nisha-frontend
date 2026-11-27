@@ -73,4 +73,20 @@ describe('Rapid Scroll, Fast Open/Close Modal Stability & Instant Cold-Open (Ord
         // Drop open avoids redundant duplicate triggerModalTypewriter reflow
         expect(dropSubmitSrc).not.toContain("globalEnv.triggerModalTypewriter('proposeModal')");
     });
+
+    it('removes closing backdrop-filter blur, rAF-throttles tooltip mousemove, and fast-exits PWA touchstart when scrolled', () => {
+        const modalCss = readFileSync(resolve(rootDir, 'css/02-modals-product-checkout.css'), 'utf8');
+        const measurementsSrc = readFileSync(resolve(rootDir, 'js/catalog/measurements.js'), 'utf8');
+        const delegationSrc = readFileSync(resolve(rootDir, 'js/core/helpers-delegation.js'), 'utf8');
+        const pwaPullSrc = readFileSync(resolve(rootDir, 'js/core/pwa-pull-refresh.js'), 'utf8');
+
+        expect(modalCss).toMatch(/\.modal-overlay\.closing\s*\{[^}]*backdrop-filter:\s*none\s*!important/);
+        expect(measurementsSrc).toContain('_tooltipMoveRafId = requestAnimationFrame');
+        expect(delegationSrc).toContain('!window.isItemMeasurementsTooltipVisible()');
+        const fnStart = pwaPullSrc.indexOf('function isEligibleForPull()');
+        const fastExitPos = pwaPullSrc.indexOf('if (top > 2) return false;', fnStart);
+        const queryPos = pwaPullSrc.indexOf('document.querySelector', fnStart);
+        expect(fastExitPos).toBeGreaterThan(fnStart);
+        expect(fastExitPos).toBeLessThan(queryPos);
+    });
 });

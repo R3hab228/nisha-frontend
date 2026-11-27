@@ -15,6 +15,8 @@
 
 .modal-overlay.closing {
     pointer-events: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     animation: fadeOutOverlay 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 .modal-overlay.closing .modal-window {
