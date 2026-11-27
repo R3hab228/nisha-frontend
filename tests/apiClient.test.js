@@ -173,4 +173,61 @@ describe('Protected API Client (js/core/apiClient.js) — Retries, Deduplication
             globalThis.i18next = prevI18n;
         }
     });
+
+    it('proactively refreshes expiring Supabase JWT before sending Authorization header and omits dead expired tokens', async () => {
+        const fetchMock = vi.fn().mockImplementation(() =>
+            Promise.resolve(new Response(JSON.stringify({ success: true, bargains: [] }), { status: 200 }))
+        );
+        globalThis.fetch = fetchMock;
+        const prevSb = window._supabase;
+
+        try {
+            // Case 1: expired session token -> refreshes silently and sends fresh token
+            const refreshMock = vi.fn().mockResolvedValue({
+                data: {
+                    session: {
+                        access_token: 'fresh_jwt_token_123',
+                        expires_at: Math.floor(Date.now() / 1000) + 3600
+                    }
+                }
+            });
+            window._supabase = {
+                auth: {
+                    getSession: vi.fn().mockResolvedValue({
+                        data: {
+                            session: {
+                                access_token: 'expired_jwt_token',
+                                expires_at: Math.floor(Date.now() / 1000) - 120
+                            }
+                        }
+                    }),
+                    refreshSession: refreshMock
+                }
+            };
+
+            await apiClient.get('/api/bargains/active?clientId=u1', { retries: 0 });
+            expect(refreshMock).toHaveBeenCalledTimes(1);
+            expect(fetchMock.mock.calls[0][1].headers.get('Authorization')).toBe('Bearer fresh_jwt_token_123');
+
+            // Case 2: expired token & refresh fails -> does NOT attach dead expired Bearer header
+            window._supabase = {
+                auth: {
+                    getSession: vi.fn().mockResolvedValue({
+                        data: {
+                            session: {
+                                access_token: 'dead_expired_jwt',
+                                expires_at: Math.floor(Date.now() / 1000) - 600
+                            }
+                        }
+                    }),
+                    refreshSession: vi.fn().mockRejectedValue(new Error('Refresh token revoked'))
+                }
+            };
+
+            await apiClient.get('/api/bargains/active?clientId=u1', { retries: 0 });
+            expect(fetchMock.mock.calls[1][1].headers.get('Authorization')).toBeNull();
+        } finally {
+            window._supabase = prevSb;
+        }
+    });
 });

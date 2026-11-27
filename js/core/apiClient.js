@@ -19,6 +19,93 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
 
     // Карта активных in-flight запросов для предотвращения дублирующего спама
     const inFlightRequests = new Map();
+    /** @type {Promise<string> | null} */
+    let inFlightSessionRefresh = null;
+
+    /**
+     * Безопасно читает exp (в секундах) из payload JWT без валидации подписи.
+     * @param {string} token
+     * @returns {number | null}
+     */
+    function readJwtExpSeconds(token) {
+        try {
+            const parts = String(token || '').split('.');
+            if (parts.length !== 3) return null;
+            const b64 = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+            const padded = b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=');
+            const rawJson = typeof atob === 'function' ? atob(padded) : '';
+            if (!rawJson) return null;
+            const parsed = JSON.parse(rawJson);
+            return typeof parsed?.exp === 'number' && Number.isFinite(parsed.exp) ? parsed.exp : null;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * Проверяет, истёк ли JWT-токен (или истечёт в ближайшие leewaySec секунд).
+     * @param {any} session
+     * @param {string} token
+     * @param {number} [leewaySec=30]
+     * @returns {boolean}
+     */
+    function isAccessTokenExpiring(session, token, leewaySec = 30) {
+        const expSec = (typeof session?.expires_at === 'number' && Number.isFinite(session.expires_at))
+            ? session.expires_at
+            : readJwtExpSeconds(token);
+        if (expSec === null) return false;
+        return (expSec * 1000) <= (Date.now() + leewaySec * 1000);
+    }
+
+    /**
+     * Возвращает актуальный Bearer-токен Supabase: если кэшированный истёк/истекает —
+     * тихо обновляет сессию (с дедупликацией параллельных запросов) и не шлёт протухший JWT.
+     * @param {any} sb
+     * @param {boolean} [forceRefresh=false]
+     * @returns {Promise<string>}
+     */
+    async function resolveFreshAccessToken(sb, forceRefresh = false) {
+        if (!sb || !sb.auth || typeof sb.auth.getSession !== 'function') return '';
+        try {
+            const sess = await sb.auth.getSession();
+            const session = sess?.data?.session || null;
+            const tok = String(session?.access_token || '').trim();
+            if (!tok && !forceRefresh) return '';
+
+            if (!forceRefresh && tok && !isAccessTokenExpiring(session, tok, 30)) {
+                return tok;
+            }
+
+            if (typeof sb.auth.refreshSession === 'function') {
+                if (!inFlightSessionRefresh) {
+                    inFlightSessionRefresh = Promise.race([
+                        Promise.resolve()
+                            .then(() => sb.auth.refreshSession())
+                            .then((refreshed) => {
+                                const nextSess = refreshed?.data?.session || null;
+                                const nextTok = String(nextSess?.access_token || '').trim();
+                                if (!nextTok || isAccessTokenExpiring(nextSess, nextTok, 0)) return '';
+                                return nextTok;
+                            })
+                            .catch(() => ''),
+                        waitMsDelay(4000).then(() => '')
+                    ]).finally(() => {
+                        inFlightSessionRefresh = null;
+                    });
+                }
+                const refreshedTok = await inFlightSessionRefresh;
+                if (refreshedTok) return refreshedTok;
+            }
+
+            // Если рефреш не сработал, отправляем токен только если он ещё физически не протух
+            if (tok && !isAccessTokenExpiring(session, tok, 0)) {
+                return tok;
+            }
+            return '';
+        } catch {
+            return '';
+        }
+    }
 
     function getBaseUrl() {
         const envUrl = window.ENV && window.ENV.API_BASE_URL;
@@ -138,7 +225,9 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
         }
         let finalBody = options.body;
 
-        // Автоматическая передача JWT токена текущей авторизованной сессии Supabase (только на свой API / same-origin)
+        // Автоматическая передача свежего JWT токена текущей авторизованной сессии Supabase (только на свой API / same-origin)
+        let autoAuthSb = null;
+        let autoAuthAttached = false;
         if (!headers.has('Authorization') && typeof window !== 'undefined') {
             try {
                 const pageOrigin = window.location?.origin || '';
@@ -147,10 +236,11 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
                 if (targetOrigin === apiOrigin || (pageOrigin && targetOrigin === pageOrigin)) {
                     const sb = window._supabase || invokeAction('getSupabase');
                     if (sb && sb.auth && typeof sb.auth.getSession === 'function') {
-                        const sess = await sb.auth.getSession();
-                        const tok = sess && sess.data && sess.data.session && sess.data.session.access_token;
+                        autoAuthSb = sb;
+                        const tok = await resolveFreshAccessToken(sb, false);
                         if (tok) {
                             headers.set('Authorization', `Bearer ${tok}`);
+                            autoAuthAttached = true;
                         }
                     }
                 }
@@ -194,6 +284,30 @@ const DEFAULT_BASE_URL = 'https://nisha-api.onrender.com';
 
                 const response = await fetch(url, fetchOpts);
                 cleanup();
+
+                // Если сервер вернул 401 (например, рассинхрон часов или токен истёк в полёте) — один тихий refresh + повтор
+                if (
+                    response.status === 401 &&
+                    autoAuthAttached &&
+                    autoAuthSb &&
+                    !isUpload &&
+                    !options._authRetried
+                ) {
+                    const refreshedTok = await resolveFreshAccessToken(autoAuthSb, true);
+                    if (refreshedTok) {
+                        headers.set('Authorization', `Bearer ${refreshedTok}`);
+                        options = { ...options, _authRetried: true };
+                        const retrySig = createTimeoutSignal(timeoutMs, options.signal);
+                        try {
+                            const retryResp = await fetch(url, { ...fetchOpts, headers, signal: retrySig.signal });
+                            retrySig.cleanup();
+                            return retryResp;
+                        } catch (retryErr) {
+                            retrySig.cleanup();
+                            throw retryErr;
+                        }
+                    }
+                }
 
                 if (!response.ok && RETRYABLE_STATUSES.has(response.status) && attempt < maxRetries) {
                     const waitMs = response.status === 429 ? Math.max(2500, baseRetryDelay * (attempt + 1)) : baseRetryDelay * (attempt + 1);
