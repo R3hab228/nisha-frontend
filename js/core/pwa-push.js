@@ -4,6 +4,7 @@
 // ==========================================
 
 import { registerActions } from './action-registry.js';
+import { base64ToBytes } from './es2025-utils.js';
 import { getRuntimeUser, getRuntimeFingerprint, getRuntimeSiteLang, getRuntimeStorage } from './runtime-env.js';
 
 let pushPrompted = false;
@@ -189,9 +190,8 @@ export async function subscribeUserToPush(registration, silent = false) {
             if (!vapidData || !vapidData.publicKey) return;
             const { publicKey } = vapidData;
 
-            const padding = '='.repeat((4 - publicKey.length % 4) % 4);
-            const base64 = (publicKey + padding).replaceAll('-', '+').replaceAll('_', '/');
-            const outputArray = Uint8Array.from(window.atob(base64), c => c.charCodeAt(0));
+            const outputArray = base64ToBytes(publicKey, { alphabet: 'base64url' });
+            if (!outputArray || outputArray.length === 0) return;
 
             targetSub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,

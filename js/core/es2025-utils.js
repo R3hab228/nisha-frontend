@@ -53,7 +53,7 @@ export function promiseTry(fn, ...args) {
  * Decodes a Base64 / Base64URL string into Uint8Array using ES2025 Uint8Array.fromBase64() with atob() fallback.
  * @param {string} base64
  * @param {{ alphabet?: 'base64' | 'base64url' }} [options={}]
- * @returns {Uint8Array | null}
+ * @returns {Uint8Array<ArrayBuffer> | null}
  */
 export function base64ToBytes(base64, options = {}) {
     if (typeof base64 !== 'string') return null;

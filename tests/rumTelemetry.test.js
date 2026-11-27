@@ -82,5 +82,9 @@ describe('Real User Monitoring (RUM) Module', () => {
         expect(body.lcp).toBe(1450);
         expect(body.ttfb).toBe(210);
         expect(body.reason).toBe('manual_test');
+        // All POST /api/rum payload values must be flat primitives compatible with backend rumMetricsSchema
+        for (const val of Object.values(body)) {
+            expect(val === null || ['string', 'number', 'boolean'].includes(typeof val)).toBe(true);
+        }
     });
 });
