@@ -443,7 +443,23 @@ export function handleDelegatedAction(e) {
         }
         case 'toggle-footer-lang': {
             const wrapper = typeof document !== 'undefined' ? document.getElementById('footerLangWrapper') : null;
-            if (wrapper) wrapper.classList.toggle('active');
+            if (wrapper) {
+                const isNowActive = wrapper.classList.toggle('active');
+                const trigger = document.getElementById('currentLangLabelFooter');
+                const menu = wrapper.querySelector('.footer-lang-menu');
+                if (menu) {
+                    if (isNowActive && trigger) {
+                        invokeAction('attachFloatingPopover', trigger, menu, {
+                            placement: 'top',
+                            strategy: 'absolute',
+                            offsetPx: 5,
+                            padding: 8
+                        });
+                    } else {
+                        invokeAction('detachFloatingPopover', menu);
+                    }
+                }
+            }
             break;
         }
         case 'set-lang': {

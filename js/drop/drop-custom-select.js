@@ -2,6 +2,8 @@
 // NISHA DROP — CUSTOM TERMINAL SELECT UI & SIZE SYNC
 // ==========================================
 
+import { attachFloatingPopover, detachFloatingPopover } from '../core/floating-ui.js';
+
 const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
 const SHOE_SIZES = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'];
 const ACCESSORY_SIZES = ['One Size', 'XS', 'S', 'M', 'L', 'XL'];
@@ -89,6 +91,7 @@ export function refreshCustomPropSelect(selectEl) {
             selectEl.value = opt.value;
             wrap.classList.remove('is-open');
             trigger.setAttribute('aria-expanded', 'false');
+            detachFloatingPopover(dropdown);
             refreshCustomPropSelect(selectEl);
             if (changed) {
                 selectEl.dispatchEvent(new Event('change', { bubbles: true }));
@@ -139,19 +142,33 @@ export function initCustomPropSelect(selectEl) {
         }
         wrap.appendChild(dropdown);
 
-        trigger.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const willOpen = !wrap.classList.contains('is-open');
+        const closeOpenPropSelects = () => {
             document.querySelectorAll('.prop-select-wrap.is-open').forEach(w => {
                 w.classList.remove('is-open');
                 const t = w.querySelector('.prop-custom-trigger');
                 if (t) t.setAttribute('aria-expanded', 'false');
+                const dd = w.querySelector('.prop-custom-dropdown');
+                if (dd) detachFloatingPopover(dd);
             });
+        };
+
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const willOpen = !wrap.classList.contains('is-open');
+            closeOpenPropSelects();
             if (willOpen) {
                 refreshCustomPropSelect(selectEl);
                 wrap.classList.add('is-open');
                 trigger.setAttribute('aria-expanded', 'true');
+                const modalBoundary = typeof wrap.closest === 'function' ? wrap.closest('.modal-window') : null;
+                attachFloatingPopover(trigger, dropdown, {
+                    placement: 'bottom-start',
+                    strategy: 'absolute',
+                    offsetPx: 4,
+                    padding: 8,
+                    ...(modalBoundary ? { boundary: modalBoundary } : {})
+                });
             }
         });
 
@@ -159,6 +176,7 @@ export function initCustomPropSelect(selectEl) {
             if (e.key === 'Escape') {
                 wrap.classList.remove('is-open');
                 trigger.setAttribute('aria-expanded', 'false');
+                detachFloatingPopover(dropdown);
             }
         });
     }
@@ -176,6 +194,8 @@ export function initCustomPropSelect(selectEl) {
                 w.classList.remove('is-open');
                 const t = w.querySelector('.prop-custom-trigger');
                 if (t) t.setAttribute('aria-expanded', 'false');
+                const dd = w.querySelector('.prop-custom-dropdown');
+                if (dd) detachFloatingPopover(dd);
             });
         });
         document.addEventListener('keydown', (e) => {
@@ -184,6 +204,8 @@ export function initCustomPropSelect(selectEl) {
                     w.classList.remove('is-open');
                     const t = w.querySelector('.prop-custom-trigger');
                     if (t) t.setAttribute('aria-expanded', 'false');
+                    const dd = w.querySelector('.prop-custom-dropdown');
+                    if (dd) detachFloatingPopover(dd);
                 });
             }
         });

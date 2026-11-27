@@ -454,7 +454,11 @@ export function handleDropdownsOutsideClick(e) {
     }
     if (!e.target.closest('#footerLangWrapper')) {
         const langWrap = document.getElementById('footerLangWrapper');
-        if (langWrap) langWrap.classList.remove('active');
+        if (langWrap) {
+            langWrap.classList.remove('active');
+            const menu = langWrap.querySelector('.footer-lang-menu');
+            if (menu) invokeAction('detachFloatingPopover', menu);
+        }
     }
 }
 

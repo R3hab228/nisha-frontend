@@ -4,6 +4,7 @@
 
 import { getCurrentSiteLang } from './catalog-state.js';
 import { invokeAction, registerActions } from '../core/action-registry.js';
+import { positionAtCursor } from '../core/floating-ui.js';
 
 const MEASUREMENT_NOTE_TRANSLATIONS = [
     {
@@ -605,25 +606,12 @@ export const moveItemMeasurementsTooltip = function(e) {
     const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : null);
     if (clientX === null || clientY === null) return;
 
-    const offset = 16;
-    const tooltipWidth = tooltip.offsetWidth || 190;
-    const tooltipHeight = tooltip.offsetHeight || 120;
-
-    let x = clientX + offset;
-    let y = clientY + offset;
-
-    if (x + tooltipWidth > window.innerWidth - 12) {
-        x = clientX - tooltipWidth - offset;
-    }
-    if (y + tooltipHeight > window.innerHeight - 12) {
-        y = clientY - tooltipHeight - offset;
-    }
-
-    if (x < 10) x = 10;
-    if (y < 10) y = 10;
-
-    tooltip.style.left = `${x}px`;
-    tooltip.style.top = `${y}px`;
+    positionAtCursor(tooltip, clientX, clientY, {
+        offsetX: 16,
+        offsetY: 16,
+        flipPadding: 12,
+        shiftPadding: 10
+    });
 };
 
 /**

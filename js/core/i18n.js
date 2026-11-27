@@ -107,7 +107,11 @@ function setLang(lang) {
     }
     if (typeof document !== 'undefined') {
         const wrapper = document.getElementById('footerLangWrapper');
-        if (wrapper) wrapper.classList.remove('active');
+        if (wrapper) {
+            wrapper.classList.remove('active');
+            const menu = wrapper.querySelector('.footer-lang-menu');
+            if (menu) invokeAction('detachFloatingPopover', menu);
+        }
     }
 }
 
