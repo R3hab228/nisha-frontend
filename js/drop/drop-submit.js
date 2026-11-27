@@ -225,14 +225,21 @@ export function openProposeModal() {
         contactEl.value = window._lastProposalContact;
     }
     if (typeof globalEnv.Sortable === 'undefined' && typeof window.Sortable === 'undefined') {
-        import('sortablejs').then(mod => {
-            window.Sortable = mod.default || mod;
-        }).catch(() => {});
+        const loadSortableDeferred = () => {
+            import('sortablejs').then(mod => {
+                window.Sortable = mod.default || mod;
+            }).catch(() => {});
+        };
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            window.requestIdleCallback(loadSortableDeferred, { timeout: 800 });
+        } else {
+            setTimeout(loadSortableDeferred, 120);
+        }
     }
 
     if (typeof globalEnv.openModal === 'function') {
+        // openModal уже запускает triggerModalTypewriter без принудительного reflow на первом кадре
         globalEnv.openModal('proposeModal');
-        if (typeof globalEnv.triggerModalTypewriter === 'function') globalEnv.triggerModalTypewriter('proposeModal');
         if (typeof globalEnv.initTurnstileWidgets === 'function') {
             setTimeout(globalEnv.initTurnstileWidgets, 100);
         }

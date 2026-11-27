@@ -206,12 +206,17 @@ function openModal(id) {
     modal.inert = false;
     modal.removeAttribute('inert');
     if (modal.classList && typeof modal.classList.remove === 'function') {
-        modal.classList.remove('closing');
+        modal.classList.remove('closing', 'swipe-closing');
     }
+    modal._swipeClosing = false;
     if (modal.classList && typeof modal.classList.add === 'function') {
         modal.classList.add('is-open');
     }
     modal.style.pointerEvents = '';
+    modal.style.opacity = '';
+    modal.style.transition = '';
+    modal.style.animation = '';
+    modal.style.backgroundColor = '';
     modal.setAttribute('aria-hidden', 'false');
     const win = /** @type {HTMLElement | null} */ (modal.querySelector ? modal.querySelector('.modal-window') : null);
     if (win) {
@@ -463,6 +468,9 @@ function executeCloseModal(id, e, options = {}) {
     }
     if (modal._closeTimer) clearTimeout(modal._closeTimer);
 
+    const closedAt = Date.now();
+    modal._closedAt = closedAt;
+
     modal._closeTimer = setTimeout(() => {
         modal._closeTimer = null;
         if (!modal.classList.contains('closing')) return;
@@ -488,10 +496,12 @@ function executeCloseModal(id, e, options = {}) {
         modal.style.animation = '';
         modal.style.backgroundColor = '';
 
-        if (modal._returnFocusElement && typeof modal._returnFocusElement.focus === 'function') {
+        // Не перехватываем фокус, если пользователь уже начал скроллить ленту после закрытия (убирает рывок в Safari/Chrome)
+        const scrolledSinceClose = ((/** @type {any} */ (window).__nishaLastScrollAt || 0) >= closedAt);
+        if (!scrolledSinceClose && modal._returnFocusElement && typeof modal._returnFocusElement.focus === 'function') {
             try { modal._returnFocusElement.focus({ preventScroll: true }); } catch {}
-            modal._returnFocusElement = null;
         }
+        modal._returnFocusElement = null;
 
         if (id === 'checkoutModal') {
             invokeAction('stopOtpPolling');
@@ -507,8 +517,14 @@ function executeCloseModal(id, e, options = {}) {
             if (document.documentElement && document.documentElement.style) document.documentElement.style.overflow = '';
         }
 
-        // Фоновые задачи (история и рассылки) запускаем безопасно в idle-потоке без фризов UI
+        // Фоновые задачи (история и рассылки) запускаем строго в простое, когда юзер не скроллит ленту
         const deferBackgroundTasks = () => {
+            if (hasOtherOpenModal()) return;
+            const msSinceScroll = Date.now() - (/** @type {any} */ (window).__nishaLastScrollAt || 0);
+            if (msSinceScroll < 380) {
+                setTimeout(deferBackgroundTasks, 400);
+                return;
+            }
             if (id === 'productModal' && typeof renderHistory === 'function') {
                 renderHistory();
             }

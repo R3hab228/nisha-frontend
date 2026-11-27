@@ -228,6 +228,10 @@ export function initGridEventDelegation() {
 
     const triggerCardPrefetch = (/** @type {string | number} */ id, immediate = false) => {
         if (!id) return;
+        // Во время быстрого скролла не спамим сетевыми предзагрузками пролетающих карточек
+        if (!immediate && (Date.now() - (/** @type {any} */ (window).__nishaLastScrollAt || 0)) < 150) {
+            return;
+        }
         const nav = /** @type {any} */ (typeof navigator !== 'undefined' ? navigator : null);
         const conn = nav ? (nav.connection || nav.mozConnection || nav.webkitConnection) : null;
         if (!immediate && conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g')) {
@@ -411,7 +415,10 @@ export function initGridEventDelegation() {
         if (!itemId) return;
 
         const DOUBLE_TAP_DELAY_MS = 200;
-        if (lastPointerType === 'mouse') {
+        const tappedMedia = Boolean(e.target && typeof e.target.closest === 'function' && e.target.closest('.card-slider-wrapper'));
+        // На ПК и при тапе по названию/цене карточки на мобильном открываем мгновенно (0ms),
+        // а задержку дабл-тап лайка оставляем только на фото-слайдере (.card-slider-wrapper).
+        if (lastPointerType === 'mouse' || !tappedMedia) {
             if (clickTimer) {
                 clearTimeout(clickTimer);
                 clickTimer = null;

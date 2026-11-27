@@ -50,12 +50,23 @@ export function initDesktopLenisController() {
 
     function stopLenis() {
         if (lenis) {
+            try {
+                if (typeof lenis.scrollTo === 'function' && typeof window !== 'undefined') {
+                    lenis.scrollTo(window.scrollY || 0, { immediate: true, force: true });
+                }
+            } catch {}
             Object.getPrototypeOf(lenis).stop.call(lenis);
         }
     }
 
     function startLenis() {
         if (lenis) {
+            try {
+                if (typeof lenis.resize === 'function') lenis.resize();
+                if (typeof lenis.scrollTo === 'function' && typeof window !== 'undefined') {
+                    lenis.scrollTo(window.scrollY || 0, { immediate: true, force: true });
+                }
+            } catch {}
             Object.getPrototypeOf(lenis).start.call(lenis);
         }
     }
@@ -76,6 +87,7 @@ export function initFabScrollBehavior() {
     let fabEl = null;
 
     window.addEventListener('scroll', () => {
+        /** @type {any} */ (window).__nishaLastScrollAt = Date.now();
         if (document.body.classList.contains('search-lock')) return;
 
         if (!scrollTicking) {

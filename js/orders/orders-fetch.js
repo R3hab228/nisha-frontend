@@ -216,51 +216,69 @@ export async function fetchMyOrders() {
                 cachedLocal.forEach(co => { if (co && co.phone) candidatePhones.add(co.phone); });
             }
 
-            const { data: userOrders, error: userOrdersErr } = await sb
-                .from('orders')
-                .select('id, phone, status, created_at, items, tracking_number, total_sum, user_id')
-                .eq('user_id', activeUser.id)
-                .order('created_at', { ascending: false });
+            const orderMap = new Map();
+            const queriedLast9 = new Set();
+
+            /** @param {Iterable<any>} phoneList */
+            const buildPhoneRpcTasks = (phoneList) => {
+                /** @type {Promise<void>[]} */
+                const tasks = [];
+                for (const rawP of phoneList) {
+                    const clean = String(rawP).replace(/[^\d]/g, '');
+                    if (clean.length >= 9) {
+                        const last9 = clean.slice(-9);
+                        const canonicalPhone = '380' + last9;
+                        if (queriedLast9.has(last9)) continue;
+                        queriedLast9.add(last9);
+
+                        tasks.push(
+                            sb.rpc('get_orders_by_phone', { search_phone: canonicalPhone })
+                                .then((/** @type {any} */ { data: phoneOrders }) => {
+                                    if (Array.isArray(phoneOrders) && phoneOrders.length > 0) {
+                                        for (const po of phoneOrders) {
+                                            if (po && po.id && !orderMap.has(po.id)) {
+                                                orderMap.set(po.id, po);
+                                            }
+                                        }
+                                    }
+                                })
+                                .catch(() => {})
+                        );
+                    }
+                }
+                return tasks;
+            };
+
+            // Запускаем основной запрос заказов по user_id и RPC по известным номерам ПАРАЛЛЕЛЬНО (убирает последовательный waterfall)
+            const initialPhoneTasks = buildPhoneRpcTasks(candidatePhones);
+            const [userOrdersResult] = await Promise.all([
+                sb
+                    .from('orders')
+                    .select('id, phone, status, created_at, items, tracking_number, total_sum, user_id')
+                    .eq('user_id', activeUser.id)
+                    .order('created_at', { ascending: false }),
+                ...initialPhoneTasks
+            ]);
+            const { data: userOrders, error: userOrdersErr } = userOrdersResult || {};
 
             if (userOrdersErr) fetchError = userOrdersErr;
 
-            const orderMap = new Map();
+            /** @type {string[]} */
+            const newlyDiscoveredPhones = [];
             (userOrders || []).forEach((/** @type {any} */ o) => {
                 if (o && o.id) {
                     orderMap.set(o.id, o);
-                    if (o.phone) candidatePhones.add(o.phone);
+                    if (o.phone) {
+                        candidatePhones.add(o.phone);
+                        newlyDiscoveredPhones.push(o.phone);
+                    }
                 }
             });
 
-            const queriedLast9 = new Set();
-            const phoneRpcTasks = [];
-
-            for (const rawP of candidatePhones) {
-                const clean = String(rawP).replace(/[^\d]/g, '');
-                if (clean.length >= 9) {
-                    const last9 = clean.slice(-9);
-                    const canonicalPhone = '380' + last9;
-                    if (queriedLast9.has(last9)) continue;
-                    queriedLast9.add(last9);
-
-                    phoneRpcTasks.push(
-                        sb.rpc('get_orders_by_phone', { search_phone: canonicalPhone })
-                            .then((/** @type {any} */ { data: phoneOrders }) => {
-                                if (Array.isArray(phoneOrders) && phoneOrders.length > 0) {
-                                    for (const po of phoneOrders) {
-                                        if (po && po.id && !orderMap.has(po.id)) {
-                                            orderMap.set(po.id, po);
-                                        }
-                                    }
-                                }
-                            })
-                            .catch(() => {})
-                    );
-                }
-            }
-
-            if (phoneRpcTasks.length > 0) {
-                await Promise.all(phoneRpcTasks);
+            // Если в заказах по user_id нашлись новые номера, которые ещё не запрашивались — добираем их параллельно
+            const extraPhoneTasks = buildPhoneRpcTasks(newlyDiscoveredPhones);
+            if (extraPhoneTasks.length > 0) {
+                await Promise.all(extraPhoneTasks);
             }
 
             if (Array.isArray(cachedLocal)) {

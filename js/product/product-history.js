@@ -278,7 +278,18 @@ export function addToHistory(item) {
     if (hist.length > 30) hist = hist.slice(0, 30);
 
     if (store) store.setJSON('nisha_history', hist);
-    renderHistory();
+
+    // Если карточка товара сейчас открыта — НЕ перестраиваем 30 карточек истории + VanillaTilt
+    // синхронно во время открытия модалки (renderHistory выполнится в простое после закрытия).
+    const prodModal = typeof document !== 'undefined' ? document.getElementById('productModal') : null;
+    const isProductModalOpen = Boolean(
+        prodModal &&
+        !prodModal.classList.contains('closing') &&
+        (prodModal.classList.contains('is-open') || prodModal.style?.display === 'flex')
+    );
+    if (!isProductModalOpen) {
+        renderHistory();
+    }
 }
 
 /**

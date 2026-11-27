@@ -273,10 +273,15 @@ export function openProductModal(item) {
         if (typeof window !== 'undefined' && window._seenItemsSet) window._seenItemsSet.add(String(item.id));
     }
 
+    // Откладываем парсинг тяжёлого чанка PhotoSwipe (73 КБ) на 450мс (или до наведения на фото),
+    // чтобы при быстром открытии/закрытии карточки главный поток не фризился.
+    const itemIdForPswp = String(item?.id || '');
     setTimeout(() => {
+        const activeNow = /** @type {any} */ (getActiveOpenedItem());
+        if (!activeNow || String(activeNow.id) !== itemIdForPswp) return;
         const ensurePhotoSwipe = g.ensurePhotoSwipe;
         if (typeof ensurePhotoSwipe === 'function') ensurePhotoSwipe();
-    }, 0);
+    }, 450);
 
     if (hasAction('stopLenis')) invokeAction('stopLenis');
     else {
@@ -593,11 +598,11 @@ export function openProductModal(item) {
         window.history.replaceState(curState, '', url.pathname + url.search);
     }
 
-    if (sb) loadItemQuestions(item.id);
-
     const runDeferredModalWork = () => {
         const activeNow = /** @type {any} */ (getActiveOpenedItem());
-        if (activeNow && String(activeNow.id) !== String(item.id)) return;
+        // Если карточку уже быстро закрыли (activeNow === null) или переключили на другую — мгновенно отменяем тяжёлую работу!
+        if (!activeNow || String(activeNow.id) !== String(item.id)) return;
+        if (sb) loadItemQuestions(item.id);
         renderSimilarItems(item);
         updateProductSeoAndOg(item, cleanDesc);
         if (typeof window !== 'undefined' && window.analytics && typeof window.analytics.trackProductView === 'function') {
@@ -612,7 +617,7 @@ export function openProductModal(item) {
         }
     };
     if (typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(runDeferredModalWork);
+        requestAnimationFrame(() => requestAnimationFrame(runDeferredModalWork));
     } else {
         runDeferredModalWork();
     }

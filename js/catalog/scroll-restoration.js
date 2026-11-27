@@ -12,6 +12,9 @@ let _saveScrollTimeout = null;
 let _scrollRestoredBadgeTimeout = null;
 /** @type {AbortController | null} */
 let _scrollBadgeCtrl = null;
+let _lastScrollSaveAt = 0;
+/** @type {string | null} */
+let _lastScrollSaveKey = null;
 
 /**
  * Проверяет, открыта ли в данный момент любая модалка.
@@ -42,15 +45,39 @@ export function saveCurrentFeedScrollState(preferredActiveItemId = null) {
     const scrollY = window.scrollY || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
     const effectiveScrollY = scrollY < 70 ? 0 : Math.round(scrollY);
 
+    // Дедупликация дублирующихся вызовов (клик по карточке + openProductModal) в пределах 80ms
+    const saveKey = `${effectiveScrollY}:${preferredActiveItemId || ''}`;
+    const now = Date.now();
+    if (saveKey === _lastScrollSaveKey && (now - _lastScrollSaveAt) < 80) return;
+    _lastScrollSaveKey = saveKey;
+    _lastScrollSaveAt = now;
+
     let activeItemId = preferredActiveItemId;
     if (!activeItemId && effectiveScrollY > 100 && typeof document !== 'undefined') {
-        const cards = document.querySelectorAll('#itemsGrid .item-card');
-        for (let i = 0; i < cards.length; i++) {
-            const card = /** @type {HTMLElement} */ (cards[i]);
-            const rect = card.getBoundingClientRect();
-            if (rect.top >= -100 && rect.top <= window.innerHeight * 0.5) {
-                activeItemId = card.dataset.id || null;
-                break;
+        // O(1) hit-test через elementsFromPoint вместо O(N) цикла getBoundingClientRect() по всем карточкам
+        if (typeof document.elementsFromPoint === 'function') {
+            try {
+                const probeX = Math.max(20, Math.round((window.innerWidth || 1000) * 0.5));
+                const probeY = Math.max(80, Math.min(Math.round((window.innerHeight || 700) * 0.35), 280));
+                const hitEls = document.elementsFromPoint(probeX, probeY);
+                for (let i = 0; i < hitEls.length; i += 1) {
+                    const card = hitEls[i]?.closest?.('#itemsGrid .item-card');
+                    if (card && /** @type {HTMLElement} */ (card).dataset?.id) {
+                        activeItemId = /** @type {HTMLElement} */ (card).dataset.id || null;
+                        break;
+                    }
+                }
+            } catch {}
+        }
+        if (!activeItemId) {
+            const cards = document.querySelectorAll('#itemsGrid .item-card');
+            for (let i = 0; i < cards.length; i++) {
+                const card = /** @type {HTMLElement} */ (cards[i]);
+                const rect = card.getBoundingClientRect();
+                if (rect.top >= -100 && rect.top <= window.innerHeight * 0.5) {
+                    activeItemId = card.dataset.id || null;
+                    break;
+                }
             }
         }
     }

@@ -327,10 +327,33 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
     window.addEventListener('keydown', warmSoundOnFirstGesture, { capture: true, passive: true, once: true });
 }
 
-// Умная фоновая предзагрузка в простой браузера:
-// - на Save-Data / медленном мобильном интернете (2G/3G) ничего лишнего не качаем;
-// - на быстром соединении предзагружаем только карточку товара (главное действие на витрине),
-//   а редкие модалки (Drop, Отзывы, Чат, Заказы, Чекаут, Профиль контакты/НП, IMask) грузятся строго по клику.
+// Intent pre-warm для ключевых модалок (Мои заказы и Предложка):
+// при первом наведении/касании/фокусе на кнопку чанки JS + CSS уже прогреваются заранее (0ms cold open).
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+    let _ordersWarmed = false;
+    let _dropWarmed = false;
+    /** @param {Event} e */
+    const warmModalOnIntent = (e) => {
+        const target = /** @type {Element | null} */ (e.target);
+        if (!target || typeof target.closest !== 'function') return;
+        if (!_ordersWarmed && target.closest('[data-action="open-orders"]')) {
+            _ordersWarmed = true;
+            loadOrdersModule();
+        } else if (!_dropWarmed && target.closest('[data-action="open-propose-modal"], .fab-propose')) {
+            _dropWarmed = true;
+            loadDropModule();
+        }
+    };
+    document.addEventListener('pointerenter', warmModalOnIntent, { capture: true, passive: true });
+    document.addEventListener('touchstart', warmModalOnIntent, { capture: true, passive: true });
+    document.addEventListener('focusin', warmModalOnIntent, { capture: true, passive: true });
+}
+
+// Умная двухволновая фоновая предзагрузка в простой браузера:
+// - на Save-Data / медленном мобильном интернете (2G/3G) ничего лишнего не качаем (работает только intent-прогрев выше);
+// - на быстром соединении:
+//   Волна 1 (~500ms idle): карточка товара + живой поиск;
+//   Волна 2 (~1600ms idle): Мои заказы (orders + CSS) и Предложка (drop + CSS), чтобы первое открытие было мгновенным.
 const preloadSecondaryModules = () => {
     const nav = /** @type {any} */ (typeof navigator !== 'undefined' ? navigator : null);
     const conn = nav ? (nav.connection || nav.mozConnection || nav.webkitConnection) : null;
@@ -339,6 +362,23 @@ const preloadSecondaryModules = () => {
 
     loadProductModule();
     loadLiveSearchModule();
+
+    const preloadWave2 = () => {
+        // Не грузим волну 2 прямо во время активного скролла ленты
+        if (typeof window !== 'undefined' && (Date.now() - (/** @type {any} */ (window).__nishaLastScrollAt || 0)) < 400) {
+            setTimeout(preloadWave2, 600);
+            return;
+        }
+        loadOrdersModule();
+        loadDropModule();
+    };
+    setTimeout(() => {
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            window.requestIdleCallback(preloadWave2, { timeout: 2500 });
+        } else {
+            preloadWave2();
+        }
+    }, 1200);
 };
 
 registerAction('prewarmProductModule', () => {
