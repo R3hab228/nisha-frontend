@@ -87,6 +87,10 @@ function notifyInvalidProposalContact(errorKey, tgUsername = '', options = {}) {
     const msg = getProposalContactErrorMessage(errorKey, tgUsername);
     if (typeof showToast === 'function') showToast(msg, 'error');
     if (options.focus) {
+        const contactWrap = document.getElementById('propContactWrapper');
+        if (contactWrap && contactWrap.style.display === 'none') {
+            contactWrap.style.display = 'block';
+        }
         const contactEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
         if (contactEl && typeof contactEl.focus === 'function') contactEl.focus();
     }
@@ -236,9 +240,6 @@ export function resetProposalForm() {
         contactEl.value = window._lastProposalContact;
     }
     _lastBlurErrorContactKey = '';
-    if (contactEl && contactEl.value.trim()) {
-        scheduleBackgroundTelegramCheck(contactEl.value, { delayMs: 250 });
-    }
     const descLabel = document.getElementById('descLabel');
     if (descLabel) {
         descLabel.textContent = tSafe('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' });
@@ -446,13 +447,18 @@ export async function submitProposal() {
         }
     }
 
+    const contactWrapEl = document.getElementById('propContactWrapper');
+    const isContactHiddenByProfile = Boolean(contactWrapEl && contactWrapEl.style.display === 'none');
     const syncContactCheck = validateProposalContactSync(rawContact);
     if (!syncContactCheck.ok) {
         notifyInvalidProposalContact(syncContactCheck.errorKey, '', { focus: true });
         return;
     }
 
-    if (syncContactCheck.tgUsername) {
+    // Если поле скрыто автоподстановкой профиля и в нём уже есть подтверждённый телефон —
+    // не блокируем отправку из-за устаревшего/сменённого @ника в профиле.
+    const shouldVerifyRemoteTg = Boolean(syncContactCheck.tgUsername) && !(isContactHiddenByProfile && syncContactCheck.phone);
+    if (shouldVerifyRemoteTg) {
         const cachedTg = getCachedTelegramUsernameStatus(syncContactCheck.tgUsername);
         if (cachedTg && cachedTg.verified === true && cachedTg.exists === false) {
             notifyInvalidProposalContact('propose.err_tg_not_found', syncContactCheck.tgUsername, { focus: true });
@@ -476,10 +482,10 @@ export async function submitProposal() {
                 clearTimeout(slowHintTimer);
                 _isVerifyingContact = false;
                 btn.textContent = prevBtnText;
-            }
-            if (!verifyRes.ok) {
                 btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
+            }
+            if (!verifyRes.ok) {
                 notifyInvalidProposalContact(verifyRes.errorKey, verifyRes.tgUsername, { focus: true });
                 return;
             }

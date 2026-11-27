@@ -35,6 +35,11 @@ describe('drop-contact-validation (phone & Telegram non-blocking checks)', () =>
         expect(validateProposalPhone('80501234567')).toEqual({ valid: true, normalized: '+380501234567' });
         expect(validateProposalPhone('+48 512 345 678')).toEqual({ valid: true, normalized: '+48512345678' });
         expect(validateProposalPhone('+1 212 555 0199')).toEqual({ valid: true, normalized: '+12125550199' });
+        // iOS / Android Contacts copy-paste with bidi marks, NBSP and en-dash
+        expect(validateProposalPhone('\u202A+380\u00A097\u2013123\u201345\u201367\u202C')).toEqual({
+            valid: true,
+            normalized: '+380971234567'
+        });
 
         // Invalid lengths, operator prefixes, fake repeated digits, garbage
         expect(validateProposalPhone('+380971234')).toEqual({ valid: false, normalized: '' });
@@ -51,6 +56,7 @@ describe('drop-contact-validation (phone & Telegram non-blocking checks)', () =>
         expect(extractTelegramUsername('@durov')).toEqual({ valid: true, username: 'durov' });
         expect(extractTelegramUsername('@Stor1k')).toEqual({ valid: true, username: 'Stor1k' });
         expect(extractTelegramUsername('https://t.me/nisha_store/')).toEqual({ valid: true, username: 'nisha_store' });
+        expect(extractTelegramUsername('https://t.me/durov?start=1')).toEqual({ valid: true, username: 'durov' });
         expect(extractTelegramUsername('t.me/archive_drop')).toEqual({ valid: true, username: 'archive_drop' });
         expect(extractTelegramUsername('valid_user99')).toEqual({ valid: true, username: 'valid_user99' });
 
@@ -76,6 +82,28 @@ describe('drop-contact-validation (phone & Telegram non-blocking checks)', () =>
             phone: ''
         });
         expect(validateProposalContactSync('@durov | +380971234567')).toMatchObject({
+            ok: true,
+            kind: 'both',
+            tgUsername: 'durov',
+            phone: '+380971234567'
+        });
+        expect(validateProposalContactSync('тг: @durov')).toMatchObject({
+            ok: true,
+            kind: 'telegram',
+            tgUsername: 'durov'
+        });
+        expect(validateProposalContactSync('тел: +380 97 123 45 67')).toMatchObject({
+            ok: true,
+            kind: 'phone',
+            phone: '+380971234567'
+        });
+        expect(validateProposalContactSync('@durov +380971234567')).toMatchObject({
+            ok: true,
+            kind: 'both',
+            tgUsername: 'durov',
+            phone: '+380971234567'
+        });
+        expect(validateProposalContactSync('+380971234567 @durov')).toMatchObject({
             ok: true,
             kind: 'both',
             tgUsername: 'durov',

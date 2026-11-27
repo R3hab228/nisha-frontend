@@ -9,7 +9,23 @@
 
 const TELEGRAM_USERNAME_RE = /^[a-zA-Z][a-zA-Z0-9_]{4,31}$/;
 const PHONE_CHARS_RE = /^[\d\s()+-]+$/;
+const INVISIBLE_UNICODE_RE = /[\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/g;
+const UNICODE_DASH_RE = /[\u2012\u2013\u2014\u2015\u2212]/g;
+const CONTACT_PREFIX_LABEL_RE = /^(?:tg|тг|telegram|телеграм|телеграмм|тел|tel|phone|телефон|номер)\s*[:\-]?\s+/i;
 const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * Очищает строку от невидимых Unicode-меток (копипаста из контактов iOS/Android/Viber) и нормализует тире/пробелы.
+ * @param {unknown} raw
+ * @returns {string}
+ */
+function cleanContactRaw(raw) {
+    return String(raw || '')
+        .replace(INVISIBLE_UNICODE_RE, '')
+        .replace(UNICODE_DASH_RE, '-')
+        .replace(/\u00A0/g, ' ')
+        .trim();
+}
 const MAX_CACHE_ENTRIES = 200;
 const DEFAULT_REMOTE_TIMEOUT_MS = 2800;
 
@@ -48,7 +64,7 @@ function hasFakeRepeatedDigits(digits) {
  * @returns {{ valid: boolean, normalized: string }}
  */
 export function validateProposalPhone(raw) {
-    const trimmed = String(raw || '').trim();
+    const trimmed = cleanContactRaw(raw);
     if (!trimmed || !PHONE_CHARS_RE.test(trimmed)) {
         return { valid: false, normalized: '' };
     }
@@ -103,7 +119,7 @@ export function validateProposalPhone(raw) {
  * @returns {{ valid: boolean, username: string }}
  */
 export function extractTelegramUsername(raw) {
-    const trimmed = String(raw || '').trim();
+    const trimmed = cleanContactRaw(raw);
     if (!trimmed || /\s/.test(trimmed)) {
         return { valid: false, username: '' };
     }
@@ -118,7 +134,7 @@ export function extractTelegramUsername(raw) {
             .replace(/^https?:\/\/(?:www\.)?(?:t\.me|telegram\.me)\//i, '')
             .replace(/^(?:www\.)?(?:t\.me|telegram\.me)\//i, '')
             .replace(/^@+/, '')
-            .replace(/\/+$/, '');
+            .replace(/[/?#].*$/, '');
     }
 
     if (!TELEGRAM_USERNAME_RE.test(candidate)) {
@@ -156,20 +172,51 @@ function looksLikePhoneAttempt(raw) {
 }
 
 /**
+ * Разбивает ввод пользователя на сегменты контактов (поддержка | , ;, меток вроде "тг @nick" и пар "@nick +380...").
+ * @param {string} cleaned
+ * @returns {string[]}
+ */
+function splitContactSegments(cleaned) {
+    const rawParts = cleaned
+        .split(/[|,;]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+    /** @type {string[]} */
+    const segments = [];
+    for (const rawPart of rawParts) {
+        const part = rawPart.replace(CONTACT_PREFIX_LABEL_RE, '').trim();
+        if (!part) continue;
+
+        // Поддержка пробельной пары "@nick +380..." / "t.me/nick 097..." или "+380... @nick"
+        const tgFirst = part.match(/^((?:@|(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/)\S+)\s+([+\d][\d\s()+-]{6,})$/i);
+        if (tgFirst) {
+            segments.push(tgFirst[1].trim(), tgFirst[2].trim());
+            continue;
+        }
+        const phoneFirst = part.match(/^([+\d][\d\s()+-]{6,})\s+((?:@|(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/)\S+)$/i);
+        if (phoneFirst) {
+            segments.push(phoneFirst[1].trim(), phoneFirst[2].trim());
+            continue;
+        }
+
+        segments.push(part);
+    }
+    return segments;
+}
+
+/**
  * Синхронная 0ms валидация поля контакта предложки (телефон, Telegram @username или связка "@nick | +380...").
  * @param {string} rawContact
  * @returns {ContactSyncResult}
  */
 export function validateProposalContactSync(rawContact) {
-    const trimmed = String(rawContact || '').trim();
+    const trimmed = cleanContactRaw(rawContact);
     if (!trimmed) {
         return { ok: false, kind: 'empty', errorKey: 'propose.err_fill_all', tgUsername: '', phone: '' };
     }
 
-    const parts = trimmed
-        .split(/[|,;]+/)
-        .map((s) => s.trim())
-        .filter(Boolean);
+    const parts = splitContactSegments(trimmed);
 
     if (parts.length === 0 || parts.length > 3) {
         return { ok: false, kind: 'invalid', errorKey: 'propose.err_contact_invalid', tgUsername: '', phone: '' };
