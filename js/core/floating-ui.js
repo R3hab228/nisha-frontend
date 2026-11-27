@@ -81,6 +81,15 @@ function applySyncCursorPosition(floatingEl, clientX, clientY, offsetX, offsetY,
 }
 
 /**
+ * Отменяет любые ожидающие асинхронные расчёты позиции у курсора (вызывается при скрытии тултипа).
+ * @param {HTMLElement | null | undefined} floatingEl
+ */
+export function cancelCursorPosition(floatingEl) {
+    if (!floatingEl) return;
+    _cursorTokens.set(floatingEl, (_cursorTokens.get(floatingEl) || 0) + 1);
+}
+
+/**
  * Позиционирует fixed-тултип (например `#measurementsTooltip`) у курсора с помощью `@floating-ui/dom`.
  * Никогда не меняет ширину/высоту/масштаб тултипа — только `left` и `top`.
  * @param {HTMLElement | null} floatingEl
@@ -124,8 +133,10 @@ export async function positionAtCursor(floatingEl, clientX, clientY, options = {
             ]
         });
 
-        // Игнорируем устаревший асинхронный расчёт, если курсор уже сдвинулся или тултип скрыли
-        if (_cursorTokens.get(floatingEl) !== token || floatingEl.style.display === 'none') {
+        // Игнорируем устаревший асинхронный расчёт, если курсор уже сдвинулся или тултип скрывается
+        const isHidden = floatingEl.style.display === 'none' ||
+            (floatingEl.classList && !floatingEl.classList.contains('visible'));
+        if (_cursorTokens.get(floatingEl) !== token || isHidden) {
             return null;
         }
 
@@ -176,6 +187,7 @@ export function detachFloatingPopover(floatingEl) {
  * Подключает `@floating-ui/dom` (`computePosition` + `autoUpdate`) к выпадающему меню/поповеру.
  * Автоматически переворачивает (`flip`) и сдвигает (`shift`) элемент внутри границ экрана/модалки,
  * не изменяя его ширину, высоту и CSS-оформление.
+ * При `verticalOnly: true` меняются только `top`/`bottom` — `left`/`right` и ширина (`left: 0; right: 0`) остаются на 100% нетронутыми.
  * @param {HTMLElement | null | undefined} referenceEl
  * @param {HTMLElement | null | undefined} floatingEl
  * @param {{
@@ -183,7 +195,8 @@ export function detachFloatingPopover(floatingEl) {
  *   strategy?: 'absolute' | 'fixed',
  *   offsetPx?: number,
  *   padding?: number,
- *   boundary?: Element | Element[]
+ *   boundary?: Element | Element[],
+ *   verticalOnly?: boolean
  * }} [options={}]
  * @returns {() => void}
  */
@@ -207,6 +220,7 @@ export function attachFloatingPopover(referenceEl, floatingEl, options = {}) {
     const offsetPx = Number.isFinite(options.offsetPx) ? Number(options.offsetPx) : 4;
     const padding = Number.isFinite(options.padding) ? Number(options.padding) : 8;
     const boundary = options.boundary;
+    const verticalOnly = Boolean(options.verticalOnly);
 
     let disposed = false;
 
@@ -215,7 +229,7 @@ export function attachFloatingPopover(referenceEl, floatingEl, options = {}) {
         const middleware = [
             offset(offsetPx),
             flip({ padding, ...(boundary ? { boundary } : {}) }),
-            shift({ padding, ...(boundary ? { boundary } : {}) })
+            ...(verticalOnly ? [] : [shift({ padding, ...(boundary ? { boundary } : {}) })])
         ];
 
         computePosition(referenceEl, floatingEl, {
@@ -232,11 +246,13 @@ export function attachFloatingPopover(referenceEl, floatingEl, options = {}) {
 
             if (Number.isFinite(res.x) && Number.isFinite(res.y)) {
                 floatingEl.style.top = `${Math.round(res.y)}px`;
-                floatingEl.style.left = `${Math.round(res.x)}px`;
                 floatingEl.style.bottom = 'auto';
-                floatingEl.style.right = 'auto';
                 floatingEl.style.marginTop = '0';
                 floatingEl.style.marginBottom = '0';
+                if (!verticalOnly) {
+                    floatingEl.style.left = `${Math.round(res.x)}px`;
+                    floatingEl.style.right = 'auto';
+                }
                 if (floatingEl.dataset) {
                     floatingEl.dataset.floatingPlacement = res.placement;
                 }
@@ -270,12 +286,14 @@ export function attachFloatingPopover(referenceEl, floatingEl, options = {}) {
 
 if (typeof window !== 'undefined') {
     window.positionAtCursor = positionAtCursor;
+    window.cancelCursorPosition = cancelCursorPosition;
     window.attachFloatingPopover = attachFloatingPopover;
     window.detachFloatingPopover = detachFloatingPopover;
 }
 
 registerActions({
     positionAtCursor,
+    cancelCursorPosition,
     attachFloatingPopover,
     detachFloatingPopover
 });

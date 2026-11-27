@@ -167,6 +167,7 @@ export function initCustomPropSelect(selectEl) {
                     strategy: 'absolute',
                     offsetPx: 4,
                     padding: 8,
+                    verticalOnly: true,
                     ...(modalBoundary ? { boundary: modalBoundary } : {})
                 });
             }

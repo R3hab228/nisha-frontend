@@ -4,7 +4,7 @@
 
 import { getCurrentSiteLang } from './catalog-state.js';
 import { invokeAction, registerActions } from '../core/action-registry.js';
-import { positionAtCursor } from '../core/floating-ui.js';
+import { positionAtCursor, cancelCursorPosition } from '../core/floating-ui.js';
 
 const MEASUREMENT_NOTE_TRANSLATIONS = [
     {
@@ -630,6 +630,7 @@ export const hideItemMeasurementsTooltip = function() {
     _isTooltipVisible = false;
     const tooltip = getMeasurementsTooltip();
     if (tooltip) {
+        cancelCursorPosition(tooltip);
         tooltip.classList.remove('visible');
         if (_tooltipHideTimer) clearTimeout(_tooltipHideTimer);
         _tooltipHideTimer = setTimeout(() => {

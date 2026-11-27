@@ -85,4 +85,39 @@ describe('Smart Floating Positioning (@floating-ui/dom — js/core/floating-ui.j
         expect(floatingEl.style.width).toBe('100%');
         expect(floatingEl.style.maxHeight).toBe('220px');
     });
+
+    it('preserves left/right CSS width rules when verticalOnly is enabled', () => {
+        /** @type {any} */
+        const refEl = {
+            isConnected: true,
+            getBoundingClientRect: () => ({ width: 240, height: 42, top: 100, left: 20, right: 260, bottom: 142 })
+        };
+        /** @type {any} */
+        const dropdownEl = {
+            isConnected: true,
+            style: {
+                top: '',
+                bottom: '',
+                left: '0px',
+                right: '0px',
+                marginTop: '',
+                marginBottom: ''
+            },
+            dataset: {},
+            getBoundingClientRect: () => ({ width: 240, height: 180, top: 146, left: 20, right: 260, bottom: 326 })
+        };
+
+        attachFloatingPopover(refEl, dropdownEl, {
+            placement: 'bottom-start',
+            strategy: 'absolute',
+            offsetPx: 4,
+            verticalOnly: true
+        });
+
+        expect(dropdownEl.style.left).toBe('0px');
+        expect(dropdownEl.style.right).toBe('0px');
+        detachFloatingPopover(dropdownEl);
+        expect(dropdownEl.style.left).toBe('0px');
+        expect(dropdownEl.style.right).toBe('0px');
+    });
 });
