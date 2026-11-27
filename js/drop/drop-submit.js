@@ -28,6 +28,13 @@ import {
     refreshCustomPropSelect,
     initCustomPropSelect
 } from './drop-custom-select.js';
+import {
+    getCachedTelegramUsernameStatus,
+    resetProposalContactValidationState,
+    scheduleBackgroundTelegramCheck,
+    validateProposalContactSync,
+    verifyProposalContactBeforeSubmit
+} from './drop-contact-validation.js';
 
 export {
     syncPropSizeOptionsByCategory,
@@ -45,6 +52,45 @@ let activeProposalUploads = 0;
 /** @type {string | null} */
 let _lastUsedPropToken = null;
 let _isSubmittingProposal = false;
+let _isVerifyingContact = false;
+let _lastBlurErrorContactKey = '';
+
+/**
+ * Возвращает локализованный текст ошибки валидации контакта.
+ * @param {string} errorKey
+ * @param {string} [tgUsername='']
+ * @returns {string}
+ */
+function getProposalContactErrorMessage(errorKey, tgUsername = '') {
+    /** @type {Record<string, string>} */
+    const defaults = {
+        'propose.err_phone_invalid': 'Некорректный номер телефона! Проверьте цифры и попробуйте ещё раз.',
+        'propose.err_tg_format': 'Некорректный Telegram @ник (5–32 латинских символа, цифры или _).',
+        'propose.err_tg_not_found': 'Telegram @{{nick}} не найден! Проверьте написание или укажите номер телефона.',
+        'propose.err_contact_invalid': 'Укажите корректный Telegram @ник или номер телефона (например @nick или +380...)',
+        'propose.err_fill_all': 'Пожалуйста, заполните АБСОЛЮТНО ВСЕ поля!'
+    };
+    const fallback = defaults[errorKey] || defaults['propose.err_contact_invalid'];
+    const resolved = tSafe(errorKey, { nick: tgUsername, defaultValue: fallback });
+    return String(resolved || fallback).replaceAll('{{nick}}', tgUsername);
+}
+
+/**
+ * Показывает красный error-тост со звуком ошибки и виброоткликом.
+ * @param {string} errorKey
+ * @param {string} [tgUsername='']
+ * @param {{ focus?: boolean }} [options]
+ */
+function notifyInvalidProposalContact(errorKey, tgUsername = '', options = {}) {
+    const g = /** @type {any} */ (globalThis);
+    if (typeof g.triggerHaptic === 'function') g.triggerHaptic('error');
+    const msg = getProposalContactErrorMessage(errorKey, tgUsername);
+    if (typeof showToast === 'function') showToast(msg, 'error');
+    if (options.focus) {
+        const contactEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
+        if (contactEl && typeof contactEl.focus === 'function') contactEl.focus();
+    }
+}
 
 /** @param {BeforeUnloadEvent} e */
 function onProposalBeforeUnload(e) {
@@ -140,6 +186,8 @@ export function enqueueProposalUpload(formData) {
 }
 
 export function resetProposalForm() {
+    _lastBlurErrorContactKey = '';
+    resetProposalContactValidationState();
     window._propBargainEnabled = false;
     window._propBargainMode = false;
     if (typeof resetPropBargainState === 'function') {
@@ -187,6 +235,10 @@ export function resetProposalForm() {
     if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
         contactEl.value = window._lastProposalContact;
     }
+    _lastBlurErrorContactKey = '';
+    if (contactEl && contactEl.value.trim()) {
+        scheduleBackgroundTelegramCheck(contactEl.value, { delayMs: 250 });
+    }
     const descLabel = document.getElementById('descLabel');
     if (descLabel) {
         descLabel.textContent = tSafe('propose.desc_label', { defaultValue: 'ОПИСАНИЕ И ДЕФЕКТЫ (ДО 250 СИМВОЛОВ):' });
@@ -223,6 +275,10 @@ export function openProposeModal() {
     const contactEl = /** @type {HTMLInputElement | null} */ (document.getElementById('propContact'));
     if (contactEl && !contactEl.value.trim() && window._lastProposalContact) {
         contactEl.value = window._lastProposalContact;
+    }
+    _lastBlurErrorContactKey = '';
+    if (contactEl && contactEl.value.trim()) {
+        scheduleBackgroundTelegramCheck(contactEl.value, { delayMs: 250 });
     }
     if (typeof globalEnv.Sortable === 'undefined' && typeof window.Sortable === 'undefined') {
         const loadSortableDeferred = () => {
@@ -274,7 +330,7 @@ export function openProposeModal() {
 export async function submitProposal() {
     const g = /** @type {any} */ (globalThis);
     const btn = document.getElementById('btnSubmitProp');
-    if (!btn || _isSubmittingProposal) return;
+    if (!btn || _isSubmittingProposal || _isVerifyingContact) return;
 
     const proposalItems = getProposalFiles().filter(obj => obj && obj.file);
     const files = proposalItems.map(obj => obj.file);
@@ -387,6 +443,46 @@ export async function submitProposal() {
             if (!window._propBargainMode && typeof openPropBargainInput === 'function') openPropBargainInput();
             else if (minBargainInput) minBargainInput.focus();
             return;
+        }
+    }
+
+    const syncContactCheck = validateProposalContactSync(rawContact);
+    if (!syncContactCheck.ok) {
+        notifyInvalidProposalContact(syncContactCheck.errorKey, '', { focus: true });
+        return;
+    }
+
+    if (syncContactCheck.tgUsername) {
+        const cachedTg = getCachedTelegramUsernameStatus(syncContactCheck.tgUsername);
+        if (cachedTg && cachedTg.verified === true && cachedTg.exists === false) {
+            notifyInvalidProposalContact('propose.err_tg_not_found', syncContactCheck.tgUsername, { focus: true });
+            return;
+        }
+        if (!cachedTg) {
+            _isVerifyingContact = true;
+            const prevBtnText = btn.textContent;
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.8';
+            const slowHintTimer = setTimeout(() => {
+                if (_isVerifyingContact) {
+                    const checkLabel = tSafe('propose.checking_contact', { defaultValue: 'ПРОВЕРКА КОНТАКТА' });
+                    btn.textContent = `[ ${checkLabel}... ]`;
+                }
+            }, 120);
+            let verifyRes;
+            try {
+                verifyRes = await verifyProposalContactBeforeSubmit(rawContact);
+            } finally {
+                clearTimeout(slowHintTimer);
+                _isVerifyingContact = false;
+                btn.textContent = prevBtnText;
+            }
+            if (!verifyRes.ok) {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+                notifyInvalidProposalContact(verifyRes.errorKey, verifyRes.tgUsername, { focus: true });
+                return;
+            }
         }
     }
 
@@ -572,6 +668,45 @@ export function initProposalListeners() {
                 refreshCustomPropSelect(/** @type {HTMLSelectElement | null} */ (document.getElementById('propCategory')));
                 refreshCustomPropSelect(/** @type {HTMLSelectElement | null} */ (document.getElementById('propSize')));
             }, 0);
+        });
+    }
+
+    const contactInput = /** @type {(HTMLInputElement & { _propContactBound?: boolean }) | null} */ (document.getElementById('propContact'));
+    if (contactInput && !contactInput._propContactBound) {
+        contactInput._propContactBound = true;
+        contactInput.addEventListener('input', () => {
+            _lastBlurErrorContactKey = '';
+            scheduleBackgroundTelegramCheck(contactInput.value, { delayMs: 450 });
+        }, { passive: true });
+
+        contactInput.addEventListener('blur', () => {
+            const val = contactInput.value.trim();
+            if (!val) return;
+            const sync = validateProposalContactSync(val);
+            if (!sync.ok) {
+                const dedupeKey = `${val}|${sync.errorKey}`;
+                if (_lastBlurErrorContactKey !== dedupeKey) {
+                    _lastBlurErrorContactKey = dedupeKey;
+                    notifyInvalidProposalContact(sync.errorKey, '', { focus: false });
+                }
+                return;
+            }
+            if (sync.tgUsername) {
+                scheduleBackgroundTelegramCheck(val, {
+                    delayMs: 0,
+                    onResult: (res, checkedRaw) => {
+                        if (!res || res.verified !== true || res.exists !== false) return;
+                        const modal = document.getElementById('proposeModal');
+                        if (!modal || modal.style.display === 'none' || modal.classList.contains('closing')) return;
+                        if (contactInput.value.trim() !== checkedRaw.trim()) return;
+                        const dedupeKey = `${checkedRaw.trim()}|not_found`;
+                        if (_lastBlurErrorContactKey !== dedupeKey) {
+                            _lastBlurErrorContactKey = dedupeKey;
+                            notifyInvalidProposalContact('propose.err_tg_not_found', res.username || sync.tgUsername, { focus: false });
+                        }
+                    }
+                });
+            }
         });
     }
 
